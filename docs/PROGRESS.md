@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-17, Phase 1 step 1 done (terrain generator); setting changed to a maple valley._
+_Last updated: 2026-10-17, Phase 1 steps 1–2 done (terrain generator, creeks); plan updated for the self-building town._
 
 ## Where we are
 
@@ -135,9 +135,17 @@ order; the ones marked **(haiku)** can be briefed to `haiku-coder`.
      takes 356 ms on average and 661 ms at most (a retry). Buildable-and-connected is 55–71%.
    - Not wired in yet: the engine, the save (seed only) and the painter still use the old painted terrain
      (steps 3 and 4).
-2. **Creeks** (haiku, from a lead brief): side streams from `flowAccum` (already in `flow.ts`) where the
-   accumulation is high, smoothed like the river, 3–8 tiles wide, class CREEK. They need short bridges or culverts.
-   Add the guarantee that creeks don't cut the start block.
+2. **Creeks. DONE** (2026-10-17). Up to 6 creeks per map, from heads at the foot of the hills down the D8 flow to
+   the river (a dilated river mask), the map border, or another creek (the end is snapped onto that creek's final
+   line). They have their own routing height (the river's height plus finer noise, so they wind instead of
+   following D8 straight lines), a two-scale meander that fades at both ends, widths of 3–8 tiles from the
+   accumulation, and are trimmed where they leave the hills. Class CREEK has no bank ring and only replaces
+   GROUND/PATCH. A creek is dropped if it runs within 24 tiles of a border (except its last 48 tiles), and so are
+   the creeks that join it. The split guarantee counts CREEK as land (culverts are cheap).
+   - Worker: all 20 seeds pass; 4 need one retry (6, 10, 11, 17). Generate takes 319 ms on average, 593 ms at most.
+     118–120 creeks over the 20 seeds.
+   - Lesson: adding noise to the river's height field made the river miss the guide (9 of 12 retries had "river
+     does not split the land"). Keep the river's field smooth, and put any detail in a separate creek field.
 3. **Collision and wiring** (haiku). The engine generates the terrain from the save's seed (save v4: seed only, no
    painted terrain; drop the terrain tool and the 7 Maple Falls terrain types, and remove the "objects" build tool
    and its UI: the player never places buildings or props). HILL, WATER, CREEK and BANK go into

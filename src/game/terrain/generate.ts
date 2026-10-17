@@ -1,7 +1,16 @@
 import { MAP, clamp, mulberry } from '../iso';
 import { TC, HS, HSTEP, sampleField, type Edge, type Terrain, type Waterway, type WaterPoint, type Chokepoint } from './types';
 import { makeNoise, fbm, ridged, smoothstep, hash2, type Noise } from './noise';
-import { priorityFlood, flowDirs, traceDown } from './flow';
+import { priorityFlood, flowDirs, flowAccum, traceDown } from './flow';
+
+/** creeks: a channel cell needs this many upstream samples to count as a channel */
+const CREEK_MIN_ACC = 60;
+/** creeks: at most this many per map */
+const MAX_CREEKS = 6;
+/** creeks: a traced creek needs at least this many samples */
+const CREEK_MIN_CELLS = 30;
+/** creeks: heads of accepted creeks are at least this many samples apart (Chebyshev) */
+const CREEK_HEAD_GAP = 40;
 
 /** the result of checking the generator's guarantees; ms is how long the check took */
 export interface GuaranteeReport { ok: boolean; reasons: string[]; buildableConnected: number; sideA: number; sideB: number; ms?: number }
@@ -74,10 +83,10 @@ let STK = new Int32Array(1 << 16);
 function growStack() { const g = new Int32Array(STK.length * 2); g.set(STK); STK = g; }
 
 /** label the 4-connected components of passable (or buildable-only) tiles with a scanline fill; sizes[k] is label k+1 */
-function labelComponents(cls: Uint8Array, buildOnly: boolean): { lab: Int32Array; sizes: number[] } {
+function labelComponents(cls: Uint8Array, land: boolean): { lab: Int32Array; sizes: number[] } {
   const N = MAP * MAP;
   const lab = LAB ?? (LAB = new Int32Array(N));
-  for (let i = 0; i < N; i++) { const c = cls[i]; lab[i] = (buildOnly ? buildable(c) : c !== TC.HILL) ? 0 : -1; }
+  for (let i = 0; i < N; i++) { const c = cls[i]; lab[i] = (land ? buildable(c) || c === TC.CREEK : c !== TC.HILL) ? 0 : -1; }
   const sizes: number[] = [];
   for (let s = 0; s < N; s++) {
     if (lab[s] !== 0) continue;
@@ -120,6 +129,7 @@ export function checkGuarantees(t: Terrain): GuaranteeReport {
   let bBuild = 0;
   if (bestId) for (let i = 0; i < N; i++) if (pass.lab[i] === bestId && buildable(t.cls[i])) bBuild++;
   const buildableConnected = bBuild / N;
+  // creeks count as land here: they are crossed by culverts
   const sides = labelComponents(t.cls, true).sizes.sort((a, b) => b - a);
   const sideA = (sides[0] ?? 0) / N, sideB = (sides[1] ?? 0) / N;
   if (buildableConnected < 0.55) reasons.push(`buildable land connected ${pct(buildableConnected)} < 55%`);
@@ -162,10 +172,13 @@ function build(genSeed: number): Terrain {
   };
   // 3-4. height field: valley base plus hill uplift (mountains, buttes), cut by the river gorge, in 4 m terraces
   const height = new Float32Array(HS * HS), uplift = new Float32Array(HS * HS);
+  // creek routing height: the river's height plus a finer wobble, so creeks get their own flow field
+  const heightC = new Float32Array(HS * HS);
   for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
     const u = (i + 0.5) / HS, v = (j + 0.5) / HS, k = j * HS + i;
     const gd = guideDist(u, v);
-    const base = 6 * fbm(nBase, u * 3, v * 3, 4) + 40 * dEdge(exit, u, v) + 30 * Math.min(1, gd / 0.25);
+    const base = 6 * fbm(nBase, u * 3, v * 3, 4) + 40 * dEdge(exit, u, v) + 70 * gd;
+    const fine = 12 * fbm(nBase, u * 14 + 9.1, v * 14 + 3.7, 3);
     const edgeN = fbm(nEdge, u * 3, v * 3, 4);
     let m = 0;
     for (const e of mountainEdges) m = Math.max(m, smoothstep(0.16, 0.03, dEdge(e, u, v) + 0.09 * edgeN));
@@ -179,6 +192,7 @@ function build(genSeed: number): Terrain {
     up = 4 * (fl + smoothstep(0.75, 1, q - fl));
     uplift[k] = up;
     height[k] = base + up;
+    heightC[k] = base + up + fine;
   }
   // 5. main river: steepest descent from just inside the source edge, smoothed, resampled, run off both ends
   const filled = priorityFlood(height, HS);
@@ -186,7 +200,8 @@ function build(genSeed: number): Terrain {
   let si = clamp(Math.round(sp.x * HS - 0.5), 0, HS - 1), sj = clamp(Math.round(sp.y * HS - 0.5), 0, HS - 1);
   if (source === 'N') sj += 6; else if (source === 'S') sj -= 6; else if (source === 'W') si += 6; else si -= 6;
   si = clamp(si, 0, HS - 1); sj = clamp(sj, 0, HS - 1);
-  let path: P[] = traceDown(dir, sj * HS + si).map(c => ({ x: (c % HS) * HSTEP + HSTEP / 2, y: ((c / HS) | 0) * HSTEP + HSTEP / 2 }));
+  const riverCells = traceDown(dir, sj * HS + si);
+  let path: P[] = riverCells.map(c => ({ x: (c % HS) * HSTEP + HSTEP / 2, y: ((c / HS) | 0) * HSTEP + HSTEP / 2 }));
   for (let it = 0; it < 3; it++) path = chaikin(path);
   path = resample(path, 8);
   // the river enters at the source point on its edge, and leaves straight out perpendicular to the nearest border
@@ -225,6 +240,144 @@ function build(genSeed: number): Terrain {
       const e = dd - (a.w + (b.w - a.w) * lastT) / 2, idx = y * MAP + x;
       if (e <= 0) cls[idx] = TC.WATER;
       else if (e <= 3 && cls[idx] !== TC.WATER) cls[idx] = TC.BANK;
+    }
+  }
+  // 6b. creeks: channel heads fed by hills come down the flow directions to the river, a junction, or the border
+  // creeks route on their own field (heightC), so their paths are not the river's
+  const filledC = priorityFlood(heightC, HS), dirC = flowDirs(filledC, HS), acc = flowAccum(dirC, HS, filledC);
+  const riverCell = new Uint8Array(HS * HS);
+  // the river mask is dilated by 2 cells, so a creek path that slips diagonally past the river still stops at it
+  for (const c of riverCells) {
+    const x = c % HS, y = (c - x) / HS;
+    for (let yy = Math.max(0, y - 2); yy <= Math.min(HS - 1, y + 2); yy++)
+      for (let xx = Math.max(0, x - 2); xx <= Math.min(HS - 1, x + 2); xx++) riverCell[yy * HS + xx] = 1;
+  }
+  // 0 = free, otherwise the accepted creek index + 1 that claimed the cell
+  const claimedBy = new Int16Array(HS * HS);
+  const isChannel = (c: number) => acc[c] >= CREEK_MIN_ACC;
+  // true if any cell within Chebyshev radius r of c (c included) passes pred
+  const anyNear = (c: number, r: number, pred: (n: number) => boolean) => {
+    const x = c % HS, y = (c - x) / HS;
+    for (let yy = Math.max(0, y - r); yy <= Math.min(HS - 1, y + r); yy++)
+      for (let xx = Math.max(0, x - r); xx <= Math.min(HS - 1, x + r); xx++) if (pred(yy * HS + xx)) return true;
+    return false;
+  };
+  const heads: number[] = [];
+  for (let c = 0; c < HS * HS; c++) {
+    if (!isChannel(c)) continue;
+    if (anyNear(c, 1, n => dirC[n] === c && isChannel(n))) continue;
+    if (!anyNear(c, 3, n => uplift[n] > 0)) continue;
+    heads.push(c);
+  }
+  // trace a head down until a river cell or the border (it ends there), or a claimed cell (a junction: included, join = its creek)
+  const traceCreek = (head: number): { cells: number[]; join: number } => {
+    const cells: number[] = [];
+    if (claimedBy[head]) return { cells, join: -1 };
+    let c = head, join = -1;
+    for (;;) {
+      cells.push(c);
+      if (riverCell[c] || dirC[c] < 0) break;
+      const nx = dirC[c];
+      if (claimedBy[nx]) { cells.push(nx); join = claimedBy[nx] - 1; break; }
+      c = nx;
+    }
+    return { cells, join };
+  };
+  const trial = heads.map(h => { const tc = traceCreek(h).cells; return { h, endAcc: acc[tc[tc.length - 1]] }; });
+  trial.sort((a, b) => b.endAcc - a.endAcc || a.h - b.h);
+  const accepted: { head: number; hx: number; hy: number; cells: number[]; join: number }[] = [];
+  for (const cand of trial) {
+    if (accepted.length >= MAX_CREEKS) break;
+    const hx = cand.h % HS, hy = (cand.h - hx) / HS;
+    if (accepted.some(a => Math.max(Math.abs(a.hx - hx), Math.abs(a.hy - hy)) < CREEK_HEAD_GAP)) continue;
+    const { cells, join } = traceCreek(cand.h);
+    if (cells.length < CREEK_MIN_CELLS) continue;
+    const id = accepted.length + 1;
+    for (const c of cells) if (!claimedBy[c] && !riverCell[c]) claimedBy[c] = id;
+    accepted.push({ head: cand.h, hx, hy, cells, join });
+  }
+  // a junction ends on the nearest point of the creek it joins (projected onto its segments); null if that creek is gone
+  // or the nearest point is more than 40 tiles from the old end (the junction was lost to trimming)
+  // true if a point more than 48 tiles of arc from the creek's end lies within 24 tiles of a map border
+  const hugsBorder = (fin: WaterPoint[]) => {
+    const s = [0];
+    for (let k = 1; k < fin.length; k++) s.push(s[k - 1] + Math.hypot(fin[k].x - fin[k - 1].x, fin[k].y - fin[k - 1].y));
+    const L = s[s.length - 1];
+    for (let k = 0; k < fin.length; k++) {
+      if (L - s[k] < 48) continue;
+      const p = fin[k];
+      if (Math.min(p.x, p.y, MAP - p.x, MAP - p.y) < 24) return true;
+    }
+    return false;
+  };
+  const joinTo = (fin: WaterPoint[], target: WaterPoint[] | null): WaterPoint[] | null => {
+    if (!target) return null;
+    const last = fin[fin.length - 1];
+    let bx = target[0].x, by = target[0].y, bd = Infinity;
+    for (let k = 0; k + 1 < target.length; k++) {
+      const a = target[k], b = target[k + 1], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+      const t = L2 > 0 ? clamp(((last.x - a.x) * dx + (last.y - a.y) * dy) / L2, 0, 1) : 0;
+      const qx = a.x + dx * t, qy = a.y + dy * t, d = Math.hypot(qx - last.x, qy - last.y);
+      if (d < bd) { bd = d; bx = qx; by = qy; }
+    }
+    if (bd > 40) return null;
+    fin[fin.length - 1] = { x: bx, y: by, w: last.w };
+    return fin;
+  };
+  const nMeander = nk(12);
+  const finals: (WaterPoint[] | null)[] = [];
+  accepted.forEach((cr, idx) => {
+    const cellPts: P[] = cr.cells.map(c => ({ x: (c % HS) * HSTEP + HSTEP / 2, y: ((c - (c % HS)) / HS) * HSTEP + HSTEP / 2 }));
+    let line = cellPts;
+    for (let it = 0; it < 3; it++) line = chaikin(line);
+    line = resample(line, 6);
+    // arc length, then meander: interior points offset perpendicular to the path
+    const sArc = [0];
+    for (let k = 1; k < line.length; k++) sArc.push(sArc[k - 1] + Math.hypot(line[k].x - line[k - 1].x, line[k].y - line[k - 1].y));
+    const moved: P[] = line.map((p, k) => {
+      if (k === 0 || k === line.length - 1) return p;
+      // tangent over +-4 points so the offset doesn't flip at the D8 corners; the meander fades out over 60 tiles at both ends
+      const a = line[Math.max(0, k - 4)], b = line[Math.min(line.length - 1, k + 4)], L = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const fade = smoothstep(0, 60, sArc[k]) * smoothstep(0, 60, sArc[line.length - 1] - sArc[k]);
+      const off = fade * (16 * fbm(nMeander, sArc[k] / 160, idx * 7.3, 3) + 3 * nMeander(sArc[k] / 30, idx * 7.3 + 50));
+      return { x: p.x - (b.y - a.y) / L * off, y: p.y + (b.x - a.x) / L * off };
+    });
+    // width from the accumulation of the nearest original cell
+    const cpts: WaterPoint[] = moved.map(p => {
+      let best = 0, bd = Infinity;
+      for (let j = 0; j < cellPts.length; j++) {
+        const d = (cellPts[j].x - p.x) ** 2 + (cellPts[j].y - p.y) ** 2;
+        if (d < bd) { bd = d; best = j; }
+      }
+      const a = acc[cr.cells[best]];
+      return { x: p.x, y: p.y, w: clamp(3 + 5 * clamp(Math.log(a / CREEK_MIN_ACC) / Math.log(20), 0, 1), 3, 8) };
+    });
+    // drop the leading hill points, keeping the last so the creek emerges from the hill edge
+    const isHill = (p: P) => { const ix = Math.floor(p.x), iy = Math.floor(p.y); return ix >= 0 && iy >= 0 && ix < MAP && iy < MAP && cls[iy * MAP + ix] === TC.HILL; };
+    let i0 = 0;
+    while (i0 < cpts.length && isHill(cpts[i0])) i0++;
+    const trimmed = cpts.slice(Math.max(0, i0 - 1));
+    // accepted creeks are processed in order, so the creek this one joins is already final
+    const fin0 = trimmed.length < 8 ? null : trimmed;
+    let fin = fin0 && cr.join >= 0 ? joinTo(fin0, finals[cr.join]) : fin0;
+    // a creek that runs within 24 tiles of a border (more than 48 tiles of arc from its end) is dropped
+    if (fin && hugsBorder(fin)) fin = null;
+    finals.push(fin);
+  });
+  for (const fin of finals) {
+    if (!fin) continue;
+    const trimmed = fin;
+    waters.push({ kind: 'creek', pts: trimmed });
+    // raster: creeks cut only ground and patches, with no bank ring
+    for (let k = 0; k + 1 < trimmed.length; k++) {
+      const a = trimmed[k], b = trimmed[k + 1], mw = Math.max(a.w, b.w) / 2 + 4;
+      const x0 = Math.max(0, Math.floor(Math.min(a.x, b.x) - mw)), x1 = Math.min(MAP - 1, Math.ceil(Math.max(a.x, b.x) + mw));
+      const y0 = Math.max(0, Math.floor(Math.min(a.y, b.y) - mw)), y1 = Math.min(MAP - 1, Math.ceil(Math.max(a.y, b.y) + mw));
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const dd = segDist(x + 0.5, y + 0.5, a.x, a.y, b.x, b.y);
+        const e = dd - (a.w + (b.w - a.w) * lastT) / 2, idx2 = y * MAP + x;
+        if (e <= 0 && (cls[idx2] === TC.GROUND || cls[idx2] === TC.PATCH)) cls[idx2] = TC.CREEK;
+      }
     }
   }
   // integral image of buildable tiles: I[y*(MAP+1)+x] counts buildable tiles in [0,x) x [0,y)
@@ -318,6 +471,6 @@ export function generateTerrain(seed: number): Terrain {
     const rep = checkGuarantees(t);
     if (rep.ok) { t.seed = seed; t.attempt = a; return t; }
     reasons = rep.reasons;
-  }
+    /* TEMP-LOG */ console.log(`RETRY seed ${seed} attempt ${a}: ${rep.reasons.join('; ')} | connected ${(rep.buildableConnected * 100).toFixed(1)}% sideA ${(rep.sideA * 100).toFixed(1)}% sideB ${(rep.sideB * 100).toFixed(1)}%`);  }
   throw new Error(`terrain seed ${seed}: all 8 attempts failed: ${reasons.join('; ')}`);
 }

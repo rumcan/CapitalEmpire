@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
-import { generateTerrain, checkGuarantees, priorityFlood, flowDirs, flowAccum, traceDown, type Terrain } from '../src/game/terrain';
+import { TC, generateTerrain, checkGuarantees, priorityFlood, flowDirs, flowAccum, traceDown, type Terrain } from '../src/game/terrain';
 
 /** FNV-1a over the raw bytes of a typed array */
 function fnv(a: ArrayBufferView): number {
@@ -34,24 +34,66 @@ test('different seeds give different maps', () => {
   assert.notEqual(fnv(gen(1).cls), fnv(gen(2).cls));
 });
 
-test('20 seeds pass the guarantees, generate in under 2 s each, and the river stays off the border', () => {
+/** cumulative arc length along a polyline, in tiles (entry k is the length up to point k) */
+function arcLengths(pts: { x: number; y: number }[]): number[] {
+  const s = [0];
+  for (let k = 1; k < pts.length; k++) s.push(s[k - 1] + Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
+  return s;
+}
+
+/** distance from (x, y) to a polyline, in tiles */
+function distPolyline(pts: { x: number; y: number }[], x: number, y: number): number {
+  let best = Infinity;
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const a = pts[k], b = pts[k + 1], dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+    const t = L2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / L2)) : 0;
+    best = Math.min(best, Math.hypot(a.x + dx * t - x, a.y + dy * t - y));
+  }
+  return best;
+}
+
+test('20 seeds pass the guarantees, generate in under 2 s each, and the river and creeks stay sane', () => {
+  let creekTotal = 0;
   for (let seed = 1; seed <= 20; seed++) {
     const t0 = performance.now();
     const t = generateTerrain(seed);
     const ms = performance.now() - t0;
     memo.set(seed, t);
     const rep = checkGuarantees(t);
-    console.log(`seed ${seed} attempt ${t.attempt} connected ${pct(rep.buildableConnected)} sideA ${pct(rep.sideA)} sideB ${pct(rep.sideB)} chokepoints [${t.chokepoints.map(c => c.kind).join(',')}] ${ms.toFixed(0)} ms`);
+    const river = t.waters.find(w => w.kind === 'river')!.pts;
+    const creeks = t.waters.filter(w => w.kind === 'creek');
+    creekTotal += creeks.length;
+    console.log(`seed ${seed} attempt ${t.attempt} connected ${pct(rep.buildableConnected)} sideA ${pct(rep.sideA)} sideB ${pct(rep.sideB)} chokepoints [${t.chokepoints.map(c => c.kind).join(',')}] creeks ${creeks.length} ${ms.toFixed(0)} ms`);
     assert.ok(rep.ok, `seed ${seed}: ${rep.reasons.join('; ')}`);
     assert.ok(ms < 2000, `seed ${seed} took ${ms.toFixed(0)} ms`);
-    // every river point except the first 3 and last 4 keeps 24+ tiles from the map border; the last 4 are the
-    // perpendicular exit (8-tile spacing puts the 4th-last point ~20 tiles out), so they are not a hugging river
-    const pts = t.waters[0].pts;
-    for (let k = 3; k < pts.length - 4; k++) {
-      const p = pts[k], d = Math.min(p.x, p.y, MAP - p.x, MAP - p.y);
+    // river: points within 48 tiles of arc length from either end are the entry and exit; all others keep 24+ tiles from the border
+    const rs = arcLengths(river), rLen = rs[rs.length - 1];
+    for (let k = 0; k < river.length; k++) {
+      if (rs[k] < 48 || rLen - rs[k] < 48) continue;
+      const p = river[k], d = Math.min(p.x, p.y, MAP - p.x, MAP - p.y);
       assert.ok(d >= 24, `seed ${seed}: river point ${k} is ${d.toFixed(1)} tiles from the border`);
     }
+    for (const c of creeks) {
+      for (const p of c.pts) assert.ok(p.w >= 3 && p.w <= 8, `seed ${seed}: creek width ${p.w}`);
+      // creek: points within 48 tiles of arc length from its end are the river/junction end; all others keep 24+ tiles from the border
+      const cs = arcLengths(c.pts), cLen = cs[cs.length - 1];
+      for (let k = 0; k < c.pts.length; k++) {
+        if (cLen - cs[k] < 48) continue;
+        const p = c.pts[k], d = Math.min(p.x, p.y, MAP - p.x, MAP - p.y);
+        assert.ok(d >= 24, `seed ${seed}: creek point ${k} is ${d.toFixed(1)} tiles from the border`);
+      }
+      // a creek ends at the river, at the border, or at another creek
+      const end = c.pts[c.pts.length - 1];
+      const onRiver = distPolyline(river, end.x, end.y) <= end.w / 2 + 24;
+      const onBorder = Math.min(end.x, end.y, MAP - end.x, MAP - end.y) <= 4;
+      const onCreek = creeks.some(o => o !== c && o.pts.some(q => Math.hypot(q.x - end.x, q.y - end.y) <= 6));
+      assert.ok(onRiver || onBorder || onCreek, `seed ${seed}: creek ends ${distPolyline(river, end.x, end.y).toFixed(1)} tiles from the river`);
+    }
+    // the start block is buildable and creek-free
+    for (let y = t.start.y; y < t.start.y + t.start.size; y++) for (let x = t.start.x; x < t.start.x + t.start.size; x++)
+      assert.notEqual(t.cls[y * MAP + x], TC.CREEK, `seed ${seed}: creek in the start block`);
   }
+  assert.ok(creekTotal >= 30, `only ${creekTotal} creeks over 20 seeds`);
 });
 
 test('the river runs off the map at both ends and its widths stay in 20..40', () => {
