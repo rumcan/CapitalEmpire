@@ -1,0 +1,70 @@
+/** Saves: gzip-compressed JSON in IndexedDB (a full 2048 map's terrain alone is 4 MB raw, too big for localStorage).
+ *  Terrain is run-length encoded first. Old v2 saves (160-tile maps in localStorage) are migrated into the centre. */
+import { MAP } from './iso';
+import type { SaveData } from './types';
+
+const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
+export const SAVE_VERSION = 3;
+
+function idb(): Promise<IDBDatabase> {
+  return new Promise((res, rej) => { const r = indexedDB.open(DB, 1); r.onupgradeneeded = () => r.result.createObjectStore(STORE); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+}
+async function idbDo<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+  const db = await idb();
+  return new Promise((res, rej) => { const tx = db.transaction(STORE, mode), q = fn(tx.objectStore(STORE)); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+}
+async function gzip(text: string) { return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer(); }
+async function gunzip(buf: ArrayBuffer) { return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
+
+/** terrain as runs [value, count, value, count, ...] */
+export function rle(a: Uint8Array) { const out: number[] = []; for (let i = 0; i < a.length;) { const v = a[i]; let j = i + 1; while (j < a.length && a[j] === v) j++; out.push(v, j - i); i = j; } return out; }
+export function unrle(runs: number[], out: Uint8Array) { let o = 0; for (let k = 0; k + 1 < runs.length; k += 2) { out.fill(runs[k], o, o + runs[k + 1]); o += runs[k + 1]; } return out; }
+
+export interface SaveV3 {
+  version: number; map: number; seed?: number;
+  /** run-length terrain */
+  terrain: number[];
+  /** ax, ay, bx, by, class, line style */
+  segs: [number, number, number, number, string, number][];
+  /** x, y, junction type */
+  nodes: [number, number, string][];
+  /** library id, x, y, flip, scale */
+  props: [string, number, number, number, number][];
+  money: number; day: number; cam?: { X: number; Y: number; z: number };
+}
+/** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
+const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',
+  'town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:postoffice', 'town:firestation', 'town:fish_tackle', 'world:diner', 'world:arcade', 'world:video_rental', 'ref:building-gas-canopy',
+  'world:church', 'world:gazebo', 'world:watertower', 'ref:landmark-windmill', 'world:barn', 'world:primary_school',
+  'world:tree_oak_0', 'world:tree_oak_1', 'world:tree_oak_2', 'world:tree_pine_0', 'world:tree_pine_1', 'ref:tree-maple-crimson', 'ref:tree-birch-gold', 'ref:tree-spruce-blue', 'world:bush_0', 'world:bush_1', 'world:hedge', 'town:hydrangea',
+  'world:car_0', 'world:car_1', 'world:car_2', 'world:car_3', 'static:pickup_n', 'static:van_e', 'static:compact_e', 'static:compact_n', 'world:schoolbus',
+  'world:streetlamp', 'world:hydrant', 'world:mailbox', 'world:bench', 'world:trashcan', 'town:stop_sign', 'town:street_sign', 'town:traffic_light', 'town:bus_stop', 'town:phone_booth', 'town:utility_pole', 'town:bike_rack', 'town:picnic_table', 'town:planter_square',
+  'world:pumpkin_0', 'world:pumpkin_1', 'world:scarecrow', 'ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'world:candy_stand', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost',
+  'world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood',
+  'gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line'];
+
+export async function writeSave(d: SaveV3) { const buf = await gzip(JSON.stringify(d)); await idbDo('readwrite', s => s.put(buf, SLOT)); return buf.byteLength; }
+export async function readSave(): Promise<SaveV3 | null> {
+  try {
+    const buf = await idbDo<ArrayBuffer | undefined>('readonly', s => s.get(SLOT));
+    if (buf) { const d = JSON.parse(await gunzip(buf)) as SaveV3; if (d.version === SAVE_VERSION && d.map === MAP) return d; }
+  } catch { /* no IndexedDB (private window): fall through */ }
+  return migrateV2();
+}
+/** a v2 save (160-tile map) moved into the centre of the big map */
+function migrateV2(): SaveV3 | null {
+  try {
+    const raw = localStorage.getItem(V2_KEY); if (!raw) return null;
+    const d = JSON.parse(raw) as SaveData; if (d.version !== 2) return null;
+    const n = d.map, o = Math.floor((MAP - n) / 2), bin = atob(d.terrain), t = new Uint8Array(MAP * MAP);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) t[(y + o) * MAP + x + o] = bin.charCodeAt(y * n + x);
+    return {
+      version: SAVE_VERSION, map: MAP, terrain: rle(t), money: d.money, day: d.day,
+      segs: d.segs.map(([ax, ay, bx, by, c, s]) => [ax + o, ay + o, bx + o, by + o, c, s]),
+      nodes: d.nodes.map(([x, y, t2]) => [x + o, y + o, t2]),
+      props: d.props.filter(([i]) => V2_IDS[i]).map(([i, x, y, f, k]) => [V2_IDS[i], x + o, y + o, f, k]),
+      cam: d.cam ? { X: d.cam.X, Y: d.cam.Y + o * 64, z: d.cam.z } : undefined,
+    };
+  } catch { return null; }
+}
+export async function clearSave() { try { await idbDo('readwrite', s => s.delete(SLOT)); } catch { /* ignore */ } }

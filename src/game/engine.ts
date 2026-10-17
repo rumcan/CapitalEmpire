@@ -1,28 +1,38 @@
-import { HH, HW, MAP, ZOOM_MAX, ZOOM_MIN, clamp, tileOf, worldX, worldY } from './iso';
-import { LIBRARY } from './library';
-import { CLASS, CLASSES, JUNCTIONS, RoadNetwork, add, mul, perp, sub, vlen, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type RoadClass } from './network';
-import { GroundRenderer, type Camera } from './renderer';
-import { Textures } from './textures';
-import type { BendMode, LibItem, LineStyle, Prop, SaveData, Tool } from './types';
+import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
+import { ATLAS_PAGES, LIBRARY } from './library';
+import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type RoadClass } from './network';
+import { NetEditor } from './netops';
+import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
+import { GroundCache } from './ground-cache';
+import { SpriteTiles, spriteRect, type Drawable } from './sprites';
+import { readSave, rle, unrle, writeSave, clearSave, SAVE_VERSION, type SaveV3 } from './save';
+import { CAR_COLOURS, TestTraffic } from './traffic';
+import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 
-const SAVE_KEY = 'maple-falls-town-v2';
 const DAY_SECONDS = 20;
+/** the old 160-tile starter town sits in the middle of the big map */
+const SEED_OFFSET = (MAP - 160) / 2;
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
 export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good' }
+export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
+const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
+const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
 
 export class Game {
-  ctx: CanvasRenderingContext2D;
+  gl: GLRenderer; ov: CanvasRenderingContext2D;
   dpr = 1; cw = 1; ch = 1; cssW = 1; cssH = 1;
   cam: Camera = { X: worldX(MAP / 2, MAP / 2), Y: worldY(MAP / 2, MAP / 2), z: 0.16 };
   terrain = new Uint8Array(MAP * MAP);
-  net = new RoadNetwork();
-  props: Prop[] = []; order: Prop[] = []; nextUid = 1;
-  images: HTMLImageElement[] = [];
-  tex = new Textures();
-  ground: GroundRenderer;
+  net = new RoadNetwork(); edit = new NetEditor(this.net);
+  props = new Set<Prop>(); nextUid = 1;
+  private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
+  sprites = new SpriteTiles();
+  ground: GroundCache;
+  /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
+  pageImages: HTMLImageElement[] = []; private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0; junctionType: NodeType = 'signal';
@@ -35,17 +45,24 @@ export class Game {
   // fx
   builds: Build[] = []; particles: Particle[] = [];
   toasts: Toast[] = []; toastId = 1;
+  traffic: TestTraffic | null = null;
+  // perf
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner' };
+  private frameTimes: number[] = [];
   // input
   private dragging: null | { kind: 'pan' | 'prop' | 'paint' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean; prop?: Prop; ox?: number; oy?: number } = null;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
-  private saveTimer = 0;
+  private saveTimer = 0; private blocksTimer = 0;
   private raf = 0; private last = 0;
+  private mask: OffscreenCanvas | null = null;
   placeError = '';
 
-  constructor(public canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext('2d')!;
-    this.ground = new GroundRenderer(this.terrain, this.net, this.tex);
+  constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement) {
+    this.gl = new GLRenderer(canvas);
+    this.ov = overlay.getContext('2d')!;
+    this.net.paintData = false;
+    this.ground = new GroundCache(this.gl);
   }
   get cls() { return CLASS[this.roadClass]; }
 
@@ -57,22 +74,30 @@ export class Game {
     this.emit();
   }
 
-  async init() {
-    const imgs = LIBRARY.map(it => new Promise<HTMLImageElement>(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(im); im.src = it.src; }));
-    let done = 0; const total = imgs.length + 12;
-    const tick = () => { this.loadProgress = ++done / total; this.emit(); };
-    imgs.forEach(p => p.then(tick));
-    const texJob = this.tex.build(() => tick());
-    this.images = await Promise.all(imgs);
-    await texJob;
-    if (!this.load()) this.seedTown();
-    this.net.rebuild(); this.syncAutoProps(); this.syncLamps(false);
-    this.reorder();
-    this.ready = true; this.emit();
+  async init(opts: { bench?: number } = {}) {
+    const tick = (p: number) => { this.loadProgress = p; this.emit(); };
+    this.resize();
+    const atlas = this.gl.loadAtlas(this.dpr >= 1.5);
+    this.pageImages = await Promise.all(ATLAS_PAGES.map(row => new Promise<HTMLImageElement>(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(im); im.src = row[1]; })));
+    this.pageAlpha = this.pageImages.map(im => { const w = Math.max(1, im.naturalWidth >> 1), h = Math.max(1, im.naturalHeight >> 1), c = new OffscreenCanvas(w, h), g = c.getContext('2d', { willReadFrequently: true })!; g.drawImage(im, 0, 0, w, h); return { w, h, data: g.getImageData(0, 0, w, h).data }; });
+    tick(0.3);
+    await atlas; tick(0.5); if (this.dead) return;
+    const save = opts.bench ? null : await readSave(); if (this.dead) return;
+    if (opts.bench) { const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
+    else if (!save || !this.load(save)) { this.seedTown(); }
+    tick(0.7);
+    const tl = performance.now();
+    this.ground.init(this.terrain);
+    this.afterLoad();
+    if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
+    await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
+    if (this.dead) return;
+    this.ready = true; tick(1);
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
-  destroy() { cancelAnimationFrame(this.raf); }
+  dead = false;
+  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); this.ground.terminate(); }
 
   // ---------- geometry helpers ----------
   resize() {
@@ -80,7 +105,7 @@ export class Game {
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
     this.cssW = r.width; this.cssH = r.height;
     this.cw = Math.max(1, Math.round(r.width * this.dpr)); this.ch = Math.max(1, Math.round(r.height * this.dpr));
-    if (this.canvas.width !== this.cw || this.canvas.height !== this.ch) { this.canvas.width = this.cw; this.canvas.height = this.ch; }
+    for (const c of [this.canvas, this.overlay]) if (c.width !== this.cw || c.height !== this.ch) { c.width = this.cw; c.height = this.ch; }
   }
   tileAt(mx: number, my: number) {
     const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z;
@@ -109,7 +134,7 @@ export class Game {
     if (it.kind === 'car') { if (occ === 3) return 'Not on the median'; }
     else if (it.big) { if (occ) return 'Keep buildings off the road and sidewalk'; }
     else if (occ === 2) return 'Not on the asphalt';
-    for (const p of this.props) {
+    for (const p of this.propGrid.query([f.x0, f.y0, f.x1, f.y1])) {
       if (p === ignore) continue;
       const pit = LIBRARY[p.item];
       if (!(it.big || pit.big)) continue;
@@ -120,70 +145,65 @@ export class Game {
   addProp(item: number, x: number, y: number, flip: boolean, scale: number): Prop {
     const f = this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
-    this.props.push(p); return p;
+    this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p);
+    if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
+    if (LIBRARY[item].big) this.scheduleBlocks();
+    return p;
   }
-  removeProp(p: Prop) { const i = this.props.indexOf(p); if (i >= 0) this.props.splice(i, 1); if (this.selected === p) this.selected = null; }
+  removeProp(p: Prop) {
+    if (!this.props.delete(p)) return;
+    this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p);
+    if (p.auto) this.autoByKey.delete(p.auto);
+    if (this.selected === p) this.selected = null;
+    if (LIBRARY[p.item].big) this.scheduleBlocks();
+  }
+  /** after moving, flipping or scaling a prop */
+  private propChanged(p: Prop) { const it = LIBRARY[p.item]; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, p.scale)); this.propGrid.remove(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.update(p); if (it.big) this.scheduleBlocks(); }
   /** street lamps light the road: their reflection pools are part of the ground picture */
-  syncLamps(invalidate = true) {
-    const before = this.net.pools.map(p => p.x + ',' + p.y).join(';');
-    this.net.setLamps(this.props.filter(p => LIBRARY[p.item].kind === 'lamp').map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 })));
-    const after = this.net.pools.map(p => p.x + ',' + p.y).join(';');
-    if (invalidate && before !== after) {
-      const a = new Set(before.split(';')), b = new Set(after.split(';'));
-      for (const k of [...a, ...b]) if (!(a.has(k) && b.has(k)) && k) { const [x, y] = k.split(',').map(Number); this.ground.invalidate([x - 9, y - 9, x + 9, y + 9]); }
-    }
+  syncLamps() {
+    const pts = [...this.lampProps].map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));
+    const changed = this.net.setLamps(pts);
+    this.ground.lamps(new Float32Array(pts.flatMap(p => [p.x, p.y])));
+    for (const b of changed) this.ground.invalidate(b, false, 0, 'gm');
   }
-  /** median trees, roundabout trees and traffic lights follow the road network */
-  syncAutoProps() {
-    const want = new Map<string, { item: number; x: number; y: number; scale: number }>();
-    for (const a of this.net.autoProps) {
+  /** median trees, roundabout trees and traffic lights follow the road network (only what the last rebuild changed) */
+  private syncAutoProps(added: AutoProp[], removed: AutoProp[]) {
+    for (const a of removed) { const p = this.autoByKey.get(autoKey(a)); if (p) this.removeProp(p); }
+    for (const a of added) {
+      const k = autoKey(a); if (this.autoByKey.has(k)) continue;
       const id = a.kind === 'tree' ? AUTO_TREES[a.i % AUTO_TREES.length] : a.kind === 'rbtree' ? 'world:tree_oak_0' : 'town:traffic_light';
       const item = LIBRARY.findIndex(i => i.id === id); if (item < 0) continue;
       const it = LIBRARY[item], b = it.boxes[0], scale = a.kind === 'tree' ? 0.85 : a.kind === 'rbtree' ? 1.2 : 1;
-      want.set(`${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`, { item, x: a.x - b.dx * scale / 2, y: a.y - b.dy * scale / 2, scale });
+      const p = this.addProp(item, a.x - b.dx * scale / 2, a.y - b.dy * scale / 2, false, scale); p.auto = k; this.autoByKey.set(k, p);
     }
-    this.props = this.props.filter(p => !p.auto || want.has(p.auto));
-    const have = new Set(this.props.filter(p => p.auto).map(p => p.auto!));
-    for (const [k, w] of want) if (!have.has(k)) { const p = this.addProp(w.item, w.x, w.y, false, w.scale); p.auto = k; }
+  }
+  /** building footprints for the planner map (debounced: many edits, one message) */
+  private scheduleBlocks() {
+    if (!this.ready) return;
+    clearTimeout(this.blocksTimer); this.blocksTimer = window.setTimeout(() => this.sendBlocks(true), 400);
+  }
+  private sendBlocks(invalidate: boolean) {
+    const out: number[] = [];
+    for (const p of this.props) { const it = LIBRARY[p.item]; if (!it.big || it.kind === 'car') continue; out.push(p.x0, p.y0, p.x1, p.y1, BUILDING_KINDS[it.kind] ?? 2); }
+    this.ground.blocks(new Float32Array(out));
+    if (invalidate) this.ground.invalidate([0, 0, MAP, MAP], false, 0, 'p');
   }
 
-  /** painter's order: a topological sort over props whose pictures overlap on screen */
-  reorder() {
-    const props = this.props, n = props.length;
-    const box = props.map(p => { const it = LIBRARY[p.item], k = p.scale, X = worldX(p.x, p.y), Y = worldY(p.x, p.y); const ax = (p.flip ? it.w - it.ax : it.ax) * k; return { x0: X - ax, x1: X - ax + it.w * k, y0: Y - it.ay * k, y1: Y - it.ay * k + it.h * k }; });
-    const cell = 800, buckets = new Map<string, number[]>();
-    for (let i = 0; i < n; i++) {
-      const b = box[i];
-      for (let gx = Math.floor(b.x0 / cell); gx <= Math.floor(b.x1 / cell); gx++) for (let gy = Math.floor(b.y0 / cell); gy <= Math.floor(b.y1 / cell); gy++) {
-        const k = gx + ',' + gy; let l = buckets.get(k); if (!l) buckets.set(k, (l = [])); l.push(i);
-      }
-    }
-    const behind: number[][] = Array.from({ length: n }, () => []);
-    const seenPair = new Set<number>();
-    const isBehind = (a: Prop, b: Prop) => {
-      const e = 0.02;
-      if (a.x1 <= b.x0 + e) return true; if (b.x1 <= a.x0 + e) return false;
-      if (a.y1 <= b.y0 + e) return true; if (b.y1 <= a.y0 + e) return false;
-      return a.x1 + a.y1 < b.x1 + b.y1;
-    };
-    for (const l of buckets.values()) for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) {
-      const a = l[i], b = l[j], key = a < b ? a * n + b : b * n + a; if (seenPair.has(key)) continue; seenPair.add(key);
-      const A = box[a], B = box[b]; if (A.x0 >= B.x1 || B.x0 >= A.x1 || A.y0 >= B.y1 || B.y0 >= A.y1) continue;
-      if (isBehind(props[a], props[b])) behind[b].push(a); else behind[a].push(b);
-    }
-    const idx = props.map((_, i) => i).sort((a, b) => (props[a].x1 + props[a].y1) - (props[b].x1 + props[b].y1));
-    const state = new Uint8Array(n), out: Prop[] = [];
-    const visit = (i: number) => {
-      if (state[i]) return; state[i] = 1;
-      const stack: [number, number][] = [[i, 0]];
-      while (stack.length) {
-        const top = stack[stack.length - 1], deps = behind[top[0]];
-        if (top[1] < deps.length) { const d = deps[top[1]++]; if (!state[d]) { state[d] = 1; stack.push([d, 0]); } }
-        else { stack.pop(); state[top[0]] = 2; out.push(props[top[0]]); }
-      }
-    };
-    for (const i of idx) visit(i);
-    this.order = out;
+  // ---------- network edits ----------
+  /** send the edits to the workers, refresh what depends on the network and mark the changed ground stale */
+  private commitNetwork(keepPrev = false, until = 0) {
+    const ops = this.edit.commit();
+    this.ground.netOps(ops);
+    if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
+    this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved);
+    this.syncLamps(); this.scheduleSave(); this.emit();
+  }
+  private afterLoad() {
+    const ops = this.edit.commit(true);
+    this.ground.netOps(ops);
+    this.syncAutoProps(this.net.autoProps, []);
+    this.syncLamps(); this.sendBlocks(false);
+    this.ground.invalidateAll();
   }
 
   // ---------- road routing ----------
@@ -233,30 +253,30 @@ export class Game {
     }
     return false;
   }
+  private propsNearLegs(legs: Leg[], hw: number) {
+    let bb: BBox | null = null; for (const l of legs) bb = unionBox(bb, [Math.min(l.a.x, l.b.x) - hw, Math.min(l.a.y, l.b.y) - hw, Math.max(l.a.x, l.b.x) + hw, Math.max(l.a.y, l.b.y) + hw]);
+    return bb ? [...this.propGrid.query(bb)].filter(p => this.propInLegs(p, legs, hw)) : [];
+  }
   finishRoute() {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
     const cls = this.cls, total = this.net.legsLength(legs), cost = Math.round(total * cls.cost);
     if (cost > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}`, 'warn'); return; }
-    const hw = cls.h + cls.walk;
-    const blocking = this.props.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car' && this.propInLegs(p, legs, hw));
+    const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
+    const blocking = near.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car');
     if (blocking.length) { this.toast(`${LIBRARY[blocking[0].item].name} is in the way — bulldoze it first`, 'warn'); return; }
-    const cleared = this.props.filter(p => !p.auto && !LIBRARY[p.item].big && this.propInLegs(p, legs, hw));
+    const cleared = near.filter(p => !p.auto && !LIBRARY[p.item].big);
     for (const p of cleared) this.removeProp(p);
     const now = performance.now(), dur = Math.min(4000, 700 + total * 70);
     const cum: number[] = []; let acc = 0; for (const l of legs) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
-    const pad = hw + 16;
-    const bb = legs.reduce<[number, number, number, number]>((b, l) => [Math.min(b[0], l.a.x, l.b.x), Math.min(b[1], l.a.y, l.b.y), Math.max(b[2], l.a.x, l.b.x), Math.max(b[3], l.a.y, l.b.y)], [Infinity, Infinity, -Infinity, -Infinity]);
-    this.ground.invalidate([bb[0] - pad, bb[1] - pad, bb[2] + pad, bb[3] + pad], true, now + dur + 150);
-    this.net.addLegs(legs, cls, this.lineStyle);
-    this.afterNetworkChange();
+    this.edit.addLegs(legs, cls, this.lineStyle);
+    this.commitNetwork(true, now + dur + 150);
     this.builds.push({ legs, cls, t0: now, dur, total, cum });
     this.money -= cost;
     this.route = [];
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()} for $${cost.toLocaleString()}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
   }
-  private afterNetworkChange() { this.syncAutoProps(); this.syncLamps(); this.reorder(); this.scheduleSave(); this.emit(); }
   private junctionClick(mx: number, my: number) {
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
     const n = this.net.nearestNode(t, spec.minDeg, 5);
@@ -264,10 +284,8 @@ export class Game {
     if (n.type === this.junctionType) { this.toast(`That junction already has ${spec.name.toLowerCase()}`); return; }
     if (spec.cost > this.money) { this.toast(`Not enough money: ${spec.name} costs $${spec.cost.toLocaleString()}`, 'warn'); return; }
     this.money -= spec.cost;
-    const reach = Math.max(...n.arms.map(a => a.h)) + 20;
-    this.ground.invalidate([n.x - reach, n.y - reach, n.x + reach, n.y + reach]);
-    this.net.setNodeType(n, this.junctionType);
-    this.afterNetworkChange();
+    this.edit.setNodeType(n, this.junctionType);
+    this.commitNetwork();
     this.puff(n.x, n.y, 8);
     if (this.junctionType === 'slip' && !n.arms.every(a => a.len >= 27)) this.toast('Slipways need long approaches (54 m+): short arms get plain corners', 'warn');
     else this.toast(`${spec.name} installed`, 'good');
@@ -276,13 +294,11 @@ export class Game {
     const t = this.tileAt(mx, my);
     if (first) {
       const p = this.propAt(mx, my);
-      if (p && !p.auto) { const it = LIBRARY[p.item]; this.removeProp(p); this.money += Math.round(it.cost * 0.5); if (it.kind === 'lamp') this.syncLamps(); this.reorder(); this.scheduleSave(); this.toast(`Removed ${it.name} (+$${Math.round(it.cost * 0.5).toLocaleString()})`); return; }
+      if (p && !p.auto) { const it = LIBRARY[p.item]; this.removeProp(p); this.money += Math.round(it.cost * 0.5); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name} (+$${Math.round(it.cost * 0.5).toLocaleString()})`); return; }
     }
     const piece = this.net.pieceNear(t); if (!piece) return;
-    const r = piece.seg.cls.h + 18, cx = (piece.p0.x + piece.p1.x) / 2, cy = (piece.p0.y + piece.p1.y) / 2;
-    this.ground.invalidate([cx - r, cy - r, cx + r, cy + r]);
-    this.net.removePiece(piece);
-    this.afterNetworkChange();
+    this.edit.removePiece(piece);
+    this.commitNetwork();
     this.hoverPiece = this.net.pieceNear(t);
     this.puff(t.x, t.y, 10);
   }
@@ -294,7 +310,11 @@ export class Game {
       if (r > 1 && Math.hypot(x + 0.5 - t.x, y + 0.5 - t.y) > r - 0.3) continue;
       const i = y * MAP + x; if (this.terrain[i] !== this.terrainType) { this.terrain[i] = this.terrainType; changed = true; }
     }
-    if (changed) { this.ground.invalidate([cx - r - 1, cy - r - 1, cx + r + 1, cy + r + 1]); this.scheduleSave(); }
+    if (!changed) return;
+    const x0 = clamp(cx - r, 0, MAP), y0 = clamp(cy - r, 0, MAP), x1 = clamp(cx + r + 1, 0, MAP), y1 = clamp(cy + r + 1, 0, MAP), w = x1 - x0, h = y1 - y0, data = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) data.set(this.terrain.subarray((y0 + y) * MAP + x0, (y0 + y) * MAP + x1), y * w);
+    this.ground.terrain(x0, y0, w, h, data);
+    this.ground.invalidate([x0 - 1, y0 - 1, x1 + 1, y1 + 1]); this.scheduleSave();
   }
   private placeAt(mx: number, my: number) {
     const t = this.tileAt(mx, my), it = LIBRARY[this.libIndex], k = this.placeScale;
@@ -304,37 +324,37 @@ export class Game {
     this.money -= it.cost;
     this.addProp(this.libIndex, t.x, t.y, this.flip, k);
     if (it.kind === 'lamp') this.syncLamps();
-    this.reorder(); this.scheduleSave(); this.emit();
+    this.scheduleSave(); this.emit();
     this.puff(t.x, t.y, 4);
   }
   propAt(mx: number, my: number): Prop | null {
-    const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z;
-    for (let i = this.order.length - 1; i >= 0; i--) {
-      const p = this.order[i], it = LIBRARY[p.item], k = p.scale, px = worldX(p.x, p.y), py = worldY(p.x, p.y), ax = (p.flip ? it.w - it.ax : it.ax) * k;
-      if (X >= px - ax && X <= px - ax + it.w * k && Y >= py - it.ay * k && Y <= py - it.ay * k + it.h * k) {
-        const img = this.images[p.item]; if (!img.naturalWidth) return p;
-        const u = (X - (px - ax)) / (it.w * k), v = (Y - (py - it.ay * k)) / (it.h * k);
-        if (sampleAlpha(img, p.flip ? 1 - u : u, v) > 20) return p;
-      }
+    const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z, r = [0, 0, 0, 0];
+    for (const p of this.sprites.at(X, Y)) {
+      spriteRect(p, r); if (X < r[0] || X > r[2] || Y < r[1] || Y > r[3]) continue;
+      const it = LIBRARY[p.item], [page, u0, v0, u1, v1] = it.tex, a = this.pageAlpha[page];
+      if (!a) return p;
+      let u = (X - r[0]) / (r[2] - r[0]); if (p.flip) u = 1 - u;
+      const v = (Y - r[1]) / (r[3] - r[1]), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
+      if (a.data[(py * a.w + px) * 4 + 3] > 20) return p;
     }
     return null;
   }
-  deleteSelected() { if (!this.selected) return; const p = this.selected, it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto) this.money += Math.round(it.cost * 0.5); if (it.kind === 'lamp') this.syncLamps(); this.reorder(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit(); }
+  deleteSelected() { if (!this.selected) return; const p = this.selected, it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto) this.money += Math.round(it.cost * 0.5); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit(); }
   flipSelected() {
     const p = this.selected; if (!p) return; const it = LIBRARY[p.item];
     const err = this.canPlace(it, p.x, p.y, !p.flip, p.scale, p); if (err) { this.toast(err, 'warn'); return; }
-    p.flip = !p.flip; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, p.scale)); this.reorder(); this.scheduleSave(); this.emit();
+    p.flip = !p.flip; this.propChanged(p); this.scheduleSave(); this.emit();
   }
   scaleSelected(f: number) {
     const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, 1.6);
     const err = this.canPlace(it, p.x, p.y, p.flip, k, p); if (err) { this.toast(err, 'warn'); return; }
-    p.scale = k; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, k)); this.reorder(); this.scheduleSave(); this.emit();
+    p.scale = k; this.propChanged(p); this.scheduleSave(); this.emit();
   }
 
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
     const mx = e.offsetX, my = e.offsetY;
-    this.canvas.setPointerCapture(e.pointerId);
+    this.overlay.setPointerCapture(e.pointerId);
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
@@ -366,7 +386,7 @@ export class Game {
         const t = this.tileAt(mx, my), p = d.prop, it = LIBRARY[p.item], s0 = this.tileAt(d.sx, d.sy);
         const nx = d.ox! + (t.x - s0.x), ny = d.oy! + (t.y - s0.y);
         this.placeError = this.canPlace(it, nx, ny, p.flip, p.scale, p);
-        p.x = nx; p.y = ny; Object.assign(p, this.footprint(it, nx, ny, p.flip, p.scale));
+        p.x = nx; p.y = ny; this.propChanged(p);
       }
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
     if (this.tool === 'objects') this.placeError = this.canPlace(LIBRARY[this.libIndex], this.hover.x, this.hover.y, this.flip, this.placeScale);
@@ -378,9 +398,9 @@ export class Game {
     if (!d) return;
     if (d.kind === 'prop' && d.prop && d.moved) {
       const p = d.prop, it = LIBRARY[p.item];
-      if (this.placeError) { p.x = d.ox!; p.y = d.oy!; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, p.scale)); this.toast(this.placeError, 'warn'); this.placeError = ''; }
+      if (this.placeError) { p.x = d.ox!; p.y = d.oy!; this.propChanged(p); this.toast(this.placeError, 'warn'); this.placeError = ''; }
       if (it.kind === 'lamp') this.syncLamps();
-      this.reorder(); this.scheduleSave();
+      this.scheduleSave();
     }
   }
   pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; }
@@ -420,6 +440,8 @@ export class Game {
     }
   }
   keyUp(e: KeyboardEvent) { this.keys.delete(e.key); }
+  /** test traffic: n cars driving the network (0 = none) */
+  setTraffic(n: number) { this.traffic = n > 0 ? new TestTraffic(this.net, n) : null; this.emit(); }
 
   // ---------- economy / save ----------
   private linked(p: Prop) { return this.net.rectOcc(p.x0 - 3, p.y0 - 3, p.x1 + 3, p.y1 + 3) > 0; }
@@ -432,102 +454,104 @@ export class Game {
     this.money += this.lastIncome; this.day++;
     this.scheduleSave(); this.emit();
   }
-  scheduleSave() { clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => this.save(), 800); }
-  save() {
-    try {
-      let bin = ''; for (let i = 0; i < this.terrain.length; i++) bin += String.fromCharCode(this.terrain[i]);
-      const data: SaveData = {
-        version: 2, map: MAP, terrain: btoa(bin),
-        segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style]),
-        nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain').map(n => [n.x, n.y, n.type]),
-        props: this.props.filter(p => !p.auto).map(p => [p.item, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
-        money: this.money, day: this.day, cam: { ...this.cam },
-      };
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-    } catch { /* storage unavailable */ }
+  scheduleSave() { if (this.benchMode) return; clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => void this.save(), 800); }
+  benchMode = false;
+  async save() {
+    if (this.benchMode) return 0;
+    const d: SaveV3 = {
+      version: SAVE_VERSION, map: MAP, terrain: rle(this.terrain),
+      segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style]),
+      nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain').map(n => [n.x, n.y, n.type]),
+      props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
+      money: this.money, day: this.day, cam: { ...this.cam },
+    };
+    try { return await writeSave(d); } catch { return 0; }
   }
-  load(): boolean {
+  private load(d: SaveV3): boolean {
     try {
-      const raw = localStorage.getItem(SAVE_KEY); if (!raw) return false;
-      const d = JSON.parse(raw) as SaveData; if (d.version !== 2 || d.map !== MAP) return false;
-      const bin = atob(d.terrain); for (let i = 0; i < this.terrain.length && i < bin.length; i++) this.terrain[i] = bin.charCodeAt(i);
-      for (const [ax, ay, bx, by, cls, style] of d.segs) this.net.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle);
-      for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) n.type = type as NodeType; }
-      this.props = []; for (const [item, x, y, flip, scale] of d.props) if (LIBRARY[item]) this.addProp(item, x, y, !!flip, scale);
+      unrle(d.terrain, this.terrain);
+      for (const [ax, ay, bx, by, cls, style] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle);
+      this.net.rebuild(true);
+      for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) this.edit.setNodeType(n, type as NodeType); }
+      const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
+      for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
       this.money = d.money; this.day = d.day; if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
       return true;
-    } catch { return false; }
+    } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
-    this.terrain.fill(0); this.net = new RoadNetwork(); this.ground = new GroundRenderer(this.terrain, this.net, this.tex);
-    this.props = []; this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = [];
+    this.terrain.fill(0); this.edit.clear();
+    for (const p of [...this.props]) this.removeProp(p);
+    this.sprites.clear(); this.autoByKey.clear();
+    this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = []; this.traffic = null;
+    this.ground.terrain(0, 0, MAP, MAP, this.terrain);
   }
-  newTown() { this.reset(); this.seedTown(); this.net.rebuild(); this.syncAutoProps(); this.syncLamps(false); this.reorder(); this.save(); this.emit(); }
-  clearTown() { this.reset(); this.net.rebuild(); this.reorder(); this.save(); this.emit(); }
+  newTown() { this.reset(); this.seedTown(); this.afterLoad(); void this.save(); this.emit(); }
+  clearTown() { this.reset(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
 
   /** A starter Maple Falls showing every road type: highway with a 45° approach, a boulevard, an avenue, a roundabout, lights with slipways, streets and a lane. */
   seedTown() {
-    const net = this.net, byId = (id: string) => LIBRARY.findIndex(i => i.id === id);
-    const legs = (pts: [number, number][]): Leg[] => pts.slice(1).map((p, i) => ({ a: { x: pts[i][0], y: pts[i][1] }, b: { x: p[0], y: p[1] } }));
-    net.addLegs(legs([[10, 50], [24, 36], [146, 36], [146, 64]]), CLASS.road, 0);
-    net.addLegs(legs([[80, 36], [80, 124]]), CLASS.boulevard, 0);
-    net.addLegs(legs([[36, 80], [128, 80]]), CLASS.avenue, 0);
-    net.addLegs(legs([[54, 80], [54, 108], [106, 108], [106, 80]]), CLASS.street, 0);
-    net.addLegs(legs([[54, 80], [54, 58]]), CLASS.street, 1);
-    net.addLegs(legs([[60, 124], [100, 124]]), CLASS.street, 0);
-    net.addLegs(legs([[106, 96], [122, 80]]), CLASS.street, 0);
-    net.addLegs(legs([[54, 94], [72, 94]]), CLASS.lane, 0);
-    net.addLegs(legs([[120, 108], [106, 108]]), CLASS.street, 2);
-    const typed = (x: number, y: number, t: NodeType) => { const n = net.nodeAt({ x, y }); if (n) n.type = t; };
+    const O = SEED_OFFSET, net = this.net, byId = (id: string) => LIBRARY.findIndex(i => i.id === id);
+    const legs = (pts: [number, number][]): Leg[] => pts.slice(1).map((p, i) => ({ a: { x: pts[i][0] + O, y: pts[i][1] + O }, b: { x: p[0] + O, y: p[1] + O } }));
+    const road = (pts: [number, number][], c: RoadClass, s: LineStyle) => this.edit.addLegs(legs(pts), c, s);
+    road([[10, 50], [24, 36], [146, 36], [146, 64]], CLASS.road, 0);
+    road([[80, 36], [80, 124]], CLASS.boulevard, 0);
+    road([[36, 80], [128, 80]], CLASS.avenue, 0);
+    road([[54, 80], [54, 108], [106, 108], [106, 80]], CLASS.street, 0);
+    road([[54, 80], [54, 58]], CLASS.street, 1);
+    road([[60, 124], [100, 124]], CLASS.street, 0);
+    road([[106, 96], [122, 80]], CLASS.street, 0);
+    road([[54, 94], [72, 94]], CLASS.lane, 0);
+    road([[120, 108], [106, 108]], CLASS.street, 2);
+    net.rebuild(true);
+    const typed = (x: number, y: number, t: NodeType) => { const n = net.nodeAt({ x: x + O, y: y + O }); if (n) this.edit.setNodeType(n, t); };
     typed(80, 36, 'slip'); typed(80, 80, 'roundabout'); typed(80, 108, 'signal'); typed(106, 80, 'signal');
     net.rebuild();
     // helpers: a sprite facing +y with its front edge on frontY; flipped sprites face +x with their front edge on frontX
-    const front = (id: string, cx: number, frontY: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = cx - b.dx * k / 2, y = frontY - (b.dy * k / 2 + b.hy * k / 2); if (!this.canPlace(it, x, y, false, k)) this.addProp(i, x, y, false, k); };
-    const side = (id: string, frontX: number, cy: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = frontX - (b.dy * k / 2 + b.hy * k / 2), y = cy - b.dx * k / 2; if (!this.canPlace(it, x, y, true, k)) this.addProp(i, x, y, true, k); };
-    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i >= 0 && !this.canPlace(LIBRARY[i], x, y, flip, k)) this.addProp(i, x, y, flip, k); };
-    // avenue shops (north side, facing the avenue)
+    const front = (id: string, cx: number, frontY: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = cx + O - b.dx * k / 2, y = frontY + O - (b.dy * k / 2 + b.hy * k / 2); if (!this.canPlace(it, x, y, false, k)) this.addProp(i, x, y, false, k); };
+    const side = (id: string, frontX: number, cy: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = frontX + O - (b.dy * k / 2 + b.hy * k / 2), y = cy + O - b.dx * k / 2; if (!this.canPlace(it, x, y, true, k)) this.addProp(i, x, y, true, k); };
+    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i >= 0 && !this.canPlace(LIBRARY[i], x + O, y + O, flip, k)) this.addProp(i, x + O, y + O, flip, k); };
     front('town:postoffice', 45, 75.4); front('town:bakery', 54, 75.4); front('world:arcade', 63, 75.4);
     front('world:video_rental', 96, 75.4); front('town:grocery', 106, 75.4); front('world:diner', 115, 75.4); front('town:pharmacy', 123, 75.4);
     front('town:laundromat', 40, 118.9); front('town:fish_tackle', 128, 100);
-    // civic
     front('world:church', 54, 54.4); front('world:primary_school', 46, 32.2); front('ref:building-gas-canopy', 112, 32.2); side('town:firestation', 73.9, 62);
     front('world:barn', 30, 61); put('ref:landmark-windmill', 22, 72); put('world:watertower', 138, 76); put('world:gazebo', 102, 56);
-    // houses: north of the loop street and the south street, west of the cul-de-sac street, north of the lane
     for (const [id, x] of [['world:house_1', 61], ['world:house_3', 69], ['gen:house-splitlevel', 91], ['world:house_4', 99]] as [string, number][]) front(id, x, 104.9);
     for (const [id, x] of [['gen:house-duplex', 66], ['world:house_1', 74], ['gen:house-l-ranch', 88], ['world:house_3', 96]] as [string, number][]) front(id, x, 120.9);
     for (const [id, y] of [['gen:house-ranch-long', 64], ['world:house_4', 72], ['gen:house-farmhouse-wrap', 88], ['gen:house-l-shape', 100]] as [string, number][]) side(id, 50.9, y);
     front('world:house_4', 60, 92.4); front('static:garage_timber', 67, 92.4);
-    // terrain: park, field, plaza, driveways
-    for (let y = 44; y < 66; y++) for (let x = 90; x < 124; x++) this.terrain[y * MAP + x] = 1;
-    for (let y = 44; y < 60; y++) for (let x = 20; x < 42; x++) this.terrain[y * MAP + x] = 4;
-    for (let y = 70; y < 75; y++) for (let x = 40; x < 50; x++) this.terrain[y * MAP + x] = 5;
-    for (const x of [64, 72, 94, 102]) for (let y = 105; y < 106; y++) this.terrain[y * MAP + x] = 6;
-    // trees, furniture, vehicles, Halloween
+    const fill = (x0: number, y0: number, x1: number, y1: number, t: number) => { for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) this.terrain[(y + O) * MAP + x + O] = t; };
+    fill(90, 44, 124, 66, 1); fill(20, 44, 42, 60, 4); fill(40, 70, 50, 75, 5);
+    for (const x of [64, 72, 94, 102]) fill(x, 105, x + 1, 106, 6);
     const trees = ['world:tree_oak_0', 'world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold', 'world:tree_pine_0', 'ref:tree-spruce-blue', 'world:tree_pine_1'];
     const spots: [number, number][] = [[94, 48], [100, 50], [108, 47], [114, 52], [120, 58], [96, 60], [112, 62], [118, 48], [60, 113], [68, 113], [92, 113], [100, 113], [44, 86], [46, 100], [112, 90], [118, 96], [130, 56], [134, 48], [30, 72], [36, 66], [138, 92], [132, 100], [60, 44], [66, 48], [24, 60]];
     spots.forEach(([x, y], i) => put(trees[(i * 5) % trees.length], x, y, 0.95 + ((i * 7) % 4) * 0.08));
-    // street lamps on the sidewalk's outer half along every kerbed street, both sides, staggered (their reflections light the road)
-    const lampId = byId('world:streetlamp'), lampIt = LIBRARY[lampId], lb = lampIt.boxes[0];
-    for (const r of net.routes) {
-      if (r.cls.walkTex !== 'slabs' || r.closed) continue;
-      const n = r.pts.length;
-      for (let k = 0; k + 1 < n; k++) {
-        const a = r.pts[k], b = r.pts[k + 1], dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy); if (L < 6) continue;
-        const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, off = r.cls.h + r.cls.walk * 0.62, step = r.cls.id === 'lane' ? 12 : 8;
-        for (let s = 4; s < L - 3; s += step) for (const side of [1, -1]) {
-          const t = s + (side > 0 ? 0 : step / 2); if (t > L - 3) continue;
-          const cx = a.x + ux * t + nx * side * off, cy = a.y + uy * t + ny * side * off, x = cx - lb.dx * 0.9 / 2, y = cy - lb.dy * 0.9 / 2;
-          if (!this.canPlace(lampIt, x, y, false, 0.9)) this.addProp(lampId, x, y, false, 0.9);
-        }
-      }
-    }
+    this.lampsAlongRoads(this.net);
     put('world:hydrant', 60, 84.2, 0.9); put('world:mailbox', 68, 76.3, 0.9); put('world:bench', 92, 84.1, 0.9); put('world:trashcan', 94, 84.1, 0.9); put('town:bus_stop', 66, 84.1, 0.95);
     put('town:stop_sign', 57.4, 104.6, 0.9); put('town:phone_booth', 101, 76.3, 0.9); put('town:picnic_table', 104, 60, 0.95); put('town:bike_rack', 60, 76.3, 0.9); put('town:utility_pole', 36, 86, 1);
     put('world:car_0', 48, 37.2); put('static:pickup_n', 104, 34.9); put('world:schoolbus', 130, 37.3); put('static:van_e', 60, 82.2); put('world:car_2', 110, 77.8);
     put('world:car_1', 82, 60); put('static:compact_n', 76, 100); put('world:car_3', 66, 106.9); put('static:compact_e', 96, 109.1, 1, true);
     put('world:scarecrow', 30, 52, 0.9); put('ref:halloween-hay-bales', 34, 56, 0.9); put('world:pumpkin_0', 59, 101.5, 0.9); put('world:pumpkin_1', 91.5, 101.6, 0.9); put('gen:inflatable-pumpkin', 73, 117.8, 0.9);
     put('world:candy_stand', 110, 58, 0.9); put('ref:halloween-pumpkin-cluster', 48, 72.5, 0.9); put('ref:halloween-sheet-ghost', 97, 101, 0.9);
-    this.cam = { X: worldX(84, 86), Y: worldY(84, 86), z: 0.17 };
+    this.cam = { X: worldX(84 + O, 86 + O), Y: worldY(84 + O, 86 + O), z: 0.17 };
+  }
+  /** street lamps on the sidewalk's outer half along every kerbed street, both sides, staggered */
+  lampsAlongRoads(net: RoadNetwork, every = 1) {
+    const lampId = LIBRARY.findIndex(i => i.id === 'world:streetlamp'), lampIt = LIBRARY[lampId], lb = lampIt.boxes[0];
+    let n = 0;
+    for (const r of net.routes) {
+      if (r.cls.walkTex !== 'slabs' || r.closed) continue;
+      for (let k = 0; k + 1 < r.pts.length; k++) {
+        const a = r.pts[k], b = r.pts[k + 1], dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy); if (L < 6) continue;
+        const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, off = r.cls.h + r.cls.walk * 0.62, step = (r.cls.id === 'lane' ? 12 : 8) * every;
+        for (let s = 4; s < L - 3; s += step) for (const side of [1, -1]) {
+          const t = s + (side > 0 ? 0 : step / 2); if (t > L - 3) continue;
+          const cx = a.x + ux * t + nx * side * off, cy = a.y + uy * t + ny * side * off, x = cx - lb.dx * 0.9 / 2, y = cy - lb.dy * 0.9 / 2;
+          if (!this.canPlace(lampIt, x, y, false, 0.9)) { this.addProp(lampId, x, y, false, 0.9); n++; }
+        }
+      }
+    }
+    return n;
   }
 
   // ---------- fx ----------
@@ -538,10 +562,12 @@ export class Game {
     const p = clamp((now - b.t0) / b.dur, 0, 1), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
     return e * b.total;
   }
-  /** screen-space clip of what has been built so far */
-  private revealPath(now: number): Path2D | null {
+  /** the build reveal as an alpha mask in screen space (half resolution) */
+  private revealMask(now: number) {
     if (!this.builds.length) return null;
-    const path = new Path2D();
+    const W = Math.ceil(this.cw / 2), H = Math.ceil(this.ch / 2);
+    if (!this.mask || this.mask.width !== W || this.mask.height !== H) this.mask = new OffscreenCanvas(W, H);
+    const g = this.mask.getContext('2d')!; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.fillStyle = '#fff'; g.beginPath();
     for (const b of this.builds) {
       const front = this.revealFront(b, now), pad = b.cls.h + b.cls.walk + 14;
       b.legs.forEach((l, i) => {
@@ -549,42 +575,107 @@ export class Game {
         const u = mul(d, 1 / len), n = perp(u), done = rl >= len - 1e-6;
         const s = sub(l.a, mul(u, pad)), e = add(l.a, mul(u, rl + (done ? pad : 0)));
         const c = [add(s, mul(n, pad)), add(e, mul(n, pad)), sub(e, mul(n, pad)), sub(s, mul(n, pad))].map(q => this.screen(q.x, q.y));
-        path.moveTo(c[0].x, c[0].y); for (let k = 1; k < 4; k++) path.lineTo(c[k].x, c[k].y); path.closePath();
+        g.moveTo(c[0].x / 2, c[0].y / 2); for (let k = 1; k < 4; k++) g.lineTo(c[k].x / 2, c[k].y / 2); g.closePath();
       });
     }
-    return path;
+    g.fill(); return this.mask;
   }
 
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
-    const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
+    const t0 = performance.now();
+    const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();
     const sp = 900 / this.cam.z * dt; let kx = 0, ky = 0;
     if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
     if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
     if (kx || ky) { this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
+    this.onFrame?.(now, dt);
     this.dayTimer += dt; if (this.dayTimer >= DAY_SECONDS) { this.dayTimer -= DAY_SECONDS; this.tickDay(); }
     for (const b of this.builds) {
       const front = this.revealFront(b, now); if (front >= b.total) continue;
       b.legs.forEach((l, i) => {
         const d = sub(l.b, l.a), len = vlen(d), rl = front - b.cum[i]; if (rl < 0 || rl > len) return;
         const u = mul(d, 1 / len), n = perp(u), f = add(l.a, mul(u, rl));
-        for (let k = 0; k < 3; k++) { const s = (Math.random() - 0.5) * 2 * b.cls.h, q = add(f, mul(n, s)); this.particles.push({ x: q.x, y: q.y, vx: (Math.random() - 0.5) * 1.5 - u.x * 0.4, vy: (Math.random() - 0.5) * 1.5 - u.y * 0.4, vz: 0.8 + Math.random() * 1.6, z: 0, life: 0.5 + Math.random() * 0.6, age: 0, r: 0.3 + Math.random() * 0.4 }); }
+        for (let k = 0; k < 3; k++) { const s = (Math.random() - 0.5) * 2 * b.cls.h, q = add(f, mul(n, s)); this.particles.push({ x: q.x, y: q.y, vx: (Math.random() - 0.5) * 1.5 - u.x * 0.4, vy: (Math.random() - 0.5) * 1.5 - u.y * 0.4, vz: 0.8 + Math.random() * 1.6, z: 0, life: 0.7 + Math.random() * 0.7, age: 0, r: 0.3 + Math.random() * 0.5 }); }
       });
     }
     this.builds = this.builds.filter(b => now < b.t0 + b.dur + 150);
     for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
     this.particles = this.particles.filter(p => p.age < p.life);
+    this.traffic?.step(dt);
+    const t1 = performance.now();
     this.draw(now);
+    const t2 = performance.now();
+    // perf counters (rolling one second)
+    this.frameTimes.push(frameMs); if (this.frameTimes.length > 60) this.frameTimes.shift();
+    const avg = this.frameTimes.reduce((s, v) => s + v, 0) / this.frameTimes.length;
+    Object.assign(this.perf, { fps: 1000 / avg, frameMs: avg, cpuMs: t2 - t0, drawMs: t2 - t1, instances: this.gl.stats.instances, draws: this.gl.stats.draws, uploadKB: this.gl.stats.uploadFloats * 4 / 1024, chunksPending: this.ground.busy });
+    this.perf.frames++;
   };
+  /** a hook for the benchmark's camera path */
+  onFrame: ((now: number, dt: number) => void) | null = null;
 
   private draw(now: number) {
-    const ctx = this.ctx, ze = this.cam.z * this.dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = '#1b2816'; ctx.fillRect(0, 0, this.cw, this.ch);
-    this.ground.draw(ctx, this.cam, this.cw, this.ch, this.dpr, now, this.revealPath(now), 7);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
+    const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
+    gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
+    const X0 = cam.X - this.cw / 2 / ze, Y0 = cam.Y - this.ch / 2 / ze, X1 = cam.X + this.cw / 2 / ze, Y1 = cam.Y + this.ch / 2 / ze;
+    const dist = (cx: number, cy: number) => Math.hypot(cx - cam.X, cy - cam.Y) * ze;
+    // ---- planner map: the whole view at the planner tier, otherwise under any chunk not baked yet
+    const pL = planLevelFor(ze), pi0 = Math.floor(X0 / PLAN_W), pi1 = Math.floor(X1 / PLAN_W), pj0 = Math.floor(Y0 / PLAN_H), pj1 = Math.floor(Y1 / PLAN_H);
+    const drawPlan = () => {
+      for (let j = pj0; j <= pj1; j++) for (let i = pi0; i <= pi1; i++) {
+        const t = this.ground.tile('p', i, j); this.ground.need(t, pL, (tier === 'planner' ? 0 : 1e6) + dist((i + 0.5) * PLAN_W, (j + 0.5) * PLAN_H), now);
+        if (t.tex) gl.drawChunk(t.tex, i * PLAN_W, j * PLAN_H, (i + 1) * PLAN_W, (j + 1) * PLAN_H);
+      }
+    };
+    if (tier === 'planner') {
+      drawPlan();
+      // vehicles as dots coloured by type
+      const tr = this.traffic;
+      if (tr) {
+        const pts = new Float32Array(tr.n * POINT_STRIDE); let n = 0;
+        for (let i = 0; i < tr.n; i++) { const X = worldX(tr.px[i], tr.py[i]), Y = worldY(tr.px[i], tr.py[i]); if (X < X0 || X > X1 || Y < Y0 || Y > Y1) continue; const c = CAR_COLOURS[tr.kind[i] % CAR_COLOURS.length], o = n * POINT_STRIDE; pts[o] = X; pts[o + 1] = Y; pts[o + 2] = c[0]; pts[o + 3] = c[1]; pts[o + 4] = c[2]; pts[o + 5] = 1; n++; }
+        gl.upload(pts, n * POINT_STRIDE); gl.drawPoints(0, n, Math.max(1.5, Math.min(4, 5 * ze / 0.035)) * (this.dpr > 1 ? 1.5 : 1));
+      }
+    } else {
+      // ---- ground: full chunks close up, district chunks (4 x 4, lite) further out
+      const mid = z < MID_BELOW, kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H, L = mid ? midLevelFor(ze) : levelFor(ze);
+      const i0 = Math.floor(X0 / CW), i1 = Math.floor(X1 / CW), j0 = Math.floor(Y0 / CH), j1 = Math.floor(Y1 / CH);
+      // a chunk not baked yet shows its piece of the planner map meanwhile
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const t = this.ground.tile(kind, i, j); if (t.tex || t.prev) continue;
+        const X = i * CW, Y = j * CH, pi = Math.floor(X / PLAN_W), pj = Math.floor(Y / PLAN_H), p = this.ground.tile('p', pi, pj);
+        this.ground.need(p, pL, 1e6 + dist(X, Y), now);
+        if (p.tex) gl.drawChunk(p.tex, X, Y, X + CW, Y + CH, false, 1, [(X - pi * PLAN_W) / PLAN_W, (Y - pj * PLAN_H) / PLAN_H, (X + CW - pi * PLAN_W) / PLAN_W, (Y + CH - pj * PLAN_H) / PLAN_H]);
+      }
+      const mask = this.revealMask(now); if (mask) gl.setMask(mask);
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const t = this.ground.tile(kind, i, j);
+        this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now);
+        const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
+        if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); }
+        else if (t.tex) gl.drawChunk(t.tex, ...r);
+      }
+      // ---- sprites: every visible tile in one instanced draw (each instance clipped to its tile), vehicles merged in
+      const vis: { i: number; j: number }[] = [];
+      for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
+      const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
+      const movers: Drawable[] = this.traffic ? this.traffic.visible(Math.min(...c.map(p => p.x)) - pad, Math.min(...c.map(p => p.y)) - pad, Math.max(...c.map(p => p.x)) + pad, Math.max(...c.map(p => p.y)) + pad) : [];
+      const f = this.sprites.frame(vis, movers), street = tier === 'street';
+      const [sAt, pAt] = gl.uploadParts([[f.shadows, street ? f.shadowFloats : 0], [f.stream, f.floats]]);
+      if (street) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE);
+      gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
+    }
+    this.ground.pump(); this.ground.settle(now); this.ground.evict(now);
+    this.drawOverlay(now);
+  }
+
+  private drawOverlay(now: number) {
+    const ctx = this.ov, ze = this.cam.z * this.dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
     if (this.showGrid && this.cam.z > 0.12) {
       const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
       const x0 = clamp(Math.floor(Math.min(c0.x, top.x)), 0, MAP), x1 = clamp(Math.ceil(Math.max(c1.x, bot.x)), 0, MAP), y0 = clamp(Math.floor(Math.min(c1.y, top.y)), 0, MAP), y1 = clamp(Math.ceil(Math.max(c0.y, bot.y)), 0, MAP);
@@ -593,31 +684,16 @@ export class Game {
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
     }
     this.drawGroundOverlays(ctx);
-    const margin = 600 * ze;
-    for (const p of this.order) {
-      const it = LIBRARY[p.item], k = p.scale * ze, s = this.screen(p.x, p.y), ax = (p.flip ? it.w - it.ax : it.ax) * k;
-      const x = s.x - ax, y = s.y - it.ay * k, w = it.w * k, h = it.h * k;
-      if (x + w < -margin || y + h < -margin || x > this.cw + margin || y > this.ch + margin) continue;
-      const img = this.images[p.item]; if (!img.naturalWidth) continue;
-      if (!it.big && it.kind !== 'fencex' && it.kind !== 'fencey') {
-        const fw = (p.x1 - p.x0), fh = (p.y1 - p.y0), c = this.screen((p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2);
-        ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(c.x, c.y, Math.max(2, (fw + fh) / 2 * HW * ze * 0.75), Math.max(1, (fw + fh) / 2 * HH * ze * 0.75), 0, 0, Math.PI * 2); ctx.fill();
-      }
-      if (p === this.selected || p === this.hoverProp) {
-        this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.fillStyle = p === this.selected ? 'rgba(255,190,60,0.25)' : 'rgba(255,255,255,0.12)'; ctx.fill(); ctx.strokeStyle = p === this.selected ? '#ffbe3c' : 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
-      }
-      if (p.flip) { ctx.save(); ctx.translate(x + w, y); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, w, h); ctx.restore(); }
-      else ctx.drawImage(img, x, y, w, h);
+    for (const p of [this.selected, this.hoverProp]) {
+      if (!p) continue;
+      this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = p === this.selected ? 'rgba(255,190,60,0.25)' : 'rgba(255,255,255,0.12)'; ctx.fill(); ctx.strokeStyle = p === this.selected ? '#ffbe3c' : 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
     }
     if (this.tool === 'objects' && this.hover && !this.dragging) {
       const it = LIBRARY[this.libIndex], k = this.placeScale, f = this.footprint(it, this.hover.x, this.hover.y, this.flip, k), ok = !this.placeError;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(f.x0, f.y0, f.x1 - f.x0, f.y1 - f.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = ok ? 'rgba(90,220,120,0.3)' : 'rgba(240,70,60,0.35)'; ctx.fill(); ctx.strokeStyle = ok ? '#6ee7a0' : '#f87171'; ctx.lineWidth = 2; ctx.stroke();
-      const img = this.images[this.libIndex], s = this.screen(this.hover.x, this.hover.y), kk = k * ze, ax = (this.flip ? it.w - it.ax : it.ax) * kk;
-      ctx.globalAlpha = ok ? 0.8 : 0.45;
-      if (img.naturalWidth) { if (this.flip) { ctx.save(); ctx.translate(s.x - ax + it.w * kk, s.y - it.ay * kk); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0, it.w * kk, it.h * kk); ctx.restore(); } else ctx.drawImage(img, s.x - ax, s.y - it.ay * kk, it.w * kk, it.h * kk); }
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = ok ? 0.8 : 0.45; this.drawSprite2D(ctx, { item: this.libIndex, x: this.hover.x, y: this.hover.y, flip: this.flip, scale: k, ...f }); ctx.globalAlpha = 1;
     }
     // construction front: striped barrier, cones and dust
     for (const b of this.builds) {
@@ -640,6 +716,15 @@ export class Game {
       const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
+  }
+  /** one sprite on the 2D overlay (placement ghost), from the atlas page image */
+  private drawSprite2D(ctx: CanvasRenderingContext2D, d: Drawable) {
+    const it = LIBRARY[d.item], img = this.pageImages[it.tex[0]]; if (!img?.naturalWidth) return;
+    const r = spriteRect(d), ze = this.cam.z * this.dpr, W = img.naturalWidth, H = img.naturalHeight;
+    const x0 = (r[0] - this.cam.X) * ze + this.cw / 2, y0 = (r[1] - this.cam.Y) * ze + this.ch / 2, w = (r[2] - r[0]) * ze, h = (r[3] - r[1]) * ze;
+    const [, u0, v0, u1, v1] = it.tex;
+    ctx.save(); if (d.flip) { ctx.translate(x0 + w, y0); ctx.scale(-1, 1); } else ctx.translate(x0, y0);
+    ctx.drawImage(img, u0 * W, v0 * H, (u1 - u0) * W, (v1 - v0) * H, 0, 0, w, h); ctx.restore();
   }
 
   private drawGroundOverlays(ctx: CanvasRenderingContext2D) {
@@ -676,17 +761,4 @@ export class Game {
       ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
     }
   }
-}
-
-// alpha sampling for picking (cached, small)
-const alphaCache = new WeakMap<HTMLImageElement, { w: number; h: number; data: Uint8ClampedArray }>();
-function sampleAlpha(img: HTMLImageElement, u: number, v: number) {
-  let e = alphaCache.get(img);
-  if (!e) {
-    const w = Math.min(96, img.naturalWidth), h = Math.max(1, Math.round(img.naturalHeight * w / img.naturalWidth));
-    const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true })!; g.drawImage(img, 0, 0, w, h);
-    e = { w, h, data: g.getImageData(0, 0, w, h).data }; alphaCache.set(img, e);
-  }
-  const x = clamp(Math.floor(u * e.w), 0, e.w - 1), y = clamp(Math.floor(v * e.h), 0, e.h - 1);
-  return e.data[(y * e.w + x) * 4 + 3];
 }

@@ -1,107 +1,92 @@
-import { CHUNK_H, CHUNK_W, HH, HW, MAP, levelFor, mulberry, tileOf, worldX, worldY } from './iso';
-import { offsetPolyline, roundPieces, roundedPath, type BBox, type Decal, type Feature, type LineRec, type RoadNetwork, type SlabRun } from './network';
-import { MOSAIC_TILES, type Textures, type TexName } from './textures';
+import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
+import { offsetPolyline, roundPieces, roundedPath, type BBox, type Decal, type Feature, type FxView, type LineRec, type RoadNetwork, type SlabRun } from './network';
+import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
 import { POOL_ANCHOR, PPM } from './ground-art';
 
 const TERRAIN_TEX: TexName[] = ['grass', 'meadow', 'dirt', 'gravel', 'field', 'paving', 'pad'];
 /** terrain types drawn on top of the sidewalk (driveways / plazas may cross it) */
 const OVER_WALK = new Set([5, 6]);
-const PIXEL_BUDGET = 30e6;
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
 /** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m) */
 const CURB_TOP = 0.065, CURB_JOINT = 0.04, FACE_WORLD = 7.5, GUTTER = 0.2;
 const SLAB_LEN = 1.25;
 const YELLOW = 'rgba(246,168,36,0.93)', WHITE = 'rgba(229,225,207,0.9)';
-
-interface Chunk { i: number; j: number; level: number; canvas: HTMLCanvasElement | null; prev: { canvas: HTMLCanvasElement; level: number } | null; prevUntil: number; used: number }
+/** planner colours: terrain types */
+const PLAN_TERRAIN = ['#4b6a2d', '#3d5a26', '#56402f', '#5b5752', '#5a4a2e', '#a89c8c', '#b9ada0'];
 export interface Camera { X: number; Y: number; z: number }
+/** building footprints for the planner map: x0, y0, x1, y1, colour index (tiles), five floats each */
+export type PlanBlocks = Float32Array;
+export const PLAN_BLOCK_COLOURS = ['#c9b79a', '#d98f5a', '#e8d27a', '#8fae6a', '#6c7c8c'];
 
-export class GroundRenderer {
-  chunks = new Map<string, Chunk>();
-  private scratch = new Map<string, HTMLCanvasElement>();
+/** Paints ground chunks (the full-quality bake) and planner chunks (the far-zoom map). Runs in the ground workers. */
+export class GroundPainter {
+  private scratch = new Map<string, Cnv>();
+  blocks: PlanBlocks = new Float32Array(0);
   constructor(public terrain: Uint8Array, public net: RoadNetwork, public tex: Textures) {}
-
-  private chunk(i: number, j: number) { const k = i + ',' + j; let c = this.chunks.get(k); if (!c) { c = { i, j, level: 0, canvas: null, prev: null, prevUntil: 0, used: 0 }; this.chunks.set(k, c); } return c; }
   private buffer(name: string, W: number, H: number) {
-    let c = this.scratch.get(name); if (!c) { c = document.createElement('canvas'); this.scratch.set(name, c); }
+    let c = this.scratch.get(name); if (!c) { c = canvas(W, H); this.scratch.set(name, c); }
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
-    const g = c.getContext('2d')!; g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, W, H); return c;
+    const g = ctx2d(c); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, W, H); return c;
   }
-  static tileRectToWorld(x0: number, y0: number, x1: number, y1: number) {
-    const xs = [worldX(x0, y0), worldX(x1, y0), worldX(x0, y1), worldX(x1, y1)], ys = [worldY(x0, y0), worldY(x1, y0), worldY(x0, y1), worldY(x1, y1)];
-    return { X0: Math.min(...xs), Y0: Math.min(...ys), X1: Math.max(...xs), Y1: Math.max(...ys) };
+  /** the tile box a world-px rectangle covers (plus a margin) */
+  static tileBox(X0: number, Y0: number, X1: number, Y1: number, pad = 1): BBox {
+    const corners = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)];
+    return [Math.floor(Math.min(...corners.map(p => p.x))) - pad, Math.floor(Math.min(...corners.map(p => p.y))) - pad, Math.ceil(Math.max(...corners.map(p => p.x))) + pad, Math.ceil(Math.max(...corners.map(p => p.y))) + pad];
   }
-  invalidate(bbox: BBox, keepPrev = false, until = 0) {
-    const r = GroundRenderer.tileRectToWorld(bbox[0], bbox[1], bbox[2], bbox[3]);
-    const i0 = Math.floor(r.X0 / CHUNK_W), i1 = Math.floor(r.X1 / CHUNK_W), j0 = Math.floor(r.Y0 / CHUNK_H), j1 = Math.floor(r.Y1 / CHUNK_H);
-    for (const c of this.chunks.values()) {
-      if (c.i < i0 || c.i > i1 || c.j < j0 || c.j > j1 || !c.canvas) continue;
-      if (keepPrev) { c.prev = { canvas: c.canvas, level: c.level }; c.prevUntil = Math.max(c.prevUntil, until); } else c.prev = null;
-      c.canvas = null;
-    }
-  }
-  invalidateAll() { for (const c of this.chunks.values()) { c.canvas = null; c.prev = null; } }
 
-  draw(ctx: CanvasRenderingContext2D, cam: Camera, cw: number, ch: number, dpr: number, now: number, reveal: Path2D | null, budgetMs: number) {
-    const ze = cam.z * dpr, L = levelFor(ze);
-    const X0 = cam.X - cw / 2 / ze, Y0 = cam.Y - ch / 2 / ze, X1 = cam.X + cw / 2 / ze, Y1 = cam.Y + ch / 2 / ze;
-    const i0 = Math.floor(X0 / CHUNK_W), i1 = Math.floor(X1 / CHUNK_W), j0 = Math.floor(Y0 / CHUNK_H), j1 = Math.floor(Y1 / CHUNK_H);
-    const visible: Chunk[] = [];
-    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const c = this.chunk(i, j); c.used = now; visible.push(c); }
-    const todo = visible.filter(c => !c.canvas || c.level !== L);
-    todo.sort((a, b) => Math.hypot((a.i + .5) * CHUNK_W - cam.X, (a.j + .5) * CHUNK_H - cam.Y) - Math.hypot((b.i + .5) * CHUNK_W - cam.X, (b.j + .5) * CHUNK_H - cam.Y));
-    const t0 = performance.now(), missing = todo.filter(c => !c.canvas), stale = todo.filter(c => c.canvas);
-    for (const c of missing) { if (performance.now() - t0 > budgetMs * 2 && c !== missing[0]) break; this.render(c, L); }
-    for (const c of stale) { if (performance.now() - t0 > budgetMs) break; this.render(c, L); }
-    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
-    const sx = (X: number) => Math.round((X - cam.X) * ze + cw / 2), sy = (Y: number) => Math.round((Y - cam.Y) * ze + ch / 2);
-    for (const c of visible) {
-      const x0 = sx(c.i * CHUNK_W), x1 = sx((c.i + 1) * CHUNK_W), y0 = sy(c.j * CHUNK_H), y1 = sy((c.j + 1) * CHUNK_H);
-      if (c.prev && now > c.prevUntil) c.prev = null;
-      if (c.prev && reveal) { ctx.drawImage(c.prev.canvas, x0, y0, x1 - x0, y1 - y0); if (c.canvas) { ctx.save(); ctx.clip(reveal); ctx.drawImage(c.canvas, x0, y0, x1 - x0, y1 - y0); ctx.restore(); } }
-      else if (c.canvas) ctx.drawImage(c.canvas, x0, y0, x1 - x0, y1 - y0);
-      else if (c.prev) ctx.drawImage(c.prev.canvas, x0, y0, x1 - x0, y1 - y0);
-      else { ctx.fillStyle = '#3f5226'; ctx.fillRect(x0, y0, x1 - x0, y1 - y0); }
-    }
-    this.evict(now);
-  }
-  private evict(now: number) {
-    let px = 0; for (const c of this.chunks.values()) { if (c.canvas) px += c.canvas.width * c.canvas.height; if (c.prev) px += c.prev.canvas.width * c.prev.canvas.height; }
-    if (px <= PIXEL_BUDGET) return;
-    const old = [...this.chunks.values()].filter(c => c.used !== now && c.canvas).sort((a, b) => a.used - b.used);
-    for (const c of old) { if (px <= PIXEL_BUDGET * 0.8) break; px -= c.canvas!.width * c.canvas!.height; c.canvas = null; c.prev = null; }
+  /** the far-zoom map: flat terrain colours, sidewalks and roads as solid fills, building footprints */
+  paintPlan(i: number, j: number, L: number): Cnv {
+    const W = Math.round(PLAN_W * L), H = Math.round(PLAN_H * L), X0 = i * PLAN_W, Y0 = j * PLAN_H;
+    const cv = canvas(W, H), ctx = ctx2d(cv);
+    const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]);
+    const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
+    ctx.fillStyle = '#2c3a20'; ctx.fillRect(0, 0, W, H);
+    ctx.setTransform(M);
+    ctx.fillStyle = PLAN_TERRAIN[0]; ctx.fillRect(0, 0, MAP, MAP);
+    // terrain in 4 x 4 tile blocks (the planner never shows finer detail)
+    const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1), byType = new Map<number, Path2D>();
+    for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (!t) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
+    for (const [t, p] of byType) { ctx.fillStyle = PLAN_TERRAIN[t]; ctx.fill(p); }
+    const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
+    const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
+    fill(v.walkF, '#9a9184'); fill(v.asphF, '#3c4150'); fill(v.medianF, '#557a35');
+    ctx.fillStyle = '#557a35'; for (const r of v.rbIslands) { ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill(); }
+    const b = this.blocks;
+    for (let k = 0; k + 4 < b.length; k += 5) { if (b[k + 2] < tx0 || b[k] > tx1 || b[k + 3] < ty0 || b[k + 1] > ty1) continue; ctx.fillStyle = PLAN_BLOCK_COLOURS[b[k + 4] | 0] ?? PLAN_BLOCK_COLOURS[0]; ctx.fillRect(b[k], b[k + 1], b[k + 2] - b[k], b[k + 3] - b[k + 1]); }
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = Math.max(0.3, minW); ctx.strokeRect(0, 0, MAP, MAP);
+    return cv;
   }
 
   /** a screen-space texture aligned to the world origin, for a context whose transform is the chunk's iso matrix */
-  private screenPattern(g: CanvasRenderingContext2D, name: TexName, L: number, X0: number, Y0: number, Minv: DOMMatrix) {
+  private screenPattern(g: C2D, name: TexName, L: number, X0: number, Y0: number, Minv: DOMMatrix) {
     const img = this.tex.image(name, L), p = g.createPattern(img, 'repeat')!;
     const ox = ((X0 * L) % img.width + img.width) % img.width, oy = ((Y0 * L) % img.height + img.height) % img.height;
     p.setTransform(Minv.multiply(new DOMMatrix([1, 0, 0, 1, -ox, -oy]))); return p;
   }
   /** the asphalt mosaic, which lives in ground (tile) space: one period = MOSAIC_TILES tiles */
-  private groundPattern(g: CanvasRenderingContext2D, img: HTMLCanvasElement) {
+  private groundPattern(g: C2D, img: Cnv) {
     const p = g.createPattern(img, 'repeat')!, s = MOSAIC_TILES / img.width; p.setTransform(new DOMMatrix([s, 0, 0, s, 0, 0])); return p;
   }
 
-  render(c: Chunk, L: number) {
-    const W = Math.round(CHUNK_W * L), H = Math.round(CHUNK_H * L), X0 = c.i * CHUNK_W, Y0 = c.j * CHUNK_H;
-    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-    const ctx = cv.getContext('2d')!;
+  /** one ground chunk (CHUNK_W x CHUNK_H world px) at cache level L: the full-quality bake. lite = a district chunk
+   *  (MID_K x MID_K ground chunks) for far zooms, without the detail too small to see there (slab sprites, litter,
+   *  decals, tyre marks, wheel wear, curb joints) */
+  paint(i: number, j: number, L: number, lite = false): Cnv {
+    const CW = CHUNK_W * (lite ? MID_K : 1), CH = CHUNK_H * (lite ? MID_K : 1);
+    const W = Math.round(CW * L), H = Math.round(CH * L), X0 = i * CW, Y0 = j * CH;
+    const cv = canvas(W, H), ctx = ctx2d(cv);
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]), Minv = M.inverse();
     const pats = new Map<TexName, CanvasPattern>();
     const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
-    const corners = [tileOf(X0, Y0), tileOf(X0 + CHUNK_W, Y0), tileOf(X0, Y0 + CHUNK_H), tileOf(X0 + CHUNK_W, Y0 + CHUNK_H)];
-    const tx0 = Math.floor(Math.min(...corners.map(p => p.x))) - 1, tx1 = Math.ceil(Math.max(...corners.map(p => p.x))) + 1;
-    const ty0 = Math.floor(Math.min(...corners.map(p => p.y))) - 1, ty1 = Math.ceil(Math.max(...corners.map(p => p.y))) + 1;
-    const box: BBox = [tx0, ty0, tx1, ty1], vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
-    const minW = 1 / (TILE_PX * L), net = this.net, tex = this.tex;
-    const paint = (g: CanvasRenderingContext2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
-    const ring = (g: CanvasRenderingContext2D, f: Feature, extra: number) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + extra; g.stroke(f.path); } else { g.lineWidth = extra; g.stroke(f.path); } };
+    const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
+    const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
+    const paint = (g: C2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
+    const ring = (g: C2D, f: Feature, extra: number) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + extra; g.stroke(f.path); } else { g.lineWidth = extra; g.stroke(f.path); } };
     /** a chunk-sized mask of the given features (black where covered) */
-    const maskOf = (name: string, feats: Feature[], extra = 0) => { const m = this.buffer(name, W, H), g = m.getContext('2d')!; g.setTransform(M); g.lineJoin = 'round'; g.fillStyle = g.strokeStyle = '#000'; for (const f of feats) extra ? ring(g, f, extra) : paint(g, f); return m; };
-    const composite = (buf: HTMLCanvasElement, op: GlobalCompositeOperation = 'source-over', alpha = 1) => { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = op; ctx.globalAlpha = alpha; ctx.drawImage(buf, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.setTransform(M); };
-    const through = (buf: HTMLCanvasElement, mask: HTMLCanvasElement) => { const g = buf.getContext('2d')!; g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-in'; g.drawImage(mask, 0, 0); g.globalCompositeOperation = 'source-over'; };
+    const maskOf = (name: string, feats: Feature[], extra = 0) => { const m = this.buffer(name, W, H), g = ctx2d(m); g.setTransform(M); g.lineJoin = 'round'; g.fillStyle = g.strokeStyle = '#000'; for (const f of feats) extra ? ring(g, f, extra) : paint(g, f); return m; };
+    const composite = (buf: Cnv, op: GlobalCompositeOperation = 'source-over', alpha = 1) => { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = op; ctx.globalAlpha = alpha; ctx.drawImage(buf, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.setTransform(M); };
+    const through = (buf: Cnv, mask: Cnv) => { const g = ctx2d(buf); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-in'; g.drawImage(mask, 0, 0); g.globalCompositeOperation = 'source-over'; };
     ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
 
     // ---- 1. terrain (grass mosaic + painted lots)
@@ -127,10 +112,10 @@ export class GroundRenderer {
     const slabWalk = walk.filter(f => f.tex === 'slabs');
     if (slabWalk.length) {
       const walkMask = maskOf('walkMask', slabWalk);
-      const sb = this.buffer('slabs', W, H), sg = sb.getContext('2d')!;
+      const sb = this.buffer('slabs', W, H), sg = ctx2d(sb);
       sg.setTransform(M); sg.fillStyle = tex.curb.top; sg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
       sg.imageSmoothingEnabled = true; sg.imageSmoothingQuality = 'high';
-      for (const run of net.slabRuns) this.drawSlabs(sg, run, box);
+      if (!lite) for (const run of net.slabRuns) this.drawSlabs(sg, run, box);
       sg.setTransform(M); sg.globalCompositeOperation = 'multiply'; sg.fillStyle = this.screenPattern(sg, 'grime', L, X0, Y0, Minv); sg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0); sg.globalCompositeOperation = 'source-over';
       through(sb, walkMask);
       // soft dark casing where the sidewalk meets grass
@@ -145,7 +130,7 @@ export class GroundRenderer {
       const asphMask = maskOf('asphMask', asph), shift = Math.max(1, FACE_WORLD * L);
       // ---- 4. curb: raised top ring (joint colour outside, cream top inside), then the visible face between the top and the road
       if (kerbed.length) {
-        const top = this.buffer('curbTop', W, H), tg = top.getContext('2d')!;
+        const top = this.buffer('curbTop', W, H), tg = ctx2d(top);
         for (const dy of [0, -shift]) {
           tg.setTransform(new DOMMatrix([1, 0, 0, 1, 0, dy]).multiply(M)); tg.lineJoin = 'round';
           tg.strokeStyle = tex.curb.joint; for (const f of kerbed) ring(tg, f, 2 * (CURB_TOP + CURB_JOINT));
@@ -155,10 +140,10 @@ export class GroundRenderer {
         // the face: a wall of height `shift` px standing on the asphalt edge wherever the road lies below the curb on
         // screen = (asphalt mask shifted up) minus (asphalt mask). Three tones from the strip, light at the top.
         const kerbMask = maskOf('kerbMask', kerbed), bands = tex.curb.face;
-        const faceBands = this.buffer('faceBands', W, H), bg = faceBands.getContext('2d')!;
+        const faceBands = this.buffer('faceBands', W, H), bg = ctx2d(faceBands);
         bg.drawImage(kerbMask, 0, -shift); bg.globalCompositeOperation = 'destination-out'; bg.drawImage(kerbMask, 0, 0);
         bg.globalCompositeOperation = 'source-in'; bg.fillStyle = bands[0]; bg.fillRect(0, 0, W, H);
-        const tint = (col: string, dy: number) => { const t = this.buffer('faceTint', W, H), g = t.getContext('2d')!; g.drawImage(kerbMask, 0, dy); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); bg.globalCompositeOperation = 'source-atop'; bg.drawImage(t, 0, 0); };
+        const tint = (col: string, dy: number) => { const t = this.buffer('faceTint', W, H), g = ctx2d(t); g.drawImage(kerbMask, 0, dy); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); bg.globalCompositeOperation = 'source-atop'; bg.drawImage(t, 0, 0); };
         tint(bands[1], -shift * 0.62); tint(bands[2], -shift * 0.3);
         composite(faceBands);
       }
@@ -170,14 +155,14 @@ export class GroundRenderer {
       // class tones as solid masks composited once (overlapping strokes and discs must not accumulate)
       const dark = asph.filter(f => f.tex === 'asphaltDark'), worn = asph.filter(f => f.tex === 'asphaltWorn');
       const toneLayer = (feats: Feature[], col: string, op: GlobalCompositeOperation, alpha: number) => {
-        const tb = this.buffer('tone', W, H), tg = tb.getContext('2d')!; tg.setTransform(M); tg.lineJoin = 'round'; tg.strokeStyle = tg.fillStyle = col;
+        const tb = this.buffer('tone', W, H), tg = ctx2d(tb); tg.setTransform(M); tg.lineJoin = 'round'; tg.strokeStyle = tg.fillStyle = col;
         for (const f of feats) paint(tg, f); composite(tb, op, alpha);
       };
       if (dark.length) toneLayer(dark, 'rgb(10,12,24)', 'multiply', 0.28);
       if (worn.length) { toneLayer(worn, 'rgb(150,150,150)', 'multiply', 0.5); toneLayer(worn, 'rgb(190,180,160)', 'screen', 0.22); }
       // ---- 6. gutter: the strip's shadow rows just inside the curb (dark, then warm), masked to the asphalt
       if (kerbed.length) {
-        const gb = this.buffer('gutter', W, H), gg = gb.getContext('2d')!; gg.setTransform(M); gg.lineJoin = 'round';
+        const gb = this.buffer('gutter', W, H), gg = ctx2d(gb); gg.setTransform(M); gg.lineJoin = 'round';
         const [g0, g1, g2] = tex.curb.gutter;
         gg.strokeStyle = g2; gg.globalAlpha = 0.5; for (const f of kerbed) ring(gg, f, 2 * GUTTER);
         gg.strokeStyle = g1; gg.globalAlpha = 0.7; for (const f of kerbed) ring(gg, f, 2 * GUTTER * 0.6);
@@ -201,8 +186,8 @@ export class GroundRenderer {
         ctx.beginPath(); ctx.arc(i.x, i.y, ringR, 0, Math.PI * 2); ctx.arc(i.x, i.y, ringR - 0.7, 0, Math.PI * 2, true); ctx.fillStyle = pat('paving'); ctx.fill('evenodd');
       }
       // ---- 8. decals, tyre marks, markings (chipped), crossings
-      for (const d of net.decals) if (d.x >= tx0 - 2 && d.x <= tx1 + 2 && d.y >= ty0 - 2 && d.y <= ty1 + 2) drawDecal(ctx, d);
-      for (const t of net.tyres) {
+      if (!lite) for (const d of net.decals) if (d.x >= tx0 - 2 && d.x <= tx1 + 2 && d.y >= ty0 - 2 && d.y <= ty1 + 2) drawDecal(ctx, d);
+      if (!lite) for (const t of net.tyres) {
         if (t.x < tx0 - 8 || t.x > tx1 + 8 || t.y < ty0 - 8 || t.y > ty1 + 8) continue;
         ctx.save(); ctx.translate(t.x, t.y); ctx.rotate(t.ang);
         const g = ctx.createLinearGradient(t.start, 0, t.start + t.len, 0); g.addColorStop(0, 'rgba(10,10,14,0.35)'); g.addColorStop(1, 'rgba(10,10,14,0)');
@@ -210,7 +195,7 @@ export class GroundRenderer {
       }
       const lines = net.lines.filter(l => vis(l.bbox)), zebra = net.zebra.filter(z => vis(z.bbox)), bars = net.bars.filter(b => vis(b.bbox));
       if (lines.length || zebra.length || bars.length) {
-        const lb = this.buffer('lines', W, H), lg = lb.getContext('2d')!; lg.setTransform(M); lg.lineJoin = 'round';
+        const lb = this.buffer('lines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineJoin = 'round';
         for (const l of lines) drawLine(lg, l, minW);
         lg.fillStyle = WHITE; for (const z of zebra) lg.fill(z.path); for (const b of bars) lg.fill(b.path);
         // chipped paint: keep the line where the wear mask is opaque
@@ -218,9 +203,9 @@ export class GroundRenderer {
         through(lb, asphMask); composite(lb);
       }
       // ---- 9. polished wheel paths (very faint) and the street-lamp reflection pools (the painting's measured response)
-      const wear = net.wear.filter(w => vis(w.bbox));
+      const wear = lite ? [] : net.wear.filter(w => vis(w.bbox));
       if (wear.length) {
-        const wb = this.buffer('wear', W, H), wg = wb.getContext('2d')!; wg.setTransform(M); wg.lineCap = 'round'; wg.lineJoin = 'round';
+        const wb = this.buffer('wear', W, H), wg = ctx2d(wb); wg.setTransform(M); wg.lineCap = 'round'; wg.lineJoin = 'round';
         for (const w of wear) { wg.strokeStyle = 'rgba(255,255,255,0.035)'; wg.lineWidth = 0.5; for (const o of w.offsets) wg.stroke(roundedPath(offsetPolyline(w.pts, o, w.closed), w.r, w.closed)); }
         through(wb, asphMask); composite(wb, 'screen');
       }
@@ -228,33 +213,33 @@ export class GroundRenderer {
       if (pools.length) {
         const rotA = Math.PI / 2 - tex.stampAngle, sc = 1.2 / (2 * PPM);
         for (const [variant, stamp] of [['lit1', tex.pool1], ['lit2', tex.pool2]] as const) {
-          const pm = this.buffer('poolMask', W, H), pg = pm.getContext('2d')!; pg.imageSmoothingEnabled = true;
+          const pm = this.buffer('poolMask', W, H), pg = ctx2d(pm); pg.imageSmoothingEnabled = true;
           for (const p of pools) {
             const S = M.transformPoint(new DOMPoint(p.x, p.y));
             const T = new DOMMatrix([1, 0, 0, 1, S.x, S.y]).multiply(new DOMMatrix([Math.cos(rotA), Math.sin(rotA), -Math.sin(rotA), Math.cos(rotA), 0, 0])).multiply(new DOMMatrix([1, 0, 0, 1, -S.x, -S.y])).multiply(M).multiply(new DOMMatrix([sc, 0, 0, sc, p.x, p.y])).multiply(new DOMMatrix([1, 0, 0, 1, -POOL_ANCHOR[0], -POOL_ANCHOR[1]]));
             pg.setTransform(T); pg.globalAlpha = p.strength; pg.drawImage(stamp, 0, 0);
           }
-          const lit = this.buffer('lit', W, H), lg = lit.getContext('2d')!; lg.setTransform(M); lg.fillStyle = this.groundPattern(lg, tex.mosaicFor(variant, L)); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
+          const lit = this.buffer('lit', W, H), lg = ctx2d(lit); lg.setTransform(M); lg.fillStyle = this.groundPattern(lg, tex.mosaicFor(variant, L)); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
           through(lit, pm); through(lit, asphMask); composite(lit);
         }
         // the curb and sidewalk near a lamp catch some of the light too (CURB_HOT / walk terms)
-        const glow = this.buffer('glow', W, H), gg = glow.getContext('2d')!; gg.setTransform(M);
+        const glow = this.buffer('glow', W, H), gg = ctx2d(glow); gg.setTransform(M);
         for (const p of pools) { const g = gg.createRadialGradient(p.x, p.y, 0, p.x, p.y, 3.2); g.addColorStop(0, 'rgba(255,170,70,0.55)'); g.addColorStop(0.4, 'rgba(255,150,50,0.22)'); g.addColorStop(1, 'rgba(255,140,40,0)'); gg.fillStyle = g; gg.beginPath(); gg.arc(p.x, p.y, 3.2, 0, Math.PI * 2); gg.fill(); }
         gg.setTransform(1, 0, 0, 1, 0, 0); gg.globalCompositeOperation = 'destination-out'; gg.drawImage(asphMask, 0, 0);
         composite(glow, 'screen');
       }
     }
     // ---- 10. leaves and grass tufts, lit by the pools where they lie in one
-    this.drawLitter(ctx, L, M, box, W, H);
+    if (!lite) this.drawLitter(ctx, net, L, M, box, W, H);
     // ---- 11. the world beyond the map
     const outside = new Path2D(); outside.rect(tx0 - 4, ty0 - 4, tx1 - tx0 + 8, ty1 - ty0 + 8); outside.rect(0, 0, MAP, MAP);
     ctx.fillStyle = pat('outside'); ctx.fill(outside, 'evenodd');
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = Math.max(0.08, minW); ctx.strokeRect(0, 0, MAP, MAP);
-    c.canvas = cv; c.level = L;
+    return cv;
   }
 
   /** slab sprites along a run (tile space), stretched to 2.5 m x the sidewalk width like the builder's slab() */
-  private drawSlabs(g: CanvasRenderingContext2D, run: SlabRun, box: BBox) {
+  private drawSlabs(g: C2D, run: SlabRun, box: BBox) {
     const tex = this.tex, img = tex.slabs, [tx0, ty0, tx1, ty1] = box;
     if (run.kind === 'straight') {
       const dx = run.b.x - run.a.x, dy = run.b.y - run.a.y, L = Math.hypot(dx, dy); if (L < 0.05) return;
@@ -286,9 +271,9 @@ export class GroundRenderer {
     }
   }
 
-  private drawLitter(ctx: CanvasRenderingContext2D, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {
-    const [tx0, ty0, tx1, ty1] = box, net = this.net, tex = this.tex, atlas = tex.leaves;
-    const lb = this.buffer('leaves', W, H), g = lb.getContext('2d')!; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  private drawLitter(ctx: C2D, net: FxView, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {
+    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, atlas = tex.leaves, occAt = (x: number, y: number) => this.net.occAt(x, y);
+    const lb = this.buffer('leaves', W, H), g = ctx2d(lb); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
     const pxPerM = 45.25 * L, shadowDx = 0.8 * L, shadowDy = 1.1 * L;
     const draw = (x: number, y: number, ang: number, sizeM: number, idx: number, pass: number) => {
       const S = M.transformPoint(new DOMPoint(x, y)), size = sizeM * pxPerM, [sx, sy, sw, sh] = tex.leafRect(idx);
@@ -301,14 +286,14 @@ export class GroundRenderer {
     const rx0 = Math.floor(tx0 / 8), rx1 = Math.floor(tx1 / 8), ry0 = Math.floor(ty0 / 8), ry1 = Math.floor(ty1 / 8);
     for (let ry = ry0; ry <= ry1; ry++) for (let rx = rx0; rx <= rx1; rx++) {
       const r = mulberry(((rx * 7919) ^ (ry * 104729) ^ 0x51ed) >>> 0), g2 = () => { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); };
-      const add = (x: number, y: number, sizeM: number) => { if (x < 0 || y < 0 || x >= MAP || y >= MAP || net.occAt(x, y)) return; if (this.terrain[Math.floor(y) * MAP + Math.floor(x)] > 1) return; inView.push({ x, y, ang: r() * Math.PI * 2, s: sizeM, idx: tex.pickLeaf(r, sizeM) }); };
+      const add = (x: number, y: number, sizeM: number) => { if (x < 0 || y < 0 || x >= MAP || y >= MAP || occAt(x, y)) return; if (this.terrain[Math.floor(y) * MAP + Math.floor(x)] > 1) return; inView.push({ x, y, ang: r() * Math.PI * 2, s: sizeM, idx: tex.pickLeaf(r, sizeM) }); };
       const sizeOf = (k: string) => { const u = r(); return (k === 'stray' ? 0.96 : 1) * (u < 0.22 ? 0.11 + r() * 0.08 : u < 0.58 ? 0.2 + r() * 0.1 : u < 0.88 ? 0.32 + r() * 0.15 : 0.49 + r() * 0.16); };
       for (let i = 0; i < 30; i++) add(rx * 8 + r() * 8, ry * 8 + r() * 8, sizeOf('stray'));
       for (let c = 0; c < 2; c++) { if (r() > 0.6) continue; const X0 = rx * 8 + r() * 8, Y0 = ry * 8 + r() * 8, n = 4 + Math.floor(r() * r() * 22), sp = (0.35 + r() * 0.6) / 2; for (let i = 0; i < n; i++) add(X0 + g2() * sp, Y0 + g2() * sp, sizeOf('gutter')); }
     }
     g.globalAlpha = 0.22; g.globalCompositeOperation = 'source-over';
     // shadows (as a darkening of the ground): drawn black through the leaf alpha
-    const sh = this.buffer('leafShadow', W, H), shg = sh.getContext('2d')!;
+    const sh = this.buffer('leafShadow', W, H), shg = ctx2d(sh);
     for (const l of inView) { const S = M.transformPoint(new DOMPoint(l.x, l.y)), size = l.s * pxPerM, [sx, sy, sw, swh] = tex.leafRect(l.idx); shg.setTransform(1, 0, 0, 1, S.x + shadowDx, S.y + shadowDy); shg.scale(1, 0.74); shg.rotate(l.ang); shg.drawImage(atlas, sx, sy, sw, swh, -size / 2, -size / 2, size, size); }
     shg.setTransform(1, 0, 0, 1, 0, 0); shg.globalCompositeOperation = 'source-in'; shg.fillStyle = '#05050f'; shg.fillRect(0, 0, W, H);
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.22; ctx.drawImage(sh, 0, 0); ctx.globalAlpha = 1;
@@ -329,7 +314,7 @@ export class GroundRenderer {
     // leaves lying in a lamp pool are lit like the builder's (brighter, warmer)
     const pools = net.pools.filter(p => p.x >= tx0 - 8 && p.x <= tx1 + 8 && p.y >= ty0 - 8 && p.y <= ty1 + 8);
     if (pools.length) {
-      const lm = this.buffer('leafLight', W, H), lg = lm.getContext('2d')!, rotA = Math.PI / 2 - tex.stampAngle, sc = 1.2 / (2 * PPM);
+      const lm = this.buffer('leafLight', W, H), lg = ctx2d(lm), rotA = Math.PI / 2 - tex.stampAngle, sc = 1.2 / (2 * PPM);
       for (const p of pools) {
         const S = M.transformPoint(new DOMPoint(p.x, p.y));
         const T = new DOMMatrix([1, 0, 0, 1, S.x, S.y]).multiply(new DOMMatrix([Math.cos(rotA), Math.sin(rotA), -Math.sin(rotA), Math.cos(rotA), 0, 0])).multiply(new DOMMatrix([1, 0, 0, 1, -S.x, -S.y])).multiply(M).multiply(new DOMMatrix([sc, 0, 0, sc, p.x, p.y])).multiply(new DOMMatrix([1, 0, 0, 1, -POOL_ANCHOR[0], -POOL_ANCHOR[1]]));
@@ -344,7 +329,7 @@ export class GroundRenderer {
 }
 
 /** a road marking: optional sideways offset, rounded corners, dashes anchored to world position (so joining roads never shifts them) */
-function drawLine(ctx: CanvasRenderingContext2D, l: LineRec, minW: number) {
+function drawLine(ctx: C2D, l: LineRec, minW: number) {
   const pts = l.offset ? offsetPolyline(l.pts, l.offset, l.closed) : l.pts;
   const pieces = roundPieces(pts, l.r, l.closed); if (!pieces.length) return;
   ctx.strokeStyle = l.color === '#d6b23b' ? YELLOW : l.color; ctx.lineWidth = Math.max(l.width, minW); ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
@@ -374,10 +359,10 @@ function drawLine(ctx: CanvasRenderingContext2D, l: LineRec, minW: number) {
   ctx.setLineDash([]); ctx.lineDashOffset = 0;
 }
 
-function rrect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function rrect(ctx: C2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
-function drawDecal(ctx: CanvasRenderingContext2D, d: Decal) {
+function drawDecal(ctx: C2D, d: Decal) {
   ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.ang); ctx.scale(d.s, d.s);
   const rng = mulberry(d.seed);
   switch (d.t) {

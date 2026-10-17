@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), viteSingleFile()],
+  // output/ holds benchmark screenshots and a browser profile whose locked files crash the watcher
+  server: { watch: { ignored: ['**/output/**', '**/ref/**', '**/dist/**'] } },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

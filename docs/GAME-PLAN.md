@@ -154,6 +154,19 @@ the desert: sun-bleached asphalt, concrete curbs, gravel verges.
 | Workflow | Undo/redo for whole edits, network health warnings (dead ends, unreachable lots, junctions too close together) |
 
 ### 3.3 Traffic simulation
+**Build or borrow (decided 2026-10-17).** We write our own TypeScript simulator. We use the published models, not
+someone else's engine, because the sim has to update incrementally on every road edit, run in our worker on our
+lane graph, and ship in a browser.
+- [movsim/traffic-simulation-de](https://github.com/movsim/traffic-simulation-de) is the reference for accuracy. It
+  is Treiber's own IDM and MOBIL in JavaScript, licensed GPL-3.0, so we implement the published equations rather than
+  copy its code. Its scenarios (ring road, on-ramp, lane closure) become our validation tests.
+- [cityflow-project/CityFlow](https://github.com/cityflow-project/CityFlow) (Apache-2.0, C++): the model for lane
+  links, junctions and signal phases at city scale.
+- [a-b-street/abstreet](https://github.com/a-b-street/abstreet) (Apache-2.0, Rust): a traffic game about editing a
+  city's roads. Its ideas for gridlock handling, live edits and event-driven far-away traffic can be ported, with
+  attribution.
+- SUMO (EPL-2.0) is the research gold standard, but it is a desktop toolsuite and not practical in a browser.
+
 - **Lane graph** from the network. Arms already carry `dir`, `h`, `laneCentres`, `stop`, `xw`, `reachEdge`,
   roundabout radius and slip geometry. Lanes are directed, right-hand traffic. Connectors are turn curves shaped
   from the same corner fillets the renderer uses. A **conflict table** per node drives gap acceptance and

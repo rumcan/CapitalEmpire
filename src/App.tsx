@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Game } from './game/engine';
-import { LIBRARY } from './game/library';
-import { TERRAINS, type Tool } from './game/types';
+import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
+import { TERRAINS, type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
 import { ZOOM_MAX, ZOOM_MIN } from './game/iso';
 
@@ -17,17 +17,20 @@ const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
+  const [fatal, setFatal] = useState('');
   const [game, setGame] = useState<Game | null>(null);
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
 
   useEffect(() => {
-    const canvas = canvasRef.current!;
-    const g = new Game(canvas);
+    const canvas = overlayRef.current!;
+    let g: Game;
+    try { g = new Game(canvasRef.current!, canvas); } catch (e) { setFatal((e as Error).message); return; }
     (window as unknown as { __game: Game }).__game = g;
     setGame(g);
     const unsub = g.subscribe(bump);
-    g.init();
+    g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));
     const wheel = (e: WheelEvent) => g.wheel(e);
     canvas.addEventListener('wheel', wheel, { passive: false });
     const kd = (e: KeyboardEvent) => g.keyDown(e), ku = (e: KeyboardEvent) => g.keyUp(e);
@@ -42,8 +45,9 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas
-        ref={canvasRef}
+        ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
         style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
@@ -54,6 +58,7 @@ export default function App() {
         onContextMenu={e => e.preventDefault()}
       />
 
+      {fatal && <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#15200f] p-8 text-center text-red-200">This game needs WebGL2 and OffscreenCanvas. {fatal}</div>}
       {game && !game.ready && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f]">
           <div className="text-3xl font-bold tracking-tight text-amber-200">Maple Falls</div>
@@ -82,7 +87,7 @@ export default function App() {
             <div className="pointer-events-auto flex items-center gap-2">
               <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/75 px-2 py-1.5 shadow-lg backdrop-blur">
                 <button className="btn" onClick={() => game.zoomAt(Math.max(ZOOM_MIN, game.cam.z / 1.25))} title="Zoom out (-)">−</button>
-                <input type="range" min={ZOOM_MIN} max={ZOOM_MAX} step={0.005} value={game.cam.z} onChange={e => game.zoomAt(+e.target.value)} className="w-28 accent-amber-400" />
+                <input type="range" min={Math.log(ZOOM_MIN)} max={Math.log(ZOOM_MAX)} step={0.01} value={Math.log(game.cam.z)} onChange={e => game.zoomAt(Math.exp(+e.target.value))} className="w-28 accent-amber-400" />
                 <button className="btn" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)">+</button>
                 <span className="ml-1 w-14 text-right text-xs tabular-nums text-slate-300" title="Zoom relative to the town builder's 100%">{Math.round(game.cam.z * 100)}%</span>
               </div>
@@ -128,10 +133,32 @@ export default function App() {
             ))}
           </div>
 
+          <PerfPanel game={game} />
           {help && <Help onClose={() => setHelp(false)} />}
         </>
       )}
       <style>{`.btn{border-radius:.6rem;border:1px solid rgba(255,255,255,.1);background:rgba(2,6,23,.75);padding:.35rem .7rem;font-size:.75rem;color:#e2e8f0;backdrop-filter:blur(6px)}.btn:hover{background:rgba(255,255,255,.12)}.chip{border-radius:.5rem;border:1px solid rgba(255,255,255,.1);padding:.3rem .55rem;font-size:.7rem;color:#cbd5e1}.chip:hover{background:rgba(255,255,255,.1)}.chip-on{background:rgba(251,191,36,.9);color:#0f172a;border-color:transparent}.card{display:flex;flex-direction:column;align-items:flex-start;border-radius:.6rem;border:1px solid rgba(255,255,255,.1);padding:.4rem .55rem;text-align:left}.card:hover{background:rgba(255,255,255,.08)}.card-on{border-color:#fbbf24;background:rgba(251,191,36,.18)}`}</style>
+    </div>
+  );
+}
+
+/** a library sprite cut out of its atlas page (mip 1) with CSS */
+function Thumb({ it, size }: { it: LibItem; size: number }) {
+  const [page, u0, v0, u1, v1] = it.tex, P = ATLAS_SIZE / 2, w = (u1 - u0) * P, h = (v1 - v0) * P, k = Math.min(size / w, size / h);
+  return <div style={{ width: w * k, height: h * k, backgroundImage: `url(${ATLAS_PAGES[page][1]})`, backgroundSize: `${P * k}px ${P * k}px`, backgroundPosition: `${-u0 * P * k}px ${-v0 * P * k}px` }} />;
+}
+
+/** frame time, what was drawn, and the test traffic */
+function PerfPanel({ game }: { game: Game }) {
+  const p = game.perf;
+  return (
+    <div className="absolute bottom-3 right-3 z-20 w-56 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] tabular-nums text-slate-300 shadow-lg backdrop-blur">
+      <div className="flex justify-between"><span>{p.fps.toFixed(0)} fps · {p.tier}</span><span>cpu {p.cpuMs.toFixed(1)} ms</span></div>
+      <div className="flex justify-between text-slate-400"><span>{p.instances.toLocaleString()} sprites · {p.draws} draws</span><span>{p.uploadKB.toFixed(0)} KB</span></div>
+      <div className="flex justify-between text-slate-400"><span>{game.props.size.toLocaleString()} props · {game.net.segs.size.toLocaleString()} segs</span><span>bake {p.chunksPending}</span></div>
+      <div className="mt-1 flex items-center gap-1"><span className="mr-auto text-slate-400">Test cars</span>
+        {[0, 1000, 5000, 10000].map(n => <button key={n} className={`chip ${(game.traffic?.n ?? 0) === n ? 'chip-on' : ''}`} onClick={() => game.setTraffic(n)}>{n ? n / 1000 + 'k' : 'off'}</button>)}
+      </div>
     </div>
   );
 }
@@ -242,7 +269,7 @@ function ObjectsPanel({ game, cats, cat, setCat }: { game: Game; cats: string[];
         {items.map(({ it, i }) => (
           <button key={it.id} onClick={() => game.setLib(i)} title={`${it.name} — ${money(it.cost)}`}
             className={`flex flex-col items-center rounded-lg border p-1 ${game.libIndex === i ? 'border-amber-400 bg-amber-400/20' : 'border-white/10 hover:bg-white/10'}`}>
-            <div className="flex h-14 w-full items-center justify-center"><img src={it.src} alt={it.name} className="max-h-14 max-w-full object-contain" draggable={false} /></div>
+            <div className="flex h-14 w-full items-center justify-center"><Thumb it={it} size={56} /></div>
             <div className="w-full truncate text-center text-[10px] text-slate-200">{it.name}</div>
             <div className="text-[10px] text-amber-300">{money(it.cost)}</div>
           </button>
@@ -266,7 +293,7 @@ function SelectPanel({ game }: { game: Game }) {
   return (
     <Panel title="Selected">
       <div className="flex items-center gap-2">
-        <img src={it.src} alt="" className="h-14 w-14 object-contain" />
+        <Thumb it={it} size={56} />
         <div><div className="text-sm font-semibold">{it.name}</div><div className="text-[11px] text-slate-400">{it.cat} · scale {p.scale.toFixed(2)}{p.flip ? ' · flipped' : ''}{p.auto ? ' · placed by the road works' : ''}</div></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1">

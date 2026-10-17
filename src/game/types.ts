@@ -21,7 +21,10 @@ export interface LibItem {
   doorAt?: { u: number; v: number };
   cost: number;
   glows?: Glow[];
-  src: string;
+  /** atlas page and UVs: [page, u0, v0, u1, v1] */
+  tex: [number, number, number, number, number];
+  /** the trimmed picture inside the w x h display rectangle: [x0, y0, x1, y1] display px */
+  quad: [number, number, number, number];
 }
 
 export interface Prop {
@@ -57,6 +60,8 @@ export const TERRAINS = [
 
 export interface SaveData {
   version: number;
+  /** map seed (terrain generation, later phases) */
+  seed?: number;
   map: number;
   terrain: string;
   /** ax, ay, bx, by, class, line style */
