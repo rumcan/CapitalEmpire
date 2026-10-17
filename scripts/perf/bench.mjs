@@ -17,14 +17,19 @@ if (args.includes('--serve')) {
 }
 const size = opt('size', '1'), dpr = +opt('dpr', '1'), shots = args.includes('--shots');
 const out = path.resolve('output/bench'); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ channel: opt('channel', 'msedge'), headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader=false', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
-const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: dpr });
+let browser, page, gpu = 'unknown';
+// headless Chrome on the worker sometimes starts without WebGL (GPU unknown): relaunch instead of waiting for nothing
+for (let attempt = 0; attempt < 3 && gpu === 'unknown'; attempt++) {
+if (browser) { console.log('[bench] no WebGL, relaunching the browser'); await browser.close(); }
+browser = await chromium.launch({ channel: opt('channel', 'msedge'), headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader=false', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
+page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: dpr });
 const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
 page.on('pageerror', e => console.log('[pageerror]', e.message));
 page.on('crash', () => console.log('[crash] the page crashed'));
 await page.goto(`${base}?bench=${size}`);
-const gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
+gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const d = gl?.getExtension('WEBGL_debug_renderer_info'); return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
+}
 console.log('GPU:', gpu);
 let shot = 0;
 const t0 = Date.now();

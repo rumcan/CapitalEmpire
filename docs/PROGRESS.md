@@ -3,15 +3,15 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-17, Phase 1 steps 1–4 done (generator, creeks, wiring, valley ground)._
+_Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges and tunnels, highway entry)._
 
 ## Where we are
 
 | Phase | Status |
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), local only, not pushed |
-| 1. Terrain (maple valley for now) | **In progress.** Task list below |
-| 2. Traffic core | Not started. The approach is decided (GAME-PLAN section 3.3) |
+| 1. Terrain (maple valley for now) | **Done** (2026-10-17), local only, not pushed. Steps and numbers below |
+| 2. Traffic core | **Next.** The approach is decided (GAME-PLAN section 3.3); suggested steps at the end |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
@@ -94,8 +94,10 @@ Other numbers:
 - **The art is Maple Falls autumn (night),** which now matches the maple-valley setting. The desert art track is
   deferred with the desert re-skin (GAME-PLAN section 7, item 4).
 - **The test traffic is a placeholder** (no car following, cars pass through each other). The real sim is Phase 2.
-- **The terrain tool and its 7 Maple Falls terrain types still exist.** Phase 1 replaces them with generated
-  desert terrain.
+- **The worker bench sometimes never gets WebGL** ("GPU: unknown", heap stuck at 8 MB, never ready). Seen twice;
+  a plain retry worked. `bench.mjs` now relaunches the browser (up to 3 tries) when WebGL is missing.
+- **The forest only plants as the camera arrives** (2 cells per frame), so a fast pan at district zoom shows trees
+  popping in at the edges.
 
 ## Remote worker PC
 
@@ -112,7 +114,7 @@ Other numbers:
 SYSTEM (`icacls ... /inheritance:r`) fixed it. The first `npm run worker:test` created the clone: 6/6 tests pass, 26 s including `npm install`. `run.sh` sends a
 snapshot of the local working tree, so uncommitted changes are tested too.
 
-## Next: Phase 1, terrain (maple valley for now)
+## Phase 1, terrain (maple valley for now): done
 
 The goal and gate are in GAME-PLAN section 3.1 and the phase table in section 5. The setting changed to a maple
 valley on 2026-10-17, so the art steps (4 and 5) use the Maple Falls art we already have. These are the steps, in
@@ -193,16 +195,65 @@ order; the ones marked **(haiku)** can be briefed to `haiku-coder`.
      If it happens again, look at the cold texture build in a fresh profile.
    - Screenshots: `look.mjs` at the repo root (git-excluded via `.git/info/exclude`; a copy of
      `output/look/look.mjs` that also shoots the river, a creek and a hill) writes `output/look/s4-*.png`.
-5. **Hills as forest** (lead decides). Cover HILL with dense maple-tree sprites from the existing atlas (the forest
-   reads as raised ground at 30%), plus placeholder rock-edge pieces along the 4 m terrace edges. They are
-   depth-sorted like buildings and cannot be bulldozed. Watch the visible-instance budget (60k at the Street tier).
-6. **Bridges and tunnels in the road tool** (lead designs; haiku implements):
-   - segment flags, with cost per metre;
-   - a bridge deck, piers and railings over water;
-   - tunnel portals, with the underground run not painted;
-   - network ops and save support.
-7. **Highway entry** at the map edge: the generator already picks the point; build the road from it.
-8. **Gate:** 20 seeds pass the generator tests; a road can cross a river and a hill; benchmark budgets still met
-   (run `haiku-runner`).
+5. **Hills as forest. DONE** (2026-10-17).
+   - `src/game/forest.ts` (pure, tested in `tests/forest.test.ts`): a jittered global grid (2.4 tiles) of trees on
+     HILL: maples, oaks and birches, conifers more likely higher up (150–400 m), clearings from noise, thinner edges,
+     none on cliffs (slope > 1.5, thinning from 1.15). About 11.5% of hill tiles get a tree (192k on seed 1).
+   - **Planted lazily** per 64x64-tile cell as the camera reaches it (2 cells per frame, nearest first). The trees
+     are sprites only, never engine props: they cannot be selected, bulldozed or saved, and are not in the planner
+     blocks. `perf.forest` counts them.
+   - **Rock instead of rock-edge sprites (decision):** there are no rock sprites in the atlas, so the 4 m terraces
+     and steep faces get a painted rock texture where the slope passes about 1.2–1.6 (`rockAlpha`, also in the
+     planner). Hill slopes are steep (median about 0.9 m/m), so this reads as cliffs between the forest. Real
+     rock-edge sprites can come with the art track.
+   - Hillshade shadows were softened (alpha up to 0.5) because they stained plain grass.
+   - Worker bench: Street 30% 60 / 0.85 / 1.1; Street 17% 56.4 / 1.08 / 1.6; District 8% 60 / 1.15 / 1.2; District
+     4.5% 60 / 1.88 / 2.2; Planner 2% 60 / 0.72 / 0.8; Whole map 59.5 / 0.83 / 1.0. Heap 216 MB, bake 17.8 ms.
+6. **Bridges and tunnels. DONE** (2026-10-17).
+   - **Data:** `Seg.kind` / `Route.kind` (`SK` GROUND 0, BRIDGE 1, TUNNEL 2), kept through splits, piece removal, the
+     worker ops and the save (an optional 7th element of the v4 seg tuple; no version bump). Routes break where the
+     kind changes.
+   - **Road tool (C:S style, automatic):** `structures.splitByTerrain` probes the corridor (5 points across) every
+     0.25 tiles: any WATER makes a bridge, any HILL a tunnel; ground gaps under 3 tiles between equal structures are
+     absorbed; bridges get 1.5-tile abutments. Bridges cost 4x per metre, tunnels 6x; a bridge can span 300 m and a
+     tunnel 600 m. The route cost preview and the build toast include them.
+   - **Painting:** bridge routes keep their road features plus a deck (water shadow, piers every 9 tiles, fascia,
+     concrete deck, railings with posts). Tunnel routes paint nothing but portals (dark mouth, headwall with arch)
+     and a dashed planner line. Forest cells near a portal re-plant without the trees in front of the mouth. Cars
+     under hills are hidden (the placeholder traffic drives through tunnels).
+   - Worker bench: all stages 60 fps; worst p95 2.2 ms (District 4.5%). Heap 217 MB, bake 16.1 ms.
+7. **Highway entry. DONE** (2026-10-17). `structures.highwayRoute`: 24 tiles straight in from the generator's border
+   point, then the cheaper of two right-angle corners to the starter town's nearest node (scored by structure
+   cost, so it avoids tunnels when it can). Built free in `seedTown` as a Road, with bridges/tunnels where needed.
+8. **Gate. PASSED** (2026-10-17).
+   - 20 seeds pass the generator guarantees (`tests/terrain.test.ts`).
+   - A road crosses the river and a hill on real terrain: `tests/gate.test.ts` (seeds 1–3: bridges 29–39 tiles over
+     rivers 26–35 wide, tunnels 174–216 tiles, a BRIDGE route, a TUNNEL route and two portals each). Also checked
+     in the browser (`look6.mjs`, git-excluded: builds both with the road tool and shoots them).
+   - Benchmark budgets still met (worker, RTX 3080, fps / cpu avg / p95 ms): Street 30% 60 / 0.75 / 0.9;
+     Street 17% 59.9 / 0.81 / 0.9; District 8% 60 / 1.17 / 1.4; District 4.5% 60 / 2.0 / 2.5; Planner 2% 60 / 0.75 /
+     0.9; Whole map 59.8 / 0.86 / 1.0. Heap 216 MB, bake 16.5 ms. 36/36 tests.
+
+Left over from Phase 1 (small, pick up when convenient):
+- The Select panel still has Bigger/Smaller for props (a leftover of the removed objects tool).
+- The starter town's layout is fixed, so on some seeds a few of its roads are skipped; old saves' roads are not
+  checked against the new terrain.
+- The highway's last leg can cut through the starter town on unlucky seeds (it targets the nearest node). It can
+  be bulldozed like any road.
+- Portals and headwalls are drawn the same whichever way the tunnel faces; bridge decks are flat (no ramps).
+- Placeholder traffic drives through tunnels (hidden) and over bridges like any road.
+
+## Next: Phase 2, traffic core
+
+Goal and gate: GAME-PLAN section 3.3 and the phase table in section 5 (gate: 10k cars for 10 in-game days on a
+seeded network, no deadlock, budgets met, every junction type behaves visibly). Suggested steps:
+1. **Lane graph** from the network (lead designs): directed lanes per arm (`laneCentres`), connectors as turn
+   curves from the renderer's corner fillets, a conflict table per node. Bridges and tunnels are ordinary links
+   (tunnel cars hidden). Incremental: rebuild only the touched nodes' lanes.
+2. **Sim worker** with IDM car-following on fixed steps, seeded; vehicles stream positions to the main thread.
+3. **MOBIL** lane changes, then junction control (priority, stop/yield, fixed-time signals, roundabouts, slips).
+4. **Zone next-hop routing** (about 256 zones, reverse Dijkstra over congested times, logit at junctions).
+5. **Test traffic** (trip generation stub), safety valves (towing, spawn throttle), then validation scenarios from
+   traffic-simulation.de (ring road, on-ramp, lane closure) as tests, and the 10k-car gate on the worker.
 
 Update this file after each step.
