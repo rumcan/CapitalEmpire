@@ -7,7 +7,9 @@ import { GroundCache } from './ground-cache';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV4 } from './save';
 import { CAR_COLOURS, TestTraffic } from './traffic';
-import { TC, classAt, generateTerrain, type Terrain } from './terrain';
+import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
+import { slopeField } from './terrain-paint';
+import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 
 const DAY_SECONDS = 20;
@@ -32,6 +34,8 @@ export class Game {
   props = new Set<Prop>(); nextUid = 1;
   private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
   sprites = new SpriteTiles();
+  /** forest: slope field and clearing noise of the terrain; trees planted per FOREST_CELL cell (key cj * 32 + ci), drawn as sprites only, never in props */
+  private slope: Float32Array = new Float32Array(0); private clearing: Noise = makeNoise(0); private forest = new Map<number, Prop[]>(); private forestItem = new Map<string, number>();
   ground: GroundCache;
   /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
   pageImages: HTMLImageElement[] = []; private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
@@ -48,7 +52,7 @@ export class Game {
   toasts: Toast[] = []; toastId = 1;
   traffic: TestTraffic | null = null;
   // perf
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner' };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0 };
   private frameTimes: number[] = [];
   // input
   private dragging: null | { kind: 'pan' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
@@ -97,7 +101,11 @@ export class Game {
     this.raf = requestAnimationFrame(this.frame);
   }
   /** generate the valley for a seed (about 0.3–0.6 s) */
-  private genTerrain(seed: number) { this.seed = seed; this.terrain = generateTerrain(seed); }
+  private genTerrain(seed: number) {
+    this.seed = seed; this.terrain = generateTerrain(seed);
+    for (const ps of this.forest.values()) for (const p of ps) this.sprites.remove(p);
+    this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
+  }
   dead = false;
   destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); this.ground.terminate(); }
 
@@ -163,6 +171,35 @@ export class Game {
     if (LIBRARY[p.item].big) this.scheduleBlocks();
   }
   /** after moving, flipping or scaling a prop */
+  /** plant the forest cells near the view (world px rectangle): nearest to the view centre first, at most two cells per frame */
+  private plantForest(X0: number, Y0: number, X1: number, Y1: number) {
+    const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = 8, N = MAP / FOREST_CELL;
+    const ci0 = clamp(Math.floor((Math.min(a.x, b.x, c.x, d.x) - g) / FOREST_CELL), 0, N - 1), ci1 = clamp(Math.floor((Math.max(a.x, b.x, c.x, d.x) + g) / FOREST_CELL), 0, N - 1);
+    const cj0 = clamp(Math.floor((Math.min(a.y, b.y, c.y, d.y) - g) / FOREST_CELL), 0, N - 1), cj1 = clamp(Math.floor((Math.max(a.y, b.y, c.y, d.y) + g) / FOREST_CELL), 0, N - 1);
+    let todo: number[] | null = null;
+    for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
+      const key = cj * N + ci; if (this.forest.has(key)) continue;
+      if (!todo) todo = []; todo.push(key);
+    }
+    if (!todo) return;
+    const m = tileOf((X0 + X1) / 2, (Y0 + Y1) / 2), mx = clamp(Math.floor(m.x / FOREST_CELL), 0, N - 1), my = clamp(Math.floor(m.y / FOREST_CELL), 0, N - 1);
+    const dd = (k: number) => ((k % N) - mx) ** 2 + (Math.floor(k / N) - my) ** 2;
+    todo.sort((p, q) => dd(p) - dd(q));
+    for (let k = 0; k < Math.min(2, todo.length); k++) this.plantCell(todo[k], todo[k] % N, Math.floor(todo[k] / N));
+  }
+  /** plant one forest cell as sprites (not props: no selection, bulldozing or saving) */
+  private plantCell(key: number, ci: number, cj: number) {
+    const trees = forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj), out: Prop[] = [];
+    for (const tr of trees) {
+      let item = this.forestItem.get(tr.id);
+      if (item === undefined) { item = LIBRARY.findIndex(i => i.id === tr.id); this.forestItem.set(tr.id, item); }
+      if (item < 0) continue;
+      const it = LIBRARY[item], b = it.boxes[0], ax = tr.x - b.dx * tr.scale / 2, ay = tr.y - b.dy * tr.scale / 2;
+      const p: Prop = { uid: this.nextUid++, item, x: ax, y: ay, flip: tr.flip, scale: tr.scale, ...this.footprint(it, ax, ay, tr.flip, tr.scale) };
+      this.sprites.add(p); out.push(p);
+    }
+    this.forest.set(key, out); this.perf.forest += out.length;
+  }
   private propChanged(p: Prop) { const it = LIBRARY[p.item]; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, p.scale)); this.propGrid.remove(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.update(p); if (it.big) this.scheduleBlocks(); }
   /** street lamps light the road: their reflection pools are part of the ground picture */
   syncLamps() {
@@ -322,6 +359,7 @@ export class Game {
   propAt(mx: number, my: number): Prop | null {
     const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z, r = [0, 0, 0, 0];
     for (const p of this.sprites.at(X, Y)) {
+      if (!this.props.has(p)) continue; // forest trees are not props: never picked
       spriteRect(p, r); if (X < r[0] || X > r[2] || Y < r[1] || Y > r[3]) continue;
       const it = LIBRARY[p.item], [page, u0, v0, u1, v1] = it.tex, a = this.pageAlpha[page];
       if (!a) return p;
@@ -447,7 +485,7 @@ export class Game {
   private reset() {
     this.edit.clear();
     for (const p of [...this.props]) this.removeProp(p);
-    this.sprites.clear(); this.autoByKey.clear();
+    this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
     this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = []; this.traffic = null;
   }
   newTown() {
@@ -630,6 +668,7 @@ export class Game {
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
       const movers: Drawable[] = this.traffic ? this.traffic.visible(Math.min(...c.map(p => p.x)) - pad, Math.min(...c.map(p => p.y)) - pad, Math.max(...c.map(p => p.x)) + pad, Math.max(...c.map(p => p.y)) + pad) : [];
+      this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), street = tier === 'street';
       const [sAt, pAt] = gl.uploadParts([[f.shadows, street ? f.shadowFloats : 0], [f.stream, f.floats]]);
       if (street) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE);

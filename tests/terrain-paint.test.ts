@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
 import { HS, TC, type WaterPoint } from '../src/game/terrain/types';
 import { makeNoise } from '../src/game/terrain/noise';
-import { shadeField, shadeRGBA, classAlpha, waterShape, waterBox, type PathSink } from '../src/game/terrain-paint';
+import { shadeField, shadeRGBA, classAlpha, rockAlpha, waterShape, waterBox, type PathSink } from '../src/game/terrain-paint';
 
 /** a sink that records every call as a plain list of points, arcs and closes */
 function recorder() {
@@ -53,6 +53,15 @@ test('classAlpha: a fully covered box is opaque, a box without the class is null
   for (let k = 0; k < full.data.length; k += 4) assert.equal(full.data[k], 0);
   const ground = new Uint8Array(MAP * MAP).fill(TC.GROUND);
   assert.equal(classAlpha(ground, TC.HILL, 100, 100, 8, 8, 2, noise), null);
+});
+
+test('rockAlpha: a flat slope field has no rock (null), a field of steepness 3 is opaque everywhere', () => {
+  const noise = makeNoise(1);
+  assert.equal(rockAlpha(new Float32Array(HS * HS), 100, 100, 10, 10, 1, noise), null);
+  const steep = rockAlpha(new Float32Array(HS * HS).fill(3), 100, 100, 10, 10, 1, noise);
+  assert.ok(steep);
+  for (let k = 3; k < steep.data.length; k += 4) assert.equal(steep.data[k], 255);
+  for (let k = 0; k < steep.data.length; k += 4) assert.equal(steep.data[k], 0);
 });
 
 test('waterShape: arcs and quads, every quad winds the same way as the arcs', () => {

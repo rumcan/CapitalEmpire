@@ -4,7 +4,7 @@ import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type Te
 import { POOL_ANCHOR, PPM } from './ground-art';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
-import { classAlpha, shadeField, shadeRGBA, waterBox, waterShape } from './terrain-paint';
+import { classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -27,10 +27,12 @@ export class GroundPainter {
   blocks: PlanBlocks = new Float32Array(0);
   /** hillshade per height sample, and the waterways with their bboxes (grown for the shore) */
   shade: Float32Array = new Float32Array(HS * HS);
+  /** slope magnitude per height sample (bare rock on the steep faces) */
+  slope: Float32Array = new Float32Array(HS * HS);
   waters: { w: Waterway; box: BBox }[] = [];
   constructor(public terrain: Uint8Array, public net: RoadNetwork, public tex: Textures) {}
   /** take a new terrain: classes, height samples and waterways */
-  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
   private buffer(name: string, W: number, H: number) {
     let c = this.scratch.get(name); if (!c) { c = canvas(W, H); this.scratch.set(name, c); }
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
@@ -67,6 +69,9 @@ export class GroundPainter {
     const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1), byType = new Map<number, Path2D>();
     for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (t !== TC.PATCH && t !== TC.HILL) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
     for (const [t, p] of byType) { ctx.fillStyle = this.planColour(t === TC.PATCH ? 'meadow' : 'forest'); ctx.fill(p); }
+    // bare rock on the steep faces, as a flat colour (before the river banks, so they read on top)
+    const ra = rockAlpha(this.slope, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.edgeNoise);
+    if (ra) { const rb = this.buffer('small', ra.W, ra.H), rg = ctx2d(rb); rg.putImageData(new ImageData(ra.data as Uint8ClampedArray<ArrayBuffer>, ra.W, ra.H), 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = this.planColour('rock'); rg.fillRect(0, 0, ra.W, ra.H); rg.globalCompositeOperation = 'source-over'; ctx.setTransform(M); ctx.drawImage(rb, tx0, ty0, ra.W / 0.25, ra.H / 0.25); }
     // river banks, creeks and the water, then the hillshade (as on the ground), so the planner reads the valley too
     const vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1, near = this.waters.filter(w => vis(w.box));
     const shape = (kind: 'river' | 'creek', extra: number, col: string) => { const p = new Path2D(); let any = false; for (const w of near) if (w.w.kind === kind) any = waterShape(p, w.w.pts, extra, box) || any; if (any) { ctx.fillStyle = col; ctx.fill(p); } };
@@ -126,6 +131,7 @@ export class GroundPainter {
     const layer = (name: TexName, mask: (g: C2D) => void) => { const b = this.buffer('layer', W, H), g = ctx2d(b); mask(g); g.globalCompositeOperation = 'source-in'; g.setTransform(M); g.fillStyle = this.screenPattern(g, name, L, X0, Y0, Minv); g.fillRect(tx0, ty0, bw, bh); g.globalCompositeOperation = 'source-over'; composite(b); };
     const cres = lite ? 1 : 4;
     for (const [want, name] of [[TC.PATCH, 'meadow'], [TC.HILL, 'forest']] as const) { const a = classAlpha(this.terrain, want, tx0, ty0, bw, bh, cres, this.edgeNoise); if (a) layer(name, g => overlay(g, a, cres)); }
+    const ra = rockAlpha(this.slope, tx0, ty0, bw, bh, cres, this.edgeNoise); if (ra) layer('rock', g => overlay(g, ra, cres));
     const near = this.waters.filter(w => vis(w.box)), rivers = near.filter(w => w.w.kind === 'river'), creeks = near.filter(w => w.w.kind === 'creek');
     /** a feathered waterway mask: 4 nested shapes from extra + f down to extra - f (tiles), each adding a quarter of the alpha */
     const shore = (g: C2D, list: typeof near, extra: number, f: number, scale = 1) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of list) any = waterShape(p, w.w.pts, extra + f * (1 - (2 * s) / 3), box, scale) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };

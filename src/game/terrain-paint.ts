@@ -35,7 +35,7 @@ export function shadeRGBA(shade: Float32Array, x0: number, y0: number, w: number
     const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, k = (v * W + u) * 4;
     if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) continue; // off the map: no shade (clamped samples would streak)
     const s = sampleField(shade, tx, ty);
-    if (s < 0) { data[k] = 14; data[k + 1] = 10; data[k + 2] = 34; data[k + 3] = Math.min(0.6, -s * 2.2) * 255; }
+    if (s < 0) { data[k] = 14; data[k + 1] = 10; data[k + 2] = 34; data[k + 3] = Math.min(0.5, -s * 1.6) * 255; }
     else { data[k] = 190; data[k + 1] = 200; data[k + 2] = 230; data[k + 3] = Math.min(0.12, s * 0.6) * 255; }
   }
   return { data, W, H };
@@ -108,4 +108,30 @@ export function waterBox(pts: WaterPoint[], pad: number): BBox {
   for (const p of pts) { if (p.w > wmax) wmax = p.w; if (p.x < x0) x0 = p.x; if (p.y < y0) y0 = p.y; if (p.x > x1) x1 = p.x; if (p.y > y1) y1 = p.y; }
   const g = wmax / 2 + pad;
   return [x0 - g, y0 - g, x1 + g, y1 + g];
+}
+
+/** slope magnitude per height sample (metres per metre, central differences): about 0.9 is typical on the hills */
+export function slopeField(height: Float32Array): Float32Array {
+  const out = new Float32Array(HS * HS);
+  for (let j = 0; j < HS; j++) {
+    const j0 = Math.max(0, j - 1), j1 = Math.min(HS - 1, j + 1), dy = (j1 - j0) * HSTEP * 2;
+    for (let i = 0; i < HS; i++) {
+      const i0 = Math.max(0, i - 1), i1 = Math.min(HS - 1, i + 1), dx = (i1 - i0) * HSTEP * 2;
+      out[j * HS + i] = Math.hypot((height[j * HS + i1] - height[j * HS + i0]) / dx, (height[j1 * HS + i] - height[j0 * HS + i]) / dy);
+    }
+  }
+  return out;
+}
+
+/** bare rock on the steep faces (RGB 0, alpha only): slope past about 1.2 fades in, the edge wobbles with noise; null when there is none in the box */
+export function rockAlpha(slope: Float32Array, x0: number, y0: number, w: number, h: number, res: number, noise: Noise): { data: Uint8ClampedArray; W: number; H: number } | null {
+  const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res));
+  const data = new Uint8ClampedArray(W * H * 4); let any = false;
+  for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
+    const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res;
+    if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) continue; // off the map: no rock
+    const a = Math.round(smoothstep(1.2, 1.6, sampleField(slope, tx, ty) + 0.25 * fbm(noise, tx / 10, ty / 10, 3)) * 255);
+    data[(v * W + u) * 4 + 3] = a; if (a > 0) any = true;
+  }
+  return any ? { data, W, H } : null;
 }
