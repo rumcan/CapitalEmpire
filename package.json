@@ -10,7 +10,10 @@
     "test": "esbuild tests/*.test.ts --bundle --platform=node --format=esm --outdir=output/tests --out-extension:.js=.mjs --log-level=warning && node --test \"output/tests/*.mjs\"",
     "assets:ground": "node scripts/assets/prep-ground.mjs",
     "assets:sprites": "node scripts/assets/prep-sprites.mjs",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "bench": "node scripts/perf/bench.mjs",
+    "worker:test": "bash scripts/worker/run.sh \"npm test\"",
+    "worker:bench": "bash scripts/worker/run.sh \"npm run build && node scripts/perf/bench.mjs --serve --channel chrome --size 1\""
   },
   "dependencies": {
     "clsx": "2.1.1",

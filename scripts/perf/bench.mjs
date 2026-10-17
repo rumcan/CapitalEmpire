@@ -1,15 +1,23 @@
-// Runs the in-game benchmark (?bench) in headless Edge with the real GPU and prints the results.
-//   node scripts/perf/bench.mjs [url] [--size 1] [--dpr 1] [--shots]
-// Needs the dev server (npm run dev -- --port 5174) or a preview server. Screenshots go to output/bench/.
+// Runs the in-game benchmark (?bench) in a headless browser on the real GPU and prints the results.
+//   node scripts/perf/bench.mjs [url] [--size 1] [--dpr 1] [--shots] [--channel msedge|chrome] [--serve]
+// --serve starts `vite preview` on dist/ itself (run `npm run build` first); otherwise it needs a running dev or
+// preview server at the url. Screenshots (--shots stalls frames, so only for looking) and JSON go to output/bench/.
 import { chromium } from 'playwright-core';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
-const base = args.find(a => a.startsWith('http')) || 'http://[::1]:5174/'; // vite binds localhost, which is IPv6 here
+let base = args.find(a => a.startsWith('http')) || 'http://[::1]:5174/'; // vite binds localhost, which is IPv6 here
+let server = null;
+if (args.includes('--serve')) {
+  base = 'http://127.0.0.1:5199/';
+  server = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['vite', 'preview', '--port', '5199', '--strictPort', '--host', '127.0.0.1'], { stdio: 'ignore', shell: process.platform === 'win32' });
+  for (let i = 0; i < 60; i++) { try { if ((await fetch(base)).ok) break; } catch { /* not up yet */ } await new Promise(r => setTimeout(r, 500)); }
+}
 const size = opt('size', '1'), dpr = +opt('dpr', '1'), shots = args.includes('--shots');
 const out = path.resolve('output/bench'); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader=false', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
+const browser = await chromium.launch({ channel: opt('channel', 'msedge'), headless: true, args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader=false', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
 const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: dpr });
 const logs = [];
 page.on('console', m => { const t = m.text(); if (/\[bench\]|error|Error/.test(t)) { logs.push(t); console.log('[page]', t.slice(0, 300)); } });
@@ -32,3 +40,4 @@ const res = await page.evaluate(() => window.__bench).catch(() => null);
 console.log(JSON.stringify({ gpu, ...res }, null, 1));
 fs.writeFileSync(path.join(out, `bench-size${size}-dpr${dpr}.json`), JSON.stringify({ gpu, ...res }, null, 1));
 await browser.close();
+if (server) { if (process.platform === 'win32') spawn('taskkill', ['/pid', String(server.pid), '/T', '/F']); else server.kill(); }
