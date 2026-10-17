@@ -9,8 +9,8 @@ _Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges
 
 | Phase | Status |
 | --- | --- |
-| 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), local only, not pushed |
-| 1. Terrain (maple valley for now) | **Done** (2026-10-17), local only, not pushed. Steps and numbers below |
+| 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
+| 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **Next.** The approach is decided (GAME-PLAN section 3.3); suggested steps at the end |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
