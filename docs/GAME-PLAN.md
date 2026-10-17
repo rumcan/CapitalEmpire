@@ -10,7 +10,8 @@ Decisions made so far:
 | Setting | **For now: a sleepy maple-wooded town valley** (2026-10-17), because all the current art is Maple Falls maple. The 1980s Las Vegas desert valley described in this plan is **deferred**: it comes back as a re-skin once the desert art exists (see section 7). Eras advance over in-game time (80s, 90s, 2000s, today) as new art arrives. |
 | Map | 4 × 4 km = **2048 × 2048 tiles** (2 m tiles), up from 160. |
 | Terrain | Seeded, fixed hills, valleys and rivers. They are not editable and they block building. Roads cross rivers on **bridges** and go through hills in **tunnels**. |
-| Player control | **Roads only.** Nothing is zoned or placed by the player. Growth follows how well the traffic flows. |
+| Player control | **Roads and traffic only** (confirmed 2026-10-17). The player never places buildings or props: the Maple Falls "objects" build tool comes out. The game allocates land use (residential, commercial, industrial, tourism, government) and builds the town itself; the player only steers **how** it grows by picking growth options (section 1.5). Growth follows how well the traffic flows. |
+| Road builder UX | **Cities: Skylines (and similar games) is the reference** for road tools, controls and feel, so players from those games feel at home (section 3.2). |
 | Closest zoom | **30%**, the town builder's 30% zoom (`ZOOM_MAX = 0.3` already). Full art quality has to hold at that zoom. |
 
 ---
@@ -61,7 +62,8 @@ are listed in section 7 and do not change Phases 1 and 2.
   - 1.3–1.8: growth slows (amber).
   - Above 1.8: growth stops (red) and the worst buildings start to decline (boarded up, then derelict, then
     cleared).
-- The road class sets the character of the land beside it, so there is no zoning. Lanes and streets grow tract
+- **The game zones, not the player** (section 1.5). The road class still shapes the character of the land beside
+  it, inside the land use the game allocated. Lanes and streets grow tract
   houses and trailer parks. Roads grow mixed use, motels and gas stations. Avenues grow strip malls, chapels and
   pawn shops. Boulevards grow the **Strip**: casinos and resorts, which are big traffic magnets. The land near the
   freeway, the railway or the map edge grows industry.
@@ -80,6 +82,28 @@ are listed in section 7 and do not change Phases 1 and 2.
 Every art item and every building records an `era`. The MVP is 1980–1989 only. Later the eras advance by in-game
 years: new buildings use the current era's art, old ones redevelop slowly, and the mix of cars changes. The data
 model supports this from day 1, so new sprites can be added without code changes.
+
+
+### 1.5 Land use and growth options (the town builds itself)
+- **The player builds no buildings, ever.** They work the traffic: roads, junctions, signals, bridges, tunnels.
+- **The game allocates the lots by default.** When a road opens land, the parcels next to it get a land use from
+  the terrain, the road class, the distance to the highway and river, the neighbours, and the current demand:
+  - **Residential:** preset houses that look amazing, with full backyards, fences, plants, pools, sheds and
+    driveways (the Lot Composer, section 3.5).
+  - **Commercial:** shops, offices and diners with **parking lots, loading bays and back alleys** generated on the
+    lot.
+  - **Industrial:** yards, warehouses and truck docks near the highway, the rail line or the edge of the map. They
+    make truck traffic.
+  - **Tourism:** attractions, hotels, a stadium or fairground, festivals. These are **traffic disruptors**: they
+    surge when an event or season hits and throw the network out of balance, so the player has to adapt.
+  - **Government:** the town hall, schools, the police and fire stations, hospitals. They are fixed destinations
+    with their own rush peaks (school runs, shift changes) and emergency vehicles that need clear routes.
+- **Growth options (player choice).** Instead of zoning, the player picks how the town should naturally grow from
+  a few options, for example: "family suburb", "industrial boom", "tourist town", "downtown core", "balanced".
+  The option shifts the allocation weights and the demand mix; it never places anything directly. The exact set
+  of options and when they unlock is still open (section 7).
+- **Demand comes from the story** (section 0): the parasite coworkers' population booms arrive as demand events
+  the network has to absorb.
 
 ---
 
@@ -162,6 +186,22 @@ tiers:
    site), so the first big bottleneck is built into the map.
 
 ### 3.2 Road builder (keep what is great, add what traffic needs)
+**The reference is Cities: Skylines** (1 and 2) and similar games. We want their players, and a familiar UX makes
+the game easy to pick up. Match their conventions wherever it doesn't fight our iso art:
+- **Draw modes:** straight, curved (3-click: start, control, end), freeform, and upgrade (click or drag along a
+  road to change its class, direction or lanes in place).
+- **Snapping and guides:** to road ends, to the middle of segments, to grid and angle guide lines, parallel
+  offsets; live length, angle and cost shown at the cursor.
+- **Elevation:** Page Up/Down (or a slider) to raise or lower the road being drawn, which gives bridges,
+  overpasses and tunnels with the same tool.
+- **A road palette by hierarchy:** small, medium, large, highways, one-way variants, and road assets (with/without
+  trees, medians, bike lanes).
+- **The junction editor** (as in C:S 2 and the TM:PE mod): lane connections, lane arrows, turn bans, stop and
+  yield signs, traffic lights with a phase editor, and priority roads.
+- **Quick tools:** roundabout stamps, highway ramps, a grid stamp, a parallel-road tool, bulldoze with refund,
+  and undo/redo.
+- **Overlays:** traffic flow, road condition, noise and the cars' routes for a selected road or vehicle (as in
+  C:S "route view").
 **Keep:** the 5 classes, 90°/45° routing, auto-split at crossings, curb corners, zebras, stop lines, medians,
 roundabouts, slipways, cul-de-sacs, piece bulldozing, lamp pools, the build reveal. The palette is re-themed for
 the desert: sun-bleached asphalt, concrete curbs, gravel verges.
@@ -177,6 +217,16 @@ the desert: sun-bleached asphalt, concrete curbs, gravel verges.
 | Workflow | Undo/redo for whole edits, network health warnings (dead ends, unreachable lots, junctions too close together) |
 
 ### 3.3 Traffic simulation
+**The bar (owner, 2026-10-17): the traffic system must be super powerful and adapt to every change.** That means:
+- **Every edit takes effect at once.** A new road, a closed lane, a changed signal or roadworks changes the lane
+  graph, and the cars already driving re-plan; nothing waits for a rebuild.
+- **Routes react to congestion.** Route costs use the measured travel times, not only free-flow speeds, so drivers
+  spread onto alternatives as jams form, and come back when the jam clears (with damping, so they don't flip-flop).
+- **Disruptions are first-class:** tourism events, roadworks, accidents and emergency vehicles inject surges or
+  close capacity, and the sim must absorb them without deadlock.
+- **Scale:** 10k simulated cars within the budget in section 2.3, with mesoscopic fallback off-screen (section 6)
+  if needed.
+
 **Build or borrow (decided 2026-10-17).** We write our own TypeScript simulator. We use the published models, not
 someone else's engine, because the sim has to update incrementally on every road edit, run in our worker on our
 lane graph, and ship in a browser.
@@ -228,6 +278,12 @@ lane graph, and ship in a browser.
 - Time controls: pause, 1×, 2×, 4×, 8×; and "skip to rush hour".
 
 ### 3.5 Lot Composer (houses that look like the owner built them)
+**Scope, 2026-10-17:** the Lot Composer builds **every** lot type, not only houses. Residential gets preset
+houses with full backyards, fences and plants. Commercial gets the building plus its **parking lot, loading bay
+and back alley**. Industrial gets yards and truck docks. Tourism and government get their own preset sites. Lots
+are allocated by the game (section 1.5), never placed by the player. The text below was written for the desert
+houses; for the maple setting the same rules apply with Maple Falls art (picket fences and hedges instead of
+CMU walls, lawns instead of rock gardens).
 A deterministic algorithm. Given a lot, it produces a believable, lived-in layout in the style of the owner's
 Maple Falls blocks, but for the desert. It ports the **places-v5 kit** ideas: block-local u/v metres, sidewalk
 2.05 m, curb, road centre 5.3 m. CapitalEmpire's `street` class already has the same dimensions (half width
@@ -307,9 +363,9 @@ Every phase ends with something playable and a measurable gate.
 | **0** | **Scale foundation** | First commit; asset prep runs on Windows; atlas and mip pipeline (0.6/0.3/0.15); WebGL2 instanced sprite layer; ground baking in a worker; 2048² map with 64-tile cells; incremental network rebuild; topology split for Node; zoom tiers including the Planner bake; save v3 (seed + roads + lot states, gzip); headless test harness; **benchmark scene** (synthetic 4 km city: 500k props, 10k moving sprites) | 60 fps panning the benchmark at every tier; budgets in §2.3 met |
 | **1** | **Desert terrain** | Height field, rivers, washes, hill outlines; placeholder rock kit; collision mask; bridges and tunnels in the road tool; highway entry at the map edge | 20 seeds pass the generator guarantees; a road can cross a river and a hill |
 | **2** | **Traffic core** | Lane graph, IDM/MOBIL, junction control, zone next-hop routing, sim worker, 4-facing car sprites, lights and brake lights, test traffic | 10k cars for 10 in-game days on a seeded network: no deadlock, budgets met, every junction type behaves visibly |
-| **3** | **Lot Composer + growth** | Parcels, archetypes, skeleton, household stories, constraints; trips and parking (the parked cars are the sim cars); access-driven growth and decline | From one highway exit, a city of 5k grows by itself; 100-lot contact sheets pass review; a jam stops growth locally |
+| **3** | **Lot Composer + growth** | Game-allocated land use (residential, commercial, industrial, tourism, government) and growth options; parcels, archetypes for every lot type (houses with backyards, commercial with parking and back alleys), skeleton, household stories, constraints; trips and parking (the parked cars are the sim cars); access-driven growth and decline | From one highway exit, a city of 5k grows by itself; 100-lot contact sheets pass review; a jam stops growth locally |
 | **4** | **Budget + bottleneck loop** | Taxes, costs, compensation, loans, milestones; bottleneck ranking; before/after; access overlays; time controls | A Career run is winnable and losable; fixing the top bottleneck measurably restarts growth |
-| **5** | **Road builder pro** | Upgrade in place, roadworks, turn lanes, signal editor and green waves, one-way, curves, roundabout sizes, car parks, bus lines; then **freeways, ramps, interchanges, overpasses** (elevated layer) | Each tool has a screenshot test and a sim capacity test |
+| **5** | **Road builder pro** | Cities: Skylines-style tools and UX (section 3.2): curved/freeform draw, snapping and guides, elevation keys, junction editor; upgrade in place, roadworks, turn lanes, signal editor and green waves, one-way, curves, roundabout sizes, car parks, bus lines; then **freeways, ramps, interchanges, overpasses** (elevated layer) | Each tool has a screenshot test and a sim capacity test |
 | **6** | **Vegas look + eras** | Final desert art; neon night lighting; the Strip with resort traffic events (fights, conventions, New Year's Eve); 16-heading cars; the era system (90s and onward as art arrives) | Night Strip at 30% holds up next to the Maple Falls standard |
 
 The art track runs alongside from Phase 1: terrain kit, then houses, then commercial, then Strip and neon.
@@ -330,6 +386,8 @@ The art track runs alongside from Phase 1: terrain kit, then houses, then commer
 - **The balance of growth, traffic and money.** The headless sim (Phase 0) lets balance be tested with numbers.
 
 ## 7. Still open (they can wait until the phase that needs them)
+0. **Growth options** (section 1.5): the exact set, how strongly each shifts allocation, and whether they unlock
+   with population (Phase 3).
 1. Era pacing: how many real minutes per in-game year, and whether eras unlock by time or by population (Phase 6).
 2. Hosting: the single-file browser build or RUN. This decides whether SharedArrayBuffer is available (Phase 2).
 3. Is the Strip one special boulevard the map seeds, or any boulevard that grows into it (Phase 3)?

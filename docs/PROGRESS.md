@@ -28,7 +28,14 @@ _Last updated: 2026-10-17, Phase 1 step 1 done (terrain generator); setting chan
 - **Map:** 4 x 4 km (2048 tiles of 2 m).
 - **Terrain:** seeded, fixed hills, valleys and rivers. Roads cross rivers with **bridges** and go through hills in
   **tunnels**.
-- **Player control:** roads only. The city grows where traffic flows and stops where it jams.
+- **Player control:** roads and traffic only. The city grows where traffic flows and stops where it jams.
+  **Confirmed 2026-10-17:** the player never builds buildings; the "objects" build tool comes out (Phase 1
+  step 3). The game allocates lots (residential, commercial, industrial, tourism, government) and builds them
+  with rich generated layouts; the player picks growth options. GAME-PLAN sections 1.5 and 3.5.
+- **Traffic:** must be very powerful and adaptive: edits take effect at once, routes react to congestion, and
+  disruptions (tourism events, roadworks) are first-class. GAME-PLAN section 3.3.
+- **Road builder UX:** Cities: Skylines and similar games are the reference, to win their players. GAME-PLAN
+  section 3.2.
 - **Closest zoom:** 30% (the town builder's 30%), at full art quality.
 - **Roads stay instant:** no manual "rebuild ground" step, ever.
 - **Traffic sim:** our own TypeScript IDM + MOBIL simulation in a worker. Treiber's traffic-simulation.de is the
@@ -132,7 +139,8 @@ order; the ones marked **(haiku)** can be briefed to `haiku-coder`.
    accumulation is high, smoothed like the river, 3–8 tiles wide, class CREEK. They need short bridges or culverts.
    Add the guarantee that creeks don't cut the start block.
 3. **Collision and wiring** (haiku). The engine generates the terrain from the save's seed (save v4: seed only, no
-   painted terrain; drop the terrain tool and the 7 Maple Falls terrain types). HILL, WATER, CREEK and BANK go into
+   painted terrain; drop the terrain tool and the 7 Maple Falls terrain types, and remove the "objects" build tool
+   and its UI: the player never places buildings or props). HILL, WATER, CREEK and BANK go into
    the occupancy grid; `canPlace` and the road tool refuse them, except for bridges and tunnels. The ground workers
    regenerate from the seed rather than receiving 4 MB.
 4. **Maple valley ground** (lead + haiku):
