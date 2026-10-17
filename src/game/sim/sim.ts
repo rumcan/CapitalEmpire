@@ -36,6 +36,11 @@ export class Sim {
   private hint = 0;
   private spawnIds: number[] = []; private spawnCum: number[] = []; private spawnTot = 0;
   private scratch = { x: 0, y: 0, hx: 0, hy: 0 };
+  /** per lane, cached from the graph in onGraph (the hot loops read these instead of the lane objects): length, speed
+   *  limit, 1 = a junction entry the gate controls */
+  private lLen = new Float64Array(0); private lVmax = new Float32Array(0); private lGate = new Uint8Array(0);
+  /** lanes whose front vehicle passed the end this step (deduped by `overMark`) */
+  private over: number[] = []; private overMark = new Uint8Array(0);
 
   /** an empty sim of cap vehicle slots on graph g; call onGraph() after every graph update */
   constructor(g: LaneGraph, cap: number, seed: number) {
@@ -52,6 +57,12 @@ export class Sim {
   onGraph() {
     const lanes = this.g.lanes;
     while (this.onLane.length < lanes.length) this.onLane.push([]);
+    const n = lanes.length;
+    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.overMark = new Uint8Array(m); }
+    for (let id = 0; id < n; id++) {
+      const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0;
+      this.lGate[id] = l && (l.kind === LK.CONN || l.kind === LK.RING) && l.prev.length && lanes[l.prev[0]]?.kind === LK.LINK ? 1 : 0;
+    }
     for (const q of this.onLane) q.length = 0;
     this.buildSpawn();
     let pending = 0;
@@ -147,10 +158,10 @@ export class Sim {
     for (let id = 0; id < Q.length; id++) {
       const q = Q[id];
       if (!q.length) continue;
-      const ln = lanes[id]!;
+      const lenL = this.lLen[id], v0L = this.lVmax[id];
       for (let k = 0; k < q.length; k++) {
         const i = q[k], v = this.v[i], si = this.s[i], P = this.plan[i]!, pi = this.pi[i];
-        const v0 = ln.vmax * this.v0f[i], d0 = ln.len - si;
+        const v0 = v0L * this.v0f[i], d0 = lenL - si;
         let gap = Infinity, dv = 0, vg = Infinity;
         if (k > 0) { const ld = q[k - 1]; gap = this.s[ld] - this.len[ld] - si; dv = v - this.v[ld]; }
         // walk the plan ahead: the first lane with vehicles gives the leader, the end of the plan may be a stop
@@ -159,7 +170,7 @@ export class Sim {
           if (d > LOOKAHEAD) break;
           const nid = P[j], q2 = Q[nid];
           if (!found && q2.length) { const ld = q2[q2.length - 1]; gap = d + this.s[ld] - this.len[ld]; dv = v - this.v[ld]; found = true; }
-          d += lanes[nid]!.len;
+          d += this.lLen[nid];
         }
         // a plan that ends in a lane going nowhere: stop at its end (a plan merely not extended yet ends at a link lane with exits)
         if (j === P.length && d <= LOOKAHEAD && !lanes[P[P.length - 1]]!.next.length) {
@@ -168,8 +179,8 @@ export class Sim {
         }
         // a junction entry the gate keeps shut: a stopped obstacle at the end of this lane
         if (pi + 1 < P.length && d0 <= v * v / (2 * CAR.b) + 15) {
-          const nid = P[pi + 1], nl = lanes[nid]!;
-          if ((nl.kind === LK.CONN || nl.kind === LK.RING) && nl.prev.length && lanes[nl.prev[0]]?.kind === LK.LINK && !this.gate(i, nid)) {
+          const nid = P[pi + 1];
+          if (this.lGate[nid] && !this.gate(i, nid)) {
             if (d0 < gap) { gap = d0; dv = v; }
             vg = Math.min(vg, d0 - STOP_MARGIN);
           }
@@ -177,7 +188,7 @@ export class Sim {
         // the next lane is slower than we are: brake for it once the comfortable braking curve is reached (keeps speed before that)
         let ac = Infinity;
         if (pi + 1 < P.length && d0 > 0.5) {
-          const vn = lanes[P[pi + 1]]!.vmax * this.v0f[i];
+          const vn = this.lVmax[P[pi + 1]] * this.v0f[i];
           if (vn < v) { const need = (vn * vn - v * v) / (2 * d0); if (need < -CAR.b) ac = need; }
         }
         let a = idm(CAR, v, v0, gap, dv);
@@ -197,24 +208,32 @@ export class Sim {
       const lim = this.vg[i];
       if (ds > lim) { ds = lim > 0 ? lim : 0; vn = 0; }
       this.s[i] += ds; this.v[i] = vn;
+      const id = this.lane[i];
+      if (this.s[i] >= this.lLen[id] && !this.overMark[id]) { this.overMark[id] = 1; this.over.push(id); }
       this.stuck[i] = vn < 0.5 ? this.stuck[i] + DT : 0;
     }
   }
 
   /** step 3: vehicles past the end of their lane move on along their plan; front vehicles first, up to 4 rounds */
   private transfer() {
-    const lanes = this.g.lanes, Q = this.onLane;
-    for (let round = 0; round < 4; round++) {
-      let moved = false;
-      for (let id = 0; id < Q.length; id++) {
+    const Q = this.onLane, L = this.lLen;
+    // only the lanes integrate() flagged, in id order (deterministic); a vehicle that lands past the end of its new lane
+    // flags that lane for the next round
+    for (let round = 0; round < 4 && this.over.length; round++) {
+      const ids = this.over.sort((a, b) => a - b); this.over = [];
+      for (const id of ids) this.overMark[id] = 0;
+      for (const id of ids) {
         const q = Q[id];
-        while (q.length && this.s[q[0]] >= lanes[id]!.len) {
-          if (!this.advance(q[0])) { this.s[q[0]] = lanes[id]!.len; this.v[q[0]] = 0; break; }
-          moved = true;
+        while (q.length && this.s[q[0]] >= L[id]) {
+          const i = q[0];
+          if (!this.advance(i)) { this.s[i] = L[id]; this.v[i] = 0; break; }
+          const nid = this.lane[i];
+          if (this.s[i] >= L[nid] && !this.overMark[nid]) { this.overMark[nid] = 1; this.over.push(nid); }
         }
       }
-      if (!moved) break;
     }
+    for (const id of this.over) this.overMark[id] = 0;
+    this.over.length = 0;
   }
 
   /** moves vehicle i (the front of its lane) onto the next lane of its plan; false if the plan ends here */
