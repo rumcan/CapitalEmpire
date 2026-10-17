@@ -1,6 +1,21 @@
 import type { NetOp } from './ground-protocol';
-import { CLASS, RoadNetwork, type Leg, type Node, type NodeType, type PieceSel, type RoadClass, type SegKind } from './network';
+import { CLASS, RoadNetwork, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type RoadClass, type SegKind } from './network';
 import type { LineStyle } from './types';
+
+/** the ops that rebuild net from nothing: a worker that replays them holds the same network (the sim worker, a new ground worker) */
+export function netToOps(net: RoadNetwork): NetOp[] {
+  const ops: NetOp[] = [{ k: 'clear' }], groups = new Map<string, { cls: ClassId; style: LineStyle; legs: number[]; kinds: number[] }>();
+  for (const s of net.segs) {
+    const key = s.cls.id + '|' + s.style;
+    let g = groups.get(key);
+    if (!g) groups.set(key, (g = { cls: s.cls.id, style: s.style, legs: [], kinds: [] }));
+    g.legs.push(s.a.x, s.a.y, s.b.x, s.b.y); g.kinds.push(s.kind);
+  }
+  for (const g of groups.values()) ops.push({ k: 'legs', legs: g.legs, cls: g.cls, style: g.style, kinds: g.kinds });
+  for (const n of net.nodes.values()) if (n.type !== 'plain') ops.push({ k: 'type', x: n.x, y: n.y, type: n.type });
+  ops.push({ k: 'rebuild', full: true });
+  return ops;
+}
 
 /** replay network edits (in a ground worker, or a test) */
 export function applyOps(n: RoadNetwork, ops: NetOp[]) {

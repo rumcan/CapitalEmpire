@@ -142,7 +142,7 @@ function Thumb({ it, size }: { it: LibItem; size: number }) {
   return <div style={{ width: w * k, height: h * k, backgroundImage: `url(${ATLAS_PAGES[page][1]})`, backgroundSize: `${P * k}px ${P * k}px`, backgroundPosition: `${-u0 * P * k}px ${-v0 * P * k}px` }} />;
 }
 
-/** frame time, what was drawn, and the test traffic */
+/** frame time, what was drawn, and the traffic */
 function PerfPanel({ game }: { game: Game }) {
   const p = game.perf;
   return (
@@ -150,9 +150,10 @@ function PerfPanel({ game }: { game: Game }) {
       <div className="flex justify-between"><span>{p.fps.toFixed(0)} fps · {p.tier}</span><span>cpu {p.cpuMs.toFixed(1)} ms</span></div>
       <div className="flex justify-between text-slate-400"><span>{p.instances.toLocaleString()} sprites · {p.draws} draws</span><span>{p.uploadKB.toFixed(0)} KB</span></div>
       <div className="flex justify-between text-slate-400"><span>{game.props.size.toLocaleString()} props · {game.net.segs.size.toLocaleString()} segs</span><span>bake {p.chunksPending}</span></div>
-      <div className="mt-1 flex items-center gap-1"><span className="mr-auto text-slate-400">Test cars</span>
-        {[0, 1000, 5000, 10000].map(n => <button key={n} className={`chip ${(game.traffic?.n ?? 0) === n ? 'chip-on' : ''}`} onClick={() => game.setTraffic(n)}>{n ? n / 1000 + 'k' : 'off'}</button>)}
+      <div className="mt-1 flex items-center gap-1"><span className="mr-auto text-slate-400">Cars</span>
+        {[0, 1000, 5000, 10000].map(n => <button key={n} className={`chip ${(game.traffic?.target ?? 0) === n ? 'chip-on' : ''}`} onClick={() => game.setTraffic(n)}>{n ? n / 1000 + 'k' : 'off'}</button>)}
       </div>
+      {game.traffic && <div className="flex justify-between text-slate-400"><span>sim {p.simActive} cars</span><span>tick {p.simTickMs.toFixed(1)} ms (max {p.simMaxTickMs.toFixed(1)})</span></div>}
     </div>
   );
 }

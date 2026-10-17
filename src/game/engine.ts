@@ -1,13 +1,14 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
 import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type SegKind } from './network';
-import { NetEditor } from './netops';
+import { NetEditor, netToOps } from './netops';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV4 } from './save';
-import { CAR_COLOURS, TestTraffic } from './traffic';
+import { CAR_COLOURS } from './traffic';
+import { SimClient } from './sim/client';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
@@ -54,9 +55,9 @@ export class Game {
   // fx
   builds: Build[] = []; particles: Particle[] = [];
   toasts: Toast[] = []; toastId = 1;
-  traffic: TestTraffic | null = null;
+  traffic: SimClient | null = null;
   // perf
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0 };
   private frameTimes: number[] = [];
   // input
   private dragging: null | { kind: 'pan' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
@@ -111,7 +112,7 @@ export class Game {
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
   }
   dead = false;
-  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); this.ground.terminate(); }
+  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); this.ground.terminate(); this.traffic?.terminate(); }
 
   // ---------- geometry helpers ----------
   resize() {
@@ -261,14 +262,14 @@ export class Game {
   /** send the edits to the workers, refresh what depends on the network and mark the changed ground stale */
   private commitNetwork(keepPrev = false, until = 0) {
     const ops = this.edit.commit(); this.lanes.update(this.net);
-    this.ground.netOps(ops);
+    this.ground.netOps(ops); this.traffic?.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
     this.syncLamps(); this.scheduleSave(); this.emit();
   }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
-    this.ground.netOps(ops); this.syncPortals();
+    this.ground.netOps(ops); this.traffic?.netOps(ops); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
     this.ground.invalidateAll();
@@ -482,8 +483,8 @@ export class Game {
     }
   }
   keyUp(e: KeyboardEvent) { this.keys.delete(e.key); }
-  /** test traffic: n cars driving the network (0 = none) */
-  setTraffic(n: number) { this.traffic = n > 0 ? new TestTraffic(this.net, n) : null; this.emit(); }
+  /** traffic: n cars driving the network (0 = none); the sim worker starts on first use */
+  setTraffic(n: number) { if (!this.traffic) this.traffic = new SimClient(netToOps(this.net)); this.traffic.setTarget(n); this.emit(); }
 
   // ---------- economy / save ----------
   private linked(p: Prop) { return this.net.rectOcc(p.x0 - 3, p.y0 - 3, p.x1 + 3, p.y1 + 3) > 0; }
@@ -525,7 +526,7 @@ export class Game {
     this.edit.clear();
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
-    this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = []; this.traffic = null;
+    this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
     this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain);
@@ -660,14 +661,14 @@ export class Game {
     this.builds = this.builds.filter(b => now < b.t0 + b.dur + 150);
     for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
     this.particles = this.particles.filter(p => p.age < p.life);
-    this.traffic?.step(dt);
+    this.traffic?.update(now);
     const t1 = performance.now();
     this.draw(now);
     const t2 = performance.now();
     // perf counters (rolling one second)
     this.frameTimes.push(frameMs); if (this.frameTimes.length > 60) this.frameTimes.shift();
     const avg = this.frameTimes.reduce((s, v) => s + v, 0) / this.frameTimes.length;
-    Object.assign(this.perf, { fps: 1000 / avg, frameMs: avg, cpuMs: t2 - t0, drawMs: t2 - t1, instances: this.gl.stats.instances, draws: this.gl.stats.draws, uploadKB: this.gl.stats.uploadFloats * 4 / 1024, chunksPending: this.ground.busy });
+    Object.assign(this.perf, { fps: 1000 / avg, frameMs: avg, cpuMs: t2 - t0, drawMs: t2 - t1, instances: this.gl.stats.instances, draws: this.gl.stats.draws, uploadKB: this.gl.stats.uploadFloats * 4 / 1024, chunksPending: this.ground.busy, simActive: this.traffic?.stats.active ?? 0, simTickMs: this.traffic?.stats.tickMs ?? 0, simMaxTickMs: this.traffic?.stats.maxTickMs ?? 0 });
     this.perf.frames++;
   };
   /** a hook for the benchmark's camera path */
@@ -693,7 +694,7 @@ export class Game {
       const tr = this.traffic;
       if (tr) {
         const pts = new Float32Array(tr.n * POINT_STRIDE); let n = 0;
-        for (let i = 0; i < tr.n; i++) { const X = worldX(tr.px[i], tr.py[i]), Y = worldY(tr.px[i], tr.py[i]); if (X < X0 || X > X1 || Y < Y0 || Y > Y1) continue; const c = CAR_COLOURS[tr.kind[i] % CAR_COLOURS.length], o = n * POINT_STRIDE; pts[o] = X; pts[o + 1] = Y; pts[o + 2] = c[0]; pts[o + 3] = c[1]; pts[o + 4] = c[2]; pts[o + 5] = 1; n++; }
+        for (let i = 0; i < tr.n; i++) { if (!tr.alive[i]) continue; const X = worldX(tr.px[i], tr.py[i]), Y = worldY(tr.px[i], tr.py[i]); if (X < X0 || X > X1 || Y < Y0 || Y > Y1) continue; const c = CAR_COLOURS[tr.kind[i] % CAR_COLOURS.length], o = n * POINT_STRIDE; pts[o] = X; pts[o + 1] = Y; pts[o + 2] = c[0]; pts[o + 3] = c[1]; pts[o + 4] = c[2]; pts[o + 5] = 1; n++; }
         gl.upload(pts, n * POINT_STRIDE); gl.drawPoints(0, n, Math.max(1.5, Math.min(4, 5 * ze / 0.035)) * (this.dpr > 1 ? 1.5 : 1));
       }
     } else {
@@ -719,8 +720,8 @@ export class Game {
       const vis: { i: number; j: number }[] = [];
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
-      // cars under a hill are in a tunnel: hidden
-      const movers: Drawable[] = this.traffic ? this.traffic.visible(Math.min(...c.map(p => p.x)) - pad, Math.min(...c.map(p => p.y)) - pad, Math.max(...c.map(p => p.x)) + pad, Math.max(...c.map(p => p.y)) + pad).filter(m => classAt(this.terrain, m.x, m.y) !== TC.HILL) : [];
+      // cars in tunnels are not drawn (the sim client skips them)
+      const movers: Drawable[] = this.traffic ? this.traffic.visible(Math.min(...c.map(p => p.x)) - pad, Math.min(...c.map(p => p.y)) - pad, Math.max(...c.map(p => p.x)) + pad, Math.max(...c.map(p => p.y)) + pad) : [];
       this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), street = tier === 'street';
       const [sAt, pAt] = gl.uploadParts([[f.shadows, street ? f.shadowFloats : 0], [f.stream, f.floats]]);

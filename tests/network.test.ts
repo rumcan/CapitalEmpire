@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
-import { NetEditor, applyOps } from '../src/game/netops';
+import { NetEditor, applyOps, netToOps } from '../src/game/netops';
 import { rle, unrle } from '../src/game/save';
 import type { NetOp } from '../src/game/ground-protocol';
 
@@ -61,6 +61,15 @@ test('replaying the recorded ops (what a ground worker does) reproduces the netw
   e.removePiece(e.net.pieceNear({ x: 150, y: 140 })!); log.push(...e.commit());
   applyOps(mirror, log);
   assert.deepEqual(summary(mirror), summary(e.net));
+});
+
+test('netToOps rebuilds the same network from nothing', () => {
+  const e = new NetEditor(new RoadNetwork());
+  grid(e, 4, 20); e.commit(true);
+  e.setNodeType(e.net.nodeAt({ x: 120, y: 120 })!, 'roundabout'); e.setNodeType(e.net.nodeAt({ x: 160, y: 140 })!, 'signal'); e.commit();
+  const copy = new RoadNetwork();
+  applyOps(copy, netToOps(e.net));
+  assert.deepEqual(summary(copy), summary(e.net));
 });
 
 test('a rebuild only touches the edited area', () => {

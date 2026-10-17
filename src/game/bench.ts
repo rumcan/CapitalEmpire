@@ -80,9 +80,13 @@ const STAGES: Stage[] = [
 function startTour(g: Game, info: Record<string, number>) {
   const results: Record<string, unknown>[] = [];
   let s = 0, t = -2, frames: number[] = [], cpu: number[] = [], inst = 0, draws = 0, upload = 0, up = 0;
+  /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
+  let stageSim = 0, simSum = 0, simN = 0, simMax = 0;
   const startX = g.cam.X, startY = g.cam.Y;
   g.onFrame = (_now, dt) => {
     if (!g.ready) return;
+    const tick = g.perf.simTickMs;
+    stageSim = Math.max(stageSim, tick); simSum += tick; simN++; simMax = Math.max(simMax, tick);
     t += dt;
     const st = STAGES[s];
     g.cam.z = st.z;
@@ -94,11 +98,11 @@ function startTour(g: Game, info: Record<string, number>) {
     if (t >= st.secs) {
       const sorted = [...cpu].sort((a, b) => a - b), q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
       const fAvg = frames.reduce((a, b) => a + b, 0) / Math.max(1, frames.length);
-      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1) });
-      s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; g.cam.X = startX; g.cam.Y = startY;
+      results.push({ stage: st.name, fps: +(1000 / fAvg).toFixed(1), cpuAvgMs: +(cpu.reduce((a, b) => a + b, 0) / Math.max(1, cpu.length)).toFixed(2), cpuP95Ms: +q(0.95).toFixed(2), maxInstances: inst, maxDraws: draws, maxUploadKB: Math.round(upload), chunkUploadsPerSec: up, uploadMsPerSec: +g.ground.uploadMsPerSecond.toFixed(1), simTickMsMax: +stageSim.toFixed(2) });
+      s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY;
       if (s >= STAGES.length) {
         g.onFrame = null;
-        const out = { ...info, cars: BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), stages: results };
+        const out = { ...info, cars: BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
         (window as unknown as { __bench: unknown }).__bench = out;
         console.log('[bench] results', JSON.stringify(out, null, 1));
         g.toast('Benchmark finished: results in the console', 'good');
