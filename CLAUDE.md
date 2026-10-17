@@ -8,7 +8,12 @@ Read `docs/PROGRESS.md` first: it says where the project is, what was decided, a
 - **One chat per phase (or big step).** When a phase is done, or the chat is getting long, update
   `docs/PROGRESS.md` and give the owner a start prompt for a fresh chat. Never rely on chat history: everything a
   new session needs is in `docs/PROGRESS.md`.
-- **The lead model designs, the Haiku 5.5 agents do the routine work.** The owner has authorised these agents:
+- **Save tokens: delegating code is the default.** The lead model (you) does not write implementation code itself.
+  Every piece of coding goes to `haiku-coder` with a precise brief: files, exact change, check to run. Every test,
+  build and benchmark run goes to `haiku-runner`. The lead writes code only when a brief would cost more than the
+  change itself (a one-line fix), or after `haiku-coder` has failed twice on the same task. Read files sparingly:
+  use Grep and line ranges, not whole files.
+- **The lead model designs, the Haiku 5.5 agents do the work.** The owner has authorised these agents:
   - `haiku-coder` (`.claude/agents/haiku-coder.md`): implements a scoped change. Brief it with the exact files, the
     change, and the check to run. Review its diff before accepting it.
   - `haiku-runner` (`.claude/agents/haiku-runner.md`): runs tests, builds and benchmarks (on the worker PC) and
