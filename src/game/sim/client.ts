@@ -24,6 +24,8 @@ export class SimClient {
   /** 4-facing index of the heading: 0 +x, 1 +y, 2 -x, 3 -y */
   head = new Uint8Array(0); kind = new Uint8Array(0); brake = new Uint8Array(0); tunnel = new Uint8Array(0);
   private prev: Float32Array | null = null; private cur: Float32Array | null = null; private tCur = 0;
+  /** the sim speed last set (sim seconds per second) */
+  private speed = 1;
   private pool: Drawable[] = [];
 
   /** starts the sim worker on a copy of the network described by ops */
@@ -38,7 +40,7 @@ export class SimClient {
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
   /** the sim speed: 0 pauses, 1 is real time, 2, 4 and 8 are faster */
-  setSpeed(k: number) { this.post({ t: 'speed', k }); }
+  setSpeed(k: number) { this.speed = k; this.post({ t: 'speed', k }); }
   terminate() { this.worker.terminate(); }
 
   private onMessage(m: FromSim) {
@@ -53,6 +55,9 @@ export class SimClient {
     this.alive = new Uint8Array(cap); this.px = new Float32Array(cap); this.py = new Float32Array(cap);
     this.head = new Uint8Array(cap); this.kind = new Uint8Array(cap); this.brake = new Uint8Array(cap); this.tunnel = new Uint8Array(cap);
   }
+
+  /** the sim's time now, s: the time of the last frame, moved on at the sim speed since it arrived (0 before the first frame) */
+  simTime(now: number): number { return this.cur ? this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed : 0; }
 
   /** unpacks the current frame into the arrays, lerping each car from its place in the previous frame (at now) */
   update(_now: number) {

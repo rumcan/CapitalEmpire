@@ -11,7 +11,7 @@ _Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
-| 2. Traffic core | **In progress** (steps 1 lane graph and 2 sim worker done). Steps at the end |
+| 2. Traffic core | **In progress** (steps 1–3 done: lane graph, sim worker, junction control). Steps at the end |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
@@ -299,3 +299,24 @@ Update this file after each step.
      0.8; Whole map 59.6 / 0.76 / 0.9. **Sim tick 3.1 ms avg, 5.5 ms max** (budget 25 ms). Heap 217 MB, bake 16.3 ms.
    - Lesson: the brief's curve rule (min of IDM and the curve deceleration whenever the next lane is slower) held cars
      at connector speed for whole links; braking only once the comfortable curve is reached fixes it.
+3. **Junction control and MOBIL. DONE** (2026-10-18).
+   - `src/game/sim/signals.ts` (`phaseState`). `Sim.gate(i, c)` decides at a junction entry, once the vehicle is within
+     braking distance + 4 m of the line: signals (red stops; a grant needs the vehicle to reach the line before red,
+     amber only passes vehicles that cannot stop; a granted vehicle gives the grant back if red comes while it can
+     still stop), stop signs (stop first), queue order (no grant while the vehicle ahead waits), room beyond the box
+     ("don't block the box": free space on the out lane minus reservations, at 3+ arm nodes and roundabouts), and the
+     conflict table (no vehicle short of a conflict point, none granted into a conflicting lane, no higher-priority
+     vehicle arriving within 4 s, 5 s at merges; equal priority = longest wait first). Ring arcs wait on entry
+     reservations.
+   - MOBIL (politeness 0.3, threshold 0.2, safe decel 4) every 0.5 s on multi-lane links, with a mandatory bias toward
+     lanes that serve the wanted movement; vehicles now want any movement and change lanes for it (a vehicle that
+     misses its lane takes a fallback movement). Lane changes are drawn smoothly (`lat` decays).
+   - Tow: 60 s stuck in a junction box or 300 s anywhere (`stats.towed`).
+   - Overlay: signal heads as green/amber/red discs at each signalled approach (Street tier), from the client's
+     interpolated sim time (`SimClient.simTime`).
+   - Tests (57 pass): no crossing collisions at a plain junction, nobody enters on red, a roundabout flows with no ring
+     overlap and no tows, left-turners use the inner boulevard lane (0.4% in the wrong lane), and an 8x8 grid of mixed
+     junctions with 400 cars runs 33 sim minutes at 4 m/s with 3 tows in 40k junction passes.
+   - Capacity finding: 8x8 single-lane street blocks of 80 m with random routing flow at 300–400 cars, are at capacity
+     at 600 (1.5 m/s) and gridlock at 1000+. Fixed-time signals (18 s greens) on 80 m blocks cut mean speed by a third.
+   - Perf: 11 ms per step at 10k cars on the 40x40 grid (dev PC), now congested (mean 3.7 m/s with random routing).

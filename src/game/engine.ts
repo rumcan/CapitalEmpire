@@ -14,6 +14,7 @@ import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt } from './sim/lanes';
+import { phaseState } from './sim/signals';
 
 const DAY_SECONDS = 20;
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
@@ -754,6 +755,26 @@ export class Game {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
+  /** the signal heads of the junctions in view (Street tier): a disc per arm at its stop line, green, amber or red at the sim's time */
+  private drawSignals(ctx: CanvasRenderingContext2D) {
+    const traffic = this.traffic; if (!traffic) return;
+    const ze = this.cam.z * this.dpr, pad = 4;
+    const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
+    const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
+    const T = traffic.simTime(performance.now());
+    this.setIso(ctx);
+    for (const p of this.lanes.signals.values()) {
+      const n = p.node;
+      if (n.x < x0 || n.x > x1 || n.y < y0 || n.y > y1) continue;
+      for (let i = 0; i < n.arms.length; i++) {
+        const a = n.arms[i], inset = a.stop >= 0 ? a.stop : a.reachEdge, st = phaseState(p, p.armPhase[i], T);
+        const x = n.x + a.dir.x * inset + a.nrm.x * a.h * 0.75, y = n.y + a.dir.y * inset + a.nrm.y * a.h * 0.75;
+        ctx.fillStyle = st === 0 ? '#3ddc84' : st === 1 ? '#ffb020' : '#ff3b3b';
+        ctx.beginPath(); ctx.arc(x, y, 0.35, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
@@ -765,6 +786,7 @@ export class Game {
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
     }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
+    if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
     this.drawGroundOverlays(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;

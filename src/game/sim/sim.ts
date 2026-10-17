@@ -2,7 +2,8 @@
 // Hot paths (step, writeFrame) are allocation-free; plans are only built when a vehicle picks a movement.
 import { mulberry } from '../iso';
 import { CAR, idm } from './idm';
-import { LK, type LaneGraph, laneAt } from './lanes';
+import { CTL, LK, type Lane, type LaneGraph, type SignalPlan, laneAt } from './lanes';
+import { SIG, phaseState } from './signals';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -17,6 +18,12 @@ const STOP_MARGIN = 0.05;
 const MIN_SPAWN_LEN = 10;
 /** spawn keeps this many metres clear of other vehicles on the lane */
 const SPAWN_GAP = 8;
+/** towing: a vehicle stuck (under 0.5 m/s) this many seconds in a junction box, or anywhere, is removed */
+const TOW_BOX = 60, TOW_ANY = 300;
+/** lane changes (MOBIL): evaluated every MOBIL_EVERY steps, politeness, incentive threshold, and the lane ends kept clear, metres */
+const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
+/** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
+const SIG_MARGIN = 0.5;
 
 /** The vehicles of one graph. Slot i is one vehicle while alive[i] is 1; the lists hold the vehicles of each lane, front first. */
 export class Sim {
@@ -25,17 +32,24 @@ export class Sim {
   vtype: Uint8Array; v0f: Float32Array; lat: Float32Array;
   move: Int32Array; plan: (number[] | null)[]; pi: Int16Array;
   stuck: Float32Array;
+  /** junction control per slot: the connector granted (-1), the lane where its room is reserved (-1), seconds waiting at a line,
+   *  1 once stopped at a line, the movement it wants at the end of its lane (-1 = none) */
+  grant: Int32Array; resv: Int32Array; wait: Float32Array; stopped: Uint8Array; want: Int32Array;
+  /** per lane: slots granted into it and not yet on it; metres reserved on it by grants */
+  granted: number[][] = []; resvLen = new Float64Array(0);
   /** per lane: vehicle slots on it, front first (largest s first) */
   onLane: number[][] = [];
   target = 0;
   rnd: () => number;
-  stats = { spawned: 0, respawned: 0, stepMs: 0 };
+  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0 };
   /** per slot: distance to the nearest virtual stop (plan end or gate), metres; Infinity = none */
   private vg: Float64Array;
   /** every slot below hint is alive */
   private hint = 0;
   private spawnIds: number[] = []; private spawnCum: number[] = []; private spawnTot = 0;
   private scratch = { x: 0, y: 0, hx: 0, hy: 0 };
+  /** lane positions for the lane change (allocation-free) */
+  private pa = { x: 0, y: 0, hx: 0, hy: 0 }; private pb = { x: 0, y: 0, hx: 0, hy: 0 };
   /** per lane, cached from the graph in onGraph (the hot loops read these instead of the lane objects): length, speed
    *  limit, 1 = a junction entry the gate controls */
   private lLen = new Float64Array(0); private lVmax = new Float32Array(0); private lGate = new Uint8Array(0);
@@ -50,6 +64,8 @@ export class Sim {
     this.vtype = new Uint8Array(cap); this.v0f = new Float32Array(cap); this.lat = new Float32Array(cap);
     this.move = new Int32Array(cap).fill(-1); this.plan = new Array<number[] | null>(cap).fill(null);
     this.pi = new Int16Array(cap); this.stuck = new Float32Array(cap); this.vg = new Float64Array(cap).fill(Infinity);
+    this.grant = new Int32Array(cap).fill(-1); this.resv = new Int32Array(cap).fill(-1); this.want = new Int32Array(cap).fill(-1);
+    this.wait = new Float32Array(cap); this.stopped = new Uint8Array(cap);
     this.onGraph();
   }
 
@@ -61,8 +77,14 @@ export class Sim {
     if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.overMark = new Uint8Array(m); }
     for (let id = 0; id < n; id++) {
       const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0;
-      this.lGate[id] = l && (l.kind === LK.CONN || l.kind === LK.RING) && l.prev.length && lanes[l.prev[0]]?.kind === LK.LINK ? 1 : 0;
+      // gated: a junction connector from a link lane, and every ring arc (a ring arc yields to the room granted on it)
+      this.lGate[id] = l && (l.kind === LK.RING || (l.kind === LK.CONN && l.prev.length && lanes[l.prev[0]]?.kind === LK.LINK)) ? 1 : 0;
     }
+    // grants and reservations do not survive a graph update: the vehicles are re-planned or respawned below
+    while (this.granted.length < n) this.granted.push([]);
+    for (const q of this.granted) q.length = 0;
+    if (this.resvLen.length < n) this.resvLen = new Float64Array(Math.max(n, 2 * this.resvLen.length));
+    this.resvLen.fill(0); this.grant.fill(-1); this.resv.fill(-1);
     for (const q of this.onLane) q.length = 0;
     this.buildSpawn();
     let pending = 0;
@@ -113,6 +135,7 @@ export class Sim {
       if (i >= this.cap) return false;
       this.alive[i] = 1; this.lane[i] = id; this.s[i] = s; this.v[i] = 0.5 * ln.vmax; this.acc[i] = 0;
       this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
+      this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
       const q = this.onLane[id];
       let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
       q.splice(k, 0, i);
@@ -123,12 +146,14 @@ export class Sim {
     return false;
   }
 
-  /** advances the simulation by one DT: accelerations, moves, lane transfers, then refills to the target */
+  /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
   step() {
     const t0 = performance.now();
     this.accelerate();
+    this.changeLanes();
     this.integrate();
     this.transfer();
+    this.tow();
     for (let i = 0; i < this.cap; i++) this.lat[i] *= 0.85;
     this.t += DT; this.steps++;
     this.fill();
@@ -149,8 +174,97 @@ export class Sim {
     }
   }
 
-  /** junction gate hook: false holds vehicle i at the stop line before lane `next` (a CONN or RING entry); always open for now */
-  private gate(_i: number, _next: number): boolean { return true; }
+  /** junction gate for vehicle i before gated lane c (a CONN or RING entry from a LINK lane): true lets it on and grants c.
+   *  Order: a grant holds (unless the light is red and it can stop), the signal, the stop sign, the vehicle ahead is granted,
+   *  room beyond the box, conflicts. */
+  private gate(i: number, c: number): boolean {
+    const C = this.g.lanes[c]!, v = this.v[i], dLine = this.lLen[this.lane[i]] - this.s[i];
+    // a ring arc: wait while an entry holds room on it (a vehicle may take the room it holds itself; ring traffic is otherwise
+    // followed by the IDM, there is no grant)
+    if (C.kind === LK.RING) return this.resv[i] === c || this.resvLen[c] <= 0;
+    const sp = C.ctl === CTL.SIGNAL ? this.g.signals.get(C.node!) : undefined;
+    const st = sp ? phaseState(sp, C.phase, this.t) : SIG.GREEN;
+    const canStop = dLine > v * v / (2 * CAR.b);
+    if (this.grant[i] === c) {
+      // a granted vehicle gives its grant back if the light turns red while it can still stop
+      if (!(st === SIG.RED && canStop)) return true;
+      this.unGrant(i); if (this.resv[i] >= 0) this.unReserve(i);
+    }
+    if (sp) {
+      if (st === SIG.RED) return false;
+      // a vehicle must clear the line before red: its time to the line, at the slower of its speed and the box's speed,
+      // against the time left before the phase turns red (with a margin); an amber only lets through a vehicle that cannot stop
+      const ta = dLine / Math.max(Math.min(v, this.lVmax[c] * this.v0f[i]), 1);
+      if (ta + SIG_MARGIN > this.toRed(sp)) return false;
+      if (st === SIG.AMBER && canStop) return false;
+    }
+    if (C.ctl === CTL.STOP && !this.stopped[i]) return false;
+    // queue order: the vehicle directly ahead on this lane goes first (a grant held behind a waiting leader blocks it for good)
+    const q = this.onLane[this.lane[i]], si = this.s[i];
+    let lead = -1; for (const w of q) { if (this.s[w] > si) lead = w; else break; }
+    if (lead >= 0 && this.grant[lead] < 0) return false;
+    const nd = C.node, ring = !!nd && nd.rb > 0;
+    const out = nd && (ring || nd.arms.length >= 3) ? this.outOf(this.plan[i]!, this.pi[i] + 1, ring) : -1;
+    if (out >= 0 && !this.roomFor(i, out)) return false;
+    if (!this.clearOf(i, C)) return false;
+    this.grant[i] = c; this.granted[c].push(i);
+    if (out >= 0) { this.resv[i] = out; this.resvLen[out] += this.needOn(i, out); }
+    return true;
+  }
+
+  /** seconds until signal plan p turns the phase now green or amber red (the phase is not red now) */
+  private toRed(p: SignalPlan): number {
+    const seg = p.green + p.amber + p.allRed, C = p.phases * seg;
+    let tt = (this.t + p.offset) % C; if (tt < 0) tt += C;
+    return Math.floor(tt / seg) * seg + p.green + p.amber - tt;
+  }
+  /** the state (SIG) of the signal showing the phase of connector C now (green when it has no plan) */
+  private signalState(C: Lane): number { const p = this.g.signals.get(C.node!); return p ? phaseState(p, C.phase, this.t) : SIG.GREEN; }
+  /** the lane a vehicle leaves node lane P[ci] into: the ring arc after a roundabout entry, else the first LINK lane after it; -1 if none */
+  private outOf(P: number[], ci: number, ring: boolean): number {
+    if (ring) return ci + 1 < P.length ? P[ci + 1] : -1;
+    const lanes = this.g.lanes;
+    for (let j = ci + 1; j < P.length; j++) if (lanes[P[j]]!.kind === LK.LINK) return P[j];
+    return -1;
+  }
+  /** the room vehicle i needs on lane out: its length + 2 m, or the whole lane when that is shorter (a roundabout arc) */
+  private needOn(i: number, out: number): number { return Math.min(this.len[i] + 2, this.lLen[out]); }
+  /** true if vehicle i can go on to lane out: the room left there (beyond its rearmost vehicle and the grants made on it) is
+   *  what it needs, or the rearmost vehicle there is moving faster than 4 m/s */
+  private roomFor(i: number, out: number): boolean {
+    const q = this.onLane[out], S = this.s, LEN = this.len;
+    let rear = this.lLen[out];
+    for (const w of q) { const r = S[w] - LEN[w]; if (r < rear) rear = r; }
+    if (rear - this.resvLen[out] >= this.needOn(i, out)) return true;
+    return q.length > 0 && this.v[q[q.length - 1]] > 4;
+  }
+  /** the conflict rules: no vehicle still short of a conflicting connector's point, none granted into it, and none approaching it
+   *  with right of way (higher priority, or equal priority and waiting longer) */
+  private clearOf(i: number, C: Lane): boolean {
+    const lanes = this.g.lanes, Q = this.onLane, S = this.s, LEN = this.len, V = this.v, lLen = this.lLen, P = this.plan, pI = this.pi;
+    for (const cf of C.conflicts) {
+      const c2 = cf.lane, L2 = lanes[c2]!;
+      for (const w of Q[c2]) if (S[w] - LEN[w] < cf.os + 1) return false;
+      if (this.granted[c2].length) return false;
+      if (L2.ctl === CTL.SIGNAL && this.signalState(L2) === SIG.RED) continue;
+      if (L2.prio > C.prio) {
+        for (const p of L2.prev) for (const w of Q[p]) {
+          if (this.grant[w] >= 0 || V[w] < 0.5 || P[w]![pI[w] + 1] !== c2) continue;
+          if ((lLen[p] - S[w] + cf.os) / V[w] < (cf.merge ? 5 : 4)) return false;
+        }
+      } else if (L2.prio === C.prio) {
+        for (const p of L2.prev) for (const w of Q[p]) {
+          if (P[w]![pI[w] + 1] !== c2 || lLen[p] - S[w] >= 20) continue;
+          if (this.wait[w] > this.wait[i] || (this.wait[w] === this.wait[i] && w < i)) return false;
+        }
+      }
+    }
+    return true;
+  }
+  /** removes vehicle i from the granted list of its connector */
+  private unGrant(i: number) { const q = this.granted[this.grant[i]], k = q.indexOf(i); if (k >= 0) q.splice(k, 1); this.grant[i] = -1; }
+  /** gives back the room vehicle i reserved on its out lane */
+  private unReserve(i: number) { const r = this.resv[i]; this.resvLen[r] = Math.max(0, this.resvLen[r] - this.needOn(i, r)); this.resv[i] = -1; }
 
   /** step 1: every vehicle's acceleration (IDM against its leader, a plan end, a closed gate, and the speed limit ahead) */
   private accelerate() {
@@ -178,7 +292,7 @@ export class Sim {
           vg = Math.min(vg, d - STOP_MARGIN);
         }
         // a junction entry the gate keeps shut: a stopped obstacle at the end of this lane
-        if (pi + 1 < P.length && d0 <= v * v / (2 * CAR.b) + 15) {
+        if (pi + 1 < P.length && d0 <= v * v / (2 * CAR.b) + 4) {
           const nid = P[pi + 1];
           if (this.lGate[nid] && !this.gate(i, nid)) {
             if (d0 < gap) { gap = d0; dv = v; }
@@ -198,6 +312,81 @@ export class Sim {
     }
   }
 
+  /** MOBIL lane changes: a vehicle on a link lane with a neighbour lane is evaluated every MOBIL_EVERY steps (slots staggered),
+   *  between the lane ends it keeps clear of; it moves to the neighbour with the best incentive, if above the threshold */
+  private changeLanes() {
+    const lanes = this.g.lanes, st = this.steps;
+    for (let i = 0; i < this.cap; i++) {
+      if (!this.alive[i] || (i + st) % MOBIL_EVERY !== 0 || this.grant[i] >= 0) continue;
+      const cur = this.lane[i], ln = lanes[cur]!;
+      if (ln.kind !== LK.LINK || (ln.left < 0 && ln.right < 0)) continue;
+      const s = this.s[i];
+      if (s < MOBIL_START || s > this.lLen[cur] - MOBIL_END) continue;
+      const k = this.onLane[cur].indexOf(i);
+      let best = MOBIL_TH, to = -1;
+      if (ln.left >= 0 && lanes[ln.left]) { const x = this.gainTo(i, ln.left, k); if (x > best) { best = x; to = ln.left; } }
+      if (ln.right >= 0 && lanes[ln.right]) { const x = this.gainTo(i, ln.right, k); if (x > best) { best = x; to = ln.right; } }
+      if (to >= 0) this.moveLane(i, to, k);
+    }
+  }
+  /** the MOBIL incentive of vehicle i (at index k of its lane) moving to the neighbour lane T: its own gain, plus politeness times
+   *  the gains of the new follower and of the old follower, plus the movement bias; -Infinity if the move is unsafe */
+  private gainTo(i: number, T: number, k: number): number {
+    const cur = this.lane[i], S = this.s, V = this.v, LEN = this.len, A = this.acc, VG = this.vg, Q = this.onLane;
+    const LC = this.lLen[cur], LT = this.lLen[T], sN = S[i] * LT / LC, qt = Q[T], qc = Q[cur];
+    const vi = V[i], v0T = this.lVmax[T] * this.v0f[i];
+    // the new leader and follower on T by position (the list is front first)
+    let j = 0; while (j < qt.length && S[qt[j]] > sN) j++;
+    const ld = j > 0 ? qt[j - 1] : -1, fo = j < qt.length ? qt[j] : -1;
+    let gap = Infinity, dv = 0;
+    if (ld >= 0) { gap = S[ld] - LEN[ld] - sN; dv = vi - V[ld]; if (gap <= 1) return -Infinity; }
+    // a stop ahead (a closed gate or a plan end) counts as an obstacle here too, as it does in accelerate()
+    if (VG[i] < gap) { gap = VG[i] + (LT - sN) - (LC - S[i]); dv = vi; }
+    const aT = idm(CAR, vi, v0T, gap, dv);
+    let gain = 0;
+    if (fo >= 0) {
+      const gf = sN - LEN[i] - S[fo];
+      if (gf <= 1) return -Infinity;
+      let g2 = gf, dv2 = V[fo] - vi;
+      if (VG[fo] < g2) { g2 = VG[fo]; dv2 = V[fo]; }
+      const af = idm(CAR, V[fo], this.lVmax[T] * this.v0f[fo], g2, dv2);
+      if (af < -4) return -Infinity;
+      gain += af - A[fo];
+    }
+    // the old follower: i's old leader becomes its leader once i has gone
+    const o = k + 1 < qc.length ? qc[k + 1] : -1;
+    if (o >= 0) {
+      const lo = k > 0 ? qc[k - 1] : -1;
+      let g3 = Infinity, dv3 = 0;
+      if (lo >= 0) { g3 = S[lo] - LEN[lo] - S[o]; dv3 = V[o] - V[lo]; }
+      if (VG[o] < g3) { g3 = VG[o]; dv3 = V[o]; }
+      gain += idm(CAR, V[o], this.lVmax[cur] * this.v0f[o], g3, dv3) - A[o];
+    }
+    let bias = 0;
+    const w = this.want[i];
+    if (w >= 0) {
+      const here = this.reach(w, cur), there = this.reach(w, T);
+      if (!here && there) bias = 1 + 2 * Math.max(0, 1 - (LC - S[i]) / 150);
+      else if (here && !there) bias = -1000;
+    }
+    return (aT - A[i]) + MOBIL_P * gain + bias;
+  }
+  /** moves vehicle i (index k of its lane) onto the neighbour lane T at the same place: its lateral offset is set so it is drawn
+   *  where it was, then it is re-planned from T */
+  private moveLane(i: number, T: number, k: number) {
+    const lanes = this.g.lanes, cur = this.lane[i], S = this.s, Q = this.onLane;
+    const LC = this.lLen[cur], LT = this.lLen[T], sN = S[i] * LT / LC, a = this.pa, b = this.pb;
+    laneAt(lanes[cur]!, S[i], a); laneAt(lanes[T]!, sN, b);
+    // the drawn point (on the old lane, at the old offset), as an offset from the new lane's centre line
+    const la = this.lat[i], dx = a.x - a.hy * la - b.x, dy = a.y + a.hx * la - b.y;
+    const lat = -b.hy * dx + b.hx * dy;
+    Q[cur].splice(k, 1);
+    const qt = Q[T]; let j = 0; while (j < qt.length && S[qt[j]] > sN) j++; qt.splice(j, 0, i);
+    S[i] = sN; this.lane[i] = T; this.lat[i] = lat;
+    this.planFrom(i, T, this.move[i]);
+    this.stats.laneChanges++;
+  }
+
   /** step 2: move every vehicle one DT, stopping exactly when it brakes to a stop, never past a virtual stop */
   private integrate() {
     for (let i = 0; i < this.cap; i++) {
@@ -211,6 +400,9 @@ export class Sim {
       const id = this.lane[i];
       if (this.s[i] >= this.lLen[id] && !this.overMark[id]) { this.overMark[id] = 1; this.over.push(id); }
       this.stuck[i] = vn < 0.5 ? this.stuck[i] + DT : 0;
+      const dEnd = this.lLen[id] - this.s[i];
+      if (vn < 0.3 && dEnd < 4) this.stopped[i] = 1;
+      if (vn < 0.5 && dEnd < 20) this.wait[i] += DT;
     }
   }
 
@@ -240,31 +432,55 @@ export class Sim {
   private advance(i: number): boolean {
     const P = this.plan[i]!, p = this.pi[i] + 1;
     if (p >= P.length) return false;
-    const lanes = this.g.lanes, old = this.lane[i];
-    this.s[i] -= lanes[old]!.len;
+    const lanes = this.g.lanes, old = this.lane[i], ln = lanes[old]!;
+    this.s[i] -= ln.len;
     this.onLane[old].shift();
-    const nid = P[p];
+    const nid = P[p], nl = lanes[nid]!;
+    if (ln.kind !== LK.LINK && nl.kind === LK.LINK) this.stats.throughput++;
+    if (this.grant[i] === nid) this.unGrant(i);
+    if (this.resv[i] === nid) this.unReserve(i);
+    this.stopped[i] = 0; if (nl.kind !== LK.LINK) this.wait[i] = 0;
     this.pi[i] = p; this.lane[i] = nid; this.onLane[nid].push(i);
-    if (lanes[nid]!.kind === LK.LINK && p === P.length - 1) this.pickMove(i);
+    if (nl.kind === LK.LINK && p === P.length - 1) this.pickMove(i);
     return true;
   }
 
-  /** a vehicle on link lane L picks the movement at the end of L's dseg: its plan is [L, ...path] */
+  /** safety valve: a vehicle stuck for TOW_BOX s in a junction box, or TOW_ANY s anywhere, is removed (fill() spawns a new one) */
+  private tow() {
+    for (let i = 0; i < this.cap; i++) {
+      if (!this.alive[i]) continue;
+      const st = this.stuck[i];
+      if (st > TOW_ANY || (st > TOW_BOX && this.g.lanes[this.lane[i]]!.kind !== LK.LINK)) { this.stats.towed++; this.stats.respawned++; this.despawn(i); }
+    }
+  }
+
+  /** a vehicle on link lane L picks the movement it wants at the end of L's dseg (any non-U one, U only when that is all there is) and plans through it */
   private pickMove(i: number) {
     const g = this.g, L = this.lane[i], d = g.dsegs[g.lanes[L]!.dseg];
     const outs = d ? d.out : [];
-    if (!outs.length) { this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; return; }
-    let pool = outs.filter(m => this.start(m, L) !== null);
-    if (!pool.length) pool = outs.slice();
-    const nu = pool.filter(m => g.moves[m]!.turn !== 'U');
-    if (nu.length) pool = nu;
-    let m = pool[Math.floor(this.rnd() * pool.length)], P = this.start(m, L);
-    if (!P) {
-      const ok = pool.filter(x => this.start(x, L) !== null);
-      if (ok.length) { m = ok[Math.floor(this.rnd() * ok.length)]; P = this.start(m, L); }
+    if (!outs.length) { this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; return; }
+    let nu = 0;
+    for (const m of outs) if (g.moves[m]!.turn !== 'U') nu++;
+    let w = -1;
+    if (nu) { let k = Math.floor(this.rnd() * nu); for (const m of outs) if (g.moves[m]!.turn !== 'U' && k-- === 0) { w = m; break; } }
+    else w = outs[Math.floor(this.rnd() * outs.length)];
+    this.want[i] = w;
+    this.planFrom(i, L, -1);
+  }
+  /** plans vehicle i from its lane L: the wanted movement if it has a path from L, else `prefer` if it has one, else a random
+   *  movement that has one, else the fallback chain */
+  private planFrom(i: number, L: number, prefer: number) {
+    const g = this.g, d = g.dsegs[g.lanes[L]!.dseg], outs = d ? d.out : [];
+    let m = -1;
+    if (this.reach(this.want[i], L)) m = this.want[i];
+    else if (this.reach(prefer, L)) m = prefer;
+    else {
+      let n = 0; for (const x of outs) if (this.reach(x, L)) n++;
+      if (n) { let k = Math.floor(this.rnd() * n); for (const x of outs) if (this.reach(x, L) && k-- === 0) { m = x; break; } }
     }
-    if (!P) { P = this.chain(L); m = -1; }
-    this.plan[i] = P; this.pi[i] = 0; this.move[i] = m;
+    this.move[i] = m;
+    this.plan[i] = m >= 0 ? this.start(m, L) ?? this.chain(L) : this.chain(L);
+    this.pi[i] = 0;
   }
 
   /** the plan a movement gives from lane L: its path from L, or a path whose second lane L feeds (its first lane replaced by L); null if none */
@@ -273,6 +489,15 @@ export class Sim {
     for (const p of m.paths) if (p[0] === L) return p.slice();
     for (const p of m.paths) if (nx.includes(p[1])) { const q = p.slice(); q[0] = L; return q; }
     return null;
+  }
+  /** true if movement mid has a plan from lane L (the same test as start(), without building the plan) */
+  private reach(mid: number, L: number): boolean {
+    const m = mid >= 0 ? this.g.moves[mid] : null;
+    if (!m) return false;
+    const nx = this.g.lanes[L]!.next;
+    for (const p of m.paths) if (p[0] === L) return true;
+    for (const p of m.paths) if (nx.includes(p[1])) return true;
+    return false;
   }
 
   /** lane L followed by next[0] lanes up to and including the first LINK lane (the fallback plan) */
@@ -317,8 +542,10 @@ export class Sim {
     this.spawnTot = tot;
   }
 
-  /** frees slot i without touching the lane lists (the caller owns them) */
+  /** frees slot i (giving back its grant and reservation) without touching the lane lists (the caller owns them) */
   private free(i: number) {
+    if (this.grant[i] >= 0) this.unGrant(i);
+    if (this.resv[i] >= 0) this.unReserve(i);
     this.alive[i] = 0; this.plan[i] = null; this.active--;
     if (i < this.hint) this.hint = i;
   }
