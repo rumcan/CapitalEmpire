@@ -64,7 +64,8 @@ function inset(n: Node, a: Arm | undefined): number {
   if (m >= 3) return a.stop >= 0 ? a.stop : a.xw >= 0 ? a.xw + 1.6 : a.reachEdge + 0.3;
   if (m === 2) {
     const b = n.arms[0] === a ? n.arms[1] : n.arms[0], d = dot(a.dir, b.dir);
-    if (d < -0.996) return 0.25;
+    // straight on; where the class (and so the lane offsets) changes, a 4-tile taper each side so the lanes shift gently
+    if (d < -0.996) return a.cls !== b.cls ? 4 : 0.25;
     return Math.max(0.25, 3 * Math.tan((Math.PI - Math.acos(clamp(d, -1, 1))) / 2));
   }
   return 0;

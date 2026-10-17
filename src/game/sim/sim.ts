@@ -2,9 +2,10 @@
 // Hot paths (step, writeFrame) are allocation-free; plans are only built when a vehicle picks a movement.
 import { mulberry } from '../iso';
 import { CAR, idm } from './idm';
-import { CTL, LK, MPT, type Lane, type LaneGraph, type SignalPlan, laneAt } from './lanes';
+import { CTL, LK, type Lane, type LaneGraph, type SignalPlan, laneAt } from './lanes';
 import { SIG, phaseState } from './signals';
 import { Router } from './routing';
+import { Trips, demandAt } from './trips';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -15,20 +16,18 @@ export const VTYPES = [{ len: 4.5 }, { len: 5.5 }, { len: 5.5 }, { len: 5.3 }, {
 
 /** a virtual stop sits this far short of its line, metres (keeps a vehicle from transferring onto it) */
 const STOP_MARGIN = 0.05;
-/** lanes shorter than this take no spawns, metres */
-const MIN_SPAWN_LEN = 10;
-/** spawn keeps this many metres clear of other vehicles on the lane */
+/** spawn keeps this many metres clear of other vehicles on the lane (spawnAt) */
 const SPAWN_GAP = 8;
+/** a spawn (spawn()) is refused when its origin's dseg has a mean speed under this many m/s (a jam), or a vehicle is within SPAWN_CLEAR m */
+const THROTTLE_V = 2, SPAWN_CLEAR = 15;
+/** spawn attempts per step in fill() */
+const FILL_TRIES = 40;
 /** towing: a vehicle stuck (under 0.5 m/s) this many seconds in a junction box, or anywhere, is removed */
 const TOW_BOX = 60, TOW_ANY = 300;
 /** lane changes (MOBIL): evaluated every MOBIL_EVERY steps, politeness, incentive threshold, and the lane ends kept clear, metres */
 const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
 const SIG_MARGIN = 0.5;
-/** a new trip's destination is at least this far (straight line, metres) from its origin, when a try finds one */
-const MIN_DEST = 300;
-/** destination draws per trip before the farthest one is taken */
-const DEST_TRIES = 16;
 
 /** The vehicles of one graph. Slot i is one vehicle while alive[i] is 1; the lists hold the vehicles of each lane, front first. */
 export class Sim {
@@ -49,23 +48,26 @@ export class Sim {
   /** per lane: vehicle slots on it, front first (largest s first) */
   onLane: number[][] = [];
   target = 0;
+  /** true: fill() aims at round(target * demandAt(t)) (the daily profile); arrivals bring the count down on their own */
+  profile = false;
   rnd: () => number;
-  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, tableMs: 0, tables: 0 };
-  /** the last destination drawn: metres along it (see drawDest) */
-  private dsS = 0;
+  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, throttled: 0, tableMs: 0, tables: 0 };
+  /** where new trips start and end (origins, destinations by zone) */
+  trips: Trips;
   /** a scratch lane position (allocation-free) */
   private pt = { x: 0, y: 0, hx: 0, hy: 0 };
   /** per slot: distance to the nearest virtual stop (plan end or gate), metres; Infinity = none */
   private vg: Float64Array;
   /** every slot below hint is alive */
   private hint = 0;
-  private spawnIds: number[] = []; private spawnCum: number[] = []; private spawnTot = 0;
   private scratch = { x: 0, y: 0, hx: 0, hy: 0 };
   /** lane positions for the lane change (allocation-free) */
   private pa = { x: 0, y: 0, hx: 0, hy: 0 }; private pb = { x: 0, y: 0, hx: 0, hy: 0 };
   /** per lane, cached from the graph in onGraph (the hot loops read these instead of the lane objects): length, speed
    *  limit, 1 = a junction entry the gate controls */
   private lLen = new Float64Array(0); private lVmax = new Float32Array(0); private lGate = new Uint8Array(0);
+  /** per lane: 1 = a node lane that merges with others into its next lane (vehicles there follow the mergers ahead of them) */
+  private lMerge = new Uint8Array(0);
   /** lanes whose front vehicle passed the end this step (deduped by `overMark`) */
   private over: number[] = []; private overMark = new Uint8Array(0);
 
@@ -81,6 +83,7 @@ export class Sim {
     this.wait = new Float32Array(cap); this.stopped = new Uint8Array(cap);
     this.dest = new Int32Array(cap).fill(-1); this.destS = new Float64Array(cap); this.route = new Array<number[] | null>(cap).fill(null);
     this.noRoute = new Uint8Array(cap);
+    this.trips = new Trips(this.rnd);
     this.onGraph();
   }
 
@@ -90,10 +93,11 @@ export class Sim {
     const lanes = this.g.lanes;
     while (this.onLane.length < lanes.length) this.onLane.push([]);
     const n = lanes.length;
-    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.overMark = new Uint8Array(m); }
+    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); }
     for (let id = 0; id < n; id++) {
       const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0;
       // gated: a junction connector from a link lane, and every ring arc (a ring arc yields to the room granted on it)
+      this.lMerge[id] = l && l.kind !== LK.LINK && l.next.length === 1 && (lanes[l.next[0]]?.prev.length ?? 0) > 1 ? 1 : 0;
       this.lGate[id] = l && (l.kind === LK.RING || (l.kind === LK.CONN && l.prev.length && lanes[l.prev[0]]?.kind === LK.LINK)) ? 1 : 0;
     }
     // grants and reservations do not survive a graph update: the vehicles are re-planned or respawned below
@@ -102,7 +106,7 @@ export class Sim {
     if (this.resvLen.length < n) this.resvLen = new Float64Array(Math.max(n, 2 * this.resvLen.length));
     this.resvLen.fill(0); this.grant.fill(-1); this.resv.fill(-1);
     for (const q of this.onLane) q.length = 0;
-    this.buildSpawn();
+    this.trips.onGraph(this.g);
     this.router.onGraph(this.g);
     let pending = 0;
     for (let i = 0; i < this.cap; i++) {
@@ -138,17 +142,17 @@ export class Sim {
     for (let i = this.cap - 1; i >= 0 && this.active > this.target; i--) this.despawn(i);
   }
 
-  /** adds one vehicle on a random link lane (weighted by length) with a random destination, if there is room for it; false if not */
+  /** one spawn attempt: an origin (Trips) and a destination at least 300 m away. Refused, and counted in stats.throttled, when the
+   *  origin's dseg is jammed (a mean speed under THROTTLE_V m/s) or a vehicle is within SPAWN_CLEAR m of the origin; else spawnAt.
+   *  Returns true if a vehicle was added */
   spawn(): boolean {
-    for (let tries = 0; tries < 8; tries++) {
-      const id = this.drawLane();
-      if (id < 0) return false;
-      const ln = this.g.lanes[id]!, s = this.rnd() * (ln.len - MIN_SPAWN_LEN) + 5;
-      laneAt(ln, s, this.pt);
-      const d = this.drawDest(this.pt.x, this.pt.y);
-      if (this.spawnAt(id, s, d, this.dsS) >= 0) return true;
-    }
-    return false;
+    const id = this.trips.origin();
+    if (id < 0) return false;
+    const ln = this.g.lanes[id]!, s = this.trips.oS;
+    if (this.router.vEma[ln.dseg]! < THROTTLE_V || !this.clearOn(id, s, SPAWN_CLEAR)) { this.stats.throttled++; return false; }
+    laneAt(ln, s, this.pt);
+    const d = this.trips.dest(this.pt.x, this.pt.y);
+    return this.spawnAt(id, s, d, this.trips.destS) >= 0;
   }
 
   /** adds one vehicle at s metres on link lane `lane`, heading for `dest` (a dseg; -1 = a random walk) at destS metres along it;
@@ -172,36 +176,15 @@ export class Sim {
     return this.pickMove(i) ? i : -1;
   }
 
-  /** a link lane for a spawn or a destination, weighted by length; -1 if there is none */
-  private drawLane(): number {
-    const n = this.spawnIds.length;
-    if (!n) return -1;
-    const r = this.rnd() * this.spawnTot, c = this.spawnCum;
-    let lo = 0, hi = n - 1;
-    while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] > r) hi = m; else lo = m + 1; }
-    return this.spawnIds[lo]!;
-  }
-  /** a destination for a trip from (ox, oy): a random link lane's dseg, at least MIN_DEST metres away if a try finds one (else the
-   *  farthest tried); returns the dseg (-1 if there are no lanes) and sets dsS */
-  private drawDest(ox: number, oy: number): number {
-    let best = -1, bestD = -1, bestS = 0;
-    for (let k = 0; k < DEST_TRIES; k++) {
-      const id = this.drawLane();
-      if (id < 0) break;
-      const ln = this.g.lanes[id]!, s = this.rnd() * (ln.len - MIN_SPAWN_LEN) + 5;
-      laneAt(ln, s, this.pt);
-      const far = Math.hypot(this.pt.x - ox, this.pt.y - oy) * MPT;
-      if (far >= MIN_DEST) { this.dsS = s; return ln.dseg; }
-      if (far > bestD) { bestD = far; best = ln.dseg; bestS = s; }
-    }
-    this.dsS = bestS;
-    return best;
-  }
   /** gives vehicle i a new destination from where it is now */
   private retarget(i: number) {
-    const ln = this.g.lanes[this.lane[i]]!;
-    laneAt(ln, this.s[i], this.pt);
-    this.dest[i] = this.drawDest(this.pt.x, this.pt.y); this.destS[i] = this.dsS; this.noRoute[i] = 0;
+    laneAt(this.g.lanes[this.lane[i]]!, this.s[i], this.pt);
+    this.dest[i] = this.trips.dest(this.pt.x, this.pt.y); this.destS[i] = this.trips.destS; this.noRoute[i] = 0;
+  }
+  /** true if no vehicle on lane id is within m metres of s */
+  private clearOn(id: number, s: number, m: number): boolean {
+    for (const j of this.onLane[id]!) if (Math.abs(this.s[j]! - s) < m) return false;
+    return true;
   }
 
   /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
@@ -314,7 +297,12 @@ export class Sim {
     const lanes = this.g.lanes, Q = this.onLane, S = this.s, LEN = this.len, V = this.v, lLen = this.lLen, P = this.plan, pI = this.pi;
     for (const cf of C.conflicts) {
       const c2 = cf.lane, L2 = lanes[c2]!;
-      for (const w of Q[c2]) if (S[w] - LEN[w] < cf.os + 1) return false;
+      if (cf.merge) {
+        // a merge: go only behind the vehicles already on the other lane (each must be a length clear ahead of us at the merge
+        // point); the zipper rule in accelerate() keeps the gap from there
+        const myRem = lLen[this.lane[i]] - S[i] + C.len;
+        for (const w of Q[c2]) if (lLen[c2] - S[w] + LEN[w] + 1 > myRem) return false;
+      } else for (const w of Q[c2]) if (S[w] - LEN[w] < cf.os + 1) return false;
       if (this.granted[c2].length) return false;
       if (L2.ctl === CTL.SIGNAL && this.signalState(L2) === SIG.RED) continue;
       if (L2.prio > C.prio) {
@@ -355,6 +343,24 @@ export class Sim {
           const nid = P[j], q2 = Q[nid];
           if (!found && q2.length) { const ld = q2[q2.length - 1]; gap = d + this.s[ld] - this.len[ld]; dv = v - this.v[ld]; found = true; }
           d += this.lLen[nid];
+        }
+        // a merge (zipper): the nearest vehicle ahead of us on the other lanes that merge into our next lane is a leader too,
+        // by the distance each has left to the merge point
+        if (this.lMerge[id]) {
+          const nN = lanes[id]!.next[0], N = lanes[nN]!, mine = this.resv[i] === nN;
+          for (const p of N.prev) {
+            if (p === id) continue;
+            const q2 = Q[p], lp = this.lLen[p];
+            for (let m = q2.length - 1; m >= 0; m--) {
+              const w = q2[m], rem = lp - this.s[w];
+              // holding the room on the merged lane outranks a merger without it (it waits for our reservation: following it
+              // would deadlock)
+              if (rem >= d0 || (mine && this.resv[w] !== nN)) continue;
+              const gm = d0 - rem - this.len[w];
+              if (gm < gap) { gap = gm; dv = v - this.v[w]; }
+              break;
+            }
+          }
         }
         // a plan that ends in a lane going nowhere: stop at its end (a plan merely not extended yet ends at a link lane with exits)
         if (j === P.length && d <= LOOKAHEAD && !lanes[P[P.length - 1]]!.next.length) {
@@ -650,13 +656,6 @@ export class Sim {
     return true;
   }
 
-  /** the cumulative spawn table: link lanes of at least MIN_SPAWN_LEN metres, not tunnels, weighted by length */
-  private buildSpawn() {
-    this.spawnIds = []; this.spawnCum = []; let tot = 0;
-    for (const ln of this.g.lanes) if (ln && ln.kind === LK.LINK && !ln.tunnel && ln.len >= MIN_SPAWN_LEN) { tot += ln.len; this.spawnIds.push(ln.id); this.spawnCum.push(tot); }
-    this.spawnTot = tot;
-  }
-
   /** frees slot i (giving back its grant and reservation) without touching the lane lists (the caller owns them) */
   private free(i: number) {
     if (this.grant[i] >= 0) this.unGrant(i);
@@ -665,8 +664,9 @@ export class Sim {
     if (i < this.hint) this.hint = i;
   }
 
-  /** up to 200 spawn attempts per step while below the target (a try can find no room; the next step tries again) */
+  /** up to FILL_TRIES spawn attempts per step while below the aim (the target, or the daily profile's share of it) */
   private fill() {
-    for (let n = 0; n < 200 && this.active < this.target; n++) this.spawn();
+    const aim = this.profile ? Math.round(this.target * demandAt(this.t)) : this.target;
+    for (let n = 0; n < FILL_TRIES && this.active < aim; n++) this.spawn();
   }
 }

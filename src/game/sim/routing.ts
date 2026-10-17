@@ -5,7 +5,7 @@ import { type LaneGraph, type Turn, LK, MPT, laneAt } from './lanes';
 import type { Sim } from './sim';
 
 /** zones: a ZN x ZN grid of 128-tile squares over the map */
-const ZN = MAP >> 7;
+export const ZN = MAP >> 7;
 /** turn penalties, seconds */
 const TURN: Record<Turn, number> = { S: 0, R: 1.5, L: 3, U: 20 };
 /** the local route is used within this many tiles of the destination, and in the destination's zone */

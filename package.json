@@ -14,6 +14,7 @@
     "bench": "node scripts/perf/bench.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",
     "worker:bench": "bash scripts/worker/run.sh \"npm run build && node scripts/perf/bench.mjs --serve --channel chrome --size 1\"",
+    "sim:gate": "esbuild scripts/sim/gate.ts --bundle --platform=node --format=esm --outfile=output/sim/gate.mjs --log-level=warning && node output/sim/gate.mjs",
     "terrain:preview": "esbuild scripts/terrain/preview.ts --bundle --platform=node --format=esm --outfile=output/terrain/preview.mjs --log-level=warning && node output/terrain/preview.mjs"
   },
   "dependencies": {

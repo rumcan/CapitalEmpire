@@ -4,9 +4,8 @@
 import type { Game } from './engine';
 import { MAP, PLANNER_Z, mulberry, worldX, worldY } from './iso';
 import { LIBRARY } from './library';
-import { CLASS, type NodeType } from './network';
+import { benchLayout, benchNetwork, M0 } from './bench-net';
 
-const GRID = 40, M0 = 96, LINES = Math.floor((MAP - 2 * M0) / GRID) + 1;
 export const BENCH_CARS = 10000;
 
 const mem = () => { const m = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory; return m ? Math.round(m.usedJSHeapSize / 1048576) + ' MB' : '?'; };
@@ -14,20 +13,8 @@ const mem = () => { const m = (performance as unknown as { memory?: { usedJSHeap
 export function buildBenchmark(g: Game, size = 1) {
   g.benchMode = true;
   const t0 = performance.now(), rnd = mulberry(99);
-  const lines = Math.max(3, Math.round(LINES * Math.sqrt(size))), at = (k: number) => M0 + k * GRID, last = at(lines - 1);
-  const clsOf = (k: number) => (k % 15 === 0 ? CLASS.boulevard : k % 5 === 0 ? CLASS.avenue : CLASS.street);
-  for (let k = 0; k < lines; k++) {
-    g.edit.addLegs([{ a: { x: M0, y: at(k) }, b: { x: last, y: at(k) } }], clsOf(k), 0);
-    g.edit.addLegs([{ a: { x: at(k), y: M0 }, b: { x: at(k), y: last } }], clsOf(k), 0);
-  }
-  g.net.rebuild(true);
-  for (let a = 0; a < lines; a++) for (let b = 0; b < lines; b++) {
-    const big = a % 5 === 0 && b % 5 === 0; if (!big) continue;
-    const n = g.net.nodeAt({ x: at(a), y: at(b) }); if (!n) continue;
-    const type: NodeType = a % 15 === 0 && b % 15 === 0 ? 'plain' : (a + b) % 10 === 0 ? 'roundabout' : 'signal';
-    if (type !== 'plain') g.edit.setNodeType(n, type);
-  }
-  g.net.rebuild();
+  const { lines, at, last } = benchLayout(size);
+  benchNetwork(g.edit, size);
   const tNet = performance.now();
   console.log('[bench] network', g.net.segs.size, 'segs', Math.round(tNet - t0), 'ms, heap', mem());
   // ---- props: every block gets two rows of houses, yards, trees, fences, parked cars and clutter
