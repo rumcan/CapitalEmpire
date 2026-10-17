@@ -32,6 +32,9 @@ _Last updated: 2026-10-17, Phase 1 steps 1–4 done (generator, creeks, wiring, 
   **Confirmed 2026-10-17:** the player never builds buildings; the "objects" build tool comes out (Phase 1
   step 3). The game allocates lots (residential, commercial, industrial, tourism, government) and builds them
   with rich generated layouts; the player picks growth options. GAME-PLAN sections 1.5 and 3.5.
+- **Growth roads are gravel (added 2026-10-17):** the town extends its own network with gravel roads to the lots it
+  allocates; the player upgrades (paves) them and reroutes traffic. Needs a gravel road class (Phase 3, with growth).
+  GAME-PLAN section 1.5.
 - **Traffic:** must be very powerful and adaptive: edits take effect at once, routes react to congestion, and
   disruptions (tourism events, roadworks) are first-class. GAME-PLAN section 3.3.
 - **Road builder UX:** Cities: Skylines and similar games are the reference, to win their players. GAME-PLAN
