@@ -11,7 +11,7 @@ _Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
-| 2. Traffic core | **In progress** (steps 1–4 done: lane graph, sim worker, junction control, routing). Steps at the end |
+| 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
@@ -335,3 +335,24 @@ Update this file after each step.
    - Perf: 10k cars on the 40x40 grid about 1.2x the step-3 cost (14 ms per step on the dev PC, Node).
    - Seen: when the target cannot be reached (a small network), `fill()` keeps making 200 spawn attempts per step
      (5.6 ms per tick for 170 cars). Capped in step 5.
+5a. **Trips, valves, scenarios, gate script. DONE** (2026-10-18).
+   - `src/game/sim/trips.ts`: `DAY = 1440` sim seconds (one game minute per sim second), `demandAt(t)` (0.35 at night,
+     peaks 1.0 at 8h and 17h), origins weighted by lane length, destinations by a gravity model
+     (`w = lane length of the zone * exp(-d / 1500 m)`), at least 300 m away. `Sim.profile` scales the target by the
+     demand curve (off by default and in the gate).
+   - Spawn throttle: no spawn on a jammed dseg (speed EMA < 2 m/s) or within 15 m of a vehicle; at most 40 attempts
+     per step (`stats.throttled`).
+   - **Zipper merges** (lead fix): merges were mutual exclusion (nobody enters while anyone is on the other merging
+     connector), which held a lane drop to 8 veh/min. Now a vehicle may enter behind the vehicles already on the other
+     lane, and vehicles on merging node lanes follow the nearest merger ahead (by distance left to the merge point). A
+     vehicle holding the reservation on the merged lane ignores mergers without one (this deadlocked a roundabout).
+   - **Tapers**: a straight 2-arm node where the class changes insets the lanes 4 tiles each side, so the lane shift
+     is a gentle S-curve instead of a 1 m kink at 3 m/s.
+   - `tests/scenarios.test.ts` (Treiber's scenarios): ring road fundamental diagram (flow 480 → 1106 → 1124 → 1124
+     veh/h at 10/25/50/70 veh/km, speed 13.1 → 4.5 m/s; the 4 corner fillets at 4.2 m/s cap the flow), on-ramp (a
+     stop-controlled right turn into a boulevard: all ramp vehicles arrive at 6/min with 20/min through), lane drop
+     (boulevard to street: 21.7 of 25 veh/min). 66 tests pass.
+   - `src/game/bench-net.ts`: the bench network as a pure module (the browser bench and the gate share it).
+     `npm run sim:gate -- [days] [cars]` (`scripts/sim/gate.ts`) runs the sim headless on it and checks the gate
+     (active >= 98%, arrivals every hour, speed > 1 m/s, towed < 1% and lost < 2% of arrivals); summary in
+     `output/sim/gate.json`. Smoke (0.05 days, 10k, dev PC): pass, 16 ms per step mean.
