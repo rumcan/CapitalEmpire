@@ -2,7 +2,7 @@
 // Hot paths (step, writeFrame) are allocation-free; plans are only built when a vehicle picks a movement.
 import { mulberry } from '../iso';
 import { CAR, idm } from './idm';
-import { CTL, LK, type Lane, type LaneGraph, type SignalPlan, laneAt } from './lanes';
+import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt } from './lanes';
 import { SIG, phaseState } from './signals';
 import { Router } from './routing';
 import { Trips, demandAt } from './trips';
@@ -213,9 +213,10 @@ export class Sim {
     }
   }
 
-  /** packs the vehicles into buf: 4 floats per slot [x, y, angle, flags]; x, y in tiles, angle in radians, dead slots 0 */
+  /** packs the vehicles into buf: 4 floats per slot [x, y, angle, flags]; x, y in tiles, angle in radians, dead slots 0.
+   *  flags: 1 alive, 2 braking, 4 tunnel, 8 left signal, 16 right signal, vtype << 5 */
   writeFrame(buf: Float32Array) {
-    const o = this.scratch, lanes = this.g.lanes;
+    const o = this.scratch, lanes = this.g.lanes, moves = this.g.moves;
     for (let i = 0; i < this.cap; i++) {
       const k = 4 * i, ln = this.alive[i] ? lanes[this.lane[i]] ?? null : null;
       if (!ln) { buf[k] = 0; buf[k + 1] = 0; buf[k + 2] = 0; buf[k + 3] = 0; continue; }
@@ -223,8 +224,21 @@ export class Sim {
       const la = this.lat[i];
       buf[k] = o.x - o.hy * la; buf[k + 1] = o.y + o.hx * la;
       buf[k + 2] = Math.atan2(o.hy, o.hx);
-      buf[k + 3] = 1 | (this.acc[i] < -0.5 ? 2 : 0) | (ln.tunnel ? 4 : 0) | (this.vtype[i] << 4);
+      buf[k + 3] = 1 | (this.acc[i] < -0.5 ? 2 : 0) | (ln.tunnel ? 4 : 0) | this.signal(i, ln, moves) | (this.vtype[i] << 5);
     }
+  }
+  /** the turn signal of vehicle i on lane ln: 8 left, 16 right, 0 none. A vehicle signals the turn of the movement it follows
+   *  (move[i], turn L or R) while it is on that movement's in lane within 40 m of the end, or on its node lanes */
+  private signal(i: number, ln: Lane, moves: (Movement | null)[]): number {
+    const m = this.move[i]; if (m === undefined || m < 0) return 0;
+    const mv = moves[m]; if (!mv || (mv.turn !== 'L' && mv.turn !== 'R')) return 0;
+    const bit = mv.turn === 'L' ? 8 : 16, near = this.s[i] >= ln.len - 40;
+    for (let q = 0; q < mv.paths.length; q++) {
+      const p = mv.paths[q]!;
+      if (near && p[0] === ln.id) return bit;
+      for (let j = 1; j < p.length - 1; j++) if (p[j] === ln.id) return bit;
+    }
+    return 0;
   }
 
   /** junction gate for vehicle i before gated lane c (a CONN or RING entry from a LINK lane): true lets it on and grants c.

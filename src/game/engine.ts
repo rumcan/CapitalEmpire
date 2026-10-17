@@ -57,6 +57,8 @@ export class Game {
   builds: Build[] = []; particles: Particle[] = [];
   toasts: Toast[] = []; toastId = 1;
   traffic: SimClient | null = null;
+  /** car light points, reused each frame (grown to 7 points per sim slot) */
+  private lightBuf = new Float32Array(0);
   // perf
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0 };
   private frameTimes: number[] = [];
@@ -722,12 +724,18 @@ export class Game {
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
       // cars in tunnels are not drawn (the sim client skips them)
-      const movers: Drawable[] = this.traffic ? this.traffic.visible(Math.min(...c.map(p => p.x)) - pad, Math.min(...c.map(p => p.y)) - pad, Math.max(...c.map(p => p.x)) + pad, Math.max(...c.map(p => p.y)) + pad) : [];
+      const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
+      const movers: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
       this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), street = tier === 'street';
-      const [sAt, pAt] = gl.uploadParts([[f.shadows, street ? f.shadowFloats : 0], [f.stream, f.floats]]);
+      // car lights (night): lamps and beam glows of the cars in the same box, uploaded with the sprites
+      const tr = this.traffic, lightOn = !!tr && cam.z >= 0.08;
+      if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
+      const lt = tr && lightOn ? tr.lights(bx0, by0, bx1, by1, ze, Math.floor(now / 350) % 2 === 0, this.lightBuf) : null;
+      const [sAt, pAt, lAt] = gl.uploadParts([[f.shadows, street ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0]]);
       if (street) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE);
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
+      if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);
     this.drawOverlay(now);

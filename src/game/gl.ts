@@ -78,7 +78,12 @@ void main() {
 const FS_POINT = `#version 300 es
 precision highp float;
 in vec4 vCol; out vec4 o;
-void main() { vec2 p = gl_PointCoord * 2.0 - 1.0; if (dot(p, p) > 1.0) discard; o = vec4(vCol.rgb * vCol.a, vCol.a); }`;
+uniform int uSoft;
+void main() {
+  vec2 p = gl_PointCoord * 2.0 - 1.0; float d = dot(p, p); if (d > 1.0) discard;
+  if (uSoft == 1) { float f = (1.0 - d) * (1.0 - d); o = vec4(vCol.rgb * vCol.a * f, 0.0); }
+  else o = vec4(vCol.rgb * vCol.a, vCol.a);
+}`;
 
 type Prog = { p: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
 
@@ -98,7 +103,7 @@ export class GLRenderer {
     this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
     this.sprite = this.program(VS_SPRITE, FS_SPRITE, ['uCam', 'uScreen', 'uMinPx', 'uAtlas']);
     this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen']);
-    this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize']);
+    this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
     for (const t of [this.maskTex, this.emptyTex]) { gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); this.texParams(gl.TEXTURE_2D, false); }
@@ -201,10 +206,10 @@ export class GLRenderer {
     for (let i = 0; i < 2; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++; this.stats.instances += count;
   }
-  /** points at float offset `firstFloat` of the uploaded stream */
-  drawPoints(firstFloat: number, count: number, size: number) {
+  /** points at float offset `firstFloat` of the uploaded stream; soft: additive glows instead of hard discs */
+  drawPoints(firstFloat: number, count: number, size: number, soft = false) {
     if (!count) return; const gl = this.gl, pr = this.point;
-    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uSize, size); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uSize, size); gl.uniform1i(pr.u.uSoft, soft ? 1 : 0); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     const B = POINT_STRIDE * 4;
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, B, firstFloat * 4);
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, B, firstFloat * 4 + 8);
