@@ -11,7 +11,7 @@ _Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
-| 2. Traffic core | **In progress** (steps 1–3 done: lane graph, sim worker, junction control). Steps at the end |
+| 2. Traffic core | **In progress** (steps 1–4 done: lane graph, sim worker, junction control, routing). Steps at the end |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
@@ -320,3 +320,18 @@ Update this file after each step.
    - Capacity finding: 8x8 single-lane street blocks of 80 m with random routing flow at 300–400 cars, are at capacity
      at 600 (1.5 m/s) and gridlock at 1000+. Fixed-time signals (18 s greens) on 80 m blocks cut mean speed by a third.
    - Perf: 11 ms per step at 10k cars on the 40x40 grid (dev PC), now congested (mean 3.7 m/s with random routing).
+4. **Zone next-hop routing. DONE** (2026-10-18). `src/game/sim/routing.ts` (`Router`):
+   - 16 x 16 zones of 128 tiles. Costs in seconds: link = length / measured speed (EMA per dseg every second);
+     movement = length / 8 + turn penalty (S 0, R 1.5, L 3, U 20) + measured junction delay (EMA of the waits).
+   - Per destination zone a table from a reverse Dijkstra over movements (CSR reverse adjacency, binary heap), built
+     on first use, refreshed round-robin (one per step) and on demand after an edit (at most 4 per step). About
+     1.4 ms per table on the 40x40 grid (max 6 ms).
+   - At each junction a logit choice among near-best movements (within max(20 s, 25%) of the best; theta 3 s + 5%).
+     Near the destination (same zone or within 64 tiles) an A* over movements finds the exact dseg.
+   - Vehicles have `dest`/`destS` and are removed on arrival (`stats.arrived`); no route → `lost`. Edits drop routes
+     and retarget vehicles whose destination vanished.
+   - Tests (`tests/routing.test.ts`): the short way wins (100/100), congestion splits two equal routes (126/133),
+     a vehicle re-routes around a removed road, a 6x6 grid delivers 764 trips with none lost.
+   - Perf: 10k cars on the 40x40 grid about 1.2x the step-3 cost (14 ms per step on the dev PC, Node).
+   - Seen: when the target cannot be reached (a small network), `fill()` keeps making 200 spawn attempts per step
+     (5.6 ms per tick for 170 cars). Capped in step 5.

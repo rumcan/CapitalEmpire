@@ -2,8 +2,9 @@
 // Hot paths (step, writeFrame) are allocation-free; plans are only built when a vehicle picks a movement.
 import { mulberry } from '../iso';
 import { CAR, idm } from './idm';
-import { CTL, LK, type Lane, type LaneGraph, type SignalPlan, laneAt } from './lanes';
+import { CTL, LK, MPT, type Lane, type LaneGraph, type SignalPlan, laneAt } from './lanes';
 import { SIG, phaseState } from './signals';
+import { Router } from './routing';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -24,6 +25,10 @@ const TOW_BOX = 60, TOW_ANY = 300;
 const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
 const SIG_MARGIN = 0.5;
+/** a new trip's destination is at least this far (straight line, metres) from its origin, when a try finds one */
+const MIN_DEST = 300;
+/** destination draws per trip before the farthest one is taken */
+const DEST_TRIES = 16;
 
 /** The vehicles of one graph. Slot i is one vehicle while alive[i] is 1; the lists hold the vehicles of each lane, front first. */
 export class Sim {
@@ -35,13 +40,21 @@ export class Sim {
   /** junction control per slot: the connector granted (-1), the lane where its room is reserved (-1), seconds waiting at a line,
    *  1 once stopped at a line, the movement it wants at the end of its lane (-1 = none) */
   grant: Int32Array; resv: Int32Array; wait: Float32Array; stopped: Uint8Array; want: Int32Array;
+  /** routing per slot: the destination dseg (-1 = none, a random walk), metres along it, the dsegs still to take (null = none),
+   *  the junction decisions in a row that found no finite cost */
+  dest: Int32Array; destS: Float64Array; route: (number[] | null)[]; noRoute: Uint8Array;
+  router = new Router();
   /** per lane: slots granted into it and not yet on it; metres reserved on it by grants */
   granted: number[][] = []; resvLen = new Float64Array(0);
   /** per lane: vehicle slots on it, front first (largest s first) */
   onLane: number[][] = [];
   target = 0;
   rnd: () => number;
-  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0 };
+  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, tableMs: 0, tables: 0 };
+  /** the last destination drawn: metres along it (see drawDest) */
+  private dsS = 0;
+  /** a scratch lane position (allocation-free) */
+  private pt = { x: 0, y: 0, hx: 0, hy: 0 };
   /** per slot: distance to the nearest virtual stop (plan end or gate), metres; Infinity = none */
   private vg: Float64Array;
   /** every slot below hint is alive */
@@ -66,10 +79,13 @@ export class Sim {
     this.pi = new Int16Array(cap); this.stuck = new Float32Array(cap); this.vg = new Float64Array(cap).fill(Infinity);
     this.grant = new Int32Array(cap).fill(-1); this.resv = new Int32Array(cap).fill(-1); this.want = new Int32Array(cap).fill(-1);
     this.wait = new Float32Array(cap); this.stopped = new Uint8Array(cap);
+    this.dest = new Int32Array(cap).fill(-1); this.destS = new Float64Array(cap); this.route = new Array<number[] | null>(cap).fill(null);
+    this.noRoute = new Uint8Array(cap);
     this.onGraph();
   }
 
-  /** after g.update(net): grow the lane lists, rebuild the spawn table, re-plan or respawn vehicles on changed lanes */
+  /** after g.update(net): grow the lane lists, rebuild the spawn table and the routing graph, re-plan or respawn vehicles on
+   *  changed lanes; routes are dropped, and a vehicle whose destination dseg went gets a new one */
   onGraph() {
     const lanes = this.g.lanes;
     while (this.onLane.length < lanes.length) this.onLane.push([]);
@@ -87,15 +103,18 @@ export class Sim {
     this.resvLen.fill(0); this.grant.fill(-1); this.resv.fill(-1);
     for (const q of this.onLane) q.length = 0;
     this.buildSpawn();
+    this.router.onGraph(this.g);
     let pending = 0;
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i]) continue;
+      this.route[i] = null;
       const id = this.lane[i], ln = lanes[id] ?? null;
       if (!ln) { this.free(i); this.stats.respawned++; pending++; continue; }
       const s = this.s[i];
       this.s[i] = s < 0 ? 0 : s > ln.len ? ln.len : s;
+      if (this.dest[i] >= 0 && this.router.gone(this.dest[i]!)) this.retarget(i);
       if (!this.valid(i)) {
-        if (ln.kind === LK.LINK) this.pickMove(i);
+        if (ln.kind === LK.LINK) { if (!this.pickMove(i)) continue; }
         else if (ln.next.length) { this.plan[i] = this.chain(id); this.pi[i] = 0; }
         else { this.free(i); this.stats.respawned++; pending++; continue; }
       }
@@ -119,31 +138,70 @@ export class Sim {
     for (let i = this.cap - 1; i >= 0 && this.active > this.target; i--) this.despawn(i);
   }
 
-  /** adds one vehicle on a random link lane (weighted by length) if there is room for it; false if not */
+  /** adds one vehicle on a random link lane (weighted by length) with a random destination, if there is room for it; false if not */
   spawn(): boolean {
-    const n = this.spawnIds.length;
-    if (!n) return false;
     for (let tries = 0; tries < 8; tries++) {
-      const r = this.rnd() * this.spawnTot, c = this.spawnCum;
-      let lo = 0, hi = n - 1;
-      while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] > r) hi = m; else lo = m + 1; }
-      const id = this.spawnIds[lo], ln = this.g.lanes[id]!;
-      const s = this.rnd() * (ln.len - MIN_SPAWN_LEN) + 5, vt = Math.floor(this.rnd() * VTYPES.length), L = VTYPES[vt].len;
-      if (!this.roomOn(id, s, L)) continue;
-      let i = this.hint;
-      while (i < this.cap && this.alive[i]) i++;
-      if (i >= this.cap) return false;
-      this.alive[i] = 1; this.lane[i] = id; this.s[i] = s; this.v[i] = 0.5 * ln.vmax; this.acc[i] = 0;
-      this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
-      this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
-      const q = this.onLane[id];
-      let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
-      q.splice(k, 0, i);
-      this.hint = i + 1; this.active++; this.stats.spawned++;
-      this.pickMove(i);
-      return true;
+      const id = this.drawLane();
+      if (id < 0) return false;
+      const ln = this.g.lanes[id]!, s = this.rnd() * (ln.len - MIN_SPAWN_LEN) + 5;
+      laneAt(ln, s, this.pt);
+      const d = this.drawDest(this.pt.x, this.pt.y);
+      if (this.spawnAt(id, s, d, this.dsS) >= 0) return true;
     }
     return false;
+  }
+
+  /** adds one vehicle at s metres on link lane `lane`, heading for `dest` (a dseg; -1 = a random walk) at destS metres along it;
+   *  returns its slot, or -1 if there is no room on the lane or no free slot (or it was lost at once) */
+  spawnAt(lane: number, s: number, dest: number, destS: number): number {
+    const ln = this.g.lanes[lane];
+    if (!ln) return -1;
+    const vt = Math.floor(this.rnd() * VTYPES.length), L = VTYPES[vt].len;
+    if (!this.roomOn(lane, s, L)) return -1;
+    let i = this.hint;
+    while (i < this.cap && this.alive[i]) i++;
+    if (i >= this.cap) return -1;
+    this.alive[i] = 1; this.lane[i] = lane; this.s[i] = s; this.v[i] = 0.5 * ln.vmax; this.acc[i] = 0;
+    this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
+    this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
+    this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0;
+    const q = this.onLane[lane];
+    let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
+    q.splice(k, 0, i);
+    this.hint = i + 1; this.active++; this.stats.spawned++;
+    return this.pickMove(i) ? i : -1;
+  }
+
+  /** a link lane for a spawn or a destination, weighted by length; -1 if there is none */
+  private drawLane(): number {
+    const n = this.spawnIds.length;
+    if (!n) return -1;
+    const r = this.rnd() * this.spawnTot, c = this.spawnCum;
+    let lo = 0, hi = n - 1;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] > r) hi = m; else lo = m + 1; }
+    return this.spawnIds[lo]!;
+  }
+  /** a destination for a trip from (ox, oy): a random link lane's dseg, at least MIN_DEST metres away if a try finds one (else the
+   *  farthest tried); returns the dseg (-1 if there are no lanes) and sets dsS */
+  private drawDest(ox: number, oy: number): number {
+    let best = -1, bestD = -1, bestS = 0;
+    for (let k = 0; k < DEST_TRIES; k++) {
+      const id = this.drawLane();
+      if (id < 0) break;
+      const ln = this.g.lanes[id]!, s = this.rnd() * (ln.len - MIN_SPAWN_LEN) + 5;
+      laneAt(ln, s, this.pt);
+      const far = Math.hypot(this.pt.x - ox, this.pt.y - oy) * MPT;
+      if (far >= MIN_DEST) { this.dsS = s; return ln.dseg; }
+      if (far > bestD) { bestD = far; best = ln.dseg; bestS = s; }
+    }
+    this.dsS = bestS;
+    return best;
+  }
+  /** gives vehicle i a new destination from where it is now */
+  private retarget(i: number) {
+    const ln = this.g.lanes[this.lane[i]]!;
+    laneAt(ln, this.s[i], this.pt);
+    this.dest[i] = this.drawDest(this.pt.x, this.pt.y); this.destS[i] = this.dsS; this.noRoute[i] = 0;
   }
 
   /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
@@ -153,11 +211,23 @@ export class Sim {
     this.changeLanes();
     this.integrate();
     this.transfer();
+    this.arrive();
     this.tow();
     for (let i = 0; i < this.cap; i++) this.lat[i] *= 0.85;
     this.t += DT; this.steps++;
+    this.router.tick(this);
     this.fill();
     this.stats.stepMs = performance.now() - t0;
+  }
+
+  /** removes the vehicles that have reached their destination (on the destination dseg, at destS or further) */
+  private arrive() {
+    const lanes = this.g.lanes;
+    for (let i = 0; i < this.cap; i++) {
+      if (!this.alive[i] || this.dest[i]! < 0) continue;
+      const ln = lanes[this.lane[i]]!;
+      if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) { this.stats.arrived++; this.despawn(i); }
+    }
   }
 
   /** packs the vehicles into buf: 4 floats per slot [x, y, angle, flags]; x, y in tiles, angle in radians, dead slots 0 */
@@ -439,8 +509,11 @@ export class Sim {
     if (ln.kind !== LK.LINK && nl.kind === LK.LINK) this.stats.throughput++;
     if (this.grant[i] === nid) this.unGrant(i);
     if (this.resv[i] === nid) this.unReserve(i);
+    // entering the first node lane of a movement: its junction delay is the time this vehicle waited at the line
+    if (ln.kind === LK.LINK && nl.kind !== LK.LINK && this.move[i]! >= 0) this.router.feed(this.move[i]!, this.wait[i]!);
     this.stopped[i] = 0; if (nl.kind !== LK.LINK) this.wait[i] = 0;
     this.pi[i] = p; this.lane[i] = nid; this.onLane[nid].push(i);
+    // a vehicle may be removed here (lost, no route): pickMove despawns it, and the callers check alive
     if (nl.kind === LK.LINK && p === P.length - 1) this.pickMove(i);
     return true;
   }
@@ -454,18 +527,60 @@ export class Sim {
     }
   }
 
-  /** a vehicle on link lane L picks the movement it wants at the end of L's dseg (any non-U one, U only when that is all there is) and plans through it */
-  private pickMove(i: number) {
-    const g = this.g, L = this.lane[i], d = g.dsegs[g.lanes[L]!.dseg];
+  /** a vehicle on link lane L picks the movement it wants at the end of L's dseg and plans through it. A vehicle with a
+   *  destination steers by the router (see steer); one without walks at random (any non-U one, U only when that is all there is).
+   *  Returns false if the vehicle was lost and removed. */
+  private pickMove(i: number): boolean {
+    const g = this.g, L = this.lane[i], dsId = g.lanes[L]!.dseg, d = g.dsegs[dsId];
     const outs = d ? d.out : [];
-    if (!outs.length) { this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; return; }
-    let nu = 0;
-    for (const m of outs) if (g.moves[m]!.turn !== 'U') nu++;
-    let w = -1;
-    if (nu) { let k = Math.floor(this.rnd() * nu); for (const m of outs) if (g.moves[m]!.turn !== 'U' && k-- === 0) { w = m; break; } }
-    else w = outs[Math.floor(this.rnd() * outs.length)];
+    if (!outs.length) { this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; return true; }
+    let w: number;
+    if (this.dest[i]! < 0) w = this.randomMove(outs);
+    else {
+      w = this.steer(i, dsId, outs);
+      if (w === -2) { this.lose(i); return false; }
+      if (w < 0) {
+        // no finite cost from here: a random walk this time; three in a row and the vehicle is lost
+        if (++this.noRoute[i]! >= 3) { this.lose(i); return false; }
+        w = this.randomMove(outs);
+      } else this.noRoute[i] = 0;
+    }
     this.want[i] = w;
     this.planFrom(i, L, -1);
+    return true;
+  }
+  /** a random movement out of a dseg, U only when it is the only one */
+  private randomMove(outs: number[]): number {
+    const g = this.g;
+    let nu = 0;
+    for (const m of outs) if (g.moves[m]!.turn !== 'U') nu++;
+    if (nu) { let k = Math.floor(this.rnd() * nu); for (const m of outs) if (g.moves[m]!.turn !== 'U' && k-- === 0) return m; }
+    return outs[Math.floor(this.rnd() * outs.length)]!;
+  }
+  /** the movement among outs that leads to dseg nx, or -1 */
+  private toward(outs: number[], nx: number): number {
+    for (const m of outs) if (this.g.moves[m]!.to === nx) return m;
+    return -1;
+  }
+  /** removes vehicle i, which has no route to its destination */
+  private lose(i: number) { this.stats.lost++; this.despawn(i); }
+  /** the movement vehicle i (on lane L, at the end of dseg cur, with movements outs) takes toward its destination: the next dseg of
+   *  its local route when in the destination zone or within LOCAL_TILES of the destination (planned by A* when needed), else the
+   *  router's logit choice by zone cost. -1 if no movement has a finite cost, -2 if the local route is not found. */
+  private steer(i: number, cur: number, outs: number[]): number {
+    const R = this.router, e = this.dest[i]!;
+    if (cur !== e && (R.zoneD[cur]! === R.zoneD[e]! || R.near(cur, e, this.destS[i]!))) {
+      const r0 = this.route[i];
+      if (r0 && r0.length) { const m = this.toward(outs, r0[0]!); if (m >= 0) { r0.shift(); if (!r0.length) this.route[i] = null; return m; } }
+      const r = R.localRoute(cur, e);
+      if (r === null) return -2;
+      if (r.length) {
+        const m = this.toward(outs, r[0]!);
+        if (m >= 0) { r.shift(); if (r.length) this.route[i] = r; return m; }
+      }
+    }
+    this.route[i] = null;
+    return R.choose(outs, R.zoneD[e]!, this.rnd);
   }
   /** plans vehicle i from its lane L: the wanted movement if it has a path from L, else `prefer` if it has one, else a random
    *  movement that has one, else the fallback chain */
@@ -546,7 +661,7 @@ export class Sim {
   private free(i: number) {
     if (this.grant[i] >= 0) this.unGrant(i);
     if (this.resv[i] >= 0) this.unReserve(i);
-    this.alive[i] = 0; this.plan[i] = null; this.active--;
+    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.active--;
     if (i < this.hint) this.hint = i;
   }
 
