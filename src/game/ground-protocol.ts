@@ -6,7 +6,7 @@ import type { Waterway } from './terrain/types';
 
 /** A network edit, replayed by every ground worker so their road networks match the main thread's exactly. */
 export type NetOp =
-  | { k: 'legs'; legs: number[]; cls: ClassId; style: LineStyle }
+  | { k: 'legs'; legs: number[]; cls: ClassId; style: LineStyle; kinds?: number[] }
   | { k: 'piece'; seg: [number, number, number, number]; p0: [number, number]; p1: [number, number] }
   | { k: 'type'; x: number; y: number; type: NodeType }
   | { k: 'rebuild'; full: boolean }

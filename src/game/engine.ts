@@ -1,7 +1,8 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type RoadClass } from './network';
+import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type RoadClass, type SegKind } from './network';
 import { NetEditor } from './netops';
+import { STRUCT_COST, STRUCT_MAX, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
@@ -275,7 +276,7 @@ export class Game {
     if (this.route.length && this.hover) legs.push(...this.legsTo(this.route[this.route.length - 1], this.snapNode(this.hover), this.keys.has('Shift')));
     return legs;
   }
-  routeCost() { return Math.round(this.net.legsLength(this.previewLegs()) * this.cls.cost); }
+  routeCost() { return this.structured(this.previewLegs()).cost; }
   private roadClick(mx: number, my: number) {
     const p = this.snapNode(this.tileAt(mx, my));
     if (!this.route.length) { this.route.push(p); this.emit(); return; }
@@ -306,6 +307,16 @@ export class Game {
     }
     return false;
   }
+  /** the legs split into ground, bridge and tunnel pieces, with their cost (money) and an error ('' if fine) */
+  private structured(legs: Leg[]) {
+    const { legs: parts, kinds } = splitByTerrain(legs, this.cls.h + this.cls.walk, (x, y) => classAt(this.terrain, x, y));
+    let raw = 0; for (let i = 0; i < parts.length; i++) raw += vlen(sub(parts[i].b, parts[i].a)) * this.cls.cost * STRUCT_COST[kinds[i]];
+    const cost = Math.round(raw), lens = structureLengths(parts, kinds);
+    let err = '';
+    if (longestRun(parts, kinds, SK.BRIDGE) > STRUCT_MAX[SK.BRIDGE]) err = `Bridges can span at most ${STRUCT_MAX[SK.BRIDGE] * 2} m`;
+    else if (longestRun(parts, kinds, SK.TUNNEL) > STRUCT_MAX[SK.TUNNEL]) err = `Tunnels can be at most ${STRUCT_MAX[SK.TUNNEL] * 2} m long`;
+    return { parts, kinds, cost, lens, err };
+  }
   private propsNearLegs(legs: Leg[], hw: number) {
     let bb: BBox | null = null; for (const l of legs) bb = unionBox(bb, [Math.min(l.a.x, l.b.x) - hw, Math.min(l.a.y, l.b.y) - hw, Math.max(l.a.x, l.b.x) + hw, Math.max(l.a.y, l.b.y) + hw]);
     return bb ? [...this.propGrid.query(bb)].filter(p => this.propInLegs(p, legs, hw)) : [];
@@ -314,22 +325,24 @@ export class Game {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
-    const cls = this.cls, total = this.net.legsLength(legs), cost = Math.round(total * cls.cost);
+    const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
     if (cost > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}`, 'warn'); return; }
-    if (this.blockedForRoad(legs, cls.h + cls.walk)) { this.toast('Roads can\'t cross hills or the river yet: bridges and tunnels are coming', 'warn'); return; }
+    if (st.err) { this.toast(st.err, 'warn'); return; }
+    const total = this.net.legsLength(parts);
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
     const blocking = near.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car');
     if (blocking.length) { this.toast(`${LIBRARY[blocking[0].item].name} is in the way — bulldoze it first`, 'warn'); return; }
     const cleared = near.filter(p => !p.auto && !LIBRARY[p.item].big);
     for (const p of cleared) this.removeProp(p);
     const now = performance.now(), dur = Math.min(4000, 700 + total * 70);
-    const cum: number[] = []; let acc = 0; for (const l of legs) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
-    this.edit.addLegs(legs, cls, this.lineStyle);
+    const cum: number[] = []; let acc = 0; for (const l of parts) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
+    this.edit.addLegs(parts, cls, this.lineStyle, kinds);
     this.commitNetwork(true, now + dur + 150);
-    this.builds.push({ legs, cls, t0: now, dur, total, cum });
+    this.builds.push({ legs: parts, cls, t0: now, dur, total, cum });
     this.money -= cost;
     this.route = [];
-    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()} for $${cost.toLocaleString()}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
+    const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
+    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
   }
   private junctionClick(mx: number, my: number) {
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
@@ -463,7 +476,7 @@ export class Game {
     if (this.benchMode) return 0;
     const d: SaveV4 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed,
-      segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style]),
+      segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style, s.kind]),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain').map(n => [n.x, n.y, n.type]),
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.money, day: this.day, cam: { ...this.cam },
@@ -473,7 +486,7 @@ export class Game {
   private load(d: SaveV4): boolean {
     try {
       this.genTerrain(d.seed);
-      for (const [ax, ay, bx, by, cls, style] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle);
+      for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle, [(kind ?? 0) as SegKind]);
       this.net.rebuild(true);
       for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) this.edit.setNodeType(n, type as NodeType); }
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));

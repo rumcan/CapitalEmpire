@@ -1,5 +1,5 @@
 import type { NetOp } from './ground-protocol';
-import { CLASS, RoadNetwork, type Leg, type Node, type NodeType, type PieceSel, type RoadClass } from './network';
+import { CLASS, RoadNetwork, type Leg, type Node, type NodeType, type PieceSel, type RoadClass, type SegKind } from './network';
 import type { LineStyle } from './types';
 
 /** replay network edits (in a ground worker, or a test) */
@@ -9,7 +9,7 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
       case 'legs': {
         const legs: Leg[] = [];
         for (let i = 0; i + 3 < op.legs.length; i += 4) legs.push({ a: { x: op.legs[i], y: op.legs[i + 1] }, b: { x: op.legs[i + 2], y: op.legs[i + 3] } });
-        n.addLegs(legs, CLASS[op.cls], op.style, false); break;
+        n.addLegs(legs, CLASS[op.cls], op.style, false, op.kinds as SegKind[] | undefined); break;
       }
       case 'piece': {
         const a = n.nodeAt({ x: op.seg[0], y: op.seg[1] });
@@ -28,9 +28,9 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
 export class NetEditor {
   ops: NetOp[] = [];
   constructor(public net: RoadNetwork) {}
-  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle) {
-    this.net.addLegs(legs, cls, style, false);
-    this.ops.push({ k: 'legs', legs: legs.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]), cls: cls.id, style });
+  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, kinds?: SegKind[]) {
+    this.net.addLegs(legs, cls, style, false, kinds);
+    this.ops.push({ k: 'legs', legs: legs.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]), cls: cls.id, style, ...(kinds ? { kinds } : {}) });
   }
   removePiece(sel: PieceSel) {
     const s = sel.seg;

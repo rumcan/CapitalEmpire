@@ -84,6 +84,22 @@ test('a 4 km street grid builds and edits quickly', () => {
   assert.ok(tEdit < 30, `edit took ${tEdit} ms`);
 });
 
+test('structure kinds are kept on every segment and route', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 0, 10, 0), leg(10, 0, 20, 0), leg(20, 0, 30, 0)], CLASS.street, 0, [0, 1, 0]); e.commit();
+  assert.deepEqual([...e.net.segs].map(s => s.kind).sort(), [0, 0, 1]);
+  assert.deepEqual([...e.net.routes].map(r => r.kind).sort(), [0, 0, 1]);
+});
+
+test('a street crossing a bridge splits it, and both halves keep the bridge kind', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(10, 0, 20, 0)], CLASS.street, 0, [1]); e.addLegs([leg(15, -5, 15, 5)], CLASS.street, 0, [0]); e.commit();
+  assert.equal(e.net.segs.size, 4);
+  const bridge = [...e.net.segs].filter(s => s.kind === 1);
+  assert.equal(bridge.length, 2);
+  assert.ok(bridge.every(s => s.a.y === 0 && s.b.y === 0));
+});
+
 test('terrain run-length encoding round-trips', () => {
   const a = new Uint8Array(5000); a.fill(3, 100, 900); a.fill(1, 4000);
   assert.deepEqual(unrle(rle(a), new Uint8Array(a.length)), a);

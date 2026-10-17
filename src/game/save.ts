@@ -24,8 +24,8 @@ export interface SaveV4 {
   version: number; map: number;
   /** the map seed: generateTerrain(seed) rebuilds the valley */
   seed: number;
-  /** ax, ay, bx, by, class, line style */
-  segs: [number, number, number, number, string, number][];
+  /** ax, ay, bx, by, class, line style, structure kind (0 ground, 1 bridge, 2 tunnel; missing = ground) */
+  segs: [number, number, number, number, string, number, number?][];
   /** x, y, junction type */
   nodes: [number, number, string][];
   /** library id, x, y, flip, scale */

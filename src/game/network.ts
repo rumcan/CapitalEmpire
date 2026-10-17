@@ -154,7 +154,9 @@ function walkAlong(pts: Pt[], closed: boolean, first: number, step: number, fn: 
 
 /* ---------- data ---------- */
 export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number }
-export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle }
+/** how a segment is built: on the ground, on a bridge, or in a tunnel */
+export const SK = { GROUND: 0, BRIDGE: 1, TUNNEL: 2 } as const; export type SegKind = 0 | 1 | 2;
+export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind }
 export interface Arm { seg: Seg; other: Node; dir: Pt; nrm: Pt; ang: number; len: number; cls: RoadClass; h: number; walk: number; reachEdge: number; reachCentre: number; lineInset: number; medianInset: number; xw: number; stop: number; hasOpp: boolean }
 export interface Feature { kind: 'stroke' | 'poly' | 'disc'; path: Path2D; w: number; tex: string; order: number; bbox: BBox; cap: 'butt' | 'round'; kerb: boolean }
 /** a run of sidewalk slabs: straight (along a segment side) or radial (around a corner fillet, a bulb or a roundabout) */
@@ -172,7 +174,7 @@ export interface Tuft { x: number; y: number; ang: number; v: number }
 /** a polished wheel path (tile space polyline) */
 export interface Wear { pts: Pt[]; closed: boolean; r: number; h: number; offsets: number[]; bbox: BBox }
 export interface Tyre { x: number; y: number; ang: number; start: number; lat: number[]; len: number }
-export interface Route { nodes: Node[]; segs: Seg[]; pts: Pt[]; cls: RoadClass; style: LineStyle; closed: boolean; a0?: Arm; a1?: Arm }
+export interface Route { nodes: Node[]; segs: Seg[]; pts: Pt[]; cls: RoadClass; style: LineStyle; kind: SegKind; closed: boolean; a0?: Arm; a1?: Arm }
 export interface AutoProp { kind: 'tree' | 'light' | 'rbtree'; x: number; y: number; i: number }
 export interface PieceSel { seg: Seg; p0: Pt; p1: Pt }
 export interface Island { x: number; y: number; r: number }
@@ -289,7 +291,7 @@ export class RoadNetwork {
 
   nodeAt(p: Pt) { return this.nodes.get(keyOf(snap(p))); }
   private node(p: Pt): Node { const s = snap(p), k = keyOf(s); let n = this.nodes.get(k); if (!n) { n = { x: s.x, y: s.y, segs: [], type: 'plain', arms: [], rb: 0 }; this.nodes.set(k, n); } return n; }
-  private link(a: Node, b: Node, cls: RoadClass, style: LineStyle) { const s: Seg = { a, b, cls, style }; a.segs.push(s); b.segs.push(s); this.segs.add(s); this.segGrid.add(s, segBox(s)); this.touched.add(a); this.touched.add(b); return s; }
+  private link(a: Node, b: Node, cls: RoadClass, style: LineStyle, kind: SegKind) { const s: Seg = { a, b, cls, style, kind }; a.segs.push(s); b.segs.push(s); this.segs.add(s); this.segGrid.add(s, segBox(s)); this.touched.add(a); this.touched.add(b); return s; }
   private unlink(s: Seg) {
     this.segs.delete(s); this.segGrid.remove(s); this.removed.add(s);
     for (const n of [s.a, s.b]) { const i = n.segs.indexOf(s); if (i >= 0) n.segs.splice(i, 1); if (!n.segs.length) this.nodes.delete(keyOf(n)); this.touched.add(n); }
@@ -301,10 +303,10 @@ export class RoadNetwork {
     const ordered = pts.map(p => ({ p, t: dot(sub(p, s.a), d) / L2 })).filter(q => q.t > 1e-6 && q.t < 1 - 1e-6).sort((p, q) => p.t - q.t);
     if (!ordered.length) return;
     const chain = [s.a, ...ordered.map(q => this.node(q.p)), s.b];
-    const cls = s.cls, style = s.style; this.unlink(s);
-    for (let i = 0; i + 1 < chain.length; i++) if (chain[i] !== chain[i + 1]) this.link(this.keep(chain[i]), this.keep(chain[i + 1]), cls, style);
+    const cls = s.cls, style = s.style, kind = s.kind; this.unlink(s);
+    for (let i = 0; i + 1 < chain.length; i++) if (chain[i] !== chain[i + 1]) this.link(this.keep(chain[i]), this.keep(chain[i + 1]), cls, style, kind);
   }
-  private addSegment(P: Pt, Q: Pt, cls: RoadClass, style: LineStyle) {
+  private addSegment(P: Pt, Q: Pt, cls: RoadClass, style: LineStyle, kind: SegKind = 0) {
     const d = sub(Q, P); if (vlen(d) < 1e-6) return;
     const cutsOld = new Map<Seg, Pt[]>(), cutsNew: { t: number; pt: Pt }[] = [];
     const near = this.segGrid.query([Math.min(P.x, Q.x) - 0.01, Math.min(P.y, Q.y) - 0.01, Math.max(P.x, Q.x) + 0.01, Math.max(P.y, Q.y) + 0.01]);
@@ -318,11 +320,11 @@ export class RoadNetwork {
     for (let i = 0; i + 1 < pts.length; i++) {
       const a = this.node(pts[i]), b = this.node(pts[i + 1]); if (a === b) continue;
       const ex = a.segs.find(s => s.a === b || s.b === b);
-      if (ex) { if (ex.cls !== cls || ex.style !== style) { ex.cls = cls; ex.style = style; this.touched.add(a); this.touched.add(b); } } else this.link(a, b, cls, style);
+      if (ex) { if (ex.cls !== cls || ex.style !== style || ex.kind !== kind) { ex.cls = cls; ex.style = style; ex.kind = kind; this.touched.add(a); this.touched.add(b); } } else this.link(a, b, cls, style, kind);
     }
   }
-  /** add legs; pass rebuild=false to batch several calls before one rebuild() */
-  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, rebuild = true) { for (const l of legs) this.addSegment(l.a, l.b, cls, style); if (rebuild) this.rebuild(); }
+  /** add legs (kinds[i] is leg i's structure kind, ground by default); pass rebuild=false to batch several calls before one rebuild() */
+  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, rebuild = true, kinds?: SegKind[]) { legs.forEach((l, i) => this.addSegment(l.a, l.b, cls, style, kinds?.[i] ?? 0)); if (rebuild) this.rebuild(); }
   legsLength(legs: Leg[]) { return legs.reduce((s, l) => s + vlen(sub(l.b, l.a)), 0); }
   segsNear(p: Pt, r: number) { return this.segGrid.query([p.x - r, p.y - r, p.x + r, p.y + r]); }
   /** the 3-tile piece of road under a point, or null */
@@ -340,11 +342,11 @@ export class RoadNetwork {
   }
   removePiece(sel: PieceSel, rebuild = true) {
     const s = sel.seg, d = sub(s.b, s.a), L2 = dot(d, d);
-    const cls = s.cls, style = s.style, inner = (p: Pt) => { const t = dot(sub(p, s.a), d) / L2; return t > 1e-6 && t < 1 - 1e-6; };
+    const cls = s.cls, style = s.style, kind = s.kind, inner = (p: Pt) => { const t = dot(sub(p, s.a), d) / L2; return t > 1e-6 && t < 1 - 1e-6; };
     const a = s.a, b = s.b; this.unlink(s);
     const p0 = snap(sel.p0), p1 = snap(sel.p1);
-    if (inner(p0)) this.link(this.keep(a), this.node(p0), cls, style);
-    if (inner(p1)) this.link(this.node(p1), this.keep(b), cls, style);
+    if (inner(p0)) this.link(this.keep(a), this.node(p0), cls, style, kind);
+    if (inner(p1)) this.link(this.node(p1), this.keep(b), cls, style, kind);
     if (rebuild) this.rebuild();
   }
   setNodeType(n: Node, type: NodeType, rebuild = true) { n.type = type; this.touched.add(n); if (rebuild) this.rebuild(); }
@@ -459,7 +461,7 @@ export class RoadNetwork {
   /** chains of the given segments between terminal nodes, then the rings left over */
   private buildRoutes(free: Set<Seg>) {
     const visited = new Set<Seg>(), routes: Route[] = [];
-    const terminal = (n: Node) => n.arms.length !== 2 || n.rb > 0 || n.arms[0].cls !== n.arms[1].cls || n.arms[0].seg.style !== n.arms[1].seg.style;
+    const terminal = (n: Node) => n.arms.length !== 2 || n.rb > 0 || n.arms[0].cls !== n.arms[1].cls || n.arms[0].seg.style !== n.arms[1].seg.style || n.arms[0].seg.kind !== n.arms[1].seg.kind;
     const walk = (start: Node, s0: Seg, ring: boolean) => {
       const nodes = [start], segs: Seg[] = []; let cur = start, s = s0;
       for (let guard = 0; guard < 100000; guard++) {
@@ -479,7 +481,7 @@ export class RoadNetwork {
         list = [...list.slice(m), ...list.slice(0, m)];
         if (list.length > 2 && less(list[list.length - 1], list[1])) list = [list[0], ...list.slice(1).reverse()];
       }
-      const r: Route = { nodes: list, segs, pts: list.map(q => ({ x: q.x, y: q.y })), cls: s.cls, style: s.style, closed };
+      const r: Route = { nodes: list, segs, pts: list.map(q => ({ x: q.x, y: q.y })), cls: s.cls, style: s.style, kind: s.kind, closed };
       if (!closed) { const n0 = list[0], n1 = list[list.length - 1]; r.a0 = n0.arms.find(a => a.other === list[1] && a.seg.cls === s.cls); r.a1 = n1.arms.find(a => a.other === list[list.length - 2] && a.seg.cls === s.cls); r.a0 ??= n0.arms[0]; r.a1 ??= n1.arms[0]; }
       return r;
     };
