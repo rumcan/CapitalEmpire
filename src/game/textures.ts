@@ -7,8 +7,8 @@ import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, POOL_ANCHOR
  *    lamp-light response (manifest.json light.DMU / DSG) at I = 0.4 and I = 0.9 for the reflection pools;
  *  - grass: the two approved 256 px grass paintings mixed in hex patches and by low-frequency noise (screen space);
  *  - curbs and slabs: colours and sprites straight from the kit. */
-export type TexName = 'grass' | 'meadow' | 'dirt' | 'gravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear';
-const PAINTED: TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear'];
+export type TexName = 'grass' | 'meadow' | 'dirt' | 'gravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek';
+const PAINTED: TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear', 'forest', 'water', 'bank', 'creek'];
 /** screen-space textures are authored at 0.8 px per world px; mip-mapped per cache level */
 export const AUTHOR = 0.8;
 const K = AUTHOR / 0.6;
@@ -118,12 +118,26 @@ function cracks(ctx: C2D, r: () => number, n: number, color: string, width: numb
     wrap(x, y, 160, (X, Y) => { ctx.beginPath(); pts.forEach(([a, b], k) => (k ? ctx.lineTo(X + a, Y + b) : ctx.moveTo(X + a, Y + b))); ctx.stroke(); });
   }
 }
+/** water ripples: short, nearly horizontal light strokes */
+function ripples(ctx: C2D, r: () => number, n: number, cols: string[]) {
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n * K * K; i++) {
+    const x = r() * BASE_W, y = r() * BASE_H, len = (8 + r() * 34) * K, ang = (r() - 0.5) * 0.3, bow = (r() - 0.5) * 3 * K;
+    ctx.strokeStyle = cols[(r() * cols.length) | 0]; ctx.lineWidth = (0.6 + r() * 0.9) * K;
+    const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
+    wrap(x, y, len, (X, Y) => { ctx.beginPath(); ctx.moveTo(X - dx, Y - dy); ctx.quadraticCurveTo(X, Y + bow, X + dx, Y + dy); ctx.stroke(); });
+  }
+}
 function isoAuthor(ctx: C2D) { ctx.setTransform(64 * AUTHOR, 32 * AUTHOR, -64 * AUTHOR, 32 * AUTHOR, 0, 0); }
 function gen(name: TexName): Cnv {
   const c = canvas(BASE_W, BASE_H), ctx = ctx2d(c), r = mulberry(PAINTED.indexOf(name) * 7919 + 17);
   switch (name) {
     case 'dirt': ctx.fillStyle = '#56402f'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 260, ['#2e201655', '#8a644044', '#3d2c2255'], 40, 120); speckle(ctx, r, 22000, ['#4a3628', '#624a36', '#3e2d22', '#6e5440', '#523c2d']); pebbles(ctx, r, 420, ['#7a7068', '#6b6058', '#8a8078'], 1.2, 2.6); leaves(ctx, r, 90); break;
     case 'gravel': ctx.fillStyle = '#5b5752'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#3a373355', '#7c766e33'], 40, 110); pebbles(ctx, r, 9000, ['#6b6660', '#49453f', '#7c766e', '#3c3935', '#857f76', '#5d5953'], 0.9, 2.2); leaves(ctx, r, 60); break;
+    case 'forest': ctx.fillStyle = '#3a2a1c'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 240, ['#1e140c66', '#3c4a2244', '#6a4a2444'], 40, 140); speckle(ctx, r, 18000, ['#2e2016', '#4a3524', '#3a2c1c', '#55402a']); cracks(ctx, r, 120, 'rgba(30,20,12,0.55)', 0.9); pebbles(ctx, r, 120, ['#5a5048', '#6a6058'], 1.0, 2.0); leaves(ctx, r, 420); break;
+    case 'water': ctx.fillStyle = '#14283a'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 160, ['#0c1a2a66', '#1e3a5044', '#24485a33'], 60, 200); ripples(ctx, r, 1400, ['rgba(120,160,190,0.10)', 'rgba(120,160,190,0.18)', 'rgba(150,185,210,0.25)', 'rgba(10,20,32,0.35)']); break;
+    case 'bank': ctx.fillStyle = '#3b3226'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 220, ['#2a231a66', '#4e443455', '#2f3a2a44'], 40, 120); speckle(ctx, r, 20000, ['#342c22', '#463c2e', '#2c251c', '#524636']); pebbles(ctx, r, 900, ['#6a645c', '#57524a', '#7a746a'], 0.9, 2.2); blades(ctx, r, 1500, ['#4a5a2a', '#5e6a30', '#3a4622']); leaves(ctx, r, 80); break;
+    case 'creek': ctx.fillStyle = '#3a3832'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 180, ['#24221e66', '#5a564c44'], 30, 90); speckle(ctx, r, 8000, ['#2e2c28', '#4a4740']); pebbles(ctx, r, 6000, ['#6e6a62', '#55514a', '#807a70', '#45423c', '#8e887c'], 1.0, 3.2); leaves(ctx, r, 40); break;
     case 'field': {
       ctx.fillStyle = '#5a4a2e'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#3a2c1a55', '#8a743e3a'], 40, 120);
       ctx.save(); isoAuthor(ctx);

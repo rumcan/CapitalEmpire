@@ -2,19 +2,16 @@ import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf 
 import { offsetPolyline, roundPieces, roundedPath, type BBox, type Decal, type Feature, type FxView, type LineRec, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
 import { POOL_ANCHOR, PPM } from './ground-art';
+import { HS, TC, type Waterway } from './terrain/types';
+import { makeNoise } from './terrain/noise';
+import { classAlpha, shadeField, shadeRGBA, waterBox, waterShape } from './terrain-paint';
 
-/** painter texture per terrain class (TC), placeholder until the real textures land: 0 is the unpainted base grass */
-const TERRAIN_TEX: TexName[] = ['grass', 'meadow', 'dirt', 'gravel', 'field', 'dirt'];
-/** terrain classes (TC) drawn on top of the sidewalk: none for now */
-const OVER_WALK = new Set<number>();
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
 /** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m) */
 const CURB_TOP = 0.065, CURB_JOINT = 0.04, FACE_WORLD = 7.5, GUTTER = 0.2;
 const SLAB_LEN = 1.25;
 const YELLOW = 'rgba(246,168,36,0.93)', WHITE = 'rgba(229,225,207,0.9)';
-/** planner colours: terrain classes (TC) */
-const PLAN_TERRAIN = ['#6f8a3a', '#93a352', '#46603a', '#3d7ea6', '#5f8fa0', '#7d6a48'];
 export interface Camera { X: number; Y: number; z: number }
 /** building footprints for the planner map: x0, y0, x1, y1, colour index (tiles), five floats each */
 export type PlanBlocks = Float32Array;
@@ -23,8 +20,17 @@ export const PLAN_BLOCK_COLOURS = ['#c9b79a', '#d98f5a', '#e8d27a', '#8fae6a', '
 /** Paints ground chunks (the full-quality bake) and planner chunks (the far-zoom map). Runs in the ground workers. */
 export class GroundPainter {
   private scratch = new Map<string, Cnv>();
+  /** the noise that wobbles the class edges (fixed seed) */
+  private edgeNoise = makeNoise(7);
+  /** planner colours per texture, computed once */
+  private planCols = new Map<TexName, string>();
   blocks: PlanBlocks = new Float32Array(0);
+  /** hillshade per height sample, and the waterways with their bboxes (grown for the shore) */
+  shade: Float32Array = new Float32Array(HS * HS);
+  waters: { w: Waterway; box: BBox }[] = [];
   constructor(public terrain: Uint8Array, public net: RoadNetwork, public tex: Textures) {}
+  /** take a new terrain: classes, height samples and waterways */
+  setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
   private buffer(name: string, W: number, H: number) {
     let c = this.scratch.get(name); if (!c) { c = canvas(W, H); this.scratch.set(name, c); }
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
@@ -36,6 +42,18 @@ export class GroundPainter {
     return [Math.floor(Math.min(...corners.map(p => p.x))) - pad, Math.floor(Math.min(...corners.map(p => p.y))) - pad, Math.ceil(Math.max(...corners.map(p => p.x))) + pad, Math.ceil(Math.max(...corners.map(p => p.y))) + pad];
   }
 
+  /** the planner colour of a texture: its mean RGB at the planner mip, 20% desaturated and lifted 5% (cached) */
+  private planColour(name: TexName): string {
+    let c = this.planCols.get(name);
+    if (!c) {
+      const img = this.tex.image(name, 0.035), d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
+      let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
+      const y = (0.3 * r + 0.59 * g + 0.11 * b) / n, lift = (s: number) => Math.round(Math.min(255, (s / n * 0.8 + y * 0.2) * 1.05));
+      c = `rgb(${lift(r)},${lift(g)},${lift(b)})`; this.planCols.set(name, c);
+    }
+    return c;
+  }
+
   /** the far-zoom map: flat terrain colours, sidewalks and roads as solid fills, building footprints */
   paintPlan(i: number, j: number, L: number): Cnv {
     const W = Math.round(PLAN_W * L), H = Math.round(PLAN_H * L), X0 = i * PLAN_W, Y0 = j * PLAN_H;
@@ -44,11 +62,19 @@ export class GroundPainter {
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
     ctx.fillStyle = '#2c3a20'; ctx.fillRect(0, 0, W, H);
     ctx.setTransform(M);
-    ctx.fillStyle = PLAN_TERRAIN[0]; ctx.fillRect(0, 0, MAP, MAP);
-    // terrain in 4 x 4 tile blocks (the planner never shows finer detail)
+    ctx.fillStyle = this.planColour('grass'); ctx.fillRect(0, 0, MAP, MAP);
+    // meadow and forest in 4 x 4 tile blocks (the planner never shows finer detail)
     const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1), byType = new Map<number, Path2D>();
-    for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (!t) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
-    for (const [t, p] of byType) { ctx.fillStyle = PLAN_TERRAIN[t]; ctx.fill(p); }
+    for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (t !== TC.PATCH && t !== TC.HILL) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
+    for (const [t, p] of byType) { ctx.fillStyle = this.planColour(t === TC.PATCH ? 'meadow' : 'forest'); ctx.fill(p); }
+    // river banks, creeks and the water, then the hillshade (as on the ground), so the planner reads the valley too
+    const vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1, near = this.waters.filter(w => vis(w.box));
+    const shape = (kind: 'river' | 'creek', extra: number, col: string) => { const p = new Path2D(); let any = false; for (const w of near) if (w.w.kind === kind) any = waterShape(p, w.w.pts, extra, box) || any; if (any) { ctx.fillStyle = col; ctx.fill(p); } };
+    shape('river', 3, this.planColour('bank'));
+    const sm = shadeRGBA(this.shade, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25), sb = this.buffer('small', sm.W, sm.H);
+    ctx2d(sb).putImageData(new ImageData(sm.data as Uint8ClampedArray<ArrayBuffer>, sm.W, sm.H), 0, 0); ctx.setTransform(M); ctx.drawImage(sb, tx0, ty0, sm.W / 0.25, sm.H / 0.25);
+    shape('river', 0, this.planColour('water'));
+    shape('creek', 0, this.planColour('water'));
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF, '#9a9184'); fill(v.asphF, '#3c4150'); fill(v.medianF, '#557a35');
@@ -90,19 +116,23 @@ export class GroundPainter {
     const through = (buf: Cnv, mask: Cnv) => { const g = ctx2d(buf); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-in'; g.drawImage(mask, 0, 0); g.globalCompositeOperation = 'source-over'; };
     ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
 
-    // ---- 1. terrain (grass mosaic + painted lots)
+    // ---- 1. terrain: grass; meadow and forest floor through soft noise-edged class masks; river banks and creek beds from
+    //      the smoothed waterway lines; the baked hillshade; then the river water (flat, so unshaded)
     ctx.fillStyle = pat('grass'); ctx.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
-    const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1);
-    const terrainPaths = (want: (t: number) => boolean) => {
-      const byType = new Map<number, Path2D>();
-      for (let y = my0; y < my1; y++) for (let x = mx0; x < mx1;) {
-        const t = this.terrain[y * MAP + x]; if (!want(t) || t === 0) { x++; continue; }
-        let x2 = x + 1; while (x2 < mx1 && this.terrain[y * MAP + x2] === t) x2++;
-        let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, x2 - x, 1); x = x2;
-      }
-      return byType;
-    };
-    for (const [t, p] of terrainPaths(t => !OVER_WALK.has(t))) { ctx.fillStyle = pat(TERRAIN_TEX[t]); ctx.fill(p); }
+    const bw = tx1 - tx0, bh = ty1 - ty0;
+    /** an RGBA image over the tile box (res px per tile), stretched onto g through the iso transform (bilinear) */
+    const overlay = (g: C2D, img: { data: Uint8ClampedArray; W: number; H: number }, res: number) => { const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0); g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(s, tx0, ty0, img.W / res, img.H / res); };
+    /** a texture through a mask: `mask` draws alpha into a chunk buffer, the texture fills it (source-in), then it is composited */
+    const layer = (name: TexName, mask: (g: C2D) => void) => { const b = this.buffer('layer', W, H), g = ctx2d(b); mask(g); g.globalCompositeOperation = 'source-in'; g.setTransform(M); g.fillStyle = this.screenPattern(g, name, L, X0, Y0, Minv); g.fillRect(tx0, ty0, bw, bh); g.globalCompositeOperation = 'source-over'; composite(b); };
+    const cres = lite ? 1 : 4;
+    for (const [want, name] of [[TC.PATCH, 'meadow'], [TC.HILL, 'forest']] as const) { const a = classAlpha(this.terrain, want, tx0, ty0, bw, bh, cres, this.edgeNoise); if (a) layer(name, g => overlay(g, a, cres)); }
+    const near = this.waters.filter(w => vis(w.box)), rivers = near.filter(w => w.w.kind === 'river'), creeks = near.filter(w => w.w.kind === 'creek');
+    /** a feathered waterway mask: 4 nested shapes from extra + f down to extra - f (tiles), each adding a quarter of the alpha */
+    const shore = (g: C2D, list: typeof near, extra: number, f: number, scale = 1) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of list) any = waterShape(p, w.w.pts, extra + f * (1 - (2 * s) / 3), box, scale) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };
+    if (rivers.length) layer('bank', g => shore(g, rivers, 3, 0.8));
+    if (creeks.length) { layer('creek', g => shore(g, creeks, 0.5, 0.5)); layer('water', g => shore(g, creeks, 0, 0.25, 0.35)); }
+    const sres = lite ? 0.25 : 0.5; overlay(ctx, shadeRGBA(this.shade, tx0, ty0, bw, bh, sres), sres); ctx.setTransform(M);
+    if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3));
 
     const walk = net.walkF.filter(f => vis(f.bbox)), asph = net.asphF.filter(f => vis(f.bbox));
     const med = net.medianF.filter(f => vis(f.bbox)), isl = net.islandF.filter(f => vis(f.bbox));
@@ -123,8 +153,6 @@ export class GroundPainter {
       ctx.strokeStyle = 'rgba(30,22,12,0.45)'; for (const f of slabWalk) ring(ctx, f, Math.max(0.14, 2 * minW));
       composite(sb);
     }
-    // ---- 3. paving / pads over the sidewalk (driveways reach the curb)
-    for (const [t, p] of terrainPaths(t => OVER_WALK.has(t))) { ctx.fillStyle = pat(TERRAIN_TEX[t]); ctx.fill(p); }
 
     if (asph.length) {
       const kerbed = asph.filter(f => f.kerb), plain = asph.filter(f => !f.kerb);

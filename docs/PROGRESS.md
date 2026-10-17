@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-17, Phase 1 steps 1–3 done (generator, creeks, wiring + collision + save v4)._
+_Last updated: 2026-10-17, Phase 1 steps 1–4 done (generator, creeks, wiring, valley ground)._
 
 ## Where we are
 
@@ -171,13 +171,25 @@ order; the ones marked **(haiku)** can be briefed to `haiku-coder`.
    - Left over: the Select panel still has Bigger/Smaller for props (remove it with the step 4 UI pass); the
      starter town's layout is fixed, so on some seeds a few of its roads are skipped; roads in old saves are not
      checked against the new terrain.
-4. **Maple valley ground** (lead + haiku):
-   - procedural textures in `textures.ts` for the classes: GROUND uses the existing grass, PATCH the meadow, plus
-     new forest floor (under hills), river water, wet bank and creek bed;
-   - the painter draws water, bank and creeks from the smoothed polylines (no 2 m staircase), with soft
-     noise-blended edges between the other classes;
-   - hillshade from the height field is baked into the ground, and the planner colours match.
-   Bump `TEX_VERSION` in `texture-share.ts`.
+4. **Maple valley ground. DONE** (2026-10-17).
+   - New screen-space textures in `textures.ts`: forest floor (leaf litter, twigs), river water (ripples), wet bank
+     (silt, pebbles, reed tufts), creek bed (stones). `TEX_VERSION` is `tex-2`.
+   - The workers now get the height field and the waterways too (`init` and a full `terrain` message;
+     `GroundPainter.setTerrain`). Pure helpers in `src/game/terrain-paint.ts` (tested in
+     `tests/terrain-paint.test.ts`): `shadeField` (hillshade per height sample, light from the screen top-left),
+     `shadeRGBA`, `classAlpha` (blurred class coverage plus noise, so class edges are soft and organic) and
+     `waterShape` (tapered capsules between the smoothed waterway points, all wound the same way).
+   - Paint order: grass; meadow (PATCH) and forest floor (HILL) through the soft class masks; river banks
+     (3 tiles, feathered) and creek beds with a thin water line from the polylines; the hillshade; the river water.
+     Feathering is 4 nested shapes added with `lighter`. No 2 m staircase anywhere.
+   - The planner uses the textures' mean colours (20% desaturated), the waterway shapes and the hillshade.
+   - Worker bench: Street 30% 60 / 0.72 / 0.8; Street 17% 60 / 0.79 / 0.9; District 8% 60 / 1.15 / 1.4; District
+     4.5% 59.9 / 2.26 / 4.5; Planner 2% 56.7 / 1.03 / 1.5; Whole map 60 / 0.97 / 1.2. Heap 228 MB. Average chunk
+     bake 16.9 ms (541 bakes). 16/16 tests.
+   - Watch: the first worker bench run never reported ready within 240 s (no page errors); the retry was fine.
+     If it happens again, look at the cold texture build in a fresh profile.
+   - Screenshots: `look.mjs` at the repo root (git-excluded via `.git/info/exclude`; a copy of
+     `output/look/look.mjs` that also shoots the river, a creek and a hill) writes `output/look/s4-*.png`.
 5. **Hills as forest** (lead decides). Cover HILL with dense maple-tree sprites from the existing atlas (the forest
    reads as raised ground at 30%), plus placeholder rock-edge pieces along the 4 m terrace edges. They are
    depth-sorted like buildings and cannot be bulldozed. Watch the visible-instance budget (60k at the Street tier).

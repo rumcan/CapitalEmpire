@@ -87,7 +87,7 @@ export class Game {
     else if (!save || !this.load(save)) { this.genTerrain(newSeed()); this.seedTown(); }
     tick(0.7);
     const tl = performance.now();
-    this.ground.init(this.terrain.cls);
+    this.ground.init(this.terrain);
     this.afterLoad();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
@@ -451,7 +451,7 @@ export class Game {
     this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = []; this.traffic = null;
   }
   newTown() {
-    this.reset(); this.genTerrain(newSeed()); this.ground.terrain(0, 0, MAP, MAP, this.terrain.cls);
+    this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain);
     this.seedTown(); this.afterLoad(); void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
   }
   clearTown() { this.reset(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }

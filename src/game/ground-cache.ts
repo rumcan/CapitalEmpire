@@ -6,6 +6,7 @@ import { GROUND_ART } from './ground-art';
 import type { FromWorker, NetOp, TileKind, ToWorker } from './ground-protocol';
 import type { GLRenderer } from './gl';
 import type { BBox } from './network';
+import type { Waterway } from './terrain/types';
 import GroundWorker from './ground.worker?worker&inline';
 
 export interface Tile {
@@ -34,11 +35,11 @@ export class GroundCache {
     }
   }
   terminate() { for (const w of this.workers) w.terminate(); this.workers = []; }
-  init(terrain: Uint8Array) { this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art: GROUND_ART, terrain, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); }
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art: GROUND_ART, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); }
   broadcast(m: ToWorker, transfer?: (w: number) => Transferable[]) { this.workers.forEach((wk, i) => wk.postMessage(m, transfer ? transfer(i) : [])); }
   netOps(ops: NetOp[]) { if (ops.length) this.broadcast({ t: 'net', ops }); }
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }
-  terrain(x0: number, y0: number, w: number, h: number, data: Uint8Array) { this.broadcast({ t: 'terrain', x0, y0, w, h, data }); }
+  terrain(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.broadcast({ t: 'terrain', cls: t.cls, height: t.height, waters: t.waters }); }
   blocks(data: Float32Array) { this.broadcast({ t: 'blocks', data }); }
 
   tile(kind: TileKind, i: number, j: number) {

@@ -19,7 +19,7 @@ scope.onmessage = async (e: MessageEvent<ToWorker>) => {
   try {
     switch (m.t) {
       case 'init': {
-        terrain.set(m.terrain);
+        painter.setTerrain(m.terrain, m.height, m.waters);
         const t0 = performance.now();
         if (!m.build) { ready = new Promise<void>(res => { gotTextures = res; }); await ready; post({ t: 'ready', ms: performance.now() - t0 }); break; }
         // the builder: textures from the cache if this browser has them, else built (and cached for next time)
@@ -35,7 +35,7 @@ scope.onmessage = async (e: MessageEvent<ToWorker>) => {
       case 'textures': restore(tex, m.snap); gotTextures?.(); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }
-      case 'terrain': for (let y = 0; y < m.h; y++) terrain.set(m.data.subarray(y * m.w, (y + 1) * m.w), (m.y0 + y) * MAP + m.x0); break;
+      case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
       case 'blocks': painter.blocks = m.data; break;
       case 'paint': {
         if (ready) await ready;
