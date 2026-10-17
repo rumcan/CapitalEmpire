@@ -1,7 +1,7 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
 import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type SegKind } from './network';
-import { NetEditor, netToOps } from './netops';
+import { NetEditor } from './netops';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
@@ -15,7 +15,7 @@ import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt } from './sim/lanes';
-import { LotMap, type Lot } from './lots/lots';
+import { LV } from './lots/town';
 import { phaseState } from './sim/signals';
 
 const DAY_SECONDS = 20;
@@ -29,6 +29,8 @@ export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
+/** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
+const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5, 0.3][i & 3]!, c = [[0, 0, 0], [76, 175, 80], [47, 123, 217], [255, 140, 26], [217, 70, 239], [255, 255, 255]][i >> 2]!; return `rgb(${Math.round(c[0]! * k)},${Math.round(c[1]! * k)},${Math.round(c[2]! * k)})`; });
 
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
@@ -36,7 +38,7 @@ export class Game {
   cam: Camera = { X: worldX(MAP / 2, MAP / 2), Y: worldY(MAP / 2, MAP / 2), z: 0.16 };
   /** the map seed (saved) and the valley generated from it */
   seed = 1; terrain!: Terrain;
-  net = new RoadNetwork(); edit = new NetEditor(this.net); lanes = new LaneGraph(); lots = new LotMap(); lotBuf: Lot[] = [];
+  net = new RoadNetwork(); edit = new NetEditor(this.net); lanes = new LaneGraph();
   props = new Set<Prop>(); nextUid = 1;
   private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
   sprites = new SpriteTiles();
@@ -60,11 +62,12 @@ export class Game {
   // fx
   builds: Build[] = []; particles: Particle[] = [];
   toasts: Toast[] = []; toastId = 1;
-  traffic: SimClient | null = null;
+  /** the city worker (cars, parcels, town): created with the game, so the town grows whenever the sim runs */
+  traffic: SimClient;
   /** car light points, reused each frame (grown to 7 points per sim slot) */
   private lightBuf = new Float32Array(0);
   // perf
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0 };
   private frameTimes: number[] = [];
   // input
   private dragging: null | { kind: 'pan' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
@@ -79,6 +82,7 @@ export class Game {
     this.ov = overlay.getContext('2d')!;
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl);
+    this.traffic = new SimClient();
   }
   get cls() { return CLASS[this.roadClass]; }
 
@@ -104,7 +108,7 @@ export class Game {
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
-    this.afterLoad();
+    this.sendTerrain(); this.afterLoad();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -271,15 +275,15 @@ export class Game {
   // ---------- network edits ----------
   /** send the edits to the workers, refresh what depends on the network and mark the changed ground stale */
   private commitNetwork(keepPrev = false, until = 0) {
-    const ops = this.edit.commit(); this.lanes.update(this.net); this.lots.update(this.net, this.terrain.cls);
-    this.ground.netOps(ops); this.traffic?.netOps(ops);
+    const ops = this.edit.commit(); this.lanes.update(this.net);
+    this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
     this.syncLamps(); this.scheduleSave(); this.emit();
   }
   private afterLoad() {
-    const ops = this.edit.commit(true); this.lanes.update(this.net); this.lots.update(this.net, this.terrain.cls);
-    this.ground.netOps(ops); this.traffic?.netOps(ops); this.syncPortals();
+    const ops = this.edit.commit(true); this.lanes.update(this.net);
+    this.ground.netOps(ops); this.traffic.netOps(ops); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
     this.ground.invalidateAll();
@@ -495,7 +499,14 @@ export class Game {
   }
   keyUp(e: KeyboardEvent) { this.keys.delete(e.key); }
   /** traffic: n cars driving the network (0 = none); the sim worker starts on first use */
-  setTraffic(n: number) { if (!this.traffic) this.traffic = new SimClient(netToOps(this.net)); this.traffic.setTarget(n); this.emit(); }
+  setTraffic(n: number) { this.traffic.setTarget(n); this.emit(); }
+  /** the town's growth option (its id, see GROWTH_OPTIONS) */
+  setGrowth(id: string) { this.traffic.setOption(id); this.emit(); }
+  /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
+  private sendTerrain() {
+    const t = this.terrain, h = t.highway;
+    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed);
+  }
 
   // ---------- economy / save ----------
   private linked(p: Prop) { return this.net.rectOcc(p.x0 - 3, p.y0 - 3, p.x1 + 3, p.y1 + 3) > 0; }
@@ -540,7 +551,7 @@ export class Game {
     this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
-    this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain);
+    this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain); this.sendTerrain();
     this.seedTown(); this.afterLoad(); void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
   }
   clearTown() { this.reset(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
@@ -680,7 +691,7 @@ export class Game {
     // perf counters (rolling one second)
     this.frameTimes.push(frameMs); if (this.frameTimes.length > 60) this.frameTimes.shift();
     const avg = this.frameTimes.reduce((s, v) => s + v, 0) / this.frameTimes.length;
-    Object.assign(this.perf, { fps: 1000 / avg, frameMs: avg, cpuMs: t2 - t0, drawMs: t2 - t1, instances: this.gl.stats.instances, draws: this.gl.stats.draws, uploadKB: this.gl.stats.uploadFloats * 4 / 1024, chunksPending: this.ground.busy, simActive: this.traffic?.stats.active ?? 0, simTickMs: this.traffic?.stats.tickMs ?? 0, simMaxTickMs: this.traffic?.stats.maxTickMs ?? 0 });
+    Object.assign(this.perf, { fps: 1000 / avg, frameMs: avg, cpuMs: t2 - t0, drawMs: t2 - t1, instances: this.gl.stats.instances, draws: this.gl.stats.draws, uploadKB: this.gl.stats.uploadFloats * 4 / 1024, chunksPending: this.ground.busy, simActive: this.traffic.stats.active, simTickMs: this.traffic.stats.tickMs, simMaxTickMs: this.traffic.stats.maxTickMs, pop: this.traffic.pop, jobs: this.traffic.jobs, built: this.traffic.built });
     this.perf.frames++;
   };
   /** a hook for the benchmark's camera path */
@@ -772,18 +783,21 @@ export class Game {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
-  /** debug (P): the parcels in view, each outline (amber at a corner) and a dot at its frontage midpoint */
+  /** debug (P): the parcels of the city worker in view: outline (amber at a corner), filled by use (EMPTY outline only, BUILDING at half alpha, declined darker), a dot at the frontage midpoint */
   private drawLots(ctx: CanvasRenderingContext2D) {
     const ze = this.cam.z * this.dpr, pad = 2;
     const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
     const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
-    this.lotBuf.length = 0; this.lots.query(x0, y0, x1, y1, this.lotBuf);
+    // the lots are not indexed here: cull by the centre against the view (a lot reaches at most 24 tiles from its centre)
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, R = Math.max(x1 - x0, y1 - y0) / 2 + 24;
     this.setIso(ctx); ctx.lineWidth = 0.08;
-    for (const l of this.lotBuf) {
-      const { o, u, n, w, d } = l, col = l.corner ? 'rgba(255,176,32,0.9)' : 'rgba(255,255,255,0.5)';
-      ctx.strokeStyle = col; ctx.fillStyle = col;
-      ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(o.x + u.x * w, o.y + u.y * w); ctx.lineTo(o.x + u.x * w + n.x * d, o.y + u.y * w + n.y * d); ctx.lineTo(o.x + n.x * d, o.y + n.y * d); ctx.closePath(); ctx.stroke();
-      ctx.beginPath(); ctx.arc(l.front.x, l.front.y, 0.2, 0, Math.PI * 2); ctx.fill();
+    for (const l of this.traffic.lots.values()) {
+      const ox = l.o[0], oy = l.o[1], ux = l.u[0] * l.w, uy = l.u[1] * l.w, nx = l.n[0] * l.d, ny = l.n[1] * l.d;
+      if (Math.abs(ox + (ux + nx) / 2 - cx) > R || Math.abs(oy + (uy + ny) / 2 - cy) > R) continue;
+      ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + ux, oy + uy); ctx.lineTo(ox + ux + nx, oy + uy + ny); ctx.lineTo(ox + nx, oy + ny); ctx.closePath();
+      if (l.level !== LV.EMPTY) { ctx.globalAlpha = l.level === LV.BUILDING ? 0.5 : 1; ctx.fillStyle = LOT_FILL[l.use * 4 + l.decline]!; ctx.fill(); ctx.globalAlpha = 1; }
+      ctx.strokeStyle = l.corner ? 'rgba(255,176,32,0.9)' : 'rgba(255,255,255,0.5)'; ctx.stroke();
+      ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(ox + ux / 2, oy + uy / 2, 0.2, 0, Math.PI * 2); ctx.fill();
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }

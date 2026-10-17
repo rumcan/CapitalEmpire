@@ -4,6 +4,7 @@ import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
 import { ZOOM_MAX, ZOOM_MIN } from './game/iso';
+import { GROWTH_OPTIONS } from './game/lots/town';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
@@ -155,6 +156,12 @@ function PerfPanel({ game }: { game: Game }) {
         {[0, 1000, 5000, 10000].map(n => <button key={n} className={`chip ${(game.traffic?.target ?? 0) === n ? 'chip-on' : ''}`} onClick={() => game.setTraffic(n)}>{n ? n / 1000 + 'k' : 'off'}</button>)}
       </div>
       {game.traffic && <div className="flex justify-between text-slate-400"><span>sim {p.simActive} cars</span><span>tick {p.simTickMs.toFixed(1)} ms (max {p.simMaxTickMs.toFixed(1)})</span></div>}
+      <div className="mt-1 flex items-center gap-1"><span className="mr-auto text-slate-400">Growth</span>
+        <select className="rounded bg-slate-800 px-1 text-slate-200" value={game.traffic.option} onChange={e => game.setGrowth(e.target.value)}>
+          {GROWTH_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+        </select>
+      </div>
+      <div className="flex justify-between text-slate-400"><span>{p.pop.toLocaleString()} pop · {p.jobs.toLocaleString()} jobs</span><span>{p.built.toLocaleString()} built lots</span></div>
     </div>
   );
 }
