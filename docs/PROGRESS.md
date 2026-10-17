@@ -3,14 +3,14 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-17, start of the Phase 1 session (worker PC working)._
+_Last updated: 2026-10-17, Phase 1 step 1 done (terrain generator); setting changed to a maple valley._
 
 ## Where we are
 
 | Phase | Status |
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), local only, not pushed |
-| 1. Desert terrain | **Next.** Task list below |
+| 1. Terrain (maple valley for now) | **In progress.** Task list below |
 | 2. Traffic core | Not started. The approach is decided (GAME-PLAN section 3.3) |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
@@ -19,7 +19,12 @@ _Last updated: 2026-10-17, start of the Phase 1 session (worker PC working)._
 
 ## Decisions so far
 
-- **Setting:** 1980s Las Vegas valley as the MVP; eras advance later as art arrives.
+- **Setting (changed 2026-10-17):** a sleepy **maple-wooded town valley for now**, because all the art is Maple
+  Falls maple. The 1980s Las Vegas desert is deferred to a later re-skin (GAME-PLAN section 7, item 4). Terrain
+  code stays setting-neutral; each setting maps the terrain classes to its own art.
+- **Story:** you are a neural parasite farming humans for Universal Food Processing Inc.; jams stress the
+  livestock and spoil the meat. Parasite coworkers (boy band producer, tele-evangelist, rom-com writer) cause the
+  population booms. Full text in GAME-PLAN section 0; the new mechanics it suggests are in section 7, item 5.
 - **Map:** 4 x 4 km (2048 tiles of 2 m).
 - **Terrain:** seeded, fixed hills, valleys and rivers. Roads cross rivers with **bridges** and go through hills in
   **tunnels**.
@@ -76,7 +81,8 @@ Other numbers:
 - **The ground workers replay the whole network at load** (about 2 s at full size, in parallel with the main
   thread). Fine for now.
 - **`SpriteTiles` has no unit tests.** The test bundle would need an esbuild loader for `.webp` imports.
-- **The art is still Maple Falls autumn (night).** The desert art track has not started (GAME-PLAN section 4.1).
+- **The art is Maple Falls autumn (night),** which now matches the maple-valley setting. The desert art track is
+  deferred with the desert re-skin (GAME-PLAN section 7, item 4).
 - **The test traffic is a placeholder** (no car following, cars pass through each other). The real sim is Phase 2.
 - **The terrain tool and its 7 Maple Falls terrain types still exist.** Phase 1 replaces them with generated
   desert terrain.
@@ -96,35 +102,55 @@ Other numbers:
 SYSTEM (`icacls ... /inheritance:r`) fixed it. The first `npm run worker:test` created the clone: 6/6 tests pass, 26 s including `npm install`. `run.sh` sends a
 snapshot of the local working tree, so uncommitted changes are tested too.
 
-## Next: Phase 1, desert terrain
+## Next: Phase 1, terrain (maple valley for now)
 
-The goal and gate are in GAME-PLAN section 3.1 and the phase table in section 5. These are the steps, in order; the
-ones marked **(haiku)** can be briefed to `haiku-coder`.
+The goal and gate are in GAME-PLAN section 3.1 and the phase table in section 5. The setting changed to a maple
+valley on 2026-10-17, so the art steps (4 and 5) use the Maple Falls art we already have. These are the steps, in
+order; the ones marked **(haiku)** can be briefed to `haiku-coder`.
 
-1. **Terrain data model** (lead designs; haiku implements). `src/game/terrain/`:
-   - a seeded generator in pure TS (no DOM) that outputs a 256² height field;
-   - a 2048² terrain-class grid: sand, caliche, rock, water, wash, bank;
-   - the river and wash polylines.
-   Save stores the seed only. Tests check the guarantees: at least 55% buildable and connected, a start site by the
-   river and the highway entry, and at least one chokepoint.
-2. **Rivers and washes** (haiku, from a lead brief): D8 flow accumulation, then smoothed polylines with widths.
-3. **Collision** (haiku). Terrain classes go into the occupancy grid. `canPlace` and the road tool refuse rock and
-   water, except for bridges and tunnels.
-4. **Desert ground** (lead + haiku):
-   - new procedural textures in `textures.ts` (sand, caliche, desert gravel, rock floor, water, wet bank) replacing
-     the grass base;
-   - the painter draws the terrain classes;
-   - the planner colours change to match.
+1. **Terrain data model and generator. DONE** (2026-10-17). `src/game/terrain/` (pure TS, no DOM):
+   - `generateTerrain(seed)` gives a 256² height field (8 tiles per sample) and a 2048² class grid. The classes are
+     setting-neutral: `TC` = GROUND 0, PATCH 1, HILL 2, WATER 3, CREEK 4, BANK 5. Each setting maps them to art.
+   - Mountains/hills on 2–3 edges (ridged noise), buttes/knolls in the valley (domain-warped noise), and rock
+     uplift terraced in 4 m steps (the terrace edges are where step 5 puts cliff or rock-edge pieces).
+   - **The main river is D8**, folded in from step 2: priority-flood, steepest descent from the source edge to the
+     opposite edge, Chaikin-smoothed, resampled every 8 tiles, 20–40 tiles wide. A guide trough and a tilt keep it
+     crossing the valley. Where the source edge has mountains it cuts a gorge.
+   - It also places the highway entry (a border tile on an edge with no mountains), a 64² start block (inset at
+     least 64 tiles from the border, at most 320 tiles from the highway and 140 tiles from the water) and the
+     chokepoints (the narrowest bridge site with flat banks, and the longest gorge).
+   - `checkGuarantees(t)`: at least 55% of the map is buildable in the largest component with no hills (water
+     counts as bridgeable); the river splits the buildable land with at least 15% on each side; the start block and
+     highway are valid; at least one chokepoint. Up to 8 attempts with derived seeds, so the map still follows
+     from the seed alone.
+   - `tests/terrain.test.ts` (5 tests). `npm run terrain:preview [seeds]` writes PNGs to `output/terrain/`.
+   - Measured on the worker: all 20 seeds pass, 18 on the first attempt (seeds 6 and 11 need one retry). Generate
+     takes 356 ms on average and 661 ms at most (a retry). Buildable-and-connected is 55–71%.
+   - Not wired in yet: the engine, the save (seed only) and the painter still use the old painted terrain
+     (steps 3 and 4).
+2. **Creeks** (haiku, from a lead brief): side streams from `flowAccum` (already in `flow.ts`) where the
+   accumulation is high, smoothed like the river, 3–8 tiles wide, class CREEK. They need short bridges or culverts.
+   Add the guarantee that creeks don't cut the start block.
+3. **Collision and wiring** (haiku). The engine generates the terrain from the save's seed (save v4: seed only, no
+   painted terrain; drop the terrain tool and the 7 Maple Falls terrain types). HILL, WATER, CREEK and BANK go into
+   the occupancy grid; `canPlace` and the road tool refuse them, except for bridges and tunnels. The ground workers
+   regenerate from the seed rather than receiving 4 MB.
+4. **Maple valley ground** (lead + haiku):
+   - procedural textures in `textures.ts` for the classes: GROUND uses the existing grass, PATCH the meadow, plus
+     new forest floor (under hills), river water, wet bank and creek bed;
+   - the painter draws water, bank and creeks from the smoothed polylines (no 2 m staircase), with soft
+     noise-blended edges between the other classes;
+   - hillshade from the height field is baked into the ground, and the planner colours match.
    Bump `TEX_VERSION` in `texture-share.ts`.
-5. **Hills as fixed sprites** (lead decides). A placeholder rock kit until the art arrives: either procedurally
-   drawn cliff and butte pieces packed into the atlas by a prep script, or generated art through the TrickOrTreat
-   RUN pipeline. They are depth-sorted like buildings and cannot be bulldozed.
+5. **Hills as forest** (lead decides). Cover HILL with dense maple-tree sprites from the existing atlas (the forest
+   reads as raised ground at 30%), plus placeholder rock-edge pieces along the 4 m terrace edges. They are
+   depth-sorted like buildings and cannot be bulldozed. Watch the visible-instance budget (60k at the Street tier).
 6. **Bridges and tunnels in the road tool** (lead designs; haiku implements):
    - segment flags, with cost per metre;
    - a bridge deck, piers and railings over water;
    - tunnel portals, with the underground run not painted;
    - network ops and save support.
-7. **Highway entry** at the map edge, built by the generator.
+7. **Highway entry** at the map edge: the generator already picks the point; build the road from it.
 8. **Gate:** 20 seeds pass the generator tests; a road can cross a river and a hill; benchmark budgets still met
    (run `haiku-runner`).
 

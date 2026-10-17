@@ -7,11 +7,34 @@ roads let it. Thousands of cars drive the network all the time. Growth stops whe
 Decisions made so far:
 | Topic | Decision |
 | --- | --- |
-| Setting | 1980s Las Vegas valley for the MVP. Eras then advance over in-game time (90s, 2000s, today) as new art arrives. |
+| Setting | **For now: a sleepy maple-wooded town valley** (2026-10-17), because all the current art is Maple Falls maple. The 1980s Las Vegas desert valley described in this plan is **deferred**: it comes back as a re-skin once the desert art exists (see section 7). Eras advance over in-game time (80s, 90s, 2000s, today) as new art arrives. |
 | Map | 4 × 4 km = **2048 × 2048 tiles** (2 m tiles), up from 160. |
 | Terrain | Seeded, fixed hills, valleys and rivers. They are not editable and they block building. Roads cross rivers on **bridges** and go through hills in **tunnels**. |
 | Player control | **Roads only.** Nothing is zoned or placed by the player. Growth follows how well the traffic flows. |
 | Closest zoom | **30%**, the town builder's 30% zoom (`ZOOM_MAX = 0.3` already). Full art quality has to hold at that zoom. |
+
+---
+
+## 0. Story (why the loop exists)
+
+You are a **neural parasite** sent by Universal Food Processing Inc. to farm human livestock for fine space
+dining. Other agents on Earth trigger the population booms. Your job is logistics: grow your sleepy maple-tree town
+with flawless roads, because **traffic jams stress the livestock and ruin the flavour of the meat**.
+
+- **Why roads are the only control:** you are middle management. The other agents make the people; you make sure
+  they can drive to work without stress.
+- **Why widening hurts:** buying land for wider roads bulldozes taxpayers, which shrinks the town. You balance a
+  tight municipal budget, the space you have, and **snooping kids on bicycles** who might find out what you are.
+- **The Population Boosters (your parasite coworkers)** run parallel operations to reach the 10-billion harvest
+  cap. Each one is a source of population-boom events with 20th-century absurdity:
+  - **The Boy Band Producer** engineers pop anthems that send teenagers into romantic frenzies.
+  - **The Tele-Evangelist** takes over megachurches and preaches that large families are blessed families.
+  - **The Rom-Com Screenwriter** writes hit films that make 80s and 90s couples want to start families.
+  - **The Town Planner (you)** has the unglamorous job: moving all those new humans without stressing them.
+
+The story fits the existing loop: demand comes from outside (the boosters), and your network is the only limit
+(section 1.2). The new ideas (booster events, the kids on bicycles, the meat-quality score as the stress measure)
+are listed in section 7 and do not change Phases 1 and 2.
 
 ---
 
@@ -310,3 +333,11 @@ The art track runs alongside from Phase 1: terrain kit, then houses, then commer
 1. Era pacing: how many real minutes per in-game year, and whether eras unlock by time or by population (Phase 6).
 2. Hosting: the single-file browser build or RUN. This decides whether SharedArrayBuffer is available (Phase 2).
 3. Is the Strip one special boulevard the map seeds, or any boulevard that grows into it (Phase 3)?
+4. **The desert re-skin (deferred, 2026-10-17).** The game runs in a maple-wooded valley until the desert art
+   exists. The terrain generator stays setting-neutral (classes GROUND, PATCH, HILL, WATER, CREEK, BANK), and each
+   setting maps those classes to its own textures and sprites. Still to decide: when to switch (or whether the
+   desert becomes a second map or era rather than a replacement), and which Vegas features (the Strip, casinos,
+   neon) still apply to the maple town or wait for the desert.
+5. **Story mechanics (from section 0):** booster events as timed population booms by district and era; the
+   meat-quality (stress) score as the player-facing name for the access score; the snooping kids on bicycles as a
+   risk mechanic (Phase 4 or later).

@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit -p .",
     "bench": "node scripts/perf/bench.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",
-    "worker:bench": "bash scripts/worker/run.sh \"npm run build && node scripts/perf/bench.mjs --serve --channel chrome --size 1\""
+    "worker:bench": "bash scripts/worker/run.sh \"npm run build && node scripts/perf/bench.mjs --serve --channel chrome --size 1\"",
+    "terrain:preview": "esbuild scripts/terrain/preview.ts --bundle --platform=node --format=esm --outfile=output/terrain/preview.mjs --log-level=warning && node output/terrain/preview.mjs"
   },
   "dependencies": {
     "clsx": "2.1.1",
