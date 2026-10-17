@@ -11,7 +11,7 @@ _Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
-| 2. Traffic core | **In progress** (step 1 lane graph done). Steps at the end |
+| 2. Traffic core | **In progress** (steps 1 lane graph and 2 sim worker done). Steps at the end |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
@@ -280,3 +280,22 @@ Update this file after each step.
      (network rebuild + lane update) 24 ms.
    - Debug overlay: key **L** (`engine.showLanes`) draws link lanes white, connectors yellow, ring arcs cyan,
      conflicts red. Checked in the browser (`look-lanes.mjs`, `look-rb.mjs` at the root, git-excluded).
+2. **Sim worker with IDM. DONE** (2026-10-17).
+   - `src/game/sim/idm.ts` (Treiber's IDM: a 1.5, b 2.0, T 1.2 s, s0 2 m, delta 4). `src/game/sim/sim.ts`: `Sim`, vehicles
+     in fixed slots (typed arrays), per-lane lists front first, `DT` 0.1 s fixed steps, seeded (`mulberry`).
+     A vehicle entering a LINK lane picks the movement at its end (random for now) and its plan is that movement's
+     lane path; leaders are found along the plan up to 150 m; it brakes for slower connectors once comfortable
+     braking (b) is needed. `gate(i, lane)` is the junction-control hook (open in step 2). Graph edits: vehicles on
+     removed lanes respawn, others re-validate their plans (`onGraph`).
+   - `src/game/sim/sim.worker.ts` replays the net ops (like the ground workers), runs `speed` steps every 100 ms and
+     posts `[x, y, angle, flags]` per slot (transferred). `src/game/sim/client.ts` (`SimClient`) interpolates
+     between the last two frames and gives the renderer drawables and planner dots; it replaced `TestTraffic`
+     (`traffic.ts` keeps only the sprite facings). Tunnel cars are hidden by a flag. `netToOps(net)` (netops.ts)
+     seeds a new worker from the current network.
+   - Perf: per-lane caches (length, limit, gate) and transferring only flagged lanes took a step at 10k cars on a
+     40x40 grid from 11.5 to 7.6 ms (dev PC, Node). The full lane graph build there is 320–680 ms (once, in the worker).
+   - Worker bench (RTX 3080, Chrome, 10k sim cars on the 4 km city), fps / cpu avg / p95 ms: Street 30% 60 / 0.63 /
+     0.7; Street 17% 60 / 0.71 / 0.8; District 8% 60 / 1.02 / 1.2; District 4.5% 60 / 1.75 / 2.3; Planner 2% 60 / 0.64 /
+     0.8; Whole map 59.6 / 0.76 / 0.9. **Sim tick 3.1 ms avg, 5.5 ms max** (budget 25 ms). Heap 217 MB, bake 16.3 ms.
+   - Lesson: the brief's curve rule (min of IDM and the curve deceleration whenever the next lane is slower) held cars
+     at connector speed for whole links; braking only once the comfortable curve is reached fixes it.
