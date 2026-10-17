@@ -288,6 +288,8 @@ export class RoadNetwork {
   occ = new Uint8Array(MAP * MAP);
   /** the ground box the last rebuild changed (null = nothing), and the auto props it added and removed */
   lastDirty: BBox | null = null; autoAdded: AutoProp[] = []; autoRemoved: AutoProp[] = [];
+  /** the nodes the last rebuild re-analysed: the touched nodes and their neighbours (all nodes after a full rebuild) */
+  lastNodes: Node[] = []; lastFull = false;
   private segGrid = new Grid<Seg>(16); private fxGrid = new Grid<Fx>(32); private poolGrid = new Grid<Pool>(32);
   private routeOf = new Map<Seg, Route>(); private routeFx = new Map<Route, Fx>(); private nodeFx = new Map<Node, Fx>();
   private touched = new Set<Node>(); private removed = new Set<Seg>();
@@ -409,6 +411,7 @@ export class RoadNetwork {
       this.routeFx.clear(); this.nodeFx.clear(); this.routes.clear(); this.routeOf.clear();
       for (const n of this.nodes.values()) A.add(n);
     } else for (const n of this.touched) { A.add(n); for (const s of n.segs) A.add(s.a === n ? s.b : s.a); }
+    this.lastNodes = [...A]; this.lastFull = full;
     const live = [...A].filter(n => n.segs.length && this.nodes.get(keyOf(n)) === n);
     for (const n of live) {
       n.arms = n.segs.map(s => { const other = s.a === n ? s.b : s.a, d = sub(other, n), L = vlen(d), dir = mul(d, 1 / L); return { seg: s, other, dir, nrm: perp(dir), ang: Math.atan2(dir.y, dir.x), len: L, cls: s.cls, h: s.cls.h, walk: s.cls.walk, reachEdge: 0, reachCentre: 0, lineInset: 0, medianInset: 0, xw: -1, stop: -1, hasOpp: false }; }).sort((p, q) => p.ang - q.ang);

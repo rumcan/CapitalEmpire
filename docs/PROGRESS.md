@@ -11,7 +11,7 @@ _Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
-| 2. Traffic core | **Next.** The approach is decided (GAME-PLAN section 3.3); suggested steps at the end |
+| 2. Traffic core | **In progress** (step 1 lane graph done). Steps at the end |
 | 3. Lot Composer + growth | Not started |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
@@ -257,3 +257,26 @@ seeded network, no deadlock, budgets met, every junction type behaves visibly). 
    traffic-simulation.de (ring road, on-ramp, lane closure) as tests, and the 10k-car gate on the worker.
 
 Update this file after each step.
+
+### Phase 2 progress
+1. **Lane graph. DONE** (2026-10-17). `src/game/sim/lanes.ts` (pure, tested in `tests/lanes.test.ts`, 8 tests):
+   - Units: points in tiles, lengths/`s`/speeds in metres and m/s (`MPT = 2`).
+   - `DSeg` = one direction of a Seg, with LINK lanes (idx 0 = inner). Lane offsets are `laneCentres` on the driver's
+     right (`perp(dir)`); the single-lane class uses 0.45. Lanes stop at an inset from each node (stop line, zebra or
+     corner reach at junctions; ring + 0.6 at roundabouts; a 3-tile fillet at bends; 0 at dead ends).
+   - Node lanes: CONN connectors are cubic Beziers shaped like circular fillets; roundabouts get RING arcs (short arc
+     past each arm and long arc to the next, circulating with the island on the left = decreasing angle), yield entries
+     and exits. Dead ends get U-turns. `Movement` = in-dseg to out-dseg with one lane path per allowed in lane
+     (multi-lane: L from the inner lane, R from the outer, S from all). `DSeg.out` lists the movements leaving its end.
+   - Control: plain junctions pick a major pair (opposed arms, highest class sum): major S/R prio 3, L prio 2, minor
+     R 1 and S/L 0 with STOP if the major is road or bigger, else YIELD. Signals/slips: a fixed-time `SignalPlan`
+     (opposed arms share a phase; green 18 s, amber 3, all-red 2, offset from the position); slip right turns yield
+     unsignalled. Roundabout entries YIELD prio 0.
+   - Conflicts per node: merges (same next lane) and polyline crossings, with s and os in metres.
+   - Incremental: `update(net)` after each rebuild (`RoadNetwork.lastNodes`/`lastFull` are new): segs with both ends
+     in the re-analysed set and all re-analysed nodes are rebuilt; ids are reused by key, so untouched lanes keep
+     their ids; `removed`/`changed` list the lane ids for the sim. Tested: incremental equals full, ids stable.
+   - Measured (Node, dev PC): 40x40 grid, 3,291 segs, 25,838 lanes, 19,256 movements: full build 680 ms; one edit
+     (network rebuild + lane update) 24 ms.
+   - Debug overlay: key **L** (`engine.showLanes`) draws link lanes white, connectors yellow, ring arcs cyan,
+     conflicts red. Checked in the browser (`look-lanes.mjs`, `look-rb.mjs` at the root, git-excluded).

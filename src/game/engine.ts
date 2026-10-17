@@ -12,6 +12,7 @@ import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } fro
 import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
+import { LK, LaneGraph, laneAt } from './sim/lanes';
 
 const DAY_SECONDS = 20;
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
@@ -31,7 +32,7 @@ export class Game {
   cam: Camera = { X: worldX(MAP / 2, MAP / 2), Y: worldY(MAP / 2, MAP / 2), z: 0.16 };
   /** the map seed (saved) and the valley generated from it */
   seed = 1; terrain!: Terrain;
-  net = new RoadNetwork(); edit = new NetEditor(this.net);
+  net = new RoadNetwork(); edit = new NetEditor(this.net); lanes = new LaneGraph();
   props = new Set<Prop>(); nextUid = 1;
   private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
   sprites = new SpriteTiles();
@@ -45,7 +46,7 @@ export class Game {
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0; junctionType: NodeType = 'signal';
-  selected: Prop | null = null; showGrid = false;
+  selected: Prop | null = null; showGrid = false; showLanes = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
   // economy
@@ -259,14 +260,14 @@ export class Game {
   // ---------- network edits ----------
   /** send the edits to the workers, refresh what depends on the network and mark the changed ground stale */
   private commitNetwork(keepPrev = false, until = 0) {
-    const ops = this.edit.commit();
+    const ops = this.edit.commit(); this.lanes.update(this.net);
     this.ground.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
     this.syncLamps(); this.scheduleSave(); this.emit();
   }
   private afterLoad() {
-    const ops = this.edit.commit(true);
+    const ops = this.edit.commit(true); this.lanes.update(this.net);
     this.ground.netOps(ops); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
@@ -468,6 +469,7 @@ export class Game {
       case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
       case 'Delete': this.deleteSelected(); break;
       case 'g': case 'G': this.showGrid = !this.showGrid; this.emit(); break;
+      case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'r': case 'R': this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
@@ -729,6 +731,28 @@ export class Game {
     this.drawOverlay(now);
   }
 
+  /** debug: the lane graph (white links, yellow connectors, cyan ring arcs, red conflict dots); lanes are drawn when an end is near the view */
+  private drawLanes(ctx: CanvasRenderingContext2D) {
+    const ze = this.cam.z * this.dpr, pad = 10;
+    const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
+    const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
+    const ok = (x: number, y: number) => x >= x0 && x <= x1 && y >= y0 && y <= y1, at = { x: 0, y: 0, hx: 0, hy: 0 };
+    this.setIso(ctx); ctx.lineWidth = 0.08;
+    for (const l of this.lanes.lanes) {
+      if (!l) continue;
+      const n = l.pts.length;
+      if (!ok(l.pts[0], l.pts[1]) && !ok(l.pts[n - 2], l.pts[n - 1])) continue;
+      if (l.kind === LK.LINK) ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      if (l.kind === LK.CONN) ctx.strokeStyle = '#ffd866';
+      if (l.kind === LK.RING) ctx.strokeStyle = '#5ee6ff';
+      ctx.beginPath(); ctx.moveTo(l.pts[0], l.pts[1]); for (let i = 2; i < n; i += 2) ctx.lineTo(l.pts[i], l.pts[i + 1]); ctx.stroke();
+      for (const c of l.conflicts) {
+        if (c.lane < l.id) continue;
+        laneAt(l, c.s, at); ctx.fillStyle = '#ff4d4d'; ctx.beginPath(); ctx.arc(at.x, at.y, 0.15, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
@@ -739,6 +763,7 @@ export class Game {
       for (let x = x0; x <= x1; x++) { ctx.moveTo(x, y0); ctx.lineTo(x, y1); } for (let y = y0; y <= y1; y++) { ctx.moveTo(x0, y); ctx.lineTo(x1, y); }
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
     }
+    if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     this.drawGroundOverlays(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
