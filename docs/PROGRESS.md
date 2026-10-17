@@ -12,7 +12,7 @@ _Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junct
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | **In progress** (step 1 gravel done). Steps at the end |
+| 3. Lot Composer + growth | **In progress** (steps 1 gravel and 2 parcels done). Steps at the end |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
@@ -417,3 +417,17 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
    them at junctions), no decals. New painted texture `roadgravel` (dusty grey-brown with pebbles; `TEX_VERSION`
    tex-5); the planner uses its mean colour. `window.__CLASSES` is exposed next to `__game` for headless scripts
    (`look-gravel.mjs`).
+2. **Parcels. DONE** (2026-10-18). `src/game/lots/lots.ts` (`LotMap`, tested in `tests/lots.test.ts`):
+   - Frontage lots like C:S zone cells, not graph faces: oriented rectangles along each side of every ground seg,
+     from the verge edge. Width/depth by class: gravel/lane/street 8 x 15 tiles, road 10 x 16, avenue 12 x 18,
+     boulevard 16 x 20. Along-positions snap to a global lattice (`t = dot(p, u)`, cells of W), so splitting a seg
+     keeps the lots; keys are geometric and stable.
+   - Ends leave out the junction reach; depth stops short of other roads' verges and at the **midline** to the road
+     behind (back-to-back strips share a block; a cut half-block gets two shallow strips; minimum depth 6 tiles).
+     More than 10% HILL/WATER/CREEK/BANK rejects a lot. Overlaps: higher class, then longer seg, then key wins (corner
+     squares go to one side, as in real square blocks where lots front two opposite sides).
+   - Incremental over a 54-tile scope around the edit; ids kept when the rectangle is unchanged.
+   - Engine: `lots.update` after the lanes in `commitNetwork`/`afterLoad`; key **P** overlay (white lots, amber
+     corners). The starter town's tight blocks get no lots (too shallow after the midline cap).
+   - Cost: bench city 7,112 lots, full update 530 ms; one edit 32 ms on the main thread (over the 30 ms edit budget):
+     step 3 moves lots and the town model into the sim worker (it already holds a network replica).

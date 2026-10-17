@@ -14,6 +14,7 @@ import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt } from './sim/lanes';
+import { LotMap, type Lot } from './lots/lots';
 import { phaseState } from './sim/signals';
 
 const DAY_SECONDS = 20;
@@ -34,7 +35,7 @@ export class Game {
   cam: Camera = { X: worldX(MAP / 2, MAP / 2), Y: worldY(MAP / 2, MAP / 2), z: 0.16 };
   /** the map seed (saved) and the valley generated from it */
   seed = 1; terrain!: Terrain;
-  net = new RoadNetwork(); edit = new NetEditor(this.net); lanes = new LaneGraph();
+  net = new RoadNetwork(); edit = new NetEditor(this.net); lanes = new LaneGraph(); lots = new LotMap(); lotBuf: Lot[] = [];
   props = new Set<Prop>(); nextUid = 1;
   private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
   sprites = new SpriteTiles();
@@ -48,7 +49,7 @@ export class Game {
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0; junctionType: NodeType = 'signal';
-  selected: Prop | null = null; showGrid = false; showLanes = false;
+  selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
   // economy
@@ -264,14 +265,14 @@ export class Game {
   // ---------- network edits ----------
   /** send the edits to the workers, refresh what depends on the network and mark the changed ground stale */
   private commitNetwork(keepPrev = false, until = 0) {
-    const ops = this.edit.commit(); this.lanes.update(this.net);
+    const ops = this.edit.commit(); this.lanes.update(this.net); this.lots.update(this.net, this.terrain.cls);
     this.ground.netOps(ops); this.traffic?.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
     this.syncLamps(); this.scheduleSave(); this.emit();
   }
   private afterLoad() {
-    const ops = this.edit.commit(true); this.lanes.update(this.net);
+    const ops = this.edit.commit(true); this.lanes.update(this.net); this.lots.update(this.net, this.terrain.cls);
     this.ground.netOps(ops); this.traffic?.netOps(ops); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
@@ -474,6 +475,7 @@ export class Game {
       case 'Delete': this.deleteSelected(); break;
       case 'g': case 'G': this.showGrid = !this.showGrid; this.emit(); break;
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
+      case 'p': case 'P': this.showLots = !this.showLots; this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'r': case 'R': this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
@@ -763,6 +765,21 @@ export class Game {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
+  /** debug (P): the parcels in view, each outline (amber at a corner) and a dot at its frontage midpoint */
+  private drawLots(ctx: CanvasRenderingContext2D) {
+    const ze = this.cam.z * this.dpr, pad = 2;
+    const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
+    const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
+    this.lotBuf.length = 0; this.lots.query(x0, y0, x1, y1, this.lotBuf);
+    this.setIso(ctx); ctx.lineWidth = 0.08;
+    for (const l of this.lotBuf) {
+      const { o, u, n, w, d } = l, col = l.corner ? 'rgba(255,176,32,0.9)' : 'rgba(255,255,255,0.5)';
+      ctx.strokeStyle = col; ctx.fillStyle = col;
+      ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(o.x + u.x * w, o.y + u.y * w); ctx.lineTo(o.x + u.x * w + n.x * d, o.y + u.y * w + n.y * d); ctx.lineTo(o.x + n.x * d, o.y + n.y * d); ctx.closePath(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(l.front.x, l.front.y, 0.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
   /** the signal heads of the junctions in view (Street tier): a disc per arm at its stop line, green, amber or red at the sim's time */
   private drawSignals(ctx: CanvasRenderingContext2D) {
     const traffic = this.traffic; if (!traffic) return;
@@ -794,6 +811,7 @@ export class Game {
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
     }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
+    if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
     this.drawGroundOverlays(ctx);
     for (const p of [this.selected, this.hoverProp]) {
