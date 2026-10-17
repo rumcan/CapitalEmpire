@@ -12,7 +12,7 @@ _Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junct
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | **In progress** (steps 1 gravel and 2 parcels done). Steps at the end |
+| 3. Lot Composer + growth | **In progress** (steps 1, 2, 3a, 5a, 5b done; 3b city worker and 5c composer in progress). Steps at the end |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
@@ -431,3 +431,25 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
      corners). The starter town's tight blocks get no lots (too shallow after the midline cap).
    - Cost: bench city 7,112 lots, full update 530 ms; one edit 32 ms on the main thread (over the 30 ms edit budget):
      step 3 moves lots and the town model into the sim worker (it already holds a network replica).
+3a. **Town growth model. DONE** (2026-10-18). `src/game/lots/town.ts` (pure, `tests/town.test.ts`):
+   - Lot states (use RES/COM/IND/TOUR/GOV, level EMPTY/BUILDING/BUILT/UPGRADED, decline 0–3, seed), events for the
+     composer, `pop`/`jobs` (RES 3/5 residents; COM 3/5, IND 6/10, TOUR 3/6, GOV 8/12 jobs at BUILT/UPGRADED).
+   - Growth per game hour `(20 + 0.10 * built) / 24` lots (about 10% a day), weighted by `zoneGrowth(access)` (1 up to
+     1.3, 0 from 1.8), `exp(-d/40)` to the nearest built lot (the town grows out from the highway exit) and value
+     (corner, paved class); top 400 candidates, seeded picks.
+   - Land use: road-class scores (RES on gravel/lane/street, COM on road/avenue/boulevard and corners, IND within 120
+     tiles of the highway, TOUR near water), balanced towards target shares RES 0.65, COM 0.20, IND 0.10, TOUR 0.05
+     (`clamp(1 + 2(target - share)/target, 0.3, 3)`); growth options scale the targets; GOV by quota (one per 400
+     residents). Construction 0.5 day; upgrades in good zones; decline in zones over 1.8 for 2 days (shabby →
+     boarded → derelict → cleared), recovery below 1.5.
+   - Test grid numbers (10x10 streets, 10 days): 298 built, jobs/pop 0.52, COM share 0.19; a jammed zone stops
+     building and declines (39 declines, 13 clears) while others grow.
+5a. **Art kit. DONE** (2026-10-18). The atlas now holds 220 sprites on 2 pages (2.96 MB of webp; dist 5.0 MB): all
+   houses with rear views, shops (with rear views), landmarks, park & sports, backyard structures/furniture/stories,
+   POI dressing, scrapyard and derelict (new `Industry` category), utility details, fences, plants. Saves store
+   sprite ids, so regenerating the library keeps old saves valid.
+5b. **Lot ground. DONE** (2026-10-18). `LotPatch` (oriented quads: paving, pad, asphalt with bay lines, dirt,
+   gravel, field) per lot key; `Game.setLotGround(key, patches)` batches per frame; the ground workers paint them
+   after the terrain and before verges and roads; the planner fills them flat.
+   - Note: `npm test` runs files in parallel, so the wall-clock budgets in the network (4 km grid) and terrain (20
+     seeds) tests can fail under load; they pass alone.
