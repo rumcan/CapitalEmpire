@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges and tunnels, highway entry)._
+_Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junction control, zone routing, trips, car lights). Phase 3 next._
 
 ## Where we are
 
@@ -12,7 +12,7 @@ _Last updated: 2026-10-17, Phase 1 done (terrain, valley ground, forest, bridges
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | Not started |
+| 3. Lot Composer + growth | **Next.** Steps at the end |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
@@ -243,7 +243,7 @@ Left over from Phase 1 (small, pick up when convenient):
 - Portals and headwalls are drawn the same whichever way the tunnel faces; bridge decks are flat (no ramps).
 - Placeholder traffic drives through tunnels (hidden) and over bridges like any road.
 
-## Next: Phase 2, traffic core
+## Phase 2, traffic core: done
 
 Goal and gate: GAME-PLAN section 3.3 and the phase table in section 5 (gate: 10k cars for 10 in-game days on a
 seeded network, no deadlock, budgets met, every junction type behaves visibly). Suggested steps:
@@ -356,3 +356,57 @@ Update this file after each step.
      `npm run sim:gate -- [days] [cars]` (`scripts/sim/gate.ts`) runs the sim headless on it and checks the gate
      (active >= 98%, arrivals every hour, speed > 1 m/s, towed < 1% and lost < 2% of arrivals); summary in
      `output/sim/gate.json`. Smoke (0.05 days, 10k, dev PC): pass, 16 ms per step mean.
+5b. **Car lights. DONE** (2026-10-18). Headlights (two lamps and a soft beam ahead), tail lights (brighter when
+   braking) and blinking turn signals (the movement's turn, within 40 m of the line and through the box), drawn as
+   soft additive points (`uSoft` in the point shader) at the Street and District tiers (not below 8%).
+6. **Gate. PASSED** (2026-10-18).
+   - `npm run sim:gate -- 10 10000` on the worker: 10 in-game days (144,000 steps) with 10,000 cars on the 4 km bench
+     city: **pass**. 221,661 trips arrived, 1,377 towed (0.62%), 0 lost, active 10,000 every hour, slowest hour
+     4.0 m/s. Step 4.6 ms mean, 7.5 ms p99, 44.8 ms max (one spike; budget 25 ms per tick). 658 s wall time.
+   - Worker bench with 10k sim cars and lights (fps / cpu avg / p95 ms): Street 30% 60 / 0.41 / 0.5; Street 17% 60 /
+     0.64 / 0.8; District 8% 60 / 1.12 / 1.3; District 4.5% 59.8 / 1.86 / 2.3; Planner 2% 60 / 0.67 / 0.8; Whole map
+     59.7 / 0.81 / 1.0. Sim tick 5.9 ms avg, 13.8 max. Heap 226 MB, bake 5.1 ms.
+   - Every junction type behaves visibly: `look-junctions.mjs` (root, git-excluded) builds a district with signal,
+     slip, roundabout and stop/yield crossings and shoots them with traffic (`output/look/junctions-sheet.png`).
+   - 66 tests pass.
+
+Left over from Phase 2 (pick up when convenient):
+- The economy day (`DAY_SECONDS = 20` in engine.ts) and the sim day (`DAY = 1440` sim s) differ: align them in
+  Phase 4 with the time controls (the worker already takes `speed`; there is no UI for it yet).
+- Car lights draw over everything (no occlusion by buildings in front).
+- Cars still use the 4-facing sprites, so they snap heading mid-turn (16 headings: Phase 6 art track).
+- Signals are fixed-time (no actuation, no right-on-red); single-lane street grids reach capacity quickly with
+  18 s greens.
+- The main thread keeps its own LaneGraph for the overlays (lanes, signal heads): about 2x the lane work per edit.
+- `Sim.profile` (the demand curve) is not switched on in the game yet; Phase 3 trips from lots replace it.
+- The lane graph's full build is 300–700 ms in the worker at load (once).
+
+## Next: Phase 3, Lot Composer + growth
+
+Goal and gate: GAME-PLAN sections 1.2, 1.5 and 3.5 and the phase table (gate: from one highway exit a city of 5k
+grows by itself; 100-lot contact sheets pass review; a jam stops growth locally). The Lot Composer ports the ideas of
+TrickOrTreat's places-v5 kit (read-only; found under `../TrickOrTreat/.claude/worktrees/vibrant-cerf-929fd1/scripts/
+town-builder/places-v5/`: `AUTHORING.md`, `kit.mjs`, `scales.json` with the owner's scales, `RUNS` fences, `stage.mjs`;
+the owner's blocks as data in `output/town-builder/presets-v5-study/data/`). Suggested steps:
+1. **Gravel road class** (narrow, 8 m/s, no sidewalks, dusty texture, cheap; a single lane each way) in the road
+   palette, painter, planner and lane graph.
+2. **Parcels**: blocks from the faces of the road graph (incremental per edit), cut into frontage lots (15–20 m
+   suburban, wider for commercial), corners handled; each lot knows its frontage dseg and driveway point.
+3. **Land use and growth**: allocation (residential, commercial, industrial, tourism, government) from terrain, road
+   class, distance to the highway and river, neighbours and a growth option; growth driven by demand and the zone
+   access score (actual / free-flow trip time from the sim).
+4. **The town lays gravel roads** into new land when its lots fill up (block-grid extensions that respect terrain;
+   no bridges or tunnels, those stay the player's).
+5. **Lot Composer v1**: archetypes per land use from Maple Falls art (houses with yards, fences, drives and story
+   dressing; commercial with car parks and loading bays; industrial yards; civic sites), deterministic per lot,
+   ground ops (drives, car parks) baked by the ground workers.
+6. **Trips from lots**: residents and jobs per lot, departures by time of day; parked cars are the sim cars.
+7. **Access-driven growth and decline** (amber/red districts, boarded, derelict, cleared), the 100-lot contact
+   sheets, and the gate run.
+
+### Start prompt for a fresh chat
+"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then continue
+Phase 3 (Lot Composer + growth) at the first step not marked DONE and carry on through the steps without asking
+between them. Delegate coding to haiku-coder and checks/benchmarks to haiku-runner (worker PC via
+scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go. Use
+look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for headless screenshots."
