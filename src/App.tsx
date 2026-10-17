@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { Game } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
-import { TERRAINS, type LibItem, type Tool } from './game/types';
+import { type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
 import { ZOOM_MAX, ZOOM_MIN } from './game/iso';
 
@@ -9,8 +9,6 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
   { id: 'road', label: 'Roads', key: 'R', icon: '🛣️' },
   { id: 'junction', label: 'Junctions', key: 'J', icon: '🚦' },
-  { id: 'objects', label: 'Build', key: 'B', icon: '🏠' },
-  { id: 'terrain', label: 'Terrain', key: 'T', icon: '🌿' },
   { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -39,8 +37,6 @@ export default function App() {
     return () => { unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
   }, []);
 
-  const cats = useMemo(() => [...new Set(LIBRARY.map(i => i.cat))], []);
-  const [cat, setCat] = useState<string>('Houses');
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
 
   return (
@@ -112,8 +108,6 @@ export default function App() {
             <div className="w-[310px] rounded-xl border border-white/10 bg-slate-950/80 p-3 shadow-lg backdrop-blur">
               {game.tool === 'road' && <RoadPanel game={game} />}
               {game.tool === 'junction' && <JunctionPanel game={game} />}
-              {game.tool === 'objects' && <ObjectsPanel game={game} cats={cats} cat={cat} setCat={setCat} />}
-              {game.tool === 'terrain' && <TerrainPanel game={game} />}
               {game.tool === 'bulldoze' && (
                 <Panel title="Bulldoze">
                   <p className="text-xs text-slate-300">Click an object to remove it (half its price is refunded). Click or drag along a road to tear it up piece by piece — the ends become cul-de-sacs and curbs, corners, crossings and markings redraw themselves instantly.</p>
@@ -239,56 +233,9 @@ function JunctionPanel({ game }: { game: Game }) {
   );
 }
 
-function TerrainPanel({ game }: { game: Game }) {
-  return (
-    <Panel title="Terrain">
-      <div className="grid grid-cols-2 gap-1">
-        {TERRAINS.map(t => (
-          <button key={t.id} onClick={() => { game.terrainType = t.id; game.emit(); }}
-            className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left text-xs ${game.terrainType === t.id ? 'border-amber-400 bg-amber-400/20' : 'border-white/10 hover:bg-white/10'}`}>
-            <span className="h-5 w-5 rounded" style={{ background: t.color, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.4)' }} />{t.name}
-          </button>
-        ))}
-      </div>
-      <div className="mt-3 flex items-center gap-2 text-xs"><span className="text-slate-400">Brush</span>
-        <input type="range" min={1} max={6} value={game.brush} onChange={e => { game.brush = +e.target.value; game.emit(); }} className="flex-1 accent-amber-400" /><span className="w-4 tabular-nums">{game.brush}</span></div>
-      <p className="mt-2 text-[11px] text-slate-500">Paint lots, parks, fields and plazas. Paving and concrete pads cross the sidewalk, so you can lay driveways up to the curb.</p>
-    </Panel>
-  );
-}
-
-function ObjectsPanel({ game, cats, cat, setCat }: { game: Game; cats: string[]; cat: string; setCat: (c: string) => void }) {
-  const items = LIBRARY.map((it, i) => ({ it, i })).filter(x => x.it.cat === cat);
-  const sel = LIBRARY[game.libIndex];
-  return (
-    <Panel title="Build">
-      <div className="flex flex-wrap gap-1">
-        {cats.map(c => <button key={c} className={`chip ${cat === c ? 'chip-on' : ''}`} onClick={() => setCat(c)}>{c}</button>)}
-      </div>
-      <div className="mt-2 grid max-h-[40vh] grid-cols-3 gap-1 overflow-y-auto pr-1">
-        {items.map(({ it, i }) => (
-          <button key={it.id} onClick={() => game.setLib(i)} title={`${it.name} — ${money(it.cost)}`}
-            className={`flex flex-col items-center rounded-lg border p-1 ${game.libIndex === i ? 'border-amber-400 bg-amber-400/20' : 'border-white/10 hover:bg-white/10'}`}>
-            <div className="flex h-14 w-full items-center justify-center"><Thumb it={it} size={56} /></div>
-            <div className="w-full truncate text-center text-[10px] text-slate-200">{it.name}</div>
-            <div className="text-[10px] text-amber-300">{money(it.cost)}</div>
-          </button>
-        ))}
-      </div>
-      <div className="mt-2 flex items-center gap-2 text-xs">
-        <button className={`chip ${game.flip ? 'chip-on' : ''}`} onClick={() => { game.flip = !game.flip; game.emit(); }} title="F">Flip ↔</button>
-        <span className="text-slate-400">Size</span>
-        <input type="range" min={0.7} max={1.4} step={0.05} value={game.placeScale} onChange={e => { game.placeScale = +e.target.value; game.emit(); }} className="flex-1 accent-amber-400" />
-        <span className="w-8 tabular-nums">{game.placeScale.toFixed(2)}</span>
-      </div>
-      <p className="mt-2 text-[11px] text-slate-500">{sel.name}: {sel.kind === 'house' ? 'faces the front edge; place it north of a street (or flipped, west of one)' : sel.door ? 'a venue with a front door, earns daily income when a sidewalk is near' : 'decorative'}.</p>
-    </Panel>
-  );
-}
-
 function SelectPanel({ game }: { game: Game }) {
   const p = game.selected;
-  if (!p) return (<Panel title="Select"><p className="text-xs text-slate-300">Click an object to select it, drag to move it. Drag empty ground (or hold the right mouse button anywhere) to pan; scroll to zoom.</p></Panel>);
+  if (!p) return (<Panel title="Select"><p className="text-xs text-slate-300">Click an object to select it. Drag empty ground (or hold the right mouse button anywhere) to pan; scroll to zoom.</p></Panel>);
   const it = LIBRARY[p.item];
   return (
     <Panel title="Selected">
@@ -297,7 +244,6 @@ function SelectPanel({ game }: { game: Game }) {
         <div><div className="text-sm font-semibold">{it.name}</div><div className="text-[11px] text-slate-400">{it.cat} · scale {p.scale.toFixed(2)}{p.flip ? ' · flipped' : ''}{p.auto ? ' · placed by the road works' : ''}</div></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1">
-        <button className="chip" onClick={() => game.flipSelected()}>Flip (F)</button>
         <button className="chip" onClick={() => game.scaleSelected(1.1)}>Bigger</button>
         <button className="chip" onClick={() => game.scaleSelected(1 / 1.1)}>Smaller</button>
         <button className="chip bg-red-500/70 text-white" onClick={() => game.deleteSelected()}>Remove (Del)</button>
@@ -310,10 +256,8 @@ function hintFor(g: Game) {
   switch (g.tool) {
     case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start`;
     case 'junction': return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here` : 'Hover a junction (three or more roads; roundabouts also work on bends)';
-    case 'objects': return g.placeError && g.hover ? `✖ ${g.placeError}` : `Click to place ${LIBRARY[g.libIndex].name} · F to flip · right-drag to pan`;
-    case 'terrain': return `Paint ${TERRAINS[g.terrainType].name} — click or drag`;
     case 'bulldoze': return 'Click objects or roads to remove them';
-    default: return 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · B build · T terrain · X bulldoze';
+    default: return 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
   }
 }
 
@@ -328,7 +272,6 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>Five road types: <b>Lane</b> (single lane), <b>Street</b> (2 lanes, sidewalks, your choice of centre line), <b>Road</b> (wider, darker asphalt with paved shoulders inside yellow edge lines and a gravel verge), <b>Avenue</b> and <b>Boulevard</b> (2 / 4 lanes around a tree-lined median).</li>
           <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; drawing over a road upgrades it.</li>
           <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend.</li>
-          <li><b>Build</b> places the builder's sprites: houses face their front edge (south-west on screen), flip with <b>F</b> to face south-east. Buildings need clear ground; lamps, signs and benches may stand on the sidewalk, cars on the road.</li>
           <li>Houses and venues near a sidewalk earn money every day; roads cost upkeep. Everything autosaves in this browser.</li>
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
         </ul>

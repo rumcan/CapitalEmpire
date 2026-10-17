@@ -470,7 +470,6 @@ export function generateTerrain(seed: number): Terrain {
     const t = build(a === 0 ? seed : hash2(seed, a));
     const rep = checkGuarantees(t);
     if (rep.ok) { t.seed = seed; t.attempt = a; return t; }
-    reasons = rep.reasons;
-    /* TEMP-LOG */ console.log(`RETRY seed ${seed} attempt ${a}: ${rep.reasons.join('; ')} | connected ${(rep.buildableConnected * 100).toFixed(1)}% sideA ${(rep.sideA * 100).toFixed(1)}% sideB ${(rep.sideB * 100).toFixed(1)}%`);  }
+    reasons = rep.reasons;  }
   throw new Error(`terrain seed ${seed}: all 8 attempts failed: ${reasons.join('; ')}`);
 }

@@ -1,10 +1,10 @@
-/** Saves: gzip-compressed JSON in IndexedDB (a full 2048 map's terrain alone is 4 MB raw, too big for localStorage).
- *  Terrain is run-length encoded first. Old v2 saves (160-tile maps in localStorage) are migrated into the centre. */
+/** Saves: gzip-compressed JSON in IndexedDB. v4 stores only the map seed: the valley is regenerated from it.
+ *  Old v2 saves (160-tile maps in localStorage) and v3 saves (with the painted terrain) are migrated. */
 import { MAP } from './iso';
 import type { SaveData } from './types';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 function idb(): Promise<IDBDatabase> {
   return new Promise((res, rej) => { const r = indexedDB.open(DB, 1); r.onupgradeneeded = () => r.result.createObjectStore(STORE); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
@@ -20,10 +20,10 @@ async function gunzip(buf: ArrayBuffer) { return new Response(new Blob([buf]).st
 export function rle(a: Uint8Array) { const out: number[] = []; for (let i = 0; i < a.length;) { const v = a[i]; let j = i + 1; while (j < a.length && a[j] === v) j++; out.push(v, j - i); i = j; } return out; }
 export function unrle(runs: number[], out: Uint8Array) { let o = 0; for (let k = 0; k + 1 < runs.length; k += 2) { out.fill(runs[k], o, o + runs[k + 1]); o += runs[k + 1]; } return out; }
 
-export interface SaveV3 {
-  version: number; map: number; seed?: number;
-  /** run-length terrain */
-  terrain: number[];
+export interface SaveV4 {
+  version: number; map: number;
+  /** the map seed: generateTerrain(seed) rebuilds the valley */
+  seed: number;
   /** ax, ay, bx, by, class, line style */
   segs: [number, number, number, number, string, number][];
   /** x, y, junction type */
@@ -43,23 +43,27 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
   'world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood',
   'gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line'];
 
-export async function writeSave(d: SaveV3) { const buf = await gzip(JSON.stringify(d)); await idbDo('readwrite', s => s.put(buf, SLOT)); return buf.byteLength; }
-export async function readSave(): Promise<SaveV3 | null> {
+export async function writeSave(d: SaveV4) { const buf = await gzip(JSON.stringify(d)); await idbDo('readwrite', s => s.put(buf, SLOT)); return buf.byteLength; }
+export async function readSave(): Promise<SaveV4 | null> {
   try {
     const buf = await idbDo<ArrayBuffer | undefined>('readonly', s => s.get(SLOT));
-    if (buf) { const d = JSON.parse(await gunzip(buf)) as SaveV3; if (d.version === SAVE_VERSION && d.map === MAP) return d; }
+    if (buf) {
+      const d = JSON.parse(await gunzip(buf)) as SaveV4 & { terrain?: unknown };
+      if (d.version === SAVE_VERSION && d.map === MAP) return d;
+      // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
+      if (d.version === 3 && d.map === MAP) return { version: SAVE_VERSION, map: MAP, seed: d.seed ?? 1, segs: d.segs, nodes: d.nodes, props: d.props, money: d.money, day: d.day, cam: d.cam };
+    }
   } catch { /* no IndexedDB (private window): fall through */ }
   return migrateV2();
 }
-/** a v2 save (160-tile map) moved into the centre of the big map */
-function migrateV2(): SaveV3 | null {
+/** a v2 save (160-tile map) moved into the centre of the big map; its painted terrain is dropped (seed 1) */
+function migrateV2(): SaveV4 | null {
   try {
     const raw = localStorage.getItem(V2_KEY); if (!raw) return null;
     const d = JSON.parse(raw) as SaveData; if (d.version !== 2) return null;
-    const n = d.map, o = Math.floor((MAP - n) / 2), bin = atob(d.terrain), t = new Uint8Array(MAP * MAP);
-    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) t[(y + o) * MAP + x + o] = bin.charCodeAt(y * n + x);
+    const n = d.map, o = Math.floor((MAP - n) / 2);
     return {
-      version: SAVE_VERSION, map: MAP, terrain: rle(t), money: d.money, day: d.day,
+      version: SAVE_VERSION, map: MAP, seed: 1, money: d.money, day: d.day,
       segs: d.segs.map(([ax, ay, bx, by, c, s]) => [ax + o, ay + o, bx + o, by + o, c, s]),
       nodes: d.nodes.map(([x, y, t2]) => [x + o, y + o, t2]),
       props: d.props.filter(([i]) => V2_IDS[i]).map(([i, x, y, f, k]) => [V2_IDS[i], x + o, y + o, f, k]),

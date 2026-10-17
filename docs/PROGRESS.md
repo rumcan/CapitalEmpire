@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-17, Phase 1 steps 1–2 done (terrain generator, creeks); plan updated for the self-building town._
+_Last updated: 2026-10-17, Phase 1 steps 1–3 done (generator, creeks, wiring + collision + save v4)._
 
 ## Where we are
 
@@ -146,11 +146,31 @@ order; the ones marked **(haiku)** can be briefed to `haiku-coder`.
      118–120 creeks over the 20 seeds.
    - Lesson: adding noise to the river's height field made the river miss the guide (9 of 12 retries had "river
      does not split the land"). Keep the river's field smooth, and put any detail in a separate creek field.
-3. **Collision and wiring** (haiku). The engine generates the terrain from the save's seed (save v4: seed only, no
-   painted terrain; drop the terrain tool and the 7 Maple Falls terrain types, and remove the "objects" build tool
-   and its UI: the player never places buildings or props). HILL, WATER, CREEK and BANK go into
-   the occupancy grid; `canPlace` and the road tool refuse them, except for bridges and tunnels. The ground workers
-   regenerate from the seed rather than receiving 4 MB.
+3. **Collision and wiring. DONE** (2026-10-17).
+   - The engine generates the terrain from `game.seed` (`genTerrain`) and sends `terrain.cls` to the ground workers
+     through the existing init message (cloning 4 MB is cheaper than regenerating in each worker).
+   - "New town" picks a new random seed ("New valley (seed N)"); "Empty map" keeps the seed.
+   - **Save v4** stores the seed and no terrain. v3 saves are converted (their painted terrain is dropped; seed
+     `d.seed ?? 1`), and v2 migrates with seed 1.
+   - **Collision** is a terrain check in the engine, not in the road occupancy grid (whose codes are road codes):
+     - roads refuse HILL and WATER until bridges and tunnels exist; CREEK (culverts) and BANK (riverside roads) are
+       allowed;
+     - props (`canPlace`) refuse HILL, WATER, CREEK and BANK.
+   - The starter town is centred on the generated start block, skipping roads that would cross blocked terrain;
+     the camera starts there.
+   - The painter maps the classes to placeholder textures until step 4: GROUND grass, PATCH meadow, HILL dirt,
+     WATER gravel, CREEK field, BANK dirt. The planner already has proper class colours.
+   - **The Build (objects) and Terrain tools are gone** (UI, keys B/T/F, prop dragging). The game still places
+     props itself (starter town, lamps, auto trees).
+   - Checked in a headless browser: the valley, river and creeks show in the planner; the starter town sits by the
+     river; no console errors. Throwaway screenshot script: `output/look/look.mjs` (gitignored).
+   - **Worker benchmark** (`npm run worker:bench`, RTX 3080, 1600x900 dpr 1, vsync caps at 60 fps), as fps / cpu
+     avg / p95 ms: Street 30% 60 / 0.81 / 1.0; Street 17% 60 / 0.91 / 1.1; District 8% 60 / 1.27 / 1.4; District
+     4.5% 60 / 2.41 / 3.6; Planner 2% 60 / 0.84 / 1.0; Whole map 60 / 0.93 / 1.1. Heap 215 MB. This is the new
+     baseline (the Phase 0 table was the laptop's AMD iGPU).
+   - Left over: the Select panel still has Bigger/Smaller for props (remove it with the step 4 UI pass); the
+     starter town's layout is fixed, so on some seeds a few of its roads are skipped; roads in old saves are not
+     checked against the new terrain.
 4. **Maple valley ground** (lead + haiku):
    - procedural textures in `textures.ts` for the classes: GROUND uses the existing grass, PATCH the meadow, plus
      new forest floor (under hills), river water, wet bank and creek bed;

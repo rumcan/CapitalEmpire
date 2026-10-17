@@ -3,17 +3,18 @@ import { offsetPolyline, roundPieces, roundedPath, type BBox, type Decal, type F
 import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
 import { POOL_ANCHOR, PPM } from './ground-art';
 
-const TERRAIN_TEX: TexName[] = ['grass', 'meadow', 'dirt', 'gravel', 'field', 'paving', 'pad'];
-/** terrain types drawn on top of the sidewalk (driveways / plazas may cross it) */
-const OVER_WALK = new Set([5, 6]);
+/** painter texture per terrain class (TC), placeholder until the real textures land: 0 is the unpainted base grass */
+const TERRAIN_TEX: TexName[] = ['grass', 'meadow', 'dirt', 'gravel', 'field', 'dirt'];
+/** terrain classes (TC) drawn on top of the sidewalk: none for now */
+const OVER_WALK = new Set<number>();
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
 /** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m) */
 const CURB_TOP = 0.065, CURB_JOINT = 0.04, FACE_WORLD = 7.5, GUTTER = 0.2;
 const SLAB_LEN = 1.25;
 const YELLOW = 'rgba(246,168,36,0.93)', WHITE = 'rgba(229,225,207,0.9)';
-/** planner colours: terrain types */
-const PLAN_TERRAIN = ['#4b6a2d', '#3d5a26', '#56402f', '#5b5752', '#5a4a2e', '#a89c8c', '#b9ada0'];
+/** planner colours: terrain classes (TC) */
+const PLAN_TERRAIN = ['#6f8a3a', '#93a352', '#46603a', '#3d7ea6', '#5f8fa0', '#7d6a48'];
 export interface Camera { X: number; Y: number; z: number }
 /** building footprints for the planner map: x0, y0, x1, y1, colour index (tiles), five floats each */
 export type PlanBlocks = Float32Array;

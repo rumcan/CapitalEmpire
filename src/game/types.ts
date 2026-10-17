@@ -44,19 +44,9 @@ export interface Prop {
   auto?: string;
 }
 
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'terrain' | 'objects';
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
-
-export const TERRAINS = [
-  { id: 0, name: 'Lawn', color: '#4b6a2d' },
-  { id: 1, name: 'Meadow', color: '#3d5a26' },
-  { id: 2, name: 'Dirt', color: '#56402f' },
-  { id: 3, name: 'Gravel', color: '#5b5752' },
-  { id: 4, name: 'Field', color: '#5a4a2e' },
-  { id: 5, name: 'Paving', color: '#a89c8c' },
-  { id: 6, name: 'Concrete pad', color: '#b9ada0' },
-] as const;
 
 export interface SaveData {
   version: number;

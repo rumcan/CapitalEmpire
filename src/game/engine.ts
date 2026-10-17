@@ -5,13 +5,14 @@ import { NetEditor } from './netops';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
-import { readSave, rle, unrle, writeSave, clearSave, SAVE_VERSION, type SaveV3 } from './save';
+import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV4 } from './save';
 import { CAR_COLOURS, TestTraffic } from './traffic';
+import { TC, classAt, generateTerrain, type Terrain } from './terrain';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 
 const DAY_SECONDS = 20;
-/** the old 160-tile starter town sits in the middle of the big map */
-const SEED_OFFSET = (MAP - 160) / 2;
+/** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
+const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
@@ -25,7 +26,8 @@ export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
   dpr = 1; cw = 1; ch = 1; cssW = 1; cssH = 1;
   cam: Camera = { X: worldX(MAP / 2, MAP / 2), Y: worldY(MAP / 2, MAP / 2), z: 0.16 };
-  terrain = new Uint8Array(MAP * MAP);
+  /** the map seed (saved) and the valley generated from it */
+  seed = 1; terrain!: Terrain;
   net = new RoadNetwork(); edit = new NetEditor(this.net);
   props = new Set<Prop>(); nextUid = 1;
   private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
@@ -36,7 +38,6 @@ export class Game {
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0; junctionType: NodeType = 'signal';
-  terrainType = 0; brush = 2; libIndex = 0; flip = false; placeScale = 1;
   selected: Prop | null = null; showGrid = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
@@ -50,13 +51,12 @@ export class Game {
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner' };
   private frameTimes: number[] = [];
   // input
-  private dragging: null | { kind: 'pan' | 'prop' | 'paint' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean; prop?: Prop; ox?: number; oy?: number } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
   private saveTimer = 0; private blocksTimer = 0;
   private raf = 0; private last = 0;
   private mask: OffscreenCanvas | null = null;
-  placeError = '';
 
   constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement) {
     this.gl = new GLRenderer(canvas);
@@ -83,11 +83,11 @@ export class Game {
     tick(0.3);
     await atlas; tick(0.5); if (this.dead) return;
     const save = opts.bench ? null : await readSave(); if (this.dead) return;
-    if (opts.bench) { const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
-    else if (!save || !this.load(save)) { this.seedTown(); }
+    if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
+    else if (!save || !this.load(save)) { this.genTerrain(newSeed()); this.seedTown(); }
     tick(0.7);
     const tl = performance.now();
-    this.ground.init(this.terrain);
+    this.ground.init(this.terrain.cls);
     this.afterLoad();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
@@ -96,6 +96,8 @@ export class Game {
     this.last = performance.now();
     this.raf = requestAnimationFrame(this.frame);
   }
+  /** generate the valley for a seed (about 0.3–0.6 s) */
+  private genTerrain(seed: number) { this.seed = seed; this.terrain = generateTerrain(seed); }
   dead = false;
   destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); this.ground.terminate(); }
 
@@ -130,6 +132,9 @@ export class Game {
   canPlace(it: LibItem, x: number, y: number, flip: boolean, k: number, ignore?: Prop): string {
     const f = this.footprint(it, x, y, flip, k);
     if (f.x0 < 1 || f.y0 < 1 || f.x1 > MAP - 1 || f.y1 > MAP - 1) return 'Outside the town limits';
+    for (let y = Math.floor(f.y0); y < Math.ceil(f.y1); y++) for (let x = Math.floor(f.x0); x < Math.ceil(f.x1); x++) {
+      const c = this.terrain.cls[y * MAP + x]; if (c === TC.HILL || c === TC.WATER || c === TC.CREEK || c === TC.BANK) return 'Not on hills or water';
+    }
     const occ = this.net.rectOcc(f.x0 + 0.08, f.y0 + 0.08, f.x1 - 0.08, f.y1 - 0.08);
     if (it.kind === 'car') { if (occ === 3) return 'Not on the median'; }
     else if (it.big) { if (occ) return 'Keep buildings off the road and sidewalk'; }
@@ -208,7 +213,6 @@ export class Game {
 
   // ---------- road routing ----------
   setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; } this.tool = t; this.emit(); }
-  setLib(i: number) { this.libIndex = i; this.tool = 'objects'; this.emit(); }
   private snapNode(p: Pt): Pt { return { x: clamp(Math.round(p.x), 2, MAP - 2), y: clamp(Math.round(p.y), 2, MAP - 2) }; }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
@@ -253,6 +257,18 @@ export class Game {
     }
     return false;
   }
+  /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads) */
+  private blockedForRoad(legs: Leg[], hw: number): boolean {
+    for (const l of legs) {
+      const d = sub(l.b, l.a), L = vlen(d); if (!L) continue;
+      const u = mul(d, 1 / L), n = perp(u);
+      for (let s = 0; s <= L; s += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
+        const x = l.a.x + u.x * s + n.x * o, y = l.a.y + u.y * s + n.y * o, c = classAt(this.terrain, x, y);
+        if (c === TC.HILL || c === TC.WATER) return true;
+      }
+    }
+    return false;
+  }
   private propsNearLegs(legs: Leg[], hw: number) {
     let bb: BBox | null = null; for (const l of legs) bb = unionBox(bb, [Math.min(l.a.x, l.b.x) - hw, Math.min(l.a.y, l.b.y) - hw, Math.max(l.a.x, l.b.x) + hw, Math.max(l.a.y, l.b.y) + hw]);
     return bb ? [...this.propGrid.query(bb)].filter(p => this.propInLegs(p, legs, hw)) : [];
@@ -263,6 +279,7 @@ export class Game {
     if (!legs.length) { this.cancelRoute(); return; }
     const cls = this.cls, total = this.net.legsLength(legs), cost = Math.round(total * cls.cost);
     if (cost > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}`, 'warn'); return; }
+    if (this.blockedForRoad(legs, cls.h + cls.walk)) { this.toast('Roads can\'t cross hills or the river yet: bridges and tunnels are coming', 'warn'); return; }
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
     const blocking = near.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car');
     if (blocking.length) { this.toast(`${LIBRARY[blocking[0].item].name} is in the way — bulldoze it first`, 'warn'); return; }
@@ -302,31 +319,6 @@ export class Game {
     this.hoverPiece = this.net.pieceNear(t);
     this.puff(t.x, t.y, 10);
   }
-  private paintAt(mx: number, my: number) {
-    const t = this.tileAt(mx, my), r = this.brush, cx = Math.floor(t.x), cy = Math.floor(t.y);
-    let changed = false;
-    for (let y = cy - r + 1; y <= cy + r - 1; y++) for (let x = cx - r + 1; x <= cx + r - 1; x++) {
-      if (x < 0 || y < 0 || x >= MAP || y >= MAP) continue;
-      if (r > 1 && Math.hypot(x + 0.5 - t.x, y + 0.5 - t.y) > r - 0.3) continue;
-      const i = y * MAP + x; if (this.terrain[i] !== this.terrainType) { this.terrain[i] = this.terrainType; changed = true; }
-    }
-    if (!changed) return;
-    const x0 = clamp(cx - r, 0, MAP), y0 = clamp(cy - r, 0, MAP), x1 = clamp(cx + r + 1, 0, MAP), y1 = clamp(cy + r + 1, 0, MAP), w = x1 - x0, h = y1 - y0, data = new Uint8Array(w * h);
-    for (let y = 0; y < h; y++) data.set(this.terrain.subarray((y0 + y) * MAP + x0, (y0 + y) * MAP + x1), y * w);
-    this.ground.terrain(x0, y0, w, h, data);
-    this.ground.invalidate([x0 - 1, y0 - 1, x1 + 1, y1 + 1]); this.scheduleSave();
-  }
-  private placeAt(mx: number, my: number) {
-    const t = this.tileAt(mx, my), it = LIBRARY[this.libIndex], k = this.placeScale;
-    const err = this.canPlace(it, t.x, t.y, this.flip, k);
-    if (err) { this.toast(err, 'warn'); return; }
-    if (it.cost > this.money) { this.toast(`Not enough money for ${it.name} ($${it.cost.toLocaleString()})`, 'warn'); return; }
-    this.money -= it.cost;
-    this.addProp(this.libIndex, t.x, t.y, this.flip, k);
-    if (it.kind === 'lamp') this.syncLamps();
-    this.scheduleSave(); this.emit();
-    this.puff(t.x, t.y, 4);
-  }
   propAt(mx: number, my: number): Prop | null {
     const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z, r = [0, 0, 0, 0];
     for (const p of this.sprites.at(X, Y)) {
@@ -340,11 +332,6 @@ export class Game {
     return null;
   }
   deleteSelected() { if (!this.selected) return; const p = this.selected, it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto) this.money += Math.round(it.cost * 0.5); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit(); }
-  flipSelected() {
-    const p = this.selected; if (!p) return; const it = LIBRARY[p.item];
-    const err = this.canPlace(it, p.x, p.y, !p.flip, p.scale, p); if (err) { this.toast(err, 'warn'); return; }
-    p.flip = !p.flip; this.propChanged(p); this.scheduleSave(); this.emit();
-  }
   scaleSelected(f: number) {
     const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, 1.6);
     const err = this.canPlace(it, p.x, p.y, p.flip, k, p); if (err) { this.toast(err, 'warn'); return; }
@@ -359,7 +346,7 @@ export class Game {
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
         const p = this.propAt(mx, my);
-        if (p) { this.selected = p; this.emit(); this.dragging = { kind: 'prop', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, prop: p, ox: p.x, oy: p.y }; return; }
+        if (p) { this.selected = p; this.emit(); return; }
         this.selected = null; this.emit();
       }
       this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false }; return;
@@ -369,8 +356,6 @@ export class Game {
       case 'road': this.roadClick(mx, my); break;
       case 'junction': this.junctionClick(mx, my); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
-      case 'terrain': this.paintAt(mx, my); this.dragging = { kind: 'paint', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
-      case 'objects': this.placeAt(mx, my); break;
     }
   }
   pointerMove(e: PointerEvent) {
@@ -380,29 +365,12 @@ export class Game {
     if (d) {
       if (Math.abs(mx - d.sx) + Math.abs(my - d.sy) > 3) d.moved = true;
       if (d.kind === 'pan') { this.cam.X = d.camX - (mx - d.sx) / this.cam.z; this.cam.Y = d.camY - (my - d.sy) / this.cam.z; this.clampCam(); }
-      else if (d.kind === 'paint') this.paintAt(mx, my);
       else if (d.kind === 'bulldoze') this.bulldozeAt(mx, my, false);
-      else if (d.kind === 'prop' && d.prop && d.moved) {
-        const t = this.tileAt(mx, my), p = d.prop, it = LIBRARY[p.item], s0 = this.tileAt(d.sx, d.sy);
-        const nx = d.ox! + (t.x - s0.x), ny = d.oy! + (t.y - s0.y);
-        this.placeError = this.canPlace(it, nx, ny, p.flip, p.scale, p);
-        p.x = nx; p.y = ny; this.propChanged(p);
-      }
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
-    if (this.tool === 'objects') this.placeError = this.canPlace(LIBRARY[this.libIndex], this.hover.x, this.hover.y, this.flip, this.placeScale);
     if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg, 5);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
   }
-  pointerUp() {
-    const d = this.dragging; this.dragging = null;
-    if (!d) return;
-    if (d.kind === 'prop' && d.prop && d.moved) {
-      const p = d.prop, it = LIBRARY[p.item];
-      if (this.placeError) { p.x = d.ox!; p.y = d.oy!; this.propChanged(p); this.toast(this.placeError, 'warn'); this.placeError = ''; }
-      if (it.kind === 'lamp') this.syncLamps();
-      this.scheduleSave();
-    }
-  }
+  pointerUp() { this.dragging = null; }
   pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; }
   doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); }
   wheel(e: WheelEvent) {
@@ -424,13 +392,10 @@ export class Game {
       case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
       case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
       case 'Delete': this.deleteSelected(); break;
-      case 'f': case 'F': if (this.selected) this.flipSelected(); else { this.flip = !this.flip; this.emit(); } break;
       case 'g': case 'G': this.showGrid = !this.showGrid; this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'r': case 'R': this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
-      case 'b': case 'B': this.setTool('objects'); break;
-      case 't': case 'T': this.setTool('terrain'); break;
       case 'x': case 'X': this.setTool('bulldoze'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case '1': case '2': case '3': case '4': case '5': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
@@ -458,8 +423,8 @@ export class Game {
   benchMode = false;
   async save() {
     if (this.benchMode) return 0;
-    const d: SaveV3 = {
-      version: SAVE_VERSION, map: MAP, terrain: rle(this.terrain),
+    const d: SaveV4 = {
+      version: SAVE_VERSION, map: MAP, seed: this.seed,
       segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style]),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain').map(n => [n.x, n.y, n.type]),
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
@@ -467,9 +432,9 @@ export class Game {
     };
     try { return await writeSave(d); } catch { return 0; }
   }
-  private load(d: SaveV3): boolean {
+  private load(d: SaveV4): boolean {
     try {
-      unrle(d.terrain, this.terrain);
+      this.genTerrain(d.seed);
       for (const [ax, ay, bx, by, cls, style] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle);
       this.net.rebuild(true);
       for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) this.edit.setNodeType(n, type as NodeType); }
@@ -480,20 +445,23 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
-    this.terrain.fill(0); this.edit.clear();
+    this.edit.clear();
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear();
     this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = []; this.traffic = null;
-    this.ground.terrain(0, 0, MAP, MAP, this.terrain);
   }
-  newTown() { this.reset(); this.seedTown(); this.afterLoad(); void this.save(); this.emit(); }
+  newTown() {
+    this.reset(); this.genTerrain(newSeed()); this.ground.terrain(0, 0, MAP, MAP, this.terrain.cls);
+    this.seedTown(); this.afterLoad(); void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
+  }
   clearTown() { this.reset(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
 
   /** A starter Maple Falls showing every road type: highway with a 45° approach, a boulevard, an avenue, a roundabout, lights with slipways, streets and a lane. */
   seedTown() {
-    const O = SEED_OFFSET, net = this.net, byId = (id: string) => LIBRARY.findIndex(i => i.id === id);
-    const legs = (pts: [number, number][]): Leg[] => pts.slice(1).map((p, i) => ({ a: { x: pts[i][0] + O, y: pts[i][1] + O }, b: { x: p[0] + O, y: p[1] + O } }));
-    const road = (pts: [number, number][], c: RoadClass, s: LineStyle) => this.edit.addLegs(legs(pts), c, s);
+    const { start } = this.terrain, Ox = clamp(start.x + 32 - 80, 8, MAP - 168), Oy = clamp(start.y + 32 - 80, 8, MAP - 168);
+    const net = this.net, byId = (id: string) => LIBRARY.findIndex(i => i.id === id);
+    const legs = (pts: [number, number][]): Leg[] => pts.slice(1).map((p, i) => ({ a: { x: pts[i][0] + Ox, y: pts[i][1] + Oy }, b: { x: p[0] + Ox, y: p[1] + Oy } }));
+    const road = (pts: [number, number][], c: RoadClass, s: LineStyle) => { const ls = legs(pts); if (!this.blockedForRoad(ls, c.h + c.walk)) this.edit.addLegs(ls, c, s); };
     road([[10, 50], [24, 36], [146, 36], [146, 64]], CLASS.road, 0);
     road([[80, 36], [80, 124]], CLASS.boulevard, 0);
     road([[36, 80], [128, 80]], CLASS.avenue, 0);
@@ -504,13 +472,13 @@ export class Game {
     road([[54, 94], [72, 94]], CLASS.lane, 0);
     road([[120, 108], [106, 108]], CLASS.street, 2);
     net.rebuild(true);
-    const typed = (x: number, y: number, t: NodeType) => { const n = net.nodeAt({ x: x + O, y: y + O }); if (n) this.edit.setNodeType(n, t); };
+    const typed = (x: number, y: number, t: NodeType) => { const n = net.nodeAt({ x: x + Ox, y: y + Oy }); if (n) this.edit.setNodeType(n, t); };
     typed(80, 36, 'slip'); typed(80, 80, 'roundabout'); typed(80, 108, 'signal'); typed(106, 80, 'signal');
     net.rebuild();
     // helpers: a sprite facing +y with its front edge on frontY; flipped sprites face +x with their front edge on frontX
-    const front = (id: string, cx: number, frontY: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = cx + O - b.dx * k / 2, y = frontY + O - (b.dy * k / 2 + b.hy * k / 2); if (!this.canPlace(it, x, y, false, k)) this.addProp(i, x, y, false, k); };
-    const side = (id: string, frontX: number, cy: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = frontX + O - (b.dy * k / 2 + b.hy * k / 2), y = cy + O - b.dx * k / 2; if (!this.canPlace(it, x, y, true, k)) this.addProp(i, x, y, true, k); };
-    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i >= 0 && !this.canPlace(LIBRARY[i], x + O, y + O, flip, k)) this.addProp(i, x + O, y + O, flip, k); };
+    const front = (id: string, cx: number, frontY: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = cx + Ox - b.dx * k / 2, y = frontY + Oy - (b.dy * k / 2 + b.hy * k / 2); if (!this.canPlace(it, x, y, false, k)) this.addProp(i, x, y, false, k); };
+    const side = (id: string, frontX: number, cy: number, k = 1) => { const i = byId(id); if (i < 0) return; const it = LIBRARY[i], b = it.boxes[0], x = frontX + Ox - (b.dy * k / 2 + b.hy * k / 2), y = cy + Oy - b.dx * k / 2; if (!this.canPlace(it, x, y, true, k)) this.addProp(i, x, y, true, k); };
+    const put = (id: string, x: number, y: number, k = 1, flip = false) => { const i = byId(id); if (i >= 0 && !this.canPlace(LIBRARY[i], x + Ox, y + Oy, flip, k)) this.addProp(i, x + Ox, y + Oy, flip, k); };
     front('town:postoffice', 45, 75.4); front('town:bakery', 54, 75.4); front('world:arcade', 63, 75.4);
     front('world:video_rental', 96, 75.4); front('town:grocery', 106, 75.4); front('world:diner', 115, 75.4); front('town:pharmacy', 123, 75.4);
     front('town:laundromat', 40, 118.9); front('town:fish_tackle', 128, 100);
@@ -520,9 +488,6 @@ export class Game {
     for (const [id, x] of [['gen:house-duplex', 66], ['world:house_1', 74], ['gen:house-l-ranch', 88], ['world:house_3', 96]] as [string, number][]) front(id, x, 120.9);
     for (const [id, y] of [['gen:house-ranch-long', 64], ['world:house_4', 72], ['gen:house-farmhouse-wrap', 88], ['gen:house-l-shape', 100]] as [string, number][]) side(id, 50.9, y);
     front('world:house_4', 60, 92.4); front('static:garage_timber', 67, 92.4);
-    const fill = (x0: number, y0: number, x1: number, y1: number, t: number) => { for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) this.terrain[(y + O) * MAP + x + O] = t; };
-    fill(90, 44, 124, 66, 1); fill(20, 44, 42, 60, 4); fill(40, 70, 50, 75, 5);
-    for (const x of [64, 72, 94, 102]) fill(x, 105, x + 1, 106, 6);
     const trees = ['world:tree_oak_0', 'world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold', 'world:tree_pine_0', 'ref:tree-spruce-blue', 'world:tree_pine_1'];
     const spots: [number, number][] = [[94, 48], [100, 50], [108, 47], [114, 52], [120, 58], [96, 60], [112, 62], [118, 48], [60, 113], [68, 113], [92, 113], [100, 113], [44, 86], [46, 100], [112, 90], [118, 96], [130, 56], [134, 48], [30, 72], [36, 66], [138, 92], [132, 100], [60, 44], [66, 48], [24, 60]];
     spots.forEach(([x, y], i) => put(trees[(i * 5) % trees.length], x, y, 0.95 + ((i * 7) % 4) * 0.08));
@@ -533,7 +498,8 @@ export class Game {
     put('world:car_1', 82, 60); put('static:compact_n', 76, 100); put('world:car_3', 66, 106.9); put('static:compact_e', 96, 109.1, 1, true);
     put('world:scarecrow', 30, 52, 0.9); put('ref:halloween-hay-bales', 34, 56, 0.9); put('world:pumpkin_0', 59, 101.5, 0.9); put('world:pumpkin_1', 91.5, 101.6, 0.9); put('gen:inflatable-pumpkin', 73, 117.8, 0.9);
     put('world:candy_stand', 110, 58, 0.9); put('ref:halloween-pumpkin-cluster', 48, 72.5, 0.9); put('ref:halloween-sheet-ghost', 97, 101, 0.9);
-    this.cam = { X: worldX(84 + O, 86 + O), Y: worldY(84 + O, 86 + O), z: 0.17 };
+    const cx = start.x + 32, cy = start.y + 32;
+    this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy);
   }
   /** street lamps on the sidewalk's outer half along every kerbed street, both sides, staggered */
   lampsAlongRoads(net: RoadNetwork, every = 1) {
@@ -689,12 +655,6 @@ export class Game {
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = p === this.selected ? 'rgba(255,190,60,0.25)' : 'rgba(255,255,255,0.12)'; ctx.fill(); ctx.strokeStyle = p === this.selected ? '#ffbe3c' : 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
     }
-    if (this.tool === 'objects' && this.hover && !this.dragging) {
-      const it = LIBRARY[this.libIndex], k = this.placeScale, f = this.footprint(it, this.hover.x, this.hover.y, this.flip, k), ok = !this.placeError;
-      this.setIso(ctx); ctx.beginPath(); ctx.rect(f.x0, f.y0, f.x1 - f.x0, f.y1 - f.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = ok ? 'rgba(90,220,120,0.3)' : 'rgba(240,70,60,0.35)'; ctx.fill(); ctx.strokeStyle = ok ? '#6ee7a0' : '#f87171'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.globalAlpha = ok ? 0.8 : 0.45; this.drawSprite2D(ctx, { item: this.libIndex, x: this.hover.x, y: this.hover.y, flip: this.flip, scale: k, ...f }); ctx.globalAlpha = 1;
-    }
     // construction front: striped barrier, cones and dust
     for (const b of this.builds) {
       const front = this.revealFront(b, now); if (front >= b.total) continue;
@@ -716,15 +676,6 @@ export class Game {
       const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
-  }
-  /** one sprite on the 2D overlay (placement ghost), from the atlas page image */
-  private drawSprite2D(ctx: CanvasRenderingContext2D, d: Drawable) {
-    const it = LIBRARY[d.item], img = this.pageImages[it.tex[0]]; if (!img?.naturalWidth) return;
-    const r = spriteRect(d), ze = this.cam.z * this.dpr, W = img.naturalWidth, H = img.naturalHeight;
-    const x0 = (r[0] - this.cam.X) * ze + this.cw / 2, y0 = (r[1] - this.cam.Y) * ze + this.ch / 2, w = (r[2] - r[0]) * ze, h = (r[3] - r[1]) * ze;
-    const [, u0, v0, u1, v1] = it.tex;
-    ctx.save(); if (d.flip) { ctx.translate(x0 + w, y0); ctx.scale(-1, 1); } else ctx.translate(x0, y0);
-    ctx.drawImage(img, u0 * W, v0 * H, (u1 - u0) * W, (v1 - v0) * H, 0, 0, w, h); ctx.restore();
   }
 
   private drawGroundOverlays(ctx: CanvasRenderingContext2D) {
@@ -753,12 +704,6 @@ export class Game {
       const pc = this.hoverPiece, cls = pc.seg.cls;
       this.setIso(ctx); ctx.beginPath(); strip([{ a: pc.p0, b: pc.p1 }], cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke();
-    } else if (this.tool === 'terrain' && this.hover) {
-      const r = this.brush, cx = Math.floor(this.hover.x), cy = Math.floor(this.hover.y);
-      this.setIso(ctx); ctx.beginPath();
-      for (let y = cy - r + 1; y <= cy + r - 1; y++) for (let x = cx - r + 1; x <= cx + r - 1; x++) { if (r > 1 && Math.hypot(x + 0.5 - this.hover.x, y + 0.5 - this.hover.y) > r - 0.3) continue; ctx.rect(x, y, 1, 1); }
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
     }
   }
 }

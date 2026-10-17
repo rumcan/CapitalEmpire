@@ -55,8 +55,6 @@ export function buildBenchmark(g: Game, size = 1) {
     for (let n = 0; n < 60; n++) put(pick(trees), x0 + rnd() * (x1 - x0), my - 3 + rnd() * 6, rnd() < 0.5, 0.7 + rnd() * 0.5);
     for (let n = 0; n < 50; n++) put(pick(yard), x0 + rnd() * (x1 - x0), my - 6 + rnd() * 12, rnd() < 0.5, 0.9);
     for (let n = 0; n < 10; n++) put(pick(furniture), x0 + rnd() * (x1 - x0), y1 + 1.2, false, 0.9);
-    // some ground variety
-    if ((bx + by) % 3 === 0) for (let y = Math.floor(my - 6); y < my + 6; y++) for (let x = Math.floor(x0); x < x1; x++) g.terrain[y * MAP + x] = 1 + ((bx + by) % 2) * 3;
   }
   console.log('[bench] props', g.props.size, Math.round(performance.now() - tNet), 'ms, heap', mem());
   const lamps = g.lampsAlongRoads(g.net, 2);
