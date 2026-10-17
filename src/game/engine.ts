@@ -2,7 +2,7 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLA
 import { ATLAS_PAGES, LIBRARY } from './library';
 import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type SegKind } from './network';
 import { NetEditor } from './netops';
-import { STRUCT_COST, STRUCT_MAX, longestRun, splitByTerrain, structureLengths } from './structures';
+import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
@@ -575,6 +575,19 @@ export class Game {
     put('world:candy_stand', 110, 58, 0.9); put('ref:halloween-pumpkin-cluster', 48, 72.5, 0.9); put('ref:halloween-sheet-ghost', 97, 101, 0.9);
     const cx = start.x + 32, cy = start.y + 32;
     this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy);
+    this.buildHighway();
+  }
+  /** the highway from its map edge entry to the starter town's node nearest the entry (the start block centre if the town has no nodes) */
+  private buildHighway() {
+    const t = this.terrain, h = t.highway, hw = CLASS.road.h + CLASS.road.walk;
+    if (h.x < 0) return;
+    let target = { x: t.start.x + t.start.size / 2, y: t.start.y + t.start.size / 2 }, best = Infinity;
+    for (const n of this.net.nodes.values()) { const d = (n.x - h.x) ** 2 + (n.y - h.y) ** 2; if (d < best) { best = d; target = { x: n.x, y: n.y }; } }
+    const pts = highwayRoute(h, target, hw, (x, y) => classAt(t, x, y));
+    const legs0: Leg[] = []; for (let i = 1; i < pts.length; i++) legs0.push({ a: pts[i - 1], b: pts[i] });
+    const { legs, kinds } = splitByTerrain(legs0, hw, (x, y) => classAt(t, x, y));
+    for (const p of this.propsNearLegs(legs, hw)) if (!LIBRARY[p.item].big) this.removeProp(p);
+    this.edit.addLegs(legs, CLASS.road, 0, kinds);
   }
   /** street lamps on the sidewalk's outer half along every kerbed street, both sides, staggered */
   lampsAlongRoads(net: RoadNetwork, every = 1) {

@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SK, type Leg } from '../src/game/network';
-import { longestRun, splitByTerrain, structureLengths } from '../src/game/structures';
+import { highwayRoute, longestRun, splitByTerrain, structureLengths } from '../src/game/structures';
 import { TC } from '../src/game/terrain/types';
 
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
@@ -39,4 +39,26 @@ test('a leg entirely on ground stays one ground leg, and the lengths add up', ()
   near(b, 13, 1e-6); near(t, 20, 1e-6); near(g, 47, 1e-6);
   near(longestRun(split.legs, split.kinds, SK.BRIDGE), 13, 1e-6);
   near(longestRun(split.legs, split.kinds, SK.TUNNEL), 20, 1e-6);
+});
+
+test('the highway bends over the water to the target: 24 tiles straight in, then one right angle, the corner without hill', () => {
+  const classAt = (x: number, y: number) => (y >= 50 && y < 60 ? TC.WATER : x >= 100 && y >= 100 ? TC.HILL : TC.GROUND);
+  const pts = highwayRoute({ x: 0, y: 20, edge: 'W' }, { x: 80, y: 140 }, 3.75, classAt);
+  assert.deepEqual(pts[0], { x: 0, y: 20 });
+  assert.deepEqual(pts[1], { x: 24, y: 20 });
+  assert.deepEqual(pts[pts.length - 1], { x: 80, y: 140 });
+  for (let i = 1; i < pts.length; i++) assert.ok(pts[i].x === pts[i - 1].x || pts[i].y === pts[i - 1].y, 'a leg is not axis-aligned');
+  const legs: Leg[] = []; for (let i = 1; i < pts.length; i++) legs.push({ a: pts[i - 1], b: pts[i] });
+  const { kinds } = splitByTerrain(legs, 3.75, classAt);
+  assert.ok(!kinds.includes(SK.TUNNEL), 'the chosen highway goes through a hill');
+});
+
+test('the highway takes the corner that avoids a hill when the other corner would tunnel', () => {
+  // water across y 50..60 for every x (both candidates bridge it); hill at x >= 100 for y 60..120 (only the x-first corner hits it)
+  const classAt = (x: number, y: number) => (y >= 50 && y < 60 ? TC.WATER : x >= 100 && y >= 60 && y < 120 ? TC.HILL : 0);
+  const pts = highwayRoute({ x: 0, y: 20, edge: 'W' }, { x: 130, y: 140 }, 3.75, classAt);
+  assert.deepEqual(pts[pts.length - 1], { x: 130, y: 140 });
+  assert.deepEqual(pts[2], { x: 24, y: 140 });
+  const legs: Leg[] = pts.slice(1).map((b, i) => ({ a: pts[i], b }));
+  assert.equal(splitByTerrain(legs, 3.75, classAt).kinds.includes(SK.TUNNEL), false);
 });

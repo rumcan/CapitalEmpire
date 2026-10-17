@@ -69,6 +69,23 @@ export function structureLengths(legs: Leg[], kinds: SegKind[]): [number, number
   return out;
 }
 
+/** the highway's straight run in from the map edge, in tiles */
+const HIGHWAY_IN = 24;
+
+/** the highway's approach: 24 tiles straight in from the border entry, then one right-angle bend to the target; the cheaper bend wins (C1 on a tie) */
+export function highwayRoute(h: { x: number; y: number; edge: 'N' | 'E' | 'S' | 'W' }, target: Pt, hw: number, classAt: (x: number, y: number) => number): Pt[] {
+  const P0 = { x: Math.round(h.x), y: Math.round(h.y) }, d = h.edge === 'N' ? { x: 0, y: 1 } : h.edge === 'S' ? { x: 0, y: -1 } : h.edge === 'W' ? { x: 1, y: 0 } : { x: -1, y: 0 };
+  const P1 = { x: P0.x + d.x * HIGHWAY_IN, y: P0.y + d.y * HIGHWAY_IN }, T = { x: Math.round(target.x), y: Math.round(target.y) };
+  const cands = [{ x: T.x, y: P1.y }, { x: P1.x, y: T.y }].map(C => [P0, P1, C, T].filter((p, i, a) => i === 0 || p.x !== a[i - 1].x || p.y !== a[i - 1].y));
+  const score = (pts: Pt[]) => {
+    const legs: Leg[] = []; for (let i = 1; i < pts.length; i++) legs.push({ a: pts[i - 1], b: pts[i] });
+    const s = splitByTerrain(legs, hw, classAt), lens = structureLengths(s.legs, s.kinds);
+    return STRUCT_COST[SK.GROUND] * lens[SK.GROUND] + STRUCT_COST[SK.BRIDGE] * lens[SK.BRIDGE] + STRUCT_COST[SK.TUNNEL] * lens[SK.TUNNEL];
+  };
+  const s1 = score(cands[0]), s2 = score(cands[1]);
+  return s2 < s1 - 1e-6 ? cands[1] : cands[0];
+}
+
 /** the longest chain of consecutive legs of this kind whose ends touch, in tiles */
 export function longestRun(legs: Leg[], kinds: SegKind[], kind: SegKind): number {
   let best = 0, run = 0, end: Pt | null = null;
