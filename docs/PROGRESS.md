@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-17, end of the Phase 0 session._
+_Last updated: 2026-10-17, start of the Phase 1 session (worker PC working)._
 
 ## Where we are
 
@@ -91,15 +91,10 @@ Other numbers:
 | Usage | `scripts/worker/run.sh "npm test"`, `npm run worker:bench`, `scripts/worker/fetch.sh output/bench` |
 | Rules | The worker clone is read-only: never commit or push from it. Rebooting the worker also stops its Hunyuan3D server. |
 
-**Status: blocked on one owner step.** The dev PC's key is not authorised on the worker yet (`Permission denied
-(publickey)`). From the laptop that already has access, append this line to
-`C:\ProgramData\ssh\administrators_authorized_keys` on the worker:
-
-```
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKnUWYJIP/nOxV1aL8R9ZNbiXJee/qDGBdLBwaQEvM55 capitalempire-dev@IVCH-Francois-Smit
-```
-
-Then check from the dev PC with `ssh cworker "echo ok"`, and run `npm run worker:test` once to create the clone.
+**Status: working (2026-10-17).** The dev PC's key is authorised. The first attempt was rejected; re-saving
+`administrators_authorized_keys` as ASCII (PowerShell's `>>` writes UTF-16) and limiting it to Administrators and
+SYSTEM (`icacls ... /inheritance:r`) fixed it. The first `npm run worker:test` created the clone: 6/6 tests pass, 26 s including `npm install`. `run.sh` sends a
+snapshot of the local working tree, so uncommitted changes are tested too.
 
 ## Next: Phase 1, desert terrain
 
