@@ -3,9 +3,9 @@
  *  keeps showing its old picture until the new one arrives, and every visible chunk falls back to the planner map. */
 import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
 import { GROUND_ART } from './ground-art';
-import type { FromWorker, NetOp, TileKind, ToWorker } from './ground-protocol';
+import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker } from './ground-protocol';
 import type { GLRenderer } from './gl';
-import type { BBox } from './network';
+import { unionBox, type BBox } from './network';
 import type { Waterway } from './terrain/types';
 import GroundWorker from './ground.worker?worker&inline';
 
@@ -21,6 +21,8 @@ const SIZE: Record<TileKind, [number, number]> = { g: [CHUNK_W, CHUNK_H], m: [MI
 
 export class GroundCache {
   tiles = new Map<number, Tile>();
+  /** the lot patches last sent, by lot key (to find the old boxes of edits) */
+  private lotPatches = new Map<string, LotPatch[]>();
   private workers: Worker[] = []; private inflight: number[] = []; private reqs = new Map<number, { t: Tile; gen: number; w: number }>();
   private nextId = 1; private want: { t: Tile; L: number; pri: number }[] = [];
   ready = 0; private isReady: boolean[] = []; errors: string[] = []; bakeMs = 0; baked = 0;
@@ -41,6 +43,19 @@ export class GroundCache {
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }
   terrain(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.broadcast({ t: 'terrain', cls: t.cls, height: t.height, waters: t.waters }); }
   blocks(data: Float32Array) { this.broadcast({ t: 'blocks', data }); }
+  /** the lot patches of the keys in `set` replace their old ones, `drop` removes keys; the chunks under the old and new patches go stale */
+  lotGround(set: [string, LotPatch[]][], drop: string[]) {
+    if (!set.length && !drop.length) return;
+    let box: BBox | null = null;
+    for (const k of drop) { const old = this.lotPatches.get(k); if (old) { const b = patchBox(old); if (b) box = unionBox(box, b); this.lotPatches.delete(k); } }
+    for (const [k, ps] of set) {
+      const old = this.lotPatches.get(k); if (old) { const b = patchBox(old); if (b) box = unionBox(box, b); }
+      const b = patchBox(ps); if (b) box = unionBox(box, b);
+      if (ps.length) this.lotPatches.set(k, ps); else this.lotPatches.delete(k);
+    }
+    this.broadcast({ t: 'lotground', set, drop });
+    if (box) this.invalidate([box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], false, 0, 'gmp');
+  }
 
   tile(kind: TileKind, i: number, j: number) {
     const k = key(kind, i, j); let t = this.tiles.get(k);

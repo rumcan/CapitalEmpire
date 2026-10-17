@@ -5,6 +5,7 @@ import { NetEditor, netToOps } from './netops';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
+import { lotBatch, type LotPatch } from './ground-protocol';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV4 } from './save';
 import { CAR_COLOURS } from './traffic';
@@ -44,6 +45,8 @@ export class Game {
   /** tunnel mouths of the network: key of the last synced set, and the points themselves */
   private portalKey = ''; private portalPts: PortalRec[] = [];
   ground: GroundCache;
+  /** lot ground edits made since the last frame (key -> patches, or null to drop), sent as one message per frame */
+  private lotPending = new Map<string, LotPatch[] | null>();
   /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
   pageImages: HTMLImageElement[] = []; private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
   ready = false; loadProgress = 0;
@@ -239,6 +242,9 @@ export class Game {
     this.ground.lamps(new Float32Array(pts.flatMap(p => [p.x, p.y])));
     for (const b of changed) this.ground.invalidate(b, false, 0, 'gm');
   }
+  /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
+  setLotGround(key: string, patches: LotPatch[] | null) { this.lotPending.set(key, patches); }
+  private flushLotGround() { if (!this.lotPending.size) return; const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop); }
   /** median trees, roundabout trees and traffic lights follow the road network (only what the last rebuild changed) */
   private syncAutoProps(added: AutoProp[], removed: AutoProp[]) {
     for (const a of removed) { const p = this.autoByKey.get(autoKey(a)); if (p) this.removeProp(p); }
@@ -646,6 +652,7 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
+    this.flushLotGround();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();

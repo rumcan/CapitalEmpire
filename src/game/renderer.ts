@@ -5,6 +5,7 @@ import { POOL_ANCHOR, PPM } from './ground-art';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
+import { quadBox, type LotPatch } from './ground-protocol';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -18,6 +19,12 @@ export interface Camera { X: number; Y: number; z: number }
 /** building footprints for the planner map: x0, y0, x1, y1, colour index (tiles), five floats each */
 export type PlanBlocks = Float32Array;
 export const PLAN_BLOCK_COLOURS = ['#c9b79a', '#d98f5a', '#e8d27a', '#8fae6a', '#6c7c8c'];
+/** lot patches are indexed in cells of this many tiles */
+const LOT_CELL = 32;
+/** the asphalt of the planner map (the same colour as the roads) */
+const PLAN_ASPHALT = '#3c4150';
+/** a patch's quad as a path (tile space) */
+const quadPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); p.lineTo(pts[2], pts[3]); p.lineTo(pts[4], pts[5]); p.lineTo(pts[6], pts[7]); p.closePath(); return p; };
 
 /** Paints ground chunks (the full-quality bake) and planner chunks (the far-zoom map). Runs in the ground workers. */
 export class GroundPainter {
@@ -32,9 +39,32 @@ export class GroundPainter {
   /** slope magnitude per height sample (bare rock on the steep faces) */
   slope: Float32Array = new Float32Array(HS * HS);
   waters: { w: Waterway; box: BBox }[] = [];
+  /** lot ground patches by lot key, and a grid (LOT_CELL tiles) of the patches they cover, keyed by cell */
+  lotPatches = new Map<string, LotPatch[]>();
+  private lotGrid = new Map<number, LotPatch[]>();
   constructor(public terrain: Uint8Array, public net: RoadNetwork, public tex: Textures) {}
   /** take a new terrain: classes, height samples and waterways */
   setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
+  /** apply lot ground edits: each key in `set` replaces its patches, each key in `drop` loses them */
+  setLotGround(set: [string, LotPatch[]][], drop: string[]) {
+    for (const k of drop) this.lotRemove(k);
+    for (const [k, ps] of set) { this.lotRemove(k); if (ps.length) { this.lotPatches.set(k, ps); for (const p of ps) this.lotCells(p, c => { const l = this.lotGrid.get(c); if (l) l.push(p); else this.lotGrid.set(c, [p]); }); } }
+  }
+  private lotRemove(k: string) {
+    const old = this.lotPatches.get(k); if (!old) return; this.lotPatches.delete(k);
+    for (const p of old) this.lotCells(p, c => { const l = this.lotGrid.get(c); if (!l) return; const i = l.indexOf(p); if (i >= 0) l.splice(i, 1); if (!l.length) this.lotGrid.delete(c); });
+  }
+  /** the grid cells a patch's box covers */
+  private lotCells(p: LotPatch, fn: (c: number) => void) {
+    const b = quadBox(p.pts);
+    for (let cx = Math.floor(b[0] / LOT_CELL); cx <= Math.floor(b[2] / LOT_CELL); cx++) for (let cy = Math.floor(b[1] / LOT_CELL); cy <= Math.floor(b[3] / LOT_CELL); cy++) fn((cx + 1024) * 4096 + cy + 1024);
+  }
+  /** the lot patches that may touch a tile box (each once) */
+  lotsIn(b: BBox): LotPatch[] {
+    const out = new Set<LotPatch>();
+    for (let cx = Math.floor(b[0] / LOT_CELL); cx <= Math.floor(b[2] / LOT_CELL); cx++) for (let cy = Math.floor(b[1] / LOT_CELL); cy <= Math.floor(b[3] / LOT_CELL); cy++) for (const p of this.lotGrid.get((cx + 1024) * 4096 + cy + 1024) ?? []) out.add(p);
+    return [...out];
+  }
   private buffer(name: string, W: number, H: number) {
     let c = this.scratch.get(name); if (!c) { c = canvas(W, H); this.scratch.set(name, c); }
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
@@ -82,6 +112,8 @@ export class GroundPainter {
     ctx2d(sb).putImageData(new ImageData(sm.data as Uint8ClampedArray<ArrayBuffer>, sm.W, sm.H), 0, 0); ctx.setTransform(M); ctx.drawImage(sb, tx0, ty0, sm.W / 0.25, sm.H / 0.25);
     shape('river', 0, this.planColour('water'));
     shape('creek', 0, this.planColour('water'));
+    // lot ground as flat fills (before the roads, so the kerbs stay on top)
+    for (const p of this.lotsIn(box)) { ctx.fillStyle = p.tex === 'asphalt' ? PLAN_ASPHALT : this.planColour(p.tex); ctx.fill(quadPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), this.planColour('roadgravel')); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
@@ -152,6 +184,28 @@ export class GroundPainter {
     const brs = net.bridges.filter(b => vis(b.bbox)), ports = net.portals.filter(p => vis(p.bbox));
     /** the chunk transform shifted dy world px straight down the screen */
     const shiftM = (dy: number) => new DOMMatrix([1, 0, 0, 1, 0, dy * L]).multiply(M);
+    // ---- 1a. lot ground (driveways, walks, car parks, yards) before the verges and roads: each patch in its surface,
+    //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines
+    const lots = this.lotsIn(box);
+    if (lots.length) {
+      const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('base', L)) : null;
+      for (const p of lots) {
+        const path = quadPath(p.pts);
+        ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : pat(p.tex); ctx.fill(path);
+        if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad') {
+          ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
+        }
+      }
+      const bays = lots.filter(p => p.lines && p.lines.length);
+      if (bays.length) {
+        const lb = this.buffer('lotLines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineCap = 'butt'; lg.lineJoin = 'round';
+        lg.strokeStyle = 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(0.08, minW); lg.beginPath();
+        for (const p of bays) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); }
+        lg.stroke(); lg.setTransform(M); lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = this.screenPattern(lg, 'wear', L, X0, Y0, Minv); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
+        composite(lb);
+      }
+      ctx.setTransform(M);
+    }
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
     for (const b of brs) {
       const path = linePath(b.pts, false);
