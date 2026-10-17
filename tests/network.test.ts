@@ -1,8 +1,9 @@
 // Headless network tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
+import { CLASS, RoadNetwork, type ClassId, type Leg, type Route } from '../src/game/network';
 import { NetEditor, applyOps, netToOps } from '../src/game/netops';
+import { CTL, LaneGraph, type Movement } from '../src/game/sim/lanes';
 import { rle, unrle } from '../src/game/save';
 import type { NetOp } from '../src/game/ground-protocol';
 
@@ -112,4 +113,31 @@ test('a street crossing a bridge splits it, and both halves keep the bridge kind
 test('terrain run-length encoding round-trips', () => {
   const a = new Uint8Array(5000); a.fill(3, 100, 900); a.fill(1, 4000);
   assert.deepEqual(unrle(rle(a), new Uint8Array(a.length)), a);
+});
+
+test('a gravel street crossing an avenue: the avenue is the major pair, the gravel arms wait at a priority', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.avenue, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.gravel, 0); e.commit();
+  const g = new LaneGraph(); g.update(e.net);
+  const n = e.net.nodeAt({ x: 50, y: 50 })!;
+  const mv = g.moves.filter((m): m is Movement => !!m && m.node === n);
+  assert.equal(n.arms.length, 4);
+  assert.equal(mv.length, 12);
+  // the avenue's movements run free; the gravel's wait (STOP, as the avenue is class 3) and never take priority
+  for (const m of mv) {
+    const c = g.lanes[m.paths[0][1]]!;
+    if (g.dsegs[m.from]!.seg.cls.id === 'avenue') assert.equal(c.ctl, CTL.FREE, c.key);
+    else { assert.equal(c.ctl, CTL.STOP, c.key); assert.ok(c.prio <= 1, c.key); }
+  }
+});
+
+test('gravel routes get no decals, while a road of the same length does', () => {
+  const decals = (id: ClassId) => {
+    const e = new NetEditor(new RoadNetwork());
+    e.addLegs([leg(0, 0, 60, 0)], CLASS[id], 0); e.commit();
+    const r = [...e.net.routes][0];
+    return (e.net as unknown as { routeFeatures(r: Route): { decals: unknown[] } }).routeFeatures(r).decals.length;
+  };
+  assert.equal(decals('gravel'), 0);
+  assert.ok(decals('road') > 0);
 });

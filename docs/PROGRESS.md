@@ -12,7 +12,7 @@ _Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junct
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | **Next.** Steps at the end |
+| 3. Lot Composer + growth | **In progress** (step 1 gravel done). Steps at the end |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
@@ -410,3 +410,10 @@ Phase 3 (Lot Composer + growth) at the first step not marked DONE and carry on t
 between them. Delegate coding to haiku-coder and checks/benchmarks to haiku-runner (worker PC via
 scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go. Use
 look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for headless screenshots."
+
+### Phase 3 progress
+1. **Gravel road class. DONE** (2026-10-18). `gravel` is the first class (key 1): 5 m, one lane each way at 8 m/s,
+   gravel verges, no kerbs, $40 per 2 m, `order` -1 (below every paved class: it yields to them and paints under
+   them at junctions), no decals. New painted texture `roadgravel` (dusty grey-brown with pebbles; `TEX_VERSION`
+   tex-5); the planner uses its mean colour. `window.__CLASSES` is exposed next to `__game` for headless scripts
+   (`look-gravel.mjs`).

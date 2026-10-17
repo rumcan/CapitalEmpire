@@ -1,10 +1,10 @@
 import { MAP, mulberry } from './iso';
 import type { LineStyle } from './types';
-export type Surface = 'asphalt' | 'asphaltDark' | 'asphaltWorn';
+export type Surface = 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'gravel';
 export type WalkKind = 'slabs' | 'gravel';
 
 /* ---------- road classes ---------- */
-export type ClassId = 'lane' | 'street' | 'road' | 'avenue' | 'boulevard';
+export type ClassId = 'gravel' | 'lane' | 'street' | 'road' | 'avenue' | 'boulevard';
 export type NodeType = 'plain' | 'signal' | 'slip' | 'roundabout';
 export interface Pt { x: number; y: number }
 export interface Leg { a: Pt; b: Pt }
@@ -31,6 +31,7 @@ export interface RoadClass {
   laneCentres: number[];
 }
 export const CLASSES: RoadClass[] = [
+  { id: 'gravel', name: 'Gravel', desc: 'Unpaved · 1 lane each way · 5 m · dusty', h: 1.25, walk: 0.35, walkTex: 'gravel', median: 0, shoulder: 0, tex: 'gravel', rConcave: 1.2, bulb: 0.6, cost: 40, order: -1, crosswalk: false, laneLine: 0, centre: 'none', laneCentres: [0.62] },
   { id: 'lane', name: 'Lane', desc: 'Single lane · 4 m · footpath', h: 1, walk: 0.6, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltWorn', rConcave: 0.8, bulb: 0, cost: 70, order: 0, crosswalk: false, laneLine: 0, centre: 'none', laneCentres: [0] },
   { id: 'street', name: 'Street', desc: '2 lanes · 6.5 m · sidewalks', h: 1.625, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphalt', rConcave: 1.75, bulb: 1, cost: 150, order: 1, crosswalk: true, laneLine: 0, centre: 'style', laneCentres: [0.8] },
   { id: 'road', name: 'Road', desc: '2 lanes + shoulders · 12 m · yellow edge lines', h: 3, walk: 0.75, walkTex: 'gravel', median: 0, shoulder: 1, tex: 'asphaltDark', rConcave: 2.5, bulb: 0, cost: 220, order: 2, crosswalk: false, laneLine: 0, centre: 'dashed', laneCentres: [1] },
@@ -716,6 +717,7 @@ export class RoadNetwork {
     return changed;
   }
   private decalsFor(r: Route, out: Decal[]) {
+    if (r.cls.id === 'gravel') return; // unpaved: no manholes, drains or patches
     const cls = r.cls, p0 = r.pts[0], rng = mulberry(((p0.x * 73856093) ^ (p0.y * 19349663) ^ (cls.order * 83492791)) >>> 0);
     const curbed = cls.walkTex === 'slabs';
     const weights: [DecalType, number][] = curbed ? [['manhole', 2], ['drain', 2.5], ['oil', 1.5], ['patch', cls.id === 'lane' ? 2.5 : 1]] : [['manhole', 0.4], ['oil', 2], ['patch', 2]];

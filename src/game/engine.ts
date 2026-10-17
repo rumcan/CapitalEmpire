@@ -479,7 +479,7 @@ export class Game {
       case 'j': case 'J': this.setTool('junction'); break;
       case 'x': case 'X': this.setTool('bulldoze'); break;
       case 'v': case 'V': this.setTool('select'); break;
-      case '1': case '2': case '3': case '4': case '5': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
+      case '1': case '2': case '3': case '4': case '5': case '6': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
       case '-': case '_': this.zoomAt(clamp(this.cam.z / 1.25, ZOOM_MIN, ZOOM_MAX)); break;
       case ' ': e.preventDefault(); break;

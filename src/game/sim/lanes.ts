@@ -44,7 +44,7 @@ interface ArmIO { a: Arm; i: number; inD: number; outD: number }
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
-const VMAX: Record<string, number> = { lane: 8, street: 11, road: 17, avenue: 14, boulevard: 17 };
+const VMAX: Record<string, number> = { gravel: 8, lane: 8, street: 11, road: 17, avenue: 14, boulevard: 17 };
 const isLive = (net: RoadNetwork, n: Node) => n.segs.length > 0 && net.nodes.get(keyOf(n)) === n;
 const armOf = (n: Node, s: Seg): Arm | undefined => n.arms.find(a => a.seg === s);
 /** offset of lane k of a seg's class from the centre line, tiles (a single lane at [0] sits at 0.45) */

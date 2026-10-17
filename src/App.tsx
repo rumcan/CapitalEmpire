@@ -25,7 +25,8 @@ export default function App() {
     const canvas = overlayRef.current!;
     let g: Game;
     try { g = new Game(canvasRef.current!, canvas); } catch (e) { setFatal((e as Error).message); return; }
-    (window as unknown as { __game: Game }).__game = g;
+    // debug and headless-screenshot hooks
+    Object.assign(window as unknown as Record<string, unknown>, { __game: g, __CLASSES: CLASSES });
     setGame(g);
     const unsub = g.subscribe(bump);
     g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));

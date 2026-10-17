@@ -84,7 +84,7 @@ export class GroundPainter {
     shape('creek', 0, this.planColour('water'));
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
-    fill(v.walkF, '#9a9184'); fill(v.asphF, '#3c4150'); fill(v.medianF, '#557a35');
+    fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), this.planColour('roadgravel')); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
     ctx.fillStyle = '#557a35'; for (const r of v.rbIslands) { ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill(); }
     // tunnel routes have no road fills, so the planner marks them with a dashed line
     ctx.strokeStyle = 'rgba(60,65,80,0.85)'; ctx.lineCap = 'butt'; ctx.setLineDash([3, 2]);
@@ -208,8 +208,11 @@ export class GroundPainter {
       // plain (verge) roads: a soft dark edge instead of a curb
       if (plain.length) { ctx.strokeStyle = 'rgba(12,10,8,0.5)'; for (const f of plain) ring(ctx, f, Math.max(0.2, 2 * minW)); }
       // ---- 5. asphalt: the painted mosaic in ground space, per class tone
+      // gravel roads are painted first, with their own pattern and no tones, so a paved road meeting one paints over it
+      const gravelF = asph.filter(f => f.tex === 'gravel'), paved = asph.filter(f => f.tex !== 'gravel');
+      if (gravelF.length) { const gp = pat('roadgravel'); for (const f of gravelF) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = gp; ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = gp; ctx.fill(f.path); } } }
       const base = this.groundPattern(ctx, tex.mosaicFor('base', L));
-      for (const f of asph) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = base; ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = base; ctx.fill(f.path); } }
+      for (const f of paved) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = base; ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = base; ctx.fill(f.path); } }
       // class tones as solid masks composited once (overlapping strokes and discs must not accumulate)
       const dark = asph.filter(f => f.tex === 'asphaltDark'), worn = asph.filter(f => f.tex === 'asphaltWorn');
       const toneLayer = (feats: Feature[], col: string, op: GlobalCompositeOperation, alpha: number) => {

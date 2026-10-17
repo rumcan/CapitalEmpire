@@ -7,8 +7,8 @@ import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, POOL_ANCHOR
  *    lamp-light response (manifest.json light.DMU / DSG) at I = 0.4 and I = 0.9 for the reflection pools;
  *  - grass: the two approved 256 px grass paintings mixed in hex patches and by low-frequency noise (screen space);
  *  - curbs and slabs: colours and sprites straight from the kit. */
-export type TexName = 'grass' | 'meadow' | 'dirt' | 'gravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek' | 'rock';
-const PAINTED: TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear', 'forest', 'water', 'bank', 'creek', 'rock'];
+export type TexName = 'grass' | 'meadow' | 'dirt' | 'gravel' | 'roadgravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek' | 'rock';
+const PAINTED: TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear', 'forest', 'water', 'bank', 'creek', 'rock', 'roadgravel'];
 /** screen-space textures are authored at 0.8 px per world px; mip-mapped per cache level */
 export const AUTHOR = 0.8;
 const K = AUTHOR / 0.6;
@@ -134,6 +134,7 @@ function gen(name: TexName): Cnv {
   switch (name) {
     case 'dirt': ctx.fillStyle = '#56402f'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 260, ['#2e201655', '#8a644044', '#3d2c2255'], 40, 120); speckle(ctx, r, 22000, ['#4a3628', '#624a36', '#3e2d22', '#6e5440', '#523c2d']); pebbles(ctx, r, 420, ['#7a7068', '#6b6058', '#8a8078'], 1.2, 2.6); leaves(ctx, r, 90); break;
     case 'gravel': ctx.fillStyle = '#5b5752'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#3a373355', '#7c766e33'], 40, 110); pebbles(ctx, r, 9000, ['#6b6660', '#49453f', '#7c766e', '#3c3935', '#857f76', '#5d5953'], 0.9, 2.2); leaves(ctx, r, 60); break;
+    case 'roadgravel': ctx.fillStyle = '#62574a'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 200, ['#8d7f6646', '#a0927644'], 40, 130); patches(ctx, r, 120, ['#3f362b55', '#4b41345a'], 30, 100); speckle(ctx, r, 26000, ['#574d40', '#74685a', '#4a4136', '#857865', '#6a5e4e']); pebbles(ctx, r, 5200, ['#8a7f6e', '#5e5446', '#a09482', '#4c4338', '#77695a'], 0.9, 2.4); leaves(ctx, r, 30); break;
     case 'forest': ctx.fillStyle = '#3a2a1c'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 240, ['#1e140c66', '#3c4a2244', '#6a4a2444'], 40, 140); speckle(ctx, r, 18000, ['#2e2016', '#4a3524', '#3a2c1c', '#55402a']); cracks(ctx, r, 120, 'rgba(30,20,12,0.55)', 0.9); pebbles(ctx, r, 120, ['#5a5048', '#6a6058'], 1.0, 2.0); leaves(ctx, r, 420); break;
     case 'water': ctx.fillStyle = '#14283a'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 160, ['#0c1a2a66', '#1e3a5044', '#24485a33'], 60, 200); ripples(ctx, r, 1400, ['rgba(120,160,190,0.10)', 'rgba(120,160,190,0.18)', 'rgba(150,185,210,0.25)', 'rgba(10,20,32,0.35)']); break;
     case 'bank': ctx.fillStyle = '#3b3226'; ctx.fillRect(0, 0, BASE_W, BASE_H); patches(ctx, r, 220, ['#2a231a66', '#4e443455', '#2f3a2a44'], 40, 120); speckle(ctx, r, 20000, ['#342c22', '#463c2e', '#2c251c', '#524636']); pebbles(ctx, r, 900, ['#6a645c', '#57524a', '#7a746a'], 0.9, 2.2); blades(ctx, r, 1500, ['#4a5a2a', '#5e6a30', '#3a4622']); leaves(ctx, r, 80); break;
