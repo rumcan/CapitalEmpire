@@ -177,6 +177,12 @@ export interface Tyre { x: number; y: number; ang: number; start: number; lat: n
 export interface Route { nodes: Node[]; segs: Seg[]; pts: Pt[]; cls: RoadClass; style: LineStyle; kind: SegKind; closed: boolean; a0?: Arm; a1?: Arm }
 export interface AutoProp { kind: 'tree' | 'light' | 'rbtree'; x: number; y: number; i: number }
 export interface PieceSel { seg: Seg; p0: Pt; p1: Pt }
+/** a bridge deck: the route centreline and the deck half width (tiles) */
+export interface BridgeRec { pts: Pt[]; hw: number; bbox: BBox }
+/** a tunnel mouth: the portal point, the unit direction into the tunnel, the road half width (asphalt + walk) */
+export interface PortalRec { x: number; y: number; dir: Pt; hw: number; bbox: BBox }
+/** a tunnel centreline and its asphalt width, for the planner dashed line */
+export interface TunnelRec { pts: Pt[]; w: number; bbox: BBox }
 export interface Island { x: number; y: number; r: number }
 
 const YELLOW = '#d6b23b', WHITE = 'rgba(238,238,230,0.92)';
@@ -236,6 +242,7 @@ export interface Fx {
   key: number; bbox: BBox;
   walkF: Feature[]; asphF: Feature[]; medianF: Feature[]; islandF: Feature[]; rbIslands: Island[];
   lines: LineRec[]; zebra: Poly[]; bars: Poly[]; decals: Decal[]; tyres: Tyre[]; autoProps: AutoProp[]; slabRuns: SlabRun[];
+  bridges: BridgeRec[]; portals: PortalRec[]; tunnels: TunnelRec[];
   /** litter (leaves, tufts, curb joints, wheel wear) is generated when a painter first needs it and cached (LRU):
    *  a 4 km network has millions of leaves, far too many to keep for every route at once */
   lazy: (() => Litter) | null; litter: Litter | null;
@@ -243,9 +250,9 @@ export interface Fx {
 export interface Litter { leaves: Leaf[]; tufts: Tuft[]; wear: Wear[]; joints: { a: Pt; b: Pt }[] }
 /** the ground features inside a box, merged in a stable order (what a chunk painter needs) */
 export type FxView = Pick<Fx, (typeof FX_LISTS)[number]> & Litter & { pools: Pool[] };
-const emptyFx = (key: number): Fx => ({ key, bbox: [0, 0, 0, 0], walkF: [], asphF: [], medianF: [], islandF: [], rbIslands: [], lines: [], zebra: [], bars: [], decals: [], tyres: [], autoProps: [], slabRuns: [], lazy: null, litter: null });
+const emptyFx = (key: number): Fx => ({ key, bbox: [0, 0, 0, 0], walkF: [], asphF: [], medianF: [], islandF: [], rbIslands: [], lines: [], zebra: [], bars: [], decals: [], tyres: [], autoProps: [], slabRuns: [], bridges: [], portals: [], tunnels: [], lazy: null, litter: null });
 const emptyLitter = (): Litter => ({ leaves: [], tufts: [], wear: [], joints: [] });
-const FX_LISTS = ['walkF', 'asphF', 'medianF', 'islandF', 'rbIslands', 'lines', 'zebra', 'bars', 'decals', 'tyres', 'slabRuns'] as const;
+const FX_LISTS = ['walkF', 'asphF', 'medianF', 'islandF', 'rbIslands', 'lines', 'zebra', 'bars', 'decals', 'tyres', 'slabRuns', 'bridges', 'portals', 'tunnels'] as const;
 const LITTER_LISTS = ['leaves', 'tufts', 'wear', 'joints'] as const;
 const LITTER_CACHE = 4000;
 function hashStr(s: string) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; }
@@ -365,6 +372,8 @@ export class RoadNetwork {
   /** every auto prop on the map (median trees, roundabout trees, traffic lights) */
   get autoProps() { const out: AutoProp[] = []; for (const f of this.routeFx.values()) out.push(...f.autoProps); for (const f of this.nodeFx.values()) out.push(...f.autoProps); return out; }
   get fxCount() { return this.routeFx.size + this.nodeFx.size; }
+  /** the tunnel mouths on the surface: forest keeps clear of them */
+  portals(): PortalRec[] { const out: PortalRec[] = []; for (const f of this.routeFx.values()) out.push(...f.portals); return out; }
   /** the ground features that can touch a box, merged in a stable order */
   view(b: BBox, withLitter = true): FxView {
     const fx = [...this.fxGrid.query(b)].filter(f => f.bbox[2] >= b[0] && f.bbox[0] <= b[2] && f.bbox[3] >= b[1] && f.bbox[1] <= b[3]).sort((p, q) => p.key - q.key);
@@ -494,6 +503,19 @@ export class RoadNetwork {
     const p0 = r.pts[0], pN = r.pts[r.pts.length - 1];
     const fx = emptyFx(hashStr(`r${Math.min(p0.x, pN.x)},${Math.min(p0.y, pN.y)},${Math.max(p0.x, pN.x)},${Math.max(p0.y, pN.y)},${r.pts.length},${r.cls.id}`));
     const cls = r.cls, path = linePath(r.pts, r.closed), bb = bboxOf(r.pts, cls.h + cls.walk + 0.5);
+    if (r.kind === SK.TUNNEL) {
+      // underground: no paint, only the tunnel record and a portal where it meets the surface
+      fx.tunnels.push({ pts: r.pts, w: 2 * cls.h, bbox: bboxOf(r.pts, cls.h + 1) });
+      if (!r.closed) {
+        const n = r.pts.length, hw = cls.h + cls.walk, ends: [Node, Pt][] = [[r.nodes[0], r.pts[1]], [r.nodes[r.nodes.length - 1], r.pts[n - 2]]];
+        for (const [node, next] of ends) {
+          if (!node.arms.some(a => a.seg.kind !== SK.TUNNEL)) continue;
+          fx.portals.push({ x: node.x, y: node.y, dir: norm(sub(next, node)), hw, bbox: [node.x - hw - 4, node.y - hw - 4, node.x + hw + 4, node.y + hw + 4] });
+        }
+      }
+      fx.bbox = bboxOf(r.pts, cls.h + cls.walk + 4);
+      return fx;
+    }
     fx.walkF.push(feat('stroke', path, 2 * (cls.h + cls.walk), cls.walkTex, walkOrder(cls.walkTex), bb));
     fx.asphF.push(feat('stroke', path, 2 * cls.h, cls.tex, cls.order, bb, 'butt', kerbed(cls)));
     const rl = cls.h + 1.75;
@@ -510,7 +532,7 @@ export class RoadNetwork {
       const mlen = pts ? pts.reduce((s, p, i) => (i ? s + vlen(sub(p, pts[i - 1])) : 0), 0) : 0;
       if (pts && pts.length >= 2 && (r.closed || mlen >= 3)) {
         fx.medianF.push(feat('stroke', roundedPath(pts, rl, r.closed), cls.median, 'grass', 0, bboxOf(pts, cls.median), 'round'));
-        walkAlong(pts, r.closed, 2.2, 4, (p, i) => fx.autoProps.push({ kind: 'tree', x: p.x, y: p.y, i }));
+        if (r.kind !== SK.BRIDGE) walkAlong(pts, r.closed, 2.2, 4, (p, i) => fx.autoProps.push({ kind: 'tree', x: p.x, y: p.y, i }));
       }
     }
     const base = r.closed ? r.pts : trimPolyline(r.pts, r.a0!.lineInset, r.a1!.lineInset);
@@ -523,13 +545,14 @@ export class RoadNetwork {
       if (centre === 'dashed') push(0.12, YELLOW, cls.id === 'road' ? [2, 1.4] : [1.6, 1.2], 0);
       else if (centre === 'double') { push(0.1, YELLOW, null, 0.17); push(0.1, YELLOW, null, -0.17); }
     }
-    if (this.paintData) { this.decalsFor(r, fx.decals); fx.lazy = () => { const l = emptyLitter(); this.routeLitter(r, l); return l; }; }
+    if (this.paintData) { if (r.kind !== SK.BRIDGE) this.decalsFor(r, fx.decals); fx.lazy = () => { const l = emptyLitter(); this.routeLitter(r, l); return l; }; }
     fx.bbox = bboxOf(r.pts, cls.h + cls.walk + 1.5);
+    if (r.kind === SK.BRIDGE) { const bb4 = bboxOf(r.pts, cls.h + cls.walk + 4); fx.bridges.push({ pts: r.pts, hw: cls.h + cls.walk + 0.35, bbox: bb4 }); fx.bbox = unionBox(fx.bbox, bb4); }
     return fx;
   }
 
   private nodeFeatures(n: Node): Fx | null {
-    const arms = n.arms, k = arms.length; if (!k) return null;
+    const arms = n.arms, k = arms.length; if (!k || arms.every(a => a.seg.kind === SK.TUNNEL)) return null;
     const fx = emptyFx(hashStr(`n${n.x},${n.y}`)), N = { x: n.x, y: n.y };
     const { walkF, asphF, medianF, islandF, rbIslands, lines, zebra, bars, tyres, slabRuns } = fx, auto = fx.autoProps;
     let bb: BBox = bboxOf([N], 1);

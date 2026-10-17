@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type RoadClass, type SegKind } from './network';
+import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type SegKind } from './network';
 import { NetEditor } from './netops';
 import { STRUCT_COST, STRUCT_MAX, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
@@ -37,6 +37,8 @@ export class Game {
   sprites = new SpriteTiles();
   /** forest: slope field and clearing noise of the terrain; trees planted per FOREST_CELL cell (key cj * 32 + ci), drawn as sprites only, never in props */
   private slope: Float32Array = new Float32Array(0); private clearing: Noise = makeNoise(0); private forest = new Map<number, Prop[]>(); private forestItem = new Map<string, number>();
+  /** tunnel mouths of the network: key of the last synced set, and the points themselves */
+  private portalKey = ''; private portalPts: PortalRec[] = [];
   ground: GroundCache;
   /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
   pageImages: HTMLImageElement[] = []; private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
@@ -192,6 +194,7 @@ export class Game {
   private plantCell(key: number, ci: number, cj: number) {
     const trees = forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj), out: Prop[] = [];
     for (const tr of trees) {
+      if (this.inPortal(tr.x, tr.y)) continue;
       let item = this.forestItem.get(tr.id);
       if (item === undefined) { item = LIBRARY.findIndex(i => i.id === tr.id); this.forestItem.set(tr.id, item); }
       if (item < 0) continue;
@@ -200,6 +203,27 @@ export class Game {
       this.sprites.add(p); out.push(p);
     }
     this.forest.set(key, out); this.perf.forest += out.length;
+  }
+  /** no trees in front of a tunnel mouth: a short strip out of the portal, as wide as its road plus margin */
+  private inPortal(x: number, y: number): boolean {
+    for (const p of this.portalPts) {
+      const dx = x - p.x, dy = y - p.y, t = dx * p.dir.x + dy * p.dir.y, lat = Math.abs(-dx * p.dir.y + dy * p.dir.x);
+      if (t > -6 && t < 8 && lat < p.hw + 3) return true;
+    }
+    return false;
+  }
+  /** after a network rebuild: the forest cells near a tunnel mouth (old or new) re-plant without the trees in the way */
+  private syncPortals() {
+    const ps = this.net.portals(), key = ps.map(p => p.x.toFixed(2) + ',' + p.y.toFixed(2)).sort().join(';');
+    if (key === this.portalKey) return;
+    const pts = [...this.portalPts, ...ps], N = MAP / FOREST_CELL, g = 14;
+    for (const [k, trees] of this.forest) {
+      const x0 = (k % N) * FOREST_CELL - g, y0 = Math.floor(k / N) * FOREST_CELL - g, x1 = x0 + FOREST_CELL + 2 * g, y1 = y0 + FOREST_CELL + 2 * g;
+      if (!pts.some(p => p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1)) continue;
+      for (const p of trees) this.sprites.remove(p);
+      this.perf.forest -= trees.length; this.forest.delete(k);
+    }
+    this.portalKey = key; this.portalPts = ps;
   }
   private propChanged(p: Prop) { const it = LIBRARY[p.item]; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, p.scale)); this.propGrid.remove(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.update(p); if (it.big) this.scheduleBlocks(); }
   /** street lamps light the road: their reflection pools are part of the ground picture */
@@ -238,12 +262,12 @@ export class Game {
     const ops = this.edit.commit();
     this.ground.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
-    this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved);
+    this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
     this.syncLamps(); this.scheduleSave(); this.emit();
   }
   private afterLoad() {
     const ops = this.edit.commit(true);
-    this.ground.netOps(ops);
+    this.ground.netOps(ops); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
     this.ground.invalidateAll();
@@ -680,7 +704,8 @@ export class Game {
       const vis: { i: number; j: number }[] = [];
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
-      const movers: Drawable[] = this.traffic ? this.traffic.visible(Math.min(...c.map(p => p.x)) - pad, Math.min(...c.map(p => p.y)) - pad, Math.max(...c.map(p => p.x)) + pad, Math.max(...c.map(p => p.y)) + pad) : [];
+      // cars under a hill are in a tunnel: hidden
+      const movers: Drawable[] = this.traffic ? this.traffic.visible(Math.min(...c.map(p => p.x)) - pad, Math.min(...c.map(p => p.y)) - pad, Math.max(...c.map(p => p.x)) + pad, Math.max(...c.map(p => p.y)) + pad).filter(m => classAt(this.terrain, m.x, m.y) !== TC.HILL) : [];
       this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), street = tier === 'street';
       const [sAt, pAt] = gl.uploadParts([[f.shadows, street ? f.shadowFloats : 0], [f.stream, f.floats]]);

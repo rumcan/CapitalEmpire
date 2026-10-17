@@ -1,5 +1,5 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
-import { offsetPolyline, roundPieces, roundedPath, type BBox, type Decal, type Feature, type FxView, type LineRec, type RoadNetwork, type SlabRun } from './network';
+import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
 import { POOL_ANCHOR, PPM } from './ground-art';
 import { HS, TC, type Waterway } from './terrain/types';
@@ -11,6 +11,8 @@ const TILE_PX = Math.hypot(HW, HH);
 /** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m) */
 const CURB_TOP = 0.065, CURB_JOINT = 0.04, FACE_WORLD = 7.5, GUTTER = 0.2;
 const SLAB_LEN = 1.25;
+/** bridge geometry in world px at zoom 1: deck thickness, deck underside to water, railing height */
+const DECK_T = 12, PIER_H = 40, RAIL_H = 10;
 const YELLOW = 'rgba(246,168,36,0.93)', WHITE = 'rgba(229,225,207,0.9)';
 export interface Camera { X: number; Y: number; z: number }
 /** building footprints for the planner map: x0, y0, x1, y1, colour index (tiles), five floats each */
@@ -84,6 +86,10 @@ export class GroundPainter {
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF, '#9a9184'); fill(v.asphF, '#3c4150'); fill(v.medianF, '#557a35');
     ctx.fillStyle = '#557a35'; for (const r of v.rbIslands) { ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill(); }
+    // tunnel routes have no road fills, so the planner marks them with a dashed line
+    ctx.strokeStyle = 'rgba(60,65,80,0.85)'; ctx.lineCap = 'butt'; ctx.setLineDash([3, 2]);
+    for (const t of v.tunnels) { ctx.lineWidth = Math.max(minW, t.w); ctx.stroke(linePath(t.pts, false)); }
+    ctx.setLineDash([]);
     const b = this.blocks;
     for (let k = 0; k + 4 < b.length; k += 5) { if (b[k + 2] < tx0 || b[k] > tx1 || b[k + 3] < ty0 || b[k + 1] > ty1) continue; ctx.fillStyle = PLAN_BLOCK_COLOURS[b[k + 4] | 0] ?? PLAN_BLOCK_COLOURS[0]; ctx.fillRect(b[k], b[k + 1], b[k + 2] - b[k], b[k + 3] - b[k + 1]); }
     ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = Math.max(0.3, minW); ctx.strokeRect(0, 0, MAP, MAP);
@@ -143,6 +149,23 @@ export class GroundPainter {
     const walk = net.walkF.filter(f => vis(f.bbox)), asph = net.asphF.filter(f => vis(f.bbox));
     const med = net.medianF.filter(f => vis(f.bbox)), isl = net.islandF.filter(f => vis(f.bbox));
     const rbs = net.rbIslands.filter(i => vis([i.x - i.r, i.y - i.r, i.x + i.r, i.y + i.r]));
+    const brs = net.bridges.filter(b => vis(b.bbox)), ports = net.portals.filter(p => vis(p.bbox));
+    /** the chunk transform shifted dy world px straight down the screen */
+    const shiftM = (dy: number) => new DOMMatrix([1, 0, 0, 1, 0, dy * L]).multiply(M);
+    // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
+    for (const b of brs) {
+      const path = linePath(b.pts, false);
+      ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
+      ctx.setTransform(shiftM(DECK_T + PIER_H + 14)); ctx.strokeStyle = 'rgba(0,0,10,0.45)'; ctx.lineWidth = 2 * b.hw + 0.6; ctx.stroke(path);
+      const piers = new Path2D();
+      walkOpen(b.pts, 9, 3, (P, u) => { const n = perp(u), h = b.hw - 0.6, A = sub(P, mul(n, h)), B = add(P, mul(n, h)); piers.moveTo(A.x, A.y); piers.lineTo(B.x, B.y); });
+      ctx.strokeStyle = '#4a4640'; ctx.lineWidth = 0.8;
+      for (let dy = DECK_T; dy <= DECK_T + PIER_H; dy += Math.max(1, 3 / L)) { ctx.setTransform(shiftM(dy)); ctx.stroke(piers); }
+      ctx.lineWidth = 2 * b.hw; ctx.strokeStyle = '#5d5850';
+      for (let dy = DECK_T; dy >= 0; dy -= Math.max(1, 2 / L)) { ctx.setTransform(shiftM(dy)); ctx.stroke(path); }
+      ctx.setTransform(M); ctx.strokeStyle = '#8f897e'; ctx.stroke(path);
+      ctx.setTransform(M);
+    }
     // ---- 2. verges (gravel) and sidewalks: slab sprites per 2.5 m, grime, masked to the sidewalk
     for (const f of walk) if (f.tex === 'gravel') { ctx.strokeStyle = 'rgba(40,32,18,0.3)'; ring(ctx, f, Math.max(0.18, 2 * minW)); }
     for (const f of walk) if (f.tex === 'gravel') { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = pat('gravel'); ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = pat('gravel'); ctx.fill(f.path); } }
@@ -264,6 +287,41 @@ export class GroundPainter {
         composite(glow, 'screen');
       }
     }
+    // ---- 9b. bridge railings: a base rail on the deck edge, a top rail RAIL_H above it, and posts every tile (not in lite)
+    if (brs.length) {
+      const posts = new Path2D();
+      ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
+      for (const b of brs) for (const s of [1, -1]) {
+        const edge = offsetPolyline(b.pts, s * (b.hw - 0.12), false), path = linePath(edge, false);
+        ctx.setTransform(M); ctx.strokeStyle = '#7a7468'; ctx.lineWidth = 0.08; ctx.stroke(path);
+        if (lite) continue;
+        ctx.setTransform(shiftM(-RAIL_H)); ctx.strokeStyle = '#d8d0c0'; ctx.lineWidth = 0.07; ctx.stroke(path);
+        walkOpen(edge, 1, 0, p => { const q = M.transformPoint(new DOMPoint(p.x, p.y)); posts.moveTo(q.x, q.y); posts.lineTo(q.x, q.y - RAIL_H * L); });
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (!lite) { ctx.strokeStyle = '#c8c0b0'; ctx.lineWidth = Math.max(1, 1.5 * L); ctx.stroke(posts); }
+      ctx.setTransform(M);
+    }
+    // ---- 9c. tunnel portals: the dark mouth on the slope, the headwall above it, and the arch
+    for (const p of ports) {
+      const d = p.dir, n = perp(d), P = { x: p.x, y: p.y }, H = 70 * L;
+      const Dd = mul(d, 3), A = add(P, mul(n, p.hw)), B = sub(P, mul(n, p.hw));
+      const mouth = ctx.createLinearGradient(P.x, P.y, P.x + Dd.x, P.y + Dd.y);
+      mouth.addColorStop(0, 'rgba(8,7,12,0.95)'); mouth.addColorStop(1, 'rgba(8,7,12,0)');
+      ctx.setTransform(M); ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.lineTo(B.x + Dd.x, B.y + Dd.y); ctx.lineTo(A.x + Dd.x, A.y + Dd.y); ctx.closePath();
+      ctx.fillStyle = mouth; ctx.fill();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      const wa = add(P, mul(n, p.hw + 0.8)), wb = sub(P, mul(n, p.hw + 0.8));
+      const a = M.transformPoint(new DOMPoint(wa.x, wa.y)), b = M.transformPoint(new DOMPoint(wb.x, wb.y));
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(b.x, b.y - H); ctx.lineTo(a.x, a.y - H); ctx.closePath();
+      ctx.fillStyle = '#7d776d'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(a.x, a.y - H); ctx.lineTo(b.x, b.y - H); ctx.strokeStyle = '#a39c90'; ctx.lineWidth = Math.max(1, 3 * L); ctx.stroke();
+      const ai = add(P, mul(n, p.hw * 0.85)), bi = sub(P, mul(n, p.hw * 0.85));
+      const a2 = M.transformPoint(new DOMPoint(ai.x, ai.y)), b2 = M.transformPoint(new DOMPoint(bi.x, bi.y));
+      ctx.beginPath(); ctx.moveTo(a2.x, a2.y); ctx.lineTo(a2.x, a2.y - 0.45 * H); ctx.bezierCurveTo(a2.x, a2.y - 0.8 * H, b2.x, b2.y - 0.8 * H, b2.x, b2.y - 0.45 * H); ctx.lineTo(b2.x, b2.y); ctx.closePath();
+      ctx.fillStyle = '#07060a'; ctx.fill();
+      ctx.setTransform(M);
+    }
     // ---- 10. leaves and grass tufts, lit by the pools where they lie in one
     if (!lite) this.drawLitter(ctx, net, L, M, box, W, H);
     // ---- 11. the world beyond the map
@@ -360,6 +418,18 @@ export class GroundPainter {
       g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'screen'; g.globalAlpha = 0.75; g.drawImage(lm, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(lb, 0, 0); ctx.setTransform(M);
+  }
+}
+
+/** points every `step` tiles along an open polyline, from `skip` tiles in to `skip` tiles before the end, with the unit direction of the run each sits on */
+function walkOpen(pts: Pt[], step: number, skip: number, fn: (p: Pt, u: Pt) => void) {
+  let total = 0; for (let k = 0; k + 1 < pts.length; k++) total += vlen(sub(pts[k + 1], pts[k]));
+  let next = skip, acc = 0;
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const a = pts[k], l = vlen(sub(pts[k + 1], a)); if (l < 1e-9) continue;
+    const u = mul(sub(pts[k + 1], a), 1 / l);
+    while (next <= acc + l && next <= total - skip + 1e-6) { fn(add(a, mul(u, next - acc)), u); next += step; }
+    acc += l;
   }
 }
 
