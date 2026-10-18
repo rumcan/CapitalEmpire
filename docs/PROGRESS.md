@@ -515,3 +515,20 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
      (in a full grid those cells are inside junction reach anyway).
    - Local 8-day run (seed 1): builds 19 → 38 a day, pop 417 and 190 built lots on day 8, 82 gravel segs, access
      worst 1.10, step about 2 ms.
+7b. **Gate runs and fixes** (2026-10-18), all on the worker (`npm run town:gate -- 1 <days>`):
+   - Run 1 (40 days): pop 4,047, then the whole gravel network gridlocked (7,300 cars at 0.1 m/s). Cause: time
+     compression. The game day is 24 minutes but cars drive at real speed, so a 2 km trip lasts hours of game time;
+     2.2 trips per resident put ~40% of the town on the road at once. Fix: **0.6 trips per resident per day** (each car
+     stands for several people), plus an **abandoned-trip valve** (a trip still driving after 1,200 sim s is removed and
+     counted against the access of both zones), and each new lot's trip counter starts at a random phase (all lots
+     built in one hour used to leave in one hour).
+   - Run 2: no jams (about 200 cars, 1.1 ms per step), but growth stopped at pop 4,086 on day 32: the town had filled
+     its side of the river and every growth candidate failed on terrain (the planner's `planWhy` counts said so).
+     By design the town never bridges, so the gate now plays a **minimal player** (step 7b): when the town is
+     land-locked for 3 game hours it builds one paved street across the shortest water crossing (the road pipeline
+     makes the bridge), at most every 2 game days.
+   - Also fixed: lots kept the lattice points free in off-lattice player grids (half of every block was lost); the
+     reservation now only applies where there is no road behind within 45 tiles.
+   - **Run 3: PASS.** Pop 5,133 on day 37 (2,245 built lots, 726 gravel legs, one player bridge on day 31), step 1.16 ms
+     mean, 8.2 max. From day 35 the bridge funnels the new district's traffic: speed 3.3 m/s, zones over 1.3 reach
+     35–37% and the worst zone 2.39 by day 37.
