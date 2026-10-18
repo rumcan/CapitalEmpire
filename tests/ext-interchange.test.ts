@@ -471,3 +471,23 @@ test('T004: 60 degree stack on 300-tile roads is ok=false with a reason (roads t
   assert.equal(ic.ok, false);
   assert.ok(ic.why.length > 0 && ic.why.includes('too short'), ic.why);
 });
+
+test('T004: a one-way A keeps only the ramps that follow its direction of travel (diamond, cloverleaf)', () => {
+  for (const type of ['diamond', 'cloverleaf'] as InterchangeType[]) {
+    const [A, B] = crossingRoads(90);
+    const full = makeInterchange(A, B, type);
+    const one = makeInterchange({ ...A, oneWay: true }, B, type);
+    assert.equal(one.ok, true, `${type} one-way A: ${one.why}`);
+    for (const [from, to] of [['A', 'B'], ['B', 'A']] as const) {
+      const f = full.ramps.filter(r => r.from === from && r.to === to).length;
+      const o = one.ramps.filter(r => r.from === from && r.to === to).length;
+      assert.equal(o * 2, f, `${type} one-way A ${from}->${to}: ${o} of ${f}`);
+    }
+    // every ramp that touches A leaves or joins it heading east (+x), the direction of travel
+    for (const r of one.ramps) {
+      const on = (r.from === 'A' ? r.pts[0]! : r.pts[r.pts.length - 1]!);
+      const t = r.from === 'A' ? sub(r.pts[1]!, r.pts[0]!) : sub(r.pts[r.pts.length - 1]!, r.pts[r.pts.length - 2]!);
+      if (r.from === 'A' || r.to === 'A') assert.ok(on && t.x > 0, `${type} one-way A: ramp ${r.from}->${r.to} runs west on A`);
+    }
+  }
+});

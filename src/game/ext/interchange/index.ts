@@ -368,9 +368,18 @@ function build(A: RoadSpec, B: RoadSpec, type: InterchangeType): Interchange {
   }
   if (short) return fail(short, [O]);
 
+  const dirOn = (road: 'A' | 'B') => (road === 'A' ? ua : ub);
+  // a one-way road keeps only the ramps that join it in its direction of travel; at-grade terminals (no tangent along the road) are not restricted
+  const kept = specs.filter(s => (['A', 'B'] as const).every(road => {
+    const one = road === 'A' ? A.oneWay : B.oneWay;
+    if (!one || (s.from !== road && s.to !== road)) return true;
+    const a = s.from === road ? s.anc[0]! : s.anc[s.anc.length - 1]!;
+    const d = dot(a.t, dirOn(road));
+    return !(Math.abs(d) > 0.7 && d < 0);
+  }));
   const ramps: Ramp[] = [];
   const pts: Pt[] = [O];
-  for (const s of specs) {
+  for (const s of kept) {
     const r = ramp(s.anc, s.kind === 'fly' ? FLY_M : LOOP_M, (pts, z) => clashes([{ pts, z }], LA, LB, F.zA, F.zB) === '');
     if (typeof r === 'string') return fail(`${s.kind} ${s.from}->${s.to} ${r}`, pts);
     ramps.push({ pts: r.pts, z: r.z, from: s.from, to: s.to, turn: s.turn, lanes: 1, kind: s.kind });
