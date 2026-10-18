@@ -212,7 +212,10 @@ export class City {
     if (!this.site || this.round.stage !== 'free') return false;
     if (!this.round.start(crowdFor(this.round.level, this.town.popK))) return false;
     const c = this.sim.clock, day = Math.floor(c / GAME_DAY) * GAME_DAY;
-    this.freeze(c <= day + EVENT_CLOCK ? day + EVENT_CLOCK : day + GAME_DAY + EVENT_CLOCK);
+    const to = c <= day + EVENT_CLOCK ? day + EVENT_CLOCK : day + GAME_DAY + EVENT_CLOCK;
+    // the clock jumps to the event evening: the town skips the hours between (no catch-up burst of growth or land sales)
+    this.town.skipTo(to);
+    this.freeze(to);
     return true;
   }
   /** ends the build now: the surge begins; false unless in build */

@@ -143,6 +143,10 @@ export class Town {
     return out;
   }
 
+  /** jump to sim time t (seconds) without running the hours between (an event round moves the clock to the evening: the skipped
+   *  hours grow nothing) */
+  skipTo(t: number) { if (t > this.t) { this.t = t; this.hour = Math.floor(t / HOUR); } }
+
   /** advance to sim time t (seconds); runs whole game hours; returns the events (the array is reused: read it before the next call) */
   tick(t: number, ctx: TownCtx): TownEvent[] {
     const ev = this.ev; ev.length = 0;
