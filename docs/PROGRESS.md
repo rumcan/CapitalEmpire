@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 started: the owner's answers are in (GAME-PLAN section 7, items 6–13) and the steps are written below._
+_Last updated: 2026-10-18, Phase 5 step 1 done (three towns) and the dev sandbox (fast growth, unlimited money, 20x)._
 
 ## Where we are
 
@@ -786,7 +786,25 @@ Steps (each ends verified, committed and written up here):
    generous build reaches 100%; the surge bench on the worker holds the sim budgets.
 
 ### Phase 5 progress
-(none yet)
+1. **Three autonomous towns. DONE** (2026-10-18; commits `e7c8d09`, `c6c0f7f`, `c773978`). The terrain generator picks three
+   town sites (64 x 64 buildable blocks at least 128 tiles from the border, 750–1500 tiles apart, the most buildable land
+   around them; a new guarantee, retried like the others: seeds 6, 10, 11 and 17 of 1–20 need a retry). A new valley lays
+   an 8 x 8 street grid (40-tile blocks, avenues on the middle lines, legs only on buildable land) at each site, and the
+   city worker stamps them: the Town's own allocation, lots BUILT at once (30% UPGRADED on paved roads), civic lots per
+   town. The Town keeps several centres (each lot belongs to the nearest), per-town residents, built and civic lots;
+   reach is from every town centre; the planner grows the towns in turn, hour by hour. With no centres everything runs
+   as before (town:gate's day lines are identical).
+   - **Decision (lead): about 1,000 residents per town, not 1,500.** An 8 x 8 grid holds 320–420 lots (about 1,000
+     residents); terrain can cut a town (seed 2's first town stamps 773). The crowds come from the event config, not
+     from the town size, so this costs nothing; the towns still grow with their own gravel roads.
+   - `npm run towns:gate -- 1,2,3 2`: residents per town after the stamp 1001/931/1000, 773/1078/1000 (seed 2),
+     1039/1017/1029 (seed 3); all hold or grow over two game days; stamp 230–500 ms; City.step mean about 5 ms, max 32 ms.
+   - **Dev sandbox (owner's request, 2026-10-18, commit `ddea358`):** on the dev server the towns start as bare grids
+     (no instant stamp) and grow 20x faster (construction, the growth rate and the gravel planner), with unlimited money
+     (the treasury shows ∞, spending and the day's books leave it alone, no bankruptcy). URL options: `?grow=N`,
+     `?stamp=1` (the instant towns), `?money=0`. A badge in the top bar shows what is on. The production build, the
+     bench and the gates use the defaults. Also a **20x** speed button. Checked in the browser pane: one town at 1,659
+     residents after about a minute at 20x (13 fps in the pane while a thousand lots compose).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
