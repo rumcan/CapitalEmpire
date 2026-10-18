@@ -478,7 +478,12 @@ export class Game {
   /** the road tool's snap under the cursor, or null with no cursor */
   private cursorSnap(): Snap | null { return this.hover ? snapPoint(this.net, this.hover, this.snapRadius()) : null; }
   /** why the preview route cannot be built ('' when it can): see checkLegs */
-  routeBlock(legs: Leg[] = this.previewLegs()): string { return legs.length ? checkLegs(this.net, legs, this.routeFrom, this.cursorSnap(), this.cls) : ''; }
+  routeBlock(legs: Leg[] = this.previewLegs()): string {
+    if (!legs.length) return '';
+    // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
+    const cs = this.cursorSnap(), last = this.route[this.route.length - 1], onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
+    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls);
+  }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
     const dx = p.x - from.x, dy = p.y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
@@ -536,8 +541,12 @@ export class Game {
   private roadClick(mx: number, my: number) {
     const s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius());
     if (!this.route.length) { this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
-    const last = this.route[this.route.length - 1];
-    for (const l of this.legsTo(last, s.p, this.keys.has('Shift'))) this.route.push(l.b);
+    const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
+    // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
+    const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
+    const why = add.length ? checkLegs(this.net, [...legs, ...add], this.routeFrom, s, this.cls) : '';
+    if (why) { this.toast(why, 'warn'); return; }
+    for (const l of add) this.route.push(l.b);
     this.routeLast = s; this.emit();
   }
   undoRoutePoint() { this.route.pop(); this.emit(); }
