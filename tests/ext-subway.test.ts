@@ -28,6 +28,35 @@ test('train capacity is 600 and two trains deliver a sustained hourly service', 
   assert.equal(delivered, 5000); assert.ok(hourly > 8_000 && hourly < 17_000);
 });
 
+test('a one-tunnel line with four trains keeps delivering in both directions', () => {
+  const s = new Subway(); s.setNetwork(twoStations, line(4));
+  s.board(1, 2, 2400, 1); s.board(2, 1, 2400, 2);
+  const delivered = new Map<number, number>(), out: Arrival[] = [];
+  for (let t = 0; t < 1500; t++) {
+    s.step(1); s.takeArrivals(out);
+    for (const a of out) delivered.set(a.tag, (delivered.get(a.tag) ?? 0) + a.fans);
+  }
+  assert.equal(delivered.get(1), 2400); assert.equal(delivered.get(2), 2400);
+});
+
+test('three-station six-train loop continues carrying fans around its circle', () => {
+  const stations: StationDef[] = [{ id: 1, x: 0, y: 0 }, { id: 2, x: 20, y: 0 }, { id: 3, x: 20, y: 20 }];
+  const s = new Subway(); s.setNetwork(stations, [{ id: 1, stations: [1, 2, 3], trains: 6, loop: true }]);
+  s.board(1, 3, 100, 3); s.board(3, 1, 100, 4);
+  const delivered = new Map<number, number>(), out: Arrival[] = [];
+  for (let t = 0; t < 200; t++) { s.step(1); s.takeArrivals(out); for (const a of out) delivered.set(a.tag, (delivered.get(a.tag) ?? 0) + a.fans); }
+  assert.equal(delivered.get(3), 100); assert.equal(delivered.get(4), 100);
+});
+
+test('three-station open line with six trains does not strand terminal passengers', () => {
+  const stations: StationDef[] = [{ id: 1, x: 0, y: 0 }, { id: 2, x: 20, y: 0 }, { id: 3, x: 20, y: 20 }];
+  const s = new Subway(); s.setNetwork(stations, [{ id: 1, stations: [1, 2, 3], trains: 6 }]);
+  s.board(1, 3, 100, 5); s.board(3, 1, 100, 6);
+  const delivered = new Map<number, number>(), out: Arrival[] = [];
+  for (let t = 0; t < 400; t++) { s.step(1); s.takeArrivals(out); for (const a of out) delivered.set(a.tag, (delivered.get(a.tag) ?? 0) + a.fans); }
+  assert.equal(delivered.get(5), 100); assert.equal(delivered.get(6), 100);
+});
+
 test('four open-line trains stay direction-separated on the same tunnel', () => {
   const stations: StationDef[] = [{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }, { id: 3, x: 200, y: 0 }];
   const s = new Subway(); s.setNetwork(stations, [{ id: 1, stations: [1, 2, 3], trains: 4 }]);
@@ -67,6 +96,17 @@ test('removing a destination drops only its waiting fans', () => {
   s.setNetwork([{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }], [{ id: 1, stations: [1, 2], trains: 1 }]);
   assert.equal(s.stats().dropped, 40); assert.equal(s.view().queues.find(q => q.station === 1)?.fans, 25);
   const result = runUntil(s, 25, 400); assert.equal(result.arrivals.reduce((n, a) => n + a.fans, 0), 25);
+});
+
+test('mean wait includes the first fans who board immediately with zero wait', () => {
+  const s = new Subway(); s.setNetwork([{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }], line());
+  s.board(1, 2, 100, 1);
+  for (let t = 0; t < 25; t++) s.step(1);
+  s.board(1, 2, 100, 2);
+  const out: Arrival[] = [];
+  for (let t = 0; t < 200 && s.stats().carried < 200; t++) { s.step(1); s.takeArrivals(out); }
+  assert.equal(s.stats().carried, 200);
+  assert.ok(s.stats().meanWait >= 25 && s.stats().meanWait < 40, `mean wait ${s.stats().meanWait} should include the 100 zero-wait fans`);
 });
 
 test('identical seeded runs produce identical arrivals', () => {

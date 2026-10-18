@@ -54,7 +54,7 @@ export class Subway {
   /** Creates a deterministic network; current operations need no random choices. */
   constructor(_seed = 1) {}
 
-  /** Replaces the network, preserving valid waiting groups and dropping groups whose routes disappear. */
+  /** Replaces the network, preserving valid waiting groups; riders on trains are re-queued at their train's last station, and groups without a remaining route are counted as dropped. */
   setNetwork(stations: StationDef[], lines: LineDef[]): void {
     const retained: Group[] = [];
     for (let i = 0; i < this.queues.length; i++) for (const g of this.queues[i]!) if (g.count > 0) retained.push(g);
@@ -104,6 +104,7 @@ export class Subway {
   step(dt: number): void {
     if (!(dt > 0) || !Number.isFinite(dt)) return;
     for (const q of this.queues) for (const g of q) { if (g.walk > 0) g.walk = Math.max(0, g.walk - dt); else g.wait += dt; }
+    // Stable per-line order resolves simultaneous departures: the first eligible train enters before later trains test the block.
     for (const line of this.lines) for (const t of line.trains) this.stepTrain(line, t, dt);
     this.refreshView();
   }
@@ -205,7 +206,10 @@ export class Subway {
     if (t.track > 0) return { track: t.track - 1, dir: -1 }; if (line.def.loop) return { track: line.tracks.length - 1, dir: -1 }; return { track: t.track, dir: 1 };
   }
   private blocked(line: RuntimeLine, train: Train, track: number, dir: 1 | -1): boolean {
-    for (const other of line.trains) if (other !== train && other.track === track && other.dir === dir && other.dist < line.tracks[track]!.length - 1e-6) return true;
+    const length = line.tracks[track]!.length;
+    // Only a train physically inside the tunnel owns the block. Trains waiting at either
+    // station boundary must not block each other, or a crowded terminal can deadlock.
+    for (const other of line.trains) if (other !== train && other.track === track && other.dir === dir && other.dist > 1e-6 && other.dist < length - 1e-6) return true;
     return false;
   }
   private dispatchWaiting(station: number): void {
@@ -218,7 +222,7 @@ export class Subway {
         const g = q[i]!;
         if (g.walk <= 0 && this.routes.get(`${station}|${g.to}`) === nextStation) {
           const take = Math.min(g.count, CAPACITY - t.load); g.count -= take; t.load += take; boarded += take;
-          if (g.initial && g.wait > 0) { this.waitSum += g.wait * take; this.waitCount += take; }
+          if (g.initial) { this.waitSum += g.wait * take; this.waitCount += take; }
           t.groups.push({ from: station, to: g.to, tag: g.tag, count: take, walk: 0, wait: 0, initial: g.initial });
           if (!g.count) { q.splice(i, 1); continue; }
         }
@@ -235,7 +239,7 @@ export class Subway {
       const g = q[i]!;
       if (g.walk <= 0 && this.routes.get(`${station}|${g.to}`) === next) {
         const take = Math.min(g.count, CAPACITY - t.load); g.count -= take; t.load += take;
-        if (g.initial && g.wait > 0) { this.waitSum += g.wait * take; this.waitCount += take; }
+        if (g.initial) { this.waitSum += g.wait * take; this.waitCount += take; }
         t.groups.push({ from: station, to: g.to, tag: g.tag, count: take, walk: 0, wait: 0, initial: g.initial });
         if (!g.count) { q.splice(i, 1); continue; }
       }
@@ -265,7 +269,7 @@ export class Subway {
       if (g.count <= 0) { q.splice(i, 1); continue; }
       if (g.walk <= 0 && this.routes.get(`${station}|${g.to}`) === stationNext && t.load < CAPACITY) {
         const take = Math.min(g.count, CAPACITY - t.load); g.count -= take; boarded += take; t.load += take;
-        if (g.initial && g.wait > 0) { this.waitSum += g.wait * take; this.waitCount += take; }
+        if (g.initial) { this.waitSum += g.wait * take; this.waitCount += take; }
         if (take > 0) { const rider: Group = { from: station, to: g.to, tag: g.tag, count: take, walk: 0, wait: 0, initial: g.initial }; t.groups.push(rider); }
         if (!g.count) { q.splice(i, 1); continue; }
       }
