@@ -1,7 +1,7 @@
 // Headless network tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, KEY_CLASSES, RoadNetwork, WIDER, type ClassId, type Leg, type Route, type Seg } from '../src/game/network';
+import { CLASS, KEY_CLASSES, RoadNetwork, WIDER, armDeg, slipIn, type ClassId, type Leg, type Node, type Route, type Seg } from '../src/game/network';
 import { NetEditor, applyNodeEntry, applyOps, netToOps, nodeEntry, straightChain } from '../src/game/netops';
 import { CTL, LaneGraph, type Movement } from '../src/game/sim/lanes';
 import { rle, unrle } from '../src/game/save';
@@ -200,4 +200,27 @@ test('saved nodes: an entry without flags loads as before (its type only); flags
   applyNodeEntry(e, [50, 50, 'plain', 1]);
   assert.deepEqual(nodeEntry(n), [50, 50, 'plain', 1]);
   applyNodeEntry(e, [5, 5, 'signal', 3]); // no node there: skipped
+});
+
+/** the in-arm degrees of a node's corners that have a right turn: the names setSlipOff takes */
+const rightDegsOf = (n: Node): number[] => n.arms.flatMap((A, i) => { const j = slipIn(A, n.arms[(i + 1) % n.arms.length]!); return j ? [armDeg(j)] : []; });
+
+test('slipways: off corners ride in the save entry as a 5th element, load back with the same lanes, and survive netToOps', () => {
+  const build = () => { const e = new NetEditor(new RoadNetwork()); e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); e.commit(); return e; };
+  const laneSnap = (net: RoadNetwork) => { const g = new LaneGraph(); g.update(net); return g.lanes.filter((l): l is NonNullable<typeof l> => !!l).map(l => `${l.key} ${Array.from(l.pts, v => v.toFixed(2)).join(',')}`).sort(); };
+  const e = build(), n = e.net.nodeAt({ x: 50, y: 50 })!;
+  e.setNodeType(n, 'slip'); e.setSlipOff(n, []); e.commit();
+  assert.deepEqual(nodeEntry(n), [50, 50, 'slip']);
+  const degs = rightDegsOf(n);
+  assert.equal(degs.length, 4);
+  e.setSlipOff(n, [degs[0]!]); e.commit();
+  assert.deepEqual(nodeEntry(n), [50, 50, 'slip', 0, [degs[0]!]]);
+  const f = build(); applyNodeEntry(f, nodeEntry(n));
+  const m = f.net.nodeAt({ x: 50, y: 50 })!;
+  assert.equal(m.type, 'slip'); assert.deepEqual(m.slipOff, [degs[0]!]);
+  f.commit();
+  assert.deepEqual(laneSnap(f.net), laneSnap(e.net));
+  const h = new RoadNetwork(); applyOps(h, netToOps(e.net));
+  assert.deepEqual(h.nodeAt({ x: 50, y: 50 })!.slipOff, [degs[0]!]);
+  assert.deepEqual(laneSnap(h), laneSnap(e.net));
 });

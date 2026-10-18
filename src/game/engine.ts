@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, FLAG_COST, Grid, JUNCTIONS, KEY_CLASSES, RoadNetwork, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
+import { CLASS, FLAG_COST, Grid, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, WIDER, SK, add, armDeg, dot, mul, norm, perp, slipCorner, slipIn, sub, unionBox, variantCost, vlen, type AutoProp, type Arm, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { MIN_SEP, checkLegs, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
@@ -119,7 +119,7 @@ export class Game {
   /** the ring lanes a roundabout installed (or re-laned) by the junction tool gets; set by the panel's chips and by Tab */
   ringLanes: 1 | 2 | 3 = 1;
   /** the junction tool's mode: 'type' installs junctionType; 'wide' and 'tl' toggle the widened-turns and turn-lane flags on the junction clicked */
-  junctionMode: 'type' | 'wide' | 'tl' = 'type';
+  junctionMode: 'type' | 'wide' | 'tl' | 'slips' = 'type';
   selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
   /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
   showAccess = false;
@@ -697,6 +697,42 @@ export class Game {
     this.commitNetwork(); this.puff(n.x, n.y, 8);
     this.toast(on ? `${name} added` : `${name} removed`, 'good');
   }
+  /** the junction tool in 'slips' mode: the corner of the junction nearest the click (the one whose bisector points most at the click) gets or
+   *  loses its slipway. A signal node becomes lights with a slipway on that corner alone; a slip node's corner turns on for SLIP_CORNER_COST, and
+   *  turning its last slipway off makes the node plain lights again (free). A plain junction and a roundabout are refused */
+  private slipClick(mx: number, my: number) {
+    const t = this.tileAt(mx, my), n = this.net.nearestNode(t, 3, 18);
+    if (!n) { this.toast('Click a junction where three or more roads meet', 'warn'); return; }
+    if (n.type === 'roundabout') { this.toast('Roundabouts have no slipways', 'warn'); return; }
+    if (n.type === 'plain') { this.toast('Slipways need traffic lights: install lights first', 'warn'); return; }
+    const k = n.arms.length, pairs = n.arms.map((A, i): [Arm, Arm] => [A, n.arms[(i + 1) % k]!]), u = norm(sub(t, n));
+    let best = -1, bd = -Infinity;
+    for (let i = 0; i < k; i++) {
+      const [A, B] = pairs[i]!, phi = (((B.ang - A.ang) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); if (phi > Math.PI) continue;
+      const d = dot(u, norm(add(A.dir, B.dir))); if (d > bd) { bd = d; best = i; }
+    }
+    if (best < 0) return;
+    const [A, B] = pairs[best]!, inA = slipIn(A, B);
+    if (!inA) { this.toast('No right turn at that corner: no slipway here', 'warn'); return; }
+    const deg = armDeg(inA), off = n.slipOff ?? [], turningOn = n.type === 'signal' || off.includes(deg);
+    // the slipways' corners after the click: a lights node gets all but the others' right turns off; a slip node's corner is added or dropped
+    const nextOff = n.type === 'signal'
+      ? pairs.flatMap(([X, Y]) => { const j = slipIn(X, Y); return j && armDeg(j) !== deg ? [armDeg(j)] : []; })
+      : turningOn ? off.filter(d => d !== deg) : [...off, deg];
+    const lights = !turningOn && !pairs.some(([X, Y]) => { const j = slipIn(X, Y); return !!j && !nextOff.includes(armDeg(j)); });
+    const cost = turningOn ? SLIP_CORNER_COST : 0;
+    if (cost > this.money) { this.toast(`Not enough money: a slipway costs $${SLIP_CORNER_COST.toLocaleString()}`, 'warn'); return; }
+    if (cost) this.traffic.spend('construction', cost);
+    if (lights) this.edit.setNodeType(n, 'signal');
+    else { if (n.type === 'signal') this.edit.setNodeType(n, 'slip'); this.edit.setSlipOff(n, nextOff); }
+    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    if (!turningOn) { this.toast(lights ? 'Slipway removed: the last one, so plain lights again' : 'Slipway removed', 'good'); return; }
+    // the corner is found again on the rebuilt arms: a corner too tight for a slipway is charged for and says so
+    const m = this.net.nodeAt({ x: n.x, y: n.y }) ?? n, ma = m.arms, mk = ma.length;
+    const cor = ma.map((X, i): [Arm, Arm] => [X, ma[(i + 1) % mk]!]).find(([X, Y]) => { const j = slipIn(X, Y); return !!j && armDeg(j) === deg; });
+    if (cor && !slipCorner(m, cor[0], cor[1])) this.toast('This corner is too tight for a slipway (needs 54 m approaches)', 'warn');
+    else this.toast('Slipway added', 'good');
+  }
   /** the add-lane tool's plan at tile t (null: no tile): the straight run of road under it (see straightChain; a toll plaza has none), the class it widens
    *  to, its cost and why it cannot be built */
   private laneUpdate(t: Pt | null) {
@@ -737,6 +773,7 @@ export class Game {
     }
   }
   private junctionClick(mx: number, my: number) {
+    if (this.junctionMode === 'slips') { this.slipClick(mx, my); return; }
     if (this.junctionMode !== 'type') { this.flagClick(mx, my); return; }
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
     if (!this.junctionOpen(this.junctionType)) { const lk = unlockOf('junction', this.junctionType)!; this.toast(this.eventMode ? `${spec.name} needs the Roundabout card` : `${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
@@ -777,6 +814,7 @@ export class Game {
     this.traffic.spend('construction', cost);
     this.junctionType = v.type; if (v.type === 'roundabout') this.ringLanes = v.rl;
     this.edit.setNodeType(n, v.type);
+    if (v.type === 'slip') this.edit.setSlipOff(n, []);
     if (v.type === 'roundabout') this.edit.setNodeFlags(n, !!n.wide, !!n.tl, v.rl);
     this.commitNetwork(); this.puff(n.x, n.y, 8);
     const warn = this.armWarn(n);
@@ -894,7 +932,7 @@ export class Game {
       else if (d.kind === 'bulldoze') this.bulldozeAt(mx, my, false);
       else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
-    if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.junctionMode === 'type' ? JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg : 2, 5);
+    if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.junctionMode === 'slips' ? 3 : this.junctionMode === 'type' ? JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg : 2, this.junctionMode === 'slips' ? 18 : 5);
     if (this.tool === 'lane') this.laneUpdate(this.hover);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
     if (this.tool === 'toll') this.tollUpdate(mx, my);

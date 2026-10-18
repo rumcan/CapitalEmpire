@@ -1,7 +1,7 @@
 // Headless lane graph tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, RoadNetwork, type Leg, type Node } from '../src/game/network';
+import { CLASS, RoadNetwork, armDeg, slipIn, type Leg, type Node } from '../src/game/network';
 import { NetEditor, applyOps } from '../src/game/netops';
 import type { NetOp } from '../src/game/ground-protocol';
 import { CTL, LK, LaneGraph, checkGraph, laneAt, type Lane, type Movement } from '../src/game/sim/lanes';
@@ -271,5 +271,55 @@ test('a slip node: incremental updates match a fresh build, and turning it back 
   assert.deepEqual(checkGraph(g), []);
   assert.ok(liveLanes(g).every(l => l.flare === undefined));
   assert.deepEqual(snapshot(g), before);
+  assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
+});
+
+/** the in-arm degrees of a node's corners that have a right turn: the names setSlipOff takes */
+const rightDegs = (n: Node): number[] => n.arms.flatMap((A, i) => { const j = slipIn(A, n.arms[(i + 1) % n.arms.length]!); return j ? [armDeg(j)] : []; });
+
+test('a slip crossing with one corner off: three slipways, the off corner\'s right turn is one signal connector; incremental = fresh', () => {
+  const e = new NetEditor(new RoadNetwork()), g = new LaneGraph(), log: NetOp[] = [];
+  const commit = () => { log.push(...e.commit()); g.update(e.net); };
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); commit();
+  const n = at(e, 50, 50);
+  e.setNodeType(n, 'slip'); commit();
+  const off = rightDegs(n).slice(0, 1);
+  e.setSlipOff(n, off); commit();
+  assert.deepEqual(n.slipOff, off);
+  assert.deepEqual(checkGraph(g), []);
+  assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
+  const rights = movesAt(g, n).filter(m => m.turn === 'R');
+  assert.equal(rights.length, 4);
+  // the three planned right turns run through a slip body (an S lane); the off corner's right turn does not
+  const planned = rights.filter(m => m.paths.length === 1 && m.paths[0]!.some(id => g.lanes[id]!.key.startsWith('S')));
+  assert.equal(planned.length, 3);
+  const plain = rights.filter(m => !planned.includes(m));
+  assert.equal(plain.length, 1);
+  const m = plain[0]!, sp = g.signals.get(n)!;
+  assert.equal(m.paths.length, 1);
+  const p = m.paths[0]!.map(id => g.lanes[id]!);
+  const conns = p.filter(l => l.node === n && l.kind === LK.CONN && l.flare === undefined);
+  assert.equal(conns.length, 1);
+  const c = conns[0]!;
+  assert.equal(c.ctl, CTL.SIGNAL); assert.equal(c.prio, 3);
+  // no approach lane here (the in link stops short of the stop line): the lane before the connector is the one on its phase
+  const feed = p[p.indexOf(c) - 1]!;
+  assert.ok(c.phase >= 0 && sp.phaseLanes[c.phase]!.includes(feed.id), 'the connector\'s in lane is on its phase');
+});
+
+test('a slip crossing with every corner off has no slipways, and turning it to lights leaves no flare lanes', () => {
+  const e = new NetEditor(new RoadNetwork()), g = new LaneGraph(), log: NetOp[] = [];
+  const commit = () => { log.push(...e.commit()); g.update(e.net); };
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); commit();
+  const n = at(e, 50, 50);
+  e.setNodeType(n, 'slip'); commit();
+  e.setSlipOff(n, rightDegs(n)); commit();
+  assert.deepEqual(checkGraph(g), []);
+  assert.equal(movesAt(g, n).filter(m => m.turn === 'R').length, 4);
+  assert.ok(liveLanes(g).every(l => l.flare === undefined));
+  e.setNodeType(n, 'signal'); commit();
+  assert.equal(n.slipOff, undefined);
+  assert.deepEqual(checkGraph(g), []);
+  assert.ok(liveLanes(g).every(l => l.flare === undefined));
   assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
 });

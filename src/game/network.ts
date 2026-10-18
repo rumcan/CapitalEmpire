@@ -57,6 +57,8 @@ export const RB_BASE: Record<1 | 2 | 3, number> = { 1: 7, 2: 11, 3: 15 };
 export const FLAG_COST = { wide: 3000, tl: 2000 };
 /** each ring lane a roundabout has beyond the first */
 export const RING_LANE_COST = 4000;
+/** a slipway on one corner of a junction with lights */
+export const SLIP_CORNER_COST = 1000;
 /** what a junction of type t with rl ring lanes costs (the type's JUNCTIONS cost, plus the ring lanes beyond the first on a roundabout) */
 export const variantCost = (t: NodeType, rl: 1 | 2 | 3): number => (JUNCTIONS.find(j => j.id === t)?.cost ?? 0) + (t === 'roundabout' ? (rl - 1) * RING_LANE_COST : 0);
 
@@ -168,8 +170,9 @@ function walkAlong(pts: Pt[], closed: boolean, first: number, step: number, fn: 
 
 /* ---------- data ---------- */
 /** a junction or bend; wide = widened turns (connectors at 2x the radius for speed), tl = turn lanes (lane 0 turns left only, at a 3+ arm junction) */
-/** rl: a roundabout's ring lanes (unset = 1; lane 0 is the outer one) */
-export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean; rl?: 1 | 2 | 3 }
+/** rl: a roundabout's ring lanes (unset = 1; lane 0 is the outer one); slipOff: a slip node's corners with no slipway, each named by its right turn's
+ *  in-arm (armDeg); unset or empty = every corner has one */
+export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean; rl?: 1 | 2 | 3; slipOff?: number[] }
 /** how a segment is built: on the ground, on a bridge, or in a tunnel */
 export const SK = { GROUND: 0, BRIDGE: 1, TUNNEL: 2 } as const; export type SegKind = 0 | 1 | 2;
 export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind }
@@ -256,9 +259,24 @@ function slipIsland(N: Pt, A: Arm, B: Arm, Q: Pt, R: number) {
   path.arcTo(C2.x, C2.y, mid.x, mid.y, 0.6); path.closePath();
   return { path, bbox: bboxOf([C2, PA, PB], 0.3) };
 }
+/** the in-arm of the right turn at the corner between consecutive arms A and B (the car turns from -A into B, or from -B into A), or null
+ *  when neither is a right turn */
+export function slipIn(A: Arm, B: Arm): Arm | null {
+  const right = (h: Pt, o: Pt) => Math.atan2(cross(h, o), dot(h, o)) > 0.35;
+  return right(mul(A.dir, -1), B.dir) ? A : right(mul(B.dir, -1), A.dir) ? B : null;
+}
+/** a corner's name in a node's slipOff: its right turn's in-arm, whole degrees */
+export const armDeg = (a: Arm) => Math.round(a.ang * 180 / Math.PI);
+/** whether the corner between consecutive arms A and B of node n has a slipway: n is a slip node, the corner has a right turn, and that
+ *  in-arm is not in n.slipOff */
+export function slipOn(n: Node, A: Arm, B: Arm): boolean {
+  if (n.type !== 'slip') return false;
+  const i = slipIn(A, B); return !!i && !n.slipOff?.includes(armDeg(i));
+}
 /** the slip road between consecutive arms A and B of a slip node (B the arm after A in n.arms): its arc's centre Q and radius R, with the
- *  painter's conditions and no Path2D; null where the painter draws no corner or no island. Callers check n.type */
+ *  painter's conditions and no Path2D; null where the painter draws no corner or no island, or the corner has no slipway (slipOn). Callers check n.type */
 export function slipCorner(n: Node, A: Arm, B: Arm): { Q: Pt; R: number } | null {
+  if (!slipOn(n, A, B)) return null;
   const N = { x: n.x, y: n.y }, phi = (((B.ang - A.ang) % TAU) + TAU) % TAU;
   if (phi < 0.12 || phi > Math.PI - 0.05) return null;
   const R = Math.min(R_SLIP, 0.45 * Math.min(A.len, B.len) * Math.tan(phi / 2)); if (R < 9) return null;
@@ -389,7 +407,10 @@ export class RoadNetwork {
     if (inner(p1)) this.link(this.node(p1), this.keep(b), cls, style, kind);
     if (rebuild) this.rebuild();
   }
-  setNodeType(n: Node, type: NodeType, rebuild = true) { n.type = type; this.touched.add(n); if (rebuild) this.rebuild(); }
+  /** a node's type; a type other than a slip drops the node's slipways (slipOff) */
+  setNodeType(n: Node, type: NodeType, rebuild = true) { n.type = type; if (type !== 'slip') n.slipOff = undefined; this.touched.add(n); if (rebuild) this.rebuild(); }
+  /** the slip node's corners without a slipway (their in-arms, armDeg; empty = all of them have one); the lane graph and the painter read it at the node */
+  setSlipOff(n: Node, off: number[], rebuild = true) { n.slipOff = off.length ? [...off] : undefined; this.touched.add(n); if (rebuild) this.rebuild(); }
   /** the node's widened-turns and turn-lane flags and its roundabout's ring lanes (the lane graph reads them at the node) */
   setNodeFlags(n: Node, wide: boolean, tl: boolean, rl: 1 | 2 | 3 = n.rl ?? 1, rebuild = true) { n.wide = wide; n.tl = tl; n.rl = rl; this.touched.add(n); if (rebuild) this.rebuild(); }
   nearestNode(p: Pt, minDeg: number, maxDist: number): Node | null {
@@ -627,7 +648,8 @@ export class RoadNetwork {
         const phi = (((B.ang - A.ang) % TAU) + TAU) % TAU;
         if (phi < 0.12 || phi > Math.PI - 0.05) continue;
         const tan = Math.tan(phi / 2), minLen = Math.min(A.len, B.len);
-        let R = n.type === 'slip' ? R_SLIP : Math.min(A.cls.rConcave, B.cls.rConcave);
+        const slip = slipOn(n, A, B);
+        let R = slip ? R_SLIP : Math.min(A.cls.rConcave, B.cls.rConcave);
         R = Math.min(R, 0.45 * minLen * tan); if (R < 0.15) continue;
         const wide = A.cls.order >= B.cls.order ? A : B;
         const cp = cornerPatch(N, A.dir, A.h, B.dir, B.h, phi, R); if (!cp) continue;
@@ -639,7 +661,7 @@ export class RoadNetwork {
           let d = angDelta(aa, ab); if (Math.abs(d) < 1e-6) d = 0.01;
           slabRuns.push({ kind: 'arc', c: cp.Q, r0: Math.max(0.05, R - wk), r1: R + 0.02, a0: d > 0 ? aa : ab, a1: d > 0 ? ab : aa, seed: (Math.abs(n.x * 13 + n.y * 29 + i * 5) | 0) });
         }
-        if (n.type === 'slip' && R >= 9) { const isl = slipIsland(N, A, B, cp.Q, R); if (isl) islandF.push(feat('poly', isl.path, 0, 'pad', 0, isl.bbox)); }
+        if (slip && R >= 9) { const isl = slipIsland(N, A, B, cp.Q, R); if (isl) islandF.push(feat('poly', isl.path, 0, 'pad', 0, isl.bbox)); }
         if ((n.type === 'signal' || n.type === 'slip') && k >= 3) { const p = add(cp.C, mul(cp.bis, R / Math.sin(phi / 2) - R + 0.6)); auto.push({ kind: 'light', x: p.x, y: p.y, i }); }
       }
       if (k === 2 && arms[0].cls !== arms[1].cls && dot(arms[0].dir, arms[1].dir) < -0.96) {

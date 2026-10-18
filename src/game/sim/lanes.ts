@@ -1,6 +1,6 @@
 // The lane graph: directed lanes, junction connectors and movements derived from the road network. Pure TS, no DOM.
 // Geometry is in tiles; lengths, s positions and speeds are in metres and m/s.
-import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, slipCorner, sub, vlen } from '../network';
+import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, slipCorner, slipOn, sub, vlen } from '../network';
 import { BOOTH_W, PLAZA_LEN, TAPER } from '../event/config';
 import { plazaKey, type TollDef } from '../event/toll';
 
@@ -450,7 +450,8 @@ export class LaneGraph {
         const c = this.conn(n, aL ?? inL, dL ?? outL, false, nl);
         if (sig) {
           c.ctl = CTL.SIGNAL; c.phase = armPhase[x.i]; c.prio = t === 'L' ? 2 : 3;
-          if (n.type === 'slip' && t === 'R') { c.ctl = CTL.YIELD; c.phase = -1; c.prio = 1; }
+          // a right turn at a slipway corner too short for a plan yields from the stop line; at an off corner it is an ordinary signal connector
+          if (t === 'R' && slipOn(n, x.a, y.a)) { c.ctl = CTL.YIELD; c.phase = -1; c.prio = 1; }
           if (sp && c.ctl === CTL.SIGNAL) { const pl = sp.phaseLanes[c.phase]!, f = (aL ?? inL).id; if (!pl.includes(f)) pl.push(f); }
         } else if (major[x.i]) { c.ctl = CTL.FREE; c.prio = t === 'L' ? 2 : 3; }
         else { c.ctl = minorCtl; c.prio = t === 'R' ? 1 : 0; }

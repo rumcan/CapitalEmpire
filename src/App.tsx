@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
-import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST } from './game/network';
+import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST } from './game/network';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
@@ -693,7 +693,7 @@ function JunctionPanel({ game }: { game: Game }) {
   return (
     <Panel title="Junctions">
       <div className="flex items-center gap-1 text-xs">
-        {([['type', 'Type'], ['wide', 'Widen turns'], ['tl', 'Turn lanes']] as const).map(([m, label]) => (
+        {([['type', 'Type'], ['wide', 'Widen turns'], ['tl', 'Turn lanes'], ['slips', 'Slipways']] as const).map(([m, label]) => (
           <button key={m} className={`chip ${mode === m ? 'chip-on' : ''}`} onClick={() => { game.junctionMode = m; game.emit(); }}>{label}</button>
         ))}
       </div>
@@ -721,7 +721,9 @@ function JunctionPanel({ game }: { game: Game }) {
           )}
         </>
       ) : (
-        <p className="mt-2 text-xs text-slate-300">{mode === 'wide'
+        <p className="mt-2 text-xs text-slate-300">{mode === 'slips'
+          ? `Slipways (${money(SLIP_CORNER_COST)} a corner): click a corner of a junction with lights to add or remove its slipway; the last one off makes it plain lights again.`
+          : mode === 'wide'
           ? `Widen turns (${money(FLAG_COST.wide)}): the corners at this junction take up to twice the speed. Click a junction or bend to turn it on; click again to remove it.`
           : `Turn lanes (${money(FLAG_COST.tl)}, two-lane roads): the leftmost lane takes left turns only; the others go straight on or right. Click a junction of three or more roads to turn it on; click again to remove it.`}</p>
       )}
@@ -792,7 +794,8 @@ function SelectPanel({ game }: { game: Game }) {
 function hintFor(g: Game) {
   switch (g.tool) {
     case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start`;
-    case 'junction': if (g.junctionMode !== 'type') return g.hoverNode ? `Click to ${g.junctionMode === 'wide' ? 'widen the turns here' : 'toggle the turn lanes here'}` : 'Hover a junction or bend';
+    case 'junction': if (g.junctionMode === 'slips') return g.hoverNode ? 'Click a corner of a junction with lights to add or remove its slipway' : 'Hover a junction with lights (three or more roads) to pick its corner';
+      if (g.junctionMode !== 'type') return g.hoverNode ? `Click to ${g.junctionMode === 'wide' ? 'widen the turns here' : 'toggle the turn lanes here'}` : 'Hover a junction or bend';
       return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here · Tab flips the type` : 'Hover a junction (three or more roads; roundabouts also work on bends) · Tab flips the type';
     case 'lane': { const h = g.laneHover; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way';
       return h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`; }
