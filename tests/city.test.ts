@@ -75,3 +75,17 @@ test('a city keeps a snapshot of each game hour: stepped across 2 game hours, th
   city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
   assert.equal(city.hours.length, 0, 'a new valley starts the hours again');
 });
+
+test('a town that reaches 1,000 residents: Village and Small town in one game hour step, their grants paid, the career at 2', () => {
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
+  city.netOps(gridEditor().commit(true));
+  city.town.pop = 1200; // a plain field: the next game hour's start reads it
+  const before = city.budget.money;
+  const r = city.step(1);
+  assert.deepEqual(r.milestones.map(m => m.name), ['Village', 'Small town'], 'the milestones newly reached, in order');
+  assert.equal(city.budget.money - before, 30000, 'the grants paid: $10,000 and $20,000');
+  assert.equal(city.career.reached, 2, 'the career at Small town');
+  assert.equal(r.won, false, 'no win below 6,000 residents');
+  assert.equal(city.step(1).milestones.length, 0, 'no milestone again within the same game hour');
+});

@@ -14,6 +14,7 @@ import { VTYPES, type CarInfo } from './sim';
 import type { Report } from './bottlenecks';
 import type { HourStat } from '../beforeafter';
 import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../budget';
+import type { CareerSave, Milestone } from '../career';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
@@ -50,6 +51,8 @@ export class SimClient {
   onGrow?: (legs: Leg[]) => void;
   /** the city's books as the worker last sent them (the treasury is also moved on spend, before the worker's answer), the game day, and called with each day's ledger as it closes */
   budget: BudgetSave = new Budget().toJSON(); day = 1; onLedger?: (l: Ledger) => void;
+  /** the career as the worker last sent it (reset with the books), and called with the milestones a step newly reached and whether the city won */
+  career: CareerSave = { reached: 0, won: false }; onMilestone?: (newly: Milestone[], won: boolean) => void;
   /** the bottleneck report as the worker last sent it (null until the first; one each game hour, and after requestReport), and called with each one as it arrives */
   report: Report | null = null; onReport?: () => void;
   /** the game hours' snapshots as the worker last sent them with the report (see HourStat), newest last */
@@ -89,13 +92,13 @@ export class SimClient {
   /** the town's growth option by id (see GROWTH_OPTIONS) */
   setOption(id: string) { this.option = id; this.post({ t: 'option', id }); }
   /** a saved town for the worker (its lots, the sim clock, s, and its books or the treasury of an old save): after the net ops of a load */
-  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY) { this.post({ t: 'townState', lots, simT, budget, money }); }
+  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave) { this.post({ t: 'townState', lots, simT, budget, money, career }); }
   /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
   spend(kind: 'construction' | 'compensation', n: number) { this.budget.money -= n; this.post({ t: 'spend', kind, n }); }
   /** takes (true) or repays (false) one loan unit; the worker refuses what the books do not allow */
   loan(take: boolean) { this.post({ t: 'loan', take }); }
-  /** replaces the books with a saved budget, or a fresh one for null (based at the sim day's midnight); the mirror takes it at once, so a save right after sees it */
-  setBudget(save: BudgetSave | null) { this.budget = save ?? { ...new Budget().toJSON(), base: Math.floor(this.simTime(performance.now()) / GAME_DAY) * GAME_DAY }; this.post({ t: 'budget', save }); }
+  /** replaces the books with a saved budget, or a fresh one for null (based at the sim day's midnight), and the career saved with them (a fresh one if none); the mirrors take it at once, so a save right after sees it */
+  setBudget(save: BudgetSave | null, career?: CareerSave | null) { this.budget = save ?? { ...new Budget().toJSON(), base: Math.floor(this.simTime(performance.now()) / GAME_DAY) * GAME_DAY }; this.career = career ?? { reached: 0, won: false }; this.post({ t: 'budget', save, career }); }
   /** asks the worker for the bottleneck report now (it arrives later, into report) */
   requestReport() { this.post({ t: 'report' }); }
   /** sets the number of cars the sim keeps on the network */
@@ -118,7 +121,8 @@ export class SimClient {
     if (m.t === 'log') { console.log('[sim]', m.message); return; }
     if (m.t === 'error') { console.error('[sim]', m.message); return; }
     if (m.t === 'lots') { this.applyLots(m.added, m.removed); return; }
-    if (m.t === 'budget') { this.budget = m.save; this.day = m.day; if (m.ledger) this.onLedger?.(m.ledger); return; }
+    if (m.t === 'budget') { this.budget = m.save; this.career = m.career; this.day = m.day; if (m.ledger) this.onLedger?.(m.ledger); return; }
+    if (m.t === 'milestone') { this.onMilestone?.(m.newly, m.won); return; }
     if (m.t === 'report') { this.report = m.report; this.hours = m.hours; this.onReport?.(); return; }
     // a null car is the inspected one gone (the worker stops then); a car of another slot is a late answer to an earlier inspect
     if (m.t === 'car') { if (this.slot >= 0 && (!m.info || m.info.slot === this.slot)) this.car = m.info; return; }

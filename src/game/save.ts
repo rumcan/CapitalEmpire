@@ -5,6 +5,7 @@ import { MAP } from './iso';
 import type { SaveData } from './types';
 import type { LotTuple } from './lots/town';
 import type { BudgetSave } from './budget';
+import type { CareerSave } from './career';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -41,6 +42,8 @@ export interface SaveV5 {
   simT?: number;
   /** the city's books: the treasury, loans, days in the red, bankruptcy and the ledgers (v5; missing = a fresh budget with money) */
   budget?: BudgetSave;
+  /** the career: the highest milestone reached and the win (v5; missing = a fresh career at the hamlet) */
+  career?: CareerSave;
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',

@@ -7,6 +7,7 @@ import { City } from '../city';
 import type { Lot } from '../lots/lots';
 import type { TownEvent } from '../lots/town';
 import type { Ledger } from '../budget';
+import type { Milestone } from '../career';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -28,8 +29,11 @@ function postTown(ev: TownEvent[], force: boolean) {
   post({ t: 'town', events: ev.slice(), pop: town.pop, jobs: town.jobs, built: town.built, access: town.access });
 }
 
-/** the books: the save, the game day now, and the ledger of the day that just closed (null unless a day did) */
-function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), day: city.budget.dayOf(city.sim.t), ledger }); }
+/** the books: the save, the career's save, the game day now, and the ledger of the day that just closed (null unless a day did) */
+function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), career: city.career.toJSON(), day: city.budget.dayOf(city.sim.t), ledger }); }
+
+/** a step's career news: the milestones it newly reached and the win, then the books (the grants moved the treasury); nothing if neither */
+function postCareer(r: { milestones: Milestone[]; won: boolean }) { if (!r.milestones.length && !r.won) return; post({ t: 'milestone', newly: r.milestones, won: r.won }); postBudget(null); }
 
 /** the bottleneck report: the flow buffer is handed over, not copied */
 function postReport() { const report = city.report(); post({ t: 'report', report, hours: city.hours.slice() }, [report.flow.buffer as ArrayBuffer]); }
@@ -70,6 +74,7 @@ function frame() {
       postTown(r.events, false);
       if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
       if (r.ledger) postBudget(r.ledger);
+      postCareer(r);
     }
     if (city.sim.t >= skipUntil) { skipUntil = -1; forcePost = true; }
   } else {
@@ -77,6 +82,7 @@ function frame() {
     postTown(r.events, false);
     if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
     if (r.ledger) postBudget(r.ledger);
+    postCareer(r);
   }
   const hr = Math.floor(city.sim.t / HOUR);
   // not while fast-forwarding (an hour passes almost every frame then); the first frame after the skip posts it
@@ -103,10 +109,10 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
-      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money), true); postBudget(null); break;
+      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career), true); postBudget(null); break;
       case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
       case 'loan': city.loan(m.take); postBudget(null); break;
-      case 'budget': city.setBudget(m.save); postBudget(null); break;
+      case 'budget': city.setBudget(m.save, m.career); postBudget(null); break;
       case 'report': postReport(); break;
       case 'inspect': inspecting = m.slot; break;
       case 'watch':

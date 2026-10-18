@@ -22,6 +22,7 @@ import { compose, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { phaseState } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
+import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 
 /** a game day and a game hour, sim s (one sim second is one game minute) */
 const GAME_DAY = 1440, GAME_HOUR = 60;
@@ -83,6 +84,8 @@ export class Game {
   showFlow = false;
   /** the right-hand panel: the budget (the treasury), the bottlenecks (key B), or none */
   panel: 'budget' | 'bottlenecks' | null = null;
+  /** the win's modal (App): set once when the career is won, cleared by its 'Keep building' */
+  showWin = false;
   /** the before / after snapshot (the bottlenecks panel): the game hour it was taken at, the window before (null: no traffic on record yet), and the next rush, [start, end] in absolute game hours */
   snapshot: { at: number; before: Window | null; after: [number, number] } | null = null;
   /** a ring pulsed for 4 s where the camera jumped (see jumpTo): the tile and the time (performance.now, ms) */
@@ -133,6 +136,14 @@ export class Game {
       else this.toast(`Day ${l.day}: ${l.net >= 0 ? '+' : '−'}$${Math.abs(l.net).toLocaleString()}`, l.net >= 0 ? 'good' : 'info');
       this.scheduleSave(); this.emit();
     };
+    this.traffic.onMilestone = (newly, won) => {
+      for (const m of newly) {
+        const what = [...m.classes.map(id => CLASS[id].name), ...m.junctions.map(id => JUNCTIONS.find(j => j.id === id)!.name), ...(m.tunnels ? ['tunnels'] : [])].join(', ');
+        this.toast(`${m.name}${what ? `: ${what}` : ''}${m.grant ? `, grant $${m.grant.toLocaleString()}` : ''}`, 'good');
+      }
+      if (won) { this.showWin = true; this.toast(`${WIN_POP.toLocaleString()} residents: the Career is won`, 'good'); }
+      this.scheduleSave(); this.emit();
+    };
   }
   get cls() { return CLASS[this.roadClass]; }
 
@@ -161,7 +172,7 @@ export class Game {
     const tl = performance.now();
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
-    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money);
+    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career);
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -489,6 +500,8 @@ export class Game {
     if (!legs.length) { this.cancelRoute(); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
+    if (!classUnlocked(cls.id, this.reached)) { const lk = unlockOf('class', cls.id)!; this.toast(`${cls.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
+    if (kinds.includes(SK.TUNNEL) && !tunnelsUnlocked(this.reached)) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
     const total = this.net.legsLength(parts);
@@ -510,6 +523,7 @@ export class Game {
   }
   private junctionClick(mx: number, my: number) {
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
+    if (!junctionUnlocked(this.junctionType, this.reached)) { const lk = unlockOf('junction', this.junctionType)!; this.toast(`${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     const n = this.net.nearestNode(t, spec.minDeg, 5);
     if (!n) { this.toast(spec.minDeg > 2 ? 'Click a junction where three or more roads meet' : 'Click a junction or a bend in the road', 'warn'); return; }
     if (n.type === this.junctionType) { this.toast(`That junction already has ${spec.name.toLowerCase()}`); return; }
@@ -732,6 +746,10 @@ export class Game {
   get ledger(): Ledger | null { const h = this.traffic.budget.history; return h[h.length - 1] ?? null; }
   /** true once the city went too long in the red (the books stay so) */
   get bankrupt() { return this.traffic.budget.bankrupt; }
+  /** the index of the highest career milestone reached (see career.ts; the city worker's, mirrored) */
+  get reached() { return this.traffic.career.reached; }
+  /** true once the career is won (WIN_POP residents; it stays so) */
+  get won() { return this.traffic.career.won; }
   /** takes a loan unit if the town can hold one more (else says why); the worker books it */
   borrow() { const b = Budget.from(this.traffic.budget); if (b.loans >= b.maxLoans(this.traffic.pop)) this.toast('No more credit: grow the town for more', 'warn'); else this.traffic.loan(true); }
   /** repays a loan unit if there is one and the treasury covers LOAN (else says why); the worker books it */
@@ -747,7 +765,7 @@ export class Game {
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.money, day: this.day, cam: { ...this.cam },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
-      simT: this.traffic.simTime(performance.now()), budget: this.traffic.budget,
+      simT: this.traffic.simTime(performance.now()), budget: this.traffic.budget, career: this.traffic.career,
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -769,7 +787,7 @@ export class Game {
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
-    this.traffic.setBudget(null); this.route = []; this.selected = null; this.builds = [];
+    this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
     this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain); this.sendTerrain();

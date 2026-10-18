@@ -14,6 +14,7 @@ import { Sim, type CarInfo } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
+import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
@@ -22,6 +23,8 @@ const CAP = 12000, TICKS = 100;
 const GAME_HOUR = 60;
 /** the game hours' snapshots kept (four game days of them: see beforeafter.ts) */
 const HOURS_KEPT = 96;
+/** the milestones of a step that reached none (shared: read, never written) */
+const NO_MILESTONES: Milestone[] = [];
 /** the water distance field: 4-tile cells, distances capped at WATER_CAP tiles */
 const WATER_N = MAP >> 2, WATER_CAP = 200;
 
@@ -63,6 +66,8 @@ export class City {
   town: Town;
   /** the city's books (budget.ts): the treasury, loans, the ledgers; the game day booked last (-1: none yet) and the sim's trade at that booking */
   budget = new Budget();
+  /** the town's career (career.ts): the milestones reached (their grants paid, their road classes, junctions and tunnels unlocked) and the win; a fresh one with each valley or book */
+  career = new Career();
   private dayIdx = -1; private tradeAt = { arrived: 0, punctual: 0 };
   /** the step calls so far (one per wall-clock frame in the worker), the ring of their times (ms), and the last network batch's times */
   calls = 0; graphMs = 0; lotsMs = 0; lanes = 0;
@@ -108,13 +113,15 @@ export class City {
     this.town = new Town(seed); this.town.option = optionOf(this.optId); this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
-    this.setBudget(null);
+    this.setBudget(null, null);
   }
 
-  /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day) */
-  setBudget(s: BudgetSave | null): void {
+  /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day); the career
+   *  saved with them, or a fresh one (at the hamlet) if none is given */
+  setBudget(s: BudgetSave | null, career?: CareerSave | null): void {
     this.budget = s ? Budget.from(s) : new Budget();
     if (!s) this.budget.base = Math.floor(this.sim.t / GAME_DAY) * GAME_DAY;
+    this.career = Career.from(career ?? undefined);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
   }
 
@@ -168,9 +175,10 @@ export class City {
   }
 
   /** a saved town (after the load's net ops): the sim clock (s), then the lots' states; returns the 'complete' event per restored lot */
-  restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number): TownEvent[] {
+  restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number, career?: CareerSave): TownEvent[] {
     this.sim.t = simT;
     this.budget = Budget.from(budget, money); if (!budget) this.budget.base = Math.floor(simT / GAME_DAY) * GAME_DAY;
+    this.career = Career.from(career);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
     const ev = this.town.restore(saved, this.sim.t); this.syncHour = -1;
     return ev;
@@ -178,12 +186,20 @@ export class City {
 
   /** n sim steps (a frame at speed n), then the town to the sim time, then the planner (once a game hour). Returns the town's events
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
-   *  ledger of the game day that closed in these steps, if one did (else null). */
-  step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null } {
+   *  ledger of the game day that closed in these steps, if one did (else null). At a game hour's start the career is updated: the
+   *  milestones newly reached (their grants paid then) and the win, if it came; milestones is the shared empty array most calls. */
+  step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
     const t0 = performance.now();
     this.calls++;
     const hr = Math.floor(this.sim.t / GAME_HOUR);
-    if (hr !== this.syncHour) { this.pushHour(hr); this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync(); }
+    let milestones = NO_MILESTONES, won = false;
+    if (hr !== this.syncHour) {
+      this.pushHour(hr); this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync();
+      const u = this.career.update(this.town.pop);
+      for (const m of u.newly) if (m.grant) this.budget.grant(m.grant);
+      if (u.newly.length) milestones = u.newly;
+      won = u.won;
+    }
     for (let k = 0; k < n; k++) this.sim.step();
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
     const events = this.town.tick(this.sim.t, this.ctx);
@@ -191,7 +207,7 @@ export class City {
     const d = this.budget.dayOf(this.sim.t); let ledger: Ledger | null = null;
     if (this.dayIdx < 0) this.dayIdx = d;
     else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
-    return { events, grow: this.planGrow(), ledger };
+    return { events, grow: this.planGrow(), ledger, milestones, won };
   }
 
   /** the snapshot of game hour h, at its start: the sim's cumulative counts, the builds, and the town's residents and built lots now */

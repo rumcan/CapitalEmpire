@@ -7,6 +7,7 @@ import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
+import { MILESTONES, WIN_POP, classUnlocked, junctionUnlocked, unlockOf } from './game/career';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
@@ -15,6 +16,8 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
+/** the price line of a locked road class or junction type: the residents it unlocks at */
+const lockText = (pop: number) => `🔒 ${pop.toLocaleString()} residents`;
 /** the game clock as HH:MM */
 const hhmm = (c: { hour: number; minute: number }) => `${String(c.hour).padStart(2, '0')}:${String(c.minute).padStart(2, '0')}`;
 /** a game hour of the day as HH:00 */
@@ -88,6 +91,7 @@ export default function App() {
                 <div className="text-[10px] uppercase tracking-[0.25em] text-amber-400/70">Town Builder</div>
               </div>
               <div className="mx-1 h-8 w-px bg-white/10" />
+              <Stat label="Career" {...careerStat(game)} tone="text-amber-200" />
               <Stat label="Treasury" value={money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
               <Stat label="Population" value={game.traffic.pop.toLocaleString()} />
               <Stat label="Jobs" value={game.traffic.jobs.toLocaleString()} />
@@ -157,6 +161,17 @@ export default function App() {
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
           {game.panel === 'bottlenecks' && <BottleneckPanel game={game} />}
+          {game.showWin && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+              <div className="w-96 rounded-2xl border border-emerald-500/40 bg-slate-950 p-6 text-center text-slate-200 shadow-2xl">
+                <div className="text-2xl font-bold text-amber-200">City!</div>
+                <p className="mt-3 text-sm text-slate-300">{WIN_POP.toLocaleString()} residents: you have won the Career. The town keeps growing if you keep building.</p>
+                <div className="mt-5 flex justify-center">
+                  <button className="chip chip-on" onClick={() => { game.showWin = false; game.emit(); }}>Keep building</button>
+                </div>
+              </div>
+            </div>
+          )}
           {game.bankrupt && !watch && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
               <div className="w-96 rounded-2xl border border-red-500/40 bg-slate-950 p-6 text-center text-slate-200 shadow-2xl">
@@ -207,20 +222,29 @@ function PerfPanel({ game }: { game: Game }) {
   );
 }
 
-function Stat({ label, value, sub, tone, subTone, onClick }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; onClick?: () => void }) {
+/** a top-bar figure: its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
+function Stat({ label, value, sub, tone, subTone, bar, onClick }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; bar?: number; onClick?: () => void }) {
   return (
     <div className={`px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick}>
       <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
       <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
       {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'}`}>{sub}</div>}
+      {bar !== undefined && <div className="mt-0.5 h-1 w-28 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(bar * 100)}%` }} /></div>}
     </div>
   );
+}
+
+/** the Career figure: the milestone reached, the next one and how far the population is from it (from the last milestone's residents to the next one's); Career won at the last */
+function careerStat(game: Game): { value: string; sub: string; bar?: number } {
+  const cur = MILESTONES[game.reached]!, nxt = MILESTONES[game.reached + 1];
+  if (!nxt) return { value: cur.name, sub: 'Career won' };
+  return { value: cur.name, sub: `next: ${nxt.name} at ${nxt.pop.toLocaleString()}`, bar: Math.min(1, Math.max(0, (game.traffic.pop - cur.pop) / (nxt.pop - cur.pop))) };
 }
 
 /** the city's books: the last closed day's ledger, the net of the last 14 days as bars, the loans and the debt */
 function BudgetPanel({ game }: { game: Game }) {
   const b = game.traffic.budget, l = game.ledger, H = b.history.slice(-14), mx = Math.max(1, ...H.map(v => Math.abs(v.net)));
-  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Road upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
+  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Road upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
   const maxLoans = Budget.from(b).maxLoans(game.traffic.pop);
   return (
     <div className="absolute right-3 top-24 z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
@@ -375,12 +399,15 @@ function RoadPanel({ game }: { game: Game }) {
         <b className="text-slate-100">Draw a connected route.</b> Click to start, click again for each bend or stop. Routes snap to the grid; crossings become junctions with rounded corners and crossings automatically.
       </p>
       <div className="mt-2 grid grid-cols-1 gap-1">
-        {CLASSES.map((c, i) => (
-          <button key={c.id} className={`card ${game.roadClass === c.id ? 'card-on' : ''}`} onClick={() => { game.roadClass = c.id; game.emit(); }} title={`Key ${i + 1}`}>
-            <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{money(c.cost)} / 2 m</span></div>
-            <div className="text-[10px] text-slate-400">{c.desc}</div>
-          </button>
-        ))}
+        {CLASSES.map((c, i) => {
+          const lk = classUnlocked(c.id, game.reached) ? null : unlockOf('class', c.id)!;
+          return (
+            <button key={c.id} className={`card ${game.roadClass === c.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.roadClass = c.id; game.emit(); }} title={`Key ${i + 1}`}>
+              <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span></div>
+              <div className="text-[10px] text-slate-400">{c.desc}</div>
+            </button>
+          );
+        })}
       </div>
       <div className="mt-2 flex items-center gap-1 text-xs">
         <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Bends</span>
@@ -416,12 +443,15 @@ function JunctionPanel({ game }: { game: Game }) {
     <Panel title="Junctions">
       <p className="text-xs text-slate-300">Pick a type, then click a junction. Lights add stop lines and signals on every corner; slipways add channelised turn lanes with islands (needs long approaches); roundabouts get a planted island.</p>
       <div className="mt-2 grid grid-cols-1 gap-1">
-        {JUNCTIONS.map(j => (
-          <button key={j.id} className={`card ${game.junctionType === j.id ? 'card-on' : ''}`} onClick={() => { game.junctionType = j.id; game.emit(); }}>
-            <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{j.name}</span><span className="text-amber-300">{j.cost ? money(j.cost) : 'free'}</span></div>
-            <div className="text-[10px] text-slate-400">{j.desc}</div>
-          </button>
-        ))}
+        {JUNCTIONS.map(j => {
+          const lk = junctionUnlocked(j.id, game.reached) ? null : unlockOf('junction', j.id)!;
+          return (
+            <button key={j.id} className={`card ${game.junctionType === j.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.junctionType = j.id; game.emit(); }}>
+              <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{j.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : j.cost ? money(j.cost) : 'free'}</span></div>
+              <div className="text-[10px] text-slate-400">{j.desc}</div>
+            </button>
+          );
+        })}
       </div>
       <p className="mt-2 text-[11px] text-slate-500">{n ? `Junction of ${n.arms.length} roads (${JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()}) — click to convert` : 'Hover a junction to highlight it.'}</p>
     </Panel>
@@ -508,6 +538,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; drawing over a road upgrades it.</li>
           <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend.</li>
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
+          <li><b>Career</b>: milestones at 250, 1,000, 2,500, 4,000 and 6,000 residents unlock road classes, junctions and tunnels and pay grants; 6,000 wins. Bankruptcy loses.</li>
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
           <li>Space pauses (tap it; hold it and drag to pan); , and . change the speed; H skips to the next rush hour.</li>
           <li>F shows traffic flow and junction levels of service; B lists the worst bottlenecks (click one to jump there).</li>
