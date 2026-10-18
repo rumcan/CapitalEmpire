@@ -128,6 +128,12 @@ function bandHit(px: number, py: number, nx: number, ny: number, a: Pt, b: Pt, R
   return best;
 }
 /** the clear distance from a verge point p along n to the nearest other seg's verge within reach (Infinity if none) */
+/** no road behind a lot's frontage midpoint within OPEN_REACH tiles (wider than a 40-tile block): open land the town may branch into */
+function openBehind(net: RoadNetwork, s: Seg, p: Pt, n: Pt): boolean {
+  const list = [...net.segsNear({ x: p.x + n.x * OPEN_REACH / 2, y: p.y + n.y * OPEN_REACH / 2 }, OPEN_REACH / 2 + 8)];
+  return clearAlong(list, s, p, n, OPEN_REACH) === Infinity;
+}
+const OPEN_REACH = 45;
 function clearAlong(list: Seg[], s: Seg, p: Pt, n: Pt, reach: number): number {
   const x1 = p.x + n.x * reach, y1 = p.y + n.y * reach, x0min = Math.min(p.x, x1), x1max = Math.max(p.x, x1), y0min = Math.min(p.y, y1), y1max = Math.max(p.y, y1);
   let best = Infinity;
@@ -166,7 +172,7 @@ function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[]) 
       // keep the side-street points of the town's growth lattice free (roads.ts branches every BRANCH tiles of t): no lot within
       // RESERVE of them where the town could still branch (gravel, or open land behind), so a future street never has to cut
       // through a house; lots of an enclosed block (a road behind) are not held back
-      if (onLattice && (cls.id === 'gravel' || clear >= 2 * D)) continue;
+      if (onLattice && (cls.id === 'gravel' || openBehind(net, s, fm, n))) continue;
       const d = Math.min(depthOf(o, u, n, W, D), Math.floor(clear / 2));
       if (d < MIN_D || (terr && badShare(terr, o, u, n, W, d) > BAD_MAX)) continue;
       const front = fm, c = { x: front.x + n.x * d / 2, y: front.y + n.y * d / 2 };
