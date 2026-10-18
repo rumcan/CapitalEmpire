@@ -1,6 +1,6 @@
 # T012 · Road, town and place names
 
-Status: open
+Status: in progress (arena/b69c1098-capitalempire)
 Module: `src/game/ext/names/` · Tests: `tests/ext-names.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
