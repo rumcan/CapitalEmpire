@@ -1,6 +1,6 @@
 # T008 · Traffic incidents
 
-Status: open
+Status: in review (#8)
 Module: `src/game/ext/incidents/` · Tests: `tests/ext-incidents.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
