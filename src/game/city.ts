@@ -2,15 +2,15 @@
 // field, the Town and the growth planner. Pure TS, no worker globals: the city worker (sim/sim.worker.ts) is a thin shell that
 // posts what City returns, and the town gate (scripts/sim/town-gate.ts) drives it headless.
 import type { NetOp } from './ground-protocol';
-import { RoadNetwork, type Leg, type Node, type Pt, type Seg } from './network';
+import { RoadNetwork, dot, norm, perp, sub, type Leg, type Node, type Pt, type Seg } from './network';
 import { applyOps } from './netops';
 import { MAP } from './iso';
 import { TC } from './terrain/types';
 import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
-import { LaneGraph } from './sim/lanes';
-import { DT, Sim, type CarInfo } from './sim/sim';
+import { LaneGraph, MPT, laneAt } from './sim/lanes';
+import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
@@ -19,6 +19,7 @@ import type { HourStat } from './beforeafter';
 import { EVENT_CLOCK } from './event/config';
 import { Round } from './event/round';
 import { crowdFor, placeStadium, type Site } from './event/site';
+import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -30,6 +31,8 @@ const HOURS_KEPT = 96;
 const NO_MILESTONES: Milestone[] = [];
 /** the water distance field: 4-tile cells, distances capped at WATER_CAP tiles */
 const WATER_N = MAP >> 2, WATER_CAP = 200;
+/** a sink's s is kept this far from its lane's ends, m (as driveway's DRIVE_END), and the dev car park test sends cars at least this far, tiles, where it can */
+const SINK_END = 3, PARK_TEST_M = 300;
 
 /** the distance (tiles, capped) to the nearest WATER on the 4-tile cells (a cell is wet if one of its tiles is): a two-pass chamfer, in tiles */
 function waterField(terr: Uint8Array): Float32Array {
@@ -82,6 +85,9 @@ export class City {
   centres: Pt[] = [];
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
+  /** the car parks as the player placed them (parkDefs, the full list), and the ones built on the network (parks: buildPark; a park with no
+   *  frontage or under 10 bays is left out; parks[k] is sim.parks[k] and the sinks' park index) */
+  parkDefs: CarParkDef[] = []; parks: CarPark[] = [];
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
   private cls: Uint8Array | null = null; private water: Float32Array | null = null; private optId = GROWTH_OPTIONS[0].id;
@@ -162,7 +168,7 @@ export class City {
   /** closes the eval: the round is free again and the clock runs on from where it was frozen; false unless in eval */
   closeRound(): boolean {
     if (!this.round.close()) return false;
-    this.unfreeze();
+    this.unfreeze(); this.emptyParks();
     return true;
   }
 
@@ -214,6 +220,7 @@ export class City {
     }
     if (part.length) applyOps(this.net, part);
     this.sim.onGraph(); this.upkeepC = null;
+    if (this.parks.length) this.resolveSinks();
     this.graphMs = performance.now() - t0;
     this.lanes = 0; for (const ln of this.g.lanes) if (ln) this.lanes++;
     return this.lotsOps();
@@ -255,6 +262,7 @@ export class City {
   step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
     const t0 = performance.now();
     this.calls++;
+    this.sim.parkedNow.length = 0;
     const hr = Math.floor(this.sim.clock / GAME_HOUR);
     let milestones = NO_MILESTONES, won = false;
     if (hr !== this.syncHour) {
@@ -283,6 +291,71 @@ export class City {
     const s = this.sim.stats;
     this.hours.push({ h, lost: this.sim.lostTotal, arrived: s.arrived, ratioSum: s.ratioSum, ratioN: s.ratioN, abandoned: s.abandoned, builds: this.builds, pop: this.town.pop, built: this.town.built });
     if (this.hours.length > HOURS_KEPT) this.hours.shift();
+  }
+
+  /** the car parks as the player placed them (defs, the full list, each time): each is built on the network (buildPark), keeping its counts
+   *  by id; then the sinks (resolveSinks) */
+  setParks(defs: CarParkDef[]): void {
+    const old = this.parks, st = this.sim.parks, parks: CarPark[] = [], states: ParkState[] = [];
+    this.parkDefs = defs.slice();
+    for (const d of defs) {
+      const p = buildPark(this.net, d);
+      if (!p) continue;
+      const k = old.findIndex(q => q.id === p.id), o = k >= 0 ? st[k] : undefined;
+      parks.push(p); states.push({ bays: p.bays.length, parked: o?.parked ?? 0, turned: o?.turned ?? 0 });
+    }
+    this.parks = parks; this.sim.parks = states; this.resolveSinks();
+  }
+  /** each car park entrance's sink (sinkAt), as the sim's sinks; Sim.setSinks keeps the vehicles already bound for them */
+  private resolveSinks(): void {
+    const sinks: Sink[] = [];
+    this.parks.forEach((p, k) => { for (const e of p.entrances) { const s = this.sinkAt(k, p, e); if (s) sinks.push(s); } });
+    this.sim.setSinks(sinks);
+  }
+  /** the sink of park k at entrance e: the dseg of the frontage road (parallel to the park's side, within 2 tiles of e) whose traffic has the
+   *  park on its right (the lanes sit on perp of the heading, as driveway reads them); its outermost lane, s at e's projection on it; null if none */
+  private sinkAt(k: number, p: CarPark, e: Pt): Sink | null {
+    const near = new Set(this.net.segsNear(e, 2)), side = p.side, vert = side % 2 === 0;
+    // the park lies on the side of the road that faces away from the frontage's outward normal
+    const pv: Pt = { x: side === 0 ? -1 : side === 2 ? 1 : 0, y: side === 1 ? -1 : side === 3 ? 1 : 0 };
+    for (const d of this.g.dsegs) {
+      if (!d || !d.lanes.length || !near.has(d.seg)) continue;
+      const h = norm(sub(d.to, d.from));
+      if (Math.abs(vert ? h.y : h.x) < 0.98 || dot(perp(h), pv) <= 0) continue;
+      const ln = this.g.lanes[d.lanes[d.lanes.length - 1]!]!;
+      if (ln.len < 2 * SINK_END) return null;
+      const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm({ x: ln.pts[2]! - p0.x, y: ln.pts[3]! - p0.y });
+      return { park: k, dseg: d.id, s: Math.min(ln.len - SINK_END, Math.max(SINK_END, dot(sub(e, p0), u) * MPT)), next: 0 };
+    }
+    return null;
+  }
+  /** the car parks' counts for the frame: id, bays, cars parked, cars turned away */
+  parkView(): ParkView[] {
+    return this.parks.map((p, k) => { const s = this.sim.parks[k]!; return { id: p.id, bays: s.bays, parked: s.parked, turned: s.turned }; });
+  }
+  /** every car park is empty again (the round's close): the cars parked and turned away are counted from zero */
+  emptyParks(): void { for (const s of this.sim.parks) { s.parked = 0; s.turned = 0; } }
+  /** dev test hook (the browser check): sends up to n cars from random origins (the trips' origins; at least PARK_TEST_M tiles from the
+   *  entrance for the first draws) to the entrances of car park id, round-robin, bound for their sinks; returns the cars sent */
+  parkTest(id: number, n: number): number {
+    const k = this.parks.findIndex(q => q.id === id), js: number[] = [];
+    this.sim.sinks.forEach((s, j) => { if (s.park === k) js.push(j); });
+    if (k < 0 || !js.length) return 0;
+    const q = { x: 0, y: 0, hx: 0, hy: 0 }, sp = { x: 0, y: 0, hx: 0, hy: 0 };
+    let sent = 0;
+    for (let c = 0; c < n; c++) {
+      let done = false;
+      for (let a = 0; a < 40 && !done; a++) {
+        const lane = this.sim.trips.origin();
+        if (lane < 0) return sent;
+        const s = this.sim.trips.oS, j = js[sent % js.length]!, K = this.sim.sinks[j]!, dd = this.g.dsegs[K.dseg]!;
+        laneAt(this.g.lanes[lane]!, s, q); laneAt(this.g.lanes[dd.lanes[dd.lanes.length - 1]!]!, K.s, sp);
+        if (a < 20 && Math.hypot(sp.x - q.x, sp.y - q.y) < PARK_TEST_M) continue;
+        done = this.sim.spawnAt(lane, s, K.dseg, K.s, 0, j) >= 0;
+      }
+      if (done) sent++;
+    }
+    return sent;
   }
 
   /** the bottleneck report of the traffic now: the junctions' levels of service, the links' v/c, and the topN entries by time lost */

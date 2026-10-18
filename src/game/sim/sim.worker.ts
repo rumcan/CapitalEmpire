@@ -103,7 +103,7 @@ function frame() {
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
   forcePost = false; wasAlive = alive;
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
-  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.round.view() };
+  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.round.view(), parks: city.parkView() };
   post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
@@ -120,6 +120,8 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.round = Round.from(m.round); postBudget(null); break;
+      case 'parks': city.setParks(m.defs); forcePost = true; break;
+      case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else city.closeRound();
         postBudget(null); forcePost = true; break;

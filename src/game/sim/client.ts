@@ -17,6 +17,7 @@ import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../
 import type { CareerSave, Milestone } from '../career';
 import { Round, type RoundSave, type RoundView } from '../event/round';
 import type { Site } from '../event/site';
+import type { CarParkDef, ParkView } from '../event/carpark';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
@@ -24,7 +25,7 @@ const FRAME_MS = 100;
 const JUMP = 3;
 /** the round before any frame: free, level 1, no runs */
 const NO_ROUND: RoundView = new Round().view();
-const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false, round: NO_ROUND };
+const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false, round: NO_ROUND, parks: [] };
 /** half a car's length per vehicle type, tiles (the lights sit at its front and rear) */
 const HALF = VTYPES.map(v => v.len / 4);
 
@@ -73,6 +74,8 @@ export class SimClient {
   stats: SimStats = { ...EMPTY };
   /** the event round as the worker last sent it (with the frame stats; see startRound), and the stadium's site (null: none; with each terrain) */
   round: RoundView = NO_ROUND; site: Site | null = null;
+  /** the car parks' counts as the worker last sent them (with each frame; see ParkView) */
+  parks: ParkView[] = [];
   n = 0;
   alive = new Uint8Array(0); px = new Float32Array(0); py = new Float32Array(0);
   /** 4-facing index of the heading: 0 +x, 1 +y, 2 -x, 3 -y */
@@ -107,6 +110,10 @@ export class SimClient {
   townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave, shift = 0, round?: RoundSave) { this.post({ t: 'townState', lots, simT, budget, money, career, shift, round }); }
   /** starts an event round (the stadium's crowd comes to kick-off at 18:00 of the clock, which freezes): the build comes first */
   startRound() { this.post({ t: 'round', op: 'start' }); }
+  /** the car parks (the full list, each time): the worker builds their bays and entrances on the network it has */
+  setParks(defs: CarParkDef[]) { this.post({ t: 'parks', defs }); }
+  /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
+  parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** ends the build now: the surge (the crowd's run to kick-off) begins */
   startNow() { this.post({ t: 'round', op: 'now' }); }
   /** closes the round's eval: the round is free again and the clock runs on */
@@ -158,7 +165,7 @@ export class SimClient {
       for (const v of this.lots.values()) if (v.level >= LV.BUILT && v.use) this.builtZone[zoneOf(v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2)] = 1;
       this.onTown?.(m.events); return;
     }
-    this.stats = m.stats; this.round = m.stats.round;
+    this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks;
     if (m.cap !== this.n) this.resize(m.cap);
     this.prev = this.cur; this.cur = m.buf; this.tCur = performance.now();
   }

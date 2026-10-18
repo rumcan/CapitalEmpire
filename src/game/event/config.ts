@@ -24,3 +24,21 @@ export const SITE_MIN = 500;
 export const SITE_MAX = 1250;
 /** the stadium's footprint keeps this many tiles from the map's edges */
 export const SITE_MARGIN = 64;
+/** a car park's bay width along its row, tiles */
+export const BAY_W = 1.25;
+/** a car park's bay depth (the row's depth from its aisle), tiles */
+export const BAY_D = 2.5;
+/** a car park's aisle width (the entry lane along the frontage, and between the bay rows), tiles */
+export const AISLE = 3;
+/** a car park's cost per tile, $ */
+export const LOT_TILE_COST = 25;
+/** the time an entrance holds for each car it admits, s (the next car waits this long at the gate) */
+export const ENTRY_S = 2;
+/** a car park entrance per this many tiles of frontage */
+export const ENTRANCE_EVERY = 40;
+/** the most entrances a car park has */
+export const MAX_ENTRANCES = 3;
+/** the most tiles between a road's verge and a car park's edge (the frontage road) */
+export const FRONT_GAP = 3;
+/** the shortest side of a car park, tiles */
+export const MIN_PARK = 12;

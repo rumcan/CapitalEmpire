@@ -8,6 +8,7 @@ import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
+import { ENTRY_S } from '../event/config';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -44,6 +45,11 @@ const grow64 = (a: Float64Array, m: number) => { const b = new Float64Array(m); 
 export const FREE = 1.213;
 /** the (decayed) number of trips a zone needs before its access counts in full */
 export const ACCESS_N = 12;
+
+/** a car park's entrance on a dseg: the vehicles bound for it stop at s metres (a sink, see Sim.setSinks); park is its index in Sim.parks, next the sim time it admits the next car */
+export interface Sink { park: number; dseg: number; s: number; next: number }
+/** a car park's counts: its bays, the cars parked, and the cars turned away (found it full) */
+export interface ParkState { bays: number; parked: number; turned: number }
 
 /** a vehicle as the inspector shows it (Sim.inspect): its point, speed and lane limit (m/s), its origin and destination points (tiles),
  *  its trip and ideal times so far (s), the destination's use (LU, 0 = none), and its route ahead as flat tile points [x, y, ...] */
@@ -100,6 +106,12 @@ export class Sim {
   /** per zone, decaying sums: actual seconds, ideal seconds, trips */
   private actS = new Float64Array(256); private idlS = new Float64Array(256); private nS = new Float64Array(256);
   private t0: Float64Array; private ideal: Float64Array; private oz: Uint8Array;
+  /** per slot: the sink (index into sinks) the vehicle is bound for, -1 none (the car park's entrance, see spawnAt) */
+  sink: Int16Array;
+  /** the car park entrances (sinks, set by setSinks) and the car parks' counts (parks[k] for sink.park k) */
+  sinks: Sink[] = []; parks: ParkState[] = [];
+  /** the admissions since the City last cleared it: pairs [park, origin zone] for each car parked (the City clears it each step) */
+  parkedNow: number[] = [];
   /** per slot: the use (LU) of the destination lot, 0 = none (a trip not to a lot) */
   private tag: Uint8Array;
   /** per slot: the tile point the vehicle spawned at (ox, oy), and its destination point (dX, dY; cached by setDest) */
@@ -144,6 +156,7 @@ export class Sim {
     this.lotTrips = new LotTrips(this.rnd);
     this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap); this.tag = new Uint8Array(cap);
     this.ox = new Float32Array(cap); this.oy = new Float32Array(cap); this.dX = new Float32Array(cap); this.dY = new Float32Array(cap);
+    this.sink = new Int16Array(cap).fill(-1);
     this.onGraph();
   }
 
@@ -219,11 +232,14 @@ export class Sim {
   }
 
   /** adds one vehicle at s metres on link lane `lane`, heading for `dest` (a dseg; -1 = a random walk) at destS metres along it,
-   *  its trip tagged with the destination lot's use (LU; 0 = none); returns its slot, -1 if there is no room on the lane or no
+   *  its trip tagged with the destination lot's use (LU; 0 = none), and bound for sink (an index into sinks; -1 = none: a car park
+   *  bound vehicle has dest = the sink's dseg and destS = the sink's s); returns its slot, -1 if there is no room on the lane or no
    *  free slot, or -2 if it was lost at once (no route) */
-  spawnAt(lane: number, s: number, dest: number, destS: number, tag = 0): number {
+  spawnAt(lane: number, s: number, dest: number, destS: number, tag = 0, sink = -1): number {
     const ln = this.g.lanes[lane];
     if (!ln) return -1;
+    // a car bound for a sink is refused on its line or past it (it would arrive at once, past a gate that is not held for it)
+    if (sink >= 0) { const K = this.sinks[sink]; if (!K || (ln.kind === LK.LINK && ln.dseg === K.dseg && s >= K.s)) return -1; }
     const vt = Math.floor(this.rnd() * VTYPES.length), L = VTYPES[vt].len;
     if (!this.roomOn(lane, s, L)) return -1;
     let i = this.hint;
@@ -233,7 +249,7 @@ export class Sim {
     this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
     this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = tag;
-    this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0;
+    this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = sink;
     laneAt(ln, s, this.pt); this.ox[i] = this.pt.x; this.oy[i] = this.pt.y; this.setDest(i);
     const q = this.onLane[lane];
     let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
@@ -271,7 +287,7 @@ export class Sim {
   /** gives vehicle i a new destination from where it is now */
   private retarget(i: number) {
     laneAt(this.g.lanes[this.lane[i]]!, this.s[i], this.pt);
-    this.dest[i] = this.trips.dest(this.pt.x, this.pt.y); this.destS[i] = this.trips.destS; this.noRoute[i] = 0; this.setDest(i);
+    this.dest[i] = this.trips.dest(this.pt.x, this.pt.y); this.destS[i] = this.trips.destS; this.noRoute[i] = 0; this.sink[i] = -1; this.setDest(i);
   }
   /** the destination point of vehicle i (tiles) into dp: the last lane of its destination dseg at destS; with no destination (a random walk), the point it is at */
   private destPt(i: number) {
@@ -321,8 +337,32 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i] || this.dest[i]! < 0) continue;
       const ln = lanes[this.lane[i]]!;
-      if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) { this.score(i, ln); this.stats.arrived++; this.despawn(i); }
+      if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) {
+        const k = this.sink[i];
+        if (k >= 0) this.enter(i, k, ln); else { this.score(i, ln); this.stats.arrived++; this.despawn(i); }
+      }
     }
+  }
+  /** a vehicle bound for sink k reached its line: parked if its park has a bay (the sink then shuts for ENTRY_S, and the car is
+   *  logged in parkedNow), else turned away (not an arrival). Either way it leaves the sim */
+  private enter(i: number, k: number, ln: Lane) {
+    const K = this.sinks[k]!, P = this.parks[K.park]!;
+    if (P.parked >= P.bays) { P.turned++; this.despawn(i); return; }
+    P.parked++; K.next = this.t + ENTRY_S; this.parkedNow.push(K.park, this.oz[i]!);
+    this.score(i, ln); this.stats.arrived++; this.despawn(i);
+  }
+  /** the car park entrances (City.resolveSinks after each graph update): a vehicle keeps its sink when the new list has one of the same
+   *  park and dseg (taking that sink's next time), else it has none (-1); a new sink starts open */
+  setSinks(list: Sink[]) {
+    const old = this.sinks;
+    if (!old.length && !list.length) return;
+    const map = new Int16Array(old.length).fill(-1);
+    for (let j = 0; j < list.length; j++) {
+      const n = list[j]!, o = old.findIndex(q => q.park === n.park && q.dseg === n.dseg);
+      if (o >= 0) { map[o] = j; n.next = old[o]!.next; }
+    }
+    for (let i = 0; i < this.cap; i++) { const k = this.sink[i]!; if (k >= 0) this.sink[i] = k < old.length ? map[k]! : -1; }
+    this.sinks = list;
   }
 
   /** watches the crossings of node n (null stops): the count starts again at 0 */
@@ -521,6 +561,17 @@ export class Sim {
           if (this.lGate[nid] && !this.gate(i, nid)) {
             if (d0 < gap) { gap = d0; dv = v; }
             vg = Math.min(vg, d0 - STOP_MARGIN);
+          }
+        }
+        // a car park's entrance (sink) shut for the next car: a stopped obstacle at its line. A full park does not hold the car:
+        // it drives on to the line and is turned away there (see enter)
+        const sk = this.sink[i];
+        if (sk >= 0) {
+          const K = this.sinks[sk]!, ln = lanes[id]!;
+          if (ln.kind === LK.LINK && ln.dseg === K.dseg && si <= K.s && this.t < K.next) {
+            const dd = K.s - si;
+            if (dd < gap) { gap = dd; dv = v; }
+            vg = Math.min(vg, dd - STOP_MARGIN);
           }
         }
         // the next lane is slower than we are: brake for it once the comfortable braking curve is reached (keeps speed before that)
@@ -822,7 +873,7 @@ export class Sim {
   private free(i: number) {
     if (this.grant[i] >= 0) this.unGrant(i);
     if (this.resv[i] >= 0) this.unReserve(i);
-    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.active--;
+    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.active--;
     if (i < this.hint) this.hint = i;
   }
 
