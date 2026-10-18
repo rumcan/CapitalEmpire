@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+import { compose, isCarPark, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { mulberry } from '../src/game/iso';
@@ -165,7 +165,9 @@ test('the average uprights per archetype (log)', () => {
   const names = ['NONE', 'RES', 'COM', 'IND', 'TOUR', 'GOV'], levels = ['EMPTY', 'BUILDING', 'BUILT', 'UPGRADED'];
   const sum = new Map<string, number>(), cnt = new Map<string, number>();
   for (const lot of LOTS) for (let use = 0; use <= 5; use++) for (let level = 0; level <= 3; level++) for (let seed = 1; seed <= 2; seed++) {
-    const c = compose(lot, { use, level, decline: 0, seed: (lot.id * 17 + seed * 7 + use * 3 + level) >>> 0 });
+    const st: ComposeState = { use, level, decline: 0, seed: (lot.id * 17 + seed * 7 + use * 3 + level) >>> 0 };
+    if (isCarPark(st)) continue;   // public car parks are sparse by design: the average is for the shops, houses and yards
+    const c = compose(lot, st);
     const k = `${names[use]} ${levels[level]}`;
     sum.set(k, (sum.get(k) ?? 0) + c.props.filter(p => isUpright(p.id)).length);
     cnt.set(k, (cnt.get(k) ?? 0) + 1);
@@ -175,4 +177,59 @@ test('the average uprights per archetype (log)', () => {
   const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
   assert.ok(avg('RES BUILT') >= 12);
   for (const u of ['COM', 'IND', 'TOUR', 'GOV']) assert.ok(avg(`${u} BUILT`) >= 14, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want 14+`);
+});
+
+/** the digest of a composition: FNV-1a over its props and ground (positions to 3 decimals) */
+function digest(c: Composition): string {
+  const s = c.props.map(p => `${p.id}|${p.x.toFixed(3)}|${p.y.toFixed(3)}|${p.flip ? 1 : 0}|${p.scale.toFixed(4)}`).join(';') + '#' +
+    c.ground.map(g => `${g.tex}:${g.pts.map(v => v.toFixed(3)).join(',')}:${(g.lines ?? []).map(v => v.toFixed(3)).join(',')}`).join(';');
+  let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+  return h.toString(16).padStart(8, '0');
+}
+
+test('non-car-park compositions are unchanged: digests of fixed seeds taken before the public car parks', () => {
+  const CASES: [number, ComposeState, string][] = [
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '129ac854'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '4c443fe6'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '77e4e197'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '276f5df8'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e838e1b7'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a2520c8b'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'ab078bae'],
+  ];
+  for (const [i, st, want] of CASES) {
+    assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
+    assert.equal(digest(compose(LOTS[i], st)), want, `${LOTS[i].key} ${JSON.stringify(st)}`);
+  }
+});
+
+test('about 15% of built commercial lots are public car parks: a car park has an asphalt bay patch and no building', () => {
+  const rnd = mulberry(20261019);
+  let parks = 0;
+  for (let i = 0; i < 200; i++) {
+    const lot = LOTS[i % LOTS.length];
+    const st: ComposeState = { use: LU.COM, level: i % 2 ? LV.BUILT : LV.UPGRADED, decline: 0, seed: Math.floor(rnd() * 4294967296) >>> 0 };
+    const c = compose(lot, st);
+    const building = c.props.some(p => { const k = byId.get(p.id)?.kind; return k === 'building' || k === 'venue'; });
+    if (!isCarPark(st)) { assert.ok(c.props.length > 0, `${lot.key} ${JSON.stringify(st)}: no props`); continue; }
+    parks++;
+    assert.ok(!building, `${lot.key} ${JSON.stringify(st)}: a car park with a building`);
+    assert.ok(c.ground.some(g => g.tex === 'asphalt' && !!g.lines && g.lines.length >= 4), `${lot.key} ${JSON.stringify(st)}: no asphalt bay patch`);
+    assert.ok(c.props.some(p => p.id === 'expansion:wheel-stop'), `${lot.key} ${JSON.stringify(st)}: no wheel stops`);
+  }
+  assert.ok(parks >= 15 && parks <= 45, `${parks} car parks of 200 commercial lots, want about 30`);
+});
+
+test('public car parks: cars fill most bays at upgraded, fewer at decline 1, none at decline 3', () => {
+  const sum = [0, 0, 0];
+  for (const lot of LOTS) {
+    const seed = (lot.id * 100 + 7) >>> 0;   // seed % 100 = 7: a car park
+    const cars = (st: ComposeState) => compose(lot, st).props.filter(p => byId.get(p.id)?.cat === 'Vehicles').length;
+    sum[0] += cars({ use: LU.COM, level: LV.UPGRADED, decline: 0, seed });
+    sum[1] += cars({ use: LU.COM, level: LV.BUILT, decline: 1, seed });
+    assert.equal(cars({ use: LU.COM, level: LV.BUILT, decline: 3, seed }), 0, `${lot.key}: cars at decline 3`);
+    sum[2] += cars({ use: LU.COM, level: LV.BUILT, decline: 0, seed });
+  }
+  assert.ok(sum[0] > sum[1] && sum[1] > 0, `upgraded ${sum[0]} cars, decline 1 ${sum[1]}`);
+  assert.ok(sum[0] >= sum[2], `upgraded ${sum[0]} cars, built ${sum[2]}`);
 });

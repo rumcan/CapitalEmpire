@@ -367,6 +367,31 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   }
 }
 
+/** a public car park: no building. A verge strip (1 tile) along the frontage with a row of bushes (a hedge's 1.6-tile footprint does not fit), a 1.5-tile drive from
+ *  the frontage to the back on one side, the rest asphalt with a row of bays facing the frontage (bay lines, wheel stops) and an
+ *  aisle behind. Cars in the bays: 40-80% seeded, 70-100% upgraded, 30% at decline 1, 10% at decline 2, none at decline 3.
+ *  A sign at the drive mouth. */
+function park(B: Build, st: ComposeState) {
+  const { W, D, r } = B, DRIVE = 1.5, STRIP = 1;
+  const L = r() < 0.5, dA0 = L ? 0 : W - DRIVE, dA1 = dA0 + DRIVE;
+  const pA0 = L ? dA1 : 0, pA1 = L ? W : dA0;
+  B.pave('drive', dA0, 0, dA1, D, 'asphalt');
+  if (pA1 - pA0 < BAY) return;
+  for (let a = pA0 + 0.8; a <= pA1 - 0.6; a += 1.4) B.put(pick(r, BUSHES), a, STRIP / 2, { plant: true });
+  const n = Math.floor((pA1 - pA0) / BAY + 1e-9), lines: number[] = [];
+  for (let k = 0; k <= n; k++) { const p = B.P(pA0 + k * BAY, STRIP), q = B.P(pA0 + k * BAY, STRIP + BAY_DEPTH); lines.push(p.x, p.y, q.x, q.y); }
+  B.patches.push({ kind: 'lot', tex: 'asphalt', quad: B.quad(pA0, STRIP, pA1, D), lines });
+  const share = st.level === LV.UPGRADED ? 0.7 + 0.3 * r() : 0.4 + 0.4 * r();
+  const fill = st.decline >= 3 ? 0 : st.decline === 2 ? 0.1 : st.decline === 1 ? 0.3 : share;
+  const wflip = Math.abs(B.u.x) < Math.abs(B.u.y);
+  for (let k = 0; k < n; k++) {
+    const a = pA0 + k * BAY + BAY / 2;
+    B.put(WHEEL, a, STRIP + BAY_DEPTH - 0.4, { flip: wflip });
+    if (r() < fill) B.vehicle(CARS, a, STRIP + 0.3);
+  }
+  B.put('town:street_sign', dA0 + DRIVE / 2, -0.4, { street: true });
+}
+
 /** a civic building (or a back view) on the left of a paved forecourt: a tree row, benches and planters, a lamp pair and a bus stop
  *  at the entrance, one car bay at the side, shrubs at the front and back */
 function civic(B: Build, st: ComposeState) {
@@ -441,6 +466,10 @@ function vacant(B: Build) {
   B.put(pick(r, TREES), W * 0.5, D * 0.3, { plant: true });
 }
 
+/** is a built or upgraded commercial lot a public car park: the lot's seed falls in the first 15% (seed % 100 < 15).
+ *  Decided from the seed alone, so no other lot's draws change. */
+export function isCarPark(st: ComposeState): boolean { return st.use === LU.COM && st.level >= LV.BUILT && st.seed % 100 < 15; }
+
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed. */
 export function compose(lot: LotGeom, st: ComposeState): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
@@ -448,7 +477,7 @@ export function compose(lot: LotGeom, st: ComposeState): Composition {
   if (st.use === LU.NONE || st.level === LV.EMPTY) vacant(B);
   else if (st.level === LV.BUILDING) site(B);
   else if (st.use === LU.RES) res(B, st);
-  else if (st.use === LU.COM) com(B, st, false);
+  else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); }
   else if (st.use === LU.TOUR) com(B, st, true);
   else if (st.use === LU.IND) ind(B, st);
   else civic(B, st);
