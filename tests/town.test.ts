@@ -20,12 +20,12 @@ const ENTRY: Pt = { x: O, y: O };
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
 type Logged = TownEvent & { t: number };
 
-/** the lots of the grid (a LotMap over the network) */
-function gridLots(): { lm: LotMap; lots: Lot[] } {
+/** the lots of the grid (a LotMap over the network; its streets of class cls) */
+function gridLots(cls = CLASS.street): { lm: LotMap; lots: Lot[] } {
   const e = new NetEditor(new RoadNetwork());
   for (let k = 0; k < N; k++) {
-    e.addLegs([leg(O, at(k), last, at(k))], CLASS.street, 0);
-    e.addLegs([leg(at(k), O, at(k), last)], CLASS.street, 0);
+    e.addLegs([leg(O, at(k), last, at(k))], cls, 0);
+    e.addLegs([leg(at(k), O, at(k), last)], cls, 0);
   }
   e.commit();
   const lm = new LotMap(); const r = lm.update(e.net, null);
@@ -39,10 +39,11 @@ const finished = (town: Town): LotState[] => [...town.states.values()].filter(s 
 /** the states that are not EMPTY (building or finished) */
 const occupied = (town: Town): LotState[] => [...town.states.values()].filter(s => s.level !== LV.EMPTY);
 
-/** run a town over `days` game days, one tick per game hour; `before(h)` runs before the tick of hour h (scenario changes) */
-function run(lm: LotMap, lots: Lot[], seed: number, days: number, o: { option?: string; before?: (h: number, town: Town) => void } = {}) {
+/** run a town over `days` game days, one tick per game hour; `before(h)` runs before the tick of hour h (scenario changes); centres: the town centres (with towns) */
+function run(lm: LotMap, lots: Lot[], seed: number, days: number, o: { option?: string; centres?: Pt[]; before?: (h: number, town: Town) => void } = {}) {
   const town = new Town(seed);
   if (o.option) town.option = GROWTH_OPTIONS.find(g => g.id === o.option)!;
+  if (o.centres) town.setCentres(o.centres);
   town.onLots(lots, []);
   const ctx = ctxOf(lm), log: Logged[] = [];
   for (let h = 1; h <= days * 24; h++) {
@@ -220,4 +221,15 @@ test('reachableFrom: an anchor whose nearest node is within its reach gives its 
   assert.ok(one.size > 0 && one.size < net.segs.size, `one network: ${one.size} of ${net.segs.size} segs`);
   assert.equal(reachableFrom(net, [C[0]], [1]).size, 0, 'the anchor is too far from its node');
   assert.equal(reachableFrom(net, [], []).size, 0);
+});
+
+test('with town centres the town grows on gravel slowly (5 + 0.02 built lots a game day), and the paved roads fill fast (6 lots a game hour)', () => {
+  const gravel = gridLots(CLASS.gravel), paved = gridLots(CLASS.street);
+  const builds = (g: { lm: LotMap; lots: Lot[] }, centres?: Pt[]) => run(g.lm, g.lots, 5, 1, { centres }).log.filter(e => e.kind === 'build').length;
+  const plain = builds(gravel), townGravel = builds(gravel, [ENTRY]), townPaved = builds(paved, [ENTRY]);
+  console.log(`day 1 builds: no centres (gravel) ${plain}, centres (gravel) ${townGravel}, centres (paved) ${townPaved}`);
+  assert.ok(townGravel > 0, 'the town still grows on gravel');
+  assert.ok(townGravel * 2 < plain, `the gravel growth with centres is slower (${townGravel} vs ${plain} a day)`);
+  assert.ok(townPaved > 6 * townGravel, `the paved roads fill faster (${townPaved} vs ${townGravel} on gravel)`);
+  assert.ok(townPaved >= 100, `the paved roads grow about 6 lots an hour (${townPaved} a day)`);
 });

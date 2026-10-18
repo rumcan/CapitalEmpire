@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LU, LV } from '../src/game/lots/town';
 import { PAYOUT_BASE } from '../src/game/event/config';
-import { Budget, DEBT_DAYS, LOAN, START_MONEY, compensation, lotTax, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn } from '../src/game/budget';
+import { Budget, DEBT_DAYS, LOAN, START_MONEY, compensation, lotTax, saleOf, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn } from '../src/game/budget';
 
 const lot = (o: Partial<LotIn>): LotIn => ({ use: LU.RES, level: LV.BUILT, decline: 0, cls: 'street', access: 1, ...o });
 const EMPTY_DAY: DayIn = { lots: [], segs: [], nodes: [], trade: { arrived: 0, punctual: 0 }, pop: 0 };
@@ -165,4 +165,14 @@ test('toJSON and from round-trip; from(undefined, money) is a fresh budget with 
   assert.equal(Budget.from(undefined, 12345).money, 12345);
   assert.equal(Budget.from(undefined).money, START_MONEY);
   assert.equal(Budget.from(undefined).loans, 0);
+});
+
+test('land sales: saleOf is 2000 x the class value x 0.3 on paved roads and nothing on gravel; sale() is income now and in the next ledger', () => {
+  assert.equal(saleOf('road'), 660); assert.equal(saleOf('boulevard'), 840); assert.equal(saleOf('gravel'), 0);
+  const b = new Budget(); b.money = 1000;
+  b.sale(660);
+  assert.equal(b.money, 1660, 'the sale is in the treasury at once');
+  const L = b.endDay(1, EMPTY_DAY);
+  assert.equal(L.sales, 660); assert.equal(L.net, 660); assert.equal(b.money, 1660);
+  assert.equal(b.endDay(2, EMPTY_DAY).sales, undefined, 'a day with no sale has no sales line');
 });

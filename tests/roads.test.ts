@@ -144,3 +144,32 @@ test('determinism: the same seed lays the same network', () => {
   assert.ok(a.length > 0);
   assert.equal(a, b);
 });
+
+/** the no-go zone of the towns test: a fake stadium site (x 200..240, y 60..140) padded by 6 tiles, as City.blocked pads it */
+const SITE = { x: 200, y: 60, w: 40, h: 80 };
+const inSite = (x: number, y: number) => x > SITE.x - 6 && x < SITE.x + SITE.w + 6 && y > SITE.y - 6 && y < SITE.y + SITE.h + 6;
+test('with towns the planner lays no gravel leg through the no-go zone, and none crosses or touches the avenue that crosses the street', () => {
+  const e = new NetEditor(new RoadNetwork()), lm = new LotMap(), town = new Town(7), rnd = seededRnd(7), cls = new Uint8Array(MAP * MAP);
+  e.addLegs([leg(ENTRY.x, ENTRY.y, 220, ENTRY.y)], CLASS.street, 0);
+  e.addLegs([leg(160, 40, 160, 300)], CLASS.avenue, 0);
+  e.commit();
+  let r = lm.update(e.net, cls); town.onLots(r.added, r.removed);
+  let reach = reachableSegs(e.net, ENTRY), laid = 0;
+  for (let h = 1; h <= 15 * 24; h++) {
+    const ctx: TownCtx = { lots: lm, entry: ENTRY, reachable: (l: Lot) => reach.has(l.seg), water: () => 200 };
+    town.tick(h * HOUR, ctx);
+    const c: RoadPlanCtx = { net: e.net, lots: lm, town, cls, entry: ENTRY, rnd, centre: ENTRY, towns: true, blocked: inSite };
+    if (!needsLand(c)) continue;
+    const legs = planExtension(c);
+    if (!legs) continue;
+    e.addLegs(legs, CLASS.gravel, 2); e.commit(); laid++;
+    r = lm.update(e.net, cls); town.onLots(r.added, r.removed); reach = reachableSegs(e.net, ENTRY);
+  }
+  assert.ok(laid > 0, `the planner laid gravel legs (${laid})`);
+  const avenues = [...e.net.segs].filter(s => s.cls.id === 'avenue');
+  for (const g of e.net.segs) {
+    if (g.cls.id !== 'gravel') continue;
+    for (const p of samplesOf(g)) assert.ok(!inSite(p.x, p.y), `a gravel leg runs through the no-go zone at (${p.x.toFixed(1)}, ${p.y.toFixed(1)})`);
+    for (const av of avenues) assert.ok(!crosses(g, av) && gap(g, av) > 1, `a gravel leg crosses or touches the avenue (gap ${gap(g, av).toFixed(2)})`);
+  }
+});

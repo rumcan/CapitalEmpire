@@ -13,10 +13,10 @@ import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
-import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
+import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
-import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, tollPrice, type CardId } from './event/config';
+import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
@@ -71,6 +71,13 @@ function pointSeg(p: Pt, a: Pt, b: Pt): number {
   const k = L2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2)) : 0;
   return Math.hypot(p.x - a.x - dx * k, p.y - a.y - dy * k);
 }
+/** the distance from (x, y) to the segment a → b (tiles) */
+function segPointDist(x: number, y: number, ax: number, ay: number, bx: number, by: number): number {
+  const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy;
+  const t = L2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L2)) : 0;
+  return Math.hypot(ax + dx * t - x, ay + dy * t - y);
+}
+
 /** the stadium door nearest point p (tiles): the first of the site's doors at the least distance */
 function nearestDoor(doors: Pt[], p: Pt): Pt | null {
   let best: Pt | null = null, bd = Infinity;
@@ -127,7 +134,19 @@ export class City {
   growStats = { enough: 0, legs: 0, none: 0 };
   /** the game hours' snapshots (see HourStat), newest last, at most HOURS_KEPT; the lots started (town 'build' events) since the terrain came */
   hours: HourStat[] = []; builds = 0;
-  private planRnd = seededRnd(1); private planHour = -1; private pendingGrow = false; private growAt = 0;
+  private planRnd = seededRnd(1); private planHour = -1; private pendingGrow = false; private growAt = -Infinity;
+  /** the toll gates as the player placed them (setTolls' defs, the full list): their plazas are no-go ground for the town's roads (with towns) */
+  private tollDefs: TollDef[] = [];
+  /** the no-go zones of the town's roads (with towns, see RoadPlanCtx.blocked): the stadium site padded by 6 tiles, a car park padded by 4, within
+   *  12 tiles of a toll plaza seg, within 6 tiles of a bus stop point */
+  private blocked = (x: number, y: number): boolean => {
+    const s = this.site;
+    if (s && x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) return true;
+    for (const p of this.parkDefs) if (x > p.x - 4 && x < p.x + p.w + 4 && y > p.y - 4 && y < p.y + p.h + 4) return true;
+    for (const d of this.tollDefs) if (segPointDist(x, y, d.ax, d.ay, d.bx, d.by) < 12) return true;
+    for (const b of this.busPts) if (b && (Math.hypot(b.lot.x - x, b.lot.y - y) < 6 || Math.hypot(b.doors.x - x, b.doors.y - y) < 6)) return true;
+    return false;
+  };
   private ticks = new Float64Array(TICKS);
 
   /** a city with no terrain yet: the town of seed (its planner starts with the same seed) */
@@ -362,7 +381,8 @@ export class City {
     if (this.crowd) { this.crowd.step(WALK_V * n * DT / MPT); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
-    for (const e of events) if (e.kind === 'build') this.builds++;
+    const towns = this.centres.length > 0;
+    for (const e of events) if (e.kind === 'build') { this.builds++; if (towns) this.sell(e.key); }
     const d = this.budget.dayOf(this.sim.clock); let ledger: Ledger | null = null;
     if (this.dayIdx < 0) this.dayIdx = d;
     else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
@@ -393,6 +413,7 @@ export class City {
   /** the toll gates as the player placed them (defs, the full list, each time): the lane graph's booths (LaneGraph.setTolls); the sim's lanes and
    *  the car parks' sinks follow when a booth changed. The graph keeps the map, so each network batch builds the booths too */
   setTolls(defs: TollDef[]): void {
+    this.tollDefs = defs.slice();
     if (!this.g.setTolls(defs, this.net)) return;
     if (this.busDefs.length) this.resolveBuses();
     this.sim.onGraph(); this.upkeepC = null;
@@ -683,8 +704,12 @@ export class City {
     return m ? { x: sx / m, y: sy / m } : this.centres[k]!;
   }
 
+  /** a lot on a paved road the town builds on is sold: the player is paid its price (saleOf: nothing on gravel) */
+  private sell(key: string): void { const l = this.lots.lots.get(key), n = l ? saleOf(l.cls) : 0; if (n) this.budget.sale(n); }
+
   /** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
-   *  (no net ops back yet: the next net batch clears it, and so does an hour, in case the engine skipped it) */
+   *  (no net ops back yet: the next net batch clears it, and so does an hour, in case the engine skipped it). With towns, at most one
+   *  every GRAVEL_EVERY_H game hours (growAt: the last one laid) */
   private planGrow(): Leg[] | null {
     const cls = this.cls;
     if (!cls) return null;
@@ -693,8 +718,9 @@ export class City {
     this.planHour = h;
     if (this.pendingGrow && this.sim.clock - this.growAt < GAME_HOUR / this.growSpeed) return null;
     const K = this.centres.length, k = K ? this.planHour % K : 0;
+    if (K && this.sim.clock - this.growAt < GRAVEL_EVERY_H * GAME_HOUR / this.growSpeed) return null;
     const c: RoadPlanCtx = K
-      ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: this.townCentre(k), built: this.town.builtK[k] }
+      ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: this.townCentre(k), built: this.town.builtK[k], blocked: this.blocked, towns: true }
       : { net: this.net, lots: this.lots, town: this.town, cls, entry: this.ctx.entry, rnd: this.planRnd };
     if (!needsLand(c)) { this.growStats.enough++; return null; }
     const legs = planExtension(c);

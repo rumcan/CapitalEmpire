@@ -4,6 +4,7 @@ import type { Lot, LotMap } from './lots';
 import type { Pt } from '../network';
 import { zoneOf } from '../sim/routing';
 import type { Built } from '../sim/trips';
+import { PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
 export const LV = { EMPTY: 0, BUILDING: 1, BUILT: 2, UPGRADED: 3 } as const;
@@ -29,6 +30,8 @@ const POP: number[][] = [[0, 0], [3, 5], [0, 0], [0, 0], [0, 0], [0, 0]];
 const JOBS: number[][] = [[0, 0], [0, 0], [3, 5], [6, 10], [3, 6], [8, 12]];
 /** the seeded noise on land use scores (+-), the candidates kept for the weighted pick */
 const NOISE = 0.15, PICK_TOP = 400;
+/** the lot sides of a pick: any lot, only those on gravel (the town's land with towns), only those on paved roads (the player's, with towns) */
+const ANY = 0, GRAVEL = 1, PAVED = 2;
 /** the base target share of built+building lots by use (index = LU; GOV is a quota, not a share; the option scales these), and the lots before shares count */
 const TARGET = [0, 0.65, 0.2, 0.1, 0.05], MIN_OCC = 10;
 
@@ -62,7 +65,7 @@ export class Town {
   /** the EMPTY lots (the candidates to grow into), their distance to the nearest lot not EMPTY (Infinity = none), by index */
   private cand: Lot[] = []; private candDn: number[] = []; private candAt = new Map<string, number>();
   /** the lots not EMPTY, the GOV lots, a rescan is due, the fraction of a lot per hour carried over, the game hours run */
-  private nAct = 0; private govN = 0; private dirty = false; private acc = 0; private hour = 0;
+  private nAct = 0; private govN = 0; private dirty = false; private acc = 0; private accP = 0; private hour = 0;
   /** per zone: the sim s since its access went above 1.8 (-1 = not) */
   private bad = new Float64Array(256).fill(-1);
   private seed: number; private rs: number;
@@ -168,27 +171,37 @@ export class Town {
         if (this.rnd() < 0.04) { this.set(s, s.use, LV.UPGRADED, s.decline, T); ev.push(this.evt(s, 'upgrade')); }
       }
     }
-    // the growth: civic quota first, then the fraction of lots per hour
+    // the growth: civic quota first, then the fraction of lots per hour. With town centres the town grows on gravel only, and slower;
+    // the player's paved roads grow PAVED_RATE lots a game hour on their own accumulator (the rates: config.ts)
     if (this.govN < this.govTarget()) this.placeGov(ctx, T, ev);
-    this.acc += (20 + 0.1 * this.built) / 24 * this.speed;
+    const towns = this.centres.length > 0;
+    this.acc += towns ? (TOWN_RATE_BASE + TOWN_RATE_PER_BUILT * this.built) / 24 * this.speed : (20 + 0.1 * this.built) / 24 * this.speed;
     let n = Math.floor(this.acc); this.acc -= n;
-    for (; n > 0; n--) {
-      const l = this.pick(ctx); if (!l) break;
-      const use = this.useFor(l, ctx), s = this.states.get(l.key)!;
-      this.set(s, use, LV.BUILDING, 0, T); ev.push(this.evt(s, 'build'));
+    for (; n > 0; n--) { const l = this.pick(ctx, towns ? GRAVEL : ANY); if (!l) break; this.startBuild(l, ctx, T, ev); }
+    if (towns) {
+      this.accP += PAVED_RATE * this.speed;
+      let m = Math.floor(this.accP); this.accP -= m;
+      for (; m > 0; m--) { const l = this.pick(ctx, PAVED); if (!l) break; this.startBuild(l, ctx, T, ev); }
     }
+  }
+
+  /** a lot starts building (EMPTY to BUILDING: a 'build' event) with a use drawn for it */
+  private startBuild(l: Lot, ctx: TownCtx, T: number, ev: TownEvent[]) {
+    const use = this.useFor(l, ctx), s = this.states.get(l.key)!;
+    this.set(s, use, LV.BUILDING, 0, T); ev.push(this.evt(s, 'build'));
   }
 
   /** the zone growth of a lot's zone if the lot is reachable, else 0 */
   private openness(l: Lot, ctx: TownCtx): number { return ctx.reachable(l) ? zoneGrowth(this.access[zoneOf(l.c.x, l.c.y)]) : 0; }
 
-  /** one weighted pick among the best PICK_TOP candidates; null if none can grow */
-  private pick(ctx: TownCtx): Lot | null {
+  /** one weighted pick among the best PICK_TOP candidates of the side (ANY, GRAVEL or PAVED: see the constants); null if none can grow */
+  private pick(ctx: TownCtx, side: number): Lot | null {
     const n = this.cand.length; if (!n) return null;
     if (this.w.length < n) { this.w = new Float64Array(2 * n); this.sel = new Int32Array(2 * n); }
     const w = this.w, sel = this.sel; let m = 0;
     for (let i = 0; i < n; i++) {
       const l = this.cand[i]; w[i] = 0;
+      if (side && (side === PAVED) === (l.cls === 'gravel')) continue;
       const zg = this.openness(l, ctx); if (zg <= 0) continue;
       const d = this.nAct ? this.candDn[i] : dist(l.c, ctx.entry);
       w[i] = zg * Math.exp(-d / 40) * lotValue(l); sel[m++] = i;

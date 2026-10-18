@@ -91,6 +91,20 @@ export const BUS_ROUTE_COST = 15000;
 /** the seats of a double-decker bus (the Double-decker buses card: every route's seats are at least this) */
 export const DECK_SEATS = 100;
 
+/** the town's own growth with town centres (the gravel lots only): lots a game day = TOWN_RATE_BASE + TOWN_RATE_PER_BUILT x the town's built lots, times the speed
+ *  (the single town keeps its own rate, see Town.step) */
+export const TOWN_RATE_BASE = 5;
+/** see TOWN_RATE_BASE: the extra lots a game day per built lot */
+export const TOWN_RATE_PER_BUILT = 0.02;
+/** with town centres: the lots a game hour the player's paved roads grow on their own (the EMPTY lots fronting paved roads), times the speed */
+export const PAVED_RATE = 6;
+/** with town centres: the town lays at most one gravel leg every this many game hours, times the speed */
+export const GRAVEL_EVERY_H = 6;
+/** with town centres: a lot's price, $ (times its frontage class value: CLASS_VALUE in budget.ts), paid to the player when the town builds on a lot on a paved road */
+export const LOT_PRICE = 2000;
+/** with town centres: the share of a lot's price the player is paid for it (see LOT_PRICE) */
+export const SALE_SHARE = 0.3;
+
 /** the treasury of a new valley with town centres, $ (the single town starts with START_MONEY: see budget.ts startMoney) */
 export const EVENT_START_MONEY = 600000;
 /** the payout of a round at rate 1 and level 1, $ (the curve: see payout) */

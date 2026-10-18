@@ -7,8 +7,10 @@ import type { Lot, LotMap } from './lots';
 import { LV, type Town } from './town';
 import { TC } from '../terrain/types';
 
-/** centre and built: the town centre to plan around and that town's built lots (default: the Town's whole built area) */
-export interface RoadPlanCtx { net: RoadNetwork; lots: LotMap; town: Town; cls: Uint8Array /* terrain classes */; entry: Pt; rnd: () => number; centre?: Pt; built?: number }
+/** centre and built: the town centre to plan around and that town's built lots (default: the Town's whole built area); blocked: the no-go
+ *  tiles, no leg may pass through one (see valid); towns: the town's roads with centres: a leg joins only the town's own classes (BRANCH_IDS)
+ *  and never touches a main road (any other class) */
+export interface RoadPlanCtx { net: RoadNetwork; lots: LotMap; town: Town; cls: Uint8Array /* terrain classes */; entry: Pt; rnd: () => number; centre?: Pt; built?: number; blocked?: (x: number, y: number) => boolean; towns?: boolean }
 
 /** the block size (tiles), the reach of the land counted from the centre (tiles), and the least land kept (lots) */
 export const BLOCK = 40;
@@ -42,6 +44,14 @@ const isEmpty = (t: Town, l: Lot) => (t.states.get(l.key)?.level ?? LV.EMPTY) ==
 const bad = (c: number) => c === TC.HILL || c === TC.WATER || c === TC.CREEK || c === TC.BANK;
 /** does the seg pass through p (within 0.05 tiles) */
 const through = (s: Seg, p: Pt) => segDist(p, s) < 0.05;
+/** does the leg A → E touch seg s: its centre line crosses s, or an end of the leg is on s (within 0.05 tiles) */
+function touches(A: Pt, E: Pt, s: Seg): boolean {
+  if (segDist(A, s) < 0.05 || segDist(E, s) < 0.05) return true;
+  const d1x = E.x - A.x, d1y = E.y - A.y, d2x = s.b.x - s.a.x, d2y = s.b.y - s.a.y, den = d1x * d2y - d1y * d2x;
+  if (Math.abs(den) < 1e-12) return false;
+  const wx = s.a.x - A.x, wy = s.a.y - A.y, t = (wx * d2y - wy * d2x) / den, w = (wx * d1y - wy * d1x) / den;
+  return t >= 0 && t <= 1 && w >= 0 && w <= 1;
+}
 /** the distance from p to the centre line of a seg */
 function segDist(p: Pt, s: Seg): number {
   const dx = s.b.x - s.a.x, dy = s.b.y - s.a.y, L2 = dx * dx + dy * dy;
@@ -103,6 +113,7 @@ function ahead(c: RoadPlanCtx, A: Pt, u: Pt, L: number, start: Seg): { t: number
   let best = Infinity, hit: Seg | null = null;
   for (const s of c.net.segsNear({ x: cx, y: cy }, R / 2 + 1)) {
     if (s === start || s.kind !== SK.GROUND) continue;
+    if (c.towns && !BRANCH_IDS.has(s.cls.id)) continue; // a town's leg never closes onto a main road
     const vx = s.b.x - s.a.x, vy = s.b.y - s.a.y, den = u.x * vy - u.y * vx;
     if (Math.abs(den) < 1e-9) continue;
     const wx = s.a.x - A.x, wy = s.a.y - A.y, t = (wx * vy - wy * vx) / den, w = (wx * u.y - wy * u.x) / den;
@@ -162,7 +173,8 @@ function candidates(c: RoadPlanCtx, cen: Pt, reach: Set<Seg>): Cand[] {
   return out;
 }
 
-/** is the candidate buildable: no bad terrain (every tile along, at the centre and the verge edges), inside the map margin,
+/** is the candidate buildable: no bad terrain (every tile along, at the centre and the verge edges), no no-go zone (with towns),
+ *  no main road touched (with towns), inside the map margin,
  *  no other road's verge within GAP of the corridor (the start and a closing end excepted), no corridor through a lot that is not EMPTY */
 function valid(c: RoadPlanCtx, k: Cand): boolean {
   const { A, u, L, start, close } = k, n = { x: -u.y, y: u.x };
@@ -178,9 +190,16 @@ function valid(c: RoadPlanCtx, k: Cand): boolean {
       if (!inside(tx, ty) || bad(c.cls[ty * MAP + tx])) { planWhy.terrain++; return false; }
     }
   }
+  // the no-go zones (with towns): every tile along, across the corridor's width (counted as terrain: ground the town may not use)
+  if (c.blocked) for (let i = 0; i <= N; i++) {
+    const t = Math.min(i, L);
+    for (const o of [0, GR, -GR]) if (c.blocked(A.x + u.x * t + n.x * o, A.y + u.y * t + n.y * o)) { planWhy.terrain++; return false; }
+  }
   // the other roads: the verges of the segs near the corridor, at 0.5 tile steps
   const mx = (A.x + E.x) / 2, my = (A.y + E.y) / 2;
   for (const s of c.net.segsNear({ x: mx, y: my }, L / 2 + GR + 16)) {
+    // with towns, a leg never touches a main road (crossing it or ending on it; counted as a verge clash)
+    if (c.towns && !BRANCH_IDS.has(s.cls.id) && touches(A, E, s)) { planWhy.verge++; return false; }
     if (s === start || s === close || through(s, A) || (close && through(s, E))) continue;
     const need = GR + s.cls.h + s.cls.walk + GAP;
     // a seg meeting the start seg at a node (a corner of the road we branch from) is only checked past `need` from A: near A

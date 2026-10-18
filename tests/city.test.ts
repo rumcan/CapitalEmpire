@@ -18,13 +18,13 @@ const O = 40, STEP = 40, N = 3, at = (k: number) => O + k * STEP, last = at(N - 
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
 
 /** the street grid and its dead-end street as an editor (the ops of the first batch are committed by the test) */
-function gridEditor(): NetEditor {
+function gridEditor(cls = CLASS.street): NetEditor {
   const e = new NetEditor(new RoadNetwork());
   for (let k = 0; k < N; k++) {
-    e.addLegs([leg(O, at(k), last, at(k))], CLASS.street, 0);
-    e.addLegs([leg(at(k), O, at(k), last)], CLASS.street, 0);
+    e.addLegs([leg(O, at(k), last, at(k))], cls, 0);
+    e.addLegs([leg(at(k), O, at(k), last)], cls, 0);
   }
-  e.addLegs([leg(last, last, last + 120, last)], CLASS.street, 0);
+  e.addLegs([leg(last, last, last + 120, last)], cls, 0);
   return e;
 }
 
@@ -88,4 +88,22 @@ test('a town that reaches 1,000 residents: Village and Small town in one game ho
   assert.equal(city.career.reached, 2, 'the career at Small town');
   assert.equal(r.won, false, 'no win below 6,000 residents');
   assert.equal(city.step(1).milestones.length, 0, 'no milestone again within the same game hour');
+});
+
+test('with town centres the lots the town builds on paved roads are sold (saleOf: 600 on a street, once per build); on gravel nothing is paid', () => {
+  for (const cls of [CLASS.street, CLASS.gravel]) {
+    const e = gridEditor(cls), city = new City(7);
+    city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7, [{ x: at(1), y: at(1) }]);
+    city.netOps(e.commit(true));
+    let builds = 0, paidBuilds = 0; const ledgers: Ledger[] = [];
+    for (let s = 0; s < 2 * 1440; s++) {
+      const r = city.step(10);
+      for (const ev of r.events) if (ev.kind === 'build') { builds++; if (city.lots.lots.get(ev.key)?.cls !== 'gravel') paidBuilds++; }
+      if (r.ledger) ledgers.push(r.ledger);
+      if (r.grow) { e.addLegs(r.grow, CLASS.gravel, 2); city.netOps(e.commit()); }
+    }
+    const sold = ledgers.reduce((a, l) => a + (l.sales ?? 0), 0) + (city.budget.today.sales ?? 0);
+    assert.ok(builds > 0, `${cls.id}: lots were started (${builds})`);
+    assert.equal(sold, 600 * (cls === CLASS.street ? paidBuilds : 0), `${cls.id}: the sales (${sold}) for ${paidBuilds} builds on paved roads`);
+  }
 });

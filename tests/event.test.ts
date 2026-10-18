@@ -142,7 +142,8 @@ test('City round: the clock freezes at 18:00; money falls with the upkeep over b
 
   // the payout is paid at kick-off (no home reaches the stadium: rate 0, the full penalty); the rest of the fall is the upkeep
   assert.equal(city.round.last.payout, payout(0, 1), 'the payout at kick-off');
-  const paid = m0 - city.budget.money + city.round.last.payout, expect = rate * (city.sim.t - t0) / GAME_DAY;
+  // the land sales the town made meanwhile (the hours it catches up at the freeze, on paved roads) are income, so they are added back
+  const paid = m0 - city.budget.money + city.round.last.payout + (city.budget.today.sales ?? 0), expect = rate * (city.sim.t - t0) / GAME_DAY;
   assert.ok(paid > 0, 'money fell');
   assert.ok(Math.abs(paid - expect) <= 0.01 * expect, `paid ${paid.toFixed(2)} $ about rate x time / 1440 = ${expect.toFixed(2)} $`);
   assert.ok(Math.abs(city.round.last.upkeep - paid) <= 0.01 * paid, 'the result carries the upkeep paid');
