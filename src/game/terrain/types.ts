@@ -20,6 +20,7 @@ export interface Terrain {
   mountainEdges: Edge[];
   /** where the highway enters: a tile on the map border */ highway: { x: number; y: number; edge: Edge };
   /** top-left tile of the buildable start block */ start: { x: number; y: number; size: number };
+  /** the three town sites: top-left tiles of 64 x 64 fully buildable blocks (the town centre is x + 32, y + 32), 1.5–3 km apart */ towns: { x: number; y: number; size: number }[];
   chokepoints: Chokepoint[];
 }
 

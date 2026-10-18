@@ -28,6 +28,7 @@ test('the same seed gives the same terrain', () => {
   assert.deepEqual(a.waters, b.waters);
   assert.deepEqual(a.highway, b.highway);
   assert.deepEqual(a.start, b.start);
+  assert.deepEqual(a.towns, b.towns);
 });
 
 test('different seeds give different maps', () => {
@@ -92,6 +93,18 @@ test('20 seeds pass the guarantees, generate in under 4 s each (a retry included
     // the start block is buildable and creek-free
     for (let y = t.start.y; y < t.start.y + t.start.size; y++) for (let x = t.start.x; x < t.start.x + t.start.size; x++)
       assert.notEqual(t.cls[y * MAP + x], TC.CREEK, `seed ${seed}: creek in the start block`);
+    // three town sites 750..1500 tiles apart (centre to centre), creek-free, at least 128 tiles from every border
+    assert.equal(t.towns.length, 3, `seed ${seed}: ${t.towns.length} town sites`);
+    const tcen = t.towns.map(w => ({ x: w.x + 32, y: w.y + 32 }));
+    for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) {
+      const d = Math.hypot(tcen[i].x - tcen[j].x, tcen[i].y - tcen[j].y);
+      assert.ok(d >= 750 && d <= 1500, `seed ${seed}: towns ${i} and ${j} are ${d.toFixed(1)} tiles apart`);
+    }
+    for (const w of t.towns) {
+      for (let y = w.y; y < w.y + w.size; y++) for (let x = w.x; x < w.x + w.size; x++)
+        assert.notEqual(t.cls[y * MAP + x], TC.CREEK, `seed ${seed}: creek in a town site`);
+      assert.ok(w.x >= 128 && w.y >= 128 && w.x + w.size <= MAP - 128 && w.y + w.size <= MAP - 128, `seed ${seed}: town site at ${w.x},${w.y} within 128 tiles of a border`);
+    }
   }
   assert.ok(creekTotal >= 30, `only ${creekTotal} creeks over 20 seeds`);
 });

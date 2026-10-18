@@ -141,11 +141,18 @@ export function checkGuarantees(t: Terrain): GuaranteeReport {
     for (let y = t.start.y; y < t.start.y + t.start.size; y++) for (let x = t.start.x; x < t.start.x + t.start.size; x++) if (!buildable(t.cls[y * MAP + x])) bad++;
     if (bad) reasons.push(`start block has ${bad} unbuildable tiles`);
   }
+  if (t.towns.length !== 3) reasons.push('fewer than 3 town sites');
+  else for (let k = 0; k < 3; k++) {
+    const tw = t.towns[k];
+    let bad = 0;
+    for (let y = tw.y; y < tw.y + tw.size; y++) for (let x = tw.x; x < tw.x + tw.size; x++) if (!buildable(t.cls[y * MAP + x])) bad++;
+    if (bad) reasons.push(`town site ${k} has ${bad} unbuildable tiles`);
+  }
   if (t.chokepoints.length < 1) reasons.push('no chokepoint (bridge or gorge)');
   return { ok: reasons.length === 0, reasons, buildableConnected, sideA, sideB, ms: performance.now() - t0 };
 }
 
-/** one attempt: edges, height field, main river, classes, highway entry, start block, chokepoints */
+/** one attempt: edges, height field, main river, classes, highway entry, start block, town sites, chokepoints */
 function build(genSeed: number): Terrain {
   const r = mulberry(genSeed);
   // 1. edges: 2 or 3 mountain edges, a random exit off them, the source opposite the exit
@@ -420,6 +427,36 @@ function build(genSeed: number): Terrain {
   }
   const highway = bestH ? { x: bestH.x, y: bestH.y, edge: bestH.edge } : { x: -1, y: -1, edge: 'N' as Edge };
   const start = bestB ? { x: bestB.x, y: bestB.y, size: 64 } : { x: -1, y: -1, size: 64 };
+  // 8b. town sites: 64 x 64 fully buildable blocks on a 16 lattice, at least 128 tiles from every border; three of them 1.5-3 km apart
+  const tc: { x: number; y: number; cx: number; cy: number; score: number }[] = [];
+  for (let by = 128; by <= MAP - 192; by += 16) for (let bx = 128; bx <= MAP - 192; bx += 16) {
+    if (count(bx, by, bx + 64, by + 64) !== 64 * 64) continue;
+    const cx = bx + 32, cy = by + 32;
+    // buildable tiles in the 240 x 240 window centred on the block, clamped to the map
+    const wx0 = clamp(cx - 120, 0, MAP), wy0 = clamp(cy - 120, 0, MAP), wx1 = clamp(cx + 120, 0, MAP), wy1 = clamp(cy + 120, 0, MAP);
+    tc.push({ x: bx, y: by, cx, cy, score: count(wx0, wy0, wx1, wy1) });
+  }
+  tc.sort((a, b) => b.score - a.score || a.y - b.y || a.x - b.x);
+  const kept: typeof tc = [];
+  for (const c of tc) {
+    if (kept.length >= 60) break;
+    if (kept.some(k => Math.hypot(k.cx - c.cx, k.cy - c.cy) <= 96)) continue;
+    kept.push(c);
+  }
+  let bestTri: [(typeof kept)[number], (typeof kept)[number], (typeof kept)[number]] | null = null;
+  let bestMin = -1, bestSum = -1;
+  for (let i = 0; i < kept.length; i++) for (let j = i + 1; j < kept.length; j++) {
+    const dij = Math.hypot(kept[i].cx - kept[j].cx, kept[i].cy - kept[j].cy);
+    if (dij < 750 || dij > 1500) continue;
+    for (let k = j + 1; k < kept.length; k++) {
+      const dik = Math.hypot(kept[i].cx - kept[k].cx, kept[i].cy - kept[k].cy), djk = Math.hypot(kept[j].cx - kept[k].cx, kept[j].cy - kept[k].cy);
+      if (dik < 750 || dik > 1500 || djk < 750 || djk > 1500) continue;
+      const s = [kept[i].score, kept[j].score, kept[k].score];
+      const mn = Math.min(s[0], s[1], s[2]), sum = s[0] + s[1] + s[2];
+      if (mn > bestMin || (mn === bestMin && sum > bestSum)) { bestMin = mn; bestSum = sum; bestTri = [kept[i], kept[j], kept[k]]; }
+    }
+  }
+  const towns: Terrain['towns'] = bestTri ? bestTri.map(b => ({ x: b.x, y: b.y, size: 64 })) : [];
   // 9. chokepoints: the narrowest river crossing with buildable banks, and the longest run of hill-walled points
   const chokepoints: Chokepoint[] = [];
   const buildableXY = (x: number, y: number) => { const ix = Math.floor(x), iy = Math.floor(y); return ix >= 0 && iy >= 0 && ix < MAP && iy < MAP && buildable(cls[iy * MAP + ix]); };
@@ -460,7 +497,7 @@ function build(genSeed: number): Terrain {
     chokepoints.push({ kind: 'gorge', x: pts[mid].x, y: pts[mid].y, width: gorgeW[mid] });
   }
   if (bridge) chokepoints.unshift(bridge);
-  return { seed: genSeed, attempt: 0, height, cls, waters, mountainEdges, highway, start, chokepoints };
+  return { seed: genSeed, attempt: 0, height, cls, waters, mountainEdges, highway, start, towns, chokepoints };
 }
 
 /** Generate the terrain for a seed: retries up to 8 times until checkGuarantees passes. */
