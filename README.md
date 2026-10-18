@@ -1,6 +1,7 @@
 # Capital Empire
 
-A town that grows by itself while you build its roads and manage the traffic. The design and the phases are in
+A road-building traffic game played in event rounds: connect the surrounding towns to each event through your toll
+gate, then keep the surge flowing live. The design and the phases are in
 [docs/GAME-PLAN.md](docs/GAME-PLAN.md).
 
 ## Run
