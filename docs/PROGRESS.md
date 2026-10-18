@@ -115,7 +115,7 @@ Other numbers:
 
 | Item | Value |
 | --- | --- |
-| Host | `RAMPAGE@192.168.0.9` (Windows, Git Bash shell, 24 threads, Node 22, Chrome 155), SSH key only, LAN only |
+| Host | `RAMPAGE@192.168.0.8` (hostname PiskriekDesk; Windows, Git Bash shell, 24 threads, Node 22, Chrome 155), SSH key only, LAN only. **Moved from .9 to .8 after a power cut (2026-10-18):** same host key (ED25519 `XKzuqm06…`); `~/.ssh/config` and known_hosts updated. A DHCP reservation on the router would keep it fixed; sshd must be running (`Start-Service sshd`, Automatic) |
 | Alias on the dev PC | `cworker` in `~/.ssh/config`, key `~/.ssh/capital_worker_ed25519` (created 2026-10-17) |
 | Clone on the worker | `/e/CapitalEmpire` (E: drive; C: is short of space), created by the first `scripts/worker/run.sh` |
 | Usage | `scripts/worker/run.sh "npm test"`, `npm run worker:bench`, `scripts/worker/fetch.sh output/bench` |
