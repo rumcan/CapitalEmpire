@@ -1073,12 +1073,8 @@ small public car parks on open town lots as part of the town's growth (a small t
 - **Junction bench** (`output/dbg/jx.ts`): on clean geometry every junction type is natural at low volume (waits of 0–5 s);
   signals and slips cope at high volume; the 4-way single-lane roundabout was the weak spot (fixed above).
 - **Handover (2026-10-18 late, the chat got too long; a fresh chat continues):**
-  - **Maybe uncommitted in the working tree: the bus fix** (a haiku-coder was still running when this chat ended): buses
-    keep their route through road edits during a surge (today an edit makes them ordinary cars or drops them; the sim
-    must never retarget, trim, tow or abandon a bus slot; the City re-points live buses at the re-resolved stops after
-    every netOps) and town-bus fans need no car park (decide by-bus before the car-park home rule in `Surge.plan`). Check
-    `git status`/`git diff`: if the files (sim.ts, city.ts, surge.ts, tests) hold it, review it, run `npm test` and
-    `npm run towns:gate -- 1 1`, then commit; else brief it again.
+  - **The bus fix: DONE** (committed just before the handover): buses keep their route through road edits during a
+    surge; town-bus fans need no car park. `npm test` 221 pass.
   - **Next: approach flares (the slipways cars actually use; the owner: "I don't see any of them use it").** Cause: at a
     'slip' node the right turn is only a YIELD connector starting at the stop line, inside the shared lane, so a
     right-turner waits behind the red-light queue. Design (lead): at a configured arm the inbound dseg's link lanes end
