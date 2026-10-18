@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–7 done; next: step 8 (live edit tools), then step 9 (balance and the gate). The owner is away: open questions take the lead's recommendation (logged as such)._
+_Last updated: 2026-10-18, Phase 5 steps 1–8 done; next: step 9 (balance and the Phase 5 gate). The owner is away: open questions take the lead's recommendation (logged as such)._
 
 ## Where we are
 
@@ -919,6 +919,15 @@ Steps (each ends verified, committed and written up here):
      valley. Checked in the browser on the dev valley: 4% in (a naive build), payout -$18,233, a card picked (Level 2,
      seats 100), the round closes.
    - The worker PC did not answer SSH on 2026-10-18 afternoon (connection timed out): the slow checks ran on the dev PC.
+8. **Live edit tools. DONE** (2026-10-18). A new class **Arterial** (2 lanes each way, no median, 16 m, $400 a tile);
+   **Add lane** (toolbar, one click widens the straight run of the road under the cursor between junctions: gravel /
+   lane / street / road → arterial, avenue → boulevard; toll plazas excluded; paid as the road tool's upgrade; works during
+   the surge since the network rebuilds instantly); junction flags **Widen turns** ($3,000: the connectors' turn speeds
+   as for twice the radius) and **Turn lanes** ($2,000: on 2-lane approaches the left lane turns left only), set with the
+   junction tool's mode switch, a `flags` net op, saved as a 4th node entry. Checked in the browser: a road run widened to
+   an arterial for $16,000; it paints 4 lanes with a centre line and dividers.
+   - **Deviation (lead, owner away):** flared turn pockets (an extra lane added only near the junction) need new lane-graph
+     geometry: moved to Phase 7 (road builder pro). The 3-lane classes also wait for Phase 7 (freeways).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
