@@ -8,7 +8,7 @@ import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
-import { ENTRY_S } from '../event/config';
+import { ENTRY_S, SERVICE_S } from '../event/config';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -113,6 +113,13 @@ export class Sim {
   party: Int8Array; partyOut: number[] = [];
   /** the car park entrances (sinks, set by setSinks) and the car parks' counts (parks[k] for sink.park k) */
   sinks: Sink[] = []; parks: ParkState[] = [];
+  /** per slot: 1 once the vehicle has paid at a toll booth (or passed its line unserved, see accelerate), 0 while it is still to pay; dwell: the
+   *  seconds it has stood within 2 m of its booth's line, slower than 0.5 m/s */
+  paid: Uint8Array; dwell: Float32Array;
+  /** the toll cars served since the City last cleared it (the City books them, see City.step) */
+  tolls = 0;
+  /** per lane: vehicles bound for it as a toll booth lane (planned onto it, not yet on it: see planFrom); per slot: the booth lane it is bound to (-1 none) */
+  private bound = new Int32Array(0); private boundTo: Int32Array;
   /** the admissions since the City last cleared it: pairs [park, origin zone] for each car parked (the City clears it each step) */
   parkedNow: number[] = [];
   /** per slot: the use (LU) of the destination lot, 0 = none (a trip not to a lot) */
@@ -136,6 +143,8 @@ export class Sim {
   /** per lane, cached from the graph in onGraph (the hot loops read these instead of the lane objects): length, speed
    *  limit, 1 = a junction entry the gate controls */
   private lLen = new Float64Array(0); private lVmax = new Float32Array(0); private lGate = new Uint8Array(0);
+  /** per lane: the booth line of a toll booth lane (metres), -1 for any other lane */
+  private lBooth = new Float64Array(0);
   /** per lane: 1 = a LINK lane (a road lane, not a junction connector or ring arc) */
   private lLink = new Uint8Array(0);
   /** per lane: 1 = a node lane that merges with others into its next lane (vehicles there follow the mergers ahead of them) */
@@ -160,6 +169,7 @@ export class Sim {
     this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap); this.tag = new Uint8Array(cap);
     this.ox = new Float32Array(cap); this.oy = new Float32Array(cap); this.dX = new Float32Array(cap); this.dY = new Float32Array(cap);
     this.sink = new Int16Array(cap).fill(-1); this.party = new Int8Array(cap).fill(-1);
+    this.paid = new Uint8Array(cap); this.dwell = new Float32Array(cap); this.boundTo = new Int32Array(cap).fill(-1);
     this.onGraph();
   }
 
@@ -169,12 +179,21 @@ export class Sim {
     const lanes = this.g.lanes;
     while (this.onLane.length < lanes.length) this.onLane.push([]);
     const n = lanes.length;
-    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); this.lLink = new Uint8Array(m); this.lossL = grow64(this.lossL, m); this.lossQ = grow64(this.lossQ, m); this.enterL = grow64(this.enterL, m); }
+    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); this.lLink = new Uint8Array(m); this.lossL = grow64(this.lossL, m); this.lossQ = grow64(this.lossQ, m); this.enterL = grow64(this.enterL, m); this.lBooth = grow64(this.lBooth, m); }
     for (let id = 0; id < n; id++) {
       const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0; this.lLink[id] = l && l.kind === LK.LINK ? 1 : 0;
+      this.lBooth[id] = l && l.booth !== undefined ? l.booth : -1;
       // gated: a junction connector from a link lane, and every ring arc (a ring arc yields to the room granted on it)
       this.lMerge[id] = l && l.kind !== LK.LINK && l.next.length === 1 && (lanes[l.next[0]]?.prev.length ?? 0) > 1 ? 1 : 0;
       this.lGate[id] = l && (l.kind === LK.RING || (l.kind === LK.CONN && l.prev.length && lanes[l.prev[0]]?.kind === LK.LINK)) ? 1 : 0;
+    }
+    // the booth bindings: recounted over the lanes as they are now (a binding to a lane that is gone, or no booth, is dropped)
+    if (this.bound.length < n) this.bound = new Int32Array(Math.max(n, 2 * this.bound.length));
+    this.bound.fill(0);
+    for (let i = 0; i < this.cap; i++) {
+      const b = this.boundTo[i]!;
+      if (b < 0) continue;
+      if (!this.alive[i] || b >= n || this.lBooth[b]! < 0) this.boundTo[i] = -1; else this.bound[b]!++;
     }
     // the losses of the lanes this update freed or rebuilt (lane ids) start again
     for (const id of this.g.removed) if (id < n) { this.lossL[id] = 0; this.lossQ[id] = 0; this.enterL[id] = 0; }
@@ -198,7 +217,7 @@ export class Sim {
       if (this.dest[i] >= 0 && this.router.gone(this.dest[i]!)) this.retarget(i);
       if (!this.valid(i)) {
         if (ln.kind === LK.LINK) { if (!this.pickMove(i)) continue; }
-        else if (ln.next.length) { this.plan[i] = this.chain(id); this.pi[i] = 0; }
+        else if (ln.next.length) { this.unbind(i); this.plan[i] = this.chain(id); this.pi[i] = 0; }
         else { this.out(i, 2); this.free(i); this.stats.respawned++; pending++; continue; }
       }
       this.onLane[id].push(i);
@@ -207,6 +226,8 @@ export class Sim {
     for (let k = 0; k < pending; k++) this.spawn();
   }
 
+  /** vehicle i has paid at its toll booth: counted in tolls (the City books the takings) */
+  private serve(i: number) { this.paid[i] = 1; this.tolls++; }
   /** removes vehicle i from its lane and frees its slot */
   despawn(i: number) {
     if (!this.alive[i]) return;
@@ -592,6 +613,21 @@ export class Sim {
             vg = Math.min(vg, dd - STOP_MARGIN);
           }
         }
+        // a toll booth: an unpaid vehicle stops at the booth's line until it has stood there SERVICE_S (dwell); one already past the line
+        // unserved (spawned there) pays at once
+        const bo = this.lBooth[id]!;
+        if (bo >= 0 && !this.paid[i]) {
+          if (si > bo + 0.5) this.serve(i);
+          else {
+            if (si >= bo - 2 && v < 0.5) this.dwell[i] += DT;
+            if (this.dwell[i]! >= SERVICE_S - DT / 2) this.serve(i);
+            else {
+              const dd = bo - si;
+              if (dd < gap) { gap = dd; dv = v; }
+              vg = Math.min(vg, dd - STOP_MARGIN);
+            }
+          }
+        }
         // the next lane is slower than we are: brake for it once the comfortable braking curve is reached (keeps speed before that)
         let ac = Infinity;
         if (pi + 1 < P.length && d0 > 0.5) {
@@ -612,7 +648,8 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i] || (i + st) % MOBIL_EVERY !== 0 || this.grant[i] >= 0) continue;
       const cur = this.lane[i], ln = lanes[cur]!;
-      if (ln.kind !== LK.LINK || (ln.left < 0 && ln.right < 0)) continue;
+      // no lane changes on a toll booth lane (the booths are the lanes; see accelerate)
+      if (ln.kind !== LK.LINK || (ln.left < 0 && ln.right < 0) || this.lBooth[cur]! >= 0) continue;
       const s = this.s[i];
       if (s < MOBIL_START || s > this.lLen[cur] - MOBIL_END) continue;
       const k = this.onLane[cur].indexOf(i);
@@ -739,6 +776,8 @@ export class Sim {
     if (ln.kind === LK.LINK && nl.kind !== LK.LINK && this.move[i]! >= 0) this.router.feed(this.move[i]!, this.wait[i]!);
     this.stopped[i] = 0; if (nl.kind !== LK.LINK) this.wait[i] = 0;
     this.pi[i] = p; this.lane[i] = nid; this.onLane[nid].push(i); this.enterL[nid] += 1;
+    // on its booth lane, the vehicle counts there, not as bound
+    if (this.lBooth[nid]! >= 0) this.unbind(i);
     // a watched junction (setWatch): a vehicle entering its node lanes from a link lane is logged with its origin and destination
     if (this.watchNode && ln.kind === LK.LINK && nl.kind !== LK.LINK && nl.node === this.watchNode) {
       const k = 4 * (this.watchN % 256), W = this.watchLog;
@@ -770,7 +809,7 @@ export class Sim {
   private pickMove(i: number): boolean {
     const g = this.g, L = this.lane[i], dsId = g.lanes[L]!.dseg, d = g.dsegs[dsId];
     const outs = d ? d.out : [];
-    if (!outs.length) { this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; return true; }
+    if (!outs.length) { this.unbind(i); this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; return true; }
     let w: number;
     if (this.dest[i]! < 0) w = this.randomMove(outs);
     else {
@@ -823,6 +862,7 @@ export class Sim {
    *  movement that has one, else the fallback chain */
   private planFrom(i: number, L: number, prefer: number) {
     const g = this.g, d = g.dsegs[g.lanes[L]!.dseg], outs = d ? d.out : [];
+    this.unbind(i);
     let m = -1;
     if (this.reach(this.want[i], L)) m = this.want[i];
     else if (this.reach(prefer, L)) m = prefer;
@@ -833,12 +873,20 @@ export class Sim {
     this.move[i] = m;
     this.plan[i] = m >= 0 ? this.start(m, L) ?? this.chain(L) : this.chain(L);
     this.pi[i] = 0;
+    // a plan from an approach lane onto a booth: the vehicle is bound to that booth lane until it is on it (or leaves the plan)
+    const P = this.plan[i]!;
+    if (P.length > 2 && this.lBooth[P[2]!]! >= 0 && this.lBooth[P[0]!]! < 0) { this.boundTo[i] = P[2]!; this.bound[P[2]!]++; }
   }
+  /** releases vehicle i's booth binding (see planFrom): the bound count of its booth lane drops */
+  private unbind(i: number) { const b = this.boundTo[i]!; if (b >= 0) { this.bound[b]!--; this.boundTo[i] = -1; } }
 
   /** the plan a movement gives from lane L: its path from L, or a path whose second lane L feeds (its first lane replaced by L); null if none */
   private start(mid: number, L: number): number[] | null {
     const m = this.g.moves[mid]!, nx = this.g.lanes[L]!.next;
-    for (const p of m.paths) if (p[0] === L) return p.slice();
+    // several paths from L (a toll gate's fan-out to its booths): the one whose booth lane (its third) has the fewest vehicles, the lowest index on a tie
+    let best: number[] | null = null, bn = Infinity;
+    for (const p of m.paths) if (p[0] === L) { const b = p[2]!, c = this.onLane[b]!.length + this.bound[b]!; if (c < bn) { bn = c; best = p; } }
+    if (best) return best.slice();
     for (const p of m.paths) if (nx.includes(p[1])) { const q = p.slice(); q[0] = L; return q; }
     return null;
   }
@@ -891,7 +939,7 @@ export class Sim {
   private free(i: number) {
     if (this.grant[i] >= 0) this.unGrant(i);
     if (this.resv[i] >= 0) this.unReserve(i);
-    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.party[i] = -1; this.active--;
+    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.party[i] = -1; this.paid[i] = 0; this.dwell[i] = 0; this.unbind(i); this.active--;
     if (i < this.hint) this.hint = i;
   }
 

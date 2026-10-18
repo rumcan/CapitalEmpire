@@ -16,7 +16,8 @@ import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
-import { EVENT_CLOCK, SURGE_SEED } from './event/config';
+import { EVENT_CLOCK, SURGE_SEED, tollPrice } from './event/config';
+import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, type Site } from './event/site';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
@@ -147,6 +148,8 @@ export class City {
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round();
     this.surge = null; this.sim.dropParty();
+    // a new valley has no toll gates until the player places them again (their booths are the old roads')
+    this.setTolls([]);
     this.setBudget(null, null);
   }
 
@@ -295,6 +298,9 @@ export class City {
     // a round under way pays the upkeep as the sim runs; the surge counts down to kick-off (the round goes to eval then)
     const rs = this.round.stage;
     if (rs === 'build' || rs === 'surge') { const u = this.upkeepRate() * n * DT / GAME_DAY; this.budget.upkeepLive(u); this.round.upkeep += u; }
+    // the toll booths' takings since the last step: each car served pays the price of the round's level; the books take it, and a round
+    // under way counts it (as it counts its upkeep)
+    if (this.sim.tolls) { const y = this.sim.tolls * tollPrice(this.round.level); this.budget.toll(y); if (rs === 'build' || rs === 'surge') this.round.toll += y; this.sim.tolls = 0; }
     // the surge: its due cars spawn, then the party cars' exits are counted; kick-off (the round's last step of the surge) gives the result
     if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g);
     this.drainParty();
@@ -327,6 +333,14 @@ export class City {
     }
     this.parks = parks; this.sim.parks = states; this.resolveSinks();
     if (this.surge) this.surge.relink(this.surgeParks());
+  }
+  /** the toll gates as the player placed them (defs, the full list, each time): the lane graph's booths (LaneGraph.setTolls); the sim's lanes and
+   *  the car parks' sinks follow when a booth changed. The graph keeps the map, so each network batch builds the booths too */
+  setTolls(defs: TollDef[]): void {
+    if (!this.g.setTolls(defs, this.net)) return;
+    this.sim.onGraph(); this.upkeepC = null;
+    if (this.parks.length) this.resolveSinks();
+    if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
   }
   /** each car park entrance's sink (sinkAt), as the sim's sinks; Sim.setSinks keeps the vehicles already bound for them */
   private resolveSinks(): void {

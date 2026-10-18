@@ -3,6 +3,7 @@
 import { MAP } from '../iso';
 import { type LaneGraph, type Turn, LK, MPT, laneAt } from './lanes';
 import type { Sim } from './sim';
+import { TOLL_ROUTE_COST } from '../event/config';
 
 /** zones: a ZN x ZN grid of 128-tile squares over the map */
 export const ZN = MAP >> 7;
@@ -153,8 +154,8 @@ export class Router {
     sim.stats.tables = n; sim.stats.tableMs = this.tableMs;
   }
 
-  /** seconds for movement m: its length at 8 m/s, its turn penalty, the measured junction delay */
-  private moveCost(m: number): number { const mv = this.g.moves[m]!; return mv.len / 8 + TURN[mv.turn] + this.dEma[m]!; }
+  /** seconds for movement m: its length at 8 m/s, its turn penalty, the measured junction delay, and TOLL_ROUTE_COST into a toll gate */
+  private moveCost(m: number): number { const mv = this.g.moves[m]!; return mv.len / 8 + TURN[mv.turn] + this.dEma[m]! + (this.g.dsegs[mv.to]?.toll ? TOLL_ROUTE_COST : 0); }
   /** recomputes lcA and mcA from the current speeds, delays and lengths */
   private refreshCosts() {
     const g = this.g, nD = g.dsegs.length, nM = g.moves.length;

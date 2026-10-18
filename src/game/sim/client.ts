@@ -18,6 +18,7 @@ import type { CareerSave, Milestone } from '../career';
 import { Round, type RoundSave, type RoundView } from '../event/round';
 import type { Site } from '../event/site';
 import type { CarParkDef, ParkView } from '../event/carpark';
+import type { TollDef } from '../event/toll';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
@@ -114,6 +115,8 @@ export class SimClient {
   setParks(defs: CarParkDef[]) { this.post({ t: 'parks', defs }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
+  /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
+  setTolls(defs: TollDef[]) { this.post({ t: 'tolls', defs }); }
   /** ends the build now: the surge (the crowd's run to kick-off) begins */
   startNow() { this.post({ t: 'round', op: 'now' }); }
   /** closes the round's eval: the round is free again and the clock runs on */

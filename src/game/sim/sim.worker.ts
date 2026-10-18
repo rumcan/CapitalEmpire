@@ -121,6 +121,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); postBudget(null); break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
+      case 'tolls': city.setTolls(m.defs); forcePost = true; break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else city.closeRound();
         postBudget(null); forcePost = true; break;

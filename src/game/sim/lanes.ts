@@ -1,6 +1,8 @@
 // The lane graph: directed lanes, junction connectors and movements derived from the road network. Pure TS, no DOM.
 // Geometry is in tiles; lengths, s positions and speeds are in metres and m/s.
 import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, sub, vlen } from '../network';
+import { BOOTH_W, PLAZA_LEN, TAPER } from '../event/config';
+import { plazaKey, type TollDef } from '../event/toll';
 
 /** metres per tile */
 export const MPT = 2;
@@ -31,9 +33,11 @@ export interface Lane {
   /** signal phase this connector is green in (-1 = not signalled) */
   phase: number;
   tunnel: boolean;
+  /** toll booth lanes only: metres along the lane to the booth line (at the plaza's middle); undefined elsewhere */
+  booth?: number;
 }
 /** a directed segment: one direction of a Seg */
-export interface DSeg { id: number; key: string; seg: Seg; dir: 0 | 1; from: Node; to: Node; lanes: number[]; len: number; vmax: number; /** movements leaving its end */ out: number[] }
+export interface DSeg { id: number; key: string; seg: Seg; dir: 0 | 1; from: Node; to: Node; lanes: number[]; len: number; vmax: number; /** movements leaving its end */ out: number[]; /** a toll gate's booths (undefined: not a toll dseg; its lanes are the booth lanes) */ toll?: number }
 /** a way through a node from one dseg to another; paths[k] is a lane sequence [inLane, ...node lanes, outLane] */
 export interface Movement { id: number; key: string; node: Node; from: number; to: number; turn: Turn; paths: number[][]; len: number }
 /** fixed-time signal plan of a node: armPhase[i] = phase of arm i (node.arms order); times in seconds */
@@ -150,6 +154,8 @@ export class LaneGraph {
   removed: number[] = [];
   /** lane ids rebuilt, reused or new in the last update */
   changed: number[] = [];
+  /** the toll gates' booths by inbound dseg key (setTolls); a dseg with a key here is a toll dseg when its seg qualifies (tollBooths) */
+  tolls = new Map<string, number>();
   private segDs = new Map<Seg, [number, number]>();
   private nodeLanes = new Map<Node, number[]>();
   private nodeMoves = new Map<Node, number[]>();
@@ -167,11 +173,38 @@ export class LaneGraph {
     // 2. the nodes to re-analyse
     if (net.lastFull || this.segDs.size === 0) { for (const n of net.nodes.values()) if (isLive(net, n)) A.add(n); }
     else for (const n of net.lastNodes) if (isLive(net, n)) A.add(n);
-    // 3. directed segs and link lanes of the segs between re-analysed nodes (and new segs)
-    for (const s of net.segs) if ((A.has(s.a) && A.has(s.b)) || !this.segDs.has(s)) { const ids = this.segDs.get(s); if (ids) this.dropSeg(s, ids); this.buildSeg(s); }
-    // 4. node lanes, movements and signal plans of the re-analysed nodes
+    // 3. directed segs and link lanes of the segs between re-analysed nodes (and new segs); 4. the node lanes, and 5. the ids freed
+    const S: Seg[] = [];
+    for (const s of net.segs) if ((A.has(s.a) && A.has(s.b)) || !this.segDs.has(s)) S.push(s);
+    this.rebuildArea(A, S);
+  }
+
+  /** the toll gates as the player placed them (defs, the full list; the graph keeps the map, so later updates build the booths too):
+   *  the segs whose toll changed (added, removed or the booths changed) and their end nodes are rebuilt as update() rebuilds edited ones.
+   *  Returns false if no toll changed */
+  setTolls(defs: TollDef[], net: RoadNetwork): boolean {
+    const next = new Map<string, number>();
+    for (const d of defs) next.set(plazaKey(d), d.booths);
+    const diff = new Set<string>();
+    for (const [k, b] of next) if (this.tolls.get(k) !== b) diff.add(k);
+    for (const k of this.tolls.keys()) if (!next.has(k)) diff.add(k);
+    this.tolls = next;
+    if (!diff.size) return false;
+    this.version++; this.removed = []; this.changed = [];
+    const A = new Set<Node>(), S: Seg[] = [];
+    for (const [s, ids] of this.segDs) {
+      if (!ids.some(id => { const d = this.dsegs[id]; return !!d && diff.has(d.key); })) continue;
+      S.push(s); for (const n of [s.a, s.b]) if (isLive(net, n)) A.add(n);
+    }
+    this.rebuildArea(A, S);
+    return true;
+  }
+
+  /** rebuilds the segs S (both directed segs and their link lanes), then the nodes A (connectors, movements, signal plans), then frees the
+   *  ids whose keys did not come back */
+  private rebuildArea(A: Set<Node>, S: Seg[]) {
+    for (const s of S) { const ids = this.segDs.get(s); if (ids) this.dropSeg(s, ids); this.buildSeg(s); }
     for (const n of A) this.buildNode(n);
-    // 5. ids whose keys did not come back are free again
     for (const id of this.deadL.values()) { this.freeL.push(id); this.removed.push(id); }
     for (const id of this.deadD.values()) this.freeD.push(id);
     for (const id of this.deadM.values()) this.freeM.push(id);
@@ -227,7 +260,9 @@ export class LaneGraph {
     const iF = dir ? ib : ia, iT = dir ? ia : ib, lanes: number[] = [];
     const d: DSeg = { id, key, seg: s, dir, from, to, lanes, len: 0, vmax: VMAX[s.cls.id], out: [] };
     this.dsegs[id] = d;
-    for (let k = 0; k < s.cls.laneCentres.length; k++) {
+    const booths = this.tollBooths(key, s, from, to, ia + ib);
+    if (booths) { d.toll = booths; this.boothLanes(d, s, booths, iF, iT, u, r); }
+    else for (let k = 0; k < s.cls.laneCentres.length; k++) {
       const off = laneOff(s, k);
       const p0 = add(add(from, mul(u, iF)), mul(r, off)), p1 = add(sub(to, mul(u, iT)), mul(r, off));
       lanes.push(this.mkLane(`${key}#${k}`, LK.LINK, [p0, p1], d.vmax, null, s.kind === SK.TUNNEL, id, k).id);
@@ -237,6 +272,31 @@ export class LaneGraph {
     return id;
   }
 
+  /** the booths of the toll gate on this directed seg (0 if it is not one): a tolled key on a straight ground seg of PLAZA_LEN - 1 tiles or more,
+   *  with room for the taper and plain two-arm ends (a junction at either end is not a toll; the def is ignored) */
+  private tollBooths(key: string, s: Seg, from: Node, to: Node, ins: number): number {
+    const b = this.tolls.get(key), L = vlen(sub(s.b, s.a));
+    if (!b || s.kind !== SK.GROUND || L < PLAZA_LEN - 1 || L - ins <= 2 * TAPER) return 0;
+    if (from.rb > 0 || to.rb > 0 || from.arms.length !== 2 || to.arms.length !== 2) return 0;
+    return b;
+  }
+  /** a toll dseg's booth lanes (LINK, n of them, pushed onto d.lanes): booth k starts at lane 0's start, fans out over TAPER tiles to its offset
+   *  (BOOTH_W apart from lane 0, the innermost), runs straight, fans back in over the last TAPER tiles to lane 0's end; its booth line is at the
+   *  middle of the straight part, metres along the lane */
+  private boothLanes(d: DSeg, s: Seg, n: number, iF: number, iT: number, u: Pt, r: Pt) {
+    const from = d.from, L = vlen(sub(s.b, s.a)), off0 = laneOff(s, 0), a0 = iF, a1 = L - iT, mid = (a0 + a1) / 2;
+    const at = (t: number, o: number): Pt => add(add(from, mul(u, t)), mul(r, o));
+    const ease = (t: number) => 0.5 - 0.5 * Math.cos(Math.PI * t);
+    for (let k = 0; k < n; k++) {
+      const offK = off0 + BOOTH_W * k, P: Pt[] = [];
+      for (let i = 0; i <= 8; i++) P.push(at(a0 + TAPER * i / 8, off0 + (offK - off0) * ease(i / 8)));
+      for (let i = 0; i <= 8; i++) P.push(at(a1 - TAPER + TAPER * i / 8, offK + (off0 - offK) * ease(i / 8)));
+      const l = this.mkLane(`${d.key}#b${k}`, LK.LINK, P, d.vmax, null, false, d.id, k);
+      // point 8 ends the fan-out; the straight part runs from there to the fan-in, and the middle of it is the booth line
+      l.booth = l.cum[8]! + (mid - (a0 + TAPER)) * MPT;
+      d.lanes.push(l.id);
+    }
+  }
   /** rebuild one node: its connectors, arcs, movements and signal plan; the link lanes around it are re-linked */
   private buildNode(n: Node) {
     for (const id of this.nodeLanes.get(n) ?? []) this.killLane(id);
@@ -284,7 +344,16 @@ export class LaneGraph {
     for (const x of io) {
       const y = io[x.i === 0 ? 1 : 0], ins = this.dsegs[x.inD]!.lanes, outs = this.dsegs[y.outD]!.lanes, paths: number[][] = [];
       const t = turnOf(this.uOf(x.inD), this.uOf(y.outD)), tt: Turn = t === 'U' ? 'S' : t;
-      for (let k = 0; k < ins.length; k++) {
+      // a toll gate ahead: every in lane to every booth (one connector each); out of a toll gate: every booth lane to the next dseg's lane 0
+      if (this.dsegs[y.outD]!.toll) {
+        for (const ik of ins) for (const ok of outs) { const inL = this.L(ik), outL = this.L(ok), c = this.conn(n, inL, outL, false, nl); paths.push([inL.id, c.id, outL.id]); }
+      } else if (this.dsegs[x.inD]!.toll) {
+        // booth k exits to lane floor(k * nOut / booths) of the next dseg: the booths spread over the out road's lanes (one lane: all merge)
+        for (let k = 0; k < ins.length; k++) {
+          const inL = this.L(ins[k]), outL = this.L(outs[Math.min(outs.length - 1, Math.floor(k * outs.length / ins.length))]), c = this.conn(n, inL, outL, false, nl);
+          paths.push([inL.id, c.id, outL.id]);
+        }
+      } else for (let k = 0; k < ins.length; k++) {
         const inL = this.L(ins[k]), outL = this.L(outs[Math.min(k, outs.length - 1)]), c = this.conn(n, inL, outL, false, nl);
         paths.push([inL.id, c.id, outL.id]);
       }

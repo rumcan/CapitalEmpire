@@ -46,3 +46,19 @@ export const MAX_ENTRANCES = 3;
 export const FRONT_GAP = 3;
 /** the shortest side of a car park, tiles */
 export const MIN_PARK = 12;
+/** the toll gate's plaza: the toll piece of road, tiles (the plaza seg's length) */
+export const PLAZA_LEN = 30;
+/** the tiles at each end of the plaza over which the booth lanes fan out and back in */
+export const TAPER = 10;
+/** the tiles between booth lanes */
+export const BOOTH_W = 1.75;
+/** the booths a new toll gate has */
+export const START_BOOTHS = 6;
+/** the seconds a car stops at a booth to pay */
+export const SERVICE_S = 4;
+/** the toll per car at level 1, $ */
+export const TOLL_PRICE = 8;
+/** the toll per car at a level, $ (up a quarter per level) */
+export const tollPrice = (level: number): number => Math.round(TOLL_PRICE * (1 + 0.25 * (level - 1)));
+/** the route cost a driver puts on a toll, s (a movement into a toll plaza costs this much more) */
+export const TOLL_ROUTE_COST = 25;
