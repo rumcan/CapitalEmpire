@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–4 done (three towns, the dev sandbox, the clock, the stadium and the round, car parks, the surge trips)._
+_Last updated: 2026-10-18, Phase 5 steps 1–5 done (towns, dev sandbox, clock, stadium and round, car parks, surge, Toll Gate); a live congestion heat map in progress (the owner's request)._
 
 ## Where we are
 
@@ -855,6 +855,29 @@ Steps (each ends verified, committed and written up here):
    - **Balance problem for step 9:** 1,200 cars leaving within 7.5 minutes is ~9,600 cars an hour; a 2-lane road carries
      ~1,800 an hour per lane, and unsignalled junctions far less. Level 1 must shrink (fewer, bigger parties) or spread
      its departures, so that a sensible build reaches 60–80% and live fixes reach 100%.
+5. **The Toll Gate. DONE** (2026-10-18; commits `99abd01`, `c4cdf1c`).
+   - A toll gate is a 30-tile plaza piece of a straight road (`TollDef`: its ends A→B, inbound A→B, booths). The lane
+     graph gives the inbound direction one lane per booth (fanning out over 10 tiles from the road lane, back in over the
+     last 10, onto all of the out road's lanes); each car takes the booth with the fewest cars on or bound for it, stops
+     `SERVICE_S` = 4 s and pays (`tollPrice(level)`, $8 at Level 1); the routing puts 25 s on a toll, so drivers avoid it
+     when a free way exists (the toll is "by the network", the owner's choice). The toll is income in the round and the
+     ledger.
+   - Throughput (cars/s, approach full; 1/2/3/6 booths): boulevard 0.093/0.182/0.271/0.543, street 0.089/0.179/0.271/
+     0.336 (one exit lane). About 11 s per car per booth (4 s paying, ~7 s to move up): close to a real cash booth.
+   - The game: the toll tool (T; hover a straight road at least 21 tiles from its junctions; inbound toward the stadium,
+     R flips; $10,000 + $4,000 a booth), the plaza asphalt baked in the ground, booth islands and `TOLL · $8` in the
+     overlay; the gate goes when its road piece is rebuilt or bulldozed; saved; the round panel shows the toll. Checked in
+     the browser: test cars queue at the booths and park beyond.
+   - **Reviewed: another simulator** (the owner's `Opus5_5-realistic-driver-behavior-simulator.zip`, a highway and a city
+     sim). Worth taking: per-driver variety (styles with their own headway, acceleration, braking, reaction), the ACC
+     model (IIDM + constant-acceleration heuristic), actuated signals (min/max green, extend on demand, skip empty
+     phases), yellow decisions, strategic lane choice. Its architecture (an object per vehicle, `Math.random`) does not
+     fit our 10k-car typed-array, seeded sim: ideas only.
+     - **Tried and reverted: time-based gap acceptance with impatience.** Our gate already passes ~560 veh/h from a queued
+       minor right turn against a 600 veh/h major road (1.8 s wait at low volume; `tests/gaps.test.ts` keeps it), and the
+       port made the grid gridlock test worse (mean speed 3.90 → 1.84 m/s). The LOS F at the towns' exits in the
+       headless round is spillback from the jammed hub road, not gap acceptance.
+     - Still open: actuated signals and driver variety (both move every gate's numbers: do them with a before/after).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
