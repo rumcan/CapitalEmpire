@@ -1058,6 +1058,23 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **Pushed to origin 2026-10-18 evening** (the owner's go-ahead): main at `4732855` (54 commits since Phase 4).
+- **Outside agents (the owner's request):** `AGENTS.md` and `agents/` (the Arena agent's instructions: code only, one task
+  per branch and PR, standalone modules in `src/game/ext/<feature>/` with tests in `tests/ext-<feature>.test.ts`, the lead
+  wires them in; a PR template; task **T001 subways**, a standalone underground rail module with its API and tests).
+- **Roundabouts reworked: DONE** (commit `3614086`): real sizes (14 / 22 / 30 m outer radius for 1 / 2 / 3 ring lanes),
+  turbo-style ring lanes, entries only when the ring lane has room to clear; zero overlaps on the bench; a 2-lane ring
+  takes 600 veh/h per arm at 3.2 s mean delay (1 lane: 39 s). Checked in the browser. The ring-lane choice in the UI
+  comes with the junction editor.
+- **Snapping, the T fix and the red preview: DONE** (commits `4d667fc`, `6a398ac`, `613b511` and the aim fix): one snap
+  point per road end, a road's whole surface snaps to its centre line, a road aimed at a road meets it square, the
+  preview turns red exactly when the click would be refused. Checked in the browser on arterial and street joins.
+- **Town bus stops and lot buy-outs: DONE** (commit `bcf949e`).
+- **Junction bench** (`output/dbg/jx.ts`): on clean geometry every junction type is natural at low volume (waits of 0–5 s);
+  signals and slips cope at high volume; the 4-way single-lane roundabout was the weak spot (fixed above).
+- **Queued:** buses keep their route through road edits during a surge (today an edit drops them) and town-bus fans need
+  no car park; **approach flares** (the slipways and turn pockets cars actually use: today a slip right turn starts at the
+  stop line inside the shared queue); the ring-lane and junction choices in the UI; the calendar and the signal tiers.
 - **Queued (the owner, 2026-10-18 evening): the calendar and the signal tiers** (GAME-PLAN 1.0.01): the year from 1985, one
   per finished round; fixed-time lights with a per-junction green split at the start, actuated from 1990, adaptive (busy
   direction bias, green waves) from 2000; saved.
