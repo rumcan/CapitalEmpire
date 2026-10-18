@@ -7,6 +7,7 @@ import { SIG, phaseState } from './signals';
 import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
+import type { Node } from '../network';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -41,6 +42,10 @@ const grow64 = (a: Float64Array, m: number) => { const b = new Float64Array(m); 
 export const FREE = 1.213;
 /** the (decayed) number of trips a zone needs before its access counts in full */
 export const ACCESS_N = 12;
+
+/** a vehicle as the inspector shows it (Sim.inspect): its point, speed and lane limit (m/s), its origin and destination points (tiles),
+ *  its trip and ideal times so far (s), the destination's use (LU, 0 = none), and its route ahead as flat tile points [x, y, ...] */
+export interface CarInfo { slot: number; x: number; y: number; v: number; vmax: number; ox: number; oy: number; dx: number; dy: number; tripS: number; idealS: number; tag: number; path: number[] }
 
 /** The vehicles of one graph. Slot i is one vehicle while alive[i] is 1; the lists hold the vehicles of each lane, front first. */
 export class Sim {
@@ -89,8 +94,15 @@ export class Sim {
   private t0: Float64Array; private ideal: Float64Array; private oz: Uint8Array;
   /** per slot: the use (LU) of the destination lot, 0 = none (a trip not to a lot) */
   private tag: Uint8Array;
+  /** per slot: the tile point the vehicle spawned at (ox, oy), and its destination point (dX, dY; cached by setDest) */
+  private ox: Float32Array; private oy: Float32Array; private dX: Float32Array; private dY: Float32Array;
+  /** the junction watched (setWatch; null = none) and a ring of its last 256 crossings, 4 floats each (origin x, y, destination x, y);
+   *  watchN counts the crossings since the watch was set */
+  watchNode: Node | null = null; watchLog = new Float32Array(4 * 256); watchN = 0;
   /** a scratch lane position (allocation-free) */
   private pt = { x: 0, y: 0, hx: 0, hy: 0 };
+  /** a scratch destination point (allocation-free; see destPt) */
+  private dp = { x: 0, y: 0, hx: 0, hy: 0 };
   /** per slot: distance to the nearest virtual stop (plan end or gate), metres; Infinity = none */
   private vg: Float64Array;
   /** every slot below hint is alive */
@@ -123,6 +135,7 @@ export class Sim {
     this.trips = new Trips(this.rnd);
     this.lotTrips = new LotTrips(this.rnd);
     this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap); this.tag = new Uint8Array(cap);
+    this.ox = new Float32Array(cap); this.oy = new Float32Array(cap); this.dX = new Float32Array(cap); this.dY = new Float32Array(cap);
     this.onGraph();
   }
 
@@ -213,6 +226,7 @@ export class Sim {
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
     this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = tag;
     this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0;
+    laneAt(ln, s, this.pt); this.ox[i] = this.pt.x; this.oy[i] = this.pt.y; this.setDest(i);
     const q = this.onLane[lane];
     let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
     q.splice(k, 0, i);
@@ -249,8 +263,15 @@ export class Sim {
   /** gives vehicle i a new destination from where it is now */
   private retarget(i: number) {
     laneAt(this.g.lanes[this.lane[i]]!, this.s[i], this.pt);
-    this.dest[i] = this.trips.dest(this.pt.x, this.pt.y); this.destS[i] = this.trips.destS; this.noRoute[i] = 0;
+    this.dest[i] = this.trips.dest(this.pt.x, this.pt.y); this.destS[i] = this.trips.destS; this.noRoute[i] = 0; this.setDest(i);
   }
+  /** the destination point of vehicle i (tiles) into dp: the last lane of its destination dseg at destS; with no destination (a random walk), the point it is at */
+  private destPt(i: number) {
+    const d = this.dest[i]!, ds = d >= 0 ? this.g.dsegs[d] : null, last = ds && ds.lanes.length ? this.g.lanes[ds.lanes[ds.lanes.length - 1]!] : null;
+    if (last) laneAt(last, this.destS[i]!, this.dp); else laneAt(this.g.lanes[this.lane[i]]!, this.s[i]!, this.dp);
+  }
+  /** caches the destination point of vehicle i (dX, dY) once its destination is set (spawnAt, retarget) */
+  private setDest(i: number) { this.destPt(i); this.dX[i] = this.dp.x; this.dY[i] = this.dp.y; }
   /** true if no vehicle on lane id is within m metres of s */
   private clearOn(id: number, s: number, m: number): boolean {
     for (const j of this.onLane[id]!) if (Math.abs(this.s[j]! - s) < m) return false;
@@ -283,6 +304,28 @@ export class Sim {
       const ln = lanes[this.lane[i]]!;
       if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) { this.score(i, ln); this.stats.arrived++; this.despawn(i); }
     }
+  }
+
+  /** watches the crossings of node n (null stops): the count starts again at 0 */
+  setWatch(n: Node | null) { this.watchNode = n; this.watchN = 0; }
+
+  /** what the inspector shows of vehicle i (null unless alive): its point, speed and lane limit, origin, destination point, trip and
+   *  ideal times so far (ideal as score() computes it), the destination's use, and its route ahead as flat tile points: now, the end of
+   *  its current dseg, the ends of the dsegs of its local route but the last, the destination point (no end when on the destination's dseg) */
+  inspect(i: number): CarInfo | null {
+    if (!this.alive[i]) return null;
+    const lanes = this.g.lanes, ln = lanes[this.lane[i]]!, P = this.plan[i] ?? [], dest = this.dest[i]!;
+    laneAt(ln, this.s[i]!, this.pt); const x = this.pt.x, y = this.pt.y;
+    this.destPt(i); const dx = this.dp.x, dy = this.dp.y;
+    // the dseg the vehicle is on, or (on a node lane) the one its plan enters next
+    let cur = -1;
+    if (ln.kind === LK.LINK) cur = ln.dseg;
+    else for (let j = this.pi[i]!; j < P.length; j++) { const l = lanes[P[j]!]; if (l && l.kind === LK.LINK) { cur = l.dseg; break; } }
+    const ds = cur >= 0 ? this.g.dsegs[cur] : null, dst = dest >= 0 && !!this.g.dsegs[dest], path = [x, y];
+    if (ds && (!dst || cur !== dest)) path.push(ds.to.x, ds.to.y);
+    if (ds && dst && cur !== dest) { const r = this.router.localRoute(cur, dest); if (r) for (let k = 0; k + 1 < r.length; k++) { const to = this.g.dsegs[r[k]!]!.to; path.push(to.x, to.y); } }
+    if (dst || !ds) path.push(dx, dy);
+    return { slot: i, x, y, v: this.v[i]!, vmax: ln.vmax, ox: this.ox[i]!, oy: this.oy[i]!, dx, dy, tripS: this.t - this.t0[i]!, idealS: Math.max(this.ideal[i]! + this.s[i]! / ln.vmax, 10), tag: this.tag[i]!, path };
   }
 
   /** packs the vehicles into buf: 4 floats per slot [x, y, angle, flags]; x, y in tiles, angle in radians, dead slots 0.
@@ -608,6 +651,11 @@ export class Sim {
     if (ln.kind === LK.LINK && nl.kind !== LK.LINK && this.move[i]! >= 0) this.router.feed(this.move[i]!, this.wait[i]!);
     this.stopped[i] = 0; if (nl.kind !== LK.LINK) this.wait[i] = 0;
     this.pi[i] = p; this.lane[i] = nid; this.onLane[nid].push(i); this.enterL[nid] += 1;
+    // a watched junction (setWatch): a vehicle entering its node lanes from a link lane is logged with its origin and destination
+    if (this.watchNode && ln.kind === LK.LINK && nl.kind !== LK.LINK && nl.node === this.watchNode) {
+      const k = 4 * (this.watchN % 256), W = this.watchLog;
+      W[k] = this.ox[i]; W[k + 1] = this.oy[i]; W[k + 2] = this.dX[i]; W[k + 3] = this.dY[i]; this.watchN++;
+    }
     // a vehicle may be removed here (lost, no route): pickMove despawns it, and the callers check alive
     if (nl.kind === LK.LINK && p === P.length - 1) this.pickMove(i);
     return true;

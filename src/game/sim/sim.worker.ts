@@ -36,6 +36,14 @@ function postReport() { const report = city.report(); post({ t: 'report', report
 /** the game hour (sim s) the bottleneck report was last posted for (-1: none yet); a report goes out once per game hour of sim time */
 const HOUR = 60;
 let reportHour = -1;
+/** the car inspected (-1: none); the junction watch: its node's x, y (null: none), whether it is on, and the wall-clock time (ms) of its next post */
+let inspecting = -1, watchXY: [number, number] | null = null, watching = false, watchNext = 0;
+
+/** posts the junction watch: the node, the crossings since it was set, and their lines (the ring's first min(n, 256) entries, 4 floats each) */
+function postWatch() {
+  const n = city.sim.watchN, lines = city.sim.watchLog.slice(0, 4 * Math.min(n, 256));
+  post({ t: 'watch', node: watchXY, n, lines }, [lines.buffer as ArrayBuffer]); watchNext = performance.now() + 1000;
+}
 
 /** a new valley: the city takes its terrain; the town starts again (no lots yet) and posts its totals and books */
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
@@ -73,6 +81,7 @@ function frame() {
   const hr = Math.floor(city.sim.t / HOUR);
   // not while fast-forwarding (an hour passes almost every frame then); the first frame after the skip posts it
   if (hr !== reportHour && !(skipUntil > city.sim.t)) { reportHour = hr; postReport(); }
+  if (watching && performance.now() >= watchNext) postWatch();
   const sim = city.sim, alive = sim.active > 0;
   // with no cars, still a frame every second: the clock (signals, the town) reads simT from it; while skipping, a frame every period
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
@@ -80,6 +89,8 @@ function frame() {
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
   const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t };
   post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
+  // the inspected car goes with every frame; once it is gone (null), no more
+  if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
 }
 
 scope.onmessage = (e: MessageEvent<ToSim>) => {
@@ -97,6 +108,11 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'loan': city.loan(m.take); postBudget(null); break;
       case 'budget': city.setBudget(m.save); postBudget(null); break;
       case 'report': postReport(); break;
+      case 'inspect': inspecting = m.slot; break;
+      case 'watch':
+        if (m.x < 0) { city.unwatch(); watching = false; watchXY = null; }
+        else { watchXY = city.watchAt(m.x, m.y); watching = true; postWatch(); }
+        break;
     }
   } catch (err) { fail(err); }
 };

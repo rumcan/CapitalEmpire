@@ -10,7 +10,7 @@ import { POINT_STRIDE } from '../gl';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 import { LV, type LotTuple, type TownEvent } from '../lots/town';
 import type { Leg } from '../network';
-import { VTYPES } from './sim';
+import { VTYPES, type CarInfo } from './sim';
 import type { Report } from './bottlenecks';
 import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../budget';
 
@@ -53,6 +53,12 @@ export class SimClient {
   report: Report | null = null; onReport?: () => void;
   /** the desired vehicle count (the sim clamps it to its slots) */
   target = 0;
+  /** the inspected car as the worker last sent it (with every frame while one is inspected; null when none, or it is gone) */
+  car: CarInfo | null = null;
+  /** the junction watch: its node (null: none), the crossings since it was set, and their lines (4 floats each); null when not watching */
+  watch: { node: [number, number] | null; n: number; lines: Float32Array } | null = null;
+  /** the slot inspected (-1: none), and whether a junction is watched: the worker's answers are kept only while so */
+  private slot = -1; private watching = false;
   /** the stats of the last frame received */
   stats: SimStats = { ...EMPTY };
   n = 0;
@@ -95,6 +101,12 @@ export class SimClient {
   setSpeed(k: number) { this.speed = k; this.post({ t: 'speed', k }); }
   /** fast-forwards the sim as fast as the worker can until the sim time until (s); the cars are not drawn between frames meanwhile */
   skip(until: number) { this.post({ t: 'skip', until }); }
+  /** inspects the car in slot (-1 stops); its info comes with the next frames, into car */
+  inspect(slot: number) { this.slot = slot; this.car = null; this.post({ t: 'inspect', slot }); }
+  /** watches the junction within 4 tiles of (x, y) for the routes through it, into watch (no junction there: a watch with no node) */
+  watchAt(x: number, y: number) { this.watching = true; this.post({ t: 'watch', x, y }); }
+  /** stops the junction watch */
+  unwatch() { this.watching = false; this.watch = null; this.post({ t: 'watch', x: -1, y: -1 }); }
   /** true while the worker is fast-forwarding (see skip) */
   get skipping() { return this.stats.skipping; }
   terminate() { this.worker.terminate(); }
@@ -105,6 +117,9 @@ export class SimClient {
     if (m.t === 'lots') { this.applyLots(m.added, m.removed); return; }
     if (m.t === 'budget') { this.budget = m.save; this.day = m.day; if (m.ledger) this.onLedger?.(m.ledger); return; }
     if (m.t === 'report') { this.report = m.report; this.onReport?.(); return; }
+    // a null car is the inspected one gone (the worker stops then); a car of another slot is a late answer to an earlier inspect
+    if (m.t === 'car') { if (this.slot >= 0 && (!m.info || m.info.slot === this.slot)) this.car = m.info; return; }
+    if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }
     if (m.t === 'grow') {
       const legs: Leg[] = [];
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });

@@ -145,6 +145,12 @@ export default function App() {
             ))}
           </div>
 
+          {(game.traffic.car || game.traffic.watch?.node) && (
+            <div className="absolute left-[390px] top-24 z-20 flex w-64 flex-col gap-2">
+              {game.traffic.car && <CarPanel game={game} />}
+              {game.traffic.watch?.node && <RoutesPanel game={game} />}
+            </div>
+          )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
           {game.panel === 'bottlenecks' && <BottleneckPanel game={game} />}
           {game.bankrupt && !watch && (
@@ -348,6 +354,46 @@ function JunctionPanel({ game }: { game: Game }) {
   );
 }
 
+/** what a car is going to, by the use of its trip's destination (the tag of Sim.inspect: LU, 0 = none) */
+const GOING = ['driving around', 'home', 'a shop', 'work at the industry', 'a venue', 'a civic site'];
+/** seconds as m:ss */
+const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+/** the car inspector (select tool, click a car): its speed against the limit, where it is going, its trip so far against its ideal time
+ *  (amber over 1.3, red over 1.8), the straight-line distance left, and Follow and Close */
+function CarPanel({ game }: { game: Game }) {
+  const c = game.traffic.car!, ratio = c.tripS / c.idealS;
+  const tone = ratio > 1.8 ? 'text-red-300' : ratio > 1.3 ? 'text-amber-300' : 'text-slate-100';
+  return (
+    <div className="rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+      <Panel title="Car">
+        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+          <span className="text-slate-400">Speed</span><span className="tabular-nums">{Math.round(c.v * 3.6)} km/h (limit {Math.round(c.vmax * 3.6)})</span>
+          <span className="text-slate-400">Going to</span><span>{GOING[c.tag] ?? 'driving around'}</span>
+          <span className="text-slate-400">Trip so far</span><span className={`tabular-nums ${tone}`}>{mmss(c.tripS)} (ideal {mmss(c.idealS)}, {ratio.toFixed(1)}×)</span>
+          <span className="text-slate-400">Distance left</span><span className="tabular-nums">{Math.round(Math.hypot(c.dx - c.x, c.dy - c.y) * 2)} m</span>
+        </div>
+        <div className="mt-2 flex gap-1">
+          <button className={`chip ${game.followCar ? 'chip-on' : ''}`} onClick={() => { game.followCar = !game.followCar; game.emit(); }}>Follow</button>
+          <button className="chip" onClick={() => game.closeInspect()}>Close</button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+/** the junction routes (flow on, click a junction): the cars that crossed it since the watch began, the colour legend, and Close */
+function RoutesPanel({ game }: { game: Game }) {
+  const w = game.traffic.watch!;
+  return (
+    <div className="rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+      <Panel title="Junction routes">
+        <p className="text-xs text-slate-200">{w.n} cars crossed since you started watching</p>
+        <p className="mt-1 text-[10px] text-slate-400"><span className="text-blue-400">Blue</span>: where they come from · <span className="text-orange-400">orange</span>: where they go</p>
+        <div className="mt-2 flex gap-1"><button className="chip" onClick={() => game.closeWatch()}>Close</button></div>
+      </Panel>
+    </div>
+  );
+}
+
 function SelectPanel({ game }: { game: Game }) {
   const p = game.selected;
   if (!p) return (<Panel title="Select"><p className="text-xs text-slate-300">Click an object to select it. Drag empty ground (or hold the right mouse button anywhere) to pan; scroll to zoom.</p></Panel>);
@@ -391,6 +437,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
           <li>Space pauses (tap it; hold it and drag to pan); , and . change the speed; H skips to the next rush hour.</li>
           <li>F shows traffic flow and junction levels of service; B lists the worst bottlenecks (click one to jump there).</li>
+          <li>With the select tool, click a car to inspect its trip; with the flow overlay on, click a junction to see where its traffic comes from and goes.</li>
         </ul>
         <button className="btn mt-5" onClick={onClose}>Close</button>
       </div>

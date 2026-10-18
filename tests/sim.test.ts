@@ -89,6 +89,29 @@ test('grid: 400 vehicles on a 6 x 6 street grid stay at 400 with valid plans', (
   }
 });
 
+test('inspector: an alive car has a route ahead (an even number of floats, at least 4) and a trip time; a dead slot is null; a watched 4-way node records crossings in a game hour', () => {
+  const e = new NetEditor(new RoadNetwork()); grid(e, 6, 40);
+  const g = graphOf(e), sim = new Sim(g, 400, 1);
+  sim.setTarget(200);
+  for (let k = 0; k < 300; k++) sim.step();
+  let live = -1;
+  for (let i = 0; i < sim.cap && live < 0; i++) if (sim.alive[i]) live = i;
+  assert.ok(live >= 0, 'a car on the grid');
+  const info = sim.inspect(live);
+  assert.ok(info, 'inspect of an alive slot');
+  assert.equal(info.path.length % 2, 0, 'path is pairs of floats');
+  assert.ok(info.path.length >= 4, 'path has a point now and one more');
+  assert.ok(info.path.every(Number.isFinite), 'path is finite');
+  assert.ok(info.tripS >= 0, `trip ${info.tripS}`);
+  let dead = -1;
+  for (let i = 0; i < sim.cap && dead < 0; i++) if (!sim.alive[i]) dead = i;
+  assert.equal(sim.inspect(dead), null, 'a dead slot');
+  // the middle of the grid is a busy 4-way node: a game hour (60 sim s, 600 steps) crosses it many times
+  sim.setWatch(e.net.nodeAt({ x: 220, y: 220 })!);
+  for (let k = 0; k < 600; k++) sim.step();
+  assert.ok(sim.watchN > 0, `crossings recorded: ${sim.watchN}`);
+});
+
 test('edit while driving: removing a busy piece of road respawns the vehicles on it and the graph stays valid', () => {
   const e = new NetEditor(new RoadNetwork()); grid(e, 6, 40);
   const g = graphOf(e), sim = new Sim(g, 400, 3);

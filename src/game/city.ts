@@ -2,7 +2,7 @@
 // field, the Town and the growth planner. Pure TS, no worker globals: the city worker (sim/sim.worker.ts) is a thin shell that
 // posts what City returns, and the town gate (scripts/sim/town-gate.ts) drives it headless.
 import type { NetOp } from './ground-protocol';
-import { RoadNetwork, type Leg, type Pt, type Seg } from './network';
+import { RoadNetwork, type Leg, type Node, type Pt, type Seg } from './network';
 import { applyOps } from './netops';
 import { MAP } from './iso';
 import { TC } from './terrain/types';
@@ -10,7 +10,7 @@ import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
 import { LaneGraph } from './sim/lanes';
-import { Sim } from './sim/sim';
+import { Sim, type CarInfo } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
@@ -189,6 +189,22 @@ export class City {
 
   /** the bottleneck report of the traffic now: the junctions' levels of service, the links' v/c, and the topN entries by time lost */
   report(topN = 10): Report { return bottlenecks(this.g, this.sim, topN); }
+
+  /** the car in slot i as the inspector shows it (see Sim.inspect), or null */
+  inspect(slot: number): CarInfo | null { return this.sim.inspect(slot); }
+  /** watches the junction (3 or more segs, or a roundabout) nearest (x, y) within 4 tiles: its x, y, or null (no watch then) */
+  watchAt(x: number, y: number): [number, number] | null {
+    let best: Node | null = null, bd = 16;
+    for (const n of this.net.nodes.values()) {
+      if (n.segs.length < 3 && n.rb <= 0) continue;
+      const d = (n.x - x) * (n.x - x) + (n.y - y) * (n.y - y);
+      if (d < bd) { bd = d; best = n; }
+    }
+    this.sim.setWatch(best);
+    return best ? [best.x, best.y] : null;
+  }
+  /** stops the junction watch */
+  unwatch(): void { this.sim.setWatch(null); }
 
   /** the built lots go to the sim (once a game hour); the sim switches from random trips to the lots' trips once a RES lot is built */
   private builtSync() {

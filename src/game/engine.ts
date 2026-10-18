@@ -30,6 +30,8 @@ export const FLOW_COLS = ['#3ddc84', '#ffd23f', '#ff8c1a', '#ff3b3b'];
 export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: '#ffd23f', D: '#ff8c1a', E: '#ff3b3b', F: '#ff3b3b' };
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
+/** a filled disc of radius r at (x, y) in device px (the overlay's identity transform), colour col */
+function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, col: string) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); }
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
@@ -77,6 +79,8 @@ export class Game {
   panel: 'budget' | 'bottlenecks' | null = null;
   /** a ring pulsed for 4 s where the camera jumped (see jumpTo): the tile and the time (performance.now, ms) */
   focus: { x: number; y: number; t: number } | null = null;
+  /** the car inspected (its slot in the traffic client's arrays; -1: none; its info is traffic.car), and whether the camera follows it */
+  inspecting = -1; followCar = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
   // economy (the books live in the city worker: traffic.budget, see the getters by the save)
@@ -521,6 +525,23 @@ export class Game {
     this.hoverPiece = this.net.pieceNear(t);
     this.puff(t.x, t.y, 10);
   }
+  /** the client slot of the nearest alive car within 1.5 tiles of the tile under (mx, my), or -1 */
+  private carAt(mx: number, my: number): number {
+    const t = this.tileAt(mx, my), tr = this.traffic;
+    let best = -1, bd = 1.5 * 1.5;
+    for (let i = 0; i < tr.n; i++) {
+      if (!tr.alive[i]) continue;
+      const dx = tr.px[i]! - t.x, dy = tr.py[i]! - t.y, d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = i; }
+    }
+    return best;
+  }
+  /** inspects the car in slot i (its trip, route and origin: see SimClient.inspect) and clears the junction watch */
+  inspectCar(i: number) { this.inspecting = i; this.traffic.inspect(i); this.traffic.unwatch(); this.emit(); }
+  /** closes the car inspector (its Close button, Esc): the camera stops following it */
+  closeInspect() { this.inspecting = -1; this.followCar = false; this.traffic.inspect(-1); this.emit(); }
+  /** closes the junction watch (its Close button, Esc) */
+  closeWatch() { this.traffic.unwatch(); this.emit(); }
   propAt(mx: number, my: number): Prop | null {
     const X = this.cam.X + (mx - this.cssW / 2) / this.cam.z, Y = this.cam.Y + (my - this.cssH / 2) / this.cam.z, r = [0, 0, 0, 0];
     for (const p of this.sprites.at(X, Y)) {
@@ -549,9 +570,13 @@ export class Game {
     if (this.keys.has(' ')) this.spacePanned = true;
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
+        // a car under the pointer (street tier) is inspected; else a prop is selected; else, with the flow on, the junction there is watched
+        const car = this.cam.z >= DISTRICT_Z ? this.carAt(mx, my) : -1;
+        if (car >= 0) { this.inspectCar(car); return; }
         const p = this.propAt(mx, my);
         if (p) { this.selected = p; this.emit(); return; }
         this.selected = null; this.emit();
+        if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
       this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false }; return;
     }
@@ -598,7 +623,9 @@ export class Game {
     const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     this.keys.add(e.key);
     switch (e.key) {
-      case 'Escape': if (this.route.length) this.cancelRoute(); else { this.selected = null; this.emit(); } break;
+      case 'Escape':
+        if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); break; }
+        if (this.route.length) this.cancelRoute(); else { this.selected = null; this.emit(); } break;
       case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
       case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
       case 'Delete': this.deleteSelected(); break;
@@ -863,6 +890,11 @@ export class Game {
     for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
     this.particles = this.particles.filter(p => p.age < p.life);
     this.traffic?.update(now);
+    // the followed car: the camera centres on its interpolated place (the info itself comes at 10 Hz)
+    if (this.followCar && this.traffic.car) {
+      const tr = this.traffic, i = this.inspecting, live = tr.alive[i] === 1, x = live ? tr.px[i]! : tr.car!.x, y = live ? tr.py[i]! : tr.car!.y;
+      this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y);
+    }
     const t1 = performance.now();
     this.draw(now);
     const t2 = performance.now();
@@ -1036,6 +1068,35 @@ export class Game {
       ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
     }
   }
+  /** the car inspector and the junction routes (see SimClient.car and .watch): the inspected car's route ahead (cyan, dashed after its first
+   *  stretch), its origin (blue) and destination (orange) dots, and a ring on the car; the watched junction's recorded crossings, from their
+   *  origins (blue) and to their destinations (orange), and a ring on the junction */
+  private drawInspect(ctx: CanvasRenderingContext2D) {
+    const tr = this.traffic, c = tr.car, w = tr.watch, jn = w && w.node ? w.node : null;
+    if (!c && !jn) return;
+    this.setIso(ctx); ctx.globalAlpha = 0.9; ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 0.5;
+    if (c) {
+      const P = c.path;
+      ctx.beginPath(); ctx.moveTo(P[0]!, P[1]!); ctx.lineTo(P[2]!, P[3]!); ctx.stroke();
+      ctx.setLineDash([1.2, 0.8]); ctx.beginPath(); ctx.moveTo(P[2]!, P[3]!);
+      for (let k = 4; k + 1 < P.length; k += 2) ctx.lineTo(P[k]!, P[k + 1]!);
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (jn && w) {
+      const L = w.lines, jx = jn[0], jy = jn[1];
+      ctx.lineWidth = 0.35; ctx.globalAlpha = 0.3;
+      ctx.strokeStyle = '#60a5fa'; ctx.beginPath(); for (let k = 0; k + 3 < L.length; k += 4) { ctx.moveTo(L[k]!, L[k + 1]!); ctx.lineTo(jx, jy); } ctx.stroke();
+      ctx.strokeStyle = '#fb923c'; ctx.beginPath(); for (let k = 0; k + 3 < L.length; k += 4) { ctx.moveTo(jx, jy); ctx.lineTo(L[k + 2]!, L[k + 3]!); } ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const dpr = this.dpr;
+    if (c) {
+      const i = this.inspecting, live = tr.alive[i] === 1, a = this.screen(c.ox, c.oy), b = this.screen(c.dx, c.dy), cs = live ? this.screen(tr.px[i]!, tr.py[i]!) : this.screen(c.x, c.y);
+      disc(ctx, a.x, a.y, 6 * dpr, '#60a5fa'); disc(ctx, b.x, b.y, 6 * dpr, '#fb923c');
+      ctx.beginPath(); ctx.arc(cs.x, cs.y, 12 * dpr, 0, Math.PI * 2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2 * dpr; ctx.stroke();
+    }
+    if (jn) { const s = this.screen(jn[0], jn[1]); ctx.beginPath(); ctx.arc(s.x, s.y, 12 * dpr, 0, Math.PI * 2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2 * dpr; ctx.stroke(); }
+  }
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
@@ -1051,6 +1112,7 @@ export class Game {
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
     if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
     this.drawFlow(ctx);
+    this.drawInspect(ctx);
     this.drawGroundOverlays(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
