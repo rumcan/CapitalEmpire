@@ -1103,8 +1103,18 @@ small public car parks on open town lots as part of the town's growth (a small t
     still deadlocks at t = 67 s; two trains can share a section; results depend on dt), **#2 grade** (re-review: no
     vertical curves; wrong on hillsides, a profile through the crossed deck), **#3 interchanges** (radii under the
     minimums and grades up to 67%), **#5 terrain v2** (passes its numbers but the valleys are a jittered grid around
-    flat-topped hills and the river is straight: the opposite of the owner's ask). **Wiring:** drivers into sim.ts in
-    progress (haiku); then incidents (sim lanes and slow zones), disasters (closures in the city), farms (rural lots).
+    flat-topped hills and the river is straight: the opposite of the owner's ask). **21:20–21:30:** merged **#9 T012
+    names** and **#10 T011 taxis** (lead fix: every driver is paid for the shift, so fleet 1/5/20 profit $2,704/$3,012/$852
+    a day) and **#1 subways** (haiku fix on the branch: one owner per block, FCFS at platforms, sub-steps of 0.1 s; the
+    lead's probes: no deadlock for 3–9 trains on a loop, never two trains in a block, the same results at dt 0.1 and 1).
+    #2, #3, #5 are being fixed on their branches. **Wiring:** the drivers wiring raised delays (street signal 4-way E
+    147 s) and jammed the toll plazas (the booth's dwell window assumed a 2 m stop; per-driver s0 varies): parked in
+    `output/review/drivers-wiring.patch`, being re-applied with the dwell windows on the driver's own s0 and a milder mix
+    (15% aggressive, 15% cautious); then incidents (sim lanes and slow zones), disasters (closures), farms (rural lots),
+    names (labels), taxis and subways (with the business layer).
+  - **Per-corner slipways: DONE** (commit `3a24eae`; browser-checked on street, arterial and mixed crossings: add and
+    remove corners, the last one off gives plain lights, roundabouts refused, lane graph clean; the corner click searches
+    18 tiles around, the island sits ~12 out).
   - **Junction UI:** ring lanes 1–3 and the Tab type flip DONE (commit `3720049`, browser-checked on street, arterial and
     mixed crossings and a bend); per-corner slipways in progress (haiku; a 'Slipways' mode, `slipOff` per node in the
     ops and the save, $1,000 a corner; resumed after the Haiku session limit).
