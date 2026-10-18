@@ -57,6 +57,15 @@ and more. The owner's answers (2026-10-18):
   layer replaces Phase 6's events; then highways, hillier terrain and the towns as seeds.
 - Also (owner): the town's normal growth adds small public car parks on open lots.
 
+#### 1.0.01 The calendar and the signal tech (the owner, 2026-10-18 evening)
+- **The year:** the game starts in **1985**; **each finished event round is one year** (2000 after 15 rounds). Tech and
+  road features unlock by year (this replaces section 7 item 1's era-pacing question).
+- **Traffic lights in three tiers:** **1985** fixed-time lights only, with a **green split the player sets per junction**;
+  **1990** actuated lights (loop detectors: the green extends while cars arrive; the behaviour of Phase 6 step 1); **2000**
+  adaptive lights (the green shifts toward the busiest direction, and neighbouring lights coordinate into green waves).
+  (History, for the record: actuated lights were common by the 1970s–80s, network-adaptive systems such as SCOOT and SCATS
+  in the 1980s–90s, camera/AI-adaptive lights in the 2000s–2010s; the owner chose these years for the game.)
+
 #### 1.0.0 Changes of 2026-10-18 evening (the owner)
 - **The towns start as small seeds** (a few streets inside their footprint); **the player builds town streets too**; the
   towns' own growth roads join only local streets, never the main road classes; **a growth target unlocks the events**.

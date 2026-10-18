@@ -1058,6 +1058,9 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **Queued (the owner, 2026-10-18 evening): the calendar and the signal tiers** (GAME-PLAN 1.0.01): the year from 1985, one
+  per finished round; fixed-time lights with a per-junction green split at the start, actuated from 1990, adaptive (busy
+  direction bias, green waves) from 2000; saved.
 - **Phase 6 step 1, actuated signals: DONE** (commit `0cf0e09`). Signal plans carry their state (the phase served, its
   stage and time): min 7 s, max 40 s green, extended while a car is within 30 m on a served lane, empty phases skipped,
   rest on green; the worker sends the states to the renderer; `Sim.fixedSignals` keeps the old rule for A/B. A 4-arm
