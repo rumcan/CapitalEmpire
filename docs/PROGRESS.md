@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–3 done (three towns, the dev sandbox, the clock, the stadium and the round, car parks)._
+_Last updated: 2026-10-18, Phase 5 steps 1–4 done (three towns, the dev sandbox, the clock, the stadium and the round, car parks, the surge trips)._
 
 ## Where we are
 
@@ -841,6 +841,20 @@ Steps (each ends verified, committed and written up here):
    - **Known issue (for step 4):** everyday lot trips pick jobs and shops in the other towns, which are not joined yet,
      so those cars are lost at once (about one every 3 sim s on seed 1). Trips must stay within joined roads.
    - Balance note: 1,200 surge cars in about 10 minutes need about 7 entrances' worth of capacity, or a faster entry.
+4. **The surge trips. DONE** (2026-10-18). `event/surge.ts`: at the surge start each town's crowd gets a seeded departure
+   schedule (a bell over the first 75% of the surge, from its homes' driveways by residents), each car bound for a car park
+   joined to its home (chosen by bays, entrances in turn); a town with no joined car park is stranded (all missed). The
+   sim tags party cars with their town and reports parked / turned away / lost per town; the HUD shows them live, the
+   result per town at kick-off; closing the round clears the party cars and empties the car parks. Everyday lot trips now
+   only go to joined roads (the towns start apart; town:gate's day lines are unchanged).
+   - **First headless round** (`output/dbg/event.ts`, a scripted player, not committed: seed 1, each town joined by one
+     2-lane road to a hub road south of the stadium, two car parks of 624 and 1,540 bays, 3 entrances each): **109 of
+     1,200 cars parked before kick-off (9.1%)**; ~1,000 cars still on the road. Worst items: the hub road (1,827 s lost)
+     and the towns' exit junctions (LOS F at v/c 0.06–0.4). City.step mean 21–24 ms per sim second with ~1,500 cars
+     (2.4 ms per step, inside the budget).
+   - **Balance problem for step 9:** 1,200 cars leaving within 7.5 minutes is ~9,600 cars an hour; a 2-lane road carries
+     ~1,800 an hour per lane, and unsignalled junctions far less. Level 1 must shrink (fewer, bigger parties) or spread
+     its departures, so that a sensible build reaches 60–80% and live fixes reach 100%.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
