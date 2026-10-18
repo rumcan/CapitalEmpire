@@ -324,12 +324,13 @@ function liveRows(v: SurgeView): TownRow[] {
 }
 
 /** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock).
- *  Docked under the top bar; the eval stage has its own screen (EvalScreen) */
+ *  Docked top right (left of a right-hand panel when one is open); the eval stage has its own screen (EvalScreen) */
 function RoundPanel({ game }: { game: Game }) {
   const r = game.traffic.round, last = r.last, goBtn = <button className="chip" onClick={() => game.goToSite()}>Go to stadium</button>;
   const crowd = r.crowd.map((c, i) => `Town ${String.fromCharCode(65 + i)} ${c}`).join(' · ') + (r.crowd.length ? ' cars' : '');
   return (
-    <div className="pointer-events-auto absolute left-1/2 top-24 z-20 w-[440px] max-w-[calc(100vw-1.5rem)] -translate-x-1/2 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+    // on the right, out of the way of building; left of the budget or bottleneck panel when one of those is open there
+    <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-24 z-20 w-[400px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur`}>
       <Panel title={`Event: Stadium · Level ${r.level}`}>
         {r.stage === 'free' && (
           <div className="space-y-2">
