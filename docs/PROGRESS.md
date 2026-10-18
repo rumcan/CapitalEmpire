@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–5 done (towns, dev sandbox, clock, stadium and round, car parks, surge, Toll Gate), the live congestion heat map, and the stranded-crowd fix; next: step 6 (buses and walkers)._
+_Last updated: 2026-10-18, Phase 5 steps 1–6 done (towns, dev sandbox, clock, stadium and round, car parks, surge, Toll Gate, buses and walkers), the live heat map; next: step 7 (evaluation, payout, levels, cards)._
 
 ## Where we are
 
@@ -888,6 +888,21 @@ Steps (each ends verified, committed and written up here):
    - **Fix (owner's report: no cars drove to the stadium, commit `fe84888`):** a car park kept the frontage seg it was built
      on; once that road was split (a new junction, the town's gravel) every town read "no car park reachable". The city
      now rebuilds its car parks after every network batch, and the surge takes a car park's road from its entrances.
+6. **Shuttle buses and walkers. DONE** (2026-10-18; commits `07430b2` and the 6b commit after it; art `257ad90`).
+   - A bus route (`event/bus.ts`): a lot stop on a road beside a car park and a doors stop on a road near the stadium,
+     resolved to lanes like the car park entrances; 8 buses of 60 seats (the starting kit: the first route is free, then
+     $15,000). Buses are sim vehicles (vtype 5, 12 m; the schoolbus art as a placeholder) that exist from the surge start
+     to the close, board one fan per 0.5 s (leave when full, or the queue is empty after 5 s, or at 40 s), unload one per
+     0.3 s, and loop.
+   - Walkers (`event/crowd.ts`): each parked party becomes 3 fans walking (1.4 m/s, straight) from its bay to its car
+     park's bus stop (the shortest queue), or straight to the nearest stadium door when the car park has no route; fans off
+     a bus walk to the nearest door. **The arrival rate now counts fans at the doors before kick-off** (of cars x 3).
+   - Drawn: stop markers, the queue as a crowd with its count, walkers from a 12-frame placeholder strip cut from three
+     TrickOrTreat character sheets (`scripts/assets/prep-walkers.mjs`; Sam plain, Jess a witch, Tommy a vampire: Phase 8
+     brings fan art); dots at far zoom. The round panel counts per town: parked cars, at the stop, on buses, fans arrived.
+   - Checked in the browser on the dev valley (a scripted hub road south of the stadium, two car parks, a bus route): the
+     whole chain runs (cars park, fans queue and ride, 60 of 3,600 fans in at 3:32 to kick-off with the jams of a naive
+     build). Headless test: 90 fans from 30 cars all arrive; walking-only arrival = distance / 1.4 m/s.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
