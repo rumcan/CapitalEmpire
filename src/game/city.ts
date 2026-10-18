@@ -11,6 +11,7 @@ import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, t
 import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
 import { LaneGraph } from './sim/lanes';
 import { Sim } from './sim/sim';
+import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 
@@ -185,6 +186,9 @@ export class City {
     else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
     return { events, grow: this.planGrow(), ledger };
   }
+
+  /** the bottleneck report of the traffic now: the junctions' levels of service, the links' v/c, and the topN entries by time lost */
+  report(topN = 10): Report { return bottlenecks(this.g, this.sim, topN); }
 
   /** the built lots go to the sim (once a game hour); the sim switches from random trips to the lots' trips once a RES lot is built */
   private builtSync() {

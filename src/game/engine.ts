@@ -25,6 +25,9 @@ import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 const GAME_DAY = 1440, GAME_HOUR = 60;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
 export const SPEEDS = [1, 2, 4, 8] as const;
+/** the flow colours by v/c (below 0.5, below 0.8, below 1, and 1 or more; see Game.drawFlow) and the junction LOS badge colours, A to F */
+export const FLOW_COLS = ['#3ddc84', '#ffd23f', '#ff8c1a', '#ff3b3b'];
+export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: '#ffd23f', D: '#ff8c1a', E: '#ff3b3b', F: '#ff3b3b' };
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
 
@@ -68,6 +71,12 @@ export class Game {
   selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
   /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
   showAccess = false;
+  /** the flow overlay (key F): each direction of each road coloured by volume / capacity, and junction LOS badges at the street and district tiers */
+  showFlow = false;
+  /** the right-hand panel: the budget (the treasury), the bottlenecks (key B), or none */
+  panel: 'budget' | 'bottlenecks' | null = null;
+  /** a ring pulsed for 4 s where the camera jumped (see jumpTo): the tile and the time (performance.now, ms) */
+  focus: { x: number; y: number; t: number } | null = null;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
   // economy (the books live in the city worker: traffic.budget, see the getters by the save)
@@ -106,7 +115,7 @@ export class Game {
     this.traffic.onGrow = (legs) => this.townGrow(legs);
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); };
     this.traffic.onLedger = (l) => {
-      if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: Universal Food Processing Inc. has pulled the plug', 'warn'); }
+      if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
       else if (l.money < 0) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
       else this.toast(`Day ${l.day}: ${l.net >= 0 ? '+' : '−'}$${Math.abs(l.net).toLocaleString()}`, l.net >= 0 ? 'good' : 'info');
@@ -579,6 +588,12 @@ export class Game {
     this.cam.X = wx - (mx - this.cssW / 2) / z; this.cam.Y = wy - (my - this.cssH / 2) / z; this.clampCam(); this.emit();
   }
   clampCam() { this.cam.X = clamp(this.cam.X, -MAP * HW, MAP * HW); this.cam.Y = clamp(this.cam.Y, 0, MAP * HH * 2); }
+  /** centres the camera on tile (x, y), zooms in to at least 0.2 (a closer zoom stays), shows the flow and pulses a ring there */
+  jumpTo(x: number, y: number) {
+    if (this.cam.z < 0.2) this.cam.z = 0.2;
+    this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam();
+    this.focus = { x, y, t: performance.now() }; this.showFlow = true; this.emit();
+  }
   keyDown(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     this.keys.add(e.key);
@@ -591,6 +606,8 @@ export class Game {
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
       case 'p': case 'P': this.showLots = !this.showLots; this.emit(); break;
       case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
+      case 'f': case 'F': this.showFlow = !this.showFlow; if (this.showFlow) this.traffic.requestReport(); this.emit(); break;
+      case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'r': case 'R': this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
@@ -982,6 +999,43 @@ export class Game {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
+  /** the traffic flow (key F, when the worker's report is in): each direction of each road with traffic, on its own side as the lanes (right of its way), coloured by v/c;
+   *  at the street and district tiers the LOS badges of the junctions with through traffic; then the focus ring of a jump (4 s) */
+  private drawFlow(ctx: CanvasRenderingContext2D) {
+    const rep = this.traffic.report; if (!rep) return;
+    const ze = this.cam.z * this.dpr, pad = 4, now = performance.now();
+    const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
+    const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
+    const f = rep.flow;
+    this.setIso(ctx); ctx.lineCap = 'butt'; ctx.globalAlpha = 0.85;
+    if (this.showFlow) for (let i = 0; i + 5 < f.length; i += 6) {
+      const fx = f[i]!, fy = f[i + 1]!, tx = f[i + 2]!, ty = f[i + 3]!, vc = f[i + 4]!, h = f[i + 5]!;
+      if (Math.max(fx, tx) < x0 || Math.min(fx, tx) > x1 || Math.max(fy, ty) < y0 || Math.min(fy, ty) > y1) continue;
+      // the offset is h / 2 along perp of the unit direction (u = (dx, dy) / L, perp u = (-uy, ux)): the side the lanes use
+      const dx = tx - fx, dy = ty - fy, L = Math.hypot(dx, dy) || 1, ox = -dy / L * h / 2, oy = dx / L * h / 2;
+      ctx.strokeStyle = FLOW_COLS[vc < 0.5 ? 0 : vc < 0.8 ? 1 : vc < 1 ? 2 : 3]!;
+      // at the planner tier a tile is HW * zoom px across, so 2 px (CSS) is 2 / (HW * zoom) tiles
+      ctx.lineWidth = this.cam.z < PLANNER_Z ? Math.max(h * 0.9, 2 / (HW * this.cam.z)) : h * 0.9;
+      ctx.beginPath(); ctx.moveTo(fx + ox, fy + oy); ctx.lineTo(tx + ox, ty + oy); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.showFlow && this.cam.z >= PLANNER_Z) {
+      ctx.font = `bold ${9 * this.dpr}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (const J of rep.junctions) {
+        if (J.through <= 0 || J.x < x0 || J.x > x1 || J.y < y0 || J.y > y1) continue;
+        const s = this.screen(J.x, J.y);
+        ctx.beginPath(); ctx.arc(s.x, s.y, 7 * this.dpr, 0, Math.PI * 2); ctx.fillStyle = LOS_COL[J.los]!; ctx.fill();
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = this.dpr; ctx.stroke();
+        ctx.fillStyle = '#0f172a'; ctx.fillText(J.los, s.x, s.y + 0.5 * this.dpr);
+      }
+    }
+    const fo = this.focus, age = fo ? now - fo.t : Infinity;
+    if (fo && age < 4000) {
+      const s = this.screen(fo.x, fo.y), r = (18 + 10 * Math.sin(age / 1000 * Math.PI * 2)) * this.dpr;
+      ctx.globalAlpha = 1 - age / 4000; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2 * this.dpr;
+      ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+  }
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
@@ -996,6 +1050,7 @@ export class Game {
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
     if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
+    this.drawFlow(ctx);
     this.drawGroundOverlays(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;

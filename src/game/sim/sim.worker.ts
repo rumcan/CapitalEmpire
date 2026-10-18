@@ -31,6 +31,12 @@ function postTown(ev: TownEvent[], force: boolean) {
 /** the books: the save, the game day now, and the ledger of the day that just closed (null unless a day did) */
 function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), day: city.budget.dayOf(city.sim.t), ledger }); }
 
+/** the bottleneck report: the flow buffer is handed over, not copied */
+function postReport() { const report = city.report(); post({ t: 'report', report }, [report.flow.buffer as ArrayBuffer]); }
+/** the game hour (sim s) the bottleneck report was last posted for (-1: none yet); a report goes out once per game hour of sim time */
+const HOUR = 60;
+let reportHour = -1;
+
 /** a new valley: the city takes its terrain; the town starts again (no lots yet) and posts its totals and books */
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
   city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed);
@@ -64,6 +70,9 @@ function frame() {
     if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
     if (r.ledger) postBudget(r.ledger);
   }
+  const hr = Math.floor(city.sim.t / HOUR);
+  // not while fast-forwarding (an hour passes almost every frame then); the first frame after the skip posts it
+  if (hr !== reportHour && !(skipUntil > city.sim.t)) { reportHour = hr; postReport(); }
   const sim = city.sim, alive = sim.active > 0;
   // with no cars, still a frame every second: the clock (signals, the town) reads simT from it; while skipping, a frame every period
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
@@ -87,6 +96,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
       case 'loan': city.loan(m.take); postBudget(null); break;
       case 'budget': city.setBudget(m.save); postBudget(null); break;
+      case 'report': postReport(); break;
     }
   } catch (err) { fail(err); }
 };

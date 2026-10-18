@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Game, SPEEDS } from './game/engine';
+import { FLOW_COLS, Game, LOS_COL, SPEEDS } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
@@ -24,8 +24,7 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
-  /** the budget panel (toggled by the treasury) and the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
-  const [budgetOpen, setBudgetOpen] = useState(false);
+  /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);
 
   useEffect(() => { if (game && !game.bankrupt) setWatch(false); });
@@ -86,7 +85,7 @@ export default function App() {
                 <div className="text-[10px] uppercase tracking-[0.25em] text-amber-400/70">Town Builder</div>
               </div>
               <div className="mx-1 h-8 w-px bg-white/10" />
-              <Stat label="Treasury" value={money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => setBudgetOpen(o => !o)} />
+              <Stat label="Treasury" value={money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
               <Stat label="Population" value={game.traffic.pop.toLocaleString()} />
               <Stat label="Jobs" value={game.traffic.jobs.toLocaleString()} />
               <Stat label="Day" value={String(game.day)} sub={hhmm(game.clock())} />
@@ -104,6 +103,8 @@ export default function App() {
                 <button className="btn" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)">+</button>
                 <span className="ml-1 w-14 text-right text-xs tabular-nums text-slate-300" title="Zoom relative to the town builder's 100%">{Math.round(game.cam.z * 100)}%</span>
               </div>
+              <button className={`btn ${game.showFlow ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.showFlow = !game.showFlow; if (game.showFlow) game.traffic.requestReport(); bump(); }} title="Traffic flow: volume / capacity and junction LOS (F)">Flow</button>
+              <button className={`btn ${game.panel === 'bottlenecks' ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)">Bottlenecks</button>
               <button className={`btn ${game.showGrid ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)">Grid</button>
               <button className="btn" onClick={() => game.save()} title="Saved automatically; force a save now">Save</button>
               <button className="btn" onClick={() => { if (confirm('Start a fresh Maple Falls starter town? Your current town will be replaced.')) game.newTown(); }}>New town</button>
@@ -144,12 +145,13 @@ export default function App() {
             ))}
           </div>
 
-          {budgetOpen && <BudgetPanel game={game} />}
+          {game.panel === 'budget' && <BudgetPanel game={game} />}
+          {game.panel === 'bottlenecks' && <BottleneckPanel game={game} />}
           {game.bankrupt && !watch && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
               <div className="w-96 rounded-2xl border border-red-500/40 bg-slate-950 p-6 text-center text-slate-200 shadow-2xl">
                 <div className="text-2xl font-bold text-red-300">Bankrupt</div>
-                <p className="mt-3 text-sm text-slate-300">Universal Food Processing Inc. has cut the farm loose: the books stayed in the red for {DEBT_DAYS} days.</p>
+                <p className="mt-3 text-sm text-slate-300">The books stayed in the red for {DEBT_DAYS} days in a row.</p>
                 <div className="mt-5 flex justify-center gap-2">
                   <button className="chip chip-on" onClick={() => game.newTown()}>New valley</button>
                   <button className="chip" onClick={() => setWatch(true)}>Keep watching</button>
@@ -236,6 +238,40 @@ function BudgetPanel({ game }: { game: Game }) {
           <button className="chip flex-1" onClick={() => game.repay()}>Repay</button>
         </div>
         {debtDaysLine(b.debtDays)}
+      </Panel>
+    </div>
+  );
+}
+/** the legend of the flow colours: the v/c bands, in FLOW_COLS order */
+const FLOW_LEGEND: [string, string][] = [['< 0.5', FLOW_COLS[0]!], ['< 0.8', FLOW_COLS[1]!], ['< 1', FLOW_COLS[2]!], ['≥ 1 v/c', FLOW_COLS[3]!]];
+/** the worst bottlenecks of the city's last report, worst first: a row per item (click to jump there), the time lost per game hour, and the flow legend */
+function BottleneckPanel({ game }: { game: Game }) {
+  const top = game.traffic.report?.top ?? [];
+  return (
+    <div className="absolute right-3 top-24 z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+      <Panel title="Bottlenecks">
+        <p className="mb-2 text-xs text-slate-400">Time lost in the last game hour or so, worst first</p>
+        {top.length ? (
+          <div className="space-y-0.5">
+            {top.map((it, i) => (
+              <button key={it.kind + it.key} className="block w-full rounded-lg px-1.5 py-1 text-left hover:bg-white/10" onClick={() => game.jumpTo(it.x, it.y)} title="Jump there">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="w-4 text-right tabular-nums text-slate-500">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate text-slate-100">{it.label}</span>
+                  {it.kind === 'junction'
+                    ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-bold text-slate-900" style={{ background: LOS_COL[it.los] }}>{it.los}</span>
+                    : <span className="shrink-0 text-[10px] tabular-nums text-slate-300">v/c {it.vc.toFixed(2)}</span>}
+                </div>
+                <div className="pl-6 text-[10px] text-slate-400">{(it.loss / 60).toFixed(1)} veh-min lost per hour</div>
+              </button>
+            ))}
+          </div>
+        ) : <p className="text-xs text-slate-400">No traffic yet</p>}
+        <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
+          {FLOW_LEGEND.map(([t, c]) => (
+            <span key={t} className="flex items-center gap-1"><span className="inline-block h-2 w-3 rounded-sm" style={{ background: c }} />{t}</span>
+          ))}
+        </div>
       </Panel>
     </div>
   );
@@ -354,6 +390,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
           <li>Space pauses (tap it; hold it and drag to pan); , and . change the speed; H skips to the next rush hour.</li>
+          <li>F shows traffic flow and junction levels of service; B lists the worst bottlenecks (click one to jump there).</li>
         </ul>
         <button className="btn mt-5" onClick={onClose}>Close</button>
       </div>
