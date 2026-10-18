@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–6 done (towns, dev sandbox, clock, stadium and round, car parks, surge, Toll Gate, buses and walkers), the live heat map; next: step 7 (evaluation, payout, levels, cards)._
+_Last updated: 2026-10-18, Phase 5 steps 1–7 done; next: step 8 (live edit tools), then step 9 (balance and the gate). The owner is away: open questions take the lead's recommendation (logged as such)._
 
 ## Where we are
 
@@ -903,6 +903,22 @@ Steps (each ends verified, committed and written up here):
    - Checked in the browser on the dev valley (a scripted hub road south of the stadium, two car parks, a bus route): the
      whole chain runs (cars park, fans queue and ride, 60 of 3,600 fans in at 3:32 to kick-off with the jams of a naive
      build). Headless test: 90 fans from 30 cars all arrive; walking-only arrival = distance / 1.4 m/s.
+7. **Evaluation, payout, levels and cards. DONE** (2026-10-18; commits `c1748cd` and the 7b commit after it).
+   - **Payout** (the owner's "money from the success or failure of the event"): at kick-off, up to +$60,000 x the level's
+     crowd factor from 50% to 100% arrival, a penalty down to -$20,000 below 50% (`payout()` in the config). On the
+     three-town valleys the income is the toll plus the payout; property tax, takings, grants and the Career are off;
+     upkeep runs on. The single-town gates are unchanged (fix:gate seed 1 day 36: -19.9%, bankrupt on day 5).
+   - **Levels and cards:** every finished round offers 3 seeded cards from the pool (roundabout unlock, +2 booths on every
+     gate, double-decker buses 100 seats, +4 buses per route, express entry 1.4 s); the pick raises the player level and is
+     needed to close the round. A perfect run (100%) raises the stadium level (x1.4 crowd) and stamps the towns +25%.
+     Decisions (lead): each round levels up (not only good ones); +2 booths and +4 buses also apply to existing gates and
+     routes. On the event valleys every road class, bridges, tunnels and signals are open from the start (the owner's
+     starting kit); the roundabout waits for its card.
+   - **The evaluation screen:** the rate and its change since the last run, fans by town and where they were stuck, the
+     money line, the 5 worst bottlenecks at kick-off with Go (jumps there with the heat map on), the draft, Back to the
+     valley. Checked in the browser on the dev valley: 4% in (a naive build), payout -$18,233, a card picked (Level 2,
+     seats 100), the round closes.
+   - The worker PC did not answer SSH on 2026-10-18 afternoon (connection timed out): the slow checks ran on the dev PC.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
