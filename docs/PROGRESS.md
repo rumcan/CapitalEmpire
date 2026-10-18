@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 done (the gate passed on seed 1); Phase 6 started in the same chat. The owner is away: open questions take the lead's recommendation (logged as such); nothing pushed._
+_Last updated: 2026-10-18 evening, Phase 5 done; Phase 6 paused after step 1 (actuated signals); Phase 6R (roads first: the owner's direction) in progress. Nothing pushed._
 
 ## Where we are
 
@@ -15,7 +15,8 @@ _Last updated: 2026-10-18, Phase 5 done (the gate passed on seed 1); Phase 6 sta
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
 | 4. Budget + bottleneck loop | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | **Done** (2026-10-18; the gate passed on seed 1), not pushed (the owner is away). Steps, numbers and the gate below |
-| 6. Expansion (new events, overlapping networks) | **In progress** (started 2026-10-18, same chat; the owner away: the lead's recommendations, logged) |
+| 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
+| 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 
@@ -1014,6 +1015,41 @@ Steps:
 
 ### Phase 6 progress
 (none yet)
+## Phase 6R, roads first (the owner's direction, 2026-10-18 evening): in progress
+
+The owner came back mid-Phase 6 and put the road work first (pulled forward from Phase 7); Phase 6's events resume after
+it (its step 1, actuated signals, carries over). **The owner's words, 2026-10-18:**
+- Multi-lane roundabouts (1, 2 and 3 lanes); **the roundabout driving "is completely broken"** (a bug: first).
+- One-way for every road type; **"all the road types that exist in real life"** (as Cities: Skylines has), and a way to
+  **flip through the variants** of a type.
+- **Junction editor:** place lights at an intersection, then flip through all the junction types; add **slipways on
+  some or all sides**, with **turn lanes in the middle**; "whatever you get in real life"; **mini-roundabouts** (a small
+  yellow circle in the road where drivers take turns) instead of two stop streets.
+- **Snapping:** each road end has a single place it snaps to and attaches to another road, and every join looks seamless.
+- **Towns:** the town's own growth roads must not connect to arterial routes; the player builds town roads as well; the
+  towns start as **small seeds whose roads are not bigger than the town**; **a growth target unlocks the events**.
+- **Terrain:** less empty space around the edges of the map, more hills and valleys, so roads follow the land instead of
+  grids.
+
+Steps (each verified, committed, written up here):
+1. **Roundabouts that work** (diagnose the ring logic in the browser and headless; fix entry/circulation/exit), then 2- and
+   3-lane rings (lane choice by exit: the outer lane for the first exit, inner lanes for later ones; bigger radii).
+2. **The road catalogue**: a parametric road model (lanes each way 1–3, one-way, median none/painted/planted, shoulders,
+   sidewalks, trees, a centre turn lane, bus lanes, gravel) and the real-life types built from it, grouped in families
+   (small, medium, large, rural); one-way in the lane graph and the painter (arrows, no centre line); the variant flip
+   key (cycles the variants of the type in hand: one-way, trees, median, turn lane).
+3. **Snapping and seamless joins**: one snap point per road end (its centre line end); a new road snaps to an end, a
+   node or a point along a road; joins between different types blend (lane counts taper, kerbs and markings meet).
+4. **The junction editor**: a junction's type flips through plain / all-way stop / two-way stop / mini-roundabout /
+   signals / roundabout 1–3 lanes; per-arm slip lanes (on some or all sides) and turn lanes in the middle (flared
+   pockets); mini-roundabouts in the sim (take turns, yield to the right).
+5. **Highways and ramps** (one-way 1–3 lanes, no junctions, on/off ramps; grade separation over roads).
+6. **Terrain**: more hills and valleys across the map, less flat space at the edges; the town sites and the event sites
+   still placeable.
+7. **Towns as seeds**: each town a small seed (a few streets inside its own footprint, ~150 residents); the player builds
+   town streets; the town's growth roads join only local streets (gravel, lane, street), never the main road classes;
+   **a growth target unlocks the events** (the stadium at 1,500 residents across the three towns; later events need more).
+8. **A check of the whole road set** (screenshot tests per type and junction; a sim capacity test per junction type).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first (Phase 6 is in

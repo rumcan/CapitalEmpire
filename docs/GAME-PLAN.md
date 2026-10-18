@@ -41,6 +41,14 @@ The game is played in **rounds** of three stages. This replaces the single-town 
 idea of plan v3 (written the same day and dropped). Everything below this section (the road builder, the traffic
 sim, the towns' own growth, the bottleneck tools, the budget machinery) carries over and is used by it.
 
+#### 1.0.0 Changes of 2026-10-18 evening (the owner)
+- **The towns start as small seeds** (a few streets inside their footprint); **the player builds town streets too**; the
+  towns' own growth roads join only local streets, never the main road classes; **a growth target unlocks the events**.
+- **The roads come first** (Phase 6R, pulled forward from Phase 7): every real-life road type with one-way variants and a
+  variant flip, a junction editor (types, slip lanes on some or all sides, turn lanes, mini-roundabouts, roundabouts of 1–3
+  lanes), one snap point per road end with seamless joins, highways and ramps.
+- **The terrain gets more hills and valleys** and less empty space at the map edges, so roads follow the land.
+
 #### 1.0.1 The map: autonomous towns
 - The valley holds several **autonomous towns** (Phase 3 towns): they grow their own houses, shops and gravel streets
   and run their own everyday traffic. The player never builds inside them.
