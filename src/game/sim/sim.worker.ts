@@ -9,6 +9,7 @@ import type { Lot } from '../lots/lots';
 import type { TownEvent } from '../lots/town';
 import type { Ledger } from '../budget';
 import type { Milestone } from '../career';
+import { Round } from '../event/round';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -18,6 +19,8 @@ const city = new City(1);
 let speed = 1, forcePost = false, wasAlive = false, townPosted = 0;
 /** the sim time a fast-forward runs to, s; -1 when none */
 let skipUntil = -1;
+/** the performance.now() of the last frame: the wall time since it feeds the event round's build */
+let wallAt = performance.now();
 const post = (m: FromSim, transfer: Transferable[] = []) => scope.postMessage(m, transfer);
 const fail = (err: unknown) => post({ t: 'error', message: (err as Error).stack || String(err) });
 const rec = (l: Lot): LotRec => ({ key: l.key, o: [l.o.x, l.o.y], u: [l.u.x, l.u.y], n: [l.n.x, l.n.y], w: l.w, d: l.d, cls: l.cls, corner: l.corner });
@@ -55,6 +58,7 @@ function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
   const towns: Pt[] = [];
   for (let i = 0; i + 1 < m.towns.length; i += 2) towns.push({ x: m.towns[i]!, y: m.towns[i + 1]! });
   city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed, towns);
+  post({ t: 'site', site: city.site });
   postTown([], true); postBudget(null);
 }
 
@@ -69,6 +73,9 @@ function netOps(ops: NetOp[]) {
 
 /** one wall-clock period: speed steps of the sim (or, while skipping, as many 20-step blocks as SKIP_MS allows), the town to the sim time, the planner, then a frame unless there is nothing to show */
 function frame() {
+  // the event round's build runs on the wall clock: the time since the last frame, s (clamped to [0, 0.5])
+  const now = performance.now();
+  city.wall(Math.min(0.5, Math.max(0, (now - wallAt) / 1000))); wallAt = now;
   const skipping = skipUntil > city.sim.t;
   if (skipping) {
     const t0 = performance.now();
@@ -96,7 +103,7 @@ function frame() {
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
   forcePost = false; wasAlive = alive;
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
-  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen };
+  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.round.view() };
   post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
@@ -112,7 +119,10 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
-      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); postBudget(null); break;
+      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.round = Round.from(m.round); postBudget(null); break;
+      case 'round':
+        if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else city.closeRound();
+        postBudget(null); forcePost = true; break;
       case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
       case 'loan': city.loan(m.take); postBudget(null); break;
       case 'budget': city.setBudget(m.save, m.career); postBudget(null); break;

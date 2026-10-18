@@ -50,10 +50,10 @@ test('spending comes out of the treasury now, shows in the next ledger, and toda
   const b = new Budget();
   b.spend('construction', 1000); b.refund(200); b.spend('compensation', 300);
   assert.equal(b.money, START_MONEY - 1100);
-  assert.deepEqual(b.today, { construction: 800, compensation: 300, grants: 0 });
+  assert.deepEqual(b.today, { construction: 800, compensation: 300, grants: 0, upkeepLive: 0 });
   const L1 = b.endDay(1, EMPTY_DAY);
   assert.deepEqual(L1, { day: 1, property: 0, business: 0, grants: 0, upkeep: 0, signals: 0, interest: 0, construction: 800, compensation: 300, net: -1100, money: START_MONEY - 1100 });
-  assert.deepEqual(b.today, { construction: 0, compensation: 0, grants: 0 });
+  assert.deepEqual(b.today, { construction: 0, compensation: 0, grants: 0, upkeepLive: 0 });
   const L2 = b.endDay(2, EMPTY_DAY);
   assert.equal(L2.construction, 0);
   assert.equal(L2.compensation, 0);
@@ -68,7 +68,7 @@ test('a grant goes into the treasury now and shows as income in the next ledger 
   assert.equal(b.today.grants, 10000);
   const L1 = b.endDay(1, EMPTY_DAY);
   assert.deepEqual(L1, { day: 1, property: 0, business: 0, grants: 10000, upkeep: 0, signals: 0, interest: 0, construction: 1000, compensation: 0, net: 9000, money: START_MONEY + 9000 });
-  assert.deepEqual(b.today, { construction: 0, compensation: 0, grants: 0 });
+  assert.deepEqual(b.today, { construction: 0, compensation: 0, grants: 0, upkeepLive: 0 });
   const L2 = b.endDay(2, EMPTY_DAY);
   assert.equal(L2.grants, 0);
   assert.equal(L2.net, 0);

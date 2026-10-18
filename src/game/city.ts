@@ -10,12 +10,15 @@ import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
 import { LaneGraph } from './sim/lanes';
-import { Sim, type CarInfo } from './sim/sim';
+import { DT, Sim, type CarInfo } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
-import { Budget, GAME_DAY, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
+import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
+import { EVENT_CLOCK } from './event/config';
+import { Round } from './event/round';
+import { crowdFor, placeStadium, type Site } from './event/site';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -77,6 +80,10 @@ export class City {
   private reach = new Set<Seg>();
   /** the town centres (tiles) of the valley (none on the single-town path): each is a town the planner grows in turn, hour by hour */
   centres: Pt[] = [];
+  /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
+  site: Site | null = null; round = new Round();
+  /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
+  private upkeepC: number | null = null;
   private cls: Uint8Array | null = null; private water: Float32Array | null = null; private optId = GROWTH_OPTIONS[0].id;
   private ctx: TownCtx;
   /** the game hour the town's access was copied to the town and the built lots given to the sim (-1 = none yet: at the next step) */
@@ -118,7 +125,45 @@ export class City {
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
+    this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round();
     this.setBudget(null, null);
+  }
+
+  /** the road upkeep per game day, $: the sum of the road stretches' upkeep (segUpkeep, as dayIn builds them), the junctions' signal upkeep,
+   *  and the loans' interest; cached until a net batch, a loan change or new books */
+  upkeepRate(): number {
+    if (this.upkeepC !== null) return this.upkeepC;
+    let r = 0;
+    for (const s of this.net.segs) r += segUpkeep({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind });
+    for (const n of this.net.nodes.values()) r += SIGNAL_UPKEEP[n.type] ?? 0;
+    r += this.budget.loans * LOAN * LOAN_RATE;
+    return this.upkeepC = r;
+  }
+
+  /** starts a round (free only, with a site): the crowd by town population (crowdFor at the round's level), and the clock frozen at the next
+   *  EVENT_CLOCK (18:00 today, or tomorrow's if the clock is past it); false if there is no site or a round is under way */
+  startRound(): boolean {
+    if (!this.site || this.round.stage !== 'free') return false;
+    if (!this.round.start(crowdFor(this.round.level, this.town.popK))) return false;
+    const c = this.sim.clock, day = Math.floor(c / GAME_DAY) * GAME_DAY;
+    this.freeze(c <= day + EVENT_CLOCK ? day + EVENT_CLOCK : day + GAME_DAY + EVENT_CLOCK);
+    return true;
+  }
+  /** ends the build now: the surge begins; false unless in build */
+  startNow(): boolean {
+    if (!this.round.startNow()) return false;
+    this.beginSurge();
+    return true;
+  }
+  /** the build's wall-clock time (dt s): when it is done the surge begins */
+  wall(dt: number): void { if (this.round.wall(dt)) this.beginSurge(); }
+  /** the surge's clock starts (see Round.beginSurge; idempotent with the round's own start) */
+  private beginSurge(): void { this.round.beginSurge(); }
+  /** closes the eval: the round is free again and the clock runs on from where it was frozen; false unless in eval */
+  closeRound(): boolean {
+    if (!this.round.close()) return false;
+    this.unfreeze();
+    return true;
   }
 
   /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day); the career
@@ -128,7 +173,7 @@ export class City {
     this.budget.unlimited = this.unlimited;
     if (!s) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career ?? undefined);
-    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
+    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null;
   }
 
   /** the dev sandbox's options: the growth speed k (the town's Town.speed, and the planner's slots and window) and unlimited money (every budget); the defaults are the game's */
@@ -138,7 +183,7 @@ export class City {
   /** spends n $ on kind (see Budget.spend); a negative construction n gives it back */
   spend(kind: 'construction' | 'compensation', n: number): void { this.budget.spend(kind, n); }
   /** takes a loan unit (true: borrow, if the town can hold one) or repays one (false); false if the books refuse */
-  loan(take: boolean): boolean { return take ? this.budget.borrow(this.town.pop) : this.budget.repay(); }
+  loan(take: boolean): boolean { this.upkeepC = null; return take ? this.budget.borrow(this.town.pop) : this.budget.repay(); }
 
   /** the day's books as Budget.endDay reads them: the lots with a town state of BUILT or more, the road stretches, the junction types,
    *  the trade since the last booking, the residents */
@@ -168,7 +213,7 @@ export class City {
       if (op.k === 'rebuild') { applyOps(this.net, part); this.g.update(this.net); part = []; }
     }
     if (part.length) applyOps(this.net, part);
-    this.sim.onGraph();
+    this.sim.onGraph(); this.upkeepC = null;
     this.graphMs = performance.now() - t0;
     this.lanes = 0; for (const ln of this.g.lanes) if (ln) this.lanes++;
     return this.lotsOps();
@@ -190,7 +235,7 @@ export class City {
     this.sim.t = simT; this.sim.shift = shift;
     this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career);
-    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
+    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null;
     const ev = this.town.restore(saved, this.sim.clock); this.syncHour = -1;
     return ev;
   }
@@ -221,6 +266,10 @@ export class City {
     }
     for (let k = 0; k < n; k++) this.sim.step();
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
+    // a round under way pays the upkeep as the sim runs; the surge counts down to kick-off (the round goes to eval then)
+    const rs = this.round.stage;
+    if (rs === 'build' || rs === 'surge') { const u = this.upkeepRate() * n * DT / GAME_DAY; this.budget.upkeepLive(u); this.round.upkeep += u; }
+    if (rs === 'surge') this.round.sim(n * DT);
     const events = this.town.tick(this.sim.clock, this.ctx);
     for (const e of events) if (e.kind === 'build') this.builds++;
     const d = this.budget.dayOf(this.sim.clock); let ledger: Ledger | null = null;

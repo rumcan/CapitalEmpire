@@ -15,12 +15,16 @@ import type { Report } from './bottlenecks';
 import type { HourStat } from '../beforeafter';
 import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../budget';
 import type { CareerSave, Milestone } from '../career';
+import { Round, type RoundSave, type RoundView } from '../event/round';
+import type { Site } from '../event/site';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
 /** a car that moved this far (tiles) between two frames was respawned or re-planned: drawn at its new place, not lerped */
 const JUMP = 3;
-const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false };
+/** the round before any frame: free, level 1, no runs */
+const NO_ROUND: RoundView = new Round().view();
+const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false, round: NO_ROUND };
 /** half a car's length per vehicle type, tiles (the lights sit at its front and rear) */
 const HALF = VTYPES.map(v => v.len / 4);
 
@@ -67,6 +71,8 @@ export class SimClient {
   private slot = -1; private watching = false;
   /** the stats of the last frame received */
   stats: SimStats = { ...EMPTY };
+  /** the event round as the worker last sent it (with the frame stats; see startRound), and the stadium's site (null: none; with each terrain) */
+  round: RoundView = NO_ROUND; site: Site | null = null;
   n = 0;
   alive = new Uint8Array(0); px = new Float32Array(0); py = new Float32Array(0);
   /** 4-facing index of the heading: 0 +x, 1 +y, 2 -x, 3 -y */
@@ -98,7 +104,13 @@ export class SimClient {
   /** the dev sandbox's options: the growth speed (1 = the game's) and unlimited money (spending does not move the treasury); stored as unlimited */
   sandbox(grow: number, money: boolean) { this.unlimited = money; this.post({ t: 'sandbox', grow, money }); }
   /** a saved town for the worker (its lots, the sim time, s, the clock's shift from it, and its books or the treasury of an old save): after the net ops of a load */
-  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave, shift = 0) { this.post({ t: 'townState', lots, simT, budget, money, career, shift }); }
+  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave, shift = 0, round?: RoundSave) { this.post({ t: 'townState', lots, simT, budget, money, career, shift, round }); }
+  /** starts an event round (the stadium's crowd comes to kick-off at 18:00 of the clock, which freezes): the build comes first */
+  startRound() { this.post({ t: 'round', op: 'start' }); }
+  /** ends the build now: the surge (the crowd's run to kick-off) begins */
+  startNow() { this.post({ t: 'round', op: 'now' }); }
+  /** closes the round's eval: the round is free again and the clock runs on */
+  closeRound() { this.post({ t: 'round', op: 'close' }); }
   /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
   spend(kind: 'construction' | 'compensation', n: number) { this.budget.money -= n; this.post({ t: 'spend', kind, n }); }
   /** takes (true) or repays (false) one loan unit; the worker refuses what the books do not allow */
@@ -133,6 +145,7 @@ export class SimClient {
     // a null car is the inspected one gone (the worker stops then); a car of another slot is a late answer to an earlier inspect
     if (m.t === 'car') { if (this.slot >= 0 && (!m.info || m.info.slot === this.slot)) this.car = m.info; return; }
     if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }
+    if (m.t === 'site') { this.site = m.site; return; }
     if (m.t === 'grow') {
       const legs: Leg[] = [];
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
@@ -145,7 +158,7 @@ export class SimClient {
       for (const v of this.lots.values()) if (v.level >= LV.BUILT && v.use) this.builtZone[zoneOf(v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2)] = 1;
       this.onTown?.(m.events); return;
     }
-    this.stats = m.stats;
+    this.stats = m.stats; this.round = m.stats.round;
     if (m.cap !== this.n) this.resize(m.cap);
     this.prev = this.cur; this.cur = m.buf; this.tCur = performance.now();
   }
