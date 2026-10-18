@@ -1,6 +1,6 @@
 # T002 · Terrain v2: more hills and valleys
 
-Status: open
+Status: in review (#5)
 Module: `src/game/ext/terrain2/` · Tests: `tests/ext-terrain2.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
