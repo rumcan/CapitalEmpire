@@ -75,6 +75,8 @@ export class Taxis {
   private rev = 0;
   /** total driver + fuel costs so far (dollars) */
   private cost = 0;
+  /** the sim time of the last step (s; -1 before the first): every taxi's driver is paid for the whole shift, idle or not */
+  private lastT = -1;
   /** summed wait time (s) of served fares, for meanWait */
   private waitSum = 0;
   constructor(seed: number, ranks: Rank[], fleet: number, travelTime: (a: Pt, b: Pt) => number) {
@@ -162,17 +164,15 @@ export class Taxis {
   /** accrue driver costs for the current leg (called when a leg ends or a new leg begins).
    *  fuel cost is added separately when the leg length is known. */
   private accrueCosts(tx: Taxi, tNow: number): void {
-    if (tx.orderT > 0 && tNow > tx.orderT) {
-      const dt = tNow - tx.orderT;
-      // driver cost proportional to on-order seconds (active taxi = on the clock)
-      this.cost += (dt / 3600) * DRIVER_PER_HR;
-    }
+    // the wages are paid per fleet hour in step() (an idle driver at a rank is still on the clock); only the leg's start is kept
     tx.orderT = tNow;
   }
 
   /** step the dispatcher at sim time t (seconds). reached is the list of taxi ids that just
    *  reached their previous Order target. Returns new orders for the caller to drive. */
   step(t: number, reached: number[]): Order[] {
+    if (this.lastT >= 0 && t > this.lastT) this.cost += this.taxis.length * ((t - this.lastT) / 3600) * DRIVER_PER_HR;
+    if (t > this.lastT) this.lastT = t;
     const out: Order[] = [];
     // expire queued requests that exceeded their maxWait
     if (this.queue.length) {
