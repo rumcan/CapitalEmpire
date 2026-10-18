@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–8 done; next: step 9 (balance and the Phase 5 gate). The owner is away: open questions take the lead's recommendation (logged as such)._
+_Last updated: 2026-10-18, Phase 5 done (the gate passed on seed 1); Phase 6 started in the same chat. The owner is away: open questions take the lead's recommendation (logged as such); nothing pushed._
 
 ## Where we are
 
@@ -14,8 +14,8 @@ _Last updated: 2026-10-18, Phase 5 steps 1–8 done; next: step 9 (balance and t
 | 2. Traffic core | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
 | 4. Budget + bottleneck loop | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
-| 5. Event round MVP: the stadium (v4, 2026-10-18) | **In progress** (started 2026-10-18). The owner answered GAME-PLAN section 7, items 6–13; steps below |
-| 6. Expansion (new events, overlapping networks) | Not started |
+| 5. Event round MVP: the stadium (v4, 2026-10-18) | **Done** (2026-10-18; the gate passed on seed 1), not pushed (the owner is away). Steps, numbers and the gate below |
+| 6. Expansion (new events, overlapping networks) | **In progress** (started 2026-10-18, same chat; the owner away: the lead's recommendations, logged) |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 
@@ -714,7 +714,7 @@ top bottleneck measurably restarts growth). Suggested steps:
 - `City.hours` (before/after) is not saved: after a load it starts empty.
 - Phase 3's 100-lot contact sheets still wait for the owner's review.
 
-## Phase 5, event round MVP (the stadium): in progress
+## Phase 5, event round MVP (the stadium): done
 
 Goal and gate: GAME-PLAN section 1.0 and the phase table (gate: a scripted player completes a Level 1 stadium round;
 replaying it after the player's fixes raises the arrival rate measurably; 100% is reachable; the surge holds the sim
@@ -928,12 +928,98 @@ Steps (each ends verified, committed and written up here):
    an arterial for $16,000; it paints 4 lanes with a centre line and dividers.
    - **Deviation (lead, owner away):** flared turn pockets (an extra lane added only near the junction) need new lane-graph
      geometry: moved to Phase 7 (road builder pro). The 3-lane classes also wait for Phase 7 (freeways).
+9. **Balance and the Phase 5 gate. DONE** (2026-10-18; commits `5e8a0ab`, `72513dd` and the economy commit after it).
+   - **Balance found headless** (`output/dbg/event2.ts`, the lead's experiments; seed 1):
+     - Level 1 as first set (1,200 cars, 3,600 fans) was more fans than the three towns have residents; even arterials got
+       2% in. **Level 1 is now 240 cars (720 fans), departures over the first 55% of the surge** (a late leaver could not
+       make it: a ~1 km drive, the car park queue and a walk of up to 300 m).
+     - **Car park entrances queue off the road** (an entry lane of 10 cars; before, one waiting car held the whole road at
+       one entrance's pace) and **take both directions** (before, cars arriving on the far side looped through the towns
+       looking for a U-turn: plain corners have none).
+     - **Closing a round clears all traffic** (a surge left the towns' junctions gridlocked, so the replay collapsed from
+       48% to 15%).
+     - Builds on seed 1: a naive build (one road link per town into a hub, tolls) 48%; the towns' middle avenues widened
+       to arterials with the links leaving from them 66–69%; each town its own feeder and car park 100%.
+     - **Signals hurt here:** the fixed-time lights (18 s green) at the three worst junctions cut a replay from 48% to
+       38%. Actuated signals (from the reviewed simulator) are Phase 6 step 1.
+   - **Economy (lead, owner away):** a new three-town valley starts with $600,000 (the single-town path keeps $80,000);
+     the toll is $25 a car; a perfect Level 1 round pays $100,000 (the penalty stays -$20,000). The construction prices are
+     unchanged (a 1 km 2-lane road ~$110,000; a spine of arterials ~$250,000).
+   - **The gate** (`npm run event:gate -- [seed]`, `scripts/sim/event-gate.ts`): A a naive build's Level 1 round; B the
+     same city replayed after the scripted player's corridor fix (for each town with 20%+ of its cars late: its spine
+     widened to arterials, a bypass link from the spine to the hub, its link widened); C a generous build (each town its
+     own feeder and car park on the stadium side facing it); D the sim budgets over the three surges.
+
+### Phase 5 gate (2026-10-18): PASSED on seed 1
+- **A scripted player completes a Level 1 stadium round: PASSED** (A: 47.9% of fans in; the treasury moved exactly toll
+  + payout - upkeep).
+- **Replaying it after the player's fixes raises the arrival rate measurably: PASSED** (B: 58.8%, +10.8 points).
+- **100% is reachable: PASSED** (C: 720/720 fans, every town).
+- **The surge holds the sim budgets: PASSED** (1.44 ms per sim step mean, 17 ms max against 25; ~540 cars at the peak).
+- Seeds 2 and 3, for information: A 53.3% / 49.6%, B +4.6 / -18.3, C 83% / 75%, budgets met. The scripted player's
+  fixed layouts (an L-shaped bypass, feeders on fixed sides) fit those valleys badly (seed 3's bypass is 1,098 tiles
+  through the terrain); a smarter scripted player is Phase 6 work (its gate needs two events on one map at 95%+).
+- The worker PC did not answer SSH all afternoon: every check ran on the dev PC. The GPU bench was not rerun for
+  Phase 5 (the overlay's heat map and the walkers are 2D overlay work; the sim budget is checked headless above).
+
+### Left over from Phase 5
+- **Town gridlock:** a surge can lock the towns' 1-lane grids (junctions at LOS F at v/c 0.06 hold cars for good; towing
+  takes 300 s). Closing a round clears it, but a cause-finding pass (box blocking, priority deadlocks) is due.
+- Fixed-time signals cut capacity at surge volumes (above): actuated signals next.
+- The scripted player only knows fixed layouts (seeds 2 and 3).
+- Flared turn pockets and 3-lane classes: Phase 7. Pedestrian art and the stadium, toll and car park art: Phase 8.
+- Buses pay the toll like cars; the left turn into a car park entrance does not conflict with oncoming traffic.
+- The main thread's money mirror catches up with a payout at the next budget message (posted at each stage change).
+- Old saves' taken cards are counted as applied (no effect replayed).
+- Phase 3's 100-lot contact sheets still wait for the owner's review.
+
+## Phase 6, expansion (new events, overlapping networks): in progress
+
+Goal and gate: GAME-PLAN section 1.0.4 and the phase table (gate: two events on one map, each at 95%+ arrival in the same
+session; budgets met). Started 2026-10-18 in the same chat as Phase 5 (the owner's wish), **the owner away: the open
+questions take the lead's recommendation, logged here as "lead, owner away"**.
+
+**Decisions (lead, owner away, 2026-10-18):**
+- **Old events (GAME-PLAN section 7, item 11; the owner asked for a setting):** a setting `oldEvents` with three modes:
+  `together` (default: every event surges in the same round, each with its own arrival rate, all counted), `background`
+  (old events surge as load, only the newest counts), `schedule` (old events rerun every third round). The next new
+  event appears when the newest event reaches 100% while every counted old one holds 95%+.
+- **Event types** (one table in the config; placeholder footprints and labels until Phase 8's art), in the order they
+  appear: the stadium (as now), a concert arena (60 x 60 tiles, 0.8x the crowd, parties of 2, kick-off 21:00), a festival
+  (140 x 100, 1.2x, parties of 4, departures over 75% of the surge, 14:00), a water park (90 x 70, 0.9x, parties of 4,
+  11:00), the casino boulevard (160 x 40, 1x, parties of 2, 22:00). Each is placed by the game 1–2.5 km from the towns
+  and at least 300 tiles from the other events. A round freezes the clock at the earliest kick-off among its events.
+- **Era pacing (section 7, item 1):** moves to Phase 8 with the look (the eras are an art matter now).
+- **Cards added:** electronic tolling (service 4 s → 1.5 s), slip lanes (the 'slip' junction type, locked until drafted;
+  the owner's starting kit lists stop/yield and signals only), rest stops and fatigue (simple: drivers slow after 8 minutes
+  on the road; a placed rest stop resets them), green wave (offsets of signals along a road). No rarity.
+- **Signals become actuated** (from the reviewed simulator; Phase 5 showed fixed-time lights cut capacity): min 7 s,
+  max 40 s green, extended while cars approach, empty phases skipped, rest on green.
+
+Steps:
+1. **Actuated signals.** Stateful signal plans in the sim (min/max green, extension by approaching cars within 30 m,
+   skip empty phases, rest on green); the worker sends the signal states to the renderer; measured before/after on the
+   T-junction test, the Phase 2 sim gate and an event-gate replay with signals at the worst junctions.
+2. **Several events.** The City's event list (type, site, level, runs); the next event placed at 100% (new site rules);
+   a round runs the events by the `oldEvents` setting; each town's crowd split per event; car parks and bus routes serve
+   the event whose site is nearest; the evaluation and the payout per event; saved.
+3. **Event types.** The config table above; footprints, labels and doors per type; kick-off clocks, party sizes and
+   departure spreads.
+4. **More cards.** Electronic tolling, slip lanes (locked), green wave, rest stops and fatigue.
+5. **Difficulty.** Per-event levels and the crowd curve within the 10k-car budget; the town growth at 100% per event;
+   a check that Level 5 crowds stay inside the sim budgets.
+6. **The Phase 6 gate** (headless): a smarter scripted player (terrain-aware links, a car park and feeder per town per
+   event) brings two events on one map to 95%+ each in the same session; budgets met; the GPU bench when the worker PC is
+   back.
+
+### Phase 6 progress
+(none yet)
 
 ### Start prompt for a fresh chat
-"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
-section 1.0 (the event rounds) and section 7 items 6–13. Ask me those open questions first (one round of questions,
-with your recommendations), then write the Phase 5 steps into PROGRESS.md and carry on through them without asking
-between them. Delegate coding to haiku-coder and checks/benchmarks to haiku-runner (worker PC via
-scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go. Use look*.mjs at the
-repo root (git-excluded copies of output/look/look.mjs) for headless screenshots; `npm run sim:gate`, `npm run
-town:gate` and `npm run fix:gate` are the headless gates."
+"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first (Phase 6 is in
+progress: its decisions and steps are under 'Phase 6, expansion'), then GAME-PLAN section 1.0 (the event rounds).
+Carry on through the Phase 6 steps without asking between them, and into the next phase when the gate passes.
+Delegate coding to haiku-coder and checks/benchmarks to haiku-runner (worker PC via scripts/worker/run.sh, or locally
+when it is offline), commit locally after each verified step, update docs/PROGRESS.md as you go. Use look*.mjs at the
+repo root for headless screenshots; `npm run sim:gate`, `town:gate`, `towns:gate`, `fix:gate` and `event:gate` are the
+headless gates; the dev server has the sandbox (fast growth, unlimited money, 20x)."

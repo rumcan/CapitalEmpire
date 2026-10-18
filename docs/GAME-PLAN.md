@@ -484,7 +484,8 @@ The art track runs alongside from Phase 1: terrain kit, then houses, then commer
 ## 7. Still open (they can wait until the phase that needs them)
 0. **Growth options** (section 1.5): the exact set, how strongly each shifts allocation, and whether they unlock
    with population (Phase 3).
-1. Era pacing: how many real minutes per in-game year, and whether eras unlock by time or by population (Phase 6).
+1. Era pacing: how many real minutes per in-game year, and whether eras unlock by time or by population. **Moved to Phase 8
+   (lead, owner away, 2026-10-18):** the eras are an art matter now (Phase 8, look + eras).
 2. Hosting: the single-file browser build or RUN. This decides whether SharedArrayBuffer is available (Phase 2).
 3. Is the Strip one special boulevard the map seeds, or any boulevard that grows into it (Phase 3)?
 4. **The desert re-skin (deferred, 2026-10-17; less important since 2026-10-18).** The game runs in a maple-wooded
