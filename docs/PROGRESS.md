@@ -619,6 +619,14 @@ top bottleneck measurably restarts growth). Suggested steps:
    roundabout at about 50 s per vehicle (LOS E) at v/c 0.08, which is a sim behaviour worth a look (roundabout entries
    wait long at low volume), not a measuring error.
 
+3c. **Car inspector and junction routes. DONE** (2026-10-18). Select tool, street tier: click a car (within 1.5 tiles) for
+   its card (speed and limit, going to home/shop/work/venue/civic, trip so far vs ideal with the ratio, distance left,
+   Follow) and its route ahead drawn in cyan (`Sim.inspect`: now, the end of its dseg, the dsegs of `localRoute` to the
+   destination). With the flow overlay on, click a junction to watch it: the sim logs each crossing's origin and
+   destination (a 256 ring, `Sim.setWatch`), drawn as blue lines in and orange lines out. Esc clears both. Checked in the
+   browser on the bench city. Note: the in-app browser pane is throttled while hidden (no animation frames, slow
+   workers), so its timings mean nothing; use the worker bench.
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
 (budget + bottleneck loop) at step 1 and carry on through the steps without asking between them. Delegate coding to
