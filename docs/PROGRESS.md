@@ -12,7 +12,7 @@ _Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junct
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | **In progress** (steps 1–6 done; step 7 gate in progress). Steps at the end |
+| 3. Lot Composer + growth | **In progress** (steps 1–7 done; the 40-day growth gate is running). Steps at the end |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
@@ -493,3 +493,25 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
      early growth is slow (20 lots/day base, construction 12 game hours, so the first houses appear after ~16 game
      hours). Balance in Phase 4. The top bar's population is still the old economy's (house props), not
      `Town.pop`: Phase 4 merges them.
+5e. **Density pass. DONE** (2026-10-18). Non-residential lots now carry 14–22 uprights (COM 15.6, IND 16.3, TOUR
+   19.6, GOV 16.1): cars in half the 2-tile bays, lamps, front dressing, tree rows, scrapyard clusters, forecourts.
+7. **City class and growth gate. DONE (code)** (2026-10-18).
+   - `src/game/city.ts`: the worker's city logic (network replica, lanes, sim, lots, reachability, water field, town,
+     growth planner) as a class; `sim.worker.ts` is a thin shell. `City.growStats` counts the planner's hourly
+     outcomes; `roads.ts` exports `planWhy` (why candidates were rejected).
+   - `npm run town:gate -- [seed] [days] [cars]`: terrain + only the highway into the start block, then the city
+     grows by itself (grow legs applied as gravel edits); daily lines, `output/sim/town-gate.json`; pass = pop 5000
+     within the days, no zero-build day unless every lot zone is jammed, step under 25 ms; prints the jam check
+     (builds inside a zone over 1.8 vs elsewhere).
+   - **Access, made robust** (lead fix): per zone, decaying sums of actual and ideal trip seconds (half-life one game
+     hour), each trip capped at 6x, pulled toward 1 until a zone has 12 (decayed) trips. The per-trip ratio EMA let a
+     few slow trips in a young town read 9.4 and stop its growth. `tests/trips.test.ts` now calibrates: 50 cars on a
+     10x10 grid read 0.98–1.00, 600 cars 1.72–2.58.
+   - **Growth planner fixes** (lead, found with a map render of the gate, `output/prof/gatemap.ts`): legs end on the
+     global 40-tile lattice (the next lattice line at least 16 tiles away), so the streets line up into blocks; nodes
+     with 2–3 arms offer their missing axis arms (the free side of a T); dead ends of gravel/lane/street/road continue
+     straight or turn as a T; the verge rule ignores the start road's corner segs near the start; lots stay 4 tiles
+     clear of lattice points along every road (`lots.ts` `BRANCH`/`RESERVE`), so future side streets never cut a house
+     (in a full grid those cells are inside junction reach anyway).
+   - Local 8-day run (seed 1): builds 19 → 38 a day, pop 417 and 190 built lots on day 8, 82 gravel segs, access
+     worst 1.10, step about 2 ms.
