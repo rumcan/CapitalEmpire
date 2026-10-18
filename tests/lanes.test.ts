@@ -192,3 +192,84 @@ test('widened turns: every connector at a flagged node is at least as fast as wi
   for (const [k, v] of plain) { const w = wide.get(k)!; assert.ok(w >= v - 1e-9, k); if (w > v + 1e-9) faster++; }
   assert.ok(faster > 0);
 });
+
+/** the link lanes that end at node n */
+const inboundLinks = (g: LaneGraph, n: Node) => g.dsegs.filter((d): d is NonNullable<typeof d> => !!d && d.to === n).flatMap(d => d.lanes.map(id => g.lanes[id]!));
+test('a slip crossing: right turns through a slip body and a yielding mouth, the other movements through approach and departure lanes', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0);
+  const g = graphOf(e), n = at(e, 50, 50);
+  e.setNodeType(n, 'slip'); update(e, g);
+  assert.deepEqual(checkGraph(g), []);
+  const mv = movesAt(g, n), own = (l: Lane) => l.node === n;
+  assert.equal(mv.length, 12);
+  const apr = liveLanes(g).filter(l => own(l) && l.flare === 1 && l.kind === LK.CONN && l.key.startsWith('A'));
+  const dep = liveLanes(g).filter(l => own(l) && l.flare === 2);
+  assert.equal(apr.length, 4); assert.equal(dep.length, 4);
+  assert.ok(apr.every(l => l.ctl === CTL.FREE));
+  // the inbound link lanes end well short of the node: 9 tiles or more where the slip body begins
+  for (const l of inboundLinks(g, n)) assert.ok(Math.hypot(l.pts[l.pts.length - 2]! - n.x, l.pts[l.pts.length - 1]! - n.y) >= 9, l.key);
+  for (const m of mv.filter(m => m.turn === 'R')) {
+    assert.equal(m.paths.length, 1, m.key);
+    const [a, b, c, d] = m.paths[0]!.map(id => g.lanes[id]!);
+    assert.equal(m.paths[0]!.length, 4, m.key);
+    assert.equal(a!.kind, LK.LINK); assert.ok(b!.key.startsWith('S') && b!.flare === 1, b!.key);
+    assert.ok(c!.key.startsWith('M') && c!.ctl === CTL.YIELD && c!.prio === 1 && c!.phase === -1, c!.key);
+    assert.equal(d!.kind, LK.LINK);
+  }
+  for (const m of mv.filter(m => m.turn !== 'R')) {
+    for (const p of m.paths) {
+      assert.equal(p.length, 5, m.key);
+      const [, ap, c, dp] = p.map(id => g.lanes[id]!);
+      assert.ok(ap!.key.startsWith('A') && ap!.flare === 1, m.key);
+      assert.equal(c!.kind, LK.CONN); assert.equal(c!.ctl, CTL.SIGNAL, m.key);
+      assert.equal(dp!.flare, 2, m.key);
+    }
+  }
+  // every mouth merges with the departure lane of its out arm (the outermost lane of that arm, here the only one)
+  for (const x of liveLanes(g).filter(l => own(l) && l.key.startsWith('M'))) {
+    assert.ok(x.conflicts.some(c => c.merge && g.lanes[c.lane]!.flare === 2), x.key);
+  }
+  const sp = g.signals.get(n)!;
+  for (const pl of sp.phaseLanes) for (const id of pl) assert.equal(g.lanes[id]!.flare, 1);
+});
+
+test('a slip avenue of two lanes each way crossing a street: right turns only from the rightmost lane, through the slip body', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.arterial, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0);
+  const g = graphOf(e), n = at(e, 50, 50);
+  e.setNodeType(n, 'slip'); update(e, g);
+  assert.deepEqual(checkGraph(g), []);
+  const mv = movesAt(g, n), right = mv.filter(m => m.turn === 'R');
+  assert.equal(right.length, 4);
+  for (const m of right) {
+    const inLanes = g.dsegs[m.from]!.lanes;
+    assert.equal(m.paths.length, 1, m.key);
+    assert.equal(m.paths[0]![0], inLanes[inLanes.length - 1], `${m.key} starts at its rightmost lane`);
+    assert.ok(g.lanes[m.paths[0]![1]!]!.key.startsWith('S'), m.key);
+    assert.ok(g.lanes[m.paths[0]![2]!]!.key.startsWith('M'), m.key);
+  }
+  // the avenue's two lanes both go straight on, lane 0 included; the left turns start at lane 0
+  const arterialStraight = mv.filter(m => g.dsegs[m.from]!.seg.cls.id === 'arterial' && m.turn === 'S');
+  assert.ok(arterialStraight.some(m => m.paths.some(p => g.lanes[p[0]!]!.idx === 0)));
+  assert.ok(arterialStraight.some(m => m.paths.some(p => g.lanes[p[0]!]!.idx === 1)));
+  assert.equal(liveLanes(g).filter(l => l.node === n && l.flare === 1 && l.key.startsWith('A')).length, 6);
+});
+
+test('a slip node: incremental updates match a fresh build, and turning it back to a signal leaves no flare lanes', () => {
+  const e = new NetEditor(new RoadNetwork()), g = new LaneGraph(), log: NetOp[] = [];
+  const commit = () => { log.push(...e.commit()); g.update(e.net); };
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); commit();
+  const n = at(e, 50, 50);
+  e.setNodeType(n, 'signal'); commit();
+  const before = snapshot(g);
+  e.setNodeType(n, 'slip'); commit();
+  assert.deepEqual(checkGraph(g), []);
+  assert.ok(liveLanes(g).some(l => l.flare !== undefined));
+  assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
+  e.setNodeType(n, 'signal'); commit();
+  assert.deepEqual(checkGraph(g), []);
+  assert.ok(liveLanes(g).every(l => l.flare === undefined));
+  assert.deepEqual(snapshot(g), before);
+  assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
+});

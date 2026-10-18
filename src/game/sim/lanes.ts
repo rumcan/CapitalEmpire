@@ -1,6 +1,6 @@
 // The lane graph: directed lanes, junction connectors and movements derived from the road network. Pure TS, no DOM.
 // Geometry is in tiles; lengths, s positions and speeds are in metres and m/s.
-import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, sub, vlen } from '../network';
+import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, slipCorner, sub, vlen } from '../network';
 import { BOOTH_W, PLAZA_LEN, TAPER } from '../event/config';
 import { plazaKey, type TollDef } from '../event/toll';
 
@@ -35,6 +35,9 @@ export interface Lane {
   tunnel: boolean;
   /** toll booth lanes only: metres along the lane to the booth line (at the plaza's middle); undefined elsewhere */
   booth?: number;
+  /** slip junctions only: 1 = a node lane before the junction's gate (an approach lane, or a slip body: a vehicle queues on it); 2 = a departure
+   *  lane (after the box, up to the exit road's link lanes); undefined elsewhere */
+  flare?: 1 | 2;
 }
 /** a directed segment: one direction of a Seg */
 export interface DSeg { id: number; key: string; seg: Seg; dir: 0 | 1; from: Node; to: Node; lanes: number[]; len: number; vmax: number; /** movements leaving its end */ out: number[]; /** a toll gate's booths (undefined: not a toll dseg; its lanes are the booth lanes) */ toll?: number }
@@ -78,10 +81,34 @@ function inset(n: Node, a: Arm | undefined): number {
   }
   return 0;
 }
-/** the insets at a seg's a end and b end, tiles, each at most 0.45 of the seg's length */
-function segInsets(s: Seg): [number, number] {
+/** a slip node's right-turn plan: each planned right turn (in arm, out arm) with the tangent points where the in arm's link lanes end (inT)
+ *  and the out arm's start (outT), tiles from the node; pairs in arm order. Empty unless the node is a plain slip of three or more arms */
+interface SlipPlan { inT: Map<Arm, number>; outT: Map<Arm, number>; pairs: [Arm, Arm][] }
+const NO_PLAN: SlipPlan = { inT: new Map(), outT: new Map(), pairs: [] };
+function slipPlan(n: Node): SlipPlan {
+  const k = n.arms.length;
+  if (n.type !== 'slip' || n.rb > 0 || k < 3) return NO_PLAN;
+  const p: SlipPlan = { inT: new Map(), outT: new Map(), pairs: [] };
+  for (let i = 0; i < k; i++) {
+    const A = n.arms[i]!, B = n.arms[(i + 1) % k]!, g = slipCorner(n, A, B);
+    if (!g) continue;
+    const pr: [Arm, Arm] | null = turnOf(mul(A.dir, -1), B.dir) === 'R' ? [A, B] : turnOf(mul(B.dir, -1), A.dir) === 'R' ? [B, A] : null;
+    if (!pr) continue;
+    const [inA, outA] = pr, tIn = dot(sub(g.Q, n), inA.dir), tOut = dot(sub(g.Q, n), outA.dir);
+    if (!(tIn > inset(n, inA) + 2 && tOut > inset(n, outA) + 2)) continue;
+    p.inT.set(inA, Math.max(p.inT.get(inA) ?? 0, tIn)); p.outT.set(outA, Math.max(p.outT.get(outA) ?? 0, tOut)); p.pairs.push([inA, outA]);
+  }
+  return p;
+}
+/** the inset where a dseg's link lanes reach node n's arm a (inbound: the in inset, else the out inset): a planned slip's tangent point, else the plain inset */
+function endInset(n: Node, a: Arm | undefined, inbound: boolean): number {
+  if (!a) return 0;
+  const p = slipPlan(n); return (inbound ? p.inT : p.outT).get(a) ?? inset(n, a);
+}
+/** the insets of a dseg from node `from` (its out inset) and into node `to` (its in inset), tiles, each at most 0.45 of the seg's length */
+function dsegInsets(s: Seg, from: Node, to: Node): [number, number] {
   const m = 0.45 * (vlen(sub(s.b, s.a)) || 1);
-  return [Math.min(inset(s.a, armOf(s.a, s)), m), Math.min(inset(s.b, armOf(s.b, s)), m)];
+  return [Math.min(endInset(from, armOf(from, s), false), m), Math.min(endInset(to, armOf(to, s), true), m)];
 }
 /** sampled cubic from P0 (leaving along h0) to P1 (arriving along h1): 9 points; a U-turn is at least 1.5 tiles across */
 function bezier(P0: Pt, h0: Pt, P1: Pt, h1: Pt, uturn: boolean): Pt[] {
@@ -260,11 +287,10 @@ export class LaneGraph {
   private makeDseg(s: Seg, dir: 0 | 1): number {
     const from = dir ? s.b : s.a, to = dir ? s.a : s.b, key = `${keyOf(from)}>${keyOf(to)}`;
     const id = this.alloc(this.deadD, this.freeD, this.dsegs, key);
-    const u = norm(sub(to, from)), r = perp(u), [ia, ib] = segInsets(s);
-    const iF = dir ? ib : ia, iT = dir ? ia : ib, lanes: number[] = [];
+    const u = norm(sub(to, from)), r = perp(u), [iF, iT] = dsegInsets(s, from, to), lanes: number[] = [];
     const d: DSeg = { id, key, seg: s, dir, from, to, lanes, len: 0, vmax: VMAX[s.cls.id], out: [] };
     this.dsegs[id] = d;
-    const booths = this.tollBooths(key, s, from, to, ia + ib);
+    const booths = this.tollBooths(key, s, from, to, iF + iT);
     if (booths) { d.toll = booths; this.boothLanes(d, s, booths, iF, iT, u, r); }
     else for (let k = 0; k < s.cls.laneCentres.length; k++) {
       const off = laneOff(s, k);
@@ -381,23 +407,54 @@ export class LaneGraph {
       sp = { node: n, armPhase, phases, green: 18, amber: 3, allRed: 2, offset: Math.abs(n.x * 7 + n.y * 13) % (phases * 23), idx: 0, stage: 0, el: 0, phaseLanes: Array.from({ length: phases }, () => []) };
       this.signals.set(n, sp);
     }
+    // a planned slip (slipPlan): an approach lane (flare 1) on each inbound link lane that reaches past its stop line, a departure lane (flare 2)
+    // on each outbound one that starts past it; the connectors run between them
+    const plan = slipPlan(n), apr = new Map<number, Lane>(), dep = new Map<number, Lane>();
+    if (plan.pairs.length) {
+      for (const x of io) {
+        const stop = inset(n, x.a);
+        for (const id of this.dsegs[x.inD]!.lanes) {
+          const inL = this.L(id), e = endPt(inL), tEnd = dot(sub(e, n), x.a.dir);
+          if (tEnd - stop < 0.5) continue;
+          const ap = this.mkLane(`A${inL.key}`, LK.CONN, [e, add(e, mul(endDir(inL), tEnd - stop))], inL.vmax, n, inL.tunnel);
+          ap.flare = 1; ap.prio = 3; link(inL, ap); nl.push(ap.id); apr.set(inL.id, ap);
+        }
+        for (const id of this.dsegs[x.outD]!.lanes) {
+          const outL = this.L(id), s0 = startPt(outL), tStart = dot(sub(s0, n), x.a.dir);
+          if (tStart - stop < 0.5) continue;
+          const dp = this.mkLane(`D${outL.key}`, LK.CONN, [add(s0, mul(startDir(outL), stop - tStart)), s0], outL.vmax, n, outL.tunnel);
+          dp.flare = 2; dp.prio = 3; link(dp, outL); nl.push(dp.id); dep.set(outL.id, dp);
+        }
+      }
+    }
     for (const x of io) for (const y of io) {
       if (x.i === y.i) continue;
       const t = turnOf(this.uOf(x.inD), this.uOf(y.outD));
       if (t === 'U') continue;
       const ins = this.dsegs[x.inD]!.lanes, outs = this.dsegs[y.outD]!.lanes, nIn = ins.length, nOut = outs.length, paths: number[][] = [];
+      const planned = t === 'R' && plan.pairs.some(([a, b]) => a === x.a && b === y.a);
       for (let k = 0; k < nIn; k++) {
         // turn lanes (n.tl): lane 0 is for the left turns only; straight on from the other lanes, right from the last one
         if (nIn > 1 && ((t === 'L' && k !== 0) || (t === 'R' && k !== nIn - 1) || (n.tl && t === 'S' && k === 0))) continue;
         const inL = this.L(ins[k]), outL = this.L(outs[t === 'L' ? 0 : t === 'R' ? nOut - 1 : Math.min(k, nOut - 1)]);
-        const c = this.conn(n, inL, outL, false, nl);
+        if (planned) {
+          // a planned slip right turn: from the link lane through the slip body (flare 1, free) and its mouth (yields to the merge), to the link lane
+          const P = bezier(endPt(inL), endDir(inL), startPt(outL), startDir(outL), false), vm = connVmax(P, Math.min(inL.vmax, outL.vmax)), tn = inL.tunnel || outL.tunnel;
+          const body = this.mkLane(`S${inL.key}|${outL.key}`, LK.CONN, P.slice(0, 7), vm, n, tn), mouth = this.mkLane(`M${inL.key}|${outL.key}`, LK.CONN, P.slice(6), vm, n, tn);
+          body.flare = 1; body.prio = 3; mouth.ctl = CTL.YIELD; mouth.prio = 1;
+          link(inL, body); link(body, mouth); link(mouth, outL); nl.push(body.id, mouth.id);
+          paths.push([inL.id, body.id, mouth.id, outL.id]); continue;
+        }
+        // the connector starts at the in lane's approach lane and ends at the out lane's departure lane, where the node has them
+        const aL = apr.get(inL.id), dL = dep.get(outL.id);
+        const c = this.conn(n, aL ?? inL, dL ?? outL, false, nl);
         if (sig) {
           c.ctl = CTL.SIGNAL; c.phase = armPhase[x.i]; c.prio = t === 'L' ? 2 : 3;
           if (n.type === 'slip' && t === 'R') { c.ctl = CTL.YIELD; c.phase = -1; c.prio = 1; }
-          if (sp && c.ctl === CTL.SIGNAL) { const pl = sp.phaseLanes[c.phase]!; if (!pl.includes(inL.id)) pl.push(inL.id); }
+          if (sp && c.ctl === CTL.SIGNAL) { const pl = sp.phaseLanes[c.phase]!, f = (aL ?? inL).id; if (!pl.includes(f)) pl.push(f); }
         } else if (major[x.i]) { c.ctl = CTL.FREE; c.prio = t === 'L' ? 2 : 3; }
         else { c.ctl = minorCtl; c.prio = t === 'R' ? 1 : 0; }
-        paths.push([inL.id, c.id, outL.id]);
+        paths.push([inL.id, ...(aL ? [aL.id] : []), c.id, ...(dL ? [dL.id] : []), outL.id]);
       }
       if (paths.length) this.move(n, x.inD, y.outD, t, paths, mv);
     }

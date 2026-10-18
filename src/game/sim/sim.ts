@@ -178,6 +178,8 @@ export class Sim {
   private lBooth = new Float64Array(0);
   /** per lane: 1 = a LINK lane (a road lane, not a junction connector or ring arc) */
   private lLink = new Uint8Array(0);
+  /** per lane: 1 = a LINK lane or a slip flare-1 lane (an approach or slip body: the vehicles before the gate); the node lanes after it are not */
+  private lPre = new Uint8Array(0);
   /** per lane: 1 = a node lane that merges with others into its next lane (vehicles there follow the mergers ahead of them) */
   private lMerge = new Uint8Array(0);
   /** lanes whose front vehicle passed the end this step (deduped by `overMark`) */
@@ -218,14 +220,15 @@ export class Sim {
     this.plans = [...this.g.signals.values()];
     while (this.onLane.length < lanes.length) this.onLane.push([]);
     const n = lanes.length;
-    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); this.lLink = new Uint8Array(m); this.lossL = grow64(this.lossL, m); this.lossQ = grow64(this.lossQ, m); this.enterL = grow64(this.enterL, m); this.lBooth = grow64(this.lBooth, m); }
+    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); this.lLink = new Uint8Array(m); this.lPre = new Uint8Array(m); this.lossL = grow64(this.lossL, m); this.lossQ = grow64(this.lossQ, m); this.enterL = grow64(this.enterL, m); this.lBooth = grow64(this.lBooth, m); }
     for (let id = 0; id < n; id++) {
-      const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0; this.lLink[id] = l && l.kind === LK.LINK ? 1 : 0;
+      const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0; this.lLink[id] = l && l.kind === LK.LINK ? 1 : 0; this.lPre[id] = l && (l.kind === LK.LINK || l.flare === 1) ? 1 : 0;
       this.lBooth[id] = l && l.booth !== undefined ? l.booth : -1;
-      // gated: a junction connector from a link lane, a roundabout exit (it waits for a ring car that crosses or merges, and for a car just
-      // past its diverge), and no ring arc (ring traffic never waits for an entry)
+      // gated: a junction connector from a link lane, an approach lane or a slip body (not a flare lane itself: a slip mouth is gated after its
+      // body, a departure lane is not), a roundabout exit (it waits for a ring car that crosses or merges, and for a car just past its
+      // diverge), and no ring arc (ring traffic never waits for an entry)
       this.lMerge[id] = l && l.kind !== LK.LINK && l.next.length === 1 && (lanes[l.next[0]]?.prev.length ?? 0) > 1 ? 1 : 0;
-      this.lGate[id] = l && l.kind === LK.CONN && l.prev.length && (lanes[l.prev[0]]?.kind === LK.LINK || lanes[l.prev[0]]?.kind === LK.RING) ? 1 : 0;
+      this.lGate[id] = l && l.kind === LK.CONN && !l.flare && l.prev.length && (lanes[l.prev[0]]?.kind === LK.LINK || lanes[l.prev[0]]?.kind === LK.RING || lanes[l.prev[0]]?.flare === 1) ? 1 : 0;
     }
     // the booth bindings: recounted over the lanes as they are now (a binding to a lane that is gone, or no booth, is dropped)
     if (this.bound.length < n) this.bound = new Int32Array(Math.max(n, 2 * this.bound.length));
@@ -1038,8 +1041,8 @@ export class Sim {
     if (this.grant[i] === nid) this.unGrant(i);
     if (this.resv[i] === nid) this.unReserve(i);
     // entering the first node lane of a movement: its junction delay is the time this vehicle waited at the line
-    if (ln.kind === LK.LINK && nl.kind !== LK.LINK && this.move[i]! >= 0) this.router.feed(this.move[i]!, this.wait[i]!);
-    this.stopped[i] = 0; if (nl.kind !== LK.LINK) this.wait[i] = 0;
+    if (this.lPre[old] && !this.lPre[nid] && this.move[i]! >= 0) this.router.feed(this.move[i]!, this.wait[i]!);
+    this.stopped[i] = 0; if (!this.lPre[nid]) this.wait[i] = 0;
     this.pi[i] = p; this.lane[i] = nid; this.onLane[nid].push(i); this.enterL[nid] += 1;
     // on its booth lane, the vehicle counts there, not as bound
     if (this.lBooth[nid]! >= 0) this.unbind(i);
@@ -1060,7 +1063,7 @@ export class Sim {
       const st = this.stuck[i];
       // a bus standing at its stop, or waiting for one (see hold), is never towed (see buses)
       if (this.bus[i]! >= 0 && (this.busDwell[i]! > 0 || this.dest[i]! < 0)) continue;
-      if (st > TOW_ANY || (st > TOW_BOX && this.g.lanes[this.lane[i]]!.kind !== LK.LINK)) { this.stats.towed++; this.stats.respawned++; this.despawn(i); continue; }
+      if (st > TOW_ANY || (st > TOW_BOX && !this.lPre[this.lane[i]!])) { this.stats.towed++; this.stats.respawned++; this.despawn(i); continue; }
       // an abandoned trip counts as a very slow one (capped at 6x) in the zones it came from and was going to
       if (this.dest[i]! >= 0 && this.bus[i]! < 0 && this.t - this.t0[i]! > ABANDON) {
         const ideal = Math.max(this.ideal[i]!, 10), act = this.t - this.t0[i]!, d = this.g.dsegs[this.dest[i]!];

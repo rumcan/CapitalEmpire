@@ -234,18 +234,33 @@ function rbFillet(N: Pt, a: Pt, h: number, R: number, r: number, side: 1 | -1) {
   path.closePath();
   return { path, bbox: bboxOf([Te, X, Tc], 0.3) };
 }
-function slipIsland(N: Pt, A: Arm, B: Arm, Q: Pt, R: number) {
+/** a slip island's geometry, no Path2D: the offset edges' corner C2 and the island's far corners PA (on arm A) and PB (on arm B); null if too tight */
+function slipIslandPts(N: Pt, A: Arm, B: Arm, Q: Pt, R: number): { C2: Pt; PA: Pt; PB: Pt } | null {
   const g = 0.6, Ri = R + SLIP_LANE;
   const C2 = lineHit(add(N, mul(A.nrm, A.h + g)), A.dir, sub(N, mul(B.nrm, B.h + g)), B.dir); if (!C2) return null;
   // first crossing of the offset edge line with the slip lane's inner circle (the island's far corner)
   const hit = (dir: Pt) => { const w = sub(C2, Q), b = dot(dir, w), c = dot(w, w) - Ri * Ri, disc = b * b - c; if (disc < 0) return -1; return -b - Math.sqrt(disc); };
   const tA = hit(A.dir), tB = hit(B.dir); if (tA < 0.9 || tB < 0.9 || dot(sub(C2, Q), sub(C2, Q)) < Ri * Ri + 1.2) return null;
-  const PA = add(C2, mul(A.dir, tA)), PB = add(C2, mul(B.dir, tB)), mid = add(C2, mul(sub(PA, C2), 0.5));
+  return { C2, PA: add(C2, mul(A.dir, tA)), PB: add(C2, mul(B.dir, tB)) };
+}
+function slipIsland(N: Pt, A: Arm, B: Arm, Q: Pt, R: number) {
+  const isl = slipIslandPts(N, A, B, Q, R); if (!isl) return null;
+  const { C2, PA, PB } = isl, Ri = R + SLIP_LANE, mid = add(C2, mul(sub(PA, C2), 0.5));
   const path = new Path2D(); path.moveTo(mid.x, mid.y); path.lineTo(PA.x, PA.y);
   const a0 = Math.atan2(PA.y - Q.y, PA.x - Q.x), a1 = Math.atan2(PB.y - Q.y, PB.x - Q.x);
   path.arc(Q.x, Q.y, Ri, a0, a1, angDelta(a0, a1) < 0);
   path.arcTo(C2.x, C2.y, mid.x, mid.y, 0.6); path.closePath();
   return { path, bbox: bboxOf([C2, PA, PB], 0.3) };
+}
+/** the slip road between consecutive arms A and B of a slip node (B the arm after A in n.arms): its arc's centre Q and radius R, with the
+ *  painter's conditions and no Path2D; null where the painter draws no corner or no island. Callers check n.type */
+export function slipCorner(n: Node, A: Arm, B: Arm): { Q: Pt; R: number } | null {
+  const N = { x: n.x, y: n.y }, phi = (((B.ang - A.ang) % TAU) + TAU) % TAU;
+  if (phi < 0.12 || phi > Math.PI - 0.05) return null;
+  const R = Math.min(R_SLIP, 0.45 * Math.min(A.len, B.len) * Math.tan(phi / 2)); if (R < 9) return null;
+  const C = lineHit(add(N, mul(perp(A.dir), A.h)), A.dir, sub(N, mul(perp(B.dir), B.h)), B.dir); if (!C) return null;
+  const Q = add(C, mul(norm(add(A.dir, B.dir)), R / Math.sin(phi / 2)));
+  return slipIslandPts(N, A, B, Q, R) ? { Q, R } : null;
 }
 
 /* ---------- spatial indexes ---------- */

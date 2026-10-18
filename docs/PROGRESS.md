@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18 late: Phase 5 done; Phase 6 paused after step 1; Phase 6R (roads first) in progress: see its Handover entry. Pushed to origin at `21f2092`._
+_Last updated: 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -1075,7 +1075,30 @@ small public car parks on open town lots as part of the town's growth (a small t
 - **Handover (2026-10-18 late, the chat got too long; a fresh chat continues):**
   - **The bus fix: DONE** (committed just before the handover): buses keep their route through road edits during a
     surge; town-bus fans need no car park. `npm test` 221 pass.
-  - **Next: approach flares (the slipways cars actually use; the owner: "I don't see any of them use it").** Cause: at a
+  - **Approach flares: DONE** (2026-10-18 night, the commit after `d4a8b23`). At a 'slip' node each corner the painter
+    gives a slip island (`slipCorner` in network.ts, shared by the painter and the lane graph) gets a right turn of its own:
+    the in arm's link lanes end at the slip arc's tangent point, approach lanes (flare 1) carry the queue to the stop line,
+    departure lanes (flare 2) run from the box to the out arm's link lanes (which start at the other tangent point), and
+    the right turn is a slip body (flare 1, free) plus a mouth (YIELD, prio 1) that merges into the exit. The sim gates
+    after flare-1 lanes, counts the wait across them (router feed) and does not tow a car queueing on them. Numbers:
+    `tests/flare.test.ts` (street, 500 veh/h per arm) right 3.5 s vs straight 16.8 s delay; the junction bench street slip
+    4-way W/E/N/S 5.1/2.8/8.0/10.2 s (was 15.0/18.4/20.7/15.4), arterial 2.3/2.2/3.8/6.7 s; towed 0. Browser: street x
+    street, arterial x arterial and arterial x street slip crossings built with the editor; the lane overlay (L) follows
+    the painted slip roads; an in-page sim on those graphs: right-turn trips take half the straight ones' time (street 28
+    vs 54 s, arterial 18 vs 46 s), 0 towed; no console errors. Not seen yet: a live car on a slip on screen (the town had
+    15 cars). `npm test` 225 pass. **Left over:** at the fork (link lane end) a straight car and a right-turner can be
+    side by side for a moment (the bench counted 1 overlap in 15 min): a diverge rule like the roundabout's would fix it;
+    then left pockets (the 'tl' flag) on the same flare, and the "brave drivers" on the shoulder.
+  - **Arena PRs reviewed (2026-10-18 night), changes requested, reviews drafted (not posted, waiting for the owner):**
+    #1 T001 subways: trains deadlock when a line has more trains than its sections hold (2 stations and 4 trains deliver
+    nothing; a 3-station loop with 6 trains stops at t = 57 s): `blocked()` counts a train dwelling at a track's start as
+    occupying it; `meanWait` leaves out fans with no wait. #2 T003 grade: a different API and model from the spec (discrete
+    levels and costs instead of `planProfile` / `crossingsOf` over terrain heights with vertical curves) and a second spec
+    file `T003-grade.md` signed as the lead. The texts are in the session; local branches `pr1`, `pr2`.
+  - **Arena task T013 (owner, 2026-10-18 night): roads and land**, one task in three parts: one-step class upgrades and
+    downgrades with prices (today `WIDER` sends gravel, lane, street and road straight to arterial), building roads over
+    lots with a confirm and the bill (no bulldozing first), natural town layouts (river, hill, crossroads, square, ribbon).
+  - **Was next: approach flares (the slipways cars actually use; the owner: "I don't see any of them use it").** Cause: at a
     'slip' node the right turn is only a YIELD connector starting at the stop line, inside the shared lane, so a
     right-turner waits behind the red-light queue. Design (lead): at a configured arm the inbound dseg's link lanes end
     `FLARE` = 15 tiles before their normal end (lanes.ts `inset()`); the node owns the approach from there: straight
