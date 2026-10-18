@@ -106,7 +106,7 @@ test('parclo right-angle: every movement has ramp, loop radii >=50m', () => {
   const [A,B] = rightAngleRoads();
   const ic = makeInterchange(A,B,'parclo');
   assert.equal(ic.ok,true, ic.why);
-  assert.ok(ic.ramps.length>=6, `parclo ramps ${ic.ramps.length} <6`);
+  assert.ok(ic.ramps.length>=4, `parclo ramps ${ic.ramps.length} <4`);
   // check all 4 unordered movements have at least one ramp
   for(const from of ['A','B'] as const) for(const to of ['A','B'] as const) if(from!==to){
     assert.ok(ic.ramps.some(r=>r.from===from&&r.to===to), `parclo missing ${from}->${to}`);
@@ -176,7 +176,7 @@ test('trumpet T: every movement for T has ramp', () => {
 });
 
 test('stack right-angle: flyover radii >=150m (allow 120)', () => {
-  const [A,B] = rightAngleRoads();
+  const [A,B] = rightAngleRoads(1000, 1000); // flyovers need roads longer than 300 tiles
   const ic = makeInterchange(A,B,'stack');
   assert.equal(ic.ok,true, ic.why);
   assert.ok(ic.ramps.length===8, `stack ramps ${ic.ramps.length} !=8`);
@@ -260,7 +260,7 @@ test('print footprint sizes', () => {
   }
 });
 
-// ── T004 rules: radii per kind, grades, clearance, ends on roads, weaving, footprint table ──
+// ── T004 rules: radii per kind, grades, clearance, ends on roads, weaving, signatures, footprint table ──
 type Pt2 = { x: number; y: number };
 const LONG = 1000; // tiles, as in the lead's probe
 const CLEAR_M = 7; // 5.5 m clearance + 1.5 m deck
@@ -272,6 +272,8 @@ const rows: Row[] = [];
 for (const type of ['diamond', 'parclo', 'cloverleaf', 'stack', 'roundabout-interchange'] as InterchangeType[]) for (const ang of [90, 60]) rows.push({ type, ang, t: false });
 for (const ang of [90, 60]) rows.push({ type: 'trumpet', ang, t: true });
 rows.push({ type: 'trumpet', ang: 60, t: false });
+/** Ramp count per type: diamond and parclo four terminal ramps, trumpet four, the rest eight (roundabout four slips). */
+const RAMPS: Record<InterchangeType, number> = { diamond: 4, parclo: 4, cloverleaf: 8, trumpet: 4, stack: 8, 'roundabout-interchange': 4 };
 /** Horizontal road A and road B at ang degrees through the origin, LONG tiles each. */
 function crossingRoads(ang: number): [RoadSpec, RoadSpec] {
   const th = ang * Math.PI / 180, h = LONG / 2;
@@ -288,8 +290,6 @@ function tRoads(ang: number): [RoadSpec, RoadSpec] {
 }
 const roadsOf = (r: Row): [RoadSpec, RoadSpec] => (r.t ? tRoads(r.ang) : crossingRoads(r.ang));
 const tagOf = (r: Row) => `${r.type} ${r.ang}deg${r.t ? ' T' : ''}`;
-/** Flyover rule: all trumpet ramps fly; stack left turns fly. */
-const isFly = (r: Row, turn: 'L' | 'R') => r.type === 'trumpet' || (r.type === 'stack' && turn === 'L');
 function distSeg(p: Pt2, a: Pt2, b: Pt2): number {
   const d = sub(b, a), L2 = d.x * d.x + d.y * d.y;
   const t = L2 > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * d.x + (p.y - a.y) * d.y) / L2)) : 0;
@@ -311,26 +311,27 @@ function maxGrade(r: { pts: Pt2[]; z: number[] }): number {
 const endsOf = (r: { pts: Pt2[] }): Pt2[] => [r.pts[0]!, r.pts[r.pts.length - 1]!];
 const nearAny = (p: Pt2, ps: Pt2[]): boolean => ps.some(q => vlen(sub(p, q)) < 4);
 
-test('T004: every movement has a ramp and every row is ok', () => {
+test('T004: ramp count per type and every movement has a ramp', () => {
   for (const row of rows) {
     const [A, B] = roadsOf(row);
     const ic = makeInterchange(A, B, row.type);
     assert.equal(ic.ok, true, `${tagOf(row)}: ${ic.why}`);
+    assert.equal(ic.ramps.length, row.t ? 4 : RAMPS[row.type], `${tagOf(row)} ramp count`);
+    const need = row.t || row.type === 'trumpet' ? 1 : 2; // a trumpet has one movement each way from the through road
     for (const from of ['A', 'B'] as const) for (const to of ['A', 'B'] as const) if (from !== to) {
       const n = ic.ramps.filter(r => r.from === from && r.to === to).length;
-      assert.ok(n >= 2, `${tagOf(row)} missing ${from}->${to} movements (${n})`);
+      assert.ok(n >= need, `${tagOf(row)} missing ${from}->${to} movements (${n})`);
     }
-    assert.equal(ic.ramps.length, row.t ? 4 : 8, `${tagOf(row)} ramp count`);
   }
 });
 
-test('T004: radius per kind (ramps and loops 50 m, flyovers 150 m)', () => {
+test('T004: radius per kind (loops, direct and terminal ramps 50 m, flyovers 150 m)', () => {
   for (const row of rows) {
     const ic = makeInterchange(...roadsOf(row), row.type);
     for (const r of ic.ramps) {
-      const need = isFly(row, r.turn) ? 150 : 50;
+      const need = r.kind === 'fly' ? 150 : 50;
       const rad = minRadiusM(r.pts);
-      assert.ok(rad >= need - 1e-6, `${tagOf(row)} ${r.from}->${r.to} ${r.turn} radius ${rad.toFixed(1)} m < ${need}`);
+      assert.ok(rad >= need - 1e-6, `${tagOf(row)} ${r.from}->${r.to} ${r.kind} radius ${rad.toFixed(1)} m < ${need}`);
     }
   }
 });
@@ -372,34 +373,82 @@ test('T004: no same-level crossings between ramps or with roads', () => {
   }
 });
 
-test('T004: ramp ends lie on the roads', () => {
+test('T004: ramp ends lie on the roads (slip ends on the ring)', () => {
   for (const row of rows) {
     const [A, B] = roadsOf(row);
     const ic = makeInterchange(A, B, row.type);
+    const ring = ic.ring ?? [];
     for (const r of ic.ramps) {
       const [e0, e1] = endsOf(r);
+      const onRing = (p: Pt2) => ring.length > 0 && distRoad(p, ring) <= END_TOL;
       const fromPts = r.from === 'A' ? A.pts : B.pts, toPts = r.to === 'A' ? A.pts : B.pts;
-      assert.ok(distRoad(e0, fromPts) <= END_TOL, `${tagOf(row)} ${r.from}->${r.to} start off road ${r.from}`);
-      assert.ok(distRoad(e1, toPts) <= END_TOL, `${tagOf(row)} ${r.from}->${r.to} end off road ${r.to}`);
+      assert.ok(distRoad(e0, fromPts) <= END_TOL || onRing(e0), `${tagOf(row)} ${r.from}->${r.to} start off road ${r.from}`);
+      assert.ok(distRoad(e1, toPts) <= END_TOL || onRing(e1), `${tagOf(row)} ${r.from}->${r.to} end off road ${r.to}`);
     }
   }
 });
 
-test('T004: cloverleaf loop nodes keep 150 m (75 tiles) from other nodes on the same road', () => {
+test('T004 signature: diamond has four terminal ramps and no loops', () => {
+  const ic = makeInterchange(...crossingRoads(90), 'diamond');
+  assert.ok(ic.ramps.every(r => r.kind === 'terminal'));
+  for (const from of ['A', 'B'] as const) assert.equal(ic.ramps.filter(r => r.from === from).length, 2);
+});
+
+test('T004 signature: parclo has two loops in diagonally opposite quadrants and two diagonal ramps', () => {
+  const ic = makeInterchange(...crossingRoads(90), 'parclo');
+  const loops = ic.ramps.filter(r => r.kind === 'loop');
+  assert.equal(loops.length, 2);
+  assert.equal(ic.ramps.filter(r => r.kind === 'terminal').length, 2);
+  const [l0, l1] = loops.map(l => l.pts[Math.floor(l.pts.length / 2)]!); // mid-points of the two loops
+  assert.ok(l0!.x * l1!.x < 0 && l0!.y * l1!.y < 0, 'loops not diagonal');
+  assert.ok(ic.footprint.length === 4);
+});
+
+test('T004 signature: cloverleaf has four loops, four direct ramps, weaving 150 m between loops', () => {
   const [A, B] = crossingRoads(90);
   const ic = makeInterchange(A, B, 'cloverleaf');
-  assert.equal(ic.ok, true, ic.why);
+  assert.equal(ic.ramps.filter(r => r.kind === 'loop').length, 4);
+  assert.equal(ic.ramps.filter(r => r.kind === 'direct').length, 4);
+  const posOn = (p: Pt2, road: 'A' | 'B') => (road === 'A' ? p.x : p.y);
   const roadOf = (p: Pt2): 'A' | 'B' => (distRoad(p, A.pts) <= END_TOL ? 'A' : 'B');
-  const posOn = (p: Pt2, road: 'A' | 'B') => (road === 'A' ? p.x : p.y); // road A is horizontal, B vertical at 90 deg
-  for (const r of ic.ramps.filter(r => r.turn === 'L')) {
-    for (const e of endsOf(r)) {
-      const road = roadOf(e), x = posOn(e, road);
-      for (const o of ic.ramps) for (const f of endsOf(o)) {
-        if (roadOf(f) !== road) continue;
-        const d = Math.abs(posOn(f, road) - x);
-        assert.ok(d < 1e-6 || d >= 75, `cloverleaf loop node ${x.toFixed(1)} is ${d.toFixed(1)} tiles from another node on road ${road}`);
-      }
+  for (const r of ic.ramps.filter(r => r.kind === 'loop')) for (const e of endsOf(r)) {
+    const road = roadOf(e), x = posOn(e, road);
+    for (const o of ic.ramps) for (const f of endsOf(o)) {
+      if (roadOf(f) !== road) continue;
+      const d = Math.abs(posOn(f, road) - x);
+      assert.ok(d < 1e-6 || d >= 75, `cloverleaf node ${x.toFixed(1)} is ${d.toFixed(1)} tiles from another node on road ${road}`);
     }
+  }
+});
+
+test('T004 signature: stack has four right-turn direct ramps and four flyovers at +14 and +21 m', () => {
+  for (const ang of [90, 60]) {
+    const ic = makeInterchange(...crossingRoads(ang), 'stack');
+    assert.equal(ic.over, 'B', 'stack: B is the over road at +7 m');
+    assert.equal(ic.ramps.filter(r => r.kind === 'direct' && r.turn === 'R').length, 4);
+    const fly = ic.ramps.filter(r => r.kind === 'fly');
+    assert.equal(fly.length, 4);
+    const tops = fly.map(r => Math.round(Math.max(...r.z))).sort((a, b) => a - b);
+    assert.deepEqual(tops, [14, 14, 21, 21], `stack ${ang}deg flyover levels ${tops}`);
+  }
+});
+
+test('T004 signature: trumpet has one 270 degree loop, one flyover (>= 150 m) and two direct ramps', () => {
+  const ic = makeInterchange(...tRoads(90), 'trumpet');
+  assert.equal(ic.ramps.filter(r => r.kind === 'loop').length, 1);
+  assert.equal(ic.ramps.filter(r => r.kind === 'fly').length, 1);
+  assert.equal(ic.ramps.filter(r => r.kind === 'direct').length, 2);
+});
+
+test('T004 signature: roundabout-interchange returns a closed ring and four slips', () => {
+  for (const ang of [90, 60]) {
+    const ic = makeInterchange(...crossingRoads(ang), 'roundabout-interchange');
+    assert.equal(ic.ramps.filter(r => r.kind === 'slip').length, 4);
+    assert.ok(ic.ring && ic.ring.length > 8, 'ring polyline');
+    const ring = ic.ring!;
+    assert.ok(vlen(sub(ring[0]!, ring[ring.length - 1]!)) < 1e-6, 'ring is closed');
+    const rr = vlen(sub(ring[0]!, { x: 0, y: 0 }));
+    assert.ok(rr * MPT_T >= 40 && rr * MPT_T <= 60, `ring radius ${rr * MPT_T} m`);
   }
 });
 
@@ -408,17 +457,17 @@ test('T004 table: footprint, min radius and max grade per type', () => {
     const ic = makeInterchange(...roadsOf(row), row.type);
     const xs = ic.footprint.map(p => p.x), ys = ic.footprint.map(p => p.y);
     const w = (Math.max(...xs) - Math.min(...xs)) * MPT_T, h = (Math.max(...ys) - Math.min(...ys)) * MPT_T;
-    const radRamp = Math.min(Infinity, ...ic.ramps.filter(r => !isFly(row, r.turn)).map(r => minRadiusM(r.pts)));
-    const radFly = Math.min(Infinity, ...ic.ramps.filter(r => isFly(row, r.turn)).map(r => minRadiusM(r.pts)));
+    const radRamp = Math.min(Infinity, ...ic.ramps.filter(r => r.kind !== 'fly').map(r => minRadiusM(r.pts)));
+    const radFly = Math.min(Infinity, ...ic.ramps.filter(r => r.kind === 'fly').map(r => minRadiusM(r.pts)));
     const grade = Math.max(0, ...ic.ramps.map(maxGrade)) * 100;
     const f = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : '-');
     console.log(`${tagOf(row).padEnd(30)} ok=${ic.ok} footprint ${w.toFixed(0)} x ${h.toFixed(0)} m, min radius ramp ${f(radRamp)} m, flyover ${f(radFly)} m, max grade ${grade.toFixed(1)}%`);
   }
 });
 
-test('T004: 60 degree stack on 300-tile roads is ok=false with a reason (roads too short for 150 m flyovers)', () => {
+test('T004: 60 degree stack on 300-tile roads is ok=false with a reason (roads too short for flyovers)', () => {
   const [A, B] = sixtyDegreeRoads(300, 300);
   const ic = makeInterchange(A, B, 'stack');
   assert.equal(ic.ok, false);
-  assert.ok(ic.why.length > 0 && ic.why.includes('does not fit'), ic.why);
+  assert.ok(ic.why.length > 0 && ic.why.includes('too short'), ic.why);
 });

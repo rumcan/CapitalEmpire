@@ -1,28 +1,32 @@
 /** Highway interchange geometry generator (T004).
  *  Tiles are 2 m = 1 tile. Pure TS, no DOM.
- *  Each movement is a cubic Bezier tangent to its two roads; its height follows a smoothstep over arc length,
- *  so the grade is at most 1.5 * rise / length (kept under 6%). Radii are checked on the sampled curve.
+ *  Each type is a set of ramps. A ramp is a list of anchors (point, unit tangent, optional height in m);
+ *  anchors are joined by cubic Beziers that keep the tangents, so every ramp is G1 at its anchors.
+ *  Heights change between height anchors with a parabolic-blend profile (linear middle, quadratic ends,
+ *  25% blends), so the peak slope is 4/3 * rise / length.
  */
 import type { Pt } from '../../network';
 
 // ── types ──
 export type InterchangeType = 'diamond' | 'parclo' | 'cloverleaf' | 'trumpet' | 'stack' | 'roundabout-interchange';
 export interface RoadSpec { pts: Pt[]; lanes: number; oneWay: boolean }
-export interface Ramp { pts: Pt[]; z: number[]; from: 'A' | 'B'; to: 'A' | 'B'; turn: 'L' | 'R'; lanes: number }
-export interface Interchange { type: InterchangeType; over: 'A' | 'B'; ramps: Ramp[]; footprint: Pt[]; ok: boolean; why: string }
+/** kind: 'direct' ramp, 'loop' (left turn, 270 deg or U), 'fly' (flyover, >= 150 m), 'terminal' (diamond-style
+ *  ramp that ends at an at-grade terminal on the other road; the turns are made at the terminal, `turn` is the main one). */
+export interface Ramp { pts: Pt[]; z: number[]; from: 'A' | 'B'; to: 'A' | 'B'; turn: 'L' | 'R'; lanes: number; kind: 'direct' | 'loop' | 'fly' | 'terminal' | 'slip' }
+/** ring: closed polyline of the roundabout centre line (roundabout-interchange only). */
+export interface Interchange { type: InterchangeType; over: 'A' | 'B'; ramps: Ramp[]; footprint: Pt[]; ok: boolean; why: string; ring?: Pt[] }
 
 // ── constants ──
 const MPT = 2; // metres per tile
-const LOOP_M = 50; // loops and ordinary ramp curves, metres
-const FLY_M = 150; // flyovers (stack and trumpet semi-direct), metres
+const LOOP_M = 50; // loops and ramp curves, metres
+const FLY_M = 150; // flyovers, metres
 const TAPER_T = 30; // merge/diverge taper, tiles (60 m): ramp arms at both ends are at least this long
-const WEAVE_T = 75; // weaving distance between loop nodes on one road, tiles (150 m)
-const OVER_M = 7; // deck height of the over road above the under road, metres
+const OVER_M = 7; // deck height of the over road, metres
 const CLEAR_M = 7; // 5.5 m clearance + 1.5 m deck between levels that cross
+const BLEND = 0.25; // share of each ramp's rise that is a parabolic blend at each end
 const MAX_GRADE = 0.06;
-const LREQ_M = (1.5 * OVER_M) / MAX_GRADE * 1.02; // arc length that keeps a 7 m rise under 6% with smoothstep
 const STEP_T = 4; // sample spacing, tiles (8 m)
-const ARMS = [0.4, 0.6, 0.8, 1.0, 1.3, 1.7, 2.2]; // Bezier arm lengths as a fraction of the chord
+const ARMS = [0.4, 0.55, 0.7, 0.85, 1.0, 1.2, 1.5, 1.9]; // Bezier arm lengths as a fraction of each chord
 const ANG_MIN = 25; // degrees, below this the crossing is too acute for the generator
 
 // ── vec helpers ──
@@ -96,15 +100,13 @@ function findX(A: Line, B: Line): Xing | null {
 
 // ── curve measures (metres unless noted) ──
 /** Cubic Bezier sampled about every STEP_T tiles. */
-function bezier(P0: Pt, P1: Pt, P2: Pt, P3: Pt): Pt[] {
+function bezier(P0: Pt, P1: Pt, P2: Pt, P3: Pt, out: Pt[]): void {
   const len = vlen(sub(P1, P0)) + vlen(sub(P2, P1)) + vlen(sub(P3, P2));
   const n = Math.max(8, Math.ceil(len / STEP_T));
-  const out: Pt[] = [];
-  for (let i = 0; i <= n; i++) {
+  for (let i = 1; i <= n; i++) {
     const t = i / n, u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
     out.push({ x: a * P0.x + b * P1.x + c * P2.x + d * P3.x, y: a * P0.y + b * P1.y + c * P2.y + d * P3.y });
   }
-  return out;
 }
 /** Smallest circumradius of consecutive triples, metres. */
 function radiusM(pts: Pt[]): number {
@@ -118,51 +120,70 @@ function radiusM(pts: Pt[]): number {
   }
   return r * MPT;
 }
-/** Polyline length, metres. */
-function lenM(pts: Pt[]): number {
-  let l = 0;
-  for (let i = 0; i + 1 < pts.length; i++) l += vlen(sub(pts[i + 1]!, pts[i]!));
-  return l * MPT;
+/** Parabolic-blend fraction: 0..1 height share at arc fraction t (linear middle, quadratic ends). */
+function blendF(t: number): number {
+  const b = BLEND;
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  if (t < b) return (t * t) / (2 * b * (1 - b));
+  if (t > 1 - b) return 1 - ((1 - t) * (1 - t)) / (2 * b * (1 - b));
+  return (t - b / 2) / (1 - b);
 }
-/** Heights from z0 to z1 along arc length, smoothstep (zero slope at both ends). */
-function profile(pts: Pt[], z0: number, z1: number): number[] {
-  const L = lenM(pts), z: number[] = [];
-  let s = 0;
-  for (let i = 0; i < pts.length; i++) {
-    if (i > 0) s += vlen(sub(pts[i]!, pts[i - 1]!)) * MPT;
-    const t = L > 0 ? clamp(s / L, 0, 1) : 0;
-    z.push(z0 + (z1 - z0) * t * t * (3 - 2 * t));
+/** Heights for a ramp: `keys` are (sample index, height in m) pairs, sorted; between keys the blend profile runs over arc length. */
+function heights(pts: Pt[], keys: { i: number; z: number }[]): number[] {
+  const s: number[] = [0];
+  for (let i = 1; i < pts.length; i++) s.push(s[i - 1]! + vlen(sub(pts[i]!, pts[i - 1]!)) * MPT);
+  const z: number[] = new Array(pts.length).fill(keys[0]!.z);
+  for (let k = 0; k + 1 < keys.length; k++) {
+    const a = keys[k]!, b = keys[k + 1]!, L = s[b.i]! - s[a.i]!;
+    for (let i = a.i; i <= b.i; i++) z[i] = a.z + (b.z - a.z) * (L > 0 ? blendF((s[i]! - s[a.i]!) / L) : 0);
   }
+  for (let i = keys[keys.length - 1]!.i + 1; i < pts.length; i++) z[i] = keys[keys.length - 1]!.z;
   return z;
 }
 
-// ── movements ──
-interface Mv { from: 'A' | 'B'; f: 1 | -1; to: 'A' | 'B'; g: 1 | -1; kind: 'direct' | 'loop' | 'fly' }
-/** True when x is closer than WEAVE_T to a node already used on the same road (identical nodes are shared, allowed). */
-const tooClose = (used: number[], x: number): boolean => used.some(u => Math.abs(u - x) > 1e-6 && Math.abs(u - x) < WEAVE_T);
-/** One ramp from road `LF` (crossing at posF, traffic direction f) to road `LT` (posT, direction g).
- *  `used` holds the node positions (tiles along each road) already taken; loops keep WEAVE_T clear of them. */
-function buildRamp(LF: Line, posF: number, LT: Line, posT: number, m: Mv, used: Record<'A' | 'B', number[]>): { pts: Pt[]; p: number; q: number } | { why: string } {
-  const rMin = m.kind === 'fly' ? FLY_M : LOOP_M;
-  const base = m.kind === 'fly' ? 60 : m.kind === 'loop' ? 40 : 25;
-  for (let ds = base; ; ds += 4) {
-    const p = posF - m.f * ds, q = posT + m.g * ds;
-    if (p < 0 || p > LF.total || q < 0 || q > LT.total) return { why: `${m.kind} ${m.from}->${m.to} does not fit on the roads (${m.kind === 'fly' ? 'flyover' : 'ramp'} needs ${m.kind === 'fly' ? 150 : 50} m radius)` };
-    if (m.kind === 'loop' && (tooClose(used[m.from], p) || tooClose(used[m.to], q))) continue;
-    const F = at(LF, p), T = at(LT, q);
-    const P0 = F.p, t0 = mul(F.dir, m.f), P3 = T.p, t3 = mul(T.dir, m.g);
-    const ch = vlen(sub(P3, P0));
-    for (const k of ARMS) {
-      const arm = Math.max(TAPER_T, k * ch);
-      const pts = bezier(P0, add(P0, mul(t0, arm)), sub(P3, mul(t3, arm)), P3);
-      if (radiusM(pts) >= rMin && lenM(pts) >= LREQ_M) return { pts, p, q };
+// ── ramps from anchors ──
+interface Anc { p: Pt; t: Pt; z?: number; arm?: number }
+/** Joins anchors with Beziers that keep each tangent; returns sampled points and heights, or the reason it failed.
+ *  Anchors with a fixed circle arm keep it; the others search arm lengths at each end. */
+function ramp(anc: Anc[], rMin: number, valid: (pts: Pt[], z: number[]) => boolean): { pts: Pt[]; z: number[] } | string {
+  let why = 'no arm lengths fit';
+  const n = anc.length;
+  for (const k0 of ARMS) for (const k1 of ARMS) {
+    const pts: Pt[] = [anc[0]!.p], idx: number[] = [0];
+    for (let i = 0; i + 1 < n; i++) {
+      const a = anc[i]!, b = anc[i + 1]!, ch = vlen(sub(b.p, a.p));
+      const fixed = a.arm !== undefined && b.arm !== undefined;
+      const arm0 = fixed ? a.arm! : Math.max(i === 0 ? Math.min(TAPER_T, 0.6 * ch) : 0, k0 * ch);
+      const arm1 = fixed ? b.arm! : Math.max(i + 2 === n ? Math.min(TAPER_T, 0.6 * ch) : 0, k1 * ch);
+      bezier(a.p, add(a.p, mul(a.t, arm0)), sub(b.p, mul(b.t, arm1)), b.p, pts);
+      idx.push(pts.length - 1);
     }
+    const rad = radiusM(pts);
+    if (rad < rMin) { why = `radius ${rad.toFixed(0)} m < ${rMin}`; continue; }
+    const keys = anc.flatMap((a, j) => (a.z === undefined ? [] : [{ i: idx[j]!, z: a.z }]));
+    if (keys.length < 2 || keys[0]!.i !== 0 || keys[keys.length - 1]!.i !== pts.length - 1) return 'anchors need heights at both ends';
+    const z = heights(pts, keys);
+    const g = gradeOf(pts, z);
+    if (g > MAX_GRADE) { why = `grade ${(g * 100).toFixed(1)}%`; continue; }
+    if (!valid(pts, z)) { why = 'crosses a road at the same level'; continue; }
+    return { pts, z };
   }
+  return why;
+}
+/** Largest |dz| / ds between consecutive samples (ds in metres). */
+function gradeOf(pts: Pt[], z: number[]): number {
+  let g = 0;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const ds = vlen(sub(pts[i + 1]!, pts[i]!)) * MPT;
+    if (ds > 0.5) g = Math.max(g, Math.abs(z[i + 1]! - z[i]!) / ds);
+  }
+  return g;
 }
 
 // ── checks ──
-/** Crossings between ramps and roads, and between ramps, closer than CLEAR_M. Returns '' when clean. */
-function clashes(ramps: Ramp[], LA: Line, LB: Line, zA: number, zB: number): string {
+/** Ramp-road and ramp-ramp crossings closer than CLEAR_M. Returns '' when clean. */
+function clashes(ramps: { pts: Pt[]; z: number[] }[], LA: Line, LB: Line, zA: number, zB: number): string {
   const near = (p: Pt, pts: Pt[]) => pts.some(q => vlen(sub(p, q)) < 4);
   for (let i = 0; i < ramps.length; i++) {
     const r = ramps[i]!;
@@ -171,8 +192,7 @@ function clashes(ramps: Ramp[], LA: Line, LB: Line, zA: number, zB: number): str
       for (const [L, zr, nm] of [[LA, zA, 'A'], [LB, zB, 'B']] as const) for (let j = 0; j + 1 < L.pts.length; j++) {
         const h = segHit(p, rr, L.pts[j]!, sub(L.pts[j + 1]!, L.pts[j]!));
         if (!h || h.t <= 0.02 || h.t >= 0.98 || h.u < 0 || h.u > 1) continue;
-        const hp = add(p, mul(rr, h.t));
-        if (near(hp, [r.pts[0]!, r.pts[r.pts.length - 1]!])) continue;
+        if ([r.pts[0]!, r.pts[r.pts.length - 1]!].some(q => vlen(sub(add(p, mul(rr, h.t)), q)) < 10)) continue;
         const zc = r.z[k]! + (r.z[k + 1]! - r.z[k]!) * h.t;
         if (Math.abs(zc - zr) < CLEAR_M) return `ramp ${i} crosses road ${nm} at the same level`;
       }
@@ -202,61 +222,177 @@ function footprintOf(pts: Pt[], pad: number): Pt[] {
   return [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }];
 }
 
-// ── main ──
-/** Kind of a movement for a type. `left` = the ramp turns left (crosses the other road's side). */
-function kindOf(type: InterchangeType, m: Mv, left: boolean): Mv['kind'] {
-  if (type === 'trumpet') return 'fly';
-  if (type === 'stack') return left ? 'fly' : 'direct';
-  if (type === 'cloverleaf') return left ? 'loop' : 'direct';
-  if (type === 'parclo') return m.from === 'A' && m.f === m.g ? 'loop' : 'direct';
-  if (type === 'roundabout-interchange') return 'loop';
-  return 'direct';
+// ── topologies ──
+/** One ramp of a type before geometry: anchors, endpoints, kind, main turn. */
+interface Spec { from: 'A' | 'B'; to: 'A' | 'B'; kind: Ramp['kind']; turn: 'L' | 'R'; anc: Anc[] }
+const D_DIA = 100; // diamond and parclo: distance from the crossing to the diverge/merge on A, tiles
+const D_PAR = 80; // parclo: distance on A to the diagonal ramps, tiles
+const T_NEAR = 20; // diamond: near terminal on B, tiles off A
+const T_FAR = 34; // diamond and parclo: far terminal on B, tiles off A
+const R_LOOP = 40; // parclo loop radius, tiles (80 m)
+const R_CLOVER = 52; // cloverleaf loop and direct radius, tiles (104 m)
+const R_FLY = 120; // stack and trumpet flyover radius, tiles (240 m)
+const NEED_T = 80; // corner arcs are at least 160 m, so a 7 m rise stays under 6%
+const R_SLIP = 25; // roundabout ring radius, tiles (50 m)
+const D_SLIP = 95; // roundabout slip ramps: distance on A to the diverge/merge, tiles
+
+/** Frame of one crossing: ax(x, y) is a point at x along A (y to A's left), bt(y) the point on B at A-offset y. */
+interface Frame {
+  O: Pt; ax: (x: number, y?: number) => Pt; bt: (y: number) => Pt; bx: (s: number) => Pt;
+  ua: Pt; na: Pt; ub: Pt; zA: number; zB: number;
+}
+/** Circle tangent to both roads in quadrant (sa, sb), radius r: centre, tangent points, and their angles in the (ua, na) frame. */
+interface Circ { C: Pt; R: number; thA: number; thB: number; phi: number }
+function circFor(F: Frame, sa: 1 | -1, sb: 1 | -1, r: number): Circ {
+  const ea = mul(F.ua, sa), eb = mul(F.ub, sb);
+  const phi = Math.acos(clamp(dot(ea, eb), -1, 1));
+  const C = add(F.O, mul(unitV(add(ea, eb)), r / Math.sin(phi / 2)));
+  const angOf = (dirP: Pt) => Math.atan2(dot(dirP, F.na), dot(dirP, F.ua));
+  const PA = add(F.O, mul(ea, dot(sub(C, F.O), ea))), PB = add(F.O, mul(eb, dot(sub(C, F.O), eb)));
+  return { C, R: r, thA: angOf(sub(PA, C)), thB: angOf(sub(PB, C)), phi };
+}
+const unitV = (a: Pt): Pt => mul(a, 1 / (vlen(a) || 1));
+/** Signed angle from a to b, in (-pi, pi]. */
+const angD = (a: number, b: number): number => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d <= -Math.PI) d += 2 * Math.PI; return d; };
+/** Anchors along circle c from angle a0 sweeping `sw` radians in n steps; tangents follow the sweep. */
+function arcAnc(F: Frame, c: Circ, a0: number, sw: number, n: number): Anc[] {
+  const out: Anc[] = [];
+  for (let i = 0; i <= n; i++) {
+    const th = a0 + (sw * i) / n, cs = Math.cos(th), sn = Math.sin(th);
+    const p = add(c.C, add(mul(F.ua, c.R * cs), mul(F.na, c.R * sn)));
+    const t = unitV(add(mul(F.ua, -sn), mul(F.na, cs)));
+    out.push({ p, t: mul(t, Math.sign(sw) || 1), arm: (4 / 3) * Math.tan(Math.abs(sw) / (4 * n)) * c.R });
+  }
+  return out;
+}
+/** 270-degree loop (long way round) leaving road `from` on its outward ray of quadrant (sa, sb). */
+function loopSpec(F: Frame, sa: 1 | -1, sb: 1 | -1, r: number, from: 'A' | 'B', to: 'A' | 'B', turn: 'L' | 'R', mid?: { i: number; z: number }, kind: Ramp['kind'] = 'loop', noBump = false): Spec {
+  const c = circFor(F, sa, sb, noBump ? r : Math.max(r, NEED_T / (Math.PI - circFor(F, sa, sb, r).phi)));
+  const th0 = from === 'A' ? c.thA : c.thB;
+  const want = from === 'A' ? mul(F.ua, sa) : mul(F.ub, sb);
+  const tan0 = unitV(add(mul(F.ua, -Math.sin(th0)), mul(F.na, Math.cos(th0))));
+  const sg = dot(want, tan0) >= 0 ? 1 : -1;
+  const anc = arcAnc(F, c, th0, sg * (Math.PI + c.phi), 3);
+  anc[0]!.z = from === 'A' ? F.zA : F.zB;
+  anc[3]!.z = to === 'A' ? F.zA : F.zB;
+  if (mid !== undefined) anc[mid.i]!.z = mid.z;
+  return { from, to, kind, turn, anc };
+}
+/** Minor (corner) arc in quadrant (sa, sb), from road `from` to the other road, arriving on the other road's outward ray. */
+function directSpec(F: Frame, sa: 1 | -1, sb: 1 | -1, r: number, from: 'A' | 'B', turn: 'L' | 'R'): Spec {
+  const c = circFor(F, sa, sb, Math.max(r, NEED_T / (Math.PI - circFor(F, sa, sb, r).phi)));
+  const th0 = from === 'A' ? c.thA : c.thB, th1 = from === 'A' ? c.thB : c.thA;
+  const sw = angD(th0, th1);
+  const anc = arcAnc(F, c, th0, sw, 2);
+  anc[0]!.z = from === 'A' ? F.zA : F.zB;
+  anc[2]!.z = from === 'A' ? F.zB : F.zA;
+  return { from, to: from === 'A' ? 'B' : 'A', kind: 'direct', turn, anc };
+}
+
+function specsFor(type: InterchangeType, F: Frame): Spec[] {
+  const { ax, bt, ua, na, zA, zB } = F;
+  const m = (v: Pt) => mul(v, -1);
+  if (type === 'diamond') return [
+    { from: 'A', to: 'B', kind: 'terminal', turn: 'L', anc: [{ p: ax(-D_DIA), t: ua, z: zA }, { p: bt(T_NEAR), t: ua, z: zB }] },
+    { from: 'B', to: 'A', kind: 'terminal', turn: 'R', anc: [{ p: bt(-T_FAR), t: ua, z: zB }, { p: ax(D_DIA + 20), t: ua, z: zA }] },
+    { from: 'A', to: 'B', kind: 'terminal', turn: 'L', anc: [{ p: ax(D_DIA), t: m(ua), z: zA }, { p: bt(-T_NEAR), t: m(ua), z: zB }] },
+    { from: 'B', to: 'A', kind: 'terminal', turn: 'R', anc: [{ p: bt(T_FAR), t: m(ua), z: zB }, { p: ax(-D_DIA - 20), t: m(ua), z: zA }] },
+  ];
+  if (type === 'parclo') return [
+    loopSpec(F, 1, 1, R_LOOP, 'A', 'B', 'L', undefined, 'loop', true), loopSpec(F, -1, -1, R_LOOP, 'A', 'B', 'L', undefined, 'loop', true), // diagonally opposite loops off A
+    { from: 'B', to: 'A', kind: 'terminal', turn: 'R', anc: [{ p: bt(-T_FAR), t: ua, z: zB }, { p: ax(D_PAR), t: ua, z: zA }] },
+    { from: 'B', to: 'A', kind: 'terminal', turn: 'R', anc: [{ p: bt(T_FAR), t: m(ua), z: zB }, { p: ax(-D_PAR), t: m(ua), z: zA }] },
+  ];
+  if (type === 'cloverleaf') return [
+    loopSpec(F, 1, 1, R_CLOVER, 'A', 'B', 'L'), loopSpec(F, -1, -1, R_CLOVER, 'A', 'B', 'L'),
+    loopSpec(F, -1, 1, R_CLOVER, 'B', 'A', 'L'), loopSpec(F, 1, -1, R_CLOVER, 'B', 'A', 'L'),
+    directSpec(F, 1, 1, R_CLOVER, 'B', 'R'), directSpec(F, -1, 1, R_CLOVER, 'B', 'R'),
+    directSpec(F, -1, -1, R_CLOVER, 'B', 'R'), directSpec(F, 1, -1, R_CLOVER, 'B', 'R'),
+  ];
+  if (type === 'stack') return [
+    loopSpec(F, 1, 1, R_FLY, 'A', 'B', 'L', { i: 2, z: 21 }, 'fly'), loopSpec(F, -1, -1, R_FLY, 'A', 'B', 'L', { i: 2, z: 21 }, 'fly'),
+    loopSpec(F, -1, 1, R_FLY, 'B', 'A', 'L', { i: 1, z: 14 }, 'fly'), loopSpec(F, 1, -1, R_FLY, 'B', 'A', 'L', { i: 1, z: 14 }, 'fly'),
+    directSpec(F, 1, 1, R_CLOVER, 'B', 'R'), directSpec(F, -1, 1, R_CLOVER, 'B', 'R'),
+    directSpec(F, -1, -1, R_CLOVER, 'B', 'R'), directSpec(F, 1, -1, R_CLOVER, 'B', 'R'),
+  ];
+  if (type === 'trumpet') return [
+    directSpec(F, 1, -1, R_CLOVER, 'A', 'R'), directSpec(F, 1, 1, R_CLOVER, 'B', 'R'),
+    loopSpec(F, 1, 1, R_CLOVER, 'A', 'B', 'L'), loopSpec(F, 1, -1, R_FLY, 'A', 'B', 'L', undefined, 'fly'),
+  ];
+  // roundabout-interchange: ring at ground under A (over); four slips, each entering or leaving the ring at 45-degree points
+  const ringAt = (deg: number): { p: Pt; t: Pt } => {
+    const th = deg * Math.PI / 180, cs = Math.cos(th), sn = Math.sin(th);
+    return { p: add(F.O, add(mul(ua, R_SLIP * cs), mul(na, R_SLIP * sn))), t: unitV(add(mul(ua, -sn), mul(na, cs))) };
+  };
+  const r225 = ringAt(225), r315 = ringAt(315), r45 = ringAt(45), r135 = ringAt(135);
+  return [
+    { from: 'A', to: 'B', kind: 'slip', turn: 'R', anc: [{ p: ax(-D_SLIP), t: ua, z: zA }, { p: r225.p, t: r225.t, z: zB }] },
+    { from: 'B', to: 'A', kind: 'slip', turn: 'R', anc: [{ p: r315.p, t: r315.t, z: zB }, { p: ax(D_SLIP), t: ua, z: zA }] },
+    { from: 'A', to: 'B', kind: 'slip', turn: 'R', anc: [{ p: ax(D_SLIP), t: m(ua), z: zA }, { p: r45.p, t: r45.t, z: zB }] },
+    { from: 'B', to: 'A', kind: 'slip', turn: 'R', anc: [{ p: r135.p, t: r135.t, z: zB }, { p: ax(-D_SLIP), t: m(ua), z: zA }] },
+  ];
 }
 
 /** Ramps for one crossing of road A and road B, or ok=false with the reason. */
-export function makeInterchange(A: RoadSpec, B: RoadSpec, type: InterchangeType): Interchange {
+function build(A: RoadSpec, B: RoadSpec, type: InterchangeType): Interchange {
   const LA = line(A.pts), LB = line(B.pts);
-  const over: 'A' | 'B' = A.lanes >= B.lanes ? 'A' : 'B';
-  const fail = (why: string, ramps: Ramp[] = [], pts: Pt[] = []): Interchange => ({ type, over, ramps, footprint: footprintOf(pts, 6), ok: false, why });
+  let over: 'A' | 'B' = A.lanes >= B.lanes ? 'A' : 'B';
+  if (type === 'stack' || type === 'trumpet') over = 'B';
   const X = findX(LA, LB);
+  const fail = (why: string, pts: Pt[] = []): Interchange => ({ type, over, ramps: [], footprint: footprintOf(pts, 6), ok: false, why });
   if (!X) return fail('no crossing');
-  const L = { A: LA, B: LB }, pos = { A: X.posA, B: X.posB }, spec = { A, B };
-  const dir = { A: at(LA, X.posA).dir, B: at(LB, X.posB).dir };
-  const angDeg = Math.acos(clamp(Math.abs(dot(dir.A, dir.B)), 0, 1)) * 180 / Math.PI;
-  if (angDeg < ANG_MIN && type !== 'trumpet') return fail(`angle too acute ${angDeg.toFixed(1)}deg`, [], [X.O]);
+  const dA = at(LA, X.posA).dir, dB = at(LB, X.posB).dir;
+  const angDeg = Math.acos(clamp(Math.abs(dot(dA, dB)), 0, 1)) * 180 / Math.PI;
+  if (angDeg < ANG_MIN) return fail(`angle too acute ${angDeg.toFixed(1)}deg`, [X.O]);
 
-  const moves: Mv[] = [];
-  for (const from of ['A', 'B'] as const) for (const f of [1, -1] as const) for (const to of ['A', 'B'] as const) {
-    if (to === from) continue;
-    for (const g of [1, -1] as const) {
-      if (spec[from].oneWay && f !== 1) continue;
-      if (spec[to].oneWay && g !== 1) continue;
-      const tf = mul(dir[from], f), tt = mul(dir[to], g);
-      if (pos[from] - f * 0.5 < 0 || pos[from] - f * 0.5 > L[from].total) continue;
-      if (pos[to] + g * 0.5 < 0 || pos[to] + g * 0.5 > L[to].total) continue;
-      const left = cross(tf, tt) > 0;
-      const m: Mv = { from, f, to, g, kind: 'direct' };
-      m.kind = kindOf(type, m, left);
-      moves.push(m);
-    }
+  // positions outside a road's extent mean the topology does not fit on the roads
+  let short = '';
+  const along = (L: Line, pos: number, d: number, nm: string): Pt => {
+    const q = pos + d;
+    if (q < -1e-6 || q > L.total + 1e-6) short ||= `road ${nm} too short for ${type}`;
+    return at(L, clamp(q, 0, L.total)).p;
+  };
+  const O = X.O, ua = dA, ub = dB, na = { x: -ua.y, y: ua.x };
+  const ax = (x: number, y = 0): Pt => {
+    if (Math.abs(y) < 1e-9) return along(LA, X.posA, x, 'A');
+    return add(O, add(mul(ua, x), mul(na, y)));
+  };
+  const bx = (s: number): Pt => along(LB, X.posB, s, 'B');
+  const bt = (y: number): Pt => bx(y / dot(ub, na));
+  const F: Frame = { O, ax, bt, bx, ua, na, ub, zA: over === 'A' ? OVER_M : 0, zB: over === 'B' ? OVER_M : 0 };
+  const specs = specsFor(type, F);
+  for (const s of specs) for (const a of [s.anc[0]!, s.anc[s.anc.length - 1]!]) {
+    const d = sub(a.p, O);
+    if (Math.abs(cross(d, ua)) < 1e-6 && (X.posA + dot(d, ua) < -1e-6 || X.posA + dot(d, ua) > LA.total + 1e-6)) short ||= `road A too short for ${type}`;
+    if (Math.abs(cross(d, ub)) < 1e-6 && (X.posB + dot(d, ub) < -1e-6 || X.posB + dot(d, ub) > LB.total + 1e-6)) short ||= `road B too short for ${type}`;
   }
-  if (moves.length === 0) return fail('no movement fits on these roads', [], [X.O]);
+  if (short) return fail(short, [O]);
 
-  // direct and flyover ramps first, loops last so they can keep WEAVE_T from every node already taken
-  moves.sort((a, b) => (a.kind === 'loop' ? 1 : 0) - (b.kind === 'loop' ? 1 : 0));
-  const used: Record<'A' | 'B', number[]> = { A: [], B: [] };
   const ramps: Ramp[] = [];
-  const pts: Pt[] = [X.O];
-  for (const m of moves) {
-    const b = buildRamp(L[m.from], pos[m.from], L[m.to], pos[m.to], m, used);
-    if ('why' in b) return fail(b.why, ramps, pts);
-    used[m.from].push(b.p); used[m.to].push(b.q);
-    const zF = m.from === over ? OVER_M : 0, zT = m.to === over ? OVER_M : 0;
-    const z = profile(b.pts, zF, zT);
-    const turn: 'L' | 'R' = cross(mul(dir[m.from], m.f), mul(dir[m.to], m.g)) > 0 ? 'L' : 'R';
-    ramps.push({ pts: b.pts, z, from: m.from, to: m.to, turn, lanes: 1 });
-    for (const p of b.pts) pts.push(p);
+  const pts: Pt[] = [O];
+  for (const s of specs) {
+    const r = ramp(s.anc, s.kind === 'fly' ? FLY_M : LOOP_M, (pts, z) => clashes([{ pts, z }], LA, LB, F.zA, F.zB) === '');
+    if (typeof r === 'string') return fail(`${s.kind} ${s.from}->${s.to} ${r}`, pts);
+    ramps.push({ pts: r.pts, z: r.z, from: s.from, to: s.to, turn: s.turn, lanes: 1, kind: s.kind });
+    for (const p of r.pts) pts.push(p);
   }
-  const why = clashes(ramps, LA, LB, over === 'A' ? OVER_M : 0, over === 'B' ? OVER_M : 0);
-  return { type, over, ramps, footprint: footprintOf(pts, 6), ok: why === '', why };
+  let ring: Pt[] | undefined;
+  if (type === 'roundabout-interchange') {
+    ring = [];
+    for (let i = 0; i <= 48; i++) ring.push(add(O, add(mul(ua, R_SLIP * Math.cos(i * Math.PI / 24)), mul(na, R_SLIP * Math.sin(i * Math.PI / 24)))));
+    for (const p of ring) pts.push(p);
+  }
+  const why = clashes(ramps, LA, LB, F.zA, F.zB);
+  return { type, over, ramps, footprint: footprintOf(pts, 6), ok: why === '', why, ...(ring ? { ring } : {}) };
+}
+
+/** Ramps for one crossing of road A and road B, or ok=false with the reason. A trumpet whose stem is B is built with the roles swapped. */
+export function makeInterchange(A: RoadSpec, B: RoadSpec, type: InterchangeType): Interchange {
+  const X = findX(line(A.pts), line(B.pts));
+  const atEnd = (L: Line, pos: number) => pos < 1e-6 || pos > L.total - 1e-6;
+  const stemB = type === 'trumpet' && X !== null && !atEnd(line(A.pts), X.posA) && atEnd(line(B.pts), X.posB);
+  if (!stemB) return build(A, B, type);
+  const sw = (x: 'A' | 'B'): 'A' | 'B' => (x === 'A' ? 'B' : 'A');
+  const r = build(B, A, type);
+  return { ...r, over: sw(r.over), ramps: r.ramps.map(m => ({ ...m, from: sw(m.from), to: sw(m.to) })) };
 }
