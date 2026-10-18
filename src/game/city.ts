@@ -106,11 +106,19 @@ export class City {
   constructor(seed: number) {
     this.net.paintData = false; this.net.occRaster = null;
     this.sim = new Sim(this.g, CAP, 1);
-    this.ctx = { lots: this.lots, entry: { x: 0, y: 0 }, reachable: (l: Lot) => this.reach.has(l.seg), water: (x, y) => this.waterAt(x, y) };
+    this.ctx = { lots: this.lots, entry: { x: 0, y: 0 }, reachable: (l: Lot) => this.reach.has(l.seg) && !this.reserved(l), water: (x, y) => this.waterAt(x, y) };
     this.town = new Town(seed);
     this.planRnd = seededRnd(seed);
   }
 
+  /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), so the town never builds there */
+  private reserved(l: Lot): boolean {
+    if (!this.site && !this.parkDefs.length) return false;
+    const ax = l.o.x + l.u.x * l.w, ay = l.o.y + l.u.y * l.w, bx = l.o.x + l.n.x * l.d, by = l.o.y + l.n.y * l.d, cx = ax + l.n.x * l.d, cy = ay + l.n.y * l.d;
+    const x0 = Math.min(l.o.x, ax, bx, cx), x1 = Math.max(l.o.x, ax, bx, cx), y0 = Math.min(l.o.y, ay, by, cy), y1 = Math.max(l.o.y, ay, by, cy);
+    const hit = (r: { x: number; y: number; w: number; h: number }) => x1 > r.x - 1 && x0 < r.x + r.w + 1 && y1 > r.y - 1 && y0 < r.y + r.h + 1;
+    return (!!this.site && hit(this.site)) || this.parkDefs.some(hit);
+  }
   /** the access per zone (256): the sim's live copy (the town reads its own copy, taken each game hour) */
   get access(): Float32Array { return this.sim.access; }
   /** the last step call's time (ms), and the largest of the last TICKS calls */

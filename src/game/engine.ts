@@ -817,8 +817,17 @@ export class Game {
     const t = this.tileAt(mx, my);
     pd.x1 = Math.round(t.x); pd.y1 = Math.round(t.y); pd.mx = mx; pd.my = my;
     const def: CarParkDef = { id: 0, x: Math.min(pd.x0, pd.x1), y: Math.min(pd.y0, pd.y1), w: Math.abs(pd.x1 - pd.x0), h: Math.abs(pd.y1 - pd.y0) };
-    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs);
+    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs) || (this.lotsUnder(def) ? 'buildings stand there' : '');
     pd.park = pd.why ? null : buildPark(this.net, def);
+  }
+  /** whether a lot of the town that is not EMPTY overlaps rect r (its box against r) */
+  private lotsUnder(r: { x: number; y: number; w: number; h: number }): boolean {
+    for (const l of this.traffic.lots.values()) {
+      if (l.level === LV.EMPTY) continue;
+      const ax = l.o[0] + l.u[0] * l.w, ay = l.o[1] + l.u[1] * l.w, bx = l.o[0] + l.n[0] * l.d, by = l.o[1] + l.n[1] * l.d, cx = ax + l.n[0] * l.d, cy = ay + l.n[1] * l.d;
+      if (Math.max(l.o[0], ax, bx, cx) > r.x && Math.min(l.o[0], ax, bx, cx) < r.x + r.w && Math.max(l.o[1], ay, by, cy) > r.y && Math.min(l.o[1], ay, by, cy) < r.y + r.h) return true;
+    }
+    return false;
   }
   /** the car park drag's end: a valid car park that is affordable is built (id: the next after the highest), else the toast says why */
   private parkRelease() {
