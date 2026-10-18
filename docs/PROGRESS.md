@@ -13,7 +13,7 @@ _Last updated: 2026-10-18, Phase 4 done (one clock and time controls, the budget
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
-| 4. Budget + bottleneck loop | **Done** (2026-10-18), not pushed yet. Steps, numbers and the gate below |
+| 4. Budget + bottleneck loop | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | Not started. The core loop is now event rounds: GAME-PLAN section 1.0; owner decisions needed first (GAME-PLAN section 7, items 6–13) |
 | 6. Expansion (new events, overlapping networks) | Not started |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
