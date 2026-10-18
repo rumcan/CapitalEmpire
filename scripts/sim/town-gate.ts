@@ -5,7 +5,7 @@ import { planWhy, reachableSegs } from '../../src/game/lots/roads';
 // (unless every zone with lots is over 1.8 access: "jam-limited", a fail); mean step time (one City.step call) under 25 ms.
 // The jam check: for each zone whose access stayed over 1.8 for a game day (judged on the access copy the town used in each
 // second), the builds in that zone and in the other zones meanwhile (expected 0 and > 0).
-//   npm run town:gate -- [seed = 1] [days = 40] [cars = 0]  (random background cars; the town's own trips start with the first house)
+//   npm run town:gate -- [seed = 1] [days = 40] [cars = 0] [keep]  (keep: run all the days even after pop 5000, to watch the jams; random background cars; the town's own trips start with the first house)
 // The player (brief step 7b): when the town is land-locked (growStats.none rose in each of the last 3 game hours, legs did not), at
 // most once per 2 game days the gate builds one bridge street over the water (findBridge: the shortest water crossing first).
 // Writes output/sim/town-gate.json (every hour) and prints the daily lines and the summary. Exit code 1 when it fails.
@@ -24,7 +24,7 @@ import { zoneOf } from '../../src/game/sim/routing';
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
-const seed = Number(process.argv[2] ?? 1), days = Math.max(1, Math.round(Number(process.argv[3] ?? 40))), cars = Math.max(0, Math.round(Number(process.argv[4] ?? 0)));
+const seed = Number(process.argv[2] ?? 1), days = Math.max(1, Math.round(Number(process.argv[3] ?? 40))), cars = Math.max(0, Math.round(Number(process.argv[4] ?? 0))), keep = process.argv[5] === 'keep';
 /** game hour and day in sim s (one call = one sim second), the goal population, the step budget (ms), the access limits */
 const HOUR = 60, DAY = 1440, GOAL = 5000, BUDGET = 25, HI = 1.3, JAM = 1.8;
 /** the player's bridge: the street's corridor half width, the land the far bank gives (tiles), the longest leg, the water part at most,
@@ -220,7 +220,7 @@ for (let s = 1; s <= days * DAY; s++) {
     dayLine(day, rec);
     if (popReachedDay < 0 && city.town.pop >= GOAL) popReachedDay = day;
     popStart = city.town.pop; dayBuilds = 0;
-    if (popReachedDay >= 0) break;
+    if (popReachedDay >= 0 && !keep) break;
   }
 }
 // the runs still open when the gate stops: episodes too if they lasted a game day
