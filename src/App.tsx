@@ -8,12 +8,14 @@ import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, classUnlocked, junctionUnlocked, unlockOf } from './game/career';
+import { LOT_TILE_COST } from './game/event/config';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
   { id: 'road', label: 'Roads', key: 'R', icon: '🛣️' },
   { id: 'junction', label: 'Junctions', key: 'J', icon: '🚦' },
   { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
+  { id: 'park', label: 'Car park', key: 'P', icon: '🅿️' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** the price line of a locked road class or junction type: the residents it unlocks at */
@@ -146,6 +148,7 @@ export default function App() {
                   <p className="text-xs text-slate-300">Click an object to remove it (half its price is refunded). Click or drag along a road to tear it up piece by piece — the ends become cul-de-sacs and curbs, corners, crossings and markings redraw themselves instantly.</p>
                 </Panel>
               )}
+              {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'select' && <SelectPanel game={game} />}
             </div>
           </div>
@@ -497,6 +500,34 @@ function RoadPanel({ game }: { game: Game }) {
   );
 }
 
+/** the car park tool: how to place one, its cost per tile, and the list of car parks (Go; a dev-only test of 50 cars) */
+function ParkPanel({ game }: { game: Game }) {
+  const views = game.traffic.parks;
+  return (
+    <Panel title="Car park">
+      <p className="text-xs leading-relaxed text-slate-300">
+        <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
+      </p>
+      <div className="mt-2 text-xs text-amber-300">{money(LOT_TILE_COST)} per tile</div>
+      <div className="mt-2 max-h-64 overflow-y-auto">
+        {game.parkDefs.length === 0 && <p className="text-xs text-slate-400">No car parks yet.</p>}
+        {game.parkDefs.map(d => {
+          const v = views.find(q => q.id === d.id);
+          return (
+            <div key={d.id} className="flex items-center justify-between gap-2 py-1 text-xs">
+              <span className="tabular-nums text-slate-200">#{d.id} · {v ? `${v.bays} bays · ${v.parked}/${v.turned}` : 'no road along it'}</span>
+              <span className="flex gap-1">
+                <button className="btn" onClick={() => game.goToPark(d.id)}>Go</button>
+                {import.meta.env.DEV && <button className="btn" onClick={() => game.parkTest(d.id, 50)}>Test 50 cars</button>}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
 function JunctionPanel({ game }: { game: Game }) {
   const n = game.hoverNode;
   return (
@@ -582,6 +613,7 @@ function hintFor(g: Game) {
     case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start`;
     case 'junction': return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here` : 'Hover a junction (three or more roads; roundabouts also work on bends)';
     case 'bulldoze': return 'Click objects or roads to remove them';
+    case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     default: return 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
   }
 }

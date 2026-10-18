@@ -49,6 +49,8 @@ export interface SaveV5 {
   career?: CareerSave;
   /** the event round: its stage, level, runs and last result (a build or surge saved mid-way restores as free; optional, no version bump) */
   round?: RoundSave;
+  /** the car parks as [x, y, w, h] tiles, ids 1..n in this order (optional, no version bump; missing = none) */
+  parks?: [number, number, number, number][];
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',

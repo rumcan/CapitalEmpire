@@ -342,15 +342,17 @@ export class City {
     this.sim.sinks.forEach((s, j) => { if (s.park === k) js.push(j); });
     if (k < 0 || !js.length) return 0;
     const q = { x: 0, y: 0, hx: 0, hy: 0 }, sp = { x: 0, y: 0, hx: 0, hy: 0 };
+    // only roads joined to the car park's frontage: the towns start apart, and a car with no way there is lost at once
+    const joined = reachableSegs(this.net, this.parks[k]!.entrances[0]!);
     let sent = 0;
     for (let c = 0; c < n; c++) {
       let done = false;
-      for (let a = 0; a < 40 && !done; a++) {
+      for (let a = 0; a < 200 && !done; a++) {
         const lane = this.sim.trips.origin();
         if (lane < 0) return sent;
         const s = this.sim.trips.oS, j = js[sent % js.length]!, K = this.sim.sinks[j]!, dd = this.g.dsegs[K.dseg]!;
         laneAt(this.g.lanes[lane]!, s, q); laneAt(this.g.lanes[dd.lanes[dd.lanes.length - 1]!]!, K.s, sp);
-        if (a < 20 && Math.hypot(sp.x - q.x, sp.y - q.y) < PARK_TEST_M) continue;
+        if (!joined.has(this.g.dsegs[this.g.lanes[lane]!.dseg]!.seg) || (a < 100 && Math.hypot(sp.x - q.x, sp.y - q.y) < PARK_TEST_M)) continue;
         done = this.sim.spawnAt(lane, s, K.dseg, K.s, 0, j) >= 0;
       }
       if (done) sent++;

@@ -13,6 +13,8 @@ import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { insideSite, type Site } from './event/site';
+import { BAY_D, BAY_W } from './event/config';
+import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
@@ -54,6 +56,9 @@ const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const isLotProp = (p: Prop) => !!p.auto && p.auto.startsWith('lot:');
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
 const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5, 0.3][i & 3]!, c = [[0, 0, 0], [76, 175, 80], [47, 123, 217], [255, 140, 26], [217, 70, 239], [255, 255, 255]][i >> 2]!; return `rgb(${Math.round(c[0]! * k)},${Math.round(c[1]! * k)},${Math.round(c[2]! * k)})`; });
+/** the library cars by facing (index 0 +x e, 1 +y s, 2 -x w, 3 -y n): the sprites of the parked cars, picked by bay index */
+const PARK_CARS: number[][] = [[], [], [], []];
+LIBRARY.forEach((it, i) => { const m = /^static:[a-z]+_([enws])(?:-v2)?$/.exec(it.id); if (it.kind === 'car' && m) PARK_CARS['eswn'.indexOf(m[1]!)]!.push(i); });
 
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
@@ -115,7 +120,14 @@ export class Game {
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
   // input
-  private dragging: null | { kind: 'pan' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
+  /** the car park drag (the park tool, left button): the tile where it began and the one under the pointer (x1, y1), the rect it makes (def, id 0),
+   *  its built park (null if not valid), the verdict (why: the reason it cannot be built, '' if it can) and the cost; mx, my: the cursor (CSS px) */
+  private parkDrag: null | { x0: number; y0: number; x1: number; y1: number; def: CarParkDef; park: CarPark | null; why: string; cost: number; mx: number; my: number } = null;
+  /** the car parks as the player placed them (saved; ids 1..n), and their builds on the network by index (null: no frontage now, drawn red) */
+  parkDefs: CarParkDef[] = []; private parkBuilt: (CarPark | null)[] = [];
+  /** the parked car props by key park:{id}:{i}, and the time of the last sync of them (ms) */
+  private parkCars = new Map<string, Prop>(); private parkSyncAt = -Infinity;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
   private saveTimer = 0; private blocksTimer = 0;
@@ -254,7 +266,7 @@ export class Game {
     if (auto) p.auto = auto;
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
-    if (LIBRARY[item].big) this.scheduleBlocks(isLotProp(p));
+    if (LIBRARY[item].big && LIBRARY[item].kind !== 'car') this.scheduleBlocks(isLotProp(p)); // cars are not building blocks (sendBlocks skips them)
     return p;
   }
   removeProp(p: Prop) {
@@ -262,7 +274,7 @@ export class Game {
     this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p);
     if (p.auto) this.autoByKey.delete(p.auto);
     if (this.selected === p) this.selected = null;
-    if (LIBRARY[p.item].big) this.scheduleBlocks(isLotProp(p));
+    if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') this.scheduleBlocks(isLotProp(p));
   }
   /** after moving, flipping or scaling a prop */
   /** plant the forest cells near the view (world px rectangle): nearest to the view centre first, at most two cells per frame */
@@ -396,7 +408,7 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
-    this.syncLamps(); this.scheduleSave(); this.emit();
+    this.syncLamps(); if (this.parkDefs.length) this.syncParks(); this.scheduleSave(); this.emit();
   }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
@@ -404,11 +416,11 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
-    this.ground.invalidateAll();
+    this.ground.invalidateAll(); this.syncParks();
   }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; } this.tool = t; this.emit(); }
+  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; } this.tool = t; this.emit(); }
   private snapNode(p: Pt): Pt { return { x: clamp(Math.round(p.x), 2, MAP - 2), y: clamp(Math.round(p.y), 2, MAP - 2) }; }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
@@ -493,6 +505,18 @@ export class Game {
     }
     return false;
   }
+  /** does a road corridor of half width hw run into a car park (its rect padded by 1 tile)? */
+  private crossesPark(legs: Leg[], hw: number): boolean {
+    for (const l of legs) {
+      const d = sub(l.b, l.a), L = vlen(d); if (!L) continue;
+      const u = mul(d, 1 / L), n = perp(u);
+      for (let s = 0; s <= L; s += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
+        const x = l.a.x + u.x * s + n.x * o, y = l.a.y + u.y * s + n.y * o;
+        for (const p of this.parkDefs) if (x >= p.x - 1 && x <= p.x + p.w + 1 && y >= p.y - 1 && y <= p.y + p.h + 1) return true;
+      }
+    }
+    return false;
+  }
   /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads); or the stadium */
   private blockedForRoad(legs: Leg[], hw: number): boolean {
     if (this.crossesStadium(legs, hw)) return true;
@@ -531,6 +555,7 @@ export class Game {
     if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
     if (this.crossesStadium(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross the stadium', 'warn'); return; }
+    if (this.crossesPark(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a car park', 'warn'); return; }
     const total = this.net.legsLength(parts);
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
     const blocking = near.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car');
@@ -567,6 +592,8 @@ export class Game {
     if (first) {
       const p = this.propAt(mx, my);
       if (p && !p.auto) { const it = LIBRARY[p.item]; this.removeProp(p); this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name} (+$${Math.round(it.cost * 0.5).toLocaleString()})`); return; }
+      const k = this.parkIndexAt(t);
+      if (k >= 0) { const id = this.parkDefs[k]!.id; this.removePark(k); this.scheduleSave(); this.toast(`Removed car park #${id} (no refund)`); this.emit(); return; }
     }
     const piece = this.net.pieceNear(t); if (!piece) return;
     this.edit.removePiece(piece);
@@ -634,6 +661,7 @@ export class Game {
       case 'road': this.roadClick(mx, my); break;
       case 'junction': this.junctionClick(mx, my); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
+      case 'park': { const t = this.tileAt(mx, my), r = Math.round; this.parkDrag = { x0: r(t.x), y0: r(t.y), x1: r(t.x), y1: r(t.y), def: { id: 0, x: 0, y: 0, w: 0, h: 0 }, park: null, why: '', cost: 0, mx, my }; this.dragging = { kind: 'park', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; this.parkUpdate(mx, my); break; }
     }
   }
   pointerMove(e: PointerEvent) {
@@ -644,11 +672,12 @@ export class Game {
       if (Math.abs(mx - d.sx) + Math.abs(my - d.sy) > 3) d.moved = true;
       if (d.kind === 'pan') { this.cam.X = d.camX - (mx - d.sx) / this.cam.z; this.cam.Y = d.camY - (my - d.sy) / this.cam.z; this.clampCam(); }
       else if (d.kind === 'bulldoze') this.bulldozeAt(mx, my, false);
+      else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
     if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg, 5);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
   }
-  pointerUp() { this.dragging = null; }
+  pointerUp() { if (this.dragging?.kind === 'park') this.parkRelease(); this.dragging = null; }
   pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; }
   doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); }
   wheel(e: WheelEvent) {
@@ -680,7 +709,7 @@ export class Game {
       case 'Delete': this.deleteSelected(); break;
       case 'g': case 'G': this.showGrid = !this.showGrid; this.emit(); break;
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
-      case 'p': case 'P': this.showLots = !this.showLots; this.emit(); break;
+      case 'k': case 'K': this.showLots = !this.showLots; this.emit(); break;
       case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
       case 'f': case 'F': this.showFlow = !this.showFlow; if (this.showFlow) this.traffic.requestReport(); this.emit(); break;
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
@@ -688,6 +717,7 @@ export class Game {
       case 'r': case 'R': this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
       case 'x': case 'X': this.setTool('bulldoze'); break;
+      case 'p': case 'P': this.setTool('park'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case '1': case '2': case '3': case '4': case '5': case '6': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
@@ -778,6 +808,126 @@ export class Game {
   /** moves the camera to the stadium's centre, keeping the zoom */
   goToSite() { const s = this.site; if (!s) return; this.cam.X = worldX(s.c.x, s.c.y); this.cam.Y = worldY(s.c.x, s.c.y); this.clampCam(); this.emit(); }
 
+  // ---------- car parks (Phase 5 step 3b) ----------
+  /** the index of the car park under tile t, or -1 */
+  private parkIndexAt(t: Pt): number { return this.parkDefs.findIndex(d => t.x >= d.x && t.x < d.x + d.w && t.y >= d.y && t.y < d.y + d.h); }
+  /** the car park drag: its rect to the pointer (tiles, rounded), the verdict (parkValid's reason, '' if it may be built), its built park and its cost */
+  private parkUpdate(mx: number, my: number) {
+    const pd = this.parkDrag; if (!pd) return;
+    const t = this.tileAt(mx, my);
+    pd.x1 = Math.round(t.x); pd.y1 = Math.round(t.y); pd.mx = mx; pd.my = my;
+    const def: CarParkDef = { id: 0, x: Math.min(pd.x0, pd.x1), y: Math.min(pd.y0, pd.y1), w: Math.abs(pd.x1 - pd.x0), h: Math.abs(pd.y1 - pd.y0) };
+    pd.def = def; pd.cost = parkCost(def); pd.why = parkValid(def, this.terrain.cls, this.net, this.site, this.parkDefs);
+    pd.park = pd.why ? null : buildPark(this.net, def);
+  }
+  /** the car park drag's end: a valid car park that is affordable is built (id: the next after the highest), else the toast says why */
+  private parkRelease() {
+    const pd = this.parkDrag; this.parkDrag = null; if (!pd) return;
+    if (pd.why) { this.toast(pd.why, 'warn'); return; }
+    if (!pd.park) { this.toast('Car park: no road along its sides', 'warn'); return; }
+    if (pd.cost > this.money) { this.toast(`Not enough money: a car park this size costs $${pd.cost.toLocaleString()}`, 'warn'); return; }
+    const id = Math.max(0, ...this.parkDefs.map(d => d.id)) + 1, bays = pd.park.bays.length;
+    this.parkDefs.push({ ...pd.def, id });
+    this.traffic.spend('construction', pd.cost);
+    this.syncParks();
+    this.toast(`Car park: ${bays} bays ($${pd.cost.toLocaleString()})`, 'good');
+    this.scheduleSave(); this.emit();
+  }
+  /** the car parks' builds on the network (after each network change and on load), and the list to the city worker (which builds them too) */
+  private syncParks() {
+    this.parkBuilt = this.parkDefs.map(d => buildPark(this.net, d));
+    this.traffic.setParks(this.parkDefs);
+    this.parkGrounds();
+  }
+  /** the car parks' asphalt and bay lines, baked into the ground like a lot's car park (key park:{id}); a car park gone, or without a frontage, drops its patch */
+  private parkGrounds() {
+    const keep = new Set<string>();
+    this.parkDefs.forEach((d, k) => {
+      const pk = this.parkBuilt[k]; if (!pk) return;
+      const key = `park:${d.id}`, lines: number[] = [];
+      for (const b of pk.bays) {
+        if (b.dir % 2 === 0) for (const o of [-BAY_W / 2, BAY_W / 2]) lines.push(b.x - BAY_D / 2, b.y + o, b.x + BAY_D / 2, b.y + o);
+        else for (const o of [-BAY_W / 2, BAY_W / 2]) lines.push(b.x + o, b.y - BAY_D / 2, b.x + o, b.y + BAY_D / 2);
+      }
+      keep.add(key); this.setLotGround(key, [{ pts: [d.x, d.y, d.x + d.w, d.y, d.x + d.w, d.y + d.h, d.x, d.y + d.h], tex: 'asphalt', lines }]);
+    });
+    for (const key of this.parkGround) if (!keep.has(key)) this.setLotGround(key, null);
+    this.parkGround = keep;
+  }
+  /** the ground patch keys of the car parks (park:{id}) baked now */
+  private parkGround = new Set<string>();
+  /** removes car park k (no refund): its parked cars go with it */
+  private removePark(k: number) { this.dropParkCars(this.parkDefs[k]!.id); this.parkDefs.splice(k, 1); this.syncParks(); }
+  /** removes the parked car props of car park id (they are contiguous from bay 0) */
+  private dropParkCars(id: number) {
+    for (let i = 0; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
+  }
+  /** the parked cars: the first `parked` bays of each car park (nearest its entrances first) get a car, an auto prop park:{id}:{i} (never saved), facing its
+   *  bay and centred on it; only the difference is added or removed, at most twice a second */
+  private syncParkCars(now: number) {
+    if (now - this.parkSyncAt < 500) return;
+    this.parkSyncAt = now;
+    const views = this.traffic.parks;
+    for (let k = 0; k < this.parkDefs.length; k++) {
+      const id = this.parkDefs[k]!.id, pk = this.parkBuilt[k] ?? null, v = views.find(q => q.id === id);
+      const want = pk && v ? Math.min(v.parked, pk.bays.length) : 0;
+      for (let i = 0; i < want; i++) {
+        const key = `park:${id}:${i}`, have = this.parkCars.get(key);
+        if (have && this.props.has(have)) continue;
+        const bay = pk!.bays[i]!, item = PARK_CARS[bay.dir]![i % PARK_CARS[bay.dir]!.length]!, b = LIBRARY[item]!.boxes[0]!;
+        this.parkCars.set(key, this.addProp(item, bay.x - b.dx / 2, bay.y - b.dy / 2, false, 1, key));
+      }
+      for (let i = want; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
+    }
+  }
+  /** moves the camera to car park id's centre, keeping the zoom */
+  goToPark(id: number) { const d = this.parkDefs.find(q => q.id === id); if (!d) return; this.cam.X = worldX(d.x + d.w / 2, d.y + d.h / 2); this.cam.Y = worldY(d.x + d.w / 2, d.y + d.h / 2); this.clampCam(); this.emit(); }
+  /** dev: n cars sent to car park id (the city worker parks them as bays allow; see parkTest there) */
+  parkTest(id: number, n: number) { this.traffic.parkTest(id, n); }
+  /** the car park bays as 1 px outlines (one stroke): the rect of each bay, its depth along the bay's facing (dir even: x) */
+  private bayOutlines(ctx: CanvasRenderingContext2D, bays: { x: number; y: number; dir: number }[]) {
+    this.setIso(ctx); ctx.beginPath();
+    for (const b of bays) { const ex = b.dir % 2 === 0 ? BAY_D / 2 : BAY_W / 2, ey = b.dir % 2 === 0 ? BAY_W / 2 : BAY_D / 2; ctx.rect(b.x - ex, b.y - ey, 2 * ex, 2 * ey); }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = this.dpr; ctx.stroke();
+  }
+  /** the car parks over the baked ground: red when it lost its frontage, its entrances as amber dots with a line to its edge, and the label
+   *  P · parked/bays at its centre */
+  private drawParks(ctx: CanvasRenderingContext2D) {
+    const dpr = this.dpr;
+    for (let k = 0; k < this.parkDefs.length; k++) {
+      const d = this.parkDefs[k]!, pk = this.parkBuilt[k] ?? null;
+      // the asphalt and the bays are baked into the ground (parkGrounds); the overlay only marks a car park that lost its frontage
+      if (!pk) { this.setIso(ctx); ctx.beginPath(); ctx.rect(d.x, d.y, d.w, d.h); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(230,80,80,0.6)'; ctx.fill(); }
+      if (pk) for (const e of pk.entrances) {
+        const a = this.screen(clamp(e.x, d.x, d.x + d.w), clamp(e.y, d.y, d.y + d.h)), b = this.screen(e.x, e.y);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = '#ffbe3c'; ctx.lineWidth = 2 * dpr; ctx.stroke();
+        disc(ctx, b.x, b.y, 4 * dpr, '#ffbe3c');
+      }
+      const parked = this.traffic.parks.find(q => q.id === d.id)?.parked ?? 0, c = this.screen(d.x + d.w / 2, d.y + d.h / 2);
+      const label = `P · ${parked}/${pk ? pk.bays.length : 0}`;
+      ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
+      ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
+    }
+    ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+  /** the car park drag: the rect green where parkValid allows it, else red; its bays and entrances when it can be built; and the verdict at the cursor
+   *  (the reason, or the cost short of the money, or the bays and the cost) */
+  private drawParkPreview(ctx: CanvasRenderingContext2D) {
+    const pd = this.parkDrag; if (!pd) return;
+    const dpr = this.dpr, d = pd.def, pk = pd.park;
+    this.setIso(ctx); ctx.beginPath(); ctx.rect(d.x, d.y, d.w, d.h); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = pd.why ? 'rgba(230,80,80,0.3)' : 'rgba(80,200,120,0.3)'; ctx.fill();
+    if (pk) { this.bayOutlines(ctx, pk.bays); for (const e of pk.entrances) { const p = this.screen(e.x, e.y); disc(ctx, p.x, p.y, 4 * dpr, '#ffbe3c'); } }
+    const short = !pd.why && pd.cost > this.money, bad = !!pd.why || short;
+    const text = pd.why || (short ? `Not enough money: $${pd.cost.toLocaleString()}` : `${pk ? pk.bays.length : 0} bays · $${pd.cost.toLocaleString()}`);
+    const x = pd.mx * dpr + 14 * dpr, y = pd.my * dpr - 12 * dpr;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
+    ctx.fillStyle = bad ? '#fecaca' : '#bbf7d0'; ctx.fillText(text, x, y);
+    ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+  }
+
   // ---------- economy / save ----------
   /** the treasury, $ (the city's books, mirrored from the city worker; spend moves it at once); Infinity with unlimited money (the dev sandbox) */
   get money(): number { return this.traffic.unlimited ? Infinity : this.traffic.budget.money; }
@@ -811,6 +961,7 @@ export class Game {
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
+      parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -822,6 +973,7 @@ export class Game {
       for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) this.edit.setNodeType(n, type as NodeType); }
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
+      if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
       return true;
     } catch (e) { console.error('load failed', e); return false; }
@@ -830,6 +982,7 @@ export class Game {
     this.edit.clear(); this.snapshot = null;
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
+    this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
@@ -1081,6 +1234,7 @@ export class Game {
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);
+    this.syncParkCars(now);
     this.drawOverlay(now);
   }
 
@@ -1228,6 +1382,8 @@ export class Game {
     this.drawInspect(ctx);
     this.drawGroundOverlays(ctx);
     this.drawStadium(ctx);
+    this.drawParks(ctx);
+    this.drawParkPreview(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
