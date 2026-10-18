@@ -1128,8 +1128,8 @@ small public car parks on open town lots as part of the town's growth (a small t
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
 Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially the
-'Handover' entry under 'Phase 6R progress' (a bus fix may be uncommitted in the working tree; the next job is the
-approach flares, the slipways cars actually use, with the design written there). Then GAME-PLAN sections 1.0.00
+'Handover' entry under 'Phase 6R progress' (the next job is the approach
+flares, the slipways cars actually use, with the design written there). Then GAME-PLAN sections 1.0.00
 (the businesses), 1.0.01 (the calendar and signal tiers) and 1.0.0 (the owner's road and town changes). Carry on
 through the queue without asking between steps; still ask before pushing. Delegate coding to haiku-coder and checks to
 haiku-runner (the worker PC is `cworker`, 192.168.0.8, via scripts/worker/run.sh), commit locally after each verified
