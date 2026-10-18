@@ -17,6 +17,7 @@
     "worker:bench": "bash scripts/worker/run.sh \"npm run build && node scripts/perf/bench.mjs --serve --channel chrome --size 1\"",
     "sim:gate": "esbuild scripts/sim/gate.ts --bundle --platform=node --format=esm --outfile=output/sim/gate.mjs --log-level=warning && node output/sim/gate.mjs",
     "town:gate": "esbuild scripts/sim/town-gate.ts --bundle --platform=node --format=esm --outfile=output/sim/town-gate.mjs --log-level=warning && node output/sim/town-gate.mjs",
+    "towns:gate": "esbuild scripts/sim/towns-gate.ts --bundle --platform=node --format=esm --outfile=output/sim/towns-gate.mjs --log-level=warning && node output/sim/towns-gate.mjs",
     "fix:gate": "esbuild scripts/sim/fix-gate.ts --bundle --platform=node --format=esm --outfile=output/sim/fix-gate.mjs --log-level=warning && node output/sim/fix-gate.mjs",
     "terrain:preview": "esbuild scripts/terrain/preview.ts --bundle --platform=node --format=esm --outfile=output/terrain/preview.mjs --log-level=warning && node output/terrain/preview.mjs"
   },

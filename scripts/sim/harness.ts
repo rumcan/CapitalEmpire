@@ -3,12 +3,13 @@
 import { reachableSegs } from '../../src/game/lots/roads';
 import { LV } from '../../src/game/lots/town';
 import { City } from '../../src/game/city';
-import { CLASS, RoadNetwork, SK, type Leg, type Node, type Pt, type Seg } from '../../src/game/network';
+import { CLASS, RoadNetwork, SK, type ClassId, type Leg, type Node, type Pt, type Seg } from '../../src/game/network';
 import { NetEditor } from '../../src/game/netops';
 import { highwayRoute, splitByTerrain } from '../../src/game/structures';
 import { classAt, generateTerrain } from '../../src/game/terrain';
 import { TC, type Terrain } from '../../src/game/terrain/types';
 import { MAP } from '../../src/game/iso';
+import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from '../../src/game/lots/seedtowns';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -73,6 +74,28 @@ export function stepSecond(h: Harness, s: number, hooks?: StepHooks): StepResult
     }
   }
   return r;
+}
+
+/** the three towns at once (a new valley, as the engine's seedTowns): their street grids as one edit with no highway, the city's terrain with the
+ *  centres (the highway entry if any, else the first centre, as the city's entry), then the stamp: each town grown to perTown residents (timed) */
+export function setupTowns(seed: number, perTown = TOWN_POP): Harness & { centres: Pt[]; stampMs: number; stampEvents: number } {
+  const t = generateTerrain(seed);
+  const city = new City(1);
+  const editor = new NetEditor(new RoadNetwork());
+  editor.net.paintData = false;
+  const cls = (x: number, y: number) => classAt(t, x, y);
+  const centres = townCentres(t);
+  const byClass = new Map<ClassId, Leg[]>();
+  for (const c of centres) {
+    const g = townGrid(c, TOWN_BLOCKS, cls);
+    g.legs.forEach((l, i) => { const id = g.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
+  }
+  for (const [id, legs] of byClass) editor.addLegs(legs, CLASS[id], 0);
+  const hy = t.highway, entry: Pt = hy.x >= 0 ? { x: hy.x, y: hy.y } : centres[0]!;
+  city.terrain(t.cls, entry, seed, centres);
+  city.netOps(editor.commit(true));
+  const t0 = performance.now(), ev = city.stamp(perTown), stampMs = performance.now() - t0;
+  return { t, city, editor, entry: centres[0]!, cls, growHist: [], lastBridge: -Infinity, bridges: 0, gravelLegs: 0, stepMs: 0, centres, stampMs, stampEvents: ev.length };
 }
 
 /** the distance from p to the centre line of a seg */

@@ -20,6 +20,7 @@ import { LK, LaneGraph, laneAt } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
 import { compose, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
+import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { phaseState } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
@@ -166,12 +167,13 @@ export class Game {
     const save = opts.bench ? null : await readSave(); if (this.dead) return;
     let loaded: SaveV5 | null = null;
     if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
-    else if (!save || !this.load(save)) { this.genTerrain(newSeed()); this.seedTown(); }
+    else if (!save || !this.load(save)) { this.genTerrain(newSeed()); this.seedTowns(); }
     else loaded = save;
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
+    if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career);
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
@@ -722,7 +724,7 @@ export class Game {
   /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
   private sendTerrain() {
     const t = this.terrain, h = t.highway;
-    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed);
+    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, townCentres(t).flatMap(p => [p.x, p.y]));
   }
   /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
   private townGrow(legs: Leg[]) {
@@ -791,7 +793,9 @@ export class Game {
   }
   newTown() {
     this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain); this.sendTerrain();
-    this.seedTown(); this.afterLoad(); void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
+    this.seedTowns(); this.afterLoad();
+    if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
+    void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
   }
   clearTown() { this.reset(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
   /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed
@@ -812,6 +816,22 @@ export class Game {
     });
   }
 
+  /** a new valley: the three towns' street grids (townGrid: the legs on buildable ground, the middle lines avenues), laid as one edit; the
+   *  city worker stamps the towns to TOWN_POP residents after the network arrives (stampPending). No lamps yet: the net is rebuilt only by
+   *  afterLoad's commit, so the lamps would need a second pass there. */
+  private stampPending = false;
+  seedTowns() {
+    const cs = townCentres(this.terrain), cls = (x: number, y: number) => classAt(this.terrain, x, y);
+    if (!cs.length) return;
+    const byClass = new Map<ClassId, Leg[]>();
+    for (const c of cs) {
+      const g = townGrid(c, TOWN_BLOCKS, cls);
+      g.legs.forEach((l, i) => { const id = g.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
+    }
+    for (const [id, legs] of byClass) this.edit.addLegs(legs, CLASS[id], 0);
+    this.cam.X = worldX(cs[0]!.x, cs[0]!.y); this.cam.Y = worldY(cs[0]!.x, cs[0]!.y);
+    this.stampPending = true;
+  }
   /** A starter Maple Falls showing every road type: highway with a 45° approach, a boulevard, an avenue, a roundabout, lights with slipways, streets and a lane. */
   seedTown() {
     const { start } = this.terrain, Ox = clamp(start.x + 32 - 80, 8, MAP - 168), Oy = clamp(start.y + 32 - 80, 8, MAP - 168);

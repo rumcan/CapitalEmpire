@@ -114,7 +114,7 @@ export default function App() {
               <button className={`btn ${game.panel === 'bottlenecks' ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)">Bottlenecks</button>
               <button className={`btn ${game.showGrid ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)">Grid</button>
               <button className="btn" onClick={() => game.save()} title="Saved automatically; force a save now">Save</button>
-              <button className="btn" onClick={() => { if (confirm('Start a fresh Maple Falls starter town? Your current town will be replaced.')) game.newTown(); }}>New town</button>
+              <button className="btn" onClick={() => { if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
               <button className="btn" onClick={() => { if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>
               <button className="btn" onClick={() => setHelp(true)}>?</button>
             </div>

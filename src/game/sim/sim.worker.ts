@@ -4,6 +4,7 @@
 // gravel extensions and the timing logs. The city logic itself is in City, so the town gate runs the same code headless.
 import type { NetOp } from '../ground-protocol';
 import { City } from '../city';
+import type { Pt } from '../network';
 import type { Lot } from '../lots/lots';
 import type { TownEvent } from '../lots/town';
 import type { Ledger } from '../budget';
@@ -49,9 +50,11 @@ function postWatch() {
   post({ t: 'watch', node: watchXY, n, lines }, [lines.buffer as ArrayBuffer]); watchNext = performance.now() + 1000;
 }
 
-/** a new valley: the city takes its terrain; the town starts again (no lots yet) and posts its totals and books */
+/** a new valley: the city takes its terrain and the town centres (flat x, y pairs); the town starts again (no lots yet) and posts its totals and books */
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
-  city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed);
+  const towns: Pt[] = [];
+  for (let i = 0; i + 1 < m.towns.length; i += 2) towns.push({ x: m.towns[i]!, y: m.towns[i + 1]! });
+  city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed, towns);
   postTown([], true); postBudget(null);
 }
 
@@ -114,6 +117,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'loan': city.loan(m.take); postBudget(null); break;
       case 'budget': city.setBudget(m.save, m.career); postBudget(null); break;
       case 'report': postReport(); break;
+      case 'stamp': postTown(city.stamp(m.pop), true); break;
       case 'inspect': inspecting = m.slot; break;
       case 'watch':
         if (m.x < 0) { city.unwatch(); watching = false; watchXY = null; }

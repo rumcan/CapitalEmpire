@@ -87,8 +87,10 @@ export class SimClient {
   private post(m: ToSim) { this.worker.postMessage(m); }
   /** replaces the worker's network (the same ops the ground workers get) */
   netOps(ops: NetOp[]) { if (ops.length) this.post({ t: 'net', ops }); }
-  /** a new valley: its terrain classes (copied), the highway entry (tiles) and the seed; the town starts again. Send before the net ops. */
-  terrain(cls: Uint8Array, entry: [number, number], seed: number) { this.post({ t: 'terrain', cls, entry, seed }); }
+  /** a new valley: its terrain classes (copied), the highway entry (tiles), the seed and the town centres (flat x, y pairs in tiles; none: the single town); the town starts again. Send before the net ops. */
+  terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = []) { this.post({ t: 'terrain', cls, entry, seed, towns }); }
+  /** the towns built at once (after a new valley's net ops): each grows to pop residents; the town's lots and totals come back as a town message */
+  stamp(pop: number) { this.post({ t: 'stamp', pop }); }
   /** the town's growth option by id (see GROWTH_OPTIONS) */
   setOption(id: string) { this.option = id; this.post({ t: 'option', id }); }
   /** a saved town for the worker (its lots, the sim clock, s, and its books or the treasury of an old save): after the net ops of a load */

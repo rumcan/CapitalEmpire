@@ -5,7 +5,12 @@ import { BLOCK } from './roads';
 import { TC } from '../terrain/types';
 
 /** the blocks a town grid spans each way (even: the two middle lines are avenues) */
-export const TOWN_BLOCKS = 6;
+export const TOWN_BLOCKS = 8;
+/** the residents each town has at a new valley (the stamp: see Town.stamp) */
+export const TOWN_POP = 1000;
+
+/** the centres (tiles) of the terrain's town sites: the top-left tile plus half the site's size */
+export const townCentres = (t: { towns: { x: number; y: number; size: number }[] }): Pt[] => t.towns.map(s => ({ x: s.x + s.size / 2, y: s.y + s.size / 2 }));
 
 /** true if every tile along the leg a-b (one sample per tile, at 0 and +-hw across) is GROUND or PATCH; a and b are axis aligned */
 function landOk(a: Pt, b: Pt, hw: number, classAt: (x: number, y: number) => number): boolean {

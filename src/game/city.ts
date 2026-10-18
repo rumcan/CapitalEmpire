@@ -8,7 +8,7 @@ import { MAP } from './iso';
 import { TC } from './terrain/types';
 import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
-import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
+import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
 import { LaneGraph } from './sim/lanes';
 import { Sim, type CarInfo } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
@@ -71,8 +71,10 @@ export class City {
   private dayIdx = -1; private tradeAt = { arrived: 0, punctual: 0 };
   /** the step calls so far (one per wall-clock frame in the worker), the ring of their times (ms), and the last network batch's times */
   calls = 0; graphMs = 0; lotsMs = 0; lanes = 0;
-  /** the segs reachable by road from the entry */
+  /** the segs reachable by road from the entry (or from the town centres, when there are some) */
   private reach = new Set<Seg>();
+  /** the town centres (tiles) of the valley (none on the single-town path): each is a town the planner grows in turn, hour by hour */
+  centres: Pt[] = [];
   private cls: Uint8Array | null = null; private water: Float32Array | null = null; private optId = GROWTH_OPTIONS[0].id;
   private ctx: TownCtx;
   /** the game hour the town's access was copied to the town and the built lots given to the sim (-1 = none yet: at the next step) */
@@ -107,10 +109,11 @@ export class City {
     return this.water[cy * WATER_N + cx]!;
   }
 
-  /** a new valley: its terrain classes, the water field, the highway entry (tiles) and the seed; the town starts again, at the sim time (no lots yet) */
-  terrain(cls: Uint8Array, entry: Pt, seed: number): void {
+  /** a new valley: its terrain classes, the water field, the highway entry (tiles), the seed and the town centres (tiles; none: the single town); the town starts again, at the sim time (no lots yet) */
+  terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = []): void {
     this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
-    this.town = new Town(seed); this.town.option = optionOf(this.optId); this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
+    this.centres = towns;
+    this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.setBudget(null, null);
@@ -168,7 +171,7 @@ export class City {
   private lotsOps(): { lotsAdded: Lot[]; lotsRemoved: string[]; events: TownEvent[] } {
     const t0 = performance.now();
     const { added, removed } = this.lots.update(this.net, this.cls);
-    this.reach = reachableSegs(this.net, this.ctx.entry);
+    this.reach = this.centres.length ? reachableFrom(this.net, [this.ctx.entry, ...this.centres], [Infinity, ...this.centres.map(() => 80)]) : reachableSegs(this.net, this.ctx.entry);
     const events = this.town.onLots(added, removed);
     this.lotsMs = performance.now() - t0;
     return { lotsAdded: added, lotsRemoved: removed, events };
@@ -183,6 +186,9 @@ export class City {
     const ev = this.town.restore(saved, this.sim.t); this.syncHour = -1;
     return ev;
   }
+
+  /** the towns built at once (a new valley, see Town.stamp): each town grows to perTown residents; returns the 'complete' events (a new array) */
+  stamp(perTown: number): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.t); this.syncHour = -1; return ev; }
 
   /** n sim steps (a frame at speed n), then the town to the sim time, then the planner (once a game hour). Returns the town's events
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
@@ -243,6 +249,13 @@ export class City {
     this.sim.setBuilt(list);
   }
 
+  /** the centre of town k: the mean of its BUILT lots (the town's centre while it has none) */
+  private townCentre(k: number): Pt {
+    let sx = 0, sy = 0, m = 0;
+    for (const s of this.town.states.values()) if (s.level >= LV.BUILT && this.town.townOf(s.key) === k) { const l = this.lots.lots.get(s.key); if (l) { sx += l.c.x; sy += l.c.y; m++; } }
+    return m ? { x: sx / m, y: sy / m } : this.centres[k]!;
+  }
+
   /** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
    *  (no net ops back yet: the next net batch clears it, and so does an hour, in case the engine skipped it) */
   private planGrow(): Leg[] | null {
@@ -252,7 +265,10 @@ export class City {
     if (h === this.planHour) return null;
     this.planHour = h;
     if (this.pendingGrow && this.sim.t - this.growAt < GAME_HOUR) return null;
-    const c: RoadPlanCtx = { net: this.net, lots: this.lots, town: this.town, cls, entry: this.ctx.entry, rnd: this.planRnd };
+    const K = this.centres.length, k = K ? this.planHour % K : 0;
+    const c: RoadPlanCtx = K
+      ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: this.townCentre(k), built: this.town.builtK[k] }
+      : { net: this.net, lots: this.lots, town: this.town, cls, entry: this.ctx.entry, rnd: this.planRnd };
     if (!needsLand(c)) { this.growStats.enough++; return null; }
     const legs = planExtension(c);
     if (!legs) { this.growStats.none++; return null; }
