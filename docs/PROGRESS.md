@@ -627,6 +627,22 @@ top bottleneck measurably restarts growth). Suggested steps:
    browser on the bench city. Note: the in-app browser pane is throttled while hidden (no animation frames, slow
    workers), so its timings mean nothing; use the worker bench.
 
+4. **Before/after and the access overlay. DONE** (2026-10-18). The City pushes a cumulative snapshot at each game hour's
+   start (`City.hours`, 96 kept: time lost (`Sim.lostTotal`), arrivals, ratio sums, abandoned, lots started, pop, built);
+   the report carries them. `src/game/beforeafter.ts` (`tests/beforeafter.test.ts`): windows between two snapshots, rush
+   windows 07–09 and 16–18, `lastRush` (else the last 2 hours), `nextRush`, `compare` (time lost per trip, trips, trip
+   time vs free flow, abandoned, lots started). Bottleneck panel: Take snapshot → the before window is the last rush, the
+   after window the first rush starting after the current hour (Skip to rush), then a table of changes. Seen in the
+   browser: day 2 16–18 vs day 3 07–09. The access overlay (key O, always at the planner tier) adds per zone `+n` lots
+   started in the last game day, `−n` declining, a red edge and "growth stopped" over 1.8, and a legend. The Bottlenecks
+   list hides items under 0.1 veh-min an hour (turning cars, not bottlenecks) and scrolls above the perf panel.
+5a. **Career milestones (module). DONE** (2026-10-18). `src/game/career.ts` (`tests/career.test.ts`): Hamlet (gravel, lane,
+   street; plain and signal junctions), Village 250 (road, $10k), Small town 1,000 (roundabouts, $20k), Town 2,500
+   (avenue, slipways, tunnels, $30k), Large town 4,000 (boulevard, $50k), City 6,000 = the Career win. Bridges are never
+   locked. Grants are income in the ledger. **Upkeep raised from 0.4% to 1% of the build cost a day**: at 0.4% a road
+   repaid its price only after 250 days, so even reckless building could not bankrupt a town; at 1% the starter town
+   (pop 69) runs about −$1.6k a day until it grows.
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
 (budget + bottleneck loop) at step 1 and carry on through the steps without asking between them. Delegate coding to
