@@ -202,7 +202,8 @@ export class LotTrips {
     const next = new Map<string, Rec>();
     for (const b of list) {
       let r = this.recs.get(b.lot.key);
-      if (!r) r = { lot: b.lot, use: b.use, pop: b.pop, jobs: b.jobs, acc: 0, pend: [], busy: false };
+      // a new lot starts its trip counter at a random phase, or every lot built in the same hour would leave in the same hour
+      if (!r) r = { lot: b.lot, use: b.use, pop: b.pop, jobs: b.jobs, acc: this.rnd(), pend: [], busy: false };
       r.lot = b.lot; r.use = b.use; r.pop = b.pop; r.jobs = b.jobs;
       next.set(b.lot.key, r);
     }
