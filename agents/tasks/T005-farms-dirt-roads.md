@@ -1,6 +1,6 @@
 # T005 · Dirt roads and farm lots
 
-Status: open
+Status: in review (#4)
 Module: `src/game/ext/farms/` · Tests: `tests/ext-farms.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
