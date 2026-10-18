@@ -62,7 +62,7 @@ export class Game {
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0; junctionType: NodeType = 'signal';
   selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
-  /** the access overlay (key O): zones with built lots shaded by access; always on below DISTRICT_Z */
+  /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
   showAccess = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
@@ -925,7 +925,7 @@ export class Game {
     }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
-    if (this.showAccess || this.cam.z < DISTRICT_Z) this.drawAccess(ctx);
+    if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
     if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
     this.drawGroundOverlays(ctx);
     for (const p of [this.selected, this.hoverProp]) {
@@ -963,7 +963,7 @@ export class Game {
     for (let z = 0; z < 256; z++) {
       if (!T.builtZone[z]) continue;
       const a = T.access[z]!;
-      ctx.fillStyle = a < 1.3 ? 'rgba(61,220,132,0.25)' : a <= 1.8 ? 'rgba(255,176,32,0.25)' : 'rgba(255,59,59,0.25)';
+      ctx.fillStyle = a < 1.3 ? 'rgba(61,220,132,0.16)' : a <= 1.8 ? 'rgba(255,176,32,0.16)' : 'rgba(255,59,59,0.16)';
       ctx.fillRect((z & 15) * 128, (z >> 4) * 128, 128, 128);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
