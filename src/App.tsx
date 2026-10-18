@@ -297,7 +297,7 @@ function BottleneckPanel({ game }: { game: Game }) {
                     ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-bold text-slate-900" style={{ background: LOS_COL[it.los] }}>{it.los}</span>
                     : <span className="shrink-0 text-[10px] tabular-nums text-slate-300">v/c {it.vc.toFixed(2)}</span>}
                 </div>
-                <div className="pl-6 text-[10px] text-slate-400">{(it.loss / 60).toFixed(1)} veh-min lost per hour</div>
+                <div className="pl-6 text-[10px] text-slate-400">{(it.loss / 60).toFixed(1)} veh-min lost per hour{it.vc < 0.3 && (it.los === 'E' || it.los === 'F') ? <span className="text-amber-300"> · queued back from downstream</span> : it.vc >= 0.8 ? <span className="text-red-300"> · at capacity</span> : null}</div>
               </button>
             ))}
           </div>
