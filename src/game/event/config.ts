@@ -62,3 +62,7 @@ export const TOLL_PRICE = 8;
 export const tollPrice = (level: number): number => Math.round(TOLL_PRICE * (1 + 0.25 * (level - 1)));
 /** the route cost a driver puts on a toll, s (a movement into a toll plaza costs this much more) */
 export const TOLL_ROUTE_COST = 25;
+/** what a new toll gate costs to build, $ (the base: the plaza and its taper) */
+export const TOLL_BASE_COST = 10000;
+/** what each booth of a new toll gate adds to its cost, $ */
+export const TOLL_BOOTH_COST = 4000;

@@ -8,7 +8,7 @@ import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, classUnlocked, junctionUnlocked, unlockOf } from './game/career';
-import { LOT_TILE_COST, PARTY } from './game/event/config';
+import { LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './game/event/config';
 import type { SurgeView, TownResult } from './game/event/surge';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
@@ -17,6 +17,7 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'junction', label: 'Junctions', key: 'J', icon: '🚦' },
   { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
   { id: 'park', label: 'Car park', key: 'P', icon: '🅿️' },
+  { id: 'toll', label: 'Toll gate', key: 'T', icon: '🛂' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** the price line of a locked road class or junction type: the residents it unlocks at */
@@ -150,6 +151,7 @@ export default function App() {
                 </Panel>
               )}
               {game.tool === 'park' && <ParkPanel game={game} />}
+              {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'select' && <SelectPanel game={game} />}
             </div>
           </div>
@@ -335,7 +337,7 @@ function RoundPanel({ game }: { game: Game }) {
               <div className="flex gap-1">{goBtn}<button className="chip chip-on" onClick={() => game.startNow()}>Start now</button></div>
             </div>
             <p className="text-xs text-slate-300">{crowd}</p>
-            <p className="text-xs text-slate-400">upkeep {money(r.upkeep)}</p>
+            <p className="text-xs text-slate-400">upkeep {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
         )}
         {r.stage === 'surge' && (
@@ -346,7 +348,7 @@ function RoundPanel({ game }: { game: Game }) {
             </div>
             {r.surge && <SurgeTowns rows={liveRows(r.surge)} total={{ parked: r.surge.parked.reduce((a, b) => a + b, 0), sent: r.surge.sent.reduce((a, b) => a + b, 0) }} />}
             <p className="text-xs text-slate-300">{crowd}</p>
-            <p className="text-xs text-slate-400">upkeep {money(r.upkeep)}</p>
+            <p className="text-xs text-slate-400">upkeep {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
         )}
         {r.stage === 'eval' && (
@@ -356,7 +358,7 @@ function RoundPanel({ game }: { game: Game }) {
               <button className="chip chip-on" onClick={() => game.closeRound()}>Back to the valley</button>
             </div>
             {last?.byTown && <SurgeTowns rows={resultRows(last.byTown)} />}
-            <p className="text-xs text-slate-400">upkeep paid {money(r.upkeep)}</p>
+            <p className="text-xs text-slate-400">upkeep paid {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
         )}
       </Panel>
@@ -553,6 +555,32 @@ function ParkPanel({ game }: { game: Game }) {
   );
 }
 
+/** the toll gate tool: how it works, the price per car (at the round's level), the booths a new gate has and its cost, and the list of toll gates (Go) */
+function TollPanel({ game }: { game: Game }) {
+  const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST;
+  return (
+    <Panel title="Toll gate">
+      <p className="text-xs leading-relaxed text-slate-300">
+        <b className="text-slate-100">Click a straight road.</b> The gate is a plaza across it: each car that passes a booth pays {money(price)}. Drivers avoid a toll road when a free way exists, so close the free ways. R flips the way in. Roads cannot cross the plaza; bulldozing it removes the gate (the road stays, no refund).
+      </p>
+      <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
+        <div className="flex justify-between"><span className="text-slate-400">Toll per car</span><span>{money(price)}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Booths per new gate</span><span>{game.tollBooths}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost of a new gate</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
+      </div>
+      <div className="mt-2 max-h-64 overflow-y-auto">
+        {game.tollDefs.length === 0 && <p className="text-xs text-slate-400">No toll gates yet.</p>}
+        {game.tollDefs.map(d => (
+          <div key={d.id} className="flex items-center justify-between gap-2 py-1 text-xs">
+            <span className="tabular-nums text-slate-200">#{d.id} · {d.booths} booths</span>
+            <button className="btn" onClick={() => game.goToToll(d.id)}>Go</button>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 function JunctionPanel({ game }: { game: Game }) {
   const n = game.hoverNode;
   return (
@@ -639,6 +667,7 @@ function hintFor(g: Game) {
     case 'junction': return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here` : 'Hover a junction (three or more roads; roundabouts also work on bends)';
     case 'bulldoze': return 'Click objects or roads to remove them';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
+    case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
     default: return 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
   }
 }

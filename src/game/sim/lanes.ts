@@ -52,7 +52,7 @@ const VMAX: Record<string, number> = { gravel: 8, lane: 8, street: 11, road: 17,
 const isLive = (net: RoadNetwork, n: Node) => n.segs.length > 0 && net.nodes.get(keyOf(n)) === n;
 const armOf = (n: Node, s: Seg): Arm | undefined => n.arms.find(a => a.seg === s);
 /** offset of lane k of a seg's class from the centre line, tiles (a single lane at [0] sits at 0.45) */
-const laneOff = (s: Seg, k: number) => { const c = s.cls.laneCentres; return c.length === 1 && c[0] === 0 ? 0.45 : c[k]; };
+export const laneOff = (s: Seg, k: number) => { const c = s.cls.laneCentres; return c.length === 1 && c[0] === 0 ? 0.45 : c[k]; };
 const startPt = (l: Lane): Pt => ({ x: l.pts[0], y: l.pts[1] });
 const endPt = (l: Lane): Pt => { const n = l.pts.length; return { x: l.pts[n - 2], y: l.pts[n - 1] }; };
 const startDir = (l: Lane): Pt => norm(sub({ x: l.pts[2], y: l.pts[3] }, startPt(l)));

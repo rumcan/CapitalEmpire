@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type SegKind } from './network';
+import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, dot, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
 import { NetEditor, netToOps } from './netops';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
@@ -13,13 +13,14 @@ import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { insideSite, type Site } from './event/site';
-import { BAY_D, BAY_W } from './event/config';
+import { BAY_D, BAY_W, BOOTH_W, PLAZA_LEN, START_BOOTHS, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './event/config';
+import { plazaEdge, plazaIslands, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
 import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
-import { LK, LaneGraph, laneAt } from './sim/lanes';
+import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
 import { compose, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
@@ -39,6 +40,10 @@ export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: 
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
 /** a filled disc of radius r at (x, y) in device px (the overlay's identity transform), colour col */
 function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, col: string) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); }
+/** a closed path over a flat x y list, in the current transform's units */
+function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
+/** the distance from p to the seg s, tiles */
+function segDist(p: Pt, s: Seg): number { const d = sub(s.b, s.a), L2 = dot(d, d) || 1, k = Math.min(1, Math.max(0, dot(sub(p, s.a), d) / L2)); return vlen(sub(p, add(s.a, mul(d, k)))); }
 /** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
 function labelPiece(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, col: string): number { ctx.strokeText(s, x, y); ctx.fillStyle = col; ctx.fillText(s, x, y); return x + ctx.measureText(s).width; }
 
@@ -128,6 +133,10 @@ export class Game {
   parkDefs: CarParkDef[] = []; private parkBuilt: (CarPark | null)[] = [];
   /** the parked car props by key park:{id}:{i}, and the time of the last sync of them (ms) */
   private parkCars = new Map<string, Prop>(); private parkSyncAt = -Infinity;
+  /** the toll gates as the player placed them (saved; ids 1..n), their plaza segs by id (only while the gate stands), their ground keys, the booths a new gate gets,
+   *  whether R has flipped the way in, and the toll tool's plan at the cursor (seg null: no road within 4 tiles; why: the reason it cannot be built, '' if it can) */
+  tollDefs: TollDef[] = []; private tollSegs = new Map<number, Seg>(); private tollGround = new Set<string>(); tollBooths = START_BOOTHS; private tollFlip = false;
+  private tollHover: null | { mx: number; my: number; seg: Seg | null; a: Pt; b: Pt; why: string; cost: number; booths: number } = null;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
   private saveTimer = 0; private blocksTimer = 0;
@@ -408,7 +417,7 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
-    this.syncLamps(); if (this.parkDefs.length) this.syncParks(); this.scheduleSave(); this.emit();
+    this.syncLamps(); if (this.parkDefs.length) this.syncParks(); if (this.tollDefs.length) this.syncTolls(); this.scheduleSave(); this.emit();
   }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
@@ -416,11 +425,11 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
-    this.ground.invalidateAll(); this.syncParks();
+    this.ground.invalidateAll(); this.syncParks(); this.syncTolls(true);
   }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; } this.tool = t; this.emit(); }
+  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; this.tollHover = null; } this.tool = t; this.emit(); }
   private snapNode(p: Pt): Pt { return { x: clamp(Math.round(p.x), 2, MAP - 2), y: clamp(Math.round(p.y), 2, MAP - 2) }; }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
@@ -517,6 +526,23 @@ export class Game {
     }
     return false;
   }
+  /** does a road corridor of half width hw run into a toll plaza (its outline padded by 1 tile)? Legs along the plaza's own centre line are fine (upgrading the road) */
+  private crossesToll(legs: Leg[], hw: number): boolean {
+    for (const d of this.tollDefs) {
+      const s = this.tollSegs.get(d.id); if (!s) continue;
+      const h = s.cls.h, W = plazaEdge(d.booths, laneOff(s, 0)), onLine = (p: Pt) => Math.abs(plazaLocal(d, p.x, p.y).o) < 0.05;
+      for (const l of legs) {
+        if (onLine(l.a) && onLine(l.b)) continue;
+        const dv = sub(l.b, l.a), L = vlen(dv); if (!L) continue;
+        const u = mul(dv, 1 / L), n = perp(u);
+        for (let k = 0; k <= L; k += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
+          const f = plazaLocal(d, l.a.x + u.x * k + n.x * o, l.a.y + u.y * k + n.y * o);
+          if (f.t >= -1 && f.t <= PLAZA_LEN + 1 && f.o >= -h - 1 && f.o <= W + 1) return true;
+        }
+      }
+    }
+    return false;
+  }
   /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads); or the stadium */
   private blockedForRoad(legs: Leg[], hw: number): boolean {
     if (this.crossesStadium(legs, hw)) return true;
@@ -556,6 +582,7 @@ export class Game {
     if (st.err) { this.toast(st.err, 'warn'); return; }
     if (this.crossesStadium(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross the stadium', 'warn'); return; }
     if (this.crossesPark(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a car park', 'warn'); return; }
+    if (this.crossesToll(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a toll plaza', 'warn'); return; }
     const total = this.net.legsLength(parts);
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
     const blocking = near.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car');
@@ -594,6 +621,8 @@ export class Game {
       if (p && !p.auto) { const it = LIBRARY[p.item]; this.removeProp(p); this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name} (+$${Math.round(it.cost * 0.5).toLocaleString()})`); return; }
       const k = this.parkIndexAt(t);
       if (k >= 0) { const id = this.parkDefs[k]!.id; this.removePark(k); this.scheduleSave(); this.toast(`Removed car park #${id} (no refund)`); this.emit(); return; }
+      const g = this.tollIndexAt(t);
+      if (g >= 0) { const id = this.tollDefs[g]!.id; this.removeToll(g); this.scheduleSave(); this.toast(`Removed toll gate #${id} (the road stays; no refund)`); this.emit(); return; }
     }
     const piece = this.net.pieceNear(t); if (!piece) return;
     this.edit.removePiece(piece);
@@ -660,6 +689,7 @@ export class Game {
     switch (this.tool) {
       case 'road': this.roadClick(mx, my); break;
       case 'junction': this.junctionClick(mx, my); break;
+      case 'toll': this.tollUpdate(mx, my); this.tollClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
       case 'park': { const t = this.tileAt(mx, my), r = Math.round; this.parkDrag = { x0: r(t.x), y0: r(t.y), x1: r(t.x), y1: r(t.y), def: { id: 0, x: 0, y: 0, w: 0, h: 0 }, park: null, why: '', cost: 0, mx, my }; this.dragging = { kind: 'park', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; this.parkUpdate(mx, my); break; }
     }
@@ -676,9 +706,10 @@ export class Game {
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
     if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg, 5);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
+    if (this.tool === 'toll') this.tollUpdate(mx, my);
   }
   pointerUp() { if (this.dragging?.kind === 'park') this.parkRelease(); this.dragging = null; }
-  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; }
+  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.tollHover = null; }
   doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
@@ -714,10 +745,11 @@ export class Game {
       case 'f': case 'F': this.showFlow = !this.showFlow; if (this.showFlow) this.traffic.requestReport(); this.emit(); break;
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
-      case 'r': case 'R': this.setTool('road'); break;
+      case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); } else this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
       case 'x': case 'X': this.setTool('bulldoze'); break;
       case 'p': case 'P': this.setTool('park'); break;
+      case 't': case 'T': this.setTool('toll'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case '1': case '2': case '3': case '4': case '5': case '6': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
@@ -937,6 +969,125 @@ export class Game {
     ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
   }
 
+  // ---------- toll gates (Phase 5 step 5b) ----------
+  /** the road seg whose ends are the plaza's a and b (either way round, within 1e-3), or null */
+  private tollSeg(d: TollDef): Seg | null {
+    const at = (p: Pt, x: number, y: number) => Math.abs(p.x - x) < 1e-3 && Math.abs(p.y - y) < 1e-3;
+    for (const s of this.net.segsNear({ x: (d.ax + d.bx) / 2, y: (d.ay + d.by) / 2 }, PLAZA_LEN / 2 + 1)) {
+      if ((at(s.a, d.ax, d.ay) && at(s.b, d.bx, d.by)) || (at(s.a, d.bx, d.by) && at(s.b, d.ax, d.ay))) return s;
+    }
+    return null;
+  }
+  /** the index of the toll gate whose plaza (tapers included) holds tile t, or -1 */
+  private tollIndexAt(t: Pt): number {
+    return this.tollDefs.findIndex(d => { const s = this.tollSegs.get(d.id); if (!s) return false; const f = plazaLocal(d, t.x, t.y); return f.t >= 0 && f.t <= PLAZA_LEN && f.o >= -s.cls.h && f.o <= plazaEdge(d.booths, laneOff(s, 0)); });
+  }
+  /** the toll tool's plan at the cursor: the nearest road piece within 4 tiles, the plaza it would make (its a → b is the inbound way: toward the stadium, R flips it),
+   *  and the verdict (why: the reason it cannot be built, '' if it can) */
+  private tollUpdate(mx: number, my: number) {
+    const t = this.tileAt(mx, my), booths = this.tollBooths, cost = TOLL_BASE_COST + booths * TOLL_BOOTH_COST;
+    let best: Seg | null = null, bd = 4, pr = 0;
+    for (const s of this.net.segsNear(t, 4)) {
+      const dv = sub(s.b, s.a), L = vlen(dv); if (!L) continue;
+      const u = mul(dv, 1 / L), k = clamp(dot(sub(t, s.a), u), 0, L), dist = vlen(sub(t, add(s.a, mul(u, k))));
+      if (dist < bd) { bd = dist; best = s; pr = k; }
+    }
+    if (!best) { this.tollHover = { mx, my, seg: null, a: t, b: t, why: 'Point at a straight road', cost, booths }; return; }
+    const seg: Seg = best, dv = sub(seg.b, seg.a), L = vlen(dv), u = mul(dv, 1 / L), P = add(seg.a, mul(u, pr));
+    const toward = !this.site || dot(u, sub(this.site.c, P)) >= 0, s0 = Math.round(pr - PLAZA_LEN / 2);
+    const p0 = add(seg.a, mul(u, s0)), p1 = add(seg.a, mul(u, s0 + PLAZA_LEN)), fwd = toward !== this.tollFlip;
+    const a = fwd ? p0 : p1, b = fwd ? p1 : p0, ends = Math.min(pr, L - pr), cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+    const junction = (p: Pt) => { for (const q of this.net.segsNear(p, 1)) if (q !== seg && segDist(p, q) < 0.6) return true; return false; };
+    let why = '';
+    if (seg.kind !== SK.GROUND) why = 'Toll gates go on ground-level road, not a bridge or tunnel';
+    else if (ends < PLAZA_LEN / 2 + 6) why = 'Too close to a junction: a toll gate needs 21 tiles of straight road at each side';
+    else if (junction(a) || junction(b)) why = 'A junction is in the way: move the gate';
+    else if (this.tollDefs.some(d => Math.hypot((d.ax + d.bx) / 2 - cx, (d.ay + d.by) / 2 - cy) < 60)) why = 'Another toll gate is within 60 tiles';
+    this.tollHover = { mx, my, seg, a, b, why, cost, booths };
+  }
+  /** the toll tool's click: a valid, affordable gate is built on the plan at the cursor (its plaza seg; the road is split at its ends) */
+  private tollClick() {
+    const h = this.tollHover; if (!h) return;
+    if (!h.seg) { this.toast('Click a straight road to put a toll gate on it', 'warn'); return; }
+    if (h.why) { this.toast(h.why, 'warn'); return; }
+    if (h.cost > this.money) { this.toast(`Not enough money: a toll gate with ${h.booths} booths costs $${h.cost.toLocaleString()}`, 'warn'); return; }
+    const s = h.seg, id = Math.max(0, ...this.tollDefs.map(d => d.id)) + 1, def: TollDef = { id, ax: h.a.x, ay: h.a.y, bx: h.b.x, by: h.b.y, booths: h.booths };
+    this.tollDefs.push(def);
+    this.edit.addLegs([{ a: h.a, b: h.b }], s.cls, s.style, [SK.GROUND]);
+    this.commitNetwork();
+    if (!this.tollDefs.includes(def)) { this.toast('The road would not take a toll gate here', 'warn'); this.tollUpdate(h.mx, h.my); return; }
+    this.traffic.setTolls(this.tollDefs);
+    this.traffic.spend('construction', h.cost);
+    this.puff((h.a.x + h.b.x) / 2, (h.a.y + h.b.y) / 2, 8);
+    this.toast(`Toll gate: ${h.booths} booths`, 'good');
+    this.tollUpdate(h.mx, h.my);
+  }
+  /** the toll gates' plaza segs after each network change (and on load): a gate whose plaza seg is gone is dropped; the ground is baked for the rest
+   *  (key toll:{id}); the worker gets the list when a gate was dropped, or when forced */
+  private syncTolls(force = false) {
+    const keep: TollDef[] = [], segs = new Map<number, Seg>();
+    for (const d of this.tollDefs) { const s = this.tollSeg(d); if (s) { keep.push(d); segs.set(d.id, s); } }
+    const dropped = keep.length !== this.tollDefs.length;
+    this.tollDefs = keep; this.tollSegs = segs;
+    const ground = new Set<string>();
+    for (const d of keep) { const key = `toll:${d.id}`, s = segs.get(d.id)!; ground.add(key); this.setLotGround(key, this.tollPatches(d, s)); }
+    for (const key of this.tollGround) if (!ground.has(key)) this.setLotGround(key, null);
+    this.tollGround = ground;
+    if (dropped || force) this.traffic.setTolls(this.tollDefs);
+  }
+  /** removes toll gate k (no refund): its plaza's ground goes; the road stays */
+  private removeToll(k: number) {
+    const d = this.tollDefs[k]!, key = `toll:${d.id}`;
+    this.tollDefs.splice(k, 1); this.tollSegs.delete(d.id); this.setLotGround(key, null); this.tollGround.delete(key);
+    this.traffic.setTolls(this.tollDefs);
+  }
+  /** the plaza's asphalt patches for toll gate d on seg s (baked like a car park's) */
+  private tollPatches(d: TollDef, s: Seg): LotPatch[] { return plazaQuads(d, s.cls.h, laneOff(s, 0)).map(pts => ({ pts, tex: 'asphalt' as const })); }
+  /** moves the camera to toll gate id's plaza, keeping the zoom */
+  goToToll(id: number) { const d = this.tollDefs.find(q => q.id === id); if (!d) return; const x = (d.ax + d.bx) / 2, y = (d.ay + d.by) / 2; this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit(); }
+  /** the toll gates over the baked ground: a booth island between each pair of booth lanes and at both outer sides (grey, with an amber roof dot), and the
+   *  label TOLL · $price above them (the price per car at the round's level) */
+  private drawTolls(ctx: CanvasRenderingContext2D) {
+    if (!this.tollDefs.length) return;
+    const dpr = this.dpr, price = tollPrice(this.traffic.round.level);
+    this.setIso(ctx); ctx.beginPath();
+    for (const d of this.tollDefs) { const s = this.tollSegs.get(d.id); if (s) for (const i of plazaIslands(d, laneOff(s, 0))) ring(ctx, i.quad); }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#d4d4d8'; ctx.fill(); ctx.strokeStyle = '#0f172a'; ctx.lineWidth = dpr; ctx.stroke();
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    for (const d of this.tollDefs) {
+      const s = this.tollSegs.get(d.id); if (!s) continue;
+      const off0 = laneOff(s, 0);
+      for (const i of plazaIslands(d, off0)) { const p = this.screen(i.c.x, i.c.y); disc(ctx, p.x, p.y, 2 * dpr, '#ffbe3c'); }
+      const mid = plazaPoint(d, PLAZA_LEN / 2, (-s.cls.h + plazaEdge(d.booths, off0)) / 2), c = this.screen(mid.x, mid.y), label = `TOLL · $${price}`;
+      ctx.strokeText(label, c.x, c.y - 18 * dpr); ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y - 18 * dpr);
+    }
+    ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+  /** the toll tool's preview at the cursor: the plaza outline (green where it can go, else red), its inbound arrow and a booth line across each booth lane;
+   *  the label: the reason, or the booths and the cost (red when short of the money) */
+  private drawTollPreview(ctx: CanvasRenderingContext2D) {
+    const h = this.tollHover; if (!h) return;
+    const dpr = this.dpr, s = h.seg;
+    if (s) {
+      const d: TollDef = { id: 0, ax: h.a.x, ay: h.a.y, bx: h.b.x, by: h.b.y, booths: h.booths }, off0 = laneOff(s, 0), c = PLAZA_LEN / 2;
+      this.setIso(ctx); ctx.beginPath(); ring(ctx, plazaOutline(d, s.cls.h, off0));
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = h.why ? 'rgba(230,80,80,0.3)' : 'rgba(80,200,120,0.3)'; ctx.fill();
+      const q = (t: number, o: number, first = false) => { const p = plazaPoint(d, t, o); if (first) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); };
+      this.setIso(ctx); ctx.beginPath();
+      q(c - 6, 0, true); q(c + 6, 0); q(c + 3, -1.5); q(c + 6, 0); q(c + 3, 1.5);
+      for (let k = 0; k < h.booths; k++) { const o = off0 + BOOTH_W * k; q(c, o - 0.8, true); q(c, o + 0.8); }
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.5 * dpr; ctx.stroke();
+    }
+    const short = !h.why && h.cost > this.money, bad = !!h.why || short;
+    const text = h.why || (short ? `Not enough money: $${h.cost.toLocaleString()}` : `${h.booths} booths · $${h.cost.toLocaleString()}`);
+    const x = h.mx * dpr + 14 * dpr, y = h.my * dpr - 12 * dpr;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
+    ctx.fillStyle = bad ? '#fecaca' : '#bbf7d0'; ctx.fillText(text, x, y);
+    ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+  }
+
   // ---------- economy / save ----------
   /** the treasury, $ (the city's books, mirrored from the city worker; spend moves it at once); Infinity with unlimited money (the dev sandbox) */
   get money(): number { return this.traffic.unlimited ? Infinity : this.traffic.budget.money; }
@@ -971,6 +1122,7 @@ export class Game {
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
+      tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -983,6 +1135,7 @@ export class Game {
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
+      if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
       if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
       return true;
     } catch (e) { console.error('load failed', e); return false; }
@@ -992,6 +1145,7 @@ export class Game {
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
+    this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
@@ -1393,6 +1547,8 @@ export class Game {
     this.drawStadium(ctx);
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
+    this.drawTolls(ctx);
+    this.drawTollPreview(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
