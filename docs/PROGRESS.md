@@ -12,7 +12,7 @@ _Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junct
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | **In progress** (steps 1, 2, 3a, 5a, 5b done; 3b city worker and 5c composer in progress). Steps at the end |
+| 3. Lot Composer + growth | **In progress** (steps 1–4 and 5a–5c done; 5d applying lots in progress). Steps at the end |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
@@ -453,3 +453,27 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
    after the terrain and before verges and roads; the planner fills them flat.
    - Note: `npm test` runs files in parallel, so the wall-clock budgets in the network (4 km grid) and terrain (20
      seeds) tests can fail under load; they pass alone.
+3b. **City worker. DONE** (2026-10-18). The sim worker owns the `LotMap` and the `Town` (the main-thread lot update
+   cost 32 ms per edit). Main → worker `terrain` (classes, highway entry, seed; resets the town) and `option`;
+   worker → main `lots` (plain lot records) and `town` (events, pop, jobs, built). The worker runs at game start, so
+   the town grows on the sim clock; with no cars it still posts a frame every second (the clock for signals and the
+   town). Reachability is a BFS over the network from the node nearest the highway entry; a 512² water distance
+   field serves TOUR scoring. `SimClient.lots` mirrors the lots with their states; key P draws them by use.
+4. **The town lays gravel roads. DONE** (2026-10-18). `src/game/lots/roads.ts` (`needsLand`, `planExtension`,
+   `tests/roads.test.ts`): when reachable empty lots within `100 + 10 sqrt(built)` tiles of the built centre drop
+   below `max(24, 1.5 x daily growth)`, at most once per game hour the worker proposes one 40-tile gravel leg (a
+   dead-end continuation, a branch at the parcel lattice, or a leg that closes a block onto another road), never on
+   HILL/WATER/CREEK/BANK (bridges and tunnels stay the player's), never through built lots. The main thread applies
+   it as a free player-like edit (`townGrow`, style 2, reveal, a toast at most every 30 s), so the network stays
+   single-sourced. Lots on gravel cannot upgrade (paving unlocks growth). Test valley: 207 gravel segs for 526 built
+   lots in 15 days, all junctions right-angle 3/4-arm crossings.
+5c. **Lot Composer. DONE** (2026-10-18). `src/game/lots/compose.ts` (pure, `tests/compose.test.ts`):
+   `compose(lot, state)` → props + ground patches, deterministic per lot seed. Facing: fronts face +Y (unflipped) or
+   +X (flipped); lots facing -Y/-X use rear views. RES: house at a setback, garage when it fits, drive and front walk,
+   trees, packed plants, fences by story, bins and mailbox, a car in the drive, household stories (young family,
+   retirees, shift worker, party house, hobby mechanic, neglected). COM: shop + car park with bays and wheel stops +
+   loading bay. IND: shed, gravel yard, chain-link, scrapyard clusters. TOUR venues, GOV civic sites, construction
+   sites, decline states (shabby, boarded with rundown sprites, derelict). Placements outside the lot, on drives or
+   overlapping more than 35% are dropped. Owner scales from places-v5 (`npm run assets:scales` →
+   `src/game/lots/scales.ts`). Average uprights: RES 16.5 (upgraded 20.4; the owner's town has ~16 per house), COM 7.5,
+   IND 8.3, TOUR 8.7, GOV 7.5, construction 5.4. Tests now import `LIBRARY` (esbuild `--loader:.webp=empty`).
