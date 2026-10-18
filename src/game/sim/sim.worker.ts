@@ -3,12 +3,13 @@
 // is posted to the main thread (SimClient). Edits arrive as ops and are replayed here. The parcels (LotMap) and the town
 // (Town: land use and growth) follow the network here too, so the main thread never pays for them.
 import type { NetOp } from '../ground-protocol';
-import { RoadNetwork, type Node, type Pt, type Seg } from '../network';
+import { RoadNetwork, type Seg } from '../network';
 import { applyOps } from '../netops';
 import { MAP } from '../iso';
 import { TC } from '../terrain/types';
 import { LotMap, type Lot } from '../lots/lots';
 import { GROWTH_OPTIONS, Town, type TownCtx, type TownEvent } from '../lots/town';
+import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from '../lots/roads';
 import { LaneGraph } from './lanes';
 import { Sim } from './sim';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
@@ -33,6 +34,9 @@ let reach = new Set<Seg>();
 let cls: Uint8Array | null = null, water: Float32Array | null = null, optId = GROWTH_OPTIONS[0].id;
 const ctx: TownCtx = { lots, entry: { x: 0, y: 0 }, reachable: (l: Lot) => reach.has(l.seg), water: waterAt };
 let town = new Town(1), townPosted = 0;
+/** the town's road plan: its random stream, the game hour planned, a gravel extension posted and not yet back as net ops (and when) */
+const GAME_HOUR = 60;
+let planRnd = seededRnd(1), planHour = -1, pendingGrow = false, growAt = 0;
 
 /** the distance (tiles, capped) to the nearest WATER from a tile: 200 before the terrain arrives */
 function waterAt(x: number, y: number): number {
@@ -63,15 +67,6 @@ function waterField(terr: Uint8Array): Float32Array {
   for (let i = 0; i < f.length; i++) f[i] = Math.min(WATER_CAP, f[i] * 4);
   return f;
 }
-/** the segs reachable by road from the node nearest the entry (none for an empty network) */
-function reachableFrom(entry: Pt): Set<Seg> {
-  const out = new Set<Seg>(); let start: Node | null = null, best = Infinity;
-  for (const n of net.nodes.values()) { const d = (n.x - entry.x) ** 2 + (n.y - entry.y) ** 2; if (d < best) { best = d; start = n; } }
-  if (!start) return out;
-  const seen = new Set<Node>([start]), q: Node[] = [start];
-  for (let i = 0; i < q.length; i++) for (const s of q[i].segs) { out.add(s); const o = s.a === q[i] ? s.b : s.a; if (!seen.has(o)) { seen.add(o); q.push(o); } }
-  return out;
-}
 const optionOf = (id: string) => GROWTH_OPTIONS.find(o => o.id === id) ?? GROWTH_OPTIONS[0];
 const rec = (l: Lot): LotRec => ({ key: l.key, o: [l.o.x, l.o.y], u: [l.u.x, l.u.y], n: [l.n.x, l.n.y], w: l.w, d: l.d, cls: l.cls, corner: l.corner });
 
@@ -86,12 +81,30 @@ function postTown(ev: TownEvent[], force: boolean) {
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
   cls = m.cls; water = waterField(m.cls); ctx.entry = { x: m.entry[0], y: m.entry[1] };
   town = new Town(m.seed); town.option = optionOf(optId); town.tick(sim.t, ctx);
+  planRnd = seededRnd(m.seed); planHour = -1; pendingGrow = false;
   postTown([], true);
+}
+
+/** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
+ *  (posted, and no net ops back yet: the next net message clears it, and so does an hour, in case the engine skipped it) */
+function planGrow() {
+  if (!cls) return;
+  const h = Math.floor(sim.t / GAME_HOUR);
+  if (h === planHour) return;
+  planHour = h;
+  if (pendingGrow && sim.t - growAt < GAME_HOUR) return;
+  const c: RoadPlanCtx = { net, lots, town, cls, entry: ctx.entry, rnd: planRnd };
+  if (!needsLand(c)) return;
+  const legs = planExtension(c);
+  if (!legs) return;
+  pendingGrow = true; growAt = sim.t;
+  post({ t: 'grow', legs: legs.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
 }
 
 /** replays the ops; the lane graph is updated after every rebuild, so each part of the edit is measured on its own */
 function netOps(ops: NetOp[]) {
   const t0 = performance.now();
+  pendingGrow = false;
   let part: NetOp[] = [];
   for (const op of ops) {
     part.push(op);
@@ -109,7 +122,7 @@ function netOps(ops: NetOp[]) {
 function lotsOps() {
   const t0 = performance.now();
   const { added, removed } = lots.update(net, cls);
-  reach = reachableFrom(ctx.entry);
+  reach = reachableSegs(net, ctx.entry);
   const ev = town.onLots(added, removed);
   if (added.length || removed.length) post({ t: 'lots', added: added.map(rec), removed });
   postTown(ev, true);
@@ -123,6 +136,7 @@ function frame() {
   for (let k = 0; k < speed; k++) sim.step();
   ticks[tick++ % TICKS] = performance.now() - t0;
   postTown(town.tick(sim.t, ctx), false);
+  planGrow();
   const alive = sim.active > 0;
   // with no cars, still a frame every second: the clock (signals, the town) reads simT from it
   if (!alive && !wasAlive && !forcePost && tick % 10 !== 0) return;

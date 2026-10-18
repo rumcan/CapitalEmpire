@@ -60,7 +60,7 @@ export class Game {
   // economy
   money = 80000; day = 1; dayTimer = 0; population = 0; lastIncome = 0;
   // fx
-  builds: Build[] = []; particles: Particle[] = [];
+  builds: Build[] = []; particles: Particle[] = []; private growToast = -Infinity;
   toasts: Toast[] = []; toastId = 1;
   /** the city worker (cars, parcels, town): created with the game, so the town grows whenever the sim runs */
   traffic: SimClient;
@@ -83,6 +83,7 @@ export class Game {
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl);
     this.traffic = new SimClient();
+    this.traffic.onGrow = (legs) => this.townGrow(legs);
   }
   get cls() { return CLASS[this.roadClass]; }
 
@@ -506,6 +507,18 @@ export class Game {
   private sendTerrain() {
     const t = this.terrain, h = t.highway;
     this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed);
+  }
+  /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
+  private townGrow(legs: Leg[]) {
+    const cls = CLASS.gravel, near = this.propsNearLegs(legs, cls.h + cls.walk);
+    if (near.some(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car')) return;
+    for (const p of near) if (!p.auto && !LIBRARY[p.item].big) this.removeProp(p);
+    const now = performance.now(), total = this.net.legsLength(legs), dur = Math.min(4000, 700 + total * 70);
+    const cum: number[] = []; let acc = 0; for (const l of legs) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
+    this.edit.addLegs(legs, cls, 2);
+    this.commitNetwork(true, now + dur + 150);
+    this.builds.push({ legs, cls, t0: now, dur, total, cum });
+    if (now - this.growToast > 30000) { this.growToast = now; this.toast('The town laid a gravel road'); }
   }
 
   // ---------- economy / save ----------

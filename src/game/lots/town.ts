@@ -108,13 +108,13 @@ export class Town {
     for (const s of this.states.values()) {
       if (s.level === LV.BUILDING) { if (T - s.since >= DAY / 2) { this.set(s, s.use, LV.BUILT, s.decline, T); ev.push(this.evt(s, 'complete')); } continue; }
       if (s.level < LV.BUILT) continue;
-      const c = this.geo.get(s.key)!.c, z = zoneOf(c.x, c.y), a = this.access[z];
+      const g = this.geo.get(s.key)!, c = g.c, z = zoneOf(c.x, c.y), a = this.access[z];
       if (s.decline === 3 && T - s.since >= 2 * DAY) { this.set(s, LU.NONE, LV.EMPTY, 0, T); ev.push(this.evt(s, 'clear')); continue; }
       if (s.decline > 0 && a < 1.5) {
         if (this.rnd() < 0.05) { this.set(s, s.use, s.level, s.decline - 1, T); ev.push(this.evt(s, 'recover')); }
       } else if (s.decline < 3 && this.bad[z] >= 0 && T - this.bad[z] >= 2 * DAY) {
         if (this.rnd() < 0.03) { this.set(s, s.use, s.level, s.decline + 1, T); ev.push(this.evt(s, 'decline')); }
-      } else if (s.level === LV.BUILT && a < 1.3 && T - s.since >= 3 * DAY) {
+      } else if (s.level === LV.BUILT && g.cls !== 'gravel' && a < 1.3 && T - s.since >= 3 * DAY) {
         if (this.rnd() < 0.04) { this.set(s, s.use, LV.UPGRADED, s.decline, T); ev.push(this.evt(s, 'upgrade')); }
       }
     }

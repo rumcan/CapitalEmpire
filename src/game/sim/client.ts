@@ -8,6 +8,7 @@ import { worldX, worldY } from '../iso';
 import { POINT_STRIDE } from '../gl';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 import type { TownEvent } from '../lots/town';
+import type { Leg } from '../network';
 import { VTYPES } from './sim';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
@@ -39,6 +40,8 @@ export class SimClient {
   pop = 0; jobs = 0; built = 0; option = 'balanced';
   /** called with the events of each town message (after the lots are updated) */
   onTown?: (events: TownEvent[]) => void;
+  /** called with the gravel extension the town plans (the engine builds it, or skips it); the worker waits for its net ops */
+  onGrow?: (legs: Leg[]) => void;
   /** the desired vehicle count (the sim clamps it to its slots) */
   target = 0;
   /** the stats of the last frame received */
@@ -77,6 +80,11 @@ export class SimClient {
     if (m.t === 'log') { console.log('[sim]', m.message); return; }
     if (m.t === 'error') { console.error('[sim]', m.message); return; }
     if (m.t === 'lots') { this.applyLots(m.added, m.removed); return; }
+    if (m.t === 'grow') {
+      const legs: Leg[] = [];
+      for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
+      this.onGrow?.(legs); return;
+    }
     if (m.t === 'town') {
       for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; } }
       this.pop = m.pop; this.jobs = m.jobs; this.built = m.built;
