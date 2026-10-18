@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 4 done (one clock and time controls, the budget, the bottleneck tools, before/after, the career mechanism; the gate passed). The plan pivoted to event rounds (GAME-PLAN v4): Phase 5 needs the owner's answers first._
+_Last updated: 2026-10-18, Phase 5 started: the owner's answers are in (GAME-PLAN section 7, items 6–13) and the steps are written below._
 
 ## Where we are
 
@@ -14,7 +14,7 @@ _Last updated: 2026-10-18, Phase 4 done (one clock and time controls, the budget
 | 2. Traffic core | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
 | 4. Budget + bottleneck loop | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
-| 5. Event round MVP: the stadium (v4, 2026-10-18) | Not started. The core loop is now event rounds: GAME-PLAN section 1.0; owner decisions needed first (GAME-PLAN section 7, items 6–13) |
+| 5. Event round MVP: the stadium (v4, 2026-10-18) | **In progress** (started 2026-10-18). The owner answered GAME-PLAN section 7, items 6–13; steps below |
 | 6. Expansion (new events, overlapping networks) | Not started |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
@@ -714,27 +714,79 @@ top bottleneck measurably restarts growth). Suggested steps:
 - `City.hours` (before/after) is not saved: after a load it starts empty.
 - Phase 3's 100-lot contact sheets still wait for the owner's review.
 
-## Next: Phase 5, event round MVP (the stadium)
+## Phase 5, event round MVP (the stadium): in progress
 
 Goal and gate: GAME-PLAN section 1.0 and the phase table (gate: a scripted player completes a Level 1 stadium round;
 replaying it after the player's fixes raises the arrival rate measurably; 100% is reachable; the surge holds the sim
-budgets). **First, the owner's answers to GAME-PLAN section 7, items 6–13** (time in a round, towns, the toll rule,
-surge size, losing, cards, passengers). Draft steps, to adjust to the answers:
-1. **Several autonomous towns:** the generator places 2–3 town seeds; the City grows each from its own centre (today the
-   Town grows from one built centre).
-2. **The round:** a state machine (build timer, surge, evaluation, draft) with its HUD and the time rules.
-3. **The event drop:** a stadium site placed by the game (a Lot Composer site with doors and a kick-off time) and a
-   crowd per town from size and distance.
-4. **The Toll Gate:** a road structure (a plaza fanning out to N booths), the lane graph and a service-time queue per
-   booth in the sim, revenue per car cleared; the budget's income switches to the toll.
-5. **The parking lot:** a placed car park (bays, entrances, aisles); cars park in the sim and become passengers.
-6. **Shuttle buses:** a route tool from the lot stop to the doors; buses that load, drive and unload; stop queues;
-   arrivals at the doors before kick-off.
-7. **The surge trips** from the towns' driveways with the kick-off deadline; the arrival rate.
-8. **Live edit tools:** add a lane in place, widen a turn, turn lanes.
-9. **Evaluation, level-up and the first card pool** (roundabout, more toll booths, double-decker buses); permanent
-   upgrades from the earnings.
-10. **The Phase 5 gate**, headless (on the fix-gate harness).
+budgets).
+
+**The owner's answers (2026-10-18; GAME-PLAN section 7, items 6–13):**
+- **Time:** the sim runs during the 10-minute build (a "Start now" button ends it early); the surge is about 10 real
+  minutes at 1x to kick-off; pause and 2x/4x are allowed in the surge, and edits work while paused. During a round the
+  day clock is frozen at event evening; the HUD shows real-time countdowns.
+- **Towns:** three of about 1,500 people (300–500 m across), placed instantly, 1.5–3 km apart; the stadium 1–2.5 km
+  from each; +25% town growth at 100% arrival.
+- **The toll: by the network.** Cars take any road; one that reaches the lot around the toll pays nothing. Fixed price
+  per level.
+- **Surge:** Level 1 about 1,200 cars (parties of 3), +40% per level.
+- **Money and losing:** upkeep keeps running, through the rounds too. Income is the toll plus the event's payout by its
+  success or failure (the arrival rate). The event is the first of several growth mechanisms (others later).
+  Bankruptcy (Phase 4's rule) stays.
+- **Cards:** pick 1 of 3, no rarity; unlocks and one-off upgrades; the roundabout becomes a card.
+- **Passengers: pedestrian sprites** (walkers bay → stop, a crowd at the stop, walkers doors → stadium). Placeholders
+  from the TrickOrTreat character sheets until Phase 8.
+- **Old events (Phase 6):** a setting, adjustable for the gameplay tests.
+
+**Design (lead, 2026-10-18).** All tunables live in one file, `src/game/event/config.ts` (build and surge seconds,
+crowd per level, party size, toll price, booth service time, bus seats, payout curve, card pool), so balance is data.
+- The round lives in the city worker (`City.round`), so the headless gates drive it the same way. Stages: `free` (the
+  day clock runs; the player starts the next round) → `build` (wall-clock 600 s, not stopped by pause; headless gates
+  pass the time in) → `surge` (sim time, 600 s to kick-off; pause stops it) → `eval` → `draft` → `free`.
+- The day clock: `sim.t` stays monotonic (physics, trip ages); a new `clock` (sim.t less the frozen seconds) drives the
+  demand profile, the town's hours and the economy's days. A round freezes it at 18:00.
+- Upkeep keeps running: during a round it is booked per sim second (the daily rate / 1,440) into a round ledger.
+- Several towns: one `Town` (the lot states) with several centres; each lot belongs to its nearest centre; reach is
+  from any town centre (the highway entry stays as it is). The towns start unconnected: linking them to the event is
+  the player's work.
+- The Toll Gate is a short road piece of its own kind (one lane per booth inbound, a service-time stop at each booth
+  line, a cost in the routing so drivers avoid it when a free way exists); every car that clears a booth pays.
+- The parking lot is a placed rectangle by a road: entrances on that road, bays from its area, a fill rate per
+  entrance; a parked car is drawn in its bay and its party becomes walkers.
+- Buses are sim vehicles on a looping route (lot stop → doors stop → back), loading from the stop's crowd.
+
+Steps (each ends verified, committed and written up here):
+1. **Three autonomous towns.** The valley generator picks 3 town sites (flat land, 300–500 m, 1.5–3 km apart, off the
+   map edge), seeds each with a small street grid and stamps it instantly to about 1,500 residents (the Town's own
+   allocation, without the clock); growth per town from its own centre; reach from every town centre; saves; town gate
+   adapted.
+2. **The event site and the round.** The stadium site placed by the game (a footprint 1–2.5 km from each town, on
+   flat land, with doors and a kick-off; drawn as a placeholder footprint; roads cannot cross it); the crowd per town
+   (size and distance); `src/game/event/config.ts`; the round state machine with the frozen day clock and the round's
+   upkeep; the HUD (stage, countdowns, "Start now", the crowd per town).
+3. **The parking lot.** A placement tool (drag a rectangle beside a road; bays from the area; entrances on the road),
+   cost; in the sim a sink with a fill rate per entrance and a bay count; parked cars drawn in the bays; saves.
+4. **The surge trips.** At the surge start each town sends its crowd from its houses' driveways on a departure wave
+   toward kick-off, routed to the nearest lot entrance; arrivals, misses and the arrival rate (at the lot for now);
+   the HUD's live counts.
+5. **The Toll Gate.** A placement tool on a road (booths 6 to start); the lane graph (the fan-out, one lane per booth,
+   the merge back), the service-time stop and revenue per car, the routing cost; drawn as a widened plaza with booth
+   markers; the toll in the round ledger; saves.
+6. **Shuttle buses and walkers.** The bus route tool (the lot stop to the doors stop, routed on the network); buses as
+   sim vehicles that dwell, load and unload; walkers (bay → stop → bus; doors → stadium) streamed to the renderer as
+   sprites (placeholders from the TrickOrTreat character sheets); the arrival now counts at the doors.
+7. **Evaluation, payout, levels and cards.** The evaluation screen (arrival rate, toll, payout, misses by town and
+   where they were stuck, the previous run); the payout by arrival rate; the income switches to the toll plus the
+   payout (property tax, takings, grants and the Career off); level-up and the draft (pick 1 of 3); the roundabout
+   locked until its card; at 100% the towns grow +25% and the stadium goes up a level; rerun or next round.
+8. **Live edit tools.** Add a lane (new wider classes; upgrade a stretch in place), widen a turn (a junction's corner
+   radius up, turn speeds up), turn lanes (an approach flare with a turn-only lane); paid from the treasury during the
+   surge.
+9. **Balance and the Phase 5 gate** (headless, on the fix-gate harness): a scripted player builds the links, the toll,
+   the lot and the bus route; runs Level 1; fixes the worst items; reruns: the arrival rate rises measurably; a
+   generous build reaches 100%; the surge bench on the worker holds the sim budgets.
+
+### Phase 5 progress
+(none yet)
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN

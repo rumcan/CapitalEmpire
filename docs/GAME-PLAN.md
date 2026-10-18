@@ -1,7 +1,7 @@
 # Capital Empire: game plan (v4, event rounds)
 
 The game is played in **rounds**. An event (a sports stadium first) drops onto the map, and you have ten minutes to
-connect the surrounding towns to it: every car must pass your **Toll Gate** (your only income), park in a sprawling
+connect the surrounding towns to it: every car should pass your **Toll Gate** (your income, with the event payout), park in a sprawling
 lot, and ride your **shuttle bus** to the doors. Then the surge starts and you watch it live, spending the toll money
 as it comes in to fix the bottlenecks before kick-off. After the event you cash in, upgrade, level up and draft a new
 unlock card; at a 100% arrival rate the towns grow and the next event drops somewhere else, on top of your old routes.
@@ -14,7 +14,7 @@ Decisions made so far:
 | --- | --- |
 | Setting | **For now: a sleepy maple-wooded town valley** (2026-10-17), because all the current art is Maple Falls maple. The 1980s Las Vegas desert valley described in this plan is **deferred**: it comes back as a re-skin once the desert art exists (see section 7). Eras advance over in-game time (80s, 90s, 2000s, today) as new art arrives. |
 | Map | 4 × 4 km = **2048 × 2048 tiles** (2 m tiles), up from 160. **Several autonomous towns on it**; the events drop in different places (2026-10-18, section 1.0.1). |
-| Core loop | **Event rounds** (v4, 2026-10-18): an event drops onto the map; a 10-minute build (roads, a Toll Gate, a parking lot, a shuttle bus route); a live stress test as the crowd surges in; then draft and expand (upgrades, level-up cards, the next event elsewhere). The toll is the only income. Section 1.0. Replaces the v3 "tourism booms" idea of the same day. |
+| Core loop | **Event rounds** (v4, 2026-10-18): an event drops onto the map; a 10-minute build (roads, a Toll Gate, a parking lot, a shuttle bus route); a live stress test as the crowd surges in; then draft and expand (upgrades, level-up cards, the next event elsewhere). Income is the toll plus the event payout. Section 1.0. Replaces the v3 "tourism booms" idea of the same day. |
 | Terrain | Seeded, fixed hills, valleys and rivers. They are not editable and they block building. Roads cross rivers on **bridges** and go through hills in **tunnels**. |
 | Player control | **Roads and the event infrastructure** (v4, 2026-10-18): roads, junctions, the Toll Gate, the parking lot and the shuttle bus route. The **events are placed by the game**, and the towns build their own houses and lots (the Lot Composer, section 1.5). |
 | Road builder UX | **Cities: Skylines (and similar games) is the reference** for road tools, controls and feel, so players from those games feel at home (section 3.2). |
@@ -50,7 +50,7 @@ sim, the towns' own growth, the bottleneck tools, the budget machinery) carries 
 - **An event drops onto the map**, placed by the game. Level 1 is a **massive sports stadium**; later levels bring
   bigger and other events (section 1.0.4).
 - **A 10-minute timer** (real time) starts. In it the player connects the surrounding towns to the event:
-  - **the Toll Gate**: a high-speed toll plaza that all incoming event traffic must pass. It is the player's **only
+  - **the Toll Gate**: a high-speed toll plaza that all incoming event traffic must pass. It is the player's **main
     income**: every car that clears it pays the toll. Its booths set its capacity, so it can be a bottleneck itself.
   - **the parking lot**: a sprawling car park behind the toll where the cars end their trip; its bays set how many it
     holds, its entrances and aisles how fast it fills.
@@ -107,12 +107,12 @@ sim, the towns' own growth, the bottleneck tools, the budget machinery) carries 
 | Player control | Roads only (up to Phase 4); roads and placed attractions (v3) | Roads, the Toll Gate, the parking lot and the shuttle bus route; **the game places the events**; the towns build themselves |
 | Map | One town growing out of one highway exit | Several autonomous towns; each new event drops somewhere else, and the networks overlap |
 | Demand | Steady commuting from the town's lots (rush hours) | **The event surge** from the towns toward kick-off, on top of the towns' everyday traffic |
-| Income | Property tax, business takings, milestone grants (Phase 4) | **The toll only** |
+| Income | Property tax, business takings, milestone grants (Phase 4) | **The toll plus the event payout** (by the arrival rate; section 7, item 10) |
 | Score | Zone access (trip time / free flow) | **Arrival rate**: tourists at the doors before kick-off / tourists sent |
 | Reacting | Between rushes, with before/after | **Live, during the surge**, paid from the toll revenue; the evaluation compares runs of the same event |
 | Progression | Population milestones; the Career won at 6,000 residents | **Level-ups and drafted unlock cards**; 100% arrival grows the towns and brings the next event |
 | Time | One sim second is one game minute; a 24-minute game day | Real-time rounds (a 10-minute build, a surge of real minutes); the day clock stays for the towns' everyday rhythm (section 7, item 6) |
-| Lose condition | Bankruptcy | Open (section 7, item 10) |
+| Lose condition | Bankruptcy | Bankruptcy; upkeep keeps running through the rounds (section 7, item 10) |
 | Road builder pro | A later phase | Its lane, turn-widening and turn-lane tools are needed in the first event round |
 | Theme | (dropped 2026-10-18) | Written last, to fit this loop (section 0) |
 
@@ -154,7 +154,7 @@ _Still true inside each town (zone access); a 100% arrival rate at an event also
   It grows with the size of the Strip.
 
 ### 1.3 Budget
-_Since 2026-10-18 (v4) **the toll is the only income** (section 1.0.2); the taxes below are superseded. The cost side (construction, upkeep, compensation) and the machinery built in Phase 4 (`src/game/budget.ts`) stay._
+_Since 2026-10-18 (v4) **the income is the toll plus the event payout** (sections 1.0.2 and 7, item 10); the taxes below are superseded. The cost side (construction, upkeep, compensation) and the machinery built in Phase 4 (`src/game/budget.ts`) stay._
 - **Income:** property tax (land value × access), business tax (customers who actually arrived), tourist tax
   (hotel rooms that are full).
 - **Costs:** construction (by class and length; bridges and tunnels per metre, which is expensive), daily
@@ -459,7 +459,7 @@ Every phase ends with something playable and a measurable gate.
 | **2** | **Traffic core** | Lane graph, IDM/MOBIL, junction control, zone next-hop routing, sim worker, 4-facing car sprites, lights and brake lights, test traffic | 10k cars for 10 in-game days on a seeded network: no deadlock, budgets met, every junction type behaves visibly |
 | **3** | **Lot Composer + growth** | The town extends itself with gravel roads (new gravel class; growth along them; paving and rerouting are the player's job, section 1.5); game-allocated land use (residential, commercial, industrial, tourism, government) and growth options; parcels, archetypes for every lot type (houses with backyards, commercial with parking and back alleys), skeleton, household stories, constraints; trips and parking (the parked cars are the sim cars); access-driven growth and decline | From one highway exit, a city of 5k grows by itself; 100-lot contact sheets pass review; a jam stops growth locally |
 | **4** | **Budget + bottleneck loop** | Taxes, costs, compensation, loans, milestones (as a mechanism); bottleneck ranking; before/after; access overlays; time controls | The books close every game day and bankruptcy is reachable; fixing the top bottleneck measurably improves the next rush hour (headless: a scripted player fixes it, the before/after shows less time lost per trip). The Career is superseded by Phase 5's levels and cards (2026-10-18) |
-| **5** | **Event round MVP: the stadium** (v4, 2026-10-18) | Several autonomous towns; the event drop (a Level 1 stadium placed by the game); the round: the 10-minute build timer, the live surge to kick-off, the evaluation; the Toll Gate (booths, service time, toll revenue as the only income); the parking lot (bays, fill rate); the shuttle bus route (buses, stop queues); the arrival rate; live edits paid from the toll (add a lane, widen a turn, a bypass); level-up and a first card pool (roundabout, toll booths, double-decker buses) | A scripted player completes a Level 1 stadium round; replaying it after the player's fixes raises the arrival rate measurably; 100% is reachable; the surge holds the sim budgets |
+| **5** | **Event round MVP: the stadium** (v4, 2026-10-18) | Several autonomous towns; the event drop (a Level 1 stadium placed by the game); the round: the 10-minute build timer, the live surge to kick-off, the evaluation; the Toll Gate (booths, service time, toll revenue and the event payout as the income); the parking lot (bays, fill rate); the shuttle bus route (buses, stop queues); the arrival rate; live edits paid from the toll (add a lane, widen a turn, a bypass); level-up and a first card pool (roundabout, toll booths, double-decker buses) | A scripted player completes a Level 1 stadium round; replaying it after the player's fixes raises the arrival rate measurably; 100% is reachable; the surge holds the sim budgets |
 | **6** | **Expansion** | New events in new places (concert, festival, water park, casino boulevard); overlapping networks while the old routes keep running; town growth at 100%; levels and bigger events; more cards (rest stop and fatigue, electronic tolling, signals, slip lanes); difficulty | Two events on one map, each at 95%+ arrival in the same session; budgets met |
 | **7** | **Road builder pro** | Cities: Skylines-style tools and UX (section 3.2): curved/freeform draw, snapping and guides, elevation keys, junction editor; roadworks, signal editor and green waves, one-way, curves, roundabout sizes, bus lines; then **freeways, ramps, interchanges, overpasses** (elevated layer). (Lane add, turn widening and turn lanes come forward to Phase 5) | Each tool has a screenshot test and a sim capacity test |
 | **8** | **Look + eras** | Event art (the stadium first, then concert, festival, water park, the casino boulevard with neon), the Toll Gate, lots and buses; 16-heading cars; the era system (90s and onward as art arrives); the desert re-skin only if still wanted (section 7, item 4) | The stadium on event night at 30% holds up next to the Maple Falls standard |
@@ -491,22 +491,29 @@ The art track runs alongside from Phase 1: terrain kit, then houses, then commer
    valley. With the casino boulevard an event like any other, the Vegas features no longer need a desert map. Still to
    decide whether a desert valley comes later as a second map.
 5. **The theme (deferred to the end, 2026-10-18):** see section 0; it will be written to fit the event rounds.
-6. **Time in a round (Phase 5).** The build is 10 real minutes: does the sim run meanwhile (the towns' everyday traffic
-   visible; recommended) or pause? How long is the surge (recommended 8–12 real minutes to kick-off, at real driving
-   speed)? Can the player pause or speed up during the surge? Does the day clock still matter outside the towns?
-7. **Towns (Phase 5).** How many (recommended 2–3 at the start), how big, how far apart (the 4 km map holds 3–4
-   towns of 300–600 m with 1–3 km between them), and how much they grow at 100% arrival.
-8. **The toll (Phase 5).** Is it unavoidable by rule (the lot only reachable through the toll) or by the player's
-   network (cars take any road; a car that reaches the lot around the toll pays nothing)? Is the price fixed or set by
-   the player (a higher toll sends fewer)?
-9. **Surge size (Phase 5).** Per level, within the sim's 10k-car budget; each car stands for a party; the buses' sizes
-   to match.
-10. **Losing (Phase 5).** None (a score only), failing an event (arrival rate under a bar), or bankruptcy (the costs
-   outrun the toll).
-11. **Old events (Phase 6).** Do they rerun every round alongside the new one, or on their own schedule? Does a later
-   failure on an old route count against the player?
-12. **Cards (Phase 5).** The pool, how many are offered per level-up, rarity, and whether some are one-off upgrades.
-13. **Passengers (Phase 5).** The walk from the bays to the bus stop and the bus queues as counts and delays
-   (recommended) or as pedestrian sprites.
+6. **Time in a round (Phase 5). DECIDED 2026-10-18:** the sim keeps running during the 10-minute build (the towns'
+   everyday traffic is visible; a "Start now" button ends the build early). The surge lasts about 10 real minutes at 1x to
+   kick-off. Pause and 2x/4x are allowed during the surge, and edits work while paused. During a round the day clock is
+   frozen at event evening and the HUD shows real-time countdowns; between rounds the day clock runs as before.
+7. **Towns (Phase 5). DECIDED 2026-10-18:** three towns of about 1,500 people each (300–500 m across), placed instantly by
+   the generator 1.5–3 km apart, with the stadium 1–2.5 km from each. Towns grow +25% at 100% arrival.
+8. **The toll (Phase 5). DECIDED 2026-10-18: by the network.** Cars take any road; a car that reaches the lot around the
+   toll pays nothing, so the player's network has to force the event traffic through the toll. The price is fixed per
+   level.
+9. **Surge size (Phase 5). DECIDED 2026-10-18:** Level 1 sends about 1,200 cars (a party of 3 per car: 3,600 fans), +40%
+   per level, well inside the 10k-car budget together with the towns' everyday traffic.
+10. **Losing (Phase 5). DECIDED 2026-10-18:** upkeep keeps running (through the rounds too). Income is the toll **plus
+   the event's payout, which depends on its success or failure** (the arrival rate). The event is the first of several
+   mechanisms that will grow the towns and their traffic; others come later. Bankruptcy (Phase 4's rule) stays the way
+   to lose.
+11. **Old events (Phase 6). DECIDED 2026-10-18: a setting, adjustable for the gameplay tests** (rerun together and counted,
+   rerun as background only, or on their own schedule).
+12. **Cards (Phase 5). DECIDED 2026-10-18:** pick 1 of 3 at each level-up, no rarity in the MVP. The pool mixes unlocks
+   (roundabout, double-decker buses) and one-off upgrades (+2 toll booths, +4 buses, +25% lot bays). The starting kit
+   has today's road classes, bridges and tunnels, stop/yield and signals, the Toll Gate with 6 booths, a parking lot and
+   a bus route with 8 buses. The roundabout becomes a card (locked at the start).
+13. **Passengers (Phase 5). DECIDED 2026-10-18: pedestrian sprites:** walkers from the bays to the lot's bus stop, a
+   visible crowd at the stop, walkers from the doors stop into the stadium. Placeholder walkers come from the
+   TrickOrTreat character sheets (`public/assets/characters/hero_*.png`, read-only) until Phase 8 brings fan art.
 14. **Logistics (later).** Freight between the towns (a factory and its suppliers, a port) on the same machinery:
    flows between towns, scored on what arrives.
