@@ -48,7 +48,7 @@ interface ArmIO { a: Arm; i: number; inD: number; outD: number }
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
-const VMAX: Record<string, number> = { gravel: 8, lane: 8, street: 11, road: 17, avenue: 14, boulevard: 17 };
+const VMAX: Record<string, number> = { gravel: 8, lane: 8, street: 11, road: 17, avenue: 14, arterial: 14, boulevard: 17 };
 const isLive = (net: RoadNetwork, n: Node) => n.segs.length > 0 && net.nodes.get(keyOf(n)) === n;
 const armOf = (n: Node, s: Seg): Arm | undefined => n.arms.find(a => a.seg === s);
 /** offset of lane k of a seg's class from the centre line, tiles (a single lane at [0] sits at 0.45) */
@@ -58,7 +58,8 @@ const endPt = (l: Lane): Pt => { const n = l.pts.length; return { x: l.pts[n - 2
 const startDir = (l: Lane): Pt => norm(sub({ x: l.pts[2], y: l.pts[3] }, startPt(l)));
 const endDir = (l: Lane): Pt => { const n = l.pts.length; return norm(sub(endPt(l), { x: l.pts[n - 4], y: l.pts[n - 3] })); };
 const link = (a: Lane, b: Lane) => { a.next.push(b.id); b.prev.push(a.id); };
-const connVmax = (P: Pt[], cap: number) => clamp(Math.sqrt(3 * minRadius(P)), 3, cap);
+/** a connector's speed limit: sqrt(3 r) for its tightest radius r (k = 2 at a widened-turns node: the same radius counts double), within [3, cap] */
+const connVmax = (P: Pt[], cap: number, k = 1) => clamp(Math.sqrt(3 * k * minRadius(P)), 3, cap);
 
 /** the inset from a node centre where a link lane stops or starts at this arm, tiles */
 function inset(n: Node, a: Arm | undefined): number {
@@ -319,7 +320,7 @@ export class LaneGraph {
   /** a connector from the end of inL to the start of outL */
   private conn(n: Node, inL: Lane, outL: Lane, uturn: boolean, nl: number[]): Lane {
     const P = bezier(endPt(inL), endDir(inL), startPt(outL), startDir(outL), uturn);
-    const c = this.mkLane(`C${inL.key}|${outL.key}`, LK.CONN, P, connVmax(P, Math.min(inL.vmax, outL.vmax)), n, inL.tunnel || outL.tunnel);
+    const c = this.mkLane(`C${inL.key}|${outL.key}`, LK.CONN, P, connVmax(P, Math.min(inL.vmax, outL.vmax), n.wide ? 2 : 1), n, inL.tunnel || outL.tunnel);
     c.prio = 3; link(inL, c); link(c, outL); nl.push(c.id);
     return c;
   }
@@ -382,7 +383,8 @@ export class LaneGraph {
       if (t === 'U') continue;
       const ins = this.dsegs[x.inD]!.lanes, outs = this.dsegs[y.outD]!.lanes, nIn = ins.length, nOut = outs.length, paths: number[][] = [];
       for (let k = 0; k < nIn; k++) {
-        if (nIn > 1 && ((t === 'L' && k !== 0) || (t === 'R' && k !== nIn - 1))) continue;
+        // turn lanes (n.tl): lane 0 is for the left turns only; straight on from the other lanes, right from the last one
+        if (nIn > 1 && ((t === 'L' && k !== 0) || (t === 'R' && k !== nIn - 1) || (n.tl && t === 'S' && k === 0))) continue;
         const inL = this.L(ins[k]), outL = this.L(outs[t === 'L' ? 0 : t === 'R' ? nOut - 1 : Math.min(k, nOut - 1)]);
         const c = this.conn(n, inL, outL, false, nl);
         if (sig) {

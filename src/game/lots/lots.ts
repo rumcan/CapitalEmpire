@@ -19,7 +19,7 @@ export interface Lot {
 /** frontage width and depth by road class, tiles */
 /** the town's street lattice (roads.ts BLOCK) and the half width kept free of lots around its points, tiles */
 export const BRANCH = 40, RESERVE = 4;
-const SIZE: Record<ClassId, [number, number]> = { gravel: [8, 15], lane: [8, 15], street: [8, 15], road: [10, 16], avenue: [12, 18], boulevard: [16, 20] };
+const SIZE: Record<ClassId, [number, number]> = { gravel: [8, 15], lane: [8, 15], street: [8, 15], road: [10, 16], avenue: [12, 18], arterial: [13, 19], boulevard: [16, 20] };
 /** the shallowest lot kept; the clearance added to another road's h + walk; the share of bad terrain allowed; the overlap tolerance */
 const MIN_D = 6, CLEAR = 0.5, BAD_MAX = 0.1, TOL = 0.25;
 /** how far a lot can reach from its seg (its depth plus the verge), and how far an edit's recompute scope reaches past its box */

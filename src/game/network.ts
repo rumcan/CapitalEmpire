@@ -4,7 +4,7 @@ export type Surface = 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'gravel';
 export type WalkKind = 'slabs' | 'gravel';
 
 /* ---------- road classes ---------- */
-export type ClassId = 'gravel' | 'lane' | 'street' | 'road' | 'avenue' | 'boulevard';
+export type ClassId = 'gravel' | 'lane' | 'street' | 'road' | 'avenue' | 'arterial' | 'boulevard';
 export type NodeType = 'plain' | 'signal' | 'slip' | 'roundabout';
 export interface Pt { x: number; y: number }
 export interface Leg { a: Pt; b: Pt }
@@ -36,9 +36,14 @@ export const CLASSES: RoadClass[] = [
   { id: 'street', name: 'Street', desc: '2 lanes · 6.5 m · sidewalks', h: 1.625, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphalt', rConcave: 1.75, bulb: 1, cost: 150, order: 1, crosswalk: true, laneLine: 0, centre: 'style', laneCentres: [0.8] },
   { id: 'road', name: 'Road', desc: '2 lanes + shoulders · 12 m · yellow edge lines', h: 3, walk: 0.75, walkTex: 'gravel', median: 0, shoulder: 1, tex: 'asphaltDark', rConcave: 2.5, bulb: 0, cost: 220, order: 2, crosswalk: false, laneLine: 0, centre: 'dashed', laneCentres: [1] },
   { id: 'avenue', name: 'Avenue', desc: '2 lanes · tree-lined median · 14 m', h: 3.5, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 2.5, bulb: 1, cost: 320, order: 3, crosswalk: true, laneLine: 0, centre: 'none', laneCentres: [2.25] },
+  { id: 'arterial', name: 'Arterial', desc: '4 lanes · no median · 16 m', h: 4, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltDark', rConcave: 2.75, bulb: 1, cost: 400, order: 3, crosswalk: true, laneLine: 2, centre: 'style', laneCentres: [1, 3] },
   { id: 'boulevard', name: 'Boulevard', desc: '4 lanes · tree-lined median · 20 m', h: 5, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 3, bulb: 1, cost: 480, order: 4, crosswalk: true, laneLine: 3, centre: 'none', laneCentres: [2, 4] },
 ];
 export const CLASS = Object.fromEntries(CLASSES.map(c => [c.id, c])) as Record<ClassId, RoadClass>;
+/** the classes the keys 1 to 6 pick, in key order (the arterial is picked in the panel) */
+export const KEY_CLASSES: ClassId[] = ['gravel', 'lane', 'street', 'road', 'avenue', 'boulevard'];
+/** the class the add-lane tool widens a road to (one more lane each way); a class not listed is the widest */
+export const WIDER: Partial<Record<ClassId, ClassId>> = { gravel: 'arterial', lane: 'arterial', street: 'arterial', road: 'arterial', avenue: 'boulevard' };
 export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number; minDeg: number }[] = [
   { id: 'plain', name: 'Plain', desc: 'Rounded corners and crossings', cost: 0, minDeg: 3 },
   { id: 'signal', name: 'Traffic lights', desc: 'Signals, stop lines', cost: 2500, minDeg: 3 },
@@ -46,6 +51,8 @@ export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number
   { id: 'roundabout', name: 'Roundabout', desc: 'Circle with a planted island', cost: 8000, minDeg: 2 },
 ];
 export const R_SLIP = 12, SLIP_LANE = 2.2, RB_LANE = 2.5;
+/** the junction flags the junction tool sells: widened turns, and turn lanes (2-lane roads) */
+export const FLAG_COST = { wide: 3000, tl: 2000 };
 
 /* ---------- vectors ---------- */
 export const sub = (a: Pt, b: Pt): Pt => ({ x: a.x - b.x, y: a.y - b.y });
@@ -154,7 +161,8 @@ function walkAlong(pts: Pt[], closed: boolean, first: number, step: number, fn: 
 }
 
 /* ---------- data ---------- */
-export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number }
+/** a junction or bend; wide = widened turns (connectors at 2x the radius for speed), tl = turn lanes (lane 0 turns left only, at a 3+ arm junction) */
+export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean }
 /** how a segment is built: on the ground, on a bridge, or in a tunnel */
 export const SK = { GROUND: 0, BRIDGE: 1, TUNNEL: 2 } as const; export type SegKind = 0 | 1 | 2;
 export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind }
@@ -360,6 +368,8 @@ export class RoadNetwork {
     if (rebuild) this.rebuild();
   }
   setNodeType(n: Node, type: NodeType, rebuild = true) { n.type = type; this.touched.add(n); if (rebuild) this.rebuild(); }
+  /** the node's widened-turns and turn-lane flags (the lane graph reads them at the node) */
+  setNodeFlags(n: Node, wide: boolean, tl: boolean, rebuild = true) { n.wide = wide; n.tl = tl; this.touched.add(n); if (rebuild) this.rebuild(); }
   nearestNode(p: Pt, minDeg: number, maxDist: number): Node | null {
     let best: Node | null = null, bd = maxDist;
     for (const s of this.segsNear(p, maxDist)) for (const n of [s.a, s.b]) { if (n.segs.length < minDeg) continue; const d = Math.hypot(n.x - p.x, n.y - p.y); if (d < bd) { bd = d; best = n; } }

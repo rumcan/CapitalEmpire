@@ -1,8 +1,8 @@
 // Headless network tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, RoadNetwork, type ClassId, type Leg, type Route } from '../src/game/network';
-import { NetEditor, applyOps, netToOps } from '../src/game/netops';
+import { CLASS, KEY_CLASSES, RoadNetwork, WIDER, type ClassId, type Leg, type Route, type Seg } from '../src/game/network';
+import { NetEditor, applyNodeEntry, applyOps, netToOps, nodeEntry, straightChain } from '../src/game/netops';
 import { CTL, LaneGraph, type Movement } from '../src/game/sim/lanes';
 import { rle, unrle } from '../src/game/save';
 import type { NetOp } from '../src/game/ground-protocol';
@@ -140,4 +140,64 @@ test('gravel routes get no decals, while a road of the same length does', () => 
   };
   assert.equal(decals('gravel'), 0);
   assert.ok(decals('road') > 0);
+});
+
+/** the seg between two points, either way round */
+const segBetween = (n: RoadNetwork, ax: number, ay: number, bx: number, by: number): Seg => [...n.segs].find(s => (s.a.x === ax && s.a.y === ay && s.b.x === bx && s.b.y === by) || (s.a.x === bx && s.a.y === by && s.b.x === ax && s.b.y === ay))!;
+
+test('the add-lane run: a straight run stops at a junction, a bend, a class change and a toll seg', () => {
+  // a crossing at (50, 50): the two halves of the street stop there
+  const cross = new NetEditor(new RoadNetwork());
+  cross.addLegs([leg(0, 50, 50, 50), leg(50, 50, 100, 50)], CLASS.street, 0); cross.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); cross.commit();
+  assert.equal(straightChain(segBetween(cross.net, 0, 50, 50, 50)).length, 1);
+  assert.equal(straightChain(segBetween(cross.net, 50, 50, 100, 50)).length, 1);
+  // a straight line of two segs runs through their joint; a 90 degree bend after it stops the run
+  const line = new NetEditor(new RoadNetwork());
+  line.addLegs([leg(0, 50, 50, 50), leg(50, 50, 100, 50)], CLASS.street, 0); line.addLegs([leg(100, 50, 100, 100)], CLASS.street, 0); line.commit();
+  const a = segBetween(line.net, 0, 50, 50, 50), b = segBetween(line.net, 50, 50, 100, 50);
+  assert.deepEqual(straightChain(a).length, 2);
+  assert.equal(straightChain(b).length, 2);
+  assert.equal(straightChain(segBetween(line.net, 100, 50, 100, 100)).length, 1);
+  // a class change ends the run; a toll seg (skip) is left out, and the run stops before it
+  const mixed = new NetEditor(new RoadNetwork());
+  mixed.addLegs([leg(0, 50, 50, 50)], CLASS.street, 0); mixed.addLegs([leg(50, 50, 100, 50)], CLASS.avenue, 0); mixed.commit();
+  assert.equal(straightChain(segBetween(mixed.net, 0, 50, 50, 50)).length, 1);
+  assert.deepEqual(straightChain(a, x => x === b), [a]);
+  assert.deepEqual(straightChain(b, x => x === b), []);
+});
+
+test('the add-lane classes: gravel, lane, street and road widen to arterial, avenue to boulevard; the arterial and boulevard are the widest', () => {
+  assert.equal(WIDER.gravel, 'arterial'); assert.equal(WIDER.lane, 'arterial'); assert.equal(WIDER.street, 'arterial'); assert.equal(WIDER.road, 'arterial');
+  assert.equal(WIDER.avenue, 'boulevard');
+  assert.equal(WIDER.arterial, undefined); assert.equal(WIDER.boulevard, undefined);
+  assert.deepEqual(KEY_CLASSES, ['gravel', 'lane', 'street', 'road', 'avenue', 'boulevard']);
+});
+
+test('a flags op: netToOps carries a node\'s widened turns and turn lanes, and a replay sets them; unflagged nodes add no op', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); e.commit();
+  assert.ok(!netToOps(e.net).some(o => o.k === 'flags'));
+  e.setNodeFlags(e.net.nodeAt({ x: 50, y: 50 })!, true, true);
+  const ops = e.commit();
+  assert.ok(ops.some(o => o.k === 'flags' && o.x === 50 && o.y === 50 && o.wide && o.tl));
+  const log = netToOps(e.net);
+  assert.ok(log.some(o => o.k === 'flags' && o.wide && o.tl));
+  const fresh = new RoadNetwork(); applyOps(fresh, log);
+  const nd = fresh.nodeAt({ x: 50, y: 50 });
+  assert.ok(nd?.wide && nd?.tl);
+});
+
+test('saved nodes: an entry without flags loads as before (its type only); flags round trip through nodeEntry and applyNodeEntry', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); e.commit();
+  applyNodeEntry(e, [50, 50, 'signal']);
+  const n = e.net.nodeAt({ x: 50, y: 50 })!;
+  assert.equal(n.type, 'signal'); assert.ok(!n.wide && !n.tl);
+  assert.deepEqual(nodeEntry(n), [50, 50, 'signal']);
+  applyNodeEntry(e, [50, 50, 'plain', 2]);
+  assert.equal(n.type, 'plain'); assert.ok(!n.wide && n.tl);
+  assert.deepEqual(nodeEntry(n), [50, 50, 'plain', 2]);
+  applyNodeEntry(e, [50, 50, 'plain', 1]);
+  assert.deepEqual(nodeEntry(n), [50, 50, 'plain', 1]);
+  applyNodeEntry(e, [5, 5, 'signal', 3]); // no node there: skipped
 });

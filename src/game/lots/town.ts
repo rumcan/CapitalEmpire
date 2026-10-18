@@ -242,7 +242,7 @@ export class Town {
     for (const s of this.states.values()) if (s.use === LU.RES && s.level !== LV.EMPTY && dist(this.geo.get(s.key)!.c, l.c) <= 30) nr++;
     const de = dist(l.c, ctx.entry), wat = ctx.water(l.c.x, l.c.y);
     sc[0] = (1 + (cid === 'gravel' || cid === 'lane' || cid === 'street' ? 0.5 : 0)) * mul[0];
-    sc[1] = (0.5 + (cid === 'road' || cid === 'avenue' ? 0.6 : 0) + (cid === 'boulevard' ? 1 : 0) + (l.corner ? 0.4 : 0)) * mul[1];
+    sc[1] = (0.5 + (cid === 'road' || cid === 'avenue' || cid === 'arterial' ? 0.6 : 0) + (cid === 'boulevard' ? 1 : 0) + (l.corner ? 0.4 : 0)) * mul[1];
     sc[2] = (0.2 + (de <= 120 ? 1.2 : 0)) * (nr > 4 ? 0.3 : 1) * mul[2];
     sc[3] = (0.1 + (wat <= 40 ? 1 : 0) + (cid === 'boulevard' ? 0.6 : 0)) * mul[3];
     let best = LU.RES, bv = -1;

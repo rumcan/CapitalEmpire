@@ -31,8 +31,8 @@ export interface SaveV5 {
   seed: number;
   /** ax, ay, bx, by, class, line style, structure kind (0 ground, 1 bridge, 2 tunnel; missing = ground) */
   segs: [number, number, number, number, string, number, number?][];
-  /** x, y, junction type */
-  nodes: [number, number, string][];
+  /** x, y, junction type, flags (optional: 1 widened turns, 2 turn lanes; missing = none; no version bump) */
+  nodes: [number, number, string, number?][];
   /** library id, x, y, flip, scale */
   props: [string, number, number, number, number][];
   /** the treasury and the game day, as before the books (kept so older readers still work; the books hold the truth) */

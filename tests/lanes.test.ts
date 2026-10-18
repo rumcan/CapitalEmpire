@@ -148,3 +148,47 @@ test('timing: a 40 x 40 grid of streets and avenues at 40 tiles, full update and
   console.log(`lane graph full update ${tFull.toFixed(0)} ms; one edit (network rebuild + lane update) ${tEdit.toFixed(1)} ms`);
   assert.deepEqual(checkGraph(g), []);
 });
+
+test('an arterial: two lanes each way, 1 and 3 tiles off the centre line, no median', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.arterial, 0);
+  const g = graphOf(e), links = liveLanes(g).filter(l => l.kind === LK.LINK);
+  assert.equal(CLASS.arterial.median, 0);
+  assert.equal(links.length, 4);
+  for (const d of g.dsegs) if (d) assert.equal(d.lanes.length, 2);
+  assert.deepEqual(links.map(l => Math.abs(l.pts[1]! - 50)).sort((p, q) => p - q), [1, 1, 3, 3]);
+});
+
+test('turn lanes: at a flagged junction, from a two-lane approach lane 0 takes only the left turns; the other lanes still go straight', () => {
+  const build = (tl: boolean) => {
+    const e = new NetEditor(new RoadNetwork());
+    e.addLegs([leg(0, 50, 100, 50)], CLASS.arterial, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0);
+    if (tl) e.setNodeFlags(at(e, 50, 50), false, true);
+    const g = graphOf(e);
+    return { g, arterial: movesAt(g, at(e, 50, 50)).filter(m => g.dsegs[m.from]!.seg.cls.id === 'arterial') };
+  };
+  const { g, arterial } = build(true);
+  const straight = arterial.filter(m => m.turn === 'S'), left = arterial.filter(m => m.turn === 'L');
+  assert.ok(straight.length > 0 && left.length > 0);
+  for (const m of straight) for (const p of m.paths) assert.notEqual(g.lanes[p[0]!]!.idx, 0, `straight from lane 0 in ${m.key}`);
+  for (const m of left) for (const p of m.paths) assert.equal(g.lanes[p[0]!]!.idx, 0);
+  assert.ok(straight.some(m => m.paths.some(p => g.lanes[p[0]!]!.idx === 1)));
+  // without the flag the same approach does go straight from lane 0
+  const plain = build(false);
+  assert.ok(plain.arterial.some(m => m.turn === 'S' && m.paths.some(p => plain.g.lanes[p[0]!]!.idx === 0)));
+});
+
+test('widened turns: every connector at a flagged node is at least as fast as without the flag, and some are faster', () => {
+  const build = (wide: boolean) => {
+    const e = new NetEditor(new RoadNetwork());
+    e.addLegs([leg(0, 50, 100, 50)], CLASS.avenue, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0);
+    if (wide) e.setNodeFlags(at(e, 50, 50), true, false);
+    return new Map(liveLanes(graphOf(e)).filter(l => l.kind === LK.CONN).map(l => [l.key, l.vmax] as const));
+  };
+  const plain = build(false), wide = build(true);
+  assert.ok(plain.size > 0);
+  assert.equal(wide.size, plain.size);
+  let faster = 0;
+  for (const [k, v] of plain) { const w = wide.get(k)!; assert.ok(w >= v - 1e-9, k); if (w > v + 1e-9) faster++; }
+  assert.ok(faster > 0);
+});

@@ -1,7 +1,7 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, dot, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
-import { NetEditor, netToOps } from './netops';
+import { CLASS, FLAG_COST, Grid, JUNCTIONS, KEY_CLASSES, RoadNetwork, WIDER, SK, add, dot, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
+import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
@@ -110,6 +110,8 @@ export class Game {
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0; junctionType: NodeType = 'signal';
+  /** the junction tool's mode: 'type' installs junctionType; 'wide' and 'tl' toggle the widened-turns and turn-lane flags on the junction clicked */
+  junctionMode: 'type' | 'wide' | 'tl' = 'type';
   selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
   /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
   showAccess = false;
@@ -163,6 +165,9 @@ export class Game {
    *  whether R has flipped the way in, and the toll tool's plan at the cursor (seg null: no road within 4 tiles; why: the reason it cannot be built, '' if it can) */
   tollDefs: TollDef[] = []; private tollSegs = new Map<number, Seg>(); private tollGround = new Set<string>(); tollBooths = START_BOOTHS; private tollFlip = false;
   private tollHover: null | { mx: number; my: number; seg: Seg | null; a: Pt; b: Pt; why: string; cost: number; booths: number } = null;
+  /** the add-lane tool's plan at the cursor: the straight run of road under it (segs; none on a toll plaza), the class it widens to (null: already the widest),
+   *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
+  laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string } = null;
   /** the shuttle bus routes as the player drew them (saved; ids 1..n, a route's index is its sim index), the bus tool's first stop once it is chosen (its
    *  road point, tiles, and its car park's id; null until then), and the tool's plan at the cursor (see busUpdate: the stop it would place, x, y, and why not) */
   busDefs: BusRouteDef[] = []; busPick: { x: number; y: number; park: number } | null = null;
@@ -462,7 +467,7 @@ export class Game {
   }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; this.tollHover = null; this.busPick = null; this.busHover = null; } this.tool = t; this.emit(); }
+  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; this.tollHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
   private snapNode(p: Pt): Pt { return { x: clamp(Math.round(p.x), 2, MAP - 2), y: clamp(Math.round(p.y), 2, MAP - 2) }; }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
@@ -633,7 +638,65 @@ export class Game {
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
   }
+  /** the junction tool in a flag mode (widened turns, turn lanes): a click on a junction or bend toggles that flag; turning it on costs FLAG_COST */
+  private flagClick(mx: number, my: number) {
+    const wide = this.junctionMode === 'wide', name = wide ? 'Widened turns' : 'Turn lanes';
+    const n = this.net.nearestNode(this.tileAt(mx, my), 2, 5);
+    if (!n) { this.toast('Click a junction or a bend in the road', 'warn'); return; }
+    if (n.type === 'roundabout') { this.toast('Roundabouts have their own lanes: no flag here', 'warn'); return; }
+    const on = wide ? !n.wide : !n.tl;
+    if (on) {
+      if (!wide && n.arms.length < 3) { this.toast('Turn lanes need a junction of three or more roads', 'warn'); return; }
+      if (!wide && !n.arms.some(a => a.cls.laneCentres.length >= 2)) { this.toast('Turn lanes need a two-lane road at the junction', 'warn'); return; }
+      const cost = FLAG_COST[wide ? 'wide' : 'tl'];
+      if (cost > this.money) { this.toast(`Not enough money: ${name.toLowerCase()} cost $${cost.toLocaleString()}`, 'warn'); return; }
+      this.traffic.spend('construction', cost);
+    }
+    this.edit.setNodeFlags(n, wide ? on : !!n.wide, wide ? !!n.tl : on);
+    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    this.toast(on ? `${name} added` : `${name} removed`, 'good');
+  }
+  /** the add-lane tool's plan at tile t (null: no tile): the straight run of road under it (see straightChain; a toll plaza has none), the class it widens
+   *  to, its cost and why it cannot be built */
+  private laneUpdate(t: Pt | null) {
+    const piece = t ? this.net.pieceNear(t) : null;
+    if (!piece) { this.laneHover = t ? { segs: [], to: null, cost: 0, why: 'Point at a road' } : null; return; }
+    const tolls = [...this.tollSegs.values()], seg = piece.seg;
+    const segs = straightChain(seg, x => tolls.includes(x)), wider = WIDER[seg.cls.id], to = wider ? CLASS[wider] : null;
+    let raw = 0; for (const s of segs) raw += vlen(sub(s.b, s.a)) * (to ? to.cost : 0) * STRUCT_COST[s.kind];
+    const cost = Math.round(raw);
+    let why = '';
+    if (tolls.includes(seg)) why = 'Toll plazas cannot be widened';
+    else if (!to) why = 'Already the widest road (more in Phase 7)';
+    else if (!this.classOpen(to.id)) { const lk = unlockOf('class', to.id)!; why = `${to.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`; }
+    else if (cost > this.money) why = `Not enough money: ${to.name.toLowerCase()} costs $${cost.toLocaleString()}`;
+    this.laneHover = { segs, to, cost, why };
+  }
+  /** the add-lane tool's click: every seg of the run goes up to the next class (its kind and line style kept); the network rebuilds at once */
+  private laneClick() {
+    const h = this.laneHover; if (!h) return;
+    if (!h.to) { this.toast('Already the widest road (more in Phase 7)', 'warn'); return; }
+    if (!h.segs.length || h.why) { this.toast(h.why || 'Point at a road', 'warn'); return; }
+    this.traffic.spend('construction', h.cost);
+    let tiles = 0;
+    for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.a, b: s.b }], h.to, s.style, [s.kind]); }
+    this.commitNetwork(); this.puff(h.segs[0]!.a.x, h.segs[0]!.a.y, 8);
+    this.toast(`Added a lane: ${Math.round(tiles * 2)} m to ${h.to.name.toLowerCase()}`, 'good');
+    this.laneUpdate(this.hover);
+  }
+  /** the junction flags over the flagged nodes (street and district zoom): W for widened turns, TL for turn lanes */
+  private drawNodeFlags(ctx: CanvasRenderingContext2D) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.font = `600 ${11 * this.dpr}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const n of this.net.nodes.values()) {
+      if (!n.wide && !n.tl) continue;
+      const s = this.screen(n.x, n.y), tag = [n.wide ? 'W' : '', n.tl ? 'TL' : ''].filter(Boolean).join(' '), y = s.y - 14 * this.dpr;
+      const w = ctx.measureText(tag).width + 8 * this.dpr, h = 16 * this.dpr;
+      ctx.fillStyle = 'rgba(15,23,42,0.85)'; ctx.fillRect(s.x - w / 2, y - h / 2, w, h);
+      ctx.fillStyle = '#fde68a'; ctx.fillText(tag, s.x, y);
+    }
+  }
   private junctionClick(mx: number, my: number) {
+    if (this.junctionMode !== 'type') { this.flagClick(mx, my); return; }
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
     if (!this.junctionOpen(this.junctionType)) { const lk = unlockOf('junction', this.junctionType)!; this.toast(this.eventMode ? `${spec.name} needs the Roundabout card` : `${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     const n = this.net.nearestNode(t, spec.minDeg, 5);
@@ -726,6 +789,7 @@ export class Game {
       case 'junction': this.junctionClick(mx, my); break;
       case 'toll': this.tollUpdate(mx, my); this.tollClick(); break;
       case 'bus': this.busUpdate(mx, my); this.busClick(); break;
+      case 'lane': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
       case 'park': { const t = this.tileAt(mx, my), r = Math.round; this.parkDrag = { x0: r(t.x), y0: r(t.y), x1: r(t.x), y1: r(t.y), def: { id: 0, x: 0, y: 0, w: 0, h: 0 }, park: null, why: '', cost: 0, mx, my }; this.dragging = { kind: 'park', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; this.parkUpdate(mx, my); break; }
     }
@@ -740,13 +804,14 @@ export class Game {
       else if (d.kind === 'bulldoze') this.bulldozeAt(mx, my, false);
       else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
-    if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg, 5);
+    if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.junctionMode === 'type' ? JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg : 2, 5);
+    if (this.tool === 'lane') this.laneUpdate(this.hover);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
     if (this.tool === 'toll') this.tollUpdate(mx, my);
     if (this.tool === 'bus') this.busUpdate(mx, my);
   }
   pointerUp() { if (this.dragging?.kind === 'park') this.parkRelease(); this.dragging = null; }
-  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.tollHover = null; this.busHover = null; }
+  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.tollHover = null; this.busHover = null; this.laneHover = null; }
   doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
@@ -791,8 +856,9 @@ export class Game {
       case 'p': case 'P': this.setTool('park'); break;
       case 't': case 'T': this.setTool('toll'); break;
       case 'u': case 'U': this.setTool('bus'); break;
+      case 'n': case 'N': this.setTool('lane'); break;
       case 'v': case 'V': this.setTool('select'); break;
-      case '1': case '2': case '3': case '4': case '5': case '6': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
+      case '1': case '2': case '3': case '4': case '5': case '6': { const c = KEY_CLASSES[+e.key - 1]; if (c) { this.roadClass = c; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
       case '-': case '_': this.zoomAt(clamp(this.cam.z / 1.25, ZOOM_MIN, ZOOM_MAX)); break;
       case ' ': e.preventDefault(); if (!e.repeat) this.spacePanned = false; break;
@@ -1301,7 +1367,7 @@ export class Game {
     const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed,
       segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style, s.kind]),
-      nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain').map(n => [n.x, n.y, n.type]),
+      nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
@@ -1318,7 +1384,7 @@ export class Game {
       this.genTerrain(d.seed);
       for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle, [(kind ?? 0) as SegKind]);
       this.net.rebuild(true);
-      for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) this.edit.setNodeType(n, type as NodeType); }
+      for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
@@ -1759,6 +1825,7 @@ export class Game {
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
     if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
+    if (this.cam.z >= PLANNER_Z) this.drawNodeFlags(ctx);
     this.drawFlow(ctx);
     this.drawInspect(ctx);
     this.drawGroundOverlays(ctx);
@@ -1867,6 +1934,13 @@ export class Game {
       const n = this.hoverNode, r = Math.max(...n.arms.map(a => a.h)) + 1.5;
       this.setIso(ctx); ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = 'rgba(255,216,102,0.22)'; ctx.fill(); ctx.strokeStyle = '#ffd866'; ctx.lineWidth = 2; ctx.setLineDash([8, 5]); ctx.stroke(); ctx.setLineDash([]);
+    } else if (this.tool === 'lane' && this.laneHover?.segs.length) {
+      // the run the add-lane tool would widen: amber where it can go, red where not
+      const h = this.laneHover, cls = h.segs[0]!.cls, legs = h.segs.map(s => ({ a: s.a, b: s.b }));
+      this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = h.why ? 'rgba(240,80,60,0.3)' : 'rgba(255,216,102,0.3)'; ctx.fill();
+      this.setIso(ctx); ctx.beginPath(); for (const l of legs) { ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); } ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.strokeStyle = h.why ? '#f87171' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
     } else if (this.tool === 'bulldoze' && this.hoverPiece) {
       const pc = this.hoverPiece, cls = pc.seg.cls;
       this.setIso(ctx); ctx.beginPath(); strip([{ a: pc.p0, b: pc.p1 }], cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);

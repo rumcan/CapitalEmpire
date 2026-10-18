@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
-import { CLASSES, JUNCTIONS } from './game/network';
+import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES } from './game/network';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
@@ -19,6 +19,7 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'park', label: 'Car park', key: 'P', icon: '🅿️' },
   { id: 'toll', label: 'Toll gate', key: 'T', icon: '🛂' },
   { id: 'bus', label: 'Bus route', key: 'U', icon: '🚌' },
+  { id: 'lane', label: 'Add lane', key: 'N', icon: '➕' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** a signed money figure: +$X or −$X */
@@ -565,10 +566,10 @@ function RoadPanel({ game }: { game: Game }) {
         <b className="text-slate-100">Draw a connected route.</b> Click to start, click again for each bend or stop. Routes snap to the grid; crossings become junctions with rounded corners and crossings automatically.
       </p>
       <div className="mt-2 grid grid-cols-1 gap-1">
-        {CLASSES.map((c, i) => {
+        {CLASSES.map(c => {
           const lk = game.classOpen(c.id) ? null : unlockOf('class', c.id)!;
           return (
-            <button key={c.id} className={`card ${game.roadClass === c.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.roadClass = c.id; game.emit(); }} title={`Key ${i + 1}`}>
+            <button key={c.id} className={`card ${game.roadClass === c.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.roadClass = c.id; game.emit(); }} title={KEY_CLASSES.includes(c.id) ? `Key ${KEY_CLASSES.indexOf(c.id) + 1}` : 'No key: picked here'}>
               <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span></div>
               <div className="text-[10px] text-slate-400">{c.desc}</div>
             </button>
@@ -685,22 +686,36 @@ function BusPanel({ game }: { game: Game }) {
 }
 
 function JunctionPanel({ game }: { game: Game }) {
-  const n = game.hoverNode;
+  const n = game.hoverNode, mode = game.junctionMode;
+  const flags = n ? [n.wide ? 'widened turns' : '', n.tl ? 'turn lanes' : ''].filter(Boolean).join(', ') : '';
   return (
     <Panel title="Junctions">
-      <p className="text-xs text-slate-300">Pick a type, then click a junction. Lights add stop lines and signals on every corner; slipways add channelised turn lanes with islands (needs long approaches); roundabouts get a planted island.</p>
-      <div className="mt-2 grid grid-cols-1 gap-1">
-        {JUNCTIONS.map(j => {
-          const lk = game.junctionOpen(j.id) ? null : unlockOf('junction', j.id)!;
-          return (
-            <button key={j.id} className={`card ${game.junctionType === j.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.junctionType = j.id; game.emit(); }}>
-              <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{j.name}</span><span className="text-amber-300">{lk ? (game.eventMode ? 'Roundabout card' : lockText(lk.pop)) : j.cost ? money(j.cost) : 'free'}</span></div>
-              <div className="text-[10px] text-slate-400">{j.desc}</div>
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-1 text-xs">
+        {([['type', 'Type'], ['wide', 'Widen turns'], ['tl', 'Turn lanes']] as const).map(([m, label]) => (
+          <button key={m} className={`chip ${mode === m ? 'chip-on' : ''}`} onClick={() => { game.junctionMode = m; game.emit(); }}>{label}</button>
+        ))}
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">{n ? `Junction of ${n.arms.length} roads (${JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()}) — click to convert` : 'Hover a junction to highlight it.'}</p>
+      {mode === 'type' ? (
+        <>
+          <p className="mt-2 text-xs text-slate-300">Pick a type, then click a junction. Lights add stop lines and signals on every corner; slipways add channelised turn lanes with islands (needs long approaches); roundabouts get a planted island.</p>
+          <div className="mt-2 grid grid-cols-1 gap-1">
+            {JUNCTIONS.map(j => {
+              const lk = game.junctionOpen(j.id) ? null : unlockOf('junction', j.id)!;
+              return (
+                <button key={j.id} className={`card ${game.junctionType === j.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.junctionType = j.id; game.emit(); }}>
+                  <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{j.name}</span><span className="text-amber-300">{lk ? (game.eventMode ? 'Roundabout card' : lockText(lk.pop)) : j.cost ? money(j.cost) : 'free'}</span></div>
+                  <div className="text-[10px] text-slate-400">{j.desc}</div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <p className="mt-2 text-xs text-slate-300">{mode === 'wide'
+          ? `Widen turns (${money(FLAG_COST.wide)}): the corners at this junction take up to twice the speed. Click a junction or bend to turn it on; click again to remove it.`
+          : `Turn lanes (${money(FLAG_COST.tl)}, two-lane roads): the leftmost lane takes left turns only; the others go straight on or right. Click a junction of three or more roads to turn it on; click again to remove it.`}</p>
+      )}
+      <p className="mt-2 text-[11px] text-slate-500">{n ? `Junction of ${n.arms.length} roads (${JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()})${flags ? `, with ${flags}` : ''} — click to ${mode === 'type' ? 'convert' : 'toggle'}` : 'Hover a junction to highlight it.'}</p>
     </Panel>
   );
 }
@@ -767,7 +782,10 @@ function SelectPanel({ game }: { game: Game }) {
 function hintFor(g: Game) {
   switch (g.tool) {
     case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start`;
-    case 'junction': return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here` : 'Hover a junction (three or more roads; roundabouts also work on bends)';
+    case 'junction': if (g.junctionMode !== 'type') return g.hoverNode ? `Click to ${g.junctionMode === 'wide' ? 'widen the turns here' : 'toggle the turn lanes here'}` : 'Hover a junction or bend';
+      return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here` : 'Hover a junction (three or more roads; roundabouts also work on bends)';
+    case 'lane': { const h = g.laneHover; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way';
+      return h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`; }
     case 'bulldoze': return 'Click objects or roads to remove them';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';

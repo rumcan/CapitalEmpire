@@ -1,5 +1,5 @@
 import type { NetOp } from './ground-protocol';
-import { CLASS, RoadNetwork, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type RoadClass, type SegKind } from './network';
+import { CLASS, RoadNetwork, cross, dot, sub, vlen, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type RoadClass, type Seg, type SegKind } from './network';
 import type { LineStyle } from './types';
 
 /** the ops that rebuild net from nothing: a worker that replays them holds the same network (the sim worker, a new ground worker) */
@@ -13,6 +13,7 @@ export function netToOps(net: RoadNetwork): NetOp[] {
   }
   for (const g of groups.values()) ops.push({ k: 'legs', legs: g.legs, cls: g.cls, style: g.style, kinds: g.kinds });
   for (const n of net.nodes.values()) if (n.type !== 'plain') ops.push({ k: 'type', x: n.x, y: n.y, type: n.type });
+  for (const n of net.nodes.values()) if (n.wide || n.tl) ops.push({ k: 'flags', x: n.x, y: n.y, wide: !!n.wide, tl: !!n.tl });
   ops.push({ k: 'rebuild', full: true });
   return ops;
 }
@@ -33,10 +34,49 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
         break;
       }
       case 'type': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeType(nd, op.type, false); break; }
+      case 'flags': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeFlags(nd, op.wide, op.tl, false); break; }
       case 'rebuild': n.rebuild(op.full); break;
       case 'clear': n.clear(); break;
     }
   }
+}
+
+/** the other end of seg s from node n */
+const farEnd = (s: Seg, n: Node): Node => (s.a === n ? s.b : s.a);
+/** whether p, m, q run on straight (the turn at m under about one degree; as fix-gate's runs) */
+const straightAt = (p: Node, m: Node, q: Node) => { const d1 = sub(m, p), d2 = sub(q, m); return dot(d1, d2) > 0 && Math.abs(cross(d1, d2)) <= 0.02 * vlen(d1) * vlen(d2); };
+/** a bound on the segs of one straight run (a loop of segs cannot run on forever) */
+const MAX_CHAIN = 4096;
+
+/** the straight run through seg s, in order from one end to the other: s, and on from each end through nodes of exactly two segs, of the same class,
+ *  straight on; it stops at a junction (3+ arms), a dead end, a bend, a class change, and before any seg skip() names (a toll plaza); s itself is
+ *  not in the run when skip() names it (an empty run) */
+export function straightChain(s: Seg, skip: (x: Seg) => boolean = () => false): Seg[] {
+  if (skip(s)) return [];
+  const ahead: Seg[] = [], behind: Seg[] = [];
+  extendRun(s.b, s, s, skip, ahead); extendRun(s.a, s, s, skip, behind);
+  return [...behind.reverse(), s, ...ahead];
+}
+/** appends to out the segs on from node n past seg cur (see straightChain) */
+function extendRun(n: Node, cur: Seg, s: Seg, skip: (x: Seg) => boolean, out: Seg[]) {
+  let from = n, c = cur;
+  while (out.length < MAX_CHAIN) {
+    const to = farEnd(c, from);
+    if (to.segs.length !== 2) return;
+    const nx = to.segs[0] === c ? to.segs[1]! : to.segs[0]!;
+    if (nx === s || nx.cls !== s.cls || skip(nx) || !straightAt(from, to, farEnd(nx, to))) return;
+    out.push(nx); from = to; c = nx;
+  }
+}
+
+/** a node's save entry: [x, y, type], with a 4th element when it has flags (1 widened turns, 2 turn lanes) */
+export type NodeEntry = [number, number, string, number?];
+export function nodeEntry(n: Node): NodeEntry { const f = (n.wide ? 1 : 0) | (n.tl ? 2 : 0); return f ? [n.x, n.y, n.type, f] : [n.x, n.y, n.type]; }
+/** a saved node entry as edits: its type and flags on the node there (no node there: skipped; no 4th element: no flags) */
+export function applyNodeEntry(e: NetEditor, [x, y, type, f]: NodeEntry) {
+  const n = e.net.nodeAt({ x, y }); if (!n) return;
+  e.setNodeType(n, type as NodeType);
+  if (f) e.setNodeFlags(n, !!(f & 1), !!(f & 2));
 }
 
 /** Edits the main thread's network and records the same edits for the ground workers. */
@@ -53,6 +93,7 @@ export class NetEditor {
     this.net.removePiece(sel, false);
   }
   setNodeType(n: Node, type: NodeType) { this.ops.push({ k: 'type', x: n.x, y: n.y, type }); this.net.setNodeType(n, type, false); }
+  setNodeFlags(n: Node, wide: boolean, tl: boolean) { this.ops.push({ k: 'flags', x: n.x, y: n.y, wide, tl }); this.net.setNodeFlags(n, wide, tl, false); }
   clear() { this.net.clear(); this.ops = [{ k: 'clear' }]; }
   /** rebuild here, and hand back the ops (ending in the same rebuild) for the workers */
   commit(full = false): NetOp[] {
