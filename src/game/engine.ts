@@ -13,7 +13,8 @@ import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { insideSite, type Site } from './event/site';
-import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './event/config';
+import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
+import { Round } from './event/round';
 import type { BusRouteDef } from './event/bus';
 import walkersUrl from '../assets/characters/walkers.png';
 import { plazaEdge, plazaIslands, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
@@ -165,6 +166,8 @@ export class Game {
   /** the shuttle bus routes as the player drew them (saved; ids 1..n, a route's index is its sim index), the bus tool's first stop once it is chosen (its
    *  road point, tiles, and its car park's id; null until then), and the tool's plan at the cursor (see busUpdate: the stop it would place, x, y, and why not) */
   busDefs: BusRouteDef[] = []; busPick: { x: number; y: number; park: number } | null = null;
+  /** the taken cards applied so far (saved: a card is never applied twice; see applyCards), the buses a new route gets and the seats of a bus */
+  cardsApplied = 0; busFleet = START_BUSES; busSeats = BUS_SEATS;
   private busHover: null | { mx: number; my: number; x: number; y: number; park: number; why: string } = null;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
@@ -606,8 +609,8 @@ export class Game {
     if (!legs.length) { this.cancelRoute(); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
-    if (!classUnlocked(cls.id, this.reached)) { const lk = unlockOf('class', cls.id)!; this.toast(`${cls.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
-    if (kinds.includes(SK.TUNNEL) && !tunnelsUnlocked(this.reached)) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
+    if (!this.classOpen(cls.id)) { const lk = unlockOf('class', cls.id)!; this.toast(`${cls.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
+    if (kinds.includes(SK.TUNNEL) && !this.tunnelsOpen()) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
     if (this.crossesStadium(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross the stadium', 'warn'); return; }
@@ -632,7 +635,7 @@ export class Game {
   }
   private junctionClick(mx: number, my: number) {
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
-    if (!junctionUnlocked(this.junctionType, this.reached)) { const lk = unlockOf('junction', this.junctionType)!; this.toast(`${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
+    if (!this.junctionOpen(this.junctionType)) { const lk = unlockOf('junction', this.junctionType)!; this.toast(this.eventMode ? `${spec.name} needs the Roundabout card` : `${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     const n = this.net.nearestNode(t, spec.minDeg, 5);
     if (!n) { this.toast(spec.minDeg > 2 ? 'Click a junction where three or more roads meet' : 'Click a junction or a bend in the road', 'warn'); return; }
     if (n.type === this.junctionType) { this.toast(`That junction already has ${spec.name.toLowerCase()}`); return; }
@@ -1161,11 +1164,11 @@ export class Game {
     const cost = this.busDefs.length ? BUS_ROUTE_COST : 0, pk = this.busPick;
     if (cost > this.money) { this.toast(`Not enough money: a bus route costs $${cost.toLocaleString()}`, 'warn'); return; }
     const id = Math.max(0, ...this.busDefs.map(d => d.id)) + 1;
-    this.busDefs.push({ id, park: pk.park, sx: pk.x, sy: pk.y, dx: h.x, dy: h.y, buses: START_BUSES, seats: BUS_SEATS });
+    this.busDefs.push({ id, park: pk.park, sx: pk.x, sy: pk.y, dx: h.x, dy: h.y, buses: this.busFleet, seats: this.busSeats });
     if (cost) this.traffic.spend('construction', cost);
     this.traffic.setBusRoutes(this.busDefs);
     this.busPick = null; this.puff((pk.x + h.x) / 2, (pk.y + h.y) / 2, 8);
-    this.toast(`Bus route #${id}: ${START_BUSES} buses of ${BUS_SEATS} seats${cost ? ` ($${cost.toLocaleString()})` : ' (the starting kit)'}`, 'good');
+    this.toast(`Bus route #${id}: ${this.busFleet} buses of ${this.busSeats} seats${cost ? ` ($${cost.toLocaleString()})` : ' (the starting kit)'}`, 'good');
     this.busUpdate(h.mx, h.my); this.scheduleSave(); this.emit();
   }
   /** the index of the bus route with a stop within 3 tiles of tile t, or -1 */
@@ -1258,6 +1261,35 @@ export class Game {
   get reached() { return this.traffic.career.reached; }
   /** true once the career is won (WIN_POP residents; it stays so) */
   get won() { return this.traffic.career.won; }
+  /** event mode: a stadium site exists, and the event's rules replace the Career's unlocks (see classOpen, junctionOpen, tunnelsOpen) */
+  get eventMode(): boolean { return this.site !== null; }
+  /** a road class is open to build: every class in event mode, else as the Career unlocks it */
+  classOpen(id: ClassId): boolean { return this.eventMode || classUnlocked(id, this.reached); }
+  /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
+  junctionOpen(t: NodeType): boolean { return this.eventMode ? t !== 'roundabout' || this.traffic.round.cards.includes('roundabout') : junctionUnlocked(t, this.reached); }
+  /** tunnels are open: always in event mode, else as the Career unlocks them */
+  tunnelsOpen(): boolean { return this.eventMode || tunnelsUnlocked(this.reached); }
+  /** takes a card of the eval's draft (the worker refuses what is not on it); its effects follow with the next frame (see applyCards) */
+  pickCard(id: CardId) { this.traffic.pickCard(id); this.emit(); }
+  /** the new toll gates' booths, the new bus routes' buses and the seats of a bus, as the cards given set them (see applyCards; on load, the cards applied) */
+  private setCardFields(cards: CardId[]) {
+    this.tollBooths = START_BOOTHS + 2 * cards.filter(c => c === 'booths').length;
+    this.busFleet = START_BUSES + 4 * cards.filter(c => c === 'buses').length;
+    this.busSeats = cards.includes('doubledecker') ? DECK_SEATS : BUS_SEATS;
+  }
+  /** the round's cards not applied yet, in order: a toast each, and the effects on the toll gates and bus routes (booths, buses, double-decker seats);
+   *  express and the double-decker seats of the routes are the worker's (City.applyCards); the roundabout's is its gate (see junctionOpen) */
+  private applyCards() {
+    const cards = this.traffic.round.cards;
+    for (let i = this.cardsApplied; i < cards.length; i++) {
+      const id = cards[i]!;
+      if (id === 'booths') { this.tollBooths += 2; for (const d of this.tollDefs) d.booths += 2; this.syncTolls(true); }
+      else if (id === 'buses') { this.busFleet += 4; for (const d of this.busDefs) d.buses += 4; this.traffic.setBusRoutes(this.busDefs); }
+      else if (id === 'doubledecker') { this.busSeats = DECK_SEATS; for (const d of this.busDefs) d.seats = Math.max(d.seats, DECK_SEATS); this.traffic.setBusRoutes(this.busDefs); }
+      this.toast(`Card: ${CARDS.find(c => c.id === id)!.name}`, 'good');
+    }
+    this.cardsApplied = cards.length; this.scheduleSave(); this.emit();
+  }
   /** takes a loan unit if the town can hold one more (else says why); the worker books it */
   borrow() { const b = Budget.from(this.traffic.budget); if (b.loans >= b.maxLoans(this.traffic.pop)) this.toast('No more credit: grow the town for more', 'warn'); else this.traffic.loan(true); }
   /** repays a loan unit if there is one and the treasury covers LOAN (else says why); the worker books it */
@@ -1277,6 +1309,7 @@ export class Game {
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
       tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
       buses: this.busDefs.map((d): [number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats]),
+      cardsApplied: this.cardsApplied,
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -1291,6 +1324,9 @@ export class Game {
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
       if (d.buses) this.busDefs = d.buses.map(([park, sx, sy, dx, dy, buses, seats], k) => ({ id: k + 1, park, sx, sy, dx, dy, buses, seats }));
+      // the cards the save had applied are in its tolls and routes already: only the fields new gates and routes take are set from them
+      const cards = d.round?.cards ?? [], n = Math.min(cards.length, d.cardsApplied ?? cards.length);
+      this.cardsApplied = n; this.setCardFields(cards.slice(0, n));
       if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
       return true;
     } catch (e) { console.error('load failed', e); return false; }
@@ -1302,6 +1338,8 @@ export class Game {
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null;
+    // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
+    this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
@@ -1455,6 +1493,7 @@ export class Game {
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
     this.applyLotQueue(); this.flushLotGround();
+    if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();

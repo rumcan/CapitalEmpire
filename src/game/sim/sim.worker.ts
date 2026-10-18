@@ -16,6 +16,8 @@ const scope = self as unknown as DedicatedWorkerGlobalScope;
 const FRAME_MS = 100, SKIP_MS = 70, TOWN_EVERY = 10;
 const city = new City(1);
 let speed = 1, forcePost = false, wasAlive = false, townPosted = 0;
+/** the event round's stage as the books were last posted for it (the build and the surge move on the clock: a change posts the books) */
+let roundStage = city.round.stage;
 /** the sim time a fast-forward runs to, s; -1 when none */
 let skipUntil = -1;
 /** the performance.now() of the last frame: the wall time since it feeds the event round's build */
@@ -107,6 +109,8 @@ function frame() {
     if (r.ledger) postBudget(r.ledger);
     postCareer(r);
   }
+  // the round's stage moved (the build ends, kick-off: the payout is booked then): the books go out so the treasury shows it at once
+  if (city.round.stage !== roundStage) { roundStage = city.round.stage; postBudget(null); }
   const hr = Math.floor(city.sim.t / HOUR);
   // not while fast-forwarding (an hour passes almost every frame then); the first frame after the skip posts it
   if (hr !== reportHour && !(skipUntil > city.sim.t)) { reportHour = hr; postReport(); }

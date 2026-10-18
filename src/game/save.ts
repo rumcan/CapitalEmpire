@@ -55,6 +55,8 @@ export interface SaveV5 {
   tolls?: [number, number, number, number, number][];
   /** the shuttle bus routes as [park, sx, sy, dx, dy, buses, seats] (the lot stop and the doors stop, tiles; ids 1..n in this order; optional, no version bump; missing = none) */
   buses?: [number, number, number, number, number, number, number][];
+  /** how many of the round's cards the game has applied to its tolls and bus routes (optional, no version bump; missing = all of them) */
+  cardsApplied?: number;
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',

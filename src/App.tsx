@@ -7,9 +7,9 @@ import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
-import { MILESTONES, WIN_POP, classUnlocked, junctionUnlocked, unlockOf } from './game/career';
-import { BUS_ROUTE_COST, BUS_SEATS, LOT_TILE_COST, PARTY, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './game/event/config';
-import type { SurgeView, TownResult } from './game/event/surge';
+import { MILESTONES, WIN_POP, unlockOf } from './game/career';
+import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
+import type { SurgeView } from './game/event/surge';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
@@ -21,6 +21,8 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'bus', label: 'Bus route', key: 'U', icon: '🚌' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
+/** a signed money figure: +$X or −$X */
+const sgn = (n: number) => (n < 0 ? '−' : '+') + money(Math.abs(n));
 /** the price line of a locked road class or junction type: the residents it unlocks at */
 const lockText = (pop: number) => `🔒 ${pop.toLocaleString()} residents`;
 /** the game clock as HH:MM */
@@ -99,7 +101,9 @@ export default function App() {
                 <div className="text-[10px] uppercase tracking-[0.25em] text-amber-400/70">Town Builder</div>
               </div>
               <div className="mx-1 h-8 w-px bg-white/10" />
-              <Stat label="Career" {...careerStat(game)} tone="text-amber-200" />
+              {game.eventMode
+                ? <Stat label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
+                : <Stat label="Career" {...careerStat(game)} tone="text-amber-200" />}
               <Stat label="Treasury" value={game.unlimited ? '∞' : money(game.money)}tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
               <Stat label="Population" value={game.traffic.pop.toLocaleString()} />
               <Stat label="Jobs" value={game.traffic.jobs.toLocaleString()} />
@@ -177,7 +181,8 @@ export default function App() {
             </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
-          {game.site && <RoundPanel game={game} />}
+          {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
+          {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.panel === 'bottlenecks' && <BottleneckPanel game={game} />}
           {game.showWin && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
@@ -316,13 +321,9 @@ interface TownRow { sent: number; parked: number; stranded: number; fans: number
 function liveRows(v: SurgeView): TownRow[] {
   return v.sent.map((sent, k) => ({ sent, parked: v.parked[k]!, stranded: v.stranded[k]!, fans: v.fans[k]!, atStop: v.atStop[k]!, onBus: v.onBus[k]!, rest: `on the road ${v.onRoad[k]}` + (v.turned[k] ? ` · turned ${v.turned[k]}` : '') + ` · lost ${v.lost[k]}` }));
 }
-/** the result's rows: the cars turned away, lost and late (on the road or never left at kick-off) per town, and the fans per town */
-function resultRows(by: TownResult[]): TownRow[] {
-  return by.map(t => ({ sent: t.sent, parked: t.parked, stranded: t.stranded, fans: t.fans, atStop: t.atStop, onBus: t.onBus, rest: `turned ${t.turned} · lost ${t.lost} · late ${t.late}` }));
-}
 
-/** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock;
- *  eval: the result, to close). Docked under the top bar; the eval screen replaces it in step 7 */
+/** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock).
+ *  Docked under the top bar; the eval stage has its own screen (EvalScreen) */
 function RoundPanel({ game }: { game: Game }) {
   const r = game.traffic.round, last = r.last, goBtn = <button className="chip" onClick={() => game.goToSite()}>Go to stadium</button>;
   const crowd = r.crowd.map((c, i) => `Town ${String.fromCharCode(65 + i)} ${c}`).join(' · ') + (r.crowd.length ? ' cars' : '');
@@ -359,17 +360,71 @@ function RoundPanel({ game }: { game: Game }) {
             <p className="text-xs text-slate-400">upkeep {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
         )}
-        {r.stage === 'eval' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-slate-100">Event over{last ? ` · ${last.arrived}/${last.sent * PARTY} fans arrived (${Math.round(last.rate * 100)}%)` : ''}</span>
-              <button className="chip chip-on" onClick={() => game.closeRound()}>Back to the valley</button>
-            </div>
-            {last?.byTown && <SurgeTowns rows={resultRows(last.byTown)} />}
-            <p className="text-xs text-slate-400">upkeep paid {money(r.upkeep)} · toll {money(r.toll)}</p>
+      </Panel>
+    </div>
+  );
+}
+
+/** the evaluation screen (Phase 5 step 7b): a centred card over the map, shown in eval only. The arrival rate and its change, the towns, the money, the
+ *  bottlenecks at kick-off (Go jumps there), and the draft of cards: picking one opens the way back to the valley (closeRound). No close button */
+function EvalScreen({ game }: { game: Game }) {
+  const r = game.traffic.round, last = r.last;
+  if (!last) return null;
+  const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
+  return (
+    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
+      <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{`Stadium · Level ${last.level} · Run ${last.run}`}</div>
+        <div>
+          <p><span className="text-4xl font-bold tabular-nums text-amber-200">{pct}%</span> <span className="text-sm text-slate-200">of fans in before kick-off</span></p>
+          <p className="text-xs text-slate-400">
+            {delta === null ? 'First run at this level'
+              : delta > 0 ? <span className="tabular-nums text-emerald-300">▲ +{delta} points since the last run</span>
+              : delta < 0 ? <span className="tabular-nums text-red-300">▼ −{-delta} points since the last run</span>
+              : 'No change since the last run'}
+          </p>
+        </div>
+        {last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">Perfect! The towns grow {Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level {last.level + 1}</div>}
+        <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
+          {last.byTown.map((t, k) => (
+            <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} fans · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}</p>
+          ))}
+        </div>
+        <p className="text-sm text-slate-200">
+          Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span> · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span>
+        </p>
+        {last.stuck.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-slate-100">Where they got stuck</p>
+            {last.stuck.map((s, k) => (
+              <div key={k} className="flex items-center justify-between gap-2 text-xs">
+                <span className="text-slate-300">{s.label} <span className="tabular-nums text-slate-400">· {Math.round(s.loss / 60)} vehicle-min lost</span></span>
+                <button className="chip" onClick={() => game.jumpTo(s.x, s.y)}>Go</button>
+              </div>
+            ))}
           </div>
         )}
-      </Panel>
+        {r.draft && (
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-slate-100">Pick a card</p>
+            <div className="grid grid-cols-3 gap-2">
+              {r.draft.map(id => { const c = CARDS.find(q => q.id === id)!; return (
+                <button key={id} className="flex flex-col rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-amber-400/50 hover:bg-white/10" onClick={() => game.pickCard(id)}>
+                  <span className="flex items-start justify-between gap-1">
+                    <span className="text-sm font-semibold text-slate-100">{c.name}</span>
+                    <span className={`shrink-0 rounded px-1 text-[9px] font-bold uppercase ${c.kind === 'unlock' ? 'bg-sky-400/20 text-sky-200' : 'bg-amber-400/20 text-amber-200'}`}>{c.kind === 'unlock' ? 'Unlock' : 'Upgrade'}</span>
+                  </span>
+                  <span className="mt-1 text-xs text-slate-400">{c.desc}</span>
+                </button>
+              ); })}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-end gap-3 pt-1">
+          {r.draft && <span className="text-xs text-slate-400">Pick a card first</span>}
+          <button className="chip chip-on disabled:cursor-not-allowed disabled:opacity-40" disabled={!!r.draft} onClick={() => game.closeRound()}>Back to the valley</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -511,7 +566,7 @@ function RoadPanel({ game }: { game: Game }) {
       </p>
       <div className="mt-2 grid grid-cols-1 gap-1">
         {CLASSES.map((c, i) => {
-          const lk = classUnlocked(c.id, game.reached) ? null : unlockOf('class', c.id)!;
+          const lk = game.classOpen(c.id) ? null : unlockOf('class', c.id)!;
           return (
             <button key={c.id} className={`card ${game.roadClass === c.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.roadClass = c.id; game.emit(); }} title={`Key ${i + 1}`}>
               <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span></div>
@@ -612,8 +667,8 @@ function BusPanel({ game }: { game: Game }) {
         <b className="text-slate-100">Click a road beside a car park, then a road near the stadium.</b> Fans walk from the bays to the stop and queue there; the buses carry them to the doors. Without a route they walk all the way. Esc cancels; with Bulldoze (X), click a stop to remove its route (no refund).
       </p>
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
-        <div className="flex justify-between"><span className="text-slate-400">Buses per new route</span><span>{START_BUSES}</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Seats per bus</span><span>{BUS_SEATS}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Buses per new route</span><span>{game.busFleet}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Seats per bus</span><span>{game.busSeats}</span></div>
         <div className="flex justify-between"><span className="text-slate-400">Cost of a new route</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{cost ? money(cost) : 'free (the starting kit)'}</span></div>
       </div>
       <div className="mt-2 max-h-64 overflow-y-auto">
@@ -636,10 +691,10 @@ function JunctionPanel({ game }: { game: Game }) {
       <p className="text-xs text-slate-300">Pick a type, then click a junction. Lights add stop lines and signals on every corner; slipways add channelised turn lanes with islands (needs long approaches); roundabouts get a planted island.</p>
       <div className="mt-2 grid grid-cols-1 gap-1">
         {JUNCTIONS.map(j => {
-          const lk = junctionUnlocked(j.id, game.reached) ? null : unlockOf('junction', j.id)!;
+          const lk = game.junctionOpen(j.id) ? null : unlockOf('junction', j.id)!;
           return (
             <button key={j.id} className={`card ${game.junctionType === j.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.junctionType = j.id; game.emit(); }}>
-              <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{j.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : j.cost ? money(j.cost) : 'free'}</span></div>
+              <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{j.name}</span><span className="text-amber-300">{lk ? (game.eventMode ? 'Roundabout card' : lockText(lk.pop)) : j.cost ? money(j.cost) : 'free'}</span></div>
               <div className="text-[10px] text-slate-400">{j.desc}</div>
             </button>
           );
