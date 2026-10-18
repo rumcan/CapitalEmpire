@@ -5,10 +5,10 @@ import assert from 'node:assert/strict';
 import { generateTerrain } from '../src/game/terrain';
 import { townCentres } from '../src/game/lots/seedtowns';
 import { crowdFor, insideSite, placeStadium } from '../src/game/event/site';
-import { CARDS, DRAFT, ENTRY_S, EXPRESS_ENTRY, L1_CARS, LEVEL_MUL, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout } from '../src/game/event/config';
+import { CARDS, DRAFT, ENTRY_S, EVENT_START_MONEY, EXPRESS_ENTRY, L1_CARS, LEVEL_MUL, PAYOUT_BASE, PAYOUT_PIVOT, PENALTY, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout } from '../src/game/event/config';
 import { Round, draftFor, type RoundSave } from '../src/game/event/round';
 import { City } from '../src/game/city';
-import { GAME_DAY } from '../src/game/budget';
+import { GAME_DAY, START_MONEY } from '../src/game/budget';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { MAP } from '../src/game/iso';
@@ -157,10 +157,20 @@ test('City round: the clock freezes at 18:00; money falls with the upkeep over b
   assert.equal(city.sim.frozen, false, 'closeRound unfreezes the clock');
 });
 
-test('payout: 0 -> -20000, 0.25 -> -10000, 0.5 -> 0, 0.75 -> 30000, 1 -> 60000 at level 1; level 2 is x1.4', () => {
-  assert.deepEqual([0, 0.25, 0.5, 0.75, 1].map(r => payout(r, 1)), [-20000, -10000, 0, 30000, 60000]);
-  assert.equal(payout(1, 2), 84000);
-  assert.equal(payout(0.75, 2), 42000);
+test('payout: the curve from the pivot: PENALTY at rate 0, half of it at half the pivot, 0 at the pivot, half PAYOUT_BASE midway above it, PAYOUT_BASE at 1; level 2 is x LEVEL_MUL', () => {
+  const P = PAYOUT_PIVOT;
+  assert.deepEqual([0, P / 2, P, (1 + P) / 2, 1].map(r => payout(r, 1)), [-PENALTY, -PENALTY / 2, 0, PAYOUT_BASE / 2, PAYOUT_BASE]);
+  assert.equal(payout(1, 2), Math.round(PAYOUT_BASE * LEVEL_MUL));
+  assert.equal(payout((1 + P) / 2, 2), Math.round(PAYOUT_BASE * LEVEL_MUL / 2));
+});
+
+test('City: a new valley with town centres starts with EVENT_START_MONEY; without centres (the single town) with START_MONEY', () => {
+  const bare = new City(7);
+  bare.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
+  assert.equal(bare.budget.money, START_MONEY);
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7, CENTRES);
+  assert.equal(city.budget.money, EVENT_START_MONEY);
 });
 
 test('the draft: DRAFT distinct cards at kick-off (seeded); a pick moves xp and cards once; close is refused while the draft is open; an unlock is never offered twice', () => {

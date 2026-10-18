@@ -3,9 +3,12 @@
 import { LV } from './lots/town';
 import { STRUCT_COST } from './structures';
 import { CLASS, type ClassId } from './network';
+import { EVENT_START_MONEY } from './event/config';
 
 /** the treasury of a new city, $ */
 export const START_MONEY = 80000;
+/** a fresh budget's treasury: a valley with town centres starts with EVENT_START_MONEY, the single town with START_MONEY */
+export const startMoney = (centres: boolean): number => (centres ? EVENT_START_MONEY : START_MONEY);
 /** one loan unit, $: borrow adds it to the treasury, repay takes it back */
 export const LOAN = 25000;
 /** interest per loan unit per game day */

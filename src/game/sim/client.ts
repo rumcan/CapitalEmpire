@@ -13,7 +13,7 @@ import type { Leg } from '../network';
 import { VTYPES, type CarInfo } from './sim';
 import type { Report } from './bottlenecks';
 import type { HourStat } from '../beforeafter';
-import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../budget';
+import { Budget, GAME_DAY, START_MONEY, startMoney, type BudgetSave, type Ledger } from '../budget';
 import type { CareerSave, Milestone } from '../career';
 import { Round, type RoundSave, type RoundView } from '../event/round';
 import type { Site } from '../event/site';
@@ -113,7 +113,12 @@ export class SimClient {
   /** replaces the worker's network (the same ops the ground workers get) */
   netOps(ops: NetOp[]) { if (ops.length) this.post({ t: 'net', ops }); }
   /** a new valley: its terrain classes (copied), the highway entry (tiles), the seed and the town centres (flat x, y pairs in tiles; none: the single town); the town starts again. Send before the net ops. */
-  terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = []) { this.post({ t: 'terrain', cls, entry, seed, towns }); }
+  terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = []) {
+    this.post({ t: 'terrain', cls, entry, seed, towns });
+    // the worker resets the books and the career with a new valley (City.terrain): the mirror shows the fresh treasury at once
+    this.budget = { ...new Budget().toJSON(), money: startMoney(towns.length > 0), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY };
+    this.career = { reached: 0, won: false };
+  }
   /** the towns built at once (after a new valley's net ops): each grows to pop residents; the town's lots and totals come back as a town message */
   stamp(pop: number) { this.post({ t: 'stamp', pop }); }
   /** the town's growth option by id (see GROWTH_OPTIONS) */

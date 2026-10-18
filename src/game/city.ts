@@ -13,7 +13,7 @@ import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
-import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
+import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
 import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, tollPrice, type CardId } from './event/config';
@@ -242,7 +242,7 @@ export class City {
   /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day); the career
    *  saved with them, or a fresh one (at the hamlet) if none is given */
   setBudget(s: BudgetSave | null, career?: CareerSave | null): void {
-    this.budget = s ? Budget.from(s) : new Budget();
+    this.budget = s ? Budget.from(s) : Budget.from(undefined, startMoney(this.centres.length > 0));
     this.budget.unlimited = this.unlimited;
     if (!s) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career ?? undefined);

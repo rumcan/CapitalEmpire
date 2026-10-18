@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LU, LV } from '../src/game/lots/town';
+import { PAYOUT_BASE } from '../src/game/event/config';
 import { Budget, DEBT_DAYS, LOAN, START_MONEY, compensation, lotTax, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn } from '../src/game/budget';
 
 const lot = (o: Partial<LotIn>): LotIn => ({ use: LU.RES, level: LV.BUILT, decline: 0, cls: 'street', access: 1, ...o });
@@ -35,10 +36,10 @@ test('a toll and a payout book into the day: in the treasury now, the lines in t
   const L = b.endDay(1, EMPTY_DAY);
   assert.equal(L.toll, 300); assert.equal(L.payout, -500);
   assert.equal(L.net, -200); assert.equal(L.money, 800);
-  b.payout(60000);
+  b.payout(PAYOUT_BASE);
   const L2 = b.endDay(2, EMPTY_DAY);
-  assert.equal(L2.payout, 60000); assert.equal(L2.toll, undefined, 'the toll line is absent when none');
-  assert.equal(L2.net, 60000); assert.equal(L2.money, 60800);
+  assert.equal(L2.payout, PAYOUT_BASE); assert.equal(L2.toll, undefined, 'the toll line is absent when none');
+  assert.equal(L2.net, PAYOUT_BASE); assert.equal(L2.money, 800 + PAYOUT_BASE);
 });
 
 test('endDay books tax, takings, upkeep, signals and interest, and applies them to the treasury', () => {

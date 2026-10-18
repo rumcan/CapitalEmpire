@@ -61,7 +61,7 @@ export const START_BOOTHS = 6;
 /** the seconds a car stops at a booth to pay */
 export const SERVICE_S = 4;
 /** the toll per car at level 1, $ */
-export const TOLL_PRICE = 8;
+export const TOLL_PRICE = 25;
 /** the toll per car at a level, $ (up a quarter per level) */
 export const tollPrice = (level: number): number => Math.round(TOLL_PRICE * (1 + 0.25 * (level - 1)));
 /** the route cost a driver puts on a toll, s (a movement into a toll plaza costs this much more) */
@@ -91,8 +91,10 @@ export const BUS_ROUTE_COST = 15000;
 /** the seats of a double-decker bus (the Double-decker buses card: every route's seats are at least this) */
 export const DECK_SEATS = 100;
 
+/** the treasury of a new valley with town centres, $ (the single town starts with START_MONEY: see budget.ts startMoney) */
+export const EVENT_START_MONEY = 600000;
 /** the payout of a round at rate 1 and level 1, $ (the curve: see payout) */
-export const PAYOUT_BASE = 60000;
+export const PAYOUT_BASE = 100000;
 /** the arrival rate at which a round pays nothing (the curve's pivot) */
 export const PAYOUT_PIVOT = 0.5;
 /** the most a round at rate 0 costs, $ (the penalty: see payout) */

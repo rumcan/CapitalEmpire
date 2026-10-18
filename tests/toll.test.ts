@@ -8,7 +8,7 @@ import { NetEditor } from '../src/game/netops';
 import { LaneGraph, LK, type DSeg } from '../src/game/sim/lanes';
 import { DT, Sim } from '../src/game/sim/sim';
 import { plazaKey, type TollDef } from '../src/game/event/toll';
-import { SERVICE_S, START_BOOTHS, tollPrice } from '../src/game/event/config';
+import { SERVICE_S, START_BOOTHS, TOLL_PRICE, tollPrice } from '../src/game/event/config';
 import { Budget, type Ledger } from '../src/game/budget';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
@@ -171,8 +171,8 @@ test('routing: with a free way of nearly the same length, most cars take it; wit
   assert.equal(only.tolls, 30, 'every car paid the toll with no other way');
 });
 
-test('tolls: the price by level (8 $ at level 1, a quarter more each level), and the takings are income at once, booked in the next ledger', () => {
-  assert.deepEqual([1, 2, 3, 5].map(tollPrice), [8, 10, 12, 16]);
+test('tolls: the price by level (TOLL_PRICE at level 1, a quarter more each level), and the takings are income at once, booked in the next ledger', () => {
+  assert.deepEqual([1, 2, 3, 5].map(tollPrice), [1, 2, 3, 5].map(l => Math.round(TOLL_PRICE * (1 + 0.25 * (l - 1)))));
   const b = new Budget(), m0 = b.money;
   b.toll(40);
   assert.equal(b.money, m0 + 40, 'in the treasury at once');
