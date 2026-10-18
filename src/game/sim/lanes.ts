@@ -40,8 +40,11 @@ export interface Lane {
 export interface DSeg { id: number; key: string; seg: Seg; dir: 0 | 1; from: Node; to: Node; lanes: number[]; len: number; vmax: number; /** movements leaving its end */ out: number[]; /** a toll gate's booths (undefined: not a toll dseg; its lanes are the booth lanes) */ toll?: number }
 /** a way through a node from one dseg to another; paths[k] is a lane sequence [inLane, ...node lanes, outLane] */
 export interface Movement { id: number; key: string; node: Node; from: number; to: number; turn: Turn; paths: number[][]; len: number }
-/** fixed-time signal plan of a node: armPhase[i] = phase of arm i (node.arms order); times in seconds */
-export interface SignalPlan { node: Node; armPhase: number[]; phases: number; green: number; amber: number; allRed: number; offset: number }
+/** signal plan of a node: armPhase[i] = phase of arm i (node.arms order); times in seconds. green, amber, allRed and offset are the fixed-time
+ *  reference cycle (Sim.fixedSignals); the runtime state is actuated (signals.ts): idx the phase served, stage 0 green, 1 amber, 2 all-red,
+ *  el the seconds in the stage; phaseLanes[k] are the LINK lanes feeding the connectors of phase k */
+export interface SignalPlan { node: Node; armPhase: number[]; phases: number; green: number; amber: number; allRed: number; offset: number;
+  idx: number; stage: number; el: number; phaseLanes: number[][] }
 
 /** the arm of a node at one of its arms' directed segments */
 interface ArmIO { a: Arm; i: number; inD: number; outD: number }
@@ -367,7 +370,7 @@ export class LaneGraph {
     let minorCtl: number = CTL.YIELD;
     if (!sig) { let hi = 0; for (const x of io) if (major[x.i]) hi = Math.max(hi, x.a.cls.order); minorCtl = hi >= 2 ? CTL.STOP : CTL.YIELD; }
     const armPhase = new Array<number>(M).fill(-1);
-    let phases = 0;
+    let phases = 0, sp: SignalPlan | null = null;
     if (sig) {
       for (let i = 0; i < M; i++) {
         if (armPhase[i] >= 0) continue;
@@ -375,7 +378,8 @@ export class LaneGraph {
         while (j < M && (armPhase[j] >= 0 || dot(io[i].a.dir, io[j].a.dir) >= -0.7)) j++;
         armPhase[i] = phases; if (j < M) armPhase[j] = phases; phases++;
       }
-      this.signals.set(n, { node: n, armPhase, phases, green: 18, amber: 3, allRed: 2, offset: Math.abs(n.x * 7 + n.y * 13) % (phases * 23) });
+      sp = { node: n, armPhase, phases, green: 18, amber: 3, allRed: 2, offset: Math.abs(n.x * 7 + n.y * 13) % (phases * 23), idx: 0, stage: 0, el: 0, phaseLanes: Array.from({ length: phases }, () => []) };
+      this.signals.set(n, sp);
     }
     for (const x of io) for (const y of io) {
       if (x.i === y.i) continue;
@@ -390,6 +394,7 @@ export class LaneGraph {
         if (sig) {
           c.ctl = CTL.SIGNAL; c.phase = armPhase[x.i]; c.prio = t === 'L' ? 2 : 3;
           if (n.type === 'slip' && t === 'R') { c.ctl = CTL.YIELD; c.phase = -1; c.prio = 1; }
+          if (sp && c.ctl === CTL.SIGNAL) { const pl = sp.phaseLanes[c.phase]!; if (!pl.includes(inL.id)) pl.push(inL.id); }
         } else if (major[x.i]) { c.ctl = CTL.FREE; c.prio = t === 'L' ? 2 : 3; }
         else { c.ctl = minorCtl; c.prio = t === 'R' ? 1 : 0; }
         paths.push([inL.id, c.id, outL.id]);

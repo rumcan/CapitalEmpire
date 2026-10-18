@@ -5,7 +5,7 @@ import { CLASS, RoadNetwork, type Leg, type Node } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { CTL, LK, LaneGraph, checkGraph, laneAt, type Lane, type SignalPlan } from '../src/game/sim/lanes';
 import { CAR, idm } from '../src/game/sim/idm';
-import { SIG, phaseState } from '../src/game/sim/signals';
+import { SIG, phaseState, stepSignals } from '../src/game/sim/signals';
 import { DT, Sim } from '../src/game/sim/sim';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
@@ -153,21 +153,28 @@ function crossing(len: number): { e: NetEditor; g: LaneGraph } {
 }
 const centre = (e: NetEditor): Node => e.net.nodeAt({ x: 300, y: 300 })!;
 
-test('signal phases: green, then amber, then red; the phases take turns', () => {
-  const p = { node: null as unknown as Node, armPhase: [0, 1], phases: 2, green: 18, amber: 3, allRed: 2, offset: 0 } as SignalPlan;
-  // a cycle is 46 s: phase 0 green 0-18, amber 18-21, red to 23; phase 1 green 23-41, amber 41-44, red to 46
-  assert.equal(phaseState(p, 0, 0), SIG.GREEN);
-  assert.equal(phaseState(p, 0, 17.9), SIG.GREEN);
-  assert.equal(phaseState(p, 0, 18.5), SIG.AMBER);
-  assert.equal(phaseState(p, 0, 21.5), SIG.RED);
-  assert.equal(phaseState(p, 1, 21.5), SIG.RED);
-  assert.equal(phaseState(p, 1, 23.5), SIG.GREEN);
-  assert.equal(phaseState(p, 1, 41.5), SIG.AMBER);
-  assert.equal(phaseState(p, 0, 46.5), SIG.GREEN, 'the cycle repeats');
-  // the sampled sequence of phase 0 over a cycle is green, amber, red (each run once)
-  const runs: number[] = [];
-  for (let t = 0; t < 46; t += 0.1) { const st = phaseState(p, 0, t); if (!runs.length || runs[runs.length - 1] !== st) runs.push(st); }
-  assert.deepEqual(runs, [SIG.GREEN, SIG.AMBER, SIG.RED]);
+test('signal phases: actuated: a phase with no call rests on green; a call for the other phase ends the green after 7 s, then amber 3 s and all-red 2 s; a car within 30 m holds the green to 40 s', () => {
+  const mk = (): SignalPlan => ({ node: null as unknown as Node, armPhase: [0, 1], phases: 2, green: 18, amber: 3, allRed: 2, offset: 0, idx: 0, stage: 0, el: 0, phaseLanes: [[0], [1]] });
+  const lLen = new Float64Array([100, 100]), s = new Float64Array(2);
+  /** the steps (1-based) at which the plan's state changes: [step, idx, stage], the first being the start */
+  const log = (p: SignalPlan, onLane: number[][], steps: number) => {
+    const out: number[][] = []; let last = '';
+    for (let k = 1; k <= steps; k++) { stepSignals([p], onLane, s, lLen, DT, false, 0); const key = `${p.idx}.${p.stage}`; if (key !== last) { out.push([k, p.idx, p.stage]); last = key; } }
+    return out;
+  };
+  // no call: phase 0 stays on green for 120 s
+  assert.deepEqual(log(mk(), [[], []], 1200), [[1, 0, 0]], 'rests on green with no call');
+  // a car 50 m from the line on lane 1 (within DEMAND_M) calls phase 1: green to 7 s (step 70), amber to 10 s (step 100), all-red to 12 s (step 120)
+  s[0] = 50;
+  assert.deepEqual(log(mk(), [[], [0]], 130), [[1, 0, 0], [70, 0, 1], [100, 0, 2], [120, 1, 0]], 'the green ends at MIN_GREEN, then amber, all-red, the called phase');
+  // a car 20 m from the line on lane 0 (within EXT_M) holds phase 0 on green past MIN_GREEN, to MAX_GREEN (step 400)
+  s[0] = 80; s[1] = 50;
+  assert.deepEqual(log(mk(), [[0], [1]], 400), [[1, 0, 0], [400, 0, 1]], 'a car within 30 m extends the green to 40 s');
+  // the fixed-time reference (fixed = true, at time t): the old 18 s / 3 s / 2 s cycle, phase 0 green 0-18, amber 18-21, red to 23, phase 1 green 23-41
+  const f = mk(), at = (t: number) => { stepSignals([f], [[], []], s, lLen, DT, true, t); return [f.idx, f.stage]; };
+  assert.deepEqual([at(0), at(17.9), at(18.5), at(21.5)], [[0, 0], [0, 0], [0, 1], [0, 2]]);
+  assert.deepEqual([at(23.5), at(41.5), at(46.5)], [[1, 0], [1, 1], [0, 0]], 'the fixed cycle repeats');
+  assert.equal(phaseState(f, 0, 0), SIG.GREEN, 'phaseState reads the state');
 });
 
 test('crossing: vehicles on conflicting connectors never both sit on their conflict point', () => {

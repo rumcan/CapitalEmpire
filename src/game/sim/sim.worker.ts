@@ -124,8 +124,10 @@ function frame() {
   // the shuttle crowd (walkers and stops) goes with the frames of a surge and its eval
   const walkers = city.surge ? city.walkBuf() : null, stops = city.surge ? city.stopBuf() : null;
   const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.roundView(), parks: city.parkView() };
-  if (walkers && stops) post({ t: 'frame', cap: sim.cap, buf, stats, walkers, stops }, [buf.buffer, walkers.buffer, stops.buffer]);
-  else post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
+  // the signal states (4 floats per plan) go with every frame
+  const sig = sim.signalFrame();
+  if (walkers && stops) post({ t: 'frame', cap: sim.cap, buf, stats, sig, walkers, stops }, [buf.buffer, sig.buffer, walkers.buffer, stops.buffer]);
+  else post({ t: 'frame', cap: sim.cap, buf, stats, sig }, [buf.buffer, sig.buffer]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
 }

@@ -28,7 +28,7 @@ import { LV, type LotTuple } from './lots/town';
 import { compose, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
-import { phaseState } from './sim/signals';
+import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 
@@ -119,6 +119,8 @@ export class Game {
   private growN = new Int32Array(256); private declN = new Int32Array(256); growTot = 0; declTot = 0; private growStamp = -Infinity;
   /** the flow overlay (key F, the Flow button, a jump): the live congestion heat map of each road direction (see drawFlow and setFlow) */
   showFlow = false;
+  /** the key (sigKey) of each main-thread signal plan, built once: the render loop reads it every frame */
+  private sigKeys = new WeakMap<object, string>();
   /** the heat map's scratch: each dseg's band and lane key (255: not drawn), the keys in drawing order, and the counts, starts and fills per key */
   private heatKey = new Uint8Array(0); private heatOrd = new Int32Array(0);
   private heatCnt = new Int32Array(32); private heatStart = new Int32Array(32); private heatFill = new Int32Array(32);
@@ -1708,13 +1710,15 @@ export class Game {
     const ze = this.cam.z * this.dpr, pad = 4;
     const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
     const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
-    const T = traffic.simTime(performance.now());
     this.setIso(ctx);
     for (const p of this.lanes.signals.values()) {
       const n = p.node;
       if (n.x < x0 || n.x > x1 || n.y < y0 || n.y > y1) continue;
+      // the worker's runtime state of the plan (the phase served, the stage); red for all when none is known yet
+      let key = this.sigKeys.get(p); if (key === undefined) { key = sigKey(n.x, n.y); this.sigKeys.set(p, key); }
+      const sg = traffic.sigs.get(key);
       for (let i = 0; i < n.arms.length; i++) {
-        const a = n.arms[i], inset = a.stop >= 0 ? a.stop : a.reachEdge, st = phaseState(p, p.armPhase[i], T);
+        const a = n.arms[i], inset = a.stop >= 0 ? a.stop : a.reachEdge, st = sg ? shown(p.armPhase[i]!, sg.idx, sg.stage) : SIG.RED;
         const x = n.x + a.dir.x * inset + a.nrm.x * a.h * 0.75, y = n.y + a.dir.y * inset + a.nrm.y * a.h * 0.75;
         ctx.fillStyle = st === 0 ? '#3ddc84' : st === 1 ? '#ffb020' : '#ff3b3b';
         ctx.beginPath(); ctx.arc(x, y, 0.35, 0, Math.PI * 2); ctx.fill();

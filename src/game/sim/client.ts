@@ -6,6 +6,7 @@ import type { Drawable } from '../sprites';
 import { facings } from '../traffic';
 import { worldX, worldY } from '../iso';
 import { zoneOf } from './routing';
+import { sigKey } from './signals';
 import { POINT_STRIDE } from '../gl';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 import { LV, type LotTuple, type TownEvent } from '../lots/town';
@@ -84,6 +85,8 @@ export class SimClient {
   /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
    *  tiles, fans, stage; stage 0 to a lot stop, 1 to a door) and the lot stops (4 floats each: x, y in tiles, the fans waiting, the route index) */
   walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
+  /** the signal states as the worker last sent them (with each frame): the phase served (idx) and the stage, by sigKey of the plan's node */
+  sigs = new Map<string, { idx: number; stage: number }>();
   /** the congestion heat map: its geometry as the worker last sent it (6 floats per dseg id: from x, y, to x, y in tiles, the lateral offset
    *  of its lanes' centre in tiles along perp(direction), its lane count; NaN for a dead id; null until the first) and the version it is for */
   heatGeom: Float32Array | null = null; heatGeomVersion = -1;
@@ -197,6 +200,9 @@ export class SimClient {
     }
     this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks;
     this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS;
+    const S = new Map<string, { idx: number; stage: number }>(), G = m.sig;
+    for (let k = 0; k + 3 < G.length; k += 4) S.set(sigKey(G[k]!, G[k + 1]!), { idx: G[k + 2]!, stage: G[k + 3]! });
+    this.sigs = S;
     if (m.cap !== this.n) this.resize(m.cap);
     this.prev = this.cur; this.cur = m.buf; this.tCur = performance.now();
   }

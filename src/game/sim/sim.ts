@@ -3,7 +3,7 @@
 import { mulberry } from '../iso';
 import { CAR, idm } from './idm';
 import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt } from './lanes';
-import { SIG, phaseState } from './signals';
+import { MIN_GREEN, SIG, demandElsewhere, fixedToRed, phaseState, stepSignals } from './signals';
 import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
@@ -86,6 +86,10 @@ export class Sim {
   granted: number[][] = []; resvLen = new Float64Array(0);
   /** per lane: vehicle slots on it, front first (largest s first) */
   onLane: number[][] = [];
+  /** the signal plans of the graph (set in onGraph), stepped each step */
+  plans: SignalPlan[] = [];
+  /** true: the signals run the fixed-time reference cycle (the A/B baseline) instead of the actuated rules */
+  fixedSignals = false;
   target = 0;
   /** true: fill() aims at round(target * demandAt(t)) (the daily profile); arrivals bring the count down on their own */
   profile = false;
@@ -203,6 +207,7 @@ export class Sim {
    *  changed lanes; routes are dropped, and a vehicle whose destination dseg went gets a new one */
   onGraph() {
     const lanes = this.g.lanes;
+    this.plans = [...this.g.signals.values()];
     while (this.onLane.length < lanes.length) this.onLane.push([]);
     const n = lanes.length;
     if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); this.lLink = new Uint8Array(m); this.lossL = grow64(this.lossL, m); this.lossQ = grow64(this.lossQ, m); this.enterL = grow64(this.enterL, m); this.lBooth = grow64(this.lBooth, m); }
@@ -429,6 +434,7 @@ export class Sim {
   /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
   step() {
     const t0 = performance.now();
+    stepSignals(this.plans, this.onLane, this.s, this.lLen, DT, this.fixedSignals, this.t);
     this.accelerate();
     this.changeLanes();
     this.integrate();
@@ -683,14 +689,21 @@ export class Sim {
     return true;
   }
 
-  /** seconds until signal plan p turns the phase now green or amber red (the phase is not red now) */
+  /** seconds until signal plan p turns the phase now green or amber red (the plan is not red for that phase): the amber left; a green
+   *  lasts at least MIN_GREEN s when another phase is called, and never ends while none is (Infinity) */
   private toRed(p: SignalPlan): number {
-    const seg = p.green + p.amber + p.allRed, C = p.phases * seg;
-    let tt = (this.t + p.offset) % C; if (tt < 0) tt += C;
-    return Math.floor(tt / seg) * seg + p.green + p.amber - tt;
+    if (this.fixedSignals) return fixedToRed(p, this.t);
+    if (p.stage === 1) return p.amber - p.el;
+    return demandElsewhere(p, this.onLane, this.s, this.lLen) ? Math.max(0, MIN_GREEN - p.el) + p.amber : Infinity;
   }
   /** the state (SIG) of the signal showing the phase of connector C now (green when it has no plan) */
   private signalState(C: Lane): number { const p = this.g.signals.get(C.node!); return p ? phaseState(p, C.phase, this.t) : SIG.GREEN; }
+  /** the signal plans' runtime states for the renderer: x, y (tiles), idx and stage, 4 floats per plan (in plans order) */
+  signalFrame(): Float32Array {
+    const P = this.plans, o = new Float32Array(4 * P.length);
+    for (let k = 0; k < P.length; k++) { const p = P[k]!; o[4 * k] = p.node.x; o[4 * k + 1] = p.node.y; o[4 * k + 2] = p.idx; o[4 * k + 3] = p.stage; }
+    return o;
+  }
   /** the lane a vehicle leaves node lane P[ci] into: the ring arc after a roundabout entry, else the first LINK lane after it; -1 if none */
   private outOf(P: number[], ci: number, ring: boolean): number {
     if (ring) return ci + 1 < P.length ? P[ci + 1] : -1;
