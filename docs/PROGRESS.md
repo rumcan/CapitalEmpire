@@ -1119,8 +1119,16 @@ small public car parks on open town lots as part of the town's growth (a small t
     episodes, 1.73 ms). Junction bench (street, 500 veh/h per arm): signal 4-way 18.6/41.8/33.3/45.5 s, slip 9.7/4.8/
     7.8/8.6 s; the slip fork still shows 3 overlaps (the diverge rule, left over from the flares). **#2 grade merged**
     (the lead's solver over the Arena agent's late fix, which still passed under the crossing on a hillside).
-    **Wiring in progress:** incidents (sim obstacles and slow zones, markers), names (town labels, junction and road
-    names); #3 interchanges reworked per type; #5 terrain reworked.
+    **22:00–22:10:** incidents wired (commit `73970a9`: obstacles and slow zones in the sim, red/amber markers, a city
+    switch, on), names wired (merge `6c3eb08`: town labels at map zoom, junction names in the junction panel and the
+    bottleneck list, road names in the select hint; browser-checked), **#5 terrain v2 merged** (reworked by a haiku on
+    the branch: domain-warped relief, branching valleys, a meandering river, no lattice; 20 seeds pass, hill 28–32%,
+    buildable 56–60%; lakes fixed at 9.5% of the map: tune both when it is wired in as the map generator). Still open:
+    **#3 interchanges** (a haiku is giving each type its real topology; the stack's left turns must be flyovers over the
+    centre, and one-way roads must be honoured). Wiring in progress: disasters (off by default). Left to wire: farms,
+    terrain v2 (switch the generator), subways and taxis (with the business layer), grade and interchanges (with the
+    highways, 6R.5). Known: the slip fork overlap (a diverge rule); the timing tests ("accACC ns per call", terrain
+    "under 4 s") fail when the dev PC is loaded.
   - **Per-corner slipways: DONE** (commit `3a24eae`; browser-checked on street, arterial and mixed crossings: add and
     remove corners, the last one off gives plain lights, roundabouts refused, lane graph clean; the corner click searches
     18 tiles around, the island sits ~12 out).
