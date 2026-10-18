@@ -655,6 +655,35 @@ top bottleneck measurably restarts growth). Suggested steps:
    repaid its price only after 250 days, so even reckless building could not bankrupt a town; at 1% the starter town
    (pop 69) runs about −$1.6k a day until it grows.
 
+5b. **Career wired in. DONE** (2026-10-18). `City.career` updates at each game hour's start (grants paid into the books;
+   `step` returns `milestones` and `won`); saved with the books (Save v5 `career`). The road tool refuses locked classes,
+   tunnels before Town and locked junction types (toasts name the milestone); the cards show a lock and the residents
+   needed; the top bar shows the Career stage and progress to the next; a City! screen at 6,000. The starter town, the
+   town's gravel, the bench and the contact sheets are never locked. Old saves start at Hamlet and are paid the grants of
+   the milestones they already passed on the first game hour.
+5c. **The Phase 4 gate, headless. IN PROGRESS.** `scripts/sim/harness.ts` (the valley, the highway, the town's gravel
+   and the minimal player's bridges; shared with the town gate, whose output is unchanged) and `npm run fix:gate --
+   [seed] [day]` (`scripts/sim/fix-gate.ts`): two runs of the same deterministic city to 09:00 of `day` (checked: the
+   same pop and treasury), then run B's scripted player fixes the bottleneck and both run on through the next day's two
+   rushes; pass (a): B loses at least 10% less time per trip than A, with at least 98% of A's trips. Scenario C, the
+   reckless player (a loan, then all the money on paved street into empty land): **pass (b), bankrupt at the close of
+   day 5** (it recovers on day 6 when the Village grant arrives, but bankruptcy is final).
+   - Found and fixed on the way: **the sim clock drifted** (`t += 0.1` read 52,379.99999 after 52,380 steps), so hour
+     and day snapshots came a step late and windows went missing; `Sim.step` now keeps `t` on the DT grid.
+   - Seed 1 at day 36 (pop 4,857; treasury $399k): the top items are 4-arm plain junctions along x = 1240 and y = 920
+     around the day-31 street bridge at (1240, 920), several LOS F at v/c 0.05–0.3: **queues spilling back** from the
+     bridge head. The 100 m queue zone books a spillback queue to the junction upstream (blocks are 80 m), so the #1
+     item is not the cause. The list now says "queued back from downstream" (LOS E/F at v/c < 0.3) or "at capacity"
+     (v/c >= 0.8).
+   - Player attempts so far, all FAIL (a): (1) the #1 junction's arms one class up plus a signal: 233.7 vs 162.7 s lost
+     per trip (worse: the signal adds red time to a junction that was not the cause); (2) the first item with v/c >= 0.6
+     (rank 9), its busiest approach seg (28 tiles of gravel) to boulevard: 216.0 vs 197.4 s (noise). One rush window is
+     noisy (A alone moved 230 → 163 s between days), so the gate compares both rushes of the next day.
+   - Next attempt (running): the corridor, every arm of the top 5 junctions (40-tile runs) to the best unlocked class,
+     the bridge included.
+   - Balance note for Phase 5: by day 36 the seed-1 town has $399k at pop 4,857 even with 1% upkeep; money does not
+     constrain a sensible player. Tourism becomes the main income in Phase 5 anyway.
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
 (budget + bottleneck loop) at step 1 and carry on through the steps without asking between them. Delegate coding to
