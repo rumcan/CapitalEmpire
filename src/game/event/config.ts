@@ -7,11 +7,11 @@ export const SURGE_S = 600;
 /** the game clock a round freezes at, s of the day: 18:00 (one sim s is one game minute) */
 export const EVENT_CLOCK = 18 * 60;
 /** the cars the crowd sends at level 1, over all the towns */
-export const L1_CARS = 1200;
+export const L1_CARS = 240;
 /** the party size of a group of visitors (the fans a car stands for; shown on the surge's total line) */
 export const PARTY = 3;
 /** the share of the surge over which the crowd departs (the rest is the drive in): departures fill the first DEPART_END * SURGE_S */
-export const DEPART_END = 0.75;
+export const DEPART_END = 0.55;
 /** the seed of the surge's own random stream (its departures, origins and destinations: never the sim's or the town's) */
 export const SURGE_SEED = 7919;
 /** the crowd's growth per level: the cars at level L are L1_CARS * LEVEL_MUL ** (L - 1) */
@@ -40,6 +40,8 @@ export const LOT_TILE_COST = 25;
 export const ENTRY_S = 2;
 /** the entry time factor of the Express entry card: an entrance holds ENTRY_S * EXPRESS_ENTRY s per car */
 export const EXPRESS_ENTRY = 0.7;
+/** the cars an entrance's entry lane holds off the road, waiting for the gate (a car past a full lane holds on the road instead) */
+export const ENTRY_Q = 10;
 /** a car park entrance per this many tiles of frontage */
 export const ENTRANCE_EVERY = 40;
 /** the most entrances a car park has */

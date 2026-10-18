@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { generateTerrain } from '../src/game/terrain';
 import { townCentres } from '../src/game/lots/seedtowns';
 import { crowdFor, insideSite, placeStadium } from '../src/game/event/site';
-import { CARDS, DRAFT, ENTRY_S, EXPRESS_ENTRY, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout } from '../src/game/event/config';
+import { CARDS, DRAFT, ENTRY_S, EXPRESS_ENTRY, L1_CARS, LEVEL_MUL, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout } from '../src/game/event/config';
 import { Round, draftFor, type RoundSave } from '../src/game/event/round';
 import { City } from '../src/game/city';
 import { GAME_DAY } from '../src/game/budget';
@@ -48,14 +48,16 @@ test('placeStadium with no centres is null; on an all-GROUND map the site is fou
   assert.equal(s.c.x % 16, 0, 'the centre is on the 16-tile lattice');
 });
 
-test('crowdFor: level 1 sends 1200 cars and level 2 sends 1680, split by population share; zeros split evenly; the parts sum to the total', () => {
-  assert.deepEqual(crowdFor(1, [1000, 900, 1100]), [400, 360, 440]);
-  assert.equal(sum(crowdFor(1, [1000, 900, 1100])), 1200);
-  assert.equal(sum(crowdFor(2, [1000, 900, 1100])), 1680);
-  assert.deepEqual(crowdFor(1, [0, 0, 0]), [400, 400, 400]);
-  assert.deepEqual(crowdFor(2, [0, 0, 0]), [560, 560, 560]);
+test('crowdFor: level 1 sends L1_CARS cars and level 2 sends L1_CARS * LEVEL_MUL, split by population share; zeros split evenly; the parts sum to the total', () => {
+  const T1 = Math.round(L1_CARS), T2 = Math.round(L1_CARS * LEVEL_MUL), pops = [1000, 900, 1100];
+  const c1 = crowdFor(1, pops);
+  assert.equal(sum(c1), T1);
+  c1.forEach((c, i) => assert.ok(Math.abs(c - T1 * pops[i]! / sum(pops)) < 1, `town ${i}: its population share of ${T1}`));
+  assert.equal(sum(crowdFor(2, pops)), T2);
+  for (const c of crowdFor(1, [0, 0, 0])) assert.ok(Math.abs(c - T1 / 3) < 1, 'zeros split evenly');
+  for (const c of crowdFor(2, [0, 0, 0])) assert.ok(Math.abs(c - T2 / 3) < 1, 'zeros split evenly (level 2)');
   const seven = crowdFor(1, [1, 1, 1, 1, 1, 1, 1]);
-  assert.equal(sum(seven), 1200);
+  assert.equal(sum(seven), T1);
   assert.ok(Math.max(...seven) - Math.min(...seven) <= 1, 'largest remainder: the parts differ by at most one');
   assert.deepEqual(crowdFor(1, []), []);
 });
@@ -120,7 +122,7 @@ test('City round: the clock freezes at 18:00; money falls with the upkeep over b
   assert.ok(rate > 0, `the roads cost upkeep (${rate.toFixed(2)} $ a day)`);
   assert.equal(city.startRound(), true);
   assert.equal(city.round.stage, 'build');
-  assert.equal(sum(city.round.crowd), 1200, 'the crowd of level 1');
+  assert.equal(sum(city.round.crowd), Math.round(L1_CARS), 'the crowd of level 1');
   assert.equal(city.sim.frozen, true);
   assert.ok(Math.abs(city.sim.clock % GAME_DAY - EVENT_CLOCK) < 1e-6, 'the clock stands at 18:00');
 
@@ -135,7 +137,7 @@ test('City round: the clock freezes at 18:00; money falls with the upkeep over b
   while (city.round.stage === 'surge' && steps++ < 200) city.step(100);
   assert.equal(city.round.stage, 'eval', 'kick-off ends in eval');
   assert.ok(city.round.last, 'a result');
-  assert.equal(city.round.last.sent, 1200);
+  assert.equal(city.round.last.sent, Math.round(L1_CARS));
   assert.ok(Math.abs(city.sim.clock % GAME_DAY - EVENT_CLOCK) < 1e-6, 'the clock stands through the surge');
 
   // the payout is paid at kick-off (no home reaches the stadium: rate 0, the full penalty); the rest of the fall is the upkeep

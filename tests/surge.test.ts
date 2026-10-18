@@ -7,7 +7,7 @@ import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { City } from '../src/game/city';
 import { MAP } from '../src/game/iso';
-import { LaneGraph } from '../src/game/sim/lanes';
+import { LaneGraph, laneAt } from '../src/game/sim/lanes';
 import { DT, Sim } from '../src/game/sim/sim';
 import { driveway, type Built } from '../src/game/sim/trips';
 import { LotMap, type Lot } from '../src/game/lots/lots';
@@ -71,7 +71,10 @@ test('surge: 30 cars from two towns joined to the car park all park before kick-
     if (k === 2 || reaches(l)) homes[k]!.push({ lot: l, town: k, pop: 1, comp: comp(l) });
   }
   assert.ok(homes[0]!.length && homes[1]!.length && homes[2]!.length, 'lots on each street');
-  const parks: SurgePark[] = [{ comp: comp({ seg: park.seg } as Lot), bays: park.bays.length, sinks: sim.sinks.map((_, j) => j) }];
+  // each sink's point and direction, as City.surgeParks gives them (the cars go to the sink that points from their home toward the entrance)
+  const pts = sim.sinks.map(K => { const q = { x: 0, y: 0, hx: 0, hy: 0 }, dg = g.dsegs[K.dseg]!; laneAt(g.lanes[dg.lanes[dg.lanes.length - 1]!]!, K.s, q); return { x: q.x, y: q.y }; });
+  const dirs = sim.sinks.map(K => ({ x: K.ux ?? 0, y: K.uy ?? 0 }));
+  const parks: SurgePark[] = [{ comp: comp({ seg: park.seg } as Lot), bays: park.bays.length, sinks: sim.sinks.map((_, j) => j), pts, dirs }];
   const s = new Surge();
   const crowd = [15, 15, 10];
   s.plan(crowd, homes, parks, seededRnd(SURGE_SEED), sim.t);
@@ -83,10 +86,14 @@ test('surge: 30 cars from two towns joined to the car park all park before kick-
   assert.equal(atKick[0]!.late + atKick[1]!.late, 0, 'no car of the joined towns is late at kick-off');
   assert.equal(atKick[0]!.parked + atKick[1]!.parked, 30, '30 cars parked before kick-off');
   assert.equal(atKick[2]!.stranded, 10, 'the third town is stranded');
-  for (let n = 0; n < 6000 && sim.active > 0; n++) { sim.step(); s.step(sim, g); drain(); }
+  // the cars in an entry queue are off the road but not yet parked: the run goes on until the queues are empty too
+  const queued = () => sim.sinks.some(K => K.q.length > 0);
+  for (let n = 0; n < 6000 && (sim.active > 0 || queued()); n++) { sim.step(); s.step(sim, g); drain(); }
   const v = s.view(), r = s.result();
   assert.equal(sim.active, 0, 'every car has gone');
+  assert.ok(!queued(), 'every entry queue has emptied');
   for (let k = 0; k < 3; k++) {
+    // the cars in the entry queues count in onRoad (they have left the road for the gate, and are neither parked nor turned away)
     const sum = r[k]!.parked + r[k]!.turned + r[k]!.lost + v.onRoad[k]! + r[k]!.stranded;
     assert.equal(sum, crowd[k], `town ${k}: parked + turned away + lost + on the road + stranded = sent`);
     assert.equal(v.onRoad[k], 0, `town ${k}: none on the road`);

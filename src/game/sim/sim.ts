@@ -8,7 +8,7 @@ import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
-import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_S, MAX_DWELL, MIN_DWELL, SERVICE_S } from '../event/config';
+import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_Q, ENTRY_S, MAX_DWELL, MIN_DWELL, SERVICE_S } from '../event/config';
 import type { BusRoute } from '../event/bus';
 
 /** seconds per step */
@@ -53,8 +53,10 @@ export const FREE = 1.213;
 /** the (decayed) number of trips a zone needs before its access counts in full */
 export const ACCESS_N = 12;
 
-/** a car park's entrance on a dseg: the vehicles bound for it stop at s metres (a sink, see Sim.setSinks); park is its index in Sim.parks, next the sim time it admits the next car */
-export interface Sink { park: number; dseg: number; s: number; next: number }
+/** a car park's entrance on a dseg: the vehicles bound for it stop at s metres (a sink, see Sim.setSinks); park is its index in Sim.parks, next the sim time it admits the next car.
+ *  q is its entry queue, off the road (FIFO): each waiting car's party town (-1 none), qz its origin zone; both are drained by Sim.drain.
+ *  A park has one sink per direction of its frontage road; they share the park's bays (Sim.queuedAt). ux, uy: the dseg's unit direction (City.sinksAt) */
+export interface Sink { park: number; dseg: number; s: number; next: number; q: number[]; qz: number[]; ux?: number; uy?: number }
 /** a car park's counts: its bays, the cars parked, and the cars turned away (found it full) */
 export interface ParkState { bays: number; parked: number; turned: number }
 
@@ -458,17 +460,32 @@ export class Sim {
         if (k >= 0) this.enter(i, k, ln); else { this.score(i, ln); this.stats.arrived++; this.despawn(i); }
       }
     }
+    this.drain();
   }
-  /** a vehicle bound for sink k reached its line: parked if its park has a bay (the sink then shuts for ENTRY_S, and the car is
-   *  logged in parkedNow), else turned away (not an arrival). Either way it leaves the sim */
+  /** a vehicle bound for sink k reached its line: turned away if its park has no bay left (the bays its entry queue holds count as taken),
+   *  else it leaves the road into the entry queue (its party town and origin zone wait in the sink; drain parks it) and counts as an arrival.
+   *  Either way it leaves the sim */
   private enter(i: number, k: number, ln: Lane) {
     const K = this.sinks[k]!, P = this.parks[K.park]!;
-    if (P.parked >= P.bays) { P.turned++; this.out(i, 1); this.despawn(i); return; }
-    P.parked++; K.next = this.t + this.entryS; this.parkedNow.push(K.park, this.oz[i]!);
-    if (this.party[i]! >= 0) this.partyBays.push(this.party[i]!, K.park, P.parked - 1);
-    this.out(i, 0);
+    if (P.parked + this.queuedAt(K.park) >= P.bays) { P.turned++; this.out(i, 1); this.despawn(i); return; }
+    K.q.push(this.party[i]!); K.qz.push(this.oz[i]!); this.party[i] = -1;
     this.score(i, ln); this.stats.arrived++; this.despawn(i);
   }
+  /** the entry queues (after the arrivals): a sink whose gate is open (t >= next) parks the first car of its queue (parked++, the gate shuts for
+   *  entryS, logged in parkedNow and partyBays; a party car's exit is logged as parked). A park that has lost its bays turns the car away */
+  private drain() {
+    for (const K of this.sinks) {
+      if (!K.q.length || this.t < K.next) continue;
+      const town = K.q.shift()!, z = K.qz.shift()!, P = this.parks[K.park]!;
+      if (P.parked >= P.bays) { P.turned++; if (town >= 0) this.partyOut.push(town, 1); continue; }
+      P.parked++; K.next = this.t + this.entryS; this.parkedNow.push(K.park, z);
+      if (town >= 0) { this.partyOut.push(town, 0); this.partyBays.push(town, K.park, P.parked - 1); }
+    }
+  }
+  /** the cars waiting in the entry queues of park k, over all its sinks (they hold bays with the parked cars) */
+  queuedAt(k: number): number { let n = 0; for (const K of this.sinks) if (K.park === k) n += K.q.length; return n; }
+  /** empties the entry queues (the round's close, with City.emptyParks): the cars in them are not logged */
+  clearQueues(): void { for (const K of this.sinks) { K.q.length = 0; K.qz.length = 0; } }
   /** the car park entrances (City.resolveSinks after each graph update): a vehicle keeps its sink when the new list has one of the same
    *  park and dseg (taking that sink's next time), else it has none (-1); a new sink starts open */
   setSinks(list: Sink[]) {
@@ -477,8 +494,10 @@ export class Sim {
     const map = new Int16Array(old.length).fill(-1);
     for (let j = 0; j < list.length; j++) {
       const n = list[j]!, o = old.findIndex(q => q.park === n.park && q.dseg === n.dseg);
-      if (o >= 0) { map[o] = j; n.next = old[o]!.next; }
+      if (o >= 0) { map[o] = j; n.next = old[o]!.next; n.q = old[o]!.q; n.qz = old[o]!.qz; }
     }
+    // the entry queues of the gone entrances: their party cars are lost
+    for (let o = 0; o < old.length; o++) if (map[o]! < 0) for (const p of old[o]!.q) if (p >= 0) this.partyOut.push(p, 2);
     for (let i = 0; i < this.cap; i++) {
       const k = this.sink[i]!;
       if (k < 0) continue;
@@ -774,12 +793,12 @@ export class Sim {
             vg = Math.min(vg, d0 - STOP_MARGIN);
           }
         }
-        // a car park's entrance (sink) shut for the next car: a stopped obstacle at its line. A full park does not hold the car:
-        // it drives on to the line and is turned away there (see enter)
+        // a car park's entrance (sink): a car bound for it holds at the line (a stopped obstacle there) only while the entry queue is full
+        // (ENTRY_Q cars off the road) and its park has a bay left for it; else it drives on to the line and leaves the road there (see enter)
         const sk = this.sink[i];
         if (sk >= 0) {
-          const K = this.sinks[sk]!, ln = lanes[id]!;
-          if (ln.kind === LK.LINK && ln.dseg === K.dseg && si <= K.s && this.t < K.next) {
+          const K = this.sinks[sk]!, P = this.parks[K.park]!, ln = lanes[id]!;
+          if (ln.kind === LK.LINK && ln.dseg === K.dseg && si <= K.s && K.q.length >= ENTRY_Q && P.parked + this.queuedAt(K.park) < P.bays) {
             const dd = K.s - si;
             if (dd < gap) { gap = dd; dv = v; }
             vg = Math.min(vg, dd - STOP_MARGIN);

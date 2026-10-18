@@ -9,7 +9,7 @@ import { TC } from './terrain/types';
 import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
-import { LK, LaneGraph, MPT, laneAt, type Lane } from './sim/lanes';
+import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
@@ -23,7 +23,7 @@ import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, type Site } from './event/site';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
-import { Surge, type SurgeHome, type SurgePark } from './event/surge';
+import { Surge, matchSink, type SurgeHome, type SurgePark } from './event/surge';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -396,28 +396,37 @@ export class City {
     if (this.parks.length) this.resolveSinks();
     if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
   }
-  /** each car park entrance's sink (sinkAt), as the sim's sinks; Sim.setSinks keeps the vehicles already bound for them */
+  /** each car park entrance's sinks (sinksAt), as the sim's sinks; Sim.setSinks keeps the vehicles already bound for them */
   private resolveSinks(): void {
     const sinks: Sink[] = [];
-    this.parks.forEach((p, k) => { for (const e of p.entrances) { const s = this.sinkAt(k, p, e); if (s) sinks.push(s); } });
+    this.parks.forEach((p, k) => { for (const e of p.entrances) for (const s of this.sinksAt(k, p, e)) sinks.push(s); });
     this.sim.setSinks(sinks);
   }
-  /** the sink of park k at entrance e: the dseg of the frontage road (parallel to the park's side, within 2 tiles of e) whose traffic has the
-   *  park on its right (the lanes sit on perp of the heading, as driveway reads them); its outermost lane, s at e's projection on it; null if none */
-  private sinkAt(k: number, p: CarPark, e: Pt): Sink | null {
+  /** the sinks of park k at entrance e, one per direction of the frontage road (parallel to the park's side, within 2 tiles of e): the dseg whose
+   *  traffic has the park on its right (the lanes sit on perp of the heading, as driveway reads them), and the opposite dseg of its seg. Each sits
+   *  on its outermost lane, s at e's projection on that lane, with ux, uy its direction. None if the right-hand dseg is missing or too short */
+  private sinksAt(k: number, p: CarPark, e: Pt): Sink[] {
     const near = new Set(this.net.segsNear(e, 2)), side = p.side, vert = side % 2 === 0;
     // the park lies on the side of the road that faces away from the frontage's outward normal
     const pv: Pt = { x: side === 0 ? -1 : side === 2 ? 1 : 0, y: side === 1 ? -1 : side === 3 ? 1 : 0 };
+    let R: DSeg | null = null;
     for (const d of this.g.dsegs) {
       if (!d || !d.lanes.length || !near.has(d.seg)) continue;
       const h = norm(sub(d.to, d.from));
       if (Math.abs(vert ? h.y : h.x) < 0.98 || dot(perp(h), pv) <= 0) continue;
-      const ln = this.g.lanes[d.lanes[d.lanes.length - 1]!]!;
-      if (ln.len < 2 * SINK_END) return null;
-      const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm({ x: ln.pts[2]! - p0.x, y: ln.pts[3]! - p0.y });
-      return { park: k, dseg: d.id, s: Math.min(ln.len - SINK_END, Math.max(SINK_END, dot(sub(e, p0), u) * MPT)), next: 0 };
+      R = d; break;
     }
-    return null;
+    if (!R) return [];
+    const ds: DSeg[] = [R];
+    for (const d of this.g.dsegs) if (d && d !== R && d.seg === R.seg && d.lanes.length) { ds.push(d); break; }
+    const out: Sink[] = [];
+    for (const d of ds) {
+      const ln = this.g.lanes[d.lanes[d.lanes.length - 1]!]!;
+      if (ln.len < 2 * SINK_END) { if (d === R) return []; continue; }
+      const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm({ x: ln.pts[2]! - p0.x, y: ln.pts[3]! - p0.y }), h = norm(sub(d.to, d.from));
+      out.push({ park: k, dseg: d.id, s: Math.min(ln.len - SINK_END, Math.max(SINK_END, dot(sub(e, p0), u) * MPT)), next: 0, q: [], qz: [], ux: h.x, uy: h.y });
+    }
+    return out;
   }
   /** the surge is planned at its start (sim s): each town's homes (its built RES lots with residents, by population), the car parks (surgeParks)
    *  and the crowd, from the surge's own stream (SURGE_SEED, never the sim's or the town's) */
@@ -432,11 +441,19 @@ export class City {
     s.plan(this.round.crowd, homes, this.surgeParks(), seededRnd(SURGE_SEED), this.sim.t);
     return s;
   }
-  /** the car parks for the surge: each with its frontage's component, its bays, and its sinks (indices into sim.sinks) */
+  /** the car parks for the surge: each with its frontage's component, its bays, and its sinks (indices into sim.sinks), each sink's point and direction */
   private surgeParks(): SurgePark[] {
-    const L: SurgePark[] = this.parks.map(p => ({ comp: this.compOf(p.seg), bays: p.bays.length, sinks: [] }));
+    const L = this.parks.map(p => ({ comp: this.compOf(p.seg), bays: p.bays.length, sinks: [] as number[], pts: [] as Pt[], dirs: [] as Pt[] }));
     // the component of a car park is its entrances' road as the lane graph has it now (never a stale build)
-    this.sim.sinks.forEach((k, j) => { const P = L[k.park], d = this.g.dsegs[k.dseg]; if (!P) return; P.sinks.push(j); if (d) P.comp = this.compOf(d.seg); });
+    this.sim.sinks.forEach((K, j) => {
+      const P = L[K.park], d = this.g.dsegs[K.dseg];
+      if (!P) return;
+      P.sinks.push(j);
+      if (d) P.comp = this.compOf(d.seg);
+      const q = { x: 0, y: 0, hx: 0, hy: 0 };
+      if (d) laneAt(this.g.lanes[d.lanes[d.lanes.length - 1]!]!, K.s, q);
+      P.pts.push({ x: q.x, y: q.y }); P.dirs.push({ x: K.ux ?? 0, y: K.uy ?? 0 });
+    });
     return L;
   }
   /** the component of a seg (see labelComps; -1 if unknown) */
@@ -598,13 +615,14 @@ export class City {
     return this.parks.map((p, k) => { const s = this.sim.parks[k]!; return { id: p.id, bays: s.bays, parked: s.parked, turned: s.turned }; });
   }
   /** every car park is empty again (the round's close): the cars parked and turned away are counted from zero */
-  emptyParks(): void { for (const s of this.sim.parks) { s.parked = 0; s.turned = 0; } }
+  emptyParks(): void { for (const s of this.sim.parks) { s.parked = 0; s.turned = 0; } this.sim.clearQueues(); }
   /** dev test hook (the browser check): sends up to n cars from random origins (the trips' origins; at least PARK_TEST_M tiles from the
    *  entrance for the first draws) to the entrances of car park id, round-robin, bound for their sinks; returns the cars sent */
   parkTest(id: number, n: number): number {
-    const k = this.parks.findIndex(q => q.id === id), js: number[] = [];
-    this.sim.sinks.forEach((s, j) => { if (s.park === k) js.push(j); });
-    if (k < 0 || !js.length) return 0;
+    const k = this.parks.findIndex(q => q.id === id);
+    if (k < 0) return 0;
+    const P = this.surgeParks()[k]!;
+    if (!P.sinks.length) return 0;
     const q = { x: 0, y: 0, hx: 0, hy: 0 }, sp = { x: 0, y: 0, hx: 0, hy: 0 };
     // only roads joined to the car park's frontage: the towns start apart, and a car with no way there is lost at once
     const joined = reachableSegs(this.net, this.parks[k]!.entrances[0]!);
@@ -614,8 +632,11 @@ export class City {
       for (let a = 0; a < 200 && !done; a++) {
         const lane = this.sim.trips.origin();
         if (lane < 0) return sent;
-        const s = this.sim.trips.oS, j = js[sent % js.length]!, K = this.sim.sinks[j]!, dd = this.g.dsegs[K.dseg]!;
-        laneAt(this.g.lanes[lane]!, s, q); laneAt(this.g.lanes[dd.lanes[dd.lanes.length - 1]!]!, K.s, sp);
+        const s = this.sim.trips.oS;
+        laneAt(this.g.lanes[lane]!, s, q);
+        // the sink that points from the car's origin toward its entrance (matchSink; round-robin over the cars sent)
+        const j = P.sinks[matchSink(P, q, sent)]!, K = this.sim.sinks[j]!, dd = this.g.dsegs[K.dseg]!;
+        laneAt(this.g.lanes[dd.lanes[dd.lanes.length - 1]!]!, K.s, sp);
         if (!joined.has(this.g.dsegs[this.g.lanes[lane]!.dseg]!.seg) || (a < 100 && Math.hypot(sp.x - q.x, sp.y - q.y) < PARK_TEST_M)) continue;
         done = this.sim.spawnAt(lane, s, K.dseg, K.s, 0, j) >= 0;
       }

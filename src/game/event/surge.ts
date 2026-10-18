@@ -1,10 +1,11 @@
 // The surge (Phase 5 step 4): the crowd of an event round, sent as party cars from their homes to the car parks joined to their roads. At
 // plan, each town's cars get a departure time in the first DEPART_END of the surge (a bell around its middle), an origin (a home of the
-// town, by population) and a destination (a car park joined to the home's road, by bays, then its entrances round-robin). Step spawns the
-// due ones from their driveways, bound for their sinks; the sim reports each party car's exit (Sim.partyOut) and the counts follow.
+// town, by population) and a destination (a car park joined to the home's road, by bays, then round-robin). Step spawns the due ones from
+// their driveways, bound for the sink of the car park that points from the home toward its entrance (matchSink); the sim reports each party
+// car's exit (Sim.partyOut) and the counts follow.
 // Pure TS, no DOM, its own random stream (SURGE_SEED, given to plan).
 import type { Lot } from '../lots/lots';
-import type { Seg } from '../network';
+import type { Pt, Seg } from '../network';
 import type { LaneGraph } from '../sim/lanes';
 import type { Sim } from '../sim/sim';
 import { driveway, type Drive } from '../sim/trips';
@@ -13,8 +14,26 @@ import type { FanCounts } from './crowd';
 
 /** a home the crowd leaves from: its lot, its town, its residents (the weight), and the component of its frontage road (see City) */
 export interface SurgeHome { lot: Lot; town: number; pop: number; comp: number }
-/** a car park as the surge sees it: the component of its frontage road, its bays (the weight), and its entrances (sink indices into Sim.sinks) */
-export interface SurgePark { comp: number; bays: number; sinks: number[] }
+/** a car park as the surge sees it: the component of its frontage road, its bays (the weight), and its sinks (indices into Sim.sinks, one per
+ *  entrance direction). pts and dirs, aligned with sinks: each sink's point (its entrance on its lane) and unit direction; none: every sink matches */
+export interface SurgePark { comp: number; bays: number; sinks: number[]; pts?: Pt[]; dirs?: Pt[] }
+
+/** the ordinal (into P.sinks) of the sink a car at o is sent to, the e-th car for this park: the sinks whose direction points from o toward
+ *  their entrance (dot(entrance - o, dir) > 0), round-robin by e; none match: all of them, round-robin. No draws, no allocation */
+export function matchSink(P: SurgePark, o: Pt, e: number): number {
+  const n = P.sinks.length, pts = P.pts, dirs = P.dirs;
+  if (!pts || !dirs) return e % n;
+  let m = 0;
+  for (let i = 0; i < n; i++) if ((pts[i]!.x - o.x) * dirs[i]!.x + (pts[i]!.y - o.y) * dirs[i]!.y > 0) m++;
+  if (!m) return e % n;
+  let want = e % m;
+  for (let i = 0; i < n; i++) {
+    if ((pts[i]!.x - o.x) * dirs[i]!.x + (pts[i]!.y - o.y) * dirs[i]!.y <= 0) continue;
+    if (want === 0) return i;
+    want--;
+  }
+  return 0;
+}
 /** a town's counts at kick-off: the cars sent, parked, turned away, lost, stranded (never spawned), and late (on the road or never left), and its fans
  *  (each parked car is PARTY fans): at the doors (fans), at a lot stop's queue (atStop), and on a bus (onBus) */
 export interface TownResult { sent: number; parked: number; turned: number; lost: number; stranded: number; late: number; fans: number; atStop: number; onBus: number }
@@ -104,9 +123,10 @@ export class Surge {
 
   /** one spawn attempt for departure d: SPAWNED, WAIT (no room on the driveway) or STRANDED */
   private spawn(d: Dep, sim: Sim, g: LaneGraph): number {
-    const o = this.drive(d.lot, g), P = this.parks[d.park], ps = P ? P.sinks : [];
-    if (!o || !ps.length) return STRANDED;
-    const j = ps[d.e % ps.length]!, K = sim.sinks[j];
+    const o = this.drive(d.lot, g), P = this.parks[d.park];
+    if (!o || !P || !P.sinks.length) return STRANDED;
+    // the sink is chosen here, not in plan: the sinks are rebuilt on each graph edit (see City.surgeParks), so the plan keeps only the car's round-robin ordinal
+    const j = P.sinks[matchSink(P, d.lot.c, d.e)]!, K = sim.sinks[j];
     if (!K) return STRANDED;
     if (g.lanes[o.lane]!.dseg === K.dseg && o.s >= K.s) return STRANDED;
     return sim.spawnAt(o.lane, o.s, K.dseg, K.s, 0, j, d.town) === -1 ? WAIT : SPAWNED;
