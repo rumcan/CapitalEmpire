@@ -35,6 +35,7 @@ Read `docs/PROGRESS.md` first: it says where the project is, what was decided, a
 - TrickOrTreat (`../TrickOrTreat`) is a read-only art and idea source. Never write to it, least of all to its
   `output/town-builder/` (the owner's data).
 - Commands: `npm run dev` (port 5173; `.claude/launch.json` uses 5174), `npm test`, `npm run typecheck`,
-  `npm run build`, `npm run bench`, `npm run worker:test`, `npm run worker:bench`.
+  `npm run build`, `npm run bench`, `npm run worker:test`, `npm run worker:bench`; headless gates `npm run sim:gate`,
+  `npm run town:gate`, `npm run fix:gate` (run the long ones on the worker).
 - Performance budgets are in `docs/GAME-PLAN.md` section 2.3. Check them with the benchmark after any change to
   rendering, the network or traffic.

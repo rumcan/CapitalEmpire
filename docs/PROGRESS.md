@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model in the city worker, the Lot Composer, trips from lots, access-driven growth; the 5k gate passed). The lot contact sheets await the owner's review. Phase 4 next._
+_Last updated: 2026-10-18, Phase 4 done (one clock and time controls, the budget, the bottleneck tools, before/after, the career mechanism; the gate passed). The plan pivoted to event rounds (GAME-PLAN v4): Phase 5 needs the owner's answers first._
 
 ## Where we are
 
@@ -13,7 +13,7 @@ _Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model i
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
-| 4. Budget + bottleneck loop | **In progress** (2026-10-18). Steps and numbers below |
+| 4. Budget + bottleneck loop | **Done** (2026-10-18), not pushed yet. Steps, numbers and the gate below |
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | Not started. The core loop is now event rounds: GAME-PLAN section 1.0; owner decisions needed first (GAME-PLAN section 7, items 6–13) |
 | 6. Expansion (new events, overlapping networks) | Not started |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
@@ -573,7 +573,7 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
   stall until the player bridges; the player gets no hint yet (Phase 4: a "no land" notice).
 - The terrain test's per-seed budget is now 4 s (the dev PC is slower than the worker).
 
-## Phase 4, budget + bottleneck loop: in progress
+## Phase 4, budget + bottleneck loop: done
 
 **Gate changed 2026-10-18** (the pivot to event rounds): the books close every game day and bankruptcy is reachable;
 fixing the top bottleneck measurably improves the next rush hour (headless). Step 5's population milestones and Career
@@ -666,7 +666,7 @@ top bottleneck measurably restarts growth). Suggested steps:
    needed; the top bar shows the Career stage and progress to the next; a City! screen at 6,000. The starter town, the
    town's gravel, the bench and the contact sheets are never locked. Old saves start at Hamlet and are paid the grants of
    the milestones they already passed on the first game hour.
-5c. **The Phase 4 gate, headless. IN PROGRESS.** `scripts/sim/harness.ts` (the valley, the highway, the town's gravel
+5c. **The Phase 4 gate, headless. DONE** (2026-10-18). `scripts/sim/harness.ts` (the valley, the highway, the town's gravel
    and the minimal player's bridges; shared with the town gate, whose output is unchanged) and `npm run fix:gate --
    [seed] [day]` (`scripts/sim/fix-gate.ts`): two runs of the same deterministic city to 09:00 of `day` (checked: the
    same pop and treasury), then run B's scripted player fixes the bottleneck and both run on through the next day's two
@@ -684,14 +684,63 @@ top bottleneck measurably restarts growth). Suggested steps:
      per trip (worse: the signal adds red time to a junction that was not the cause); (2) the first item with v/c >= 0.6
      (rank 9), its busiest approach seg (28 tiles of gravel) to boulevard: 216.0 vs 197.4 s (noise). One rush window is
      noisy (A alone moved 230 → 163 s between days), so the gate compares both rushes of the next day.
-   - Next attempt (running): the corridor, every arm of the top 5 junctions (40-tile runs) to the best unlocked class,
-     the bridge included.
+   - (3) **PASS: the corridor.** Every arm of the top 5 junctions (40-tile runs; links' runs 80 tiles) to the best
+     unlocked class, within the money less $20k (bridges dropped first when over): 640 tiles gravel → boulevard and 51
+     street → boulevard, $332k (the 29-tile bridge was dropped). Next day's two rushes, B against A: **time lost per trip
+     158.0 s against 197.4 s (-19.9%)**, trip time over free flow 1.11 against 1.42 (-22%), trips 466 against 461, lots
+     started 149 against 144; but trips abandoned 39 against 31. One seed, one comparison: the lesson is that a jam
+     cluster needs the corridor fixed, not its #1 junction.
    - Balance note for Phase 5: by day 36 the seed-1 town has $399k at pop 4,857 even with 1% upkeep; money does not
      constrain a sensible player. In Phase 5 the toll becomes the only income anyway.
 
+### Phase 4 gate (as changed 2026-10-18)
+- **The books close every game day and bankruptcy is reachable: PASSED** (`tests/budget.test.ts`, `tests/city.test.ts`;
+  `fix:gate` scenario C: a reckless player is bankrupt at the close of day 5).
+- **Fixing the top bottleneck measurably improves the next rush: PASSED** (`npm run fix:gate -- 1 36` on the worker:
+  -19.9% time lost per trip over the next day's two rushes, B against the same city unfixed).
+- Budgets met (worker bench after step 4: 60 fps at every stage, main thread at most 2.8 ms p95, sim tick 6.6 ms avg and
+  17.9 max against 25). Some stages read 20–50% above Phase 3 (District 4.5% 2.13/2.8 ms, whole map 0.94/1.4 ms); the
+  headless A/B put the sim's share at about +0.4 ms per step.
+
+### Left over from Phase 4
+- **Superseded by plan v4** (kept in the code until Phase 5 replaces it): the property tax, business takings and
+  grants as income (the toll becomes the only income); the population milestones and the Career win at 6,000 (Phase 5
+  has levels and drafted cards); the 'Cars' chips (random traffic) and the growth-option select in the perf panel.
+- The bottleneck attribution books a spillback queue to the junction upstream (the 100 m queue zone is longer than an
+  80 m block); the list flags "queued back from downstream", but a cause-finding pass (follow the queue to the first
+  item at capacity) would serve the live stress test.
+- Roundabout entries wait long at low volume (about 50 s per vehicle, LOS E at v/c 0.08 on the bench city).
+- The economy is generous: seed 1 has $399k at pop 4,857 on day 36 with 1% upkeep. Moot once the toll is the only income.
+- `City.hours` (before/after) is not saved: after a load it starts empty.
+- Phase 3's 100-lot contact sheets still wait for the owner's review.
+
+## Next: Phase 5, event round MVP (the stadium)
+
+Goal and gate: GAME-PLAN section 1.0 and the phase table (gate: a scripted player completes a Level 1 stadium round;
+replaying it after the player's fixes raises the arrival rate measurably; 100% is reachable; the surge holds the sim
+budgets). **First, the owner's answers to GAME-PLAN section 7, items 6–13** (time in a round, towns, the toll rule,
+surge size, losing, cards, passengers). Draft steps, to adjust to the answers:
+1. **Several autonomous towns:** the generator places 2–3 town seeds; the City grows each from its own centre (today the
+   Town grows from one built centre).
+2. **The round:** a state machine (build timer, surge, evaluation, draft) with its HUD and the time rules.
+3. **The event drop:** a stadium site placed by the game (a Lot Composer site with doors and a kick-off time) and a
+   crowd per town from size and distance.
+4. **The Toll Gate:** a road structure (a plaza fanning out to N booths), the lane graph and a service-time queue per
+   booth in the sim, revenue per car cleared; the budget's income switches to the toll.
+5. **The parking lot:** a placed car park (bays, entrances, aisles); cars park in the sim and become passengers.
+6. **Shuttle buses:** a route tool from the lot stop to the doors; buses that load, drive and unload; stop queues;
+   arrivals at the doors before kick-off.
+7. **The surge trips** from the towns' driveways with the kick-off deadline; the arrival rate.
+8. **Live edit tools:** add a lane in place, widen a turn, turn lanes.
+9. **Evaluation, level-up and the first card pool** (roundabout, more toll booths, double-decker buses); permanent
+   upgrades from the earnings.
+10. **The Phase 5 gate**, headless (on the fix-gate harness).
+
 ### Start prompt for a fresh chat
-"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
-(budget + bottleneck loop) at step 1 and carry on through the steps without asking between them. Delegate coding to
-haiku-coder and checks/benchmarks to haiku-runner (worker PC via scripts/worker/run.sh), commit locally after each
-verified step, update docs/PROGRESS.md as you go. Use look*.mjs at the repo root (git-excluded copies of
-output/look/look.mjs) for headless screenshots; `npm run town:gate` and `npm run sim:gate` are the headless gates."
+"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
+section 1.0 (the event rounds) and section 7 items 6–13. Ask me those open questions first (one round of questions,
+with your recommendations), then write the Phase 5 steps into PROGRESS.md and carry on through them without asking
+between them. Delegate coding to haiku-coder and checks/benchmarks to haiku-runner (worker PC via
+scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go. Use look*.mjs at the
+repo root (git-excluded copies of output/look/look.mjs) for headless screenshots; `npm run sim:gate`, `npm run
+town:gate` and `npm run fix:gate` are the headless gates."
