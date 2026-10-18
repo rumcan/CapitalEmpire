@@ -1095,6 +1095,19 @@ small public car parks on open town lots as part of the town's growth (a small t
     occupying it; `meanWait` leaves out fans with no wait. #2 T003 grade: a different API and model from the spec (discrete
     levels and costs instead of `planProfile` / `crossingsOf` over terrain heights with vertical curves) and a second spec
     file `T003-grade.md` signed as the lead. The texts are in the session; local branches `pr1`, `pr2`.
+  - **Arena PRs, round 2 (2026-10-18 21:00; the owner's rule: post review comments without asking, tell him, merge
+    finished PRs and have a Haiku wire them in).** Merged to main on GitHub and pulled: **#4 T005 farms** (17 parcels on a
+    test road, none on hill/water/road, no overlaps, all prop ids exist), **#6 T006 disasters**, **#7 T009 drivers**
+    (ACC/IIDM/CAH match Treiber & Kesting; 2,040 veh/h per lane; string-stable ring), **#8 T008 incidents** (~7.8 a game
+    day for 3,000 cars). Being finished by the lead (the owner, 21:15: no more comments, fix them ourselves on the PR branches and merge; a cron checks for new PRs every 5 min until 22:20): **#1 subways** (re-review: a 3-station loop with 7 trains
+    still deadlocks at t = 67 s; two trains can share a section; results depend on dt), **#2 grade** (re-review: no
+    vertical curves; wrong on hillsides, a profile through the crossed deck), **#3 interchanges** (radii under the
+    minimums and grades up to 67%), **#5 terrain v2** (passes its numbers but the valleys are a jittered grid around
+    flat-topped hills and the river is straight: the opposite of the owner's ask). **Wiring:** drivers into sim.ts in
+    progress (haiku); then incidents (sim lanes and slow zones), disasters (closures in the city), farms (rural lots).
+  - **Junction UI:** ring lanes 1–3 and the Tab type flip DONE (commit `3720049`, browser-checked on street, arterial and
+    mixed crossings and a bend); per-corner slipways in progress (haiku; a 'Slipways' mode, `slipOff` per node in the
+    ops and the save, $1,000 a corner; resumed after the Haiku session limit).
   - **Arena task T013 (owner, 2026-10-18 night): roads and land**, one task in three parts: one-step class upgrades and
     downgrades with prices (today `WIDER` sends gravel, lane, street and road straight to arterial), building roads over
     lots with a confirm and the bill (no bulldozing first), natural town layouts (river, hill, crossroads, square, ribbon).
