@@ -11,7 +11,7 @@ _Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model i
 | --- | --- |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
-| 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
+| 2. Traffic core | **Done** (2026-10-18), not pushed yet. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), not pushed yet; the contact sheets wait for the owner's review |
 | 4. Budget + bottleneck loop | **Next.** Suggested steps at the end |
 | 5. Road builder pro | Not started |
