@@ -27,3 +27,6 @@ and wire it into the city worker, the engine tools, the renderer and the save.
 | T010 | Business economics: the business tree's catalogue and formulas | `src/game/ext/business/` |
 | T011 | Taxi service: fleet and dispatch | `src/game/ext/taxi/` |
 | T012 | Road, town and place names | `src/game/ext/names/` |
+| T013 | Road upgrades and downgrades: a one-step class ladder with prices | `src/game/ext/regrade/` |
+| T014 | Building roads over lots: the clearance, its bill and the confirm question | `src/game/ext/clearance/` |
+| T015 | Natural town layouts: river, hill, crossroads, square and ribbon towns | `src/game/ext/townform/` |
