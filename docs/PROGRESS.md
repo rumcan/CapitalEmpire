@@ -1057,6 +1057,28 @@ businesses, the stadium first; a business tree unlocked by success; revenue per 
 upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, towns as seeds, the road set check). Also:
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
+### Phase 6R progress
+- **Phase 6 step 1, actuated signals: DONE** (commit `0cf0e09`). Signal plans carry their state (the phase served, its
+  stage and time): min 7 s, max 40 s green, extended while a car is within 30 m on a served lane, empty phases skipped,
+  rest on green; the worker sends the states to the renderer; `Sim.fixedSignals` keeps the old rule for A/B. A 4-arm
+  junction (900 + 150 veh/h): minor wait 4.8 → 4.2 s at the same throughput. `sim:gate -- 2 10000` on the worker: PASS,
+  43,311 arrived, 68 towed, 0 lost, 3.95 ms per step mean (Phase 2: 4.6).
+- **Town growth (the owner's request): DONE** (commits `78e5472`, `c4908e3`). On the three-town valleys the town's gravel
+  keeps out of the stadium, car parks, toll plazas and bus stops and never joins or crosses a main road; the town grows
+  slowly on its own ((5 + 0.02 built) lots a day, a gravel leg every 6 game hours) and fast along paved roads (6 lots an
+  hour); each lot started on a paved road pays a **land sale** (30% of $2,000 x the frontage class value; a street pays
+  back about 1.5x its cost). A round's jump to the event evening skips the town's hours (no catch-up burst).
+- **Small public car parks in the towns (the owner's request): DONE** (commit `8fcaa88`): about 15% of commercial lots.
+- **Roundabouts, the owner's report "completely broken":** traced headless (a 4-arm ring: every car circulates the right
+  way and leaves at its own exit; 120 cars all through, none lost or towed) and in the browser. The owner's detail: entries
+  wait with no one coming, and **"there isn't a clear uniform snapping system"**: the road tool only rounded clicks to the
+  grid, so near-misses made extra nodes beside junctions (stubs, crowded junctions). The snapping system comes first
+  (6R.3, in progress), then the roundabout and junction waits are retested on clean joins.
+- **The owner (2026-10-18 evening):** you cannot build a road on top of another road without removing it first (drawing
+  over a road no longer upgrades it; widening is the Add lane tool); bulldozing a town building buys the lot out (paid as
+  compensation; queued).
+
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first (Phase 6 is in
 progress: its decisions and steps are under 'Phase 6, expansion'), then GAME-PLAN section 1.0 (the event rounds).
