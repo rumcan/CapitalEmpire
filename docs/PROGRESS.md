@@ -606,6 +606,19 @@ top bottleneck measurably restarts growth). Suggested steps:
    10/15/25/35/50 s); links per seg with loss and v/c (capacity 30 vehicles per lane per game hour at 13.4 m/s, scaled
    by the limit, halved into a signal); the top 10 by loss; flow per dseg. 10x10 grid: 695 veh-s/h lost at the worst
    item with 600 cars, 9 with 50; a 600-car step is about 1.8 ms.
+   - Cost (worker, headless `sim:gate` 0.5 day, 10k cars, A/B by checking out `src/game/sim` per commit): step mean 4.3–4.6
+     ms before, 4.8 ms after (+~0.4 ms, about 10%); p99 7.0–7.8 → 8.6–9.1 ms. The browser bench after step 2b read a sim
+     tick of 7.1 ms avg (19.9 max) against 4.8 in Phase 3 and Street 30% at 51.5 fps; the A/B says most of that is
+     run-to-run noise. Rerun the worker bench at the end of the phase.
+3b. **Bottleneck UI. DONE** (2026-10-18). The city worker posts the report once per game hour (not while skipping) and on
+   request. Key **F** / the Flow button: each direction of each road with traffic on its own side, coloured by v/c
+   (< 0.5 green, < 0.8 yellow, < 1 orange, red); LOS badges at junctions with through traffic (street and district
+   tiers). Key **B** / Bottlenecks: the top 10 by time lost (veh-min per game hour) with LOS or v/c; a click jumps the
+   camera there (zoom at least 0.2) with a pulsing ring. Only one right-hand panel shows (`Game.panel`: budget or
+   bottlenecks). Seen on the bench city with 5k cars: 2,206 junctions, 8,106 dsegs with flow; the worst item a
+   roundabout at about 50 s per vehicle (LOS E) at v/c 0.08, which is a sim behaviour worth a look (roundabout entries
+   wait long at low volume), not a measuring error.
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
 (budget + bottleneck loop) at step 1 and carry on through the steps without asking between them. Delegate coding to
