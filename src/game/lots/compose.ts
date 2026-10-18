@@ -33,7 +33,7 @@ const REACH = 0.3, VERGE = 1.2, EPS = 0.02;
 /** the largest share of the smaller footprint two uprights may share */
 const OVERLAP = 0.35;
 /** the car park's bay pitch and depth, tiles; the wheel stop id */
-const BAY = 1.25, BAY_DEPTH = 2.5, WHEEL = 'expansion:wheel-stop';
+const BAY = 2, BAY_DEPTH = 2.5, WHEEL = 'expansion:wheel-stop';
 
 const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
 const names = (ids: string[]) => ids.filter(id => BY.has(id));
@@ -72,7 +72,8 @@ const PICKUPS = CARS.filter(id => /pickup|van/.test(id));
 const FACE: Record<string, Pt> = { n: { x: 0, y: -1 }, s: { x: 0, y: 1 }, e: { x: 1, y: 0 }, w: { x: -1, y: 0 } };
 const JUNK = names(['expansion:junk-car', 'expansion:appliance-pile', 'expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:oil-drums', 'expansion:concrete-rubble']);
 const SCRAP = names(['expansion:scrap-engine', 'expansion:tyre-stack', 'expansion:yard-workbench', 'expansion:air-compressor']);
-const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle']);
+const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle', 'expansion:appliance-pile']);
+const TRAILERS = names(['expansion:camper', 'expansion:boxcar', 'expansion:boat-trailer', 'expansion:utility-trailer', 'expansion:lean-to-shed']);
 const PICKET: Pair = { x: 'world:fence_picket_x', y: 'world:fence_picket_y' };
 const PRIVACY: Pair = { x: 'expansion:fence-privacy-x', y: 'expansion:fence-privacy-y' };
 const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
@@ -175,7 +176,7 @@ class Build {
     return [this.P(a0, b0), this.P(a1, b0), this.P(a1, b1), this.P(a0, b1)].flatMap(p => [p.x, p.y]);
   }
   /** a car park along the lot front from a0 to a1: bay lines every BAY tiles, BAY_DEPTH deep, a wheel stop at each bay's end,
-   *  and a car in every other bay with a seeded chance */
+   *  and a car in about half the bays (seeded) */
   carPark(a0: number, a1: number) {
     const n = Math.floor((a1 - a0) / BAY + 1e-9);
     if (n < 1) return;
@@ -186,7 +187,7 @@ class Build {
     for (let k = 0; k < n; k++) {
       const a = a0 + k * BAY + BAY / 2;
       this.put(WHEEL, a, BAY_DEPTH - 0.4, { flip });
-      if (k % 2 === 0 && this.r() < 0.6) this.vehicle(CARS, a, 0.3);
+      if (this.r() < 0.5) this.vehicle(CARS, a, 0.3);
     }
   }
   /** a car (or pickup) facing the road best, from a pool, with its near edge at b0 along the lot's n */
@@ -332,59 +333,91 @@ function res(B: Build, st: ComposeState) {
   for (let b = 0.8; b <= sb - 0.6; b += 1.4) for (let a = 0.8; a <= W - 0.8; a += 1.4) B.put(pick(r, BUSHES), a, b, { plant: true });
 }
 
-/** a shop or venue with a car park beside it, a loading bay and bins at the back; a tour venue adds benches and trees */
+/** a shop or venue with a car park beside it (two bays when the lot allows), a lamp at its corner, a front row by the door
+ *  (bike rack, bin, bench, bushes along the shop front), a hvac unit at the side, a tree row along the side lot line and the
+ *  bins at the back; a tour venue adds a second bench, a picnic table, a phone booth and a sign */
 function com(B: Build, st: ComposeState, tour: boolean) {
   const { W, D, r, rear, flip } = B;
   const pool = st.decline >= 2 ? BOARDED : rear ? SHOP_REAR : tour ? VENUE : SHOP_FRONT;
-  const ss = specFit(B, pool, W - 2.9, D - 3.5, { flip });
+  const ss = specFit(B, pool, Math.max(2.4, W - 4.9), D - 3.5, { flip });
   if (!ss) return;
   const sw = 2 * B.ea(ss), sd = 2 * B.eb(ss), sb = 1 + r(), ca = 0.3 + sw / 2;
   B.at(ss, ca, sb + B.eb(ss));
-  if (!rear) { B.put('world:bench', ca + 1.0, sb - 0.8); B.put('town:bike_rack', ca - 1.0, sb - 0.9); }
-  const pA0 = ca + sw / 2 + 0.6;
+  if (!rear) {
+    B.put('town:bike_rack', ca - 1.0, sb - 0.9);
+    B.put('world:trashcan', ca - 0.1, sb - 0.5);
+    B.put('world:bench', ca + 0.9, sb - 0.7);
+    for (let a = 0.6; a <= sw; a += 1.4) B.put(pick(r, BUSHES), a, sb - 0.7, { plant: true });
+  }
+  const pA0 = 0.6 + sw;
   B.carPark(pA0, W - 0.3);
+  B.put('world:streetlamp', W - 0.4, -0.4, { street: true });
   B.pave('yard', 0.3, D - 3.2, 0.3 + sw, D - 0.4, 'pad');
   B.put('town:dumpster', sw * 0.3 + 0.5, D - 1.3);
   B.put('town:delivery_crates', sw * 0.7 + 0.2, D - 1.2);
-  B.put('expansion:hvac-unit', ca, sb + sd + 0.8);
+  B.put('expansion:hvac-unit', sw + 0.6, sb + sd / 2);
+  for (let b = sb + 0.6; b <= D - 1.5; b += 2) B.put(pick(r, TREES), W - 0.6, b, { plant: true });
   B.put(pick(r, TREES), 0.6, D - 0.6, { plant: true });
-  B.put(pick(r, TREES), W - 0.6, sb + 0.6, { plant: true });
-  if (tour) { B.put('world:bench', W - 1.0, sb + 1.6); B.put(pick(r, TREES), W - 0.6, D - 2.2, { plant: true }); }
+  for (let a = 3; a <= W - 1.6; a += 1.4) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
+  if (tour) {
+    B.put('world:bench', W - 1.0, sb + 1.6);
+    B.put('town:picnic_table', W - 1.8, sb + 4.5);
+    B.put('town:phone_booth', 0.6, -0.4, { street: true });
+    B.put('town:street_sign', pA0 + 0.4, -0.4, { street: true });
+  }
 }
 
-/** a civic building (or a back view) on a paved forecourt, trees in a row, benches and street lamps */
+/** a civic building (or a back view) on the left of a paved forecourt: a tree row, benches and planters, a lamp pair and a bus stop
+ *  at the entrance, one car bay at the side, shrubs at the front and back */
 function civic(B: Build, st: ComposeState) {
   const { W, D, r, rear, flip } = B;
-  const cs = specFit(B, rear ? SHOP_REAR : CIVIC, W - 1.6, D - 6, { flip });
+  const cs = specFit(B, rear ? SHOP_REAR : CIVIC, W - 3.2, D - 6, { flip });
   if (!cs) return;
-  const ea = B.ea(cs), eb = B.eb(cs), sb = 3 + 1.5 * r();
-  B.at(cs, W / 2, sb + eb);
-  B.pave('yard', W / 2 - ea - 0.8, 0, W / 2 + ea + 0.8, sb, 'paving');
-  for (let a = 0.8; a <= W - 0.8; a += 2) B.put(pick(r, TREES), a, 0.7, { plant: true });
-  B.put('world:bench', W / 2 - ea - 1.4, sb - 0.6);
-  B.put('world:bench', W / 2 + ea + 1.4, sb - 0.6);
-  B.put('world:streetlamp', 0.4, -0.4, { street: true });
-  B.put('world:streetlamp', W - 0.4, -0.4, { street: true });
+  const ea = B.ea(cs), eb = B.eb(cs), sb = 3 + 1.5 * r(), cx = 0.3 + ea, cw = 2 * ea;
+  B.at(cs, cx, sb + eb);
+  B.pave('yard', 0.3, 0, cw + 0.6, sb, 'paving');
+  for (let a = 0.8; a <= cw + 0.2; a += 2) B.put(pick(r, TREES), a, 0.7, { plant: true });
+  B.put('town:planter_square', cx - 1.2, sb - 0.6);
+  B.put('town:planter_square', cx + 1.2, sb - 0.6);
+  B.put('world:streetlamp', cx - 1.2, -0.4, { street: true });
+  B.put('world:streetlamp', cx + 1.2, -0.4, { street: true });
+  B.put('town:bus_stop', cw + 1.2, -0.5, { street: true });
+  B.put('world:bench', cx - ea - 0.2, sb - 0.6);
+  B.put('world:bench', cx + ea + 0.2, sb - 0.6);
+  B.carPark(cw + 0.6, W - 0.3);
+  B.put('town:bike_rack', 0.9, sb - 1.0);
+  B.put(pick(r, TREES), 0.6, D - 0.6, { plant: true });
+  B.put(pick(r, TREES), W - 0.6, D - 0.6, { plant: true });
+  for (let a = 1.4; a <= W - 1.4; a += 1.4) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
   if (st.decline >= 1) B.put(pick(r, BUSHES), W / 2, sb + 2 * eb + 1, { plant: true });
 }
 
-/** a yard of gravel with a shed at the back, a chain-link fence with a gate gap at the front, clutter clusters and a pickup */
+/** a yard of gravel with a shed at the back, a second shed or trailer, a chain-link fence with a gate gap at the front,
+ *  3-5 scrapyard clusters of 3-5 items against the side fences and the shed, a pickup and a van, a utility pole and weeds along the fence */
 function ind(B: Build, st: ComposeState) {
   const { W, D, r, flip } = B;
   B.pave('yard', 0.4, 0.4, W - 0.4, D - 0.4, 'gravel');
   const shed = st.decline >= 2 ? ['expansion:abandoned-workshop'] : W >= 12 ? [...SHED, ...BARN] : SHED;
   const sh = specFit(B, shed, W - 0.8, D - 3, { flip });
-  if (sh) B.at(sh, W / 2, D - B.eb(sh) - 0.9);
+  const shB = D - (sh ? B.eb(sh) : 1.5) - 0.9;
+  if (sh) B.at(sh, W / 2, shB);
+  const tr = specFit(B, TRAILERS, W - 2.4, 4.5, { flip });
+  if (tr) B.at(tr, B.ea(tr) + 0.8, 3 + B.eb(tr));
   B.run(CHAIN, 0.4, 0.4, W - 0.4, 0.4, [0.35, 0.65]);
   B.run(CHAIN, 0.4, 0.4, 0.4, D - 0.4);
   B.run(CHAIN, W - 0.4, 0.4, W - 0.4, D - 0.4);
   B.run(CHAIN, 0.4, D - 0.4, W - 0.4, D - 0.4);
-  const k = 2 + Math.floor(r() * 3);
-  for (let i = 0; i < k; i++) {
-    const ca = 1.5 + r() * Math.max(0, W - 3), cb = 2.5 + r() * Math.max(0, D - 7);
-    for (let j = 0; j < 3; j++) B.put(pick(r, CLUTTER), ca + (r() - 0.5) * 2.4, cb + (r() - 0.5) * 2.4);
-  }
   B.vehicle(PICKUPS, W / 2 + 1.5, 1.2);
+  B.vehicle(PICKUPS, W / 2 - 1.5, 1.2);
+  B.put('town:utility_pole', 0.5, -0.5, { street: true });
+  const k = 3 + Math.floor(r() * 3);
+  for (let i = 0; i < k; i++) {
+    // the last cluster stands in front of the shed, the others against the side fences
+    const last = i === k - 1 && sh, ca = last ? W / 2 : i % 2 ? W - 1.3 : 1.3, cb = last ? shB - 1.6 : 3 + r() * Math.max(0, D - 8);
+    const m = 3 + Math.floor(r() * 3);
+    for (let j = 0; j < m; j++) B.put(pick(r, CLUTTER), ca + (r() - 0.5) * 2.4, cb + (r() - 0.5) * 2.4);
+  }
+  for (let b = 2; b <= D - 1.5; b += 3) B.put(pick(r, BUSHES), 0.9, b, { plant: true });
 }
 
 /** a construction site: dirt, cement bags, rubble, a cable spool, a pickup and a temporary fence; no building */

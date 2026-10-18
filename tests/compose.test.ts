@@ -18,7 +18,7 @@ const O = 40, STEP = 40, LINES = 4, at = (k: number) => O + k * STEP, last = at(
 
 const byId = new Map(LIBRARY.map(i => [i.id, i]));
 /** the street-placed items (the verge in front of a lot, up to 1.2 tiles) */
-const STREET = new Set(['gen:trash-cans-row', 'world:mailbox', 'world:streetlamp']);
+const STREET = new Set(['gen:trash-cans-row', 'world:mailbox', 'world:streetlamp', 'town:bus_stop', 'town:phone_booth', 'town:street_sign', 'town:utility_pole']);
 const isFence = (id: string) => { const k = byId.get(id)?.kind; return k === 'fencex' || k === 'fencey' || id === 'world:hedge'; };
 const isWheel = (id: string) => id === 'expansion:wheel-stop';
 const isCar = (id: string) => byId.get(id)?.cat === 'Vehicles';
@@ -172,5 +172,7 @@ test('the average uprights per archetype (log)', () => {
   }
   const lines = [...sum.keys()].map(k => `${k}: ${(sum.get(k)! / cnt.get(k)!).toFixed(1)}`);
   console.log(`uprights per lot (decline 0, ${LOTS.length} lots x 2 seeds)\n  ${lines.join('\n  ')}`);
-  assert.ok((sum.get('RES BUILT')! / cnt.get('RES BUILT')!) >= 12);
+  const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
+  assert.ok(avg('RES BUILT') >= 12);
+  for (const u of ['COM', 'IND', 'TOUR', 'GOV']) assert.ok(avg(`${u} BUILT`) >= 14, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want 14+`);
 });
