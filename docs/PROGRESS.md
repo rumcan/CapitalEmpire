@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–2 done (three towns, the dev sandbox, the frozen clock, the stadium site and the round)._
+_Last updated: 2026-10-18, Phase 5 steps 1–3 done (three towns, the dev sandbox, the clock, the stadium and the round, car parks)._
 
 ## Where we are
 
@@ -824,6 +824,23 @@ Steps (each ends verified, committed and written up here):
      `Kick-off in`, `Event over · 0/1200 arrived`, Back to the valley). Checked in the browser pane on a stamped valley:
      the whole loop runs, the clock stands at 18:00 through the round and runs on after it; 10 minutes of round cost
      $11,237 of upkeep on the stamped towns' streets (balance in step 9).
+3. **The parking lot. DONE** (2026-10-18; commits `16dccd7`, `bbdcc72` and the 3c commit after it).
+   - `event/carpark.ts`: a car park is an axis-aligned rectangle beside a road; the frontage is the parallel ground road
+     whose verge is within 3 tiles of an edge (the longest overlap wins); entrances on its centre line, one per 40 tiles of
+     frontage (1–3); bays 2.5 m x 5 m in double rows off aisles, nearest an entrance first; $25 a tile. Valid: sides at
+     least 12, buildable, no road verge or other car park or the stadium over it, no built lot under it, a frontage.
+   - The sim's **entrance sinks**: a car bound for a car park treats its entrance as a stop while the entrance is busy (one
+     car per `ENTRY_S` = 2 s; in practice a stopped car needs about 3.3 s to clear it: about 1,100 cars an hour per
+     entrance) and parks when it gets in; a full car park turns it away. A queue forms on the road behind it. Headless:
+     50 test cars from one town all park through one entrance in about 170 s.
+   - The game: the car park tool (P; drag a rectangle; preview green/red with the bays, entrances and the reason or
+     the cost), the asphalt and bay lines baked into the ground (like the lots' car parks), parked cars as sprites in
+     the bays nearest an entrance, the label `P · parked/bays`, bulldoze removes one, saved. The lots overlay moved from
+     P to K. The town never builds on a car park or the stadium site.
+   - Dev: the car park panel has [Test 50 cars] (cars from roads joined to the car park).
+   - **Known issue (for step 4):** everyday lot trips pick jobs and shops in the other towns, which are not joined yet,
+     so those cars are lost at once (about one every 3 sim s on seed 1). Trips must stay within joined roads.
+   - Balance note: 1,200 surge cars in about 10 minutes need about 7 entrances' worth of capacity, or a faster entry.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
