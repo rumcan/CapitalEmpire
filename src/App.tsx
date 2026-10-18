@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { FLOW_COLS, Game, LOS_COL, SPEEDS } from './game/engine';
+import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
@@ -122,7 +122,7 @@ export default function App() {
                 <button className="btn" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)">+</button>
                 <span className="ml-1 w-14 text-right text-xs tabular-nums text-slate-300" title="Zoom relative to the town builder's 100%">{Math.round(game.cam.z * 100)}%</span>
               </div>
-              <button className={`btn ${game.showFlow ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.showFlow = !game.showFlow; if (game.showFlow) game.traffic.requestReport(); bump(); }} title="Traffic flow: volume / capacity and junction LOS (F)">Flow</button>
+              <button className={`btn ${game.showFlow ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.setFlow(!game.showFlow); bump(); }} title="Live congestion heat map (F)">Flow</button>
               <button className={`btn ${game.panel === 'bottlenecks' ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)">Bottlenecks</button>
               <button className={`btn ${game.showGrid ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)">Grid</button>
               <button className="btn" onClick={() => game.save()} title="Saved automatically; force a save now">Save</button>
@@ -160,6 +160,7 @@ export default function App() {
             {hintFor(game)}
           </div>
           {(game.showAccess || game.cam.z < PLANNER_Z) && <AccessLegend game={game} />}
+          {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} />}
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (
@@ -467,6 +468,19 @@ function AccessLegend({ game }: { game: Game }) {
         <div key={t} className="flex items-center gap-2"><span className="inline-block h-2.5 w-3 rounded-sm" style={{ background: c }} />{t}</div>
       ))}
       <div className="mt-1 border-t border-white/10 pt-1 tabular-nums">+{game.growTot} lots started today, −{game.declTot} declining</div>
+    </div>
+  );
+}
+/** the heat map's bands, bottom-left above the hint bar (raised: above the access legend too; see Game.drawFlow) */
+const HEAT_LEGEND: [string, string][] = [['Flowing — 75%+ of the speed limit', HEAT_COLS[0]!], ['Slow — 50–75%', HEAT_COLS[1]!], ['Heavy — 25–50%', HEAT_COLS[2]!], ['Stopped — under 25%', HEAT_COLS[3]!]];
+function HeatLegend({ raised }: { raised: boolean }) {
+  return (
+    <div className={`pointer-events-none absolute ${raised ? 'bottom-[10rem]' : 'bottom-14'} left-3 z-20 w-64 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur`}>
+      <div className="mb-1 font-bold text-slate-100">Congestion · live</div>
+      {HEAT_LEGEND.map(([t, c]) => (
+        <div key={t} className="flex items-center gap-2"><span className="inline-block h-1 w-4 shrink-0 rounded-full" style={{ background: c }} />{t}</div>
+      ))}
+      <div className="mt-1 border-t border-white/10 pt-1 text-[10px] text-slate-400">speed against the limit, each direction; updated twice a second</div>
     </div>
   );
 }

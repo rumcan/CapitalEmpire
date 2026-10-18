@@ -33,8 +33,10 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 const GAME_DAY = 1440, GAME_HOUR = 60;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
 export const SPEEDS = [1, 2, 4, 8, 20] as const;
-/** the flow colours by v/c (below 0.5, below 0.8, below 1, and 1 or more; see Game.drawFlow) and the junction LOS badge colours, A to F */
+/** the flow colours by v/c (below 0.5, below 0.8, below 1, and 1 or more; the Bottlenecks legend) and the junction LOS badge colours, A to F */
 export const FLOW_COLS = ['#3ddc84', '#ffd23f', '#ff8c1a', '#ff3b3b'];
+/** the heat map's bands by speed against the limit: Flowing (75%+), Slow (50-75%), Heavy (25-50%), Stopped (under 25%); see Game.drawFlow */
+export const HEAT_COLS = ['#0ca30c', '#fab219', '#ec835a', '#d03b3b'];
 export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: '#ffd23f', D: '#ff8c1a', E: '#ff3b3b', F: '#ff3b3b' };
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
@@ -92,8 +94,11 @@ export class Game {
   showAccess = false;
   /** the access overlay's growth state per zone, refreshed at most once a second (growthNow): the lots started within the last game day (growN), the lots declining (declN), and the totals */
   private growN = new Int32Array(256); private declN = new Int32Array(256); growTot = 0; declTot = 0; private growStamp = -Infinity;
-  /** the flow overlay (key F): each direction of each road coloured by volume / capacity, and junction LOS badges at the street and district tiers */
+  /** the flow overlay (key F, the Flow button, a jump): the live congestion heat map of each road direction (see drawFlow and setFlow) */
   showFlow = false;
+  /** the heat map's scratch: each dseg's band and lane key (255: not drawn), the keys in drawing order, and the counts, starts and fills per key */
+  private heatKey = new Uint8Array(0); private heatOrd = new Int32Array(0);
+  private heatCnt = new Int32Array(32); private heatStart = new Int32Array(32); private heatFill = new Int32Array(32);
   /** the right-hand panel: the budget (the treasury), the bottlenecks (key B), or none */
   panel: 'budget' | 'bottlenecks' | null = null;
   /** the win's modal (App): set once when the career is won, cleared by its 'Keep building' */
@@ -726,8 +731,10 @@ export class Game {
   jumpTo(x: number, y: number) {
     if (this.cam.z < 0.2) this.cam.z = 0.2;
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam();
-    this.focus = { x, y, t: performance.now() }; this.showFlow = true; this.emit();
+    this.focus = { x, y, t: performance.now() }; this.setFlow(true); this.emit();
   }
+  /** shows or hides the flow overlay (the Flow button, key F, a jump) and turns the worker's heat map on or off with it (see SimClient.heatOn); callers emit */
+  setFlow(on: boolean) { this.showFlow = on; this.traffic.heatOn(on); }
   keyDown(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     this.keys.add(e.key);
@@ -742,7 +749,7 @@ export class Game {
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
       case 'k': case 'K': this.showLots = !this.showLots; this.emit(); break;
       case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
-      case 'f': case 'F': this.showFlow = !this.showFlow; if (this.showFlow) this.traffic.requestReport(); this.emit(); break;
+      case 'f': case 'F': this.setFlow(!this.showFlow); this.emit(); break;
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); } else this.setTool('road'); break;
@@ -1461,42 +1468,65 @@ export class Game {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
-  /** the traffic flow (key F, when the worker's report is in): each direction of each road with traffic, on its own side as the lanes (right of its way), coloured by v/c;
-   *  at the street and district tiers the LOS badges of the junctions with through traffic; then the focus ring of a jump (4 s) */
+  /** the traffic flow (key F): the live congestion heat map (see drawHeat) when the worker's geometry and heat are in, then the focus ring of a jump (4 s) */
   private drawFlow(ctx: CanvasRenderingContext2D) {
-    const rep = this.traffic.report; if (!rep) return;
-    const ze = this.cam.z * this.dpr, pad = 4, now = performance.now();
-    const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
-    const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
-    const f = rep.flow;
-    this.setIso(ctx); ctx.lineCap = 'butt'; ctx.globalAlpha = 0.85;
-    if (this.showFlow) for (let i = 0; i + 5 < f.length; i += 6) {
-      const fx = f[i]!, fy = f[i + 1]!, tx = f[i + 2]!, ty = f[i + 3]!, vc = f[i + 4]!, h = f[i + 5]!;
-      if (Math.max(fx, tx) < x0 || Math.min(fx, tx) > x1 || Math.max(fy, ty) < y0 || Math.min(fy, ty) > y1) continue;
-      // the offset is h / 2 along perp of the unit direction (u = (dx, dy) / L, perp u = (-uy, ux)): the side the lanes use
-      const dx = tx - fx, dy = ty - fy, L = Math.hypot(dx, dy) || 1, ox = -dy / L * h / 2, oy = dx / L * h / 2;
-      ctx.strokeStyle = FLOW_COLS[vc < 0.5 ? 0 : vc < 0.8 ? 1 : vc < 1 ? 2 : 3]!;
-      // at the planner tier a tile is HW * zoom px across, so 2 px (CSS) is 2 / (HW * zoom) tiles
-      ctx.lineWidth = this.cam.z < PLANNER_Z ? Math.max(h * 0.9, 2 / (HW * this.cam.z)) : h * 0.9;
-      ctx.beginPath(); ctx.moveTo(fx + ox, fy + oy); ctx.lineTo(tx + ox, ty + oy); ctx.stroke();
-    }
-    ctx.globalAlpha = 1; ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (this.showFlow && this.cam.z >= PLANNER_Z) {
-      ctx.font = `bold ${9 * this.dpr}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      for (const J of rep.junctions) {
-        if (J.through <= 0 || J.x < x0 || J.x > x1 || J.y < y0 || J.y > y1) continue;
-        const s = this.screen(J.x, J.y);
-        ctx.beginPath(); ctx.arc(s.x, s.y, 7 * this.dpr, 0, Math.PI * 2); ctx.fillStyle = LOS_COL[J.los]!; ctx.fill();
-        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = this.dpr; ctx.stroke();
-        ctx.fillStyle = '#0f172a'; ctx.fillText(J.los, s.x, s.y + 0.5 * this.dpr);
-      }
-    }
+    const tr = this.traffic, G = tr.heatGeom, R = tr.heatRatio, D = tr.heatDens, now = performance.now();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.showFlow && G && R && D) this.drawHeat(ctx, G, R, D, now);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.lineCap = 'butt';
     const fo = this.focus, age = fo ? now - fo.t : Infinity;
     if (fo && age < 4000) {
       const s = this.screen(fo.x, fo.y), r = (18 + 10 * Math.sin(age / 1000 * Math.PI * 2)) * this.dpr;
       ctx.globalAlpha = 1 - age / 4000; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2 * this.dpr;
       ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
     }
+  }
+  /** the congestion heat map (SimClient.heatGeom, heatRatio, heatDens): each direction of each road with traffic (1 vehicle per km per lane or more), on its own
+   *  side of the road, in the band of its speed against the limit (Flowing 0.75+, Slow, Heavy, Stopped under 0.25; worst drawn last, on top): a glow, then a core.
+   *  Screen space, one path per band and lane count (so each has its width), culled to the view; the keys are counting-sorted into the scratch arrays (no allocation) */
+  private drawHeat(ctx: CanvasRenderingContext2D, G: Float32Array, R: Float32Array, D: Float32Array, now: number) {
+    const ze = this.cam.z * this.dpr, cX = this.cam.X, cY = this.cam.Y, cw2 = this.cw / 2, ch2 = this.ch / 2, pad = 4;
+    const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
+    const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
+    const nD = Math.min(G.length / 6, R.length, D.length) | 0;
+    if (this.heatKey.length < nD) { this.heatKey = new Uint8Array(nD); this.heatOrd = new Int32Array(nD); }
+    const K = this.heatKey, ord = this.heatOrd, cnt = this.heatCnt, start = this.heatStart, fill = this.heatFill;
+    // pass 1: the key of each dseg drawn (dead ids are NaN, no traffic is density under 1): band * 8 + lanes - 1, lanes 1 to 8
+    cnt.fill(0);
+    for (let d = 0; d < nD; d++) {
+      const o = 6 * d, fx = G[o]!, fy = G[o + 1]!, tx = G[o + 2]!, ty = G[o + 3]!;
+      K[d] = 255;
+      if (Number.isNaN(fx) || D[d]! < 1 || Math.max(fx, tx) < x0 || Math.min(fx, tx) > x1 || Math.max(fy, ty) < y0 || Math.min(fy, ty) > y1) continue;
+      const r = R[d]!, band = r >= 0.75 ? 0 : r >= 0.5 ? 1 : r >= 0.25 ? 2 : 3, lanes = Math.min(8, Math.max(1, G[o + 5]! | 0));
+      const k = band * 8 + lanes - 1;
+      K[d] = k; cnt[k] = cnt[k]! + 1;
+    }
+    // pass 2: the start of each key in ord; pass 3: the dsegs of each key, in dseg order
+    let s = 0;
+    for (let k = 0; k < 32; k++) { start[k] = s; fill[k] = s; s += cnt[k]!; }
+    for (let d = 0; d < nD; d++) { const k = K[d]!; if (k !== 255) { const p = fill[k]!; fill[k] = p + 1; ord[p] = d; } }
+    const zf = clamp(this.cam.z / 0.12, 0.6, 1.6), pulse = 0.85 + 0.15 * Math.sin(now / 1000 * Math.PI * 2);
+    ctx.lineCap = 'round';
+    for (let band = 0; band < 4; band++) for (let ln = 0; ln < 8; ln++) {
+      const k = band * 8 + ln, n0 = start[k]!, n1 = n0 + cnt[k]!;
+      if (n1 === n0) continue;
+      // device px: 2.2 px a lane at the 0.12 zoom tier and up, scaled with the zoom, 2 to 9 px
+      const w = clamp((ln + 1) * 2.2 * zf, 2, 9) * this.dpr;
+      ctx.beginPath();
+      for (let j = n0; j < n1; j++) {
+        const o = 6 * ord[j]!, fx = G[o]!, fy = G[o + 1]!, tx = G[o + 2]!, ty = G[o + 3]!, dx = tx - fx, dy = ty - fy, L = Math.hypot(dx, dy) || 1, off = G[o + 4]!;
+        // the lanes' centre: off tiles along perp(u) = (-uy, ux), u = (dx, dy) / L
+        const ox = -dy / L * off, oy = dx / L * off;
+        ctx.moveTo((worldX(fx + ox, fy + oy) - cX) * ze + cw2, (worldY(fx + ox, fy + oy) - cY) * ze + ch2);
+        ctx.lineTo((worldX(tx + ox, ty + oy) - cX) * ze + cw2, (worldY(tx + ox, ty + oy) - cY) * ze + ch2);
+      }
+      ctx.strokeStyle = HEAT_COLS[band]!;
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = band === 0 ? 0.06 : 0.18; ctx.lineWidth = 3 * w; ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = band === 0 ? 0.45 : band === 1 ? 0.9 : band === 2 ? 0.95 : pulse;
+      ctx.lineWidth = band === 3 ? 1.4 * w : w; ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   /** the car inspector and the junction routes (see SimClient.car and .watch): the inspected car's route ahead (cyan, dashed after its first
    *  stretch), its origin (blue) and destination (orange) dots, and a ring on the car; the watched junction's recorded crossings, from their
