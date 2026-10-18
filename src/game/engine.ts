@@ -2,7 +2,7 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLA
 import { ATLAS_PAGES, LIBRARY } from './library';
 import { CLASS, FLAG_COST, Grid, JUNCTIONS, KEY_CLASSES, RoadNetwork, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
-import { checkLegs, snapPoint, type Snap } from './snap';
+import { MIN_SEP, checkLegs, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
@@ -484,7 +484,7 @@ export class Game {
   routeBlock(legs: Leg[] = this.previewLegs()): string {
     if (!legs.length) return '';
     // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
-    const cs = this.cursorSnap(), last = this.route[this.route.length - 1], onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
+    const c0 = this.cursorSnap(), last = this.route[this.route.length - 1], cs = c0 && last ? this.aim(last, c0) : c0, onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
     return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls);
   }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
@@ -505,11 +505,21 @@ export class Game {
     const corner = ax >= ay ? { x: p.x, y: from.y } : { x: from.x, y: p.y };
     return [{ a: from, b: corner }, { a: corner, b: p }];
   }
+  /** a snap onto a road, seen from the route's last point: the point on that road square across from `from`, so the new road meets it
+   *  straight (a T) instead of an L whose corner and last stretch would lie on the road itself; the snap as it is when that foot is off the
+   *  road's span (within MIN_SEP of its ends) or `from` lies on the road's line */
+  private aim(from: Pt, s: Snap): Snap {
+    if (s.kind !== 'road' || !s.seg) return s;
+    const a = s.seg.a, b = s.seg.b, dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy); if (L < 1e-6) return s;
+    const t = ((from.x - a.x) * dx + (from.y - a.y) * dy) / L, q = { x: a.x + dx * t / L, y: a.y + dy * t / L };
+    if (t < MIN_SEP || t > L - MIN_SEP || Math.hypot(from.x - q.x, from.y - q.y) < 1) return s;
+    return { ...s, p: q };
+  }
   previewLegs(): Leg[] {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1], b: this.route[i] });
     const cs = this.cursorSnap();
-    if (this.route.length && cs) legs.push(...this.legsTo(this.route[this.route.length - 1], cs.p, this.keys.has('Shift')));
+    if (this.route.length && cs) { const last = this.route[this.route.length - 1]!; legs.push(...this.legsTo(last, this.aim(last, cs).p, this.keys.has('Shift'))); }
     return legs;
   }
   routeCost() { return this.structured(this.previewLegs()).cost; }
@@ -542,7 +552,8 @@ export class Game {
     return { n: hit.length, comp: hit.reduce((s, v) => s + compensation(v), 0) };
   }
   private roadClick(mx: number, my: number) {
-    const s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius());
+    let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius());
+    if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
     if (!this.route.length) { this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
