@@ -165,8 +165,8 @@ export function driveway(lot: Lot, g: LaneGraph, byseg?: Map<Seg, number[]>): Dr
   return null;
 }
 
-/** a trip waiting to leave: its destination lot and the sim time it may leave (its departure, within its hour) */
-interface Trip { to: Lot; due: number }
+/** a trip waiting to leave: its destination lot, the sim time it may leave (its departure, within its hour), and the destination's use (LU) */
+interface Trip { to: Lot; due: number; use: number }
 /** a built lot in the trips' lists: its use, residents, jobs, its fraction of a trip carried over, and its trips waiting to leave */
 interface Rec { lot: Lot; use: number; pop: number; jobs: number; acc: number; pend: Trip[]; busy: boolean }
 /** the cumulative weights of a list */
@@ -233,21 +233,21 @@ export class LotTrips {
       r.acc += r.pop * k; const n = Math.floor(r.acc); r.acc -= n;
       for (let j = 0; j < n; j++) {
         const due = H * 60 + this.rnd() * 60;
-        if (evening) { const o = this.pick(this.jobsL, this.jobC, r.lot); if (o) this.add(sim, o, r.lot, due); }
-        else if (morning) { const d = this.pick(this.jobsL, this.jobC, r.lot); if (d) this.add(sim, r, d.lot, due); }
+        if (evening) { const o = this.pick(this.jobsL, this.jobC, r.lot); if (o) this.add(sim, o, r.lot, due, LU.RES); }
+        else if (morning) { const d = this.pick(this.jobsL, this.jobC, r.lot); if (d) this.add(sim, r, d.lot, due, d.use); }
         else {
           const d = this.rnd() < SHOP ? this.pick(this.shops, this.shopC, r.lot) : this.pick(this.jobsL, this.jobC, r.lot);
-          if (d) this.add(sim, r, d.lot, due);
+          if (d) this.add(sim, r, d.lot, due, d.use);
         }
       }
     }
   }
 
-  /** queues a trip from lot rec `from` to lot `to` (the oldest is dropped when PEND_MAX wait) */
-  private add(sim: Sim, from: Rec, to: Lot, due: number) {
+  /** queues a trip from lot rec `from` to lot `to`, its destination's use `use` (the oldest is dropped when PEND_MAX wait) */
+  private add(sim: Sim, from: Rec, to: Lot, due: number, use: number) {
     if (to.key === from.lot.key) return;
     if (from.pend.length >= PEND_MAX) { from.pend.shift(); sim.stats.dropped++; }
-    from.pend.push({ to, due });
+    from.pend.push({ to, due, use });
     if (!from.busy) { from.busy = true; this.busy.push(from); }
   }
 
@@ -263,7 +263,7 @@ export class LotTrips {
         const o = this.drive(r.lot), d = this.drive(p.to);
         const dest = d ? this.g.lanes[d.lane]!.dseg : -1;
         if (!o || !d || (dest === this.g.lanes[o.lane]!.dseg && d.s < o.s)) { r.pend.splice(i, 1); sim.stats.dropped++; continue; }
-        const res = sim.spawnAt(o.lane, o.s, dest, d.s);
+        const res = sim.spawnAt(o.lane, o.s, dest, d.s, p.use);
         if (res === -1) { i++; continue; }
         r.pend.splice(i, 1);
       }

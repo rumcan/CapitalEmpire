@@ -76,8 +76,8 @@ function lotSim(g: LaneGraph, lm: LotMap, town: Town) {
   sim.setBuilt(built);
   const trips: { t: number; from: number; to: number }[] = [];
   const spawnAt = sim.spawnAt.bind(sim);
-  sim.spawnAt = (lane, s, dest, destS) => {
-    const r = spawnAt(lane, s, dest, destS);
+  sim.spawnAt = (lane, s, dest, destS, tag) => {
+    const r = spawnAt(lane, s, dest, destS, tag);
     if (r >= 0) trips.push({ t: sim.t, from: useAt.get(`L${lane}|${s}`) ?? -1, to: useAt.get(`D${dest}|${destS}`) ?? -1 });
     return r;
   };
@@ -100,6 +100,8 @@ test('lot trips: over 2 game days morning trips go home to jobs, evening trips c
   assert.ok(toJobs > 0.8, `morning trips RES to jobs: ${(100 * toJobs).toFixed(0)}%`);
   assert.ok(fromJobs > 0.8, `evening trips jobs to RES: ${(100 * fromJobs).toFixed(0)}%`);
   assert.ok(sim.stats.arrived / trips.length > 0.8, `arrived ${sim.stats.arrived} of ${trips.length}`);
+  assert.ok(sim.trade.arrived > 0, `trade arrived ${sim.trade.arrived}`);
+  assert.ok(sim.trade.punctual > 0 && sim.trade.punctual <= sim.trade.arrived, `trade punctual ${sim.trade.punctual} of ${sim.trade.arrived}`);
   const zones = new Set(builtLots(town, lm).map(b => zoneOf(b.lot.c.x, b.lot.c.y)));
   for (const z of zones) assert.ok(sim.access[z]! >= 0.9 && sim.access[z]! <= 1.15, `free-flow access in zone ${z}: ${sim.access[z]}`);
 });

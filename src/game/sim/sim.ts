@@ -6,6 +6,7 @@ import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, lan
 import { SIG, phaseState } from './signals';
 import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
+import { LU } from '../lots/town';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -60,6 +61,9 @@ export class Sim {
   profile = false;
   rnd: () => number;
   stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, throttled: 0, tableMs: 0, tables: 0, dropped: 0, ratioSum: 0, ratioN: 0, abandoned: 0 };
+  /** trade since the sim started: trips that arrived at a non-RES lot (the destination's use tag >= LU.COM), and the sum of their
+   *  punctuality min(1, FREE * ideal / actual): 1 is on time, less is late */
+  trade = { arrived: 0, punctual: 0 };
   /** where new trips start and end (origins, destinations by zone) */
   trips: Trips;
   /** 'random': the target count with random trips (the bench, the gate, the tests); 'lots': the built lots' trips, no target (lotTrips) */
@@ -75,6 +79,8 @@ export class Sim {
   /** per zone, decaying sums: actual seconds, ideal seconds, trips */
   private actS = new Float64Array(256); private idlS = new Float64Array(256); private nS = new Float64Array(256);
   private t0: Float64Array; private ideal: Float64Array; private oz: Uint8Array;
+  /** per slot: the use (LU) of the destination lot, 0 = none (a trip not to a lot) */
+  private tag: Uint8Array;
   /** a scratch lane position (allocation-free) */
   private pt = { x: 0, y: 0, hx: 0, hy: 0 };
   /** per slot: distance to the nearest virtual stop (plan end or gate), metres; Infinity = none */
@@ -106,7 +112,7 @@ export class Sim {
     this.noRoute = new Uint8Array(cap);
     this.trips = new Trips(this.rnd);
     this.lotTrips = new LotTrips(this.rnd);
-    this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap);
+    this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap); this.tag = new Uint8Array(cap);
     this.onGraph();
   }
 
@@ -178,9 +184,10 @@ export class Sim {
     return this.spawnAt(id, s, d, this.trips.destS) >= 0;
   }
 
-  /** adds one vehicle at s metres on link lane `lane`, heading for `dest` (a dseg; -1 = a random walk) at destS metres along it;
-   *  returns its slot, -1 if there is no room on the lane or no free slot, or -2 if it was lost at once (no route) */
-  spawnAt(lane: number, s: number, dest: number, destS: number): number {
+  /** adds one vehicle at s metres on link lane `lane`, heading for `dest` (a dseg; -1 = a random walk) at destS metres along it,
+   *  its trip tagged with the destination lot's use (LU; 0 = none); returns its slot, -1 if there is no room on the lane or no
+   *  free slot, or -2 if it was lost at once (no route) */
+  spawnAt(lane: number, s: number, dest: number, destS: number, tag = 0): number {
     const ln = this.g.lanes[lane];
     if (!ln) return -1;
     const vt = Math.floor(this.rnd() * VTYPES.length), L = VTYPES[vt].len;
@@ -191,7 +198,7 @@ export class Sim {
     this.alive[i] = 1; this.lane[i] = lane; this.s[i] = s; this.v[i] = 0.5 * ln.vmax; this.acc[i] = 0;
     this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
-    this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!;
+    this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = tag;
     this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0;
     const q = this.onLane[lane];
     let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
@@ -207,6 +214,7 @@ export class Sim {
   private score(i: number, ln: Lane) {
     const ideal = Math.max(this.ideal[i]! + this.s[i]! / ln.vmax, 10), act = Math.min(this.t - this.t0[i]!, 6 * ideal);
     this.stats.ratioSum += act / ideal; this.stats.ratioN++;
+    if (this.tag[i]! >= LU.COM) { this.trade.arrived++; this.trade.punctual += Math.min(1, act > 0 ? FREE * ideal / act : 1); }
     this.bump(this.oz[i]!, act, ideal); this.bump(this.router.zoneD[ln.dseg]!, act, ideal);
   }
   /** one trip (actual and ideal seconds, the actual capped at 6x) into zone z's sums, and its access */
