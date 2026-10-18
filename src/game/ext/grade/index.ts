@@ -1,465 +1,353 @@
-/** Grade separation: bridges over and tunnels under roads (road-over-road). Pure TS, no DOM. */
-import { MAP, mulberry } from '../../iso';
-import { SK } from '../../network';
+/** Grade separation: per-tile elevation profile for bridges over and tunnels under roads. Pure TS. */
 import type { Pt } from '../../network';
 
-/** Elevation levels: -1 tunnel/underpass, 0 ground, 1 bridge/overpass, 2 high bridge */
-export type Elevation = -1 | 0 | 1 | 2;
-/** Re-export SegKind for convenience */
-export type SegKind = 0 | 1 | 2;
+/** Existing road segment to clear (centre line and deck height in metres) */
+export interface Crossing { a: Pt; b: Pt; deck: number /* m */ }
 
-/** A road segment with its elevation and structural kind */
-export interface GradeSegment {
-  /** unique id */
-  id: number;
-  /** start point (tiles) */
-  a: Pt;
-  /** end point (tiles) */
-  b: Pt;
-  /** logical level: -1 below, 0 ground, 1 above, 2 high */
-  elevation: Elevation;
-  /** structural kind: SK.GROUND 0, SK.BRIDGE 1, SK.TUNNEL 2 (for save) */
-  kind: SegKind;
-}
-
-/** Interior crossing between two segments */
-export interface Crossing {
-  /** stable id */
-  id: number;
-  /** ids of the two segments */
-  a: number;
-  b: number;
-  /** intersection point (tiles) */
-  x: number;
-  y: number;
-  /** true when elevations differ → no junction needed */
-  separated: boolean;
-  /** vertical clearance in tiles (levels * CLEARANCE_TILES) */
-  clearance: number;
-}
-
-/** Validation of a potential ramp */
-export interface RampInfo {
-  /** segment id */
-  seg: number;
-  /** levels risen (abs(elevation)) */
-  rise: number;
-  /** tiles needed at MAX_GRADE */
-  need: number;
-  /** true when length >= need or elevation is ground */
+/** Elevation profile along a new route */
+export interface Profile {
+  /** distance along route in tiles (1 tile = 2 m), 0 = start */
+  s: number[];
+  /** height in metres (absolute, terrain + structure) */
+  z: number[];
+  /** kind per sample */
+  kinds: ('ground' | 'ramp' | 'bridge' | 'tunnel')[];
+  /** true when ramps fit within route and between crossings */
   ok: boolean;
+  /** reason when not ok */
+  why: string;
 }
 
-/** Validation of a continuous span */
-export interface SpanInfo {
-  /** representative segment id of the span */
-  seg: number;
-  /** kind of the span */
-  kind: SegKind;
-  /** total length of the continuous run (tiles) */
-  length: number;
-  /** true when within limits */
-  ok: boolean;
-}
-
-/** What the renderer and lane builder consume */
-export interface GradeView {
-  /** bridge decks: centreline and half width for rendering / lane placement */
-  decks: { id: number; pts: Pt[]; hw: number; elevation: Elevation }[];
-  /** pillar centres (tiles) */
-  pillars: { x: number; y: number; seg: number }[];
-  /** tunnel portal positions and direction into tunnel (unit vector in tile space) */
-  portals: { x: number; y: number; dir: Pt; seg: number }[];
-  /** all crossings (with separated flag) */
-  crossings: Crossing[];
-  /** ramp checks */
-  ramps: RampInfo[];
-}
-
-// ---------------------------------------------------------------------------
-// Constants (tunable, exported)
-// ---------------------------------------------------------------------------
-
-/** $ per tile of road at ground (tiles = 2 m) — street class reference */
-export const GROUND_COST_PER_TILE = 150;
-/** $ per tile of overpass/bridge deck (includes deck, railings, abutments) */
-export const BRIDGE_COST_PER_TILE = 600;
-/** $ per tile of underpass/tunnel (cut-and-cover) */
-export const TUNNEL_COST_PER_TILE = 900;
-/** $ per tile extra for ramp (grade, retaining walls, earthworks) */
-export const RAMP_COST_PER_TILE = 200;
-/** $ per pillar (pier foundation + column) */
-export const PILLAR_COST = 2000;
-/** $ per portal (headwall + wing walls) */
-export const PORTAL_COST = 5000;
-/** upkeep per game day as share of build cost (1 % → rebuilds in 100 days) */
-export const UPKEEP_RATE = 0.01;
-
-/** vertical clearance from lower road surface to underside of deck above (tiles = 5.5 m) */
-export const CLEARANCE_TILES = 2.75;
-/** maximum road grade (6 % — 1:16.7, comfortable for trucks) */
-export const MAX_GRADE = 0.06;
-/** longest single bridge run before an expansion joint / support is needed (tiles = 300 m) */
-export const MAX_BRIDGE_SPAN = 150;
-/** longest single tunnel/underpass run before ventilation needed (tiles = 600 m) */
-export const MAX_TUNNEL_LENGTH = 300;
-/** abutment length at each bridge end where it meets ground (tiles) */
-export const ABUTMENT = 1.5;
-/** pillar spacing along a bridge centreline (tiles = 30 m) */
-export const PILLAR_SPACING = 15;
-/** half width of a typical road corridor for deck hw (tiles): street ~1.625+1.0 */
-export const DEFAULT_HW = 2.6;
-
-// ---------------------------------------------------------------------------
-// Pure helpers
-// ---------------------------------------------------------------------------
-
+/** Helpers */
 const EPS = 1e-9;
+const vlen = (a: Pt, b: Pt) => Math.hypot(b.x - a.x, b.y - a.y);
 
-/** length of a grade segment in tiles (1 tile = 2 m) */
-export function segLength(s: GradeSegment): number {
-  const dx = s.b.x - s.a.x, dy = s.b.y - s.a.y;
-  return Math.hypot(dx, dy);
-}
-
-/** tiles of ramp needed to rise `deltaLevels` levels at MAX_GRADE (0 levels → 0) */
-export function rampLength(deltaLevels: number): number {
-  const d = Math.abs(deltaLevels);
-  if (d < EPS) return 0;
-  return (d * CLEARANCE_TILES) / MAX_GRADE;
-}
-
-/** cost per tile by kind */
-function costPerTile(kind: SegKind): number {
-  return kind === SK.BRIDGE ? BRIDGE_COST_PER_TILE : kind === SK.TUNNEL ? TUNNEL_COST_PER_TILE : GROUND_COST_PER_TILE;
-}
-
-/** build cost of one segment (length * per-tile kind cost). Ramp surcharge is added in buildCost(). */
-export function segmentCost(seg: GradeSegment): number {
-  return segLength(seg) * costPerTile(seg.kind);
-}
-
-/** helper: segment intersection (interior) — returns point or null */
-function segIntersect(a: Pt, b: Pt, c: Pt, d: Pt): Pt | null {
-  const abx = b.x - a.x, aby = b.y - a.y;
-  const cdx = d.x - c.x, cdy = d.y - c.y;
-  const den = abx * cdy - aby * cdx;
-  if (Math.abs(den) < 1e-12) return null; // parallel
-  const acx = c.x - a.x, acy = c.y - a.y;
-  const t = (acx * cdy - acy * cdx) / den;
-  const u = (acx * aby - acy * abx) / den;
-  // interior only: exclude endpoints (t==0,1 or u==0,1)
+/** segment intersection of p1-p2 and q1-q2: interior only (excludes endpoints within EPS), returns point or null */
+function segIntersect(p1: Pt, p2: Pt, q1: Pt, q2: Pt): Pt | null {
+  const d1x = p2.x - p1.x, d1y = p2.y - p1.y;
+  const d2x = q2.x - q1.x, d2y = q2.y - q1.y;
+  const den = d1x * d2y - d1y * d2x;
+  if (Math.abs(den) < 1e-12) return null;
+  const w1x = q1.x - p1.x, w1y = q1.y - p1.y;
+  const t = (w1x * d2y - w1y * d2x) / den;
+  const u = (w1x * d1y - w1y * d1x) / den;
+  // interior only: strictly inside (exclude endpoints)
   if (t <= EPS || t >= 1 - EPS || u <= EPS || u >= 1 - EPS) return null;
-  return { x: a.x + abx * t, y: a.y + aby * t };
+  return { x: p1.x + d1x * t, y: p1.y + d1y * t };
 }
 
-/** squared distance tile */
-function dist2(p: Pt, q: Pt): number {
-  const dx = p.x - q.x, dy = p.y - q.y;
-  return dx * dx + dy * dy;
+/** total length of polyline route in tiles, and leg data */
+function routeInfo(route: Pt[]) {
+  const legs: { a: Pt; b: Pt; len: number; cum0: number; cum1: number }[] = [];
+  let L = 0;
+  for (let i = 1; i < route.length; i++) {
+    const a = route[i - 1]!, b = route[i]!;
+    const len = vlen(a, b);
+    legs.push({ a, b, len, cum0: L, cum1: L + len });
+    L += len;
+  }
+  return { legs, L };
 }
 
-/** detect interior crossings (excludes shared endpoints and collinear overlaps) */
-export function detectCrossings(segments: GradeSegment[]): Crossing[] {
-  const out: Crossing[] = [];
-  let cid = 0;
-  const n = segments.length;
-  for (let i = 0; i < n; i++) {
-    const si = segments[i];
-    const a0 = si.a, a1 = si.b;
-    const abx = a1.x - a0.x, aby = a1.y - a0.y;
-    const alen2 = abx * abx + aby * aby;
-    if (alen2 < EPS) continue;
-    // bbox for quick reject
-    const aminX = Math.min(a0.x, a1.x), amaxX = Math.max(a0.x, a1.x);
-    const aminY = Math.min(a0.y, a1.y), amaxY = Math.max(a0.y, a1.y);
-    for (let j = i + 1; j < n; j++) {
-      const sj = segments[j];
-      // skip if share an endpoint within EPS (node, not crossing)
-      if (dist2(si.a, sj.a) < EPS || dist2(si.a, sj.b) < EPS || dist2(si.b, sj.a) < EPS || dist2(si.b, sj.b) < EPS) continue;
-      const b0 = sj.a, b1 = sj.b;
-      // bbox reject
-      if (Math.max(aminX, Math.min(b0.x, b1.x)) > Math.min(amaxX, Math.max(b0.x, b1.x)) + EPS) continue;
-      if (Math.max(aminY, Math.min(b0.y, b1.y)) > Math.min(amaxY, Math.max(b0.y, b1.y)) + EPS) continue;
-      const pt = segIntersect(a0, a1, b0, b1);
+/** point at distance s along route (tiles) */
+function pointAt(route: Pt[], legs: ReturnType<typeof routeInfo>['legs'], L: number, s: number): Pt {
+  if (s <= 0) return route[0]!;
+  if (s >= L) return route[route.length - 1]!;
+  for (const leg of legs) if (s >= leg.cum0 - 1e-9 && s <= leg.cum1 + 1e-9) {
+    const t = leg.len < EPS ? 0 : (s - leg.cum0) / leg.len;
+    return { x: leg.a.x + (leg.b.x - leg.a.x) * t, y: leg.a.y + (leg.b.y - leg.a.y) * t };
+  }
+  return route[route.length - 1]!;
+}
+
+/** crossingsOf: find where route crosses existing roads */
+export function crossingsOf(route: Pt[], roads: { a: Pt; b: Pt; deck: number }[]): { at: number; deck: number }[] {
+  if (route.length < 2) return [];
+  const { legs } = routeInfo(route);
+  const out: { at: number; deck: number }[] = [];
+  for (const road of roads) {
+    for (const leg of legs) {
+      const pt = segIntersect(leg.a, leg.b, road.a, road.b);
       if (!pt) continue;
-      const clearance = Math.abs(si.elevation - sj.elevation) * CLEARANCE_TILES;
-      const separated = si.elevation !== sj.elevation;
-      out.push({ id: cid++, a: si.id, b: sj.id, x: pt.x, y: pt.y, separated, clearance });
+      // Use projection t along leg: dot(pt - leg.a, leg.b - leg.a)/len^2
+      const denom = leg.len * leg.len;
+      let tt = 0;
+      if (denom > EPS) {
+        const apx = pt.x - leg.a.x, apy = pt.y - leg.a.y;
+        const abx = leg.b.x - leg.a.x, aby = leg.b.y - leg.a.y;
+        tt = (apx * abx + apy * aby) / denom;
+      }
+      tt = Math.max(0, Math.min(1, tt));
+      const at = leg.cum0 + tt * leg.len;
+      out.push({ at, deck: road.deck });
     }
   }
-  // stable sort by id (deterministic)
-  out.sort((p, q) => p.id - q.id);
+  out.sort((a, b) => a.at - b.at);
   return out;
 }
 
-/** classify existing crossings by current elevations: updates separated/clearance */
-export function classifyCrossings(segments: GradeSegment[], crossings: Crossing[]): Crossing[] {
-  const map = new Map<number, GradeSegment>();
-  for (const s of segments) map.set(s.id, s);
-  for (const c of crossings) {
-    const sa = map.get(c.a), sb = map.get(c.b);
-    if (!sa || !sb) continue;
-    c.separated = sa.elevation !== sb.elevation;
-    c.clearance = Math.abs(sa.elevation - sb.elevation) * CLEARANCE_TILES;
-  }
-  return crossings;
+/** ramp length in tiles for rise (m) at maxGrade (fraction, e.g. 0.06) */
+function rampTiles(riseM: number, maxGrade: number): number {
+  if (Math.abs(riseM) < 1e-9) return 0;
+  return Math.abs(riseM) / (maxGrade * 2);
 }
 
-/** every segment as potential ramp: need = rampLength(|elevation|), ok when length >= need or ground */
-export function validateRamps(segments: GradeSegment[]): RampInfo[] {
-  const out: RampInfo[] = [];
-  for (const s of segments) {
-    const rise = Math.abs(s.elevation);
-    const need = rampLength(rise);
-    const len = segLength(s);
-    const ok = s.elevation === 0 ? true : len + 1e-9 >= need;
-    out.push({ seg: s.id, rise, need, ok });
-  }
-  return out;
-}
+/** planProfile: elevation profile with clearance and grade limits, vertical curves */
+export function planProfile(
+  route: Pt[],
+  crossings: Crossing[],
+  ground: (x: number, y: number) => number,
+  opts: { over: boolean; maxGrade: number; clearance?: number },
+): Profile {
+  const clearance = opts.clearance ?? (opts.over ? 5.5 : 6);
+  const maxGrade = opts.maxGrade;
+  const overhang = 3; // tiles each side of crossing to fully span road width
+  const minGap = 5; // tiles of ground needed between separate bridges
+  const Vc = 4; // vertical curve total length in tiles (both ends combined)
 
-/** max-span check per continuous run of same kind where segments touch end-to-end */
-export function validateSpans(segments: GradeSegment[]): SpanInfo[] {
-  if (!segments.length) return [];
-  // key = quantised endpoint for connectivity (0.001 tile snap)
-  const keyOf = (p: Pt) => `${Math.round(p.x * 1000)},${Math.round(p.y * 1000)}`;
-  // map endpoint key -> list of segment indices incident
-  const at = new Map<string, number[]>();
-  segments.forEach((s, i) => {
-    for (const k of [keyOf(s.a), keyOf(s.b)]) {
-      let arr = at.get(k);
-      if (!arr) { arr = []; at.set(k, arr); }
-      arr.push(i);
+  if (route.length < 2) {
+    return { s: [0], z: [ground(route[0]!.x, route[0]!.y)], kinds: ['ground'], ok: false, why: 'route too short' };
+  }
+
+  const { legs, L } = routeInfo(route);
+  const pointAtFn = (s: number) => pointAt(route, legs, L, s);
+  const groundAt = (s: number) => {
+    const p = pointAtFn(s);
+    return ground(p.x, p.y);
+  };
+
+  // Find at positions for each crossing (if not already resolved)
+  type CInfo = { at: number; deck: number; target: number; rise: number; need: number; raw: Crossing };
+  const infos: CInfo[] = [];
+  for (const c of crossings as unknown as (Crossing & { at?: number })[]) {
+    if (typeof (c as unknown as { at: number }).at === 'number') {
+      const at = (c as unknown as { at: number }).at;
+      const deck = (c as Crossing).deck ?? (c as unknown as { deck: number }).deck ?? 0;
+      const target = opts.over ? deck + clearance : deck - clearance;
+      const g = groundAt(at);
+      const rise = target - g;
+      const need = rampTiles(rise, maxGrade) + Vc / 2; // include vertical curve allowance
+      infos.push({ at, deck, target, rise, need, raw: c as Crossing });
+    } else {
+      // compute intersections for this crossing segment
+      const cross = c as Crossing;
+      for (const leg of legs) {
+        const pt = segIntersect(leg.a, leg.b, cross.a, cross.b);
+        if (!pt) continue;
+        const denom = leg.len * leg.len;
+        let tt = 0;
+        if (denom > EPS) {
+          const apx = pt.x - leg.a.x, apy = pt.y - leg.a.y;
+          const abx = leg.b.x - leg.a.x, aby = leg.b.y - leg.a.y;
+          tt = (apx * abx + apy * aby) / denom;
+        }
+        tt = Math.max(0, Math.min(1, tt));
+        const at = leg.cum0 + tt * leg.len;
+        const deck = cross.deck;
+        const target = opts.over ? deck + clearance : deck - clearance;
+        const g = groundAt(at);
+        const rise = target - g;
+        const need = rampTiles(rise, maxGrade) + Vc / 2;
+        infos.push({ at, deck, target, rise, need, raw: cross });
+      }
     }
+  }
+  infos.sort((a, b) => a.at - b.at);
+
+  // Handle no crossings: ground-following profile
+  if (!infos.length) {
+    const s: number[] = [];
+    const z: number[] = [];
+    const kinds: Profile['kinds'] = [];
+    const n = Math.ceil(L);
+    for (let i = 0; i <= n; i++) {
+      const sv = i < n ? i : L;
+      if (sv > L + 1e-9) break;
+      s.push(sv);
+      z.push(groundAt(sv));
+      kinds.push('ground');
+      if (sv >= L - 1e-9) break;
+    }
+    // ensure last point exactly L
+    if (Math.abs(s[s.length - 1]! - L) > 1e-9) {
+      s.push(L);
+      z.push(groundAt(L));
+      kinds.push('ground');
+    }
+    return { s, z, kinds, ok: true, why: '' };
+  }
+
+  // Group close crossings into one bridge/tunnel — keep left/right needs separate for hills
+  type Group = { infos: CInfo[]; leftAt: number; rightAt: number; target: number; leftNeed: number; rightNeed: number };
+  let groups: Group[] = infos.map(ci => ({
+    infos: [ci],
+    leftAt: ci.at,
+    rightAt: ci.at,
+    target: ci.target,
+    leftNeed: ci.need,
+    rightNeed: ci.need,
+  }));
+  const recomputeGroup = (g: Group) => {
+    g.leftAt = Math.min(...g.infos.map(i => i.at));
+    g.rightAt = Math.max(...g.infos.map(i => i.at));
+    g.target = opts.over ? Math.max(...g.infos.map(i => i.target)) : Math.min(...g.infos.map(i => i.target));
+    // iterative refinement for each side (hills)
+    let leftNeed = rampTiles(g.target - groundAt((g.leftAt + g.rightAt) / 2), maxGrade) + Vc / 2;
+    let rightNeed = leftNeed;
+    for (let iter = 0; iter < 10; iter++) {
+      const bridgeStart = g.leftAt - overhang;
+      const rampStart = bridgeStart - leftNeed;
+      const leftGround = groundAt(Math.max(0, Math.min(L, rampStart)));
+      const newLeft = rampTiles(g.target - leftGround, maxGrade) + Vc / 2;
+      const bridgeEnd = g.rightAt + overhang;
+      const rampEnd = bridgeEnd + rightNeed;
+      const rightGround = groundAt(Math.max(0, Math.min(L, rampEnd)));
+      const newRight = rampTiles(g.target - rightGround, maxGrade) + Vc / 2;
+      if (Math.abs(newLeft - leftNeed) < 0.01 && Math.abs(newRight - rightNeed) < 0.01) break;
+      leftNeed = newLeft; rightNeed = newRight;
+    }
+    g.leftNeed = leftNeed; g.rightNeed = rightNeed;
+  };
+  groups.forEach(recomputeGroup);
+
+  let merged = true;
+  while (merged) {
+    merged = false;
+    for (let i = 0; i + 1 < groups.length; i++) {
+      const a = groups[i]!, b = groups[i + 1]!;
+      const aBridgeEnd = a.rightAt + overhang;
+      const bBridgeStart = b.leftAt - overhang;
+      const aRampEnd = aBridgeEnd + a.rightNeed;
+      const bRampStart = bBridgeStart - b.leftNeed;
+      const gap = bRampStart - aRampEnd;
+      if (gap < minGap - 1e-9) {
+        const combined: Group = { infos: [...a.infos, ...b.infos], leftAt: 0, rightAt: 0, target: 0, leftNeed: 0, rightNeed: 0 };
+        recomputeGroup(combined);
+        groups.splice(i, 2, combined);
+        merged = true;
+        break;
+      }
+    }
+  }
+
+  type Interval = { rampStart: number; bridgeStart: number; bridgeEnd: number; rampEnd: number; target: number; group: Group };
+  const intervals: Interval[] = groups.map(g => {
+    const bridgeStart = g.leftAt - overhang;
+    const bridgeEnd = g.rightAt + overhang;
+    const rampStart = bridgeStart - g.leftNeed;
+    const rampEnd = bridgeEnd + g.rightNeed;
+    return { rampStart, bridgeStart, bridgeEnd, rampEnd, target: g.target, group: g };
   });
-  const visited = new Set<number>();
-  const out: SpanInfo[] = [];
-  for (let i = 0; i < segments.length; i++) {
-    if (visited.has(i)) continue;
-    const kind = segments[i].kind;
-    if (kind === SK.GROUND) { visited.add(i); continue; }
-    // BFS over same-kind touching segments
-    const stack: number[] = [i];
-    visited.add(i);
-    let total = 0;
-    const members: number[] = [];
-    while (stack.length) {
-      const curIdx = stack.pop()!;
-      const cur = segments[curIdx];
-      total += segLength(cur);
-      members.push(curIdx);
-      for (const kp of [keyOf(cur.a), keyOf(cur.b)]) {
-        const neigh = at.get(kp) ?? [];
-        for (const ni of neigh) {
-          if (visited.has(ni)) continue;
-          if (segments[ni].kind !== kind) continue;
-          visited.add(ni);
-          stack.push(ni);
+
+  // Feasibility checks
+  let ok = true;
+  let why = '';
+  if (intervals.length) {
+    const first = intervals[0]!;
+    const last = intervals[intervals.length - 1]!;
+    if (first.rampStart < -1e-9) {
+      ok = false;
+      why = `crossing at ${first.group.leftAt.toFixed(1)} too close to start (needs ${first.group.leftNeed.toFixed(1)} tiles, has ${first.group.leftAt.toFixed(1)})`;
+    } else if (last.rampEnd > L + 1e-9) {
+      ok = false;
+      why = `crossing at ${last.group.rightAt.toFixed(1)} too close to end (needs ${last.group.rightNeed.toFixed(1)} tiles, has ${(L - last.group.rightAt).toFixed(1)})`;
+    } else {
+      // check inter-group gap already handled by merging, but if still gap <0 after merging, report too close to each other
+      for (let i = 0; i + 1 < intervals.length; i++) {
+        const a = intervals[i]!, b = intervals[i + 1]!;
+        if (b.rampStart < a.rampEnd - 1e-9) {
+          ok = false;
+          why = `crossings at ${a.group.leftAt.toFixed(1)} and ${b.group.leftAt.toFixed(1)} too close to each other (gap ${(b.rampStart - a.rampEnd).toFixed(1)} tiles)`;
+          break;
         }
       }
     }
-    const limit = kind === SK.BRIDGE ? MAX_BRIDGE_SPAN : MAX_TUNNEL_LENGTH;
-    const ok = total <= limit + 1e-9;
-    out.push({ seg: segments[members[0]]!.id, kind, length: total, ok });
-  }
-  return out;
-}
-
-// ---------------------------------------------------------------------------
-// Cost including pillars/portals/ramp surcharge
-// ---------------------------------------------------------------------------
-
-/** count pillars for a bridge chain: one every PILLAR_SPACING, not at the abutments */
-function countPillarsForLength(len: number): number {
-  if (len < PILLAR_SPACING - 1e-9) return 0;
-  // first pillar at PILLAR_SPACING/2 from start, last before ABUTMENT at end
-  // simple: floor((len - ABUTMENT*2) / PILLAR_SPACING) clamped >=0, or floor(len / PILLAR_SPACING)
-  // use floor(len / PILLAR_SPACING) as stable estimate (tests use this)
-  return Math.max(0, Math.floor(len / PILLAR_SPACING));
-}
-
-/** total build cost: segments + pillars + portals + ramp surcharge (ramp extra per tile of elevated segment) */
-export function buildCost(segments: GradeSegment[]): number {
-  let sum = 0;
-  // per-segment base
-  for (const s of segments) sum += segmentCost(s);
-  // ramp surcharge: for every non-ground segment, add RAMP_COST per tile (the sloping earthworks)
-  for (const s of segments) if (s.elevation !== 0) sum += segLength(s) * RAMP_COST_PER_TILE;
-  // pillars for bridges
-  // group bridges into runs for pillar count (reuse validateSpans grouping but count per run)
-  const spans = validateSpans(segments);
-  for (const sp of spans) if (sp.kind === SK.BRIDGE) sum += countPillarsForLength(sp.length) * PILLAR_COST;
-  // portals for tunnels/underpasses: 2 per continuous tunnel run
-  for (const sp of spans) if (sp.kind === SK.TUNNEL) sum += 2 * PORTAL_COST;
-  return sum;
-}
-
-// ---------------------------------------------------------------------------
-// Main class
-// ---------------------------------------------------------------------------
-
-/** Grade separation manager: holds segments, detects crossings, builds view, validates. */
-export class GradeSeparation {
-  private segs: Map<number, GradeSegment> = new Map();
-  private crossings: Crossing[] = [];
-  private viewCache: GradeView | null = null;
-  private seed: number;
-  private rng: () => number;
-
-  constructor(seed = 1) {
-    this.seed = seed >>> 0;
-    this.rng = mulberry(this.seed);
   }
 
-  /** replace the whole network; crossings and view recomputed */
-  setNetwork(segments: GradeSegment[]): void {
-    this.segs.clear();
-    for (const s of segments) this.segs.set(s.id, { ...s, a: { ...s.a }, b: { ...s.b } });
-    this.recompute();
+  // Generate per-tile profile
+  const sArr: number[] = [];
+  const nTiles = Math.ceil(L);
+  for (let i = 0; i <= nTiles; i++) {
+    const sv = i < nTiles ? i : L;
+    if (sv > L + 1e-9) break;
+    sArr.push(sv);
+    if (Math.abs(sv - L) < 1e-9) break;
   }
+  // Ensure we cover L exactly if not integer and not already
+  if (sArr.length && Math.abs(sArr[sArr.length - 1]! - L) > 1e-9) sArr.push(L);
 
-  /** add or update one segment */
-  setSegment(seg: GradeSegment): void {
-    this.segs.set(seg.id, { ...seg, a: { ...seg.a }, b: { ...seg.b } });
-    this.recompute();
-  }
+  const zArr: number[] = [];
+  const kindsArr: Profile['kinds'] = [];
 
-  /** remove segment by id */
-  removeSegment(id: number): void {
-    this.segs.delete(id);
-    this.recompute();
-  }
-
-  /** all segments (copy) */
-  getSegments(): GradeSegment[] {
-    return [...this.segs.values()].map(s => ({ ...s, a: { ...s.a }, b: { ...s.b } }));
-  }
-
-  /** interior crossings with separated flag */
-  getCrossings(): Crossing[] {
-    return this.crossings.map(c => ({ ...c }));
-  }
-
-  /** true when a and b are grade-separated (different z and interior crossing exists, or same elevation but indirect?) */
-  isSeparated(a: number, b: number): boolean {
-    for (const c of this.crossings) {
-      if ((c.a === a && c.b === b) || (c.a === b && c.b === a)) return c.separated;
+  // Helper to compute height for ramp with vertical curves
+  const rampHeight = (s: number, s0: number, z0: number, s1: number, z1: number, maxG: number): number => {
+    const total = s1 - s0;
+    if (total < EPS) return z0;
+    const rise = z1 - z0;
+    // Use piecewise with vertical curves
+    // If total is very short, fall back to smoothstep across whole
+    if (total <= Vc + 1e-9) {
+      // smoothstep across whole ramp
+      const t = (s - s0) / total;
+      const sm = t * t * (3 - 2 * t); // smoothstep 0..1, zero slope at ends
+      return z0 + rise * sm;
     }
-    // also if no crossing but different elevations at a shared ramp node? Not separated (they meet at junction)
-    return false;
-  }
-
-  /** total build cost (defines saving) */
-  cost(): number {
-    return buildCost(this.getSegments());
-  }
-
-  /** upkeep per game day (1 % of build cost) */
-  upkeepPerDay(): number {
-    return this.cost() * UPKEEP_RATE;
-  }
-
-  /** validation strings: ramp too steep, span too long, tunnel too long */
-  validate(): string[] {
-    const errs: string[] = [];
-    for (const r of validateRamps(this.getSegments())) {
-      if (!r.ok) errs.push(`Ramp ${r.seg} too steep: need ${r.need.toFixed(1)} tiles, has ${segLength(this.segs.get(r.seg)!)?.toFixed(1) ?? '?'}`);
+    const half = Vc / 2;
+    if (s <= s0 + half) {
+      // first curve: grade 0 -> maxGrade
+      const t = (s - s0) / half;
+      const sign = Math.sign(rise) || 1;
+      const g = maxG * sign;
+      return z0 + g * half * t * t;
+    } else if (s >= s1 - half) {
+      const sign = Math.sign(rise) || 1;
+      const g = maxG * sign;
+      const tp = (s - (s1 - half)) / half;
+      const zb = z1 - g * half;
+      return zb + g * half * (2 * tp - tp * tp);
+    } else {
+      // middle linear
+      const sign = Math.sign(rise) || 1;
+      const g = maxG * sign;
+      const za = z0 + g * half;
+      return za + g * 2 * (s - (s0 + half));
     }
-    for (const s of validateSpans(this.getSegments())) {
-      if (!s.ok) {
-        const kindName = s.kind === SK.BRIDGE ? 'Bridge' : 'Tunnel';
-        const lim = s.kind === SK.BRIDGE ? MAX_BRIDGE_SPAN : MAX_TUNNEL_LENGTH;
-        errs.push(`${kindName} span ${s.seg} too long: ${s.length.toFixed(1)} > ${lim} tiles`);
+  };
+
+  // For each s, determine interval and compute z
+  for (const s of sArr) {
+    let found = false;
+    for (const it of intervals) {
+      if (s >= it.rampStart - 1e-9 && s < it.bridgeStart - 1e-9) {
+        // left ramp
+        const z0 = groundAt(it.rampStart);
+        const z1 = it.target;
+        zArr.push(rampHeight(s, it.rampStart, z0, it.bridgeStart, z1, maxGrade));
+        kindsArr.push('ramp');
+        found = true;
+        break;
+      } else if (s >= it.bridgeStart - 1e-9 && s <= it.bridgeEnd + 1e-9) {
+        zArr.push(it.target);
+        kindsArr.push(opts.over ? 'bridge' : 'tunnel');
+        found = true;
+        break;
+      } else if (s > it.bridgeEnd + 1e-9 && s <= it.rampEnd + 1e-9) {
+        const z0 = it.target;
+        const z1 = groundAt(it.rampEnd);
+        zArr.push(rampHeight(s, it.bridgeEnd, z0, it.rampEnd, z1, maxGrade));
+        kindsArr.push('ramp');
+        found = true;
+        break;
       }
     }
-    return errs;
+    if (!found) {
+      zArr.push(groundAt(s));
+      kindsArr.push('ground');
+    }
   }
 
-  /** what renderer draws: decks, pillars, portals, crossings, ramps */
-  view(): GradeView {
-    if (this.viewCache) return this.viewCache;
-    const segs = this.getSegments();
-    const decks: GradeView['decks'] = [];
-    const pillars: GradeView['pillars'] = [];
-    const portals: GradeView['portals'] = [];
-    // decks for bridges/high bridges
-    for (const s of segs) if (s.kind === SK.BRIDGE) {
-      decks.push({ id: s.id, pts: [{ ...s.a }, { ...s.b }], hw: DEFAULT_HW, elevation: s.elevation });
-    }
-    // pillars: along each bridge span, jittered deterministically
-    this.rng = mulberry(this.seed);
-    for (const s of segs) if (s.kind === SK.BRIDGE) {
-      const len = segLength(s);
-      const n = countPillarsForLength(len);
-      if (n <= 0) continue;
-      const dx = (s.b.x - s.a.x) / len, dy = (s.b.y - s.a.y) / len;
-      for (let k = 0; k < n; k++) {
-        const t = (k + 1) * PILLAR_SPACING; // spacing along; first at 15, etc.
-        if (t > len + 1e-9) break;
-        // jitter +-0.4 tiles crosswise and +-1 tile along, seeded
-        const jx = (this.rng() - 0.5) * 0.8, jy = (this.rng() - 0.5) * 0.8;
-        const px = (this.rng() - 0.5) * 2;
-        const bx = s.a.x + dx * (t + px) + (-dy) * jx;
-        const by = s.a.y + dy * (t + px) + dx * jy;
-        // clamp to map
-        pillars.push({ x: Math.max(0, Math.min(MAP, bx)), y: Math.max(0, Math.min(MAP, by)), seg: s.id });
-      }
-    }
-    // portals for tunnels: 2 per tunnel run (at run ends)
-    // Build endpoint map for tunnel runs: collect segments of each run to find endpoints
-    // Simpler: each tunnel segment gets 2 portals at its ends where neighbor is not tunnel or no neighbor
-    const keyOf = (p: Pt) => `${Math.round(p.x * 1000)},${Math.round(p.y * 1000)}`;
-    const at = new Map<string, GradeSegment[]>();
-    for (const s of segs) if (s.kind === SK.TUNNEL) {
-      for (const kp of [keyOf(s.a), keyOf(s.b)]) {
-        let arr = at.get(kp);
-        if (!arr) { arr = []; at.set(kp, arr); }
-        arr.push(s);
-      }
-    }
-    for (const s of segs) if (s.kind === SK.TUNNEL) {
-      const ends: [Pt, Pt][] = [[s.a, s.b], [s.b, s.a]];
-      for (const [pt, other] of ends) {
-        const key = keyOf(pt);
-        const neigh = (at.get(key) ?? []).filter(q => q.kind === SK.TUNNEL && q.id !== s.id);
-        // portal if no other tunnel continues (dead end or meets ground)
-        if (neigh.length === 0) {
-          const dx = other.x - pt.x, dy = other.y - pt.y;
-          const L = Math.hypot(dx, dy) || 1;
-          portals.push({ x: pt.x, y: pt.y, dir: { x: dx / L, y: dy / L }, seg: s.id });
-        }
-      }
-    }
-    // also handle tunnelRuns where interior run endpoints already covered; deduplicate by quantised pos
-    const seen = new Set<string>();
-    const uniqPortals: typeof portals = [];
-    for (const p of portals) {
-      const k = `${Math.round(p.x * 1000)},${Math.round(p.y * 1000)},${p.seg}`;
-      if (seen.has(k)) continue;
-      seen.add(k);
-      uniqPortals.push(p);
-    }
-    // ramps
-    const ramps = validateRamps(segs);
-    const crossings = this.crossings.map(c => ({ ...c }));
-    this.viewCache = { decks, pillars: pillars, portals: uniqPortals, crossings, ramps };
-    return this.viewCache;
-  }
+  // If not ok, still return profile but ok false
 
-  /** summary stats for panel */
-  stats(): { segments: number; overpasses: number; underpasses: number; crossings: number; separated: number; atGrade: number } {
-    const segs = this.getSegments();
-    const overpasses = segs.filter(s => s.kind === SK.BRIDGE).length;
-    const underpasses = segs.filter(s => s.kind === SK.TUNNEL).length;
-    const crossings = this.crossings.length;
-    const separated = this.crossings.filter(c => c.separated).length;
-    return { segments: segs.length, overpasses, underpasses, crossings, separated, atGrade: crossings - separated };
-  }
-
-  private recompute(): void {
-    const arr = this.getSegments();
-    this.crossings = detectCrossings(arr);
-    this.viewCache = null;
-  }
+  // Ensure kinds length matches s and z
+  return { s: sArr, z: zArr, kinds: kindsArr, ok, why };
 }
