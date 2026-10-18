@@ -1,42 +1,51 @@
-// Terrain v2: rolling hill country for the 4 x 4 km map (pure TypeScript, no DOM).
-// Same output as src/game/terrain/generate.ts (a `Terrain`), so the engine can swap the one call. Unlike v1 (one
-// flat valley floor, mountains only on 2-3 edges) the whole map is hill country: a connected lowland of valleys
-// 300-800 m wide, hill masses between them, the river and creeks in the valley floors, and hills on every edge.
+// Terrain v2: organic hill country for the 4 x 4 km map (pure TypeScript, no DOM).
+// Same output as src/game/terrain/generate.ts (a `Terrain`), so the engine can swap the one call. The land is one
+// domain-warped height field (broad fBm plus ridged crests, tilted toward the highway's edge). The valleys are its
+// drainage: steepest descent on the pit-filled grid and flow accumulation, so they branch like streams. The river is a
+// meandering line cut into the ground (the drainage runs down it), a channel's floor widens with the water it carries,
+// and basins that fill become lakes. Hills are ground well above the floor of its nearest channel (or steep ground near
+// one), so the hill share comes from the terrain, not from a target.
 import { MAP, clamp, mulberry } from '../../iso';
 import { TC, HS, HSTEP, sampleField, type Chokepoint, type Edge, type Terrain, type WaterPoint, type Waterway } from '../../terrain/types';
 import { makeNoise, fbm, ridged, smoothstep, hash2, type Noise } from '../../terrain/noise';
 import { priorityFlood, flowDirs, flowAccum } from '../../terrain/flow';
 import { checkGuarantees } from '../../terrain/generate';
 
-/** the generator's knobs: frequencies are per map width, heights are metres, distances are tiles of 2 m */
+/** the generator's knobs: frequencies and distances are tiles of 2 m, heights are metres */
 export const T2 = {
-  /** the hill mass: uplift (m) of the broad masses and of their ridged crests, and the crest frequency across the map */
-  bandUp: 110, ridgeUp: 40, ridgeFreq: 9,
-  /** a valley's half width (tiles) and the share of the map that must be hill before water is cut in */
-  valleyW: 74, hillMin: 0.385, hillMax: 0.396,
+  /** the domain warp: amplitude (tiles) and scale (tiles per noise cell), so no feature lines up on an axis */
+  warpAmp: 140, warpScale: 700,
+  /** the broad hills: fBm uplift (m) and its scale (tiles); the ridged crests: uplift (m, around their mean) and scale */
+  baseUp: 80, baseScale: 620, ridgeUp: 130, ridgeScale: 360,
+  /** the tilt toward the open edge (m across the map), so the drainage runs out there */
+  tilt: 60,
   /** the mountain edges: how far in they fade (map fraction) and the uplift they carry at the border (m) */
   edgeIn: 0.13, edgeUpLo: 55, edgeUpHi: 150,
-  /** the open edge (the highway's side) still gets hills in its band, this high (m), fading over this fraction */
+  /** the open edge (the highway's side) still gets hills in its band, fading in over this fraction (map) */
   openIn: 0.08, openUpLo: 70, openUpHi: 120,
-  /** valley mouths narrow at the borders: the width factor just inside the border, and the fade-in (map fraction) */
-  mouthW: 0.72, mouthIn: 0.1,
-  /** the river's valley floor: flat within 45 tiles of the bed, blended into the hills by 150, rising 3 cm a tile */
-  floorFlat: 45, floorBlend: 150, floorRise: 0.03,
-  /** the river's bed falls this much (m) from its source to its mouth, with this much noise (m) */
-  riverDrop: 34, riverWobble: 3,
+  /** a channel cell is valley floor when it has chanMin upstream cells; its floor's half width (tiles) is hwBase + hwLog * ln(acc / chanMin), within hwBase..hwMax; the river's floor is at least riverHw */
+  chanMin: 250, hwBase: 60, hwLog: 18, hwMax: 200, riverHw: 110,
+  /** the floors are flat within half their width and rise 3 cm a tile away from the bed */
+  floorRise: 0.03,
+  /** hills: ground this far (m) above its nearest floor, or half that on a slope steeper than slopeHill (m per tile) */
+  hillAbove: 13, hillSoft: 0.5, slopeHill: 0.22,
+  /** the lakes: the deepest basins of the lowland cover this share of the map */
+  lakeShare: 0.095,
+  /** the border (outside the river and the highway valley) is raised to at least this height (m), so it never drains */
+  wallH: 180,
+  /** the river's meander amplitude (tiles) */
+  meander: 90,
   /** the highway's valley: half-width (tiles), depth (tiles), and the creek clearance around the entry (tiles) */
   hwyHalf: 44, hwyDeep: 200, hwyClear: 30,
   /** the local valley floor: min-filter radius in height samples (5 = 40 tiles) */
   floorR: 5,
   /** the flat-edge check: the outer band (tiles), the relief (m) over a 32-tile window below which land is flat, and the most flat buildable land the band may hold */
   edgeBand: 64, flatRelief: 8, edgeFlatMax: 0.3,
-  /** a valley corridor's median width must be in this range (tiles of 2 m) */
+  /** the median width of the valley corridors between hill bands must be in this range (tiles of 2 m) */
   valleyMin: 150, valleyMax: 400,
-  /** the share of the map that must be buildable in one passable component (v1 asks 55%) */
-  connected: 0.557,
 };
 
-/** creeks: a channel cell needs this many upstream samples, at most MAX_CREEKS per map, a traced creek this many cells, heads this far apart */
+/** creeks: a channel cell needs this many upstream cells, at most MAX_CREEKS per map, a traced creek this many cells, heads this far apart */
 const CREEK_MIN_ACC = 45, MAX_CREEKS = 9, CREEK_MIN_CELLS = 24, CREEK_HEAD_GAP = 40;
 /** the class grid and the patch noise run at this many tiles per cell */
 const CELL = 4, G = MAP / CELL;
@@ -62,21 +71,18 @@ export interface Guarantees2 {
 }
 
 type P = { x: number; y: number };
-/** a valley axis: its ends, its half width (tiles) and the fraction of the width its mouth keeps at the border */
-type Axis = { ax: number; ay: number; bx: number; by: number; w: number; mouth: number };
-/** the height layers before the highway and river are carved */
-interface Layers { base: Float32Array; mass: Float32Array; edge: Float32Array; open: Float32Array; dv: Float32Array }
-
 const EDGES: Edge[] = ['N', 'E', 'S', 'W'];
 const OPP: Record<Edge, Edge> = { N: 'S', E: 'W', S: 'N', W: 'E' };
 const buildable = (c: number) => c === TC.GROUND || c === TC.PATCH;
 const pct = (v: number) => (v * 100).toFixed(1) + '%';
+/** a sample is hill when it stands high above its nearest floor, or is half that high on a steep slope */
+const isHillS = (above: number, slope: number) => above >= T2.hillAbove || (above >= T2.hillAbove * T2.hillSoft && slope >= T2.slopeHill);
 /** distance from a point (u, v) to an edge, in map fractions */
 const dEdge = (e: Edge, u: number, v: number) => (e === 'W' ? u : e === 'E' ? 1 - u : e === 'N' ? v : 1 - v);
-/** the position of a point along an edge, in map fractions (x for N/S, y for W/E) */
-const alongEdge0 = (e: Edge, p: P) => (e === 'N' || e === 'S' ? p.x : p.y);
 /** the point at fraction p along an edge, in map fractions */
 const along = (e: Edge, p: number): P => (e === 'N' ? { x: p, y: 0 } : e === 'S' ? { x: p, y: 1 } : e === 'W' ? { x: 0, y: p } : { x: 1, y: p });
+/** the entry point (a tile on the open edge) for a position along that edge */
+const entryAt = (e: Edge, pos: number): P => ({ x: e === 'N' || e === 'S' ? pos : e === 'W' ? 0 : MAP - 1, y: e === 'N' ? 0 : e === 'S' ? MAP - 1 : pos });
 
 /** distance from (px, py) to segment a-b; writes the clamped projection (0..1) to lastT (shared with the water widths) */
 let lastT = 0;
@@ -163,6 +169,24 @@ function minFilter(src: Float32Array, n: number, r: number): Float32Array {
   return out;
 }
 
+/** distance (in samples) from every sample to the nearest seed sample, and that seed's index: a two-pass chamfer (1, sqrt 2) */
+function nearestSeed(seed: Uint8Array, n: number): { dist: Float32Array; src: Int32Array } {
+  const N = n * n, dist = new Float32Array(N).fill(1e9), src = new Int32Array(N).fill(-1);
+  for (let c = 0; c < N; c++) if (seed[c]) { dist[c] = 0; src[c] = c; }
+  const relax = (c: number, nb: number, w: number) => { if (dist[nb] + w < dist[c]) { dist[c] = dist[nb] + w; src[c] = src[nb]; } };
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const c = y * n + x;
+    if (x > 0) relax(c, c - 1, 1);
+    if (y > 0) { relax(c, c - n, 1); if (x > 0) relax(c, c - n - 1, Math.SQRT2); if (x < n - 1) relax(c, c - n + 1, Math.SQRT2); }
+  }
+  for (let y = n - 1; y >= 0; y--) for (let x = n - 1; x >= 0; x--) {
+    const c = y * n + x;
+    if (x < n - 1) relax(c, c + 1, 1);
+    if (y < n - 1) { relax(c, c + n, 1); if (x < n - 1) relax(c, c + n + 1, Math.SQRT2); if (x > 0) relax(c, c + n - 1, Math.SQRT2); }
+  }
+  return { dist, src };
+}
+
 /** paint the river's water and its 3-tile bank ring into cls (banks cut into hills too, as in v1) */
 function rasterRiver(cls: Uint8Array, pts: WaterPoint[]) {
   for (let k = 0; k + 1 < pts.length; k++) {
@@ -192,224 +216,129 @@ function rasterCreek(cls: Uint8Array, pts: WaterPoint[]) {
   }
 }
 
-/** one attempt: edges, valley network, hill heights, highway and river valleys, classes, creeks, sites, chokepoints */
+/** one attempt: edges, the warped height field, the highway cut, the drainage and river, valley floors, classes, creeks, sites, chokepoints */
 function build(genSeed: number): Terrain {
   const r = mulberry(genSeed);
-  // 1. edges: mountains on 3 sides; the fourth is open for the highway and the river's mouth
+  // 1. edges: mountains on 3 sides; the fourth is open for the highway and the river's mouth; the river rises on the source edge
   const mountainEdges: Edge[] = [];
   while (mountainEdges.length < 3) { const e = EDGES[Math.floor(r() * 4)]; if (!mountainEdges.includes(e)) mountainEdges.push(e); }
   const exit = EDGES.find(e => !mountainEdges.includes(e))!;
   const source = OPP[exit];
   const sp = along(source, 0.25 + 0.5 * r()), ep = along(exit, 0.25 + 0.5 * r());
+  const hwyPos = (0.2 + 0.6 * r()) * MAP; // tiles along the open edge
   // 2. one noise per purpose, all derived from the seed
   const nk = (k: number): Noise => makeNoise(hash2(genSeed, k));
-  const nWarp = nk(1), nBase = nk(2), nMod = nk(3), nSw = nk(4), nEdge = nk(5), nEdgeR = nk(6);
-  const nFine = nk(7), nWidth = nk(8), nPatch = nk(9), nMeander = nk(10), nRidge = nk(11), nBed = nk(12);
-  // 3. the valley network: a jittered grid of nodes, every edge anchor joined to the nearest node, and the nodes
-  // joined to their left and upper neighbours (a spanning tree, so the lowland is connected by construction) plus
-  // some of the other neighbours (loops, so the valleys do not read as a waffle)
-  const NN = 5, cell = MAP / NN;
-  const node: P[] = [];
-  for (let gy = 0; gy < NN; gy++) for (let gx = 0; gx < NN; gx++) {
-    node.push({ x: (gx + 0.5) * cell + (r() - 0.5) * cell * 0.45, y: (gy + 0.5) * cell + (r() - 0.5) * cell * 0.45 });
-  }
-  const id = (gx: number, gy: number) => gy * NN + gx;
-  // one anchor per edge at 18-82% along it; on the open edge it keeps 300 tiles from the river's mouth (the highway
-  // takes that mouth, so the two never share a valley)
-  const anchors: P[] = [];
-  for (const e of EDGES) {
-    let p = 0.18 + 0.64 * r();
-    if (e === exit) {
-      const rp = alongEdge0(e, ep);
-      for (let tries = 0; tries < 8 && Math.abs(p - rp) * MAP < 300; tries++) p = 0.18 + 0.64 * r();
+  const nWx = nk(1), nWy = nk(2), nBase = nk(3), nRidge = nk(4), nEdge = nk(5), nEdgeR = nk(6), nOpen = nk(7);
+  const nFine = nk(8), nWidth = nk(9), nPatch = nk(10), nMeander = nk(11), nBend = nk(12);
+  // 3. the height field on the sample grid: broad fBm plus ridged crests, both sampled at domain-warped positions,
+  //    the tilt toward the open edge, and the mountain and open-edge uplifts
+  const hraw = new Float32Array(HS * HS);
+  const ws = T2.warpScale;
+  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
+    const k = j * HS + i, x = i * HSTEP + HSTEP / 2, y = j * HSTEP + HSTEP / 2, u = x / MAP, v = y / MAP;
+    const wx = x + T2.warpAmp * fbm(nWx, x / ws, y / ws, 3), wy = y + T2.warpAmp * fbm(nWy, x / ws, y / ws, 3);
+    const base = T2.baseUp * fbm(nBase, wx / T2.baseScale, wy / T2.baseScale, 5);
+    const crest = T2.ridgeUp * (ridged(nRidge, wx / T2.ridgeScale, wy / T2.ridgeScale, 4) - 0.5);
+    const tilt = T2.tilt * clamp(dEdge(exit, clamp(wx / MAP, 0, 1), clamp(wy / MAP, 0, 1)), 0, 1);
+    const edgeWarp = 0.12 * fbm(nEdge, u * 3, v * 3, 4);
+    let m = 0;
+    for (const e of mountainEdges) {
+      const d = clamp(dEdge(e, u, v) + edgeWarp, 0, 1);
+      m = Math.max(m, Math.pow(clamp(1 - d / T2.edgeIn, 0, 1), 0.7));
     }
-    anchors.push({ x: along(e, p).x * MAP, y: along(e, p).y * MAP });
+    const edge = m * (T2.edgeUpLo + (T2.edgeUpHi - T2.edgeUpLo) * ridged(nEdgeR, u * 9, v * 9, 4));
+    const dOpen = clamp(1 - dEdge(exit, u, v) / T2.openIn, 0, 1);
+    const open = (0.75 + 0.25 * dOpen) * (T2.openUpLo + (T2.openUpHi - T2.openUpLo) * ridged(nOpen, u * 7 + 11.3, v * 7 + 4.7, 3));
+    hraw[k] = base + crest + tilt + Math.max(edge, open);
   }
-  const axes: Axis[] = [];
-  // a link is a gently bent 3-segment chain, so the valleys wind instead of running straight between the nodes
-  const link = (a: P, b: P, w = T2.valleyW * (0.85 + 0.3 * r()), mouth = 1) => {
-    const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
-    const pts: P[] = [a];
-    for (let k = 1; k <= 3; k++) {
-      const t = k / 4, off = (r() - 0.5) * 0.3 * L;
-      pts.push({ x: a.x + dx * t - (dy / L) * off, y: a.y + dy * t + (dx / L) * off });
-    }
-    pts.push(b);
-    for (let k = 0; k + 1 < pts.length; k++) axes.push({ ax: pts[k].x, ay: pts[k].y, bx: pts[k + 1].x, by: pts[k + 1].y, w: w * (0.8 + 0.4 * r()), mouth });
-  };
-  for (let gy = 0; gy < NN; gy++) for (let gx = 0; gx < NN; gx++) {
-    if (gx > 0) link(node[id(gx - 1, gy)], node[id(gx, gy)]);
-    if (gy > 0) link(node[id(gx, gy - 1)], node[id(gx, gy)]);
-    // a loop along the other neighbours now and then: more of the hill masses cut into separate bands
-    if (gx > 0 && gy > 0 && r() < 0.12) link(node[id(gx - 1, gy)], node[id(gx, gy - 1)]);
+  // 4. the highway's valley: a cut (never a fill) from the entry inland, its floor at the entry's height, so the
+  //    highway has a valley to come in by; the tongue is marked so the classes keep it buildable
+  const e0 = entryAt(exit, hwyPos), hb = sampleField(hraw, e0.x, e0.y);
+  const tongue = new Float32Array(HS * HS);
+  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
+    const x = i * HSTEP + HSTEP / 2, y = j * HSTEP + HSTEP / 2;
+    const t = exit === 'N' ? y : exit === 'S' ? MAP - y : exit === 'W' ? x : MAP - x; // depth inland
+    const lat = Math.abs((exit === 'N' || exit === 'S' ? x : y) - hwyPos);
+    const w = smoothstep(T2.hwyDeep + 70, T2.hwyDeep - 20, t) * smoothstep(T2.hwyHalf + 40, T2.hwyHalf - 4, lat);
+    if (w <= 0) continue;
+    const k = j * HS + i;
+    tongue[k] = w;
+    hraw[k] += (Math.min(hraw[k], hb + 0.02 * t) - hraw[k]) * w;
   }
-  // each edge anchor joins the nearest node, and that last stretch narrows into its mouth
-  for (const a of anchors) {
-    let bn = node[0], bd = Infinity;
-    for (const n of node) { const d = Math.hypot(n.x - a.x, n.y - a.y); if (d < bd) { bd = d; bn = n; } }
-    link(a, bn, T2.valleyW * (0.9 + 0.2 * r()), T2.mouthW);
-  }
-  // the highway takes the open edge's anchor: that mouth is its entry, so the 16 x 48 strip is always lowland
-  const hwyAnchor = anchors[EDGES.indexOf(exit)];
-  const hwyPos = alongEdge0(exit, hwyAnchor); // tiles along the open edge
-  // 4. the river's control points: source edge to exit edge, kept in the middle of the map and bent by noise.
-  //    Its valley is one of the axes, and the water is carved along its final line (step 8), so it always has a floor.
+  // 5. the river: a winding line from the source edge to the exit edge (control points bent by noise, smoothed and
+  //    meandered). Its bed is a running minimum of the ground along the line, so it never climbs, and the ground within
+  //    16 tiles is cut down to that bed: the drainage then runs down the river, which is the biggest channel by construction
   const rHead: P = { x: sp.x * MAP, y: sp.y * MAP }, rTail: P = { x: ep.x * MAP, y: ep.y * MAP };
   const cp: P[] = [rHead];
   const ndx = rTail.x - rHead.x, ndy = rTail.y - rHead.y, nl = Math.hypot(ndx, ndy) || 1;
   const bend = 0.18 * MAP;
   for (let k = 1; k <= 3; k++) {
-    const t = k / 4, off = bend * fbm(nWarp, t * 2.7, 4.1, 3);
+    const t = k / 4, off = bend * fbm(nBend, t * 2.7, 4.1, 3);
     cp.push({ x: clamp(rHead.x + ndx * t - (ndy / nl) * off, 0.2 * MAP, 0.8 * MAP), y: clamp(rHead.y + ndy * t + (ndx / nl) * off, 0.2 * MAP, 0.8 * MAP) });
   }
   cp.push(rTail);
-  for (let k = 0; k + 1 < cp.length; k++) link(cp[k], cp[k + 1], T2.valleyW * 1.5, 0.62);
-  /** the normalised distance (1 on a valley's half width) to the nearest axis; valley mouths narrow at the borders */
-  const valleyAt = (x: number, y: number): number => {
-    const near = smoothstep(0, T2.mouthIn, Math.min(x, y, MAP - x, MAP - y) / MAP);
-    // a domain warp: the valleys wind and their edges are organic, not straight lines between the nodes
-    x += 55 * fbm(nWarp, x / 520, y / 520, 3);
-    y += 55 * fbm(nWarp, x / 520 + 4.7, y / 520 + 9.2, 3);
-    let best = 1e9;
-    for (const a of axes) {
-      const dx = a.bx - a.ax, dy = a.by - a.ay, L2 = dx * dx + dy * dy;
-      const t = clamp(((x - a.ax) * dx + (y - a.ay) * dy) / L2, 0, 1);
-      const d = Math.hypot(a.ax + dx * t - x, a.ay + dy * t - y) / (a.w * (a.mouth + (1 - a.mouth) * near));
-      if (d < best) best = d;
-    }
-    return best;
-  };
-  // 5. the height layers, first without the highway's cut so its valley can go where the open edge is lowest
-  const layers: Layers = { base: new Float32Array(HS * HS), mass: new Float32Array(HS * HS), edge: new Float32Array(HS * HS), open: new Float32Array(HS * HS), dv: new Float32Array(HS * HS) };
-  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
-    const u = (i + 0.5) / HS, v = (j + 0.5) / HS, k = j * HS + i;
-    const x = u * MAP, y = v * MAP;
-    // the normalised distance to the nearest valley axis, its unit wobbled by noise; the classes are hills past its cut
-    layers.dv[k] = valleyAt(x, y) * (0.85 + 0.3 * fbm(nWarp, u * 3.2, v * 3.2, 3));
-    layers.base[k] = 9 * fbm(nBase, u * 6, v * 6, 4) + 16 * fbm(nSw, u * 2.2, v * 2.2, 3) + 12 * dEdge(exit, u, v);
-    layers.mass[k] = (T2.bandUp + T2.ridgeUp * ridged(nRidge, u * T2.ridgeFreq, v * T2.ridgeFreq, 3)) * (0.7 + 0.55 * fbm(nMod, u * 2.6, v * 2.6, 3));
-    let m = 0;
-    for (const e of mountainEdges) {
-      const d = clamp(dEdge(e, u, v) + 0.05 * fbm(nEdge, u * 4, v * 4, 4), 0, 1);
-      m = Math.max(m, Math.pow(clamp(1 - d / T2.edgeIn, 0, 1), 0.7));
-    }
-    layers.edge[k] = m * (T2.edgeUpLo + (T2.edgeUpHi - T2.edgeUpLo) * ridged(nEdgeR, u * 9, v * 9, 4));
-    // the open edge gets its own hills, so no side of the map is a flat strip
-    const dOpen = clamp(1 - dEdge(exit, u, v) / T2.openIn, 0, 1);
-    layers.open[k] = (0.75 + 0.25 * dOpen) * (T2.openUpLo + (T2.openUpHi - T2.openUpLo) * ridged(nEdgeR, u * 7 + 11.3, v * 7 + 4.7, 3));
-  }
-  // 6. a preliminary cut radius from the histogram of the distance field, used while the creeks are routed (the final
-  //     one is calibrated on the painted classes); hills are where the distance to the nearest valley axis passes it
-  const dvG = new Float32Array(G * G), patchG = new Float32Array(G * G);
-  for (let cj = 0; cj < G; cj++) for (let ci = 0; ci < G; ci++) {
-    const c = cj * G + ci, d = sampleField(layers.dv, ci * CELL + CELL / 2, cj * CELL + CELL / 2);
-    dvG[c] = Math.min(d, 24);
-    patchG[c] = fbm(nPatch, (ci * CELL + 2) / 180, (cj * CELL + 2) / 180, 4);
-  }
-  const BINS = 512, DV_MAX = 24;
-  const bin = new Int32Array(BINS);
-  for (let c = 0; c < G * G; c++) bin[Math.min(BINS - 1, (dvG[c] / DV_MAX * BINS) | 0)]++;
-  // the radius used for the creek checks (the final cut is found later, on the painted classes)
-  const hillThr = ((): number => { let acc = 0; const want = T2.hillMin * G * G; for (let b = BINS - 1; b >= 0; b--) { acc += bin[b]; if (acc >= want) return ((b + 0.5) / BINS) * DV_MAX; } return DV_MAX; })();
-  // the height rise is gradual: hills start just off a valley floor and reach their full uplift by about two usual
-  // valley widths (3100 m), so the edges of the lowland are gentle slopes, not walls
-  const up0 = new Float32Array(HS * HS);
-  const mv = T2.valleyW * 1.06; // the mean axis half width: the normalised distance field's unit, in tiles
-  for (let k = 0; k < HS * HS; k++) {
-    const d = Math.min(layers.dv[k] * mv, 400);
-    up0[k] = Math.max(layers.mass[k], Math.max(layers.edge[k], layers.open[k])) * smoothstep(60, 400, d);
-  }
-  /** the entry point (a tile on the open edge) for a position along that edge */
-  const entryAt = (pos: number): P => ({ x: exit === 'N' || exit === 'S' ? pos : exit === 'W' ? 0 : MAP - 1, y: exit === 'N' ? 0 : exit === 'S' ? MAP - 1 : pos });
-  // 7. the heights: the highest of the layers, with the highway's valley cut through every hill it meets, terraced at 4 m
-  const height = new Float32Array(HS * HS), uplift = new Float32Array(HS * HS), natural = new Float32Array(HS * HS);
-  const buildHeight = (pos: number) => {
-    for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
-      const k = j * HS + i, x = i * HSTEP + HSTEP / 2, y = j * HSTEP + HSTEP / 2;
-      const lat = Math.abs((exit === 'N' || exit === 'S' ? x : y) - pos);
-      const up0k = up0[k] * smoothstep(30, 100, lat) * smoothstep(60, 140, lat);
-      const q = up0k / 4, fl = Math.floor(q);
-      uplift[k] = 4 * (fl + smoothstep(0.75, 1, q - fl)); // 4 m terraces on the hills
-      height[k] = layers.base[k] + uplift[k];
-      natural[k] = height[k];
-    }
-    // the highway's valley: a shallow tongue from the entry inland, so the highway has a valley to come in by
-    const e0 = entryAt(pos), hb = sampleField(height, e0.x, e0.y);
-    for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
-      const x = i * HSTEP + HSTEP / 2, y = j * HSTEP + HSTEP / 2;
-      const t = exit === 'N' ? y : exit === 'S' ? MAP - y : exit === 'W' ? x : MAP - x; // depth inland
-      if (t > T2.hwyDeep + 80) continue;
-      const lat = Math.abs((exit === 'N' || exit === 'S' ? x : y) - pos);
-      const w = smoothstep(T2.hwyDeep + 70, T2.hwyDeep - 20, t) * smoothstep(T2.hwyHalf + 40, T2.hwyHalf - 4, lat);
-      if (w <= 0) continue;
-      const k = j * HS + i, target = hb + 0.02 * t;
-      height[k] += (target - height[k]) * w;
-      uplift[k] *= 1 - w; // the entry strip must be buildable
-    }
-  };
-  buildHeight(hwyPos);
-  // 8. the river: the control line, smoothed, resampled, meandered, with a bed that falls from its head to its mouth
-  let line = cp;
+  let line: P[] = cp;
   for (let it = 0; it < 3; it++) line = chaikin(line);
-  line = meander(resample(line, 8), nMeander, 0.5, 42, 190);
+  line = meander(resample(line, 8), nMeander, 0.5, T2.meander, 190);
   const arc = [0];
   for (let k = 1; k < line.length; k++) arc.push(arc[k - 1] + Math.hypot(line[k].x - line[k - 1].x, line[k].y - line[k - 1].y));
-  const riverLen = arc[arc.length - 1];
-  const headH = sampleField(height, rHead.x, rHead.y);
-  const pts: WaterPoint[] = line.map((p, k) => ({
-    x: p.x, y: p.y,
-    w: clamp(20 + 20 * (0.5 + 0.5 * nWidth(arc[k] / 300, 0)), 20, 40),
-  }));
-  const bed: number[] = line.map((_, k) => headH - T2.riverDrop * (arc[k] / riverLen) + T2.riverWobble * fbm(nBed, arc[k] / 240, 3.7, 3));
-  /** the bed height and width at arc length s along the river */
-  const bedAt = (s: number) => {
-    let lo = 0, hi = arc.length - 1;
-    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (arc[mid] <= s) lo = mid; else hi = mid; }
-    const t = (s - arc[lo]) / Math.max(1e-6, arc[hi] - arc[lo]);
-    return bed[lo] + (bed[hi] - bed[lo]) * t;
-  };
-  /** the river's valley floor: flat within 45 tiles of the bed, blended into the hills by 150, rising 3 cm a tile */
-  const bedH = new Float32Array(HS * HS).fill(Infinity), bedD2 = new Float32Array(HS * HS).fill(Infinity);
-  for (let k = 0; k + 1 < pts.length; k++) {
-    const a = pts[k], b = pts[k + 1];
-    const reach = T2.floorBlend + Math.max(a.w, b.w) / 2;
+  const pts: WaterPoint[] = line.map((p, k) => ({ x: p.x, y: p.y, w: clamp(20 + 20 * (0.5 + 0.5 * nWidth(arc[k] / 300, 0)), 20, 40) }));
+  const waters: Waterway[] = [{ kind: 'river', pts }];
+  const bed = new Float32Array(line.length);
+  bed[0] = sampleField(hraw, line[0].x, line[0].y);
+  for (let k = 1; k < line.length; k++) bed[k] = Math.min(sampleField(hraw, line[k].x, line[k].y), bed[k - 1] - 0.01 * (arc[k] - arc[k - 1]));
+  // the nearest point of the river line to every sample (squared distance in tiles, and the bed there)
+  const riverD2 = new Float32Array(HS * HS).fill(Infinity), riverBed = new Float32Array(HS * HS);
+  for (let k = 0; k + 1 < line.length; k++) {
+    const a = line[k], b = line[k + 1], reach = T2.riverHw;
     const i0 = Math.max(0, Math.floor((Math.min(a.x, b.x) - reach) / HSTEP)), i1 = Math.min(HS - 1, Math.ceil((Math.max(a.x, b.x) + reach) / HSTEP));
     const j0 = Math.max(0, Math.floor((Math.min(a.y, b.y) - reach) / HSTEP)), j1 = Math.min(HS - 1, Math.ceil((Math.max(a.y, b.y) + reach) / HSTEP));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const x = i * HSTEP + HSTEP / 2, y = j * HSTEP + HSTEP / 2;
-      const d = segDist(x, y, a.x, a.y, b.x, b.y), k2 = j * HS + i, d2 = d * d;
-      if (d2 < bedD2[k2]) { bedD2[k2] = d2; bedH[k2] = bedAt(arc[k] + (arc[k + 1] - arc[k]) * lastT); }
+      const d = segDist(x, y, a.x, a.y, b.x, b.y), k2 = j * HS + i;
+      if (d * d < riverD2[k2]) { riverD2[k2] = d * d; riverBed[k2] = bed[k] + (bed[k + 1] - bed[k]) * lastT; }
     }
   }
-  for (let k = 0; k < HS * HS; k++) {
-    const d = Math.sqrt(bedD2[k]);
-    if (!Number.isFinite(d) || d >= T2.floorBlend) continue;
-    const w = smoothstep(T2.floorBlend, T2.floorFlat, d);
-    const floorY = bedH[k] + T2.floorRise * d;
-    height[k] = Math.max(bedH[k], height[k] + (floorY - height[k]) * w);
-    uplift[k] *= 1 - w * 0.85; // the floor is lowland; the banks of a gorge keep some rock
+  for (let k = 0; k < HS * HS; k++) if (riverD2[k] <= 16 * 16) hraw[k] = Math.min(hraw[k], riverBed[k]);
+  // the border: only the river's ends and the highway's valley may drain off the map, so the basins drain into the one
+  // river and the lowland is one connected valley system; the rest of the border is raised to a wall
+  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
+    if (!(i === 0 || j === 0 || i === HS - 1 || j === HS - 1)) continue;
+    const k = j * HS + i;
+    if (riverD2[k] > 16 * 16 && tongue[k] === 0) hraw[k] = Math.max(hraw[k], T2.wallH);
   }
-  const waters: Waterway[] = [{ kind: 'river', pts }];
+  // 6. drainage: fill the pits, route every sample to its steepest neighbour, accumulate the flow (a small fine noise breaks ties)
+  const D = new Float32Array(HS * HS);
+  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) D[j * HS + i] = hraw[j * HS + i] + 3 * fbm(nFine, ((i + 0.5) / HS) * 14, ((j + 0.5) / HS) * 14, 4);
+  const F = priorityFlood(D, HS), dir = flowDirs(F, HS), acc = flowAccum(dir, HS, F);
+  // 7. channels: every cell with enough upstream cells, and the river's own samples; a channel's floor half width grows with its flow
+  const chan = new Uint8Array(HS * HS), hwC = new Float32Array(HS * HS);
+  for (let c = 0; c < HS * HS; c++) {
+    if (acc[c] < T2.chanMin) continue;
+    chan[c] = 1;
+    hwC[c] = clamp(T2.hwBase + T2.hwLog * Math.log(acc[c] / T2.chanMin), T2.hwBase, T2.hwMax);
+  }
+  for (let c = 0; c < HS * HS; c++) if (riverD2[c] <= HSTEP * HSTEP) { chan[c] = 1; hwC[c] = Math.max(hwC[c], T2.riverHw); }
+  const { dist, src } = nearestSeed(chan, HS);
+  // 8. the valley floors: each sample is pulled toward the bed of its nearest channel, flat inside half the floor's width
+  const height = new Float32Array(HS * HS), above = new Float32Array(HS * HS), slope = new Float32Array(HS * HS);
+  for (let k = 0; k < HS * HS; k++) {
+    const s = src[k], d = dist[k] * HSTEP, hw = hwC[s], bed = F[s];
+    const w = smoothstep(hw, hw * 0.5, d);
+    height[k] = hraw[k] + (bed + T2.floorRise * d - hraw[k]) * w;
+    above[k] = (height[k] - bed) * (1 - smoothstep(0.2, 0.8, tongue[k]));
+  }
+  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
+    const ie = Math.min(HS - 1, i + 1), iw = Math.max(0, i - 1), jn = Math.min(HS - 1, j + 1), js = Math.max(0, j - 1);
+    const gx = (height[j * HS + ie] - height[j * HS + iw]) / ((ie - iw) * HSTEP), gy = (height[jn * HS + i] - height[js * HS + i]) / ((jn - js) * HSTEP);
+    slope[j * HS + i] = Math.hypot(gx, gy);
+  }
   // 9. local relief, for scoring sites (how far the ground rises above the lowest point within 40 tiles)
   const floorMin = minFilter(height, HS, T2.floorR);
   const relief = new Float32Array(HS * HS);
   for (let k = 0; k < HS * HS; k++) relief[k] = height[k] - floorMin[k];
-  // 10. creeks: heads at the foot of the hills come down the flow to the river, a junction or the border (v1's method).
-  //     Their routing field is clean inside the river's floor, so a creek that reaches the floor runs to the water.
-  const heightC = new Float32Array(HS * HS);
-  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
-    const k = j * HS + i, d = Math.sqrt(bedD2[k]);
-    const fine = 16 * fbm(nFine, ((i + 0.5) / HS) * 14, ((j + 0.5) / HS) * 14, 4) + 5 * fbm(nFine, ((i + 0.5) / HS) * 40 + 7.7, ((j + 0.5) / HS) * 40 + 3.1, 2);
-    heightC[k] = d < T2.floorBlend ? bedH[k] + T2.floorRise * d : natural[k] + fine; // natural: not the highway's cut
-  }
-  // a low rise in the routing field around the highway's entry diverts creeks, so the entry strip stays clear
-  const e0 = entryAt(hwyPos);
-  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) {
-    const d = Math.hypot(i * HSTEP + HSTEP / 2 - e0.x, j * HSTEP + HSTEP / 2 - e0.y);
-    if (d < 220) heightC[j * HS + i] += 26 * smoothstep(220, 90, d);
-  }
-  const filledC = priorityFlood(heightC, HS), dirC = flowDirs(filledC, HS), acc = flowAccum(dirC, HS, filledC);
-  // a river cell is within 2 cells of the river's centreline
+  const cellP = (c: number): P => ({ x: (c % HS) * HSTEP + HSTEP / 2, y: Math.floor(c / HS) * HSTEP + HSTEP / 2 });
+  // 10. creeks: heads at the foot of the hills come down the drainage to the river, a junction or the border (v1's method)
   const riverCell = new Uint8Array(HS * HS);
   for (const p of pts) {
     const ci = clamp(Math.round(p.x / HSTEP - 0.5), 0, HS - 1), cj = clamp(Math.round(p.y / HSTEP - 0.5), 0, HS - 1);
@@ -428,8 +357,8 @@ function build(genSeed: number): Terrain {
   const heads: number[] = [];
   for (let c = 0; c < HS * HS; c++) {
     if (!isChannel(c)) continue;
-    if (anyNear(c, 1, n => dirC[n] === c && isChannel(n))) continue;
-    if (!anyNear(c, 3, n => layers.dv[n] > hillThr)) continue; // a head sits at the foot of the hills
+    if (anyNear(c, 1, n => dir[n] === c && isChannel(n))) continue;
+    if (!anyNear(c, 3, n => isHillS(above[n], slope[n]))) continue; // a head sits at the foot of the hills
     heads.push(c);
   }
   // trace a head down until a river cell or the border (it ends there), or a claimed cell (a junction: included)
@@ -439,8 +368,8 @@ function build(genSeed: number): Terrain {
     let c = h, join = -1;
     for (;;) {
       cells.push(c);
-      if (riverCell[c] || dirC[c] < 0) break;
-      const nx = dirC[c];
+      if (riverCell[c] || dir[c] < 0) break;
+      const nx = dir[c];
       if (claimedBy[nx]) { cells.push(nx); join = claimedBy[nx] - 1; break; }
       c = nx;
     }
@@ -492,15 +421,15 @@ function build(genSeed: number): Terrain {
     let c = h;
     for (;;) {
       cells.push(c);
-      if (riverCell[c] || dirC[c] < 0) break;
-      c = dirC[c];
+      if (riverCell[c] || dir[c] < 0) break;
+      c = dir[c];
       if (cells.length > HS * HS) break;
     }
     return cells;
   };
   /** a creek's polyline from its routing cells: smoothed, meandered, with widths from the flow accumulation */
   const creekLine = (cells: number[], idx: number): WaterPoint[] => {
-    const cellPts: P[] = cells.map(c => ({ x: (c % HS) * HSTEP + HSTEP / 2, y: ((c - (c % HS)) / HS) * HSTEP + HSTEP / 2 }));
+    const cellPts: P[] = cells.map(c => cellP(c));
     let cl = cellPts;
     for (let it = 0; it < 3; it++) cl = chaikin(cl);
     cl = meander(resample(cl, 6), nMeander, idx * 7.3 + 20, 16, 160);
@@ -514,7 +443,7 @@ function build(genSeed: number): Terrain {
       return { x: p.x, y: p.y, w: clamp(3 + 5 * clamp(Math.log(a / CREEK_MIN_ACC) / Math.log(20), 0, 1), 3, 8) };
     });
   };
-  const isHillP = (p: P) => { const ix = Math.floor(p.x), iy = Math.floor(p.y); return ix >= 0 && iy >= 0 && ix < MAP && iy < MAP && layers.dv[(iy >> 3) * HS + (ix >> 3)] > hillThr; };
+  const isHillP = (p: P) => { const ix = Math.floor(p.x), iy = Math.floor(p.y); return ix >= 0 && iy >= 0 && ix < MAP && iy < MAP && isHillS(above[(iy >> 3) * HS + (ix >> 3)], slope[(iy >> 3) * HS + (ix >> 3)]); };
   const finals: (WaterPoint[] | null)[] = [];
   accepted.forEach((cr, idx) => {
     /** a creek's line from routing cells, trimmed where it leaves the hills (the last hill point is kept) */
@@ -544,35 +473,82 @@ function build(genSeed: number): Terrain {
   });
   const creekPts: WaterPoint[][] = [];
   for (const fin of finals) if (fin) { creekPts.push(fin); waters.push({ kind: 'creek', pts: fin }); }
-  // 11. the classes: the cut radius comes from the sorted distance field (the share above a radius is a quantile), and
-  // is nudged up to four times because the water and the creeks cut into the hills after the paint
-  const cls = new Uint8Array(MAP * MAP);
-  /** paint the classes given the cut radius: hills past it, patches, then the river and the creeks cut in */
-  const classify = (thr: number) => {
-    for (let y = 0; y < MAP; y++) for (let x = 0; x < MAP; x++) {
-      const c = (y >> 2) * G + (x >> 2), k = y * MAP + x;
-      cls[k] = dvG[c] > thr ? TC.HILL : patchG[c] > 0.35 ? TC.PATCH : TC.GROUND;
-    }
-    rasterRiver(cls, pts);
-    for (const cr of creekPts) rasterCreek(cls, cr);
-  };
-  const hillTarget = T2.hillMin + (T2.hillMax - T2.hillMin) * r();
-  const dvSorted = Float32Array.from(dvG).sort();
-  /** the cut radius that leaves `share` of the cells above it (binary search on the sorted field) */
-  const radiusFor = (share: number): number => {
-    let lo = 0, hi = dvSorted.length;
-    const from = Math.floor((1 - share) * dvSorted.length);
-    while (lo < hi) { const mid = (lo + hi) >> 1; if (mid < from) lo = mid + 1; else hi = mid; }
-    return dvSorted[clamp(lo, 0, dvSorted.length - 1)];
-  };
-  const countHills = () => { let n = 0; for (let k = 0; k < MAP * MAP; k++) if (cls[k] === TC.HILL) n++; return n / (MAP * MAP); };
-  let cellShare = Math.min(0.6, hillTarget + 0.03);
-  for (let it = 0; it < 4; it++) {
-    classify(radiusFor(cellShare));
-    const h = countHills();
-    if (Math.abs(h - hillTarget) < 0.004) break;
-    cellShare = clamp(cellShare + (hillTarget - h), 0.2, 0.6);
+  // 11. the classes: hills where isHillS says so, patches over some ground, then the river and the creeks cut in
+  // the basins: where the drainage had to fill a pit, the water stands at the spill level (lakes). The deepest basins
+  // among the lowland cover T2.lakeShare of the map, so the lakes take the same share of every map
+  const pond = new Float32Array(HS * HS);
+  for (let k = 0; k < HS * HS; k++) pond[k] = F[k] - D[k];
+  const hillC = new Uint8Array(G * G), pondC = new Float32Array(G * G), lowC = new Float32Array(G * G);
+  let nLow = 0;
+  for (let cj = 0; cj < G; cj++) for (let ci = 0; ci < G; ci++) {
+    const c = cj * G + ci, cx = ci * CELL + CELL / 2, cy = cj * CELL + CELL / 2;
+    hillC[c] = isHillS(sampleField(above, cx, cy), sampleField(slope, cx, cy)) ? 1 : 0;
+    pondC[c] = sampleField(pond, cx, cy);
+    if (!hillC[c]) lowC[nLow++] = pondC[c];
   }
+  const sortedLow = lowC.subarray(0, nLow).sort();
+  const want = Math.round(T2.lakeShare * G * G);
+  const lakeAt = want > 0 && nLow > 0 ? Math.max(0.5, sortedLow[Math.max(0, nLow - want)]) : Infinity;
+  const cls = new Uint8Array(MAP * MAP);
+  for (let cj = 0; cj < G; cj++) for (let ci = 0; ci < G; ci++) {
+    const c0 = cj * G + ci;
+    const patch = fbm(nPatch, (ci * CELL + 2) / 180, (cj * CELL + 2) / 180, 4) > 0.35;
+    const lake = !hillC[c0] && pondC[c0] > lakeAt;
+    const c = hillC[c0] ? TC.HILL : lake ? TC.WATER : patch ? TC.PATCH : TC.GROUND;
+    for (let y = cj * CELL; y < cj * CELL + CELL; y++) for (let x = ci * CELL; x < ci * CELL + CELL; x++) cls[y * MAP + x] = c;
+  }
+  // the passes: a lowland pocket cut off by hills is joined to the main lowland through the fewest hill cells, and those
+  // cells become ground, so the valley floors stay one connected system. One 0-1 breadth-first search from the main
+  // lowland (entering a hill cell costs 1, lowland 0) gives every cell its way back; each pocket walks that way home.
+  const N2 = G * G, hillG = new Uint8Array(N2);
+  for (let c = 0; c < N2; c++) hillG[c] = cls[Math.floor(c / G) * CELL * MAP + (c % G) * CELL] === TC.HILL ? 1 : 0;
+  const lab = new Int32Array(N2), sizes: number[] = [];
+  for (let s = 0; s < N2; s++) {
+    if (hillG[s] || lab[s]) continue;
+    const id = sizes.length + 1; let size = 0; const stack = [s]; lab[s] = id;
+    while (stack.length) {
+      const c = stack.pop()!; size++;
+      const x = c % G, y = (c - x) / G;
+      if (x > 0 && !hillG[c - 1] && !lab[c - 1]) { lab[c - 1] = id; stack.push(c - 1); }
+      if (x < G - 1 && !hillG[c + 1] && !lab[c + 1]) { lab[c + 1] = id; stack.push(c + 1); }
+      if (y > 0 && !hillG[c - G] && !lab[c - G]) { lab[c - G] = id; stack.push(c - G); }
+      if (y < G - 1 && !hillG[c + G] && !lab[c + G]) { lab[c + G] = id; stack.push(c + G); }
+    }
+    sizes.push(size);
+  }
+  if (sizes.length > 1) {
+    let big = 1;
+    for (let k = 2; k <= sizes.length; k++) if (sizes[k - 1] > sizes[big - 1]) big = k;
+    const passDq = new Int32Array(8 * N2), passDist = new Int32Array(N2).fill(1e9), passPrev = new Int32Array(N2);
+    const firstOf = new Int32Array(sizes.length + 1).fill(-1);
+    let hd = 4 * N2, tl = hd;
+    for (let c = 0; c < N2; c++) {
+      if (lab[c] !== big) { if (firstOf[lab[c]] < 0) firstOf[lab[c]] = c; continue; }
+      passDist[c] = 0; passDq[tl++] = c;
+    }
+    while (hd < tl) {
+      const c = passDq[hd++], x = c % G, y = (c - x) / G;
+      for (let q = 0; q < 4; q++) {
+        const nb = q === 0 ? (x > 0 ? c - 1 : -1) : q === 1 ? (x < G - 1 ? c + 1 : -1) : q === 2 ? (y > 0 ? c - G : -1) : (y < G - 1 ? c + G : -1);
+        if (nb < 0) continue;
+        const w = hillG[nb], nd = passDist[c] + w;
+        if (nd >= passDist[nb]) continue;
+        passDist[nb] = nd; passPrev[nb] = c;
+        if (w) passDq[tl++] = nb; else passDq[--hd] = nb;
+      }
+    }
+    for (let p = 1; p <= sizes.length; p++) {
+      if (p === big || firstOf[p] < 0 || passDist[firstOf[p]] >= 1e9) continue;
+      for (let c = firstOf[p]; passDist[c] > 0; c = passPrev[c]) {
+        if (!hillG[c]) continue;
+        hillG[c] = 0;
+        const ci = c % G, cj = (c - ci) / G;
+        for (let y = cj * CELL; y < cj * CELL + CELL; y++) for (let x = ci * CELL; x < ci * CELL + CELL; x++) cls[y * MAP + x] = TC.GROUND;
+      }
+    }
+  }
+  rasterRiver(cls, pts);
+  for (const cr of creekPts) rasterCreek(cls, cr);
   // 12. buildable tiles' integral image and a cell-resolution relief table, for scoring sites
   const S = MAP + 1, I = new Int32Array(S * S);
   for (let y = 0; y < MAP; y++) {
@@ -592,7 +568,6 @@ function build(genSeed: number): Terrain {
   };
   // 13. the highway entry: a 16 x 48 strip of buildable land on the open edge, nearest the chosen position
   const hw: { x: number; y: number; edge: Edge }[] = [];
-
   for (let c = 0; c + 16 <= MAP; c += 16) {
     const cx = c + 8;
     let x = 0, y = 0, rect: [number, number, number, number];
@@ -711,11 +686,12 @@ export function checkGuarantees2(t: Terrain): Guarantees2 {
   }
   // hills reach the edge on at least 3 sides
   const edgeHill = [0, 0, 0, 0];
+  const EB = T2.edgeBand;
   for (let e = 0; e < 4; e++) {
+    // the band of edge e (N = y < EB, E = x >= MAP - EB, S = y >= MAP - EB, W = x < EB), scanned rows or columns only
     let band = 0, hills = 0;
-    for (let y = 0; y < MAP; y++) for (let x = 0; x < MAP; x++) {
-      const d = e === 0 ? y : e === 1 ? MAP - 1 - x : e === 2 ? MAP - 1 - y : x;
-      if (d >= T2.edgeBand) continue;
+    const y0 = e === 2 ? MAP - EB : 0, y1 = e === 0 ? EB : MAP, x0 = e === 1 ? MAP - EB : 0, x1 = e === 3 ? EB : MAP;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
       band++;
       if (t.cls[y * MAP + x] === TC.HILL) hills++;
     }

@@ -79,8 +79,8 @@ test('the same seed gives the same terrain, different seeds differ', () => {
 test('more hills and valleys than v1, and no flat edge band', () => {
   // measured with checkGuarantees2 on seeds 1-6: v1 keeps 92-96% of the outer band's buildable land flat (16-36% of the
   // whole band: its hills hug three edges and the fourth is a plain) and its median valley corridor is 611-779 tiles
-  // wide; v2 keeps 9-15% of the band flat - flat buildable ground on all four sides is what the owner called empty -
-  // and its corridors at 157-181 tiles, so a lowland point sees a hill within about 100 tiles on its narrowest axis
+  // wide; v2 keeps 3-8% of the band flat - flat buildable ground on all four sides is what the owner called empty -
+  // and its corridors at 153-181 tiles, so a lowland point sees a hill within about 90 tiles on its narrowest axis
   for (let seed = 1; seed <= 5; seed++) {
     const g = checkGuarantees2(gen(seed));
     assert.ok(g.hill >= 0.25 && g.hill <= 0.4, `seed ${seed}: hills ${pct(g.hill)}`);
@@ -170,4 +170,34 @@ test('the highway entry has a valley to come in by: buildable ground 48 tiles in
     // the 16-wide, 48-deep strip the road tool digs from: allow a few creek tiles, no hills and no water
     assert.ok(bad <= 40, `seed ${seed}: ${bad} unbuildable tiles within 8 of the highway entry`);
   }
+});
+
+/** the orientation histogram of the buildable/hill boundary: gradient directions of the hill mask (8-tile samples, blurred 3 x 3), 16 bins; the outer 128 tiles are left out (the mountain edges run along the border by design) */
+function orientation(t: Terrain): number[] {
+  const S = MAP / 8, B = 16, m = new Float32Array(S * S), b = new Float32Array(S * S);
+  for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) m[j * S + i] = t.cls[(j * 8 + 4) * MAP + i * 8 + 4] === TC.HILL ? 1 : 0;
+  for (let j = 1; j < S - 1; j++) for (let i = 1; i < S - 1; i++) {
+    let s = 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) s += m[(j + dj) * S + i + di];
+    b[j * S + i] = s / 9;
+  }
+  const bins = new Array<number>(16).fill(0);
+  for (let j = B; j < S - B; j++) for (let i = B; i < S - B; i++) {
+    const gx = b[j * S + i + 1] - b[j * S + i - 1], gy = b[(j + 1) * S + i] - b[(j - 1) * S + i];
+    if (Math.hypot(gx, gy) < 0.15) continue;
+    bins[Math.min(15, Math.floor(((Math.atan2(gy, gx) + Math.PI) / (2 * Math.PI)) * 16))]++;
+  }
+  return bins;
+}
+
+test('not a grid: no orientation bin above 2x the mean, and the hill share differs between seeds', () => {
+  const hills: number[] = [];
+  for (let seed = 1; seed <= 20; seed++) {
+    const t = gen(seed), bins = orientation(t), mean = bins.reduce((s, v) => s + v, 0) / 16, top = Math.max(...bins);
+    assert.ok(top <= 2 * mean, `seed ${seed}: orientation bin ${bins.indexOf(top)} holds ${(top / mean).toFixed(2)}x the mean`);
+    hills.push(checkGuarantees2(t).hill);
+  }
+  const spread = Math.max(...hills) - Math.min(...hills);
+  console.log(`hill share over 20 seeds ${pct(Math.min(...hills))}..${pct(Math.max(...hills))}, spread ${(100 * spread).toFixed(1)} points`);
+  assert.ok(spread >= 0.03, `hill share over 20 seeds spans only ${pct(spread)}`);
 });
