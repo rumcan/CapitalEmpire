@@ -1,7 +1,8 @@
 // The traffic simulation core: IDM car following on the lane graph, vehicles in fixed slots. Pure TS, no DOM.
 // Hot paths (step, writeFrame) are allocation-free; plans are only built when a vehicle picks a movement.
 import { mulberry } from '../iso';
-import { CAR, idm } from './idm';
+import { CAR } from './idm';
+import { Drivers, accACC, idm, iidm } from '../ext/drivers';
 import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt, nearestLink } from './lanes';
 import { MIN_GREEN, SIG, demandElsewhere, fixedToRed, phaseState, stepSignals } from './signals';
 import { Router } from './routing';
@@ -23,8 +24,6 @@ export const VTYPES = [{ len: 4.5 }, { len: 5.5 }, { len: 5.5 }, { len: 5.3 }, {
 const CAR_TYPES = 5;
 /** the shuttle bus's vehicle type (the last of VTYPES) */
 export const BUS_VT = VTYPES.length - 1;
-/** a bus within BUS_NEAR m of its target stop and under 0.5 m/s is at the stop (see busStep) */
-const BUS_NEAR = 3;
 
 /** a virtual stop sits this far short of its line, metres (keeps a vehicle from transferring onto it) */
 const STOP_MARGIN = 0.05;
@@ -38,8 +37,10 @@ const FILL_TRIES = 40;
 const TOW_BOX = 60, TOW_ANY = 300;
 /** a trip still on the road after this many sim seconds is abandoned (the driver gives up; a gridlock drains instead of piling up) */
 const ABANDON = 1200;
-/** lane changes (MOBIL): evaluated every MOBIL_EVERY steps, politeness, incentive threshold, and the lane ends kept clear, metres */
-const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
+/** lane changes (MOBIL): evaluated every MOBIL_EVERY steps, and the lane ends kept clear, metres (politeness and threshold are per driver: Sim.drivers) */
+const MOBIL_EVERY = 5, MOBIL_START = 10, MOBIL_END = 15;
+/** the driver mix of the sim's traffic (ext/drivers): shares of aggressive and cautious drivers, and of trucks (none until there is truck art) */
+export const DRIVER_MIX = { aggressive: 0.15, cautious: 0.15, truckShare: 0 };
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
 const SIG_MARGIN = 0.5;
 /** a roundabout entry or inner exit gives way to ring traffic that is within this many metres of the crossing (standing or not), plus 4 s of its travel */
@@ -98,6 +99,9 @@ export class Sim {
   /** true: fill() aims at round(target * demandAt(t)) (the daily profile); arrivals bring the count down on their own */
   profile = false;
   rnd: () => number;
+  /** per slot driver parameters (ext/drivers): desired speed factor, headway, acceleration, braking, jam gap, MOBIL politeness and threshold;
+   *  drawn from their own seeded stream at spawn (spawnAt, buses) */
+  readonly drivers: Drivers;
   stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, throttled: 0, tableMs: 0, tables: 0, dropped: 0, ratioSum: 0, ratioN: 0, abandoned: 0 };
   /** trade since the sim started: trips that arrived at a non-RES lot (the destination's use tag >= LU.COM), and the sum of their
    *  punctuality min(1, FREE * ideal / actual): 1 is on time, less is late */
@@ -193,6 +197,7 @@ export class Sim {
   /** an empty sim of cap vehicle slots on graph g; call onGraph() after every graph update */
   constructor(g: LaneGraph, cap: number, seed: number) {
     this.g = g; this.cap = cap; this.rnd = mulberry(seed);
+    this.drivers = new Drivers(seed * 7919 + 13, DRIVER_MIX); this.drivers.ensure(cap);
     this.alive = new Uint8Array(cap); this.lane = new Int32Array(cap); this.s = new Float64Array(cap);
     this.v = new Float32Array(cap); this.acc = new Float32Array(cap); this.len = new Float32Array(cap);
     this.vtype = new Uint8Array(cap); this.v0f = new Float32Array(cap); this.lat = new Float32Array(cap);
@@ -379,7 +384,8 @@ export class Sim {
     while (i < this.cap && this.alive[i]) i++;
     if (i >= this.cap) return -1;
     this.alive[i] = 1; this.lane[i] = lane; this.s[i] = s; this.v[i] = 0.5 * ln.vmax; this.acc[i] = 0;
-    this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
+    // the sim's stream keeps its draw here (the rest stays aligned); the car's v0f comes from its driver
+    this.rnd(); this.drivers.assign(i, 'car'); this.v0f[i] = this.drivers.v0f[i]!; this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
     this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = tag;
     this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = sink; this.party[i] = party;
@@ -552,6 +558,8 @@ export class Sim {
     while (i < this.cap && this.alive[i]) i++;
     if (i >= this.cap) return -1;
     this.alive[i] = 1; this.lane[i] = lane; this.s[i] = s; this.v[i] = 0; this.acc[i] = 0;
+    // a bus keeps v0f 1 and drives with the car's constants (no driver variety)
+    this.drivers.assign(i, 'car'); const D = this.drivers; D.T[i] = CAR.T; D.a[i] = CAR.a; D.b[i] = CAR.b; D.s0[i] = CAR.s0;
     this.v0f[i] = 1; this.vtype[i] = BUS_VT; this.len[i] = BUS_LEN; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
     this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = 0;
@@ -602,7 +610,7 @@ export class Sim {
     this.dest[i] = -1; this.unbind(i); this.plan[i] = [this.lane[i]!]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1;
     return true;
   }
-  /** the bus step (once per step, after tow): a bus within BUS_NEAR m of its target stop and under 0.5 m/s is at the stop and dwells there. At the lot
+  /** the bus step (once per step, after tow): a bus within its jam gap s0 + 1 m of its target stop and under 0.5 m/s is at the stop and dwells there. At the lot
    *  stop it boards one fan of the queue per BOARD_S while seats are free (busWait counts the queue), and leaves when full, or when the queue is
    *  empty after MIN_DWELL, or at MAX_DWELL. At the doors stop it alights one fan per ALIGHT_S and leaves when empty. Each boarding or alighting is
    *  logged in busEv. A bus whose route is gone is removed */
@@ -617,7 +625,7 @@ export class Sim {
       const R = this.busRoutes[r];
       if (!R) continue;
       const leg = this.busLeg[i]!, T = leg ? R.lot : R.doors;
-      if (ln.dseg !== T.dseg || Math.abs(T.s - this.s[i]!) > BUS_NEAR || this.v[i]! >= 0.5) continue;
+      if (ln.dseg !== T.dseg || Math.abs(T.s - this.s[i]!) > this.drivers.s0[i]! + 1 || this.v[i]! >= 0.5) continue;
       this.busDwell[i] = this.busDwell[i]! + DT;
       if (leg) {
         let b = this.busBoard[i]! + DT, w = this.busWait[r]!;
@@ -808,7 +816,7 @@ export class Sim {
 
   /** step 1: every vehicle's acceleration (IDM against its leader, a plan end, a closed gate, and the speed limit ahead) */
   private accelerate() {
-    const lanes = this.g.lanes, Q = this.onLane;
+    const lanes = this.g.lanes, Q = this.onLane, D = this.drivers;
     for (let id = 0; id < Q.length; id++) {
       const q = Q[id];
       if (!q.length) continue;
@@ -816,14 +824,15 @@ export class Sim {
       for (let k = 0; k < q.length; k++) {
         const i = q[k], v = this.v[i], si = this.s[i], P = this.plan[i]!, pi = this.pi[i];
         const v0 = v0L * this.v0f[i], d0 = lenL - si;
-        let gap = Infinity, dv = 0, vg = Infinity;
-        if (k > 0) { const ld = q[k - 1]; gap = this.s[ld] - this.len[ld] - si; dv = v - this.v[ld]; }
+        // the gap to the leader: its speed vl and acceleration al (no leader, a free road: vl = v, al = 0; an obstacle: vl = al = 0)
+        let gap = Infinity, vl = v, al = 0, vg = Infinity, hard = false;
+        if (k > 0) { const ld = q[k - 1]; gap = this.s[ld] - this.len[ld] - si; vl = this.v[ld]; al = this.acc[ld]; }
         // walk the plan ahead: the first lane with vehicles gives the leader, the end of the plan may be a stop
         let d = d0, found = k > 0, j = pi + 1;
         for (; j < P.length; j++) {
           if (d > LOOKAHEAD) break;
           const nid = P[j], q2 = Q[nid];
-          if (!found && q2.length) { const ld = q2[q2.length - 1]; gap = d + this.s[ld] - this.len[ld]; dv = v - this.v[ld]; found = true; }
+          if (!found && q2.length) { const ld = q2[q2.length - 1]; gap = d + this.s[ld] - this.len[ld]; vl = this.v[ld]; al = this.acc[ld]; found = true; }
           d += this.lLen[nid];
         }
         // a merge (zipper): the nearest vehicle ahead of us on the other lanes that merge into our next lane is a leader too,
@@ -840,21 +849,21 @@ export class Sim {
               // would deadlock)
               if (rem >= d0 || (mine && this.resv[w] !== nN)) continue;
               const gm = d0 - rem - this.len[w];
-              if (gm < gap) { gap = gm; dv = v - this.v[w]; }
+              if (gm < gap) { gap = gm; vl = this.v[w]; al = this.acc[w]; hard = true; }
               break;
             }
           }
         }
         // a plan that ends in a lane going nowhere: stop at its end (a plan merely not extended yet ends at a link lane with exits)
         if (j === P.length && d <= LOOKAHEAD && !lanes[P[P.length - 1]]!.next.length) {
-          if (d < gap) { gap = d; dv = v; }
+          if (d < gap) { gap = d; vl = 0; al = 0; hard = true; }
           vg = Math.min(vg, d - STOP_MARGIN);
         }
         // a junction entry the gate keeps shut: a stopped obstacle at the end of this lane
         if (pi + 1 < P.length && d0 <= v * v / (2 * CAR.b) + 4) {
           const nid = P[pi + 1];
           if (this.lGate[nid] && !this.gate(i, nid)) {
-            if (d0 < gap) { gap = d0; dv = v; }
+            if (d0 < gap) { gap = d0; vl = 0; al = 0; hard = true; }
             vg = Math.min(vg, d0 - STOP_MARGIN);
           }
         }
@@ -865,7 +874,7 @@ export class Sim {
           const K = this.sinks[sk]!, P = this.parks[K.park]!, ln = lanes[id]!;
           if (ln.kind === LK.LINK && ln.dseg === K.dseg && si <= K.s && K.q.length >= ENTRY_Q && P.parked + this.queuedAt(K.park) < P.bays) {
             const dd = K.s - si;
-            if (dd < gap) { gap = dd; dv = v; }
+            if (dd < gap) { gap = dd; vl = 0; al = 0; hard = true; }
             vg = Math.min(vg, dd - STOP_MARGIN);
           }
         }
@@ -875,7 +884,7 @@ export class Sim {
           const R = this.busRoutes[bu], T = R ? (this.busLeg[i] ? R.lot : R.doors) : null;
           if (T && T.dseg === lanes[id]!.dseg && si <= T.s) {
             const dd = T.s - si;
-            if (dd < gap) { gap = dd; dv = v; }
+            if (dd < gap) { gap = dd; vl = 0; al = 0; hard = true; }
             vg = Math.min(vg, dd - STOP_MARGIN);
           }
         }
@@ -885,11 +894,11 @@ export class Sim {
         if (bo >= 0 && !this.paid[i]) {
           if (si > bo + 0.5) this.serve(i);
           else {
-            if (si >= bo - 2 && v < 0.5) this.dwell[i] += DT;
+            if (si >= bo - D.s0[i]! - 1 && v < 0.5) this.dwell[i] += DT;
             if (this.dwell[i]! >= SERVICE_S - DT / 2) this.serve(i);
             else {
               const dd = bo - si;
-              if (dd < gap) { gap = dd; dv = v; }
+              if (dd < gap) { gap = dd; vl = 0; al = 0; hard = true; }
               vg = Math.min(vg, dd - STOP_MARGIN);
             }
           }
@@ -900,7 +909,8 @@ export class Sim {
           const vn = this.lVmax[P[pi + 1]] * this.v0f[i];
           if (vn < v) { const need = (vn * vn - v * v) / (2 * d0); if (need < -CAR.b) ac = need; }
         }
-        let a = idm(CAR, v, v0, gap, dv);
+        const useIidm = hard || this.lLink[id] === 0;
+        let a = useIidm ? iidm(v, v0, gap, v - vl, D.a[i]!, D.b[i]!, D.T[i]!, D.s0[i]!) : accACC(v, v0, gap, vl, al, D.a[i]!, D.b[i]!, D.T[i]!, D.s0[i]!);
         if (ac < Infinity) a = Math.min(a, Math.max(ac, -3));
         // a bus waiting for its stop holds still (see hold)
         if (this.busN && this.bus[i]! >= 0 && this.dest[i]! < 0) vg = 0;
@@ -912,7 +922,7 @@ export class Sim {
   /** MOBIL lane changes: a vehicle on a link lane with a neighbour lane is evaluated every MOBIL_EVERY steps (slots staggered),
    *  between the lane ends it keeps clear of; it moves to the neighbour with the best incentive, if above the threshold */
   private changeLanes() {
-    const lanes = this.g.lanes, st = this.steps;
+    const lanes = this.g.lanes, st = this.steps, D = this.drivers;
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i] || (i + st) % MOBIL_EVERY !== 0 || this.grant[i] >= 0 || this.bus[i]! >= 0) continue;
       const cur = this.lane[i], ln = lanes[cur]!;
@@ -921,7 +931,7 @@ export class Sim {
       const s = this.s[i];
       if (s < MOBIL_START || s > this.lLen[cur] - MOBIL_END) continue;
       const k = this.onLane[cur].indexOf(i);
-      let best = MOBIL_TH, to = -1;
+      let best = D.threshold[i]!, to = -1;
       if (ln.left >= 0 && lanes[ln.left]) { const x = this.gainTo(i, ln.left, k); if (x > best) { best = x; to = ln.left; } }
       if (ln.right >= 0 && lanes[ln.right]) { const x = this.gainTo(i, ln.right, k); if (x > best) { best = x; to = ln.right; } }
       if (to >= 0) this.moveLane(i, to, k);
@@ -930,7 +940,7 @@ export class Sim {
   /** the MOBIL incentive of vehicle i (at index k of its lane) moving to the neighbour lane T: its own gain, plus politeness times
    *  the gains of the new follower and of the old follower, plus the movement bias; -Infinity if the move is unsafe */
   private gainTo(i: number, T: number, k: number): number {
-    const cur = this.lane[i], S = this.s, V = this.v, LEN = this.len, A = this.acc, VG = this.vg, Q = this.onLane;
+    const cur = this.lane[i], S = this.s, V = this.v, LEN = this.len, A = this.acc, VG = this.vg, Q = this.onLane, D = this.drivers;
     const LC = this.lLen[cur], LT = this.lLen[T], sN = S[i] * LT / LC, qt = Q[T], qc = Q[cur];
     const vi = V[i], v0T = this.lVmax[T] * this.v0f[i];
     // the new leader and follower on T by position (the list is front first)
@@ -940,14 +950,14 @@ export class Sim {
     if (ld >= 0) { gap = S[ld] - LEN[ld] - sN; dv = vi - V[ld]; if (gap <= 1) return -Infinity; }
     // a stop ahead (a closed gate or a plan end) counts as an obstacle here too, as it does in accelerate()
     if (VG[i] < gap) { gap = VG[i] + (LT - sN) - (LC - S[i]); dv = vi; }
-    const aT = idm(CAR, vi, v0T, gap, dv);
+    const aT = idm(vi, v0T, gap, dv, D.a[i]!, D.b[i]!, D.T[i]!, D.s0[i]!);
     let gain = 0;
     if (fo >= 0) {
       const gf = sN - LEN[i] - S[fo];
       if (gf <= 1) return -Infinity;
       let g2 = gf, dv2 = V[fo] - vi;
       if (VG[fo] < g2) { g2 = VG[fo]; dv2 = V[fo]; }
-      const af = idm(CAR, V[fo], this.lVmax[T] * this.v0f[fo], g2, dv2);
+      const af = idm(V[fo], this.lVmax[T] * this.v0f[fo], g2, dv2, D.a[fo]!, D.b[fo]!, D.T[fo]!, D.s0[fo]!);
       if (af < -4) return -Infinity;
       gain += af - A[fo];
     }
@@ -958,7 +968,7 @@ export class Sim {
       let g3 = Infinity, dv3 = 0;
       if (lo >= 0) { g3 = S[lo] - LEN[lo] - S[o]; dv3 = V[o] - V[lo]; }
       if (VG[o] < g3) { g3 = VG[o]; dv3 = V[o]; }
-      gain += idm(CAR, V[o], this.lVmax[cur] * this.v0f[o], g3, dv3) - A[o];
+      gain += idm(V[o], this.lVmax[cur] * this.v0f[o], g3, dv3, D.a[o]!, D.b[o]!, D.T[o]!, D.s0[o]!) - A[o];
     }
     let bias = 0;
     const w = this.want[i];
@@ -967,7 +977,7 @@ export class Sim {
       if (!here && there) bias = 1 + 2 * Math.max(0, 1 - (LC - S[i]) / 150);
       else if (here && !there) bias = -1000;
     }
-    return (aT - A[i]) + MOBIL_P * gain + bias;
+    return (aT - A[i]) + D.politeness[i]! * gain + bias;
   }
   /** moves vehicle i (index k of its lane) onto the neighbour lane T at the same place: its lateral offset is set so it is drawn
    *  where it was, then it is re-planned from T */
@@ -999,7 +1009,7 @@ export class Sim {
       if (this.s[i] >= this.lLen[id] && !this.overMark[id]) { this.overMark[id] = 1; this.over.push(id); }
       this.stuck[i] = vn < 0.5 ? this.stuck[i] + DT : 0;
       const dEnd = this.lLen[id] - this.s[i];
-      if (vn < 0.3 && dEnd < 4) this.stopped[i] = 1;
+      if (vn < 0.3 && dEnd < this.drivers.s0[i]! + 2) this.stopped[i] = 1;
       if (vn < 0.5 && dEnd < 20) this.wait[i] += DT;
       // the time lost this step: the shortfall under 90% of the limit, on a link lane's queue (lossQ) or on the lane (lossL)
       const vm = this.lVmax[id];
