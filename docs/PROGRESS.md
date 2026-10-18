@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 steps 1–5 done (towns, dev sandbox, clock, stadium and round, car parks, surge, Toll Gate); a live congestion heat map in progress (the owner's request)._
+_Last updated: 2026-10-18, Phase 5 steps 1–5 done (towns, dev sandbox, clock, stadium and round, car parks, surge, Toll Gate), the live congestion heat map, and the stranded-crowd fix; next: step 6 (buses and walkers)._
 
 ## Where we are
 
@@ -878,6 +878,16 @@ Steps (each ends verified, committed and written up here):
        port made the grid gridlock test worse (mean speed 3.90 → 1.84 m/s). The LOS F at the towns' exits in the
        headless round is spillback from the jammed hub road, not gap acceptance.
      - Still open: actuated signals and driver variety (both move every gate's numbers: do them with a before/after).
+   - **Live congestion heat map (owner's request, 2026-10-18; commits `5ee20eb`, `bc23cdc`).** The owner found the hourly
+     v/c Flow overlay not good enough (a jammed road read green). The Flow overlay (F) is now live: the worker keeps per
+     direction of each road the speed against the limit and the density (EMAs of ~5 s, 0.03 ms per sim second) and posts
+     them twice a second while it is on; the overlay draws each direction with traffic in four bands (Flowing 75%+,
+     Slow 50–75%, Heavy 25–50%, Stopped under 25%; the dataviz status palette `#0ca30c #fab219 #ec835a #d03b3b`), a glow
+     under a solid core, Stopped thicker and pulsing; a legend. The owner chose the congestion view only (not the delay
+     hotspots, volume or event-crowd views offered). The hourly report still feeds the Bottlenecks panel.
+   - **Fix (owner's report: no cars drove to the stadium, commit `fe84888`):** a car park kept the frontage seg it was built
+     on; once that road was split (a new junction, the town's gravel) every town read "no car park reachable". The city
+     now rebuilds its car parks after every network batch, and the surge takes a car park's road from its entrances.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
