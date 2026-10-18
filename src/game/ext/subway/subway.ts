@@ -10,6 +10,8 @@ export interface Arrival { station: number; fans: number; tag: number }
 export interface TrainView { line: number; x: number; y: number; dir: number; load: number }
 /** Reused renderer-facing train positions and per-station queue totals. */
 export interface SubwayView { trains: TrainView[]; queues: { station: number; fans: number }[] }
+/** Debug state of one train: its block (track section + direction), distance along it (m), and whether it owns the block. */
+export interface TrainState { line: number; track: number; dir: 1 | -1; dist: number; owned: boolean; inside: boolean; station: number; queued: boolean }
 
 /** Build price of one station, in dollars. */
 export const STATION_COST = 40_000;
@@ -20,11 +22,15 @@ export const TRAIN_COST = 25_000;
 /** Fraction of total build cost charged per game day (1,440 sim seconds). */
 export const UPKEEP_RATE = 0.01;
 const MPT = 2, CRUISE = 20, ACCEL = 1, CAPACITY = 600, BOARD_RATE = 10, MIN_DWELL = 20, TRANSFER_WALK = 60;
+/** Longest internal time step (s): step(dt) is split into equal sub-steps no longer than this, so motion does not depend on dt. */
+const SUBSTEP = 0.1;
 
 type Group = { from: number; to: number; tag: number; count: number; walk: number; wait: number; initial: boolean };
 type Track = { a: number; b: number; length: number; ax: number; ay: number; bx: number; by: number };
-type Train = { line: number; track: number; dir: 1 | -1; dist: number; speed: number; dwell: number; at: number; groups: Group[]; load: number };
-type RuntimeLine = { def: LineDef; tracks: Track[]; trains: Train[]; total: number };
+/** `owned` = the train holds its block (track + dir) and is moving; a train at a platform is never owned. `queued` = FCFS sequence while waiting for a block (0 = not waiting). */
+type Train = { line: number; track: number; dir: 1 | -1; dist: number; speed: number; dwell: number; at: number; groups: Group[]; load: number; owned: boolean; queued: number };
+/** `owners[block]` is the one train inside that block (block = track * 2 + (dir > 0 ? 0 : 1)), or null. */
+type RuntimeLine = { def: LineDef; tracks: Track[]; trains: Train[]; owners: (Train | null)[] };
 
 /** Returns the one-time cost of stations, unique line tunnels, and trains. */
 export function buildCost(stations: StationDef[], lines: LineDef[]): number {
@@ -40,6 +46,9 @@ export function buildCost(stations: StationDef[], lines: LineDef[]): number {
   return stations.length * STATION_COST + length * TUNNEL_COST_PER_TILE + trains * TRAIN_COST;
 }
 
+/** Block index of a track section travelled in a direction. */
+function blockIndex(track: number, dir: number): number { return track * 2 + (dir > 0 ? 0 : 1); }
+
 /** Deterministic underground train and count-based passenger simulation. */
 export class Subway {
   private stations: StationDef[] = [];
@@ -50,6 +59,7 @@ export class Subway {
   private arrivals: Arrival[] = [];
   private render: SubwayView = { trains: [], queues: [] };
   private carried = 0; private dropped = 0; private waitSum = 0; private waitCount = 0;
+  private seq = 0;
 
   /** Creates a deterministic network; current operations need no random choices. */
   constructor(_seed = 1) {}
@@ -66,19 +76,19 @@ export class Subway {
       const ids = def0.stations.filter(id => this.stationIndex.has(id));
       if (ids.length < 2) continue;
       const def: LineDef = { ...def0, stations: ids, trains: Math.max(0, Math.floor(def0.trains)), loop: !!def0.loop };
-      const tracks: Track[] = []; let total = 0;
+      const tracks: Track[] = [];
       for (let i = 0; i < ids.length - 1 + (def.loop ? 1 : 0); i++) {
         const a = this.stations[this.stationIndex.get(ids[i % ids.length])!]!, b = this.stations[this.stationIndex.get(ids[(i + 1) % ids.length])!]!;
         const length = Math.hypot(b.x - a.x, b.y - a.y) * MPT;
-        tracks.push({ a: ids[i % ids.length]!, b: ids[(i + 1) % ids.length]!, length, ax: a.x, ay: a.y, bx: b.x, by: b.y }); total += length;
+        tracks.push({ a: ids[i % ids.length]!, b: ids[(i + 1) % ids.length]!, length, ax: a.x, ay: a.y, bx: b.x, by: b.y });
       }
-      const runtime: RuntimeLine = { def, tracks, trains: [], total }; this.lines.push(runtime);
-      const cycle = total * (def.loop ? 1 : 2);
-      for (let k = 0; k < def.trains && cycle > 0; k++) runtime.trains.push(this.placeTrain(runtime, cycle * k / def.trains));
+      const runtime: RuntimeLine = { def, tracks, trains: [], owners: new Array<Train | null>(tracks.length * 2).fill(null) };
+      this.lines.push(runtime);
+      this.placeTrains(runtime);
     }
     this.buildRoutes();
     this.dropped = 0;
-    for (const line of this.lines) for (const train of line.trains) if (train.dist <= 1e-9) this.startAtStation(line, train, line.tracks[train.track]!.a);
+    for (const line of this.lines) for (const train of line.trains) this.startAtStation(line, train, train.at);
     for (const g of retained) {
       if (!this.stationIndex.has(g.from) || !this.stationIndex.has(g.to) || !this.hasRoute(g.from, g.to)) { this.dropped += g.count; continue; }
       const ix = this.stationIndex.get(g.from)!; this.queues[ix]!.push(g);
@@ -100,12 +110,11 @@ export class Subway {
     return n;
   }
 
-  /** Advances trains and passenger counts by dt simulation seconds (normally 0.1 or 1). */
+  /** Advances trains and passenger counts by dt simulation seconds (normally 0.1 or 1); internally split into sub-steps of at most 0.1 s. */
   step(dt: number): void {
     if (!(dt > 0) || !Number.isFinite(dt)) return;
-    for (const q of this.queues) for (const g of q) { if (g.walk > 0) g.walk = Math.max(0, g.walk - dt); else g.wait += dt; }
-    // Stable per-line order resolves simultaneous departures: the first eligible train enters before later trains test the block.
-    for (const line of this.lines) for (const t of line.trains) this.stepTrain(line, t, dt);
+    const n = Math.max(1, Math.ceil(dt / SUBSTEP - 1e-9)), h = dt / n;
+    for (let s = 0; s < n; s++) this.advance(h);
     this.refreshView();
   }
 
@@ -120,6 +129,15 @@ export class Subway {
   view(): SubwayView { return this.render; }
   /** Returns delivered fans, dropped fans and the mean initial queue wait, in seconds. */
   stats(): { carried: number; dropped: number; meanWait: number } { return { carried: this.carried, dropped: this.dropped, meanWait: this.waitCount ? this.waitSum / this.waitCount : 0 }; }
+  /** Debug hook for tests: every train's block and state (allocates; not for the per-step path). */
+  occupancy(): TrainState[] {
+    const out: TrainState[] = [];
+    for (const line of this.lines) for (const t of line.trains) {
+      const length = line.tracks[t.track]!.length;
+      out.push({ line: t.line, track: t.track, dir: t.dir, dist: t.dist, owned: t.owned, inside: t.dist > 1e-6 && t.dist < length - 1e-6, station: t.at, queued: t.queued > 0 });
+    }
+    return out;
+  }
 
   private hasRoute(from: number, to: number): boolean { return this.routes.has(`${from}|${to}`); }
   private buildRoutes(): void {
@@ -172,51 +190,71 @@ export class Subway {
       }
     }
   }
-  private placeTrain(line: RuntimeLine, offset: number): Train {
-    let dir: 1 | -1 = 1, rem = offset;
-    if (!line.def.loop && rem >= line.total) { dir = -1; rem -= line.total; }
-    if (dir > 0) {
-      for (let i = 0; i < line.tracks.length; i++) { const tr = line.tracks[i]!; if (rem < tr.length || i === line.tracks.length - 1) return { line: line.def.id, track: i, dir, dist: Math.min(rem, tr.length), speed: 0, dwell: 0, at: tr.a, groups: [], load: 0 }; rem -= tr.length; }
-    } else {
-      for (let i = line.tracks.length - 1; i >= 0; i--) { const tr = line.tracks[i]!; if (rem < tr.length || i === 0) return { line: line.def.id, track: i, dir, dist: tr.length - Math.min(rem, tr.length), speed: 0, dwell: 0, at: tr.b, groups: [], load: 0 }; rem -= tr.length; }
+  /** Starts a line's trains dwelling at the platforms where their blocks begin, spread evenly over the block cycle; extra trains share a platform and queue for their block. No two trains start inside one block. */
+  private placeTrains(line: RuntimeLine): void {
+    const T = line.tracks.length, order: number[] = [];
+    for (let i = 0; i < T; i++) order.push(blockIndex(i, 1));
+    if (!line.def.loop) for (let i = T - 1; i >= 0; i--) order.push(blockIndex(i, -1));
+    const n = line.def.trains;
+    for (let k = 0; k < n; k++) {
+      const b = order[Math.floor(k * order.length / n)]!, track = b >> 1, dir: 1 | -1 = b & 1 ? -1 : 1, tr = line.tracks[track]!;
+      line.trains.push({ line: line.def.id, track, dir, dist: dir > 0 ? 0 : tr.length, speed: 0, dwell: MIN_DWELL, at: dir > 0 ? tr.a : tr.b, groups: [], load: 0, owned: false, queued: 0 });
     }
-    return { line: line.def.id, track: 0, dir: 1, dist: 0, speed: 0, dwell: 0, at: line.tracks[0]!.a, groups: [], load: 0 };
   }
-  private stepTrain(line: RuntimeLine, t: Train, dt: number): void {
-    if (t.dwell > 0) { t.dwell = Math.max(0, t.dwell - dt); return; }
-    let left = dt;
-    while (left > 1e-9) {
-      const tr = line.tracks[t.track]!;
-      if ((t.dir > 0 && t.dist >= tr.length - 1e-6) || (t.dir < 0 && t.dist <= 1e-6)) {
-        this.arriveAt(line, t, t.dir > 0 ? tr.b : tr.a); if (t.dwell > 0) break; continue;
-      }
-      if ((t.dir > 0 && t.dist <= 1e-6 || t.dir < 0 && t.dist >= tr.length - 1e-6) && this.blocked(line, t, t.track, t.dir)) { t.speed = 0; break; }
-      const remaining = t.dir > 0 ? tr.length - t.dist : t.dist;
-      const stopDist = this.stoppingDistance(t.speed);
-      const accel = remaining <= stopDist + 1 ? -ACCEL : t.speed < CRUISE ? ACCEL : 0;
-      const ns = Math.max(0, Math.min(CRUISE, t.speed + accel * left));
-      const move = (t.speed + ns) * 0.5 * left;
-      if (move >= remaining) { const used = t.speed + ns > 1e-9 ? Math.min(left, 2 * remaining / (t.speed + ns)) : left; t.dist = t.dir > 0 ? tr.length : 0; t.speed = Math.min(CRUISE, ns); left -= used; this.arriveAt(line, t, t.dir > 0 ? tr.b : tr.a); if (t.dwell > 0) break; }
-      else { t.dist += t.dir * move; t.speed = ns; left = 0; }
-    }
+  /** Advances one sub-step of h seconds: waiting counters, then every train in fixed line and train order. */
+  private advance(h: number): void {
+    for (const q of this.queues) for (const g of q) { if (g.walk > 0) g.walk = Math.max(0, g.walk - h); else g.wait += h; }
+    for (const line of this.lines) for (const t of line.trains) this.stepTrain(line, t, h);
   }
   private stoppingDistance(v: number): number { return v * v / (2 * ACCEL); }
   private nextTrack(line: RuntimeLine, t: Train): { track: number; dir: 1 | -1 } {
     if (t.dir > 0) { if (t.track + 1 < line.tracks.length) return { track: t.track + 1, dir: 1 }; if (line.def.loop) return { track: 0, dir: 1 }; return { track: t.track, dir: -1 }; }
     if (t.track > 0) return { track: t.track - 1, dir: -1 }; if (line.def.loop) return { track: line.tracks.length - 1, dir: -1 }; return { track: t.track, dir: 1 };
   }
-  private blocked(line: RuntimeLine, train: Train, track: number, dir: 1 | -1): boolean {
-    const length = line.tracks[track]!.length;
-    // Only a train physically inside the tunnel owns the block. Trains waiting at either
-    // station boundary must not block each other, or a crowded terminal can deadlock.
-    for (const other of line.trains) if (other !== train && other.track === track && other.dir === dir && other.dist > 1e-6 && other.dist < length - 1e-6) return true;
-    return false;
+  /** The station a train at a platform is heading to on its current block. */
+  private headingTo(line: RuntimeLine, t: Train): number { const tr = line.tracks[t.track]!; return t.dir > 0 ? tr.b : tr.a; }
+  private stepTrain(line: RuntimeLine, t: Train, dt: number): void {
+    let left = dt;
+    while (left > 1e-9) {
+      if (!t.owned) {
+        // At a platform: dwell first, then take the block if it is free, otherwise queue for it.
+        if (t.dwell > 0) { const used = Math.min(t.dwell, left); t.dwell -= used; left -= used; continue; }
+        if (!this.acquire(line, t)) return;
+      }
+      const tr = line.tracks[t.track]!;
+      const remaining = t.dir > 0 ? tr.length - t.dist : t.dist;
+      if (remaining <= 1e-6) { this.arriveAt(line, t, t.dir > 0 ? tr.b : tr.a); continue; }
+      const stopDist = this.stoppingDistance(t.speed);
+      const accel = t.speed <= 0 ? ACCEL : remaining <= stopDist + t.speed * left ? -ACCEL : t.speed < CRUISE ? ACCEL : 0;
+      const ns = Math.max(0, Math.min(CRUISE, t.speed + accel * left));
+      const move = (t.speed + ns) * 0.5 * left;
+      if (move >= remaining) {
+        const used = t.speed + ns > 1e-9 ? Math.min(left, 2 * remaining / (t.speed + ns)) : left;
+        t.dist = t.dir > 0 ? tr.length : 0; t.speed = ns; left -= used;
+        this.arriveAt(line, t, t.dir > 0 ? tr.b : tr.a);
+      } else { t.dist += t.dir * move; t.speed = ns; left = 0; }
+    }
+  }
+  /** Takes the train's block when no train owns it; otherwise the train waits at its platform in FCFS order. */
+  private acquire(line: RuntimeLine, t: Train): boolean {
+    const b = blockIndex(t.track, t.dir);
+    if (line.owners[b]) { if (!t.queued) t.queued = ++this.seq; return false; }
+    line.owners[b] = t; t.owned = true; t.queued = 0; return true;
+  }
+  /** Frees the train's block at its far station and hands it straight to the earliest-queued train waiting for that block. */
+  private release(line: RuntimeLine, t: Train): void {
+    const b = blockIndex(t.track, t.dir);
+    if (line.owners[b] === t) line.owners[b] = null;
+    t.owned = false;
+    let next: Train | undefined;
+    for (const other of line.trains) if (!other.owned && other.queued > 0 && blockIndex(other.track, other.dir) === b && (!next || other.queued < next.queued)) next = other;
+    if (next) { line.owners[b] = next; next.owned = true; next.queued = 0; }
   }
   private dispatchWaiting(station: number): void {
     const q = this.queues[this.stationIndex.get(station)!]!;
     for (const line of this.lines) for (const t of line.trains) {
-      if (t.at !== station || t.dwell <= 0 || t.load >= CAPACITY) continue;
-      const nextStation = t.dir > 0 ? line.tracks[t.track]!.b : line.tracks[t.track]!.a;
+      if (t.at !== station || t.owned || t.load >= CAPACITY) continue;
+      const nextStation = this.headingTo(line, t);
       let boarded = 0;
       for (let i = 0; i < q.length && t.load < CAPACITY;) {
         const g = q[i]!;
@@ -228,13 +266,14 @@ export class Subway {
         }
         i++;
       }
-      t.dwell = Math.max(t.dwell, boarded / BOARD_RATE);
+      // A queued train boards while it waits for its block; it never gains dwell, so a queued train always has a busy block.
+      if (!t.queued) t.dwell = Math.max(t.dwell, boarded / BOARD_RATE);
     }
   }
 
   private startAtStation(line: RuntimeLine, t: Train, station: number): void {
     t.at = station; t.dwell = MIN_DWELL;
-    const next = line.tracks[t.track]!.b, q = this.queues[this.stationIndex.get(station)!]!;
+    const next = this.headingTo(line, t), q = this.queues[this.stationIndex.get(station)!]!;
     for (let i = 0; i < q.length && t.load < CAPACITY;) {
       const g = q[i]!;
       if (g.walk <= 0 && this.routes.get(`${station}|${g.to}`) === next) {
@@ -248,7 +287,8 @@ export class Subway {
   }
 
   private arriveAt(line: RuntimeLine, t: Train, station: number): void {
-    t.at = station; t.speed = 0;
+    this.release(line, t);
+    t.at = station; t.speed = 0; t.queued = 0;
     // Alight delivered groups, or change them into a transfer walk at this station.
     const track = line.tracks[t.track]!;
     let nextStation: number;
@@ -277,7 +317,7 @@ export class Subway {
     }
     const duration = Math.max(MIN_DWELL, (alighted + boarded) / BOARD_RATE);
     t.dwell = duration;
-    // Advance to the next physical section after this stop.
+    // Advance to the next physical section after this stop; the train still has to take that block to leave.
     if (t.dir > 0) {
       if (t.track + 1 < line.tracks.length) { t.track++; t.dist = 0; }
       else if (line.def.loop) { t.track = 0; t.dist = 0; }
@@ -296,7 +336,7 @@ export class Subway {
     const trains = this.render.trains; let n = 0;
     for (const line of this.lines) for (const t of line.trains) {
       const tr = line.tracks[t.track]!, r = trains[n] ?? (trains[n] = { line: 0, x: 0, y: 0, dir: 0, load: 0 });
-      const p = t.dir > 0 ? t.dist / tr.length : 1 - t.dist / tr.length;
+      const f = tr.length > 0 ? t.dist / tr.length : 0, p = t.dir > 0 ? f : 1 - f;
       r.line = t.line; r.x = tr.ax + (tr.bx - tr.ax) * p; r.y = tr.ay + (tr.by - tr.ay) * p;
       r.dir = Math.atan2((t.dir > 0 ? tr.by - tr.ay : tr.ay - tr.by), (t.dir > 0 ? tr.bx - tr.ax : tr.ax - tr.bx)); r.load = t.load; n++;
     }

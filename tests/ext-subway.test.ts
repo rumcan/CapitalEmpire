@@ -126,3 +126,56 @@ test('build cost is stations plus line tunnels and trains; 40-train step benchma
   console.log(`subway step: ${(ms * 1000).toFixed(2)} μs for 10 lines, 40 trains, 50 stations`);
   assert.ok(ms < 0.05, `step took ${ms} ms`);
 });
+
+/** Counts pairs of trains that own the same block (or sit strictly inside it) at this instant. */
+function sameBlockPairs(s: Subway): number {
+  const seen = new Set<string>(); let pairs = 0;
+  for (const t of s.occupancy()) if (t.owned || t.inside) { const k = `${t.line}|${t.track}|${t.dir}`; if (seen.has(k)) pairs++; seen.add(k); }
+  return pairs;
+}
+/** Runs one line for 3,000 s with 30 fans boarding every 40 s (sub-steps of dt), checking blocks on every step. */
+function soak(stations: StationDef[], lines: LineDef[], dt: number): { carried: number; boarded: number; riding: number; overlaps: number } {
+  const s = new Subway(); s.setNetwork(stations, lines);
+  const ids = lines[0]!.stations, n = ids.length, steps = Math.round(3000 / dt), every = Math.round(40 / dt);
+  let boarded = 0, overlaps = 0;
+  for (let i = 0; i < steps; i++) {
+    if (i % every === 0) { const k = i / every; boarded += s.board(ids[k % n]!, ids[(k + 1) % n]!, 30, 1); }
+    s.step(dt); overlaps += sameBlockPairs(s);
+  }
+  return { carried: s.stats().carried, boarded, riding: s.view().trains.reduce((sum, t) => sum + t.load, 0), overlaps };
+}
+const topologies: { name: string; stations: StationDef[]; loop: boolean }[] = [
+  { name: 'open 2-station', stations: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }], loop: false },
+  { name: 'open 3-station', stations: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }, { id: 3, x: 200, y: 0 }], loop: false },
+  { name: 'loop 3-station', stations: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }, { id: 3, x: 100, y: 100 }], loop: true },
+  { name: 'loop 4-station', stations: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }, { id: 3, x: 100, y: 100 }, { id: 4, x: 0, y: 100 }], loop: true },
+];
+for (const topo of topologies) test(`${topo.name}, 1..10 trains: one train per block, fans keep arriving, dt 0.1 matches dt 1`, () => {
+  let worstRatio = 1, worstDrift = 0;
+  for (let trains = 1; trains <= 10; trains++) {
+    const lines: LineDef[] = [{ id: 1, stations: topo.stations.map(st => st.id), trains, loop: topo.loop }];
+    const fine = soak(topo.stations, lines, 0.1), coarse = soak(topo.stations, lines, 1);
+    for (const [label, r] of [['dt 0.1', fine], ['dt 1', coarse]] as const) {
+      assert.equal(r.overlaps, 0, `${topo.name}, ${trains} trains, ${label}: two trains inside one block`);
+      assert.ok(r.carried >= 0.8 * (r.boarded - r.riding), `${topo.name}, ${trains} trains, ${label}: carried ${r.carried} of ${r.boarded} boarded (${r.riding} riding)`);
+      worstRatio = Math.min(worstRatio, r.carried / Math.max(1, r.boarded - r.riding));
+    }
+    const drift = Math.abs(fine.carried - coarse.carried) / Math.max(1, coarse.carried);
+    worstDrift = Math.max(worstDrift, drift);
+    assert.ok(drift <= 0.15, `${topo.name}, ${trains} trains: dt 0.1 carried ${fine.carried}, dt 1 carried ${coarse.carried}`);
+  }
+  console.log(`subway ${topo.name}: worst carried/boarded ${worstRatio.toFixed(3)}; worst dt drift ${(worstDrift * 100).toFixed(2)}%`);
+});
+
+test('a loop with more trains than blocks keeps every train moving; queued trains always find their block busy', () => {
+  const s = new Subway(); s.setNetwork(topologies[2]!.stations, [{ id: 1, stations: [1, 2, 3], trains: 7, loop: true }]);
+  const laps = new Array<number>(7).fill(0); const prev = s.occupancy().map(t => t.station);
+  for (let i = 0; i < 30_000; i++) {
+    s.step(0.1);
+    const now = s.occupancy();
+    now.forEach((t, k) => { if (t.station !== prev[k]) { laps[k]!++; prev[k] = t.station; } });
+    for (const t of now) if (t.queued) assert.ok(now.some(o => o.owned && o.line === t.line && o.track === t.track && o.dir === t.dir), `queued train with a free block at step ${i}`);
+  }
+  console.log(`subway 7 trains on a 3-station loop, 3,000 s: station arrivals per train ${laps.join(', ')}`);
+  assert.ok(Math.min(...laps) >= 5, `slowest train made ${Math.min(...laps)} station arrivals`);
+});
