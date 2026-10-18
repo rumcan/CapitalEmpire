@@ -58,6 +58,7 @@ export class Disasters {
   private nextId = 1;
   private pending: Disaster | null = null;
   private current: Disaster | null = null;
+  private forced: DisasterKind | null = null;
 
   /** The terrain buffer is MAP*MAP classes, row-major; heights gives metres at tile coordinates. */
   constructor(seed: number, terrainCls: Uint8Array, heights: (x: number, y: number) => number) {
@@ -107,6 +108,9 @@ export class Disasters {
     return out;
   }
 
+  /** Dev and tests: the next daily roll is kind instead of the seeded draw (it starts only if the kind has a road to close, else that day is empty). */
+  force(kind: DisasterKind): void { this.forced = kind; }
+
   /** Repair one quake closure by segment key. A quake ends after its last closure is repaired; the next step reports ended. */
   repair(disaster: number, key: string): void {
     const d = this.current;
@@ -141,6 +145,7 @@ export class Disasters {
   }
 
   private roll(at: number, roads: RoadInfo[]): Disaster | null {
+    if (this.forced) { const k = this.forced; this.forced = null; return this.make(k, at, roads); }
     const risks = this.riskPerDay(roads);
     let draw = this.random();
     for (const kind of KINDS) { draw -= risks[kind]; if (draw < 0) return this.make(kind, at, roads); }

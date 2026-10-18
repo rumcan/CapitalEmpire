@@ -17,6 +17,8 @@ const ASTAR_POPS = 4000;
 const ON_DEMAND = 4;
 /** A* heuristic speed, m/s (the fastest road class) */
 const H_SPEED = 17;
+/** seconds added to the link and the movements into a dseg closed by a disaster (Router.setShut): new plans go round it when they can */
+export const CLOSED_COST = 3600;
 
 /** zone of a point in tiles, clamped to the map (zones are 128 tiles square, row-major) */
 export function zoneOf(x: number, y: number): number {
@@ -93,6 +95,8 @@ export class Router {
   zoneD = new Int32Array(0);
   /** per dseg id: 1 when the dseg was removed or re-keyed in the last onGraph (vehicles aimed at it need a new destination) */
   dGone = new Uint8Array(0);
+  /** per dseg id: 1 when a disaster has closed it (setShut): its link and the movements into it cost CLOSED_COST more */
+  private shut = new Uint8Array(0); private shutKeys = new Set<string>();
   private dKey: string[] = []; private mKey: string[] = [];
   private tabs = new Map<number, ZoneTable>(); private tabList: ZoneTable[] = []; private rr = -1; private budget = 0;
   /** duration of the last table rebuild, ms */
@@ -114,7 +118,7 @@ export class Router {
     this.gS = grown(this.gS, nD); this.gSt = grown(this.gSt, nD); this.par = grown(this.par, nD); this.cl = grown(this.cl, nD);
     this.sumV = grown(this.sumV, nD); this.cntV = grown(this.cntV, nD);
     this.dEma = grown(this.dEma, nM); this.used = grown(this.used, nM); this.mcA = grown(this.mcA, nM); this.mFrom = grown(this.mFrom, nM);
-    this.inList = grown(this.inList, nM);
+    this.inList = grown(this.inList, nM); this.shut = grown(this.shut, nD);
     for (let id = 0; id < nD; id++) {
       const d = g.dsegs[id] ?? null, k = d ? d.key : '', old = this.dKey[id] ?? '';
       this.dGone[id] = old !== '' && old !== k ? 1 : 0;
@@ -135,7 +139,23 @@ export class Router {
     for (let d = 0; d < nD; d++) this.inOff[d + 1]! += this.inOff[d]!;
     this.cursor.set(this.inOff);
     for (const mv of g.moves) if (mv) this.inList[this.cursor[mv.to]!++] = mv.id;
+    this.markShut();
     this.refreshCosts();
+  }
+
+  /** the closed dsegs, by key (the disasters' closures, both directions of a closed seg): new plans route round them; the zone tables are rebuilt now */
+  setShut(keys: Set<string>): void {
+    const same = keys.size === this.shutKeys.size && [...keys].every(k => this.shutKeys.has(k));
+    this.shutKeys = keys;
+    if (!this.g) return;
+    this.markShut(); this.refreshCosts();
+    if (!same) for (const T of this.tabList) this.build(T);
+  }
+  /** shut[d] for each current dsegs' key */
+  private markShut(): void {
+    const nD = this.g.dsegs.length;
+    this.shut = grown(this.shut, nD);
+    for (let d = 0; d < nD; d++) this.shut[d] = this.shutKeys.size && this.shutKeys.has(this.dKey[d] ?? '') ? 1 : 0;
   }
 
   /** true if dseg d was removed or re-keyed in the last graph update */
@@ -155,11 +175,11 @@ export class Router {
   }
 
   /** seconds for movement m: its length at 8 m/s, its turn penalty, the measured junction delay, and TOLL_ROUTE_COST into a toll gate */
-  private moveCost(m: number): number { const mv = this.g.moves[m]!; return mv.len / 8 + TURN[mv.turn] + this.dEma[m]! + (this.g.dsegs[mv.to]?.toll ? TOLL_ROUTE_COST : 0); }
+  private moveCost(m: number): number { const mv = this.g.moves[m]!; return mv.len / 8 + TURN[mv.turn] + this.dEma[m]! + (this.g.dsegs[mv.to]?.toll ? TOLL_ROUTE_COST : 0) + (this.shut[mv.to] ? CLOSED_COST : 0); }
   /** recomputes lcA and mcA from the current speeds, delays and lengths */
   private refreshCosts() {
     const g = this.g, nD = g.dsegs.length, nM = g.moves.length;
-    for (let d = 0; d < nD; d++) { const dg = g.dsegs[d]; this.lcA[d] = dg ? dg.len / Math.max(this.vEma[d]!, 1) : 0; }
+    for (let d = 0; d < nD; d++) { const dg = g.dsegs[d]; this.lcA[d] = dg ? dg.len / Math.max(this.vEma[d]!, 1) + (this.shut[d] ? CLOSED_COST : 0) : 0; }
     for (let m = 0; m < nM; m++) this.mcA[m] = g.moves[m] ? this.moveCost(m) : 0;
   }
 

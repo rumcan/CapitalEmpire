@@ -9,6 +9,8 @@ import { zoneOf } from './routing';
 import { sigKey } from './signals';
 import { POINT_STRIDE } from '../gl';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
+import type { DisasterNote, DisasterView } from '../city';
+import type { DisasterKind } from '../ext/disasters';
 import { LV, type LotTuple, type TownEvent } from '../lots/town';
 import type { Leg } from '../network';
 import { VTYPES, type CarInfo } from './sim';
@@ -87,6 +89,8 @@ export class SimClient {
   walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
   /** the active traffic incidents as the worker last sent them (with each frame): 3 floats each, x and y (tiles) and kind (1 crash, 0 breakdown) */
   incidents: Float32Array = NO_FLOATS;
+  /** the active natural disaster as the worker last sent it (none: empty); called with the notes (warnings, starts, ends, repairs) of each such message */
+  disasters: DisasterView[] = []; onDisasters?: (notes: DisasterNote[]) => void;
   /** the signal states as the worker last sent them (with each frame): the phase served (idx) and the stage, by sigKey of the plan's node */
   sigs = new Map<string, { idx: number; stage: number }>();
   /** the congestion heat map: its geometry as the worker last sent it (6 floats per dseg id: from x, y, to x, y in tiles, the lateral offset
@@ -117,9 +121,10 @@ export class SimClient {
   private post(m: ToSim) { this.worker.postMessage(m); }
   /** replaces the worker's network (the same ops the ground workers get) */
   netOps(ops: NetOp[]) { if (ops.length) this.post({ t: 'net', ops }); }
-  /** a new valley: its terrain classes (copied), the highway entry (tiles), the seed and the town centres (flat x, y pairs in tiles; none: the single town); the town starts again. Send before the net ops. */
-  terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = []) {
-    this.post({ t: 'terrain', cls, entry, seed, towns });
+  /** a new valley: its terrain classes (copied), the highway entry (tiles), the seed and the town centres (flat x, y pairs in tiles; none: the single town),
+   *  and the heights (HS*HS metres, copied; the disasters read them: none gives flat ground); the town starts again. Send before the net ops. */
+  terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = [], height?: Float32Array) {
+    this.post({ t: 'terrain', cls, entry, seed, towns, height });
     // the worker resets the books and the career with a new valley (City.terrain): the mirror shows the fresh treasury at once
     this.budget = { ...new Budget().toJSON(), money: startMoney(towns.length > 0), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY };
     this.career = { reached: 0, won: false };
@@ -175,6 +180,12 @@ export class SimClient {
   heatOn(on: boolean) { this.post({ t: 'heat', on }); }
   /** turns the traffic incidents on or off (on by default; off lifts the blocks they made); the active ones come with each frame into incidents */
   incidentsOn(on: boolean) { this.post({ t: 'incidents', on }); }
+  /** turns the natural disasters on or off (off by default: no warnings, closures or risk rolls); off lifts their closures. The dev switch: window.__game.traffic.disastersOn(true) */
+  disastersOn(on: boolean) { this.post({ t: 'disastersOn', on }); }
+  /** dev: the next daily risk roll draws a disaster of this kind (the disasters must be on) */
+  forceDisaster(kind: DisasterKind) { this.post({ t: 'forceDisaster', kind }); }
+  /** pays for the repair of the quake closure key of disaster id (the worker charges it, or notes it unpaid); the note comes back with the next disasters message */
+  repairDisaster(id: number, key: string) { this.post({ t: 'repairDisaster', id, key }); }
   /** true while the worker is fast-forwarding (see skip) */
   get skipping() { return this.stats.skipping; }
   terminate() { this.worker.terminate(); }
@@ -192,6 +203,7 @@ export class SimClient {
     if (m.t === 'site') { this.site = m.site; return; }
     if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
     if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatAt = performance.now(); return; }
+    if (m.t === 'disasters') { this.disasters = m.active; this.onDisasters?.(m.notes); return; }
     if (m.t === 'grow') {
       const legs: Leg[] = [];
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });

@@ -2,10 +2,10 @@
 // field, the Town and the growth planner. Pure TS, no worker globals: the city worker (sim/sim.worker.ts) is a thin shell that
 // posts what City returns, and the town gate (scripts/sim/town-gate.ts) drives it headless.
 import type { NetOp } from './ground-protocol';
-import { RoadNetwork, dot, norm, perp, sub, type Leg, type Node, type Pt, type Seg } from './network';
+import { RoadNetwork, SK, dot, keyOf, norm, perp, sub, type Leg, type Node, type Pt, type Seg } from './network';
 import { applyOps } from './netops';
 import { MAP } from './iso';
-import { TC } from './terrain/types';
+import { TC, sampleField } from './terrain/types';
 import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
@@ -13,6 +13,7 @@ import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { Incidents, type Exposure, type Incident, type Passage } from './ext/incidents';
+import { Disasters, type Disaster, type DisasterKind, type RoadInfo } from './ext/disasters';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensation, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
@@ -87,6 +88,12 @@ function nearestDoor(doors: Pt[], p: Pt): Pt | null {
 }
 
 /** One city: feed it the network ops (netOps), the terrain (terrain) and the sim steps (step). The worker and the gate share it. */
+/** a natural disaster as the main thread draws it: its area (tiles, flat x, y pairs), its times (sim s; end Infinity for a quake until repaired) and its
+ *  closures (x, y: the seg's midpoint in tiles; cost: the repair, $; repair: a quake closure the player can pay for) */
+export interface DisasterView { id: number; kind: DisasterKind; warnAt: number; start: number; end: number; area: number[]; closures: { key: string; x: number; y: number; cost: number; repair: boolean }[] }
+/** a disaster's transition or repair, for the toasts: warned (secs: seconds to its start), started or ended (n: its closures), repaired or unpaid (cost, $) */
+export interface DisasterNote { k: 'warned' | 'started' | 'ended' | 'repaired' | 'unpaid'; kind: DisasterKind; id: number; secs: number; n: number; cost: number }
+
 export class City {
   /** the road network replica (no paint, no occupancy raster: the lanes and the parcels need the geometry only) */
   readonly net = new RoadNetwork();
@@ -159,6 +166,15 @@ export class City {
   /** per junction node: its entries over the last minute, decayed (S, at sim time t), see passages */
   private nodeLoad = new Map<Node, { S: number; t: number }>();
   private incPt = { x: 0, y: 0, hx: 0, hy: 0 };
+  /** the natural disasters (ext/disasters): the module (made only while the switch is on and there is terrain), the switch (off by default), the seed,
+   *  the sim second of its last tick, the notes and the change flag for the main thread; the live disasters with the seg keys they closed (dl); the
+   *  closure refcount per seg key (a seg two disasters close stays closed until both lift); the lanes given a closure block (closedLanes); the midpoints
+   *  of the closed segs (disMid); the heights (metres, at tile x, y: flat without a height field) */
+  private dis: Disasters | null = null; disasters = false; private disSeed = 0; private disT = 0; private disChanged = false; private disNotes: DisasterNote[] = [];
+  private dl = new Map<number, { d: Disaster; keys: string[] }>(); private closed = new Map<string, number>(); private closedLanes: number[] = [];
+  private disMid = new Map<string, Pt>(); private heightOf: (x: number, y: number) => number = () => 0;
+  /** per seg: its RoadInfo for the disasters, kept until its ends move (the water distance and the slope are the terrain's; see segInfo) */
+  private segs = new WeakMap<Seg, { ax: number; ay: number; bx: number; by: number; kind: number; info: RoadInfo }>(); private roadBuf: RoadInfo[] = [];
 
   /** a city with no terrain yet: the town of seed (its planner starts with the same seed) */
   constructor(seed: number) {
@@ -193,9 +209,11 @@ export class City {
     return this.water[cy * WATER_N + cx]!;
   }
 
-  /** a new valley: its terrain classes, the water field, the highway entry (tiles), the seed and the town centres (tiles; none: the single town); the town starts again, at the sim time (no lots yet) */
-  terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = []): void {
+  /** a new valley: its terrain classes, the water field, the highway entry (tiles), the seed, the town centres (tiles; none: the single town) and the
+   *  heights (HS*HS metres, the terrain's height field: the disasters' flood and slope tests; none: flat); the town starts again, at the sim time (no lots yet) */
+  terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = [], height?: Float32Array): void {
     this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
+    this.heightOf = height ? (x, y) => sampleField(height, x, y) : () => 0; this.segs = new WeakMap();
     this.centres = towns;
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
@@ -204,6 +222,7 @@ export class City {
     this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses();
     // a new valley has no incidents: the old ones' blocks are lifted, the module starts again
     this.resetIncidents(seed);
+    this.resetDisasters(seed);
     // a new valley has no toll gates until the player places them again (their booths are the old roads')
     this.setTolls([]);
     this.setBudget(null, null);
@@ -323,6 +342,8 @@ export class City {
   private resetIncidents(seed: number): void {
     this.liftAll(); this.inc = new Incidents(seed); this.incSeed = seed; this.incT = this.sim.t;
     this.expM.fill(0); this.expVS.fill(0); this.expSlow.fill(0); this.enterPrev = this.sim.enterL.slice(); this.nodeLoad.clear();
+    // liftAll clears every block on the sim: the disasters' closures (if any) go back on
+    if (this.closed.size) this.applyClosures();
   }
   /** the active incidents for the renderer: 3 floats each, x and y (tiles, on the lane at its s) and kind (1 crash, 0 breakdown) */
   incidentBuf(): Float32Array {
@@ -340,15 +361,17 @@ export class City {
   netOps(ops: NetOp[]): { lotsAdded: Lot[]; lotsRemoved: string[]; events: TownEvent[] } {
     const t0 = performance.now();
     this.pendingGrow = false;
-    let part: NetOp[] = [];
+    let part: NetOp[] = [], rebuilt = false;
     for (const op of ops) {
       part.push(op);
-      if (op.k === 'rebuild') { applyOps(this.net, part); this.g.update(this.net); this.incidentsOnGraph(); part = []; }
+      if (op.k === 'rebuild') { applyOps(this.net, part); this.g.update(this.net); this.incidentsOnGraph(); part = []; rebuilt = true; }
     }
     if (part.length) applyOps(this.net, part);
     this.labelComps();
     if (this.busDefs.length) this.resolveBuses();
     this.sim.onGraph(); this.upkeepC = null;
+    // the closure blocks follow the lanes: the new graph's lanes of the closed segs get them (the old ids' are lifted there)
+    if (rebuilt && this.closed.size) this.applyClosures();
     // the car parks are built again on the new network (a frontage road split or replaced by the edit leaves the old build on a dead seg;
     // the counts are kept by id), and with them the sinks
     if (this.parkDefs.length) this.setParks(this.parkDefs);
@@ -371,7 +394,7 @@ export class City {
   /** a saved town (after the load's net ops): the sim time (s), the clock's offset from it (shift, s; 0 if none), then the lots' states;
    *  returns the 'complete' event per restored lot */
   restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number, career?: CareerSave, shift = 0): TownEvent[] {
-    this.sim.t = simT; this.sim.shift = shift; this.resetIncidents(this.incSeed);
+    this.sim.t = simT; this.sim.shift = shift; this.resetIncidents(this.incSeed); this.resetDisasters(this.disSeed);
     this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null;
@@ -409,6 +432,8 @@ export class City {
     }
     if (this.incidents) { for (let k = 0; k < n; k++) { this.sim.step(); this.sample(); } if (this.sim.t - this.incT >= 0.999) this.incidentTick(); }
     else for (let k = 0; k < n; k++) this.sim.step();
+    // the disasters run on the same sim clock (once a sim second, the module's own days on top)
+    if (this.dis && this.sim.t - this.disT >= 0.999) this.disasterTick(this.dis);
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
     // a round under way pays the upkeep as the sim runs; the surge counts down to kick-off (the round goes to eval then)
     const rs = this.round.stage;
@@ -523,6 +548,133 @@ export class City {
     for (const a of this.inc.active(this.sim.t)) if (this.g.removed.includes(a.lane) || this.g.changed.includes(a.lane)) this.inc.clear(a.id);
   }
 
+  /** the natural disasters on or off (off by default: no module, no closures). Off lifts the closures and forgets the live disasters; on starts a fresh
+   *  module with the terrain's seed (the sim's clock: the day rolls go on from now) */
+  setDisasters(on: boolean): void {
+    if (on === this.disasters) return;
+    this.disasters = on; this.resetDisasters(this.disSeed);
+  }
+  /** a new module (made here only while the switch is on, with terrain): the closures lift and the live disasters are forgotten; the clock starts at the sim's time now */
+  private resetDisasters(seed: number): void {
+    this.liftClosures(); this.dl.clear(); this.closed.clear(); this.disMid.clear(); this.disNotes = [];
+    this.disSeed = seed; this.disT = this.sim.t;
+    this.dis = this.disasters && this.cls ? new Disasters(seed, this.cls, this.heightOf) : null;
+    this.applyClosures(); this.disChanged = true;
+  }
+  /** dev and tests: the next daily roll of the disasters is kind (Disasters.force); false when they are off */
+  forceDisaster(kind: DisasterKind): boolean { if (!this.dis) return false; this.dis.force(kind); return true; }
+  /** pays the repair of the quake closure key of disaster id: the cost goes out as construction. False (with an 'unpaid' note) when the treasury
+   *  cannot pay (or unless unlimited); false too when there is no such closure */
+  repairDisaster(id: number, key: string): boolean {
+    const e = this.dl.get(id); if (!this.dis || !e) return false;
+    const c = e.d.closures.find(x => x.key === key && x.until === 'repair'); if (!c) return false;
+    const cost = c.repairCost;
+    if (!this.budget.unlimited && this.budget.money < cost) { this.disNote('unpaid', e.d, cost); return false; }
+    this.spend('construction', cost);
+    this.dis.repair(id, key);
+    this.disNote('repaired', e.d, cost);
+    this.reconcileDisaster(id);
+    return true;
+  }
+  /** the disasters for the main thread, when they changed since the last call (else null): the active one (if any) and the notes since the last call */
+  disasterFrame(): { active: DisasterView[]; notes: DisasterNote[] } | null {
+    if (!this.disChanged) return null;
+    this.disChanged = false;
+    const notes = this.disNotes; this.disNotes = [];
+    const active: DisasterView[] = [];
+    if (this.dis) for (const d of this.dis.active()) active.push(this.disasterView(d));
+    return { active, notes };
+  }
+  /** the view of a live disaster: its area flat (x, y pairs) and its closures' midpoints (the seg's, from disMid) */
+  private disasterView(d: Disaster): DisasterView {
+    const area: number[] = []; for (const p of d.area) area.push(p.x, p.y);
+    return { id: d.id, kind: d.kind, warnAt: d.warnAt, start: d.start, end: d.end, area, closures: d.closures.map(c => {
+      const m = this.disMid.get(c.key);
+      return { key: c.key, x: m?.x ?? 0, y: m?.y ?? 0, cost: c.repairCost, repair: c.until === 'repair' };
+    }) };
+  }
+  /** a disaster's note for the toasts (the closures' count is the module's now) */
+  private disNote(k: DisasterNote['k'], d: Disaster, cost = 0, secs = 0): void {
+    this.disNotes.push({ k, kind: d.kind, id: d.id, secs, n: d.closures.length, cost }); this.disChanged = true;
+  }
+  /** one sim second (or more) of disasters: the module steps with the roads; the closures of the disasters that start are counted and their blocks and
+   *  router closures applied, and those of the ones that end lifted; the transitions go out as notes */
+  private disasterTick(dis: Disasters): void {
+    const t = this.sim.t; this.disT = t;
+    const roads = this.roadInfos(), r = dis.step(t, roads);
+    if (!r.warned.length && !r.started.length && !r.ended.length) return;
+    for (const d of r.warned) this.disNote('warned', d, 0, d.start - t);
+    for (const d of r.ended) { this.releaseDisaster(d.id); this.disNote('ended', d); }
+    if (r.started.length) {
+      const by = new Map<string, RoadInfo>(); for (const info of roads) by.set(info.key, info);
+      for (const d of r.started) {
+        const keys = d.closures.map(c => c.key);
+        for (const k of keys) {
+          this.closed.set(k, (this.closed.get(k) ?? 0) + 1);
+          const info = by.get(k); if (info) this.disMid.set(k, { x: (info.a.x + info.b.x) / 2, y: (info.a.y + info.b.y) / 2 });
+        }
+        this.dl.set(d.id, { d, keys }); this.disNote('started', d);
+      }
+    }
+    if (r.started.length || r.ended.length) this.applyClosures();
+  }
+  /** a live disaster's closures come off the refcount (its seg keys, as they are still closed) */
+  private releaseDisaster(id: number): void {
+    const e = this.dl.get(id); if (!e) return;
+    for (const k of e.keys) this.unclose(k);
+    this.dl.delete(id);
+  }
+  /** one closure of a seg off the refcount; the seg is open again (and its midpoint dropped) at zero */
+  private unclose(k: string): void {
+    const n = (this.closed.get(k) ?? 0) - 1;
+    if (n > 0) this.closed.set(k, n); else { this.closed.delete(k); this.disMid.delete(k); }
+  }
+  /** after a repair: the seg keys that disaster no longer closes come off the refcount, and the blocks follow */
+  private reconcileDisaster(id: number): void {
+    const e = this.dl.get(id); if (!e) return;
+    const left: string[] = [];
+    for (const k of e.keys) { if (e.d.closures.some(c => c.key === k)) left.push(k); else this.unclose(k); }
+    e.keys = left; this.applyClosures();
+  }
+  /** the closed segs (both directions) get a standing block at 1 m on each of their lanes, and the router closes their dsegs; the blocks made before
+   *  are lifted first (by the lane ids they were put on: after a graph update the ids of the new lanes are the ones given) */
+  private applyClosures(): void {
+    this.liftClosures();
+    const shut = new Set<string>();
+    if (this.closed.size) for (const d of this.g.dsegs) {
+      if (!d || !this.closed.has(this.segInfo(d.seg).key)) continue;
+      shut.add(d.key);
+      for (const l of d.lanes) { this.sim.addBlock(l, 1); this.closedLanes.push(l); }
+    }
+    this.sim.router.setShut(shut);
+  }
+  /** lifts the closure blocks this city put on the sim */
+  private liftClosures(): void {
+    for (const l of this.closedLanes) this.sim.removeBlock(l, 1);
+    this.closedLanes = [];
+  }
+  /** the roads as the disasters read them: one RoadInfo per seg (cached per seg, see segInfo) */
+  private roadInfos(): RoadInfo[] {
+    const out = this.roadBuf; out.length = 0;
+    for (const s of this.net.segs) out.push(this.segInfo(s));
+    return out;
+  }
+  /** the RoadInfo of seg s: its key (its two end keys, sorted: both directions share it), its kind, the distance to water at its middle (tiles) and its
+   *  slope (rise over run, the heights at its ends). Cached per seg, recomputed when its ends move */
+  private segInfo(s: Seg): RoadInfo {
+    const c = this.segs.get(s);
+    if (c && c.ax === s.a.x && c.ay === s.a.y && c.bx === s.b.x && c.by === s.b.y && c.kind === s.kind) return c.info;
+    const ka = keyOf(s.a), kb = keyOf(s.b), len = Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
+    const info: RoadInfo = {
+      key: ka < kb ? ka + '~' + kb : kb + '~' + ka, a: { x: s.a.x, y: s.a.y }, b: { x: s.b.x, y: s.b.y },
+      kind: s.kind === SK.BRIDGE ? 'bridge' : s.kind === SK.TUNNEL ? 'tunnel' : 'ground',
+      nearWater: this.waterAt((s.a.x + s.b.x) / 2, (s.a.y + s.b.y) / 2),
+      slope: len ? Math.abs(this.heightOf(s.b.x, s.b.y) - this.heightOf(s.a.x, s.a.y)) / (2 * len) : 0,
+    };
+    this.segs.set(s, { ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, kind: s.kind, info });
+    return info;
+  }
+
   /** the snapshot of game hour h, at its start: the sim's cumulative counts, the builds, and the town's residents and built lots now */
   private pushHour(h: number) {
     const s = this.sim.stats;
@@ -551,6 +703,7 @@ export class City {
     if (!this.g.setTolls(defs, this.net)) return;
     if (this.busDefs.length) this.resolveBuses();
     this.sim.onGraph(); this.upkeepC = null;
+    if (this.closed.size) this.applyClosures();
     if (this.parks.length) this.resolveSinks();
     if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
   }

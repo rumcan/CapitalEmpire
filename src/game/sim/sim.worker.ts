@@ -72,7 +72,7 @@ function postWatch() {
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
   const towns: Pt[] = [];
   for (let i = 0; i + 1 < m.towns.length; i += 2) towns.push({ x: m.towns[i]!, y: m.towns[i + 1]! });
-  city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed, towns);
+  city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed, towns, m.height);
   post({ t: 'site', site: city.site });
   postTown([], true); postBudget(null);
 }
@@ -116,6 +116,9 @@ function frame() {
   if (hr !== reportHour && !(skipUntil > city.sim.t)) { reportHour = hr; postReport(); }
   if (watching && performance.now() >= watchNext) postWatch();
   if (heatOn && performance.now() >= heatNext) postHeat();
+  // the disasters go when they changed (warnings, starts, ends, repairs): not per frame
+  const dz = city.disasterFrame();
+  if (dz) post({ t: 'disasters', active: dz.active, notes: dz.notes });
   const sim = city.sim, alive = sim.active > 0;
   // with no cars, still a frame every second: the clock (signals, the town) reads simT from it; while skipping, a frame every period
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
@@ -152,6 +155,9 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'buyLot': postTown(city.buyLot(m.key), true); postBudget(null); break;
       case 'heat': heatOn = m.on; heatGeomV = -1; heatNext = 0; break;
       case 'incidents': city.setIncidents(m.on); forcePost = true; break;
+      case 'disastersOn': city.setDisasters(m.on); break;
+      case 'forceDisaster': city.forceDisaster(m.kind); break;
+      case 'repairDisaster': city.repairDisaster(m.id, m.key); postBudget(null); break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else if (m.op === 'pick') city.pickCard(m.card);
         else if (city.closeRound() && city.grown) postTown(city.grown.events, true);

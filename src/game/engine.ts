@@ -33,6 +33,8 @@ import { Names, RoadNames } from './ext/names';
 import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
+import type { DisasterNote } from './city';
+import type { DisasterKind } from './ext/disasters';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -81,6 +83,20 @@ export interface Toast { id: number; text: string; t: number; kind: 'info' | 'wa
 export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
+/** a natural disaster's area colour and name (see Game.drawDisasters, disasterText) */
+const DISASTER_COL: Record<DisasterKind, string> = { flood: '#3b82f6', storm: '#9ca3af', landslide: '#92400e', wildfire: '#f97316', quake: '#a855f7' };
+const DISASTER_NAME: Record<DisasterKind, string> = { flood: 'Flood', storm: 'Storm', landslide: 'Landslide', wildfire: 'Wildfire', quake: 'Earthquake' };
+/** the toast for a disaster's note (see City.disasterFrame): the warning, the start, the end, and the repairs */
+function disasterText(n: DisasterNote): string {
+  const name = DISASTER_NAME[n.kind], money = `$${n.cost.toLocaleString()}`, roads = `${n.n} road${n.n === 1 ? '' : 's'}`;
+  switch (n.k) {
+    case 'warned': return n.kind === 'flood' ? `Flood warning: roads near the river may close in ${Math.round(n.secs)} s` : `${name} warning: roads in the area may close in ${Math.round(n.secs)} s`;
+    case 'started': return n.kind === 'quake' ? `Earthquake: ${roads} closed (bridges, tunnels); click a red X to pay for its repair` : n.kind === 'flood' ? `Flood: the low roads by the river are closed (${roads})` : `${name}: ${roads} closed`;
+    case 'ended': return `${name} over: the roads are open again`;
+    case 'repaired': return `Repaired for ${money}`;
+    case 'unpaid': return `Repair needs ${money}: not enough money`;
+  }
+}
 const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
 /** a town lot's use as the player reads it in the toasts (index LU: NONE, RES, COM, IND, TOUR, GOV) */
 const LOT_NAME = ['lot', 'residential lot', 'commercial lot', 'industrial lot', 'tourist lot', 'civic lot'];
@@ -224,6 +240,7 @@ export class Game {
       else this.toast(`Day ${l.day}: ${l.net >= 0 ? '+' : '−'}$${Math.abs(l.net).toLocaleString()}`, l.net >= 0 ? 'good' : 'info');
       this.scheduleSave(); this.emit();
     };
+    this.traffic.onDisasters = (notes) => { for (const n of notes) this.toast(disasterText(n), n.k === 'repaired' ? 'good' : n.k === 'ended' ? 'info' : 'warn'); };
     this.traffic.onMilestone = (newly, won) => {
       for (const m of newly) {
         const what = [...m.classes.map(id => CLASS[id].name), ...m.junctions.map(id => JUNCTIONS.find(j => j.id === id)!.name), ...(m.tunnels ? ['tunnels'] : [])].join(', ');
@@ -912,6 +929,7 @@ export class Game {
         // a car under the pointer (street tier) is inspected; else a prop is selected; else, with the flow on, the junction there is watched
         const car = this.cam.z >= DISTRICT_Z ? this.carAt(mx, my) : -1;
         if (car >= 0) { this.inspectCar(car); return; }
+        if (this.cam.z >= DISTRICT_Z && this.repairAt(mx, my)) return;
         const p = this.propAt(mx, my);
         if (p) { this.selected = p; this.emit(); return; }
         this.selected = null; this.emit();
@@ -1069,7 +1087,7 @@ export class Game {
   /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
   private sendTerrain() {
     const t = this.terrain, h = t.highway;
-    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, townCentres(t).flatMap(p => [p.x, p.y]));
+    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, townCentres(t).flatMap(p => [p.x, p.y]), t.height);
   }
   /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
   private townGrow(legs: Leg[]) {
@@ -1905,6 +1923,41 @@ export class Game {
       ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.stroke();
     }
   }
+  /** the natural disaster under way (SimClient.disasters): its area as a translucent polygon in its colour, and a red X on each closed road's midpoint (a
+   *  quake's closure that can be paid for also has a ring: a click on it repairs it, see repairAt); at the district and street tiers */
+  private drawDisasters(ctx: CanvasRenderingContext2D) {
+    const D = this.traffic.disasters; if (!D.length) return;
+    const dpr = this.dpr, r = 6 * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    for (const d of D) {
+      const A = d.area, col = DISASTER_COL[d.kind];
+      if (A.length >= 6) {
+        ctx.beginPath();
+        for (let k = 0; k + 1 < A.length; k += 2) { const p = this.screen(A[k]!, A[k + 1]!); if (k) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y); }
+        ctx.closePath(); ctx.globalAlpha = 0.22; ctx.fillStyle = col; ctx.fill();
+        ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = col; ctx.stroke();
+      }
+      for (const c of d.closures) {
+        const p = this.screen(c.x, c.y);
+        ctx.globalAlpha = 1; ctx.beginPath();
+        ctx.moveTo(p.x - r, p.y - r); ctx.lineTo(p.x + r, p.y + r); ctx.moveTo(p.x + r, p.y - r); ctx.lineTo(p.x - r, p.y + r);
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2.5 * dpr; ctx.stroke();
+        if (c.repair) { ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.8, 0, Math.PI * 2); ctx.strokeStyle = col; ctx.lineWidth = 1.5 * dpr; ctx.stroke(); }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  /** a click (CSS px) on the ring of a closure that can be paid for (a quake's): asks the worker to repair it (it charges, or notes it unpaid); true if hit */
+  private repairAt(mx: number, my: number): boolean {
+    const dpr = this.dpr;
+    for (const d of this.traffic.disasters) for (const c of d.closures) {
+      if (!c.repair) continue;
+      const p = this.screen(c.x, c.y);
+      if (Math.hypot(p.x / dpr - mx, p.y / dpr - my) > 11) continue;
+      this.traffic.repairDisaster(d.id, c.key); return true;
+    }
+    return false;
+  }
   /** the traffic flow (key F): the live congestion heat map (see drawHeat) when the worker's geometry and heat are in, then the focus ring of a jump (4 s) */
   private drawFlow(ctx: CanvasRenderingContext2D) {
     const tr = this.traffic, G = tr.heatGeom, R = tr.heatRatio, D = tr.heatDens, now = performance.now();
@@ -2008,7 +2061,7 @@ export class Game {
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
     if (this.cam.z < DISTRICT_Z) this.drawTownNames(ctx);
-    if (this.traffic && this.cam.z >= DISTRICT_Z) { this.drawSignals(ctx); this.drawIncidents(ctx); }
+    if (this.traffic && this.cam.z >= DISTRICT_Z) { this.drawDisasters(ctx); this.drawSignals(ctx); this.drawIncidents(ctx); }
     if (this.cam.z >= PLANNER_Z) this.drawNodeFlags(ctx);
     this.drawFlow(ctx);
     this.drawInspect(ctx);
