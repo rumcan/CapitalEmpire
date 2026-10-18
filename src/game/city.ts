@@ -213,6 +213,9 @@ export class City {
     this.grown = null;
     if (!this.round.close()) return false;
     this.sim.dropParty(); this.surge = null; this.crowd = null; this.sim.dropBuses();
+    // the roads clear after the event: a surge can leave the towns' junctions gridlocked, and the next round must start on an open network
+    // (the everyday trips start again on their own)
+    for (let i = 0; i < this.sim.cap; i++) if (this.sim.alive[i]) this.sim.despawn(i);
     this.unfreeze(); this.emptyParks();
     if (perfect && this.centres.length) this.grown = this.growTowns();
     return true;
