@@ -12,6 +12,7 @@ import { LV, type LotTuple, type TownEvent } from '../lots/town';
 import type { Leg } from '../network';
 import { VTYPES, type CarInfo } from './sim';
 import type { Report } from './bottlenecks';
+import type { HourStat } from '../beforeafter';
 import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../budget';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
@@ -51,6 +52,8 @@ export class SimClient {
   budget: BudgetSave = new Budget().toJSON(); day = 1; onLedger?: (l: Ledger) => void;
   /** the bottleneck report as the worker last sent it (null until the first; one each game hour, and after requestReport), and called with each one as it arrives */
   report: Report | null = null; onReport?: () => void;
+  /** the game hours' snapshots as the worker last sent them with the report (see HourStat), newest last */
+  hours: HourStat[] = [];
   /** the desired vehicle count (the sim clamps it to its slots) */
   target = 0;
   /** the inspected car as the worker last sent it (with every frame while one is inspected; null when none, or it is gone) */
@@ -116,7 +119,7 @@ export class SimClient {
     if (m.t === 'error') { console.error('[sim]', m.message); return; }
     if (m.t === 'lots') { this.applyLots(m.added, m.removed); return; }
     if (m.t === 'budget') { this.budget = m.save; this.day = m.day; if (m.ledger) this.onLedger?.(m.ledger); return; }
-    if (m.t === 'report') { this.report = m.report; this.onReport?.(); return; }
+    if (m.t === 'report') { this.report = m.report; this.hours = m.hours; this.onReport?.(); return; }
     // a null car is the inspected one gone (the worker stops then); a car of another slot is a late answer to an earlier inspect
     if (m.t === 'car') { if (this.slot >= 0 && (!m.info || m.info.slot === this.slot)) this.car = m.info; return; }
     if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }

@@ -14,11 +14,14 @@ import { Sim, type CarInfo } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
+import type { HourStat } from './beforeafter';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
 /** the game hour (sim s): the town's access is copied and the built lots given to the sim at its start; the planner runs once per hour */
 const GAME_HOUR = 60;
+/** the game hours' snapshots kept (four game days of them: see beforeafter.ts) */
+const HOURS_KEPT = 96;
 /** the water distance field: 4-tile cells, distances capped at WATER_CAP tiles */
 const WATER_N = MAP >> 2, WATER_CAP = 200;
 
@@ -72,6 +75,8 @@ export class City {
   /** the town's road plan: its random stream, the game hour planned, a gravel extension posted and not yet back as net ops (and when) */
   /** the growth planner's hourly outcomes (diagnostics): enough land, a leg proposed, short of land but no valid leg */
   growStats = { enough: 0, legs: 0, none: 0 };
+  /** the game hours' snapshots (see HourStat), newest last, at most HOURS_KEPT; the lots started (town 'build' events) since the terrain came */
+  hours: HourStat[] = []; builds = 0;
   private planRnd = seededRnd(1); private planHour = -1; private pendingGrow = false; private growAt = 0;
   private ticks = new Float64Array(TICKS);
 
@@ -101,6 +106,7 @@ export class City {
   terrain(cls: Uint8Array, entry: Pt, seed: number): void {
     this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
     this.town = new Town(seed); this.town.option = optionOf(this.optId); this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
+    this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.setBudget(null);
   }
@@ -177,14 +183,22 @@ export class City {
     const t0 = performance.now();
     this.calls++;
     const hr = Math.floor(this.sim.t / GAME_HOUR);
-    if (hr !== this.syncHour) { this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync(); }
+    if (hr !== this.syncHour) { this.pushHour(hr); this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync(); }
     for (let k = 0; k < n; k++) this.sim.step();
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
     const events = this.town.tick(this.sim.t, this.ctx);
+    for (const e of events) if (e.kind === 'build') this.builds++;
     const d = this.budget.dayOf(this.sim.t); let ledger: Ledger | null = null;
     if (this.dayIdx < 0) this.dayIdx = d;
     else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
     return { events, grow: this.planGrow(), ledger };
+  }
+
+  /** the snapshot of game hour h, at its start: the sim's cumulative counts, the builds, and the town's residents and built lots now */
+  private pushHour(h: number) {
+    const s = this.sim.stats;
+    this.hours.push({ h, lost: this.sim.lostTotal, arrived: s.arrived, ratioSum: s.ratioSum, ratioN: s.ratioN, abandoned: s.abandoned, builds: this.builds, pop: this.town.pop, built: this.town.built });
+    if (this.hours.length > HOURS_KEPT) this.hours.shift();
   }
 
   /** the bottleneck report of the traffic now: the junctions' levels of service, the links' v/c, and the topN entries by time lost */

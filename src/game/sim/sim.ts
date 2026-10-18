@@ -77,6 +77,8 @@ export class Sim {
    *  lost on the lane away from its end (lossL: the shortfall of the speed under 90% of the limit, per step times DT), vehicle-seconds
    *  lost within QUEUE_M m of a LINK lane's end (lossQ: the queue of the junction ahead), and the vehicles that entered the lane */
   lossL = new Float64Array(0); lossQ = new Float64Array(0); enterL = new Float64Array(0);
+  /** vehicle-seconds lost since the sim started: the sum of every loss added to lossL and lossQ, never decayed (the game hours' snapshots read it, see HourStat) */
+  lostTotal = 0;
   /** where new trips start and end (origins, destinations by zone) */
   trips: Trips;
   /** 'random': the target count with random trips (the bench, the gate, the tests); 'lots': the built lots' trips, no target (lotTrips) */
@@ -610,7 +612,7 @@ export class Sim {
       if (vn < 0.5 && dEnd < 20) this.wait[i] += DT;
       // the time lost this step: the shortfall under 90% of the limit, on a link lane's queue (lossQ) or on the lane (lossL)
       const vm = this.lVmax[id];
-      if (vm > 0) { const loss = DT * Math.max(0, 1 - vn / (0.9 * vm)); if (this.lLink[id] && dEnd < QUEUE_M) this.lossQ[id] += loss; else this.lossL[id] += loss; }
+      if (vm > 0) { const loss = DT * Math.max(0, 1 - vn / (0.9 * vm)); if (this.lLink[id] && dEnd < QUEUE_M) this.lossQ[id] += loss; else this.lossL[id] += loss; this.lostTotal += loss; }
     }
   }
 

@@ -64,3 +64,14 @@ test('a city books its first game day when the sim clock passes 1440 s: one ledg
   assert.ok(ledgers[0]!.upkeep > 0, `road upkeep booked (${ledgers[0]!.upkeep})`);
   assert.equal(city.budget.history.length, 1, 'one ledger in the books');
 });
+
+test('a city keeps a snapshot of each game hour: stepped across 2 game hours, the hours rise', () => {
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
+  city.netOps(gridEditor().commit(true));
+  for (let s = 0; s < 130; s++) city.step(10);
+  assert.ok(city.hours.length >= 2, `snapshots of the game hours (${city.hours.length})`);
+  for (let i = 1; i < city.hours.length; i++) assert.ok(city.hours[i]!.h > city.hours[i - 1]!.h, 'the hours rise');
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
+  assert.equal(city.hours.length, 0, 'a new valley starts the hours again');
+});

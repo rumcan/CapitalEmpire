@@ -10,6 +10,8 @@ import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV5 } from './save';
 import { CAR_COLOURS } from './traffic';
 import { SimClient, type LotView } from './sim/client';
+import { zoneOf } from './sim/routing';
+import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
@@ -32,6 +34,8 @@ export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: 
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
 /** a filled disc of radius r at (x, y) in device px (the overlay's identity transform), colour col */
 function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, col: string) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); }
+/** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
+function labelPiece(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, col: string): number { ctx.strokeText(s, x, y); ctx.fillStyle = col; ctx.fillText(s, x, y); return x + ctx.measureText(s).width; }
 
 interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: number; cum: number[] }
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
@@ -73,10 +77,14 @@ export class Game {
   selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
   /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
   showAccess = false;
+  /** the access overlay's growth state per zone, refreshed at most once a second (growthNow): the lots started within the last game day (growN), the lots declining (declN), and the totals */
+  private growN = new Int32Array(256); private declN = new Int32Array(256); growTot = 0; declTot = 0; private growStamp = -Infinity;
   /** the flow overlay (key F): each direction of each road coloured by volume / capacity, and junction LOS badges at the street and district tiers */
   showFlow = false;
   /** the right-hand panel: the budget (the treasury), the bottlenecks (key B), or none */
   panel: 'budget' | 'bottlenecks' | null = null;
+  /** the before / after snapshot (the bottlenecks panel): the game hour it was taken at, the window before (null: no traffic on record yet), and the next rush, [start, end] in absolute game hours */
+  snapshot: { at: number; before: Window | null; after: [number, number] } | null = null;
   /** a ring pulsed for 4 s where the camera jumped (see jumpTo): the tile and the time (performance.now, ms) */
   focus: { x: number; y: number; t: number } | null = null;
   /** the car inspected (its slot in the traffic client's arrays; -1: none; its info is traffic.car), and whether the camera follows it */
@@ -673,6 +681,30 @@ export class Game {
     this.traffic.skip(until);
     this.toast(`Skipping to the ${h === 7 ? 'morning' : 'evening'} rush…`);
   }
+  /** takes the before / after snapshot now: the last rush window before this game hour and the next rush (the after numbers come with it); asks for a fresh report */
+  takeSnapshot() {
+    const at = Math.floor(this.traffic.simTime(performance.now()) / GAME_HOUR), after = nextRush(at + 1); // the hour now began before the change: the after window starts at the next hour or later
+    this.snapshot = { at, before: lastRush(this.traffic.hours, at), after };
+    this.traffic.requestReport();
+    this.toast(`Snapshot taken. Make your change; the after numbers come with the ${String(after[0] % 24).padStart(2, '0')}:00 rush`);
+    this.emit();
+  }
+  /** drops the before / after snapshot */
+  clearSnapshot() { this.snapshot = null; this.emit(); }
+  /** the snapshot's rush window, once both its hours are in the city's snapshots (null until then) */
+  get snapshotAfter(): Window | null { const s = this.snapshot; return s ? windowOf(this.traffic.hours, s.after[0], s.after[1], true) : null; }
+  /** the access overlay's growth state, at most once a second: per zone, the lots started within the last game day (no declining, level BUILDING or more) and the lots declining (decline 1 or more); and the totals */
+  private growthNow() {
+    const now = performance.now();
+    if (now - this.growStamp < 1000) return;
+    this.growStamp = now; const T = this.traffic.simTime(now);
+    this.growN.fill(0); this.declN.fill(0); this.growTot = 0; this.declTot = 0;
+    for (const l of this.traffic.lots.values()) {
+      const z = zoneOf(l.o[0] + l.u[0] * l.w / 2 + l.n[0] * l.d / 2, l.o[1] + l.u[1] * l.w / 2 + l.n[1] * l.d / 2);
+      if (l.decline >= 1) { this.declN[z]++; this.declTot++; }
+      if (l.level >= LV.BUILDING && l.decline === 0 && T - l.since <= GAME_DAY) { this.growN[z]++; this.growTot++; }
+    }
+  }
   /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
   private sendTerrain() {
     const t = this.terrain, h = t.highway;
@@ -732,7 +764,7 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
-    this.edit.clear();
+    this.edit.clear(); this.snapshot = null;
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
@@ -1142,17 +1174,35 @@ export class Game {
     }
   }
 
-  /** the access overlay: each zone (128 tiles square) with a built lot, shaded by its access: green below 1.3, amber to 1.8, red above (25% alpha) */
+  /** the access overlay: each zone (128 tiles square) with a built lot, shaded by its access: green below 1.3, amber to 1.8, red above (25% alpha),
+   *  with a red edge over 1.8; at the district and planner tiers each built zone is labelled with its growth (+started, −declining; growth stopped over 1.8) */
   private drawAccess(ctx: CanvasRenderingContext2D) {
     const T = this.traffic;
+    this.growthNow();
     this.setIso(ctx);
     for (let z = 0; z < 256; z++) {
       if (!T.builtZone[z]) continue;
-      const a = T.access[z]!;
+      const a = T.access[z]!, x0 = (z & 15) * 128, y0 = (z >> 4) * 128;
       ctx.fillStyle = a < 1.3 ? 'rgba(61,220,132,0.16)' : a <= 1.8 ? 'rgba(255,176,32,0.16)' : 'rgba(255,59,59,0.16)';
-      ctx.fillRect((z & 15) * 128, (z >> 4) * 128, 128, 128);
+      ctx.fillRect(x0, y0, 128, 128);
+      if (a > 1.8) { ctx.strokeStyle = 'rgba(255,59,59,0.6)'; ctx.lineWidth = 3 / (HW * this.cam.z * this.dpr); ctx.strokeRect(x0, y0, 128, 128); }
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.cam.z < DISTRICT_Z) {
+      // the labels in screen px, at each built zone's centre: started (green) and declining (red); growth stopped under them
+      const dpr = this.dpr;
+      ctx.font = `bold ${12 * dpr}px sans-serif`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = '#0f172a';
+      for (let z = 0; z < 256; z++) {
+        if (!T.builtZone[z]) continue;
+        const g = this.growN[z]!, d = this.declN[z]!, stop = T.access[z]! > 1.8;
+        if (!g && !d && !stop) continue;
+        const c = this.screen((z & 15) * 128 + 64, (z >> 4) * 128 + 64), a = g ? `+${g}` : '', b = d ? ` −${d}` : '';
+        let x = c.x - ctx.measureText(a + b).width / 2;
+        if (a) x = labelPiece(ctx, a, x, c.y, '#3ddc84');
+        if (b) labelPiece(ctx, b, x, c.y, '#ff3b3b');
+        if (stop) { const s = 'growth stopped'; labelPiece(ctx, s, c.x - ctx.measureText(s).width / 2, c.y + (a || b ? 15 * dpr : 0), '#ff3b3b'); }
+      }
+    }
   }
 
   private drawGroundOverlays(ctx: CanvasRenderingContext2D) {

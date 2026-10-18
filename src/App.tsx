@@ -3,9 +3,10 @@ import { FLOW_COLS, Game, LOS_COL, SPEEDS } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
-import { ZOOM_MAX, ZOOM_MIN } from './game/iso';
+import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
-import { Budget, DEBT_DAYS, LOAN, LOAN_RATE } from './game/budget';
+import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
+import { compare, type Delta, type Window } from './game/beforeafter';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
@@ -16,6 +17,8 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** the game clock as HH:MM */
 const hhmm = (c: { hour: number; minute: number }) => `${String(c.hour).padStart(2, '0')}:${String(c.minute).padStart(2, '0')}`;
+/** a game hour of the day as HH:00 */
+const hod = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -138,6 +141,7 @@ export default function App() {
           <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-slate-950/75 px-4 py-1.5 text-xs text-slate-300 shadow-lg backdrop-blur">
             {hintFor(game)}
           </div>
+          {(game.showAccess || game.cam.z < PLANNER_Z) && <AccessLegend game={game} />}
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (
@@ -252,9 +256,10 @@ function BudgetPanel({ game }: { game: Game }) {
 const FLOW_LEGEND: [string, string][] = [['< 0.5', FLOW_COLS[0]!], ['< 0.8', FLOW_COLS[1]!], ['< 1', FLOW_COLS[2]!], ['≥ 1 v/c', FLOW_COLS[3]!]];
 /** the worst bottlenecks of the city's last report, worst first: a row per item (click to jump there), the time lost per game hour, and the flow legend */
 function BottleneckPanel({ game }: { game: Game }) {
-  const top = game.traffic.report?.top ?? [];
+  // items under 0.1 veh-min an hour are noise (a car slowing for a turn), not bottlenecks
+  const top = (game.traffic.report?.top ?? []).filter(it => it.loss >= 6);
   return (
-    <div className="absolute right-3 top-24 z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+    <div className="absolute right-3 top-24 z-20 max-h-[calc(100vh-18rem)] w-72 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
       <Panel title="Bottlenecks">
         <p className="mb-2 text-xs text-slate-400">Time lost in the last game hour or so, worst first</p>
         {top.length ? (
@@ -272,13 +277,82 @@ function BottleneckPanel({ game }: { game: Game }) {
               </button>
             ))}
           </div>
-        ) : <p className="text-xs text-slate-400">No traffic yet</p>}
+        ) : <p className="text-xs text-slate-400">{game.traffic.report ? 'No bottlenecks: the traffic flows freely' : 'No traffic yet'}</p>}
         <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
           {FLOW_LEGEND.map(([t, c]) => (
             <span key={t} className="flex items-center gap-1"><span className="inline-block h-2 w-3 rounded-sm" style={{ background: c }} />{t}</span>
           ))}
         </div>
+        <BeforeAfter game={game} />
       </Panel>
+    </div>
+  );
+}
+/** the day and the hours of a window as the panel names it, e.g. day 3, 07:00–09:00 (the books' day 1 is the first day) */
+function winLabel(game: Game, w: Window) { return `day ${Math.floor(w.h0 / 24) - Math.floor(game.traffic.budget.base / GAME_DAY) + 1}, ${hod(w.h0)}–${hod(w.h1)}`; }
+/** a compared value as the table shows it: seconds to one decimal, the ratio to two, counts whole */
+const fmtVal = (name: string, v: number) => name === 'Time lost per trip' ? `${v.toFixed(1)} s` : name === 'Trip time vs free flow' ? v.toFixed(2) : Math.round(v).toLocaleString();
+/** the change of a compared value: an arrow and the per cent, green when better and red when worse; a dash when it did not move */
+function Change({ d }: { d: Delta }) {
+  if (Math.abs(d.pct) < 0.5) return <span className="text-slate-500">–</span>;
+  return <span className={d.better ? 'text-emerald-300' : 'text-red-300'}>{d.pct > 0 ? '▲' : '▼'} {Math.min(999, Math.abs(d.pct)).toFixed(0)}%</span>;
+}
+/** the before / after section of the bottlenecks panel: a snapshot now, then the first rush after the change against the last rush before it (see Game.takeSnapshot) */
+function BeforeAfter({ game }: { game: Game }) {
+  const snap = game.snapshot, after = game.snapshotAfter, waiting = !!snap && !after;
+  // while the after rush is out, the report is asked for every 10 s, so its hours come in fresh
+  useEffect(() => { if (!waiting) return; const iv = setInterval(() => game.traffic.requestReport(), 10000); return () => clearInterval(iv); }, [game, waiting]);
+  if (!snap) return (
+    <div className="mt-3 border-t border-white/10 pt-2">
+      <div className="mb-1 text-xs font-bold text-slate-200">Before / after</div>
+      <button className="chip" onClick={() => game.takeSnapshot()}>Take snapshot</button>
+      <p className="mt-1 text-[11px] text-slate-400">Snapshot, change the roads, then wait for (or skip to) the next rush hour.</p>
+    </div>
+  );
+  const rows = after ? compare(snap.before ?? after, after) : [];
+  return (
+    <div className="mt-3 border-t border-white/10 pt-2">
+      <div className="mb-1 flex items-center gap-2 text-xs font-bold text-slate-200">Before / after<span className="flex-1" /><button className="chip" onClick={() => game.clearSnapshot()}>Clear</button></div>
+      <div className="space-y-1 text-[11px] text-slate-300">
+        {snap.before
+          ? <p>Before: {winLabel(game, snap.before)}{snap.before.rush ? '' : ' (no rush yet: the last 2 hours)'}</p>
+          : <p className="text-amber-200">No traffic on record before the snapshot yet</p>}
+        {after ? (
+          <>
+            <p>After: {winLabel(game, after)}</p>
+            <table className="w-full tabular-nums">
+              <thead><tr className="text-[10px] text-slate-500"><th className="text-left font-normal">Measure</th><th className="text-right font-normal">Before</th><th className="text-right font-normal">After</th><th className="text-right font-normal">Change</th></tr></thead>
+              <tbody>
+                {rows.map(d => (
+                  <tr key={d.name} className="border-t border-white/5">
+                    <td className="py-0.5 pr-1 text-slate-300">{d.name}</td>
+                    <td className="px-1 text-right text-slate-400">{snap.before ? fmtVal(d.name, d.before) : '–'}</td>
+                    <td className="px-1 text-right text-slate-100">{fmtVal(d.name, d.after)}</td>
+                    <td className="pl-1 text-right">{snap.before && <Change d={d} />}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span>After: waiting for {hod(snap.after[0])}–{hod(snap.after[1])}</span>
+            <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()}>Skip to rush</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+/** the access overlay's bands and the growth counts, bottom-left above the hint bar (see Game.growthNow) */
+const ACCESS_LEGEND: [string, string][] = [['full growth (< 1.3)', '#3ddc84'], ['slowed (1.3–1.8)', '#ffb020'], ['stopped (> 1.8)', '#ff3b3b']];
+function AccessLegend({ game }: { game: Game }) {
+  return (
+    <div className="pointer-events-none absolute bottom-14 left-3 z-20 w-56 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur">
+      {ACCESS_LEGEND.map(([t, c]) => (
+        <div key={t} className="flex items-center gap-2"><span className="inline-block h-2.5 w-3 rounded-sm" style={{ background: c }} />{t}</div>
+      ))}
+      <div className="mt-1 border-t border-white/10 pt-1 tabular-nums">+{game.growTot} lots started today, −{game.declTot} declining</div>
     </div>
   );
 }

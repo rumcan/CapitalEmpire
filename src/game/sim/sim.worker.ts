@@ -32,7 +32,7 @@ function postTown(ev: TownEvent[], force: boolean) {
 function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), day: city.budget.dayOf(city.sim.t), ledger }); }
 
 /** the bottleneck report: the flow buffer is handed over, not copied */
-function postReport() { const report = city.report(); post({ t: 'report', report }, [report.flow.buffer as ArrayBuffer]); }
+function postReport() { const report = city.report(); post({ t: 'report', report, hours: city.hours.slice() }, [report.flow.buffer as ArrayBuffer]); }
 /** the game hour (sim s) the bottleneck report was last posted for (-1: none yet); a report goes out once per game hour of sim time */
 const HOUR = 60;
 let reportHour = -1;

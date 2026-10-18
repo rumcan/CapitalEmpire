@@ -4,6 +4,7 @@ import type { LotTuple, TownEvent } from '../lots/town';
 import type { BudgetSave, Ledger } from '../budget';
 import type { Report } from './bottlenecks';
 import type { CarInfo } from './sim';
+import type { HourStat } from '../beforeafter';
 
 /** what the worker measured, sent with every frame; skipping: a fast-forward is running (simT is then the last frame's, not extrapolated) */
 export interface SimStats { active: number; target: number; lanes: number; stepMs: number; tickMs: number; maxTickMs: number; graphMs: number; respawned: number; simT: number; skipping: boolean }
@@ -19,6 +20,6 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
 /** worker to main thread: a frame of cap slots (4 floats each, see Sim.writeFrame); the parcels added and removed by a network batch; the town's events, totals and access per zone (256); the town's gravel extension (legs: ax, ay, bx, by, ... in tiles);
  *  the books (after a day closes, or after a budget message: the save, the game day now, and the ledger of the day that just closed, if any) */
 export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats } | { t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
-  | { t: 'budget'; save: BudgetSave; day: number; ledger: Ledger | null } | { t: 'report'; report: Report }
+  | { t: 'budget'; save: BudgetSave; day: number; ledger: Ledger | null } | { t: 'report'; report: Report; hours: HourStat[] }
   | { t: 'car'; info: CarInfo | null } | { t: 'watch'; node: [number, number] | null; n: number; lines: Float32Array };
-/** (car: the inspected car, with every frame (null once it is gone); watch: the watched junction's x, y (null: none), the crossings since it was set, and their lines, 4 floats each (origin x, y, destination x, y), at most 256) */
+/** (report: the bottleneck report, and the game hours' snapshots (HourStat, newest last), a copy; car: the inspected car, with every frame (null once it is gone); watch: the watched junction's x, y (null: none), the crossings since it was set, and their lines, 4 floats each (origin x, y, destination x, y), at most 256) */
