@@ -13,7 +13,7 @@ _Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model i
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
-| 4. Budget + bottleneck loop | **Next.** Suggested steps at the end |
+| 4. Budget + bottleneck loop | **In progress** (2026-10-18). Steps and numbers below |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
 
@@ -562,7 +562,7 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
   stall until the player bridges; the player gets no hint yet (Phase 4: a "no land" notice).
 - The terrain test's per-seed budget is now 4 s (the dev PC is slower than the worker).
 
-## Next: Phase 4, budget + bottleneck loop
+## Phase 4, budget + bottleneck loop: in progress
 
 Goal and gate: GAME-PLAN sections 1.3, 3.4 and the phase table (gate: a Career run is winnable and losable; fixing the
 top bottleneck measurably restarts growth). Suggested steps:
@@ -575,6 +575,21 @@ top bottleneck measurably restarts growth). Suggested steps:
 4. **Before/after** snapshots over one simulated rush hour; the district access overlay with growth state.
 5. **Milestones and Career**: population milestones unlocking road classes/tools/grants; win and lose conditions;
    a headless Career gate (a scripted player that paves the top bottleneck must restart growth measurably).
+
+### Phase 4 progress
+1. **One clock and time controls. DONE** (2026-10-18). The sim clock is the only clock: one sim second is one game minute, a game
+   day is 1,440 sim s (24 minutes at 1x), and the economy's day closes at the sim's midnight. Pause/1x/2x/4x/8x in the top bar
+   (Space taps pause, Space-drag still pans; `,` and `.` change speed). **Skip to rush hour** (H, or the Rush button):
+   the worker fast-forwards (`{t:'skip'}`, 20-step blocks for 70 ms of each 100 ms frame) to the next 7:30 or 16:30; one
+   to six game hours take a few seconds. The top bar shows `Town.pop`, jobs and the time of day.
+2a. **Budget module. DONE** (2026-10-18). `src/game/budget.ts` (pure, `tests/budget.test.ts`): property tax per built lot
+   (RES 12/20, COM 30/50, IND 24/40, TOUR 36/60 $ a day at BUILT/UPGRADED) x frontage value (gravel 0.7 .. boulevard 1.4)
+   x access value `clamp(1.5 - 0.5 access, 0.25, 1)` x decline (1, 0.7, 0.3, 0); business $1.5 per customer or worker who
+   arrived at a non-RES lot, times punctuality `min(1, FREE ideal / actual)` (the sim tags each lot trip with its
+   destination's use and counts `sim.trade`); upkeep 0.4% of the build cost per tile a day (bridges x4, tunnels x6);
+   signals $20, slipways $40, roundabouts $10 a day; compensation for cleared lots (RES 2,000/3,500 .. TOUR 6,000/10,000;
+   500 while building); loans of $25k at 1% a day, one more per 2,000 residents (at most 6); **bankrupt after 5 days in
+   a row in the red**.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
