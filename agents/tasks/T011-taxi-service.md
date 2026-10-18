@@ -1,6 +1,6 @@
 # T011 · Taxi service (fleet and dispatch model)
 
-Status: in progress
+Status: in review (#10)
 Module: `src/game/ext/taxi/` · Tests: `tests/ext-taxi.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
