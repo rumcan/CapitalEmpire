@@ -1,7 +1,7 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
 import { CLASS, CLASSES, Grid, JUNCTIONS, RoadNetwork, SK, add, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type SegKind } from './network';
-import { NetEditor } from './netops';
+import { NetEditor, netToOps } from './netops';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
@@ -341,7 +341,8 @@ export class Game {
   }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
-    this.ground.netOps(ops); this.traffic.netOps(ops); this.syncPortals();
+    // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
+    this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
     this.ground.invalidateAll();
