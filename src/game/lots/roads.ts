@@ -7,10 +7,12 @@ import type { Lot, LotMap } from './lots';
 import { LV, type Town } from './town';
 import { TC } from '../terrain/types';
 
-export interface RoadPlanCtx { net: RoadNetwork; lots: LotMap; town: Town; cls: Uint8Array /* terrain classes */; entry: Pt; rnd: () => number }
+/** centre and built: the town centre to plan around and that town's built lots (default: the Town's whole built area) */
+export interface RoadPlanCtx { net: RoadNetwork; lots: LotMap; town: Town; cls: Uint8Array /* terrain classes */; entry: Pt; rnd: () => number; centre?: Pt; built?: number }
 
 /** the block size (tiles), the reach of the land counted from the centre (tiles), and the least land kept (lots) */
-const BLOCK = 40, NEAR = 100, MIN_LAND = 24;
+export const BLOCK = 40;
+const NEAR = 100, MIN_LAND = 24;
 /** diagnostics: why candidates were rejected (cumulative) */
 export const planWhy = { cands: 0, margin: 0, terrain: 0, verge: 0, lot: 0 };
 /** the gravel corridor: its half width (h + walk), the terrain sample offset across (h + walk + 1), the verge gap kept, the map margin (tiles) */
@@ -57,6 +59,19 @@ export function reachableSegs(net: RoadNetwork, entry: Pt): Set<Seg> {
   return out;
 }
 
+/** the segs reachable by road from the node nearest each anchor (the union), for the anchors whose nearest node is within maxD[i] tiles */
+export function reachableFrom(net: RoadNetwork, anchors: Pt[], maxD: number[]): Set<Seg> {
+  const out = new Set<Seg>(), seen = new Set<Node>();
+  for (let i = 0; i < anchors.length; i++) {
+    const p = anchors[i]; let start: Node | null = null, best = Infinity;
+    for (const n of net.nodes.values()) { const d = (n.x - p.x) ** 2 + (n.y - p.y) ** 2; if (d < best) { best = d; start = n; } }
+    if (!start || Math.sqrt(best) > maxD[i] || seen.has(start)) continue;
+    seen.add(start); const q: Node[] = [start];
+    for (let j = 0; j < q.length; j++) for (const s of q[j].segs) { out.add(s); const o = s.a === q[j] ? s.b : s.a; if (!seen.has(o)) { seen.add(o); q.push(o); } }
+  }
+  return out;
+}
+
 /** a seeded stream (mulberry32, as the Town's): [0, 1) */
 export function seededRnd(seed: number): () => number {
   let s = seed >>> 0;
@@ -65,6 +80,7 @@ export function seededRnd(seed: number): () => number {
 
 /** the built centre: the mean of the BUILT lots (the entry while none is built) */
 function builtCentre(c: RoadPlanCtx): Pt {
+  if (c.centre) return c.centre;
   let sx = 0, sy = 0, m = 0;
   for (const s of c.town.states.values()) if (s.level >= LV.BUILT) { const l = c.lots.lots.get(s.key); if (l) { sx += l.c.x; sy += l.c.y; m++; } }
   return m ? { x: sx / m, y: sy / m } : c.entry;
@@ -73,9 +89,9 @@ function builtCentre(c: RoadPlanCtx): Pt {
 /** short of land: fewer reachable EMPTY lots within reach of the centre (NEAR + 10 x sqrt(built lots) tiles: the radius grows
  *  with the town, so a spread-out town does not keep asking for roads) than max(24, 1.5 × the Town's daily growth) */
 function short(c: RoadPlanCtx, cen: Pt, reach: Set<Seg>): boolean {
-  let n = 0; const R = NEAR + 10 * Math.sqrt(c.town.built);
+  let n = 0; const B = c.built ?? c.town.built, R = NEAR + 10 * Math.sqrt(B);
   for (const l of c.lots.lots.values()) if (reach.has(l.seg) && isEmpty(c.town, l) && dist(l.c, cen) <= R) n++;
-  return n < Math.max(MIN_LAND, 1.5 * (20 + 0.1 * c.town.built));
+  return n < Math.max(MIN_LAND, 1.5 * (20 + 0.1 * B));
 }
 
 /** is the town short of land (see short) */

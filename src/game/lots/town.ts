@@ -69,6 +69,9 @@ export class Town {
   /** the built+building lots by use (index = LU) and in total */
   private cnt = new Int32Array(6); private occ = 0;
   private ax: number[] = []; private ay: number[] = [];
+  /** the town centres (tiles); the town index of every known lot (the nearest centre, -1 with none); per town: the residents, the built lots and the GOV lots */
+  centres: Pt[] = []; private townIdx = new Map<string, number>();
+  popK: number[] = []; builtK: number[] = []; govK: number[] = [];
 
   constructor(seed: number) { this.seed = seed >>> 0; this.rs = this.seed; }
 
@@ -80,13 +83,13 @@ export class Town {
       const s = this.states.get(key); if (!s || keep.has(key)) continue;
       ev.push({ key, kind: 'gone', use: s.use, level: s.level, decline: s.decline, seed: s.seed, since: s.since });
       this.set(s, LU.NONE, LV.EMPTY, 0, this.t);
-      this.candDel(key); this.states.delete(key); this.geo.delete(key);
+      this.candDel(key); this.states.delete(key); this.geo.delete(key); this.townIdx.delete(key);
     }
     for (const l of added) {
-      if (this.states.has(l.key)) { this.geo.set(l.key, l); const i = this.candAt.get(l.key); if (i !== undefined) this.cand[i] = l; }
+      if (this.states.has(l.key)) { this.geo.set(l.key, l); this.townSet(this.states.get(l.key)!, l.key, l.c); const i = this.candAt.get(l.key); if (i !== undefined) this.cand[i] = l; }
       else {
         this.states.set(l.key, { key: l.key, use: LU.NONE, level: LV.EMPTY, decline: 0, since: this.t, seed: hashStr(this.seed ^ 0x811c9dc5, l.key), pop: 0, jobs: 0 });
-        this.geo.set(l.key, l); this.candAdd(l);
+        this.geo.set(l.key, l); this.townSet(null, l.key, l.c); this.candAdd(l);
       }
     }
     if (added.length || removed.length) this.dirty = true;
@@ -104,6 +107,34 @@ export class Town {
     }
     this.t = t; this.hour = Math.floor(t / HOUR);
     return ev;
+  }
+
+  /** the town centres (tiles; copied): every known lot gets its town index and the per-town totals are recomputed */
+  setCentres(c: Pt[]) {
+    this.centres = c.map(p => ({ x: p.x, y: p.y }));
+    this.popK = this.centres.map(() => 0); this.builtK = this.centres.map(() => 0); this.govK = this.centres.map(() => 0);
+    for (const [key, l] of this.geo) this.townIdx.set(key, this.nearest(l.c));
+    for (const s of this.states.values()) this.townAdd(this.townOf(s.key), s, 1);
+  }
+
+  /** the town (index into centres) of a known lot, -1 if none or no centres */
+  townOf(key: string): number { return this.townIdx.get(key) ?? -1; }
+
+  /** the towns built at once (a new valley): each town grows to perTown residents (or its land runs out), lots BUILT (30% UPGRADED
+   *  on paved roads) by the usual allocation; returns the 'complete' events */
+  stamp(ctx: TownCtx, perTown: number, T: number): TownEvent[] {
+    const out: TownEvent[] = [];
+    for (let k = 0; k < this.centres.length; k++) {
+      while (this.popK[k] < perTown) {
+        if (this.dirty) this.rescan();
+        if (this.govN < this.govTarget()) this.placeGov(ctx, T, out, LV.BUILT);
+        const l = this.pickTown(ctx, k); if (!l) break;
+        const use = this.useFor(l, ctx), s = this.states.get(l.key)!;
+        const level = l.seg.cls.id !== 'gravel' && this.rnd() < 0.3 ? LV.UPGRADED : LV.BUILT;
+        this.set(s, use, level, 0, T); out.push(this.evt(s, 'complete'));
+      }
+    }
+    return out;
   }
 
   /** advance to sim time t (seconds); runs whole game hours; returns the events (the array is reused: read it before the next call) */
@@ -160,12 +191,38 @@ export class Town {
       w[i] = zg * Math.exp(-d / 40) * lotValue(l); sel[m++] = i;
     }
     if (!m) return null;
+    const q = this.drawTop(w, sel, m); return q < 0 ? null : this.cand[q];
+  }
+
+  /** one weighted pick among the best candidates of town k (the town's own lots, weighted by distance to its centre or the
+   *  nearest lot not EMPTY); null if none can grow */
+  private pickTown(ctx: TownCtx, k: number): Lot | null {
+    const n = this.cand.length; if (!n) return null;
+    if (this.w.length < n) { this.w = new Float64Array(2 * n); this.sel = new Int32Array(2 * n); }
+    const w = this.w, sel = this.sel; let m = 0;
+    let has = false;
+    for (const s of this.states.values()) if (s.use !== LU.NONE && this.townOf(s.key) === k) { has = true; break; }
+    const cen = this.centres[k];
+    for (let i = 0; i < n; i++) {
+      const l = this.cand[i]; w[i] = 0;
+      if (this.townOf(l.key) !== k) continue;
+      const zg = this.openness(l, ctx); if (zg <= 0) continue;
+      const d = has ? this.candDn[i] : dist(l.c, cen);
+      const wi = zg * Math.exp(-d / 40) * lotValue(l); if (wi <= 0) continue;
+      w[i] = wi; sel[m++] = i;
+    }
+    if (!m) return null;
+    const q = this.drawTop(w, sel, m); return q < 0 ? null : this.cand[q];
+  }
+
+  /** the seeded weighted draw among the best PICK_TOP of the m candidates sel[0..m) (weights w): one draw; the candidate index */
+  private drawTop(w: Float64Array, sel: Int32Array, m: number): number {
     const idx = sel.subarray(0, m); idx.sort((a, b) => w[b] - w[a]);
     const K = Math.min(PICK_TOP, m); let tot = 0;
     for (let j = 0; j < K; j++) tot += w[idx[j]];
     let r = this.rnd() * tot;
-    for (let j = 0; j < K; j++) { r -= w[idx[j]]; if (r < 0 || j === K - 1) return this.cand[idx[j]]; }
-    return null;
+    for (let j = 0; j < K; j++) { r -= w[idx[j]]; if (r < 0 || j === K - 1) return idx[j]; }
+    return -1;
   }
 
   /** the land use of a chosen lot: the scores times the share balance, the option and seeded noise; the highest wins */
@@ -193,34 +250,70 @@ export class Town {
   /** the civic lots wanted: one per 400 residents, the first at 200 (scaled by the option's GOV multiplier) */
   private govTarget(): number { return this.pop < 200 ? 0 : Math.round((1 + Math.floor((this.pop - 200) / 400)) * this.option.w[4]); }
 
-  /** place one GOV lot on the best road class among the open candidates nearest the centre of the built area */
-  private placeGov(ctx: TownCtx, T: number, ev: TownEvent[]) {
+  /** the centre of town k: the mean of its lots not NONE (the centre while it has none) */
+  private townCentre(k: number): Pt {
     let sx = 0, sy = 0, m = 0;
-    for (const s of this.states.values()) if (s.use !== LU.NONE) { const c = this.geo.get(s.key)!.c; sx += c.x; sy += c.y; m++; }
-    const cen = { x: m ? sx / m : ctx.entry.x, y: m ? sy / m : ctx.entry.y };
+    for (const s of this.states.values()) if (s.use !== LU.NONE && this.townOf(s.key) === k) { const c = this.geo.get(s.key)!.c; sx += c.x; sy += c.y; m++; }
+    return m ? { x: sx / m, y: sy / m } : this.centres[k];
+  }
+
+  /** place one GOV lot on the best road class among the open candidates nearest the centre of the built area (with centres: of
+   *  the town with the most residents per civic lot, and its candidates only); level BUILDING, or BUILT for an instant one */
+  private placeGov(ctx: TownCtx, T: number, ev: TownEvent[], level: number = LV.BUILDING) {
+    let cen: Pt, k = -1;
+    if (this.centres.length) {
+      k = 0; for (let j = 1; j < this.centres.length; j++) if (this.popK[j] / (this.govK[j] + 1) > this.popK[k] / (this.govK[k] + 1)) k = j;
+      cen = this.townCentre(k);
+    } else {
+      let sx = 0, sy = 0, m = 0;
+      for (const s of this.states.values()) if (s.use !== LU.NONE) { const c = this.geo.get(s.key)!.c; sx += c.x; sy += c.y; m++; }
+      cen = { x: m ? sx / m : ctx.entry.x, y: m ? sy / m : ctx.entry.y };
+    }
     const ok: number[] = [];
-    for (let i = 0; i < this.cand.length; i++) if (this.openness(this.cand[i], ctx) > 0) ok.push(i);
+    for (let i = 0; i < this.cand.length; i++) if (this.openness(this.cand[i], ctx) > 0 && (k < 0 || this.townOf(this.cand[i].key) === k)) ok.push(i);
     if (!ok.length) return;
     const dc = (i: number) => dist(this.cand[i].c, cen);
     ok.sort((i, j) => dc(i) - dc(j));
     let best = ok[0];
     for (const i of ok.slice(0, 40)) if (this.cand[i].seg.cls.order > this.cand[best].seg.cls.order) best = i;
     const s = this.states.get(this.cand[best].key)!;
-    this.set(s, LU.GOV, LV.BUILDING, 0, T); ev.push(this.evt(s, 'build'));
+    this.set(s, LU.GOV, level, 0, T); ev.push(this.evt(s, level >= LV.BUILT ? 'complete' : 'build'));
+  }
+
+  /** a lot's town index from its centre (-1 with no centres); its totals move when the town changes (s: its state, null if new) */
+  private townSet(s: LotState | null, key: string, c: Pt) {
+    const o = this.townOf(key), n = this.nearest(c);
+    if (s && o !== n) { this.townAdd(o, s, -1); this.townAdd(n, s, 1); }
+    this.townIdx.set(key, n);
+  }
+  /** the nearest centre to c (ties: the lowest index), -1 with no centres */
+  private nearest(c: Pt): number {
+    let best = -1, bd = Infinity;
+    for (let k = 0; k < this.centres.length; k++) { const d = (c.x - this.centres[k].x) ** 2 + (c.y - this.centres[k].y) ** 2; if (d < bd) { bd = d; best = k; } }
+    return best;
+  }
+  /** adds (sg = 1) or removes (sg = -1) a lot's residents, built and GOV counts to town k (none for k < 0) */
+  private townAdd(k: number, s: LotState, sg: number) {
+    if (k < 0) return;
+    this.popK[k] += sg * s.pop; if (s.level >= LV.BUILT) this.builtK[k] += sg; if (s.use === LU.GOV) this.govK[k] += sg;
   }
 
   /** a state change: keeps the totals, the candidates and the distances to the lots not EMPTY */
   private set(s: LotState, use: number, level: number, decline: number, T: number) {
-    const was = s.use !== LU.NONE;
+    const was = s.use !== LU.NONE, k = this.townOf(s.key);
     if (s.level !== LV.EMPTY) { this.cnt[s.use]--; this.occ--; }
     this.pop -= s.pop; this.jobs -= s.jobs;
+    if (k >= 0) this.popK[k] -= s.pop;
     if (was) this.nAct--; if (s.level >= LV.BUILT) this.built--; if (s.use === LU.GOV) this.govN--;
+    if (k >= 0) { if (s.level >= LV.BUILT) this.builtK[k]--; if (s.use === LU.GOV) this.govK[k]--; }
     s.use = use; s.level = level; s.decline = decline; s.since = T;
     s.pop = yieldOf(POP, s); s.jobs = yieldOf(JOBS, s);
     this.pop += s.pop; this.jobs += s.jobs;
+    if (k >= 0) this.popK[k] += s.pop;
     if (level !== LV.EMPTY) { this.cnt[use]++; this.occ++; }
     const is = use !== LU.NONE;
     if (is) this.nAct++; if (level >= LV.BUILT) this.built++; if (use === LU.GOV) this.govN++;
+    if (k >= 0) { if (level >= LV.BUILT) this.builtK[k]++; if (use === LU.GOV) this.govK[k]++; }
     const l = this.geo.get(s.key)!;
     if (!is && level === LV.EMPTY) this.candAdd(l); else this.candDel(s.key);
     if (is && !was) for (let i = 0; i < this.cand.length; i++) { const d = dist(this.cand[i].c, l.c); if (d < this.candDn[i]) this.candDn[i] = d; }

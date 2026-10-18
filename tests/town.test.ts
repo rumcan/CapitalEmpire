@@ -6,6 +6,9 @@ import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, zoneGrowth, type LotState, type LotTuple, type TownCtx, type TownEvent } from '../src/game/lots/town';
 import { zoneOf } from '../src/game/sim/routing';
+import { reachableFrom } from '../src/game/lots/roads';
+import { townGrid, TOWN_BLOCKS } from '../src/game/lots/seedtowns';
+import { TC } from '../src/game/terrain/types';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -150,4 +153,71 @@ test('restore: a saved town comes back with the same pop, jobs and built lots, a
   // the keys that no longer exist are dropped
   const gone = new Town(4); gone.onLots(lots.slice(1), []);
   assert.equal(gone.restore([[lots[0].key, LU.RES, LV.BUILT, 0, 1, 0]], 0).length, 0);
+});
+
+/** the lots of the town grids of some centres (all GROUND): one LotMap over every grid, and its network */
+function townLots(centres: Pt[]): { net: RoadNetwork; lm: LotMap; lots: Lot[] } {
+  const e = new NetEditor(new RoadNetwork()); e.net.paintData = false;
+  for (const c of centres) {
+    const g = townGrid(c, TOWN_BLOCKS, () => TC.GROUND);
+    e.addLegs(g.legs.filter((_, k) => g.cls[k] === 'street'), CLASS.street, 0);
+    e.addLegs(g.legs.filter((_, k) => g.cls[k] === 'avenue'), CLASS.avenue, 0);
+  }
+  e.commit();
+  const lm = new LotMap(); const r = lm.update(e.net, null);
+  return { net: e.net, lm, lots: r.added };
+}
+/** a key string of the occupied states (sorted): the lot keys, uses and levels */
+const stateKey = (t: Town) => JSON.stringify([...t.states.values()].filter(s => s.level !== LV.EMPTY).map(s => [s.key, s.use, s.level]).sort((p, q) => (p[0] as string) < (q[0] as string) ? -1 : (p[0] as string) > (q[0] as string) ? 1 : 0));
+
+test('stamp: two towns 1000 tiles apart each reach 400 residents; lots belong to their nearest centre; the same calls give the same states', () => {
+  const C: Pt[] = [{ x: 500, y: 600 }, { x: 1500, y: 600 }];
+  const build = () => {
+    const { lm, lots } = townLots(C);
+    const town = new Town(3); town.setCentres(C); town.onLots(lots, []);
+    const ev = town.stamp({ lots: lm, entry: C[0], reachable: () => true, water: () => 200 }, 400, 0);
+    return { lm, town, ev };
+  };
+  const a = build(), b = build();
+  const occ = [...a.town.states.values()].filter(s => s.level !== LV.EMPTY);
+  const perTownLots = C.map((_, k) => occ.filter(s => a.town.townOf(s.key) === k).length);
+  const pops = C.map((_, k) => a.town.popK[k]);
+  console.log(`[town] stamp 2 towns x 400 residents: pop per town ${pops}, lots not EMPTY per town ${perTownLots}, lots ${a.lm.lots.size}, events ${a.ev.length}`);
+  pops.forEach((p, k) => assert.ok(p >= 400, `town ${k} pop ${p}: its land ran out`));
+  assert.equal(pops[0] + pops[1], a.town.pop, 'the town pops add up to the total');
+  assert.equal(a.ev.length, occ.length, 'one complete event per lot placed');
+  assert.ok(a.ev.every(e => e.kind === 'complete' && (e.level === LV.BUILT || e.level === LV.UPGRADED)), 'lots are BUILT or UPGRADED');
+  assert.ok(a.ev.every(e => e.level === LV.BUILT || a.lm.lots.get(e.key)!.seg.cls.id !== 'gravel'), 'no UPGRADED gravel');
+  for (const s of occ) {
+    const c = a.lm.lots.get(s.key)!.c, d = C.map(p => Math.hypot(p.x - c.x, p.y - c.y));
+    assert.equal(a.town.townOf(s.key), d.indexOf(Math.min(...d)), `lot ${s.key} in its nearest town`);
+  }
+  assert.equal(stateKey(a.town), stateKey(b.town), 'two identical runs give the same states');
+});
+
+test('no centres: no town totals, townOf is -1 and stamp places nothing; the per-town totals add up to the global ones, also after setCentres', () => {
+  const { lm, lots } = gridLots();
+  const { town } = run(lm, lots, 2, 6);
+  assert.deepEqual([town.centres.length, town.popK.length, town.townOf(lots[0].key)], [0, 0, -1]);
+  assert.deepEqual(town.stamp(ctxOf(lm), 400, 0), []);
+  const sumsOk = (t: Town) => {
+    const st = [...t.states.values()];
+    return t.popK.reduce((x, y) => x + y, 0) === t.pop && t.builtK.reduce((x, y) => x + y, 0) === t.built && t.govK.reduce((x, y) => x + y, 0) === st.filter(s => s.use === LU.GOV).length;
+  };
+  const withC = new Town(2); withC.setCentres([ENTRY, { x: last, y: last }]); withC.onLots(lots, []);
+  for (let h = 1; h <= 6 * 24; h++) withC.tick(h * HOUR, ctxOf(lm));
+  assert.ok(sumsOk(withC), 'totals after growth');
+  withC.setCentres([{ x: last, y: O }]);
+  assert.ok(sumsOk(withC), 'totals after setCentres');
+  assert.equal(withC.townOf(lots[0].key), 0);
+});
+
+test('reachableFrom: an anchor whose nearest node is within its reach gives its network; a farther one gives nothing', () => {
+  const C: Pt[] = [{ x: 500, y: 600 }, { x: 1500, y: 600 }];
+  const { net } = townLots(C);
+  assert.equal(reachableFrom(net, [C[0], C[1]], [100, 100]).size, net.segs.size, 'both networks');
+  const one = reachableFrom(net, [C[0]], [100]);
+  assert.ok(one.size > 0 && one.size < net.segs.size, `one network: ${one.size} of ${net.segs.size} segs`);
+  assert.equal(reachableFrom(net, [C[0]], [1]).size, 0, 'the anchor is too far from its node');
+  assert.equal(reachableFrom(net, [], []).size, 0);
 });
