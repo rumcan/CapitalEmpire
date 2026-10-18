@@ -12,7 +12,7 @@ _Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junct
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | **In progress** (steps 1–4 and 5a–5c done; 5d applying lots in progress). Steps at the end |
+| 3. Lot Composer + growth | **In progress** (steps 1–6 done; step 7 gate in progress). Steps at the end |
 | 4. Budget + bottleneck loop | Not started |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
@@ -477,3 +477,19 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
    overlapping more than 35% are dropped. Owner scales from places-v5 (`npm run assets:scales` →
    `src/game/lots/scales.ts`). Average uprights: RES 16.5 (upgraded 20.4; the owner's town has ~16 per house), COM 7.5,
    IND 8.3, TOUR 8.7, GOV 7.5, construction 5.4. Tests now import `LIBRARY` (esbuild `--loader:.webp=empty`).
+5d. **The engine builds the lots. DONE** (2026-10-18). Town events queue lot keys; up to 40 lots per frame are
+   composed (more when the queue is long) as `lot:<key>` auto props plus lot ground; a lot holding a non-auto building
+   (the starter town) is skipped. **Save v5** stores the non-empty lot states and the sim clock; the worker restores
+   them (`Town.restore`). `Game.stageLots({cols, rows, uses, level, decline, seed})` stages contact sheets
+   (`look-stage.mjs`: `output/look/res-*.png`, `mix-*.png`): houses read convincingly next to the owner's density;
+   COM/IND/TOUR/GOV lots read sparse (about 8 uprights) and want a density pass.
+6. **Trips from lots and access. DONE** (2026-10-18). Driveways on the lot side's outer lane; in `'lots'` mode (from
+   the first built RES lot) each RES lot sends `residents x 2.2 / day` trips shaped by `demandAt` (morning to jobs,
+   evening home, off-peak shopping), departures spread over the hour. Access per zone = EMA of actual / ideal trip
+   time divided by the free-flow ratio `FREE = 1.213` (measured: 50 cars on a 10x10 grid; 600 cars read 3.31 raw),
+   so free flow reads about 1.07–1.10 and the town's 1.3/1.8 thresholds mean 30%/80% slower than free flow. The worker
+   feeds it to the town hourly and to the main thread (key **O** overlay, automatic at the planner tier).
+   - Seen in the browser (8x): the town lays its first gravel roads and construction sites within a game day; the
+     early growth is slow (20 lots/day base, construction 12 game hours, so the first houses appear after ~16 game
+     hours). Balance in Phase 4. The top bar's population is still the old economy's (house props), not
+     `Town.pop`: Phase 4 merges them.
