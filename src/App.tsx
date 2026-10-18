@@ -34,6 +34,9 @@ export default function App() {
   const [watch, setWatch] = useState(false);
 
   useEffect(() => { if (game && !game.bankrupt) setWatch(false); });
+  // the round's clocks (the build, the surge) show mm:ss: re-render 4 times a second while one runs
+  const roundLive = !!game && (game.traffic.round.stage === 'build' || game.traffic.round.stage === 'surge');
+  useEffect(() => { if (!roundLive) return; const iv = window.setInterval(bump, 250); return () => clearInterval(iv); }, [roundLive]);
 
   useEffect(() => {
     const canvas = overlayRef.current!;
@@ -165,6 +168,7 @@ export default function App() {
             </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
+          {game.site && <RoundPanel game={game} />}
           {game.panel === 'bottlenecks' && <BottleneckPanel game={game} />}
           {game.showWin && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
@@ -281,6 +285,57 @@ function BudgetPanel({ game }: { game: Game }) {
     </div>
   );
 }
+/** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock;
+ *  eval: the result, to close). Docked under the top bar; the eval screen replaces it in step 7 */
+function RoundPanel({ game }: { game: Game }) {
+  const r = game.traffic.round, last = r.last, goBtn = <button className="chip" onClick={() => game.goToSite()}>Go to stadium</button>;
+  const crowd = r.crowd.map((c, i) => `Town ${String.fromCharCode(65 + i)} ${c}`).join(' · ') + (r.crowd.length ? ' cars' : '');
+  return (
+    <div className="pointer-events-auto absolute left-1/2 top-24 z-20 w-[440px] max-w-[calc(100vw-1.5rem)] -translate-x-1/2 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+      <Panel title={`Event: Stadium · Level ${r.level}`}>
+        {r.stage === 'free' && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-slate-100">Run {r.runs + 1}</span>
+              <div className="flex gap-1">{goBtn}<button className="chip chip-on" onClick={() => game.startRound()}>Start the event</button></div>
+            </div>
+            {last && <p className="text-xs text-slate-300">Last run: {last.arrived}/{last.sent} arrived ({Math.round(last.rate * 100)}%)</p>}
+          </div>
+        )}
+        {r.stage === 'build' && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-2xl font-bold tabular-nums text-amber-200">Build · {mmss(Math.ceil(r.buildLeft))}</span>
+              <div className="flex gap-1">{goBtn}<button className="chip chip-on" onClick={() => game.startNow()}>Start now</button></div>
+            </div>
+            <p className="text-xs text-slate-300">{crowd}</p>
+            <p className="text-xs text-slate-400">upkeep {money(r.upkeep)}</p>
+          </div>
+        )}
+        {r.stage === 'surge' && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-2xl font-bold tabular-nums text-amber-200">Kick-off in {mmss(Math.ceil(r.surgeLeft))}</span>
+              {goBtn}
+            </div>
+            <p className="text-xs text-slate-300">{crowd}</p>
+            <p className="text-xs text-slate-400">upkeep {money(r.upkeep)}</p>
+          </div>
+        )}
+        {r.stage === 'eval' && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-slate-100">Event over{last ? ` · ${last.arrived}/${last.sent} arrived (${Math.round(last.rate * 100)}%)` : ''}</span>
+              <button className="chip chip-on" onClick={() => game.closeRound()}>Back to the valley</button>
+            </div>
+            <p className="text-xs text-slate-400">upkeep paid {money(r.upkeep)}</p>
+          </div>
+        )}
+      </Panel>
+    </div>
+  );
+}
+
 /** the legend of the flow colours: the v/c bands, in FLOW_COLS order */
 const FLOW_LEGEND: [string, string][] = [['< 0.5', FLOW_COLS[0]!], ['< 0.8', FLOW_COLS[1]!], ['< 1', FLOW_COLS[2]!], ['≥ 1 v/c', FLOW_COLS[3]!]];
 /** the worst bottlenecks of the city's last report, worst first: a row per item (click to jump there), the time lost per game hour, and the flow legend */

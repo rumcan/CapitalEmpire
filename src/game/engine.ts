@@ -12,6 +12,7 @@ import { CAR_COLOURS } from './traffic';
 import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
+import { insideSite, type Site } from './event/site';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
@@ -480,8 +481,21 @@ export class Game {
     }
     return false;
   }
-  /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads) */
+  /** does a road corridor of half width hw run into the stadium (its footprint padded by 2 tiles)? false with no site yet */
+  private crossesStadium(legs: Leg[], hw: number): boolean {
+    const site = this.site; if (!site) return false;
+    for (const l of legs) {
+      const d = sub(l.b, l.a), L = vlen(d); if (!L) continue;
+      const u = mul(d, 1 / L), n = perp(u);
+      for (let s = 0; s <= L; s += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
+        if (insideSite(site, l.a.x + u.x * s + n.x * o, l.a.y + u.y * s + n.y * o, 2)) return true;
+      }
+    }
+    return false;
+  }
+  /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads); or the stadium */
   private blockedForRoad(legs: Leg[], hw: number): boolean {
+    if (this.crossesStadium(legs, hw)) return true;
     for (const l of legs) {
       const d = sub(l.b, l.a), L = vlen(d); if (!L) continue;
       const u = mul(d, 1 / L), n = perp(u);
@@ -516,6 +530,7 @@ export class Game {
     if (kinds.includes(SK.TUNNEL) && !tunnelsUnlocked(this.reached)) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
+    if (this.crossesStadium(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross the stadium', 'warn'); return; }
     const total = this.net.legsLength(parts);
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
     const blocking = near.filter(p => !p.auto && LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car');
@@ -750,6 +765,18 @@ export class Game {
     this.builds.push({ legs, cls, t0: now, dur, total, cum });
     if (now - this.growToast > 30000) { this.growToast = now; this.toast('The town laid a gravel road'); }
   }
+
+  // ---------- the event (Phase 5 step 2c) ----------
+  /** the stadium's site as the city worker placed it (null: none yet; it follows each terrain) */
+  get site(): Site | null { return this.traffic.site; }
+  /** announces an event round: the build (10 minutes of wall clock) starts; the city worker refuses unless the round is free */
+  startRound() { this.traffic.startRound(); this.toast('The event is announced: 10 minutes to build'); this.emit(); }
+  /** ends the build now: the crowd's run to kick-off begins */
+  startNow() { this.traffic.startNow(); this.emit(); }
+  /** closes the eval: the round is free again and the clock runs on */
+  closeRound() { this.traffic.closeRound(); this.emit(); }
+  /** moves the camera to the stadium's centre, keeping the zoom */
+  goToSite() { const s = this.site; if (!s) return; this.cam.X = worldX(s.c.x, s.c.y); this.cam.Y = worldY(s.c.x, s.c.y); this.clampCam(); this.emit(); }
 
   // ---------- economy / save ----------
   /** the treasury, $ (the city's books, mirrored from the city worker; spend moves it at once); Infinity with unlimited money (the dev sandbox) */
@@ -1200,6 +1227,7 @@ export class Game {
     this.drawFlow(ctx);
     this.drawInspect(ctx);
     this.drawGroundOverlays(ctx);
+    this.drawStadium(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1259,6 +1287,22 @@ export class Game {
     }
   }
 
+  /** the stadium's placeholder art (until Phase 8): the footprint with its pitch inset 8 tiles, the 4 doors, and the label at the centre (every zoom) */
+  private drawStadium(ctx: CanvasRenderingContext2D) {
+    const s = this.site; if (!s) return;
+    const dpr = this.dpr, I = 8;
+    const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
+    rect(s.x, s.y, s.w, s.h); ctx.fillStyle = 'rgba(150,160,175,0.55)'; ctx.fill();
+    rect(s.x + I, s.y + I, s.w - 2 * I, s.h - 2 * I); ctx.fillStyle = 'rgba(70,140,70,0.55)'; ctx.fill();
+    rect(s.x, s.y, s.w, s.h); ctx.strokeStyle = '#e9edf2'; ctx.lineWidth = 2 * dpr; ctx.stroke();
+    ctx.fillStyle = '#ffbe3c';
+    for (const d of s.doors) { const p = this.screen(d.x, d.y); ctx.beginPath(); ctx.arc(p.x, p.y, 6 * dpr, 0, Math.PI * 2); ctx.fill(); }
+    const c = this.screen(s.c.x, s.c.y), label = `STADIUM · L${this.traffic.round.level}`;
+    ctx.font = `bold ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 4 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
+    ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
+    ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
   private drawGroundOverlays(ctx: CanvasRenderingContext2D) {
     const strip = (legs: Leg[], hw: number) => { for (const l of legs) { const d = sub(l.b, l.a), len = vlen(d) || 1, u = mul(d, 1 / len), n = perp(u); const c = [add(sub(l.a, mul(u, hw)), mul(n, hw)), add(add(l.b, mul(u, hw)), mul(n, hw)), sub(add(l.b, mul(u, hw)), mul(n, hw)), sub(sub(l.a, mul(u, hw)), mul(n, hw))]; ctx.moveTo(c[0].x, c[0].y); for (let k = 1; k < 4; k++) ctx.lineTo(c[k].x, c[k].y); ctx.closePath(); } };
     if (this.tool === 'road') {
