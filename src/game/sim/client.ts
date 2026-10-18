@@ -154,6 +154,8 @@ export class SimClient {
   requestReport() { this.post({ t: 'report' }); }
   /** the shuttle routes as the player drew them (the full list, each time): the worker resolves their stops and plans their buses */
   setBusRoutes(defs: BusRouteDef[]) { this.post({ t: 'buses', defs }); }
+  /** the player buys the town lot key out (the worker clears it if the books cover it; its 'clear' comes back in a town message) */
+  buyLot(key: string) { this.post({ t: 'buyLot', key }); }
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
   /** the sim speed: 0 pauses, 1 is real time, 2, 4, 8 and 20 are faster */

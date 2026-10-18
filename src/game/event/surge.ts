@@ -3,13 +3,15 @@
 // town, by population) and a destination (a car park joined to the home's road, by bays, then round-robin). Step spawns the due ones from
 // their driveways, bound for the sink of the car park that points from the home toward its entrance (matchSink); the sim reports each party
 // car's exit (Sim.partyOut) and the counts follow.
+// A party whose home is within BUS_WALK of a town's bus stop (a stop on a road beside a town's car park lot) goes by that bus instead: it
+// spawns no car, it walks from home to the stop (step hands the walk to the City), and the bus counts (byBus) follow.
 // Pure TS, no DOM, its own random stream (SURGE_SEED, given to plan).
 import type { Lot } from '../lots/lots';
 import type { Pt, Seg } from '../network';
 import type { LaneGraph } from '../sim/lanes';
 import type { Sim } from '../sim/sim';
 import { driveway, type Drive } from '../sim/trips';
-import { DEPART_END, SURGE_S } from './config';
+import { BUS_WALK, DEPART_END, PARTY, SURGE_S } from './config';
 import type { FanCounts } from './crowd';
 
 /** a home the crowd leaves from: its lot, its town, its residents (the weight), and the component of its frontage road (see City) */
@@ -17,6 +19,8 @@ export interface SurgeHome { lot: Lot; town: number; pop: number; comp: number }
 /** a car park as the surge sees it: the component of its frontage road, its bays (the weight), and its sinks (indices into Sim.sinks, one per
  *  entrance direction). pts and dirs, aligned with sinks: each sink's point (its entrance on its lane) and unit direction; none: every sink matches */
 export interface SurgePark { comp: number; bays: number; sinks: number[]; pts?: Pt[]; dirs?: Pt[] }
+/** a town's bus stop for the surge: the route (its index), the town, and the stop's point (tiles) */
+export interface SurgeStop { route: number; town: number; x: number; y: number }
 
 /** the ordinal (into P.sinks) of the sink a car at o is sent to, the e-th car for this park: the sinks whose direction points from o toward
  *  their entrance (dot(entrance - o, dir) > 0), round-robin by e; none match: all of them, round-robin. No draws, no allocation */
@@ -34,14 +38,27 @@ export function matchSink(P: SurgePark, o: Pt, e: number): number {
   }
   return 0;
 }
+/** the route of town k's nearest bus stop within BUS_WALK tiles of lot l's centre (the lowest route on a tie), or -1: the party drives */
+function busStop(stops: SurgeStop[], k: number, l: Lot): number {
+  let best = -1, bd = Infinity;
+  for (const q of stops) {
+    if (q.town !== k) continue;
+    const d = Math.hypot(q.x - l.c.x, q.y - l.c.y);
+    if (d <= BUS_WALK && d < bd) { bd = d; best = q.route; }
+  }
+  return best;
+}
 /** a town's counts at kick-off: the cars sent, parked, turned away, lost, stranded (never spawned), and late (on the road or never left), and its fans
- *  (each parked car is PARTY fans): at the doors (fans), at a lot stop's queue (atStop), and on a bus (onBus) */
-export interface TownResult { sent: number; parked: number; turned: number; lost: number; stranded: number; late: number; fans: number; atStop: number; onBus: number }
-/** the surge as the UI sees it, per town: the cars sent, parked, on the road, turned away, lost and stranded, and the fans at the doors, at a lot stop and on a bus */
-export interface SurgeView { sent: number[]; parked: number[]; onRoad: number[]; turned: number[]; lost: number[]; stranded: number[]; fans: number[]; atStop: number[]; onBus: number[] }
+ *  (each parked car is PARTY fans): at the doors (fans), at a lot stop's queue (atStop), on a bus (onBus), and by a town's bus (byBus: the fans
+ *  whose party took a town bus at its departure; they are not in late) */
+export interface TownResult { sent: number; parked: number; turned: number; lost: number; stranded: number; late: number; fans: number; atStop: number; onBus: number; byBus: number }
+/** the surge as the UI sees it, per town: the cars sent, parked, on the road, turned away, lost and stranded, and the fans at the doors, at a lot stop,
+ *  on a bus and by a town's bus */
+export interface SurgeView { sent: number[]; parked: number[]; onRoad: number[]; turned: number[]; lost: number[]; stranded: number[]; fans: number[]; atStop: number[]; onBus: number[]; byBus: number[] }
 
-/** a departure: its sim time, its town, its origin lot, its car park (an index into the park list) and its entrance ordinal (round-robin) */
-interface Dep { t: number; town: number; lot: Lot; park: number; e: number }
+/** a departure: its sim time, its town, its origin lot, its car park (an index into the park list), its entrance ordinal (round-robin), and the
+ *  route of the town bus it takes (-1: by car) */
+interface Dep { t: number; town: number; lot: Lot; park: number; e: number; bus: number }
 /** the most cars spawned in one step */
 const MAX_SPAWN = 60;
 /** the outcomes of one spawn attempt: spawned, wait for room, or stranded (cannot leave) */
@@ -56,23 +73,25 @@ function pickCum(cum: number[], x: number): number {
 
 /** The surge of one round: the schedule of the crowd's departures and the per-town counts of their cars */
 export class Surge {
-  /** per town: the cars sent, departed (spawned, or lost at once), parked, turned away, lost, and stranded */
+  /** per town: the cars sent, departed (spawned, or lost at once), parked, turned away, lost, and stranded; the parties that took a town bus */
   private sent: number[] = []; private departed: number[] = []; private parked: number[] = []; private turned: number[] = [];
-  private lost: number[] = []; private stranded: number[] = [];
+  private lost: number[] = []; private stranded: number[] = []; private bus: number[] = [];
   /** the departures in time order, the next one to come due, and the due ones not yet spawned (in order) */
   private sched: Dep[] = []; private next = 0; private pend: Dep[] = [];
   /** the car parks (see SurgePark), the next entrance ordinal per park, and the driveways by lot key and by seg (cleared on each graph update) */
   private parks: SurgePark[] = []; private rr: number[] = [];
   private drives = new Map<string, Drive | null>(); private bySeg: Map<Seg, number[]> | null = null;
 
-  /** plans the surge at t0 (sim s): crowd[k] cars from town k, homes[k] the homes of town k, parks the car parks, rnd the surge's own stream.
+  /** plans the surge at t0 (sim s): crowd[k] cars from town k, homes[k] the homes of town k, parks the car parks, rnd the surge's own stream,
+   *  stops the town bus stops (none: every party drives).
    *  A home counts only with a car park joined to its road (the same comp); a town with no such home sends its whole crowd stranded (no draws).
-   *  Each car: a home by population, a park by bays, and a departure at t0 + SURGE_S * DEPART_END * u, u the mean of three draws (a bell at the middle). */
-  plan(crowd: number[], homes: SurgeHome[][], parks: SurgePark[], rnd: () => number, t0: number): void {
+   *  Each car: a home by population, a park by bays, and a departure at t0 + SURGE_S * DEPART_END * u, u the mean of three draws (a bell at the middle).
+   *  A car whose home is within BUS_WALK of a stop of its town (the nearest) is a bus party instead: the same draws, no entrance. */
+  plan(crowd: number[], homes: SurgeHome[][], parks: SurgePark[], rnd: () => number, t0: number, stops: SurgeStop[] = []): void {
     const K = crowd.length;
     this.parks = parks; this.rr = parks.map(() => 0);
     this.sent = crowd.slice(); this.departed = crowd.map(() => 0); this.parked = crowd.map(() => 0); this.turned = crowd.map(() => 0);
-    this.lost = crowd.map(() => 0); this.stranded = crowd.map(() => 0);
+    this.lost = crowd.map(() => 0); this.stranded = crowd.map(() => 0); this.bus = crowd.map(() => 0);
     this.sched = []; this.next = 0; this.pend = []; this.drives.clear(); this.bySeg = null;
     // the car parks with bays and entrances, by component, with the cumulative bays of each component's list
     const byComp = new Map<number, { ids: number[]; cum: number[] }>();
@@ -90,12 +109,12 @@ export class Surge {
         const h = hs[pickCum(hc, rnd() * tot)]!, L = byComp.get(h.comp)!;
         const park = L.ids[pickCum(L.cum, rnd() * L.cum[L.cum.length - 1]!)]!;
         const u = (rnd() + rnd() + rnd()) / 3;
-        this.sched.push({ t: t0 + SURGE_S * DEPART_END * u, town: k, lot: h.lot, park, e: 0 });
+        this.sched.push({ t: t0 + SURGE_S * DEPART_END * u, town: k, lot: h.lot, park, e: 0, bus: busStop(stops, k, h.lot) });
       }
     }
-    // the entrances round-robin in departure order (the sort is stable: equal times keep their draw order)
+    // the entrances round-robin in departure order (the sort is stable: equal times keep their draw order); a bus party takes no entrance
     this.sched.sort((a, b) => a.t - b.t);
-    for (const d of this.sched) d.e = this.rr[d.park]!++;
+    for (const d of this.sched) if (d.bus < 0) d.e = this.rr[d.park]!++;
   }
 
   /** the car parks' lists now (after a network edit: the sinks' indices may have moved, see City.surgeParks); the same park indices */
@@ -105,13 +124,15 @@ export class Surge {
 
   /** once per City step while the surge runs: the departures due by sim.t join the pending ones, and each pending car tries to spawn, in order,
    *  up to MAX_SPAWN a step. A car with no room on its driveway waits for the next step; one that cannot leave (no driveway, no entrance, or past
-   *  its entrance on the driveway's own dseg) is stranded. A spawn that the sim refuses for no route is lost at once (its exit comes via event). */
-  step(sim: Sim, g: LaneGraph): void {
+   *  its entrance on the driveway's own dseg) is stranded. A spawn that the sim refuses for no route is lost at once (its exit comes via event).
+   *  A bus party due is handed to walk(home, route, town) (true: it walks to its stop; false: the stop is gone, and the party is lost). */
+  step(sim: Sim, g: LaneGraph, walk?: (home: Lot, route: number, town: number) => boolean): void {
     while (this.next < this.sched.length && this.sched[this.next]!.t <= sim.t) this.pend.push(this.sched[this.next++]!);
     if (!this.pend.length) return;
     let n = 0, w = 0;
     for (let i = 0; i < this.pend.length; i++) {
       const d = this.pend[i]!;
+      if (d.bus >= 0) { if (walk && walk(d.lot, d.bus, d.town)) this.bus[d.town]!++; else this.lost[d.town]!++; continue; }
       if (n >= MAX_SPAWN) { this.pend[w++] = d; continue; }
       const r = this.spawn(d, sim, g);
       if (r === WAIT) this.pend[w++] = d;
@@ -155,18 +176,21 @@ export class Surge {
   /** the departure times (sim s), in order: for the tests */
   times(): number[] { return this.sched.map(d => d.t); }
 
-  /** the counts as the UI sees them: per town the cars sent, parked, on the road (departed, less those parked, turned away and lost), turned away, lost, stranded */
+  /** the counts as the UI sees them: per town the cars sent, parked, on the road (departed, less those parked, turned away and lost), turned away, lost, stranded,
+   *  and the fans by a town bus (the parties that took it, PARTY each) */
   view(c?: FanCounts): SurgeView {
     const onRoad = this.sent.map((_, k) => this.departed[k]! - this.parked[k]! - this.turned[k]! - this.lost[k]!);
     return { sent: this.sent.slice(), parked: this.parked.slice(), onRoad, turned: this.turned.slice(), lost: this.lost.slice(), stranded: this.stranded.slice(),
-      fans: this.sent.map((_, k) => c?.fans[k] ?? 0), atStop: this.sent.map((_, k) => c?.atStop[k] ?? 0), onBus: this.sent.map((_, k) => c?.onBus[k] ?? 0) };
+      fans: this.sent.map((_, k) => c?.fans[k] ?? 0), atStop: this.sent.map((_, k) => c?.atStop[k] ?? 0), onBus: this.sent.map((_, k) => c?.onBus[k] ?? 0),
+      byBus: this.bus.map(p => p * PARTY) };
   }
 
-  /** the counts per town at kick-off: late is what was still on the road or never left (sent less the others); the fans as the crowd counts them (c, see FanCounts; none: 0) */
+  /** the counts per town at kick-off: late is what was still on the road or never left (sent less the others, and less the parties by a town bus, which
+   *  walk and ride and are not on the road); the fans as the crowd counts them (c, see FanCounts; none: 0) */
   result(c?: FanCounts): TownResult[] {
     return this.sent.map((s, k) => {
-      const parked = this.parked[k]!, turned = this.turned[k]!, lost = this.lost[k]!, stranded = this.stranded[k]!;
-      return { sent: s, parked, turned, lost, stranded, late: s - parked - turned - lost - stranded, fans: c?.fans[k] ?? 0, atStop: c?.atStop[k] ?? 0, onBus: c?.onBus[k] ?? 0 };
+      const parked = this.parked[k]!, turned = this.turned[k]!, lost = this.lost[k]!, stranded = this.stranded[k]!, bus = this.bus[k]!;
+      return { sent: s, parked, turned, lost, stranded, late: s - parked - turned - lost - stranded - bus, fans: c?.fans[k] ?? 0, atStop: c?.atStop[k] ?? 0, onBus: c?.onBus[k] ?? 0, byBus: bus * PARTY };
     });
   }
 }

@@ -147,6 +147,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
       case 'buses': city.setBusRoutes(m.defs); forcePost = true; break;
+      case 'buyLot': postTown(city.buyLot(m.key), true); postBudget(null); break;
       case 'heat': heatOn = m.on; heatGeomV = -1; heatNext = 0; break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else if (m.op === 'pick') city.pickCard(m.card);

@@ -53,8 +53,9 @@ export interface SaveV5 {
   parks?: [number, number, number, number][];
   /** the toll gates as [ax, ay, bx, by, booths] (the plaza's ends, inbound a → b; ids 1..n in this order; optional, no version bump; missing = none) */
   tolls?: [number, number, number, number, number][];
-  /** the shuttle bus routes as [park, sx, sy, dx, dy, buses, seats] (the lot stop and the doors stop, tiles; ids 1..n in this order; optional, no version bump; missing = none) */
-  buses?: [number, number, number, number, number, number, number][];
+  /** the shuttle bus routes as [park, sx, sy, dx, dy, buses, seats, town] (the lot stop and the doors stop, tiles; town: the town's index, -1 for a route
+   *  of a car park; ids 1..n in this order; optional, no version bump; missing = none; a save without the town element has none) */
+  buses?: [number, number, number, number, number, number, number, number?][];
   /** how many of the round's cards the game has applied to its tolls and bus routes (optional, no version bump; missing = all of them) */
   cardsApplied?: number;
 }

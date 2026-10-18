@@ -233,3 +233,29 @@ test('with town centres the town grows on gravel slowly (5 + 0.02 built lots a g
   assert.ok(townPaved > 6 * townGravel, `the paved roads fill faster (${townPaved} vs ${townGravel} on gravel)`);
   assert.ok(townPaved >= 100, `the paved roads grow about 6 lots an hour (${townPaved} a day)`);
 });
+
+test('a lot bought out: EMPTY with a clear event, held 2 game days (no growth on it, the other lots grow), and it regrows after; an EMPTY lot is not bought', () => {
+  const { lm, lots } = gridLots();
+  const town = new Town(5); town.onLots(lots, []);
+  const ctx = ctxOf(lm), tick = (h: number) => town.tick(h * HOUR, ctx);
+  for (let h = 1; h <= 3 * 24; h++) tick(h);
+  const bought = finished(town)[0];
+  assert.ok(bought, 'a finished lot to buy out');
+  const key = bought.key, T0 = town.t, hold = T0 + 2 * DAY;
+  const e = town.clear(key);
+  assert.ok(e && e.kind === 'clear' && e.level === LV.EMPTY && e.use === LU.NONE, 'the clear event: EMPTY, no use');
+  assert.equal(town.states.get(key)!.level, LV.EMPTY, 'the lot is EMPTY now');
+  assert.equal(town.holdUntil.get(key), hold, 'held until 2 game days on');
+  assert.equal(town.clear(key), null, 'an EMPTY lot cannot be bought out again');
+  // the hold: the lot stays EMPTY hour by hour while the town grows on the other lots
+  let grewOthers = false;
+  for (let h = Math.floor(T0 / HOUR) + 1; h * HOUR < hold; h++) {
+    for (const ev of tick(h)) if (ev.key !== key && ev.kind === 'build') grewOthers = true;
+    assert.equal(town.states.get(key)!.level, LV.EMPTY, `held at ${h * HOUR} s`);
+  }
+  assert.ok(grewOthers, 'the town grows on its other lots meanwhile');
+  // after the hold the lot can be built on again
+  let regrownAt = -1;
+  for (let h = hold / HOUR; h < hold / HOUR + 10 * 24 && regrownAt < 0; h++) { tick(h); if (town.states.get(key)!.level !== LV.EMPTY) regrownAt = town.t; }
+  assert.ok(regrownAt >= hold, `regrown ${((regrownAt - T0) / DAY).toFixed(2)} game days after the purchase`);
+});

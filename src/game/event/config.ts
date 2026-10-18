@@ -88,6 +88,8 @@ export const MAX_DWELL = 40;
 export const WALK_V = 1.4;
 /** what a shuttle route costs to build, $ (the UI charges it) */
 export const BUS_ROUTE_COST = 15000;
+/** the farthest a party's home may be from a town's bus stop (a stop on a road beside a town's car park lot), tiles (300 m): the party takes the town bus, not a car */
+export const BUS_WALK = 150;
 /** the seats of a double-decker bus (the Double-decker buses card: every route's seats are at least this) */
 export const DECK_SEATS = 100;
 

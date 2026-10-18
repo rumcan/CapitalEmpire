@@ -13,7 +13,7 @@ import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
-import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
+import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensation, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
 import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, tollPrice, type CardId } from './event/config';
@@ -23,7 +23,7 @@ import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, type Site } from './event/site';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
-import { Surge, matchSink, type SurgeHome, type SurgePark } from './event/surge';
+import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -378,7 +378,7 @@ export class City {
     // under way counts it (as it counts its upkeep)
     if (this.sim.tolls) { const y = this.sim.tolls * tollPrice(this.round.level); this.budget.toll(y); if (rs === 'build' || rs === 'surge') this.round.toll += y; this.sim.tolls = 0; }
     // the surge: its due cars spawn, then the party cars' exits are counted; kick-off (the round's last step of the surge) gives the result
-    if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g);
+    if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g, this.busWalk);
     this.drainParty();
     this.drainBus();
     if (this.crowd) { this.crowd.step(WALK_V * n * DT / MPT); this.syncWait(); }
@@ -464,8 +464,11 @@ export class City {
       const k = this.town.townOf(b.lot.key);
       if (b.use === LU.RES && b.pop > 0 && k >= 0 && k < K) homes[k]!.push({ lot: b.lot, town: k, pop: b.pop, comp: this.compOf(b.lot.seg) });
     }
+    // the town bus stops: a route with a town (its lot stop beside the town's car park) and a resolved stop
+    const stops: SurgeStop[] = [];
+    this.busDefs.forEach((d, r) => { const p = this.busPts[r]?.lot; if (d.town !== undefined && p) stops.push({ route: r, town: d.town, x: p.x, y: p.y }); });
     const s = new Surge();
-    s.plan(this.round.crowd, homes, this.surgeParks(), seededRnd(SURGE_SEED), this.sim.t);
+    s.plan(this.round.crowd, homes, this.surgeParks(), seededRnd(SURGE_SEED), this.sim.t, stops);
     return s;
   }
   /** the car parks for the surge: each with its frontage's component, its bays, and its sinks (indices into sim.sinks), each sink's point and direction */
@@ -520,6 +523,25 @@ export class City {
     pb.length = 0;
   }
 
+  /** the player buys a town lot out (the bulldozer): its compensation is spent, and the town clears and holds it (Town.clear). Returns the town's events
+   *  to post (the 'clear'); none if the lot is not built, or the books refuse the price */
+  buyLot(key: string): TownEvent[] {
+    const s = this.town.states.get(key);
+    if (!s) return [];
+    const c = compensation(s);
+    if (!this.budget.unlimited && c > this.budget.money) return [];
+    const e = this.town.clear(key);
+    if (!e) return [];
+    this.spend('compensation', c); this.syncHour = -1;
+    return [e];
+  }
+  /** a town bus party's walk (Surge.step): from its home to its route's lot stop, a group of PARTY fans that queues there at its arrival; false if the stop is gone */
+  private busWalk = (home: Lot, r: number, k: number): boolean => {
+    const C = this.crowd, p = this.busPts[r]?.lot;
+    if (!C || !p) return false;
+    C.add({ x: home.c.x, y: home.c.y, tx: p.x, ty: p.y, n: PARTY, town: k, stage: 0, route: r });
+    return true;
+  };
   /** the shuttle routes as the player drew them (the full list, each time): their stops are resolved on the lane graph (busStopAt); a route with an
    *  unresolved stop is inactive. The buses on the network are planned to the new stops */
   setBusRoutes(defs: BusRouteDef[]): void {

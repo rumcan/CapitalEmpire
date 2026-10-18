@@ -69,6 +69,8 @@ export class Town {
   /** per zone: the sim s since its access went above 1.8 (-1 = not) */
   private bad = new Float64Array(256).fill(-1);
   private seed: number; private rs: number;
+  /** per lot bought out (see clear): the sim s the lot is held until (no town growth on it before then) */
+  holdUntil = new Map<string, number>();
   private ev: TownEvent[] = [];
   private w = new Float64Array(0); private sel = new Int32Array(0); private sc = new Float64Array(4); private mul = new Float64Array(4);
   /** the built+building lots by use (index = LU) and in total */
@@ -147,6 +149,16 @@ export class Town {
    *  hours grow nothing) */
   skipTo(t: number) { if (t > this.t) { this.t = t; this.hour = Math.floor(t / HOUR); } }
 
+  /** a lot bought out (the player's bulldozer): a built lot (BUILDING or more) goes EMPTY now (a 'clear' event) and is held for 2 game days (see
+   *  holdUntil: the town does not grow on it). Null, and nothing changes, for a lot that is not built */
+  clear(key: string): TownEvent | null {
+    const s = this.states.get(key);
+    if (!s || s.level < LV.BUILDING) return null;
+    this.set(s, LU.NONE, LV.EMPTY, 0, this.t);
+    this.holdUntil.set(key, this.t + 2 * DAY);
+    return this.evt(s, 'clear');
+  }
+
   /** advance to sim time t (seconds); runs whole game hours; returns the events (the array is reused: read it before the next call) */
   tick(t: number, ctx: TownCtx): TownEvent[] {
     const ev = this.ev; ev.length = 0;
@@ -196,7 +208,10 @@ export class Town {
   }
 
   /** the zone growth of a lot's zone if the lot is reachable, else 0 */
-  private openness(l: Lot, ctx: TownCtx): number { return ctx.reachable(l) ? zoneGrowth(this.access[zoneOf(l.c.x, l.c.y)]) : 0; }
+  private openness(l: Lot, ctx: TownCtx): number {
+    if ((this.holdUntil.get(l.key) ?? -Infinity) > this.t) return 0;
+    return ctx.reachable(l) ? zoneGrowth(this.access[zoneOf(l.c.x, l.c.y)]) : 0;
+  }
 
   /** one weighted pick among the best PICK_TOP candidates of the side (ANY, GRAVEL or PAVED: see the constants); null if none can grow */
   private pick(ctx: TownCtx, side: number): Lot | null {

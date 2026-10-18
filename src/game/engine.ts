@@ -26,7 +26,7 @@ import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
-import { compose, type ComposeState, type LotGeom } from './lots/compose';
+import { compose, isCarPark, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { SIG, shown, sigKey } from './sim/signals';
@@ -78,6 +78,8 @@ export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
+/** a town lot's use as the player reads it in the toasts (index LU: NONE, RES, COM, IND, TOUR, GOV) */
+const LOT_NAME = ['lot', 'residential lot', 'commercial lot', 'industrial lot', 'tourist lot', 'civic lot'];
 /** the planner's building refresh for the town's lots: at most one per this many ms; the contact sheet's block size, tiles */
 const LOT_BLOCKS_MS = 5000, BLOCK = 40;
 /** the library index by id, and the props the town's lots add (auto 'lot:' + key) */
@@ -174,11 +176,12 @@ export class Game {
    *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
   laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string } = null;
   /** the shuttle bus routes as the player drew them (saved; ids 1..n, a route's index is its sim index), the bus tool's first stop once it is chosen (its
-   *  road point, tiles, and its car park's id; null until then), and the tool's plan at the cursor (see busUpdate: the stop it would place, x, y, and why not) */
-  busDefs: BusRouteDef[] = []; busPick: { x: number; y: number; park: number } | null = null;
+   *  road point, tiles, its car park's id, and its town when the stop is beside a town's car park lot; null until then), and the tool's plan at the cursor
+   *  (see busUpdate: the stop it would place, x, y, its car park or town, and why not) */
+  busDefs: BusRouteDef[] = []; busPick: { x: number; y: number; park: number; town?: number } | null = null;
   /** the taken cards applied so far (saved: a card is never applied twice; see applyCards), the buses a new route gets and the seats of a bus */
   cardsApplied = 0; busFleet = START_BUSES; busSeats = BUS_SEATS;
-  private busHover: null | { mx: number; my: number; x: number; y: number; park: number; why: string } = null;
+  private busHover: null | { mx: number; my: number; x: number; y: number; park: number; why: string; town?: number } = null;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
   private saveTimer = 0; private blocksTimer = 0;
@@ -744,11 +747,28 @@ export class Game {
       const b = this.busIndexAt(t);
       if (b >= 0) { const id = this.busDefs[b]!.id; this.removeBus(b); this.scheduleSave(); this.toast(`Removed bus route #${id} (no refund)`); this.emit(); return; }
     }
-    const piece = this.net.pieceNear(t); if (!piece) return;
+    const piece = this.net.pieceNear(t);
+    if (!piece) { if (first) this.buyOut(t); return; }
     this.edit.removePiece(piece);
     this.commitNetwork();
     this.hoverPiece = this.net.pieceNear(t);
     this.puff(t.x, t.y, 10);
+  }
+  /** the bulldozer on a town building (no road, no prop there): the built lot (BUILDING or more) under tile t is bought out for its compensation, if the
+   *  treasury covers it. The worker clears the lot and holds it (see City.buyLot); its price is spent there */
+  private buyOut(t: Pt) {
+    let v: LotView | null = null;
+    for (const l of this.traffic.lots.values()) {
+      if (l.level < LV.BUILDING) continue;
+      const dx = t.x - l.o[0], dy = t.y - l.o[1], a = dx * l.u[0] + dy * l.u[1], b = dx * l.n[0] + dy * l.n[1];
+      if (a >= 0 && a <= l.w && b >= 0 && b <= l.d) { v = l; break; }
+    }
+    if (!v) return;
+    const c = compensation(v), name = LOT_NAME[v.use] ?? 'lot';
+    if (c > this.money) { this.toast(`Not enough money: buying out this ${name} costs $${c.toLocaleString()}`, 'warn'); return; }
+    this.traffic.buyLot(v.key);
+    this.toast(`Bought and cleared ${name} for $${c.toLocaleString()}`, 'good');
+    this.emit();
   }
   /** the client slot of the nearest alive car within 1.5 tiles of the tile under (mx, my), or -1 */
   private carAt(mx: number, my: number): number {
@@ -1229,30 +1249,48 @@ export class Game {
     return best;
   }
   /** the bus tool's plan at the cursor: the stop it would place (x, y: a road point within 4 tiles, else the tile under the cursor), the car park of a lot stop
-   *  (park: its id; 0 for a doors stop or none) and why it cannot be placed ('' if it can). The lot stop: a car park within 12 tiles of the road point; the doors
-   *  stop: within 60 tiles of the stadium's rect. Once the first stop is picked, the plan is the doors stop */
+   *  (park: its id; 0 for a doors stop, a town's car park or none), the town of a stop beside a town's car park lot (town), and why it cannot be placed ('' if
+   *  it can). The lot stop: a car park within 12 tiles of the road point, else a town's car park lot (townParkAt); the doors stop: within 60 tiles of the
+   *  stadium's rect. Once the first stop is picked, the plan is the doors stop */
   private busUpdate(mx: number, my: number) {
     const t = this.tileAt(mx, my), lot = !this.busPick, P = this.roadNear(t, 4);
     if (!P) { this.busHover = { mx, my, x: t.x, y: t.y, park: 0, why: lot ? 'Click a road beside a car park' : 'Click a road near the stadium' }; return; }
     if (lot) {
       let park = 0, bd = 12;
       for (const d of this.parkDefs) { const q = rectDist(P, d.x, d.y, d.w, d.h); if (q <= bd) { bd = q; park = d.id; } }
-      this.busHover = { mx, my, x: P.x, y: P.y, park, why: park ? '' : 'Click a road beside a car park' };
+      if (park) { this.busHover = { mx, my, x: P.x, y: P.y, park, why: '' }; return; }
+      const town = this.townParkAt(t, 12);
+      this.busHover = town === null ? { mx, my, x: P.x, y: P.y, park: 0, why: 'Click a road beside a car park' } : { mx, my, x: P.x, y: P.y, park: 0, why: '', town };
     } else {
       const s = this.site, near = !!s && rectDist(P, s.x, s.y, s.w, s.h) <= 60;
       this.busHover = { mx, my, x: P.x, y: P.y, park: 0, why: near ? '' : 'Click a road near the stadium' };
     }
+  }
+  /** the town of the town public car park lot (a COM lot that isCarPark) whose centre is nearest tile t within r tiles, or null; the town is the nearest
+   *  town centre to that lot's centre (the worker's town index: the terrain's towns, in order) */
+  private townParkAt(t: Pt, r: number): number | null {
+    let best: LotView | null = null, bd = r, bx = 0, by = 0;
+    for (const v of this.traffic.lots.values()) {
+      if (!isCarPark(v)) continue;
+      const cx = v.o[0] + (v.u[0] * v.w + v.n[0] * v.d) / 2, cy = v.o[1] + (v.u[1] * v.w + v.n[1] * v.d) / 2, d = Math.hypot(cx - t.x, cy - t.y);
+      if (d <= bd) { bd = d; best = v; bx = cx; by = cy; }
+    }
+    if (!best) return null;
+    const cs = townCentres(this.terrain);
+    let k = -1, kd = Infinity;
+    cs.forEach((c, i) => { const d = (c.x - bx) ** 2 + (c.y - by) ** 2; if (d < kd) { kd = d; k = i; } });
+    return k < 0 ? null : k;
   }
   /** the bus tool's click: the first picks the lot stop (its plan must have a car park), the second places the route with the doors stop if it is affordable
    *  (the first route is free: the starting kit) */
   private busClick() {
     const h = this.busHover; if (!h) return;
     if (h.why) { this.toast(h.why, 'warn'); return; }
-    if (!this.busPick) { this.busPick = { x: h.x, y: h.y, park: h.park }; this.busUpdate(h.mx, h.my); this.emit(); return; }
+    if (!this.busPick) { this.busPick = { x: h.x, y: h.y, park: h.park, town: h.town }; this.busUpdate(h.mx, h.my); this.emit(); return; }
     const cost = this.busDefs.length ? BUS_ROUTE_COST : 0, pk = this.busPick;
     if (cost > this.money) { this.toast(`Not enough money: a bus route costs $${cost.toLocaleString()}`, 'warn'); return; }
     const id = Math.max(0, ...this.busDefs.map(d => d.id)) + 1;
-    this.busDefs.push({ id, park: pk.park, sx: pk.x, sy: pk.y, dx: h.x, dy: h.y, buses: this.busFleet, seats: this.busSeats });
+    this.busDefs.push({ id, park: pk.park, sx: pk.x, sy: pk.y, dx: h.x, dy: h.y, buses: this.busFleet, seats: this.busSeats, ...(pk.town !== undefined ? { town: pk.town } : {}) });
     if (cost) this.traffic.spend('construction', cost);
     this.traffic.setBusRoutes(this.busDefs);
     this.busPick = null; this.puff((pk.x + h.x) / 2, (pk.y + h.y) / 2, 8);
@@ -1324,7 +1362,7 @@ export class Game {
     }
     if (!h.why) { const b = this.screen(h.x, h.y); busStop(ctx, b.x, b.y, dpr); }
     const cost = this.busDefs.length ? BUS_ROUTE_COST : 0, short = !h.why && !!P && cost > this.money, bad = !!h.why || short;
-    const text = h.why || (!P ? `Lot stop · car park #${h.park}` : short ? `Not enough money: $${cost.toLocaleString()}` : cost ? `Bus route · $${cost.toLocaleString()}` : 'Bus route · free (the starting kit)');
+    const text = h.why || (!P ? (h.town !== undefined ? 'Lot stop · town car park' : `Lot stop · car park #${h.park}`) : short ? `Not enough money: $${cost.toLocaleString()}` : cost ? `Bus route · $${cost.toLocaleString()}` : 'Bus route · free (the starting kit)');
     const x = h.mx * dpr + 14 * dpr, y = h.my * dpr - 12 * dpr;
     ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
@@ -1396,7 +1434,7 @@ export class Game {
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
       tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
-      buses: this.busDefs.map((d): [number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats]),
+      buses: this.busDefs.map((d): [number, number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats, d.town ?? -1]),
       cardsApplied: this.cardsApplied,
     };
     try { return await writeSave(d); } catch { return 0; }
@@ -1411,7 +1449,7 @@ export class Game {
       for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
-      if (d.buses) this.busDefs = d.buses.map(([park, sx, sy, dx, dy, buses, seats], k) => ({ id: k + 1, park, sx, sy, dx, dy, buses, seats }));
+      if (d.buses) this.busDefs = d.buses.map(([park, sx, sy, dx, dy, buses, seats, town], k) => ({ id: k + 1, park, sx, sy, dx, dy, buses, seats, ...(town !== undefined && town >= 0 ? { town } : {}) }));
       // the cards the save had applied are in its tolls and routes already: only the fields new gates and routes take are set from them
       const cards = d.round?.cards ?? [], n = Math.min(cards.length, d.cardsApplied ?? cards.length);
       this.cardsApplied = n; this.setCardFields(cards.slice(0, n));

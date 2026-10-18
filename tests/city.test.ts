@@ -6,8 +6,8 @@ import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { City } from '../src/game/city';
 import { MAP } from '../src/game/iso';
-import { builtLots } from '../src/game/lots/town';
-import type { Ledger } from '../src/game/budget';
+import { LV, builtLots } from '../src/game/lots/town';
+import { compensation, type Ledger } from '../src/game/budget';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -106,4 +106,31 @@ test('with town centres the lots the town builds on paved roads are sold (saleOf
     assert.ok(builds > 0, `${cls.id}: lots were started (${builds})`);
     assert.equal(sold, 600 * (cls === CLASS.street ? paidBuilds : 0), `${cls.id}: the sales (${sold}) for ${paidBuilds} builds on paved roads`);
   }
+});
+
+test('buying a built town lot out: its compensation is spent and the lot is cleared and held; refused when the books cannot cover it', () => {
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
+  city.netOps(gridEditor().commit(true));
+  for (let s = 0; s < 2 * 1440 && !builtLots(city.town, city.lots).length; s++) city.step(10);
+  const b = builtLots(city.town, city.lots)[0];
+  assert.ok(b, 'a built lot');
+  const key = b.lot.key, st = city.town.states.get(key)!, c = compensation(st);
+  assert.ok(c > 0, `the compensation of the lot: $${c}`);
+  // refused: the treasury is short of the price (nothing changes)
+  const money = city.budget.money;
+  city.budget.money = c - 1;
+  assert.deepEqual(city.buyLot(key), [], 'refused without the money');
+  assert.equal(st.level, LV.BUILT, 'the lot is still built');
+  // bought: the price is spent as compensation, the lot is EMPTY with a clear event, and held
+  city.budget.money = money;
+  const comp = city.budget.today.compensation;
+  const ev = city.buyLot(key);
+  assert.equal(ev.length, 1);
+  assert.equal(ev[0]!.kind, 'clear');
+  assert.equal(ev[0]!.key, key);
+  assert.equal(st.level, LV.EMPTY, 'the lot is EMPTY');
+  assert.equal(city.budget.money, money - c, 'the price left the treasury');
+  assert.equal(city.budget.today.compensation, comp + c, 'booked as compensation today');
+  assert.deepEqual(city.buyLot(key), [], 'an EMPTY lot is not bought again');
 });

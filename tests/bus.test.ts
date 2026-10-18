@@ -122,3 +122,48 @@ test('without a route the fans walk to the door: the first fans arrive at the fi
   assert.ok(Math.abs(tArr - tPark - walk) <= 1.5, `the first fan arrived ${(tArr - tPark).toFixed(1)} s after the park, the walk is ${walk.toFixed(1)} s`);
   console.log(`walk: ${walk.toFixed(0)} s from the bay to the door; the first fans came ${(tArr - tPark).toFixed(1)} s after the first park; all 90 by ${sim.t.toFixed(0)} s`);
 });
+
+/** a town's stop on the street (its lot stop at x 300 on the westbound kerb lane, the same lane as the doors stop by DOOR, downstream of it), a route of
+ *  town 0 (no car park: park 0) */
+const TOWN_ROUTE: BusRouteDef = { id: 1, park: 0, town: 0, sx: 300, sy: 298.5, dx: 250, dy: 298.5, buses: 2, seats: BUS_SEATS };
+
+test('a town bus: the parties whose homes are within BUS_WALK of the town stop walk to it and ride to the doors (no car for them); the counts add up', () => {
+  // one town, its centre on the street near the stop: its homes grow along the street and the streets north of it. The cross streets give the town
+  // land: a town short of land lays a gravel leg (its planner runs on the first step), and a new junction or a longer street drops the buses
+  const city = new City(3), sim = city.sim;
+  city.terrain(new Uint8Array(MAP * MAP), { x: 200, y: ROAD_Y }, 7, [{ x: 300, y: ROAD_Y }]);
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(200, ROAD_Y, 800, ROAD_Y)], CLASS.street, 0);
+  for (const x of [220, 260, 340, 380]) e.addLegs([leg(x, ROAD_Y, x, 120)], CLASS.street, 0);
+  e.addLegs([leg(220, 120, 380, 120)], CLASS.street, 0);
+  city.netOps(e.commit(true));
+  city.stamp(30);
+  // the first step switches the sim to the lots' trips (its setTarget trims every vehicle): that runs before the surge places its buses
+  assert.equal(city.step(1).grow, null, 'no gravel leg in the first step');
+  city.setParks([PARK]);
+  city.site = { x: 240, y: 290, w: 20, h: 6, c: { x: 250, y: 293 }, doors: [DOOR] };
+  city.setBusRoutes([TOWN_ROUTE]);
+  assert.equal(city.round.start([30]), true, 'the round starts');
+  assert.equal(city.startNow(), true, 'the surge begins');
+  assert.ok(city.crowd && city.surge, 'the crowd is out');
+  assert.equal(sim.busN, 2, 'two buses at the lot stop');
+  const C = city.crowd!;
+  const quiet = () => C.walkers.length === 0 && C.waiting(0) === 0 && C.counts().onBus.every(x => x === 0) && sim.active === 0;
+  let n = 0;
+  for (; n < 8000 && !(n > 0 && city.round.stage !== 'surge' && quiet()); n++) {
+    const r = city.step(1);
+    assert.equal(r.grow, null, 'no gravel leg (it would cut the bus lane)');
+    if (n % 10 === 0) {
+      const v = city.roundView().surge!;
+      const W = C.walking();
+      const lhs = v.parked[0]! * PARTY + v.byBus[0]!;
+      const rhs = W[0]! + v.atStop[0]! + v.onBus[0]! + v.fans[0]!;
+      assert.equal(lhs, rhs, `at ${sim.t} s: parked x PARTY + by bus = walking + at the stop + on a bus + at the doors (town 0)`);
+    }
+  }
+  const v = city.roundView().surge!;
+  assert.ok(v.byBus[0]! > 0, `${v.byBus[0]} fans by bus`);
+  assert.equal(v.onRoad[0]! + v.parked[0]! + v.turned[0]! + v.lost[0]! + v.stranded[0]! + v.byBus[0]! / PARTY, 30, 'on the road + parked + turned + lost + stranded + by bus = sent');
+  assert.equal(v.fans[0], v.byBus[0]! + v.parked[0]! * PARTY, 'every fan of the bus and of the parked cars is at the doors');
+  console.log(`town bus: ${v.byBus[0]} of town 0's ${30 * PARTY} fans by bus, ${v.parked[0]} cars parked, all at the doors by ${sim.t.toFixed(0)} s`);
+});

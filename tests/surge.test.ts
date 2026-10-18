@@ -13,7 +13,7 @@ import { driveway, type Built } from '../src/game/sim/trips';
 import { LotMap, type Lot } from '../src/game/lots/lots';
 import { LU } from '../src/game/lots/town';
 import { reachableSegs, seededRnd } from '../src/game/lots/roads';
-import { SURGE_S, SURGE_SEED, DEPART_END } from '../src/game/event/config';
+import { BUS_WALK, PARTY, SURGE_S, SURGE_SEED, DEPART_END } from '../src/game/event/config';
 import { Surge, type SurgeHome, type SurgePark } from '../src/game/event/surge';
 import type { CarParkDef } from '../src/game/event/carpark';
 
@@ -164,4 +164,57 @@ test('City round, end to end (no homes built, so every car is stranded): the sur
   assert.equal(city.closeRound(), true);
   assert.equal(city.surge, null, 'the close drops the surge');
   assert.equal(city.roundView().surge, null);
+});
+
+test('bus parties: a town with a town stop sends the parties whose homes are within BUS_WALK of it by bus (no car spawned, a walk to the stop); the far ones drive; the counts add up', () => {
+  const { city } = surgeCity();
+  const sim = city.sim, g = city.g, park = city.parks[0]!;
+  const joined = reachableSegs(city.net, { x: 200, y: 300 });
+  const comp = (l: Lot) => (joined.has(l.seg) ? 0 : 1);
+  const sinkDseg = sim.sinks[0]!.dseg, sinkS = sim.sinks[0]!.s;
+  const reaches = (l: Lot) => { const d = driveway(l, g); return !!d && (g.lanes[d.lane]!.dseg !== sinkDseg || d.s < sinkS); };
+  // town 0's homes run from the west end (within BUS_WALK of its stop at x 230) to x 500 (beyond it); town 1's are all far from town 0's stop
+  const homes: SurgeHome[][] = [[], [], []];
+  for (const l of city.lots.lots.values()) {
+    const k = l.c.y > 500 ? 2 : l.c.x < 500 ? 0 : 1;
+    if (k === 2 || reaches(l)) homes[k]!.push({ lot: l, town: k, pop: 1, comp: comp(l) });
+  }
+  const STOP = { route: 0, town: 0, x: 230, y: 298.5 };
+  const far = homes[0]!.filter(h => Math.hypot(h.lot.c.x - STOP.x, h.lot.c.y - STOP.y) > BUS_WALK);
+  assert.ok(far.length > 0 && far.length < homes[0]!.length, 'town 0 has homes near the stop and far from it');
+  const pts = sim.sinks.map(K => { const q = { x: 0, y: 0, hx: 0, hy: 0 }, dg = g.dsegs[K.dseg]!; laneAt(g.lanes[dg.lanes[dg.lanes.length - 1]!]!, K.s, q); return { x: q.x, y: q.y }; });
+  const dirs = sim.sinks.map(K => ({ x: K.ux ?? 0, y: K.uy ?? 0 }));
+  const parks: SurgePark[] = [{ comp: comp({ seg: park.seg } as Lot), bays: park.bays.length, sinks: sim.sinks.map((_, j) => j), pts, dirs }];
+  const s = new Surge();
+  const crowd = [15, 15, 10];
+  s.plan(crowd, homes, parks, seededRnd(SURGE_SEED), sim.t, [STOP]);
+  // the walks by bus and the cars spawned per town (the sim's party argument is the town)
+  const walks: { lot: Lot; r: number; k: number }[] = [], spawned = [0, 0, 0];
+  const walk = (lot: Lot, r: number, k: number) => { walks.push({ lot, r, k }); return true; };
+  const spawnAt = sim.spawnAt.bind(sim);
+  sim.spawnAt = (lane: number, at: number, dest: number, destS: number, tag: number, sink: number, party: number) => { const q = spawnAt(lane, at, dest, destS, tag, sink, party); if (q >= 0) spawned[party]!++; return q; };
+  const drain = () => { for (let k = 0; k < sim.partyOut.length; k += 2) s.event(sim.partyOut[k]!, sim.partyOut[k + 1]!); sim.partyOut.length = 0; };
+  const queued = () => sim.sinks.some(K => K.q.length > 0);
+  const kick = sim.t + SURGE_S;
+  while (sim.t < kick - DT / 2) { sim.step(); s.step(sim, g, walk); drain(); }
+  for (let n = 0; n < 6000 && (sim.active > 0 || queued()); n++) { sim.step(); s.step(sim, g, walk); drain(); }
+  const v = s.view(), r = s.result();
+  const w0 = walks.filter(w => w.k === 0).length;
+  assert.ok(w0 > 0 && w0 < crowd[0], `${w0} of town 0's ${crowd[0]} parties by bus, the rest by car`);
+  assert.equal(walks.filter(w => w.k !== 0).length, 0, 'no bus party in the other towns');
+  for (const w of walks) {
+    assert.equal(w.r, 0, 'the walk is to the stop of route 0');
+    assert.ok(Math.hypot(w.lot.c.x - STOP.x, w.lot.c.y - STOP.y) <= BUS_WALK, 'a bus party\'s home is within BUS_WALK of the stop');
+  }
+  assert.equal(spawned[0]! + w0 + v.stranded[0]!, crowd[0], 'town 0: the cars spawned, the bus parties and the stranded add up to the crowd');
+  assert.equal(spawned[1]! + v.stranded[1]!, crowd[1], 'town 1 (no stop): every party drives or is stranded');
+  assert.equal(v.byBus[0], PARTY * w0, 'the fans by bus: PARTY per bus party');
+  assert.deepEqual([v.byBus[1], v.byBus[2]], [0, 0], 'no fans by bus elsewhere');
+  for (let k = 0; k < 3; k++) {
+    const sum = r[k]!.parked + r[k]!.turned + r[k]!.lost + v.onRoad[k]! + r[k]!.stranded + v.byBus[k]! / PARTY;
+    assert.equal(sum, crowd[k], `town ${k}: parked + turned + lost + on the road + stranded + by bus = sent`);
+    assert.equal(r[k]!.byBus, v.byBus[k], `town ${k}: the result's fans by bus`);
+  }
+  assert.equal(r[0]!.late, 0, 'nothing late in town 0');
+  console.log(`bus parties: town 0 sent ${crowd[0]}: ${w0} by bus (${far.length} of its ${homes[0]!.length} homes are beyond ${BUS_WALK} tiles), ${spawned[0]} cars spawned; town 1 spawned ${spawned[1]}`);
 });

@@ -308,7 +308,7 @@ function SurgeTowns({ rows, total }: { rows: TownRow[]; total?: { fans: number; 
     <div className="space-y-0.5">
       {rows.map((w, k) => (
         <div key={k}>
-          <p className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} cars · at the stop {w.atStop} · on buses {w.onBus} · arrived {w.fans} fans{w.stranded > 0 ? ' · no car park reachable' : ''}</p>
+          <p className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} cars · at the stop {w.atStop} · on buses {w.onBus} · arrived {w.fans} fans{w.stranded > 0 ? ' · no car park reachable' : ''}{w.byBus > 0 ? ` · by bus ${w.byBus}` : ''}</p>
           {w.rest && <p className="text-[10px] tabular-nums text-slate-400">{w.rest}</p>}
         </div>
       ))}
@@ -317,10 +317,10 @@ function SurgeTowns({ rows, total }: { rows: TownRow[]; total?: { fans: number; 
   );
 }
 /** a town's row in SurgeTowns: the cars sent and parked, stranded (no car park reachable), the fans at the doors, at a lot stop and on a bus, and the rest of its counts */
-interface TownRow { sent: number; parked: number; stranded: number; fans: number; atStop: number; onBus: number; rest: string }
-/** the surge's live rows: the cars on the road, turned away and lost per town, and the fans per town */
+interface TownRow { sent: number; parked: number; stranded: number; fans: number; atStop: number; onBus: number; byBus: number; rest: string }
+/** the surge's live rows: the cars on the road, turned away and lost per town, and the fans per town (and by a town bus) */
 function liveRows(v: SurgeView): TownRow[] {
-  return v.sent.map((sent, k) => ({ sent, parked: v.parked[k]!, stranded: v.stranded[k]!, fans: v.fans[k]!, atStop: v.atStop[k]!, onBus: v.onBus[k]!, rest: `on the road ${v.onRoad[k]}` + (v.turned[k] ? ` · turned ${v.turned[k]}` : '') + ` · lost ${v.lost[k]}` }));
+  return v.sent.map((sent, k) => ({ sent, parked: v.parked[k]!, stranded: v.stranded[k]!, fans: v.fans[k]!, atStop: v.atStop[k]!, onBus: v.onBus[k]!, byBus: v.byBus[k]!, rest: `on the road ${v.onRoad[k]}` + (v.turned[k] ? ` · turned ${v.turned[k]}` : '') + ` · lost ${v.lost[k]}` }));
 }
 
 /** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock).
@@ -389,7 +389,7 @@ function EvalScreen({ game }: { game: Game }) {
         {last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">Perfect! The towns grow {Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level {last.level + 1}</div>}
         <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
           {last.byTown.map((t, k) => (
-            <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} fans · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}</p>
+            <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} fans · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}{t.byBus > 0 ? ` · by bus ${t.byBus}` : ''}</p>
           ))}
         </div>
         <p className="text-sm text-slate-200">
@@ -678,7 +678,7 @@ function BusPanel({ game }: { game: Game }) {
         {game.busDefs.length === 0 && <p className="text-xs text-slate-400">No bus routes yet.</p>}
         {game.busDefs.map(d => (
           <div key={d.id} className="flex items-center justify-between gap-2 py-1 text-xs">
-            <span className="tabular-nums text-slate-200">#{d.id} · car park #{d.park} · {d.buses} buses · {d.seats} seats</span>
+            <span className="tabular-nums text-slate-200">#{d.id} · {d.town !== undefined ? `town ${String.fromCharCode(65 + d.town)} lot stop` : `car park #${d.park}`} · {d.buses} buses · {d.seats} seats</span>
             <button className="btn" onClick={() => game.goToBus(d.id)}>Go</button>
           </div>
         ))}
