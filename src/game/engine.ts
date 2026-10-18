@@ -20,7 +20,10 @@ import { compose, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { phaseState } from './sim/signals';
 
-const DAY_SECONDS = 20;
+/** a game day and a game hour, sim s (one sim second is one game minute) */
+const GAME_DAY = 1440, GAME_HOUR = 60;
+/** the sim speeds the time controls offer (sim s per s); 0 is paused */
+export const SPEEDS = [1, 2, 4, 8] as const;
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
 
@@ -67,7 +70,13 @@ export class Game {
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
   // economy
-  money = 80000; day = 1; dayTimer = 0; population = 0; lastIncome = 0;
+  money = 80000; day = 1; lastIncome = 0;
+  /** the sim speed (sim s per s; 0 = paused) and the last speed above 0 (what a resume goes back to) */
+  speed = 1; private lastSpeed = 1;
+  /** the sim day of the last economy tick (-1: take it from the next frame, no tick) */
+  private simDay = -1;
+  /** a Space press that panned (held with the drag) does not also pause on release */
+  private spacePanned = false;
   // fx
   builds: Build[] = []; particles: Particle[] = []; private growToast = -Infinity;
   toasts: Toast[] = []; toastId = 1;
@@ -493,6 +502,7 @@ export class Game {
     const mx = e.offsetX, my = e.offsetY;
     this.overlay.setPointerCapture(e.pointerId);
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
+    if (this.keys.has(' ')) this.spacePanned = true;
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
         const p = this.propAt(mx, my);
@@ -554,14 +564,36 @@ export class Game {
       case '1': case '2': case '3': case '4': case '5': case '6': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
       case '-': case '_': this.zoomAt(clamp(this.cam.z / 1.25, ZOOM_MIN, ZOOM_MAX)); break;
-      case ' ': e.preventDefault(); break;
+      case ' ': e.preventDefault(); if (!e.repeat) this.spacePanned = false; break;
+      case '.': case '>': { const k = this.speed || this.lastSpeed; this.setSpeed(SPEEDS.find(s => s > k) ?? SPEEDS[SPEEDS.length - 1]!); break; }
+      case ',': case '<': { const k = this.speed || this.lastSpeed; this.setSpeed(SPEEDS.filter(s => s < k).pop() ?? SPEEDS[0]); break; }
+      case 'h': case 'H': this.skipToRush(); break;
     }
   }
-  keyUp(e: KeyboardEvent) { this.keys.delete(e.key); }
+  keyUp(e: KeyboardEvent) {
+    const tag = (e.target as HTMLElement)?.tagName;
+    if (e.key === ' ' && !this.spacePanned && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && tag !== 'BUTTON') this.togglePause();
+    this.keys.delete(e.key);
+  }
   /** traffic: n cars driving the network (0 = none); the sim worker starts on first use */
   setTraffic(n: number) { this.traffic.setTarget(n); this.emit(); }
   /** the town's growth option (its id, see GROWTH_OPTIONS) */
   setGrowth(id: string) { this.traffic.setOption(id); this.emit(); }
+  /** the sim speed (0 pauses); a speed above 0 is remembered for the resume */
+  setSpeed(k: number) { if (k > 0) this.lastSpeed = k; this.speed = k; this.traffic.setSpeed(k); this.emit(); }
+  /** pauses, or resumes at the last speed */
+  togglePause() { this.setSpeed(this.speed ? 0 : this.lastSpeed); }
+  /** the game clock: the economy's day, and the time of day from the sim clock (one sim second is one game minute) */
+  clock(): { day: number; hour: number; minute: number } { const t = this.traffic.simTime(performance.now()); return { day: this.day, hour: Math.floor(t / GAME_HOUR) % 24, minute: Math.floor(t % GAME_HOUR) }; }
+  /** fast-forwards the sim to the next 7:30 or 16:30 (sim s 450 and 990 of the day); resumes first if paused */
+  skipToRush() {
+    if (this.traffic.skipping) return;
+    const t = this.traffic.simTime(performance.now()), day = Math.floor(t / GAME_DAY) * GAME_DAY;
+    const until = [day + 450, day + 990].find(u => u > t) ?? day + GAME_DAY + 450, h = until % GAME_DAY === 450 ? 7 : 16;
+    if (!this.speed) this.setSpeed(this.lastSpeed);
+    this.traffic.skip(until);
+    this.toast(`Skipping to the ${h === 7 ? 'morning' : 'evening'} rush…`);
+  }
   /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
   private sendTerrain() {
     const t = this.terrain, h = t.highway;
@@ -586,7 +618,6 @@ export class Game {
     let houses = 0, venues = 0;
     for (const p of this.props) { const it = LIBRARY[p.item]; if (it.kind === 'house' && this.linked(p)) houses++; else if ((it.kind === 'venue' || it.kind === 'arcade' || it.kind === 'shop') && this.linked(p)) venues++; }
     let upkeep = 0; for (const s of this.net.segs) upkeep += vlen(sub(s.b, s.a)) * (1 + s.cls.order * 0.6);
-    this.population = houses * 3 + venues;
     this.lastIncome = Math.round(houses * 120 + venues * 260 - upkeep);
     this.money += this.lastIncome; this.day++;
     this.scheduleSave(); this.emit();
@@ -614,7 +645,7 @@ export class Game {
       for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) this.edit.setNodeType(n, type as NodeType); }
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
-      this.money = d.money; this.day = d.day; if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
+      this.money = d.money; this.day = d.day; this.simDay = -1; if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
       return true;
     } catch (e) { console.error('load failed', e); return false; }
   }
@@ -624,7 +655,7 @@ export class Game {
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
-    this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = [];
+    this.money = 80000; this.day = 1; this.simDay = -1; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
     this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain); this.sendTerrain();
@@ -765,7 +796,9 @@ export class Game {
     if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
     if (kx || ky) { this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
     this.onFrame?.(now, dt);
-    this.dayTimer += dt; if (this.dayTimer >= DAY_SECONDS) { this.dayTimer -= DAY_SECONDS; this.tickDay(); }
+    // one economy tick per sim day boundary (no catch-up); nothing until the client has had a frame
+    const st = this.traffic.simTime(performance.now());
+    if (st > 0) { const sd = Math.floor(st / GAME_DAY); if (this.simDay < 0 || sd < this.simDay) this.simDay = sd; else if (sd > this.simDay) { this.simDay = sd; this.tickDay(); } }
     for (const b of this.builds) {
       const front = this.revealFront(b, now); if (front >= b.total) continue;
       b.legs.forEach((l, i) => {

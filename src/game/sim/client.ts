@@ -16,7 +16,7 @@ import { VTYPES } from './sim';
 const FRAME_MS = 100;
 /** a car that moved this far (tiles) between two frames was respawned or re-planned: drawn at its new place, not lerped */
 const JUMP = 3;
-const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0 };
+const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false };
 /** half a car's length per vehicle type, tiles (the lights sit at its front and rear) */
 const HALF = VTYPES.map(v => v.len / 4);
 
@@ -79,6 +79,10 @@ export class SimClient {
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
   /** the sim speed: 0 pauses, 1 is real time, 2, 4 and 8 are faster */
   setSpeed(k: number) { this.speed = k; this.post({ t: 'speed', k }); }
+  /** fast-forwards the sim as fast as the worker can until the sim time until (s); the cars are not drawn between frames meanwhile */
+  skip(until: number) { this.post({ t: 'skip', until }); }
+  /** true while the worker is fast-forwarding (see skip) */
+  get skipping() { return this.stats.skipping; }
   terminate() { this.worker.terminate(); }
 
   private onMessage(m: FromSim) {
@@ -116,7 +120,7 @@ export class SimClient {
   }
 
   /** the sim's time now, s: the time of the last frame, moved on at the sim speed since it arrived (0 before the first frame) */
-  simTime(now: number): number { return this.cur ? this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed : 0; }
+  simTime(now: number): number { if (!this.cur) return 0; return this.stats.skipping ? this.stats.simT : this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed; }
 
   /** unpacks the current frame into the arrays, lerping each car from its place in the previous frame (at now) */
   update(_now: number) {

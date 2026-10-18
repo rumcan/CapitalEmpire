@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Game } from './game/engine';
+import { Game, SPEEDS } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
@@ -13,6 +13,8 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
+/** the game clock as HH:MM */
+const hhmm = (c: { hour: number; minute: number }) => `${String(c.hour).padStart(2, '0')}:${String(c.minute).padStart(2, '0')}`;
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -78,11 +80,17 @@ export default function App() {
               </div>
               <div className="mx-1 h-8 w-px bg-white/10" />
               <Stat label="Treasury" value={money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} />
-              <Stat label="Population" value={game.population.toLocaleString()} />
-              <Stat label="Day" value={String(game.day)} sub={`next in ${Math.max(0, Math.ceil(20 - game.dayTimer))}s`} />
+              <Stat label="Population" value={game.traffic.pop.toLocaleString()} />
+              <Stat label="Jobs" value={game.traffic.jobs.toLocaleString()} />
+              <Stat label="Day" value={String(game.day)} sub={hhmm(game.clock())} />
               <Stat label="Daily income" value={(game.lastIncome >= 0 ? '+' : '') + money(game.lastIncome)} tone={game.lastIncome >= 0 ? 'text-emerald-300' : 'text-red-300'} />
             </div>
             <div className="pointer-events-auto flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/75 px-2 py-1.5 shadow-lg backdrop-blur">
+                <button className="btn" onClick={() => game.togglePause()} title="Pause (Space)">{game.speed ? '⏸' : '▶'}</button>
+                {SPEEDS.map(k => <button key={k} className={`chip ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} title="Speed (, and .)">{k}×</button>)}
+                <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} title="Skip to the next rush hour (H)">{game.traffic.skipping ? 'Skipping…' : '⏭ Rush'}</button>
+              </div>
               <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/75 px-2 py-1.5 shadow-lg backdrop-blur">
                 <button className="btn" onClick={() => game.zoomAt(Math.max(ZOOM_MIN, game.cam.z / 1.25))} title="Zoom out (-)">−</button>
                 <input type="range" min={Math.log(ZOOM_MIN)} max={Math.log(ZOOM_MAX)} step={0.01} value={Math.log(game.cam.z)} onChange={e => game.zoomAt(Math.exp(+e.target.value))} className="w-28 accent-amber-400" />
@@ -283,6 +291,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend.</li>
           <li>Houses and venues near a sidewalk earn money every day; roads cost upkeep. Everything autosaves in this browser.</li>
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
+          <li>Space pauses (tap it; hold it and drag to pan); , and . change the speed; H skips to the next rush hour.</li>
         </ul>
         <button className="btn mt-5" onClick={onClose}>Close</button>
       </div>
