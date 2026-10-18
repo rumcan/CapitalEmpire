@@ -92,11 +92,16 @@ export default function App() {
               </div>
               <div className="mx-1 h-8 w-px bg-white/10" />
               <Stat label="Career" {...careerStat(game)} tone="text-amber-200" />
-              <Stat label="Treasury" value={money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
+              <Stat label="Treasury" value={game.unlimited ? '∞' : money(game.money)}tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
               <Stat label="Population" value={game.traffic.pop.toLocaleString()} />
               <Stat label="Jobs" value={game.traffic.jobs.toLocaleString()} />
               <Stat label="Day" value={String(game.day)} sub={hhmm(game.clock())} />
               <Stat label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
+              {(game.growth !== 1 || game.unlimited || !game.stamped) && (
+                <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
+                  dev: {[game.growth !== 1 && `grow ${game.growth}×`, game.unlimited && '∞ $', !game.stamped && 'no stamp'].filter(Boolean).join(' · ')}
+                </div>
+              )}
             </div>
             <div className="pointer-events-auto flex items-center gap-2">
               <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/75 px-2 py-1.5 shadow-lg backdrop-blur">

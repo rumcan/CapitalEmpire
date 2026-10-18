@@ -146,12 +146,14 @@ export class Budget {
   today = { construction: 0, compensation: 0, grants: 0 };
   /** the ledgers, newest last (at most 30) */
   history: Ledger[] = [];
+  /** dev sandbox: spending is booked in the ledger but the treasury does not move, and endDay keeps it and the debt at their values (not saved) */
+  unlimited = false;
 
   /** the game day (1 from base on) of sim time t, s; a microsecond is forgiven, as the clock adds DT = 0.1 s and drifts a hair
    *  (1440 calls of DT land on 1439.9999999998), so the midnight is booked on the step that reaches it */
   dayOf(t: number): number { return Math.floor((t - this.base + 1e-6) / GAME_DAY) + 1; }
   /** spends n $ on kind today: out of the treasury now, into the next ledger */
-  spend(kind: 'construction' | 'compensation', n: number) { this.money -= n; this.today[kind] += n; }
+  spend(kind: 'construction' | 'compensation', n: number) { if (!this.unlimited) this.money -= n; this.today[kind] += n; }
   /** gives back n $ of today's construction */
   refund(n: number) { this.money += n; this.today.construction -= n; }
   /** pays n $ of milestone grant into the treasury now: shows as income in the next ledger */
@@ -165,6 +167,7 @@ export class Budget {
   /** closes game day `day` from its trade, lots, roads and junctions: tax and takings in, upkeep, signal upkeep and interest out
    *  (today's spending is already out); the day's debt count and bankruptcy follow; returns the ledger */
   endDay(day: number, d: DayIn): Ledger {
+    const m0 = this.money; // the treasury before the day's flows (kept when unlimited)
     let property = 0, upkeep = 0, signals = 0;
     for (const l of d.lots) property += lotTax(l);
     for (const s of d.segs) upkeep += segUpkeep(s);
@@ -174,8 +177,8 @@ export class Budget {
     this.money += p + b - u - sg - it; // the grants and today's spending are in the treasury already
     const L: Ledger = { day, property: p, business: b, grants: g, upkeep: u, signals: sg, interest: it, construction: c, compensation: k, net: p + b + g - u - sg - it - c - k, money: this.money };
     this.today.construction = 0; this.today.compensation = 0; this.today.grants = 0;
-    this.debtDays = this.money < 0 ? this.debtDays + 1 : 0;
-    this.bankrupt ||= this.debtDays >= DEBT_DAYS;
+    if (this.unlimited) { this.money = m0; this.debtDays = 0; this.bankrupt = false; }
+    else { this.debtDays = this.money < 0 ? this.debtDays + 1 : 0; this.bankrupt ||= this.debtDays >= DEBT_DAYS; }
     this.history.push(L); if (this.history.length > 30) this.history.shift();
     return L;
   }

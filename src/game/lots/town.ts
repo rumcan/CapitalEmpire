@@ -51,6 +51,8 @@ export class Town {
   /** the state of every known lot by key */
   states = new Map<string, LotState>();
   option: GrowthOption = GROWTH_OPTIONS[0];
+  /** the growth speed (dev sandbox, 1 = the game's): the construction takes DAY / 2 / speed, and growth is speed times as fast */
+  speed = 1;
   /** residents and jobs of all lots; the lots built (BUILT or UPGRADED); the sim time reached */
   pop = 0; jobs = 0; built = 0; t = 0;
   /** access score per zone (256): actual / free-flow trip time; 1 = free flow. The sim fills it (step 6); default 1. */
@@ -153,7 +155,7 @@ export class Town {
     if (this.dirty) this.rescan();
     // the lots: construction, then upgrade, decline, recovery and clearing of the built ones
     for (const s of this.states.values()) {
-      if (s.level === LV.BUILDING) { if (T - s.since >= DAY / 2) { this.set(s, s.use, LV.BUILT, s.decline, T); ev.push(this.evt(s, 'complete')); } continue; }
+      if (s.level === LV.BUILDING) { if (T - s.since >= DAY / 2 / this.speed) { this.set(s, s.use, LV.BUILT, s.decline, T); ev.push(this.evt(s, 'complete')); } continue; }
       if (s.level < LV.BUILT) continue;
       const g = this.geo.get(s.key)!, c = g.c, z = zoneOf(c.x, c.y), a = this.access[z];
       if (s.decline === 3 && T - s.since >= 2 * DAY) { this.set(s, LU.NONE, LV.EMPTY, 0, T); ev.push(this.evt(s, 'clear')); continue; }
@@ -167,7 +169,7 @@ export class Town {
     }
     // the growth: civic quota first, then the fraction of lots per hour
     if (this.govN < this.govTarget()) this.placeGov(ctx, T, ev);
-    this.acc += (20 + 0.1 * this.built) / 24;
+    this.acc += (20 + 0.1 * this.built) / 24 * this.speed;
     let n = Math.floor(this.acc); this.acc -= n;
     for (; n > 0; n--) {
       const l = this.pick(ctx); if (!l) break;

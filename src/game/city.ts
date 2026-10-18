@@ -66,6 +66,8 @@ export class City {
   town: Town;
   /** the city's books (budget.ts): the treasury, loans, the ledgers; the game day booked last (-1: none yet) and the sim's trade at that booking */
   budget = new Budget();
+  /** dev sandbox: the growth speed (1 = the game's; see Town.speed) and unlimited money (see Budget.unlimited); each budget gets the money flag */
+  growSpeed = 1; unlimited = false;
   /** the town's career (career.ts): the milestones reached (their grants paid, their road classes, junctions and tunnels unlocked) and the win; a fresh one with each valley or book */
   career = new Career();
   private dayIdx = -1; private tradeAt = { arrived: 0, punctual: 0 };
@@ -113,7 +115,7 @@ export class City {
   terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = []): void {
     this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
     this.centres = towns;
-    this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
+    this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.setBudget(null, null);
@@ -123,10 +125,15 @@ export class City {
    *  saved with them, or a fresh one (at the hamlet) if none is given */
   setBudget(s: BudgetSave | null, career?: CareerSave | null): void {
     this.budget = s ? Budget.from(s) : new Budget();
+    this.budget.unlimited = this.unlimited;
     if (!s) this.budget.base = Math.floor(this.sim.t / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career ?? undefined);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
   }
+
+  /** the dev sandbox's options: the growth speed k (the town's Town.speed, and the planner's slots and window) and unlimited money (every budget); the defaults are the game's */
+  setGrowth(k: number): void { this.growSpeed = k; this.town.speed = k; }
+  setUnlimited(on: boolean): void { this.unlimited = on; this.budget.unlimited = on; }
 
   /** spends n $ on kind (see Budget.spend); a negative construction n gives it back */
   spend(kind: 'construction' | 'compensation', n: number): void { this.budget.spend(kind, n); }
@@ -180,7 +187,7 @@ export class City {
   /** a saved town (after the load's net ops): the sim clock (s), then the lots' states; returns the 'complete' event per restored lot */
   restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number, career?: CareerSave): TownEvent[] {
     this.sim.t = simT;
-    this.budget = Budget.from(budget, money); if (!budget) this.budget.base = Math.floor(simT / GAME_DAY) * GAME_DAY;
+    this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(simT / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
     const ev = this.town.restore(saved, this.sim.t); this.syncHour = -1;
@@ -261,10 +268,10 @@ export class City {
   private planGrow(): Leg[] | null {
     const cls = this.cls;
     if (!cls) return null;
-    const h = Math.floor(this.sim.t / GAME_HOUR);
+    const h = Math.floor(this.sim.t * this.growSpeed / GAME_HOUR);
     if (h === this.planHour) return null;
     this.planHour = h;
-    if (this.pendingGrow && this.sim.t - this.growAt < GAME_HOUR) return null;
+    if (this.pendingGrow && this.sim.t - this.growAt < GAME_HOUR / this.growSpeed) return null;
     const K = this.centres.length, k = K ? this.planHour % K : 0;
     const c: RoadPlanCtx = K
       ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: this.townCentre(k), built: this.town.builtK[k] }

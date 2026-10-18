@@ -118,6 +118,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'budget': city.setBudget(m.save, m.career); postBudget(null); break;
       case 'report': postReport(); break;
       case 'stamp': postTown(city.stamp(m.pop), true); break;
+      case 'sandbox': city.setGrowth(m.grow); city.setUnlimited(m.money); postBudget(null); break;
       case 'inspect': inspecting = m.slot; break;
       case 'watch':
         if (m.x < 0) { city.unwatch(); watching = false; watchXY = null; }

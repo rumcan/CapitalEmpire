@@ -28,7 +28,7 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 /** a game day and a game hour, sim s (one sim second is one game minute) */
 const GAME_DAY = 1440, GAME_HOUR = 60;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
-export const SPEEDS = [1, 2, 4, 8] as const;
+export const SPEEDS = [1, 2, 4, 8, 20] as const;
 /** the flow colours by v/c (below 0.5, below 0.8, below 1, and 1 or more; see Game.drawFlow) and the junction LOS badge colours, A to F */
 export const FLOW_COLS = ['#3ddc84', '#ffd23f', '#ff8c1a', '#ff3b3b'];
 export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: '#ffd23f', D: '#ff8c1a', E: '#ff3b3b', F: '#ff3b3b' };
@@ -98,6 +98,9 @@ export class Game {
   // economy (the books live in the city worker: traffic.budget, see the getters by the save)
   /** the sim speed (sim s per s; 0 = paused) and the last speed above 0 (what a resume goes back to) */
   speed = 1; private lastSpeed = 1;
+  /** the dev sandbox (URL ?grow=N, ?stamp=0|1, ?money=0|1; the dev server defaults to grow 20, no stamp, money on; the bench forces the game's): the growth speed (1 = the game's),
+   *  whether a new valley's towns are stamped to their residents, and unlimited money (sent to the city worker at init) */
+  private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false;
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
@@ -128,12 +131,17 @@ export class Game {
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl);
     this.traffic = new SimClient();
+    // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
+    const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
+    this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
+    this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
+    this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); };
     this.traffic.onLedger = (l) => {
       if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
-      else if (l.money < 0) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
+      else if (l.money < 0 && !this.traffic.unlimited) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
       else this.toast(`Day ${l.day}: ${l.net >= 0 ? '+' : '−'}$${Math.abs(l.net).toLocaleString()}`, l.net >= 0 ? 'good' : 'info');
       this.scheduleSave(); this.emit();
     };
@@ -158,6 +166,8 @@ export class Game {
 
   async init(opts: { bench?: number } = {}) {
     const tick = (p: number) => { this.loadProgress = p; this.emit(); };
+    if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; }
+    this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney); // before the terrain: the city worker reads its options from the first messages
     this.resize();
     const atlas = this.gl.loadAtlas(this.dpr >= 1.5);
     this.pageImages = await Promise.all(ATLAS_PAGES.map(row => new Promise<HTMLImageElement>(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(im); im.src = row[1]; })));
@@ -740,8 +750,12 @@ export class Game {
   }
 
   // ---------- economy / save ----------
-  /** the treasury, $ (the city's books, mirrored from the city worker; spend moves it at once) */
-  get money(): number { return this.traffic.budget.money; }
+  /** the treasury, $ (the city's books, mirrored from the city worker; spend moves it at once); Infinity with unlimited money (the dev sandbox) */
+  get money(): number { return this.traffic.unlimited ? Infinity : this.traffic.budget.money; }
+  /** the dev sandbox's growth speed (1 = the game's), whether the towns are stamped at a new valley, and unlimited money (the top bar's badge) */
+  get growth(): number { return this.sandboxGrow; }
+  get stamped(): boolean { return this.stampOn; }
+  get unlimited(): boolean { return this.traffic.unlimited; }
   /** the game day (from the city's books) */
   get day(): number { return this.traffic.day; }
   /** the last closed day's ledger, or null before the first day closes */
@@ -765,7 +779,7 @@ export class Game {
       segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style, s.kind]),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain').map(n => [n.x, n.y, n.type]),
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
-      money: this.money, day: this.day, cam: { ...this.cam },
+      money: this.traffic.budget.money, day: this.day, cam: { ...this.cam },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
       simT: this.traffic.simTime(performance.now()), budget: this.traffic.budget, career: this.traffic.career,
     };
@@ -830,7 +844,7 @@ export class Game {
     }
     for (const [id, legs] of byClass) this.edit.addLegs(legs, CLASS[id], 0);
     this.cam.X = worldX(cs[0]!.x, cs[0]!.y); this.cam.Y = worldY(cs[0]!.x, cs[0]!.y);
-    this.stampPending = true;
+    if (this.stampOn) this.stampPending = true;
   }
   /** A starter Maple Falls showing every road type: highway with a 45° approach, a boulevard, an avenue, a roundabout, lights with slipways, streets and a lane. */
   seedTown() {

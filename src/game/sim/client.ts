@@ -77,6 +77,8 @@ export class SimClient {
   private lc: LightCounts = { small: 0, beams: 0 };
   /** the sim speed last set (sim seconds per second) */
   private speed = 1;
+  /** the dev sandbox's unlimited money, as last sent (see sandbox) */
+  unlimited = false;
   private pool: Drawable[] = [];
 
   /** starts the city worker, empty: the terrain and the network follow (terrain, then netOps) */
@@ -93,6 +95,8 @@ export class SimClient {
   stamp(pop: number) { this.post({ t: 'stamp', pop }); }
   /** the town's growth option by id (see GROWTH_OPTIONS) */
   setOption(id: string) { this.option = id; this.post({ t: 'option', id }); }
+  /** the dev sandbox's options: the growth speed (1 = the game's) and unlimited money (spending does not move the treasury); stored as unlimited */
+  sandbox(grow: number, money: boolean) { this.unlimited = money; this.post({ t: 'sandbox', grow, money }); }
   /** a saved town for the worker (its lots, the sim clock, s, and its books or the treasury of an old save): after the net ops of a load */
   townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave) { this.post({ t: 'townState', lots, simT, budget, money, career }); }
   /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
@@ -105,7 +109,7 @@ export class SimClient {
   requestReport() { this.post({ t: 'report' }); }
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
-  /** the sim speed: 0 pauses, 1 is real time, 2, 4 and 8 are faster */
+  /** the sim speed: 0 pauses, 1 is real time, 2, 4, 8 and 20 are faster */
   setSpeed(k: number) { this.speed = k; this.post({ t: 'speed', k }); }
   /** fast-forwards the sim as fast as the worker can until the sim time until (s); the cars are not drawn between frames meanwhile */
   skip(until: number) { this.post({ t: 'skip', until }); }
