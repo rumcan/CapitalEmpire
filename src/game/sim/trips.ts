@@ -17,9 +17,10 @@ const MIN_LEN = 10;
 const DECAY = 1500, OWN_ZONE_M = 400;
 /** a driveway's s is kept this far from the lane's ends, metres */
 const DRIVE_END = 3;
-/** lot trips: trips per resident per day, the share of off-peak trips that shop (RES to COM or TOUR), the trips kept pending per lot,
+/** lot trips: trips per resident per day (0.6, not a real 2+: the game day is 24 minutes while cars drive at real speed, so a
+ *  2 km trip lasts hours of game time; each car stands for several people's trips), the share of off-peak trips that shop (RES to COM or TOUR), the trips kept pending per lot,
  *  the draws tried for a destination (rejection sampling on the distance decay) */
-const PER_RES = 2.2, SHOP = 0.7, PEND_MAX = 4, PICK_TRIES = 8;
+const PER_RES = 0.6, SHOP = 0.7, PEND_MAX = 4, PICK_TRIES = 8;
 /** a destination is at least MIN_DEST metres (straight line) from its origin when one of DEST_TRIES draws is; else the farthest */
 const MIN_DEST = 300, DEST_TRIES = 4;
 /** zones: ZN x ZN, each 128 tiles square */

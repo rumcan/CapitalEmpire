@@ -24,6 +24,8 @@ const THROTTLE_V = 2, SPAWN_CLEAR = 15;
 const FILL_TRIES = 40;
 /** towing: a vehicle stuck (under 0.5 m/s) this many seconds in a junction box, or anywhere, is removed */
 const TOW_BOX = 60, TOW_ANY = 300;
+/** a trip still on the road after this many sim seconds is abandoned (the driver gives up; a gridlock drains instead of piling up) */
+const ABANDON = 1200;
 /** lane changes (MOBIL): evaluated every MOBIL_EVERY steps, politeness, incentive threshold, and the lane ends kept clear, metres */
 const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
@@ -57,7 +59,7 @@ export class Sim {
   /** true: fill() aims at round(target * demandAt(t)) (the daily profile); arrivals bring the count down on their own */
   profile = false;
   rnd: () => number;
-  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, throttled: 0, tableMs: 0, tables: 0, dropped: 0, ratioSum: 0, ratioN: 0 };
+  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, throttled: 0, tableMs: 0, tables: 0, dropped: 0, ratioSum: 0, ratioN: 0, abandoned: 0 };
   /** where new trips start and end (origins, destinations by zone) */
   trips: Trips;
   /** 'random': the target count with random trips (the bench, the gate, the tests); 'lots': the built lots' trips, no target (lotTrips) */
@@ -590,7 +592,13 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i]) continue;
       const st = this.stuck[i];
-      if (st > TOW_ANY || (st > TOW_BOX && this.g.lanes[this.lane[i]]!.kind !== LK.LINK)) { this.stats.towed++; this.stats.respawned++; this.despawn(i); }
+      if (st > TOW_ANY || (st > TOW_BOX && this.g.lanes[this.lane[i]]!.kind !== LK.LINK)) { this.stats.towed++; this.stats.respawned++; this.despawn(i); continue; }
+      // an abandoned trip counts as a very slow one (capped at 6x) in the zones it came from and was going to
+      if (this.dest[i]! >= 0 && this.t - this.t0[i]! > ABANDON) {
+        const ideal = Math.max(this.ideal[i]!, 10), act = this.t - this.t0[i]!, d = this.g.dsegs[this.dest[i]!];
+        this.bump(this.oz[i]!, act, ideal); if (d) this.bump(this.router.zoneD[d.id]!, act, ideal);
+        this.stats.abandoned++; this.despawn(i);
+      }
     }
   }
 

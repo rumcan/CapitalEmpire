@@ -157,15 +157,16 @@ function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[]) 
   for (const side of [1, -1] as const) {
     const n = mul(pu, side);
     for (let k = kLo; k <= kHi; k++) {
-      // keep the side-street points of the town's growth lattice free (roads.ts branches every BRANCH tiles of t): no lot
-      // within RESERVE of them, so a future street never has to cut through a house (in a full grid they are junctions anyway)
-      const lo = k * W, m0 = Math.floor((lo - RESERVE) / BRANCH) + 1;
-      if (m0 * BRANCH < lo + W + RESERVE) continue;
+      const lo = k * W, m0 = Math.floor((lo - RESERVE) / BRANCH) + 1, onLattice = m0 * BRANCH < lo + W + RESERVE;
       const o = { x: f.x + u.x * k * W + n.x * r0, y: f.y + u.y * k * W + n.y * r0 };
       blockers(net, s, o, u, n, W, D);
       // the midline cap: half the clear distance to the verge of the road behind, from the front corners and the midpoint
       const fm = { x: o.x + u.x * W / 2, y: o.y + u.y * W / 2 }, fe = { x: o.x + u.x * W, y: o.y + u.y * W };
       const clear = Math.min(clearAlong(list, s, o, n, reach), clearAlong(list, s, fm, n, reach), clearAlong(list, s, fe, n, reach));
+      // keep the side-street points of the town's growth lattice free (roads.ts branches every BRANCH tiles of t): no lot within
+      // RESERVE of them where the town could still branch (gravel, or open land behind), so a future street never has to cut
+      // through a house; lots of an enclosed block (a road behind) are not held back
+      if (onLattice && (cls.id === 'gravel' || clear >= 2 * D)) continue;
       const d = Math.min(depthOf(o, u, n, W, D), Math.floor(clear / 2));
       if (d < MIN_D || (terr && badShare(terr, o, u, n, W, d) > BAD_MAX)) continue;
       const front = fm, c = { x: front.x + n.x * d / 2, y: front.y + n.y * d / 2 };
