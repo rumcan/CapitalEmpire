@@ -557,14 +557,14 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 }
 
 function RoadPanel({ game }: { game: Game }) {
-  const legs = game.previewLegs();
+  const legs = game.previewLegs(), block = game.routeBlock(legs);
   const len = game.net.legsLength(legs);
   const cost = game.routeCost(), comp = game.routeCompensation();
   const cls = game.cls;
   return (
     <Panel title="Building new roads">
       <p className="text-xs leading-relaxed text-slate-300">
-        <b className="text-slate-100">Draw a connected route.</b> Click to start, click again for each bend or stop. Routes snap to the grid; crossings become junctions with rounded corners and crossings automatically.
+        <b className="text-slate-100">Draw a connected route.</b> Click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions with rounded corners and crossings automatically.
       </p>
       <div className="mt-2 grid grid-cols-1 gap-1">
         {CLASSES.map(c => {
@@ -594,13 +594,14 @@ function RoadPanel({ game }: { game: Game }) {
         <div className="flex justify-between"><span className="text-slate-400">Route</span><span>{game.route.length} point{game.route.length === 1 ? '' : 's'} · {Math.round(len * 2)} m</span></div>
         <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost + comp.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
         {comp.n > 0 && <div className="flex justify-between"><span className="text-slate-400">Compensation</span><span className="text-red-300">{money(comp.comp)} <span className="text-slate-500">({comp.n} building{comp.n === 1 ? '' : 's'})</span></span></div>}
+        {block && <div className="mt-1 text-xs text-red-300">{block}</div>}
       </div>
       <div className="mt-2 flex gap-1">
         <button className="chip chip-on flex-1 disabled:opacity-40" disabled={game.route.length < 2} onClick={() => game.finishRoute()}>Build route ⏎</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.undoRoutePoint()} title="Backspace">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">Double-click the last point or press Enter to build. Drawing over an existing road upgrades it. Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[11px] text-slate-500">Double-click the last point or press Enter to build. To widen a road, use the Add lane tool. Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -804,7 +805,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>
           <li>Five road types: <b>Lane</b> (single lane), <b>Street</b> (2 lanes, sidewalks, your choice of centre line), <b>Road</b> (wider, darker asphalt with paved shoulders inside yellow edge lines and a gravel verge), <b>Avenue</b> and <b>Boulevard</b> (2 / 4 lanes around a tree-lined median).</li>
-          <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; drawing over a road upgrades it.</li>
+          <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
           <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend.</li>
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
           <li><b>Career</b>: milestones at 250, 1,000, 2,500, 4,000 and 6,000 residents unlock road classes, junctions and tunnels and pay grants; 6,000 wins. Bankruptcy loses.</li>

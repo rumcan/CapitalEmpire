@@ -1,7 +1,8 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, FLAG_COST, Grid, JUNCTIONS, KEY_CLASSES, RoadNetwork, WIDER, SK, add, dot, mul, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
+import { CLASS, FLAG_COST, Grid, JUNCTIONS, KEY_CLASSES, RoadNetwork, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
+import { checkLegs, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
@@ -136,6 +137,8 @@ export class Game {
   inspecting = -1; followCar = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
+  /** the snaps of the route's first point and of its last click (see snap.ts: checkLegs judges the route against them) */
+  routeFrom: Snap | null = null; routeLast: Snap | null = null;
   // economy (the books live in the city worker: traffic.budget, see the getters by the save)
   /** the sim speed (sim s per s; 0 = paused) and the last speed above 0 (what a resume goes back to) */
   speed = 1; private lastSpeed = 1;
@@ -470,7 +473,12 @@ export class Game {
 
   // ---------- road routing ----------
   setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; this.tollHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
-  private snapNode(p: Pt): Pt { return { x: clamp(Math.round(p.x), 2, MAP - 2), y: clamp(Math.round(p.y), 2, MAP - 2) }; }
+  /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
+  private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
+  /** the road tool's snap under the cursor, or null with no cursor */
+  private cursorSnap(): Snap | null { return this.hover ? snapPoint(this.net, this.hover, this.snapRadius()) : null; }
+  /** why the preview route cannot be built ('' when it can): see checkLegs */
+  routeBlock(legs: Leg[] = this.previewLegs()): string { return legs.length ? checkLegs(this.net, legs, this.routeFrom, this.cursorSnap(), this.cls) : ''; }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
     const dx = p.x - from.x, dy = p.y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
@@ -492,7 +500,8 @@ export class Game {
   previewLegs(): Leg[] {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1], b: this.route[i] });
-    if (this.route.length && this.hover) legs.push(...this.legsTo(this.route[this.route.length - 1], this.snapNode(this.hover), this.keys.has('Shift')));
+    const cs = this.cursorSnap();
+    if (this.route.length && cs) legs.push(...this.legsTo(this.route[this.route.length - 1], cs.p, this.keys.has('Shift')));
     return legs;
   }
   routeCost() { return this.structured(this.previewLegs()).cost; }
@@ -525,14 +534,14 @@ export class Game {
     return { n: hit.length, comp: hit.reduce((s, v) => s + compensation(v), 0) };
   }
   private roadClick(mx: number, my: number) {
-    const p = this.snapNode(this.tileAt(mx, my));
-    if (!this.route.length) { this.route.push(p); this.emit(); return; }
+    const s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius());
+    if (!this.route.length) { this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
     const last = this.route[this.route.length - 1];
-    for (const l of this.legsTo(last, p, this.keys.has('Shift'))) this.route.push(l.b);
-    this.emit();
+    for (const l of this.legsTo(last, s.p, this.keys.has('Shift'))) this.route.push(l.b);
+    this.routeLast = s; this.emit();
   }
   undoRoutePoint() { this.route.pop(); this.emit(); }
-  cancelRoute() { this.route = []; this.emit(); }
+  cancelRoute() { this.route = []; this.routeFrom = this.routeLast = null; this.emit(); }
   /** strip test: does the prop footprint touch a leg's corridor of half width hw? */
   private propInLegs(p: Prop, legs: Leg[], hw: number) {
     const pts = [{ x: p.x0, y: p.y0 }, { x: p.x1, y: p.y0 }, { x: p.x0, y: p.y1 }, { x: p.x1, y: p.y1 }, { x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }];
@@ -614,6 +623,8 @@ export class Game {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
+    const block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls);
+    if (block) { this.toast(block, 'warn'); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
     if (!this.classOpen(cls.id)) { const lk = unlockOf('class', cls.id)!; this.toast(`${cls.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
@@ -1916,23 +1927,38 @@ export class Game {
     ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
+  /** the road tool's snap mark: an amber ring on a node or a dead end, a tick across the road on a road; nothing on the grid */
+  private drawSnapMark(ctx: CanvasRenderingContext2D, s: Snap) {
+    if (s.kind === 'node' || s.kind === 'end') {
+      const c = this.screen(s.p.x, s.p.y);
+      ctx.strokeStyle = '#ffb020'; ctx.lineWidth = 2 * this.dpr; ctx.beginPath(); ctx.arc(c.x, c.y, 8 * this.dpr, 0, Math.PI * 2); ctx.stroke();
+    } else if (s.kind === 'road' && s.seg) {
+      const n = perp(norm(sub(s.seg.b, s.seg.a))), h = s.seg.cls.h + 0.5, p = s.p;
+      this.setIso(ctx); ctx.beginPath(); ctx.moveTo(p.x - n.x * h, p.y - n.y * h); ctx.lineTo(p.x + n.x * h, p.y + n.y * h); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.strokeStyle = '#ffb020'; ctx.lineWidth = 2 * this.dpr; ctx.stroke();
+    }
+  }
   private drawGroundOverlays(ctx: CanvasRenderingContext2D) {
     const strip = (legs: Leg[], hw: number) => { for (const l of legs) { const d = sub(l.b, l.a), len = vlen(d) || 1, u = mul(d, 1 / len), n = perp(u); const c = [add(sub(l.a, mul(u, hw)), mul(n, hw)), add(add(l.b, mul(u, hw)), mul(n, hw)), sub(add(l.b, mul(u, hw)), mul(n, hw)), sub(sub(l.a, mul(u, hw)), mul(n, hw))]; ctx.moveTo(c[0].x, c[0].y); for (let k = 1; k < 4; k++) ctx.lineTo(c[k].x, c[k].y); ctx.closePath(); } };
     if (this.tool === 'road') {
-      const legs = this.previewLegs(), cls = this.cls;
+      const legs = this.previewLegs(), cls = this.cls, cs = this.cursorSnap(), block = this.routeBlock(legs), bad = block !== '';
       if (legs.length) {
         this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = cls.walkTex === 'gravel' ? 'rgba(150,140,120,0.45)' : 'rgba(230,200,160,0.45)'; ctx.fill();
         this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h); ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.fillStyle = 'rgba(50,60,80,0.6)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,230,150,0.9)'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = bad ? 'rgba(160,40,40,0.6)' : 'rgba(50,60,80,0.6)'; ctx.fill(); ctx.strokeStyle = bad ? 'rgba(248,113,113,0.9)' : 'rgba(255,230,150,0.9)'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
         if (cls.median) { this.setIso(ctx); ctx.beginPath(); strip(legs, cls.median / 2); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(90,160,70,0.55)'; ctx.fill(); }
         this.setIso(ctx); ctx.beginPath(); for (const l of legs) { ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); } ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.strokeStyle = '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = bad ? '#f87171' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
         const pts = [...this.route, legs[legs.length - 1].b];
         for (const p of pts) { const s = this.screen(p.x, p.y); ctx.fillStyle = '#ffd866'; ctx.beginPath(); ctx.arc(s.x, s.y, 4 * this.dpr, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#4a3200'; ctx.lineWidth = 1.5; ctx.stroke(); }
-      } else if (this.hover) {
-        const p = this.snapNode(this.hover), s = this.screen(p.x, p.y);
+      } else if (cs) {
+        const s = this.screen(cs.p.x, cs.p.y);
         ctx.fillStyle = 'rgba(255,216,102,0.9)'; ctx.beginPath(); ctx.arc(s.x, s.y, 5 * this.dpr, 0, Math.PI * 2); ctx.fill();
+      }
+      if (cs) {
+        this.drawSnapMark(ctx, cs);
+        if (bad) { const c = this.screen(cs.p.x, cs.p.y); ctx.font = `bold ${12 * this.dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * this.dpr; ctx.strokeStyle = '#0f172a'; ctx.strokeText(block, c.x, c.y - 18 * this.dpr); ctx.fillStyle = '#f87171'; ctx.fillText(block, c.x, c.y - 18 * this.dpr); }
       }
     } else if (this.tool === 'junction' && this.hoverNode) {
       const n = this.hoverNode, r = Math.max(...n.arms.map(a => a.h)) + 1.5;
