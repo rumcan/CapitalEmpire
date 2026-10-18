@@ -11,13 +11,25 @@ export interface RoadPlanCtx { net: RoadNetwork; lots: LotMap; town: Town; cls: 
 
 /** the block size (tiles), the reach of the land counted from the centre (tiles), and the least land kept (lots) */
 const BLOCK = 40, NEAR = 100, MIN_LAND = 24;
+/** diagnostics: why candidates were rejected (cumulative) */
+export const planWhy = { cands: 0, margin: 0, terrain: 0, verge: 0, lot: 0 };
 /** the gravel corridor: its half width (h + walk), the terrain sample offset across (h + walk + 1), the verge gap kept, the map margin (tiles) */
 const GR = CLASS.gravel.h + CLASS.gravel.walk, GR_T = GR + 1, GAP = 3, MARGIN = 16;
 /** the shortest leg, and how far past its length a road may be to close it */
 const MIN_LEG = 8, CLOSE = 14;
+/** an open leg reaches the next lattice line at least this far away (tiles) */
+const MIN_TO_LATTICE = 16;
+/** the length from A along an axis-aligned u to the first lattice line (a multiple of BLOCK) at least MIN_TO_LATTICE away; BLOCK otherwise */
+function toLattice(A: Pt, u: Pt): number {
+  const ax = Math.abs(u.x) > 0.999 ? 'x' : Math.abs(u.y) > 0.999 ? 'y' : null;
+  if (!ax) return BLOCK;
+  const p = A[ax], d = Math.sign(u[ax]), goal = p + d * MIN_TO_LATTICE;
+  const q = d > 0 ? Math.ceil(goal / BLOCK) * BLOCK : Math.floor(goal / BLOCK) * BLOCK;
+  return Math.abs(q - p);
+}
 /** the score terms: a dead-end leg that closes nothing, a new junction with a paved road, a block closed */
 const DEAD_PEN = 30, JUNC_PEN = 20, CLOSE_BONUS = 25;
-const GROW_IDS = new Set<string>(['gravel', 'lane', 'street']), BRANCH_IDS = new Set<string>(['gravel', 'lane', 'street', 'road']);
+const BRANCH_IDS = new Set<string>(['gravel', 'lane', 'street', 'road']);
 
 /** a candidate leg: from A along u (length L), starting on seg `start`, closing on `close` (null = open); the score (lower is better) and a tie-break */
 interface Cand { A: Pt; u: Pt; L: number; start: Seg; close: Seg | null; dead: boolean; score: number; tie: number }
@@ -93,7 +105,9 @@ function push(c: RoadPlanCtx, cen: Pt, out: Cand[], A: Pt, u: Pt, L: number, sta
 
 /** the candidates of one base leg: open (BLOCK long), and closing on the road ahead when there is one */
 function addCands(c: RoadPlanCtx, cen: Pt, out: Cand[], A: Pt, u: Pt, start: Seg, dead: boolean) {
-  push(c, cen, out, A, u, BLOCK, start, null, dead);
+  // the open leg ends on the town's street lattice (the next multiple of BLOCK across u, at least MIN_TO_LATTICE away), so the
+  // streets the town lays line up into 40-tile blocks whatever the road it starts from (a non-axis u keeps a full BLOCK)
+  push(c, cen, out, A, u, toLattice(A, u), start, null, dead);
   const hit = ahead(c, A, u, BLOCK, start);
   if (hit) push(c, cen, out, A, u, hit.t, start, hit.seg, dead);
 }
@@ -105,9 +119,19 @@ function candidates(c: RoadPlanCtx, cen: Pt, reach: Set<Seg>): Cand[] {
   for (const n of c.net.nodes.values()) {
     if (n.segs.length !== 1 || n.type !== 'plain') continue;
     const s = n.segs[0];
-    if (!GROW_IDS.has(s.cls.id) || !reach.has(s)) continue;
-    const u = norm(sub(n, s.a === n ? s.b : s.a));
-    addCands(c, cen, out, { x: n.x, y: n.y }, u, s, true);
+    if (!BRANCH_IDS.has(s.cls.id) || !reach.has(s)) continue;
+    // straight on, and turning left or right (a T at the dead end: the highway's end in the start block grows this way)
+    const u = norm(sub(n, s.a === n ? s.b : s.a)), A = { x: n.x, y: n.y };
+    addCands(c, cen, out, A, u, s, true);
+    addCands(c, cen, out, A, { x: -u.y, y: u.x }, s, true); addCands(c, cen, out, A, { x: u.y, y: -u.x }, s, true);
+  }
+  // the missing arms of corners and T-junctions (the free side of a T, the open sides of a bend): axis directions with no arm
+  for (const n of c.net.nodes.values()) {
+    if (n.segs.length < 2 || n.segs.length > 3 || n.type !== 'plain') continue;
+    const own = n.segs.filter(s => s.kind === SK.GROUND && BRANCH_IDS.has(s.cls.id) && reach.has(s));
+    if (own.length !== n.segs.length) continue;
+    const dirs = n.segs.map(s => norm(sub(s.a === n ? s.b : s.a, n))), A = { x: n.x, y: n.y };
+    for (const u of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) if (!dirs.some(d => dot(d, u) > 0.98)) addCands(c, cen, out, A, u, own[0], false);
   }
   for (const s of c.net.segs) {
     if (s.kind !== SK.GROUND || !BRANCH_IDS.has(s.cls.id) || !reach.has(s)) continue;
@@ -128,14 +152,14 @@ function valid(c: RoadPlanCtx, k: Cand): boolean {
   const { A, u, L, start, close } = k, n = { x: -u.y, y: u.x };
   const E = { x: A.x + u.x * L, y: A.y + u.y * L };
   const inside = (x: number, y: number) => x >= MARGIN && y >= MARGIN && x < MAP - MARGIN && y < MAP - MARGIN;
-  if (!inside(Math.floor(A.x), Math.floor(A.y)) || !inside(Math.floor(E.x), Math.floor(E.y))) return false;
+  if (!inside(Math.floor(A.x), Math.floor(A.y)) || !inside(Math.floor(E.x), Math.floor(E.y))) { planWhy.margin++; return false; }
   // the terrain: one sample per tile along, at 0 and +-GR_T across
   const N = Math.ceil(L);
   for (let i = 0; i <= N; i++) {
     const t = Math.min(i, L);
     for (const o of [0, GR_T, -GR_T]) {
       const tx = Math.floor(A.x + u.x * t + n.x * o), ty = Math.floor(A.y + u.y * t + n.y * o);
-      if (!inside(tx, ty) || bad(c.cls[ty * MAP + tx])) return false;
+      if (!inside(tx, ty) || bad(c.cls[ty * MAP + tx])) { planWhy.terrain++; return false; }
     }
   }
   // the other roads: the verges of the segs near the corridor, at 0.5 tile steps
@@ -143,7 +167,10 @@ function valid(c: RoadPlanCtx, k: Cand): boolean {
   for (const s of c.net.segsNear({ x: mx, y: my }, L / 2 + GR + 16)) {
     if (s === start || s === close || through(s, A) || (close && through(s, E))) continue;
     const need = GR + s.cls.h + s.cls.walk + GAP;
-    for (let i = 0; i <= 2 * L; i++) if (segDist({ x: A.x + u.x * Math.min(i / 2, L), y: A.y + u.y * Math.min(i / 2, L) }, s) < need) return false;
+    // a seg meeting the start seg at a node (a corner of the road we branch from) is only checked past `need` from A: near A
+    // the new leg joins that junction anyway
+    const adj = s.a === start.a || s.a === start.b || s.b === start.a || s.b === start.b;
+    for (let i = adj ? Math.ceil(2 * need) : 0; i <= 2 * L; i++) if (segDist({ x: A.x + u.x * Math.min(i / 2, L), y: A.y + u.y * Math.min(i / 2, L) }, s) < need) { planWhy.verge++; return false; }
   }
   // the lots: the corridor (0.5 tile steps along and across) through no lot that is not EMPTY
   const x0 = Math.min(A.x, E.x) - GR_T, y0 = Math.min(A.y, E.y) - GR_T, x1 = Math.max(A.x, E.x) + GR_T, y1 = Math.max(A.y, E.y) + GR_T;
@@ -153,7 +180,7 @@ function valid(c: RoadPlanCtx, k: Cand): boolean {
       const t = Math.min(i / 2, L), o = -GR + j * GR / 4;
       const x = A.x + u.x * t + n.x * o - l.o.x, y = A.y + u.y * t + n.y * o - l.o.y;
       const a = x * l.u.x + y * l.u.y, b = x * l.n.x + y * l.n.y;
-      if (a >= -0.5 && a <= l.w + 0.5 && b >= -0.5 && b <= l.d + 0.5) return false;
+      if (a >= -0.5 && a <= l.w + 0.5 && b >= -0.5 && b <= l.d + 0.5) { planWhy.lot++; return false; }
     }
   }
   return true;
@@ -163,7 +190,7 @@ function valid(c: RoadPlanCtx, k: Cand): boolean {
 export function planExtension(c: RoadPlanCtx): Leg[] | null {
   const cen = builtCentre(c), reach = reachableSegs(c.net, c.entry);
   if (!short(c, cen, reach)) return null;
-  const cands = candidates(c, cen, reach).sort((p, q) => (p.score - q.score) || (p.tie - q.tie));
+  const cands = candidates(c, cen, reach); planWhy.cands += cands.length; cands.sort((p, q) => (p.score - q.score) || (p.tie - q.tie));
   for (const k of cands) {
     if (!valid(c, k)) continue;
     return [{ a: { x: k.A.x, y: k.A.y }, b: { x: k.A.x + k.u.x * k.L, y: k.A.y + k.u.y * k.L } }];

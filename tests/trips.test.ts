@@ -104,15 +104,17 @@ test('lot trips: over 2 game days morning trips go home to jobs, evening trips c
   for (const z of zones) assert.ok(sim.access[z]! >= 0.9 && sim.access[z]! <= 1.15, `free-flow access in zone ${z}: ${sim.access[z]}`);
 });
 
-test('lot trips: 6x the RES lots in one zone congest it: its access is over 1.3 after a day', () => {
-  const { g, lm, lots, town } = gridCity();
-  const homes = populate(town, lots);
-  const z0 = (l: Lot) => zoneOf(l.c.x, l.c.y);
-  // zone 0 (the grid's corner) gets 6x its RES lots: the others are added from its unbuilt lots
-  const have = homes.filter(l => z0(l) === 0).length, extra = lots.filter(l => z0(l) === 0 && !homes.includes(l)).slice(0, 5 * have);
-  const seed = (l: Lot) => town.states.get(l.key)!.seed;
-  town.restore(extra.map(l => [l.key, LU.RES, LV.BUILT, 0, seed(l), 0] as LotTuple), 0);
-  const { sim } = lotSim(g, lm, town);
-  runDays(sim, 1);
-  assert.ok(sim.access[0]! > 1.3, `access in zone 0 with ${have + extra.length} RES lots: ${sim.access[0]}`);
+test('access calibration: 50 cars on a 10x10 street grid read free flow (< 1.2), 600 cars read congested (> 1.3) in every zone with trips', () => {
+  const run = (cars: number) => {
+    const e = new NetEditor(new RoadNetwork());
+    for (let k = 0; k <= 10; k++) { e.addLegs([leg(100, 100 + k * 40, 500, 100 + k * 40)], CLASS.street, 0); e.addLegs([leg(100 + k * 40, 100, 100 + k * 40, 500)], CLASS.street, 0); }
+    e.commit(true); const g = new LaneGraph(); g.update(e.net);
+    const sim = new Sim(g, cars, 3); sim.setTarget(cars); runDays(sim, 0.5);
+    const zs = [...new Set([zoneOf(150, 150), zoneOf(300, 300), zoneOf(450, 450)])];
+    return zs.map(z => sim.access[z]!);
+  };
+  const free = run(50), jam = run(600);
+  console.log(`access calibration: 50 cars ${free.map(a => a.toFixed(2)).join(' ')}; 600 cars ${jam.map(a => a.toFixed(2)).join(' ')}`);
+  for (const a of free) assert.ok(a < 1.2, `free flow reads ${a.toFixed(2)}`);
+  for (const a of jam) assert.ok(a > 1.3, `congestion reads ${a.toFixed(2)}`);
 });

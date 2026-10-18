@@ -1,166 +1,56 @@
 /// <reference lib="webworker" />
-// The city worker: its own road network and lane graph, the Sim stepped every 100 ms, and the cars packed into a frame that
-// is posted to the main thread (SimClient). Edits arrive as ops and are replayed here. The parcels (LotMap) and the town
-// (Town: land use and growth) follow the network here too, so the main thread never pays for them.
+// The city worker: a thin shell around one City (game/city.ts). Messages in (edits, terrain, targets, speed), messages out: the cars
+// packed into a frame every FRAME_MS (SimClient reads them), the parcels that changed, the town's events and totals, the town's
+// gravel extensions and the timing logs. The city logic itself is in City, so the town gate runs the same code headless.
 import type { NetOp } from '../ground-protocol';
-import { RoadNetwork, type Seg } from '../network';
-import { applyOps } from '../netops';
-import { MAP } from '../iso';
-import { TC } from '../terrain/types';
-import { LotMap, type Lot } from '../lots/lots';
-import { GROWTH_OPTIONS, LU, Town, builtLots, type TownCtx, type TownEvent } from '../lots/town';
-import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from '../lots/roads';
-import { LaneGraph } from './lanes';
-import { Sim } from './sim';
+import { City } from '../city';
+import type { Lot } from '../lots/lots';
+import type { TownEvent } from '../lots/town';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
-const net = new RoadNetwork(); net.paintData = false; net.occRaster = null;
-const g = new LaneGraph();
-const sim = new Sim(g, 12000, 1);
 /** wall-clock frame period, ms; the sim is stepped once per DT of its speed */
-const FRAME_MS = 100, TICKS = 100;
-/** the water distance field: 4-tile cells, distances capped at WATER_CAP tiles; the town posts its totals at least this often (sim s) */
-const WATER_N = MAP >> 2, WATER_CAP = 200, TOWN_EVERY = 10;
-let speed = 1, forcePost = false, wasAlive = false, graphMs = 0, lanes = 0, tick = 0;
-/** the tick times of the last TICKS ticks (a ring) */
-const ticks = new Float64Array(TICKS);
+const FRAME_MS = 100, TOWN_EVERY = 10;
+const city = new City(1);
+let speed = 1, forcePost = false, wasAlive = false, townPosted = 0;
 const post = (m: FromSim, transfer: Transferable[] = []) => scope.postMessage(m, transfer);
 const fail = (err: unknown) => post({ t: 'error', message: (err as Error).stack || String(err) });
-
-// the city: the parcels, the segs reachable from the highway entry, the town and what it needs from the terrain
-const lots = new LotMap();
-let reach = new Set<Seg>();
-let cls: Uint8Array | null = null, water: Float32Array | null = null, optId = GROWTH_OPTIONS[0].id;
-const ctx: TownCtx = { lots, entry: { x: 0, y: 0 }, reachable: (l: Lot) => reach.has(l.seg), water: waterAt };
-let town = new Town(1), townPosted = 0;
-/** the game hour the town's access was copied to the town and the built lots given to the sim (-1 = none yet: at the next frame) */
-let syncHour = -1;
-/** the town's road plan: its random stream, the game hour planned, a gravel extension posted and not yet back as net ops (and when) */
-const GAME_HOUR = 60;
-let planRnd = seededRnd(1), planHour = -1, pendingGrow = false, growAt = 0;
-
-/** the distance (tiles, capped) to the nearest WATER from a tile: 200 before the terrain arrives */
-function waterAt(x: number, y: number): number {
-  if (!water) return WATER_CAP;
-  const cx = Math.min(WATER_N - 1, Math.max(0, Math.floor(x / 4))), cy = Math.min(WATER_N - 1, Math.max(0, Math.floor(y / 4)));
-  return water[cy * WATER_N + cx];
-}
-/** the distance field to WATER on the 4-tile cells (a cell is wet if one of its tiles is): a two-pass chamfer, in tiles */
-function waterField(terr: Uint8Array): Float32Array {
-  const N = WATER_N, f = new Float32Array(N * N).fill(1e9), S = Math.SQRT2;
-  for (let cy = 0; cy < N; cy++) for (let cx = 0; cx < N; cx++) {
-    let wet = false;
-    for (let j = 0; j < 4 && !wet; j++) for (let i = 0; i < 4; i++) if (terr[(cy * 4 + j) * MAP + cx * 4 + i] === TC.WATER) { wet = true; break; }
-    if (wet) f[cy * N + cx] = 0;
-  }
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-    const i = y * N + x; let v = f[i];
-    if (x > 0) v = Math.min(v, f[i - 1] + 1);
-    if (y > 0) { v = Math.min(v, f[i - N] + 1); if (x > 0) v = Math.min(v, f[i - N - 1] + S); if (x < N - 1) v = Math.min(v, f[i - N + 1] + S); }
-    f[i] = v;
-  }
-  for (let y = N - 1; y >= 0; y--) for (let x = N - 1; x >= 0; x--) {
-    const i = y * N + x; let v = f[i];
-    if (x < N - 1) v = Math.min(v, f[i + 1] + 1);
-    if (y < N - 1) { v = Math.min(v, f[i + N] + 1); if (x < N - 1) v = Math.min(v, f[i + N + 1] + S); if (x > 0) v = Math.min(v, f[i + N - 1] + S); }
-    f[i] = v;
-  }
-  for (let i = 0; i < f.length; i++) f[i] = Math.min(WATER_CAP, f[i] * 4);
-  return f;
-}
-const optionOf = (id: string) => GROWTH_OPTIONS.find(o => o.id === id) ?? GROWTH_OPTIONS[0];
 const rec = (l: Lot): LotRec => ({ key: l.key, o: [l.o.x, l.o.y], u: [l.u.x, l.u.y], n: [l.n.x, l.n.y], w: l.w, d: l.d, cls: l.cls, corner: l.corner });
 
 /** posts the town's events and totals: when forced, when there are events, or every TOWN_EVERY sim s */
 function postTown(ev: TownEvent[], force: boolean) {
-  if (!force && !ev.length && sim.t - townPosted < TOWN_EVERY) return;
-  townPosted = sim.t;
+  if (!force && !ev.length && city.sim.t - townPosted < TOWN_EVERY) return;
+  townPosted = city.sim.t;
+  const town = city.town;
   post({ t: 'town', events: ev.slice(), pop: town.pop, jobs: town.jobs, built: town.built, access: town.access });
 }
 
-/** the built lots go to the sim (once a game hour); the sim switches from random trips to the lots' trips once a RES lot is built */
-function builtSync() {
-  const list = builtLots(town, lots);
-  if (sim.mode === 'random' && list.some(b => b.use === LU.RES)) { sim.mode = 'lots'; sim.setTarget(0); }
-  sim.setBuilt(list);
-}
-
-/** a new valley: its terrain classes, the water field, the highway entry and the seed; the town starts again, at the sim time (no lots yet) */
+/** a new valley: the city takes its terrain; the town starts again (no lots yet) and posts its totals */
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
-  cls = m.cls; water = waterField(m.cls); ctx.entry = { x: m.entry[0], y: m.entry[1] };
-  town = new Town(m.seed); town.option = optionOf(optId); town.tick(sim.t, ctx); syncHour = -1;
-  planRnd = seededRnd(m.seed); planHour = -1; pendingGrow = false;
+  city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed);
   postTown([], true);
 }
 
-/** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
- *  (posted, and no net ops back yet: the next net message clears it, and so does an hour, in case the engine skipped it) */
-function planGrow() {
-  if (!cls) return;
-  const h = Math.floor(sim.t / GAME_HOUR);
-  if (h === planHour) return;
-  planHour = h;
-  if (pendingGrow && sim.t - growAt < GAME_HOUR) return;
-  const c: RoadPlanCtx = { net, lots, town, cls, entry: ctx.entry, rnd: planRnd };
-  if (!needsLand(c)) return;
-  const legs = planExtension(c);
-  if (!legs) return;
-  pendingGrow = true; growAt = sim.t;
-  post({ t: 'grow', legs: legs.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
-}
-
-/** replays the ops; the lane graph is updated after every rebuild, so each part of the edit is measured on its own */
+/** replays the ops; the city logs the timings that are slow (over 50 ms) */
 function netOps(ops: NetOp[]) {
-  const t0 = performance.now();
-  pendingGrow = false;
-  let part: NetOp[] = [];
-  for (const op of ops) {
-    part.push(op);
-    if (op.k === 'rebuild') { applyOps(net, part); g.update(net); part = []; }
-  }
-  if (part.length) applyOps(net, part);
-  sim.onGraph();
-  graphMs = performance.now() - t0;
-  lanes = 0; for (const ln of g.lanes) if (ln) lanes++;
-  if (graphMs > 50) post({ t: 'log', message: `net ops ${ops.length} and graph in ${graphMs.toFixed(0)} ms` });
-  lotsOps();
+  const r = city.netOps(ops);
+  if (city.graphMs > 50) post({ t: 'log', message: `net ops ${ops.length} and graph in ${city.graphMs.toFixed(0)} ms` });
+  if (r.lotsAdded.length || r.lotsRemoved.length) post({ t: 'lots', added: r.lotsAdded.map(rec), removed: r.lotsRemoved });
+  postTown(r.events, true);
+  if (city.lotsMs > 50) post({ t: 'log', message: `lots ${r.lotsAdded.length} added, ${r.lotsRemoved.length} removed in ${city.lotsMs.toFixed(0)} ms` });
 }
 
-/** a saved town (after the load's net ops): the sim clock, then the lots' states; the restored lots post as completed */
-function townStateOps(m: Extract<ToSim, { t: 'townState' }>) {
-  sim.t = m.simT;
-  postTown(town.restore(m.lots, sim.t), true); syncHour = -1;
-}
-
-/** after a network batch: the parcels that changed, the reachable segs, the town's lots; posts the changes */
-function lotsOps() {
-  const t0 = performance.now();
-  const { added, removed } = lots.update(net, cls);
-  reach = reachableSegs(net, ctx.entry);
-  const ev = town.onLots(added, removed);
-  if (added.length || removed.length) post({ t: 'lots', added: added.map(rec), removed });
-  postTown(ev, true);
-  const ms = performance.now() - t0;
-  if (ms > 50) post({ t: 'log', message: `lots ${added.length} added, ${removed.length} removed in ${ms.toFixed(0)} ms` });
-}
-
-/** one wall-clock period: speed steps of the sim, the town to the sim time, then a frame unless there is nothing to show */
+/** one wall-clock period: speed steps of the sim, the town to the sim time, the planner, then a frame unless there is nothing to show */
 function frame() {
-  const t0 = performance.now();
-  const hr = Math.floor(sim.t / GAME_HOUR);
-  if (hr !== syncHour) { syncHour = hr; town.access.set(sim.access); builtSync(); }
-  for (let k = 0; k < speed; k++) sim.step();
-  ticks[tick++ % TICKS] = performance.now() - t0;
-  postTown(town.tick(sim.t, ctx), false);
-  planGrow();
-  const alive = sim.active > 0;
+  const r = city.step(speed);
+  postTown(r.events, false);
+  if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
+  const sim = city.sim, alive = sim.active > 0;
   // with no cars, still a frame every second: the clock (signals, the town) reads simT from it
-  if (!alive && !wasAlive && !forcePost && tick % 10 !== 0) return;
+  if (!alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
   forcePost = false; wasAlive = alive;
-  let maxTickMs = 0; for (const v of ticks) if (v > maxTickMs) maxTickMs = v;
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
-  const stats: SimStats = { active: sim.active, target: sim.target, lanes, stepMs: sim.stats.stepMs, tickMs: ticks[(tick - 1) % TICKS], maxTickMs, graphMs, respawned: sim.stats.respawned, simT: sim.t };
+  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t };
   post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
 }
 
@@ -170,10 +60,10 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
     switch (m.t) {
       case 'net': netOps(m.ops); break;
       case 'terrain': terrainOps(m); break;
-      case 'target': sim.setTarget(m.n); forcePost = true; break;
+      case 'target': city.sim.setTarget(m.n); forcePost = true; break;
       case 'speed': speed = m.k; break;
-      case 'option': optId = m.id; town.option = optionOf(m.id); break;
-      case 'townState': townStateOps(m); break;
+      case 'option': city.option(m.id); break;
+      case 'townState': postTown(city.restore(m.lots, m.simT), true); break;
     }
   } catch (err) { fail(err); }
 };

@@ -17,6 +17,8 @@ export interface Lot {
 }
 
 /** frontage width and depth by road class, tiles */
+/** the town's street lattice (roads.ts BLOCK) and the half width kept free of lots around its points, tiles */
+export const BRANCH = 40, RESERVE = 4;
 const SIZE: Record<ClassId, [number, number]> = { gravel: [8, 15], lane: [8, 15], street: [8, 15], road: [10, 16], avenue: [12, 18], boulevard: [16, 20] };
 /** the shallowest lot kept; the clearance added to another road's h + walk; the share of bad terrain allowed; the overlap tolerance */
 const MIN_D = 6, CLEAR = 0.5, BAD_MAX = 0.1, TOL = 0.25;
@@ -155,6 +157,10 @@ function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[]) 
   for (const side of [1, -1] as const) {
     const n = mul(pu, side);
     for (let k = kLo; k <= kHi; k++) {
+      // keep the side-street points of the town's growth lattice free (roads.ts branches every BRANCH tiles of t): no lot
+      // within RESERVE of them, so a future street never has to cut through a house (in a full grid they are junctions anyway)
+      const lo = k * W, m0 = Math.floor((lo - RESERVE) / BRANCH) + 1;
+      if (m0 * BRANCH < lo + W + RESERVE) continue;
       const o = { x: f.x + u.x * k * W + n.x * r0, y: f.y + u.y * k * W + n.y * r0 };
       blockers(net, s, o, u, n, W, D);
       // the midline cap: half the clear distance to the verge of the road behind, from the front corners and the midpoint

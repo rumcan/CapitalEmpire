@@ -32,6 +32,8 @@ const SIG_MARGIN = 0.5;
  *  grid with 50 cars, the mean ratio over the arrivals after one game hour: 1.213 (seeds 1 to 3: 1.217, 1.211, 1.211). With 600 cars
  *  (congested) it is 3.31. access = ratio / FREE reads about 1.0 in free flow; 1.3 and 1.8 are 30% and 80% over it. */
 export const FREE = 1.213;
+/** the (decayed) number of trips a zone needs before its access counts in full */
+export const ACCESS_N = 12;
 
 /** The vehicles of one graph. Slot i is one vehicle while alive[i] is 1; the lists hold the vehicles of each lane, front first. */
 export class Sim {
@@ -61,12 +63,15 @@ export class Sim {
   /** 'random': the target count with random trips (the bench, the gate, the tests); 'lots': the built lots' trips, no target (lotTrips) */
   mode: 'random' | 'lots' = 'random';
   lotTrips: LotTrips;
-  /** access per zone (16 x 16, row-major): the EMA of the trips' ratio over FREE that start or end there, starting at 1; zones with no
-   *  trip in a game hour relax 1% toward 1 */
+  /** access per zone (16 x 16, row-major): the trips that start or end there, sum of actual times over sum of ideal times, over FREE.
+   *  The sums decay by half every game hour, so it follows the last few hours; with little evidence (decayed trip count under
+   *  ACCESS_N) it is pulled toward 1, so a handful of slow trips in a young town cannot redden a district */
   access = new Float32Array(256).fill(1);
   /** per zone: finished trips since the last game hour; per slot: spawn time (s), ideal time (s: the lanes driven at their speed limit,
    *  less the spawn lane's part before the spawn), origin zone */
   private hits = new Uint32Array(256); private aH = 0;
+  /** per zone, decaying sums: actual seconds, ideal seconds, trips */
+  private actS = new Float64Array(256); private idlS = new Float64Array(256); private nS = new Float64Array(256);
   private t0: Float64Array; private ideal: Float64Array; private oz: Uint8Array;
   /** a scratch lane position (allocation-free) */
   private pt = { x: 0, y: 0, hx: 0, hy: 0 };
@@ -198,14 +203,23 @@ export class Sim {
   setBuilt(list: Built[]) { this.stats.dropped += this.lotTrips.setBuilt(list); }
   /** a finished trip (arrival on ln): its ratio, its time over max(ideal, 10 s), over FREE; the EMA of access in its origin zone and in its destination zone */
   private score(i: number, ln: Lane) {
-    const ideal = this.ideal[i]! + this.s[i]! / ln.vmax, r = (this.t - this.t0[i]!) / Math.max(ideal, 10);
-    this.stats.ratioSum += r; this.stats.ratioN++;
-    this.bump(this.oz[i]!, r / FREE); this.bump(this.router.zoneD[ln.dseg]!, r / FREE);
+    const ideal = Math.max(this.ideal[i]! + this.s[i]! / ln.vmax, 10), act = Math.min(this.t - this.t0[i]!, 6 * ideal);
+    this.stats.ratioSum += act / ideal; this.stats.ratioN++;
+    this.bump(this.oz[i]!, act, ideal); this.bump(this.router.zoneD[ln.dseg]!, act, ideal);
   }
-  /** one trip's ratio (normalised) into zone z's access: an EMA with weight 0.05 */
-  private bump(z: number, a: number) { this.access[z] = this.access[z]! + 0.05 * (a - this.access[z]!); this.hits[z]++; }
-  /** once per game hour: the zones with no finished trip in it relax 1% toward 1 */
-  private relax() { for (let z = 0; z < 256; z++) { if (!this.hits[z]) this.access[z] = this.access[z]! + 0.01 * (1 - this.access[z]!); this.hits[z] = 0; } }
+  /** one trip (actual and ideal seconds, the actual capped at 6x) into zone z's sums, and its access */
+  private bump(z: number, act: number, ideal: number) {
+    this.actS[z] += act; this.idlS[z] += ideal; this.nS[z] += 1; this.hits[z]++;
+    const raw = this.actS[z]! / this.idlS[z]! / FREE, w = Math.min(1, this.nS[z]! / ACCESS_N);
+    this.access[z] = 1 + w * (raw - 1);
+  }
+  /** once per game hour: every zone's sums decay by half (and its access with the weight of its evidence) */
+  private relax() {
+    for (let z = 0; z < 256; z++) {
+      this.actS[z] *= 0.5; this.idlS[z] *= 0.5; this.nS[z] *= 0.5; this.hits[z] = 0;
+      if (this.idlS[z]! > 0) { const raw = this.actS[z]! / this.idlS[z]! / FREE, w = Math.min(1, this.nS[z]! / ACCESS_N); this.access[z] = 1 + w * (raw - 1); } else this.access[z] = 1;
+    }
+  }
 
   /** gives vehicle i a new destination from where it is now */
   private retarget(i: number) {
