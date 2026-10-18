@@ -14,8 +14,9 @@ _Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model i
 | 2. Traffic core | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
 | 4. Budget + bottleneck loop | **In progress** (2026-10-18). Steps and numbers below |
-| 5. Road builder pro | Not started |
-| 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
+| 5. Towns + tourism booms (new, 2026-10-18) | Not started. The new core mechanic: GAME-PLAN section 1.0; owner decisions needed first (GAME-PLAN section 7, items 6–9) |
+| 6. Road builder pro (was 5) | Not started |
+| 7. Look + eras (was 6, "Vegas look") | Not started. The art track can start any time; the attractions (water park, casino boulevard) come first |
 
 ## Decisions so far
 
@@ -28,7 +29,13 @@ _Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model i
 - **Map:** 4 x 4 km (2048 tiles of 2 m).
 - **Terrain:** seeded, fixed hills, valleys and rivers. Roads cross rivers with **bridges** and go through hills in
   **tunnels**.
-- **Player control:** roads and traffic only. The city grows where traffic flows and stops where it jams.
+- **Core mechanic (2026-10-18): connect the towns, tourism first.** Several towns on the map; the player places a
+  tourism attraction (water park, casino boulevard); each boom by season sends tourists by car from the other towns;
+  the boom is scored on how many reach the venue in time (money and growth lost for the rest); the player upgrades the
+  roads and the next boom delivers more. Logistics (other industries) later. GAME-PLAN section 1.0, with the list of
+  pivots in 1.0.6 and the open questions in section 7 (items 6–9). This **reverses "the player never builds
+  buildings"** for attractions; the towns still build their own lots.
+- **Player control (up to 2026-10-18):** roads and traffic only. The city grows where traffic flows and stops where it jams.
   **Confirmed 2026-10-17:** the player never builds buildings; the "objects" build tool comes out (Phase 1
   step 3). The game allocates lots (residential, commercial, industrial, tourism, government) and builds them
   with rich generated layouts; the player picks growth options. GAME-PLAN sections 1.5 and 3.5.
@@ -563,6 +570,11 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
 - The terrain test's per-seed budget is now 4 s (the dev PC is slower than the worker).
 
 ## Phase 4, budget + bottleneck loop: in progress
+
+**Gate changed 2026-10-18** (the towns-and-tourism pivot): the books close every game day and bankruptcy is reachable;
+fixing the top bottleneck measurably improves the next rush hour (headless). The Career win/lose gate moves to the new
+Phase 5 (tourism booms). Step 5's population milestones stay as the mechanism (unlocks, grants); Phase 5 swaps their
+trigger to tourism results.
 
 Goal and gate: GAME-PLAN sections 1.3, 3.4 and the phase table (gate: a Career run is winnable and losable; fixing the
 top bottleneck measurably restarts growth). Suggested steps:
