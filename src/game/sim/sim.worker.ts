@@ -46,6 +46,20 @@ let reportHour = -1;
 /** the car inspected (-1: none); the junction watch: its node's x, y (null: none), whether it is on, and the wall-clock time (ms) of its next post */
 let inspecting = -1, watchXY: [number, number] | null = null, watching = false, watchNext = 0;
 
+/** the congestion heat map (off by default): on while the client asks; heatGeomV is the version of the geometry last posted (-1: none, so it goes
+ *  out before the first heat of each switch on), heatNext the performance.now() of the next heat */
+const HEAT_MS = 500;
+let heatOn = false, heatGeomV = -1, heatNext = 0;
+
+/** posts the heat: the geometry first when the version changed, then the ratios and densities (copies, transferred) */
+function postHeat() {
+  const sim = city.sim;
+  if (sim.heatVersion !== heatGeomV) { heatGeomV = sim.heatVersion; const geom = sim.heatGeometry(); post({ t: 'heatGeom', version: heatGeomV, geom }, [geom.buffer as ArrayBuffer]); }
+  const ratio = sim.heatRatio.slice(), dens = sim.heatDens.slice();
+  post({ t: 'heat', version: heatGeomV, ratio, dens }, [ratio.buffer as ArrayBuffer, dens.buffer as ArrayBuffer]);
+  heatNext = performance.now() + HEAT_MS;
+}
+
 /** posts the junction watch: the node, the crossings since it was set, and their lines (the ring's first min(n, 256) entries, 4 floats each) */
 function postWatch() {
   const n = city.sim.watchN, lines = city.sim.watchLog.slice(0, 4 * Math.min(n, 256));
@@ -97,6 +111,7 @@ function frame() {
   // not while fast-forwarding (an hour passes almost every frame then); the first frame after the skip posts it
   if (hr !== reportHour && !(skipUntil > city.sim.t)) { reportHour = hr; postReport(); }
   if (watching && performance.now() >= watchNext) postWatch();
+  if (heatOn && performance.now() >= heatNext) postHeat();
   const sim = city.sim, alive = sim.active > 0;
   // with no cars, still a frame every second: the clock (signals, the town) reads simT from it; while skipping, a frame every period
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
@@ -122,6 +137,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
+      case 'heat': heatOn = m.on; heatGeomV = -1; heatNext = 0; break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else city.closeRound();
         postBudget(null); forcePost = true; break;

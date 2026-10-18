@@ -151,6 +151,11 @@ export class Sim {
   private lMerge = new Uint8Array(0);
   /** lanes whose front vehicle passed the end this step (deduped by `overMark`) */
   private over: number[] = []; private overMark = new Uint8Array(0);
+  /** the live heat per dseg id, updated once per sim second (heatTick): the EMA (about 5 s) of the mean of v / lane vmax over the vehicles on
+   *  its lanes, relaxing to 1 when it is empty; the EMA of its density (vehicles per km per lane). heatVersion is bumped when the dseg list changes (onGraph) */
+  heatRatio = new Float32Array(0); heatDens = new Float32Array(0); heatVersion = 0;
+  /** the heat's bookkeeping: the key and lane count of each dseg id at the last onGraph, and the per-second sums of v / vmax and counts per dseg id */
+  private hKey: string[] = []; private hNL: number[] = []; private hSum = new Float64Array(0); private hCnt = new Uint32Array(0);
 
   /** an empty sim of cap vehicle slots on graph g; call onGraph() after every graph update */
   constructor(g: LaneGraph, cap: number, seed: number) {
@@ -204,6 +209,7 @@ export class Sim {
     if (this.resvLen.length < n) this.resvLen = new Float64Array(Math.max(n, 2 * this.resvLen.length));
     this.resvLen.fill(0); this.grant.fill(-1); this.resv.fill(-1);
     for (const q of this.onLane) q.length = 0;
+    this.heatGraph();
     this.trips.onGraph(this.g); this.lotTrips.onGraph(this.g);
     this.router.onGraph(this.g);
     let pending = 0;
@@ -224,6 +230,60 @@ export class Sim {
     }
     for (const q of this.onLane) if (q.length > 1) q.sort((a, b) => this.s[b] - this.s[a]);
     for (let k = 0; k < pending; k++) this.spawn();
+  }
+
+  /** the heat arrays follow the dseg list: a dseg id whose key or lane count changed (or that is new) starts neutral (ratio 1, density 0),
+   *  and any change bumps heatVersion */
+  private heatGraph() {
+    const g = this.g, nD = g.dsegs.length, N = Math.max(nD, this.hKey.length);
+    if (this.heatRatio.length < N) {
+      const m = Math.max(N, 2 * this.heatRatio.length), r = new Float32Array(m).fill(1), e = new Float32Array(m);
+      r.set(this.heatRatio); e.set(this.heatDens);
+      this.heatRatio = r; this.heatDens = e; this.hSum = new Float64Array(m); this.hCnt = new Uint32Array(m);
+    }
+    let bump = false;
+    for (let d = 0; d < N; d++) {
+      const dg = g.dsegs[d] ?? null, k = dg ? dg.key : '', nl = dg ? dg.lanes.length : 0;
+      if (this.hKey[d] === k && this.hNL[d] === nl) continue;
+      bump = true; this.hKey[d] = k; this.hNL[d] = nl; this.heatRatio[d] = 1; this.heatDens[d] = 0;
+    }
+    if (bump) this.heatVersion++;
+  }
+
+  /** the 1 s heat update (every 10 steps, from step): per dseg, over the vehicles on its LINK lanes, the mean of v / lane vmax and the count;
+   *  the ratio moves toward the mean by 0.2 (an EMA of about 5 s), or toward 1 when it is empty; the density moves toward n / (km x lanes) */
+  private heatTick() {
+    const g = this.g, nD = g.dsegs.length, Q = this.onLane, V = this.v, lanes = g.lanes, S = this.hSum, C = this.hCnt, R = this.heatRatio, D = this.heatDens;
+    S.fill(0, 0, nD); C.fill(0, 0, nD);
+    for (let id = 0; id < Q.length; id++) {
+      const q = Q[id]!;
+      if (!q.length || !this.lLink[id]) continue;
+      const ln = lanes[id]; if (!ln) continue;
+      const d = ln.dseg, vm = this.lVmax[id]!;
+      for (const i of q) { S[d]! += V[i]! / vm; C[d]!++; }
+    }
+    for (let d = 0; d < nD; d++) {
+      const dg = g.dsegs[d]; if (!dg) continue;
+      const n = C[d]!, per = dg.len / 1000 * dg.lanes.length;
+      R[d] = n ? R[d]! + 0.2 * (S[d]! / n - R[d]!) : R[d]! + 0.2 * (1 - R[d]!);
+      D[d] = D[d]! + 0.2 * ((per > 0 ? n / per : 0) - D[d]!);
+    }
+  }
+
+  /** the heat map's geometry, 6 floats per dseg id: from x, y and to x, y (tiles), the lateral offset (tiles) of the centre of its lanes
+   *  along perp(direction), the side its lanes are on, and its lane count; NaN for a dead id. A new array each call (on a heatVersion change) */
+  heatGeometry(): Float32Array {
+    const g = this.g, nD = g.dsegs.length, out = new Float32Array(6 * nD).fill(NaN);
+    for (let d = 0; d < nD; d++) {
+      const dg = g.dsegs[d]; if (!dg) continue;
+      const fx = dg.from.x, fy = dg.from.y, tx = dg.to.x, ty = dg.to.y, L = Math.hypot(tx - fx, ty - fy) || 1;
+      const rx = -(ty - fy) / L, ry = (tx - fx) / L;
+      let off = 0, k = 0;
+      for (const id of dg.lanes) { const ln = g.lanes[id]; if (!ln) continue; off += (ln.pts[0]! - fx) * rx + (ln.pts[1]! - fy) * ry; k++; }
+      const o = 6 * d;
+      out[o] = fx; out[o + 1] = fy; out[o + 2] = tx; out[o + 3] = ty; out[o + 4] = k ? off / k : 0; out[o + 5] = dg.lanes.length;
+    }
+    return out;
   }
 
   /** vehicle i has paid at its toll booth: counted in tolls (the City books the takings) */
@@ -358,6 +418,7 @@ export class Sim {
     // a frozen clock: the shift gives back the DT that t just gained, so the clock stands still
     if (this.frozen) this.shift = Math.round((this.shift - DT) * PER_S) / PER_S;
     this.router.tick(this);
+    if (this.steps % 10 === 0) this.heatTick();
     const H = Math.floor(this.t / 60);
     if (H !== this.aH) { this.aH = H; this.relax(); }
     if (this.mode === 'lots') this.lotTrips.step(this); else this.fill();

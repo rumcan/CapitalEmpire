@@ -77,6 +77,12 @@ export class SimClient {
   round: RoundView = NO_ROUND; site: Site | null = null;
   /** the car parks' counts as the worker last sent them (with each frame; see ParkView) */
   parks: ParkView[] = [];
+  /** the congestion heat map: its geometry as the worker last sent it (6 floats per dseg id: from x, y, to x, y in tiles, the lateral offset
+   *  of its lanes' centre in tiles along perp(direction), its lane count; NaN for a dead id; null until the first) and the version it is for */
+  heatGeom: Float32Array | null = null; heatGeomVersion = -1;
+  /** the heat map's per-dseg speed ratio (mean v / lane vmax, 1 = free) and density (vehicles per km per lane) as the worker last sent them
+   *  (null until the first), and the performance.now() of that message (see heatOn) */
+  heatRatio: Float32Array | null = null; heatDens: Float32Array | null = null; heatAt = 0;
   n = 0;
   alive = new Uint8Array(0); px = new Float32Array(0); py = new Float32Array(0);
   /** 4-facing index of the heading: 0 +x, 1 +y, 2 -x, 3 -y */
@@ -141,6 +147,9 @@ export class SimClient {
   watchAt(x: number, y: number) { this.watching = true; this.post({ t: 'watch', x, y }); }
   /** stops the junction watch */
   unwatch() { this.watching = false; this.watch = null; this.post({ t: 'watch', x: -1, y: -1 }); }
+  /** turns the congestion heat map on or off (off by default: the worker posts nothing for it then). On: the geometry comes first (heatGeom), then
+   *  the heat every 500 ms (heat, heatRatio, heatDens, heatAt); the last values stay after off */
+  heatOn(on: boolean) { this.post({ t: 'heat', on }); }
   /** true while the worker is fast-forwarding (see skip) */
   get skipping() { return this.stats.skipping; }
   terminate() { this.worker.terminate(); }
@@ -156,6 +165,8 @@ export class SimClient {
     if (m.t === 'car') { if (this.slot >= 0 && (!m.info || m.info.slot === this.slot)) this.car = m.info; return; }
     if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }
     if (m.t === 'site') { this.site = m.site; return; }
+    if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
+    if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatAt = performance.now(); return; }
     if (m.t === 'grow') {
       const legs: Leg[] = [];
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });
