@@ -49,12 +49,17 @@ function nodeSnap(n: Node): Snap { return { p: { x: n.x, y: n.y }, kind: n.segs.
 /** where a road-tool click at p lands, within rTiles: the nearest node (exact position); else the nearest point on a road, pulled to the
  *  road's nearer end when that end is within MIN_SEP; else the tile grid (clamped to the map, as the road tool always did) */
 export function snapPoint(net: RoadNetwork, p: Pt, rTiles: number): Snap {
-  const segs = net.segsNear(p, rTiles);
+  // a road's whole surface snaps to it: the reach is its half width and verge plus the pointer radius (a click on an arterial's kerb
+  // joins its centre line; a T made at the kerb would stop short as a dead end), and a node's reach is that of its widest arm
+  const wide = (s: Seg) => s.cls.h + s.cls.walk + rTiles, segs = net.segsNear(p, rTiles + 8);
   let node: Node | null = null, nd = Infinity;
-  for (const s of segs) for (const n of [s.a, s.b]) { const d = dist(n, p); if (d <= rTiles && d < nd) { nd = d; node = n; } }
+  for (const s of segs) for (const n of [s.a, s.b]) {
+    const reach = Math.max(rTiles, ...n.segs.map(q => q.cls.h + q.cls.walk)), d = dist(n, p);
+    if (d <= reach && d < nd) { nd = d; node = n; }
+  }
   if (node) return nodeSnap(node);
   let seg: Seg | null = null, rd = Infinity, road: Pt = p;
-  for (const s of segs) { const r = projectOn(s, p); if (r.d <= rTiles && r.d < rd) { rd = r.d; seg = s; road = r.q; } }
+  for (const s of segs) { const r = projectOn(s, p); if (r.d <= wide(s) && r.d < rd) { rd = r.d; seg = s; road = r.q; } }
   if (seg) {
     const near = dist(seg.a, road) <= dist(seg.b, road) ? seg.a : seg.b;
     if (dist(near, road) < MIN_SEP) return nodeSnap(near);

@@ -94,3 +94,12 @@ test('a leg joining a road at a point at 30 degrees or more is fine; a shallow j
   assert.equal(checkLegs(n, [leg(50, 100, 50 + 60 * Math.cos(a), 100 - 60 * Math.sin(a))], null, null), 'Too close to another road');
   assert.equal(checkLegs(n, [leg(50, 90, 50 + 60 * Math.cos(a), 90 + 60 * Math.sin(a))], null, null), 'Too close to another road');
 });
+
+test('a click on an arterial kerb (4 tiles off its centre line) snaps to the centre line: a T meets the road, not its edge', () => {
+  const n = new RoadNetwork(); n.addLegs([leg(0, 100, 200, 100)], CLASS.arterial, 0, false);
+  const s = snapPoint(n, { x: 100, y: 104.4 }, 2);
+  assert.equal(s.kind, 'road');
+  near(s.p.x, 100); near(s.p.y, 100);
+  // beyond the verge plus the pointer radius it is the grid
+  assert.equal(snapPoint(n, { x: 100, y: 108 }, 2).kind, 'grid');
+});
