@@ -31,6 +31,10 @@ const ABANDON = 1200;
 const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
 const SIG_MARGIN = 0.5;
+/** the queue of the junction ahead: the last this many metres of a LINK lane (Sim.lossQ) */
+const QUEUE_M = 100;
+/** a copy of a Float64Array a in one of length m (the per-lane sums keep their values when the lists grow) */
+const grow64 = (a: Float64Array, m: number) => { const b = new Float64Array(m); b.set(a); return b; };
 /** the free-flow ratio of a trip (its time over its ideal time, see Sim.score). Measured (output/calib, random mode) on a 10 x 10 street
  *  grid with 50 cars, the mean ratio over the arrivals after one game hour: 1.213 (seeds 1 to 3: 1.217, 1.211, 1.211). With 600 cars
  *  (congested) it is 3.31. access = ratio / FREE reads about 1.0 in free flow; 1.3 and 1.8 are 30% and 80% over it. */
@@ -64,6 +68,10 @@ export class Sim {
   /** trade since the sim started: trips that arrived at a non-RES lot (the destination's use tag >= LU.COM), and the sum of their
    *  punctuality min(1, FREE * ideal / actual): 1 is on time, less is late */
   trade = { arrived: 0, punctual: 0 };
+  /** per lane, decaying sums (halved every game hour in relax(), so a steady rate r per game hour reads r / ln 2): vehicle-seconds
+   *  lost on the lane away from its end (lossL: the shortfall of the speed under 90% of the limit, per step times DT), vehicle-seconds
+   *  lost within QUEUE_M m of a LINK lane's end (lossQ: the queue of the junction ahead), and the vehicles that entered the lane */
+  lossL = new Float64Array(0); lossQ = new Float64Array(0); enterL = new Float64Array(0);
   /** where new trips start and end (origins, destinations by zone) */
   trips: Trips;
   /** 'random': the target count with random trips (the bench, the gate, the tests); 'lots': the built lots' trips, no target (lotTrips) */
@@ -93,6 +101,8 @@ export class Sim {
   /** per lane, cached from the graph in onGraph (the hot loops read these instead of the lane objects): length, speed
    *  limit, 1 = a junction entry the gate controls */
   private lLen = new Float64Array(0); private lVmax = new Float32Array(0); private lGate = new Uint8Array(0);
+  /** per lane: 1 = a LINK lane (a road lane, not a junction connector or ring arc) */
+  private lLink = new Uint8Array(0);
   /** per lane: 1 = a node lane that merges with others into its next lane (vehicles there follow the mergers ahead of them) */
   private lMerge = new Uint8Array(0);
   /** lanes whose front vehicle passed the end this step (deduped by `overMark`) */
@@ -122,13 +132,16 @@ export class Sim {
     const lanes = this.g.lanes;
     while (this.onLane.length < lanes.length) this.onLane.push([]);
     const n = lanes.length;
-    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); }
+    if (this.lLen.length < n) { const m = Math.max(n, this.lLen.length * 2); this.lLen = new Float64Array(m); this.lVmax = new Float32Array(m); this.lGate = new Uint8Array(m); this.lMerge = new Uint8Array(m); this.overMark = new Uint8Array(m); this.lLink = new Uint8Array(m); this.lossL = grow64(this.lossL, m); this.lossQ = grow64(this.lossQ, m); this.enterL = grow64(this.enterL, m); }
     for (let id = 0; id < n; id++) {
-      const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0;
+      const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0; this.lLink[id] = l && l.kind === LK.LINK ? 1 : 0;
       // gated: a junction connector from a link lane, and every ring arc (a ring arc yields to the room granted on it)
       this.lMerge[id] = l && l.kind !== LK.LINK && l.next.length === 1 && (lanes[l.next[0]]?.prev.length ?? 0) > 1 ? 1 : 0;
       this.lGate[id] = l && (l.kind === LK.RING || (l.kind === LK.CONN && l.prev.length && lanes[l.prev[0]]?.kind === LK.LINK)) ? 1 : 0;
     }
+    // the losses of the lanes this update freed or rebuilt (lane ids) start again
+    for (const id of this.g.removed) if (id < n) { this.lossL[id] = 0; this.lossQ[id] = 0; this.enterL[id] = 0; }
+    for (const id of this.g.changed) if (id < n) { this.lossL[id] = 0; this.lossQ[id] = 0; this.enterL[id] = 0; }
     // grants and reservations do not survive a graph update: the vehicles are re-planned or respawned below
     while (this.granted.length < n) this.granted.push([]);
     for (const q of this.granted) q.length = 0;
@@ -225,6 +238,8 @@ export class Sim {
   }
   /** once per game hour: every zone's sums decay by half (and its access with the weight of its evidence) */
   private relax() {
+    const n = this.g.lanes.length;
+    for (let id = 0; id < n; id++) { this.lossL[id] *= 0.5; this.lossQ[id] *= 0.5; this.enterL[id] *= 0.5; }
     for (let z = 0; z < 256; z++) {
       this.actS[z] *= 0.5; this.idlS[z] *= 0.5; this.nS[z] *= 0.5; this.hits[z] = 0;
       if (this.idlS[z]! > 0) { const raw = this.actS[z]! / this.idlS[z]! / FREE, w = Math.min(1, this.nS[z]! / ACCESS_N); this.access[z] = 1 + w * (raw - 1); } else this.access[z] = 1;
@@ -550,6 +565,9 @@ export class Sim {
       const dEnd = this.lLen[id] - this.s[i];
       if (vn < 0.3 && dEnd < 4) this.stopped[i] = 1;
       if (vn < 0.5 && dEnd < 20) this.wait[i] += DT;
+      // the time lost this step: the shortfall under 90% of the limit, on a link lane's queue (lossQ) or on the lane (lossL)
+      const vm = this.lVmax[id];
+      if (vm > 0) { const loss = DT * Math.max(0, 1 - vn / (0.9 * vm)); if (this.lLink[id] && dEnd < QUEUE_M) this.lossQ[id] += loss; else this.lossL[id] += loss; }
     }
   }
 
@@ -589,7 +607,7 @@ export class Sim {
     // entering the first node lane of a movement: its junction delay is the time this vehicle waited at the line
     if (ln.kind === LK.LINK && nl.kind !== LK.LINK && this.move[i]! >= 0) this.router.feed(this.move[i]!, this.wait[i]!);
     this.stopped[i] = 0; if (nl.kind !== LK.LINK) this.wait[i] = 0;
-    this.pi[i] = p; this.lane[i] = nid; this.onLane[nid].push(i);
+    this.pi[i] = p; this.lane[i] = nid; this.onLane[nid].push(i); this.enterL[nid] += 1;
     // a vehicle may be removed here (lost, no route): pickMove despawns it, and the callers check alive
     if (nl.kind === LK.LINK && p === P.length - 1) this.pickMove(i);
     return true;
