@@ -40,6 +40,8 @@ export interface SaveV5 {
   lots?: LotTuple[];
   /** the sim clock, s, so the construction timers go on (v5) */
   simT?: number;
+  /** the game clock's offset from simT, s (clock = simT + shift; missing = 0): a frozen clock saves as it stood (optional, no version bump) */
+  shift?: number;
   /** the city's books: the treasury, loans, days in the red, bankruptcy and the ledgers (v5; missing = a fresh budget with money) */
   budget?: BudgetSave;
   /** the career: the highest milestone reached and the win (v5; missing = a fresh career at the hamlet) */

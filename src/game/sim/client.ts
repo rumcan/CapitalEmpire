@@ -20,7 +20,7 @@ import type { CareerSave, Milestone } from '../career';
 const FRAME_MS = 100;
 /** a car that moved this far (tiles) between two frames was respawned or re-planned: drawn at its new place, not lerped */
 const JUMP = 3;
-const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false };
+const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false };
 /** half a car's length per vehicle type, tiles (the lights sit at its front and rear) */
 const HALF = VTYPES.map(v => v.len / 4);
 
@@ -97,14 +97,14 @@ export class SimClient {
   setOption(id: string) { this.option = id; this.post({ t: 'option', id }); }
   /** the dev sandbox's options: the growth speed (1 = the game's) and unlimited money (spending does not move the treasury); stored as unlimited */
   sandbox(grow: number, money: boolean) { this.unlimited = money; this.post({ t: 'sandbox', grow, money }); }
-  /** a saved town for the worker (its lots, the sim clock, s, and its books or the treasury of an old save): after the net ops of a load */
-  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave) { this.post({ t: 'townState', lots, simT, budget, money, career }); }
+  /** a saved town for the worker (its lots, the sim time, s, the clock's shift from it, and its books or the treasury of an old save): after the net ops of a load */
+  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave, shift = 0) { this.post({ t: 'townState', lots, simT, budget, money, career, shift }); }
   /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
   spend(kind: 'construction' | 'compensation', n: number) { this.budget.money -= n; this.post({ t: 'spend', kind, n }); }
   /** takes (true) or repays (false) one loan unit; the worker refuses what the books do not allow */
   loan(take: boolean) { this.post({ t: 'loan', take }); }
   /** replaces the books with a saved budget, or a fresh one for null (based at the sim day's midnight), and the career saved with them (a fresh one if none); the mirrors take it at once, so a save right after sees it */
-  setBudget(save: BudgetSave | null, career?: CareerSave | null) { this.budget = save ?? { ...new Budget().toJSON(), base: Math.floor(this.simTime(performance.now()) / GAME_DAY) * GAME_DAY }; this.career = career ?? { reached: 0, won: false }; this.post({ t: 'budget', save, career }); }
+  setBudget(save: BudgetSave | null, career?: CareerSave | null) { this.budget = save ?? { ...new Budget().toJSON(), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY }; this.career = career ?? { reached: 0, won: false }; this.post({ t: 'budget', save, career }); }
   /** asks the worker for the bottleneck report now (it arrives later, into report) */
   requestReport() { this.post({ t: 'report' }); }
   /** sets the number of cars the sim keeps on the network */
@@ -165,6 +165,9 @@ export class SimClient {
 
   /** the sim's time now, s: the time of the last frame, moved on at the sim speed since it arrived (0 before the first frame) */
   simTime(now: number): number { if (!this.cur) return 0; return this.stats.skipping ? this.stats.simT : this.stats.simT + Math.max(0, now - this.tCur) / 1000 * this.speed; }
+  /** the game clock now, s (the time of day and the game day): the clock of the last frame, moved on at the sim speed like simTime, but
+   *  not while it is frozen or the sim is skipping (0 before the first frame) */
+  clockTime(now: number): number { if (!this.cur) return 0; const s = this.stats; return s.clock + (s.frozen || s.skipping ? 0 : Math.max(0, now - this.tCur) / 1000 * this.speed); }
 
   /** unpacks the current frame into the arrays, lerping each car from its place in the previous frame (at now) */
   update(_now: number) {

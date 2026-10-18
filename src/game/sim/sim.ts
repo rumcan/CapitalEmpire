@@ -52,6 +52,10 @@ export interface CarInfo { slot: number; x: number; y: number; v: number; vmax: 
 /** The vehicles of one graph. Slot i is one vehicle while alive[i] is 1; the lists hold the vehicles of each lane, front first. */
 export class Sim {
   g: LaneGraph; t = 0; steps = 0; cap: number; active = 0;
+  /** the offset of the game clock from t, s (on the DT grid): clock = t + shift. Zero unless the clock was frozen (see freezeAt) */
+  shift = 0;
+  /** true while the clock is frozen: each step takes DT off shift, so the clock stands still while t (the physics) runs on */
+  frozen = false;
   alive: Uint8Array; lane: Int32Array; s: Float64Array; v: Float32Array; acc: Float32Array; len: Float32Array;
   vtype: Uint8Array; v0f: Float32Array; lat: Float32Array;
   move: Int32Array; plan: (number[] | null)[]; pi: Int16Array;
@@ -282,6 +286,14 @@ export class Sim {
     return true;
   }
 
+  /** the game clock, s: the time of day and the game day (the town, the budget, the demand curve, the lot trips' hours). Equal to t
+   *  unless the clock was frozen; the physics, the trips' ages, the signals and the hourly decay read t */
+  get clock(): number { return this.t + this.shift; }
+  /** freezes the clock at c (s): shift becomes c - t, on the DT grid; the sim keeps running, and each step takes DT off shift */
+  freezeAt(c: number) { this.shift = Math.round((c - this.t) * PER_S) / PER_S; this.frozen = true; }
+  /** the clock runs again from where it stopped (shift stays) */
+  unfreeze() { this.frozen = false; }
+
   /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
   step() {
     const t0 = performance.now();
@@ -294,6 +306,8 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) this.lat[i] *= 0.85;
     // on the DT grid: summing 0.1 drifts (52,380 steps read 52,379.99999), which moved hour and day boundaries a step late
     this.t = Math.round((this.t + DT) * PER_S) / PER_S; this.steps++;
+    // a frozen clock: the shift gives back the DT that t just gained, so the clock stands still
+    if (this.frozen) this.shift = Math.round((this.shift - DT) * PER_S) / PER_S;
     this.router.tick(this);
     const H = Math.floor(this.t / 60);
     if (H !== this.aH) { this.aH = H; this.relax(); }
@@ -814,7 +828,7 @@ export class Sim {
 
   /** up to FILL_TRIES spawn attempts per step while below the aim (the target, or the daily profile's share of it) */
   private fill() {
-    const aim = this.profile ? Math.round(this.target * demandAt(this.t)) : this.target;
+    const aim = this.profile ? Math.round(this.target * demandAt(this.clock)) : this.target;
     for (let n = 0; n < FILL_TRIES && this.active < aim; n++) this.spawn();
   }
 }

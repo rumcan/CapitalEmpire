@@ -184,7 +184,7 @@ export class Game {
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
-    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career);
+    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0);
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -697,19 +697,21 @@ export class Game {
   /** pauses, or resumes at the last speed */
   togglePause() { this.setSpeed(this.speed ? 0 : this.lastSpeed); }
   /** the game clock: the economy's day, and the time of day from the sim clock (one sim second is one game minute) */
-  clock(): { day: number; hour: number; minute: number } { const t = this.traffic.simTime(performance.now()); return { day: this.day, hour: Math.floor(t / GAME_HOUR) % 24, minute: Math.floor(t % GAME_HOUR) }; }
-  /** fast-forwards the sim to the next 7:30 or 16:30 (sim s 450 and 990 of the day); resumes first if paused */
+  clock(): { day: number; hour: number; minute: number } { const t = this.traffic.clockTime(performance.now()); return { day: this.day, hour: Math.floor(t / GAME_HOUR) % 24, minute: Math.floor(t % GAME_HOUR) }; }
+  /** fast-forwards the sim to the next 7:30 or 16:30 (game clock s 450 and 990 of the day); resumes first if paused. Not while the clock is frozen. */
   skipToRush() {
     if (this.traffic.skipping) return;
-    const t = this.traffic.simTime(performance.now()), day = Math.floor(t / GAME_DAY) * GAME_DAY;
-    const until = [day + 450, day + 990].find(u => u > t) ?? day + GAME_DAY + 450, h = until % GAME_DAY === 450 ? 7 : 16;
+    if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
+    const now = performance.now(), c = this.traffic.clockTime(now), day = Math.floor(c / GAME_DAY) * GAME_DAY;
+    const target = [day + 450, day + 990].find(u => u > c) ?? day + GAME_DAY + 450, h = target % GAME_DAY === 450 ? 7 : 16;
+    const until = this.traffic.simTime(now) + (target - c); // the sim time of the target, from the clock's offset now
     if (!this.speed) this.setSpeed(this.lastSpeed);
     this.traffic.skip(until);
     this.toast(`Skipping to the ${h === 7 ? 'morning' : 'evening'} rush…`);
   }
   /** takes the before / after snapshot now: the last rush window before this game hour and the next rush (the after numbers come with it); asks for a fresh report */
   takeSnapshot() {
-    const at = Math.floor(this.traffic.simTime(performance.now()) / GAME_HOUR), after = nextRush(at + 1); // the hour now began before the change: the after window starts at the next hour or later
+    const at = Math.floor(this.traffic.clockTime(performance.now()) / GAME_HOUR), after = nextRush(at + 1); // the hour now began before the change: the after window starts at the next hour or later
     this.snapshot = { at, before: lastRush(this.traffic.hours, at), after };
     this.traffic.requestReport();
     this.toast(`Snapshot taken. Make your change; the after numbers come with the ${String(after[0] % 24).padStart(2, '0')}:00 rush`);
@@ -723,7 +725,7 @@ export class Game {
   private growthNow() {
     const now = performance.now();
     if (now - this.growStamp < 1000) return;
-    this.growStamp = now; const T = this.traffic.simTime(now);
+    this.growStamp = now; const T = this.traffic.clockTime(now);
     this.growN.fill(0); this.declN.fill(0); this.growTot = 0; this.declTot = 0;
     for (const l of this.traffic.lots.values()) {
       const z = zoneOf(l.o[0] + l.u[0] * l.w / 2 + l.n[0] * l.d / 2, l.o[1] + l.u[1] * l.w / 2 + l.n[1] * l.d / 2);
@@ -781,7 +783,7 @@ export class Game {
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
-      simT: this.traffic.simTime(performance.now()), budget: this.traffic.budget, career: this.traffic.career,
+      simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, budget: this.traffic.budget, career: this.traffic.career,
     };
     try { return await writeSave(d); } catch { return 0; }
   }

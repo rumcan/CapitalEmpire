@@ -115,7 +115,7 @@ export class City {
   terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = []): void {
     this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
     this.centres = towns;
-    this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
+    this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.setBudget(null, null);
@@ -126,7 +126,7 @@ export class City {
   setBudget(s: BudgetSave | null, career?: CareerSave | null): void {
     this.budget = s ? Budget.from(s) : new Budget();
     this.budget.unlimited = this.unlimited;
-    if (!s) this.budget.base = Math.floor(this.sim.t / GAME_DAY) * GAME_DAY;
+    if (!s) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career ?? undefined);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
   }
@@ -184,18 +184,24 @@ export class City {
     return { lotsAdded: added, lotsRemoved: removed, events };
   }
 
-  /** a saved town (after the load's net ops): the sim clock (s), then the lots' states; returns the 'complete' event per restored lot */
-  restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number, career?: CareerSave): TownEvent[] {
-    this.sim.t = simT;
-    this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(simT / GAME_DAY) * GAME_DAY;
+  /** a saved town (after the load's net ops): the sim time (s), the clock's offset from it (shift, s; 0 if none), then the lots' states;
+   *  returns the 'complete' event per restored lot */
+  restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number, career?: CareerSave, shift = 0): TownEvent[] {
+    this.sim.t = simT; this.sim.shift = shift;
+    this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
-    const ev = this.town.restore(saved, this.sim.t); this.syncHour = -1;
+    const ev = this.town.restore(saved, this.sim.clock); this.syncHour = -1;
     return ev;
   }
 
+  /** freezes the game clock at c (s, the time of day): the sim keeps running, the town, the books and the planner stand still (see Sim.freezeAt) */
+  freeze(c: number): void { this.sim.freezeAt(c); }
+  /** the game clock runs again (see Sim.unfreeze) */
+  unfreeze(): void { this.sim.unfreeze(); }
+
   /** the towns built at once (a new valley, see Town.stamp): each town grows to perTown residents; returns the 'complete' events (a new array) */
-  stamp(perTown: number): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.t); this.syncHour = -1; return ev; }
+  stamp(perTown: number): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.clock); this.syncHour = -1; return ev; }
 
   /** n sim steps (a frame at speed n), then the town to the sim time, then the planner (once a game hour). Returns the town's events
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
@@ -204,7 +210,7 @@ export class City {
   step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
     const t0 = performance.now();
     this.calls++;
-    const hr = Math.floor(this.sim.t / GAME_HOUR);
+    const hr = Math.floor(this.sim.clock / GAME_HOUR);
     let milestones = NO_MILESTONES, won = false;
     if (hr !== this.syncHour) {
       this.pushHour(hr); this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync();
@@ -215,9 +221,9 @@ export class City {
     }
     for (let k = 0; k < n; k++) this.sim.step();
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
-    const events = this.town.tick(this.sim.t, this.ctx);
+    const events = this.town.tick(this.sim.clock, this.ctx);
     for (const e of events) if (e.kind === 'build') this.builds++;
-    const d = this.budget.dayOf(this.sim.t); let ledger: Ledger | null = null;
+    const d = this.budget.dayOf(this.sim.clock); let ledger: Ledger | null = null;
     if (this.dayIdx < 0) this.dayIdx = d;
     else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
     return { events, grow: this.planGrow(), ledger, milestones, won };
@@ -268,10 +274,10 @@ export class City {
   private planGrow(): Leg[] | null {
     const cls = this.cls;
     if (!cls) return null;
-    const h = Math.floor(this.sim.t * this.growSpeed / GAME_HOUR);
+    const h = Math.floor(this.sim.clock * this.growSpeed / GAME_HOUR);
     if (h === this.planHour) return null;
     this.planHour = h;
-    if (this.pendingGrow && this.sim.t - this.growAt < GAME_HOUR / this.growSpeed) return null;
+    if (this.pendingGrow && this.sim.clock - this.growAt < GAME_HOUR / this.growSpeed) return null;
     const K = this.centres.length, k = K ? this.planHour % K : 0;
     const c: RoadPlanCtx = K
       ? { net: this.net, lots: this.lots, town: this.town, cls, entry: this.centres[k]!, rnd: this.planRnd, centre: this.townCentre(k), built: this.town.builtK[k] }
@@ -280,7 +286,7 @@ export class City {
     const legs = planExtension(c);
     if (!legs) { this.growStats.none++; return null; }
     this.growStats.legs++;
-    this.pendingGrow = true; this.growAt = this.sim.t;
+    this.pendingGrow = true; this.growAt = this.sim.clock;
     return legs;
   }
 }

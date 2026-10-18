@@ -31,7 +31,7 @@ function postTown(ev: TownEvent[], force: boolean) {
 }
 
 /** the books: the save, the career's save, the game day now, and the ledger of the day that just closed (null unless a day did) */
-function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), career: city.career.toJSON(), day: city.budget.dayOf(city.sim.t), ledger }); }
+function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), career: city.career.toJSON(), day: city.budget.dayOf(city.sim.clock), ledger }); }
 
 /** a step's career news: the milestones it newly reached and the win, then the books (the grants moved the treasury); nothing if neither */
 function postCareer(r: { milestones: Milestone[]; won: boolean }) { if (!r.milestones.length && !r.won) return; post({ t: 'milestone', newly: r.milestones, won: r.won }); postBudget(null); }
@@ -96,7 +96,7 @@ function frame() {
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
   forcePost = false; wasAlive = alive;
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
-  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t };
+  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen };
   post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
@@ -112,7 +112,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
-      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career), true); postBudget(null); break;
+      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); postBudget(null); break;
       case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
       case 'loan': city.loan(m.take); postBudget(null); break;
       case 'budget': city.setBudget(m.save, m.career); postBudget(null); break;

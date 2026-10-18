@@ -7,15 +7,16 @@ import type { Report } from './bottlenecks';
 import type { CarInfo } from './sim';
 import type { HourStat } from '../beforeafter';
 
-/** what the worker measured, sent with every frame; skipping: a fast-forward is running (simT is then the last frame's, not extrapolated) */
-export interface SimStats { active: number; target: number; lanes: number; stepMs: number; tickMs: number; maxTickMs: number; graphMs: number; respawned: number; simT: number; skipping: boolean }
+/** what the worker measured, sent with every frame; skipping: a fast-forward is running (simT is then the last frame's, not extrapolated);
+ *  clock: the game clock, s (simT + the clock's shift); frozen: the clock is frozen (it does not move while simT does) */
+export interface SimStats { active: number; target: number; lanes: number; stepMs: number; tickMs: number; maxTickMs: number; graphMs: number; respawned: number; simT: number; skipping: boolean; clock: number; frozen: boolean }
 /** a parcel as plain data: origin o, along u and away n (tiles, unit vectors), width w, depth d, the frontage's road class and a corner flag */
 export interface LotRec { key: string; o: [number, number]; u: [number, number]; n: [number, number]; w: number; d: number; cls: string; corner: boolean }
-/** main thread to worker: network edits, a new valley (terrain classes, the highway entry in tiles, the seed, the town centres as flat x, y pairs in tiles (none: the single town)), the vehicle target, the speed (0 pauses; 1 is real time), the growth option id, a saved town (its lots, the sim clock, s, and its books, or the treasury of an old save; sent after the net ops of a load), a skip: fast-forward the sim as fast as the worker can until the sim time until (s),
+/** main thread to worker: network edits, a new valley (terrain classes, the highway entry in tiles, the seed, the town centres as flat x, y pairs in tiles (none: the single town)), the vehicle target, the speed (0 pauses; 1 is real time), the growth option id, a saved town (its lots, the sim time, s, the clock's shift from it (s; 0 if none), and its books, or the treasury of an old save; sent after the net ops of a load), a skip: fast-forward the sim as fast as the worker can until the sim time until (s),
  *  a spend (construction or compensation, $; negative construction gives back), a loan (take or repay one unit), the books replaced (a saved budget, or null for a fresh one; with the career saved with them, or none for a fresh one),
  *  a stamp (the towns built at once: each grows to pop residents; after the net ops of a new valley),
  *  a sandbox (dev options: the growth speed grow (1 = the game's) and unlimited money (money: spending does not move the treasury)) */
-export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array; entry: [number, number]; seed: number; towns: number[] } | { t: 'target'; n: number } | { t: 'speed'; k: number } | { t: 'option'; id: string } | { t: 'townState'; lots: LotTuple[]; simT: number; budget?: BudgetSave; money: number; career?: CareerSave } | { t: 'skip'; until: number }
+export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array; entry: [number, number]; seed: number; towns: number[] } | { t: 'target'; n: number } | { t: 'speed'; k: number } | { t: 'option'; id: string } | { t: 'townState'; lots: LotTuple[]; simT: number; budget?: BudgetSave; money: number; career?: CareerSave; shift?: number } | { t: 'skip'; until: number }
   | { t: 'spend'; kind: 'construction' | 'compensation'; n: number } | { t: 'loan'; take: boolean } | { t: 'budget'; save: BudgetSave | null; career?: CareerSave | null } | { t: 'report' } | { t: 'stamp'; pop: number }
   | { t: 'sandbox'; grow: number; money: boolean } | { t: 'inspect'; slot: number } | { t: 'watch'; x: number; y: number };
 /** (report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;

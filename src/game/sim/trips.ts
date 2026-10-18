@@ -226,8 +226,9 @@ export class LotTrips {
   }
 
   /** the trips of game hour H: each home's share of the day's trips for the hour, by the hour's kind */
+  /** the hour H is the sim hour (scheduling); its kind and demand come from the game clock's hour C, so a frozen evening keeps making evening trips */
   private generate(sim: Sim, H: number) {
-    const hod = H % 24, k = PER_RES / 24 * demandAt(H * 60 + 30) / MEAN_DEMAND;
+    const C = Math.floor(sim.clock / 60), hod = ((C % 24) + 24) % 24, k = PER_RES / 24 * demandAt(C * 60 + 30) / MEAN_DEMAND;
     const morning = hod >= 6 && hod <= 11, evening = hod >= 15 && hod <= 21;
     for (const r of this.homes) {
       r.acc += r.pop * k; const n = Math.floor(r.acc); r.acc -= n;
