@@ -99,11 +99,14 @@ export function planProfile(
   ground: (x: number, y: number) => number,
   opts: { over: boolean; maxGrade: number; clearance?: number },
 ): Profile {
-  const clearance = opts.clearance ?? (opts.over ? 5.5 : 6);
+  const DECK_THICK = 1.5;
+  const rawClearance = opts.clearance ?? (opts.over ? 5.5 : 6);
+  const clearance = opts.over ? rawClearance + DECK_THICK : rawClearance;
   const maxGrade = opts.maxGrade;
-  const overhang = 3; // tiles each side of crossing to fully span road width
-  const minGap = 5; // tiles of ground needed between separate bridges
-  const Vc = 4; // vertical curve total length in tiles (both ends combined)
+  const overhang = 3;
+  const minGap = 5;
+  // vertical curve: K=10 minimal, L = K * gradeChange% in metres => for 6% =>60m=30 tiles, 4%=>40m=20 tiles
+  const Vc = Math.round(5 * maxGrade * 100); // tiles 30 for 6% =>60m, 20 for 4% =>40m (K=10)
 
   if (route.length < 2) {
     return { s: [0], z: [ground(route[0]!.x, route[0]!.y)], kinds: ['ground'], ok: false, why: 'route too short' };

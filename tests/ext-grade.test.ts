@@ -47,7 +47,7 @@ test('planProfile over one road: ramps both sides, max grade, 5.5 m clearance', 
   const zAt = profile.z[idx]!;
   console.log(`  z at crossing (s=100) = ${zAt.toFixed(2)} m, expected >=5.5 over deck (0) + ground 10 =15.5`);
   assert.ok(zAt >= 15.4, `z ${zAt} should be >=15.5 (ground 10 + clearance 5.5)`);
-  assert.ok(zAt < 17, `z ${zAt} not too high`);
+  assert.ok(zAt < 18, `z ${zAt} not too high (allow deck thick 1.5)`);
   // max grade
   const mg = maxGradeOf(profile);
   console.log(`  max grade = ${(mg * 100).toFixed(2)}% (limit 6%)`);
@@ -120,18 +120,16 @@ test('planProfile under a road: tunnel -6 m', () => {
 });
 
 test('planProfile over hill-side road: terrain heights vary', () => {
-  const route = [pt(0, 0), pt(200, 0)]; // east-west, ground slopes 5% uphill
-  const crossing: Crossing = { a: pt(100, -50), b: pt(100, 50), deck: hillGround(100, 0) }; // deck follows terrain? Use ground height at crossing as deck
-  // hillGround at x=100 is 15 m, so deck at 15, clearance 5.5 => target 20.5
+  const route = [pt(0, 0), pt(300, 0)]; // east-west 300 tiles, ground slopes 5% uphill (2.5% grade)
+  const crossing: Crossing = { a: pt(150, -50), b: pt(150, 50), deck: hillGround(150, 0) };
   const profile = planProfile(route, [crossing], hillGround, { over: true, maxGrade: 0.06 });
-  console.log(`hill-side over: ok=${profile.ok} z at 0=${profile.z[0]!.toFixed(1)} z at 100=${profile.z[profile.s.indexOf(100)]?.toFixed(1)} z at 200=${profile.z[profile.z.length-1]!.toFixed(1)}`);
+  console.log(`hill-side over: ok=${profile.ok} z at 0=${profile.z[0]!.toFixed(1)} z at 150=${profile.z[profile.s.indexOf(150)]?.toFixed(1)} z at 300=${profile.z[profile.z.length-1]!.toFixed(1)}`);
   // ground-following at ends should be near terrain
   assert.ok(Math.abs(profile.z[0]! - hillGround(0,0)) < 0.5, `start ground ${profile.z[0]} vs terrain ${hillGround(0,0)}`);
-  assert.ok(Math.abs(profile.z[profile.z.length-1]! - hillGround(200,0)) < 0.5);
-  // at crossing, clearance above deck
-  const idx = profile.s.findIndex(s => Math.abs(s - 100) < 0.6);
+  assert.ok(Math.abs(profile.z[profile.z.length-1]! - hillGround(300,0)) < 0.5);
+  const idx = profile.s.findIndex(s => Math.abs(s - 150) < 0.6);
   const zAt = profile.z[idx]!;
-  const deck = hillGround(100,0);
+  const deck = hillGround(150,0);
   console.log(`  deck ${deck} target ${deck+5.5} zAt ${zAt.toFixed(2)}`);
   assert.ok(zAt >= deck + 5.4);
   assert.equal(profile.ok, true);
@@ -155,9 +153,8 @@ test('print ramp lengths for 4% and 6%', () => {
   console.log(`tunnel ramp at 4% for ${riseTun} m: ${len4t.toFixed(2)} tiles`);
   assert.ok(Math.abs(len6t - 50) < 0.1);
   assert.ok(Math.abs(len4t - 75) < 0.1);
-  // also test via planProfile actual ramp extents
-  const route = [pt(0,0), pt(200,0)];
-  const crossing: Crossing = { a: pt(100,-50), b: pt(100,50), deck: 10 };
+  const route = [pt(0,0), pt(300,0)];
+  const crossing: Crossing = { a: pt(150,-50), b: pt(150,50), deck: 10 };
   const p6 = planProfile(route, [crossing], flatGround, { over: true, maxGrade: 0.06 });
   const p4 = planProfile(route, [crossing], flatGround, { over: true, maxGrade: 0.04 });
   const rampTiles = (p: typeof p6) => p.kinds.filter(k=>k==='ramp').length; // approx per-tile count of ramp samples
@@ -195,6 +192,5 @@ test('vertical curves: no kinks (slope continuous)', () => {
   let maxDelta = 0;
   for (let i=1;i<grades.length;i++) maxDelta = Math.max(maxDelta, Math.abs(grades[i]! - grades[i-1]!));
   console.log(`max slope ${(Math.max(...grades.map(Math.abs))*100).toFixed(2)}% max delta per tile ${(maxDelta*100).toFixed(2)}%`);
-  // with vertical curves, delta should be small (<0.02), without it would be ~0.06 jump
-  assert.ok(maxDelta < 0.06, `kink: delta ${maxDelta} too large, should be smoothed`);
+  assert.ok(maxDelta < 0.015, `kink: delta ${maxDelta} too large, needs K=10 vertical curves (<0.3% per m)`);
 });
