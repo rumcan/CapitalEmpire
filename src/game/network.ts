@@ -55,6 +55,10 @@ export const R_SLIP = 12, SLIP_LANE = 2.2, RB_LANE = 2.5;
 export const RB_BASE: Record<1 | 2 | 3, number> = { 1: 7, 2: 11, 3: 15 };
 /** the junction flags the junction tool sells: widened turns, and turn lanes (2-lane roads) */
 export const FLAG_COST = { wide: 3000, tl: 2000 };
+/** each ring lane a roundabout has beyond the first */
+export const RING_LANE_COST = 4000;
+/** what a junction of type t with rl ring lanes costs (the type's JUNCTIONS cost, plus the ring lanes beyond the first on a roundabout) */
+export const variantCost = (t: NodeType, rl: 1 | 2 | 3): number => (JUNCTIONS.find(j => j.id === t)?.cost ?? 0) + (t === 'roundabout' ? (rl - 1) * RING_LANE_COST : 0);
 
 /* ---------- vectors ---------- */
 export const sub = (a: Pt, b: Pt): Pt => ({ x: a.x - b.x, y: a.y - b.y });

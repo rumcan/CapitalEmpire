@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
-import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES } from './game/network';
+import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST } from './game/network';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
@@ -699,7 +699,7 @@ function JunctionPanel({ game }: { game: Game }) {
       </div>
       {mode === 'type' ? (
         <>
-          <p className="mt-2 text-xs text-slate-300">Pick a type, then click a junction. Lights add stop lines and signals on every corner; slipways add channelised turn lanes with islands (needs long approaches); roundabouts get a planted island.</p>
+          <p className="mt-2 text-xs text-slate-300">Pick a type, then click a junction. Lights add stop lines and signals on every corner; slipways add channelised turn lanes with islands (needs long approaches); roundabouts get a planted island. Tab flips the junction under the pointer through the types (Shift+Tab back).</p>
           <div className="mt-2 grid grid-cols-1 gap-1">
             {JUNCTIONS.map(j => {
               const lk = game.junctionOpen(j.id) ? null : unlockOf('junction', j.id)!;
@@ -711,13 +711,21 @@ function JunctionPanel({ game }: { game: Game }) {
               );
             })}
           </div>
+          {game.junctionType === 'roundabout' && (
+            <div className="mt-2 flex items-center gap-1 text-xs">
+              <span className="text-slate-400">Ring lanes:</span>
+              {([1, 2, 3] as const).map(k => (
+                <button key={k} className={`chip ${game.ringLanes === k ? 'chip-on' : ''}`} onClick={() => { game.ringLanes = k; game.emit(); }}>{k}{k > 1 ? ` (+${money((k - 1) * RING_LANE_COST)})` : ''}</button>
+              ))}
+            </div>
+          )}
         </>
       ) : (
         <p className="mt-2 text-xs text-slate-300">{mode === 'wide'
           ? `Widen turns (${money(FLAG_COST.wide)}): the corners at this junction take up to twice the speed. Click a junction or bend to turn it on; click again to remove it.`
           : `Turn lanes (${money(FLAG_COST.tl)}, two-lane roads): the leftmost lane takes left turns only; the others go straight on or right. Click a junction of three or more roads to turn it on; click again to remove it.`}</p>
       )}
-      <p className="mt-2 text-[11px] text-slate-500">{n ? `Junction of ${n.arms.length} roads (${JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()})${flags ? `, with ${flags}` : ''} — click to ${mode === 'type' ? 'convert' : 'toggle'}` : 'Hover a junction to highlight it.'}</p>
+      <p className="mt-2 text-[11px] text-slate-500">{n ? `Junction of ${n.arms.length} roads (${n.type === 'roundabout' ? `roundabout, ${n.rl ?? 1} ring lane${(n.rl ?? 1) > 1 ? 's' : ''}` : JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()})${flags ? `, with ${flags}` : ''} — click to ${mode === 'type' ? 'convert' : 'toggle'}` : 'Hover a junction to highlight it.'}</p>
     </Panel>
   );
 }
@@ -785,7 +793,7 @@ function hintFor(g: Game) {
   switch (g.tool) {
     case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start`;
     case 'junction': if (g.junctionMode !== 'type') return g.hoverNode ? `Click to ${g.junctionMode === 'wide' ? 'widen the turns here' : 'toggle the turn lanes here'}` : 'Hover a junction or bend';
-      return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here` : 'Hover a junction (three or more roads; roundabouts also work on bends)';
+      return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here · Tab flips the type` : 'Hover a junction (three or more roads; roundabouts also work on bends) · Tab flips the type';
     case 'lane': { const h = g.laneHover; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way';
       return h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`; }
     case 'bulldoze': return 'Click objects or roads to remove them';
@@ -806,7 +814,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>
           <li>Five road types: <b>Lane</b> (single lane), <b>Street</b> (2 lanes, sidewalks, your choice of centre line), <b>Road</b> (wider, darker asphalt with paved shoulders inside yellow edge lines and a gravel verge), <b>Avenue</b> and <b>Boulevard</b> (2 / 4 lanes around a tree-lined median).</li>
           <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
-          <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend.</li>
+          <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend. Tab flips the junction under the pointer through the types (roundabouts with 1, 2 or 3 ring lanes; Shift+Tab goes back).</li>
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
           <li><b>Career</b>: milestones at 250, 1,000, 2,500, 4,000 and 6,000 residents unlock road classes, junctions and tunnels and pay grants; 6,000 wins. Bankruptcy loses.</li>
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
