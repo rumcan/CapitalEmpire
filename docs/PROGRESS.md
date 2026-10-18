@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18 evening, Phase 5 done; Phase 6 step 1 (actuated signals) done; Phase 6R (roads first) in progress, then Phase B (businesses: the owner's v5 pivot). Nothing pushed._
+_Last updated: 2026-10-18 late: Phase 5 done; Phase 6 paused after step 1; Phase 6R (roads first) in progress: see its Handover entry. Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -1072,9 +1072,39 @@ small public car parks on open town lots as part of the town's growth (a small t
 - **Town bus stops and lot buy-outs: DONE** (commit `bcf949e`).
 - **Junction bench** (`output/dbg/jx.ts`): on clean geometry every junction type is natural at low volume (waits of 0–5 s);
   signals and slips cope at high volume; the 4-way single-lane roundabout was the weak spot (fixed above).
-- **Queued:** buses keep their route through road edits during a surge (today an edit drops them) and town-bus fans need
-  no car park; **approach flares** (the slipways and turn pockets cars actually use: today a slip right turn starts at the
-  stop line inside the shared queue); the ring-lane and junction choices in the UI; the calendar and the signal tiers.
+- **Handover (2026-10-18 late, the chat got too long; a fresh chat continues):**
+  - **Maybe uncommitted in the working tree: the bus fix** (a haiku-coder was still running when this chat ended): buses
+    keep their route through road edits during a surge (today an edit makes them ordinary cars or drops them; the sim
+    must never retarget, trim, tow or abandon a bus slot; the City re-points live buses at the re-resolved stops after
+    every netOps) and town-bus fans need no car park (decide by-bus before the car-park home rule in `Surge.plan`). Check
+    `git status`/`git diff`: if the files (sim.ts, city.ts, surge.ts, tests) hold it, review it, run `npm test` and
+    `npm run towns:gate -- 1 1`, then commit; else brief it again.
+  - **Next: approach flares (the slipways cars actually use; the owner: "I don't see any of them use it").** Cause: at a
+    'slip' node the right turn is only a YIELD connector starting at the stop line, inside the shared lane, so a
+    right-turner waits behind the red-light queue. Design (lead): at a configured arm the inbound dseg's link lanes end
+    `FLARE` = 15 tiles before their normal end (lanes.ts `inset()`); the node owns the approach from there: straight
+    continuation lanes (LK.CONN, ctl FREE) from each link lane's end to the stop line, then the junction connectors as
+    now (ctl SIGNAL); and a **slip lane** (LK.CONN, ctl YIELD, prio 1) from the rightmost link lane's end along the slip
+    curve (a bezier from that end, heading along the arm, to the right exit road's outermost lane start) straight onto the
+    exit road: the right-turn movement's path is [link lane, slip lane, out lane]. Conflicts: the slip merges into the
+    out lane (conflicts() over the node's lanes). Cars must be in the rightmost lane at the flare start (MOBIL's
+    strategic `want`). The renderer already paints the slip road (network.ts slipIsland, R_SLIP 12). Test: a 4-way slip
+    junction with red-light queues on every arm: the right-turners' mean delay far below the straight cars'; the junction
+    bench `output/dbg/jx.ts` (`node output/dbg/jx.mjs 500 15 street slip`) and an overlap count of 0; browser check on
+    street and arterial (the owner's rule: test road/junction work in the browser across classes before saying done).
+    Later the same flare carries **left pockets** (the 'tl' flag) and the owner's "brave drivers" who run along the
+    shoulder to reach a slip when the queue is long.
+  - **Then, in order:** the junction UI (ring lanes 1–3 in the junction panel, flip through junction types, slips and
+    turn lanes per arm); the calendar and the signal tiers (GAME-PLAN 1.0.01); the road catalogue with one-way and a
+    variant flip (6R.2); highways and ramps, the hillier terrain, the towns as seeds with a growth target (6R.5–7, some as
+    Arena tasks T002–T004); then **Phase B, the businesses** (GAME-PLAN 1.0.00; Arena task T010 holds the economics).
+  - **Arena agent:** twelve tasks in `agents/tasks/` (pushed); review its PRs against `agents/arena/INSTRUCTIONS.md` and
+    wire the modules in from `src/game/ext/`.
+  - **Workflow notes:** the worker PC is `cworker` = 192.168.0.8 (moved after a power cut); the owner tests on his own dev
+    server at http://localhost:5174 (it serves the working folder live: say when unfinished work may show there); the
+    owner asked to be told when something lands; dev-only debug: `window.__game` in the page (roadClick/finishRoute with
+    screen coords, setTool, parkTest, startRound/startNow) for scripted browser checks; `output/dbg/` holds the lead's
+    headless scripts (event2.ts scenario builds, jx.ts junction bench, rb.ts/rbgeo.ts roundabouts).
 - **Queued (the owner, 2026-10-18 evening): the calendar and the signal tiers** (GAME-PLAN 1.0.01): the year from 1985, one
   per finished round; fixed-time lights with a per-junction green split at the start, actuated from 1990, adaptive (busy
   direction bias, green waves) from 2000; saved.
@@ -1100,10 +1130,13 @@ small public car parks on open town lots as part of the town's growth (a small t
 
 
 ### Start prompt for a fresh chat
-"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first (Phase 6 is in
-progress: its decisions and steps are under 'Phase 6, expansion'), then GAME-PLAN section 1.0 (the event rounds).
-Carry on through the Phase 6 steps without asking between them, and into the next phase when the gate passes.
-Delegate coding to haiku-coder and checks/benchmarks to haiku-runner (worker PC via scripts/worker/run.sh, or locally
-when it is offline), commit locally after each verified step, update docs/PROGRESS.md as you go. Use look*.mjs at the
-repo root for headless screenshots; `npm run sim:gate`, `town:gate`, `towns:gate`, `fix:gate` and `event:gate` are the
-headless gates; the dev server has the sandbox (fast growth, unlimited money, 20x)."
+"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
+Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially the
+'Handover' entry under 'Phase 6R progress' (a bus fix may be uncommitted in the working tree; the next job is the
+approach flares, the slipways cars actually use, with the design written there). Then GAME-PLAN sections 1.0.00
+(the businesses), 1.0.01 (the calendar and signal tiers) and 1.0.0 (the owner's road and town changes). Carry on
+through the queue without asking between steps; still ask before pushing. Delegate coding to haiku-coder and checks to
+haiku-runner (the worker PC is `cworker`, 192.168.0.8, via scripts/worker/run.sh), commit locally after each verified
+step, update docs/PROGRESS.md as you go, and test every road/junction change in the browser across road classes before
+calling it done. The owner tests on http://localhost:5174 (his dev server, live working folder): tell him when work
+lands. Review the Arena agent's PRs (agents/) and wire its modules in."
