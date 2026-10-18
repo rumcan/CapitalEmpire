@@ -39,6 +39,8 @@ const TOW_BOX = 60, TOW_ANY = 300;
 const ABANDON = 1200;
 /** lane changes (MOBIL): evaluated every MOBIL_EVERY steps, and the lane ends kept clear, metres (politeness and threshold are per driver: Sim.drivers) */
 const MOBIL_EVERY = 5, MOBIL_START = 10, MOBIL_END = 15;
+/** an obstacle (Sim.blocks) this close ahead on its lane makes a free neighbour lane worth a change (MOBIL); no car is spawned this close behind one */
+const BLOCK_NEAR = 150, BLOCK_SPAWN = 50;
 /** the driver mix of the sim's traffic (ext/drivers): shares of aggressive and cautious drivers, and of trucks (none until there is truck art) */
 export const DRIVER_MIX = { aggressive: 0.15, cautious: 0.15, truckShare: 0 };
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
@@ -112,6 +114,11 @@ export class Sim {
   lossL = new Float64Array(0); lossQ = new Float64Array(0); enterL = new Float64Array(0);
   /** vehicle-seconds lost since the sim started: the sum of every loss added to lossL and lossQ, never decayed (the game hours' snapshots read it, see HourStat) */
   lostTotal = 0;
+  /** standing obstacles by lane id: the positions s (m) of the stretches incidents block (addBlock). A car brakes for the nearest one ahead of it on its
+   *  lane, or on its next lane within LOOKAHEAD, as for a booth line; a car is not towed while one holds it (tow) */
+  blocks = new Map<number, number[]>();
+  /** rubbernecking slow zones by lane id (setSlow): a car at s within [from, to] drives at factor of its desired speed there */
+  slow = new Map<number, { from: number; to: number; factor: number }[]>();
   /** where new trips start and end (origins, destinations by zone) */
   trips: Trips;
   /** 'random': the target count with random trips (the bench, the gate, the tests); 'lots': the built lots' trips, no target (lotTrips) */
@@ -380,6 +387,8 @@ export class Sim {
     if (sink >= 0) { const K = this.sinks[sink]; if (!K || (ln.kind === LK.LINK && ln.dseg === K.dseg && s >= K.s)) return -1; }
     const vt = Math.floor(this.rnd() * CAR_TYPES), L = VTYPES[vt].len;
     if (!this.roomOn(lane, s, L)) return -1;
+    // no car starts within BLOCK_SPAWN m behind an obstacle on its lane
+    if (this.blocks.size && this.blockAhead(lane, s) <= BLOCK_SPAWN) return -1;
     let i = this.hint;
     while (i < this.cap && this.alive[i]) i++;
     if (i >= this.cap) return -1;
@@ -473,6 +482,35 @@ export class Sim {
     if (H !== this.aH) { this.aH = H; this.relax(); }
     if (this.mode === 'lots') this.lotTrips.step(this); else this.fill();
     this.stats.stepMs = performance.now() - t0;
+  }
+
+  /** an obstacle on lane at s metres (a crash or a breakdown, from the incidents): the cars behind it stop short of it and change lanes off it when
+   *  they can; no vehicle is spawned within BLOCK_SPAWN m behind it. Cheap: a list per lane */
+  addBlock(lane: number, s: number): void { const b = this.blocks.get(lane); if (b) b.push(s); else this.blocks.set(lane, [s]); }
+  /** lifts the obstacle at s on lane (the one addBlock placed); the traffic behind it moves on */
+  removeBlock(lane: number, s: number): void {
+    const b = this.blocks.get(lane); if (!b) return;
+    const k = b.indexOf(s); if (k >= 0) b.splice(k, 1);
+    if (!b.length) this.blocks.delete(lane);
+  }
+  /** the slow zones of lane (replaces its list; none removes them) */
+  setSlow(lane: number, zones: { from: number; to: number; factor: number }[]): void { if (zones.length) this.slow.set(lane, zones); else this.slow.delete(lane); }
+  /** the distance from s to the nearest obstacle ahead of it on lane (Infinity if none) */
+  private blockAhead(lane: number, s: number): number {
+    const b = this.blocks.get(lane); let d = Infinity;
+    if (b) for (const o of b) if (o > s && o - s < d) d = o - s;
+    return d;
+  }
+  /** the position of the nearest obstacle on lane (Infinity if none) */
+  private minBlock(lane: number): number {
+    const b = this.blocks.get(lane); let m = Infinity;
+    if (b) for (const o of b) if (o < m) m = o;
+    return m;
+  }
+  /** true if car i has an obstacle ahead on its lane, or on its next lane (the cars it holds, see tow) */
+  private held(i: number): boolean {
+    const P = this.plan[i] ?? [], p = this.pi[i]! + 1;
+    return this.blockAhead(this.lane[i]!, this.s[i]!) < Infinity || (p < P.length && this.minBlock(P[p]!) < Infinity);
   }
 
   /** removes the vehicles that have reached their destination (on the destination dseg, at destS or further) */
@@ -820,10 +858,11 @@ export class Sim {
     for (let id = 0; id < Q.length; id++) {
       const q = Q[id];
       if (!q.length) continue;
-      const lenL = this.lLen[id], v0L = this.lVmax[id];
+      const lenL = this.lLen[id], v0L = this.lVmax[id], zn = this.slow.size ? this.slow.get(id) : undefined;
       for (let k = 0; k < q.length; k++) {
         const i = q[k], v = this.v[i], si = this.s[i], P = this.plan[i]!, pi = this.pi[i];
-        const v0 = v0L * this.v0f[i], d0 = lenL - si;
+        let v0 = v0L * this.v0f[i]; const d0 = lenL - si;
+        if (zn) for (const z of zn) if (si >= z.from && si <= z.to) v0 *= z.factor;
         // the gap to the leader: its speed vl and acceleration al (no leader, a free road: vl = v, al = 0; an obstacle: vl = al = 0)
         let gap = Infinity, vl = v, al = 0, vg = Infinity, hard = false;
         if (k > 0) { const ld = q[k - 1]; gap = this.s[ld] - this.len[ld] - si; vl = this.v[ld]; al = this.acc[ld]; }
@@ -888,6 +927,13 @@ export class Sim {
             vg = Math.min(vg, dd - STOP_MARGIN);
           }
         }
+        // an obstacle ahead on this lane, or near the start of the next one (within LOOKAHEAD): stopped short of it, as at a booth line
+        if (this.blocks.size) {
+          let dd = this.blockAhead(id, si);
+          if (pi + 1 < P.length) { const nb = d0 + this.minBlock(P[pi + 1]!); if (nb <= LOOKAHEAD && nb < dd) dd = nb; }
+          if (dd < gap) { gap = dd; vl = 0; al = 0; hard = true; }
+          if (dd < Infinity) vg = Math.min(vg, dd - STOP_MARGIN);
+        }
         // a toll booth: an unpaid vehicle stops at the booth's line until it has stood there SERVICE_S (dwell); one already past the line
         // unserved (spawned there) pays at once
         const bo = this.lBooth[id]!;
@@ -948,6 +994,8 @@ export class Sim {
     const ld = j > 0 ? qt[j - 1] : -1, fo = j < qt.length ? qt[j] : -1;
     let gap = Infinity, dv = 0;
     if (ld >= 0) { gap = S[ld] - LEN[ld] - sN; dv = vi - V[ld]; if (gap <= 1) return -Infinity; }
+    // an obstacle ahead on the target lane is a stopped leader there
+    if (this.blocks.size) { const bT = this.blockAhead(T, sN); if (bT < gap) { gap = bT; dv = vi; } }
     // a stop ahead (a closed gate or a plan end) counts as an obstacle here too, as it does in accelerate()
     if (VG[i] < gap) { gap = VG[i] + (LT - sN) - (LC - S[i]); dv = vi; }
     const aT = idm(vi, v0T, gap, dv, D.a[i]!, D.b[i]!, D.T[i]!, D.s0[i]!);
@@ -977,6 +1025,8 @@ export class Sim {
       if (!here && there) bias = 1 + 2 * Math.max(0, 1 - (LC - S[i]) / 150);
       else if (here && !there) bias = -1000;
     }
+    // an obstacle near ahead on this lane and none near on the target: a strong reason to change
+    if (this.blocks.size && this.blockAhead(cur, S[i]) <= BLOCK_NEAR && this.blockAhead(T, sN) > BLOCK_NEAR) bias += 2;
     return (aT - A[i]) + D.politeness[i]! * gain + bias;
   }
   /** moves vehicle i (index k of its lane) onto the neighbour lane T at the same place: its lateral offset is set so it is drawn
@@ -1073,6 +1123,9 @@ export class Sim {
       const st = this.stuck[i];
       // a bus standing at its stop, or waiting for one (see hold), is never towed (see buses)
       if (this.bus[i]! >= 0 && (this.busDwell[i]! > 0 || this.dest[i]! < 0)) continue;
+      // a car stuck behind an obstacle (see held) is not towed while the obstacle stands; its stuck clock starts again at once, so a queue
+      // that clears after the obstacle is lifted is not towed in the first steps
+      if (st > TOW_BOX && this.blocks.size && this.held(i)) { this.stuck[i] = 0; continue; }
       if (st > TOW_ANY || (st > TOW_BOX && !this.lPre[this.lane[i]!])) { this.stats.towed++; this.stats.respawned++; this.despawn(i); continue; }
       // an abandoned trip counts as a very slow one (capped at 6x) in the zones it came from and was going to
       if (this.dest[i]! >= 0 && this.bus[i]! < 0 && this.t - this.t0[i]! > ABANDON) {

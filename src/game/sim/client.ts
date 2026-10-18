@@ -85,6 +85,8 @@ export class SimClient {
   /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
    *  tiles, fans, stage; stage 0 to a lot stop, 1 to a door) and the lot stops (4 floats each: x, y in tiles, the fans waiting, the route index) */
   walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
+  /** the active traffic incidents as the worker last sent them (with each frame): 3 floats each, x and y (tiles) and kind (1 crash, 0 breakdown) */
+  incidents: Float32Array = NO_FLOATS;
   /** the signal states as the worker last sent them (with each frame): the phase served (idx) and the stage, by sigKey of the plan's node */
   sigs = new Map<string, { idx: number; stage: number }>();
   /** the congestion heat map: its geometry as the worker last sent it (6 floats per dseg id: from x, y, to x, y in tiles, the lateral offset
@@ -171,6 +173,8 @@ export class SimClient {
   /** turns the congestion heat map on or off (off by default: the worker posts nothing for it then). On: the geometry comes first (heatGeom), then
    *  the heat every 500 ms (heat, heatRatio, heatDens, heatAt); the last values stay after off */
   heatOn(on: boolean) { this.post({ t: 'heat', on }); }
+  /** turns the traffic incidents on or off (on by default; off lifts the blocks they made); the active ones come with each frame into incidents */
+  incidentsOn(on: boolean) { this.post({ t: 'incidents', on }); }
   /** true while the worker is fast-forwarding (see skip) */
   get skipping() { return this.stats.skipping; }
   terminate() { this.worker.terminate(); }
@@ -201,7 +205,7 @@ export class SimClient {
       this.onTown?.(m.events); return;
     }
     this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks;
-    this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS;
+    this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS; this.incidents = m.inc;
     const S = new Map<string, { idx: number; stage: number }>(), G = m.sig;
     for (let k = 0; k + 3 < G.length; k += 4) S.set(sigKey(G[k]!, G[k + 1]!), { idx: G[k + 2]!, stage: G[k + 3]! });
     this.sigs = S;

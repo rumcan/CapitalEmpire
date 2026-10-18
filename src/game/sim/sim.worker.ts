@@ -126,8 +126,10 @@ function frame() {
   const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.roundView(), parks: city.parkView() };
   // the signal states (4 floats per plan) go with every frame
   const sig = sim.signalFrame();
-  if (walkers && stops) post({ t: 'frame', cap: sim.cap, buf, stats, sig, walkers, stops }, [buf.buffer, sig.buffer, walkers.buffer, stops.buffer]);
-  else post({ t: 'frame', cap: sim.cap, buf, stats, sig }, [buf.buffer, sig.buffer]);
+  // the active traffic incidents go with every frame (3 floats each: see City.incidentBuf)
+  const inc = city.incidentBuf();
+  if (walkers && stops) post({ t: 'frame', cap: sim.cap, buf, stats, sig, inc, walkers, stops }, [buf.buffer, sig.buffer, inc.buffer, walkers.buffer, stops.buffer]);
+  else post({ t: 'frame', cap: sim.cap, buf, stats, sig, inc }, [buf.buffer, sig.buffer, inc.buffer]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
 }
@@ -149,6 +151,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'buses': city.setBusRoutes(m.defs); forcePost = true; break;
       case 'buyLot': postTown(city.buyLot(m.key), true); postBudget(null); break;
       case 'heat': heatOn = m.on; heatGeomV = -1; heatNext = 0; break;
+      case 'incidents': city.setIncidents(m.on); forcePost = true; break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else if (m.op === 'pick') city.pickCard(m.card);
         else if (city.closeRound() && city.grown) postTown(city.grown.events, true);

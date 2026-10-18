@@ -1871,6 +1871,20 @@ export class Game {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
+  /** the traffic incidents (SimClient.incidents, 3 floats each: x, y in tiles, kind 1 crash or 0 breakdown): a red warning triangle for a crash, amber
+   *  for a breakdown, on the lane where it stands, in screen space; culled to the view (drawn at the street and district tiers, with the signals) */
+  private drawIncidents(ctx: CanvasRenderingContext2D) {
+    const F = this.traffic.incidents, dpr = this.dpr, r = 9 * dpr;
+    if (!F.length) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    for (let k = 0; k + 2 < F.length; k += 3) {
+      const p = this.screen(F[k]!, F[k + 1]!);
+      if (p.x < -r || p.x > this.cw + r || p.y < -r || p.y > this.ch + r) continue;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x + r * 0.9, p.y + r * 0.6); ctx.lineTo(p.x - r * 0.9, p.y + r * 0.6); ctx.closePath();
+      ctx.fillStyle = F[k + 2] === 1 ? '#ff3b3b' : '#ffb020'; ctx.fill();
+      ctx.lineWidth = 1.5 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.stroke();
+    }
+  }
   /** the traffic flow (key F): the live congestion heat map (see drawHeat) when the worker's geometry and heat are in, then the focus ring of a jump (4 s) */
   private drawFlow(ctx: CanvasRenderingContext2D) {
     const tr = this.traffic, G = tr.heatGeom, R = tr.heatRatio, D = tr.heatDens, now = performance.now();
@@ -1973,7 +1987,7 @@ export class Game {
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
-    if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
+    if (this.traffic && this.cam.z >= DISTRICT_Z) { this.drawSignals(ctx); this.drawIncidents(ctx); }
     if (this.cam.z >= PLANNER_Z) this.drawNodeFlags(ctx);
     this.drawFlow(ctx);
     this.drawInspect(ctx);

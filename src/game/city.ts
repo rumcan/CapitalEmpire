@@ -12,6 +12,7 @@ import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type
 import { LK, LaneGraph, MPT, laneAt, type DSeg, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
+import { Incidents, type Exposure, type Incident, type Passage } from './ext/incidents';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensation, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
@@ -148,6 +149,16 @@ export class City {
     return false;
   };
   private ticks = new Float64Array(TICKS);
+  /** the traffic incidents (ext/incidents): the module, and the switch (false turns them off: the blocks they made are lifted); the incidents whose
+   *  blocks the sim carries now (by id, with the lanes they block); the sim second the last tick ran at */
+  private inc: Incidents; private incSeed: number; incidents = true;
+  private incApplied = new Map<number, { a: Incident; lanes: number[] }>(); private incT = 0;
+  /** per lane, the link traffic of the current sim second, summed over the steps (sample): vehicle-metres, vehicle-seconds, and the seconds of the
+   *  vehicles slower than 1.5 m/s; and the junction entries (Sim.enterL) at the last tick */
+  private expM = new Float64Array(0); private expVS = new Float64Array(0); private expSlow = new Float64Array(0); private enterPrev = new Float64Array(0);
+  /** per junction node: its entries over the last minute, decayed (S, at sim time t), see passages */
+  private nodeLoad = new Map<Node, { S: number; t: number }>();
+  private incPt = { x: 0, y: 0, hx: 0, hy: 0 };
 
   /** a city with no terrain yet: the town of seed (its planner starts with the same seed) */
   constructor(seed: number) {
@@ -156,6 +167,7 @@ export class City {
     this.ctx = { lots: this.lots, entry: { x: 0, y: 0 }, reachable: (l: Lot) => this.reach.has(l.seg) && !this.reserved(l), water: (x, y) => this.waterAt(x, y) };
     this.town = new Town(seed);
     this.planRnd = seededRnd(seed);
+    this.inc = new Incidents(seed); this.incSeed = seed;
     // the everyday trips to a lot are only to lots on roads joined to the origin (a town apart from the others has no road to it)
     this.sim.lotTrips.joined = (a, b) => this.joinedLots(a, b);
   }
@@ -190,6 +202,8 @@ export class City {
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round(); this.grown = null; this.sim.entryS = ENTRY_S;
     this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses();
+    // a new valley has no incidents: the old ones' blocks are lifted, the module starts again
+    this.resetIncidents(seed);
     // a new valley has no toll gates until the player places them again (their booths are the old roads')
     this.setTolls([]);
     this.setBudget(null, null);
@@ -297,6 +311,30 @@ export class City {
   /** the growth option by id (see GROWTH_OPTIONS) */
   option(id: string): void { this.optId = id; this.town.option = optionOf(id); }
 
+  /** the traffic incidents on or off (on by default; the dev switch): off lifts the blocks and slow zones they made and forgets them; on starts
+   *  the sim second clock and the junction counts here */
+  setIncidents(on: boolean): void {
+    if (on === this.incidents) return;
+    this.incidents = on;
+    this.resetIncidents(this.incSeed);
+  }
+  /** starts the incidents afresh (a new valley, a loaded game, the switch): the blocks lift, the module is made with seed, and the sim second, the
+   *  sample and the junction counts start at the sim's time now */
+  private resetIncidents(seed: number): void {
+    this.liftAll(); this.inc = new Incidents(seed); this.incSeed = seed; this.incT = this.sim.t;
+    this.expM.fill(0); this.expVS.fill(0); this.expSlow.fill(0); this.enterPrev = this.sim.enterL.slice(); this.nodeLoad.clear();
+  }
+  /** the active incidents for the renderer: 3 floats each, x and y (tiles, on the lane at its s) and kind (1 crash, 0 breakdown) */
+  incidentBuf(): Float32Array {
+    const act = this.incidents ? this.inc.active(this.sim.t) : [], o = new Float32Array(3 * act.length);
+    let n = 0;
+    for (const a of act) {
+      const ln = this.g.lanes[a.lane]; if (!ln) continue;
+      laneAt(ln, a.s, this.incPt); o[3 * n] = this.incPt.x; o[3 * n + 1] = this.incPt.y; o[3 * n + 2] = a.kind === 'crash' ? 1 : 0; n++;
+    }
+    return n === act.length ? o : o.slice(0, 3 * n);
+  }
+
   /** replays a batch of network ops (a rebuild ends each part; the lane graph follows each one, so each part is measured on its own),
    *  then the parcels, the reachable segs and the town's lots. Returns the parcels added and removed and the town's events. */
   netOps(ops: NetOp[]): { lotsAdded: Lot[]; lotsRemoved: string[]; events: TownEvent[] } {
@@ -305,7 +343,7 @@ export class City {
     let part: NetOp[] = [];
     for (const op of ops) {
       part.push(op);
-      if (op.k === 'rebuild') { applyOps(this.net, part); this.g.update(this.net); part = []; }
+      if (op.k === 'rebuild') { applyOps(this.net, part); this.g.update(this.net); this.incidentsOnGraph(); part = []; }
     }
     if (part.length) applyOps(this.net, part);
     this.labelComps();
@@ -333,7 +371,7 @@ export class City {
   /** a saved town (after the load's net ops): the sim time (s), the clock's offset from it (shift, s; 0 if none), then the lots' states;
    *  returns the 'complete' event per restored lot */
   restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number, career?: CareerSave, shift = 0): TownEvent[] {
-    this.sim.t = simT; this.sim.shift = shift;
+    this.sim.t = simT; this.sim.shift = shift; this.resetIncidents(this.incSeed);
     this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null;
@@ -369,7 +407,8 @@ export class City {
         won = u.won;
       }
     }
-    for (let k = 0; k < n; k++) this.sim.step();
+    if (this.incidents) { for (let k = 0; k < n; k++) { this.sim.step(); this.sample(); } if (this.sim.t - this.incT >= 0.999) this.incidentTick(); }
+    else for (let k = 0; k < n; k++) this.sim.step();
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
     // a round under way pays the upkeep as the sim runs; the surge counts down to kick-off (the round goes to eval then)
     const rs = this.round.stage;
@@ -390,6 +429,98 @@ export class City {
     if (this.dayIdx < 0) this.dayIdx = d;
     else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
     return { events, grow: this.planGrow(), ledger, milestones, won };
+  }
+
+  /** after each sim step (the incidents on): the link lanes' vehicles, summed over the second (metres, seconds, and the seconds slower than 1.5 m/s) */
+  private sample(): void {
+    const Q = this.sim.onLane, V = this.sim.v, lanes = this.g.lanes;
+    if (this.expM.length < Q.length) this.growExp(Q.length);
+    for (let id = 0; id < Q.length; id++) {
+      const q = Q[id]!; if (!q.length) continue;
+      const ln = lanes[id]; if (!ln || ln.kind !== LK.LINK) continue;
+      for (const i of q) { const v = V[i]!; this.expM[id]! += v * DT; this.expVS[id]! += DT; if (v < 1.5) this.expSlow[id]! += DT; }
+    }
+  }
+  /** the sample arrays grow to n lanes (the lanes added since, copied) */
+  private growExp(n: number): void {
+    const m = Math.max(n, 2 * this.expM.length);
+    const g = (a: Float64Array) => { const b = new Float64Array(m); b.set(a); return b; };
+    this.expM = g(this.expM); this.expVS = g(this.expVS); this.expSlow = g(this.expSlow);
+  }
+  /** a junction node's lanes that the vehicles entered this second, as the exposure's passages: each node of 3 or more arms with its entries (count)
+   *  and its load (conflictLoad, veh/h: the entries over the last minute, decayed with a 60 s time constant, times 60) */
+  private passages(t: number, w: number): Passage[] {
+    const E = this.sim.enterL, lanes = this.g.lanes, out: Passage[] = [];
+    // a game hour's relax halves every entry count at its start (the step it turns): the count of this window is what it added since
+    const k = Math.floor((t - w) / 60) !== Math.floor(t / 60) ? 0.5 : 1;
+    if (this.enterPrev.length < E.length) { const b = new Float64Array(E.length); b.set(this.enterPrev); this.enterPrev = b; }
+    const per = new Map<Node, { n: number; lane: number }>();
+    const n = Math.min(lanes.length, E.length);
+    for (let id = 0; id < n; id++) {
+      const c = E[id]!, p = this.enterPrev[id]!;
+      this.enterPrev[id] = c;
+      let d = c - p * k; if (d < 0) d = c;
+      const ln = lanes[id];
+      if (!ln || d <= 0 || ln.kind === LK.LINK || !ln.node || ln.node.arms.length < 3) continue;
+      const o = per.get(ln.node);
+      if (o) { o.n += d; o.lane = id; } else per.set(ln.node, { n: d, lane: id });
+    }
+    for (const [nd, o] of per) {
+      let L = this.nodeLoad.get(nd); if (!L) { L = { S: 0, t }; this.nodeLoad.set(nd, L); }
+      L.S = L.S * Math.exp(-(t - L.t) / 60) + o.n; L.t = t;
+      out.push({ node: `${nd.x},${nd.y}`, conflictLoad: L.S * 60, count: o.n, lane: o.lane, s: lanes[o.lane]!.len / 2 });
+    }
+    for (const [nd, L] of this.nodeLoad) if (t - L.t > 600) this.nodeLoad.delete(nd);
+    return out;
+  }
+  /** the link lanes' exposure of the window (w sim s) from the sample; the sample is cleared */
+  private exposure(w: number): Exposure[] {
+    const out: Exposure[] = [], Q = this.sim.onLane, lanes = this.g.lanes, dsegs = this.g.dsegs;
+    const n = Math.min(Q.length, this.expM.length);
+    for (let id = 0; id < n; id++) {
+      const m = this.expM[id]!; if (!(m > 0)) continue;
+      const ln = lanes[id]; if (!ln || ln.kind !== LK.LINK || !(ln.len > 0)) continue;
+      const vs = this.expVS[id]!;
+      out.push({ lane: id, metres: m, density: vs / w / (ln.len / 1000), stopGo: vs > 0 ? this.expSlow[id]! / vs : 0, len: ln.len, lanes: dsegs[ln.dseg]?.lanes.length ?? 1 });
+    }
+    this.expM.fill(0); this.expVS.fill(0); this.expSlow.fill(0);
+    return out;
+  }
+  /** one sim second (or more) of incidents: the exposure and the junction passages go to the module, the incidents it starts get their blocks and
+   *  slow zones on the sim, and the blocks of the incidents no longer active are lifted */
+  private incidentTick(): void {
+    const t = this.sim.t, w = t - this.incT;
+    this.incT = t;
+    const fresh = this.inc.step(t, this.exposure(w), this.passages(t, w));
+    for (const a of fresh) this.applyIncident(a);
+    const live = new Set<number>();
+    for (const a of this.inc.active(t)) live.add(a.id);
+    for (const id of [...this.incApplied.keys()]) if (!live.has(id)) this.liftIncident(id);
+  }
+  /** an incident's blocks on the sim: its lane at s, and for a two-lane crash the neighbour lane (right, else left) when there is one; its slow zones */
+  private applyIncident(a: Incident): void {
+    const lanes = this.g.lanes, ls = [a.lane], ln = lanes[a.lane];
+    if (a.blocks >= 2 && ln) { const nb = ln.right >= 0 && lanes[ln.right] ? ln.right : ln.left >= 0 && lanes[ln.left] ? ln.left : -1; if (nb >= 0) ls.push(nb); }
+    for (const l of ls) this.sim.addBlock(l, a.s);
+    for (const z of a.slowZone) this.sim.setSlow(z.lane, [...(this.sim.slow.get(z.lane) ?? []), z]);
+    this.incApplied.set(a.id, { a, lanes: ls });
+  }
+  /** lifts an incident's blocks and slow zones from the sim (the incident is over, or gone) */
+  private liftIncident(id: number): void {
+    const ap = this.incApplied.get(id); if (!ap) return;
+    this.incApplied.delete(id);
+    for (const l of ap.lanes) this.sim.removeBlock(l, ap.a.s);
+    for (const z of ap.a.slowZone) this.sim.setSlow(z.lane, (this.sim.slow.get(z.lane) ?? []).filter(x => x !== z));
+  }
+  /** lifts every incident's blocks and slow zones, and clears the sim's lists */
+  private liftAll(): void {
+    for (const id of [...this.incApplied.keys()]) this.liftIncident(id);
+    this.sim.blocks.clear(); this.sim.slow.clear();
+  }
+  /** after a graph update: an active incident on a lane the update removed or rebuilt is cleared (its blocks lift at the next tick) */
+  private incidentsOnGraph(): void {
+    if (!this.incidents || (!this.g.removed.length && !this.g.changed.length)) return;
+    for (const a of this.inc.active(this.sim.t)) if (this.g.removed.includes(a.lane) || this.g.changed.includes(a.lane)) this.inc.clear(a.id);
   }
 
   /** the snapshot of game hour h, at its start: the sim's cumulative counts, the builds, and the town's residents and built lots now */
