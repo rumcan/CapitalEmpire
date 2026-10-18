@@ -1112,6 +1112,15 @@ small public car parks on open town lots as part of the town's growth (a small t
     `output/review/drivers-wiring.patch`, being re-applied with the dwell windows on the driver's own s0 and a milder mix
     (15% aggressive, 15% cautious); then incidents (sim lanes and slow zones), disasters (closures), farms (rural lots),
     names (labels), taxis and subways (with the business layer).
+  - **Driver variety wired: DONE** (commit `cff555e`): 15% aggressive / 15% cautious drivers with their own parameters,
+    ACC on open road, IIDM inside junctions, at merges and behind obstacles, MOBIL politeness and threshold per driver,
+    the stop windows on each driver's jam gap. Worker gates: `sim:gate -- 2 10000` PASS, 43,482 arrived (was 43,311), 97
+    towed (68), 0 lost, 5.46 ms per step mean (3.95; budget 25 ms per 100 ms tick); `town:gate` PASS (pop 5,133, 0 jam
+    episodes, 1.73 ms). Junction bench (street, 500 veh/h per arm): signal 4-way 18.6/41.8/33.3/45.5 s, slip 9.7/4.8/
+    7.8/8.6 s; the slip fork still shows 3 overlaps (the diverge rule, left over from the flares). **#2 grade merged**
+    (the lead's solver over the Arena agent's late fix, which still passed under the crossing on a hillside).
+    **Wiring in progress:** incidents (sim obstacles and slow zones, markers), names (town labels, junction and road
+    names); #3 interchanges reworked per type; #5 terrain reworked.
   - **Per-corner slipways: DONE** (commit `3a24eae`; browser-checked on street, arterial and mixed crossings: add and
     remove corners, the last one off gives plain lights, roundabouts refused, lane graph clean; the corner click searches
     18 tiles around, the island sits ~12 out).
