@@ -9,14 +9,16 @@ import { TC } from './terrain/types';
 import { LotMap, type Lot } from './lots/lots';
 import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableFrom, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
-import { LaneGraph, MPT, laneAt } from './sim/lanes';
+import { LK, LaneGraph, MPT, laneAt, type Lane } from './sim/lanes';
 import { DT, Sim, type CarInfo, type ParkState, type Sink } from './sim/sim';
 import { bottlenecks, type Report } from './sim/bottlenecks';
 import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
-import { EVENT_CLOCK, SURGE_SEED, tollPrice } from './event/config';
+import { EVENT_CLOCK, PARTY, SURGE_SEED, WALK_V, tollPrice } from './event/config';
+import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
+import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, type Site } from './event/site';
@@ -35,6 +37,9 @@ const NO_MILESTONES: Milestone[] = [];
 const WATER_N = MAP >> 2, WATER_CAP = 200;
 /** a sink's s is kept this far from its lane's ends, m (as driveway's DRIVE_END), and the dev car park test sends cars at least this far, tiles, where it can */
 const SINK_END = 3, PARK_TEST_M = 300;
+/** a shuttle route's buses are spawned this many m apart back along the kerb lane from the lot stop; its stops must be within BUS_REACH tiles of the
+ *  player's points, and kept BUS_END m clear of the lane's ends */
+const BUS_GAP = 15, BUS_REACH = 4, BUS_END = 3;
 
 /** the distance (tiles, capped) to the nearest WATER on the 4-tile cells (a cell is wet if one of its tiles is): a two-pass chamfer, in tiles */
 function waterField(terr: Uint8Array): Float32Array {
@@ -60,6 +65,18 @@ function waterField(terr: Uint8Array): Float32Array {
   return f;
 }
 const optionOf = (id: string) => GROWTH_OPTIONS.find(o => o.id === id) ?? GROWTH_OPTIONS[0];
+/** the distance from point p to segment ab (tiles) */
+function pointSeg(p: Pt, a: Pt, b: Pt): number {
+  const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+  const k = L2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2)) : 0;
+  return Math.hypot(p.x - a.x - dx * k, p.y - a.y - dy * k);
+}
+/** the stadium door nearest point p (tiles): the first of the site's doors at the least distance */
+function nearestDoor(doors: Pt[], p: Pt): Pt | null {
+  let best: Pt | null = null, bd = Infinity;
+  for (const d of doors) { const x = Math.hypot(d.x - p.x, d.y - p.y); if (x < bd) { bd = x; best = d; } }
+  return best;
+}
 
 /** One city: feed it the network ops (netOps), the terrain (terrain) and the sim steps (step). The worker and the gate share it. */
 export class City {
@@ -93,6 +110,10 @@ export class City {
   /** the car parks as the player placed them (parkDefs, the full list), and the ones built on the network (parks: buildPark; a park with no
    *  frontage or under 10 bays is left out; parks[k] is sim.parks[k] and the sinks' park index) */
   parkDefs: CarParkDef[] = []; parks: CarPark[] = [];
+  /** the shuttle routes as the player drew them (busDefs, the full list: a route's index is its sim index), their resolved stops' points (tiles; null:
+   *  unresolved, the route is inactive), and the crowd of the surge (event/crowd.ts: the walkers, the queues, the fans on the buses; null outside the
+   *  surge, its eval included) */
+  busDefs: BusRouteDef[] = []; private busPts: ({ lot: Pt; doors: Pt } | null)[] = []; crowd: Crowd | null = null;
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
   private cls: Uint8Array | null = null; private water: Float32Array | null = null; private optId = GROWTH_OPTIONS[0].id;
@@ -147,7 +168,7 @@ export class City {
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round();
-    this.surge = null; this.sim.dropParty();
+    this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses();
     // a new valley has no toll gates until the player places them again (their booths are the old roads')
     this.setTolls([]);
     this.setBudget(null, null);
@@ -182,11 +203,11 @@ export class City {
   /** the build's wall-clock time (dt s): when it is done the surge begins */
   wall(dt: number): void { if (this.round.wall(dt)) this.beginSurge(); }
   /** the surge's clock starts (see Round.beginSurge; idempotent with the round's own start) */
-  private beginSurge(): void { this.round.beginSurge(); this.surge = this.planSurge(); }
+  private beginSurge(): void { this.round.beginSurge(); this.surge = this.planSurge(); this.startBuses(); }
   /** closes the eval: the round is free again and the clock runs on from where it was frozen; false unless in eval */
   closeRound(): boolean {
     if (!this.round.close()) return false;
-    this.sim.dropParty(); this.surge = null;
+    this.sim.dropParty(); this.surge = null; this.crowd = null; this.sim.dropBuses();
     this.unfreeze(); this.emptyParks();
     return true;
   }
@@ -239,6 +260,7 @@ export class City {
     }
     if (part.length) applyOps(this.net, part);
     this.labelComps();
+    if (this.busDefs.length) this.resolveBuses();
     this.sim.onGraph(); this.upkeepC = null;
     // the car parks are built again on the new network (a frontage road split or replaced by the edit leaves the old build on a dead seg;
     // the counts are kept by id), and with them the sinks
@@ -306,6 +328,8 @@ export class City {
     // the surge: its due cars spawn, then the party cars' exits are counted; kick-off (the round's last step of the surge) gives the result
     if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g);
     this.drainParty();
+    this.drainBus();
+    if (this.crowd) { this.crowd.step(WALK_V * n * DT / MPT); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
     for (const e of events) if (e.kind === 'build') this.builds++;
@@ -340,6 +364,7 @@ export class City {
    *  the car parks' sinks follow when a booth changed. The graph keeps the map, so each network batch builds the booths too */
   setTolls(defs: TollDef[]): void {
     if (!this.g.setTolls(defs, this.net)) return;
+    if (this.busDefs.length) this.resolveBuses();
     this.sim.onGraph(); this.upkeepC = null;
     if (this.parks.length) this.resolveSinks();
     if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
@@ -405,23 +430,136 @@ export class City {
   /** kick-off: the result is in (the cars parked, the rate, each town's counts at this moment); the surge spawns no more, and its counts run on through the eval */
   private kickOff(): void {
     const L = this.round.last; if (!L) return;
-    const by = this.surge ? this.surge.result() : [];
-    let arrived = 0; for (const t of by) arrived += t.parked;
-    L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / L.sent : 0;
+    const c = this.fanCounts(), by = this.surge ? this.surge.result(c) : [];
+    let arrived = 0; for (const f of c.fans) arrived += f;
+    L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / (L.sent * PARTY) : 0;
   }
   /** the party cars' exits since the last step go to the surge (the sim's partyOut, cleared; discarded with no surge) */
   private drainParty(): void {
     const po = this.sim.partyOut;
-    if (!po.length) return;
     for (let k = 0; k < po.length; k += 2) this.surge?.event(po[k]!, po[k + 1]!);
     po.length = 0;
+    // the party cars that parked: their fans start walking from their bays
+    const pb = this.sim.partyBays;
+    for (let k = 0; k < pb.length; k += 3) this.partyWalk(pb[k]!, pb[k + 1]!, pb[k + 2]!);
+    pb.length = 0;
+  }
+
+  /** the shuttle routes as the player drew them (the full list, each time): their stops are resolved on the lane graph (busStopAt); a route with an
+   *  unresolved stop is inactive. The buses on the network are planned to the new stops */
+  setBusRoutes(defs: BusRouteDef[]): void {
+    this.busDefs = defs.slice();
+    this.resolveBuses(); this.sim.refitBuses(); this.syncWait();
+  }
+  /** resolves every route's two stops on the lane graph (sim.busRoutes: null for an inactive route; busPts: the stops' points) */
+  private resolveBuses(): void {
+    const pts: ({ lot: Pt; doors: Pt } | null)[] = [], R: (BusRoute | null)[] = [];
+    for (const d of this.busDefs) {
+      const a = this.busStopAt({ x: d.sx, y: d.sy }), b = this.busStopAt({ x: d.dx, y: d.dy });
+      pts.push(a && b ? { lot: a.pt, doors: b.pt } : null);
+      R.push(a && b ? { lot: a.stop, doors: b.stop, seats: d.seats } : null);
+    }
+    this.busPts = pts; this.sim.setBusRoutes(R);
+  }
+  /** the stop nearest point e (tiles): the kerb lane (the rightmost LINK lane) of the ground road whose centre line is nearest e, within BUS_REACH
+   *  tiles; the stop is e's projection on that lane, kept BUS_END m clear of its ends. Null if no road is that near */
+  private busStopAt(e: Pt): { stop: BusStop; pt: Pt } | null {
+    const near = new Set(this.net.segsNear(e, BUS_REACH));
+    let best: { dseg: number; s: number; d: number; ln: Lane } | null = null;
+    for (const d of this.g.dsegs) {
+      if (!d || !d.lanes.length || !near.has(d.seg)) continue;
+      const ln = this.g.lanes[d.lanes[d.lanes.length - 1]!];
+      if (!ln || ln.kind !== LK.LINK || ln.len < 2 * BUS_END) continue;
+      const n = ln.pts.length, p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, p1 = { x: ln.pts[n - 2]!, y: ln.pts[n - 1]! };
+      const dist = pointSeg(e, p0, p1);
+      if (dist > BUS_REACH || (best && dist >= best.d)) continue;
+      const u = norm(sub(p1, p0));
+      best = { dseg: d.id, s: Math.min(ln.len - BUS_END, Math.max(BUS_END, dot(sub(e, p0), u) * MPT)), d: dist, ln };
+    }
+    if (!best) return null;
+    laneAt(best.ln, best.s, this.stopPt);
+    return { stop: { dseg: best.dseg, s: best.s }, pt: { x: this.stopPt.x, y: this.stopPt.y } };
+  }
+  /** the surge's crowd and buses start: the crowd (no walkers yet), and each route's buses at its lot stop, BUS_GAP m apart back along the kerb lane */
+  private startBuses(): void {
+    this.sim.dropBuses();
+    const C = new Crowd(this.round.crowd.length, this.busDefs.length);
+    this.crowd = C;
+    this.busDefs.forEach((d, r) => {
+      const R = this.sim.busRoutes[r];
+      if (!R) return;
+      const dg = this.g.dsegs[R.lot.dseg], lane = dg ? dg.lanes[dg.lanes.length - 1] : undefined;
+      if (lane === undefined) return;
+      // each bus BUS_GAP m behind the last; where there is no room (the sim keeps its clearance), 1 m further back until there is
+      let s = R.lot.s, placed = 0;
+      while (placed < d.buses && s >= 0) {
+        const slot = this.sim.spawnBus(r, lane, s);
+        if (slot >= 0) { C.newBus(slot); placed++; s -= BUS_GAP; } else s -= 1;
+      }
+    });
+    this.syncWait();
+  }
+  /** the sim's waiting fans per route (busWait) are the crowd's queues (after the crowd changes) */
+  private syncWait(): void {
+    if (!this.crowd) return;
+    for (let r = 0; r < this.sim.busWait.length; r++) this.sim.busWait[r] = this.crowd.waiting(r);
+  }
+  /** the buses' boardings, alightings and losses since the last step (sim.busEv, cleared): a boarding takes its fan off the stop's queue, an alighting
+   *  walks the fan from the doors stop to the nearest door, and a lost bus's fans go back to the front of their lot stop's queue */
+  private drainBus(): void {
+    const ev = this.sim.busEv, C = this.crowd;
+    if (C) for (let k = 0; k < ev.length; k += 4) {
+      const slot = ev[k]!, r = ev[k + 1]!, kind = ev[k + 2]!, n = ev[k + 3]!;
+      if (kind === 0) C.board(r, slot, n);
+      else if (kind === 1) { for (let j = 0; j < n; j++) { const t = C.unloadOne(slot); if (t >= 0) this.walkDoor(t, this.busPts[r]?.doors ?? null, 1, -1); } }
+      else C.requeue(r, slot);
+    }
+    ev.length = 0;
+  }
+  /** a party car of park k parked at its bay (an index into busPts' park list): its PARTY fans walk from the bay to the lot stop of the route of this
+   *  car park with the shortest queue, or else to the nearest door */
+  private partyWalk(town: number, k: number, bay: number): void {
+    const C = this.crowd, P = this.parks[k], b = P?.bays[bay];
+    if (!C || !P || !b) return;
+    let r = -1, best = Infinity;
+    this.busDefs.forEach((d, q) => { if (d.park === P.id && this.busPts[q] && C.waiting(q) < best) { best = C.waiting(q); r = q; } });
+    if (r >= 0) { const t = this.busPts[r]!.lot; C.add({ x: b.x, y: b.y, tx: t.x, ty: t.y, n: PARTY, town, stage: 0, route: r }); return; }
+    this.walkDoor(town, b, PARTY, -1);
+  }
+  /** n fans of town at p walk to the stadium's nearest door (route: the route they came from, -1 none); with no door, they are there already */
+  private walkDoor(town: number, p: Pt | null, n: number, route: number): void {
+    const C = this.crowd;
+    if (!C) return;
+    const d = p && this.site ? nearestDoor(this.site.doors, p) : null;
+    if (!p || !d) { C.arrive(town, n); return; }
+    C.add({ x: p.x, y: p.y, tx: d.x, ty: d.y, n, town, stage: 1, route });
+  }
+  /** the fans per town now (zeros with no crowd): see FanCounts */
+  private fanCounts(): FanCounts {
+    if (this.crowd) return this.crowd.counts();
+    const z = new Array<number>(this.round.crowd.length).fill(0);
+    return { fans: z, atStop: z.slice(), onBus: z.slice() };
+  }
+  /** the walkers as the frame sends them: 4 floats per group (x, y in tiles, n fans, stage) */
+  walkBuf(): Float32Array {
+    const W = this.crowd?.walkers ?? [], out = new Float32Array(4 * W.length);
+    W.forEach((g, i) => { out[4 * i] = g.x; out[4 * i + 1] = g.y; out[4 * i + 2] = g.n; out[4 * i + 3] = g.stage; });
+    return out;
+  }
+  /** the lot stops as the frame sends them: 4 floats per active route with a lot stop (x, y in tiles, the fans waiting, the route index) */
+  stopBuf(): Float32Array {
+    const rs: number[] = [];
+    this.busPts.forEach((p, r) => { if (p) rs.push(r); });
+    const out = new Float32Array(4 * rs.length);
+    rs.forEach((r, i) => { const p = this.busPts[r]!.lot; out[4 * i] = p.x; out[4 * i + 1] = p.y; out[4 * i + 2] = this.crowd?.waiting(r) ?? 0; out[4 * i + 3] = r; });
+    return out;
   }
   /** the round from a save (see Round.from): any surge under way is dropped with its party cars */
-  loadRound(s?: RoundSave): void { this.round = Round.from(s); this.surge = null; this.sim.dropParty(); }
+  loadRound(s?: RoundSave): void { this.round = Round.from(s); this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); }
   /** the round as the UI and the frame see it: with the surge's counts by town while the surge runs or its result is in (null otherwise) */
   roundView(): RoundView {
     const v = this.round.view();
-    if (this.surge && (v.stage === 'surge' || v.stage === 'eval')) v.surge = this.surge.view();
+    if (this.surge && (v.stage === 'surge' || v.stage === 'eval')) v.surge = this.surge.view(this.fanCounts());
     return v;
   }
   /** the car parks' counts for the frame: id, bays, cars parked, cars turned away */
@@ -481,6 +619,8 @@ export class City {
     this.sim.setBuilt(list);
   }
 
+  /** a scratch lane point (the stops' points, see busStopAt) */
+  private stopPt = { x: 0, y: 0, hx: 0, hy: 0 };
   /** the centre of town k: the mean of its BUILT lots (the town's centre while it has none) */
   private townCentre(k: number): Pt {
     let sx = 0, sy = 0, m = 0;

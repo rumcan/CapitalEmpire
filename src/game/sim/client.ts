@@ -19,6 +19,7 @@ import { Round, type RoundSave, type RoundView } from '../event/round';
 import type { Site } from '../event/site';
 import type { CarParkDef, ParkView } from '../event/carpark';
 import type { TollDef } from '../event/toll';
+import type { BusRouteDef } from '../event/bus';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
@@ -26,6 +27,8 @@ const FRAME_MS = 100;
 const JUMP = 3;
 /** the round before any frame: free, level 1, no runs */
 const NO_ROUND: RoundView = new Round().view();
+/** no walkers or stops (before a surge, and after it) */
+const NO_FLOATS = new Float32Array(0);
 const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false, round: NO_ROUND, parks: [] };
 /** half a car's length per vehicle type, tiles (the lights sit at its front and rear) */
 const HALF = VTYPES.map(v => v.len / 4);
@@ -77,6 +80,9 @@ export class SimClient {
   round: RoundView = NO_ROUND; site: Site | null = null;
   /** the car parks' counts as the worker last sent them (with each frame; see ParkView) */
   parks: ParkView[] = [];
+  /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
+   *  tiles, fans, stage; stage 0 to a lot stop, 1 to a door) and the lot stops (4 floats each: x, y in tiles, the fans waiting, the route index) */
+  walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
   /** the congestion heat map: its geometry as the worker last sent it (6 floats per dseg id: from x, y, to x, y in tiles, the lateral offset
    *  of its lanes' centre in tiles along perp(direction), its lane count; NaN for a dead id; null until the first) and the version it is for */
   heatGeom: Float32Array | null = null; heatGeomVersion = -1;
@@ -135,6 +141,8 @@ export class SimClient {
   setBudget(save: BudgetSave | null, career?: CareerSave | null) { this.budget = save ?? { ...new Budget().toJSON(), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY }; this.career = career ?? { reached: 0, won: false }; this.post({ t: 'budget', save, career }); }
   /** asks the worker for the bottleneck report now (it arrives later, into report) */
   requestReport() { this.post({ t: 'report' }); }
+  /** the shuttle routes as the player drew them (the full list, each time): the worker resolves their stops and plans their buses */
+  setBusRoutes(defs: BusRouteDef[]) { this.post({ t: 'buses', defs }); }
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
   /** the sim speed: 0 pauses, 1 is real time, 2, 4, 8 and 20 are faster */
@@ -180,6 +188,7 @@ export class SimClient {
       this.onTown?.(m.events); return;
     }
     this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks;
+    this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS;
     if (m.cap !== this.n) this.resize(m.cap);
     this.prev = this.cur; this.cur = m.buf; this.tCur = performance.now();
   }

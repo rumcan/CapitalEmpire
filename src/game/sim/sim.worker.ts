@@ -117,8 +117,11 @@ function frame() {
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
   forcePost = false; wasAlive = alive;
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
+  // the shuttle crowd (walkers and stops) goes with the frames of a surge and its eval
+  const walkers = city.surge ? city.walkBuf() : null, stops = city.surge ? city.stopBuf() : null;
   const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.roundView(), parks: city.parkView() };
-  post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
+  if (walkers && stops) post({ t: 'frame', cap: sim.cap, buf, stats, walkers, stops }, [buf.buffer, walkers.buffer, stops.buffer]);
+  else post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
 }
@@ -137,6 +140,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
+      case 'buses': city.setBusRoutes(m.defs); forcePost = true; break;
       case 'heat': heatOn = m.on; heatGeomV = -1; heatNext = 0; break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else city.closeRound();

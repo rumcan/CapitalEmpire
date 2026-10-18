@@ -10,8 +10,10 @@ import type { RoundSave, RoundView } from '../event/round';
 import type { Site } from '../event/site';
 import type { CarParkDef, ParkView } from '../event/carpark';
 import type { TollDef } from '../event/toll';
+import type { BusRouteDef } from '../event/bus';
 
-/** what the worker measured, sent with every frame; skipping: a fast-forward is running (simT is then the last frame's, not extrapolated);
+/** what the worker measured, sent with every frame (walkers and stops: while a surge or its eval is on: the walking fan groups, 4 floats each (x, y in tiles, fans, stage),
+ *  and the lot stops, 4 floats each (x, y in tiles, the fans waiting, the route index)); skipping: a fast-forward is running (simT is then the last frame's, not extrapolated);
  *  clock: the game clock, s (simT + the clock's shift); frozen: the clock is frozen (it does not move while simT does) */
 export interface SimStats { active: number; target: number; lanes: number; stepMs: number; tickMs: number; maxTickMs: number; graphMs: number; respawned: number; simT: number; skipping: boolean; clock: number; frozen: boolean; round: RoundView; parks: ParkView[] }
 /** a parcel as plain data: origin o, along u and away n (tiles, unit vectors), width w, depth d, the frontage's road class and a corner flag */
@@ -23,13 +25,14 @@ export interface LotRec { key: string; o: [number, number]; u: [number, number];
 export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array; entry: [number, number]; seed: number; towns: number[] } | { t: 'target'; n: number } | { t: 'speed'; k: number } | { t: 'option'; id: string } | { t: 'townState'; lots: LotTuple[]; simT: number; budget?: BudgetSave; money: number; career?: CareerSave; shift?: number; round?: RoundSave } | { t: 'skip'; until: number }
   | { t: 'spend'; kind: 'construction' | 'compensation'; n: number } | { t: 'loan'; take: boolean } | { t: 'budget'; save: BudgetSave | null; career?: CareerSave | null } | { t: 'report' } | { t: 'stamp'; pop: number }
   | { t: 'sandbox'; grow: number; money: boolean } | { t: 'inspect'; slot: number } | { t: 'watch'; x: number; y: number } | { t: 'round'; op: 'start' | 'now' | 'close' }
-  | { t: 'parks'; defs: CarParkDef[] } | { t: 'parkTest'; id: number; n: number } | { t: 'tolls'; defs: TollDef[] } | { t: 'heat'; on: boolean };
-/** (heat: the congestion heat map on or off (off by default: nothing is posted then); report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;
+  | { t: 'parks'; defs: CarParkDef[] } | { t: 'parkTest'; id: number; n: number } | { t: 'tolls'; defs: TollDef[] } | { t: 'heat'; on: boolean }
+  | { t: 'buses'; defs: BusRouteDef[] };
+/** (buses: the shuttle routes as the player drew them (the full list, each time: the worker resolves their stops); heat: the congestion heat map on or off (off by default: nothing is posted then); report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;
  *  watch: the junction within 4 tiles of (x, y) is watched for the routes through it, x < 0 stops) */
 /** worker to main thread: a frame of cap slots (4 floats each, see Sim.writeFrame); the parcels added and removed by a network batch; the town's events, totals and access per zone (256); the town's gravel extension (legs: ax, ay, bx, by, ... in tiles);
  *  the books (after a day closes, or after a budget message: the save, the career's save, the game day now, and the ledger of the day that just closed, if any);
  *  the milestones a step newly reached (in order; their grants are paid) and whether the city won, when a game hour's start brought either */
-export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats } | { t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
+export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats; walkers?: Float32Array; stops?: Float32Array } | { t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
   | { t: 'budget'; save: BudgetSave; career: CareerSave; day: number; ledger: Ledger | null } | { t: 'milestone'; newly: Milestone[]; won: boolean } | { t: 'report'; report: Report; hours: HourStat[] }
   | { t: 'car'; info: CarInfo | null } | { t: 'watch'; node: [number, number] | null; n: number; lines: Float32Array } | { t: 'site'; site: Site | null }
   | { t: 'heatGeom'; version: number; geom: Float32Array } | { t: 'heat'; version: number; ratio: Float32Array; dens: Float32Array };

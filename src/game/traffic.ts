@@ -15,6 +15,10 @@ export function facings() {
   if (c.vanB >= 0) sets.push([[c.vanB, false], [c.vanB, true], [c.w, false], [c.n, false]]);
   if (c.pick >= 0) sets.push([[c.e, false], [c.s, false], [c.pick, true], [c.pick, false]]);
   if (c.pickB >= 0) sets.push([[c.e, false], [c.s, false], [c.pickB, true], [c.pickB, false]]);
+  // the shuttle bus (vehicle type 5, see VTYPES): placeholder art, the schoolbus flipped on the s and n headings
+  const bus = byId('world:schoolbus'), bi = bus >= 0 ? bus : c.e;
+  while (sets.length < 5) sets.push(sets[0]!);
+  sets.push([[bi, false], [bi, true], [bi, false], [bi, true]]);
   FACINGS = sets.map(set => set.map(([item, flip]) => {
     const b = LIBRARY[item].boxes[0];
     return { item, flip, ox: (flip ? b.dy : b.dx) / 2, oy: (flip ? b.dx : b.dy) / 2, hx: (flip ? b.hy : b.hx) / 2, hy: (flip ? b.hx : b.hy) / 2 };
@@ -22,4 +26,4 @@ export function facings() {
   return FACINGS;
 }
 /** body colours of the cars (the planner dots), by car type */
-export const CAR_COLOURS = [[0.95, 0.85, 0.55], [0.9, 0.45, 0.35], [0.6, 0.8, 0.95], [0.85, 0.85, 0.85], [0.7, 0.9, 0.6]];
+export const CAR_COLOURS = [[0.95, 0.85, 0.55], [0.9, 0.45, 0.35], [0.6, 0.8, 0.95], [0.85, 0.85, 0.85], [0.7, 0.9, 0.6], [0.95, 0.6, 0.15]];

@@ -66,3 +66,21 @@ export const TOLL_ROUTE_COST = 25;
 export const TOLL_BASE_COST = 10000;
 /** what each booth of a new toll gate adds to its cost, $ */
 export const TOLL_BOOTH_COST = 4000;
+/** the seats of a shuttle bus: a bus leaves its lot stop once it has this many fans on board */
+export const BUS_SEATS = 60;
+/** the shuttle buses a new route has (the UI's default; a route's count is its own) */
+export const START_BUSES = 8;
+/** a shuttle bus's length, m (its vehicle type: the bus is the last of VTYPES, the cars never draw it) */
+export const BUS_LEN = 12;
+/** a fan boards a bus at its lot stop every BOARD_S s (while seats are free), s */
+export const BOARD_S = 0.5;
+/** a fan alights at the doors stop every ALIGHT_S s, s */
+export const ALIGHT_S = 0.3;
+/** a bus at its lot stop leaves, once the queue is empty, after MIN_DWELL s at the stop, s */
+export const MIN_DWELL = 5;
+/** a bus at its lot stop leaves at MAX_DWELL s at the stop whatever the queue, s */
+export const MAX_DWELL = 40;
+/** a walking fan's speed, m/s (the walk from a car park's bay to a lot stop or a stadium door, straight) */
+export const WALK_V = 1.4;
+/** what a shuttle route costs to build, $ (the UI charges it) */
+export const BUS_ROUTE_COST = 15000;

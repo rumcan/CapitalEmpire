@@ -8,7 +8,8 @@ import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
-import { ENTRY_S, SERVICE_S } from '../event/config';
+import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_S, MAX_DWELL, MIN_DWELL, SERVICE_S } from '../event/config';
+import type { BusRoute } from '../event/bus';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -16,8 +17,14 @@ export const DT = 0.1;
 const PER_S = Math.round(1 / DT);
 /** metres searched ahead along the plan for a leader and for a plan end */
 export const LOOKAHEAD = 150;
-/** vehicle types (the renderer's sprite sets): length in metres */
-export const VTYPES = [{ len: 4.5 }, { len: 5.5 }, { len: 5.5 }, { len: 5.3 }, { len: 5.3 }];
+/** vehicle types (the renderer's sprite sets): length in metres. 0 to 4 are the random car types (spawnAt draws among CAR_TYPES of them); the last is the shuttle bus */
+export const VTYPES = [{ len: 4.5 }, { len: 5.5 }, { len: 5.5 }, { len: 5.3 }, { len: 5.3 }, { len: BUS_LEN }];
+/** the random car types: the first CAR_TYPES of VTYPES */
+const CAR_TYPES = 5;
+/** the shuttle bus's vehicle type (the last of VTYPES) */
+export const BUS_VT = VTYPES.length - 1;
+/** a bus within BUS_NEAR m of its target stop and under 0.5 m/s is at the stop (see busStep) */
+const BUS_NEAR = 3;
 
 /** a virtual stop sits this far short of its line, metres (keeps a vehicle from transferring onto it) */
 const STOP_MARGIN = 0.05;
@@ -111,6 +118,15 @@ export class Sim {
   /** per slot: the surge party the car belongs to (its town index), -1 none (see spawnAt); a party car that leaves the sim logs its exit in partyOut
    *  as the pair [town, kind]: kind 0 parked, 1 turned away, 2 lost (see out). The City reads and clears partyOut each step */
   party: Int8Array; partyOut: number[] = [];
+  /** per slot: the shuttle route the bus drives (its index in busRoutes; -1 none), its leg (0 to the doors stop, 1 to the lot stop), its fans on board,
+   *  the seconds it has dwelt at its stop, and the seconds of its current boarding or alighting (see busStep) */
+  bus: Int16Array; busLeg: Uint8Array; busLoad: Int32Array; busDwell: Float32Array; busBoard: Float32Array;
+  /** the shuttle routes by index (null: a route with no stops on the network), the fans waiting at each route's lot stop (the City keeps them; a boarding
+   *  takes them here), the buses alive, and the boardings and alightings since the City last cleared them as quads [slot, route, kind, count]: kind 0
+   *  boarded, 1 alighted, 2 lost with its fans on board (the City requeues them). The City reads and clears busEv each step */
+  busRoutes: (BusRoute | null)[] = []; busWait: number[] = []; busEv: number[] = []; busN = 0;
+  /** the party cars that parked since the City last cleared it, as triples [town, park, bay]: the City starts their fans walking from the bay */
+  partyBays: number[] = [];
   /** the car park entrances (sinks, set by setSinks) and the car parks' counts (parks[k] for sink.park k) */
   sinks: Sink[] = []; parks: ParkState[] = [];
   /** per slot: 1 once the vehicle has paid at a toll booth (or passed its line unserved, see accelerate), 0 while it is still to pay; dwell: the
@@ -175,6 +191,7 @@ export class Sim {
     this.ox = new Float32Array(cap); this.oy = new Float32Array(cap); this.dX = new Float32Array(cap); this.dY = new Float32Array(cap);
     this.sink = new Int16Array(cap).fill(-1); this.party = new Int8Array(cap).fill(-1);
     this.paid = new Uint8Array(cap); this.dwell = new Float32Array(cap); this.boundTo = new Int32Array(cap).fill(-1);
+    this.bus = new Int16Array(cap).fill(-1); this.busLeg = new Uint8Array(cap); this.busLoad = new Int32Array(cap); this.busDwell = new Float32Array(cap); this.busBoard = new Float32Array(cap);
     this.onGraph();
   }
 
@@ -216,15 +233,17 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i]) continue;
       this.route[i] = null;
-      const id = this.lane[i], ln = lanes[id] ?? null;
+      const id = this.lane[i], ln = lanes[id] ?? null, bus = this.bus[i]! >= 0;
+      // a bus is planned to its stop again (its route may have moved); a bus whose lane or route is gone is removed (its fans logged), never replaced
+      if (bus && (!ln || !this.busFit(i))) { this.free(i); continue; }
       if (!ln) { this.out(i, 2); this.free(i); this.stats.respawned++; pending++; continue; }
       const s = this.s[i];
       this.s[i] = s < 0 ? 0 : s > ln.len ? ln.len : s;
-      if (this.dest[i] >= 0 && this.router.gone(this.dest[i]!)) this.retarget(i);
+      if (!bus && this.dest[i] >= 0 && this.router.gone(this.dest[i]!)) this.retarget(i);
       if (!this.valid(i)) {
         if (ln.kind === LK.LINK) { if (!this.pickMove(i)) continue; }
         else if (ln.next.length) { this.unbind(i); this.plan[i] = this.chain(id); this.pi[i] = 0; }
-        else { this.out(i, 2); this.free(i); this.stats.respawned++; pending++; continue; }
+        else { this.out(i, 2); this.free(i); this.stats.respawned++; if (!bus) pending++; continue; }
       }
       this.onLane[id].push(i);
     }
@@ -331,7 +350,7 @@ export class Sim {
     if (!ln) return -1;
     // a car bound for a sink is refused on its line or past it (it would arrive at once, past a gate that is not held for it)
     if (sink >= 0) { const K = this.sinks[sink]; if (!K || (ln.kind === LK.LINK && ln.dseg === K.dseg && s >= K.s)) return -1; }
-    const vt = Math.floor(this.rnd() * VTYPES.length), L = VTYPES[vt].len;
+    const vt = Math.floor(this.rnd() * CAR_TYPES), L = VTYPES[vt].len;
     if (!this.roomOn(lane, s, L)) return -1;
     let i = this.hint;
     while (i < this.cap && this.alive[i]) i++;
@@ -412,6 +431,7 @@ export class Sim {
     this.transfer();
     this.arrive();
     this.tow();
+    if (this.busN) this.buses();
     for (let i = 0; i < this.cap; i++) this.lat[i] *= 0.85;
     // on the DT grid: summing 0.1 drifts (52,380 steps read 52,379.99999), which moved hour and day boundaries a step late
     this.t = Math.round((this.t + DT) * PER_S) / PER_S; this.steps++;
@@ -429,7 +449,7 @@ export class Sim {
   private arrive() {
     const lanes = this.g.lanes;
     for (let i = 0; i < this.cap; i++) {
-      if (!this.alive[i] || this.dest[i]! < 0) continue;
+      if (!this.alive[i] || this.dest[i]! < 0 || this.bus[i]! >= 0) continue;
       const ln = lanes[this.lane[i]]!;
       if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) {
         const k = this.sink[i];
@@ -442,7 +462,9 @@ export class Sim {
   private enter(i: number, k: number, ln: Lane) {
     const K = this.sinks[k]!, P = this.parks[K.park]!;
     if (P.parked >= P.bays) { P.turned++; this.out(i, 1); this.despawn(i); return; }
-    P.parked++; K.next = this.t + ENTRY_S; this.parkedNow.push(K.park, this.oz[i]!); this.out(i, 0);
+    P.parked++; K.next = this.t + ENTRY_S; this.parkedNow.push(K.park, this.oz[i]!);
+    if (this.party[i]! >= 0) this.partyBays.push(this.party[i]!, K.park, P.parked - 1);
+    this.out(i, 0);
     this.score(i, ln); this.stats.arrived++; this.despawn(i);
   }
   /** the car park entrances (City.resolveSinks after each graph update): a vehicle keeps its sink when the new list has one of the same
@@ -463,6 +485,93 @@ export class Sim {
       if (this.sink[i]! < 0 && this.party[i]! >= 0) { this.out(i, 2); this.despawn(i); }
     }
     this.sinks = list;
+  }
+
+  /** the shuttle routes (by index; null where a route has no stops) as the City resolved them: the buses are planned to the new stops by onGraph,
+   *  or by refitBuses; a route's waiting fans (busWait) grow to its index */
+  setBusRoutes(list: (BusRoute | null)[]): void {
+    this.busRoutes = list;
+    while (this.busWait.length < list.length) this.busWait.push(0);
+  }
+  /** plans every bus to its target stop again (after setBusRoutes, with the graph as it is); a bus whose route is gone is removed (its fans logged) */
+  refitBuses(): void {
+    for (let i = 0; i < this.cap; i++) if (this.bus[i]! >= 0 && this.alive[i] && !this.busFit(i)) this.despawn(i);
+  }
+  /** removes the buses (the round's close): their fans are not logged, and the waiting fans are cleared */
+  dropBuses(): void {
+    for (let i = 0; i < this.cap; i++) if (this.bus[i]! >= 0 && this.alive[i]) { this.busLoad[i] = 0; this.despawn(i); }
+    this.busWait.fill(0); this.busEv.length = 0; this.partyBays.length = 0;
+  }
+  /** adds a shuttle bus of route r at s metres on link lane lane (its lot stop's kerb lane), heading for the lot stop (leg 1): it waits there for
+   *  fans. Returns its slot; -1 if there is no room on the lane, no free slot or no such route, -2 if it was lost at once (no route) */
+  spawnBus(r: number, lane: number, s: number): number {
+    const R = this.busRoutes[r], ln = this.g.lanes[lane];
+    if (!R || !ln || ln.kind !== LK.LINK || !this.roomOn(lane, s, BUS_LEN)) return -1;
+    let i = this.hint;
+    while (i < this.cap && this.alive[i]) i++;
+    if (i >= this.cap) return -1;
+    this.alive[i] = 1; this.lane[i] = lane; this.s[i] = s; this.v[i] = 0; this.acc[i] = 0;
+    this.v0f[i] = 1; this.vtype[i] = BUS_VT; this.len[i] = BUS_LEN; this.lat[i] = 0; this.stuck[i] = 0;
+    this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
+    this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = 0;
+    this.dest[i] = R.lot.dseg; this.destS[i] = R.lot.s; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = -1; this.party[i] = -1;
+    this.bus[i] = r; this.busLeg[i] = 1; this.busLoad[i] = 0; this.busDwell[i] = 0; this.busBoard[i] = 0; this.busN++;
+    laneAt(ln, s, this.pt); this.ox[i] = this.pt.x; this.oy[i] = this.pt.y; this.setDest(i);
+    const q = this.onLane[lane];
+    let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
+    q.splice(k, 0, i);
+    this.hint = i + 1; this.active++; this.stats.spawned++;
+    if (!this.pickMove(i)) return -2;
+    return i;
+  }
+  /** a bus slot stops being a bus (it is freed): a bus with fans on board logs them as lost (quads in busEv); its bus state is cleared */
+  private busOff(i: number) {
+    if (this.bus[i]! < 0) return;
+    if (this.busLoad[i]) this.busEv.push(i, this.bus[i]!, 2, this.busLoad[i]!);
+    this.bus[i] = -1; this.busLoad[i] = 0; this.busDwell[i] = 0; this.busBoard[i] = 0; this.busN--;
+  }
+  /** points bus i at its target stop (the lot stop on leg 1, the doors stop on leg 0): its dest and destS, its route cleared; false if its route is gone */
+  private busFit(i: number): boolean {
+    const R = this.busRoutes[this.bus[i]!];
+    if (!R) return false;
+    const T = this.busLeg[i] ? R.lot : R.doors;
+    this.dest[i] = T.dseg; this.destS[i] = T.s; this.route[i] = null; this.noRoute[i] = 0; this.setDest(i);
+    return true;
+  }
+  /** the bus step (once per step, after tow): a bus within BUS_NEAR m of its target stop and under 0.5 m/s is at the stop and dwells there. At the lot
+   *  stop it boards one fan of the queue per BOARD_S while seats are free (busWait counts the queue), and leaves when full, or when the queue is
+   *  empty after MIN_DWELL, or at MAX_DWELL. At the doors stop it alights one fan per ALIGHT_S and leaves when empty. Each boarding or alighting is
+   *  logged in busEv. A bus whose route is gone is removed */
+  private buses() {
+    for (let i = 0; i < this.cap; i++) {
+      const r = this.bus[i]!;
+      if (r < 0 || !this.alive[i]) continue;
+      const R = this.busRoutes[r];
+      if (!R) { this.despawn(i); continue; }
+      const leg = this.busLeg[i]!, T = leg ? R.lot : R.doors, ln = this.g.lanes[this.lane[i]!]!;
+      if (ln.dseg !== T.dseg || Math.abs(T.s - this.s[i]!) > BUS_NEAR || this.v[i]! >= 0.5) continue;
+      this.busDwell[i] = this.busDwell[i]! + DT;
+      if (leg) {
+        let b = this.busBoard[i]! + DT, w = this.busWait[r]!;
+        while (b >= BOARD_S - DT / 2 && this.busLoad[i]! < R.seats && w > 0) {
+          b -= BOARD_S; this.busLoad[i]!++; w--; this.busWait[r] = w; this.busEv.push(i, r, 0, 1);
+        }
+        this.busBoard[i] = this.busLoad[i]! < R.seats && w > 0 ? b : 0;
+        const d = this.busDwell[i]!;
+        if (this.busLoad[i]! >= R.seats || (w === 0 && d >= MIN_DWELL - DT / 2) || d >= MAX_DWELL - DT / 2) this.depart(i);
+      } else {
+        let b = this.busBoard[i]! + DT;
+        while (b >= ALIGHT_S - DT / 2 && this.busLoad[i]! > 0) { b -= ALIGHT_S; this.busLoad[i]!--; this.busEv.push(i, r, 1, 1); }
+        this.busBoard[i] = this.busLoad[i]! > 0 ? b : 0;
+        if (this.busLoad[i]! === 0) this.depart(i);
+      }
+    }
+  }
+  /** bus i leaves its stop for the other one: its target flips, its dwell and boarding clock start again, and it is planned on from here */
+  private depart(i: number) {
+    this.busLeg[i] = this.busLeg[i] ? 0 : 1; this.busDwell[i] = 0; this.busBoard[i] = 0;
+    if (!this.busFit(i)) { this.despawn(i); return; }
+    this.pickMove(i);
   }
 
   /** watches the crossings of node n (null stops): the count starts again at 0 */
@@ -674,6 +783,16 @@ export class Sim {
             vg = Math.min(vg, dd - STOP_MARGIN);
           }
         }
+        // a shuttle bus stops at its target stop (its dwell, see buses) until it leaves for the other one: the obstacle a sink is
+        const bu = this.bus[i]!;
+        if (bu >= 0 && lanes[id]!.kind === LK.LINK) {
+          const R = this.busRoutes[bu], T = R ? (this.busLeg[i] ? R.lot : R.doors) : null;
+          if (T && T.dseg === lanes[id]!.dseg && si <= T.s) {
+            const dd = T.s - si;
+            if (dd < gap) { gap = dd; dv = v; }
+            vg = Math.min(vg, dd - STOP_MARGIN);
+          }
+        }
         // a toll booth: an unpaid vehicle stops at the booth's line until it has stood there SERVICE_S (dwell); one already past the line
         // unserved (spawned there) pays at once
         const bo = this.lBooth[id]!;
@@ -707,7 +826,7 @@ export class Sim {
   private changeLanes() {
     const lanes = this.g.lanes, st = this.steps;
     for (let i = 0; i < this.cap; i++) {
-      if (!this.alive[i] || (i + st) % MOBIL_EVERY !== 0 || this.grant[i] >= 0) continue;
+      if (!this.alive[i] || (i + st) % MOBIL_EVERY !== 0 || this.grant[i] >= 0 || this.bus[i]! >= 0) continue;
       const cur = this.lane[i], ln = lanes[cur]!;
       // no lane changes on a toll booth lane (the booths are the lanes; see accelerate)
       if (ln.kind !== LK.LINK || (ln.left < 0 && ln.right < 0) || this.lBooth[cur]! >= 0) continue;
@@ -854,9 +973,11 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i]) continue;
       const st = this.stuck[i];
+      // a bus standing at its stop is never towed (see buses)
+      if (this.bus[i]! >= 0 && this.busDwell[i]! > 0) continue;
       if (st > TOW_ANY || (st > TOW_BOX && this.g.lanes[this.lane[i]]!.kind !== LK.LINK)) { this.stats.towed++; this.stats.respawned++; this.despawn(i); continue; }
       // an abandoned trip counts as a very slow one (capped at 6x) in the zones it came from and was going to
-      if (this.dest[i]! >= 0 && this.t - this.t0[i]! > ABANDON) {
+      if (this.dest[i]! >= 0 && this.bus[i]! < 0 && this.t - this.t0[i]! > ABANDON) {
         const ideal = Math.max(this.ideal[i]!, 10), act = this.t - this.t0[i]!, d = this.g.dsegs[this.dest[i]!];
         this.bump(this.oz[i]!, act, ideal); if (d) this.bump(this.router.zoneD[d.id]!, act, ideal);
         this.stats.abandoned++; this.despawn(i);
@@ -998,6 +1119,7 @@ export class Sim {
 
   /** frees slot i (giving back its grant and reservation) without touching the lane lists (the caller owns them) */
   private free(i: number) {
+    this.busOff(i);
     if (this.grant[i] >= 0) this.unGrant(i);
     if (this.resv[i] >= 0) this.unReserve(i);
     this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.party[i] = -1; this.paid[i] = 0; this.dwell[i] = 0; this.unbind(i); this.active--;
@@ -1007,6 +1129,6 @@ export class Sim {
   /** up to FILL_TRIES spawn attempts per step while below the aim (the target, or the daily profile's share of it) */
   private fill() {
     const aim = this.profile ? Math.round(this.target * demandAt(this.clock)) : this.target;
-    for (let n = 0; n < FILL_TRIES && this.active < aim; n++) this.spawn();
+    for (let n = 0; n < FILL_TRIES && this.active - this.busN < aim; n++) this.spawn();
   }
 }

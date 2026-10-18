@@ -5,7 +5,7 @@ import type { SurgeView, TownResult } from './surge';
 
 /** the round's stage: free (no round), build, surge (kick-off to come), eval (the result is in last, to be closed) */
 export type Stage = 'free' | 'build' | 'surge' | 'eval';
-/** a round's result: its level, its run (the 1-based number of the round), the cars sent, arrived (the cars parked), the arrival rate (arrived / sent),
+/** a round's result: its level, its run (the 1-based number of the round), the cars sent, arrived (the fans at the doors at kick-off: see City.kickOff), the arrival rate (arrived / (sent * PARTY)),
  *  the road and signal upkeep and loan interest paid while it ran, $, the tolls taken while it ran, $, and each town's counts at kick-off (see TownResult) */
 export interface RoundResult { level: number; run: number; sent: number; arrived: number; rate: number; upkeep: number; toll?: number; byTown: TownResult[] }
 /** the round as the UI sees it: its stage, level, runs, the build and surge left (s), the crowd by town (cars), the upkeep paid so far

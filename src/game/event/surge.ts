@@ -9,15 +9,17 @@ import type { LaneGraph } from '../sim/lanes';
 import type { Sim } from '../sim/sim';
 import { driveway, type Drive } from '../sim/trips';
 import { DEPART_END, SURGE_S } from './config';
+import type { FanCounts } from './crowd';
 
 /** a home the crowd leaves from: its lot, its town, its residents (the weight), and the component of its frontage road (see City) */
 export interface SurgeHome { lot: Lot; town: number; pop: number; comp: number }
 /** a car park as the surge sees it: the component of its frontage road, its bays (the weight), and its entrances (sink indices into Sim.sinks) */
 export interface SurgePark { comp: number; bays: number; sinks: number[] }
-/** a town's counts at kick-off: the cars sent, parked, turned away, lost, stranded (never spawned), and late (on the road or never left) */
-export interface TownResult { sent: number; parked: number; turned: number; lost: number; stranded: number; late: number }
-/** the surge as the UI sees it, per town: the cars sent, parked, on the road, turned away, lost and stranded */
-export interface SurgeView { sent: number[]; parked: number[]; onRoad: number[]; turned: number[]; lost: number[]; stranded: number[] }
+/** a town's counts at kick-off: the cars sent, parked, turned away, lost, stranded (never spawned), and late (on the road or never left), and its fans
+ *  (each parked car is PARTY fans): at the doors (fans), at a lot stop's queue (atStop), and on a bus (onBus) */
+export interface TownResult { sent: number; parked: number; turned: number; lost: number; stranded: number; late: number; fans: number; atStop: number; onBus: number }
+/** the surge as the UI sees it, per town: the cars sent, parked, on the road, turned away, lost and stranded, and the fans at the doors, at a lot stop and on a bus */
+export interface SurgeView { sent: number[]; parked: number[]; onRoad: number[]; turned: number[]; lost: number[]; stranded: number[]; fans: number[]; atStop: number[]; onBus: number[] }
 
 /** a departure: its sim time, its town, its origin lot, its car park (an index into the park list) and its entrance ordinal (round-robin) */
 interface Dep { t: number; town: number; lot: Lot; park: number; e: number }
@@ -134,16 +136,17 @@ export class Surge {
   times(): number[] { return this.sched.map(d => d.t); }
 
   /** the counts as the UI sees them: per town the cars sent, parked, on the road (departed, less those parked, turned away and lost), turned away, lost, stranded */
-  view(): SurgeView {
+  view(c?: FanCounts): SurgeView {
     const onRoad = this.sent.map((_, k) => this.departed[k]! - this.parked[k]! - this.turned[k]! - this.lost[k]!);
-    return { sent: this.sent.slice(), parked: this.parked.slice(), onRoad, turned: this.turned.slice(), lost: this.lost.slice(), stranded: this.stranded.slice() };
+    return { sent: this.sent.slice(), parked: this.parked.slice(), onRoad, turned: this.turned.slice(), lost: this.lost.slice(), stranded: this.stranded.slice(),
+      fans: this.sent.map((_, k) => c?.fans[k] ?? 0), atStop: this.sent.map((_, k) => c?.atStop[k] ?? 0), onBus: this.sent.map((_, k) => c?.onBus[k] ?? 0) };
   }
 
-  /** the counts per town at kick-off: late is what was still on the road or never left (sent less the others) */
-  result(): TownResult[] {
+  /** the counts per town at kick-off: late is what was still on the road or never left (sent less the others); the fans as the crowd counts them (c, see FanCounts; none: 0) */
+  result(c?: FanCounts): TownResult[] {
     return this.sent.map((s, k) => {
       const parked = this.parked[k]!, turned = this.turned[k]!, lost = this.lost[k]!, stranded = this.stranded[k]!;
-      return { sent: s, parked, turned, lost, stranded, late: s - parked - turned - lost - stranded };
+      return { sent: s, parked, turned, lost, stranded, late: s - parked - turned - lost - stranded, fans: c?.fans[k] ?? 0, atStop: c?.atStop[k] ?? 0, onBus: c?.onBus[k] ?? 0 };
     });
   }
 }
