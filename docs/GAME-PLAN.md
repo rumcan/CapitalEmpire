@@ -16,26 +16,15 @@ Decisions made so far:
 
 ---
 
-## 0. Story (why the loop exists)
+## 0. Theme (deferred to the end)
 
-You are a **neural parasite** sent by Universal Food Processing Inc. to farm human livestock for fine space
-dining. Other agents on Earth trigger the population booms. Your job is logistics: grow your sleepy maple-tree town
-with flawless roads, because **traffic jams stress the livestock and ruin the flavour of the meat**.
+The theme (who you are and why you build the roads) is **open and comes last** (decided 2026-10-18): the game loop
+is designed first, and the theme is written afterwards to fit the final gameplay. The earlier alien-parasite story is
+dropped; nothing in the plan depends on a theme.
 
-- **Why roads are the only control:** you are middle management. The other agents make the people; you make sure
-  they can drive to work without stress.
-- **Why widening hurts:** buying land for wider roads bulldozes taxpayers, which shrinks the town. You balance a
-  tight municipal budget, the space you have, and **snooping kids on bicycles** who might find out what you are.
-- **The Population Boosters (your parasite coworkers)** run parallel operations to reach the 10-billion harvest
-  cap. Each one is a source of population-boom events with 20th-century absurdity:
-  - **The Boy Band Producer** engineers pop anthems that send teenagers into romantic frenzies.
-  - **The Tele-Evangelist** takes over megachurches and preaches that large families are blessed families.
-  - **The Rom-Com Screenwriter** writes hit films that make 80s and 90s couples want to start families.
-  - **The Town Planner (you)** has the unglamorous job: moving all those new humans without stressing them.
-
-The story fits the existing loop: demand comes from outside (the boosters), and your network is the only limit
-(section 1.2). The new ideas (booster events, the kids on bicycles, the meat-quality score as the stress measure)
-are listed in section 7 and do not change Phases 1 and 2.
+A direction the owner is exploring (an idea, not a decision): you start by adding a business to a town, which makes the
+town boom; the boom brings the traffic you have to fix; then new towns pop up, and the traffic between the towns becomes
+the next thing to fix (a logistics layer).
 
 ---
 
@@ -108,8 +97,8 @@ model supports this from day 1, so new sprites can be added without code changes
   a few options, for example: "family suburb", "industrial boom", "tourist town", "downtown core", "balanced".
   The option shifts the allocation weights and the demand mix; it never places anything directly. The exact set
   of options and when they unlock is still open (section 7).
-- **Demand comes from the story** (section 0): the parasite coworkers' population booms arrive as demand events
-  the network has to absorb.
+- **Demand events** (open, see section 0): booms from outside (for example a new business) arrive as demand the
+  network has to absorb.
 
 ---
 
@@ -402,6 +391,5 @@ The art track runs alongside from Phase 1: terrain kit, then houses, then commer
    setting maps those classes to its own textures and sprites. Still to decide: when to switch (or whether the
    desert becomes a second map or era rather than a replacement), and which Vegas features (the Strip, casinos,
    neon) still apply to the maple town or wait for the desert.
-5. **Story mechanics (from section 0):** booster events as timed population booms by district and era; the
-   meat-quality (stress) score as the player-facing name for the access score; the snooping kids on bicycles as a
-   risk mechanic (Phase 4 or later).
+5. **The theme and its mechanics (deferred to the end, 2026-10-18):** see section 0. One direction being explored is
+   several towns and the traffic between them (a logistics layer).

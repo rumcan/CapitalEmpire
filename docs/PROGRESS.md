@@ -22,9 +22,9 @@ _Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model i
 - **Setting (changed 2026-10-17):** a sleepy **maple-wooded town valley for now**, because all the art is Maple
   Falls maple. The 1980s Las Vegas desert is deferred to a later re-skin (GAME-PLAN section 7, item 4). Terrain
   code stays setting-neutral; each setting maps the terrain classes to its own art.
-- **Story:** you are a neural parasite farming humans for Universal Food Processing Inc.; jams stress the
-  livestock and spoil the meat. Parasite coworkers (boy band producer, tele-evangelist, rom-com writer) cause the
-  population booms. Full text in GAME-PLAN section 0; the new mechanics it suggests are in section 7, item 5.
+- **Theme (changed 2026-10-18):** none for now. The alien-parasite story is dropped; the theme comes at the end and is
+  written to fit the final gameplay. A direction being explored (not decided): you add a business that makes a town
+  boom, new towns pop up, and the traffic between towns becomes a logistics layer. GAME-PLAN section 0.
 - **Map:** 4 x 4 km (2048 tiles of 2 m).
 - **Terrain:** seeded, fixed hills, valleys and rivers. Roads cross rivers with **bridges** and go through hills in
   **tunnels**.
