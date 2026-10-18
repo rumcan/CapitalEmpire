@@ -167,3 +167,60 @@ test('a town bus: the parties whose homes are within BUS_WALK of the town stop w
   assert.equal(v.fans[0], v.byBus[0]! + v.parked[0]! * PARTY, 'every fan of the bus and of the parked cars is at the doors');
   console.log(`town bus: ${v.byBus[0]} of town 0's ${30 * PARTY} fans by bus, ${v.parked[0]} cars parked, all at the doors by ${sim.t.toFixed(0)} s`);
 });
+
+test('a bus route keeps its buses through road edits: a split away from the route and a split on the route (between the stops) leave both buses serving both stops, and no bus slot is lost', () => {
+  const city = new City(1), sim = city.sim;
+  city.terrain(new Uint8Array(MAP * MAP), { x: 200, y: ROAD_Y }, 7);
+  // the route's street, and a second street south of it (not joined) for the edit away from the route
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(200, ROAD_Y, 800, ROAD_Y), leg(200, 500, 800, 500)], CLASS.street, 0);
+  city.netOps(e.commit(true));
+  city.setParks([PARK]);
+  city.site = { x: 240, y: 290, w: 20, h: 6, c: { x: 250, y: 293 }, doors: [DOOR] };
+  city.setBusRoutes([ROUTE]);
+  startSurge(city, [0]);
+  const C = city.crowd!, FANS = 2 * BUS_SEATS;
+  C.queue[0]!.push({ town: 0, n: FANS });
+  const busSlots = () => { const out: number[] = []; for (let i = 0; i < sim.cap; i++) if (sim.bus[i]! >= 0) out.push(i); return out; };
+  const slots0 = busSlots();
+  assert.equal(slots0.length, 2, 'two buses at the lot stop');
+  const load = new Map<number, number>();
+  let boards = 0, alights = 0, minBuses = 2;
+  const run = (max: number, until: () => boolean) => {
+    for (let n = 0; n < max && !until(); n++) {
+      city.step(1);
+      for (const i of busSlots()) {
+        const L = sim.busLoad[i]!, p = load.get(i) ?? 0;
+        if (L > p) boards += L - p; else if (L < p) alights += p - L;
+        load.set(i, L);
+      }
+      minBuses = Math.min(minBuses, sim.busN);
+    }
+  };
+  const dwelling = () => busSlots().some(i => sim.busDwell[i]! > 0);
+  run(1500, () => boards > 0);
+  assert.ok(boards > 0, `boardings before the edits: ${boards}`);
+  // an edit away from the route: a crossing on the street to the south splits its seg
+  e.addLegs([leg(500, 450, 500, 550)], CLASS.street, 0);
+  city.netOps(e.commit());
+  run(300, () => false);
+  // an edit on the route: a crossing at x 330 splits the street between the doors stop (x 250) and the lot stop (x 395); the buses are at a stop
+  // (dwelling) when it lands, so their lanes are gone
+  run(3000, dwelling);
+  assert.ok(dwelling(), 'a bus is at a stop when the route is split');
+  const b0 = boards, a0 = alights;
+  e.addLegs([leg(330, 200, 330, 400)], CLASS.street, 0);
+  city.netOps(e.commit());
+  run(4000, () => C.fans[0]! >= FANS);
+  assert.equal(minBuses, 2, 'no bus slot lost: two buses through both edits');
+  assert.deepEqual(busSlots(), slots0, 'the same two buses');
+  assert.ok(boards - b0 > 0, `boardings after the route split: ${boards - b0}`);
+  assert.ok(alights - a0 > 0, `alightings after the route split: ${alights - a0}`);
+  assert.equal(C.fans[0], FANS, 'every fan reached the doors');
+  const R = sim.busRoutes[0]!;
+  for (const i of busSlots()) {
+    const T = sim.busLeg[i] ? R.lot : R.doors;
+    assert.equal(sim.dest[i], T.dseg, `bus ${i} is pointed at its stop's dseg`);
+  }
+  console.log(`route edits: ${boards - b0} boardings and ${alights - a0} alightings after the route split; both buses kept; ${FANS} fans at the door by ${sim.t.toFixed(0)} s`);
+});

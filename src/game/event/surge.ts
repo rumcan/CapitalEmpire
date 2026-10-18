@@ -84,7 +84,8 @@ export class Surge {
 
   /** plans the surge at t0 (sim s): crowd[k] cars from town k, homes[k] the homes of town k, parks the car parks, rnd the surge's own stream,
    *  stops the town bus stops (none: every party drives).
-   *  A home counts only with a car park joined to its road (the same comp); a town with no such home sends its whole crowd stranded (no draws).
+   *  A home counts with a car park joined to its road (the same comp) or within BUS_WALK of a stop of its town (a bus party needs no car park: decided
+   *  first); a town with no such home sends its whole crowd stranded (no draws).
    *  Each car: a home by population, a park by bays, and a departure at t0 + SURGE_S * DEPART_END * u, u the mean of three draws (a bell at the middle).
    *  A car whose home is within BUS_WALK of a stop of its town (the nearest) is a bus party instead: the same draws, no entrance. */
   plan(crowd: number[], homes: SurgeHome[][], parks: SurgePark[], rnd: () => number, t0: number, stops: SurgeStop[] = []): void {
@@ -103,11 +104,12 @@ export class Surge {
     });
     for (let k = 0; k < K; k++) {
       const hs: SurgeHome[] = [], hc: number[] = []; let tot = 0;
-      for (const h of homes[k] ?? []) if (h.pop > 0 && byComp.has(h.comp)) { hs.push(h); tot += h.pop; hc.push(tot); }
+      for (const h of homes[k] ?? []) if (h.pop > 0 && (byComp.has(h.comp) || busStop(stops, k, h.lot) >= 0)) { hs.push(h); tot += h.pop; hc.push(tot); }
       if (!hs.length || !(tot > 0)) { this.stranded[k] = crowd[k]!; continue; }
       for (let c = 0; c < crowd[k]!; c++) {
-        const h = hs[pickCum(hc, rnd() * tot)]!, L = byComp.get(h.comp)!;
-        const park = L.ids[pickCum(L.cum, rnd() * L.cum[L.cum.length - 1]!)]!;
+        const h = hs[pickCum(hc, rnd() * tot)]!, L = byComp.get(h.comp);
+        // a bus party walks to its stop and needs no car park (no park draw); a car party's park is one joined to its home
+        const park = L ? L.ids[pickCum(L.cum, rnd() * L.cum[L.cum.length - 1]!)]! : -1;
         const u = (rnd() + rnd() + rnd()) / 3;
         this.sched.push({ t: t0 + SURGE_S * DEPART_END * u, town: k, lot: h.lot, park, e: 0, bus: busStop(stops, k, h.lot) });
       }

@@ -532,3 +532,20 @@ export function laneAt(l: Lane, s: number, out: { x: number; y: number; hx: numb
   const ax = p[2 * lo], ay = p[2 * lo + 1], dx = p[2 * hi] - ax, dy = p[2 * hi + 1] - ay, dl = Math.hypot(dx, dy) || 1;
   out.x = ax + dx * f; out.y = ay + dy * f; out.hx = dx / dl; out.hy = dy / dl;
 }
+
+/** the link lane and metres along it nearest the point (x, y, tiles) over the whole graph (a scan: for the rare moves, such as a bus that
+ *  lost its lane to an edit); null if there is no link lane */
+export function nearestLink(g: LaneGraph, x: number, y: number): { id: number; s: number } | null {
+  let best: { id: number; s: number } | null = null, bd = Infinity;
+  for (const ln of g.lanes) {
+    if (!ln || ln.kind !== LK.LINK) continue;
+    const p = ln.pts, c = ln.cum;
+    for (let k = 0; k + 1 < c.length; k++) {
+      const ax = p[2 * k]!, ay = p[2 * k + 1]!, ex = p[2 * k + 2]! - ax, ey = p[2 * k + 3]! - ay, L2 = ex * ex + ey * ey;
+      const t = L2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * ex + (y - ay) * ey) / L2)) : 0;
+      const px = ax + ex * t - x, py = ay + ey * t - y, d = px * px + py * py;
+      if (d < bd) { bd = d; best = { id: ln.id, s: c[k]! + t * (c[k + 1]! - c[k]!) }; }
+    }
+  }
+  return best;
+}

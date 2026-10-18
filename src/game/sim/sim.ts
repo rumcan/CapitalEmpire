@@ -2,7 +2,7 @@
 // Hot paths (step, writeFrame) are allocation-free; plans are only built when a vehicle picks a movement.
 import { mulberry } from '../iso';
 import { CAR, idm } from './idm';
-import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt } from './lanes';
+import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt, nearestLink } from './lanes';
 import { MIN_GREEN, SIG, demandElsewhere, fixedToRed, phaseState, stepSignals } from './signals';
 import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
@@ -131,6 +131,9 @@ export class Sim {
   /** per slot: the shuttle route the bus drives (its index in busRoutes; -1 none), its leg (0 to the doors stop, 1 to the lot stop), its fans on board,
    *  the seconds it has dwelt at its stop, and the seconds of its current boarding or alighting (see busStep) */
   bus: Int16Array; busLeg: Uint8Array; busLoad: Int32Array; busDwell: Float32Array; busBoard: Float32Array;
+  /** per bus slot: the key of its lane, and its point (tiles) as buses() last saw it: after a graph update a bus whose lane is gone or rebuilt
+   *  (another key) moves to the nearest link lane to that point (see busHome) */
+  busKey: string[]; busX: Float64Array; busY: Float64Array;
   /** the shuttle routes by index (null: a route with no stops on the network), the fans waiting at each route's lot stop (the City keeps them; a boarding
    *  takes them here), the buses alive, and the boardings and alightings since the City last cleared them as quads [slot, route, kind, count]: kind 0
    *  boarded, 1 alighted, 2 lost with its fans on board (the City requeues them). The City reads and clears busEv each step */
@@ -204,6 +207,7 @@ export class Sim {
     this.sink = new Int16Array(cap).fill(-1); this.party = new Int8Array(cap).fill(-1);
     this.paid = new Uint8Array(cap); this.dwell = new Float32Array(cap); this.boundTo = new Int32Array(cap).fill(-1);
     this.bus = new Int16Array(cap).fill(-1); this.busLeg = new Uint8Array(cap); this.busLoad = new Int32Array(cap); this.busDwell = new Float32Array(cap); this.busBoard = new Float32Array(cap);
+    this.busKey = new Array<string>(cap).fill(''); this.busX = new Float64Array(cap); this.busY = new Float64Array(cap);
     this.onGraph();
   }
 
@@ -247,9 +251,10 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i]) continue;
       this.route[i] = null;
-      const id = this.lane[i], ln = lanes[id] ?? null, bus = this.bus[i]! >= 0;
-      // a bus is planned to its stop again (its route may have moved); a bus whose lane or route is gone is removed (its fans logged), never replaced
-      if (bus && (!ln || !this.busFit(i))) { this.free(i); continue; }
+      const bus = this.bus[i]! >= 0;
+      // a bus is kept on its lane (or moved to the nearest one) and planned to its stop again (busHome); only a bus whose route is gone is removed (its fans logged)
+      if (bus && !this.busHome(i)) { this.free(i); continue; }
+      const id = this.lane[i], ln = lanes[id] ?? null;
       if (!ln) { this.out(i, 2); this.free(i); this.stats.respawned++; pending++; continue; }
       const s = this.s[i];
       this.s[i] = s < 0 ? 0 : s > ln.len ? ln.len : s;
@@ -339,7 +344,8 @@ export class Sim {
   /** sets the desired vehicle count (clamped to cap); lowering despawns the highest slots first */
   setTarget(n: number) {
     this.target = Math.max(0, Math.min(this.cap, Math.floor(n)));
-    for (let i = this.cap - 1; i >= 0 && this.active > this.target; i--) this.despawn(i);
+    // the buses are not cars: the trim takes cars only (fill aims at the cars the same way)
+    for (let i = this.cap - 1; i >= 0 && this.active - this.busN > this.target; i--) if (this.bus[i]! < 0) this.despawn(i);
   }
 
   /** one spawn attempt: an origin (Trips) and a destination at least 300 m away. Refused, and counted in stats.throttled, when the
@@ -527,7 +533,7 @@ export class Sim {
   }
   /** plans every bus to its target stop again (after setBusRoutes, with the graph as it is); a bus whose route is gone is removed (its fans logged) */
   refitBuses(): void {
-    for (let i = 0; i < this.cap; i++) if (this.bus[i]! >= 0 && this.alive[i] && !this.busFit(i)) this.despawn(i);
+    for (let i = 0; i < this.cap; i++) if (this.bus[i]! >= 0 && this.alive[i] && !this.busHome(i)) this.despawn(i);
   }
   /** removes the buses (the round's close): their fans are not logged, and the waiting fans are cleared */
   dropBuses(): void {
@@ -549,6 +555,7 @@ export class Sim {
     this.dest[i] = R.lot.dseg; this.destS[i] = R.lot.s; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = -1; this.party[i] = -1;
     this.bus[i] = r; this.busLeg[i] = 1; this.busLoad[i] = 0; this.busDwell[i] = 0; this.busBoard[i] = 0; this.busN++;
     laneAt(ln, s, this.pt); this.ox[i] = this.pt.x; this.oy[i] = this.pt.y; this.setDest(i);
+    this.busKey[i] = ln.key; this.busX[i] = this.pt.x; this.busY[i] = this.pt.y;
     const q = this.onLane[lane];
     let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
     q.splice(k, 0, i);
@@ -562,12 +569,34 @@ export class Sim {
     if (this.busLoad[i]) this.busEv.push(i, this.bus[i]!, 2, this.busLoad[i]!);
     this.bus[i] = -1; this.busLoad[i] = 0; this.busDwell[i] = 0; this.busBoard[i] = 0; this.busN--;
   }
-  /** points bus i at its target stop (the lot stop on leg 1, the doors stop on leg 0): its dest and destS, its route cleared; false if its route is gone */
+  /** points bus i at its target stop (the lot stop on leg 1, the doors stop on leg 0): its dest and destS, its route cleared. A stop that does not
+   *  resolve (null route) leaves the bus with no destination (it waits, see hold); false only if the route itself is gone */
   private busFit(i: number): boolean {
-    const R = this.busRoutes[this.bus[i]!];
-    if (!R) return false;
+    const r = this.bus[i]!, R = this.busRoutes[r];
+    this.route[i] = null; this.noRoute[i] = 0;
+    if (!R) { this.dest[i] = -1; return r < this.busRoutes.length; }
     const T = this.busLeg[i] ? R.lot : R.doors;
-    this.dest[i] = T.dseg; this.destS[i] = T.s; this.route[i] = null; this.noRoute[i] = 0; this.setDest(i);
+    this.dest[i] = T.dseg; this.destS[i] = T.s; this.setDest(i);
+    return true;
+  }
+  /** a bus after a graph update (or a route change): its lane is kept while the lane has the key it had, else the bus moves to the nearest link lane
+   *  to its last point (busX, busY); it is pointed at its stop (busFit) and planned on from its lane. False if its route is gone (the caller removes it) */
+  private busHome(i: number): boolean {
+    const lanes = this.g.lanes, cur = lanes[this.lane[i]!] ?? null;
+    if (!cur || cur.key !== this.busKey[i]) {
+      const at = nearestLink(this.g, this.busX[i]!, this.busY[i]!);
+      if (!at) return false;
+      const nl = lanes[at.id]!;
+      this.lane[i] = at.id; this.s[i] = at.s; this.busKey[i] = nl.key; this.plan[i] = null; this.pi[i] = 0;
+    }
+    if (!this.busFit(i)) return false;
+    if (lanes[this.lane[i]!]!.kind === LK.LINK) this.pickMove(i);
+    return true;
+  }
+  /** a bus with no stop to drive to waits where it is: no destination (dest -1), a plan that is its lane alone, and it holds still (accelerate);
+   *  the next graph update or route change points it at its stop again */
+  private hold(i: number): boolean {
+    this.dest[i] = -1; this.unbind(i); this.plan[i] = [this.lane[i]!]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1;
     return true;
   }
   /** the bus step (once per step, after tow): a bus within BUS_NEAR m of its target stop and under 0.5 m/s is at the stop and dwells there. At the lot
@@ -578,9 +607,13 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       const r = this.bus[i]!;
       if (r < 0 || !this.alive[i]) continue;
+      if (r >= this.busRoutes.length) { this.despawn(i); continue; }
+      const ln = this.g.lanes[this.lane[i]!]!;
+      laneAt(ln, this.s[i]!, this.pt); this.busX[i] = this.pt.x; this.busY[i] = this.pt.y;
+      // a stop that does not resolve: the bus waits (no dwell)
       const R = this.busRoutes[r];
-      if (!R) { this.despawn(i); continue; }
-      const leg = this.busLeg[i]!, T = leg ? R.lot : R.doors, ln = this.g.lanes[this.lane[i]!]!;
+      if (!R) continue;
+      const leg = this.busLeg[i]!, T = leg ? R.lot : R.doors;
       if (ln.dseg !== T.dseg || Math.abs(T.s - this.s[i]!) > BUS_NEAR || this.v[i]! >= 0.5) continue;
       this.busDwell[i] = this.busDwell[i]! + DT;
       if (leg) {
@@ -866,6 +899,8 @@ export class Sim {
         }
         let a = idm(CAR, v, v0, gap, dv);
         if (ac < Infinity) a = Math.min(a, Math.max(ac, -3));
+        // a bus waiting for its stop holds still (see hold)
+        if (this.busN && this.bus[i]! >= 0 && this.dest[i]! < 0) vg = 0;
         this.acc[i] = a; this.vg[i] = vg;
       }
     }
@@ -1023,8 +1058,8 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i]) continue;
       const st = this.stuck[i];
-      // a bus standing at its stop is never towed (see buses)
-      if (this.bus[i]! >= 0 && this.busDwell[i]! > 0) continue;
+      // a bus standing at its stop, or waiting for one (see hold), is never towed (see buses)
+      if (this.bus[i]! >= 0 && (this.busDwell[i]! > 0 || this.dest[i]! < 0)) continue;
       if (st > TOW_ANY || (st > TOW_BOX && this.g.lanes[this.lane[i]]!.kind !== LK.LINK)) { this.stats.towed++; this.stats.respawned++; this.despawn(i); continue; }
       // an abandoned trip counts as a very slow one (capped at 6x) in the zones it came from and was going to
       if (this.dest[i]! >= 0 && this.bus[i]! < 0 && this.t - this.t0[i]! > ABANDON) {
@@ -1039,13 +1074,16 @@ export class Sim {
    *  destination steers by the router (see steer); one without walks at random (any non-U one, U only when that is all there is).
    *  Returns false if the vehicle was lost and removed. */
   private pickMove(i: number): boolean {
-    const g = this.g, L = this.lane[i], dsId = g.lanes[L]!.dseg, d = g.dsegs[dsId];
+    const g = this.g, L = this.lane[i], dsId = g.lanes[L]!.dseg, d = g.dsegs[dsId], bus = this.bus[i]! >= 0;
+    // a bus with no stop to drive to waits (see hold); a car with none walks at random
+    if (bus && this.dest[i]! < 0) return this.hold(i);
     const outs = d ? d.out : [];
     if (!outs.length) { this.unbind(i); this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; return true; }
     let w: number;
     if (this.dest[i]! < 0) w = this.randomMove(outs);
     else {
       w = this.steer(i, dsId, outs);
+      if (w < 0 && bus) return this.hold(i);
       if (w === -2) { this.lose(i); return false; }
       if (w < 0) {
         // no finite cost from here: a random walk this time; three in a row and the vehicle is lost
