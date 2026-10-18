@@ -16,10 +16,11 @@ import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
-import { EVENT_CLOCK } from './event/config';
-import { Round } from './event/round';
+import { EVENT_CLOCK, SURGE_SEED } from './event/config';
+import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, type Site } from './event/site';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
+import { Surge, type SurgeHome, type SurgePark } from './event/surge';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -85,6 +86,9 @@ export class City {
   centres: Pt[] = [];
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
+  /** the surge of the round (event/surge.ts: planned at the surge's start, counted through the eval; null outside) and the road components of the
+   *  network (comp: the segs joined by road share a number; labelled after each network batch, see labelComps) */
+  surge: Surge | null = null; private comp = new Map<Seg, number>();
   /** the car parks as the player placed them (parkDefs, the full list), and the ones built on the network (parks: buildPark; a park with no
    *  frontage or under 10 bays is left out; parks[k] is sim.parks[k] and the sinks' park index) */
   parkDefs: CarParkDef[] = []; parks: CarPark[] = [];
@@ -109,6 +113,8 @@ export class City {
     this.ctx = { lots: this.lots, entry: { x: 0, y: 0 }, reachable: (l: Lot) => this.reach.has(l.seg) && !this.reserved(l), water: (x, y) => this.waterAt(x, y) };
     this.town = new Town(seed);
     this.planRnd = seededRnd(seed);
+    // the everyday trips to a lot are only to lots on roads joined to the origin (a town apart from the others has no road to it)
+    this.sim.lotTrips.joined = (a, b) => this.joinedLots(a, b);
   }
 
   /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), so the town never builds there */
@@ -140,6 +146,7 @@ export class City {
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
     this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round();
+    this.surge = null; this.sim.dropParty();
     this.setBudget(null, null);
   }
 
@@ -172,10 +179,11 @@ export class City {
   /** the build's wall-clock time (dt s): when it is done the surge begins */
   wall(dt: number): void { if (this.round.wall(dt)) this.beginSurge(); }
   /** the surge's clock starts (see Round.beginSurge; idempotent with the round's own start) */
-  private beginSurge(): void { this.round.beginSurge(); }
+  private beginSurge(): void { this.round.beginSurge(); this.surge = this.planSurge(); }
   /** closes the eval: the round is free again and the clock runs on from where it was frozen; false unless in eval */
   closeRound(): boolean {
     if (!this.round.close()) return false;
+    this.sim.dropParty(); this.surge = null;
     this.unfreeze(); this.emptyParks();
     return true;
   }
@@ -227,8 +235,10 @@ export class City {
       if (op.k === 'rebuild') { applyOps(this.net, part); this.g.update(this.net); part = []; }
     }
     if (part.length) applyOps(this.net, part);
+    this.labelComps();
     this.sim.onGraph(); this.upkeepC = null;
     if (this.parks.length) this.resolveSinks();
+    if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
     this.graphMs = performance.now() - t0;
     this.lanes = 0; for (const ln of this.g.lanes) if (ln) this.lanes++;
     return this.lotsOps();
@@ -285,7 +295,10 @@ export class City {
     // a round under way pays the upkeep as the sim runs; the surge counts down to kick-off (the round goes to eval then)
     const rs = this.round.stage;
     if (rs === 'build' || rs === 'surge') { const u = this.upkeepRate() * n * DT / GAME_DAY; this.budget.upkeepLive(u); this.round.upkeep += u; }
-    if (rs === 'surge') this.round.sim(n * DT);
+    // the surge: its due cars spawn, then the party cars' exits are counted; kick-off (the round's last step of the surge) gives the result
+    if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g);
+    this.drainParty();
+    if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
     for (const e of events) if (e.kind === 'build') this.builds++;
     const d = this.budget.dayOf(this.sim.clock); let ledger: Ledger | null = null;
@@ -313,6 +326,7 @@ export class City {
       parks.push(p); states.push({ bays: p.bays.length, parked: o?.parked ?? 0, turned: o?.turned ?? 0 });
     }
     this.parks = parks; this.sim.parks = states; this.resolveSinks();
+    if (this.surge) this.surge.relink(this.surgeParks());
   }
   /** each car park entrance's sink (sinkAt), as the sim's sinks; Sim.setSinks keeps the vehicles already bound for them */
   private resolveSinks(): void {
@@ -336,6 +350,62 @@ export class City {
       return { park: k, dseg: d.id, s: Math.min(ln.len - SINK_END, Math.max(SINK_END, dot(sub(e, p0), u) * MPT)), next: 0 };
     }
     return null;
+  }
+  /** the surge is planned at its start (sim s): each town's homes (its built RES lots with residents, by population), the car parks (surgeParks)
+   *  and the crowd, from the surge's own stream (SURGE_SEED, never the sim's or the town's) */
+  private planSurge(): Surge {
+    const K = this.round.crowd.length, homes: SurgeHome[][] = [];
+    for (let k = 0; k < K; k++) homes.push([]);
+    for (const b of builtLots(this.town, this.lots)) {
+      const k = this.town.townOf(b.lot.key);
+      if (b.use === LU.RES && b.pop > 0 && k >= 0 && k < K) homes[k]!.push({ lot: b.lot, town: k, pop: b.pop, comp: this.compOf(b.lot.seg) });
+    }
+    const s = new Surge();
+    s.plan(this.round.crowd, homes, this.surgeParks(), seededRnd(SURGE_SEED), this.sim.t);
+    return s;
+  }
+  /** the car parks for the surge: each with its frontage's component, its bays, and its sinks (indices into sim.sinks) */
+  private surgeParks(): SurgePark[] {
+    const L: SurgePark[] = this.parks.map(p => ({ comp: this.compOf(p.seg), bays: p.bays.length, sinks: [] }));
+    this.sim.sinks.forEach((k, j) => { const P = L[k.park]; if (P) P.sinks.push(j); });
+    return L;
+  }
+  /** the component of a seg (see labelComps; -1 if unknown) */
+  private compOf(seg: Seg): number { return this.comp.get(seg) ?? -1; }
+  /** the road components: the segs joined by road share a number (a walk over the nodes, after each network batch) */
+  private labelComps(): void {
+    const comp = new Map<Seg, number>(), seen = new Set<Node>(); let k = 0;
+    for (const n0 of this.net.nodes.values()) {
+      if (seen.has(n0)) continue;
+      seen.add(n0); const q: Node[] = [n0];
+      for (let i = 0; i < q.length; i++) for (const s of q[i]!.segs) { comp.set(s, k); const o = s.a === q[i] ? s.b : s.a; if (!seen.has(o)) { seen.add(o); q.push(o); } }
+      k++;
+    }
+    this.comp = comp;
+  }
+  /** true if lots a and b front the same road component: a trip between them has a road */
+  private joinedLots(a: Lot, b: Lot): boolean { const c = this.comp.get(a.seg); return c !== undefined && c === this.comp.get(b.seg); }
+  /** kick-off: the result is in (the cars parked, the rate, each town's counts at this moment); the surge spawns no more, and its counts run on through the eval */
+  private kickOff(): void {
+    const L = this.round.last; if (!L) return;
+    const by = this.surge ? this.surge.result() : [];
+    let arrived = 0; for (const t of by) arrived += t.parked;
+    L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / L.sent : 0;
+  }
+  /** the party cars' exits since the last step go to the surge (the sim's partyOut, cleared; discarded with no surge) */
+  private drainParty(): void {
+    const po = this.sim.partyOut;
+    if (!po.length) return;
+    for (let k = 0; k < po.length; k += 2) this.surge?.event(po[k]!, po[k + 1]!);
+    po.length = 0;
+  }
+  /** the round from a save (see Round.from): any surge under way is dropped with its party cars */
+  loadRound(s?: RoundSave): void { this.round = Round.from(s); this.surge = null; this.sim.dropParty(); }
+  /** the round as the UI and the frame see it: with the surge's counts by town while the surge runs or its result is in (null otherwise) */
+  roundView(): RoundView {
+    const v = this.round.view();
+    if (this.surge && (v.stage === 'surge' || v.stage === 'eval')) v.surge = this.surge.view();
+    return v;
   }
   /** the car parks' counts for the frame: id, bays, cars parked, cars turned away */
   parkView(): ParkView[] {

@@ -186,6 +186,8 @@ export class LotTrips {
   private busy: Rec[] = [];
   /** the driveway of each lot by key (null: none), cleared on every graph update; the dsegs by seg, built on first use */
   private cache = new Map<string, Drive | null>(); private bySeg: Map<Seg, number[]> | null = null;
+  /** the road join of two lots (City: the same component of the road network); a destination must be joined to its origin. null: no check */
+  joined: ((a: Lot, b: Lot) => boolean) | null = null;
   private g!: LaneGraph;
   /** the game hour generated last (-1 = none yet) */
   private hour = -1;
@@ -285,8 +287,9 @@ export class LotTrips {
     return d;
   }
 
-  /** a list entry drawn by its weight (cum) times exp(-d / DECAY), d the metres from `from`: rejection sampling, PICK_TRIES draws
-   *  (the last one stands if none is accepted); null if the list is empty */
+  /** a list entry drawn by its weight (cum) times exp(-d / DECAY), d the metres from `from`: rejection sampling, PICK_TRIES draws.
+   *  A draw not joined to `from` (see joined) is rejected and the draw goes on; the last one stands only if it is joined. null if none is
+   *  accepted or the list is empty. The joined check reads no random number, so with every entry joined the draws are as before */
   private pick(list: Rec[], cum: number[], from: Lot): Rec | null {
     const n = list.length; if (!n) return null;
     const tot = cum[n - 1]!; let r: Rec | null = null;
@@ -295,8 +298,8 @@ export class LotTrips {
       while (lo < hi) { const m = (lo + hi) >> 1; if (cum[m]! > x) hi = m; else lo = m + 1; }
       r = list[lo]!;
       const d = Math.hypot(r.lot.c.x - from.c.x, r.lot.c.y - from.c.y) * MPT;
-      if (this.rnd() < Math.exp(-d / DECAY)) break;
+      if (this.rnd() < Math.exp(-d / DECAY) && (!this.joined || this.joined(r.lot, from))) return r;
     }
-    return r;
+    return r && (!this.joined || this.joined(r.lot, from)) ? r : null;
   }
 }

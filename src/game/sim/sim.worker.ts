@@ -9,7 +9,6 @@ import type { Lot } from '../lots/lots';
 import type { TownEvent } from '../lots/town';
 import type { Ledger } from '../budget';
 import type { Milestone } from '../career';
-import { Round } from '../event/round';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -103,7 +102,7 @@ function frame() {
   if (!skipping && !alive && !wasAlive && !forcePost && city.calls % 10 !== 0) return;
   forcePost = false; wasAlive = alive;
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
-  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.round.view(), parks: city.parkView() };
+  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.roundView(), parks: city.parkView() };
   post({ t: 'frame', cap: sim.cap, buf, stats }, [buf.buffer]);
   // the inspected car goes with every frame; once it is gone (null), no more
   if (inspecting >= 0) { const info = city.inspect(inspecting); post({ t: 'car', info }); if (!info) inspecting = -1; }
@@ -119,7 +118,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
-      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.round = Round.from(m.round); postBudget(null); break;
+      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); postBudget(null); break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'round':

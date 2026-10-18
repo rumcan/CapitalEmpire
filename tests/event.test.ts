@@ -70,7 +70,7 @@ test('Round: start, wall(600) into surge, sim(600) into eval, close into free wi
   assert.equal(r.sim(SURGE_S / 2), false);
   assert.equal(r.sim(SURGE_S / 2), true, 'kick-off');
   assert.equal(r.stage, 'eval');
-  assert.deepEqual(r.last, { level: 1, run: 1, sent: 7, arrived: 0, rate: 0, upkeep: 0 });
+  assert.deepEqual(r.last, { level: 1, run: 1, sent: 7, arrived: 0, rate: 0, upkeep: 0, byTown: [] });
   assert.equal(r.close(), true);
   assert.equal(r.stage, 'free'); assert.equal(r.runs, 1);
 

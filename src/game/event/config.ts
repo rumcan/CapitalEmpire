@@ -8,8 +8,12 @@ export const SURGE_S = 600;
 export const EVENT_CLOCK = 18 * 60;
 /** the cars the crowd sends at level 1, over all the towns */
 export const L1_CARS = 1200;
-/** the party size of a group of visitors (not used yet: a later step) */
+/** the party size of a group of visitors (the fans a car stands for; shown on the surge's total line) */
 export const PARTY = 3;
+/** the share of the surge over which the crowd departs (the rest is the drive in): departures fill the first DEPART_END * SURGE_S */
+export const DEPART_END = 0.75;
+/** the seed of the surge's own random stream (its departures, origins and destinations: never the sim's or the town's) */
+export const SURGE_SEED = 7919;
 /** the crowd's growth per level: the cars at level L are L1_CARS * LEVEL_MUL ** (L - 1) */
 export const LEVEL_MUL = 1.4;
 /** the share of the town's growth the event adds (not used yet: a later step) */

@@ -8,7 +8,8 @@ import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, classUnlocked, junctionUnlocked, unlockOf } from './game/career';
-import { LOT_TILE_COST } from './game/event/config';
+import { LOT_TILE_COST, PARTY } from './game/event/config';
+import type { SurgeView, TownResult } from './game/event/surge';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
@@ -288,6 +289,28 @@ function BudgetPanel({ game }: { game: Game }) {
     </div>
   );
 }
+/** the surge's per-town lines and its total (the live counts, or the result's at kick-off): the town's letter, parked of sent, the rest, and a note
+ *  when no car park is reachable; the total line is arrived (parked) of sent, the rate, and the fans the cars stand for (PARTY each) */
+function SurgeTowns({ rows, total }: { rows: { sent: number; parked: number; stranded: number; rest: string }[]; total?: { parked: number; sent: number } }) {
+  const P = total?.parked ?? 0, S = total?.sent ?? 0;
+  return (
+    <div className="space-y-0.5">
+      {rows.map((w, k) => (
+        <p key={k} className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} · {w.rest}{w.stranded > 0 ? ' · no car park reachable' : ''}</p>
+      ))}
+      {total && <p className="text-xs font-semibold tabular-nums text-slate-100">Arrived {P}/{S} ({S ? Math.round(100 * P / S) : 0}%) ({S * PARTY} fans)</p>}
+    </div>
+  );
+}
+/** the surge's live rows: the cars on the road, turned away and lost per town */
+function liveRows(v: SurgeView): { sent: number; parked: number; stranded: number; rest: string }[] {
+  return v.sent.map((sent, k) => ({ sent, parked: v.parked[k]!, stranded: v.stranded[k]!, rest: `on the road ${v.onRoad[k]}` + (v.turned[k] ? ` · turned ${v.turned[k]}` : '') + ` · lost ${v.lost[k]}` }));
+}
+/** the result's rows: the cars turned away, lost and late (on the road or never left at kick-off) per town */
+function resultRows(by: TownResult[]): { sent: number; parked: number; stranded: number; rest: string }[] {
+  return by.map(t => ({ sent: t.sent, parked: t.parked, stranded: t.stranded, rest: `turned ${t.turned} · lost ${t.lost} · late ${t.late}` }));
+}
+
 /** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock;
  *  eval: the result, to close). Docked under the top bar; the eval screen replaces it in step 7 */
 function RoundPanel({ game }: { game: Game }) {
@@ -321,6 +344,7 @@ function RoundPanel({ game }: { game: Game }) {
               <span className="text-2xl font-bold tabular-nums text-amber-200">Kick-off in {mmss(Math.ceil(r.surgeLeft))}</span>
               {goBtn}
             </div>
+            {r.surge && <SurgeTowns rows={liveRows(r.surge)} total={{ parked: r.surge.parked.reduce((a, b) => a + b, 0), sent: r.surge.sent.reduce((a, b) => a + b, 0) }} />}
             <p className="text-xs text-slate-300">{crowd}</p>
             <p className="text-xs text-slate-400">upkeep {money(r.upkeep)}</p>
           </div>
@@ -331,6 +355,7 @@ function RoundPanel({ game }: { game: Game }) {
               <span className="text-sm font-semibold text-slate-100">Event over{last ? ` · ${last.arrived}/${last.sent} arrived (${Math.round(last.rate * 100)}%)` : ''}</span>
               <button className="chip chip-on" onClick={() => game.closeRound()}>Back to the valley</button>
             </div>
+            {last?.byTown && <SurgeTowns rows={resultRows(last.byTown)} />}
             <p className="text-xs text-slate-400">upkeep paid {money(r.upkeep)}</p>
           </div>
         )}

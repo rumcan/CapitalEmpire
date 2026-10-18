@@ -108,6 +108,9 @@ export class Sim {
   private t0: Float64Array; private ideal: Float64Array; private oz: Uint8Array;
   /** per slot: the sink (index into sinks) the vehicle is bound for, -1 none (the car park's entrance, see spawnAt) */
   sink: Int16Array;
+  /** per slot: the surge party the car belongs to (its town index), -1 none (see spawnAt); a party car that leaves the sim logs its exit in partyOut
+   *  as the pair [town, kind]: kind 0 parked, 1 turned away, 2 lost (see out). The City reads and clears partyOut each step */
+  party: Int8Array; partyOut: number[] = [];
   /** the car park entrances (sinks, set by setSinks) and the car parks' counts (parks[k] for sink.park k) */
   sinks: Sink[] = []; parks: ParkState[] = [];
   /** the admissions since the City last cleared it: pairs [park, origin zone] for each car parked (the City clears it each step) */
@@ -156,7 +159,7 @@ export class Sim {
     this.lotTrips = new LotTrips(this.rnd);
     this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap); this.tag = new Uint8Array(cap);
     this.ox = new Float32Array(cap); this.oy = new Float32Array(cap); this.dX = new Float32Array(cap); this.dY = new Float32Array(cap);
-    this.sink = new Int16Array(cap).fill(-1);
+    this.sink = new Int16Array(cap).fill(-1); this.party = new Int8Array(cap).fill(-1);
     this.onGraph();
   }
 
@@ -189,14 +192,14 @@ export class Sim {
       if (!this.alive[i]) continue;
       this.route[i] = null;
       const id = this.lane[i], ln = lanes[id] ?? null;
-      if (!ln) { this.free(i); this.stats.respawned++; pending++; continue; }
+      if (!ln) { this.out(i, 2); this.free(i); this.stats.respawned++; pending++; continue; }
       const s = this.s[i];
       this.s[i] = s < 0 ? 0 : s > ln.len ? ln.len : s;
       if (this.dest[i] >= 0 && this.router.gone(this.dest[i]!)) this.retarget(i);
       if (!this.valid(i)) {
         if (ln.kind === LK.LINK) { if (!this.pickMove(i)) continue; }
         else if (ln.next.length) { this.plan[i] = this.chain(id); this.pi[i] = 0; }
-        else { this.free(i); this.stats.respawned++; pending++; continue; }
+        else { this.out(i, 2); this.free(i); this.stats.respawned++; pending++; continue; }
       }
       this.onLane[id].push(i);
     }
@@ -207,10 +210,17 @@ export class Sim {
   /** removes vehicle i from its lane and frees its slot */
   despawn(i: number) {
     if (!this.alive[i]) return;
+    this.out(i, 2);
     const q = this.onLane[this.lane[i]], k = q.indexOf(i);
     if (k >= 0) q.splice(k, 1);
     this.free(i);
   }
+
+  /** a party car leaves the sim as kind (0 parked, 1 turned away, 2 lost): logged in partyOut as [town, kind]; a car of no party logs nothing. Called before
+   *  its slot is freed (despawn logs a lost car; a car is logged once: the party is cleared) */
+  private out(i: number, kind: number) { const p = this.party[i]!; if (p >= 0) { this.partyOut.push(p, kind); this.party[i] = -1; } }
+  /** removes the surge party's cars without logging them (the round's close) */
+  dropParty(): void { for (let i = 0; i < this.cap; i++) if (this.alive[i] && this.party[i]! >= 0) { this.party[i] = -1; this.despawn(i); } }
 
   /** sets the desired vehicle count (clamped to cap); lowering despawns the highest slots first */
   setTarget(n: number) {
@@ -235,7 +245,7 @@ export class Sim {
    *  its trip tagged with the destination lot's use (LU; 0 = none), and bound for sink (an index into sinks; -1 = none: a car park
    *  bound vehicle has dest = the sink's dseg and destS = the sink's s); returns its slot, -1 if there is no room on the lane or no
    *  free slot, or -2 if it was lost at once (no route) */
-  spawnAt(lane: number, s: number, dest: number, destS: number, tag = 0, sink = -1): number {
+  spawnAt(lane: number, s: number, dest: number, destS: number, tag = 0, sink = -1, party = -1): number {
     const ln = this.g.lanes[lane];
     if (!ln) return -1;
     // a car bound for a sink is refused on its line or past it (it would arrive at once, past a gate that is not held for it)
@@ -249,7 +259,7 @@ export class Sim {
     this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
     this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = tag;
-    this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = sink;
+    this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = sink; this.party[i] = party;
     laneAt(ln, s, this.pt); this.ox[i] = this.pt.x; this.oy[i] = this.pt.y; this.setDest(i);
     const q = this.onLane[lane];
     let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
@@ -286,6 +296,8 @@ export class Sim {
 
   /** gives vehicle i a new destination from where it is now */
   private retarget(i: number) {
+    // a party car that gets a new destination is no longer counted by the surge: logged as lost
+    this.out(i, 2);
     laneAt(this.g.lanes[this.lane[i]]!, this.s[i], this.pt);
     this.dest[i] = this.trips.dest(this.pt.x, this.pt.y); this.destS[i] = this.trips.destS; this.noRoute[i] = 0; this.sink[i] = -1; this.setDest(i);
   }
@@ -347,8 +359,8 @@ export class Sim {
    *  logged in parkedNow), else turned away (not an arrival). Either way it leaves the sim */
   private enter(i: number, k: number, ln: Lane) {
     const K = this.sinks[k]!, P = this.parks[K.park]!;
-    if (P.parked >= P.bays) { P.turned++; this.despawn(i); return; }
-    P.parked++; K.next = this.t + ENTRY_S; this.parkedNow.push(K.park, this.oz[i]!);
+    if (P.parked >= P.bays) { P.turned++; this.out(i, 1); this.despawn(i); return; }
+    P.parked++; K.next = this.t + ENTRY_S; this.parkedNow.push(K.park, this.oz[i]!); this.out(i, 0);
     this.score(i, ln); this.stats.arrived++; this.despawn(i);
   }
   /** the car park entrances (City.resolveSinks after each graph update): a vehicle keeps its sink when the new list has one of the same
@@ -361,7 +373,13 @@ export class Sim {
       const n = list[j]!, o = old.findIndex(q => q.park === n.park && q.dseg === n.dseg);
       if (o >= 0) { map[o] = j; n.next = old[o]!.next; }
     }
-    for (let i = 0; i < this.cap; i++) { const k = this.sink[i]!; if (k >= 0) this.sink[i] = k < old.length ? map[k]! : -1; }
+    for (let i = 0; i < this.cap; i++) {
+      const k = this.sink[i]!;
+      if (k < 0) continue;
+      this.sink[i] = k < old.length ? map[k]! : -1;
+      // a party car whose entrance is gone is lost
+      if (this.sink[i]! < 0 && this.party[i]! >= 0) { this.out(i, 2); this.despawn(i); }
+    }
     this.sinks = list;
   }
 
@@ -873,7 +891,7 @@ export class Sim {
   private free(i: number) {
     if (this.grant[i] >= 0) this.unGrant(i);
     if (this.resv[i] >= 0) this.unReserve(i);
-    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.active--;
+    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.party[i] = -1; this.active--;
     if (i < this.hint) this.hint = i;
   }
 
