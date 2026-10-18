@@ -11,6 +11,7 @@ import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 import { LV, type LotTuple, type TownEvent } from '../lots/town';
 import type { Leg } from '../network';
 import { VTYPES } from './sim';
+import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../budget';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
@@ -45,6 +46,8 @@ export class SimClient {
   onTown?: (events: TownEvent[]) => void;
   /** called with the gravel extension the town plans (the engine builds it, or skips it); the worker waits for its net ops */
   onGrow?: (legs: Leg[]) => void;
+  /** the city's books as the worker last sent them (the treasury is also moved on spend, before the worker's answer), the game day, and called with each day's ledger as it closes */
+  budget: BudgetSave = new Budget().toJSON(); day = 1; onLedger?: (l: Ledger) => void;
   /** the desired vehicle count (the sim clamps it to its slots) */
   target = 0;
   /** the stats of the last frame received */
@@ -73,8 +76,14 @@ export class SimClient {
   terrain(cls: Uint8Array, entry: [number, number], seed: number) { this.post({ t: 'terrain', cls, entry, seed }); }
   /** the town's growth option by id (see GROWTH_OPTIONS) */
   setOption(id: string) { this.option = id; this.post({ t: 'option', id }); }
-  /** a saved town for the worker (its lots and the sim clock, s): after the net ops of a load */
-  townState(lots: LotTuple[], simT: number) { this.post({ t: 'townState', lots, simT }); }
+  /** a saved town for the worker (its lots, the sim clock, s, and its books or the treasury of an old save): after the net ops of a load */
+  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY) { this.post({ t: 'townState', lots, simT, budget, money }); }
+  /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
+  spend(kind: 'construction' | 'compensation', n: number) { this.budget.money -= n; this.post({ t: 'spend', kind, n }); }
+  /** takes (true) or repays (false) one loan unit; the worker refuses what the books do not allow */
+  loan(take: boolean) { this.post({ t: 'loan', take }); }
+  /** replaces the books with a saved budget, or a fresh one for null (based at the sim day's midnight); the mirror takes it at once, so a save right after sees it */
+  setBudget(save: BudgetSave | null) { this.budget = save ?? { ...new Budget().toJSON(), base: Math.floor(this.simTime(performance.now()) / GAME_DAY) * GAME_DAY }; this.post({ t: 'budget', save }); }
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
   /** the sim speed: 0 pauses, 1 is real time, 2, 4 and 8 are faster */
@@ -89,6 +98,7 @@ export class SimClient {
     if (m.t === 'log') { console.log('[sim]', m.message); return; }
     if (m.t === 'error') { console.error('[sim]', m.message); return; }
     if (m.t === 'lots') { this.applyLots(m.added, m.removed); return; }
+    if (m.t === 'budget') { this.budget = m.save; this.day = m.day; if (m.ledger) this.onLedger?.(m.ledger); return; }
     if (m.t === 'grow') {
       const legs: Leg[] = [];
       for (let i = 0; i + 3 < m.legs.length; i += 4) legs.push({ a: { x: m.legs[i], y: m.legs[i + 1] }, b: { x: m.legs[i + 2], y: m.legs[i + 3] } });

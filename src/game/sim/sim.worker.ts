@@ -6,6 +6,7 @@ import type { NetOp } from '../ground-protocol';
 import { City } from '../city';
 import type { Lot } from '../lots/lots';
 import type { TownEvent } from '../lots/town';
+import type { Ledger } from '../budget';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -27,10 +28,13 @@ function postTown(ev: TownEvent[], force: boolean) {
   post({ t: 'town', events: ev.slice(), pop: town.pop, jobs: town.jobs, built: town.built, access: town.access });
 }
 
-/** a new valley: the city takes its terrain; the town starts again (no lots yet) and posts its totals */
+/** the books: the save, the game day now, and the ledger of the day that just closed (null unless a day did) */
+function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), day: city.budget.dayOf(city.sim.t), ledger }); }
+
+/** a new valley: the city takes its terrain; the town starts again (no lots yet) and posts its totals and books */
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
   city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed);
-  postTown([], true);
+  postTown([], true); postBudget(null);
 }
 
 /** replays the ops; the city logs the timings that are slow (over 50 ms) */
@@ -51,12 +55,14 @@ function frame() {
       const r = city.step(20);
       postTown(r.events, false);
       if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
+      if (r.ledger) postBudget(r.ledger);
     }
     if (city.sim.t >= skipUntil) { skipUntil = -1; forcePost = true; }
   } else {
     const r = city.step(speed);
     postTown(r.events, false);
     if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
+    if (r.ledger) postBudget(r.ledger);
   }
   const sim = city.sim, alive = sim.active > 0;
   // with no cars, still a frame every second: the clock (signals, the town) reads simT from it; while skipping, a frame every period
@@ -77,7 +83,10 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
-      case 'townState': postTown(city.restore(m.lots, m.simT), true); break;
+      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money), true); postBudget(null); break;
+      case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
+      case 'loan': city.loan(m.take); postBudget(null); break;
+      case 'budget': city.setBudget(m.save); postBudget(null); break;
     }
   } catch (err) { fail(err); }
 };

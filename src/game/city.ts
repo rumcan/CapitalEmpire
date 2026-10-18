@@ -7,10 +7,12 @@ import { applyOps } from './netops';
 import { MAP } from './iso';
 import { TC } from './terrain/types';
 import { LotMap, type Lot } from './lots/lots';
-import { GROWTH_OPTIONS, LU, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
+import { GROWTH_OPTIONS, LU, LV, Town, builtLots, type LotTuple, type TownCtx, type TownEvent } from './lots/town';
 import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from './lots/roads';
 import { LaneGraph } from './sim/lanes';
 import { Sim } from './sim/sim';
+import { zoneOf } from './sim/routing';
+import { Budget, GAME_DAY, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -55,6 +57,9 @@ export class City {
   readonly lots = new LotMap();
   /** the town (replaced by terrain: a new valley starts a new town) */
   town: Town;
+  /** the city's books (budget.ts): the treasury, loans, the ledgers; the game day booked last (-1: none yet) and the sim's trade at that booking */
+  budget = new Budget();
+  private dayIdx = -1; private tradeAt = { arrived: 0, punctual: 0 };
   /** the step calls so far (one per wall-clock frame in the worker), the ring of their times (ms), and the last network batch's times */
   calls = 0; graphMs = 0; lotsMs = 0; lanes = 0;
   /** the segs reachable by road from the entry */
@@ -96,6 +101,33 @@ export class City {
     this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
     this.town = new Town(seed); this.town.option = optionOf(this.optId); this.town.tick(this.sim.t, this.ctx); this.syncHour = -1;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
+    this.setBudget(null);
+  }
+
+  /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day) */
+  setBudget(s: BudgetSave | null): void {
+    this.budget = s ? Budget.from(s) : new Budget();
+    if (!s) this.budget.base = Math.floor(this.sim.t / GAME_DAY) * GAME_DAY;
+    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
+  }
+
+  /** spends n $ on kind (see Budget.spend); a negative construction n gives it back */
+  spend(kind: 'construction' | 'compensation', n: number): void { this.budget.spend(kind, n); }
+  /** takes a loan unit (true: borrow, if the town can hold one) or repays one (false); false if the books refuse */
+  loan(take: boolean): boolean { return take ? this.budget.borrow(this.town.pop) : this.budget.repay(); }
+
+  /** the day's books as Budget.endDay reads them: the lots with a town state of BUILT or more, the road stretches, the junction types,
+   *  the trade since the last booking, the residents */
+  dayIn(): DayIn {
+    const lots: LotIn[] = [], segs: SegIn[] = [], nodes: string[] = [];
+    for (const l of this.lots.lots.values()) {
+      const s = this.town.states.get(l.key);
+      if (s && s.level >= LV.BUILT) lots.push({ use: s.use, level: s.level, decline: s.decline, cls: l.cls, access: this.sim.access[zoneOf(l.c.x, l.c.y)]! });
+    }
+    for (const s of this.net.segs) segs.push({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind });
+    for (const n of this.net.nodes.values()) nodes.push(n.type);
+    const tr = this.sim.trade, t0 = this.tradeAt;
+    return { lots, segs, nodes, trade: { arrived: tr.arrived - t0.arrived, punctual: tr.punctual - t0.punctual }, pop: this.town.pop };
   }
 
   /** the growth option by id (see GROWTH_OPTIONS) */
@@ -129,15 +161,18 @@ export class City {
   }
 
   /** a saved town (after the load's net ops): the sim clock (s), then the lots' states; returns the 'complete' event per restored lot */
-  restore(saved: LotTuple[], simT: number): TownEvent[] {
+  restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number): TownEvent[] {
     this.sim.t = simT;
+    this.budget = Budget.from(budget, money); if (!budget) this.budget.base = Math.floor(simT / GAME_DAY) * GAME_DAY;
+    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade };
     const ev = this.town.restore(saved, this.sim.t); this.syncHour = -1;
     return ev;
   }
 
   /** n sim steps (a frame at speed n), then the town to the sim time, then the planner (once a game hour). Returns the town's events
-   *  (the array is reused: read it before the next call) and the gravel extension the town lays now, if any (legs in tiles). */
-  step(n: number): { events: TownEvent[]; grow: Leg[] | null } {
+   *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
+   *  ledger of the game day that closed in these steps, if one did (else null). */
+  step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null } {
     const t0 = performance.now();
     this.calls++;
     const hr = Math.floor(this.sim.t / GAME_HOUR);
@@ -145,7 +180,10 @@ export class City {
     for (let k = 0; k < n; k++) this.sim.step();
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
     const events = this.town.tick(this.sim.t, this.ctx);
-    return { events, grow: this.planGrow() };
+    const d = this.budget.dayOf(this.sim.t); let ledger: Ledger | null = null;
+    if (this.dayIdx < 0) this.dayIdx = d;
+    else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
+    return { events, grow: this.planGrow(), ledger };
   }
 
   /** the built lots go to the sim (once a game hour); the sim switches from random trips to the lots' trips once a RES lot is built */

@@ -19,6 +19,7 @@ import { LV, type LotTuple } from './lots/town';
 import { compose, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { phaseState } from './sim/signals';
+import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 
 /** a game day and a game hour, sim s (one sim second is one game minute) */
 const GAME_DAY = 1440, GAME_HOUR = 60;
@@ -69,12 +70,9 @@ export class Game {
   showAccess = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
-  // economy
-  money = 80000; day = 1; lastIncome = 0;
+  // economy (the books live in the city worker: traffic.budget, see the getters by the save)
   /** the sim speed (sim s per s; 0 = paused) and the last speed above 0 (what a resume goes back to) */
   speed = 1; private lastSpeed = 1;
-  /** the sim day of the last economy tick (-1: take it from the next frame, no tick) */
-  private simDay = -1;
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
@@ -107,6 +105,13 @@ export class Game {
     this.traffic = new SimClient();
     this.traffic.onGrow = (legs) => this.townGrow(legs);
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); };
+    this.traffic.onLedger = (l) => {
+      if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: Universal Food Processing Inc. has pulled the plug', 'warn'); }
+      else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
+      else if (l.money < 0) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
+      else this.toast(`Day ${l.day}: ${l.net >= 0 ? '+' : '−'}$${Math.abs(l.net).toLocaleString()}`, l.net >= 0 ? 'good' : 'info');
+      this.scheduleSave(); this.emit();
+    };
   }
   get cls() { return CLASS[this.roadClass]; }
 
@@ -135,7 +140,7 @@ export class Game {
     const tl = performance.now();
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
-    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0);
+    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money);
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -385,6 +390,34 @@ export class Game {
     return legs;
   }
   routeCost() { return this.structured(this.previewLegs()).cost; }
+  /** the town's built-up lots (BUILDING or more) that the legs' centre lines run through: sampled every half tile, a point counts when it is
+   *  at least half a tile inside the lot's rectangle (o, along u, away n, w by d) */
+  private lotsInLegs(legs: Leg[]): LotView[] {
+    const hit: LotView[] = [];
+    if (!legs.length) return hit;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const l of legs) { x0 = Math.min(x0, l.a.x, l.b.x); y0 = Math.min(y0, l.a.y, l.b.y); x1 = Math.max(x1, l.a.x, l.b.x); y1 = Math.max(y1, l.a.y, l.b.y); }
+    for (const v of this.traffic.lots.values()) {
+      if (v.level < LV.BUILDING) continue;
+      const [ox, oy] = v.o, [ux, uy] = v.u, [nx, ny] = v.n, R = Math.hypot(v.w, v.d) / 2 + 0.5;
+      const cx = ox + (ux * v.w + nx * v.d) / 2, cy = oy + (uy * v.w + ny * v.d) / 2;
+      if (cx < x0 - R || cx > x1 + R || cy < y0 - R || cy > y1 + R) continue;
+      if (legs.some(l => {
+        const k = Math.max(1, Math.ceil(vlen(sub(l.b, l.a)) / 0.5));
+        for (let i = 0; i <= k; i++) {
+          const x = l.a.x + (l.b.x - l.a.x) * i / k - ox, y = l.a.y + (l.b.y - l.a.y) * i / k - oy, a = x * ux + y * uy, b = x * nx + y * ny;
+          if (a >= 0.5 && a <= v.w - 0.5 && b >= 0.5 && b <= v.d - 0.5) return true;
+        }
+        return false;
+      })) hit.push(v);
+    }
+    return hit;
+  }
+  /** the compensation the route being drawn would cost: the built-up lots it runs through, and their total $ */
+  routeCompensation(): { n: number; comp: number } {
+    const hit = this.lotsInLegs(this.structured(this.previewLegs()).parts);
+    return { n: hit.length, comp: hit.reduce((s, v) => s + compensation(v), 0) };
+  }
   private roadClick(mx: number, my: number) {
     const p = this.snapNode(this.tileAt(mx, my));
     if (!this.route.length) { this.route.push(p); this.emit(); return; }
@@ -434,7 +467,8 @@ export class Game {
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
-    if (cost > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}`, 'warn'); return; }
+    const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
+    if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
     const total = this.net.legsLength(parts);
     const hw = cls.h + cls.walk, near = this.propsNearLegs(legs, hw);
@@ -447,10 +481,11 @@ export class Game {
     this.edit.addLegs(parts, cls, this.lineStyle, kinds);
     this.commitNetwork(true, now + dur + 150);
     this.builds.push({ legs: parts, cls, t0: now, dur, total, cum });
-    this.money -= cost;
+    this.traffic.spend('construction', cost);
+    if (comp) this.traffic.spend('compensation', comp);
     this.route = [];
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
-    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
+    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
   }
   private junctionClick(mx: number, my: number) {
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
@@ -458,7 +493,7 @@ export class Game {
     if (!n) { this.toast(spec.minDeg > 2 ? 'Click a junction where three or more roads meet' : 'Click a junction or a bend in the road', 'warn'); return; }
     if (n.type === this.junctionType) { this.toast(`That junction already has ${spec.name.toLowerCase()}`); return; }
     if (spec.cost > this.money) { this.toast(`Not enough money: ${spec.name} costs $${spec.cost.toLocaleString()}`, 'warn'); return; }
-    this.money -= spec.cost;
+    this.traffic.spend('construction', spec.cost);
     this.edit.setNodeType(n, this.junctionType);
     this.commitNetwork();
     this.puff(n.x, n.y, 8);
@@ -469,7 +504,7 @@ export class Game {
     const t = this.tileAt(mx, my);
     if (first) {
       const p = this.propAt(mx, my);
-      if (p && !p.auto) { const it = LIBRARY[p.item]; this.removeProp(p); this.money += Math.round(it.cost * 0.5); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name} (+$${Math.round(it.cost * 0.5).toLocaleString()})`); return; }
+      if (p && !p.auto) { const it = LIBRARY[p.item]; this.removeProp(p); this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name} (+$${Math.round(it.cost * 0.5).toLocaleString()})`); return; }
     }
     const piece = this.net.pieceNear(t); if (!piece) return;
     this.edit.removePiece(piece);
@@ -490,7 +525,7 @@ export class Game {
     }
     return null;
   }
-  deleteSelected() { if (!this.selected) return; const p = this.selected, it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto) this.money += Math.round(it.cost * 0.5); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit(); }
+  deleteSelected() { if (!this.selected) return; const p = this.selected, it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto) this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit(); }
   scaleSelected(f: number) {
     const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, 1.6);
     const err = this.canPlace(it, p.x, p.y, p.flip, k, p); if (err) { this.toast(err, 'warn'); return; }
@@ -613,15 +648,18 @@ export class Game {
   }
 
   // ---------- economy / save ----------
-  private linked(p: Prop) { return this.net.rectOcc(p.x0 - 3, p.y0 - 3, p.x1 + 3, p.y1 + 3) > 0; }
-  private tickDay() {
-    let houses = 0, venues = 0;
-    for (const p of this.props) { const it = LIBRARY[p.item]; if (it.kind === 'house' && this.linked(p)) houses++; else if ((it.kind === 'venue' || it.kind === 'arcade' || it.kind === 'shop') && this.linked(p)) venues++; }
-    let upkeep = 0; for (const s of this.net.segs) upkeep += vlen(sub(s.b, s.a)) * (1 + s.cls.order * 0.6);
-    this.lastIncome = Math.round(houses * 120 + venues * 260 - upkeep);
-    this.money += this.lastIncome; this.day++;
-    this.scheduleSave(); this.emit();
-  }
+  /** the treasury, $ (the city's books, mirrored from the city worker; spend moves it at once) */
+  get money(): number { return this.traffic.budget.money; }
+  /** the game day (from the city's books) */
+  get day(): number { return this.traffic.day; }
+  /** the last closed day's ledger, or null before the first day closes */
+  get ledger(): Ledger | null { const h = this.traffic.budget.history; return h[h.length - 1] ?? null; }
+  /** true once the city went too long in the red (the books stay so) */
+  get bankrupt() { return this.traffic.budget.bankrupt; }
+  /** takes a loan unit if the town can hold one more (else says why); the worker books it */
+  borrow() { const b = Budget.from(this.traffic.budget); if (b.loans >= b.maxLoans(this.traffic.pop)) this.toast('No more credit: grow the town for more', 'warn'); else this.traffic.loan(true); }
+  /** repays a loan unit if there is one and the treasury covers LOAN (else says why); the worker books it */
+  repay() { const b = this.traffic.budget; if (!b.loans) this.toast('No loans to repay', 'warn'); else if (b.money < LOAN) this.toast('Not enough money to repay', 'warn'); else this.traffic.loan(false); }
   scheduleSave() { if (this.benchMode) return; clearTimeout(this.saveTimer); this.saveTimer = window.setTimeout(() => void this.save(), 800); }
   benchMode = false;
   async save() {
@@ -633,7 +671,7 @@ export class Game {
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.money, day: this.day, cam: { ...this.cam },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
-      simT: this.traffic.simTime(performance.now()),
+      simT: this.traffic.simTime(performance.now()), budget: this.traffic.budget,
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -645,7 +683,7 @@ export class Game {
       for (const [x, y, type] of d.nodes) { const n = this.net.nodeAt({ x, y }); if (n) this.edit.setNodeType(n, type as NodeType); }
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
-      this.money = d.money; this.day = d.day; this.simDay = -1; if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
+      if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
       return true;
     } catch (e) { console.error('load failed', e); return false; }
   }
@@ -655,7 +693,7 @@ export class Game {
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
-    this.money = 80000; this.day = 1; this.simDay = -1; this.route = []; this.selected = null; this.builds = [];
+    this.traffic.setBudget(null); this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
     this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain); this.sendTerrain();
@@ -796,9 +834,6 @@ export class Game {
     if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
     if (kx || ky) { this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
     this.onFrame?.(now, dt);
-    // one economy tick per sim day boundary (no catch-up); nothing until the client has had a frame
-    const st = this.traffic.simTime(performance.now());
-    if (st > 0) { const sd = Math.floor(st / GAME_DAY); if (this.simDay < 0 || sd < this.simDay) this.simDay = sd; else if (sd > this.simDay) { this.simDay = sd; this.tickDay(); } }
     for (const b of this.builds) {
       const front = this.revealFront(b, now); if (front >= b.total) continue;
       b.legs.forEach((l, i) => {

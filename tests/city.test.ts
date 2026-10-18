@@ -7,6 +7,7 @@ import { NetEditor } from '../src/game/netops';
 import { City } from '../src/game/city';
 import { MAP } from '../src/game/iso';
 import { builtLots } from '../src/game/lots/town';
+import type { Ledger } from '../src/game/budget';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -16,13 +17,19 @@ import { builtLots } from '../src/game/lots/town';
 const O = 40, STEP = 40, N = 3, at = (k: number) => O + k * STEP, last = at(N - 1);
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
 
-test('a city fed a street grid grows built lots over 3 game days and lays gravel when short of land', () => {
+/** the street grid and its dead-end street as an editor (the ops of the first batch are committed by the test) */
+function gridEditor(): NetEditor {
   const e = new NetEditor(new RoadNetwork());
   for (let k = 0; k < N; k++) {
     e.addLegs([leg(O, at(k), last, at(k))], CLASS.street, 0);
     e.addLegs([leg(at(k), O, at(k), last)], CLASS.street, 0);
   }
   e.addLegs([leg(last, last, last + 120, last)], CLASS.street, 0);
+  return e;
+}
+
+test('a city fed a street grid grows built lots over 3 game days and lays gravel when short of land', () => {
+  const e = gridEditor();
   const city = new City(7);
   city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
   const first = city.netOps(e.commit(true));
@@ -44,4 +51,16 @@ test('a city fed a street grid grows built lots over 3 game days and lays gravel
   assert.ok(built > 0, `built lots after 3 game days (${built})`);
   assert.ok(grows > 0 && gravelLegs > 0, `gravel legs laid when short of land (${grows} extensions)`);
   assert.ok(city.town.pop > 0, 'the town has residents');
+});
+
+test('a city books its first game day when the sim clock passes 1440 s: one ledger, with road upkeep', () => {
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7);
+  city.netOps(gridEditor().commit(true));
+  const ledgers: Ledger[] = [];
+  for (let s = 0; s < 1450; s++) { const r = city.step(10); if (r.ledger) ledgers.push(r.ledger); }
+  assert.equal(ledgers.length, 1, 'one game day closed');
+  assert.equal(ledgers[0]!.day, 1, 'the ledger is day 1');
+  assert.ok(ledgers[0]!.upkeep > 0, `road upkeep booked (${ledgers[0]!.upkeep})`);
+  assert.equal(city.budget.history.length, 1, 'one ledger in the books');
 });

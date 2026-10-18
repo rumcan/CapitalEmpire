@@ -4,6 +4,7 @@
 import { MAP } from './iso';
 import type { SaveData } from './types';
 import type { LotTuple } from './lots/town';
+import type { BudgetSave } from './budget';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -32,11 +33,14 @@ export interface SaveV5 {
   nodes: [number, number, string][];
   /** library id, x, y, flip, scale */
   props: [string, number, number, number, number][];
+  /** the treasury and the game day, as before the books (kept so older readers still work; the books hold the truth) */
   money: number; day: number; cam?: { X: number; Y: number; z: number };
   /** the town's lots that are not EMPTY: key, use, level, decline, seed, since (v5; missing = none) */
   lots?: LotTuple[];
   /** the sim clock, s, so the construction timers go on (v5) */
   simT?: number;
+  /** the city's books: the treasury, loans, days in the red, bankruptcy and the ledgers (v5; missing = a fresh budget with money) */
+  budget?: BudgetSave;
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',

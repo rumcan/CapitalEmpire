@@ -5,6 +5,7 @@ import { type LibItem, type Tool } from './game/types';
 import { CLASSES, JUNCTIONS } from './game/network';
 import { ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
+import { Budget, DEBT_DAYS, LOAN, LOAN_RATE } from './game/budget';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
@@ -23,6 +24,11 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
+  /** the budget panel (toggled by the treasury) and the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
+  const [budgetOpen, setBudgetOpen] = useState(false);
+  const [watch, setWatch] = useState(false);
+
+  useEffect(() => { if (game && !game.bankrupt) setWatch(false); });
 
   useEffect(() => {
     const canvas = overlayRef.current!;
@@ -42,6 +48,7 @@ export default function App() {
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
+  const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
@@ -79,11 +86,11 @@ export default function App() {
                 <div className="text-[10px] uppercase tracking-[0.25em] text-amber-400/70">Town Builder</div>
               </div>
               <div className="mx-1 h-8 w-px bg-white/10" />
-              <Stat label="Treasury" value={money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} />
+              <Stat label="Treasury" value={money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => setBudgetOpen(o => !o)} />
               <Stat label="Population" value={game.traffic.pop.toLocaleString()} />
               <Stat label="Jobs" value={game.traffic.jobs.toLocaleString()} />
               <Stat label="Day" value={String(game.day)} sub={hhmm(game.clock())} />
-              <Stat label="Daily income" value={(game.lastIncome >= 0 ? '+' : '') + money(game.lastIncome)} tone={game.lastIncome >= 0 ? 'text-emerald-300' : 'text-red-300'} />
+              <Stat label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
             </div>
             <div className="pointer-events-auto flex items-center gap-2">
               <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/75 px-2 py-1.5 shadow-lg backdrop-blur">
@@ -137,6 +144,20 @@ export default function App() {
             ))}
           </div>
 
+          {budgetOpen && <BudgetPanel game={game} />}
+          {game.bankrupt && !watch && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+              <div className="w-96 rounded-2xl border border-red-500/40 bg-slate-950 p-6 text-center text-slate-200 shadow-2xl">
+                <div className="text-2xl font-bold text-red-300">Bankrupt</div>
+                <p className="mt-3 text-sm text-slate-300">Universal Food Processing Inc. has cut the farm loose: the books stayed in the red for {DEBT_DAYS} days.</p>
+                <div className="mt-5 flex justify-center gap-2">
+                  <button className="chip chip-on" onClick={() => game.newTown()}>New valley</button>
+                  <button className="chip" onClick={() => setWatch(true)}>Keep watching</button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <PerfPanel game={game} />
           {help && <Help onClose={() => setHelp(false)} />}
         </>
@@ -174,14 +195,54 @@ function PerfPanel({ game }: { game: Game }) {
   );
 }
 
-function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
+function Stat({ label, value, sub, tone, subTone, onClick }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; onClick?: () => void }) {
   return (
-    <div className="px-1">
+    <div className={`px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick}>
       <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
       <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
-      {sub && <div className="text-[10px] text-slate-500">{sub}</div>}
+      {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'}`}>{sub}</div>}
     </div>
   );
+}
+
+/** the city's books: the last closed day's ledger, the net of the last 14 days as bars, the loans and the debt */
+function BudgetPanel({ game }: { game: Game }) {
+  const b = game.traffic.budget, l = game.ledger, H = b.history.slice(-14), mx = Math.max(1, ...H.map(v => Math.abs(v.net)));
+  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Road upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
+  const maxLoans = Budget.from(b).maxLoans(game.traffic.pop);
+  return (
+    <div className="absolute right-3 top-24 z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+      <Panel title={`Budget — day ${game.day}`}>
+        {l ? (
+          <div className="space-y-0.5 text-xs">
+            {rows.map(([name, v, income]) => (
+              <div key={name} className={`flex justify-between ${!v ? 'text-slate-500' : income ? 'text-emerald-300' : 'text-red-300'}`}><span>{name}</span><span className="tabular-nums">{v && !income ? '−' : v ? '+' : ''}{money(v)}</span></div>
+            ))}
+            <div className={`mt-1 flex justify-between border-t border-white/10 pt-1 font-semibold ${l.net >= 0 ? 'text-emerald-300' : 'text-red-300'}`}><span>Net</span><span className="tabular-nums">{l.net >= 0 ? '+' : '−'}{money(Math.abs(l.net))}</span></div>
+          </div>
+        ) : <p className="text-xs text-slate-400">The first day's books close at midnight.</p>}
+        <div className="relative mt-3 flex h-16 gap-0.5">
+          <div className="absolute inset-x-0 top-1/2 border-t border-white/20" />
+          {H.map(v => (
+            <div key={v.day} className="relative flex-1" title={`Day ${v.day}: ${v.net >= 0 ? '+' : '−'}${money(Math.abs(v.net))}`}>
+              <div className={`absolute inset-x-0 ${v.net >= 0 ? 'rounded-t bg-emerald-400/80' : 'rounded-b bg-red-400/80'}`} style={{ height: `${Math.max(2, Math.abs(v.net) / mx * 50)}%`, ...(v.net >= 0 ? { bottom: '50%' } : { top: '50%' }) }} />
+            </div>
+          ))}
+        </div>
+        <div className="mt-1 text-[10px] text-slate-500">{H.length ? `Net per day, last ${H.length} day${H.length === 1 ? '' : 's'}` : 'No day has closed yet'}</div>
+        <div className="mt-3 text-xs text-slate-300">Loans: {b.loans} of {maxLoans} × {money(LOAN)} at {Math.round(LOAN_RATE * 100)}%/day</div>
+        <div className="mt-1 flex gap-1">
+          <button className="chip flex-1" onClick={() => game.borrow()}>Borrow</button>
+          <button className="chip flex-1" onClick={() => game.repay()}>Repay</button>
+        </div>
+        {debtDaysLine(b.debtDays)}
+      </Panel>
+    </div>
+  );
+}
+/** the red line of the budget panel: the days in the red and the days left before bankruptcy (nothing when the books are fine) */
+function debtDaysLine(d: number) {
+  return d > 0 ? <p className="mt-2 text-xs text-red-300">In the red for {d} day{d === 1 ? '' : 's'}: bankrupt in {DEBT_DAYS - d} unless the books recover.</p> : null;
 }
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (<div><div className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">{title}</div>{children}</div>);
@@ -190,7 +251,7 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 function RoadPanel({ game }: { game: Game }) {
   const legs = game.previewLegs();
   const len = game.net.legsLength(legs);
-  const cost = game.routeCost();
+  const cost = game.routeCost(), comp = game.routeCompensation();
   const cls = game.cls;
   return (
     <Panel title="Building new roads">
@@ -220,7 +281,8 @@ function RoadPanel({ game }: { game: Game }) {
       )}
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Route</span><span>{game.route.length} point{game.route.length === 1 ? '' : 's'} · {Math.round(len * 2)} m</span></div>
-        <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost + comp.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
+        {comp.n > 0 && <div className="flex justify-between"><span className="text-slate-400">Compensation</span><span className="text-red-300">{money(comp.comp)} <span className="text-slate-500">({comp.n} building{comp.n === 1 ? '' : 's'})</span></span></div>}
       </div>
       <div className="mt-2 flex gap-1">
         <button className="chip chip-on flex-1 disabled:opacity-40" disabled={game.route.length < 2} onClick={() => game.finishRoute()}>Build route ⏎</button>
@@ -289,7 +351,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>Five road types: <b>Lane</b> (single lane), <b>Street</b> (2 lanes, sidewalks, your choice of centre line), <b>Road</b> (wider, darker asphalt with paved shoulders inside yellow edge lines and a gravel verge), <b>Avenue</b> and <b>Boulevard</b> (2 / 4 lanes around a tree-lined median).</li>
           <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; drawing over a road upgrades it.</li>
           <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend.</li>
-          <li>Houses and venues near a sidewalk earn money every day; roads cost upkeep. Everything autosaves in this browser.</li>
+          <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
           <li>Space pauses (tap it; hold it and drag to pan); , and . change the speed; H skips to the next rush hour.</li>
         </ul>

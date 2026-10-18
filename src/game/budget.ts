@@ -12,6 +12,8 @@ export const LOAN = 25000;
 export const LOAN_RATE = 0.01;
 /** days in the red in a row that bankrupt the city */
 export const DEBT_DAYS = 5;
+/** one game day, sim s (one sim second is one game minute) */
+export const GAME_DAY = 1440;
 /** property tax per day by use (index LU) and level (BUILT, UPGRADED), $ at frontage value 1 and access 1 */
 export const PROPERTY: number[][] = [
   [0, 0], // NONE
@@ -123,11 +125,13 @@ export interface Ledger {
   /** the treasury after the day */
   money: number;
 }
-/** the budget as saved: the treasury, loans, days in the red, bankruptcy and the ledgers */
-export interface BudgetSave { money: number; loans: number; debtDays: number; bankrupt: boolean; history: Ledger[] }
+/** the budget as saved: the sim s of day 1's midnight (base), the treasury, loans, days in the red, bankruptcy and the ledgers */
+export interface BudgetSave { base: number; money: number; loans: number; debtDays: number; bankrupt: boolean; history: Ledger[] }
 
 /** The city's budget. Spending is taken from the treasury when it happens and shows in the next day's ledger; endDay books the rest. */
 export class Budget {
+  /** sim s of day 1's midnight: the game day is Math.floor((t - base) / GAME_DAY) + 1 (see dayOf) */
+  base = 0;
   /** the treasury, $ */
   money = START_MONEY;
   /** the loan units taken (each LOAN, each paying LOAN_RATE a day) */
@@ -141,6 +145,9 @@ export class Budget {
   /** the ledgers, newest last (at most 30) */
   history: Ledger[] = [];
 
+  /** the game day (1 from base on) of sim time t, s; a microsecond is forgiven, as the clock adds DT = 0.1 s and drifts a hair
+   *  (1440 calls of DT land on 1439.9999999998), so the midnight is booked on the step that reaches it */
+  dayOf(t: number): number { return Math.floor((t - this.base + 1e-6) / GAME_DAY) + 1; }
   /** spends n $ on kind today: out of the treasury now, into the next ledger */
   spend(kind: 'construction' | 'compensation', n: number) { this.money -= n; this.today[kind] += n; }
   /** gives back n $ of today's construction */
@@ -169,12 +176,12 @@ export class Budget {
     return L;
   }
   /** the save: the treasury, loans, days in the red, bankruptcy and a copy of the ledgers */
-  toJSON(): BudgetSave { return { money: this.money, loans: this.loans, debtDays: this.debtDays, bankrupt: this.bankrupt, history: this.history.slice() }; }
-  /** a budget from a save; from(undefined, money) is a fresh budget with that treasury (old saves; START_MONEY if none given) */
+  toJSON(): BudgetSave { return { base: this.base, money: this.money, loans: this.loans, debtDays: this.debtDays, bankrupt: this.bankrupt, history: this.history.slice() }; }
+  /** a budget from a save (base 0 if the save has none); from(undefined, money) is a fresh budget with that treasury (old saves; START_MONEY if none given) */
   static from(s?: BudgetSave, money?: number): Budget {
     const b = new Budget();
     if (!s) { b.money = money ?? START_MONEY; return b; }
-    b.money = s.money; b.loans = s.loans; b.debtDays = s.debtDays; b.bankrupt = s.bankrupt; b.history = s.history.slice(-30);
+    b.base = s.base ?? 0; b.money = s.money; b.loans = s.loans; b.debtDays = s.debtDays; b.bankrupt = s.bankrupt; b.history = s.history.slice(-30);
     return b;
   }
 }

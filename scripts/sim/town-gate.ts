@@ -20,6 +20,7 @@ import { MAP } from '../../src/game/iso';
 import { TC } from '../../src/game/terrain/types';
 import { builtLots, LV } from '../../src/game/lots/town';
 import { zoneOf } from '../../src/game/sim/routing';
+import type { Ledger } from '../../src/game/budget';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -34,7 +35,7 @@ const AXES: Pt[] = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 
 
 interface Hour { hour: number; pop: number; jobs: number; built: number; gravel: number; paved: number; cars: number; speed: number; arrived: number; shareHi: number | null; shareJam: number | null; worst: number | null; builds: number; stepMeanMs: number; stepMaxMs: number }
 interface Episode { zone: number; fromH: number; toH: number; buildsInZone: number; buildsElsewhere: number }
-interface Day { day: number; popStart: number; builds: number; pop: number; jamLimited: boolean }
+interface Day { day: number; popStart: number; builds: number; pop: number; jamLimited: boolean; money: number; net: number | null }
 
 // the valley and the city: the highway only (no starter town), from the map edge into the start block centre
 const t = generateTerrain(seed);
@@ -66,6 +67,8 @@ let popStart = 0, dayBuilds = 0, gravelLegs = 0, day = 0;
 /** the planner's growStats at each game hour's end, and the player's bridges (the second of the last one, the count) */
 const growHist: { none: number; legs: number }[] = [];
 let lastBridge = -Infinity, bridges = 0;
+/** the ledger of the game day that closed last (returned by City.step), reset at each day line */
+let closed: Ledger | null = null;
 
 /** the mean speed of the live cars (m/s), sampled every 10 sim s */
 function sampleSpeed() {
@@ -97,10 +100,11 @@ function closeHour(hIdx: number) {
   arrivedAt = city.sim.stats.arrived; hBuilds = 0; hStepSum = 0; hStepMax = 0; hSteps = 0; hSpeedSum = 0; hSpeedN = 0;
 }
 const pct = (v: number | null) => v === null ? '  -' : `${String(Math.round(100 * v)).padStart(3)}%`;
-function dayLine(d: number, rec: Hour) {
+function dayLine(d: number, rec: Hour, money: number, net: number | null) {
   console.log(`day ${String(d).padStart(2)}  pop ${String(rec.pop).padStart(5)}  jobs ${String(rec.jobs).padStart(5)}  built ${String(rec.built).padStart(5)}  ` +
     `segs gravel ${rec.gravel} paved ${rec.paved}  cars ${rec.cars}  speed ${rec.speed.toFixed(1)} m/s  arrived ${rec.arrived}  ` +
     `>1.3 ${pct(rec.shareHi)} >1.8 ${pct(rec.shareJam)}  worst ${rec.worst === null ? '-' : rec.worst.toFixed(2)}  builds ${dayBuilds}  ` +
+    `treasury $${Math.round(money)} net ${net === null ? '-' : Math.round(net)}  ` +
     `step ${rec.stepMeanMs.toFixed(2)} ms mean, ${rec.stepMaxMs.toFixed(2)} max`);
 }
 
@@ -179,6 +183,7 @@ function landLocked(): boolean {
 for (let s = 1; s <= days * DAY; s++) {
   const t0 = performance.now();
   const r = city.step(10);
+  if (r.ledger) closed = r.ledger;
   const ms = performance.now() - t0;
   hStepSum += ms; hStepMax = Math.max(hStepMax, ms); hSteps++; allStepSum += ms; allStepMax = Math.max(allStepMax, ms); allSteps++;
   // the jam runs by the access copy this second's tick used; then this second's builds against the open runs
@@ -216,8 +221,9 @@ for (let s = 1; s <= days * DAY; s++) {
       if (zl.allJam) { if (jamLimitedDay < 0) jamLimitedDay = day; }
       else if (zeroDay < 0) zeroDay = day;
     }
-    days_.push({ day, popStart, builds: dayBuilds, pop: city.town.pop, jamLimited: zl.allJam });
-    dayLine(day, rec);
+    const net = closed ? closed.net : null;
+    days_.push({ day, popStart, builds: dayBuilds, pop: city.town.pop, jamLimited: zl.allJam, money: Math.round(city.budget.money), net });
+    dayLine(day, rec, city.budget.money, net); closed = null;
     if (popReachedDay < 0 && city.town.pop >= GOAL) popReachedDay = day;
     popStart = city.town.pop; dayBuilds = 0;
     if (popReachedDay >= 0 && !keep) break;
