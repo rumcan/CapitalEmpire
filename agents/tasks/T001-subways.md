@@ -1,6 +1,6 @@
 # T001 · Subways (a standalone underground rail module)
 
-Status: open
+Status: in review (#1)
 Module: `src/game/ext/subway/` · Tests: `tests/ext-subway.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 

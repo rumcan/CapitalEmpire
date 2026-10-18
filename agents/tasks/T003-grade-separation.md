@@ -1,6 +1,6 @@
 # T003 · Grade separation: bridges over roads and tunnels under them
 
-Status: in review (#2)
+Status: merged (#2)
 Module: `src/game/ext/grade/` · Tests: `tests/ext-grade.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 

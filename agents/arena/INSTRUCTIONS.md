@@ -16,7 +16,8 @@ design the game, edit the plan, or wire your module into the engine.
    **`tests/ext-<feature>.test.ts`**). It must be pure TypeScript with **no DOM, no React, no WebGL, no Web Worker globals**.
    It may import types and pure helpers from `src/game/` (for example `Pt` from `src/game/network.ts`, `MAP` from
    `src/game/iso.ts`, the terrain classes `TC` from `src/game/terrain/types.ts`) but must **not modify any file outside
-   `src/game/ext/<feature>/`, `tests/ext-<feature>.test.ts`, and your task file's `Status:` line**. Anything outside (the engine, the
+   `src/game/ext/<feature>/`, `tests/ext-<feature>.test.ts`, your task file's `Status:` line, and any other path your task file names explicitly (for example a report under
+   `agents/reports/`)**. Anything outside (the engine, the
    city worker, the UI, saves, the renderer) is the lead's: describe what it needs under **Integration notes** in the PR.
 3. **Follow the task's interface.** The task file gives the exported API the lead will call. Keep its names and
    shapes; you may add exports. If the spec is ambiguous or wrong, say so in the PR (or open it as a draft with your
