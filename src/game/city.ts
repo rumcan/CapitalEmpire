@@ -240,7 +240,9 @@ export class City {
     if (part.length) applyOps(this.net, part);
     this.labelComps();
     this.sim.onGraph(); this.upkeepC = null;
-    if (this.parks.length) this.resolveSinks();
+    // the car parks are built again on the new network (a frontage road split or replaced by the edit leaves the old build on a dead seg;
+    // the counts are kept by id), and with them the sinks
+    if (this.parkDefs.length) this.setParks(this.parkDefs);
     if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
     this.graphMs = performance.now() - t0;
     this.lanes = 0; for (const ln of this.g.lanes) if (ln) this.lanes++;
@@ -381,7 +383,8 @@ export class City {
   /** the car parks for the surge: each with its frontage's component, its bays, and its sinks (indices into sim.sinks) */
   private surgeParks(): SurgePark[] {
     const L: SurgePark[] = this.parks.map(p => ({ comp: this.compOf(p.seg), bays: p.bays.length, sinks: [] }));
-    this.sim.sinks.forEach((k, j) => { const P = L[k.park]; if (P) P.sinks.push(j); });
+    // the component of a car park is its entrances' road as the lane graph has it now (never a stale build)
+    this.sim.sinks.forEach((k, j) => { const P = L[k.park], d = this.g.dsegs[k.dseg]; if (!P) return; P.sinks.push(j); if (d) P.comp = this.compOf(d.seg); });
     return L;
   }
   /** the component of a seg (see labelComps; -1 if unknown) */
