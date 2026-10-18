@@ -7,15 +7,17 @@ import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { lotBatch, type LotPatch } from './ground-protocol';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
-import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV4 } from './save';
+import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV5 } from './save';
 import { CAR_COLOURS } from './traffic';
-import { SimClient } from './sim/client';
+import { SimClient, type LotView } from './sim/client';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
 import { FOREST_CELL, forestCell } from './forest';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt } from './sim/lanes';
-import { LV } from './lots/town';
+import { LV, type LotTuple } from './lots/town';
+import { compose, type ComposeState, type LotGeom } from './lots/compose';
+import { LotMap } from './lots/lots';
 import { phaseState } from './sim/signals';
 
 const DAY_SECONDS = 20;
@@ -29,6 +31,11 @@ export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
+/** the planner's building refresh for the town's lots: at most one per this many ms; the contact sheet's block size, tiles */
+const LOT_BLOCKS_MS = 5000, BLOCK = 40;
+/** the library index by id, and the props the town's lots add (auto 'lot:' + key) */
+const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
+const isLotProp = (p: Prop) => !!p.auto && p.auto.startsWith('lot:');
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
 const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5, 0.3][i & 3]!, c = [[0, 0, 0], [76, 175, 80], [47, 123, 217], [255, 140, 26], [217, 70, 239], [255, 255, 255]][i >> 2]!; return `rgb(${Math.round(c[0]! * k)},${Math.round(c[1]! * k)},${Math.round(c[2]! * k)})`; });
 
@@ -67,13 +74,17 @@ export class Game {
   /** car light points, reused each frame (grown to 7 points per sim slot) */
   private lightBuf = new Float32Array(0);
   // perf
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
   // input
   private dragging: null | { kind: 'pan' | 'bulldoze'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
   private saveTimer = 0; private blocksTimer = 0;
+  /** the town's lots: their props by key, the keys queued to apply, the lots staged by the contact sheet (stageLots; they win until a reset) */
+  private lotProps = new Map<string, Prop[]>(); private lotQueue = new Set<string>(); private staged = new Map<string, { g: LotGeom; st: ComposeState }>();
+  /** scratch for the starter check (the lot's box, the props found); the planner's last building refresh (ms) and the timer of the town's lot refresh */
+  private lotBox: BBox = [0, 0, 0, 0]; private lotHits = new Set<Prop>(); private blocksAt = -Infinity; private lotBlocksTimer = 0;
   private raf = 0; private last = 0;
   private mask: OffscreenCanvas | null = null;
 
@@ -84,6 +95,7 @@ export class Game {
     this.ground = new GroundCache(this.gl);
     this.traffic = new SimClient();
     this.traffic.onGrow = (legs) => this.townGrow(legs);
+    this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); };
   }
   get cls() { return CLASS[this.roadClass]; }
 
@@ -104,12 +116,15 @@ export class Game {
     tick(0.3);
     await atlas; tick(0.5); if (this.dead) return;
     const save = opts.bench ? null : await readSave(); if (this.dead) return;
+    let loaded: SaveV5 | null = null;
     if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
     else if (!save || !this.load(save)) { this.genTerrain(newSeed()); this.seedTown(); }
+    else loaded = save;
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
+    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0);
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -124,7 +139,7 @@ export class Game {
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
   }
   dead = false;
-  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); this.ground.terminate(); this.traffic?.terminate(); }
+  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); }
 
   // ---------- geometry helpers ----------
   resize() {
@@ -172,12 +187,13 @@ export class Game {
     }
     return '';
   }
-  addProp(item: number, x: number, y: number, flip: boolean, scale: number): Prop {
+  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string): Prop {
     const f = this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
+    if (auto) p.auto = auto;
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
-    if (LIBRARY[item].big) this.scheduleBlocks();
+    if (LIBRARY[item].big) this.scheduleBlocks(isLotProp(p));
     return p;
   }
   removeProp(p: Prop) {
@@ -185,7 +201,7 @@ export class Game {
     this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p);
     if (p.auto) this.autoByKey.delete(p.auto);
     if (this.selected === p) this.selected = null;
-    if (LIBRARY[p.item].big) this.scheduleBlocks();
+    if (LIBRARY[p.item].big) this.scheduleBlocks(isLotProp(p));
   }
   /** after moving, flipping or scaling a prop */
   /** plant the forest cells near the view (world px rectangle): nearest to the view centre first, at most two cells per frame */
@@ -250,6 +266,43 @@ export class Game {
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
   setLotGround(key: string, patches: LotPatch[] | null) { this.lotPending.set(key, patches); }
   private flushLotGround() { if (!this.lotPending.size) return; const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop); }
+  /** the town's lots: up to 40 queued keys a frame (more while the queue is over 2,000, up to 400), so a loaded city fills in */
+  private applyLotQueue() {
+    const q = this.lotQueue; if (!q.size) return;
+    const n = q.size > 2000 ? Math.min(400, 40 + Math.ceil((q.size - 2000) / 4)) : 40;
+    let k = 0;
+    for (const key of q) { if (k++ >= n) break; q.delete(key); this.applyLot(key); }
+  }
+  /** a lot follows the town: composed from its town state; dropped when EMPTY, gone or holding a starter building (a staged lot is as it was staged) */
+  private applyLot(key: string) {
+    const st = this.staged.get(key); if (st) { this.placeLot(key, st.g, st.st); return; }
+    const v = this.traffic.lots.get(key);
+    if (!v || v.level === LV.EMPTY || this.starterIn(v)) { this.dropLot(key); return; }
+    this.placeLot(key, { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, { use: v.use, level: v.level, decline: v.decline, seed: v.seed });
+  }
+  /** a non-auto building (not a car) in the lot's box: the starter town's houses win over the lot */
+  private starterIn(v: LotView): boolean {
+    const x = v.o[0], y = v.o[1], ax = v.u[0] * v.w, ay = v.u[1] * v.w, bx = v.n[0] * v.d, by = v.n[1] * v.d, b = this.lotBox;
+    b[0] = Math.min(x, x + ax, x + bx, x + ax + bx); b[1] = Math.min(y, y + ay, y + by, y + ay + by);
+    b[2] = Math.max(x, x + ax, x + bx, x + ax + bx); b[3] = Math.max(y, y + ay, y + by, y + ay + by);
+    this.lotHits.clear(); this.propGrid.query(b, this.lotHits);
+    for (const p of this.lotHits) { const it = LIBRARY[p.item]; if (!p.auto && it.big && it.kind !== 'car') return true; }
+    return false;
+  }
+  /** the lot's props and ground go */
+  private dropLot(key: string) {
+    const old = this.lotProps.get(key);
+    if (old) { for (const p of old) if (this.props.has(p)) { this.removeProp(p); this.perf.lotProps--; } this.lotProps.delete(key); }
+    this.setLotGround(key, null);
+  }
+  /** composes a lot and adds its props (auto 'lot:' + key: never saved, and the tools ignore them) and its ground patches */
+  private placeLot(key: string, g: LotGeom, st: ComposeState) {
+    this.dropLot(key);
+    const c = compose(g, st), ps: Prop[] = [];
+    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
+    this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
+    this.setLotGround(key, c.ground);
+  }
   /** median trees, roundabout trees and traffic lights follow the road network (only what the last rebuild changed) */
   private syncAutoProps(added: AutoProp[], removed: AutoProp[]) {
     for (const a of removed) { const p = this.autoByKey.get(autoKey(a)); if (p) this.removeProp(p); }
@@ -261,14 +314,16 @@ export class Game {
       const p = this.addProp(item, a.x - b.dx * scale / 2, a.y - b.dy * scale / 2, false, scale); p.auto = k; this.autoByKey.set(k, p);
     }
   }
-  /** building footprints for the planner map (debounced: many edits, one message) */
-  private scheduleBlocks() {
+  /** building footprints for the planner map (debounced: many edits, one message); the town's lots wait, at most one refresh per LOT_BLOCKS_MS */
+  private scheduleBlocks(lot = false) {
     if (!this.ready) return;
+    if (lot) { if (!this.lotBlocksTimer) this.lotBlocksTimer = window.setTimeout(() => { this.lotBlocksTimer = 0; this.sendBlocks(true); }, Math.max(0, this.blocksAt + LOT_BLOCKS_MS - performance.now())); return; }
     clearTimeout(this.blocksTimer); this.blocksTimer = window.setTimeout(() => this.sendBlocks(true), 400);
   }
   private sendBlocks(invalidate: boolean) {
     const out: number[] = [];
     for (const p of this.props) { const it = LIBRARY[p.item]; if (!it.big || it.kind === 'car') continue; out.push(p.x0, p.y0, p.x1, p.y1, BUILDING_KINDS[it.kind] ?? 2); }
+    this.blocksAt = performance.now();
     this.ground.blocks(new Float32Array(out));
     if (invalidate) this.ground.invalidate([0, 0, MAP, MAP], false, 0, 'p');
   }
@@ -536,16 +591,18 @@ export class Game {
   benchMode = false;
   async save() {
     if (this.benchMode) return 0;
-    const d: SaveV4 = {
+    const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed,
       segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style, s.kind]),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain').map(n => [n.x, n.y, n.type]),
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.money, day: this.day, cam: { ...this.cam },
+      lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
+      simT: this.traffic.simTime(performance.now()),
     };
     try { return await writeSave(d); } catch { return 0; }
   }
-  private load(d: SaveV4): boolean {
+  private load(d: SaveV5): boolean {
     try {
       this.genTerrain(d.seed);
       for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle, [(kind ?? 0) as SegKind]);
@@ -561,6 +618,8 @@ export class Game {
     this.edit.clear();
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
+    for (const k of this.lotProps.keys()) this.setLotGround(k, null);
+    this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.money = 80000; this.day = 1; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
@@ -568,6 +627,23 @@ export class Game {
     this.seedTown(); this.afterLoad(); void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
   }
   clearTown() { this.reset(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
+  /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed
+   *  directly (no town) with a use from uses (cycled), the level, decline and seed + i. The states hold until the next reset. */
+  stageLots(o: { cols: number; rows: number; uses: number[]; level: number; decline: number; seed: number }) {
+    this.reset(); this.afterLoad();
+    const W = o.cols * BLOCK, H = o.rows * BLOCK, c = tileOf(this.cam.X, this.cam.Y);
+    const x0 = clamp(Math.round(c.x - W / 2), 8, MAP - 8 - W), y0 = clamp(Math.round(c.y - H / 2), 8, MAP - 8 - H);
+    const legs: Leg[] = [];
+    for (let i = 0; i <= o.cols; i++) legs.push({ a: { x: x0 + i * BLOCK, y: y0 }, b: { x: x0 + i * BLOCK, y: y0 + H } });
+    for (let j = 0; j <= o.rows; j++) legs.push({ a: { x: x0, y: y0 + j * BLOCK }, b: { x: x0 + W, y: y0 + j * BLOCK } });
+    this.edit.addLegs(legs, CLASS.street, 0);
+    this.commitNetwork();
+    const { added } = new LotMap().update(this.net, this.terrain.cls);
+    added.forEach((l, i) => {
+      const g: LotGeom = { o: l.o, u: l.u, n: l.n, w: l.w, d: l.d }, st: ComposeState = { use: o.uses[i % o.uses.length]!, level: o.level, decline: o.decline, seed: o.seed + i };
+      this.staged.set(l.key, { g, st }); this.placeLot(l.key, g, st);
+    });
+  }
 
   /** A starter Maple Falls showing every road type: highway with a 45° approach, a boulevard, an avenue, a roundabout, lights with slipways, streets and a lane. */
   seedTown() {
@@ -676,7 +752,7 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
-    this.flushLotGround();
+    this.applyLotQueue(); this.flushLotGround();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();

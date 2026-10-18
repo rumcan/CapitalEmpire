@@ -8,6 +8,8 @@ import type { LibItem } from '../types';
 import type { LotPatch } from '../ground-protocol';
 import { mulberry } from '../iso';
 import type { Lot } from './lots';
+/** the lot geometry compose reads (a LotView or a Lot) */
+export type LotGeom = Pick<Lot, 'o' | 'u' | 'n' | 'w' | 'd'>;
 import { LU, LV } from './town';
 import { OWNER_SCALE } from './scales';
 
@@ -113,7 +115,7 @@ class Build {
   noCars = false; cap = 28;
   readonly r: () => number;
 
-  constructor(lot: Lot, r: () => number) {
+  constructor(lot: LotGeom, r: () => number) {
     this.o = lot.o; this.u = lot.u; this.n = lot.n; this.W = lot.w; this.D = lot.d; this.r = r;
     const rx = -lot.n.x, ry = -lot.n.y;
     this.flip = Math.abs(rx) > Math.abs(ry);
@@ -407,7 +409,7 @@ function vacant(B: Build) {
 }
 
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed. */
-export function compose(lot: Lot, st: ComposeState): Composition {
+export function compose(lot: LotGeom, st: ComposeState): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
   B.noCars = st.decline >= 3;
   if (st.use === LU.NONE || st.level === LV.EMPTY) vacant(B);

@@ -7,7 +7,7 @@ import { facings } from '../traffic';
 import { worldX, worldY } from '../iso';
 import { POINT_STRIDE } from '../gl';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
-import type { TownEvent } from '../lots/town';
+import type { LotTuple, TownEvent } from '../lots/town';
 import type { Leg } from '../network';
 import { VTYPES } from './sim';
 
@@ -19,8 +19,8 @@ const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, 
 /** half a car's length per vehicle type, tiles (the lights sit at its front and rear) */
 const HALF = VTYPES.map(v => v.len / 4);
 
-/** a parcel as the worker sent it, with the town's use, level and decline (0, 0, 0 = EMPTY) */
-export interface LotView extends LotRec { use: number; level: number; decline: number }
+/** a parcel as the worker sent it, with the town's use, level, decline, the lot's seed and the sim s of its last change (0, 0, 0, 0, 0 = EMPTY) */
+export interface LotView extends LotRec { use: number; level: number; decline: number; seed: number; since: number }
 
 /** point counts of SimClient.lights: the lamps (small points, written first) and the beam glows */
 export interface LightCounts { small: number; beams: number }
@@ -70,6 +70,8 @@ export class SimClient {
   terrain(cls: Uint8Array, entry: [number, number], seed: number) { this.post({ t: 'terrain', cls, entry, seed }); }
   /** the town's growth option by id (see GROWTH_OPTIONS) */
   setOption(id: string) { this.option = id; this.post({ t: 'option', id }); }
+  /** a saved town for the worker (its lots and the sim clock, s): after the net ops of a load */
+  townState(lots: LotTuple[], simT: number) { this.post({ t: 'townState', lots, simT }); }
   /** sets the number of cars the sim keeps on the network */
   setTarget(n: number) { this.target = n; this.post({ t: 'target', n }); }
   /** the sim speed: 0 pauses, 1 is real time, 2, 4 and 8 are faster */
@@ -86,7 +88,7 @@ export class SimClient {
       this.onGrow?.(legs); return;
     }
     if (m.t === 'town') {
-      for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; } }
+      for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; } }
       this.pop = m.pop; this.jobs = m.jobs; this.built = m.built;
       this.onTown?.(m.events); return;
     }
@@ -99,7 +101,7 @@ export class SimClient {
     const keep = new Set<string>();
     for (const r of added) keep.add(r.key);
     for (const k of removed) if (!keep.has(k)) this.lots.delete(k);
-    for (const r of added) { const old = this.lots.get(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0 }); }
+    for (const r of added) { const old = this.lots.get(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
   }
   private resize(cap: number) {
     this.n = cap; this.prev = null;

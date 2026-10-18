@@ -1,10 +1,12 @@
-/** Saves: gzip-compressed JSON in IndexedDB. v4 stores only the map seed: the valley is regenerated from it.
- *  Old v2 saves (160-tile maps in localStorage) and v3 saves (with the painted terrain) are migrated. */
+/** Saves: gzip-compressed JSON in IndexedDB. v4 stores only the map seed: the valley is regenerated from it. v5 adds the town's
+ *  lots and the sim clock. Old v2 saves (160-tile maps in localStorage), v3 saves (with the painted terrain) and v4 saves (no lots)
+ *  are migrated. */
 import { MAP } from './iso';
 import type { SaveData } from './types';
+import type { LotTuple } from './lots/town';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 function idb(): Promise<IDBDatabase> {
   return new Promise((res, rej) => { const r = indexedDB.open(DB, 1); r.onupgradeneeded = () => r.result.createObjectStore(STORE); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
@@ -20,7 +22,7 @@ async function gunzip(buf: ArrayBuffer) { return new Response(new Blob([buf]).st
 export function rle(a: Uint8Array) { const out: number[] = []; for (let i = 0; i < a.length;) { const v = a[i]; let j = i + 1; while (j < a.length && a[j] === v) j++; out.push(v, j - i); i = j; } return out; }
 export function unrle(runs: number[], out: Uint8Array) { let o = 0; for (let k = 0; k + 1 < runs.length; k += 2) { out.fill(runs[k], o, o + runs[k + 1]); o += runs[k + 1]; } return out; }
 
-export interface SaveV4 {
+export interface SaveV5 {
   version: number; map: number;
   /** the map seed: generateTerrain(seed) rebuilds the valley */
   seed: number;
@@ -31,6 +33,10 @@ export interface SaveV4 {
   /** library id, x, y, flip, scale */
   props: [string, number, number, number, number][];
   money: number; day: number; cam?: { X: number; Y: number; z: number };
+  /** the town's lots that are not EMPTY: key, use, level, decline, seed, since (v5; missing = none) */
+  lots?: LotTuple[];
+  /** the sim clock, s, so the construction timers go on (v5) */
+  simT?: number;
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',
@@ -43,21 +49,26 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
   'world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood',
   'gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line'];
 
-export async function writeSave(d: SaveV4) { const buf = await gzip(JSON.stringify(d)); await idbDo('readwrite', s => s.put(buf, SLOT)); return buf.byteLength; }
-export async function readSave(): Promise<SaveV4 | null> {
+export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify(d)); await idbDo('readwrite', s => s.put(buf, SLOT)); return buf.byteLength; }
+/** a parsed save of any version we read as the current one (null if it is not ours or not a version we read) */
+export function upgradeSave(d: { version: number; map: number } & Partial<SaveV5>): SaveV5 | null {
+  if (d.map !== MAP) return null;
+  if (d.version === SAVE_VERSION) return d as SaveV5;
+  // v4: the same town, no lots yet
+  if (d.version === 4) return { ...(d as SaveV5), version: SAVE_VERSION };
+  // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
+  if (d.version === 3) return { version: SAVE_VERSION, map: MAP, seed: d.seed ?? 1, segs: d.segs!, nodes: d.nodes!, props: d.props!, money: d.money!, day: d.day!, cam: d.cam };
+  return null;
+}
+export async function readSave(): Promise<SaveV5 | null> {
   try {
     const buf = await idbDo<ArrayBuffer | undefined>('readonly', s => s.get(SLOT));
-    if (buf) {
-      const d = JSON.parse(await gunzip(buf)) as SaveV4 & { terrain?: unknown };
-      if (d.version === SAVE_VERSION && d.map === MAP) return d;
-      // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
-      if (d.version === 3 && d.map === MAP) return { version: SAVE_VERSION, map: MAP, seed: d.seed ?? 1, segs: d.segs, nodes: d.nodes, props: d.props, money: d.money, day: d.day, cam: d.cam };
-    }
+    if (buf) { const d = upgradeSave(JSON.parse(await gunzip(buf))); if (d) return d; }
   } catch { /* no IndexedDB (private window): fall through */ }
   return migrateV2();
 }
 /** a v2 save (160-tile map) moved into the centre of the big map; its painted terrain is dropped (seed 1) */
-function migrateV2(): SaveV4 | null {
+function migrateV2(): SaveV5 | null {
   try {
     const raw = localStorage.getItem(V2_KEY); if (!raw) return null;
     const d = JSON.parse(raw) as SaveData; if (d.version !== 2) return null;

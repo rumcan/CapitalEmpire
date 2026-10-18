@@ -118,6 +118,12 @@ function netOps(ops: NetOp[]) {
   lotsOps();
 }
 
+/** a saved town (after the load's net ops): the sim clock, then the lots' states; the restored lots post as completed */
+function townStateOps(m: Extract<ToSim, { t: 'townState' }>) {
+  sim.t = m.simT;
+  postTown(town.restore(m.lots, sim.t), true);
+}
+
 /** after a network batch: the parcels that changed, the reachable segs, the town's lots; posts the changes */
 function lotsOps() {
   const t0 = performance.now();
@@ -156,6 +162,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'target': sim.setTarget(m.n); forcePost = true; break;
       case 'speed': speed = m.k; break;
       case 'option': optId = m.id; town.option = optionOf(m.id); break;
+      case 'townState': townStateOps(m); break;
     }
   } catch (err) { fail(err); }
 };

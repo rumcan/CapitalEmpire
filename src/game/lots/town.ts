@@ -7,7 +7,9 @@ import { zoneOf } from '../sim/routing';
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
 export const LV = { EMPTY: 0, BUILDING: 1, BUILT: 2, UPGRADED: 3 } as const;
 export interface LotState { key: string; use: number; level: number; decline: number /* 0 ok, 1 shabby, 2 boarded, 3 derelict */; since: number /* sim s of the last change */; seed: number; pop: number; jobs: number }
-export interface TownEvent { key: string; kind: 'build' | 'complete' | 'upgrade' | 'decline' | 'recover' | 'clear' | 'gone'; use: number; level: number; decline: number }
+/** a saved lot: key, use, level, decline, seed, since (sim s of the last change) */
+export type LotTuple = [string, number, number, number, number, number];
+export interface TownEvent { key: string; kind: 'build' | 'complete' | 'upgrade' | 'decline' | 'recover' | 'clear' | 'gone'; use: number; level: number; decline: number; seed: number; since: number }
 export interface GrowthOption { id: string; name: string; w: [number, number, number, number, number] /* RES COM IND TOUR GOV multipliers */ }
 /** the growth options: the multipliers shift the land use scores (and GOV's quota); the player picks one, nothing is placed */
 export const GROWTH_OPTIONS: GrowthOption[] = [
@@ -75,7 +77,7 @@ export class Town {
     for (const l of added) keep.add(l.key);
     for (const key of removed) {
       const s = this.states.get(key); if (!s || keep.has(key)) continue;
-      ev.push({ key, kind: 'gone', use: s.use, level: s.level, decline: s.decline });
+      ev.push({ key, kind: 'gone', use: s.use, level: s.level, decline: s.decline, seed: s.seed, since: s.since });
       this.set(s, LU.NONE, LV.EMPTY, 0, this.t);
       this.candDel(key); this.states.delete(key); this.geo.delete(key);
     }
@@ -87,6 +89,19 @@ export class Town {
       }
     }
     if (added.length || removed.length) this.dirty = true;
+    return ev;
+  }
+
+  /** a saved town on load (after the lots are known): the states of the saved keys that exist, the clock at t (the hour too, so
+   *  no hours are replayed). Returns a 'complete' event per restored lot, so the main thread composes it. */
+  restore(saved: LotTuple[], t: number): TownEvent[] {
+    const ev: TownEvent[] = [];
+    for (const [key, use, level, decline, seed, since] of saved) {
+      const s = this.states.get(key); if (!s || level === LV.EMPTY) continue;
+      s.seed = seed; this.set(s, use, level, decline, since);
+      ev.push({ key, kind: 'complete', use, level, decline, seed, since });
+    }
+    this.t = t; this.hour = Math.floor(t / HOUR);
     return ev;
   }
 
@@ -235,7 +250,7 @@ export class Town {
     this.cand.pop(); this.candDn.pop(); this.candAt.delete(key);
   }
 
-  private evt(s: LotState, kind: TownEvent['kind']): TownEvent { return { key: s.key, kind, use: s.use, level: s.level, decline: s.decline }; }
+  private evt(s: LotState, kind: TownEvent['kind']): TownEvent { return { key: s.key, kind, use: s.use, level: s.level, decline: s.decline, seed: s.seed, since: s.since }; }
 
   /** the seeded stream (mulberry32): [0, 1) */
   private rnd(): number {

@@ -161,7 +161,7 @@ function PerfPanel({ game }: { game: Game }) {
           {GROWTH_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
         </select>
       </div>
-      <div className="flex justify-between text-slate-400"><span>{p.pop.toLocaleString()} pop · {p.jobs.toLocaleString()} jobs</span><span>{p.built.toLocaleString()} built lots</span></div>
+      <div className="flex justify-between text-slate-400"><span>{p.pop.toLocaleString()} pop · {p.jobs.toLocaleString()} jobs</span><span>{p.built.toLocaleString()} built lots · {p.lotProps.toLocaleString()} lot props</span></div>
     </div>
   );
 }

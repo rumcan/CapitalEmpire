@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg, type Pt } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { GROWTH_OPTIONS, LU, LV, Town, zoneGrowth, type LotState, type TownCtx, type TownEvent } from '../src/game/lots/town';
+import { GROWTH_OPTIONS, LU, LV, Town, zoneGrowth, type LotState, type LotTuple, type TownCtx, type TownEvent } from '../src/game/lots/town';
 import { zoneOf } from '../src/game/sim/routing';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
@@ -120,11 +120,34 @@ test('onLots with removed keys emits gone and takes the lot out of pop and jobs'
   const { town } = run(lm, lots, 9, 6);
   const s = finished(town).find(q => q.pop + q.jobs > 0)!;
   assert.ok(s, 'a finished lot with pop or jobs');
-  const { key, use, level, decline, pop, jobs } = s;
+  const { key, use, level, decline, pop, jobs, seed, since } = s;
   const pop0 = town.pop, jobs0 = town.jobs;
   const ev = town.onLots([], [key]);
-  assert.deepEqual(ev, [{ key, kind: 'gone', use, level, decline }]);
+  assert.deepEqual(ev, [{ key, kind: 'gone', use, level, decline, seed, since }]);
   assert.equal(town.pop, pop0 - pop);
   assert.equal(town.jobs, jobs0 - jobs);
   assert.ok(!town.states.has(key));
+});
+
+test('restore: a saved town comes back with the same pop, jobs and built lots, and a complete event per restored lot', () => {
+  const { lm, lots } = gridLots();
+  const { town } = run(lm, lots, 4, 8);
+  const saved: LotTuple[] = [...town.states.values()].filter(s => s.level !== LV.EMPTY).map(s => [s.key, s.use, s.level, s.decline, s.seed, s.since]);
+  assert.ok(saved.length > 10, 'some lots built');
+  const back = new Town(4);
+  back.onLots(lots, []);
+  const ev = back.restore(saved, town.t);
+  assert.equal(back.pop, town.pop);
+  assert.equal(back.jobs, town.jobs);
+  assert.equal(back.built, town.built);
+  assert.equal(back.t, town.t);
+  assert.equal(ev.length, saved.length);
+  assert.ok(ev.every(e => e.kind === 'complete'));
+  for (const [key, use, level, decline, seed, since] of saved) {
+    const s = back.states.get(key)!;
+    assert.deepEqual([s.use, s.level, s.decline, s.seed, s.since], [use, level, decline, seed, since]);
+  }
+  // the keys that no longer exist are dropped
+  const gone = new Town(4); gone.onLots(lots.slice(1), []);
+  assert.equal(gone.restore([[lots[0].key, LU.RES, LV.BUILT, 0, 1, 0]], 0).length, 0);
 });
