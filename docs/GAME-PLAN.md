@@ -41,6 +41,22 @@ The game is played in **rounds** of three stages. This replaces the single-town 
 idea of plan v3 (written the same day and dropped). Everything below this section (the road builder, the traffic
 sim, the towns' own growth, the bottleneck tools, the budget machinery) carries over and is used by it.
 
+#### 1.0.00 The businesses (v5, the owner, 2026-10-18 evening)
+**You are both the entrepreneur and the town planner.** The player starts **businesses**; the first is the stadium, and
+others stem from it: bus services, taxi services, commercial tourism linked to an attraction (a bass-fishing resort and
+then a fish-and-tackle shop; a golf course and then a private golf estate whose lots you sell; a casino and then hotels),
+and more. The owner's answers (2026-10-18):
+- **Placing:** the player picks the spot and pays to build a business (any valid land, like a big lot); where it stands
+  decides how hard its traffic is. The stadium's events run as today's rounds.
+- **Unlocks: a business tree by success:** each business unlocks its spin-offs when it does well (the stadium at Level 2:
+  a bus company and a sports bar; a fishing resort: a tackle shop; a golf course: estate lots to sell; a casino: hotels).
+  The level-up cards become upgrades for businesses and roads.
+- **Revenue: per visitor who arrives** (ticket, fare, green fee, room night), so traffic still decides the income; the
+  towns supply the customers, and tourists come in from the highway as the businesses grow; upkeep runs on every business.
+- **Order:** after the core road fixes (roundabouts, the road catalogue, snapping, the junction editor); the business
+  layer replaces Phase 6's events; then highways, hillier terrain and the towns as seeds.
+- Also (owner): the town's normal growth adds small public car parks on open lots.
+
 #### 1.0.0 Changes of 2026-10-18 evening (the owner)
 - **The towns start as small seeds** (a few streets inside their footprint); **the player builds town streets too**; the
   towns' own growth roads join only local streets, never the main road classes; **a growth target unlocks the events**.

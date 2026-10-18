@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18 evening, Phase 5 done; Phase 6 paused after step 1 (actuated signals); Phase 6R (roads first: the owner's direction) in progress. Nothing pushed._
+_Last updated: 2026-10-18 evening, Phase 5 done; Phase 6 step 1 (actuated signals) done; Phase 6R (roads first) in progress, then Phase B (businesses: the owner's v5 pivot). Nothing pushed._
 
 ## Where we are
 
@@ -1050,6 +1050,12 @@ Steps (each verified, committed, written up here):
    town streets; the town's growth roads join only local streets (gravel, lane, street), never the main road classes;
    **a growth target unlocks the events** (the stadium at 1,500 residents across the three towns; later events need more).
 8. **A check of the whole road set** (screenshot tests per type and junction; a sim capacity test per junction type).
+
+**Order changed (the owner, 2026-10-18 evening, GAME-PLAN 1.0.00 "the businesses"):** steps 1–4 (roundabouts, the
+catalogue, snapping, the junction editor), then **Phase B, the business layer** (the player places and pays for
+businesses, the stadium first; a business tree unlocked by success; revenue per visitor who arrives; cards become
+upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, towns as seeds, the road set check). Also:
+small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first (Phase 6 is in
