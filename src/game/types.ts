@@ -44,7 +44,7 @@ export interface Prop {
   auto?: string;
 }
 
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll';
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
 

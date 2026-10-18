@@ -8,7 +8,7 @@ import { GROWTH_OPTIONS } from './game/lots/town';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, classUnlocked, junctionUnlocked, unlockOf } from './game/career';
-import { LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './game/event/config';
+import { BUS_ROUTE_COST, BUS_SEATS, LOT_TILE_COST, PARTY, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './game/event/config';
 import type { SurgeView, TownResult } from './game/event/surge';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
@@ -18,6 +18,7 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
   { id: 'park', label: 'Car park', key: 'P', icon: '🅿️' },
   { id: 'toll', label: 'Toll gate', key: 'T', icon: '🛂' },
+  { id: 'bus', label: 'Bus route', key: 'U', icon: '🚌' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** the price line of a locked road class or junction type: the residents it unlocks at */
@@ -152,6 +153,7 @@ export default function App() {
               )}
               {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
+              {game.tool === 'bus' && <BusPanel game={game} />}
               {game.tool === 'select' && <SelectPanel game={game} />}
             </div>
           </div>
@@ -292,26 +294,31 @@ function BudgetPanel({ game }: { game: Game }) {
     </div>
   );
 }
-/** the surge's per-town lines and its total (the live counts, or the result's at kick-off): the town's letter, parked of sent, the rest, and a note
- *  when no car park is reachable; the total line is arrived (parked) of sent, the rate, and the fans the cars stand for (PARTY each) */
-function SurgeTowns({ rows, total }: { rows: { sent: number; parked: number; stranded: number; rest: string }[]; total?: { parked: number; sent: number } }) {
-  const P = total?.parked ?? 0, S = total?.sent ?? 0;
+/** the surge's per-town lines and its total (the live counts, or the result's at kick-off): the town's letter, parked of sent, the fans, and a note
+ *  when no car park is reachable (the rest on a second line); the total line is the fans arrived of the fans sent (PARTY per car), and the rate */
+function SurgeTowns({ rows, total }: { rows: TownRow[]; total?: { fans: number; sent: number } }) {
+  const F = total?.fans ?? 0, S = total?.sent ?? 0;
   return (
     <div className="space-y-0.5">
       {rows.map((w, k) => (
-        <p key={k} className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} · {w.rest}{w.stranded > 0 ? ' · no car park reachable' : ''}</p>
+        <div key={k}>
+          <p className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} cars · at the stop {w.atStop} · on buses {w.onBus} · arrived {w.fans} fans{w.stranded > 0 ? ' · no car park reachable' : ''}</p>
+          {w.rest && <p className="text-[10px] tabular-nums text-slate-400">{w.rest}</p>}
+        </div>
       ))}
-      {total && <p className="text-xs font-semibold tabular-nums text-slate-100">Arrived {P}/{S} ({S ? Math.round(100 * P / S) : 0}%) ({S * PARTY} fans)</p>}
+      {total && <p className="text-xs font-semibold tabular-nums text-slate-100">Arrived {F}/{S * PARTY} fans ({S ? Math.round(100 * F / (S * PARTY)) : 0}%)</p>}
     </div>
   );
 }
-/** the surge's live rows: the cars on the road, turned away and lost per town */
-function liveRows(v: SurgeView): { sent: number; parked: number; stranded: number; rest: string }[] {
-  return v.sent.map((sent, k) => ({ sent, parked: v.parked[k]!, stranded: v.stranded[k]!, rest: `on the road ${v.onRoad[k]}` + (v.turned[k] ? ` · turned ${v.turned[k]}` : '') + ` · lost ${v.lost[k]}` }));
+/** a town's row in SurgeTowns: the cars sent and parked, stranded (no car park reachable), the fans at the doors, at a lot stop and on a bus, and the rest of its counts */
+interface TownRow { sent: number; parked: number; stranded: number; fans: number; atStop: number; onBus: number; rest: string }
+/** the surge's live rows: the cars on the road, turned away and lost per town, and the fans per town */
+function liveRows(v: SurgeView): TownRow[] {
+  return v.sent.map((sent, k) => ({ sent, parked: v.parked[k]!, stranded: v.stranded[k]!, fans: v.fans[k]!, atStop: v.atStop[k]!, onBus: v.onBus[k]!, rest: `on the road ${v.onRoad[k]}` + (v.turned[k] ? ` · turned ${v.turned[k]}` : '') + ` · lost ${v.lost[k]}` }));
 }
-/** the result's rows: the cars turned away, lost and late (on the road or never left at kick-off) per town */
-function resultRows(by: TownResult[]): { sent: number; parked: number; stranded: number; rest: string }[] {
-  return by.map(t => ({ sent: t.sent, parked: t.parked, stranded: t.stranded, rest: `turned ${t.turned} · lost ${t.lost} · late ${t.late}` }));
+/** the result's rows: the cars turned away, lost and late (on the road or never left at kick-off) per town, and the fans per town */
+function resultRows(by: TownResult[]): TownRow[] {
+  return by.map(t => ({ sent: t.sent, parked: t.parked, stranded: t.stranded, fans: t.fans, atStop: t.atStop, onBus: t.onBus, rest: `turned ${t.turned} · lost ${t.lost} · late ${t.late}` }));
 }
 
 /** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock;
@@ -328,7 +335,7 @@ function RoundPanel({ game }: { game: Game }) {
               <span className="text-sm font-semibold text-slate-100">Run {r.runs + 1}</span>
               <div className="flex gap-1">{goBtn}<button className="chip chip-on" onClick={() => game.startRound()}>Start the event</button></div>
             </div>
-            {last && <p className="text-xs text-slate-300">Last run: {last.arrived}/{last.sent} arrived ({Math.round(last.rate * 100)}%)</p>}
+            {last && <p className="text-xs text-slate-300">Last run: {last.arrived}/{last.sent * PARTY} fans arrived ({Math.round(last.rate * 100)}%)</p>}
           </div>
         )}
         {r.stage === 'build' && (
@@ -347,7 +354,7 @@ function RoundPanel({ game }: { game: Game }) {
               <span className="text-2xl font-bold tabular-nums text-amber-200">Kick-off in {mmss(Math.ceil(r.surgeLeft))}</span>
               {goBtn}
             </div>
-            {r.surge && <SurgeTowns rows={liveRows(r.surge)} total={{ parked: r.surge.parked.reduce((a, b) => a + b, 0), sent: r.surge.sent.reduce((a, b) => a + b, 0) }} />}
+            {r.surge && <SurgeTowns rows={liveRows(r.surge)} total={{ fans: r.surge.fans.reduce((a, b) => a + b, 0), sent: r.surge.sent.reduce((a, b) => a + b, 0) }} />}
             <p className="text-xs text-slate-300">{crowd}</p>
             <p className="text-xs text-slate-400">upkeep {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
@@ -355,7 +362,7 @@ function RoundPanel({ game }: { game: Game }) {
         {r.stage === 'eval' && (
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-slate-100">Event over{last ? ` · ${last.arrived}/${last.sent} arrived (${Math.round(last.rate * 100)}%)` : ''}</span>
+              <span className="text-sm font-semibold text-slate-100">Event over{last ? ` · ${last.arrived}/${last.sent * PARTY} fans arrived (${Math.round(last.rate * 100)}%)` : ''}</span>
               <button className="chip chip-on" onClick={() => game.closeRound()}>Back to the valley</button>
             </div>
             {last?.byTown && <SurgeTowns rows={resultRows(last.byTown)} />}
@@ -595,6 +602,33 @@ function TollPanel({ game }: { game: Game }) {
   );
 }
 
+/** the bus route tool: how a route works (fans walk to the lot stop, the buses carry them to the doors), its buses and seats, its cost (the first is
+ *  free), and the routes (Go) */
+function BusPanel({ game }: { game: Game }) {
+  const cost = game.busDefs.length ? BUS_ROUTE_COST : 0;
+  return (
+    <Panel title="Bus route">
+      <p className="text-xs leading-relaxed text-slate-300">
+        <b className="text-slate-100">Click a road beside a car park, then a road near the stadium.</b> Fans walk from the bays to the stop and queue there; the buses carry them to the doors. Without a route they walk all the way. Esc cancels; with Bulldoze (X), click a stop to remove its route (no refund).
+      </p>
+      <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
+        <div className="flex justify-between"><span className="text-slate-400">Buses per new route</span><span>{START_BUSES}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Seats per bus</span><span>{BUS_SEATS}</span></div>
+        <div className="flex justify-between"><span className="text-slate-400">Cost of a new route</span><span className={cost > game.money ? 'text-red-300' : 'text-emerald-300'}>{cost ? money(cost) : 'free (the starting kit)'}</span></div>
+      </div>
+      <div className="mt-2 max-h-64 overflow-y-auto">
+        {game.busDefs.length === 0 && <p className="text-xs text-slate-400">No bus routes yet.</p>}
+        {game.busDefs.map(d => (
+          <div key={d.id} className="flex items-center justify-between gap-2 py-1 text-xs">
+            <span className="tabular-nums text-slate-200">#{d.id} · car park #{d.park} · {d.buses} buses · {d.seats} seats</span>
+            <button className="btn" onClick={() => game.goToBus(d.id)}>Go</button>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 function JunctionPanel({ game }: { game: Game }) {
   const n = game.hoverNode;
   return (
@@ -682,6 +716,7 @@ function hintFor(g: Game) {
     case 'bulldoze': return 'Click objects or roads to remove them';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
+    case 'bus': return g.busPick ? 'BUS ROUTE: click a road near the stadium for the doors stop · Esc cancels' : 'BUS ROUTE: click a road beside a car park for the lot stop · with Bulldoze (X), click a stop to remove its route (no refund)';
     default: return 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
   }
 }

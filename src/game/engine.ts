@@ -13,7 +13,9 @@ import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { insideSite, type Site } from './event/site';
-import { BAY_D, BAY_W, BOOTH_W, PLAZA_LEN, START_BOOTHS, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './event/config';
+import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice } from './event/config';
+import type { BusRouteDef } from './event/bus';
+import walkersUrl from '../assets/characters/walkers.png';
 import { plazaEdge, plazaIslands, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
 import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
@@ -42,6 +44,24 @@ export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: 
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
 /** a filled disc of radius r at (x, y) in device px (the overlay's identity transform), colour col */
 function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, col: string) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); }
+/** a bus stop's marker at (x, y) in device px: a rounded amber square of half side 6 px with a white B */
+function busStop(ctx: CanvasRenderingContext2D, x: number, y: number, dpr: number) {
+  const r = 6 * dpr;
+  ctx.beginPath(); ctx.roundRect(x - r, y - r, 2 * r, 2 * r, 2.5 * dpr); ctx.fillStyle = '#ffbe3c'; ctx.fill(); ctx.strokeStyle = '#4a3200'; ctx.lineWidth = dpr; ctx.stroke();
+  ctx.font = `bold ${9 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff'; ctx.fillText('B', x, y + 0.5 * dpr);
+  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+}
+/** the distance, tiles, from point p to the rect (x, y, w, h): 0 inside it */
+function rectDist(p: Pt, x: number, y: number, w: number, h: number): number { return Math.hypot(Math.max(x - p.x, 0, p.x - x - w), Math.max(y - p.y, 0, p.y - y - h)); }
+/** the walkers' sheet: 12 cells of 32 px in one row (hero h, frame f in cell 4h + f), made on first use (the overlay) */
+let walkSheet: HTMLImageElement | null = null;
+/** one walker drawn from the sheet: cell (hero, frame), its feet at tile (x, y), h device px tall; the projection as screen() (ze, X0, Y0 the camera's scale
+ *  and centre, cw, ch the view in device px); off the view it is skipped */
+function walkerSprite(ctx: CanvasRenderingContext2D, sheet: HTMLImageElement, x: number, y: number, hero: number, frame: number, ze: number, X0: number, Y0: number, cw: number, ch: number, h: number) {
+  const px = (worldX(x, y) - X0) * ze + cw / 2, py = (worldY(x, y) - Y0) * ze + ch / 2;
+  if (px < -h || px > cw + h || py < -h || py > ch + h) return;
+  ctx.drawImage(sheet, (4 * hero + frame) * 32, 0, 32, 32, px - h / 2, py - h, h, h);
+}
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
@@ -142,6 +162,10 @@ export class Game {
    *  whether R has flipped the way in, and the toll tool's plan at the cursor (seg null: no road within 4 tiles; why: the reason it cannot be built, '' if it can) */
   tollDefs: TollDef[] = []; private tollSegs = new Map<number, Seg>(); private tollGround = new Set<string>(); tollBooths = START_BOOTHS; private tollFlip = false;
   private tollHover: null | { mx: number; my: number; seg: Seg | null; a: Pt; b: Pt; why: string; cost: number; booths: number } = null;
+  /** the shuttle bus routes as the player drew them (saved; ids 1..n, a route's index is its sim index), the bus tool's first stop once it is chosen (its
+   *  road point, tiles, and its car park's id; null until then), and the tool's plan at the cursor (see busUpdate: the stop it would place, x, y, and why not) */
+  busDefs: BusRouteDef[] = []; busPick: { x: number; y: number; park: number } | null = null;
+  private busHover: null | { mx: number; my: number; x: number; y: number; park: number; why: string } = null;
   keys = new Set<string>();
   private listeners = new Set<() => void>();
   private saveTimer = 0; private blocksTimer = 0;
@@ -422,7 +446,8 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
-    this.syncLamps(); if (this.parkDefs.length) this.syncParks(); if (this.tollDefs.length) this.syncTolls(); this.scheduleSave(); this.emit();
+    this.syncLamps(); if (this.parkDefs.length) this.syncParks(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
+    this.scheduleSave(); this.emit();
   }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
@@ -430,11 +455,11 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
-    this.ground.invalidateAll(); this.syncParks(); this.syncTolls(true);
+    this.ground.invalidateAll(); this.syncParks(); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
   }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; this.tollHover = null; } this.tool = t; this.emit(); }
+  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.parkDrag = null; this.tollHover = null; this.busPick = null; this.busHover = null; } this.tool = t; this.emit(); }
   private snapNode(p: Pt): Pt { return { x: clamp(Math.round(p.x), 2, MAP - 2), y: clamp(Math.round(p.y), 2, MAP - 2) }; }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
@@ -628,6 +653,8 @@ export class Game {
       if (k >= 0) { const id = this.parkDefs[k]!.id; this.removePark(k); this.scheduleSave(); this.toast(`Removed car park #${id} (no refund)`); this.emit(); return; }
       const g = this.tollIndexAt(t);
       if (g >= 0) { const id = this.tollDefs[g]!.id; this.removeToll(g); this.scheduleSave(); this.toast(`Removed toll gate #${id} (the road stays; no refund)`); this.emit(); return; }
+      const b = this.busIndexAt(t);
+      if (b >= 0) { const id = this.busDefs[b]!.id; this.removeBus(b); this.scheduleSave(); this.toast(`Removed bus route #${id} (no refund)`); this.emit(); return; }
     }
     const piece = this.net.pieceNear(t); if (!piece) return;
     this.edit.removePiece(piece);
@@ -695,6 +722,7 @@ export class Game {
       case 'road': this.roadClick(mx, my); break;
       case 'junction': this.junctionClick(mx, my); break;
       case 'toll': this.tollUpdate(mx, my); this.tollClick(); break;
+      case 'bus': this.busUpdate(mx, my); this.busClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
       case 'park': { const t = this.tileAt(mx, my), r = Math.round; this.parkDrag = { x0: r(t.x), y0: r(t.y), x1: r(t.x), y1: r(t.y), def: { id: 0, x: 0, y: 0, w: 0, h: 0 }, park: null, why: '', cost: 0, mx, my }; this.dragging = { kind: 'park', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; this.parkUpdate(mx, my); break; }
     }
@@ -712,9 +740,10 @@ export class Game {
     if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg, 5);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
     if (this.tool === 'toll') this.tollUpdate(mx, my);
+    if (this.tool === 'bus') this.busUpdate(mx, my);
   }
   pointerUp() { if (this.dragging?.kind === 'park') this.parkRelease(); this.dragging = null; }
-  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.tollHover = null; }
+  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.tollHover = null; this.busHover = null; }
   doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
@@ -741,6 +770,7 @@ export class Game {
     switch (e.key) {
       case 'Escape':
         if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); break; }
+        if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); break; }
         if (this.route.length) this.cancelRoute(); else { this.selected = null; this.emit(); } break;
       case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
       case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
@@ -757,6 +787,7 @@ export class Game {
       case 'x': case 'X': this.setTool('bulldoze'); break;
       case 'p': case 'P': this.setTool('park'); break;
       case 't': case 'T': this.setTool('toll'); break;
+      case 'u': case 'U': this.setTool('bus'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case '1': case '2': case '3': case '4': case '5': case '6': { const c = CLASSES[+e.key - 1]; if (c) { this.roadClass = c.id; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
@@ -1095,6 +1126,121 @@ export class Game {
     ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
   }
 
+  // ---------- shuttle bus routes (Phase 5 step 6b) ----------
+  /** the road point nearest tile t within r tiles (its projection on the nearest seg's centre line), or null */
+  private roadNear(t: Pt, r: number): Pt | null {
+    let best: Pt | null = null, bd = r;
+    for (const s of this.net.segsNear(t, r)) {
+      const dv = sub(s.b, s.a), L = vlen(dv); if (!L) continue;
+      const u = mul(dv, 1 / L), P = add(s.a, mul(u, clamp(dot(sub(t, s.a), u), 0, L))), d = vlen(sub(t, P));
+      if (d < bd) { bd = d; best = P; }
+    }
+    return best;
+  }
+  /** the bus tool's plan at the cursor: the stop it would place (x, y: a road point within 4 tiles, else the tile under the cursor), the car park of a lot stop
+   *  (park: its id; 0 for a doors stop or none) and why it cannot be placed ('' if it can). The lot stop: a car park within 12 tiles of the road point; the doors
+   *  stop: within 60 tiles of the stadium's rect. Once the first stop is picked, the plan is the doors stop */
+  private busUpdate(mx: number, my: number) {
+    const t = this.tileAt(mx, my), lot = !this.busPick, P = this.roadNear(t, 4);
+    if (!P) { this.busHover = { mx, my, x: t.x, y: t.y, park: 0, why: lot ? 'Click a road beside a car park' : 'Click a road near the stadium' }; return; }
+    if (lot) {
+      let park = 0, bd = 12;
+      for (const d of this.parkDefs) { const q = rectDist(P, d.x, d.y, d.w, d.h); if (q <= bd) { bd = q; park = d.id; } }
+      this.busHover = { mx, my, x: P.x, y: P.y, park, why: park ? '' : 'Click a road beside a car park' };
+    } else {
+      const s = this.site, near = !!s && rectDist(P, s.x, s.y, s.w, s.h) <= 60;
+      this.busHover = { mx, my, x: P.x, y: P.y, park: 0, why: near ? '' : 'Click a road near the stadium' };
+    }
+  }
+  /** the bus tool's click: the first picks the lot stop (its plan must have a car park), the second places the route with the doors stop if it is affordable
+   *  (the first route is free: the starting kit) */
+  private busClick() {
+    const h = this.busHover; if (!h) return;
+    if (h.why) { this.toast(h.why, 'warn'); return; }
+    if (!this.busPick) { this.busPick = { x: h.x, y: h.y, park: h.park }; this.busUpdate(h.mx, h.my); this.emit(); return; }
+    const cost = this.busDefs.length ? BUS_ROUTE_COST : 0, pk = this.busPick;
+    if (cost > this.money) { this.toast(`Not enough money: a bus route costs $${cost.toLocaleString()}`, 'warn'); return; }
+    const id = Math.max(0, ...this.busDefs.map(d => d.id)) + 1;
+    this.busDefs.push({ id, park: pk.park, sx: pk.x, sy: pk.y, dx: h.x, dy: h.y, buses: START_BUSES, seats: BUS_SEATS });
+    if (cost) this.traffic.spend('construction', cost);
+    this.traffic.setBusRoutes(this.busDefs);
+    this.busPick = null; this.puff((pk.x + h.x) / 2, (pk.y + h.y) / 2, 8);
+    this.toast(`Bus route #${id}: ${START_BUSES} buses of ${BUS_SEATS} seats${cost ? ` ($${cost.toLocaleString()})` : ' (the starting kit)'}`, 'good');
+    this.busUpdate(h.mx, h.my); this.scheduleSave(); this.emit();
+  }
+  /** the index of the bus route with a stop within 3 tiles of tile t, or -1 */
+  private busIndexAt(t: Pt): number { return this.busDefs.findIndex(d => Math.hypot(d.sx - t.x, d.sy - t.y) <= 3 || Math.hypot(d.dx - t.x, d.dy - t.y) <= 3); }
+  /** removes bus route k (no refund) and sends the list to the city worker (which plans the buses again) */
+  private removeBus(k: number) { this.busDefs.splice(k, 1); this.traffic.setBusRoutes(this.busDefs); }
+  /** moves the camera to the midpoint of bus route id's stops, keeping the zoom */
+  goToBus(id: number) { const d = this.busDefs.find(q => q.id === id); if (!d) return; const x = (d.sx + d.dx) / 2, y = (d.sy + d.dy) / 2; this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit(); }
+  /** the bus routes over the baked ground: a bus-stop marker at each stop, and at the street and district zooms a thin dashed line between a route's two stops
+   *  (white 30%: a schematic, not the path) */
+  private drawBuses(ctx: CanvasRenderingContext2D) {
+    if (!this.busDefs.length) return;
+    const dpr = this.dpr;
+    if (this.cam.z >= PLANNER_Z) {
+      ctx.beginPath();
+      for (const d of this.busDefs) { const a = this.screen(d.sx, d.sy), b = this.screen(d.dx, d.dy); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
+      ctx.setLineDash([6 * dpr, 4 * dpr]); ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5 * dpr; ctx.stroke(); ctx.setLineDash([]);
+    }
+    for (const d of this.busDefs) { const a = this.screen(d.sx, d.sy), b = this.screen(d.dx, d.dy); busStop(ctx, a.x, a.y, dpr); busStop(ctx, b.x, b.y, dpr); }
+  }
+  /** the shuttle crowd on the map (during a surge and its eval): each lot stop's queue as up to 24 walkers in a 4 x 6 grid 0.7 tiles apart, 1.5 tiles behind the
+   *  kerb (toward the stop's car park), with the count (`n waiting`); each walking group as min(n, 3) walkers 0.4 tiles apart, feet at the tile, the walk cycle
+   *  of hero (group % 3), a frame each 180 ms; below zoom 0.08 each group is a 2 px amber dot. Culled to the view */
+  private drawWalkers(ctx: CanvasRenderingContext2D, now: number) {
+    const W = this.traffic.walkers, S = this.traffic.stops;
+    if (!W.length && !S.length) return;
+    if (!walkSheet) { walkSheet = new Image(); walkSheet.src = walkersUrl; }
+    const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y;
+    const sprites = this.cam.z >= 0.08, h = 0.9 * HH * 2 * ze, tick = now / 180, sheet = walkSheet;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    for (let i = 0; i + 3 < S.length; i += 4) {
+      const sx = S[i]!, sy = S[i + 1]!, q = Math.round(S[i + 2]!), r = S[i + 3]!;
+      const def = this.busDefs[r], park = def ? this.parkDefs.find(p => p.id === def.park) : undefined;
+      let ux = 0, uy = 1;
+      if (park) { const cx = park.x + park.w / 2 - sx, cy = park.y + park.h / 2 - sy, L = Math.hypot(cx, cy); if (L > 0) { ux = cx / L; uy = cy / L; } }
+      const bx = sx + ux * 1.5, by = sy + uy * 1.5;
+      for (let g = 0, nq = sprites ? Math.min(24, q) : 0; g < nq; g++) walkerSprite(ctx, sheet, bx + ((g & 3) - 1.5) * 0.7, by + ((g >> 2) - 2.5) * 0.7, r % 3, Math.floor(tick + g) % 4, ze, X0, Y0, cw, ch, h);
+      if (q > 0) {
+        const px = (worldX(sx, sy) - X0) * ze + cw / 2, py = (worldY(sx, sy) - Y0) * ze + ch / 2, label = `${q} waiting`;
+        ctx.strokeText(label, px, py - 16 * dpr); ctx.fillStyle = '#f8fafc'; ctx.fillText(label, px, py - 16 * dpr);
+      }
+    }
+    if (!sprites) {
+      ctx.fillStyle = '#ffbe3c';
+      for (let i = 0; i + 3 < W.length; i += 4) {
+        const px = (worldX(W[i]!, W[i + 1]!) - X0) * ze + cw / 2, py = (worldY(W[i]!, W[i + 1]!) - Y0) * ze + ch / 2;
+        if (px >= -2 * dpr && px <= cw + 2 * dpr && py >= -2 * dpr && py <= ch + 2 * dpr) ctx.fillRect(px - dpr, py - dpr, 2 * dpr, 2 * dpr);
+      }
+    } else for (let i = 0; i + 3 < W.length; i += 4) {
+      const x = W[i]!, y = W[i + 1]!, k = Math.min(3, Math.round(W[i + 2]!)), idx = i >> 2, frame = Math.floor(tick + idx) % 4;
+      for (let j = 0; j < k; j++) walkerSprite(ctx, sheet, x + (j - (k - 1) / 2) * 0.4, y, idx % 3, frame, ze, X0, Y0, cw, ch, h);
+    }
+    ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+  /** the bus tool's preview at the cursor: once the first stop is picked, a line from it to the plan (white dashed) and the plan's stop; the label: the reason,
+   *  the lot stop's car park, or the doors stop's cost (red when short of the money) */
+  private drawBusPreview(ctx: CanvasRenderingContext2D) {
+    const h = this.busHover; if (!h) return;
+    const dpr = this.dpr, P = this.busPick;
+    if (P) {
+      const a = this.screen(P.x, P.y), b = this.screen(h.x, h.y);
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.setLineDash([6 * dpr, 4 * dpr]); ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5 * dpr; ctx.stroke(); ctx.setLineDash([]);
+      busStop(ctx, a.x, a.y, dpr);
+    }
+    if (!h.why) { const b = this.screen(h.x, h.y); busStop(ctx, b.x, b.y, dpr); }
+    const cost = this.busDefs.length ? BUS_ROUTE_COST : 0, short = !h.why && !!P && cost > this.money, bad = !!h.why || short;
+    const text = h.why || (!P ? `Lot stop · car park #${h.park}` : short ? `Not enough money: $${cost.toLocaleString()}` : cost ? `Bus route · $${cost.toLocaleString()}` : 'Bus route · free (the starting kit)');
+    const x = h.mx * dpr + 14 * dpr, y = h.my * dpr - 12 * dpr;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
+    ctx.fillStyle = bad ? '#fecaca' : '#bbf7d0'; ctx.fillText(text, x, y);
+    ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+  }
+
   // ---------- economy / save ----------
   /** the treasury, $ (the city's books, mirrored from the city worker; spend moves it at once); Infinity with unlimited money (the dev sandbox) */
   get money(): number { return this.traffic.unlimited ? Infinity : this.traffic.budget.money; }
@@ -1130,6 +1276,7 @@ export class Game {
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
       tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
+      buses: this.busDefs.map((d): [number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats]),
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -1143,6 +1290,7 @@ export class Game {
       for (const [id, x, y, flip, scale] of d.props) { const i = index.get(id); if (i !== undefined) this.addProp(i, x, y, !!flip, scale); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
+      if (d.buses) this.busDefs = d.buses.map(([park, sx, sy, dx, dy, buses, seats], k) => ({ id: k + 1, park, sx, sy, dx, dy, buses, seats }));
       if (d.cam) this.cam = { ...d.cam, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) };
       return true;
     } catch (e) { console.error('load failed', e); return false; }
@@ -1153,6 +1301,7 @@ export class Game {
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
+    this.busDefs = []; this.busPick = null; this.busHover = null;
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
@@ -1577,8 +1726,11 @@ export class Game {
     this.drawStadium(ctx);
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
+    this.drawBuses(ctx);
+    this.drawWalkers(ctx, now);
     this.drawTolls(ctx);
     this.drawTollPreview(ctx);
+    this.drawBusPreview(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
       this.setIso(ctx); ctx.beginPath(); ctx.rect(p.x0, p.y0, p.x1 - p.x0, p.y1 - p.y0); ctx.setTransform(1, 0, 0, 1, 0, 0);
