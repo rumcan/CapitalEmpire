@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 5 step 1 done (three towns) and the dev sandbox (fast growth, unlimited money, 20x)._
+_Last updated: 2026-10-18, Phase 5 steps 1–2 done (three towns, the dev sandbox, the frozen clock, the stadium site and the round)._
 
 ## Where we are
 
@@ -805,6 +805,25 @@ Steps (each ends verified, committed and written up here):
      `?stamp=1` (the instant towns), `?money=0`. A badge in the top bar shows what is on. The production build, the
      bench and the gates use the defaults. Also a **20x** speed button. Checked in the browser pane: one town at 1,659
      residents after about a minute at 20x (13 fps in the pane while a thousand lots compose).
+2. **The event site and the round. DONE** (2026-10-18; commits `331655c`, `bb78b25` and the UI commit after it).
+   - **The day clock** (`sim.clock = sim.t + shift`): the time of day, the town's hours, the books' days and the trips'
+     demand read the clock; physics, trip ages, signals and the hourly decay read `sim.t`. A frozen clock keeps the lot
+     trips coming every 60 sim s at the frozen hour's demand, so the evening traffic keeps running. Saved as a shift.
+   - **The config** `src/game/event/config.ts` (build 600 s wall clock, surge 600 sim s, the clock frozen at 18:00, Level 1
+     1,200 cars, parties of 3, +40% per level, the stadium 100 x 80 tiles, 500–1,250 tiles from each town).
+   - **The site** (`event/site.ts`, placed by the game from the terrain and the town centres; the city worker and the
+     engine get the same one): seed 1 (832, 768) at 510–522 tiles from the towns, seed 2 500–510, seed 3 508–936. The
+     score (spread + 0.25 x mean distance) favours the near bound, so the roads to build are about 1 km each.
+     The crowd splits the level's cars over the towns by population.
+   - **The round** (`event/round.ts`, in the city worker): free → build (wall clock; Start now) → surge (sim time to
+     kick-off; pause stops it) → eval → free. Starting freezes the clock at the next 18:00; closing runs it again.
+     Upkeep is paid live while a round runs (the daily rate per sim second; booked in the next ledger's upkeep). A save
+     mid-round restores as free.
+   - **UI**: the stadium as a placeholder footprint (concrete, pitch, four doors, `STADIUM · L1`); roads cannot cross it
+     (the road tool refuses with a toast); the round panel (announce, `Build · 9:56` with the crowd per town, Start now,
+     `Kick-off in`, `Event over · 0/1200 arrived`, Back to the valley). Checked in the browser pane on a stamped valley:
+     the whole loop runs, the clock stands at 18:00 through the round and runs on after it; 10 minutes of round cost
+     $11,237 of upkeep on the stamped towns' streets (balance in step 9).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then GAME-PLAN
