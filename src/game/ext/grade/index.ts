@@ -1,8 +1,8 @@
 /** Grade separation: per-tile elevation profile for bridges over and tunnels under roads. Pure TS. */
 import type { Pt } from '../../network';
 
-/** Existing road segment to clear (centre line and deck height in metres) */
-export interface Crossing { a: Pt; b: Pt; deck: number /* m */ }
+/** Existing road segment to clear: centre line, and deck height in metres above the terrain (0 = ground road) */
+export interface Crossing { a: Pt; b: Pt; deck: number /* m above terrain */ }
 
 /** Elevation profile along a new route */
 export interface Profile {
@@ -12,14 +12,23 @@ export interface Profile {
   z: number[];
   /** kind per sample */
   kinds: ('ground' | 'ramp' | 'bridge' | 'tunnel')[];
-  /** true when ramps fit within route and between crossings */
+  /** true when every ramp fits within the route and between crossings */
   ok: boolean;
   /** reason when not ok */
   why: string;
 }
 
-/** Helpers */
+/** Bridge deck thickness (m): the bridge road surface sits this far above the underside of the upper deck */
+export const DECK_THICKNESS = 1.5;
+/** Default vertical curve constant: curve length (m) = K x |grade change (%)| */
+export const CURVE_K = 15;
+/** Level bridge span beyond each crossing (m): half the crossed road's width (4 m) plus a 2 m margin */
+const BRIDGE_HALF = 6;
+/** Minimum ground (m) between the ramps of two separate structures; closer ones merge into one bridge */
+const MIN_GAP = 10;
 const EPS = 1e-9;
+
+/** Helpers */
 const vlen = (a: Pt, b: Pt) => Math.hypot(b.x - a.x, b.y - a.y);
 
 /** segment intersection of p1-p2 and q1-q2: interior only (excludes endpoints within EPS), returns point or null */
@@ -60,6 +69,14 @@ function pointAt(route: Pt[], legs: ReturnType<typeof routeInfo>['legs'], L: num
   return route[route.length - 1]!;
 }
 
+/** distance along the route (tiles) of point pt, projected onto leg */
+function legAt(leg: { a: Pt; b: Pt; len: number; cum0: number }, pt: Pt): number {
+  const denom = leg.len * leg.len;
+  if (denom <= EPS) return leg.cum0;
+  const tt = ((pt.x - leg.a.x) * (leg.b.x - leg.a.x) + (pt.y - leg.a.y) * (leg.b.y - leg.a.y)) / denom;
+  return leg.cum0 + Math.max(0, Math.min(1, tt)) * leg.len;
+}
+
 /** crossingsOf: find where route crosses existing roads */
 export function crossingsOf(route: Pt[], roads: { a: Pt; b: Pt; deck: number }[]): { at: number; deck: number }[] {
   if (route.length < 2) return [];
@@ -68,286 +85,192 @@ export function crossingsOf(route: Pt[], roads: { a: Pt; b: Pt; deck: number }[]
   for (const road of roads) {
     for (const leg of legs) {
       const pt = segIntersect(leg.a, leg.b, road.a, road.b);
-      if (!pt) continue;
-      // Use projection t along leg: dot(pt - leg.a, leg.b - leg.a)/len^2
-      const denom = leg.len * leg.len;
-      let tt = 0;
-      if (denom > EPS) {
-        const apx = pt.x - leg.a.x, apy = pt.y - leg.a.y;
-        const abx = leg.b.x - leg.a.x, aby = leg.b.y - leg.a.y;
-        tt = (apx * abx + apy * aby) / denom;
-      }
-      tt = Math.max(0, Math.min(1, tt));
-      const at = leg.cum0 + tt * leg.len;
-      out.push({ at, deck: road.deck });
+      if (pt) out.push({ at: legAt(leg, pt), deck: road.deck });
     }
   }
   out.sort((a, b) => a.at - b.at);
   return out;
 }
 
-/** ramp length in tiles for rise (m) at maxGrade (fraction, e.g. 0.06) */
-function rampTiles(riseM: number, maxGrade: number): number {
-  if (Math.abs(riseM) < 1e-9) return 0;
-  return Math.abs(riseM) / (maxGrade * 2);
+/** One ramp on one side of a structure. Distances in metres from the side's route end (the bridge is at D).
+ *  Ground-following up to x0, then a grade that changes with parabolic vertical curves: g0 -> Gs over LA, level Gs
+ *  over P, Gs -> 0 over LC at the bridge. lin = straight fallback that does not fit (not ok). */
+interface Side {
+  x0: number; z0: number; g0: number; Gs: number; LA: number; P: number; LC: number;
+  lin: boolean; slope: number;
+  /** average grade (fraction) the straight fallback needs; Infinity when there is no room at all */
+  need: number;
 }
 
-/** planProfile: elevation profile with clearance and grade limits, vertical curves */
+/** Height at distance x (m from the side's route end) on a side's ramp */
+function sideZ(sd: Side, x: number): number {
+  if (sd.lin) return sd.z0 + sd.slope * x;
+  const v = x - sd.x0;
+  if (v <= sd.LA) return sd.z0 + sd.g0 * v + (sd.LA > EPS ? (sd.Gs - sd.g0) * v * v / (2 * sd.LA) : 0);
+  const zA = sd.z0 + (sd.g0 + sd.Gs) * sd.LA / 2;
+  if (v <= sd.LA + sd.P) return zA + sd.Gs * (v - sd.LA);
+  const w = Math.min(v - sd.LA - sd.P, sd.LC);
+  return zA + sd.Gs * sd.P + (sd.LC > EPS ? sd.Gs * (w - w * w / (2 * sd.LC)) : 0);
+}
+
+/** Ramp starting on the ground at x0 with grade Gs (sign = climb or fall towards the bridge) that lands exactly on T at D.
+ *  Returns the largest x0 (shortest ramp) that fits, or null. The terrain slope at x0 (slopeAt) sets the first curve. */
+function rampFor(gU: (x: number) => number, slopeAt: (x: number) => number, D: number, T: number, Gs: number, K: number): Side | null {
+  const LC = K * 100 * Math.abs(Gs);
+  const probe = (x0: number) => {
+    const z0 = gU(x0), g0 = slopeAt(x0);
+    const LA = K * 100 * Math.abs(Gs - g0);
+    const P = D - x0 - LA - LC;
+    const F = z0 + (g0 + Gs) * LA / 2 + Gs * P + Gs * LC / 2 - T;
+    return { F, P, z0, g0, LA };
+  };
+  const h = Math.max(0.5, D / 400);
+  const n = Math.ceil(D / h);
+  let prevX = 0, prevF = 0, havePrev = false;
+  for (let i = 0; i <= n; i++) {
+    const x0 = Math.max(0, D - i * h);
+    const p = probe(x0);
+    if (p.P < -EPS) { havePrev = false; continue; }
+    if (havePrev && p.F * prevF <= 0) {
+      let lo = x0, flo = p.F, hi = prevX;
+      for (let k = 0; k < 60; k++) {
+        const mid = (lo + hi) / 2, fm = probe(mid).F;
+        if (fm * flo <= 0) hi = mid; else { lo = mid; flo = fm; }
+      }
+      const x = (lo + hi) / 2;
+      const q = probe(x);
+      if (q.P < -1e-6) return null;
+      return { x0: x, z0: q.z0, g0: q.g0, Gs, LA: q.LA, P: Math.max(0, q.P), LC, lin: false, slope: 0, need: 0 };
+    }
+    prevX = x0; prevF = p.F; havePrev = true;
+  }
+  return null;
+}
+
+/** Side ramp to a level bridge at T, D metres from the route end. Tries plateau grades from -G to +G (uphill and downhill
+ *  approaches differ, so a gentler plateau can fit where the full grade cannot) and keeps the shortest ramp that fits.
+ *  If none fits, falls back to a straight line from the ground at the route end to T at D (not ok). */
+function solveSide(gU: (x: number) => number, slopeAt: (x: number) => number, D: number, T: number, G: number, K: number): Side {
+  if (D > EPS) {
+    let best: Side | null = null;
+    const steps = 12;
+    for (let j = -steps; j <= steps; j++) {
+      const sd = rampFor(gU, slopeAt, D, T, G * j / steps, K);
+      if (sd && (!best || sd.x0 > best.x0)) best = sd;
+    }
+    if (best) return best;
+  }
+  const z0 = gU(0);
+  const slope = D > EPS ? (T - z0) / D : 0;
+  return { x0: 0, z0, g0: 0, Gs: 0, LA: 0, P: 0, LC: 0, lin: true, slope, need: D > EPS ? Math.abs(slope) : Infinity };
+}
+
+/** One bridge or tunnel: the crossings it clears, its road height T, and the ramps on each side */
+interface Group {
+  infos: { d: number; T: number }[];
+  d0: number; d1: number; T: number; bL: number; bR: number;
+  left: Side; right: Side;
+}
+
+/** planProfile: elevation profile with clearance, grade limits and vertical curves (K m per %), bridges or tunnels.
+ *  Ramps are worked out against the terrain along the route, each side separately. A structure that cannot fit falls back
+ *  to a straight clamp that still clears its crossings, with ok=false and the average grade it would need. */
 export function planProfile(
   route: Pt[],
   crossings: Crossing[],
   ground: (x: number, y: number) => number,
-  opts: { over: boolean; maxGrade: number; clearance?: number },
+  opts: { over: boolean; maxGrade: number; clearance?: number; k?: number },
 ): Profile {
   const clearance = opts.clearance ?? (opts.over ? 5.5 : 6);
-  const maxGrade = opts.maxGrade;
-  const overhang = 3; // tiles each side of crossing to fully span road width
-  const minGap = 5; // tiles of ground needed between separate bridges
-  const Vc = 4; // vertical curve total length in tiles (both ends combined)
+  const G = opts.maxGrade;
+  const K = opts.k ?? CURVE_K;
 
   if (route.length < 2) {
     return { s: [0], z: [ground(route[0]!.x, route[0]!.y)], kinds: ['ground'], ok: false, why: 'route too short' };
   }
 
   const { legs, L } = routeInfo(route);
-  const pointAtFn = (s: number) => pointAt(route, legs, L, s);
-  const groundAt = (s: number) => {
-    const p = pointAtFn(s);
-    return ground(p.x, p.y);
+  const M = 2 * L; // route length in metres
+  const groundS = (s: number) => { const p = pointAt(route, legs, L, s); return ground(p.x, p.y); };
+  const gAt = (d: number) => groundS(Math.min(Math.max(d, 0), M) / 2); // terrain height at route distance d (m)
+  const slopeOf = (g: (x: number) => number) => (x: number) => {
+    const a = Math.max(0, x - 1), b = Math.min(M, x + 1);
+    return b > a ? (g(b) - g(a)) / (b - a) : 0;
   };
 
-  // Find at positions for each crossing (if not already resolved)
-  type CInfo = { at: number; deck: number; target: number; rise: number; need: number; raw: Crossing };
-  const infos: CInfo[] = [];
-  for (const c of crossings as unknown as (Crossing & { at?: number })[]) {
-    if (typeof (c as unknown as { at: number }).at === 'number') {
-      const at = (c as unknown as { at: number }).at;
-      const deck = (c as Crossing).deck ?? (c as unknown as { deck: number }).deck ?? 0;
-      const target = opts.over ? deck + clearance : deck - clearance;
-      const g = groundAt(at);
-      const rise = target - g;
-      const need = rampTiles(rise, maxGrade) + Vc / 2; // include vertical curve allowance
-      infos.push({ at, deck, target, rise, need, raw: c as Crossing });
-    } else {
-      // compute intersections for this crossing segment
-      const cross = c as Crossing;
-      for (const leg of legs) {
-        const pt = segIntersect(leg.a, leg.b, cross.a, cross.b);
-        if (!pt) continue;
-        const denom = leg.len * leg.len;
-        let tt = 0;
-        if (denom > EPS) {
-          const apx = pt.x - leg.a.x, apy = pt.y - leg.a.y;
-          const abx = leg.b.x - leg.a.x, aby = leg.b.y - leg.a.y;
-          tt = (apx * abx + apy * aby) / denom;
-        }
-        tt = Math.max(0, Math.min(1, tt));
-        const at = leg.cum0 + tt * leg.len;
-        const deck = cross.deck;
-        const target = opts.over ? deck + clearance : deck - clearance;
-        const g = groundAt(at);
-        const rise = target - g;
-        const need = rampTiles(rise, maxGrade) + Vc / 2;
-        infos.push({ at, deck, target, rise, need, raw: cross });
-      }
-    }
-  }
-  infos.sort((a, b) => a.at - b.at);
-
-  // Handle no crossings: ground-following profile
-  if (!infos.length) {
-    const s: number[] = [];
-    const z: number[] = [];
-    const kinds: Profile['kinds'] = [];
-    const n = Math.ceil(L);
-    for (let i = 0; i <= n; i++) {
-      const sv = i < n ? i : L;
-      if (sv > L + 1e-9) break;
-      s.push(sv);
-      z.push(groundAt(sv));
-      kinds.push('ground');
-      if (sv >= L - 1e-9) break;
-    }
-    // ensure last point exactly L
-    if (Math.abs(s[s.length - 1]! - L) > 1e-9) {
-      s.push(L);
-      z.push(groundAt(L));
-      kinds.push('ground');
-    }
-    return { s, z, kinds, ok: true, why: '' };
-  }
-
-  // Group close crossings into one bridge/tunnel — keep left/right needs separate for hills
-  type Group = { infos: CInfo[]; leftAt: number; rightAt: number; target: number; leftNeed: number; rightNeed: number };
-  let groups: Group[] = infos.map(ci => ({
-    infos: [ci],
-    leftAt: ci.at,
-    rightAt: ci.at,
-    target: ci.target,
-    leftNeed: ci.need,
-    rightNeed: ci.need,
-  }));
-  const recomputeGroup = (g: Group) => {
-    g.leftAt = Math.min(...g.infos.map(i => i.at));
-    g.rightAt = Math.max(...g.infos.map(i => i.at));
-    g.target = opts.over ? Math.max(...g.infos.map(i => i.target)) : Math.min(...g.infos.map(i => i.target));
-    // iterative refinement for each side (hills)
-    let leftNeed = rampTiles(g.target - groundAt((g.leftAt + g.rightAt) / 2), maxGrade) + Vc / 2;
-    let rightNeed = leftNeed;
-    for (let iter = 0; iter < 10; iter++) {
-      const bridgeStart = g.leftAt - overhang;
-      const rampStart = bridgeStart - leftNeed;
-      const leftGround = groundAt(Math.max(0, Math.min(L, rampStart)));
-      const newLeft = rampTiles(g.target - leftGround, maxGrade) + Vc / 2;
-      const bridgeEnd = g.rightAt + overhang;
-      const rampEnd = bridgeEnd + rightNeed;
-      const rightGround = groundAt(Math.max(0, Math.min(L, rampEnd)));
-      const newRight = rampTiles(g.target - rightGround, maxGrade) + Vc / 2;
-      if (Math.abs(newLeft - leftNeed) < 0.01 && Math.abs(newRight - rightNeed) < 0.01) break;
-      leftNeed = newLeft; rightNeed = newRight;
-    }
-    g.leftNeed = leftNeed; g.rightNeed = rightNeed;
+  // crossing points (route m) and the height the new road must have there
+  const infos: { d: number; T: number }[] = [];
+  const add = (at: number, deck: number) => {
+    const S = groundS(at) + deck; // crossed road surface: terrain plus its deck
+    infos.push({ d: 2 * at, T: opts.over ? S + clearance + DECK_THICKNESS : S - clearance });
   };
-  groups.forEach(recomputeGroup);
+  for (const c of crossings as (Crossing & { at?: number })[]) {
+    if (typeof c.at === 'number') add(c.at, c.deck);
+    else for (const leg of legs) {
+      const pt = segIntersect(leg.a, leg.b, c.a, c.b);
+      if (pt) add(legAt(leg, pt), c.deck);
+    }
+  }
+  infos.sort((a, b) => a.d - b.d);
 
+  const make = (list: { d: number; T: number }[]): Group => {
+    const d0 = list[0]!.d, d1 = list[list.length - 1]!.d;
+    const T = opts.over ? Math.max(...list.map(i => i.T)) : Math.min(...list.map(i => i.T));
+    const bL = Math.max(0, d0 - BRIDGE_HALF), bR = Math.min(M, d1 + BRIDGE_HALF);
+    const gL = (x: number) => gAt(x);
+    const gR = (x: number) => gAt(M - x);
+    return {
+      infos: list, d0, d1, T, bL, bR,
+      left: solveSide(gL, slopeOf(gL), bL, T, G, K),
+      right: solveSide(gR, slopeOf(gR), M - bR, T, G, K),
+    };
+  };
+
+  // one group per crossing, then merge neighbours whose ramps would meet (or leave less than MIN_GAP of ground)
+  const groups: Group[] = infos.map(i => make([i]));
   let merged = true;
   while (merged) {
     merged = false;
-    for (let i = 0; i + 1 < groups.length; i++) {
-      const a = groups[i]!, b = groups[i + 1]!;
-      const aBridgeEnd = a.rightAt + overhang;
-      const bBridgeStart = b.leftAt - overhang;
-      const aRampEnd = aBridgeEnd + a.rightNeed;
-      const bRampStart = bBridgeStart - b.leftNeed;
-      const gap = bRampStart - aRampEnd;
-      if (gap < minGap - 1e-9) {
-        const combined: Group = { infos: [...a.infos, ...b.infos], leftAt: 0, rightAt: 0, target: 0, leftNeed: 0, rightNeed: 0 };
-        recomputeGroup(combined);
-        groups.splice(i, 2, combined);
+    for (let k = 0; k + 1 < groups.length; k++) {
+      const a = groups[k]!, b = groups[k + 1]!;
+      const aRampEnd = M - a.right.x0; // route m where a's right ramp meets the ground
+      const bRampStart = b.left.x0; // route m where b's left ramp leaves the ground
+      if (bRampStart - aRampEnd < MIN_GAP) {
+        groups.splice(k, 2, make([...a.infos, ...b.infos]));
         merged = true;
         break;
       }
     }
   }
 
-  type Interval = { rampStart: number; bridgeStart: number; bridgeEnd: number; rampEnd: number; target: number; group: Group };
-  const intervals: Interval[] = groups.map(g => {
-    const bridgeStart = g.leftAt - overhang;
-    const bridgeEnd = g.rightAt + overhang;
-    const rampStart = bridgeStart - g.leftNeed;
-    const rampEnd = bridgeEnd + g.rightNeed;
-    return { rampStart, bridgeStart, bridgeEnd, rampEnd, target: g.target, group: g };
-  });
+  const fails: string[] = [];
+  const needText = (sd: Side) => Number.isFinite(sd.need) ? `${(sd.need * 100).toFixed(1)}% average grade` : 'a vertical step';
+  for (const g of groups) {
+    if (g.left.lin) fails.push(`crossing at ${(g.d0 / 2).toFixed(1)} tiles too close to start (needs ${needText(g.left)}, max ${(G * 100).toFixed(1)}%)`);
+    if (g.right.lin) fails.push(`crossing at ${(g.d1 / 2).toFixed(1)} tiles too close to end (needs ${needText(g.right)}, max ${(G * 100).toFixed(1)}%)`);
+  }
+  const ok = fails.length === 0;
+  const why = fails.join('; ');
 
-  // Feasibility checks
-  let ok = true;
-  let why = '';
-  if (intervals.length) {
-    const first = intervals[0]!;
-    const last = intervals[intervals.length - 1]!;
-    if (first.rampStart < -1e-9) {
-      ok = false;
-      why = `crossing at ${first.group.leftAt.toFixed(1)} too close to start (needs ${first.group.leftNeed.toFixed(1)} tiles, has ${first.group.leftAt.toFixed(1)})`;
-    } else if (last.rampEnd > L + 1e-9) {
-      ok = false;
-      why = `crossing at ${last.group.rightAt.toFixed(1)} too close to end (needs ${last.group.rightNeed.toFixed(1)} tiles, has ${(L - last.group.rightAt).toFixed(1)})`;
-    } else {
-      // check inter-group gap already handled by merging, but if still gap <0 after merging, report too close to each other
-      for (let i = 0; i + 1 < intervals.length; i++) {
-        const a = intervals[i]!, b = intervals[i + 1]!;
-        if (b.rampStart < a.rampEnd - 1e-9) {
-          ok = false;
-          why = `crossings at ${a.group.leftAt.toFixed(1)} and ${b.group.leftAt.toFixed(1)} too close to each other (gap ${(b.rampStart - a.rampEnd).toFixed(1)} tiles)`;
-          break;
-        }
-      }
+  // per-tile samples along the route
+  const s: number[] = [];
+  for (let sv = 0; sv < L - 1e-9; sv++) s.push(sv);
+  s.push(L);
+  const z: number[] = [];
+  const kinds: Profile['kinds'] = [];
+  for (const sv of s) {
+    const d = 2 * sv;
+    let zz = gAt(d);
+    let kind: Profile['kinds'][number] = 'ground';
+    for (const g of groups) {
+      if (d < g.left.x0 - EPS) break; // before this structure's ramp: ground
+      if (d <= g.bL + EPS) { zz = sideZ(g.left, d); kind = 'ramp'; break; }
+      if (d <= g.bR + EPS) { zz = g.T; kind = opts.over ? 'bridge' : 'tunnel'; break; }
+      if (d <= M - g.right.x0 + EPS) { zz = sideZ(g.right, M - d); kind = 'ramp'; break; }
     }
+    z.push(zz);
+    kinds.push(kind);
   }
 
-  // Generate per-tile profile
-  const sArr: number[] = [];
-  const nTiles = Math.ceil(L);
-  for (let i = 0; i <= nTiles; i++) {
-    const sv = i < nTiles ? i : L;
-    if (sv > L + 1e-9) break;
-    sArr.push(sv);
-    if (Math.abs(sv - L) < 1e-9) break;
-  }
-  // Ensure we cover L exactly if not integer and not already
-  if (sArr.length && Math.abs(sArr[sArr.length - 1]! - L) > 1e-9) sArr.push(L);
-
-  const zArr: number[] = [];
-  const kindsArr: Profile['kinds'] = [];
-
-  // Helper to compute height for ramp with vertical curves
-  const rampHeight = (s: number, s0: number, z0: number, s1: number, z1: number, maxG: number): number => {
-    const total = s1 - s0;
-    if (total < EPS) return z0;
-    const rise = z1 - z0;
-    // Use piecewise with vertical curves
-    // If total is very short, fall back to smoothstep across whole
-    if (total <= Vc + 1e-9) {
-      // smoothstep across whole ramp
-      const t = (s - s0) / total;
-      const sm = t * t * (3 - 2 * t); // smoothstep 0..1, zero slope at ends
-      return z0 + rise * sm;
-    }
-    const half = Vc / 2;
-    if (s <= s0 + half) {
-      // first curve: grade 0 -> maxGrade
-      const t = (s - s0) / half;
-      const sign = Math.sign(rise) || 1;
-      const g = maxG * sign;
-      return z0 + g * half * t * t;
-    } else if (s >= s1 - half) {
-      const sign = Math.sign(rise) || 1;
-      const g = maxG * sign;
-      const tp = (s - (s1 - half)) / half;
-      const zb = z1 - g * half;
-      return zb + g * half * (2 * tp - tp * tp);
-    } else {
-      // middle linear
-      const sign = Math.sign(rise) || 1;
-      const g = maxG * sign;
-      const za = z0 + g * half;
-      return za + g * 2 * (s - (s0 + half));
-    }
-  };
-
-  // For each s, determine interval and compute z
-  for (const s of sArr) {
-    let found = false;
-    for (const it of intervals) {
-      if (s >= it.rampStart - 1e-9 && s < it.bridgeStart - 1e-9) {
-        // left ramp
-        const z0 = groundAt(it.rampStart);
-        const z1 = it.target;
-        zArr.push(rampHeight(s, it.rampStart, z0, it.bridgeStart, z1, maxGrade));
-        kindsArr.push('ramp');
-        found = true;
-        break;
-      } else if (s >= it.bridgeStart - 1e-9 && s <= it.bridgeEnd + 1e-9) {
-        zArr.push(it.target);
-        kindsArr.push(opts.over ? 'bridge' : 'tunnel');
-        found = true;
-        break;
-      } else if (s > it.bridgeEnd + 1e-9 && s <= it.rampEnd + 1e-9) {
-        const z0 = it.target;
-        const z1 = groundAt(it.rampEnd);
-        zArr.push(rampHeight(s, it.bridgeEnd, z0, it.rampEnd, z1, maxGrade));
-        kindsArr.push('ramp');
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      zArr.push(groundAt(s));
-      kindsArr.push('ground');
-    }
-  }
-
-  // If not ok, still return profile but ok false
-
-  // Ensure kinds length matches s and z
-  return { s: sArr, z: zArr, kinds: kindsArr, ok, why };
+  return { s, z, kinds, ok, why };
 }

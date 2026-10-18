@@ -2,23 +2,42 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { crossingsOf, planProfile } from '../src/game/ext/grade/index.js';
-import type { Crossing } from '../src/game/ext/grade/index.js';
+import type { Crossing, Profile } from '../src/game/ext/grade/index.js';
 import type { Pt } from '../src/game/network.js';
 
 const pt = (x: number, y: number): Pt => ({ x, y });
 const flatGround = () => 10; // flat terrain at 10 m
-const hillGround = (x: number, _y: number): number => 10 + 0.05 * x; // 5% slope: 10 m at x=0, 15 m at x=100
+const hillGround = (x: number, _y: number): number => 0.08 * x; // 4% rise: x in tiles, 2 m per tile
+const across = (x: number, deck: number): Crossing => ({ a: pt(x, -50), b: pt(x, 50), deck }); // deck = m above terrain
+const ROUTE = [pt(0, 0), pt(300, 0)]; // 300 tiles = 600 m; a road crossing at tile 150 (300 m)
 
-function maxGradeOf(profile: { s: number[]; z: number[] }): number {
-  let max = 0;
-  for (let i = 1; i < profile.s.length; i++) {
-    const ds = profile.s[i]! - profile.s[i - 1]!;
-    const dz = Math.abs(profile.z[i]! - profile.z[i - 1]!);
-    const grade = dz / (ds * 2); // tiles *2 = metres run
-    if (grade > max) max = grade;
+/** largest grade (fraction) between samples, and largest change of grade per metre */
+function gradeStats(p: Profile): { maxG: number; maxRate: number } {
+  let maxG = 0, maxRate = 0, prev = NaN;
+  for (let i = 1; i < p.s.length; i++) {
+    const g = (p.z[i]! - p.z[i - 1]!) / ((p.s[i]! - p.s[i - 1]!) * 2); // tiles x 2 = metres run
+    maxG = Math.max(maxG, Math.abs(g));
+    if (!Number.isNaN(prev)) maxRate = Math.max(maxRate, Math.abs(g - prev) / 2);
+    prev = g;
   }
-  return max;
+  return { maxG, maxRate };
 }
+
+/** index of the last bridge or tunnel sample */
+function lastStructure(p: Profile): number {
+  let last = -1;
+  p.kinds.forEach((k, i) => { if (k === 'bridge' || k === 'tunnel') last = i; });
+  return last;
+}
+
+/** metres of ramp before and after the bridge or tunnel (sample resolution 2 m) */
+function rampMetres(p: Profile): { before: number; after: number } {
+  const first = p.kinds.findIndex(k => k === 'bridge' || k === 'tunnel');
+  return { before: (first - p.kinds.indexOf('ramp')) * 2, after: (p.kinds.lastIndexOf('ramp') - lastStructure(p)) * 2 };
+}
+
+/** height of the profile at tile s (nearest sample) */
+const zAtTile = (p: Profile, s: number) => p.z[p.s.findIndex(v => Math.abs(v - s) < 0.01)]!;
 
 test('crossingsOf: finds at along route', () => {
   const route = [pt(0, 0), pt(200, 0)]; // east-west 200 tiles =400 m
@@ -34,167 +53,156 @@ test('crossingsOf: finds at along route', () => {
   assert.equal(crossings[0]!.deck, 0);
 });
 
-test('planProfile over one road: ramps both sides, max grade, 5.5 m clearance', () => {
-  const route = [pt(0, 0), pt(200, 0)];
-  const crossing: Crossing = { a: pt(100, -50), b: pt(100, 50), deck: 10 };
-  const profile = planProfile(route, [crossing], flatGround, { over: true, maxGrade: 0.06 });
-  console.log(`over one road: ok=${profile.ok} why=${profile.why} s=${profile.s.length} kinds=${profile.kinds.slice(49, 55).join(',')}`);
-  // ok
-  assert.equal(profile.ok, true);
+test('planProfile over one road: 7 m above the crossed surface, ramps both sides, max grade', () => {
+  const profile = planProfile(ROUTE, [across(150, 0)], flatGround, { over: true, maxGrade: 0.06 });
+  const { maxG, maxRate } = gradeStats(profile);
+  const r = rampMetres(profile);
+  console.log(`over one road: ok=${profile.ok} bridge z=${zAtTile(profile, 150).toFixed(2)} max grade=${(maxG * 100).toFixed(2)}% ramps ${r.before.toFixed(0)} m / ${r.after.toFixed(0)} m`);
+  assert.equal(profile.ok, true, profile.why);
   assert.equal(profile.why, '');
-  // clearance at crossing (s=100)
-  const idx = profile.s.findIndex(s => Math.abs(s - 100) < 0.6);
-  const zAt = profile.z[idx]!;
-  console.log(`  z at crossing (s=100) = ${zAt.toFixed(2)} m, expected >=5.5 over deck (0) + ground 10 =15.5`);
-  assert.ok(zAt >= 15.4, `z ${zAt} should be >=15.5 (ground 10 + clearance 5.5)`);
-  assert.ok(zAt < 17, `z ${zAt} not too high`);
-  // max grade
-  const mg = maxGradeOf(profile);
-  console.log(`  max grade = ${(mg * 100).toFixed(2)}% (limit 6%)`);
-  assert.ok(mg <= 0.061, `max grade ${mg} exceeds 0.06`);
-  // kinds contain bridge and ramp
+  // crossed surface 10 (ground) + 0 (deck) + 5.5 clearance + 1.5 deck thickness = 17
+  assert.ok(Math.abs(zAtTile(profile, 150) - 17) < 0.01, `bridge at ${zAtTile(profile, 150)}, expected 17`);
+  assert.ok(maxG <= 0.06 + 1e-9, `max grade ${maxG} exceeds 0.06`);
+  assert.ok(maxRate <= 0.0012, `grade changes ${maxRate} per m, limit 0.12%`);
+  assert.equal(profile.z[0], 10);
+  assert.equal(profile.z[profile.z.length - 1], 10);
   assert.ok(profile.kinds.includes('bridge'));
   assert.ok(profile.kinds.includes('ramp'));
   assert.ok(profile.kinds.includes('ground'));
-  // ramp length check: for 5.5 m rise at 6%, tiles =5.5/(0.06*2)=45.83
-  const rampLen = 5.5 / (0.06 * 2);
-  console.log(`  expected ramp ~${rampLen.toFixed(1)} tiles at 6% for 5.5 m`);
-  // find ramp extent: first ramp to bridge
-  const firstBridge = profile.kinds.indexOf('bridge');
-  const firstRamp = profile.kinds.indexOf('ramp');
-  assert.ok(firstRamp >= 0 && firstBridge > firstRamp);
 });
 
 test('planProfile over two close roads as one long bridge', () => {
-  const route = [pt(0, 0), pt(200, 0)];
-  const c1: Crossing = { a: pt(90, -50), b: pt(90, 50), deck: 10 };
-  const c2: Crossing = { a: pt(110, -50), b: pt(110, 50), deck: 10 }; // 20 tiles (40 m) apart, close
-  const profile = planProfile(route, [c1, c2], flatGround, { over: true, maxGrade: 0.06 });
-  console.log(`two close roads: ok=${profile.ok} kinds bridges=${profile.kinds.filter(k=>k==='bridge').length} ramps=${profile.kinds.filter(k=>k==='ramp').length}`);
-  assert.equal(profile.ok, true);
-  // should be one continuous bridge covering both, not two separate bridges with ground between
-  // Check that between s=90 and s=110, kinds are not ground (should be bridge throughout)
-  const midIdx = profile.s.findIndex(s => Math.abs(s - 100) < 0.6);
-  assert.ok(midIdx >=0);
-  assert.ok(profile.kinds[midIdx] === 'bridge', `mid between crossings should be bridge, got ${profile.kinds[midIdx]}`);
-  // there should not be ground between the two crossings
+  const crossings = [across(140, 0), across(160, 0)]; // 20 tiles (40 m) apart: one structure
+  const profile = planProfile(ROUTE, crossings, flatGround, { over: true, maxGrade: 0.06 });
+  console.log(`two close roads: ok=${profile.ok} bridges=${profile.kinds.filter(k => k === 'bridge').length} ramps=${profile.kinds.filter(k => k === 'ramp').length}`);
+  assert.equal(profile.ok, true, profile.why);
+  assert.equal(profile.kinds[profile.s.findIndex(s => Math.abs(s - 150) < 0.01)], 'bridge');
+  // no ground between the two crossings
   let groundBetween = 0;
-  for (let i=0;i<profile.s.length;i++) if (profile.s[i]! > 90 && profile.s[i]! < 110 && profile.kinds[i]==='ground') groundBetween++;
-  console.log(`  ground samples between 90-110: ${groundBetween} (expected 0 for one long bridge)`);
+  for (let i = 0; i < profile.s.length; i++) if (profile.s[i]! > 140 && profile.s[i]! < 160 && profile.kinds[i] === 'ground') groundBetween++;
+  console.log(`  ground samples between 140-160: ${groundBetween} (expected 0 for one long bridge)`);
   assert.equal(groundBetween, 0);
-  // max grade still respected
-  const mg = maxGradeOf(profile);
-  assert.ok(mg <= 0.061);
+  assert.ok(gradeStats(profile).maxG <= 0.06 + 1e-9);
+  assert.ok(Math.abs(zAtTile(profile, 150) - 17) < 0.01);
 });
 
-test('planProfile too close to end: not ok with reason', () => {
+test('too close to the ends: not ok with reason, and the profile still clears the crossing', () => {
   const route = [pt(0, 0), pt(100, 0)]; // 100 tiles
-  const crossing: Crossing = { a: pt(10, -50), b: pt(10, 50), deck: 10 }; // 10 tiles from start, needs ~45 tiles ramp
-  const profile = planProfile(route, [crossing], flatGround, { over: true, maxGrade: 0.06 });
-  console.log(`too close to start: ok=${profile.ok} why=${profile.why}`);
-  assert.equal(profile.ok, false);
-  assert.ok(profile.why.toLowerCase().includes('start') || profile.why.toLowerCase().includes('close'), `why should mention start: ${profile.why}`);
-  // same for end
-  const crossingEnd: Crossing = { a: pt(90, -50), b: pt(90, 50), deck: 10 }; // 10 from end of 100
-  const profile2 = planProfile(route, [crossingEnd], flatGround, { over: true, maxGrade: 0.06 });
-  console.log(`too close to end: ok=${profile2.ok} why=${profile2.why}`);
-  assert.equal(profile2.ok, false);
-  assert.ok(profile2.why.toLowerCase().includes('end') || profile2.why.toLowerCase().includes('close'));
+  const atStart = planProfile(route, [across(10, 0)], flatGround, { over: true, maxGrade: 0.06 });
+  console.log(`too close to start: ok=${atStart.ok} why=${atStart.why}`);
+  assert.equal(atStart.ok, false);
+  assert.ok(atStart.why.includes('start'), `why should mention start: ${atStart.why}`);
+  assert.ok(zAtTile(atStart, 10) >= 17 - 1e-9, `start crossing z ${zAtTile(atStart, 10)} must clear 17`);
+
+  const atEnd = planProfile(route, [across(90, 0)], flatGround, { over: true, maxGrade: 0.06 });
+  console.log(`too close to end: ok=${atEnd.ok} why=${atEnd.why}`);
+  assert.equal(atEnd.ok, false);
+  assert.ok(atEnd.why.includes('end'), `why should mention end: ${atEnd.why}`);
+  assert.ok(zAtTile(atEnd, 90) >= 17 - 1e-9, `end crossing z ${zAtTile(atEnd, 90)} must clear 17`);
 });
 
-test('planProfile under a road: tunnel -6 m', () => {
-  const route = [pt(0, 0), pt(200, 0)];
-  const crossing: Crossing = { a: pt(100, -50), b: pt(100, 50), deck: 10 };
-  const profile = planProfile(route, [crossing], flatGround, { over: false, maxGrade: 0.06 });
-  console.log(`under one road: ok=${profile.ok} kinds=${profile.kinds.filter(k=>k==='tunnel').length} tunnels`);
-  assert.equal(profile.ok, true);
-  const idx = profile.s.findIndex(s => Math.abs(s - 100) < 0.6);
-  const zAt = profile.z[idx]!;
-  console.log(`  z at crossing = ${zAt.toFixed(2)} m, expected ~4 (deck 10 -6)`);
-  assert.ok(zAt > 3 && zAt < 5, `tunnel z ${zAt} should be ~4`);
+test('planProfile under a road: tunnel 6 m below the crossed surface, with vertical curves', () => {
+  const profile = planProfile(ROUTE, [across(150, 0)], flatGround, { over: false, maxGrade: 0.06 });
+  const { maxG, maxRate } = gradeStats(profile);
+  const r = rampMetres(profile);
+  console.log(`under one road: ok=${profile.ok} tunnel z=${zAtTile(profile, 150).toFixed(2)} max grade=${(maxG * 100).toFixed(2)}% ramps ${r.before.toFixed(0)} m / ${r.after.toFixed(0)} m`);
+  assert.equal(profile.ok, true, profile.why);
+  assert.ok(Math.abs(zAtTile(profile, 150) - 4) < 0.01, `tunnel z ${zAtTile(profile, 150)}, expected 4 (10 - 6)`);
   assert.ok(profile.kinds.includes('tunnel'));
   assert.ok(profile.kinds.includes('ramp'));
-  const mg = maxGradeOf(profile);
-  console.log(`  max grade = ${(mg*100).toFixed(2)}%`);
-  assert.ok(mg <= 0.061);
+  assert.ok(maxG <= 0.06 + 1e-9);
+  assert.ok(maxRate <= 0.0012, `grade changes ${maxRate} per m, limit 0.12%`);
 });
 
-test('planProfile over hill-side road: terrain heights vary', () => {
-  const route = [pt(0, 0), pt(200, 0)]; // east-west, ground slopes 5% uphill
-  const crossing: Crossing = { a: pt(100, -50), b: pt(100, 50), deck: hillGround(100, 0) }; // deck follows terrain? Use ground height at crossing as deck
-  // hillGround at x=100 is 15 m, so deck at 15, clearance 5.5 => target 20.5
-  const profile = planProfile(route, [crossing], hillGround, { over: true, maxGrade: 0.06 });
-  console.log(`hill-side over: ok=${profile.ok} z at 0=${profile.z[0]!.toFixed(1)} z at 100=${profile.z[profile.s.indexOf(100)]?.toFixed(1)} z at 200=${profile.z[profile.z.length-1]!.toFixed(1)}`);
-  // ground-following at ends should be near terrain
-  assert.ok(Math.abs(profile.z[0]! - hillGround(0,0)) < 0.5, `start ground ${profile.z[0]} vs terrain ${hillGround(0,0)}`);
-  assert.ok(Math.abs(profile.z[profile.z.length-1]! - hillGround(200,0)) < 0.5);
-  // at crossing, clearance above deck
-  const idx = profile.s.findIndex(s => Math.abs(s - 100) < 0.6);
-  const zAt = profile.z[idx]!;
-  const deck = hillGround(100,0);
-  console.log(`  deck ${deck} target ${deck+5.5} zAt ${zAt.toFixed(2)}`);
-  assert.ok(zAt >= deck + 5.4);
-  assert.equal(profile.ok, true);
-  const mg = maxGradeOf(profile);
-  console.log(`  max grade ${(mg*100).toFixed(2)}%`);
-  assert.ok(mg <= 0.061, `max grade ${mg} exceeds 0.06`);
+test('over a 4% hillside: ok on a 600-tile route, 7 m above the crossed surface on the terrain', () => {
+  const route = [pt(0, 0), pt(600, 0)];
+  const profile = planProfile(route, [across(300, 0)], hillGround, { over: true, maxGrade: 0.06 });
+  const { maxG, maxRate } = gradeStats(profile);
+  const r = rampMetres(profile);
+  const surface = hillGround(300, 0); // crossed road at tile 300 sits on 24 m of terrain
+  console.log(`hillside 4% over (600 tiles): ok=${profile.ok} bridge ${zAtTile(profile, 300).toFixed(2)} m (surface ${surface} + 7), ramps uphill ${r.before.toFixed(0)} m / downhill ${r.after.toFixed(0)} m, max grade ${(maxG * 100).toFixed(2)}%`);
+  assert.equal(profile.ok, true, profile.why);
+  assert.ok(Math.abs(zAtTile(profile, 300) - (surface + 7)) < 0.01, `bridge ${zAtTile(profile, 300)}, expected ${surface + 7}`);
+  assert.ok(Math.abs(profile.z[0]! - hillGround(0, 0)) < 1e-9, 'route start on the terrain');
+  assert.ok(Math.abs(profile.z[profile.z.length - 1]! - hillGround(600, 0)) < 1e-9, 'route end on the terrain');
+  assert.ok(maxG <= 0.06 + 1e-9, `max grade ${maxG} exceeds 0.06`);
+  assert.ok(maxRate <= 0.0012, `grade changes ${maxRate} per m, limit 0.12%`);
 });
 
-test('print ramp lengths for 4% and 6%', () => {
-  const rise = 5.5; // m clearance over
-  const len6 = rise / (0.06 * 2);
-  const len4 = rise / (0.04 * 2);
-  console.log(`ramp length at 6% for ${rise} m rise: ${len6.toFixed(2)} tiles (${(len6*2).toFixed(1)} m)`);
-  console.log(`ramp length at 4% for ${rise} m rise: ${len4.toFixed(2)} tiles (${(len4*2).toFixed(1)} m)`);
-  assert.ok(Math.abs(len6 - 45.83) < 0.1);
-  assert.ok(Math.abs(len4 - 68.75) < 0.1);
-  const riseTun = 6;
-  const len6t = riseTun / (0.06 * 2);
-  const len4t = riseTun / (0.04 * 2);
-  console.log(`tunnel ramp at 6% for ${riseTun} m: ${len6t.toFixed(2)} tiles`);
-  console.log(`tunnel ramp at 4% for ${riseTun} m: ${len4t.toFixed(2)} tiles`);
-  assert.ok(Math.abs(len6t - 50) < 0.1);
-  assert.ok(Math.abs(len4t - 75) < 0.1);
-  // also test via planProfile actual ramp extents
-  const route = [pt(0,0), pt(200,0)];
-  const crossing: Crossing = { a: pt(100,-50), b: pt(100,50), deck: 10 };
-  const p6 = planProfile(route, [crossing], flatGround, { over: true, maxGrade: 0.06 });
-  const p4 = planProfile(route, [crossing], flatGround, { over: true, maxGrade: 0.04 });
-  const rampTiles = (p: typeof p6) => p.kinds.filter(k=>k==='ramp').length; // approx per-tile count of ramp samples
-  console.log(`  actual ramp tiles in profile at 6%: ~${rampTiles(p6)} (expect ~${(len6*2).toFixed(0)} samples? linear)`);
-  console.log(`  actual ramp tiles in profile at 4%: ~${rampTiles(p4)}`);
-  assert.ok(p6.ok && p4.ok);
+test('the 4% hillside on a 300-tile route (crossing at tile 150) is not ok, and still clears the crossing', () => {
+  // climbing from 0 m to 19 m over 294 m needs 6.5% on average before any vertical curve: the uphill side cannot fit
+  const up = planProfile(ROUTE, [across(150, 0)], hillGround, { over: true, maxGrade: 0.06 });
+  console.log(`hillside 4% over (300 tiles): ok=${up.ok} why=${up.why} bridge z=${zAtTile(up, 150).toFixed(2)}`);
+  assert.equal(up.ok, false);
+  assert.ok(up.why.includes('start') && up.why.includes('6.5%'), `why should name the start and the grade: ${up.why}`);
+  assert.ok(zAtTile(up, 150) >= 19 - 1e-9, `clamped bridge z ${zAtTile(up, 150)} must clear 19 (crossed surface 12 + 7)`);
+  // the same slope falling towards the crossing: the downhill side is the one that cannot fit
+  const down = planProfile(ROUTE, [across(150, 0)], (x: number) => 0.08 * (300 - x), { over: true, maxGrade: 0.06 });
+  console.log(`hillside 4% falling (300 tiles): ok=${down.ok} why=${down.why}`);
+  assert.equal(down.ok, false);
+  assert.ok(down.why.includes('end'), `why should name the end: ${down.why}`);
+  assert.ok(zAtTile(down, 150) >= 19 - 1e-9);
 });
 
-test('crossingsOf vs planProfile integration: roads to profile', () => {
-  const route = [pt(0,0), pt(200,0)];
-  const roads = [{ a: pt(100,-50), b: pt(100,50), deck: 2 }]; // existing bridge deck at 2 m
-  const atDecks = crossingsOf(route, roads);
-  assert.equal(atDecks.length, 1);
-  assert.ok(Math.abs(atDecks[0]!.at - 100) < 0.1);
-  assert.equal(atDecks[0]!.deck, 2);
-  // use that to build profile clearing existing bridge: target = deck +5.5 =7.5
-  const profile = planProfile(route, [{ a: roads[0]!.a, b: roads[0]!.b, deck: 2 }], flatGround, { over: true, maxGrade: 0.06 });
-  const idx = profile.s.findIndex(s=>Math.abs(s-100)<0.6);
-  console.log(`integration: deck 2 -> target 7.5, z at crossing ${profile.z[idx]!.toFixed(2)}`);
-  assert.ok(profile.z[idx]! >= 7.4);
+test('grade never exceeds maxGrade (4% and 6%)', () => {
+  for (const G of [0.04, 0.06]) {
+    const p = planProfile(ROUTE, [across(150, 0)], flatGround, { over: true, maxGrade: G });
+    const { maxG } = gradeStats(p);
+    console.log(`flat over, max grade ${G * 100}%: ok=${p.ok} measured ${(maxG * 100).toFixed(3)}%`);
+    assert.equal(p.ok, true, p.why);
+    assert.ok(maxG <= G + 1e-9, `max grade ${maxG} exceeds ${G}`);
+  }
+  const hill = planProfile([pt(0, 0), pt(600, 0)], [across(300, 0)], hillGround, { over: true, maxGrade: 0.06 });
+  assert.ok(gradeStats(hill).maxG <= 0.06 + 1e-9);
+});
+
+test('grade changes by at most 0.12% per metre (K = 8.4 or more)', () => {
+  const flat = planProfile(ROUTE, [across(150, 0)], flatGround, { over: true, maxGrade: 0.06 });
+  const tight = planProfile(ROUTE, [across(150, 0)], flatGround, { over: true, maxGrade: 0.06, k: 8.4 });
+  const tunnel = planProfile(ROUTE, [across(150, 0)], flatGround, { over: false, maxGrade: 0.04, k: 8.4 });
+  const a = gradeStats(flat), b = gradeStats(tight), c = gradeStats(tunnel);
+  console.log(`grade change per m: K=15 ${(a.maxRate * 100).toFixed(4)}%, K=8.4 ${(b.maxRate * 100).toFixed(4)}%, tunnel K=8.4 4% ${(c.maxRate * 100).toFixed(4)}%`);
+  assert.ok(a.maxRate <= 0.0012 && b.maxRate <= 0.0012 && c.maxRate <= 0.0012);
+});
+
+test('print ramp lengths for 4% and 6% (with vertical curves)', () => {
+  // flat ground: ramp = rise / G + curve length, curve length = K x G(%) for the 0 -> G change at the foot
+  const K = 15;
+  for (const G of [0.06, 0.04]) {
+    const bridge = rampMetres(planProfile(ROUTE, [across(150, 0)], flatGround, { over: true, maxGrade: G })).before;
+    const analytic = 7 / G + K * 100 * G;
+    console.log(`ramp at ${G * 100}% for 7 m (bridge): ${bridge.toFixed(0)} m measured, ${analytic.toFixed(1)} m = rise/G + curve ${(K * 100 * G).toFixed(0)} m`);
+    assert.ok(Math.abs(bridge - analytic) < 2.5, `ramp ${bridge} vs ${analytic}`);
+    const tunnel = rampMetres(planProfile(ROUTE, [across(150, 0)], flatGround, { over: false, maxGrade: G })).before;
+    const analyticT = 6 / G + K * 100 * G;
+    console.log(`ramp at ${G * 100}% for 6 m (tunnel): ${tunnel.toFixed(0)} m measured, ${analyticT.toFixed(1)} m`);
+    assert.ok(Math.abs(tunnel - analyticT) < 2.5, `tunnel ramp ${tunnel} vs ${analyticT}`);
+  }
 });
 
 test('vertical curves: no kinks (slope continuous)', () => {
-  const route = [pt(0,0), pt(200,0)];
-  const crossing: Crossing = { a: pt(100,-50), b: pt(100,50), deck: 10 };
-  const profile = planProfile(route, [crossing], flatGround, { over: true, maxGrade: 0.06 });
-  // check slope change per tile is gradual (no jump > maxGrade)
+  const profile = planProfile(ROUTE, [across(150, 0)], flatGround, { over: true, maxGrade: 0.06 });
   const grades: number[] = [];
-  for (let i=1;i<profile.s.length;i++) {
-    const ds = profile.s[i]! - profile.s[i-1]!;
-    const dz = profile.z[i]! - profile.z[i-1]!;
-    grades.push(dz/(ds*2));
+  for (let i = 1; i < profile.s.length; i++) {
+    const ds = profile.s[i]! - profile.s[i - 1]!;
+    grades.push((profile.z[i]! - profile.z[i - 1]!) / (ds * 2));
   }
-  // find max slope change between consecutive grades
   let maxDelta = 0;
-  for (let i=1;i<grades.length;i++) maxDelta = Math.max(maxDelta, Math.abs(grades[i]! - grades[i-1]!));
-  console.log(`max slope ${(Math.max(...grades.map(Math.abs))*100).toFixed(2)}% max delta per tile ${(maxDelta*100).toFixed(2)}%`);
-  // with vertical curves, delta should be small (<0.02), without it would be ~0.06 jump
-  assert.ok(maxDelta < 0.06, `kink: delta ${maxDelta} too large, should be smoothed`);
+  for (let i = 1; i < grades.length; i++) maxDelta = Math.max(maxDelta, Math.abs(grades[i]! - grades[i - 1]!));
+  console.log(`max slope ${(Math.max(...grades.map(Math.abs)) * 100).toFixed(2)}% max grade change per tile ${(maxDelta * 100).toFixed(3)}%`);
+  // a 0 -> 6% kink would be a 6% jump; with 90 m curves the grade moves 0.13% per 2 m tile
+  assert.ok(maxDelta < 0.002, `kink: delta ${maxDelta} too large, should be smoothed`);
+});
+
+test('crossingsOf vs planProfile integration: roads to profile', () => {
+  const roads = [{ a: pt(150, -50), b: pt(150, 50), deck: 2 }]; // existing bridge deck 2 m above the ground
+  const atDecks = crossingsOf(ROUTE, roads);
+  assert.equal(atDecks.length, 1);
+  assert.ok(Math.abs(atDecks[0]!.at - 150) < 0.1);
+  assert.equal(atDecks[0]!.deck, 2);
+  // surface = 10 + 2 = 12, so the new bridge sits at 12 + 5.5 + 1.5 = 19
+  const profile = planProfile(ROUTE, [{ a: roads[0]!.a, b: roads[0]!.b, deck: 2 }], flatGround, { over: true, maxGrade: 0.06 });
+  console.log(`integration: crossed deck 2 m -> bridge z at crossing ${zAtTile(profile, 150).toFixed(2)}`);
+  assert.equal(profile.ok, true, profile.why);
+  assert.ok(Math.abs(zAtTile(profile, 150) - 19) < 0.01);
 });
