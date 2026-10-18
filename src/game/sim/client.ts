@@ -5,9 +5,10 @@ import type { NetOp } from '../ground-protocol';
 import type { Drawable } from '../sprites';
 import { facings } from '../traffic';
 import { worldX, worldY } from '../iso';
+import { zoneOf } from './routing';
 import { POINT_STRIDE } from '../gl';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
-import type { LotTuple, TownEvent } from '../lots/town';
+import { LV, type LotTuple, type TownEvent } from '../lots/town';
 import type { Leg } from '../network';
 import { VTYPES } from './sim';
 
@@ -38,6 +39,8 @@ export class SimClient {
   lots = new Map<string, LotView>();
   /** the town's residents, jobs and built lots (from the last town message) and the growth option id */
   pop = 0; jobs = 0; built = 0; option = 'balanced';
+  /** the access per zone (256, 1 = free flow) from the last town message, and the zones with a built lot (1) */
+  access: Float32Array = new Float32Array(256).fill(1); builtZone = new Uint8Array(256);
   /** called with the events of each town message (after the lots are updated) */
   onTown?: (events: TownEvent[]) => void;
   /** called with the gravel extension the town plans (the engine builds it, or skips it); the worker waits for its net ops */
@@ -89,7 +92,9 @@ export class SimClient {
     }
     if (m.t === 'town') {
       for (const e of m.events) { const v = this.lots.get(e.key); if (v) { v.use = e.use; v.level = e.level; v.decline = e.decline; v.seed = e.seed; v.since = e.since; } }
-      this.pop = m.pop; this.jobs = m.jobs; this.built = m.built;
+      this.pop = m.pop; this.jobs = m.jobs; this.built = m.built; this.access = m.access;
+      this.builtZone.fill(0);
+      for (const v of this.lots.values()) if (v.level >= LV.BUILT && v.use) this.builtZone[zoneOf(v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2)] = 1;
       this.onTown?.(m.events); return;
     }
     this.stats = m.stats;

@@ -1,8 +1,13 @@
 // Trips: where vehicles start and where they want to go. An origin is a link lane weighted by length over the map; the
 // destination zone is drawn by a gravity model (zone length times exp(-distance / 1500 m)), then a lane in it by length.
-// Rebuilt on every graph update; the weights per origin zone are cached until the next one. Pure TS, no DOM.
+// Rebuilt on every graph update; the weights per origin zone are cached until the next one. Also the lot trips (mode 'lots'):
+// the built lots send their trips by the hour and the time of day, from and to their driveways. Pure TS, no DOM.
 import { MPT, LK, type LaneGraph, laneAt } from './lanes';
 import { ZN, zoneOf } from './routing';
+import { dot, norm, perp, sub, type Seg } from '../network';
+import type { Lot } from '../lots/lots';
+import { LU } from '../lots/town';
+import type { Sim } from './sim';
 
 /** sim seconds per in-game day: one game minute per sim second */
 export const DAY = 1440;
@@ -10,6 +15,11 @@ export const DAY = 1440;
 const MIN_LEN = 10;
 /** the gravity decay length, metres; the origin's own zone counts at OWN_ZONE_M */
 const DECAY = 1500, OWN_ZONE_M = 400;
+/** a driveway's s is kept this far from the lane's ends, metres */
+const DRIVE_END = 3;
+/** lot trips: trips per resident per day, the share of off-peak trips that shop (RES to COM or TOUR), the trips kept pending per lot,
+ *  the draws tried for a destination (rejection sampling on the distance decay) */
+const PER_RES = 2.2, SHOP = 0.7, PEND_MAX = 4, PICK_TRIES = 8;
 /** a destination is at least MIN_DEST metres (straight line) from its origin when one of DEST_TRIES draws is; else the farthest */
 const MIN_DEST = 300, DEST_TRIES = 4;
 /** zones: ZN x ZN, each 128 tiles square */
@@ -125,5 +135,165 @@ export class Trips {
       this.wCum[row + z] = c;
     }
     this.wTot[oz] = c; this.wOk[oz] = 1;
+  }
+}
+
+/** the mean of demandAt over a day: a lot's hourly rate is its share of the day's trips over this */
+const MEAN_DEMAND = (() => { let s = 0; for (let t = 0; t < DAY; t++) s += demandAt(t); return s / DAY; })();
+
+/** a driveway: the link lane a lot's cars join or leave the road by, and s (m) where the lot's frontage meets it */
+export interface Drive { lane: number; s: number }
+/** a built lot for the trips: its parcel, its use (LU), residents and jobs */
+export interface Built { lot: Lot; use: number; pop: number; jobs: number }
+
+/** the driveway of a lot: the outermost link lane of the directed seg whose traffic has the lot on its right (the lanes sit on
+ *  perp(u), the right-hand side of the heading u, so dot(perp(u), lot.n) > 0), with s the projection of the frontage midpoint on
+ *  it (m, clamped to [DRIVE_END, len - DRIVE_END]). byseg maps a seg to its dseg ids (else the dsegs are scanned). null if none. */
+export function driveway(lot: Lot, g: LaneGraph, byseg?: Map<Seg, number[]>): Drive | null {
+  const ids = byseg ? byseg.get(lot.seg) ?? [] : g.dsegs.flatMap(d => d && d.seg === lot.seg ? [d.id] : []);
+  for (const id of ids) {
+    const d = g.dsegs[id];
+    if (!d || d.seg !== lot.seg || !d.lanes.length) continue;
+    if (dot(perp(norm(sub(d.to, d.from))), lot.n) <= 0) continue;
+    const ln = g.lanes[d.lanes[d.lanes.length - 1]!]!;
+    if (ln.len < 2 * DRIVE_END) return null;
+    const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm(sub({ x: ln.pts[2]!, y: ln.pts[3]! }, p0));
+    const s = Math.min(ln.len - DRIVE_END, Math.max(DRIVE_END, dot(sub(lot.front, p0), u) * MPT));
+    return { lane: ln.id, s };
+  }
+  return null;
+}
+
+/** a trip waiting to leave: its destination lot and the sim time it may leave (its departure, within its hour) */
+interface Trip { to: Lot; due: number }
+/** a built lot in the trips' lists: its use, residents, jobs, its fraction of a trip carried over, and its trips waiting to leave */
+interface Rec { lot: Lot; use: number; pop: number; jobs: number; acc: number; pend: Trip[]; busy: boolean }
+/** the cumulative weights of a list */
+const cumOf = (list: Rec[], w: (r: Rec) => number): number[] => { const c: number[] = []; let t = 0; for (const r of list) c.push(t += w(r)); return c; };
+
+/** The lot trips (sim mode 'lots'). Each game hour every built RES lot sends trips at PER_RES * residents / 24 times the demand
+ *  share of the hour (over the day's mean); morning hours (6 to 11) go home to a job lot, evening hours (15 to 21) come home from
+ *  a job lot, and other hours are 70% shopping (to COM or TOUR) and 30% to any job lot. Destinations are drawn by jobs and the
+ *  distance decay exp(-d / DECAY). Each trip leaves at a seeded time within its hour (a platoon at the hour's start inflates the
+ *  ratio of the trips behind it), from its origin driveway, and waits there (up to PEND_MAX per lot) until there is room. */
+export class LotTrips {
+  /** the built lots by key, and the lists trips are drawn from: homes (RES with residents), jobs, shops (COM or TOUR), with the cumulative jobs */
+  private recs = new Map<string, Rec>();
+  private homes: Rec[] = []; private jobsL: Rec[] = []; private shops: Rec[] = [];
+  private jobC: number[] = []; private shopC: number[] = [];
+  /** the lots with trips waiting */
+  private busy: Rec[] = [];
+  /** the driveway of each lot by key (null: none), cleared on every graph update; the dsegs by seg, built on first use */
+  private cache = new Map<string, Drive | null>(); private bySeg: Map<Seg, number[]> | null = null;
+  private g!: LaneGraph;
+  /** the game hour generated last (-1 = none yet) */
+  private hour = -1;
+  private rnd: () => number;
+
+  constructor(rnd: () => number) { this.rnd = rnd; }
+
+  /** after a graph update: the driveways are looked up again */
+  onGraph(g: LaneGraph) { this.g = g; this.cache.clear(); this.bySeg = null; }
+
+  /** the built lots (from the town, once a game hour). New lots join; the lots gone lose their waiting trips. Returns the trips dropped. */
+  setBuilt(list: Built[]): number {
+    let dropped = 0;
+    const next = new Map<string, Rec>();
+    for (const b of list) {
+      let r = this.recs.get(b.lot.key);
+      if (!r) r = { lot: b.lot, use: b.use, pop: b.pop, jobs: b.jobs, acc: 0, pend: [], busy: false };
+      r.lot = b.lot; r.use = b.use; r.pop = b.pop; r.jobs = b.jobs;
+      next.set(b.lot.key, r);
+    }
+    for (const [k, r] of this.recs) if (!next.has(k)) { dropped += r.pend.length; r.pend.length = 0; }
+    this.recs = next;
+    this.homes = []; this.jobsL = []; this.shops = [];
+    for (const r of next.values()) {
+      if (r.use === LU.RES) { if (r.pop > 0) this.homes.push(r); }
+      else if (r.jobs > 0) { this.jobsL.push(r); if (r.use === LU.COM || r.use === LU.TOUR) this.shops.push(r); }
+    }
+    this.jobC = cumOf(this.jobsL, r => r.jobs); this.shopC = cumOf(this.shops, r => r.jobs);
+    return dropped;
+  }
+
+  /** once per sim step (lots mode): at the start of each game hour its trips are made; then the waiting trips try to leave */
+  step(sim: Sim) {
+    const H = Math.floor(sim.t / 60);
+    if (H !== this.hour) { this.hour = H; this.generate(sim, H); }
+    if (this.busy.length) this.retry(sim);
+  }
+
+  /** the trips of game hour H: each home's share of the day's trips for the hour, by the hour's kind */
+  private generate(sim: Sim, H: number) {
+    const hod = H % 24, k = PER_RES / 24 * demandAt(H * 60 + 30) / MEAN_DEMAND;
+    const morning = hod >= 6 && hod <= 11, evening = hod >= 15 && hod <= 21;
+    for (const r of this.homes) {
+      r.acc += r.pop * k; const n = Math.floor(r.acc); r.acc -= n;
+      for (let j = 0; j < n; j++) {
+        const due = H * 60 + this.rnd() * 60;
+        if (evening) { const o = this.pick(this.jobsL, this.jobC, r.lot); if (o) this.add(sim, o, r.lot, due); }
+        else if (morning) { const d = this.pick(this.jobsL, this.jobC, r.lot); if (d) this.add(sim, r, d.lot, due); }
+        else {
+          const d = this.rnd() < SHOP ? this.pick(this.shops, this.shopC, r.lot) : this.pick(this.jobsL, this.jobC, r.lot);
+          if (d) this.add(sim, r, d.lot, due);
+        }
+      }
+    }
+  }
+
+  /** queues a trip from lot rec `from` to lot `to` (the oldest is dropped when PEND_MAX wait) */
+  private add(sim: Sim, from: Rec, to: Lot, due: number) {
+    if (to.key === from.lot.key) return;
+    if (from.pend.length >= PEND_MAX) { from.pend.shift(); sim.stats.dropped++; }
+    from.pend.push({ to, due });
+    if (!from.busy) { from.busy = true; this.busy.push(from); }
+  }
+
+  /** the waiting trips leave their driveways in order, as far as there is room; a trip whose driveway or destination is gone is
+   *  dropped, and so is one that would turn back on its own dseg. Lots with nothing waiting leave the list. */
+  private retry(sim: Sim) {
+    const B = this.busy;
+    for (let b = 0; b < B.length; b++) {
+      const r = B[b]!;
+      for (let i = 0; i < r.pend.length;) {
+        const p = r.pend[i]!;
+        if (p.due > sim.t) { i++; continue; }
+        const o = this.drive(r.lot), d = this.drive(p.to);
+        const dest = d ? this.g.lanes[d.lane]!.dseg : -1;
+        if (!o || !d || (dest === this.g.lanes[o.lane]!.dseg && d.s < o.s)) { r.pend.splice(i, 1); sim.stats.dropped++; continue; }
+        const res = sim.spawnAt(o.lane, o.s, dest, d.s);
+        if (res === -1) { i++; continue; }
+        r.pend.splice(i, 1);
+      }
+      if (!r.pend.length) { r.busy = false; B.splice(b--, 1); }
+    }
+  }
+
+  /** the driveway of a lot, cached until the next graph update */
+  private drive(lot: Lot): Drive | null {
+    let d = this.cache.get(lot.key);
+    if (d === undefined) {
+      if (!this.bySeg) {
+        this.bySeg = new Map();
+        for (const ds of this.g.dsegs) if (ds) { const q = this.bySeg.get(ds.seg); if (q) q.push(ds.id); else this.bySeg.set(ds.seg, [ds.id]); }
+      }
+      d = driveway(lot, this.g, this.bySeg); this.cache.set(lot.key, d);
+    }
+    return d;
+  }
+
+  /** a list entry drawn by its weight (cum) times exp(-d / DECAY), d the metres from `from`: rejection sampling, PICK_TRIES draws
+   *  (the last one stands if none is accepted); null if the list is empty */
+  private pick(list: Rec[], cum: number[], from: Lot): Rec | null {
+    const n = list.length; if (!n) return null;
+    const tot = cum[n - 1]!; let r: Rec | null = null;
+    for (let k = 0; k < PICK_TRIES; k++) {
+      const x = this.rnd() * tot; let lo = 0, hi = n - 1;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (cum[m]! > x) hi = m; else lo = m + 1; }
+      r = list[lo]!;
+      const d = Math.hypot(r.lot.c.x - from.c.x, r.lot.c.y - from.c.y) * MPT;
+      if (this.rnd() < Math.exp(-d / DECAY)) break;
+    }
+    return r;
   }
 }

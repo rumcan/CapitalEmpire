@@ -62,6 +62,8 @@ export class Game {
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0; junctionType: NodeType = 'signal';
   selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
+  /** the access overlay (key O): zones with built lots shaded by access; always on below DISTRICT_Z */
+  showAccess = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
   route: Pt[] = [];
   // economy
@@ -542,6 +544,7 @@ export class Game {
       case 'g': case 'G': this.showGrid = !this.showGrid; this.emit(); break;
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
       case 'p': case 'P': this.showLots = !this.showLots; this.emit(); break;
+      case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'r': case 'R': this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
@@ -922,6 +925,7 @@ export class Game {
     }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
+    if (this.showAccess || this.cam.z < DISTRICT_Z) this.drawAccess(ctx);
     if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
     this.drawGroundOverlays(ctx);
     for (const p of [this.selected, this.hoverProp]) {
@@ -950,6 +954,19 @@ export class Game {
       const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
+  }
+
+  /** the access overlay: each zone (128 tiles square) with a built lot, shaded by its access: green below 1.3, amber to 1.8, red above (25% alpha) */
+  private drawAccess(ctx: CanvasRenderingContext2D) {
+    const T = this.traffic;
+    this.setIso(ctx);
+    for (let z = 0; z < 256; z++) {
+      if (!T.builtZone[z]) continue;
+      const a = T.access[z]!;
+      ctx.fillStyle = a < 1.3 ? 'rgba(61,220,132,0.25)' : a <= 1.8 ? 'rgba(255,176,32,0.25)' : 'rgba(255,59,59,0.25)';
+      ctx.fillRect((z & 15) * 128, (z >> 4) * 128, 128, 128);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   private drawGroundOverlays(ctx: CanvasRenderingContext2D) {

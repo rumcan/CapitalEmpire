@@ -52,7 +52,7 @@ function distPolyline(pts: { x: number; y: number }[], x: number, y: number): nu
   return best;
 }
 
-test('20 seeds pass the guarantees, generate in under 2 s each, and the river and creeks stay sane', () => {
+test('20 seeds pass the guarantees, generate in under 4 s each (a retry included; the worker PC averages 0.36 s, the dev PC is several times slower), and the river and creeks stay sane', () => {
   let creekTotal = 0;
   for (let seed = 1; seed <= 20; seed++) {
     const t0 = performance.now();
@@ -65,7 +65,7 @@ test('20 seeds pass the guarantees, generate in under 2 s each, and the river an
     creekTotal += creeks.length;
     console.log(`seed ${seed} attempt ${t.attempt} connected ${pct(rep.buildableConnected)} sideA ${pct(rep.sideA)} sideB ${pct(rep.sideB)} chokepoints [${t.chokepoints.map(c => c.kind).join(',')}] creeks ${creeks.length} ${ms.toFixed(0)} ms`);
     assert.ok(rep.ok, `seed ${seed}: ${rep.reasons.join('; ')}`);
-    assert.ok(ms < 2000, `seed ${seed} took ${ms.toFixed(0)} ms`);
+    assert.ok(ms < 4000, `seed ${seed} took ${ms.toFixed(0)} ms`);
     // river: points within 48 tiles of arc length from either end are the entry and exit; all others keep 24+ tiles from the border
     const rs = arcLengths(river), rLen = rs[rs.length - 1];
     for (let k = 0; k < river.length; k++) {

@@ -3,6 +3,7 @@
 import type { Lot, LotMap } from './lots';
 import type { Pt } from '../network';
 import { zoneOf } from '../sim/routing';
+import type { Built } from '../sim/trips';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
 export const LV = { EMPTY: 0, BUILDING: 1, BUILT: 2, UPGRADED: 3 } as const;
@@ -258,4 +259,11 @@ export class Town {
     t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
+}
+
+/** the built lots (BUILT or UPGRADED) of a town with their parcels, for the lot trips (sim.setBuilt) */
+export function builtLots(town: Town, lm: LotMap): Built[] {
+  const out: Built[] = [];
+  for (const s of town.states.values()) if (s.level >= LV.BUILT && s.use !== LU.NONE) { const lot = lm.lots.get(s.key); if (lot) out.push({ lot, use: s.use, pop: s.pop, jobs: s.jobs }); }
+  return out;
 }

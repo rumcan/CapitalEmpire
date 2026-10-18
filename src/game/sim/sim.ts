@@ -5,7 +5,7 @@ import { CAR, idm } from './idm';
 import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt } from './lanes';
 import { SIG, phaseState } from './signals';
 import { Router } from './routing';
-import { Trips, demandAt } from './trips';
+import { LotTrips, Trips, demandAt, type Built } from './trips';
 
 /** seconds per step */
 export const DT = 0.1;
@@ -28,6 +28,10 @@ const TOW_BOX = 60, TOW_ANY = 300;
 const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
 const SIG_MARGIN = 0.5;
+/** the free-flow ratio of a trip (its time over its ideal time, see Sim.score). Measured (output/calib, random mode) on a 10 x 10 street
+ *  grid with 50 cars, the mean ratio over the arrivals after one game hour: 1.213 (seeds 1 to 3: 1.217, 1.211, 1.211). With 600 cars
+ *  (congested) it is 3.31. access = ratio / FREE reads about 1.0 in free flow; 1.3 and 1.8 are 30% and 80% over it. */
+export const FREE = 1.213;
 
 /** The vehicles of one graph. Slot i is one vehicle while alive[i] is 1; the lists hold the vehicles of each lane, front first. */
 export class Sim {
@@ -51,9 +55,19 @@ export class Sim {
   /** true: fill() aims at round(target * demandAt(t)) (the daily profile); arrivals bring the count down on their own */
   profile = false;
   rnd: () => number;
-  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, throttled: 0, tableMs: 0, tables: 0 };
+  stats = { spawned: 0, respawned: 0, stepMs: 0, towed: 0, throughput: 0, laneChanges: 0, arrived: 0, lost: 0, throttled: 0, tableMs: 0, tables: 0, dropped: 0, ratioSum: 0, ratioN: 0 };
   /** where new trips start and end (origins, destinations by zone) */
   trips: Trips;
+  /** 'random': the target count with random trips (the bench, the gate, the tests); 'lots': the built lots' trips, no target (lotTrips) */
+  mode: 'random' | 'lots' = 'random';
+  lotTrips: LotTrips;
+  /** access per zone (16 x 16, row-major): the EMA of the trips' ratio over FREE that start or end there, starting at 1; zones with no
+   *  trip in a game hour relax 1% toward 1 */
+  access = new Float32Array(256).fill(1);
+  /** per zone: finished trips since the last game hour; per slot: spawn time (s), ideal time (s: the lanes driven at their speed limit,
+   *  less the spawn lane's part before the spawn), origin zone */
+  private hits = new Uint32Array(256); private aH = 0;
+  private t0: Float64Array; private ideal: Float64Array; private oz: Uint8Array;
   /** a scratch lane position (allocation-free) */
   private pt = { x: 0, y: 0, hx: 0, hy: 0 };
   /** per slot: distance to the nearest virtual stop (plan end or gate), metres; Infinity = none */
@@ -84,6 +98,8 @@ export class Sim {
     this.dest = new Int32Array(cap).fill(-1); this.destS = new Float64Array(cap); this.route = new Array<number[] | null>(cap).fill(null);
     this.noRoute = new Uint8Array(cap);
     this.trips = new Trips(this.rnd);
+    this.lotTrips = new LotTrips(this.rnd);
+    this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap);
     this.onGraph();
   }
 
@@ -106,7 +122,7 @@ export class Sim {
     if (this.resvLen.length < n) this.resvLen = new Float64Array(Math.max(n, 2 * this.resvLen.length));
     this.resvLen.fill(0); this.grant.fill(-1); this.resv.fill(-1);
     for (const q of this.onLane) q.length = 0;
-    this.trips.onGraph(this.g);
+    this.trips.onGraph(this.g); this.lotTrips.onGraph(this.g);
     this.router.onGraph(this.g);
     let pending = 0;
     for (let i = 0; i < this.cap; i++) {
@@ -156,7 +172,7 @@ export class Sim {
   }
 
   /** adds one vehicle at s metres on link lane `lane`, heading for `dest` (a dseg; -1 = a random walk) at destS metres along it;
-   *  returns its slot, or -1 if there is no room on the lane or no free slot (or it was lost at once) */
+   *  returns its slot, -1 if there is no room on the lane or no free slot, or -2 if it was lost at once (no route) */
   spawnAt(lane: number, s: number, dest: number, destS: number): number {
     const ln = this.g.lanes[lane];
     if (!ln) return -1;
@@ -168,13 +184,28 @@ export class Sim {
     this.alive[i] = 1; this.lane[i] = lane; this.s[i] = s; this.v[i] = 0.5 * ln.vmax; this.acc[i] = 0;
     this.v0f[i] = 0.9 + 0.2 * this.rnd(); this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
+    this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!;
     this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0;
     const q = this.onLane[lane];
     let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
     q.splice(k, 0, i);
     this.hint = i + 1; this.active++; this.stats.spawned++;
-    return this.pickMove(i) ? i : -1;
+    if (!this.pickMove(i)) return -2;
+    return i;
   }
+
+  /** the lot trips' buildings: the built lots (see LotTrips.setBuilt); the trips dropped are counted in stats.dropped */
+  setBuilt(list: Built[]) { this.stats.dropped += this.lotTrips.setBuilt(list); }
+  /** a finished trip (arrival on ln): its ratio, its time over max(ideal, 10 s), over FREE; the EMA of access in its origin zone and in its destination zone */
+  private score(i: number, ln: Lane) {
+    const ideal = this.ideal[i]! + this.s[i]! / ln.vmax, r = (this.t - this.t0[i]!) / Math.max(ideal, 10);
+    this.stats.ratioSum += r; this.stats.ratioN++;
+    this.bump(this.oz[i]!, r / FREE); this.bump(this.router.zoneD[ln.dseg]!, r / FREE);
+  }
+  /** one trip's ratio (normalised) into zone z's access: an EMA with weight 0.05 */
+  private bump(z: number, a: number) { this.access[z] = this.access[z]! + 0.05 * (a - this.access[z]!); this.hits[z]++; }
+  /** once per game hour: the zones with no finished trip in it relax 1% toward 1 */
+  private relax() { for (let z = 0; z < 256; z++) { if (!this.hits[z]) this.access[z] = this.access[z]! + 0.01 * (1 - this.access[z]!); this.hits[z] = 0; } }
 
   /** gives vehicle i a new destination from where it is now */
   private retarget(i: number) {
@@ -199,7 +230,9 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) this.lat[i] *= 0.85;
     this.t += DT; this.steps++;
     this.router.tick(this);
-    this.fill();
+    const H = Math.floor(this.t / 60);
+    if (H !== this.aH) { this.aH = H; this.relax(); }
+    if (this.mode === 'lots') this.lotTrips.step(this); else this.fill();
     this.stats.stepMs = performance.now() - t0;
   }
 
@@ -209,7 +242,7 @@ export class Sim {
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i] || this.dest[i]! < 0) continue;
       const ln = lanes[this.lane[i]]!;
-      if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) { this.stats.arrived++; this.despawn(i); }
+      if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) { this.score(i, ln); this.stats.arrived++; this.despawn(i); }
     }
   }
 
@@ -523,7 +556,7 @@ export class Sim {
     const P = this.plan[i]!, p = this.pi[i] + 1;
     if (p >= P.length) return false;
     const lanes = this.g.lanes, old = this.lane[i], ln = lanes[old]!;
-    this.s[i] -= ln.len;
+    this.s[i] -= ln.len; this.ideal[i] += ln.len / ln.vmax;
     this.onLane[old].shift();
     const nid = P[p], nl = lanes[nid]!;
     if (ln.kind !== LK.LINK && nl.kind === LK.LINK) this.stats.throughput++;

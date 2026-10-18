@@ -8,7 +8,7 @@ import { applyOps } from '../netops';
 import { MAP } from '../iso';
 import { TC } from '../terrain/types';
 import { LotMap, type Lot } from '../lots/lots';
-import { GROWTH_OPTIONS, Town, type TownCtx, type TownEvent } from '../lots/town';
+import { GROWTH_OPTIONS, LU, Town, builtLots, type TownCtx, type TownEvent } from '../lots/town';
 import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from '../lots/roads';
 import { LaneGraph } from './lanes';
 import { Sim } from './sim';
@@ -34,6 +34,8 @@ let reach = new Set<Seg>();
 let cls: Uint8Array | null = null, water: Float32Array | null = null, optId = GROWTH_OPTIONS[0].id;
 const ctx: TownCtx = { lots, entry: { x: 0, y: 0 }, reachable: (l: Lot) => reach.has(l.seg), water: waterAt };
 let town = new Town(1), townPosted = 0;
+/** the game hour the town's access was copied to the town and the built lots given to the sim (-1 = none yet: at the next frame) */
+let syncHour = -1;
 /** the town's road plan: its random stream, the game hour planned, a gravel extension posted and not yet back as net ops (and when) */
 const GAME_HOUR = 60;
 let planRnd = seededRnd(1), planHour = -1, pendingGrow = false, growAt = 0;
@@ -74,13 +76,20 @@ const rec = (l: Lot): LotRec => ({ key: l.key, o: [l.o.x, l.o.y], u: [l.u.x, l.u
 function postTown(ev: TownEvent[], force: boolean) {
   if (!force && !ev.length && sim.t - townPosted < TOWN_EVERY) return;
   townPosted = sim.t;
-  post({ t: 'town', events: ev.slice(), pop: town.pop, jobs: town.jobs, built: town.built });
+  post({ t: 'town', events: ev.slice(), pop: town.pop, jobs: town.jobs, built: town.built, access: town.access });
+}
+
+/** the built lots go to the sim (once a game hour); the sim switches from random trips to the lots' trips once a RES lot is built */
+function builtSync() {
+  const list = builtLots(town, lots);
+  if (sim.mode === 'random' && list.some(b => b.use === LU.RES)) { sim.mode = 'lots'; sim.setTarget(0); }
+  sim.setBuilt(list);
 }
 
 /** a new valley: its terrain classes, the water field, the highway entry and the seed; the town starts again, at the sim time (no lots yet) */
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
   cls = m.cls; water = waterField(m.cls); ctx.entry = { x: m.entry[0], y: m.entry[1] };
-  town = new Town(m.seed); town.option = optionOf(optId); town.tick(sim.t, ctx);
+  town = new Town(m.seed); town.option = optionOf(optId); town.tick(sim.t, ctx); syncHour = -1;
   planRnd = seededRnd(m.seed); planHour = -1; pendingGrow = false;
   postTown([], true);
 }
@@ -121,7 +130,7 @@ function netOps(ops: NetOp[]) {
 /** a saved town (after the load's net ops): the sim clock, then the lots' states; the restored lots post as completed */
 function townStateOps(m: Extract<ToSim, { t: 'townState' }>) {
   sim.t = m.simT;
-  postTown(town.restore(m.lots, sim.t), true);
+  postTown(town.restore(m.lots, sim.t), true); syncHour = -1;
 }
 
 /** after a network batch: the parcels that changed, the reachable segs, the town's lots; posts the changes */
@@ -139,6 +148,8 @@ function lotsOps() {
 /** one wall-clock period: speed steps of the sim, the town to the sim time, then a frame unless there is nothing to show */
 function frame() {
   const t0 = performance.now();
+  const hr = Math.floor(sim.t / GAME_HOUR);
+  if (hr !== syncHour) { syncHour = hr; town.access.set(sim.access); builtSync(); }
   for (let k = 0; k < speed; k++) sim.step();
   ticks[tick++ % TICKS] = performance.now() - t0;
   postTown(town.tick(sim.t, ctx), false);
