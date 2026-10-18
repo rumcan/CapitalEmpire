@@ -402,48 +402,74 @@ export class LaneGraph {
       if (paths.length) this.move(n, x.inD, y.outD, t, paths, mv);
     }
   }
-  /** a roundabout: ring arcs (short and long per arm), entries (yield), exits, and a movement per arm pair */
+  /** a roundabout of rl ring lanes (lane 0 the outer one), each with ring arcs (short and long per arm). Entries (yield): an approach lane
+   *  enters the ring lane of its rank from the right (the rightmost to lane 0, the next to lane 1, clamped), and the leftmost lane also
+   *  enters the innermost. Exits: from every ring lane to the exit road's lane of the same rank (an inner exit crosses the outer lanes,
+   *  so it has prio 2 and gives way). Movements: the first exit (right) only from the outer lane, the last exit (left) and U-turns only
+   *  from the innermost, straight on from any. With one ring lane every lane goes through lane 0, as before. */
   private ring(n: Node, io: ArmIO[], nl: number[], mv: number[]) {
-    const M = io.length, rc = n.rb - RB_LANE / 2, th = io.map(x => x.a.ang);
-    const dl = io.map(x => Math.asin(Math.min(0.8, laneOff(x.a.seg, x.a.seg.cls.laneCentres.length - 1) / rc)) + 0.12);
+    const M = io.length, RL = n.rl ?? 1, inner = RL - 1, o = keyOf(n), th = io.map(x => x.a.ang);
+    const rcOf = (k: number) => n.rb - RB_LANE * (k + 0.5);
+    const dl = io.map(x => Math.asin(Math.min(0.8, laneOff(x.a.seg, x.a.seg.cls.laneCentres.length - 1) / rcOf(0))) + 0.12);
     const ord = io.map((_, i) => i).sort((p, q) => th[q] - th[p]), pos = new Array<number>(M);
     ord.forEach((a, p) => { pos[a] = p; });
     const gap = (p: number) => { let g = th[ord[p]] - th[ord[(p + 1) % M]]; while (g <= 0) g += TAU; return g; };
     // arms too close for their arcs: shrink the arm ends (the short arc keeps at least 0.1 rad)
     for (let p = 0; p < M; p++) { const a = ord[p], b = ord[(p + 1) % M], g = gap(p); if (g - dl[a] - dl[b] < 0.1) { const v = Math.max(0.05, (g - 0.1) / 2); dl[a] = Math.min(dl[a], v); dl[b] = Math.min(dl[b], v); } }
-    const at = (t: number): Pt => ({ x: n.x + rc * Math.cos(t), y: n.y + rc * Math.sin(t) });
+    const at = (t: number, k: number): Pt => { const r = rcOf(k); return { x: n.x + r * Math.cos(t), y: n.y + r * Math.sin(t) }; };
     const tan = (t: number): Pt => ({ x: Math.sin(t), y: -Math.cos(t) });
-    const arc = (a0: number, a1: number): Pt[] => { const k = Math.max(1, Math.ceil(Math.abs(a1 - a0) / 0.25)), P: Pt[] = []; for (let j = 0; j <= k; j++) P.push(at(a0 + (a1 - a0) * j / k)); return P; };
-    const rv = clamp(Math.sqrt(3 * rc * MPT), 4, 11), o = keyOf(n);
-    const sh: Lane[] = [], lg: Lane[] = [], en: Pt[] = [], ex: Pt[] = [], entries: number[][] = [], exits: Lane[] = [];
-    for (let i = 0; i < M; i++) {
-      const oth = keyOf(io[i].a.other), nx = ord[(pos[i] + 1) % M], L = gap(pos[i]) - dl[i] - dl[nx];
-      sh[i] = this.mkLane(`R${o}@${oth}:s`, LK.RING, arc(th[i] + dl[i], th[i] - dl[i]), rv, n, false);
-      lg[i] = this.mkLane(`R${o}@${oth}:l`, LK.RING, arc(th[i] - dl[i], th[i] - dl[i] - L), rv, n, false);
-      sh[i].prio = 3; lg[i].prio = 3; nl.push(sh[i].id, lg[i].id);
-      en[i] = at(th[i] - dl[i]); ex[i] = at(th[i] + dl[i]);
-    }
-    for (let i = 0; i < M; i++) { link(sh[i], lg[i]); link(lg[i], sh[ord[(pos[i] + 1) % M]]); }
-    for (let i = 0; i < M; i++) {
-      entries[i] = [];
-      for (const id of this.dsegs[io[i].inD]!.lanes) {
-        const inL = this.L(id), P = bezier(endPt(inL), endDir(inL), en[i], tan(th[i] - dl[i]), false);
-        const e = this.mkLane(`E${inL.key}`, LK.CONN, P, connVmax(P, Math.min(inL.vmax, lg[i].vmax)), n, inL.tunnel);
-        e.ctl = CTL.YIELD; e.prio = 0; link(inL, e); link(e, lg[i]); nl.push(e.id); entries[i].push(e.id);
+    const arc = (a0: number, a1: number, k: number): Pt[] => { const seg = Math.max(1, Math.ceil(Math.abs(a1 - a0) / 0.25)), P: Pt[] = []; for (let j = 0; j <= seg; j++) P.push(at(a0 + (a1 - a0) * j / seg, k)); return P; };
+    const rvOf = (k: number) => clamp(Math.sqrt(3 * rcOf(k) * MPT), 4, 11);
+    // the ring arcs of each ring lane: sh[k][i] runs through arm i's mouth, lg[k][i] on to the next arm
+    const sh: Lane[][] = [], lg: Lane[][] = [];
+    for (let k = 0; k < RL; k++) {
+      sh.push([]); lg.push([]);
+      const sfx = k ? `:${k}` : '';
+      for (let i = 0; i < M; i++) {
+        const oth = keyOf(io[i].a.other), L = gap(pos[i]) - dl[i] - dl[ord[(pos[i] + 1) % M]];
+        sh[k][i] = this.mkLane(`R${o}@${oth}:s${sfx}`, LK.RING, arc(th[i] + dl[i], th[i] - dl[i], k), rvOf(k), n, false);
+        lg[k][i] = this.mkLane(`R${o}@${oth}:l${sfx}`, LK.RING, arc(th[i] - dl[i], th[i] - dl[i] - L, k), rvOf(k), n, false);
+        sh[k][i].prio = 3; lg[k][i].prio = 3; nl.push(sh[k][i].id, lg[k][i].id);
       }
     }
-    for (let j = 0; j < M; j++) {
-      const outs = this.dsegs[io[j].outD]!.lanes, outL = this.L(outs[outs.length - 1]);
-      const P = bezier(ex[j], tan(th[j] + dl[j]), startPt(outL), startDir(outL), false);
-      const x = this.mkLane(`X${outL.key}`, LK.CONN, P, connVmax(P, Math.min(rv, outL.vmax)), n, outL.tunnel);
-      x.prio = 3; link(lg[ord[(pos[j] - 1 + M) % M]], x); link(x, outL); nl.push(x.id); exits[j] = x;
+    for (let k = 0; k < RL; k++) for (let i = 0; i < M; i++) { link(sh[k][i], lg[k][i]); link(lg[k][i], sh[k][ord[(pos[i] + 1) % M]]); }
+    // entries: ent[i][k] lists [ring lane, entry lane] for approach lane k of arm i (k 0 the leftmost)
+    const ent: [number, number][][][] = [];
+    for (let i = 0; i < M; i++) {
+      const ins = this.dsegs[io[i].inD]!.lanes, nIn = ins.length;
+      ent.push([]);
+      for (let k = 0; k < nIn; k++) {
+        const inL = this.L(ins[k]!), nat = Math.min(nIn - 1 - k, inner), want = [nat];
+        if (k === 0 && inner !== nat) want.push(inner);
+        ent[i].push([]);
+        for (const m of want) {
+          const P = bezier(endPt(inL), endDir(inL), at(th[i] - dl[i], m), tan(th[i] - dl[i]), false);
+          const e = this.mkLane(`E${inL.key}${m ? `:${m}` : ''}`, LK.CONN, P, connVmax(P, Math.min(inL.vmax, lg[m][i].vmax)), n, inL.tunnel);
+          e.ctl = CTL.YIELD; e.prio = 0; link(inL, e); link(e, lg[m][i]); nl.push(e.id); ent[i][k]!.push([m, e.id]);
+        }
+      }
     }
+    // exits: exX[m][j] the connector from ring lane m to arm j, exOut[m][j] the exit road's lane it joins (lane m from the outside, 0 at least)
+    const exX: number[][] = [], exOut: number[][] = [];
+    for (let m = 0; m < RL; m++) {
+      exX.push([]); exOut.push([]);
+      for (let j = 0; j < M; j++) {
+        const outs = this.dsegs[io[j].outD]!.lanes, outL = this.L(outs[Math.max(0, outs.length - 1 - m)]!), t = th[j] + dl[j];
+        const P = bezier(at(t, m), tan(t), startPt(outL), startDir(outL), false);
+        const x = this.mkLane(`X${outL.key}${m ? `:${m}` : ''}`, LK.CONN, P, connVmax(P, Math.min(rvOf(m), outL.vmax)), n, outL.tunnel);
+        x.prio = m ? 2 : 3; link(lg[m][ord[(pos[j] - 1 + M) % M]]!, x); link(x, outL); nl.push(x.id);
+        exX[m]!.push(x.id); exOut[m]!.push(outL.id);
+      }
+    }
+    // the movement's ring lanes for an approach lane's entries: right from lane 0 only, left and U-turns from the innermost, straight on any
+    const want = (cat: 'R' | 'L' | 'U' | 'S', list: [number, number][]) => list.filter(([m]) => cat === 'S' || (cat === 'R' ? m === 0 : m === inner));
     for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
-      const ins = this.dsegs[io[i].inD]!.lanes, outs = this.dsegs[io[j].outD]!.lanes, outL = outs[outs.length - 1], paths: number[][] = [];
-      for (let k = 0; k < ins.length; k++) {
-        const path = [ins[k], entries[i][k], lg[i].id];
-        for (let q = (pos[i] + 1) % M; ord[q] !== j; q = (q + 1) % M) path.push(sh[ord[q]].id, lg[ord[q]].id);
-        path.push(exits[j].id, outL);
+      const cat = i === j ? 'U' : j === ord[(pos[i] + 1) % M] ? 'R' : j === ord[(pos[i] - 1 + M) % M] ? 'L' : 'S';
+      const ins = this.dsegs[io[i].inD]!.lanes, paths: number[][] = [];
+      for (let k = 0; k < ins.length; k++) for (const [m, eid] of want(cat, ent[i][k]!)) {
+        const path = [ins[k]!, eid, lg[m][i]!.id];
+        for (let q = (pos[i] + 1) % M; ord[q] !== j; q = (q + 1) % M) path.push(sh[m][ord[q]]!.id, lg[m][ord[q]]!.id);
+        path.push(exX[m]![j]!, exOut[m]![j]!);
         paths.push(path);
       }
       this.move(n, io[i].inD, io[j].outD, i === j ? 'U' : turnOf(this.uOf(io[i].inD), this.uOf(io[j].outD)), paths, mv);
@@ -453,6 +479,8 @@ export class LaneGraph {
   private conflicts(nl: number[]) {
     for (let p = 0; p < nl.length; p++) for (let q = p + 1; q < nl.length; q++) {
       const A = this.L(nl[p]), B = this.L(nl[q]);
+      // a lane and its successor meet at one point: that is not a crossing (a ring exit starts where its ring arc ends)
+      if (A.next.includes(B.id) || B.next.includes(A.id)) continue;
       if (A.next.length === 1 && B.next.length === 1 && A.next[0] === B.next[0]) {
         A.conflicts.push({ lane: B.id, s: A.len, os: B.len, merge: true }); B.conflicts.push({ lane: A.id, s: B.len, os: A.len, merge: true });
         continue;

@@ -42,6 +42,10 @@ const ABANDON = 1200;
 const MOBIL_EVERY = 5, MOBIL_P = 0.3, MOBIL_TH = 0.2, MOBIL_START = 10, MOBIL_END = 15;
 /** a signal lets a vehicle on only if it reaches the line this many seconds before the phase turns red, s */
 const SIG_MARGIN = 0.5;
+/** a roundabout entry or inner exit gives way to ring traffic that is within this many metres of the crossing (standing or not), plus 4 s of its travel */
+const RING_GAP = 10;
+/** a roundabout exit waits while a car on the ring lane it leaves from has its rear within this many metres of the point it diverges */
+const DIVERGE = 6;
 /** the queue of the junction ahead: the last this many metres of a LINK lane (Sim.lossQ) */
 const QUEUE_M = 100;
 /** a copy of a Float64Array a in one of length m (the per-lane sums keep their values when the lists grow) */
@@ -214,9 +218,10 @@ export class Sim {
     for (let id = 0; id < n; id++) {
       const l = lanes[id]; this.lLen[id] = l ? l.len : 0; this.lVmax[id] = l ? l.vmax : 0; this.lLink[id] = l && l.kind === LK.LINK ? 1 : 0;
       this.lBooth[id] = l && l.booth !== undefined ? l.booth : -1;
-      // gated: a junction connector from a link lane, and every ring arc (a ring arc yields to the room granted on it)
+      // gated: a junction connector from a link lane, a roundabout exit (it waits for a ring car that crosses or merges, and for a car just
+      // past its diverge), and no ring arc (ring traffic never waits for an entry)
       this.lMerge[id] = l && l.kind !== LK.LINK && l.next.length === 1 && (lanes[l.next[0]]?.prev.length ?? 0) > 1 ? 1 : 0;
-      this.lGate[id] = l && (l.kind === LK.RING || (l.kind === LK.CONN && l.prev.length && lanes[l.prev[0]]?.kind === LK.LINK)) ? 1 : 0;
+      this.lGate[id] = l && l.kind === LK.CONN && l.prev.length && (lanes[l.prev[0]]?.kind === LK.LINK || lanes[l.prev[0]]?.kind === LK.RING) ? 1 : 0;
     }
     // the booth bindings: recounted over the lanes as they are now (a binding to a lane that is gone, or no booth, is dropped)
     if (this.bound.length < n) this.bound = new Int32Array(Math.max(n, 2 * this.bound.length));
@@ -656,9 +661,9 @@ export class Sim {
    *  room beyond the box, conflicts. */
   private gate(i: number, c: number): boolean {
     const C = this.g.lanes[c]!, v = this.v[i], dLine = this.lLen[this.lane[i]] - this.s[i];
-    // a ring arc: wait while an entry holds room on it (a vehicle may take the room it holds itself; ring traffic is otherwise
-    // followed by the IDM, there is no grant)
-    if (C.kind === LK.RING) return this.resv[i] === c || this.resvLen[c] <= 0;
+    // a roundabout exit: a car on the ring lane it leaves that has just passed the diverge (on the through arc) is not left alongside
+    const from = this.g.lanes[this.lane[i]]!;
+    if (from.kind === LK.RING && this.grant[i] !== c) for (const nx of from.next) if (nx !== c && this.g.lanes[nx]!.kind === LK.RING) for (const w of this.onLane[nx]!) if (this.s[w]! - this.len[w]! < DIVERGE) return false;
     const sp = C.ctl === CTL.SIGNAL ? this.g.signals.get(C.node!) : undefined;
     const st = sp ? phaseState(sp, C.phase, this.t) : SIG.GREEN;
     const canStop = dLine > v * v / (2 * CAR.b);
@@ -682,9 +687,11 @@ export class Sim {
     if (lead >= 0 && this.grant[lead] < 0) return false;
     const nd = C.node, ring = !!nd && nd.rb > 0;
     const out = nd && (ring || nd.arms.length >= 3) ? this.outOf(this.plan[i]!, this.pi[i] + 1, ring) : -1;
-    if (out >= 0 && !this.roomFor(i, out)) return false;
+    // a roundabout entry is granted only when its ring lane is clear for its length plus 2 m from the merge (strict: no reservation on it either)
+    if (out >= 0 && !this.roomFor(i, out, ring && this.lLink[this.lane[i]] === 1)) return false;
     if (!this.clearOf(i, C)) return false;
     this.grant[i] = c; this.granted[c].push(i);
+    if (this.resv[i] >= 0) this.unReserve(i);
     if (out >= 0) { this.resv[i] = out; this.resvLen[out] += this.needOn(i, out); }
     return true;
   }
@@ -714,11 +721,13 @@ export class Sim {
   /** the room vehicle i needs on lane out: its length + 2 m, or the whole lane when that is shorter (a roundabout arc) */
   private needOn(i: number, out: number): number { return Math.min(this.len[i] + 2, this.lLen[out]); }
   /** true if vehicle i can go on to lane out: the room left there (beyond its rearmost vehicle and the grants made on it) is
-   *  what it needs, or the rearmost vehicle there is moving faster than 4 m/s */
-  private roomFor(i: number, out: number): boolean {
+   *  what it needs, or the rearmost vehicle there is moving faster than 4 m/s. strict (a roundabout entry): the room must be
+   *  there with no grant made on the lane, and a moving vehicle does not count */
+  private roomFor(i: number, out: number, strict = false): boolean {
     const q = this.onLane[out], S = this.s, LEN = this.len;
     let rear = this.lLen[out];
     for (const w of q) { const r = S[w] - LEN[w]; if (r < rear) rear = r; }
+    if (strict) return rear >= this.needOn(i, out) && this.resvLen[out] <= 0;
     if (rear - this.resvLen[out] >= this.needOn(i, out)) return true;
     return q.length > 0 && this.v[q[q.length - 1]] > 4;
   }
@@ -737,9 +746,15 @@ export class Sim {
       if (this.granted[c2].length) return false;
       if (L2.ctl === CTL.SIGNAL && this.signalState(L2) === SIG.RED) continue;
       if (L2.prio > C.prio) {
+        // at a roundabout a car on the ring that is coming (or standing) within RING_GAP m plus 4 s of its travel holds the crossing
+        const ringX = !!C.node && C.node.rb > 0;
         for (const p of L2.prev) for (const w of Q[p]) {
-          if (this.grant[w] >= 0 || V[w] < 0.5 || P[w]![pI[w] + 1] !== c2) continue;
-          if ((lLen[p] - S[w] + cf.os) / V[w] < (cf.merge ? 5 : 4)) return false;
+          if (this.grant[w] >= 0 || P[w]![pI[w] + 1] !== c2) continue;
+          const dist = lLen[p] - S[w] + cf.os;
+          // (a ring car may speed up to its lane's limit before it reaches the crossing, so the faster of the two counts)
+          if (ringX) { if (dist < RING_GAP + 4 * Math.max(V[w]!, this.lVmax[p]!)) return false; continue; }
+          if (V[w] < 0.5) continue;
+          if (dist / V[w] < (cf.merge ? 5 : 4)) return false;
         }
       } else if (L2.prio === C.prio) {
         for (const p of L2.prev) for (const w of Q[p]) {
@@ -778,7 +793,8 @@ export class Sim {
         // a merge (zipper): the nearest vehicle ahead of us on the other lanes that merge into our next lane is a leader too,
         // by the distance each has left to the merge point
         if (this.lMerge[id]) {
-          const nN = lanes[id]!.next[0], N = lanes[nN]!, mine = this.resv[i] === nN;
+          // a ring lane takes no reservation's precedence: ring traffic never waits for an entry, so an entry follows it
+          const nN = lanes[id]!.next[0], N = lanes[nN]!, mine = this.resv[i] === nN && N.kind !== LK.RING;
           for (const p of N.prev) {
             if (p === id) continue;
             const q2 = Q[p], lp = this.lLen[p];

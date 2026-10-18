@@ -13,7 +13,7 @@ export function netToOps(net: RoadNetwork): NetOp[] {
   }
   for (const g of groups.values()) ops.push({ k: 'legs', legs: g.legs, cls: g.cls, style: g.style, kinds: g.kinds });
   for (const n of net.nodes.values()) if (n.type !== 'plain') ops.push({ k: 'type', x: n.x, y: n.y, type: n.type });
-  for (const n of net.nodes.values()) if (n.wide || n.tl) ops.push({ k: 'flags', x: n.x, y: n.y, wide: !!n.wide, tl: !!n.tl });
+  for (const n of net.nodes.values()) if (n.wide || n.tl || (n.rl ?? 1) > 1) ops.push({ k: 'flags', x: n.x, y: n.y, wide: !!n.wide, tl: !!n.tl, rl: n.rl ?? 1 });
   ops.push({ k: 'rebuild', full: true });
   return ops;
 }
@@ -34,7 +34,7 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
         break;
       }
       case 'type': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeType(nd, op.type, false); break; }
-      case 'flags': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeFlags(nd, op.wide, op.tl, false); break; }
+      case 'flags': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeFlags(nd, op.wide, op.tl, op.rl ?? nd.rl ?? 1, false); break; }
       case 'rebuild': n.rebuild(op.full); break;
       case 'clear': n.clear(); break;
     }
@@ -69,14 +69,15 @@ function extendRun(n: Node, cur: Seg, s: Seg, skip: (x: Seg) => boolean, out: Se
   }
 }
 
-/** a node's save entry: [x, y, type], with a 4th element when it has flags (1 widened turns, 2 turn lanes) */
+/** a node's save entry: [x, y, type], with a 4th element when it has flags: 1 widened turns, 2 turn lanes, and bits 4 and 8 the
+ *  roundabout's ring lanes less one (rl = 1 + (f >> 2 & 3)) */
 export type NodeEntry = [number, number, string, number?];
-export function nodeEntry(n: Node): NodeEntry { const f = (n.wide ? 1 : 0) | (n.tl ? 2 : 0); return f ? [n.x, n.y, n.type, f] : [n.x, n.y, n.type]; }
+export function nodeEntry(n: Node): NodeEntry { const f = (n.wide ? 1 : 0) | (n.tl ? 2 : 0) | (((n.rl ?? 1) - 1) << 2); return f ? [n.x, n.y, n.type, f] : [n.x, n.y, n.type]; }
 /** a saved node entry as edits: its type and flags on the node there (no node there: skipped; no 4th element: no flags) */
 export function applyNodeEntry(e: NetEditor, [x, y, type, f]: NodeEntry) {
   const n = e.net.nodeAt({ x, y }); if (!n) return;
   e.setNodeType(n, type as NodeType);
-  if (f) e.setNodeFlags(n, !!(f & 1), !!(f & 2));
+  if (f) e.setNodeFlags(n, !!(f & 1), !!(f & 2), Math.min(3, 1 + ((f >> 2) & 3)) as 1 | 2 | 3);
 }
 
 /** Edits the main thread's network and records the same edits for the ground workers. */
@@ -93,7 +94,8 @@ export class NetEditor {
     this.net.removePiece(sel, false);
   }
   setNodeType(n: Node, type: NodeType) { this.ops.push({ k: 'type', x: n.x, y: n.y, type }); this.net.setNodeType(n, type, false); }
-  setNodeFlags(n: Node, wide: boolean, tl: boolean) { this.ops.push({ k: 'flags', x: n.x, y: n.y, wide, tl }); this.net.setNodeFlags(n, wide, tl, false); }
+  /** the node's flags and ring lanes (rl keeps the node's own when not given) */
+  setNodeFlags(n: Node, wide: boolean, tl: boolean, rl: 1 | 2 | 3 = n.rl ?? 1) { this.ops.push({ k: 'flags', x: n.x, y: n.y, wide, tl, rl }); this.net.setNodeFlags(n, wide, tl, rl, false); }
   clear() { this.net.clear(); this.ops = [{ k: 'clear' }]; }
   /** rebuild here, and hand back the ops (ending in the same rebuild) for the workers */
   commit(full = false): NetOp[] {

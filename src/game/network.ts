@@ -51,6 +51,8 @@ export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number
   { id: 'roundabout', name: 'Roundabout', desc: 'Circle with a planted island', cost: 8000, minDeg: 2 },
 ];
 export const R_SLIP = 12, SLIP_LANE = 2.2, RB_LANE = 2.5;
+/** a roundabout's outer edge radius for 1, 2 or 3 ring lanes, tiles (14, 22 and 30 m); the widest arm can make it bigger */
+export const RB_BASE: Record<1 | 2 | 3, number> = { 1: 7, 2: 11, 3: 15 };
 /** the junction flags the junction tool sells: widened turns, and turn lanes (2-lane roads) */
 export const FLAG_COST = { wide: 3000, tl: 2000 };
 
@@ -162,7 +164,8 @@ function walkAlong(pts: Pt[], closed: boolean, first: number, step: number, fn: 
 
 /* ---------- data ---------- */
 /** a junction or bend; wide = widened turns (connectors at 2x the radius for speed), tl = turn lanes (lane 0 turns left only, at a 3+ arm junction) */
-export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean }
+/** rl: a roundabout's ring lanes (unset = 1; lane 0 is the outer one) */
+export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean; rl?: 1 | 2 | 3 }
 /** how a segment is built: on the ground, on a bridge, or in a tunnel */
 export const SK = { GROUND: 0, BRIDGE: 1, TUNNEL: 2 } as const; export type SegKind = 0 | 1 | 2;
 export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind }
@@ -368,8 +371,8 @@ export class RoadNetwork {
     if (rebuild) this.rebuild();
   }
   setNodeType(n: Node, type: NodeType, rebuild = true) { n.type = type; this.touched.add(n); if (rebuild) this.rebuild(); }
-  /** the node's widened-turns and turn-lane flags (the lane graph reads them at the node) */
-  setNodeFlags(n: Node, wide: boolean, tl: boolean, rebuild = true) { n.wide = wide; n.tl = tl; this.touched.add(n); if (rebuild) this.rebuild(); }
+  /** the node's widened-turns and turn-lane flags and its roundabout's ring lanes (the lane graph reads them at the node) */
+  setNodeFlags(n: Node, wide: boolean, tl: boolean, rl: 1 | 2 | 3 = n.rl ?? 1, rebuild = true) { n.wide = wide; n.tl = tl; n.rl = rl; this.touched.add(n); if (rebuild) this.rebuild(); }
   nearestNode(p: Pt, minDeg: number, maxDist: number): Node | null {
     let best: Node | null = null, bd = maxDist;
     for (const s of this.segsNear(p, maxDist)) for (const n of [s.a, s.b]) { if (n.segs.length < minDeg) continue; const d = Math.hypot(n.x - p.x, n.y - p.y); if (d < bd) { bd = d; best = n; } }
@@ -426,7 +429,8 @@ export class RoadNetwork {
     const live = [...A].filter(n => n.segs.length && this.nodes.get(keyOf(n)) === n);
     for (const n of live) {
       n.arms = n.segs.map(s => { const other = s.a === n ? s.b : s.a, d = sub(other, n), L = vlen(d), dir = mul(d, 1 / L); return { seg: s, other, dir, nrm: perp(dir), ang: Math.atan2(dir.y, dir.x), len: L, cls: s.cls, h: s.cls.h, walk: s.cls.walk, reachEdge: 0, reachCentre: 0, lineInset: 0, medianInset: 0, xw: -1, stop: -1, hasOpp: false }; }).sort((p, q) => p.ang - q.ang);
-      n.rb = n.type === 'roundabout' && n.arms.length >= 2 ? Math.max(4.5, Math.max(...n.arms.map(a => a.h)) + 3) : 0;
+      const rl = n.rl ?? 1;
+      n.rb = n.type === 'roundabout' && n.arms.length >= 2 ? Math.max(RB_BASE[rl], Math.max(...n.arms.map(a => a.h)) + 2 + rl * RB_LANE) : 0;
     }
     for (const n of live) this.analyseNode(n);
     // routes through the changed nodes go, and are walked again from their segments
@@ -584,12 +588,19 @@ export class RoadNetwork {
         const f = rbFillet(N, a.dir, a.h, R, 1.5, side); if (f) asphF.push(feat('poly', f.path, 0, a.cls.tex, a.cls.order, f.bbox, 'butt', kerbed(a.cls)));
         const g = rbFillet(N, a.dir, a.h + a.walk, R + wmax, Math.max(0.2, 1.5 - a.walk), side); if (g) walkF.push(feat('poly', g.path, 0, a.cls.walkTex, walkOrder(a.cls.walkTex), g.bbox));
       }
-      rbIslands.push({ x: n.x, y: n.y, r: R - RB_LANE });
+      const rl = n.rl ?? 1;
+      rbIslands.push({ x: n.x, y: n.y, r: R - rl * RB_LANE });
       auto.push({ kind: 'rbtree', x: n.x, y: n.y, i: 0 });
       for (const a of arms) {
         const rn = { x: a.dir.y, y: -a.dir.x }, m = a.cls.median / 2, at = add(N, mul(a.dir, R + 0.35));
         const p0 = add(at, mul(rn, m + 0.2)), p1 = add(at, mul(rn, a.h - 0.2));
         lines.push({ pts: [p0, p1], closed: false, width: 0.3, color: WHITE, dash: [0.45, 0.3], r: 0, offset: 0, bbox: bboxOf([p0, p1], 0.5) });
+      }
+      // a dashed white circle between each pair of ring lanes (2 and 3 lanes)
+      for (let k = 1; k < rl; k++) {
+        const Rk = R - k * RB_LANE, ring: Pt[] = [];
+        for (let i = 0; i < 64; i++) ring.push({ x: n.x + Math.cos((Math.PI * 2 * i) / 64) * Rk, y: n.y + Math.sin((Math.PI * 2 * i) / 64) * Rk });
+        lines.push({ pts: ring, closed: true, width: 0.3, color: WHITE, dash: [0.45, 0.3], r: 0, offset: 0, bbox: bboxOf(ring, 0.5) });
       }
     } else {
       for (let i = 0; i < k; i++) {
@@ -703,7 +714,7 @@ export class RoadNetwork {
     if (n.rb) {
       const rng = mulberry(((n.x * 7919) ^ (n.y * 104729)) >>> 0), g = gaussOf(rng), R = n.rb, steps = Math.ceil(Math.PI * 2 * R / 2.5);
       for (let i = 0; i < steps; i++) { const t0 = (Math.PI * 2 * i) / steps, t1 = (Math.PI * 2 * (i + 1)) / steps, P = { x: n.x + Math.cos(t0) * R, y: n.y + Math.sin(t0) * R }, Q = { x: n.x + Math.cos(t1) * R, y: n.y + Math.sin(t1) * R }, d = sub(Q, P), L = vlen(d), u = mul(d, 1 / L), nIn = norm(sub(n, P)); this.litterRun(fx, P, u, nIn, L, 1, rng, g, true, R); }
-      const ri = R - RB_LANE;
+      const ri = R - (n.rl ?? 1) * RB_LANE;
       for (let i = 0; i < steps; i++) { const t0 = (Math.PI * 2 * i) / steps, t1 = (Math.PI * 2 * (i + 1)) / steps, P = { x: n.x + Math.cos(t0) * ri, y: n.y + Math.sin(t0) * ri }, Q = { x: n.x + Math.cos(t1) * ri, y: n.y + Math.sin(t1) * ri }, d = sub(Q, P), L = vlen(d), u = mul(d, 1 / L), nIn = norm(sub(P, n)); this.litterRun(fx, P, u, nIn, L, 0, rng, g, false, RB_LANE); }
     }
   }
