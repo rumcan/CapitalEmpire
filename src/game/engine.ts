@@ -29,6 +29,7 @@ import { LV, type LotTuple } from './lots/town';
 import { compose, isCarPark, type ComposeState, type LotGeom } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
+import { Names, RoadNames } from './ext/names';
 import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
@@ -97,6 +98,10 @@ export class Game {
   cam: Camera = { X: worldX(MAP / 2, MAP / 2), Y: worldY(MAP / 2, MAP / 2), z: 0.16 };
   /** the map seed (saved) and the valley generated from it */
   seed = 1; terrain!: Terrain;
+  /** the road, town and place names of the map (src/game/ext/names): derived from the seed and stable keys, so never saved; rebuilt by genTerrain */
+  names!: Names; roadNames!: RoadNames;
+  /** the town sites' centres (tiles) in the terrain's order: the town index of the names module */
+  townPts: Pt[] = [];
   net = new RoadNetwork(); edit = new NetEditor(this.net); lanes = new LaneGraph();
   props = new Set<Prop>(); nextUid = 1;
   private propGrid = new Grid<Prop>(8); private lampProps = new Set<Prop>(); private autoByKey = new Map<string, Prop>();
@@ -138,6 +143,8 @@ export class Game {
   /** the car inspected (its slot in the traffic client's arrays; -1: none; its info is traffic.car), and whether the camera follows it */
   inspecting = -1; followCar = false;
   hover: Pt | null = null; hoverProp: Prop | null = null; hoverNode: Node | null = null; hoverPiece: PieceSel | null = null;
+  /** the select tool's road under the pointer when no prop is (its name; '' otherwise) */
+  hoverRoad = '';
   route: Pt[] = [];
   /** the snaps of the route's first point and of its last click (see snap.ts: checkLegs judges the route against them) */
   routeFrom: Snap | null = null; routeLast: Snap | null = null;
@@ -262,6 +269,7 @@ export class Game {
   /** generate the valley for a seed (about 0.3–0.6 s) */
   private genTerrain(seed: number) {
     this.seed = seed; this.terrain = generateTerrain(seed);
+    this.names = new Names(seed); this.townPts = townCentres(this.terrain); this.roadNames = new RoadNames(this.names, this.townPts);
     for (const ps of this.forest.values()) for (const p of ps) this.sprites.remove(p);
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
   }
@@ -857,6 +865,7 @@ export class Game {
       else if (d.kind === 'bulldoze') this.bulldozeAt(mx, my, false);
       else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
+    if (this.tool === 'select' && !d) this.hoverRoad = this.hoverProp ? '' : this.roadNameAt(this.hover);
     if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.junctionMode === 'type' ? JUNCTIONS.find(j => j.id === this.junctionType)!.minDeg : 2, 5);
     if (this.tool === 'lane') this.laneUpdate(this.hover);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
@@ -864,7 +873,18 @@ export class Game {
     if (this.tool === 'bus') this.busUpdate(mx, my);
   }
   pointerUp() { if (this.dragging?.kind === 'park') this.parkRelease(); this.dragging = null; }
-  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.tollHover = null; this.busHover = null; this.laneHover = null; }
+  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.busHover = null; this.laneHover = null; }
+  /** the name of the road under tile t (the piece under it, then its route), or '' */
+  roadNameAt(t: Pt | null): string {
+    const piece = t ? this.net.pieceNear(t) : null;
+    return piece ? this.roadNameOfSeg(piece.seg) : '';
+  }
+  /** the name of the route a segment belongs to, or '' */
+  private roadNameOfSeg(s: Seg): string { const r = this.net.routeOfSeg(s); return r ? this.roadNames.nameOf(r) : ''; }
+  /** a junction's name from the names of the roads meeting at it (Names.junction: "Maple Ave & 3rd St"), or '' */
+  junctionName(n: Node): string { const names: string[] = []; for (const a of n.arms) { const s = this.roadNameOfSeg(a.seg); if (s) names.push(s); } return this.names.junction(names); }
+  /** the name of the junction at tile position (x, y) (a node's position), or '' when there is no junction there */
+  junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
   doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
@@ -1897,6 +1917,7 @@ export class Game {
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);
+    if (this.cam.z < DISTRICT_Z) this.drawTownNames(ctx);
     if (this.traffic && this.cam.z >= DISTRICT_Z) this.drawSignals(ctx);
     if (this.cam.z >= PLANNER_Z) this.drawNodeFlags(ctx);
     this.drawFlow(ctx);
@@ -1936,6 +1957,18 @@ export class Game {
       const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
+  }
+
+  /** the map's three town names at the district and planner tiers: white with a dark outline, centred on each town site (screen px) */
+  private drawTownNames(ctx: CanvasRenderingContext2D) {
+    const dpr = this.dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.font = `bold ${16 * dpr}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 4 * dpr; ctx.strokeStyle = '#0f172a'; ctx.fillStyle = '#ffffff';
+    this.townPts.forEach((c, i) => {
+      const s = this.screen(c.x, c.y), label = this.names.town(i);
+      ctx.strokeText(label, s.x, s.y); ctx.fillText(label, s.x, s.y);
+    });
+    ctx.textAlign = 'left';
   }
 
   /** the access overlay: each zone (128 tiles square) with a built lot, shaded by its access: green below 1.3, amber to 1.8, red above (25% alpha),

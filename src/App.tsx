@@ -5,6 +5,7 @@ import { type LibItem, type Tool } from './game/types';
 import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES } from './game/network';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
+import { shortName } from './game/ext/names';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
@@ -443,18 +444,23 @@ function BottleneckPanel({ game }: { game: Game }) {
         <p className="mb-2 text-xs text-slate-400">Time lost in the last game hour or so, worst first</p>
         {top.length ? (
           <div className="space-y-0.5">
-            {top.map((it, i) => (
+            {top.map((it, i) => {
+              // the name looked up on the main thread: a junction by its node, a link by the road under its midpoint; the type text stays as the subtitle
+              const name = it.kind === 'junction' ? game.junctionNameAt(it.x, it.y) : shortName(game.roadNameAt({ x: it.x, y: it.y }));
+              return (
               <button key={it.kind + it.key} className="block w-full rounded-lg px-1.5 py-1 text-left hover:bg-white/10" onClick={() => game.jumpTo(it.x, it.y)} title="Jump there">
                 <div className="flex items-center gap-2 text-xs">
                   <span className="w-4 text-right tabular-nums text-slate-500">{i + 1}</span>
-                  <span className="min-w-0 flex-1 truncate text-slate-100">{it.label}</span>
+                  <span className="min-w-0 flex-1 truncate text-slate-100">{name || it.label}</span>
                   {it.kind === 'junction'
                     ? <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-bold text-slate-900" style={{ background: LOS_COL[it.los] }}>{it.los}</span>
                     : <span className="shrink-0 text-[10px] tabular-nums text-slate-300">v/c {it.vc.toFixed(2)}</span>}
                 </div>
+                {name ? <div className="pl-6 text-[10px] text-slate-500">{it.label}</div> : null}
                 <div className="pl-6 text-[10px] text-slate-400">{(it.loss / 60).toFixed(1)} veh-min lost per hour{it.vc < 0.3 && (it.los === 'E' || it.los === 'F') ? <span className="text-amber-300"> · queued back from downstream</span> : it.vc >= 0.8 ? <span className="text-red-300"> · at capacity</span> : null}</div>
               </button>
-            ))}
+              );
+            })}
           </div>
         ) : <p className="text-xs text-slate-400">{game.traffic.report ? 'No bottlenecks: the traffic flows freely' : 'No traffic yet'}</p>}
         <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
@@ -717,7 +723,7 @@ function JunctionPanel({ game }: { game: Game }) {
           ? `Widen turns (${money(FLAG_COST.wide)}): the corners at this junction take up to twice the speed. Click a junction or bend to turn it on; click again to remove it.`
           : `Turn lanes (${money(FLAG_COST.tl)}, two-lane roads): the leftmost lane takes left turns only; the others go straight on or right. Click a junction of three or more roads to turn it on; click again to remove it.`}</p>
       )}
-      <p className="mt-2 text-[11px] text-slate-500">{n ? `Junction of ${n.arms.length} roads (${JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()})${flags ? `, with ${flags}` : ''} — click to ${mode === 'type' ? 'convert' : 'toggle'}` : 'Hover a junction to highlight it.'}</p>
+      <p className="mt-2 text-[11px] text-slate-500">{n ? `${game.junctionName(n) ? `${game.junctionName(n)} · ` : ''}Junction of ${n.arms.length} roads (${JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()})${flags ? `, with ${flags}` : ''} — click to ${mode === 'type' ? 'convert' : 'toggle'}` : 'Hover a junction to highlight it.'}</p>
     </Panel>
   );
 }
@@ -789,6 +795,7 @@ function hintFor(g: Game) {
     case 'lane': { const h = g.laneHover; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way';
       return h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`; }
     case 'bulldoze': return 'Click objects or roads to remove them';
+    case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
     case 'bus': return g.busPick ? 'BUS ROUTE: click a road near the stadium for the doors stop · Esc cancels' : 'BUS ROUTE: click a road beside a car park for the lot stop · with Bulldoze (X), click a stop to remove its route (no refund)';

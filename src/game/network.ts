@@ -348,6 +348,8 @@ export class RoadNetwork {
   addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, rebuild = true, kinds?: SegKind[]) { legs.forEach((l, i) => this.addSegment(l.a, l.b, cls, style, kinds?.[i] ?? 0)); if (rebuild) this.rebuild(); }
   legsLength(legs: Leg[]) { return legs.reduce((s, l) => s + vlen(sub(l.b, l.a)), 0); }
   segsNear(p: Pt, r: number) { return this.segGrid.query([p.x - r, p.y - r, p.x + r, p.y + r]); }
+  /** the route a segment belongs to (the current build; undefined for a segment not in a route yet) */
+  routeOfSeg(s: Seg): Route | undefined { return this.routeOf.get(s); }
   /** the 3-tile piece of road under a point, or null */
   pieceNear(p: Pt): PieceSel | null {
     let best: PieceSel | null = null, bd = Infinity;
