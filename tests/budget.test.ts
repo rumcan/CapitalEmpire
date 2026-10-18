@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LU, LV } from '../src/game/lots/town';
-import { Budget, DEBT_DAYS, LOAN, START_MONEY, compensation, lotTax, segUpkeep, type DayIn, type LotIn } from '../src/game/budget';
+import { Budget, DEBT_DAYS, LOAN, START_MONEY, compensation, lotTax, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn } from '../src/game/budget';
 
 const lot = (o: Partial<LotIn>): LotIn => ({ use: LU.RES, level: LV.BUILT, decline: 0, cls: 'street', access: 1, ...o });
 const EMPTY_DAY: DayIn = { lots: [], segs: [], nodes: [], trade: { arrived: 0, punctual: 0 }, pop: 0 };
@@ -23,9 +23,9 @@ test('compensation: 0 for an empty lot; by use and level; a tenth of it when der
   assert.equal(compensation({ use: LU.RES, level: LV.BUILT, decline: 3 }), 200);
 });
 
-test('segment upkeep: 100 tiles of street ground is 60; the same as a bridge is 240', () => {
-  assert.equal(segUpkeep({ cls: 'street', len: 100, kind: 0 }), 60);
-  assert.equal(segUpkeep({ cls: 'street', len: 100, kind: 1 }), 240);
+test('segment upkeep: 100 tiles of street ground is 150; the same as a bridge is 600', () => {
+  assert.equal(segUpkeep({ cls: 'street', len: 100, kind: 0 }), 150);
+  assert.equal(segUpkeep({ cls: 'street', len: 100, kind: 1 }), 600);
 });
 
 test('endDay books tax, takings, upkeep, signals and interest, and applies them to the treasury', () => {
@@ -37,10 +37,10 @@ test('endDay books tax, takings, upkeep, signals and interest, and applies them 
     trade: { arrived: 10, punctual: 8 },
     pop: 4000,
   };
-  // tax 12 + 70 = 82; takings 1.5 * 8 = 12; upkeep 60 + 24 = 84; signals 20 + 10 = 30; interest 2 * 25000 * 0.01 = 500
+  // tax 12 + 70 = 82; takings 1.5 * 8 = 12; upkeep 150 + 60 = 210; signals 20 + 10 = 30; interest 2 * 25000 * 0.01 = 500
   const L = b.endDay(1, d);
-  assert.deepEqual(L, { day: 1, property: 82, business: 12, upkeep: 84, signals: 30, interest: 500, construction: 0, compensation: 0, net: -520, money: START_MONEY - 520 });
-  assert.equal(b.money, START_MONEY - 520);
+  assert.deepEqual(L, { day: 1, property: 82, business: 12, grants: 0, upkeep: 210, signals: 30, interest: 500, construction: 0, compensation: 0, net: -646, money: START_MONEY - 646 });
+  assert.equal(b.money, START_MONEY - 646);
   assert.deepEqual(b.history, [L]);
   assert.equal(b.debtDays, 0);
   assert.equal(b.bankrupt, false);
@@ -50,15 +50,37 @@ test('spending comes out of the treasury now, shows in the next ledger, and toda
   const b = new Budget();
   b.spend('construction', 1000); b.refund(200); b.spend('compensation', 300);
   assert.equal(b.money, START_MONEY - 1100);
-  assert.deepEqual(b.today, { construction: 800, compensation: 300 });
+  assert.deepEqual(b.today, { construction: 800, compensation: 300, grants: 0 });
   const L1 = b.endDay(1, EMPTY_DAY);
-  assert.deepEqual(L1, { day: 1, property: 0, business: 0, upkeep: 0, signals: 0, interest: 0, construction: 800, compensation: 300, net: -1100, money: START_MONEY - 1100 });
-  assert.deepEqual(b.today, { construction: 0, compensation: 0 });
+  assert.deepEqual(L1, { day: 1, property: 0, business: 0, grants: 0, upkeep: 0, signals: 0, interest: 0, construction: 800, compensation: 300, net: -1100, money: START_MONEY - 1100 });
+  assert.deepEqual(b.today, { construction: 0, compensation: 0, grants: 0 });
   const L2 = b.endDay(2, EMPTY_DAY);
   assert.equal(L2.construction, 0);
   assert.equal(L2.compensation, 0);
   assert.equal(L2.net, 0);
   assert.equal(L2.money, START_MONEY - 1100);
+});
+
+test('a grant goes into the treasury now and shows as income in the next ledger (net and money); today resets after', () => {
+  const b = new Budget();
+  b.grant(10000); b.spend('construction', 1000);
+  assert.equal(b.money, START_MONEY + 9000);
+  assert.equal(b.today.grants, 10000);
+  const L1 = b.endDay(1, EMPTY_DAY);
+  assert.deepEqual(L1, { day: 1, property: 0, business: 0, grants: 10000, upkeep: 0, signals: 0, interest: 0, construction: 1000, compensation: 0, net: 9000, money: START_MONEY + 9000 });
+  assert.deepEqual(b.today, { construction: 0, compensation: 0, grants: 0 });
+  const L2 = b.endDay(2, EMPTY_DAY);
+  assert.equal(L2.grants, 0);
+  assert.equal(L2.net, 0);
+  assert.equal(L2.money, START_MONEY + 9000);
+});
+
+test('a save from before grants: its ledgers read with grants 0', () => {
+  const old: BudgetSave = { base: 0, money: 1000, loans: 0, debtDays: 0, bankrupt: false, history: [{ day: 1, property: 5, business: 0, upkeep: 0, signals: 0, interest: 0, construction: 0, compensation: 0, net: 5, money: 1000 } as Ledger] };
+  const b = Budget.from(old);
+  assert.equal(b.history[0]!.grants, 0);
+  assert.equal(b.history[0]!.net, 5);
+  assert.equal(b.endDay(2, EMPTY_DAY).grants, 0);
 });
 
 test('loans: the limit is one unit per 2000 residents from one, at most 6; repay needs the cash', () => {

@@ -1,4 +1,4 @@
-// The city's money: the treasury, the daily ledger (property tax and business takings in; upkeep, signal upkeep, loan interest,
+// The city's money: the treasury, the daily ledger (property tax, business takings and grants in; upkeep, signal upkeep, loan interest,
 // construction and compensation out), loans, and bankruptcy after DEBT_DAYS days in the red. Pure TS, no DOM, runs in node.
 import { LV } from './lots/town';
 import { STRUCT_COST } from './structures';
@@ -38,8 +38,8 @@ export const COMPENSATION: number[][] = [
 ];
 /** $ per customer or worker who arrived at a non-RES lot, times their punctuality */
 export const BUSINESS = 1.5;
-/** upkeep per day: this share of the build cost per tile (times STRUCT_COST[kind] for bridges and tunnels) */
-export const UPKEEP = 0.004;
+/** upkeep per day: this share of the build cost per tile (1%: a road costs its price again in 100 days, so roads must earn their keep through the lots they serve) (times STRUCT_COST[kind] for bridges and tunnels) */
+export const UPKEEP = 0.01;
 /** signal upkeep per day by junction type (others 0), $ */
 export const SIGNAL_UPKEEP: Record<string, number> = { signal: 20, slip: 40, roundabout: 10 };
 
@@ -102,7 +102,7 @@ export function compensation(l: { use: number; level: number; decline: number })
 /** a stretch's upkeep per day, $: its length times the class cost, the upkeep share, times the structure's multiplier */
 export function segUpkeep(s: SegIn): number { return s.len * CLASS[s.cls as ClassId]!.cost * UPKEEP * STRUCT_COST[s.kind]!; }
 
-/** one game day's books, whole dollars; costs are positive, net = property + business - upkeep - signals - interest - construction - compensation */
+/** one game day's books, whole dollars; costs are positive, net = property + business + grants - upkeep - signals - interest - construction - compensation */
 export interface Ledger {
   /** the game day */
   day: number;
@@ -110,6 +110,8 @@ export interface Ledger {
   property: number;
   /** the business takings in */
   business: number;
+  /** the milestone grants in */
+  grants: number;
   /** the road upkeep out */
   upkeep: number;
   /** the signal upkeep out */
@@ -128,7 +130,7 @@ export interface Ledger {
 /** the budget as saved: the sim s of day 1's midnight (base), the treasury, loans, days in the red, bankruptcy and the ledgers */
 export interface BudgetSave { base: number; money: number; loans: number; debtDays: number; bankrupt: boolean; history: Ledger[] }
 
-/** The city's budget. Spending is taken from the treasury when it happens and shows in the next day's ledger; endDay books the rest. */
+/** The city's budget. Spending and grants move the treasury when they happen and show in the next day's ledger; endDay books the rest. */
 export class Budget {
   /** sim s of day 1's midnight: the game day is Math.floor((t - base) / GAME_DAY) + 1 (see dayOf) */
   base = 0;
@@ -140,8 +142,8 @@ export class Budget {
   debtDays = 0;
   /** true once debtDays reached DEBT_DAYS (it stays so) */
   bankrupt = false;
-  /** today's construction and compensation spending, $ (booked by the next endDay) */
-  today = { construction: 0, compensation: 0 };
+  /** today's construction and compensation spending and grants, $ (booked by the next endDay) */
+  today = { construction: 0, compensation: 0, grants: 0 };
   /** the ledgers, newest last (at most 30) */
   history: Ledger[] = [];
 
@@ -152,6 +154,8 @@ export class Budget {
   spend(kind: 'construction' | 'compensation', n: number) { this.money -= n; this.today[kind] += n; }
   /** gives back n $ of today's construction */
   refund(n: number) { this.money += n; this.today.construction -= n; }
+  /** pays n $ of milestone grant into the treasury now: shows as income in the next ledger */
+  grant(n: number) { this.money += n; this.today.grants += n; }
   /** the loan units a city of pop residents can hold: one more per 2000 residents, at most 6 */
   maxLoans(pop: number): number { return Math.min(6, 1 + Math.floor(pop / 2000)); }
   /** takes one loan unit (LOAN into the treasury) if the city of pop residents can hold another; false if not */
@@ -166,10 +170,10 @@ export class Budget {
     for (const s of d.segs) upkeep += segUpkeep(s);
     for (const t of d.nodes) signals += SIGNAL_UPKEEP[t] ?? 0;
     const p = Math.round(property), b = Math.round(BUSINESS * d.trade.punctual), u = Math.round(upkeep), sg = Math.round(signals);
-    const it = Math.round(this.loans * LOAN * LOAN_RATE), c = Math.round(this.today.construction), k = Math.round(this.today.compensation);
-    this.money += p + b - u - sg - it;
-    const L: Ledger = { day, property: p, business: b, upkeep: u, signals: sg, interest: it, construction: c, compensation: k, net: p + b - u - sg - it - c - k, money: this.money };
-    this.today.construction = 0; this.today.compensation = 0;
+    const it = Math.round(this.loans * LOAN * LOAN_RATE), c = Math.round(this.today.construction), k = Math.round(this.today.compensation), g = Math.round(this.today.grants);
+    this.money += p + b - u - sg - it; // the grants and today's spending are in the treasury already
+    const L: Ledger = { day, property: p, business: b, grants: g, upkeep: u, signals: sg, interest: it, construction: c, compensation: k, net: p + b + g - u - sg - it - c - k, money: this.money };
+    this.today.construction = 0; this.today.compensation = 0; this.today.grants = 0;
     this.debtDays = this.money < 0 ? this.debtDays + 1 : 0;
     this.bankrupt ||= this.debtDays >= DEBT_DAYS;
     this.history.push(L); if (this.history.length > 30) this.history.shift();
@@ -177,11 +181,11 @@ export class Budget {
   }
   /** the save: the treasury, loans, days in the red, bankruptcy and a copy of the ledgers */
   toJSON(): BudgetSave { return { base: this.base, money: this.money, loans: this.loans, debtDays: this.debtDays, bankrupt: this.bankrupt, history: this.history.slice() }; }
-  /** a budget from a save (base 0 if the save has none); from(undefined, money) is a fresh budget with that treasury (old saves; START_MONEY if none given) */
+  /** a budget from a save (base 0 if the save has none; ledgers from before grants read as no grant); from(undefined, money) is a fresh budget with that treasury (old saves; START_MONEY if none given) */
   static from(s?: BudgetSave, money?: number): Budget {
     const b = new Budget();
     if (!s) { b.money = money ?? START_MONEY; return b; }
-    b.base = s.base ?? 0; b.money = s.money; b.loans = s.loans; b.debtDays = s.debtDays; b.bankrupt = s.bankrupt; b.history = s.history.slice(-30);
+    b.base = s.base ?? 0; b.money = s.money; b.loans = s.loans; b.debtDays = s.debtDays; b.bankrupt = s.bankrupt; b.history = s.history.slice(-30).map(l => ({ ...l, grants: l.grants ?? 0 }));
     return b;
   }
 }

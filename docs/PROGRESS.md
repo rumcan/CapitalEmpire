@@ -586,7 +586,7 @@ top bottleneck measurably restarts growth). Suggested steps:
    (RES 12/20, COM 30/50, IND 24/40, TOUR 36/60 $ a day at BUILT/UPGRADED) x frontage value (gravel 0.7 .. boulevard 1.4)
    x access value `clamp(1.5 - 0.5 access, 0.25, 1)` x decline (1, 0.7, 0.3, 0); business $1.5 per customer or worker who
    arrived at a non-RES lot, times punctuality `min(1, FREE ideal / actual)` (the sim tags each lot trip with its
-   destination's use and counts `sim.trade`); upkeep 0.4% of the build cost per tile a day (bridges x4, tunnels x6);
+   destination's use and counts `sim.trade`); upkeep 1% of the build cost per tile a day (raised from 0.4% in step 5: at 0.4% the Career could not be lost; bridges x4, tunnels x6);
    signals $20, slipways $40, roundabouts $10 a day; compensation for cleared lots (RES 2,000/3,500 .. TOUR 6,000/10,000;
    500 while building); loans of $25k at 1% a day, one more per 2,000 residents (at most 6); **bankrupt after 5 days in
    a row in the red**.
