@@ -1,6 +1,6 @@
 # T006 · Natural disasters
 
-Status: open
+Status: in progress (arena/2e426635-capitalempire)
 Module: `src/game/ext/disasters/` · Tests: `tests/ext-disasters.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
