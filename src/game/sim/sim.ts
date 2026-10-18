@@ -11,6 +11,8 @@ import type { Node } from '../network';
 
 /** seconds per step */
 export const DT = 0.1;
+/** steps per sim second (1 / DT): the clock is kept as whole steps over this, so whole seconds are exact */
+const PER_S = Math.round(1 / DT);
 /** metres searched ahead along the plan for a leader and for a plan end */
 export const LOOKAHEAD = 150;
 /** vehicle types (the renderer's sprite sets): length in metres */
@@ -290,7 +292,8 @@ export class Sim {
     this.arrive();
     this.tow();
     for (let i = 0; i < this.cap; i++) this.lat[i] *= 0.85;
-    this.t += DT; this.steps++;
+    // on the DT grid: summing 0.1 drifts (52,380 steps read 52,379.99999), which moved hour and day boundaries a step late
+    this.t = Math.round((this.t + DT) * PER_S) / PER_S; this.steps++;
     this.router.tick(this);
     const H = Math.floor(this.t / 60);
     if (H !== this.aH) { this.aH = H; this.relax(); }
