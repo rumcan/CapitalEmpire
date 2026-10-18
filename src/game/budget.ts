@@ -114,6 +114,8 @@ export interface Ledger {
   grants: number;
   /** the toll gates' takings in (absent when none: read it as 0, as old ledgers have none) */
   toll?: number;
+  /** the event's payout (signed: negative is a cost; absent when none: read it as 0) */
+  payout?: number;
   /** the road upkeep out */
   upkeep: number;
   /** the signal upkeep out */
@@ -145,7 +147,7 @@ export class Budget {
   /** true once debtDays reached DEBT_DAYS (it stays so) */
   bankrupt = false;
   /** today's construction and compensation spending, grants and live upkeep (paid while a round runs), $ (booked by the next endDay) */
-  today: { construction: number; compensation: number; grants: number; upkeepLive: number; /** the toll takings today (absent when none) */ toll?: number } = { construction: 0, compensation: 0, grants: 0, upkeepLive: 0 };
+  today: { construction: number; compensation: number; grants: number; upkeepLive: number; /** the toll takings today (absent when none) */ toll?: number; /** the payout today (signed; absent when none) */ payout?: number } = { construction: 0, compensation: 0, grants: 0, upkeepLive: 0 };
   /** the ledgers, newest last (at most 30) */
   history: Ledger[] = [];
   /** dev sandbox: spending is booked in the ledger but the treasury does not move, and endDay keeps it and the debt at their values (not saved) */
@@ -164,6 +166,8 @@ export class Budget {
   grant(n: number) { this.money += n; this.today.grants += n; }
   /** books n $ of toll takings into the treasury now: shows as toll income in the next ledger (as grant does, unlimited included) */
   toll(n: number) { this.money += n; this.today.toll = (this.today.toll ?? 0) + n; }
+  /** books n $ of a round's payout (negative: a cost) into the treasury now: shows in the next ledger as payout, booked in net (as toll does) */
+  payout(n: number) { this.money += n; this.today.payout = (this.today.payout ?? 0) + n; }
   /** the loan units a city of pop residents can hold: one more per 2000 residents, at most 6 */
   maxLoans(pop: number): number { return Math.min(6, 1 + Math.floor(pop / 2000)); }
   /** takes one loan unit (LOAN into the treasury) if the city of pop residents can hold another; false if not */
@@ -182,9 +186,10 @@ export class Budget {
     const it = Math.round(this.loans * LOAN * LOAN_RATE), c = Math.round(this.today.construction), k = Math.round(this.today.compensation), g = Math.round(this.today.grants);
     const lv = Math.round(this.today.upkeepLive); // the live upkeep is out of the treasury already, shown here in the upkeep line
     const tl = Math.round(this.today.toll ?? 0); // the tolls are in the treasury already (see toll)
+    const pay = Math.round(this.today.payout ?? 0); // the payout is too (see payout)
     this.money += p + b - u - sg - it; // the grants and today's spending are in the treasury already
-    const L: Ledger = { day, property: p, business: b, grants: g, ...(tl ? { toll: tl } : {}), upkeep: u + lv, signals: sg, interest: it, construction: c, compensation: k, net: p + b + g + tl - u - lv - sg - it - c - k, money: this.money };
-    this.today.construction = 0; this.today.compensation = 0; this.today.grants = 0; this.today.upkeepLive = 0; delete this.today.toll;
+    const L: Ledger = { day, property: p, business: b, grants: g, ...(tl ? { toll: tl } : {}), ...(pay ? { payout: pay } : {}), upkeep: u + lv, signals: sg, interest: it, construction: c, compensation: k, net: p + b + g + tl + pay - u - lv - sg - it - c - k, money: this.money };
+    this.today.construction = 0; this.today.compensation = 0; this.today.grants = 0; this.today.upkeepLive = 0; delete this.today.toll; delete this.today.payout;
     if (this.unlimited) { this.money = m0; this.debtDays = 0; this.bankrupt = false; }
     else { this.debtDays = this.money < 0 ? this.debtDays + 1 : 0; this.bankrupt ||= this.debtDays >= DEBT_DAYS; }
     this.history.push(L); if (this.history.length > 30) this.history.shift();

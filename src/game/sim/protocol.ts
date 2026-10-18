@@ -7,6 +7,7 @@ import type { Report } from './bottlenecks';
 import type { CarInfo } from './sim';
 import type { HourStat } from '../beforeafter';
 import type { RoundSave, RoundView } from '../event/round';
+import type { CardId } from '../event/config';
 import type { Site } from '../event/site';
 import type { CarParkDef, ParkView } from '../event/carpark';
 import type { TollDef } from '../event/toll';
@@ -24,7 +25,7 @@ export interface LotRec { key: string; o: [number, number]; u: [number, number];
  *  a sandbox (dev options: the growth speed grow (1 = the game's) and unlimited money (money: spending does not move the treasury)) */
 export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array; entry: [number, number]; seed: number; towns: number[] } | { t: 'target'; n: number } | { t: 'speed'; k: number } | { t: 'option'; id: string } | { t: 'townState'; lots: LotTuple[]; simT: number; budget?: BudgetSave; money: number; career?: CareerSave; shift?: number; round?: RoundSave } | { t: 'skip'; until: number }
   | { t: 'spend'; kind: 'construction' | 'compensation'; n: number } | { t: 'loan'; take: boolean } | { t: 'budget'; save: BudgetSave | null; career?: CareerSave | null } | { t: 'report' } | { t: 'stamp'; pop: number }
-  | { t: 'sandbox'; grow: number; money: boolean } | { t: 'inspect'; slot: number } | { t: 'watch'; x: number; y: number } | { t: 'round'; op: 'start' | 'now' | 'close' }
+  | { t: 'sandbox'; grow: number; money: boolean } | { t: 'inspect'; slot: number } | { t: 'watch'; x: number; y: number } | { t: 'round'; op: 'start' | 'now' | 'close' } | { t: 'round'; op: 'pick'; card: CardId }
   | { t: 'parks'; defs: CarParkDef[] } | { t: 'parkTest'; id: number; n: number } | { t: 'tolls'; defs: TollDef[] } | { t: 'heat'; on: boolean }
   | { t: 'buses'; defs: BusRouteDef[] };
 /** (buses: the shuttle routes as the player drew them (the full list, each time: the worker resolves their stops); heat: the congestion heat map on or off (off by default: nothing is posted then); report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;

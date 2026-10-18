@@ -153,6 +153,7 @@ test('City round, end to end (no homes built, so every car is stranded): the sur
   assert.deepEqual(L.byTown.map(t => t.stranded), crowd, 'the result has each town\'s stranded crowd');
   assert.deepEqual(L.byTown.map(t => t.late), crowd.map(() => 0), 'nothing late: nothing was sent');
   assert.deepEqual(city.roundView().surge?.stranded, crowd, 'the eval view carries the counts');
+  assert.equal(city.pickCard(city.round.draft![0]!), true, 'a card of the draft is taken first (the close needs it)');
   assert.equal(city.closeRound(), true);
   assert.equal(city.surge, null, 'the close drops the surge');
   assert.equal(city.roundView().surge, null);

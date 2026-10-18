@@ -143,7 +143,8 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'buses': city.setBusRoutes(m.defs); forcePost = true; break;
       case 'heat': heatOn = m.on; heatGeomV = -1; heatNext = 0; break;
       case 'round':
-        if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else city.closeRound();
+        if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else if (m.op === 'pick') city.pickCard(m.card);
+        else if (city.closeRound() && city.grown) postTown(city.grown.events, true);
         postBudget(null); forcePost = true; break;
       case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
       case 'loan': city.loan(m.take); postBudget(null); break;

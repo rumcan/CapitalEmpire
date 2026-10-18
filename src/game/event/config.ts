@@ -16,7 +16,7 @@ export const DEPART_END = 0.75;
 export const SURGE_SEED = 7919;
 /** the crowd's growth per level: the cars at level L are L1_CARS * LEVEL_MUL ** (L - 1) */
 export const LEVEL_MUL = 1.4;
-/** the share of the town's growth the event adds (not used yet: a later step) */
+/** the share of the town's growth a perfect run adds (each town is stamped to its population times 1 + TOWN_GROWTH: see City.closeRound) */
 export const TOWN_GROWTH = 0.25;
 /** the stadium's footprint, tiles: its width (x) */
 export const STADIUM_W = 100;
@@ -38,6 +38,8 @@ export const AISLE = 3;
 export const LOT_TILE_COST = 25;
 /** the time an entrance holds for each car it admits, s (the next car waits this long at the gate) */
 export const ENTRY_S = 2;
+/** the entry time factor of the Express entry card: an entrance holds ENTRY_S * EXPRESS_ENTRY s per car */
+export const EXPRESS_ENTRY = 0.7;
 /** a car park entrance per this many tiles of frontage */
 export const ENTRANCE_EVERY = 40;
 /** the most entrances a car park has */
@@ -84,3 +86,33 @@ export const MAX_DWELL = 40;
 export const WALK_V = 1.4;
 /** what a shuttle route costs to build, $ (the UI charges it) */
 export const BUS_ROUTE_COST = 15000;
+/** the seats of a double-decker bus (the Double-decker buses card: every route's seats are at least this) */
+export const DECK_SEATS = 100;
+
+/** the payout of a round at rate 1 and level 1, $ (the curve: see payout) */
+export const PAYOUT_BASE = 60000;
+/** the arrival rate at which a round pays nothing (the curve's pivot) */
+export const PAYOUT_PIVOT = 0.5;
+/** the most a round at rate 0 costs, $ (the penalty: see payout) */
+export const PENALTY = 20000;
+/** the arrival rate a round must reach to be perfect (its towns grow and the stadium's level rises on close) */
+export const PERFECT_RATE = 0.9995;
+/** the payout of a round, $ (signed: a negative one is a cost): at rate >= PAYOUT_PIVOT, PAYOUT_BASE times LEVEL_MUL ** (level - 1) times the share
+ *  above the pivot (1 at rate 1); below it, a PENALTY times the share under the pivot (the full PENALTY at rate 0) */
+export function payout(rate: number, level: number): number {
+  if (rate >= PAYOUT_PIVOT) return Math.round(PAYOUT_BASE * LEVEL_MUL ** (level - 1) * (rate - PAYOUT_PIVOT) / (1 - PAYOUT_PIVOT));
+  return -Math.round(PENALTY * (PAYOUT_PIVOT - rate) / PAYOUT_PIVOT);
+}
+
+/** the cards of the draft (Phase 5 step 7): an unlock is offered once (never again once taken); an upgrade may be taken again */
+export const CARDS = [
+  { id: 'roundabout', name: 'Roundabout', desc: 'Unlocks the roundabout junction', kind: 'unlock' },
+  { id: 'booths', name: '+2 toll booths', desc: 'Every toll gate gets two more booths, and new gates too', kind: 'upgrade' },
+  { id: 'doubledecker', name: 'Double-decker buses', desc: 'Buses seat 100 instead of 60', kind: 'unlock' },
+  { id: 'buses', name: '+4 buses', desc: 'Every bus route gets four more buses, and new routes too', kind: 'upgrade' },
+  { id: 'express', name: 'Express entry', desc: 'Car park entrances let a car in every 1.4 s instead of 2', kind: 'unlock' },
+] as const;
+/** a card's id (see CARDS) */
+export type CardId = (typeof CARDS)[number]['id'];
+/** the cards offered at each kick-off (fewer when the pool has fewer left) */
+export const DRAFT = 3;

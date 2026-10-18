@@ -17,6 +17,7 @@ import { Budget, GAME_DAY, START_MONEY, type BudgetSave, type Ledger } from '../
 import type { CareerSave, Milestone } from '../career';
 import { Round, type RoundSave, type RoundView } from '../event/round';
 import type { Site } from '../event/site';
+import type { CardId } from '../event/config';
 import type { CarParkDef, ParkView } from '../event/carpark';
 import type { TollDef } from '../event/toll';
 import type { BusRouteDef } from '../event/bus';
@@ -133,6 +134,8 @@ export class SimClient {
   startNow() { this.post({ t: 'round', op: 'now' }); }
   /** closes the round's eval: the round is free again and the clock runs on */
   closeRound() { this.post({ t: 'round', op: 'close' }); }
+  /** takes a card of the eval's draft: its effects apply at once (see City.pickCard) */
+  pickCard(card: CardId) { this.post({ t: 'round', op: 'pick', card }); }
   /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
   spend(kind: 'construction' | 'compensation', n: number) { this.budget.money -= n; this.post({ t: 'spend', kind, n }); }
   /** takes (true) or repays (false) one loan unit; the worker refuses what the books do not allow */

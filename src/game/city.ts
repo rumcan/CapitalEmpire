@@ -16,7 +16,7 @@ import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, segUpkeep, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
-import { EVENT_CLOCK, PARTY, SURGE_SEED, WALK_V, tollPrice } from './event/config';
+import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
@@ -104,6 +104,8 @@ export class City {
   centres: Pt[] = [];
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
+  /** the towns grown by the last close (closeRound: a perfect run only; null otherwise): the new lots' events, and the residents of each town reached */
+  grown: { events: TownEvent[]; pops: number[] } | null = null;
   /** the surge of the round (event/surge.ts: planned at the surge's start, counted through the eval; null outside) and the road components of the
    *  network (comp: the segs joined by road share a number; labelled after each network batch, see labelComps) */
   surge: Surge | null = null; private comp = new Map<Seg, number>();
@@ -167,7 +169,7 @@ export class City {
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
-    this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round();
+    this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round(); this.grown = null; this.sim.entryS = ENTRY_S;
     this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses();
     // a new valley has no toll gates until the player places them again (their booths are the old roads')
     this.setTolls([]);
@@ -204,12 +206,34 @@ export class City {
   wall(dt: number): void { if (this.round.wall(dt)) this.beginSurge(); }
   /** the surge's clock starts (see Round.beginSurge; idempotent with the round's own start) */
   private beginSurge(): void { this.round.beginSurge(); this.surge = this.planSurge(); this.startBuses(); }
-  /** closes the eval: the round is free again and the clock runs on from where it was frozen; false unless in eval */
+  /** closes the eval: the round is free again and the clock runs on from where it was frozen. A perfect run's towns grow (growTowns; see grown).
+   *  False unless in eval, and while the draft is open (see Round.close) */
   closeRound(): boolean {
+    const perfect = !!this.round.last?.perfect;
+    this.grown = null;
     if (!this.round.close()) return false;
     this.sim.dropParty(); this.surge = null; this.crowd = null; this.sim.dropBuses();
     this.unfreeze(); this.emptyParks();
+    if (perfect && this.centres.length) this.grown = this.growTowns();
     return true;
+  }
+  /** a perfect run's growth: each town is stamped to its residents times 1 + TOWN_GROWTH (the land may run out short of that); returns the new lots'
+   *  events and the residents each town reached */
+  private growTowns(): { events: TownEvent[]; pops: number[] } {
+    const events = this.stamp(0, this.town.popK.map(p => p * (1 + TOWN_GROWTH)));
+    return { events, pops: this.town.popK.slice() };
+  }
+  /** the player takes a card of the eval's draft (see Round.pick); its effects apply at once (applyCards); false if refused */
+  pickCard(id: CardId): boolean {
+    if (!this.round.pick(id)) return false;
+    this.applyCards();
+    return true;
+  }
+  /** the taken cards' effects on the worker's side: express shortens each car park entrance's hold (sim.entryS), and double-decker seats go on
+   *  the bus routes (resolveBuses). The other cards (roundabout, booths, buses) are the City's to report only: the engine applies them */
+  private applyCards(): void {
+    this.sim.entryS = this.round.cards.includes('express') ? ENTRY_S * EXPRESS_ENTRY : ENTRY_S;
+    if (this.busDefs.length) this.resolveBuses();
   }
 
   /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day); the career
@@ -232,17 +256,17 @@ export class City {
   loan(take: boolean): boolean { this.upkeepC = null; return take ? this.budget.borrow(this.town.pop) : this.budget.repay(); }
 
   /** the day's books as Budget.endDay reads them: the lots with a town state of BUILT or more, the road stretches, the junction types,
-   *  the trade since the last booking, the residents */
+   *  the trade since the last booking, the residents. With towns (centres) the lots and the trade pay nothing: the event's payouts are the income */
   dayIn(): DayIn {
-    const lots: LotIn[] = [], segs: SegIn[] = [], nodes: string[] = [];
-    for (const l of this.lots.lots.values()) {
+    const lots: LotIn[] = [], segs: SegIn[] = [], nodes: string[] = [], towns = this.centres.length > 0;
+    if (!towns) for (const l of this.lots.lots.values()) {
       const s = this.town.states.get(l.key);
       if (s && s.level >= LV.BUILT) lots.push({ use: s.use, level: s.level, decline: s.decline, cls: l.cls, access: this.sim.access[zoneOf(l.c.x, l.c.y)]! });
     }
     for (const s of this.net.segs) segs.push({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind });
     for (const n of this.net.nodes.values()) nodes.push(n.type);
     const tr = this.sim.trade, t0 = this.tradeAt;
-    return { lots, segs, nodes, trade: { arrived: tr.arrived - t0.arrived, punctual: tr.punctual - t0.punctual }, pop: this.town.pop };
+    return { lots, segs, nodes, trade: towns ? { arrived: 0, punctual: 0 } : { arrived: tr.arrived - t0.arrived, punctual: tr.punctual - t0.punctual }, pop: this.town.pop };
   }
 
   /** the growth option by id (see GROWTH_OPTIONS) */
@@ -297,8 +321,8 @@ export class City {
   /** the game clock runs again (see Sim.unfreeze) */
   unfreeze(): void { this.sim.unfreeze(); }
 
-  /** the towns built at once (a new valley, see Town.stamp): each town grows to perTown residents; returns the 'complete' events (a new array) */
-  stamp(perTown: number): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.clock); this.syncHour = -1; return ev; }
+  /** the towns built at once (a new valley, or a perfect round's growth, see Town.stamp): each town grows to perTown residents, or to targets[k] when given; returns the 'complete' events (a new array) */
+  stamp(perTown: number, targets?: number[]): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.clock, targets); this.syncHour = -1; return ev; }
 
   /** n sim steps (a frame at speed n), then the town to the sim time, then the planner (once a game hour). Returns the town's events
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
@@ -312,10 +336,13 @@ export class City {
     let milestones = NO_MILESTONES, won = false;
     if (hr !== this.syncHour) {
       this.pushHour(hr); this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync();
-      const u = this.career.update(this.town.pop);
-      for (const m of u.newly) if (m.grant) this.budget.grant(m.grant);
-      if (u.newly.length) milestones = u.newly;
-      won = u.won;
+      // with towns (centres) there is no career: its milestones and grants wait (the event's money is the income, see dayIn)
+      if (!this.centres.length) {
+        const u = this.career.update(this.town.pop);
+        for (const m of u.newly) if (m.grant) this.budget.grant(m.grant);
+        if (u.newly.length) milestones = u.newly;
+        won = u.won;
+      }
     }
     for (let k = 0; k < n; k++) this.sim.step();
     this.ticks[(this.calls - 1) % TICKS] = performance.now() - t0;
@@ -433,6 +460,10 @@ export class City {
     const c = this.fanCounts(), by = this.surge ? this.surge.result(c) : [];
     let arrived = 0; for (const f of c.fans) arrived += f;
     L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / (L.sent * PARTY) : 0;
+    // the money: the payout (signed) is paid now, the net is the toll and payout less the upkeep; the bottlenecks as the crowd meets them
+    L.perfect = L.rate >= PERFECT_RATE; L.payout = payout(L.rate, L.level); L.net = (L.toll ?? 0) + L.payout - L.upkeep;
+    L.stuck = this.report(5).top.map(i => ({ label: i.label, x: i.x, y: i.y, loss: i.loss }));
+    this.budget.payout(L.payout);
   }
   /** the party cars' exits since the last step go to the surge (the sim's partyOut, cleared; discarded with no surge) */
   private drainParty(): void {
@@ -457,7 +488,7 @@ export class City {
     for (const d of this.busDefs) {
       const a = this.busStopAt({ x: d.sx, y: d.sy }), b = this.busStopAt({ x: d.dx, y: d.dy });
       pts.push(a && b ? { lot: a.pt, doors: b.pt } : null);
-      R.push(a && b ? { lot: a.stop, doors: b.stop, seats: d.seats } : null);
+      R.push(a && b ? { lot: a.stop, doors: b.stop, seats: this.round.cards.includes('doubledecker') ? Math.max(d.seats, DECK_SEATS) : d.seats } : null);
     }
     this.busPts = pts; this.sim.setBusRoutes(R);
   }
@@ -555,7 +586,7 @@ export class City {
     return out;
   }
   /** the round from a save (see Round.from): any surge under way is dropped with its party cars */
-  loadRound(s?: RoundSave): void { this.round = Round.from(s); this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); }
+  loadRound(s?: RoundSave): void { this.round = Round.from(s); this.grown = null; this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); this.applyCards(); }
   /** the round as the UI and the frame see it: with the surge's counts by town while the surge runs or its result is in (null otherwise) */
   roundView(): RoundView {
     const v = this.round.view();

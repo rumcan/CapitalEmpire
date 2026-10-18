@@ -28,6 +28,19 @@ test('segment upkeep: 100 tiles of street ground is 150; the same as a bridge is
   assert.equal(segUpkeep({ cls: 'street', len: 100, kind: 1 }), 600);
 });
 
+test('a toll and a payout book into the day: in the treasury now, the lines in the ledger and in net; a negative payout is a cost', () => {
+  const b = new Budget(); b.money = 1000;
+  b.toll(300); b.payout(-500);
+  assert.equal(b.money, 800, 'in the treasury now');
+  const L = b.endDay(1, EMPTY_DAY);
+  assert.equal(L.toll, 300); assert.equal(L.payout, -500);
+  assert.equal(L.net, -200); assert.equal(L.money, 800);
+  b.payout(60000);
+  const L2 = b.endDay(2, EMPTY_DAY);
+  assert.equal(L2.payout, 60000); assert.equal(L2.toll, undefined, 'the toll line is absent when none');
+  assert.equal(L2.net, 60000); assert.equal(L2.money, 60800);
+});
+
 test('endDay books tax, takings, upkeep, signals and interest, and applies them to the treasury', () => {
   const b = new Budget(); b.loans = 2;
   const d: DayIn = {

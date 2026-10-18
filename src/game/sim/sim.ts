@@ -127,6 +127,8 @@ export class Sim {
   busRoutes: (BusRoute | null)[] = []; busWait: number[] = []; busEv: number[] = []; busN = 0;
   /** the party cars that parked since the City last cleared it, as triples [town, park, bay]: the City starts their fans walking from the bay */
   partyBays: number[] = [];
+  /** the seconds an entrance holds for each car it admits (ENTRY_S; the Express entry card shortens it: see City.applyCards) */
+  entryS = ENTRY_S;
   /** the car park entrances (sinks, set by setSinks) and the car parks' counts (parks[k] for sink.park k) */
   sinks: Sink[] = []; parks: ParkState[] = [];
   /** per slot: 1 once the vehicle has paid at a toll booth (or passed its line unserved, see accelerate), 0 while it is still to pay; dwell: the
@@ -462,7 +464,7 @@ export class Sim {
   private enter(i: number, k: number, ln: Lane) {
     const K = this.sinks[k]!, P = this.parks[K.park]!;
     if (P.parked >= P.bays) { P.turned++; this.out(i, 1); this.despawn(i); return; }
-    P.parked++; K.next = this.t + ENTRY_S; this.parkedNow.push(K.park, this.oz[i]!);
+    P.parked++; K.next = this.t + this.entryS; this.parkedNow.push(K.park, this.oz[i]!);
     if (this.party[i]! >= 0) this.partyBays.push(this.party[i]!, K.park, P.parked - 1);
     this.out(i, 0);
     this.score(i, ln); this.stats.arrived++; this.despawn(i);

@@ -1,20 +1,39 @@
 // The event round's state machine (Phase 5 step 2b): free, build (wall-clock s, the stadium goes up), surge (sim s, the crowd comes to
-// kick-off, the clock frozen), eval (the result waits to be closed), then free again with one more run. Pure TS, no DOM.
-import { BUILD_S, SURGE_S } from './config';
+// kick-off, the clock frozen), eval (the result waits to be closed, and the draft of cards is open until one is picked), then free again
+// with one more run (a perfect run raises the level). Pure TS, no DOM.
+import { BUILD_S, CARDS, DRAFT, PERFECT_RATE, SURGE_SEED, SURGE_S, type CardId } from './config';
 import type { SurgeView, TownResult } from './surge';
+import { mulberry } from '../iso';
 
 /** the round's stage: free (no round), build, surge (kick-off to come), eval (the result is in last, to be closed) */
 export type Stage = 'free' | 'build' | 'surge' | 'eval';
+/** a bottleneck at kick-off (see City.report): its label, its place (tiles) and the vehicle-seconds it lost */
+export interface Stuck { label: string; x: number; y: number; loss: number }
 /** a round's result: its level, its run (the 1-based number of the round), the cars sent, arrived (the fans at the doors at kick-off: see City.kickOff), the arrival rate (arrived / (sent * PARTY)),
- *  the road and signal upkeep and loan interest paid while it ran, $, the tolls taken while it ran, $, and each town's counts at kick-off (see TownResult) */
-export interface RoundResult { level: number; run: number; sent: number; arrived: number; rate: number; upkeep: number; toll?: number; byTown: TownResult[] }
+ *  the road and signal upkeep and loan interest paid while it ran, $, the tolls taken while it ran, $ (absent when none), the payout (signed, $: see config payout), the net (toll + payout - upkeep, $),
+ *  the previous run's rate at the same stadium level (null: none), the top bottlenecks at kick-off, whether it was perfect (rate >= PERFECT_RATE), and each town's counts at kick-off (see TownResult) */
+export interface RoundResult { level: number; run: number; sent: number; arrived: number; rate: number; upkeep: number; toll?: number; payout: number; net: number; prevRate: number | null; stuck: Stuck[]; perfect: boolean; byTown: TownResult[] }
 /** the round as the UI sees it: its stage, level, runs, the build and surge left (s), the crowd by town (cars), the upkeep paid so far
- *  this round ($), the tolls taken so far this round ($), the last result, and the surge's counts by town (while it runs or its result is in; null otherwise) */
-export interface RoundView { stage: Stage; level: number; runs: number; buildLeft: number; surgeLeft: number; crowd: number[]; upkeep: number; toll: number; last: RoundResult | null; surge: SurgeView | null }
+ *  this round ($), the tolls taken so far this round ($), the last result, the surge's counts by town (while it runs or its result is in; null otherwise),
+ *  the player level (xp), the cards taken (in order), and the draft open now (null: none) */
+export interface RoundView { stage: Stage; level: number; runs: number; buildLeft: number; surgeLeft: number; crowd: number[]; upkeep: number; toll: number; last: RoundResult | null; surge: SurgeView | null; xp: number; cards: CardId[]; draft: CardId[] | null }
 /** the round as saved (the view, without the surge: a save restores the surge only as far as the round goes) */
 export type RoundSave = Omit<RoundView, 'surge'>;
 
-/** a city's event round: the stage and its clocks, the crowd, the upkeep paid this round and the last result */
+/** the draft offered at kick-off: DRAFT distinct cards (fewer when the pool has fewer), drawn by a seeded stream (SURGE_SEED + 1000 * xp + runs)
+ *  from the pool: every upgrade, and each unlock not yet taken; null when the pool is empty */
+export function draftFor(xp: number, runs: number, taken: CardId[]): CardId[] | null {
+  const pool: CardId[] = CARDS.filter(c => c.kind === 'upgrade' || !taken.includes(c.id)).map(c => c.id);
+  const rnd = mulberry(SURGE_SEED + 1000 * xp + runs), out: CardId[] = [];
+  while (out.length < DRAFT && pool.length) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]!);
+  return out.length ? out : null;
+}
+/** a result as an old save has it (before the event's money: no payout, the net from its toll and upkeep, no previous rate or bottlenecks) */
+function full(l: Omit<RoundResult, 'payout' | 'net' | 'prevRate' | 'stuck' | 'perfect'> & Partial<Pick<RoundResult, 'payout' | 'net' | 'prevRate' | 'stuck' | 'perfect'>>): RoundResult {
+  return { payout: 0, net: (l.toll ?? 0) - l.upkeep, prevRate: null, stuck: [], perfect: l.rate >= PERFECT_RATE, ...l };
+}
+
+/** a city's event round: the stage and its clocks, the crowd, the upkeep paid this round, the last result, and the player's cards */
 export class Round {
   /** the stage (see Stage) */
   stage: Stage = 'free';
@@ -28,6 +47,9 @@ export class Round {
   toll = 0;
   /** the last round's result (null until one is in eval) */
   last: RoundResult | null = null;
+  /** the player level (starts at 1: each card taken raises it by one), the cards taken (in order: an unlock once, an upgrade again), and the draft
+   *  open at kick-off (null: none; close needs it picked) */
+  xp = 1; cards: CardId[] = []; draft: CardId[] | null = null;
 
   /** starts a round with the crowd (free to build): the build lasts BUILD_S; false if a round is not free */
   start(crowd: number[]): boolean {
@@ -51,34 +73,45 @@ export class Round {
   }
   /** the surge begins: SURGE_S sim s to kick-off */
   beginSurge(): void { this.stage = 'surge'; this.surgeLeft = SURGE_S; }
-  /** dt sim s of the surge: true when kick-off comes (the eval begins, and last is the result); only in surge */
+  /** dt sim s of the surge: true when kick-off comes (the eval begins, the result is last, and the draft is open); only in surge */
   sim(dt: number): boolean {
     if (this.stage !== 'surge') return false;
     this.surgeLeft -= dt;
     if (this.surgeLeft > 0) return false;
     this.surgeLeft = 0; this.stage = 'eval';
     let sent = 0; for (const c of this.crowd) sent += c;
-    this.last = { level: this.level, run: this.runs + 1, sent, arrived: 0, rate: 0, upkeep: this.upkeep, ...(this.toll ? { toll: this.toll } : {}), byTown: [] };
+    const prev = this.last;
+    this.last = { level: this.level, run: this.runs + 1, sent, arrived: 0, rate: 0, upkeep: this.upkeep, ...(this.toll ? { toll: this.toll } : {}), payout: 0, net: 0,
+      prevRate: prev && prev.level === this.level ? prev.rate : null, stuck: [], perfect: false, byTown: [] };
+    this.draft = draftFor(this.xp, this.runs, this.cards);
     return true;
   }
-  /** closes the eval: the round is free again and one more run is counted; false unless in eval */
+  /** the player takes a card of the open draft (eval only): it joins cards, xp goes up by one and the draft closes; false otherwise */
+  pick(id: CardId): boolean {
+    if (this.stage !== 'eval' || !this.draft?.includes(id)) return false;
+    this.cards.push(id); this.xp++; this.draft = null;
+    return true;
+  }
+  /** closes the eval: the round is free again and one more run is counted; a perfect run raises the level. Refused (false) while the draft is open,
+   *  and unless in eval */
   close(): boolean {
-    if (this.stage !== 'eval') return false;
+    if (this.stage !== 'eval' || this.draft) return false;
     this.stage = 'free'; this.runs++;
+    if (this.last?.perfect) this.level++;
     return true;
   }
   /** the round as the UI and the save see it */
   view(): RoundView {
-    return { stage: this.stage, level: this.level, runs: this.runs, buildLeft: this.buildLeft, surgeLeft: this.surgeLeft, crowd: this.crowd, upkeep: this.upkeep, toll: this.toll, last: this.last, surge: null };
+    return { stage: this.stage, level: this.level, runs: this.runs, buildLeft: this.buildLeft, surgeLeft: this.surgeLeft, crowd: this.crowd, upkeep: this.upkeep, toll: this.toll, last: this.last, surge: null, xp: this.xp, cards: this.cards, draft: this.draft };
   }
-  /** a round from a save: a build or surge saved mid-way restores as free (its crowd and upkeep dropped), keeping the level, the runs and
-   *  the last result; an eval or a free round keeps its crowd and upkeep too; no save: a fresh round */
+  /** a round from a save: a build or surge saved mid-way restores as free (its crowd and upkeep dropped), keeping the level, the runs, the cards, the xp
+   *  and the last result; an eval or a free round keeps its crowd, upkeep and draft too; no save: a fresh round (old saves: xp 1, no cards, no draft) */
   static from(s?: RoundSave): Round {
     const r = new Round();
     if (!s) return r;
-    r.level = s.level; r.runs = s.runs; r.last = s.last;
+    r.level = s.level; r.runs = s.runs; r.last = s.last ? full(s.last) : null; r.xp = s.xp ?? 1; r.cards = s.cards ?? [];
     if (s.stage === 'build' || s.stage === 'surge') return r;
-    r.stage = s.stage; r.crowd = s.crowd; r.upkeep = s.upkeep; r.toll = s.toll ?? 0;
+    r.stage = s.stage; r.crowd = s.crowd; r.upkeep = s.upkeep; r.toll = s.toll ?? 0; r.draft = s.draft ?? null;
     return r;
   }
 }

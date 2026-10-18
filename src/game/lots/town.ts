@@ -122,12 +122,13 @@ export class Town {
   /** the town (index into centres) of a known lot, -1 if none or no centres */
   townOf(key: string): number { return this.townIdx.get(key) ?? -1; }
 
-  /** the towns built at once (a new valley): each town grows to perTown residents (or its land runs out), lots BUILT (30% UPGRADED
-   *  on paved roads) by the usual allocation; returns the 'complete' events */
-  stamp(ctx: TownCtx, perTown: number, T: number): TownEvent[] {
+  /** the towns built at once (a new valley, or a perfect round's growth): each town grows to perTown residents, or to its targets[k] when given
+   *  (or its land runs out), lots BUILT (30% UPGRADED on paved roads) by the usual allocation; returns the 'complete' events */
+  stamp(ctx: TownCtx, perTown: number, T: number, targets?: number[]): TownEvent[] {
     const out: TownEvent[] = [];
     for (let k = 0; k < this.centres.length; k++) {
-      while (this.popK[k] < perTown) {
+      const goal = targets?.[k] ?? perTown;
+      while (this.popK[k] < goal) {
         if (this.dirty) this.rescan();
         if (this.govN < this.govTarget()) this.placeGov(ctx, T, out, LV.BUILT);
         const l = this.pickTown(ctx, k); if (!l) break;

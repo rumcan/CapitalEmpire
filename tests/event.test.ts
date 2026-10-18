@@ -5,8 +5,8 @@ import assert from 'node:assert/strict';
 import { generateTerrain } from '../src/game/terrain';
 import { townCentres } from '../src/game/lots/seedtowns';
 import { crowdFor, insideSite, placeStadium } from '../src/game/event/site';
-import { SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S } from '../src/game/event/config';
-import { Round } from '../src/game/event/round';
+import { CARDS, DRAFT, ENTRY_S, EXPRESS_ENTRY, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout } from '../src/game/event/config';
+import { Round, draftFor, type RoundSave } from '../src/game/event/round';
 import { City } from '../src/game/city';
 import { GAME_DAY } from '../src/game/budget';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
@@ -70,7 +70,9 @@ test('Round: start, wall(600) into surge, sim(600) into eval, close into free wi
   assert.equal(r.sim(SURGE_S / 2), false);
   assert.equal(r.sim(SURGE_S / 2), true, 'kick-off');
   assert.equal(r.stage, 'eval');
-  assert.deepEqual(r.last, { level: 1, run: 1, sent: 7, arrived: 0, rate: 0, upkeep: 0, byTown: [] });
+  assert.deepEqual(r.last, { level: 1, run: 1, sent: 7, arrived: 0, rate: 0, upkeep: 0, payout: 0, net: 0, prevRate: null, stuck: [], perfect: false, byTown: [] });
+  assert.equal(r.close(), false, 'refused while the draft is open');
+  assert.equal(r.pick(r.draft![0]!), true);
   assert.equal(r.close(), true);
   assert.equal(r.stage, 'free'); assert.equal(r.runs, 1);
 
@@ -136,12 +138,133 @@ test('City round: the clock freezes at 18:00; money falls with the upkeep over b
   assert.equal(city.round.last.sent, 1200);
   assert.ok(Math.abs(city.sim.clock % GAME_DAY - EVENT_CLOCK) < 1e-6, 'the clock stands through the surge');
 
-  const paid = m0 - city.budget.money, expect = rate * (city.sim.t - t0) / GAME_DAY;
+  // the payout is paid at kick-off (no home reaches the stadium: rate 0, the full penalty); the rest of the fall is the upkeep
+  assert.equal(city.round.last.payout, payout(0, 1), 'the payout at kick-off');
+  const paid = m0 - city.budget.money + city.round.last.payout, expect = rate * (city.sim.t - t0) / GAME_DAY;
   assert.ok(paid > 0, 'money fell');
   assert.ok(Math.abs(paid - expect) <= 0.01 * expect, `paid ${paid.toFixed(2)} $ about rate x time / 1440 = ${expect.toFixed(2)} $`);
   assert.ok(Math.abs(city.round.last.upkeep - paid) <= 0.01 * paid, 'the result carries the upkeep paid');
+  assert.equal(city.round.last.net, city.round.last.payout - city.round.last.upkeep, 'the net: the payout less the upkeep (no toll)');
 
+  assert.equal(city.closeRound(), false, 'refused while the draft is open');
+  assert.equal(city.round.draft?.length, DRAFT, 'three cards offered');
+  assert.equal(city.pickCard(city.round.draft![0]!), true);
+  assert.equal(city.round.xp, 2, 'the pick is a level'); assert.equal(city.round.cards.length, 1);
   assert.equal(city.closeRound(), true);
   assert.equal(city.round.stage, 'free'); assert.equal(city.round.runs, 1);
   assert.equal(city.sim.frozen, false, 'closeRound unfreezes the clock');
+});
+
+test('payout: 0 -> -20000, 0.25 -> -10000, 0.5 -> 0, 0.75 -> 30000, 1 -> 60000 at level 1; level 2 is x1.4', () => {
+  assert.deepEqual([0, 0.25, 0.5, 0.75, 1].map(r => payout(r, 1)), [-20000, -10000, 0, 30000, 60000]);
+  assert.equal(payout(1, 2), 84000);
+  assert.equal(payout(0.75, 2), 42000);
+});
+
+test('the draft: DRAFT distinct cards at kick-off (seeded); a pick moves xp and cards once; close is refused while the draft is open; an unlock is never offered twice', () => {
+  assert.deepEqual(draftFor(1, 0, []), draftFor(1, 0, []), 'the draft is seeded');
+  const r = new Round();
+  for (let run = 0; run < 8; run++) {
+    assert.equal(r.start([5]), true);
+    r.wall(BUILD_S); r.sim(SURGE_S);
+    const d = r.draft!;
+    assert.ok(d, 'a draft at kick-off');
+    assert.equal(new Set(d).size, d.length, 'distinct cards');
+    const open = CARDS.filter(c => c.kind === 'upgrade' || !r.cards.includes(c.id)).length;
+    assert.equal(d.length, Math.min(DRAFT, open), 'DRAFT cards, fewer only when the pool runs short');
+    for (const id of d) assert.ok(CARDS.find(c => c.id === id)!.kind === 'upgrade' || !r.cards.includes(id), `${id}: a taken unlock is not offered`);
+    assert.equal(r.close(), false, 'refused with the draft open');
+    if (run === 0) assert.equal(r.pick(CARDS.map(c => c.id).find(id => !d.includes(id))!), false, 'a card not in the draft is refused');
+    const id = d[run % d.length]!, xp = r.xp;
+    assert.equal(r.pick(id), true);
+    assert.equal(r.pick(id), false, 'the draft is closed after the pick');
+    assert.equal(r.xp, xp + 1); assert.equal(r.cards[r.cards.length - 1], id); assert.equal(r.draft, null);
+    assert.equal(r.close(), true);
+  }
+  assert.equal(r.xp, 9); assert.equal(r.cards.length, 8); assert.equal(r.runs, 8);
+  for (const c of CARDS) if (c.kind === 'unlock') assert.ok(r.cards.filter(id => id === c.id).length <= 1, `${c.id} taken at most once`);
+});
+
+test('Round: a perfect run raises the level on close; prevRate is the previous rate at the same level, and null once the level has risen', () => {
+  const r = new Round();
+  r.start([5]); r.wall(BUILD_S); r.sim(SURGE_S);
+  assert.equal(r.last!.prevRate, null, 'no run before');
+  r.last!.rate = 0.6; assert.equal(r.pick(r.draft![0]!), true); assert.equal(r.close(), true);
+  assert.equal(r.level, 1, 'a run below the perfect rate keeps the level');
+  r.start([5]); r.wall(BUILD_S); r.sim(SURGE_S);
+  assert.equal(r.last!.prevRate, 0.6, 'the previous run at this level');
+  r.last!.rate = 1; r.last!.perfect = true; assert.equal(r.pick(r.draft![0]!), true); assert.equal(r.close(), true);
+  assert.equal(r.level, 2, 'a perfect run raises the level');
+  r.start([5]); r.wall(BUILD_S); r.sim(SURGE_S);
+  assert.equal(r.last!.prevRate, null, 'a new level has no previous rate');
+  assert.equal(r.last!.level, 2);
+});
+
+test('old saves: xp 1, no cards, no draft; an old result reads with no payout and the net of its upkeep', () => {
+  const old = { stage: 'free', level: 2, runs: 3, buildLeft: 0, surgeLeft: 0, crowd: [], upkeep: 0, toll: 0, last: { level: 2, run: 3, sent: 10, arrived: 5, rate: 0.5, upkeep: 100, byTown: [] } } as unknown as RoundSave;
+  const r = Round.from(old);
+  assert.equal(r.xp, 1); assert.deepEqual(r.cards, []); assert.equal(r.draft, null);
+  assert.equal(r.level, 2); assert.equal(r.last!.payout, 0); assert.equal(r.last!.net, -100); assert.equal(r.last!.perfect, false);
+});
+
+test('City: the cards in a save: express holds each entrance for ENTRY_S * EXPRESS_ENTRY, double-decker seats are at least 100 on every route', () => {
+  const city = new City(1);
+  city.terrain(new Uint8Array(MAP * MAP), { x: 200, y: 300 }, 7);
+  const e = new NetEditor(new RoadNetwork()); e.addLegs([leg(200, 300, 800, 300)], CLASS.street, 0); city.netOps(e.commit(true));
+  city.setBusRoutes([{ id: 1, park: 1, sx: 395, sy: 298.5, dx: 250, dy: 298.5, buses: 2, seats: 60 }]);
+  assert.equal(city.sim.busRoutes[0]!.seats, 60);
+  assert.equal(city.sim.entryS, ENTRY_S);
+  const r = new Round(); r.cards = ['express', 'doubledecker']; r.xp = 3;
+  city.loadRound(r.view());
+  assert.equal(city.sim.entryS, ENTRY_S * EXPRESS_ENTRY);
+  assert.equal(city.sim.busRoutes[0]!.seats, 100);
+});
+
+test('City with towns: a perfect run raises the level and grows each town to its residents times 1 + TOWN_GROWTH (as far as its land goes); a run below the perfect rate does not', () => {
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7, CENTRES);
+  city.netOps(gridEditor().commit(true));
+  city.stamp(60);
+  const before = city.town.popK.slice();
+  const playRound = () => {
+    assert.equal(city.startRound(), true);
+    assert.equal(city.startNow(), true);
+    let steps = 0; while (city.round.stage === 'surge' && steps++ < 200) city.step(100);
+    assert.equal(city.round.stage, 'eval');
+  };
+  playRound();
+  assert.equal(city.closeRound(), false, 'the draft is open');
+  city.round.last!.perfect = true; // no home reaches the stadium here, so the rate is 0: the flag is set by hand, as a perfect rate would set it
+  assert.equal(city.pickCard(city.round.draft![0]!), true);
+  assert.equal(city.closeRound(), true);
+  assert.equal(city.round.level, 2, 'the level rises');
+  assert.ok(city.grown, 'the towns grew');
+  assert.deepEqual(city.grown.pops, city.town.popK, 'the residents reached');
+  before.forEach((p, k) => assert.ok(city.grown!.pops[k]! >= p, `town ${k} does not shrink`));
+  assert.ok(city.grown.pops.some((p, k) => p > before[k]!), 'some town grew');
+  playRound();
+  assert.equal(city.round.last!.perfect, false, 'a run at rate 0 is not perfect');
+  assert.equal(city.pickCard(city.round.draft![0]!), true);
+  const pops = city.town.popK.slice();
+  assert.equal(city.closeRound(), true);
+  assert.equal(city.grown, null, 'no growth below the perfect rate');
+  assert.deepEqual(city.town.popK, pops);
+  assert.equal(city.round.level, 2, 'the level stays');
+});
+
+test('City with towns: the books take no property or business and the career waits; the roads still cost upkeep', () => {
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7, CENTRES);
+  // a bigger grid than gridEditor's (six streets each way): enough land for 250 residents, a milestone
+  const e = new NetEditor(new RoadNetwork()), far = at(5);
+  for (let k = 0; k < 6; k++) { e.addLegs([leg(O, at(k), far, at(k))], CLASS.street, 0); e.addLegs([leg(at(k), O, at(k), far)], CLASS.street, 0); }
+  city.netOps(e.commit(true));
+  city.stamp(300);
+  assert.ok(city.town.pop >= 250, 'the towns are big enough for a milestone');
+  const d = city.dayIn();
+  assert.equal([...d.lots].length, 0, 'no lots pay property');
+  assert.deepEqual(d.trade, { arrived: 0, punctual: 0 }, 'no trade pays business');
+  assert.ok([...d.segs].length > 0, 'the roads are still there (upkeep)');
+  city.step(20);
+  assert.equal(city.career.reached, 0, 'no milestones with towns');
 });
