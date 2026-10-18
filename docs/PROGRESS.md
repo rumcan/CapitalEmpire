@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junction control, zone routing, trips, car lights). Phase 3 next._
+_Last updated: 2026-10-18, Phase 3 done (gravel roads, parcels, the town model in the city worker, the Lot Composer, trips from lots, access-driven growth; the 5k gate passed). The lot contact sheets await the owner's review. Phase 4 next._
 
 ## Where we are
 
@@ -12,8 +12,8 @@ _Last updated: 2026-10-18, Phase 2 done (lane graph, IDM/MOBIL sim worker, junct
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **In progress** (steps 1–4 and 5a done; the 10-day gate is running). Steps at the end |
-| 3. Lot Composer + growth | **In progress** (steps 1–7 done; the 40-day growth gate is running). Steps at the end |
-| 4. Budget + bottleneck loop | Not started |
+| 3. Lot Composer + growth | **Done** (2026-10-18), not pushed yet; the contact sheets wait for the owner's review |
+| 4. Budget + bottleneck loop | **Next.** Suggested steps at the end |
 | 5. Road builder pro | Not started |
 | 6. Vegas look + eras | Not started. The art track can start any time (GAME-PLAN section 4.1) |
 
@@ -381,7 +381,7 @@ Left over from Phase 2 (pick up when convenient):
 - `Sim.profile` (the demand curve) is not switched on in the game yet; Phase 3 trips from lots replace it.
 - The lane graph's full build is 300–700 ms in the worker at load (once).
 
-## Next: Phase 3, Lot Composer + growth
+## Phase 3, Lot Composer + growth: done (plan as written at the start)
 
 Goal and gate: GAME-PLAN sections 1.2, 1.5 and 3.5 and the phase table (gate: from one highway exit a city of 5k
 grows by itself; 100-lot contact sheets pass review; a jam stops growth locally). The Lot Composer ports the ideas of
@@ -404,7 +404,7 @@ the owner's blocks as data in `output/town-builder/presets-v5-study/data/`). Sug
 7. **Access-driven growth and decline** (amber/red districts, boarded, derelict, cleared), the 100-lot contact
    sheets, and the gate run.
 
-### Start prompt for a fresh chat
+### (Old start prompt, Phase 3)
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then continue
 Phase 3 (Lot Composer + growth) at the first step not marked DONE and carry on through the steps without asking
 between them. Delegate coding to haiku-coder and checks/benchmarks to haiku-runner (worker PC via
@@ -532,3 +532,53 @@ look*.mjs at the repo root (git-excluded copies of output/look/look.mjs) for hea
    - **Run 3: PASS.** Pop 5,133 on day 37 (2,245 built lots, 726 gravel legs, one player bridge on day 31), step 1.16 ms
      mean, 8.2 max. From day 35 the bridge funnels the new district's traffic: speed 3.3 m/s, zones over 1.3 reach
      35–37% and the worst zone 2.39 by day 37.
+   - **Run 4 (55 days, `keep`): a jam stops growth locally.** Pop 8,166 by day 55 with a second player bridge on day 45.
+     19 jam episodes (a zone over 1.8 for 25–92 game hours, mostly where the bridges funnel traffic): in **every** one
+     the jammed zone built nothing while 110–403 lots were built elsewhere. Step 2.3 ms mean, 17.8 max.
+   - **Worker bench after Phase 3** (10k random cars on the bench city, fps / cpu avg / p95 ms): Street 30% 60 / 0.37 /
+     0.5; Street 17% 60 / 0.59 / 0.7; District 8% 60 / 0.98 / 1.1; District 4.5% 60 / 1.65 / 1.9; Planner 2% 60 / 0.64 /
+     0.7; Whole map 59.8 / 0.74 / 0.9. Sim tick 4.8 ms avg, 10.3 max. Heap 213 MB, bake 4.3 ms. (A first run had 0 cars:
+     the bench commits its network before `afterLoad`, which then sent the worker no ops; `afterLoad` now sends the
+     whole network with `netToOps`.)
+
+### Phase 3 gate
+- **From one highway exit a city of 5k grows by itself: PASSED** (run 3: 5,133 on day 37, with one player bridge,
+  which the design leaves to the player).
+- **A jam stops growth locally: PASSED** (run 4, 19 of 19 episodes; also `tests/town.test.ts` test 3).
+- **100-lot contact sheets pass review: WAITING FOR THE OWNER.** `output/look/lot-sheet.jpg` (git-ignored; rows:
+  houses built, houses upgraded, shops/industry/venues/civic, boarded, derelict; made with `look-stage.mjs` at the
+  root, which stages lots on the start block via `Game.stageLots`). Budgets met (worker bench above).
+
+### Left over from Phase 3
+- Balance: early growth is slow (first houses after ~16 game hours); the economy's population (top bar, house props)
+  is not `Town.pop`; the economy day (20 s) is not the sim day (1440 s). All Phase 4.
+- The cars chips (random traffic) stop mattering once the town switches the sim to lot trips; the bench and the
+  Phase 2 gate stay in random mode. Decide in Phase 4 whether background traffic remains (tourists on the highway).
+- Parked cars in drives are composer props, not the sim's cars (GAME-PLAN wants the parked cars to be the sim cars).
+- Lot props are auto props: the select tool can pick and delete them (not counted back in `perf.lotProps`).
+- Lots on 45° roads keep axis-aligned buildings (facing by the nearest axis); no stepped setbacks yet.
+- `stageLots` overwrites the autosave (debug only).
+- The growth planner only lays 40-tile lattice legs; it never bridges (the gate's player does). Towns hemmed by water
+  stall until the player bridges; the player gets no hint yet (Phase 4: a "no land" notice).
+- The terrain test's per-seed budget is now 4 s (the dev PC is slower than the worker).
+
+## Next: Phase 4, budget + bottleneck loop
+
+Goal and gate: GAME-PLAN sections 1.3, 3.4 and the phase table (gate: a Career run is winnable and losable; fixing the
+top bottleneck measurably restarts growth). Suggested steps:
+1. **One clock and time controls**: the economy day = the sim day; pause, 1x, 2x, 4x, 8x (the worker already takes
+   `speed`); "skip to rush hour". The top bar shows `Town.pop`/jobs.
+2. **Budget**: property tax (land value x access), business tax (customers who arrived), construction and upkeep (by
+   class and length; bridges/tunnels per metre), signals, compensation for lots a new road cuts, loans; bankruptcy.
+3. **Bottleneck tools**: the lane flow heatmap (volume / capacity), junction LOS badges A–F, the ranked bottleneck list
+   (vehicle-hours lost per junction/link; click to jump), the car inspector, routes through a junction.
+4. **Before/after** snapshots over one simulated rush hour; the district access overlay with growth state.
+5. **Milestones and Career**: population milestones unlocking road classes/tools/grants; win and lose conditions;
+   a headless Career gate (a scripted player that paves the top bottleneck must restart growth measurably).
+
+### Start prompt for a fresh chat
+"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
+(budget + bottleneck loop) at step 1 and carry on through the steps without asking between them. Delegate coding to
+haiku-coder and checks/benchmarks to haiku-runner (worker PC via scripts/worker/run.sh), commit locally after each
+verified step, update docs/PROGRESS.md as you go. Use look*.mjs at the repo root (git-excluded copies of
+output/look/look.mjs) for headless screenshots; `npm run town:gate` and `npm run sim:gate` are the headless gates."
