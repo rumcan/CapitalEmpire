@@ -591,6 +591,21 @@ top bottleneck measurably restarts growth). Suggested steps:
    500 while building); loans of $25k at 1% a day, one more per 2,000 residents (at most 6); **bankrupt after 5 days in
    a row in the red**.
 
+2b. **The books in the City. DONE** (2026-10-18). `City.budget` (worker and gates alike) books each game day at midnight
+   (`Budget.base` = the sim s of day 1's midnight; `dayOf` forgives 1e-6 s of DT drift) from `City.dayIn()` (built lots
+   with their zone access, segs, junction types, the day's trade). The main thread mirrors `BudgetSave` from `{t:'budget'}`
+   messages and spends through `{t:'spend'}` (optimistic), `{t:'loan'}`, `{t:'budget'}` (reset). A route through the town's
+   built lots (centre line half a tile inside a lot) pays compensation, shown in the road panel before building. Save v5
+   gains an optional `budget`. UI: click the treasury for the Budget panel (the last ledger, 14 days of net, loans with
+   Borrow/Repay); a bankrupt screen (pauses once, then "Keep watching"). The town gate prints the treasury and the day's
+   net. Seen in the browser: day 1 of a loaded town booked property 67, upkeep 583, signals 90, interest 250.
+3a. **Where time is lost. DONE** (2026-10-18). The sim keeps per-lane decaying sums (halved each game hour): `lossL`
+   (vehicle-s under 90% of the limit), `lossQ` (the same within 100 m of a link lane's end: the queue of the junction
+   ahead), `enterL`. `src/game/sim/bottlenecks.ts` (`tests/bottlenecks.test.ts`) turns them into a report: junctions (3+ segs
+   or a roundabout) with loss, throughput, delay per vehicle and HCM-style LOS A–F (signals 10/20/35/55/80 s, others
+   10/15/25/35/50 s); links per seg with loss and v/c (capacity 30 vehicles per lane per game hour at 13.4 m/s, scaled
+   by the limit, halved into a signal); the top 10 by loss; flow per dseg. 10x10 grid: 695 veh-s/h lost at the worst
+   item with 600 cars, 9 with 50; a 600-car step is about 1.8 ms.
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first, then start Phase 4
 (budget + bottleneck loop) at step 1 and carry on through the steps without asking between them. Delegate coding to
