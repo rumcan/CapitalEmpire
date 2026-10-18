@@ -1,6 +1,6 @@
 # T004 · Highway interchanges (geometry generator)
 
-Status: open (best after T003; can start in parallel using its API shape)
+Status: in review (#3)
 Module: `src/game/ext/interchange/` · Tests: `tests/ext-interchange.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
