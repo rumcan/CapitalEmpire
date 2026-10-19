@@ -515,9 +515,34 @@ export class RoadNetwork {
       // left inside the ring ran its lanes on to the island, and each click broke off one more piece (the owner, 2026-10-19)
       const ring = (n: Node) => (n.rb > 0 ? n.rb + Math.max(0, ...n.arms.map(a => a.walk)) + half : 0);
       if (s0 < ring(s.a)) s0 = 0; if (L - s1 < ring(s.b)) s1 = L;
+      [s0, s1] = this.clearCut(s, s0, s1);
       bd = dist; best = { seg: s, p0: add(s.a, mul(u, s0)), p1: add(s.a, mul(u, s1)) };
     }
     return best;
+  }
+  /** widens a cut [s0, s1] of seg s (tiles from s.a) a tile at a time until each new dead end it leaves clears the corridors of the roads around it
+   *  (all but those at the node its own stub keeps), of `extra` (a route about to be built, with its half widths), and of the facing new end; a
+   *  stub that cannot clear goes whole. (Cut to the turning circles alone, a bulldozed piece left two dead ends overlapping each other or a
+   *  road by the junction next to them: the road builder's stress test, 2026-10-19) */
+  clearCut(s: Seg, s0: number, s1: number, extra: { a: Pt; b: Pt; hw: number }[] = []): [number, number] {
+    const d = sub(s.b, s.a), L = vlen(d), u = mul(d, 1 / L), hw = s.cls.h + s.cls.walk, at = (t: number) => add(s.a, mul(u, t));
+    const near = (p: Pt, a: Pt, b: Pt) => { const e = sub(b, a), L2 = dot(e, e), t = L2 > 0 ? clamp(dot(sub(p, a), e) / L2, 0, 1) : 0; return vlen(sub(p, add(a, mul(e, t)))); };
+    const others = [...this.segsNear(mul(add(s.a, s.b), 0.5), L / 2 + 24)].filter(t => t !== s);
+    // a ring's circle (with its walk) counts too, the ring at the stub's own node included: a cut end inside it left the stub under the ring
+    const rings = new Set<Node>(); for (const t of [s, ...others]) for (const m of [t.a, t.b]) if (m.rb > 0) rings.add(m);
+    const clear = (p: Pt, own: Node, facing: [Pt, Pt] | null) => {
+      for (const m of rings) if (vlen(sub(p, m)) < m.rb + Math.max(0, ...m.arms.map(x => x.walk)) + (m === own ? hw : hw + 0.5)) return false;
+      for (const t of others) if (t.a !== own && t.b !== own && near(p, t.a, t.b) < hw + t.cls.h + t.cls.walk - 0.5) return false;
+      for (const e of extra) if (near(p, e.a, e.b) < hw + e.hw - 0.5) return false;
+      return !facing || near(p, facing[0], facing[1]) >= 2 * hw - 0.5;
+    };
+    for (let k = 0; k < 400; k++) {
+      let moved = false;
+      if (s0 > 0 && !clear(at(s0), s.a, s1 < L ? [at(s1), s.b] : null)) { s0 = s0 - 1 < 2 ? 0 : s0 - 1; moved = true; }
+      if (s1 < L && !clear(at(s1), s.b, s0 > 0 ? [s.a, at(s0)] : null)) { s1 = L - s1 - 1 < 2 ? L : s1 + 1; moved = true; }
+      if (!moved) break;
+    }
+    return [s0, s1];
   }
   removePiece(sel: PieceSel, rebuild = true) {
     const s = sel.seg, d = sub(s.b, s.a), L2 = dot(d, d);

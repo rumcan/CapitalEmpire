@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -1058,6 +1058,33 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **The road builder's stress test, and what it found (2026-10-19 night): DONE.** The owner: "put the road builder through its
+  paces". `src/game/dev/roadfuzz.ts` (dev server only): `__roadFuzz(seed, steps, { half })` drives the real tools through the Game
+  (routes of every class and variant, 90/45 bends, Shift, Replace, bulldozer, every junction type incl. 1-3 lane rings, Add lane,
+  reverse) at random points and next to junctions, ends and rings in an empty box; after each action `netProblems` checks the box
+  (roads on roads, crossings without a junction, corridors overlapping away from a junction, junctions under MIN_SEP apart, sharp
+  joins, segs under a tile, ring arms too short, nodes or roads inside a ring, `checkGraph`); a new problem is a failure with the
+  action log since the box was last cleared; `__roadReplay(box, log, upTo)` replays one. First run: 57 failures in 600 actions; now
+  4 in 1,800 (384 roads built), the rest checker false alarms or one judgement call (below). Fixed:
+  - checkLegs: a route may not double back (rule 6a) or run within two corridors of itself ('The road runs into itself'); the points
+    it splits the network at (its own points, new junctions, nodes it passes over) are 2 tiles apart; new junctions MIN_SEP apart;
+    parallel to 1e-4 (a diagonal through non-integer points slipped past at 1e-9 and a route was built on a road).
+  - Cuts (bulldozer and Replace): `RoadNetwork.clearCut` widens a cut until each new dead end clears the roads around, the facing end
+    and any ring's circle; `Game.tidyEnds` afterwards trims dead ends the cut left crowding a road (a seg taken whole made its
+    neighbours dead ends) and drops dead-end stubs under 2 tiles. Replace joins an old road at the route's own end point.
+  - Route points within 0.05 of a node weld on to it (`Game.weld`); terrain runs under 2 tiles take a neighbour's kind (ground at a
+    leg's end grows to 2 tiles into the tunnel/bridge), and a split point within 2 tiles of a node on the route moves on to it.
+  - lanes.ts `inset` at a bend: radius = widest lane offset + 1.5 (at 3 tiles an arterial's inner lanes had a connector of length 0
+    at a right angle; a six-lane's crossed).
+  - Junction tool: a ring is refused (not warned after the build) when an arm is under its radius + 6 (multi-lane) or + 2 (1 lane),
+    or another road or node is inside it (`ringClash`); Add lane refuses a widening that crowds a road or grows a ring past its arms
+    (`widenClash`). The junction tool now previews the ring it would build (circle and island at the real size, red with the roads in
+    the way red and the reason written on it), as the road tool previews routes.
+  - Known, left: Replace may cut a short piece of the road a route starts on when it lies in the new corridor next to a junction
+    (the normal tool refuses that route as too close), leaving a gap between two junctions; seen once in 1,800 actions.
+  - Also: moving cars are drawn 20% smaller (`CAR_SCALE` 0.8 in client.ts, their lamps with them), the owner's ask.
+  - Checks: typecheck clean; `npm test` 414/415 (ext-terrain2's 4 s timing); `town:gate` PASS (5,124 pop, 0 jams); `sim:gate -- 1
+    10000` PASS (20,961 arrived, 61 towed, 0 lost).
 - **Rings at awkward joins, and the road tool's Replace mode (2026-10-19 evening): DONE.**
   - *Cars dived into the ring and U-turned at the centre.* Cause: an arterial met the street 10 tiles from a junction
     (allowed: MIN_SEP 8) and the junction was made a 3-lane ring (rb 15): the arterial's own node sat inside the ring,

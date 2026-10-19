@@ -15,7 +15,7 @@ const MAX_HALF = 6.1;                   // the widest road's corridor half width
 const SIN_MIN = Math.sin(MIN_ANGLE * Math.PI / 180), COS_MIN = Math.cos(MIN_ANGLE * Math.PI / 180), COS_SAME = Math.cos(Math.PI / 180);
 const JUNCTION_MSG = 'Too close to a junction: keep 16 m apart', ANGLE_MSG = 'Too sharp a join (under 30°)';
 const ROAD_MSG = 'A road is already there: bulldoze it first', CORRIDOR_MSG = 'Too close to another road';
-const RING_MSG = 'Roads join a roundabout at its centre';
+const RING_MSG = 'Roads join a roundabout at its centre', SELF_MSG = 'The road runs into itself';
 /** how far past a point a roundabout's node can be and its circle still reach it (the biggest ring and its walk, with a margin) */
 const RING_NEAR = 22;
 /** a roundabout's (or a mini's) reach, tiles: its circle and the widest arm's walk; 0 for any other node */
@@ -31,7 +31,7 @@ function ptSeg(p: Pt, a: Pt, b: Pt): number {
 }
 
 /** the distance between the segments pq and rs (0 where they cross) */
-function segDist(p: Pt, q: Pt, r: Pt, s: Pt): number {
+export function segDist(p: Pt, q: Pt, r: Pt, s: Pt): number {
   const d1x = q.x - p.x, d1y = q.y - p.y, d2x = s.x - r.x, d2y = s.y - r.y, den = d1x * d2y - d1y * d2x;
   if (Math.abs(den) > 1e-12) {
     const wx = r.x - p.x, wy = r.y - p.y, t = (wx * d2y - wy * d2x) / den, u = (wx * d1y - wy * d1x) / den;
@@ -88,7 +88,10 @@ function onRoad(net: RoadNetwork, q: Pt, skip?: Set<Seg>): boolean {
  *  Rules: (1) a leg may not run along an existing road for more than MIN_RUN (bulldoze it first; the Add lane tool widens a road);
  *  (2) a leg's corridor may not overlap another road's corridor, except in a junction: where it starts or ends on that road's node, or
  *  where it meets the road at MIN_ANGLE or more; (3) a new junction (a route point on a road, or a leg crossing one) must be MIN_SEP
- *  tiles from every other node; (4) a leg that starts or ends on a node must make at least MIN_ANGLE with each of that node's arms.
+ *  tiles from every other node; (4) a leg that starts or ends on a node must make at least MIN_ANGLE with each of that node's arms;
+ *  (5) a leg may not enter a roundabout's circle; (6) the route against itself: a join may not double back (under MIN_ANGLE with the leg
+ *  before it), two legs that are not neighbours may not lie within two corridors of each other (a closed loop's first and last legs
+ *  meet at its start, so there only the join's angle counts), and a new junction must be 2 tiles from every other route point.
  *  skip (Replace on): the segs the route bulldozes, which are judged as gone (no rule sees them) */
 export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: Snap | null, cls: RoadClass = CLASS.street, skip?: Set<Seg>): string {
   const hw = cls.h + cls.walk;
@@ -108,7 +111,8 @@ export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: 
       const ex = s.b.x - s.a.x, ey = s.b.y - s.a.y, LS = Math.hypot(ex, ey);
       if (LS < EPS) continue;
       const den = dx * ey - dy * ex, hs = hw + s.cls.h + s.cls.walk;
-      if (Math.abs(den) < 1e-9 * L * LS) { // parallel: along the road (rule 1), or beside it (rule 2)
+      // parallel to 1e-4 (a diagonal through non-integer points is a hair off: at 1e-9 a route ran on top of one; the stress test, 2026-10-19)
+      if (Math.abs(den) < 1e-4 * L * LS) { // parallel: along the road (rule 1), or beside it (rule 2)
         const lat = Math.max(Math.abs(dx * (s.a.y - l.a.y) - dy * (s.a.x - l.a.x)), Math.abs(dx * (s.b.y - l.a.y) - dy * (s.b.x - l.a.x))) / L;
         if (lat <= EPS) {
           const ta = ((s.a.x - l.a.x) * dx + (s.a.y - l.a.y) * dy) / L, tb = ((s.b.x - l.a.x) * dx + (s.b.y - l.a.y) * dy) / L;
@@ -127,6 +131,8 @@ export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: 
       if (!(onNode || (wide && (inside || onEnd)))) return CORRIDOR_MSG;
     }
   }
+  // new junctions apart from each other too (a route crossing one road on both sides of a corner made two, 4 tiles apart)
+  for (let i = 0; i < cand.length; i++) for (let j = i + 1; j < cand.length; j++) { const d = dist(cand[i]!, cand[j]!); if (d > EPS && d < MIN_SEP) return JUNCTION_MSG; }
   for (const q of cand) {
     const own = nodeOf(q);
     for (const s of net.segsNear(q, MIN_SEP)) for (const n of [s.a, s.b]) if (n !== own && dist(n, q) < MIN_SEP && !skip?.has(s)) return JUNCTION_MSG;
@@ -146,6 +152,26 @@ export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: 
       }
     }
   }
+  // (6) the route against itself, over its own legs (the short ones skipped)
+  const r = legs.filter(l => dist(l.a, l.b) >= EPS), closed = r.length > 2 && dist(r[0]!.a, r[r.length - 1]!.b) < EPS;
+  /** true when the join from leg `into` to leg `out` (at into.b = out.a) is not a doubling back: the reversed incoming leg makes at least MIN_ANGLE with the outgoing one */
+  const joinOk = (into: Leg, out: Leg): boolean => {
+    const ux = into.a.x - into.b.x, uy = into.a.y - into.b.y, vx = out.b.x - out.a.x, vy = out.b.y - out.a.y;
+    return (ux * vx + uy * vy) / (Math.hypot(ux, uy) * Math.hypot(vx, vy)) <= COS_MIN;
+  };
+  for (let i = 0; i + 1 < r.length; i++) if (!joinOk(r[i]!, r[i + 1]!)) return ANGLE_MSG;
+  if (closed && !joinOk(r[r.length - 1]!, r[0]!)) return ANGLE_MSG;
+  for (let i = 0; i < r.length; i++) for (let j = i + 2; j < r.length; j++) {
+    if (closed && i === 0 && j === r.length - 1) continue;
+    if (segDist(r[i]!.a, r[i]!.b, r[j]!.a, r[j]!.b) < 2 * hw) return SELF_MSG;
+  }
+  // a new junction too close to a route corner or end left a road piece under a tile long (2 tiles, not MIN_SEP: a bend is no junction, and a
+  // route that leaves a road and bends a few tiles on is fine)
+  // the points the route will split the network at (its own points, the new junctions, the nodes it passes over) must be 2 tiles apart or one:
+  // closer, they left road pieces under a tile long (a route corner 0.9 tiles from a node on its line; a last leg 0.9 tiles long)
+  const splits: Pt[] = [...cand]; for (const l of legs) splits.push(l.a, l.b);
+  for (const l of legs) for (const s of net.segsNear({ x: (l.a.x + l.b.x) / 2, y: (l.a.y + l.b.y) / 2 }, dist(l.a, l.b) / 2 + 2)) if (!skip?.has(s)) for (const n of [s.a, s.b]) if (ptSeg(n, l.a, l.b) <= EPS) splits.push(n);
+  for (let i = 0; i < splits.length; i++) for (let j = i + 1; j < splits.length; j++) { const d = dist(splits[i]!, splits[j]!); if (d > EPS && d < 2) return JUNCTION_MSG; }
   // (5) a leg may not enter a roundabout's circle (with its walk and the leg's corridor) except to end on its node
   for (const l of legs) {
     if (dist(l.a, l.b) < EPS) continue;
@@ -217,15 +243,21 @@ export function replaceCuts(net: RoadNetwork, legs: Leg[], cls: RoadClass): Piec
     let a = Math.max(0, t0 - pad), b = Math.min(LS, t1 + pad);
     if (a < 2) a = 0;
     if (LS - b < 2) b = LS;
+    let joinA = false, joinB = false, endA: Pt | null = null, endB: Pt | null = null;
     // a route end on s (replacing a stretch of it): the cut stops there, so the rest of s joins the new road at that point (padded, it left a gap)
     for (const [e, l, away] of [[legs[0]!.a, legs[0]!, legs[0]!.b], [legs[legs.length - 1]!.b, legs[legs.length - 1]!, legs[legs.length - 1]!.a]] as const) {
       if (ptSeg(e, s.a, s.b) >= EPS || keep(l, s)) continue;
       const te = ((e.x - s.a.x) * ex + (e.y - s.a.y) * ey) / LS, ta = ((away.x - s.a.x) * ex + (away.y - s.a.y) * ey) / LS;
       if (te < a - EPS || te > b + EPS) continue;
       // exactly there (rounded on to s's node, a route end short of it would be left apart from it)
-      if (ta > te) a = te < EPS ? 0 : te; else b = LS - te < EPS ? LS : te;
+      if (ta > te) { a = te < EPS ? 0 : te; joinA = true; } else { b = LS - te < EPS ? LS : te; joinB = true; }
+      if (ta > te) endA = e; else endB = e;
     }
-    out.push({ seg: s, p0: { x: s.a.x + ex * a / LS, y: s.a.y + ey * a / LS }, p1: { x: s.a.x + ex * b / LS, y: s.a.y + ey * b / LS } });
+    // the other new dead ends clear the new road and the roads around (see RoadNetwork.clearCut); an end the route joins stays where it is
+    const [ca, cb] = net.clearCut(s, a, b, legs.map(l => ({ a: l.a, b: l.b, hw })));
+    if (!joinA) a = ca; if (!joinB) b = cb;
+    // a joined end is the route's own point (its projection on s, a few thousandths off, made a second node beside the route's end)
+    out.push({ seg: s, p0: joinA && a > 0 && endA ? { ...endA } : { x: s.a.x + ex * a / LS, y: s.a.y + ey * a / LS }, p1: joinB && b < LS && endB ? { ...endB } : { x: s.a.x + ex * b / LS, y: s.a.y + ey * b / LS } });
   }
   return out;
 }

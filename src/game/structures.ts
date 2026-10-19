@@ -20,6 +20,9 @@ function at(l: Leg, u: Pt, L: number, s: number): Pt {
   return { x: l.a.x + u.x * s, y: l.a.y + u.y * s };
 }
 
+/** the shortest piece a leg is split into, tiles */
+const MIN_PIECE = 2;
+
 /** split each leg where its corridor (half width hw) crosses water (bridge) or hills (tunnel); the rest stays ground */
 export function splitByTerrain(legs: Leg[], hw: number, classAt: (x: number, y: number) => number): { legs: Leg[]; kinds: SegKind[] } {
   const outLegs: Leg[] = [], kinds: SegKind[] = [];
@@ -54,6 +57,16 @@ export function splitByTerrain(legs: Leg[], hw: number, classAt: (x: number, y: 
       if (g.kind !== SK.GROUND || g.s1 - g.s0 >= MIN_GROUND || (runs[k - 1]?.kind !== SK.BRIDGE && runs[k + 1]?.kind !== SK.BRIDGE)) continue;
       if (runs[k - 1]) runs[k - 1].s1 = g.s1; else if (runs[k + 1]) runs[k + 1].s0 = g.s0;
       runs.splice(k, 1);
+    }
+    // a run under MIN_PIECE (a tunnel mouth by a leg's corner, a sliver between two boundaries) takes its longer neighbour's kind: its ends made
+    // road pieces under a tile long (the road builder's stress test, 2026-10-19)
+    // (ground at a leg's end grows to MIN_PIECE into the structure beside it instead: a tunnel or a bridge comes out on to ground)
+    for (let k = 0; k < runs.length; k++) {
+      const r = runs[k]!, p = runs[k - 1], q = runs[k + 1];
+      if (r.s1 - r.s0 >= MIN_PIECE || (!p && !q)) continue;
+      if (r.kind === SK.GROUND && !p && q!.s1 - q!.s0 > 2 * MIN_PIECE) { r.s1 = q!.s0 = r.s0 + MIN_PIECE; continue; }
+      if (r.kind === SK.GROUND && !q && p!.s1 - p!.s0 > 2 * MIN_PIECE) { r.s0 = p!.s1 = r.s1 - MIN_PIECE; continue; }
+      r.kind = (!p ? q! : !q ? p : p.s1 - p.s0 >= q.s1 - q.s0 ? p : q).kind;
     }
     // adjacent runs of the same kind become one
     for (let k = runs.length - 1; k > 0; k--) if (runs[k].kind === runs[k - 1].kind) { runs[k - 1].s1 = runs[k].s1; runs.splice(k, 1); }

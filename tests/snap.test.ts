@@ -74,10 +74,10 @@ test('a leg running along an existing road is refused (bulldoze it first)', () =
   assert.equal(checkLegs(n, [leg(0, 100, 100, 100)], null, null), 'A road is already there: bulldoze it first');
 });
 
-test('a run along a road of under 0.5 tiles is not a road already there (its end is a junction, too close to the node)', () => {
+test('a run along a road of under 0.5 tiles is not a road already there; its two ends would be junctions 0.3 tiles apart, too close (it left a 0.3-tile seg)', () => {
   const n = net(leg(0, 100, 100, 100));
   assert.doesNotMatch(checkLegs(n, [leg(100, 100, 99.8, 100)], null, null), /already there/);
-  assert.equal(checkLegs(n, [leg(60, 100, 60.3, 100)], null, null), '');
+  assert.equal(checkLegs(n, [leg(60, 100, 60.3, 100)], null, null), 'Too close to a junction: keep 16 m apart');
 });
 
 test('a leg beside a road within the two corridors is refused; 8 tiles off is fine', () => {
@@ -204,4 +204,24 @@ test('a hidden stub inside a ring (an arm bulldozed down to a dead end under its
   const stubs = ringStubs(n, r);
   assert.equal(stubs.length, 1);
   assert.equal(checkLegs(n, r, null, null, CLASS.street, new Set(stubs.map(x => x.seg))), '');
+});
+
+test('a route that doubles back on its own first leg is refused (a road on a road)', () => {
+  assert.equal(checkLegs(net(), [leg(100, 100, 200, 100), leg(200, 100, 104, 100)], null, null), 'Too sharp a join (under 30°)');
+});
+
+test('a route whose last leg runs back beside its first leg is refused: the road runs into itself', () => {
+  const r = [leg(100, 100, 100, 200), leg(100, 200, 140, 200), leg(140, 200, 140, 110), leg(140, 110, 104, 110)];
+  assert.equal(checkLegs(net(), r, null, null), 'The road runs into itself');
+});
+
+test('a closed square loop with its own legs is fine', () => {
+  const r = [leg(100, 100, 160, 100), leg(160, 100, 160, 160), leg(160, 160, 100, 160), leg(100, 160, 100, 100)];
+  assert.equal(checkLegs(net(), r, null, null), '');
+});
+
+test('a route that ends 1 tile past the street it crosses makes a junction too close to its end (it left a 1-tile seg); 3 tiles past is fine', () => {
+  const n = net(leg(100, 100, 200, 100));
+  assert.equal(checkLegs(n, [leg(150, 60, 150, 101)], null, null), 'Too close to a junction: keep 16 m apart');
+  assert.equal(checkLegs(n, [leg(150, 60, 150, 103)], null, null), '');
 });

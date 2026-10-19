@@ -333,3 +333,36 @@ test('one-way junctions: at a signal, an inbound one-way arm has a stop bar acro
   assert.equal(full.length, 1, 'one full-width bar');
   assert.ok((full[0]!.bbox[0] + full[0]!.bbox[2]) / 2 < 50, 'on the inbound (west) arm');
 });
+
+/** the distance from p to the segment a-b */
+const toSeg = (p: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }) => { const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy; const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2)); return Math.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y); };
+/** every pair of segs that share no node but whose corridors overlap by more than a tile (what the road builder's stress test flags) */
+function overlaps(n: RoadNetwork): string[] {
+  const out: string[] = [], segs = [...n.segs];
+  for (let i = 0; i < segs.length; i++) for (let j = i + 1; j < segs.length; j++) {
+    const s = segs[i]!, t = segs[j]!;
+    if (s.a === t.a || s.a === t.b || s.b === t.a || s.b === t.b) continue;
+    const d = Math.min(toSeg(s.a, t.a, t.b), toSeg(s.b, t.a, t.b), toSeg(t.a, s.a, s.b), toSeg(t.b, s.a, s.b)), need = s.cls.h + s.cls.walk + t.cls.h + t.cls.walk;
+    if (d < need - 1) out.push(`${s.cls.id} ${s.a.x},${s.a.y}-${s.b.x},${s.b.y} / ${t.cls.id} ${t.a.x},${t.a.y}-${t.b.x},${t.b.y}: ${d.toFixed(1)} < ${need.toFixed(1)}`);
+  }
+  return out;
+}
+
+test('the bulldozer near a bend: the new dead end clears the road round the bend (a street bending into an arterial)', () => {
+  const n = new RoadNetwork();
+  n.addLegs([leg(100, 100, 120, 120)], CLASS.street, 0, false); n.addLegs([leg(120, 120, 120, 180)], CLASS.arterial, 0);
+  const p = n.pieceNear({ x: 118, y: 118 })!;
+  assert.ok(p, 'a piece');
+  n.removePiece(p);
+  assert.deepEqual(overlaps(n), []);
+});
+
+test('the bulldozer next to a T: the new dead end of a grand boulevard clears the boulevard across the junction', () => {
+  const n = new RoadNetwork();
+  n.addLegs([leg(40, 100, 200, 100)], CLASS.grand, 0, false); n.addLegs([leg(100, 100, 100, 160)], CLASS.street, 0);
+  n.removePiece(n.pieceNear({ x: 106, y: 100 })!);
+  assert.deepEqual(overlaps(n), []);
+  // and a click in the middle of a long road still takes a short piece
+  const q = n.pieceNear({ x: 170, y: 100 })!, len = Math.hypot(q.p1.x - q.p0.x, q.p1.y - q.p0.y);
+  assert.ok(len < 40, `a piece of ${len.toFixed(1)} tiles`);
+});

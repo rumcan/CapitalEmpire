@@ -78,7 +78,11 @@ function inset(n: Node, a: Arm | undefined): number {
     const b = n.arms[0] === a ? n.arms[1] : n.arms[0], d = dot(a.dir, b.dir);
     // straight on; where the class (and so the lane offsets) changes, a 4-tile taper each side so the lanes shift gently
     if (d < -0.996) return a.cls !== b.cls ? 4 : 0.25;
-    return Math.max(0.25, 3 * Math.tan((Math.PI - Math.acos(clamp(d, -1, 1))) / 2));
+    // a bend: the lanes stop where a curve of radius r (3 tiles, or the widest lane offset of the two arms plus 1.5) leaves each arm, so the inner
+    // lanes keep a curve (at 3 tiles an arterial's inner lanes, 3 off the centre line, ended and started on one point at a right angle: a
+    // connector of length 0; a six-lane's crossed over. The road builder's stress test, 2026-10-19)
+    const off = (x: Arm) => Math.max(...x.cls.laneCentres.map(Math.abs)), r = Math.max(3, Math.max(off(a), off(b)) + 1.5);
+    return Math.max(0.25, r * Math.tan((Math.PI - Math.acos(clamp(d, -1, 1))) / 2));
   }
   return 0;
 }

@@ -56,6 +56,9 @@ export default function App() {
     try { g = new Game(canvasRef.current!, canvas); } catch (e) { setFatal((e as Error).message); return; }
     // debug and headless-screenshot hooks
     Object.assign(window as unknown as Record<string, unknown>, { __game: g, __CLASSES: CLASSES });
+    // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
+    // game: StrictMode mounts twice, and the first game is disposed)
+    if (import.meta.env.DEV) void import('./game/dev/roadfuzz').then(m => Object.assign(window as unknown as Record<string, unknown>, { __roadFuzz: (seed?: number, steps?: number, o?: Parameters<typeof m.roadFuzz>[3]) => m.roadFuzz((window as unknown as { __game: Game }).__game, seed, steps, o), __roadReplay: (box: [number, number, number, number], log: string[], upTo?: number) => m.roadReplay((window as unknown as { __game: Game }).__game, box, log, upTo) }));
     setGame(g);
     const unsub = g.subscribe(bump);
     g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));
