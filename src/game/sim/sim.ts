@@ -743,9 +743,11 @@ export class Sim {
    *  room beyond the box, conflicts. */
   private gate(i: number, c: number): boolean {
     const C = this.g.lanes[c]!, v = this.v[i], dLine = this.lLen[this.lane[i]] - this.s[i];
-    // a roundabout exit: a car on the ring lane it leaves that has just passed the diverge (on the through arc) is not left alongside
-    const from = this.g.lanes[this.lane[i]]!;
-    if (from.kind === LK.RING && this.grant[i] !== c) for (const nx of from.next) if (nx !== c && this.g.lanes[nx]!.kind === LK.RING) for (const w of this.onLane[nx]!) if (this.s[w]! - this.len[w]! < DIVERGE) return false;
+    // a roundabout exit: a car on the ring lane it leaves that has just passed the diverge (on the through arc) is not left alongside: the
+    // separation along the shared path (our distance to the fork plus its tail past it) must be DIVERGE m, or its tail that far when it stands
+    // (counting only its tail made every exit behind a through car stop on the ring and hold the lane)
+    const from = this.g.lanes[this.lane[i]]!, toFork = this.lLen[this.lane[i]] - this.s[i];
+    if (from.kind === LK.RING && this.grant[i] !== c) for (const nx of from.next) if (nx !== c && this.g.lanes[nx]!.kind === LK.RING) for (const w of this.onLane[nx]!) if (this.s[w]! - this.len[w]! + (this.v[w]! > 1 ? toFork : 0) < DIVERGE) return false;
     const sp = C.ctl === CTL.SIGNAL ? this.g.signals.get(C.node!) : undefined;
     const st = sp ? phaseState(sp, C.phase, this.t) : SIG.GREEN;
     const canStop = dLine > v * v / (2 * CAR.b);
