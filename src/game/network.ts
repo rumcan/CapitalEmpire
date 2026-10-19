@@ -820,18 +820,27 @@ export class RoadNetwork {
       for (let i = 0; i < k; i++) {
         const A = arms[i], B = arms[(i + 1) % k];
         const phi = (((B.ang - A.ang) % TAU) + TAU) % TAU;
-        if (phi < 0.12 || phi > Math.PI - 0.05) continue;
-        // the surface between the two arms' facing kerbs, from the node to where the kerbs meet (N, A's kerb at the node, the corner, B's): a
+        if (phi < 0.12) continue;
+        // (the outside of a bend in one road, one class, style and kind, is the route's own round join: left as it is)
+        const oneRoad = k === 2 && A.cls === B.cls && A.seg.style === B.seg.style && A.seg.kind === B.seg.kind;
+        if (!(phi > Math.PI && oneRoad)) 
+        // the surface between the two arms' facing kerbs, from the node to where the kerbs meet (N, A's kerb at the node, the corner, B's), on
+        // the inside of a corner and on the outside too (a bend's outer kerbs meet behind the node: two road types turning a corner left its
+        // outer square bare, the owner's screenshot, 2026-10-19): a
         // wide road whose end the other roads leave at an angle left triangles past the node unpaved, beside them and in the V between two
         // arms (the owner's screenshots, 2026-10-19). It lies between kerbs, so it never paves past one
         {
           const FA = add(N, mul(perp(A.dir), A.h)), FB = sub(N, mul(perp(B.dir), B.h)), Cq = lineHit(FA, A.dir, FB, B.dir), top = A.cls.order >= B.cls.order ? A : B;
-          if (Cq && vlen(sub(Cq, N)) < 4 * (A.h + B.h) + 8) { const q = [N, FA, Cq, FB]; asphF.push(feat('poly', polyPath(q), 0, top.cls.tex, top.cls.order, bboxOf(q, 0.3), 'butt', kerbed(top.cls))); }
+          // (a corner behind the node on either arm only when near: two arms nearly straight on met their kerbs 19 tiles up the narrow one and
+          // painted the wide road's asphalt up it, the owner's screenshot)
+          const near = (c: Pt, r: number) => (dot(sub(c, N), A.dir) >= -0.01 && dot(sub(c, N), B.dir) >= -0.01) || vlen(sub(c, N)) <= r;
+          if (Cq && vlen(sub(Cq, N)) < 4 * (A.h + B.h) + 8 && near(Cq, Math.max(A.h, B.h) + 4)) { const q = [N, FA, Cq, FB]; asphF.push(feat('poly', polyPath(q), 0, top.cls.tex, top.cls.order, bboxOf(q, 0.3), 'butt', kerbed(top.cls))); }
           // the same for the walks (under the asphalt): the walk round the corner runs on from one arm's to the other's instead of stopping square at
           // the node (the owner's screenshot: a wide road's sidewalk ended short of the crossing road's)
           const WA = add(N, mul(perp(A.dir), A.h + A.walk)), WB = sub(N, mul(perp(B.dir), B.h + B.walk)), Cw = lineHit(WA, A.dir, WB, B.dir), wt = (A.walk >= B.walk ? A : B).cls.walkTex;
-          if (Cw && vlen(sub(Cw, N)) < 4 * (A.h + B.h + A.walk + B.walk) + 8) { const q = [N, WA, Cw, WB]; walkF.push(feat('poly', polyPath(q), 0, wt, walkOrder(wt), bboxOf(q, 0.3))); }
+          if (Cw && vlen(sub(Cw, N)) < 4 * (A.h + B.h + A.walk + B.walk) + 8 && near(Cw, Math.max(A.h + A.walk, B.h + B.walk) + 4)) { const q = [N, WA, Cw, WB]; walkF.push(feat('poly', polyPath(q), 0, wt, walkOrder(wt), bboxOf(q, 0.3))); }
         }
+        if (phi > Math.PI - 0.05) continue;
         const tan = Math.tan(phi / 2), minLen = Math.min(A.len, B.len);
         const slip = slipOn(n, A, B);
         let R = slip ? R_SLIP : Math.min(A.cls.rConcave, B.cls.rConcave);
@@ -876,11 +885,11 @@ export class RoadNetwork {
       // each arm paved (and its walk laid) from the node out to where its road's own surface starts (the route's end inset): the boxes and corner
       // patches left wedges where an arm's surface starts far out, as a street meeting a wide road at 45 degrees, or a wide one-way turning at
       // a junction (the owner, 2026-10-19: "this wedge missing instead of a smooth turn")
-      // two arms straight on at a junction of 3+ with different widths: a taper on each side no other arm joins, from the wide edge at the node
+      // two arms straight on (within about 30 degrees) at a junction of 3+ with different widths: a taper on each side no other arm joins, from the wide edge at the node
       // to the narrow edge (over twice the step, 2.5 tiles at least); without it the wide road's kerb stopped at the node and the narrow road's
       // started a step in, a jagged notch (the owner's screenshot of a wide one-way turning with a street straight on, 2026-10-19)
       if (k >= 3) for (let i = 0; i < k; i++) for (let j = i + 1; j < k; j++) {
-        const P = arms[i]!, R2 = arms[j]!; if (dot(P.dir, R2.dir) >= -0.96 || Math.abs(P.h + P.walk - R2.h - R2.walk) < 0.3) continue;
+        const P = arms[i]!, R2 = arms[j]!; if (dot(P.dir, R2.dir) >= -0.85 || Math.abs(P.h + P.walk - R2.h - R2.walk) < 0.3) continue;
         const [wide, narrow] = P.h + P.walk >= R2.h + R2.walk ? [P, R2] : [R2, P], nn = perp(narrow.dir);
         const T = Math.min(Math.max(2.5, 2 * (wide.h + wide.walk - narrow.h - narrow.walk)), 0.6 * narrow.len), E = add(N, mul(narrow.dir, T));
         for (const sg of [1, -1] as const) {
@@ -898,7 +907,8 @@ export class RoadNetwork {
       }
       if (k >= 3) for (const A of arms) for (const B of arms) {
         if (A === B || A.cls.order <= B.cls.order) continue;
-        const th = Math.acos(clamp(dot(A.dir, B.dir), -1, 1)); if (th < 0.2 || th > Math.PI - 0.26) continue;
+        // (not past about 150 degrees: the box of two roads nearly straight on stretched 16 tiles up the narrow one, the owner's screenshot)
+        const th = Math.acos(clamp(dot(A.dir, B.dir), -1, 1)); if (th < 0.2 || th > 2.6) continue;
         const pts: Pt[] = [];
         for (const [sa, sb] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) { const p = lineHit(add(N, mul(A.nrm, sa * A.h)), A.dir, add(N, mul(B.nrm, sb * B.h)), B.dir); if (p) pts.push(p); }
         if (pts.length < 4) continue;

@@ -243,6 +243,8 @@ export function junctionGallery(game: Game, opts: { mains?: string[]; sides?: st
     for (const th of [45, 60, 90]) shapes.push([`end under a V ±${th}°`, [{ a: ray(90 * deg), b: C }], [{ a: ray(-90 * deg - th * deg), b: C }, { a: C, b: ray(-90 * deg + th * deg) }]]);
     for (const th of [90, 45]) shapes.push([`end across a road at ${th}°`, [{ a: ray(90 * deg), b: C }], [{ a: ray(-90 * deg - th * deg), b: C }, { a: C, b: ray(90 * deg - th * deg) }]]);
     for (const th of [90, 45]) shapes.push([`crossing at ${th}°`, [{ a: ray(Math.PI), b: C }, { a: C, b: ray(0) }], [{ a: ray(th * deg), b: C }, { a: C, b: ray(th * deg + Math.PI) }]]);
+    // two roads only: the main road turning a corner into the side road's type (and straight on, a class change)
+    for (const th of [45, 90, 135, 180]) shapes.push([`corner ${th}° into it`, [{ a: ray(Math.PI), b: C }], [{ a: C, b: ray(Math.PI - th * deg) }]]);
     for (const th of [45, 90, 135]) shapes.push([`bend ${th}° with a side road`, [{ a: ray(Math.PI), b: C }, { a: C, b: ray(Math.PI - (180 - th) * deg) }], [{ a: C, b: ray(-60 * deg) }]]);
     for (const [name, ml, sl] of shapes) {
       cases++;
