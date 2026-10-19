@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg, type PieceSel, type Pt, type Seg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { benchLayout, benchNetwork } from '../src/game/bench-net';
-import { LotMap, type Lot } from '../src/game/lots/lots';
+import { LotMap, ringClear, type Lot } from '../src/game/lots/lots';
 import { MAP } from '../src/game/iso';
 import { TC } from '../src/game/terrain/types';
 
@@ -177,4 +177,22 @@ test('timing (log): the 40x40 bench grid, full update and one edit', () => {
   console.log(`[lots] one edit (a 40-tile street): update ${one.toFixed(1)} ms, ${r.added.length} added, ${r.removed.length} removed, ${lm.lots.size} lots`);
   const fresh = new LotMap(); fresh.update(e.net, null);
   assert.deepEqual(fingerprint(lm), fingerprint(fresh));
+});
+
+test('a roundabout grown to 3 ring lanes: no lot reaches into its circle (its edge, the walk and the clearance), with a bend in each arm near it', () => {
+  // a plus of streets whose arms bend 12 tiles out: a bend is no junction, so the lots of the outer piece start there, inside a big ring
+  const e = new NetEditor(new RoadNetwork()), C = { x: 200, y: 200 };
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) e.addLegs([leg(C.x, C.y, C.x + dx * 12 - dy * 2, C.y + dy * 12 + dx * 2), leg(C.x + dx * 12 - dy * 2, C.y + dy * 12 + dx * 2, C.x + dx * 60, C.y + dy * 60)], CLASS.street, 0);
+  e.commit();
+  const lm = new LotMap(); lm.update(e.net, null);
+  for (const rl of [1, 2, 3] as const) {
+    const n = e.net.nodeAt(C)!;
+    if (rl === 1) e.setNodeType(n, 'roundabout'); e.setNodeFlags(n, false, false, rl); e.commit(); lm.update(e.net, null);
+    const m = e.net.nodeAt(C)!, R = ringClear(m);
+    assert.ok(R > m.rb && lm.lots.size > 0, `ring ${rl}: a clearance, and lots`);
+    for (const l of lm.lots.values()) for (const p of samples(l)) assert.ok(Math.hypot(p.x - C.x, p.y - C.y) > R - 1e-6, `ring ${rl}: lot ${l.key} reaches into the circle (r ${R.toFixed(1)})`);
+    // incremental equals full
+    const fresh = new LotMap(); fresh.update(e.net, null);
+    assert.deepEqual(fingerprint(lm), fingerprint(fresh), `ring ${rl}: incremental equals full`);
+  }
 });

@@ -538,7 +538,11 @@ export class LaneGraph {
       }
     }
     // the movement's ring lanes for an approach lane's entries: right from lane 0 only, left and U-turns from the innermost, straight on any
-    const want = (cat: 'R' | 'L' | 'U' | 'S', list: [number, number][]) => list.filter(([m]) => cat === 'S' || (cat === 'R' ? m === 0 : m === inner));
+    // lane use (as the painted arrows of real rings): 1-2 ring lanes: R outer, S any, L and U inner; 3 ring lanes: R outer, S outer and
+    // middle, L middle and inner, U inner (every left turn on the inner lane saturated it in an event surge: the owner's 3-lane ring)
+    const want = (cat: 'R' | 'L' | 'U' | 'S', list: [number, number][]) => list.filter(([m]) => RL < 3
+      ? cat === 'S' || (cat === 'R' ? m === 0 : m === inner)
+      : cat === 'R' ? m === 0 : cat === 'S' ? m <= 1 : cat === 'L' ? m >= 1 : m === inner);
     for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
       const cat = i === j ? 'U' : j === ord[(pos[i] + 1) % M] ? 'R' : j === ord[(pos[i] - 1 + M) % M] ? 'L' : 'S';
       const ins = this.dsegs[io[i].inD]!.lanes, paths: number[][] = [];

@@ -49,6 +49,9 @@ const SIG_MARGIN = 0.5;
 const RING_GAP = 10;
 /** a roundabout exit waits while a car on the ring lane it leaves from has its rear within this many metres of the point it diverges */
 const DIVERGE = 6;
+/** a ring exit's gap to a car coming on an outer ring lane it crosses: s at its speed, and m at least (4 s / 10 m: no overlaps on the
+ *  bench at 600 veh/h per arm; 2 s / 6 m let cars touch) */
+const EXIT_GAP = 4, EXIT_MIN = 10;
 /** the queue of the junction ahead: the last this many metres of a LINK lane (Sim.lossQ) */
 const QUEUE_M = 100;
 /** a copy of a Float64Array a in one of length m (the per-lane sums keep their values when the lists grow) */
@@ -831,13 +834,18 @@ export class Sim {
       if (this.granted[c2].length) return false;
       if (L2.ctl === CTL.SIGNAL && this.signalState(L2) === SIG.RED) continue;
       if (L2.prio > C.prio) {
-        // at a roundabout a car on the ring that is coming (or standing) within RING_GAP m plus 4 s of its travel holds the crossing
-        const ringX = !!C.node && C.node.rb > 0;
+        // at a roundabout entry a car on the ring that is coming (or standing) within RING_GAP m plus 4 s of its travel holds the crossing;
+        // a ring exit crossing the outer lanes takes a short gap instead (with the entry rule an inner-lane exit waited for 40 m of empty
+        // outer lane, never came on a busy ring, and held its whole lane: the owner's 3-lane ring, 2026-10-19)
+        const ringX = !!C.node && C.node.rb > 0 && C.prev.every(p => lanes[p]!.kind !== LK.RING);
+        if (ringX && this.ringComing(c2, cf.os)) return false;
         for (const p of L2.prev) for (const w of Q[p]) {
           if (this.grant[w] >= 0 || P[w]![pI[w] + 1] !== c2) continue;
           const dist = lLen[p] - S[w] + cf.os;
           // (a ring car may speed up to its lane's limit before it reaches the crossing, so the faster of the two counts)
           if (ringX) { if (dist < RING_GAP + 4 * Math.max(V[w]!, this.lVmax[p]!)) return false; continue; }
+          // a ring exit crossing the outer lanes: an ordinary gap (EXIT_MIN m, EXIT_GAP s at the other car's speed)
+          if (C.node!.rb > 0) { if (dist < EXIT_MIN || (V[w] >= 0.5 && dist / V[w] < EXIT_GAP)) return false; continue; }
           if (V[w] < 0.5) continue;
           if (dist / V[w] < (cf.merge ? 5 : 4)) return false;
         }
@@ -849,6 +857,28 @@ export class Sim {
       }
     }
     return true;
+  }
+  /** a roundabout entry's look-back along the ring: true if a car is coming to ring lane c2 (its plan reaches c2 within the next few lanes)
+   *  within RING_GAP m plus 4 s of its travel of the conflict point os m along c2, on ring lanes up to that far back (one lane back was
+   *  not enough: ring arcs are 10-20 m, so a car two arcs back reached the merge while an entering car was still crossing to an inner
+   *  lane, and the two held each other there) */
+  private ringComing(c2: number, os: number): boolean {
+    const lanes = this.g.lanes, Q = this.onLane, S = this.s, V = this.v, P = this.plan, pI = this.pi, lLen = this.lLen, far = RING_GAP + 4 * 12;
+    let front: [number, number][] = [[c2, os]];
+    for (let depth = 0; depth < 4 && front.length; depth++) {
+      const nxt: [number, number][] = [];
+      for (const [l, base] of front) for (const p of lanes[l]!.prev) {
+        if (depth > 0 && lanes[p]!.kind !== LK.RING) continue;
+        for (const w of Q[p]) {
+          if (this.grant[w] >= 0) continue;
+          const plan = P[w]!, k = plan.indexOf(c2, pI[w]); if (k < 0 || k > pI[w] + depth + 1) continue;
+          if (lLen[p] - S[w] + base < RING_GAP + 4 * Math.max(V[w]!, this.lVmax[p]!)) return true;
+        }
+        if (lanes[p]!.kind === LK.RING && base + lLen[p] < far) nxt.push([p, base + lLen[p]]);
+      }
+      front = nxt;
+    }
+    return false;
   }
   /** removes vehicle i from the granted list of its connector */
   private unGrant(i: number) { const q = this.granted[this.grant[i]], k = q.indexOf(i); if (k >= 0) q.splice(k, 1); this.grant[i] = -1; }
@@ -1197,14 +1227,17 @@ export class Sim {
     this.route[i] = null;
     return R.choose(outs, R.zoneD[e]!, this.rnd);
   }
-  /** plans vehicle i from its lane L: the wanted movement if it has a path from L, else `prefer` if it has one, else a random
-   *  movement that has one, else the fallback chain */
+  /** plans vehicle i from its lane L: the wanted movement if it has a path from L, else `prefer` if it has one, else (with a destination)
+   *  the router's choice among the movements that have one, else a random movement that has one, else the fallback chain. (A random one
+   *  sent a car stuck in the left lane of a jammed 3-lane ring round the inner lane on a U-turn, back out the way it came and in again:
+   *  the owner's 3-lane ring, 2026-10-19) */
   private planFrom(i: number, L: number, prefer: number) {
     const g = this.g, d = g.dsegs[g.lanes[L]!.dseg], outs = d ? d.out : [];
     this.unbind(i);
     let m = -1;
     if (this.reach(this.want[i], L)) m = this.want[i];
     else if (this.reach(prefer, L)) m = prefer;
+    else if (this.dest[i]! >= 0 && (m = this.router.choose(outs.filter(x => this.reach(x, L)), this.router.zoneD[this.dest[i]!]!, this.rnd)) >= 0) this.route[i] = null;
     else {
       let n = 0; for (const x of outs) if (this.reach(x, L)) n++;
       if (n) { let k = Math.floor(this.rnd() * n); for (const x of outs) if (this.reach(x, L) && k-- === 0) { m = x; break; } }

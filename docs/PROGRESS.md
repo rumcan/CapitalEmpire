@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -1058,6 +1058,26 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **3-lane rings, the owner's follow-ups (2026-10-19 afternoon): DONE.**
+  - *Cars dived to the island, went round, out the way they came and back in.* Cause: a car that could not get into
+    its movement's approach lane (no gap in a queue) got a **random** movement its lane allows (sim.ts `planFrom`), often
+    the U-turn on the inner ring. Now (with a destination) the router chooses among the reachable movements (no U unless
+    it is the only one). Headless probe, six-lane 3-ring 900 veh/h per arm, trips with an in-out-in path: 46 → 1. The
+    owner confirmed on a new map: cars drive the ring correctly. Also in this commit, the earlier session's uncommitted
+    3-lane work: lane use 3 rings (R outer, S outer+middle, L middle+inner, U inner; lanes.ts `ring`), an entry's
+    look-back along the ring (`ringComing`), and ring exits crossing the outer lanes take an ordinary gap (EXIT_GAP 4 s /
+    EXIT_MIN 10 m) instead of the entry rule. Roundabout bench (600 veh/h per arm): 1 / 2 / 3 lanes 42.4 / 4.3 / 4.2 s,
+    0 overlaps, 0 towed.
+  - *A ring grown to more lanes reached into houses.* Lots now keep clear of a ring's circle (rb + widest walk +
+    CLEAR; lots.ts `ringClear`, `blockers`): lots it covers go (the house is demolished, 'gone') and new lots form
+    outside, which the town builds. (A bend or class change in an arm near the ring let lots start inside it.)
+  - *The town laid gravel into rings.* `planExtension`'s `valid` refuses a leg within a ring's clearance + the gravel
+    verge + GAP (a branch point of the 40-tile lattice could fall inside a ring).
+  - *Dev unlock-all*: on the dev server every road class, junction (the roundabout without its card), tunnels and
+    every lights tier are open from the start (`?unlock=0` plays the unlocks; the badge says "all unlocked").
+  - Tests: lots.test.ts and roads.test.ts each gained a ring test (both fail before the fix). `npm test` 394/395 (the
+    one failure is ext-terrain2's 4 s timing budget at 4.1 s on a loaded PC), typecheck clean, `town:gate` PASS
+    (5,142 pop, 0 jams).
 - **Multi-lane roundabouts: cars stopping on the ring (the owner, 2026-10-19: "cars drive in the 3-lane roundabout, stop
   in the middle, wait, then leave, and all the lanes wait for them"): FIXED.** Cause (probe `output/probe/rbstop.ts`):
   the exit gate's diverge rule (sim.ts `gate`) held an exiting ring car until the car ahead going on around was 6 m past

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, norm, sub, type Leg, type Node, type Pt, type Seg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
-import { LotMap, type Lot } from '../src/game/lots/lots';
+import { LotMap, ringClear, type Lot } from '../src/game/lots/lots';
 import { LV, Town, type TownCtx } from '../src/game/lots/town';
 import { needsLand, planExtension, reachableSegs, seededRnd, type RoadPlanCtx } from '../src/game/lots/roads';
 import { MAP } from '../src/game/iso';
@@ -55,10 +55,11 @@ function lotSamples(l: Lot): Pt[] {
 interface Run { net: RoadNetwork; lm: LotMap; town: Town; built: number[] /* the built lots at the end of each game day */; cls: Uint8Array }
 /** a town on a street from the entry, run for days: each game hour the town ticks, and when it needs land the planned
  *  extension is laid and the lots follow (as the city worker and the engine do) */
-function run(cls: Uint8Array, days: number, seed: number): Run {
+function run(cls: Uint8Array, days: number, seed: number, prep?: (e: NetEditor) => void): Run {
   const e = new NetEditor(new RoadNetwork()), lm = new LotMap(), town = new Town(seed), rnd = seededRnd(seed);
   e.addLegs([leg(ENTRY.x, ENTRY.y, 220, ENTRY.y)], CLASS.street, 0);
   e.commit();
+  prep?.(e);
   let r = lm.update(e.net, cls); town.onLots(r.added, r.removed);
   let reach = reachableSegs(e.net, ENTRY);
   const built: number[] = [];
@@ -172,4 +173,17 @@ test('with towns the planner lays no gravel leg through the no-go zone, and none
     for (const p of samplesOf(g)) assert.ok(!inSite(p.x, p.y), `a gravel leg runs through the no-go zone at (${p.x.toFixed(1)}, ${p.y.toFixed(1)})`);
     for (const av of avenues) assert.ok(!crosses(g, av) && gap(g, av) > 1, `a gravel leg crosses or touches the avenue (gap ${gap(g, av).toFixed(2)})`);
   }
+});
+
+test('a roundabout on the street: the town never lays gravel into its circle (edge, walk, the gravel verge and the gap)', () => {
+  // a crossing 10 tiles past a branch point of the street (x = 160 is on the 40-tile lattice): the town could branch inside the ring
+  const R = { x: 170, y: ENTRY.y };
+  const res = run(valley(() => {}), 15, 7, e => {
+    e.addLegs([leg(R.x, ENTRY.y - 60, R.x, ENTRY.y + 60)], CLASS.street, 0); e.commit();
+    const n = e.net.nodeAt(R)!; e.setNodeType(n, 'roundabout'); e.setNodeFlags(n, false, false, 3); e.commit();
+  });
+  const n = res.net.nodeAt(R)!, need = ringClear(n) + CLASS.gravel.h + CLASS.gravel.walk;
+  const gravel = [...res.net.segs].filter(s => s.cls.id === 'gravel');
+  assert.ok(gravel.length > 5, `the town grew (${gravel.length} gravel segs)`);
+  for (const s of gravel) assert.ok(segDist(R, s) >= need - 1e-6, `gravel ${s.a.x},${s.a.y}-${s.b.x},${s.b.y} is ${segDist(R, s).toFixed(1)} from the ring (need ${need.toFixed(1)})`);
 });

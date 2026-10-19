@@ -22,6 +22,8 @@ export const BRANCH = 40, RESERVE = 4;
 const SIZE: Record<string, [number, number]> = { gravel: [8, 15], lane: [8, 15], street: [8, 15], road: [10, 16], avenue: [12, 18], arterial: [13, 19], boulevard: [16, 20], six: [13, 19], grand: [16, 20], divided: [10, 16] };
 /** the shallowest lot kept; the clearance added to another road's h + walk; the share of bad terrain allowed; the overlap tolerance */
 const MIN_D = 6, CLEAR = 0.5, BAD_MAX = 0.1, TOL = 0.25;
+/** how far past a lot's half diagonal a ring's node can be and its circle still reach the lot (the biggest ring's clearance is about 22) */
+const RING_NEAR = 26;
 /** how far a lot can reach from its seg (its depth plus the verge), and how far an edit's recompute scope reaches past its box */
 const REACH = 27, SCOPE = 2 * REACH;
 /** the spatial grid's cell, tiles */
@@ -64,20 +66,27 @@ function overlaps(p: Lot, q: Lot): boolean {
 /** priority: higher road order first, then the longer seg, then the smaller key */
 const prio = (p: Lot, q: Lot) => (q.seg.cls.order - p.seg.cls.order) || (segLen(q.seg) - segLen(p.seg)) || (p.key < q.key ? -1 : p.key > q.key ? 1 : 0);
 
-// scratch for one candidate's blockers (the other segs near its box, with their clearance)
-const near: Seg[] = [], nearThr: number[] = [];
-/** collect the other segs whose clearance band reaches the lot's rectangle */
+// scratch for one candidate's blockers (the other segs near its box, with their clearance, and the rings near it)
+const near: Seg[] = [], nearThr: number[] = [], rings: Node[] = [], ringR: number[] = [];
+/** the clearance of a roundabout's (or a mini's) circle: its edge, the widest arm's walk, and CLEAR (0 for any other node) */
+export const ringClear = (n: Node) => (n.rb > 0 ? n.rb + Math.max(0, ...n.arms.map(a => a.walk)) + CLEAR : 0);
+/** collect the other segs whose clearance band reaches the lot's rectangle, and the rings (at the ends of those segs or of s) whose
+ *  circle does (a ring grown to more lanes reached into the lots of the roads around it: the owner's 3-lane ring, 2026-10-19) */
 function blockers(net: RoadNetwork, s: Seg, o: Pt, u: Pt, n: Pt, W: number, D: number) {
-  near.length = 0; nearThr.length = 0;
+  near.length = 0; nearThr.length = 0; rings.length = 0; ringR.length = 0;
   const box = rectBox(o, u, n, W, D), cx = o.x + u.x * W / 2 + n.x * D / 2, cy = o.y + u.y * W / 2 + n.y * D / 2;
+  const ring = (nd: Node) => { const r = ringClear(nd); if (r > 0 && !rings.includes(nd) && touches([nd.x, nd.y, nd.x, nd.y], pad(box, r))) { rings.push(nd); ringR.push(r); } };
+  ring(s.a); ring(s.b);
+  for (const s2 of net.segsNear({ x: cx, y: cy }, Math.hypot(W, D) / 2 + RING_NEAR)) { ring(s2.a); ring(s2.b); }
   for (const s2 of net.segsNear({ x: cx, y: cy }, Math.hypot(W, D) / 2 + 7)) {
     if (s2 === s) continue;
     const thr = s2.cls.h + s2.cls.walk + CLEAR;
     if (touches(segBox(s2), pad(box, thr))) { near.push(s2); nearThr.push(thr); }
   }
 }
-/** is (px, py) within a blocker's clearance */
+/** is (px, py) within a blocker's clearance (a seg's band or a ring's circle) */
 function blocked(px: number, py: number): boolean {
+  for (let m = 0; m < rings.length; m++) { const dx = px - rings[m]!.x, dy = py - rings[m]!.y, r = ringR[m]!; if (dx * dx + dy * dy <= r * r) return true; }
   for (let m = 0; m < near.length; m++) {
     const a = near[m].a, b = near[m].b, dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
     let t = L2 > 0 ? ((px - a.x) * dx + (py - a.y) * dy) / L2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;

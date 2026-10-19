@@ -116,7 +116,7 @@ export default function App() {
               <Stat label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
               {(game.growth !== 1 || game.unlimited || !game.stamped) && (
                 <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
-                  dev: {[game.growth !== 1 && `grow ${game.growth}×`, game.unlimited && '∞ $', !game.stamped && 'no stamp'].filter(Boolean).join(' · ')}
+                  dev: {[game.growth !== 1 && `grow ${game.growth}×`, game.unlimited && '∞ $', !game.stamped && 'no stamp', game.unlockAll && 'all unlocked'].filter(Boolean).join(' · ')}
                 </div>
               )}
             </div>
@@ -870,13 +870,13 @@ function phaseLabel(n: Node, armPhase: number[], k: number): string {
 }
 /** the selected lights: the tier, the fixed-time green split (a slider per phase, committed on release, with the cycle length) and the upgrades (paid, by year) */
 function SignalsDetail({ game, n }: { game: Game; n: Node }) {
-  const tier = n.sig ?? 1, year = game.traffic.round.year, plan = game.lanes.signals.get(n);
+  const tier = n.sig ?? 1, plan = game.lanes.signals.get(n);
   const [draft, setDraft] = useState<number[] | null>(null);
   const greens = draft ?? plan?.greens ?? [], cycle = greens.reduce((s, g) => s + g, 0) + 5 * greens.length;
   /** the slider's release: the split is set (the lights become fixed-time) and the network commits, once */
   const release = () => { if (draft && plan && draft.some((g, k) => g !== plan.greens[k])) game.setSplit(n, draft); setDraft(null); };
   const up = (t: 1 | 2, label: string) => {
-    const ok = year >= SIGNAL_TIER_YEAR[t]!;
+    const ok = game.signalTier() >= t;
     return <button className={`chip ${ok ? 'chip-on' : ''}`} disabled={!ok} onClick={() => game.upgradeSignal(t)}>{ok ? `Upgrade to ${label} (${money(UPGRADE_COST[t]!)})` : `${label[0]!.toUpperCase()}${label.slice(1)} lights from ${SIGNAL_TIER_YEAR[t]}`}</button>;
   };
   return (

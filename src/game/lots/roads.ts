@@ -3,7 +3,7 @@
 // The candidates are scored first and validated best first, so a call stays cheap.
 import { CLASS, SK, dot, mul, norm, sub, vlen, type Leg, type Node, type Pt, type RoadNetwork, type Seg } from '../network';
 import { MAP } from '../iso';
-import type { Lot, LotMap } from './lots';
+import { ringClear, type Lot, type LotMap } from './lots';
 import { LV, type Town } from './town';
 import { TC } from '../terrain/types';
 
@@ -206,6 +206,14 @@ function valid(c: RoadPlanCtx, k: Cand): boolean {
     // the new leg joins that junction anyway
     const adj = s.a === start.a || s.a === start.b || s.b === start.a || s.b === start.b;
     for (let i = adj ? Math.ceil(2 * need) : 0; i <= 2 * L; i++) if (segDist({ x: A.x + u.x * Math.min(i / 2, L), y: A.y + u.y * Math.min(i / 2, L) }, s) < need) { planWhy.verge++; return false; }
+  }
+  // the rings: no point of the corridor within a roundabout's (or a mini's) circle, its walk and GAP (a branch off a ring's arm, or a leg
+  // closing on one, ran into the island: the owner's 3-lane ring, 2026-10-19)
+  for (const nd of c.net.nodes.values()) {
+    const r = ringClear(nd); if (r <= 0) continue;
+    const need = r + GR + GAP;
+    if (segDist(nd, { a: A, b: E } as Seg) >= need) continue;
+    planWhy.verge++; return false;
   }
   // the lots: the corridor (0.5 tile steps along and across) through no lot that is not EMPTY
   const x0 = Math.min(A.x, E.x) - GR_T, y0 = Math.min(A.y, E.y) - GR_T, x1 = Math.max(A.x, E.x) + GR_T, y1 = Math.max(A.y, E.y) + GR_T;

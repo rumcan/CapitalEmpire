@@ -189,7 +189,7 @@ export class Game {
   speed = 1; private lastSpeed = 1;
   /** the dev sandbox (URL ?grow=N, ?stamp=0|1, ?money=0|1; the dev server defaults to grow 20, no stamp, money on; the bench forces the game's): the growth speed (1 = the game's),
    *  whether a new valley's towns are stamped to their residents, and unlimited money (sent to the city worker at init) */
-  private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false;
+  private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false; private sandboxUnlock = false;
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
@@ -248,6 +248,8 @@ export class Game {
     this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
+    // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
+    this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); };
     this.traffic.onLedger = (l) => {
@@ -279,7 +281,7 @@ export class Game {
 
   async init(opts: { bench?: number } = {}) {
     const tick = (p: number) => { this.loadProgress = p; this.emit(); };
-    if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; }
+    if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; this.sandboxUnlock = false; }
     this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney); // before the terrain: the city worker reads its options from the first messages
     this.resize();
     const atlas = this.gl.loadAtlas(this.dpr >= 1.5);
@@ -783,7 +785,7 @@ export class Game {
     const relane = n.type === 'roundabout' && t === 'roundabout', name = JUNCTIONS.find(j => j.id === t)!.name;
     this.traffic.spend('construction', cost);
     if (n.type !== t) this.edit.setNodeType(n, t);
-    if (t === 'signal') this.edit.setSignal(n, signalTierOpen(this.traffic.round.year), undefined);
+    if (t === 'signal') this.edit.setSignal(n, this.signalTier(), undefined);
     if (t === 'roundabout') { this.edit.setNodeFlags(n, !!n.wide, !!n.tl, rl); this.ringLanes = rl; }
     else if ((t === 'stop' || t === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1); // no options on a stop or a mini: its flags go
     this.commitNetwork(); this.puff(n.x, n.y, 8);
@@ -974,7 +976,7 @@ export class Game {
     if (v.type === 'roundabout') this.ringLanes = v.rl;
     const hadLights = isLights(n), lit = v.type === 'signal' || v.type === 'slip';
     this.edit.setNodeType(n, v.type);
-    if (lit && !hadLights) this.edit.setSignal(n, signalTierOpen(this.traffic.round.year), undefined);
+    if (lit && !hadLights) this.edit.setSignal(n, this.signalTier(), undefined);
     if (v.type === 'slip') this.edit.setSlipOff(n, []);
     if (v.type === 'roundabout') this.edit.setNodeFlags(n, !!n.wide, !!n.tl, v.rl);
     else if ((v.type === 'stop' || v.type === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1);
@@ -990,7 +992,7 @@ export class Game {
   upgradeSignal(tier: 1 | 2) {
     const n = this.selectedNode(); if (!n || !isLights(n) || (n.sig ?? 1) >= tier) return;
     const name = tier === 1 ? 'Actuated' : 'Adaptive', cost = UPGRADE_COST[tier]!;
-    if (signalTierOpen(this.traffic.round.year) < tier) { this.toast(`${name} lights from ${SIGNAL_TIER_YEAR[tier]}`, 'warn'); return; }
+    if (this.signalTier() < tier) { this.toast(`${name} lights from ${SIGNAL_TIER_YEAR[tier]}`, 'warn'); return; }
     if (cost > this.money) { this.toast(`Not enough money: ${name.toLowerCase()} lights cost $${cost.toLocaleString()}`, 'warn'); return; }
     this.traffic.spend('construction', cost);
     this.edit.setSignal(n, tier, n.split);
@@ -1662,6 +1664,8 @@ export class Game {
   /** the dev sandbox's growth speed (1 = the game's), whether the towns are stamped at a new valley, and unlimited money (the top bar's badge) */
   get growth(): number { return this.sandboxGrow; }
   get stamped(): boolean { return this.stampOn; }
+  /** the dev sandbox's unlock-all (see sandboxUnlock) */
+  get unlockAll(): boolean { return this.sandboxUnlock; }
   get unlimited(): boolean { return this.traffic.unlimited; }
   /** the game day (from the city's books) */
   get day(): number { return this.traffic.day; }
@@ -1676,11 +1680,13 @@ export class Game {
   /** event mode: a stadium site exists, and the event's rules replace the Career's unlocks (see classOpen, junctionOpen, tunnelsOpen) */
   get eventMode(): boolean { return this.site !== null; }
   /** a road class is open to build: every class in event mode, else as the Career unlocks it */
-  classOpen(id: ClassId): boolean { return this.eventMode || classUnlocked(id, this.reached); }
+  classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
   /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
-  junctionOpen(t: NodeType): boolean { return this.eventMode ? t !== 'roundabout' || this.traffic.round.cards.includes('roundabout') : junctionUnlocked(t, this.reached); }
+  junctionOpen(t: NodeType): boolean { return this.sandboxUnlock ? true : this.eventMode ? t !== 'roundabout' || this.traffic.round.cards.includes('roundabout') : junctionUnlocked(t, this.reached); }
+  /** the best signal tier open: the year's (see signalTierOpen), every tier with the dev sandbox's unlock-all */
+  signalTier(): 0 | 1 | 2 { return this.sandboxUnlock ? 2 : signalTierOpen(this.traffic.round.year); }
   /** tunnels are open: always in event mode, else as the Career unlocks them */
-  tunnelsOpen(): boolean { return this.eventMode || tunnelsUnlocked(this.reached); }
+  tunnelsOpen(): boolean { return this.sandboxUnlock || this.eventMode || tunnelsUnlocked(this.reached); }
   /** takes a card of the eval's draft (the worker refuses what is not on it); its effects follow with the next frame (see applyCards) */
   pickCard(id: CardId) { this.traffic.pickCard(id); this.emit(); }
   /** the new toll gates' booths, the new bus routes' buses and the seats of a bus, as the cards given set them (see applyCards; on load, the cards applied) */
