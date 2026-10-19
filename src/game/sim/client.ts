@@ -2,7 +2,7 @@
 // frames, and interpolates the cars between them so they move smoothly at 60 fps while the sim runs at 10 Hz.
 import SimWorker from './sim.worker?worker&inline';
 import type { NetOp } from '../ground-protocol';
-import type { Drawable } from '../sprites';
+import { CAR_SCALE, type Drawable } from '../sprites';
 import { facings } from '../traffic';
 import { worldX, worldY } from '../iso';
 import { zoneOf } from './routing';
@@ -50,9 +50,6 @@ function put(out: Float32Array, k: number, tx: number, ty: number, r: number, g:
 }
 
 /** The city worker's side: the cars of the sim, as typed arrays indexed by slot (n = the sim's slot count, 0 before the first frame), the parcels and the town. */
-/** the moving cars' sprite scale (the owner, 2026-10-19: 20% smaller on the map) */
-export const CAR_SCALE = 0.8;
-
 export class SimClient {
   private worker: Worker;
   /** the parcels by key (geometry and the town's state) */
@@ -312,7 +309,7 @@ export class SimClient {
       if (!this.alive[i] || this.tunnel[i]) continue;
       const x = this.px[i], y = this.py[i]; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
       const f = F[this.kind[i] % F.length][this.head[i]];
-      let d = this.pool[k]; if (!d) this.pool.push((d = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0 }));
+      let d = this.pool[k]; if (!d) this.pool.push((d = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0, moving: true }));
       // drawn at CAR_SCALE about the car's centre: the anchor and footprint offsets scale with it
       d.item = f.item; d.flip = f.flip; d.scale = CAR_SCALE; d.x = x - f.ox * CAR_SCALE; d.y = y - f.oy * CAR_SCALE; d.x0 = x - f.hx * CAR_SCALE; d.x1 = x + f.hx * CAR_SCALE; d.y0 = y - f.hy * CAR_SCALE; d.y1 = y + f.hy * CAR_SCALE;
       out.push(d); k++;

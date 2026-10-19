@@ -9,7 +9,10 @@ import { SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import type { Prop } from './types';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
-export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number }
+export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean }
+/** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
+ *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
+export const CAR_SCALE = 0.8;
 interface DTile { i: number; j: number; props: Set<Prop>; order: Prop[] | null; packed: Float32Array; shadows: Float32Array; rects: Float32Array; buckets: Map<number, number[]> }
 export interface TileDraw { i: number; j: number; shadows: number; sprites: number }
 
@@ -19,7 +22,9 @@ const SHADOWED = (it: (typeof LIBRARY)[number]) => !it.big && it.kind !== 'fence
 
 /** the trimmed picture's rectangle in world px */
 export function spriteRect<T extends number[] | Float32Array>(d: Drawable, out: T = [0, 0, 0, 0] as T, o = 0): T {
-  const it = LIBRARY[d.item], k = d.scale, X = worldX(d.x, d.y), Y = worldY(d.x, d.y), ax = d.flip ? it.w - it.ax : it.ax;
+  const it = LIBRARY[d.item], parked = it.kind === 'car' && !d.moving, f = parked ? CAR_SCALE : 1, k = d.scale * f, ax = d.flip ? it.w - it.ax : it.ax;
+  // a parked car shrinks about the middle of its footprint, so it stays in its bay
+  const cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2, px = parked ? cx + (d.x - cx) * f : d.x, py = parked ? cy + (d.y - cy) * f : d.y, X = worldX(px, py), Y = worldY(px, py);
   const left = X - ax * k, top = Y - it.ay * k, q = it.quad;
   const qx0 = d.flip ? it.w - q[2] : q[0], qx1 = d.flip ? it.w - q[0] : q[2];
   out[o] = left + qx0 * k; out[o + 1] = top + q[1] * k; out[o + 2] = left + qx1 * k; out[o + 3] = top + q[3] * k;

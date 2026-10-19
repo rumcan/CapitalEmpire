@@ -837,6 +837,15 @@ export class RoadNetwork {
         asphF.push(feat('poly', polyPath(pa), 0, wide.cls.tex, wide.cls.order, bboxOf(pa, 0.3), 'butt', kerbed(wide.cls)));
         walkF.push(feat('poly', polyPath(pw), 0, wide.cls.walkTex, walkOrder(wide.cls.walkTex), bboxOf(pw, 0.3)));
       }
+      // each arm paved (and its walk laid) from the node out to where its road's own surface starts (the route's end inset): the boxes and corner
+      // patches left wedges where an arm's surface starts far out, as a street meeting a wide road at 45 degrees, or a wide one-way turning at
+      // a junction (the owner, 2026-10-19: "this wedge missing instead of a smooth turn")
+      if (k >= 3) for (const a of arms) {
+        const t = a.reachEdge + (n.type === 'slip' ? R_SLIP : a.cls.rConcave) + 0.35, e = add(N, mul(a.dir, t));
+        const band = (h: number) => [add(N, mul(a.nrm, h)), add(e, mul(a.nrm, h)), sub(e, mul(a.nrm, h)), sub(N, mul(a.nrm, h))], pa = band(a.h), pw = band(a.h + a.walk);
+        walkF.push(feat('poly', polyPath(pw), 0, a.cls.walkTex, walkOrder(a.cls.walkTex), bboxOf(pw, 0.3)));
+        asphF.push(feat('poly', polyPath(pa), 0, a.cls.tex, a.cls.order, bboxOf(pa, 0.3), 'butt', kerbed(a.cls)));
+      }
       if (k >= 3) for (const A of arms) for (const B of arms) {
         if (A === B || A.cls.order <= B.cls.order) continue;
         const th = Math.acos(clamp(dot(A.dir, B.dir), -1, 1)); if (th < 0.2 || th > Math.PI - 0.26) continue;
