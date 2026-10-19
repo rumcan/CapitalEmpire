@@ -3,7 +3,7 @@
 // Along-road positions sit on a global lattice, so a split road keeps its lots; the depth stops short of other roads, and
 // lots on bad terrain are dropped. Overlaps are settled by priority (road order, then seg length, then key).
 import { MAP } from '../iso';
-import { Grid, SK, dot, mul, perp, sub, unionBox, vlen, type BBox, type ClassId, type Node, type Pt, type RoadClass, type RoadNetwork, type Seg } from '../network';
+import { Grid, SK, dot, mul, perp, sub, unionBox, vlen, type BBox, type Node, type Pt, type RoadClass, type RoadNetwork, type Seg } from '../network';
 import { TC } from '../terrain/types';
 
 export interface Lot {
@@ -19,7 +19,7 @@ export interface Lot {
 /** frontage width and depth by road class, tiles */
 /** the town's street lattice (roads.ts BLOCK) and the half width kept free of lots around its points, tiles */
 export const BRANCH = 40, RESERVE = 4;
-const SIZE: Record<ClassId, [number, number]> = { gravel: [8, 15], lane: [8, 15], street: [8, 15], road: [10, 16], avenue: [12, 18], arterial: [13, 19], boulevard: [16, 20] };
+const SIZE: Record<string, [number, number]> = { gravel: [8, 15], lane: [8, 15], street: [8, 15], road: [10, 16], avenue: [12, 18], arterial: [13, 19], boulevard: [16, 20], six: [13, 19], grand: [16, 20], divided: [10, 16] };
 /** the shallowest lot kept; the clearance added to another road's h + walk; the share of bad terrain allowed; the overlap tolerance */
 const MIN_D = 6, CLEAR = 0.5, BAD_MAX = 0.1, TOL = 0.25;
 /** how far a lot can reach from its seg (its depth plus the verge), and how far an edit's recompute scope reaches past its box */
@@ -150,7 +150,7 @@ function clearAlong(list: Seg[], s: Seg, p: Pt, n: Pt, reach: number): number {
 function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[]) {
   if (s.kind !== SK.GROUND) return;
   const dv = sub(s.b, s.a), L = vlen(dv); if (L < 1e-6) return;
-  const u = mul(dv, 1 / L), pu = perp(u), cls = s.cls, [W, D] = SIZE[cls.id], r0 = cls.h + cls.walk;
+  const u = mul(dv, 1 / L), pu = perp(u), cls = s.cls, [W, D] = SIZE[cls.base], r0 = cls.h + cls.walk;
   const t0 = dot(s.a, u), t1 = dot(s.b, u), ra = endReach(s.a, cls), rb = endReach(s.b, cls);
   const kLo = Math.ceil((t0 + ra) / W - 1e-9), kHi = Math.floor((t1 - rb) / W + 1e-9) - 1;
   if (kHi < kLo) return;

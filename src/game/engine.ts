@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, FLAG_COST, Grid, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind } from './network';
+import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, snapPoint, type Snap } from './snap';
@@ -257,14 +257,14 @@ export class Game {
     this.traffic.onDisasters = (notes) => { for (const n of notes) this.toast(disasterText(n), n.k === 'repaired' ? 'good' : n.k === 'ended' ? 'info' : 'warn'); };
     this.traffic.onMilestone = (newly, won) => {
       for (const m of newly) {
-        const what = [...m.classes.map(id => CLASS[id].name), ...m.junctions.map(id => JUNCTIONS.find(j => j.id === id)!.name), ...(m.tunnels ? ['tunnels'] : [])].join(', ');
+        const what = [...m.classes.map(id => classOf(id).name), ...m.junctions.map(id => JUNCTIONS.find(j => j.id === id)!.name), ...(m.tunnels ? ['tunnels'] : [])].join(', ');
         this.toast(`${m.name}${what ? `: ${what}` : ''}${m.grant ? `, grant $${m.grant.toLocaleString()}` : ''}`, 'good');
       }
       if (won) { this.showWin = true; this.toast(`${WIN_POP.toLocaleString()} residents: the Career is won`, 'good'); }
       this.scheduleSave(); this.emit();
     };
   }
-  get cls() { return CLASS[this.roadClass]; }
+  get cls() { return classOf(this.roadClass); }
 
   subscribe(fn: () => void) { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
   emit() { for (const l of this.listeners) l(); }
@@ -823,7 +823,7 @@ export class Game {
     const piece = t ? this.net.pieceNear(t) : null;
     if (!piece) { this.laneHover = t ? { segs: [], to: null, cost: 0, why: 'Point at a road' } : null; return; }
     const tolls = [...this.tollSegs.values()], seg = piece.seg;
-    const segs = straightChain(seg, x => tolls.includes(x)), wider = WIDER[seg.cls.id], to = wider ? CLASS[wider] : null;
+    const segs = straightChain(seg, x => tolls.includes(x)), wider = WIDER[seg.cls.id], to = wider ? classOf(wider) : null;
     let raw = 0; for (const s of segs) raw += vlen(sub(s.b, s.a)) * (to ? to.cost : 0) * STRUCT_COST[s.kind];
     const cost = Math.round(raw);
     let why = '';
@@ -928,6 +928,15 @@ export class Game {
     if (n.type === 'roundabout' && (n.rl ?? 1) > 1 && n.arms.some(a => a.len < n.rb + 6)) return `A ${n.rl ?? 1}-lane ring needs longer approaches: arms of ${Math.ceil((n.rb + 6) * 2)} m+`;
     return '';
   }
+  /** Tab (Shift+Tab back) in the road tool: the variant of the type in hand moves to the next one (CLASS_VARIANTS: one-way, trees, turn lane, median). Nothing is toasted */
+  flipVariant(dir: 1 | -1) {
+    const list = CLASS_VARIANTS[this.cls.base]!;
+    if (list.length < 2) return;
+    let i = list.indexOf(this.roadClass); if (i < 0) i = 0;
+    this.roadClass = list[(i + dir + list.length) % list.length]!; this.emit();
+  }
+  /** the road tool's type pick: the same type keeps the variant in hand, another type starts at its plain variant */
+  pickType(t: TypeId) { if (this.cls.base !== t) this.roadClass = CLASS_VARIANTS[t]![0]!; this.emit(); }
   /** Tab (Shift+Tab back) in the junction tool: the junction or bend under the pointer moves to the next type it can take (the open types in VARIANTS
    *  that fit its arms; a bend takes plain and the roundabouts). Money is checked for the rise; a flip down is free. The junction is selected, so the panel follows */
   private flipJunction(dir: 1 | -1) {
@@ -1160,7 +1169,7 @@ export class Game {
       case '.': case '>': { const k = this.speed || this.lastSpeed; this.setSpeed(SPEEDS.find(s => s > k) ?? SPEEDS[SPEEDS.length - 1]!); break; }
       case ',': case '<': { const k = this.speed || this.lastSpeed; this.setSpeed(SPEEDS.filter(s => s < k).pop() ?? SPEEDS[0]); break; }
       case 'h': case 'H': this.skipToRush(); break;
-      case 'Tab': if (this.tool === 'junction') { e.preventDefault(); if (!e.repeat) this.flipJunction(e.shiftKey ? -1 : 1); } break;
+      case 'Tab': if (this.tool === 'junction') { e.preventDefault(); if (!e.repeat) this.flipJunction(e.shiftKey ? -1 : 1); } else if (this.tool === 'road') { e.preventDefault(); if (!e.repeat) this.flipVariant(e.shiftKey ? -1 : 1); } break;
     }
   }
   keyUp(e: KeyboardEvent) {
@@ -1696,7 +1705,7 @@ export class Game {
   private load(d: SaveV5): boolean {
     try {
       this.genTerrain(d.seed);
-      for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], CLASS[cls as ClassId] ?? CLASS.street, style as LineStyle, [(kind ?? 0) as SegKind]);
+      for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind]);
       this.net.rebuild(true);
       for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
@@ -1762,7 +1771,7 @@ export class Game {
       const g = townGrid(c, TOWN_BLOCKS, cls);
       g.legs.forEach((l, i) => { const id = g.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
     }
-    for (const [id, legs] of byClass) this.edit.addLegs(legs, CLASS[id], 0);
+    for (const [id, legs] of byClass) this.edit.addLegs(legs, classOf(id), 0);
     this.cam.X = worldX(cs[0]!.x, cs[0]!.y); this.cam.Y = worldY(cs[0]!.x, cs[0]!.y);
     if (this.stampOn) this.stampPending = true;
   }

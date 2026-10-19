@@ -1,5 +1,5 @@
 // The bottleneck report: where the sim loses time, ranked by junction and by link (from Sim.lossL, lossQ and enterL). Pure TS, no DOM.
-import { CLASS, type ClassId, type Node } from '../network';
+import { classOf, type Node } from '../network';
 import { LK, MPT, type DSeg, type LaneGraph } from './lanes';
 
 /** level of service bounds, s of delay per vehicle, at a signal and elsewhere: A at or below the first, F above the last */
@@ -78,7 +78,7 @@ export function bottlenecks(g: LaneGraph, m: { lossL: Float64Array; lossQ: Float
   const items: Item[] = [];
   for (const J of junctions) if (J.loss > 0) items.push({ kind: 'junction', key: J.key, x: J.x, y: J.y, loss: J.loss, label: `${TYPE_NAME[J.type] ?? J.type} · ${J.arms} arms`, los: J.los, vc: jv.get(J) ?? 0 });
   const lks = [...links.values()];
-  for (const K of lks) if (K.loss > 0) items.push({ kind: 'link', key: K.key, x: (K.ax + K.bx) / 2, y: (K.ay + K.by) / 2, loss: K.loss, label: `${CLASS[K.cls as ClassId].name} · ${Math.round(Math.hypot(K.bx - K.ax, K.by - K.ay) * MPT)} m`, los: '', vc: K.vc });
+  for (const K of lks) if (K.loss > 0) items.push({ kind: 'link', key: K.key, x: (K.ax + K.bx) / 2, y: (K.ay + K.by) / 2, loss: K.loss, label: `${classOf(K.cls).name} · ${Math.round(Math.hypot(K.bx - K.ax, K.by - K.ay) * MPT)} m`, los: '', vc: K.vc });
   items.sort((p, q) => q.loss - p.loss);
   return { junctions, links: lks, top: items.slice(0, topN), flow };
 }

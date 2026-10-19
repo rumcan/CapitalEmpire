@@ -2,7 +2,7 @@
 // construction and compensation out), loans, and bankruptcy after DEBT_DAYS days in the red. Pure TS, no DOM, runs in node.
 import { LV } from './lots/town';
 import { STRUCT_COST } from './structures';
-import { CLASS, type ClassId } from './network';
+import { classOf } from './network';
 import { EVENT_START_MONEY, LOT_PRICE, SALE_SHARE } from './event/config';
 
 /** the treasury of a new city, $ */
@@ -27,7 +27,7 @@ export const PROPERTY: number[][] = [
   [0, 0], // GOV
 ];
 /** land value by frontage class (unknown classes count as 1) */
-export const CLASS_VALUE: Record<string, number> = { gravel: 0.7, lane: 0.9, street: 1, road: 1.1, avenue: 1.25, arterial: 1.25, boulevard: 1.4 };
+export const CLASS_VALUE: Record<string, number> = { gravel: 0.7, lane: 0.9, street: 1, road: 1.1, avenue: 1.25, arterial: 1.25, boulevard: 1.4, six: 1.25, grand: 1.4, divided: 1.1 };
 /** the share of the tax kept by decline (0 ok, 1 shabby, 2 boarded, 3 derelict) */
 export const DECLINE_VALUE = [1, 0.7, 0.3, 0];
 /** compensation paid when a lot is cleared, $ by use (index LU) and level (BUILDING, BUILT, UPGRADED) */
@@ -47,7 +47,7 @@ export const UPKEEP = 0.01;
 export const SIGNAL_UPKEEP: Record<string, number> = { signal: 20, slip: 40, roundabout: 10 };
 
 /** what the player is paid for a lot the town builds on, $ (with town centres; 0 on gravel): LOT_PRICE times the frontage class value times SALE_SHARE, rounded */
-export function saleOf(cls: string): number { return cls === 'gravel' ? 0 : Math.round(LOT_PRICE * (CLASS_VALUE[cls] ?? 1) * SALE_SHARE); }
+export function saleOf(cls: string): number { return cls === 'gravel' ? 0 : Math.round(LOT_PRICE * (CLASS_VALUE[classOf(cls).base] ?? 1) * SALE_SHARE); }
 
 /** the access ratio's value: 1 at free flow, 0.6 at 1.8, clamped to [0.25, 1] */
 export function accessValue(a: number): number { return Math.min(1, Math.max(0.25, 1.5 - 0.5 * a)); }
@@ -98,7 +98,7 @@ export interface DayIn {
 /** a lot's property tax per day, $ (0 unless built): the use and level's rate times the frontage value, access and decline */
 export function lotTax(l: LotIn): number {
   if (l.level < LV.BUILT) return 0;
-  return PROPERTY[l.use]![l.level - LV.BUILT]! * (CLASS_VALUE[l.cls] ?? 1) * accessValue(l.access) * DECLINE_VALUE[l.decline]!;
+  return PROPERTY[l.use]![l.level - LV.BUILT]! * (CLASS_VALUE[classOf(l.cls).base] ?? 1) * accessValue(l.access) * DECLINE_VALUE[l.decline]!;
 }
 /** the compensation for clearing a lot, $ (0 if empty): the use and level's sum, a tenth of it if derelict, else by decline */
 export function compensation(l: { use: number; level: number; decline: number }): number {
@@ -106,7 +106,7 @@ export function compensation(l: { use: number; level: number; decline: number })
   return Math.round(COMPENSATION[l.use]![l.level - LV.BUILDING]! * (l.decline >= 3 ? 0.1 : DECLINE_VALUE[l.decline]!));
 }
 /** a stretch's upkeep per day, $: its length times the class cost, the upkeep share, times the structure's multiplier */
-export function segUpkeep(s: SegIn): number { return s.len * CLASS[s.cls as ClassId]!.cost * UPKEEP * STRUCT_COST[s.kind]!; }
+export function segUpkeep(s: SegIn): number { return s.len * classOf(s.cls).cost * UPKEEP * STRUCT_COST[s.kind]!; }
 
 /** one game day's books, whole dollars; costs are positive, net = property + business + grants + toll - upkeep - signals - interest - construction - compensation */
 export interface Ledger {

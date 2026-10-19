@@ -56,7 +56,6 @@ interface ArmIO { a: Arm; i: number; inD: number; outD: number }
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
-const VMAX: Record<string, number> = { gravel: 8, lane: 8, street: 11, road: 17, avenue: 14, arterial: 14, boulevard: 17 };
 const isLive = (net: RoadNetwork, n: Node) => n.segs.length > 0 && net.nodes.get(keyOf(n)) === n;
 const armOf = (n: Node, s: Seg): Arm | undefined => n.arms.find(a => a.seg === s);
 /** offset of lane k of a seg's class from the centre line, tiles (a single lane at [0] sits at 0.45) */
@@ -290,7 +289,7 @@ export class LaneGraph {
     const from = dir ? s.b : s.a, to = dir ? s.a : s.b, key = `${keyOf(from)}>${keyOf(to)}`;
     const id = this.alloc(this.deadD, this.freeD, this.dsegs, key);
     const u = norm(sub(to, from)), r = perp(u), [iF, iT] = dsegInsets(s, from, to), lanes: number[] = [];
-    const d: DSeg = { id, key, seg: s, dir, from, to, lanes, len: 0, vmax: VMAX[s.cls.id], out: [] };
+    const d: DSeg = { id, key, seg: s, dir, from, to, lanes, len: 0, vmax: s.cls.vmax, out: [] };
     this.dsegs[id] = d;
     const booths = this.tollBooths(key, s, from, to, iF + iT);
     if (booths) { d.toll = booths; this.boothLanes(d, s, booths, iF, iT, u, r); }

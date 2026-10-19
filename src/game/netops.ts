@@ -1,5 +1,5 @@
 import type { NetOp } from './ground-protocol';
-import { CLASS, RoadNetwork, cross, dot, sub, vlen, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type RoadClass, type Seg, type SegKind } from './network';
+import { RoadNetwork, classOf, cross, dot, sub, vlen, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type RoadClass, type Seg, type SegKind } from './network';
 import type { LineStyle } from './types';
 
 /** the ops that rebuild net from nothing: a worker that replays them holds the same network (the sim worker, a new ground worker) */
@@ -27,7 +27,7 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
       case 'legs': {
         const legs: Leg[] = [];
         for (let i = 0; i + 3 < op.legs.length; i += 4) legs.push({ a: { x: op.legs[i], y: op.legs[i + 1] }, b: { x: op.legs[i + 2], y: op.legs[i + 3] } });
-        n.addLegs(legs, CLASS[op.cls], op.style, false, op.kinds as SegKind[] | undefined); break;
+        n.addLegs(legs, classOf(op.cls), op.style, false, op.kinds as SegKind[] | undefined); break;
       }
       case 'piece': {
         const a = n.nodeAt({ x: op.seg[0], y: op.seg[1] });

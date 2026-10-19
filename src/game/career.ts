@@ -1,6 +1,6 @@
 // The career: the population milestones a town reaches as it grows, what each unlocks (road classes, junction types, tunnels)
 // and the budget grant paid then, and the win at WIN_POP. Milestones never un-reach. Pure TS, no DOM, runs in node.
-import type { ClassId, NodeType } from './network';
+import { CLASS, type ClassId, type NodeType } from './network';
 
 /** a population milestone: the residents it needs, what reaching it unlocks and the grant paid then */
 export interface Milestone {
@@ -24,9 +24,11 @@ export const MILESTONES: Milestone[] = [
   { pop: 250, name: 'Village', classes: ['road'], junctions: [], tunnels: false, grant: 10000 },
   { pop: 1000, name: 'Small town', classes: [], junctions: ['roundabout'], tunnels: false, grant: 20000 },
   { pop: 2500, name: 'Town', classes: ['avenue', 'arterial'], junctions: ['slip'], tunnels: true, grant: 30000 },
-  { pop: 4000, name: 'Large town', classes: ['boulevard'], junctions: [], tunnels: false, grant: 50000 },
-  { pop: 6000, name: 'City', classes: [], junctions: [], tunnels: false, grant: 0 },
+  { pop: 4000, name: 'Large town', classes: ['boulevard', 'six', 'divided'], junctions: [], tunnels: false, grant: 50000 },
+  { pop: 6000, name: 'City', classes: ['grand'], junctions: [], tunnels: false, grant: 0 },
 ];
+/** the type a class id unlocks by (its base); an unknown or missing id unlocks nothing */
+const baseOf = (id?: string): ClassId => (id && CLASS[id]?.base) || '';
 /** the residents that win the career (the City milestone) */
 export const WIN_POP = 6000;
 
@@ -37,14 +39,14 @@ export function reachedFor(pop: number): number {
   return r;
 }
 /** true if a road class is unlocked at milestone index reached (a milestone at or below it lists it) */
-export function classUnlocked(id: ClassId, reached: number): boolean { return MILESTONES.some((m, i) => i <= reached && m.classes.includes(id)); }
+export function classUnlocked(id: ClassId, reached: number): boolean { return MILESTONES.some((m, i) => i <= reached && m.classes.includes(baseOf(id))); }
 /** true if a junction type is unlocked at milestone index reached */
 export function junctionUnlocked(t: NodeType, reached: number): boolean { return MILESTONES.some((m, i) => i <= reached && m.junctions.includes(t)); }
 /** true if tunnels are unlocked at milestone index reached */
 export function tunnelsUnlocked(reached: number): boolean { return MILESTONES.some((m, i) => i <= reached && m.tunnels); }
 /** the milestone that unlocks a road class or junction type (by its id), or tunnels (no id): the lowest one that lists it; null if none does */
 export function unlockOf(kind: 'class' | 'junction' | 'tunnel', id?: string): Milestone | null {
-  return MILESTONES.find(m => kind === 'class' ? m.classes.includes(id as ClassId) : kind === 'junction' ? m.junctions.includes(id as NodeType) : m.tunnels) ?? null;
+  return MILESTONES.find(m => kind === 'class' ? m.classes.includes(baseOf(id)) : kind === 'junction' ? m.junctions.includes(id as NodeType) : m.tunnels) ?? null;
 }
 
 /** the career as saved: the index of the highest milestone reached and whether the win has happened */

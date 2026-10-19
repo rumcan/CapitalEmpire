@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
-import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, type Node } from './game/network';
+import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, TYPES, VARIANTS, type Family, type Node } from './game/network';
 import { SIGNAL_TIER_YEAR } from './game/event/round';
 import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
 import { isLights, junctionCorners, slipRule } from './game/junctions';
@@ -565,6 +565,11 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   return (<div><div className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">{title}</div>{children}</div>);
 }
 
+/** the road tool's size headers, in order */
+const ROAD_FAMILIES: { id: Family; label: string }[] = [{ id: 'small', label: 'Small' }, { id: 'medium', label: 'Medium' }, { id: 'large', label: 'Large' }, { id: 'rural', label: 'Rural' }];
+/** the variant chip labels, by a variant's flags joined with dots ('' is the plain type) */
+const VARIANT_LABEL: Record<string, string> = { '': 'Plain', tr: 'Trees', gr: 'Grass median', tl: 'Turn lane', 'tl.tr': 'Turn lane + trees', ow: 'One-way', 'ow.tr': 'One-way + trees' };
+
 function RoadPanel({ game }: { game: Game }) {
   const legs = game.previewLegs(), block = game.routeBlock(legs);
   const len = game.net.legsLength(legs);
@@ -575,16 +580,35 @@ function RoadPanel({ game }: { game: Game }) {
       <p className="text-xs leading-relaxed text-slate-300">
         <b className="text-slate-100">Draw a connected route.</b> Click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions with rounded corners and crossings automatically.
       </p>
-      <div className="mt-2 grid grid-cols-1 gap-1">
-        {CLASSES.map(c => {
-          const lk = game.classOpen(c.id) ? null : unlockOf('class', c.id)!;
-          return (
-            <button key={c.id} className={`card ${game.roadClass === c.id ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => { game.roadClass = c.id; game.emit(); }} title={KEY_CLASSES.includes(c.id) ? `Key ${KEY_CLASSES.indexOf(c.id) + 1}` : 'No key: picked here'}>
-              <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span></div>
-              <div className="text-[10px] text-slate-400">{c.desc}</div>
-            </button>
-          );
-        })}
+      <div className="mt-2 flex flex-col gap-1">
+        {ROAD_FAMILIES.map(f => (
+          <div key={f.id}>
+            <div className="mt-1 text-[10px] uppercase tracking-wider text-slate-400">{f.label}</div>
+            {TYPES.filter(t => t.family === f.id).map(t => {
+              const c = CLASS[t.id]!, lk = game.classOpen(t.id) ? null : unlockOf('class', t.id)!, on = game.cls.base === t.id;
+              return (
+                <div key={`${f.id}-${t.id}`}>
+                  <button className={`card ${on ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
+                    <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span></div>
+                    <div className="text-[10px] text-slate-400">{c.desc}</div>
+                  </button>
+                  {on && VARIANTS[t.id].length > 1 && (
+                    <div className="mb-1 ml-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-1 text-xs">
+                        {VARIANTS[t.id].map(v => {
+                          const vc = CLASS[v]!;
+                          return <button key={v} className={`chip ${game.roadClass === v ? 'chip-on' : ''}`} onClick={() => { game.roadClass = v; game.emit(); }}>{VARIANT_LABEL[vc.flags.join('.')] ?? vc.name}</button>;
+                        })}
+                        <span className="ml-auto text-[10px] text-slate-500">Tab: flip</span>
+                      </div>
+                      <div className="mt-1 text-[10px] text-slate-400">{money(game.cls.cost)} / 2 m · {game.cls.desc}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
       <div className="mt-2 flex items-center gap-1 text-xs">
         <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Bends</span>
@@ -927,7 +951,7 @@ function SelectPanel({ game }: { game: Game }) {
 
 function hintFor(g: Game) {
   switch (g.tool) {
-    case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start`;
+    case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`;
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';

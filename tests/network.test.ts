@@ -1,7 +1,7 @@
 // Headless network tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, KEY_CLASSES, RoadNetwork, WIDER, armDeg, slipIn, type ClassId, type Fx, type Leg, type Node, type Route, type Seg } from '../src/game/network';
+import { CLASS, CLASSES, KEY_CLASSES, RoadNetwork, VARIANTS, WIDER, armDeg, classOf, slipIn, type ClassId, type Fx, type Leg, type Node, type Route, type Seg } from '../src/game/network';
 import { NetEditor, applyNodeEntry, applyOps, netToOps, nodeEntry, straightChain } from '../src/game/netops';
 import { CTL, LaneGraph, type Movement } from '../src/game/sim/lanes';
 import { rle, unrle } from '../src/game/save';
@@ -166,10 +166,10 @@ test('the add-lane run: a straight run stops at a junction, a bend, a class chan
   assert.deepEqual(straightChain(b, x => x === b), []);
 });
 
-test('the add-lane classes: gravel, lane, street and road widen to arterial, avenue to boulevard; the arterial and boulevard are the widest', () => {
+test('the add-lane classes: gravel, lane, street and road widen to arterial, avenue to boulevard, arterial to six, boulevard to grand; the six and grand are the widest', () => {
   assert.equal(WIDER.gravel, 'arterial'); assert.equal(WIDER.lane, 'arterial'); assert.equal(WIDER.street, 'arterial'); assert.equal(WIDER.road, 'arterial');
   assert.equal(WIDER.avenue, 'boulevard');
-  assert.equal(WIDER.arterial, undefined); assert.equal(WIDER.boulevard, undefined);
+  assert.equal(WIDER.arterial, 'six'); assert.equal(WIDER.boulevard, 'grand'); assert.equal(WIDER.six, undefined); assert.equal(WIDER.grand, undefined);
   assert.deepEqual(KEY_CLASSES, ['gravel', 'lane', 'street', 'road', 'avenue', 'boulevard']);
 });
 
@@ -251,4 +251,52 @@ test('wide corners: a wide node rounds its corners at 2.2 times the class radius
   const plain = corner(false), wide = corner(true);
   assert.ok(Math.abs((plain - 0.02) - CLASS.arterial.rConcave) < 1e-9);
   assert.ok(Math.abs((wide - 0.02) / (plain - 0.02) - 2.2) < 1e-9);
+});
+
+test('the seven old ids keep their numbers (a saved game loads as it was)', () => {
+  // id, h, laneCentres, cost, median, shoulder, centre
+  const old: [string, number, number[], number, number, number, string][] = [
+    ['gravel', 1.25, [0.62], 40, 0, 0, 'none'], ['lane', 1, [0], 70, 0, 0, 'none'], ['street', 1.625, [0.8], 150, 0, 0, 'style'],
+    ['road', 3, [1], 220, 0, 1, 'dashed'], ['avenue', 3.5, [2.25], 320, 2, 0, 'none'], ['arterial', 4, [1, 3], 400, 0, 0, 'style'], ['boulevard', 5, [2, 4], 480, 2, 0, 'none'],
+  ];
+  for (const [id, h, lc, cost, median, shoulder, centre] of old) {
+    const c = CLASS[id]!;
+    assert.deepEqual([c.id, c.h, c.laneCentres, c.cost, c.median, c.shoulder, c.centre], [id, h, lc, cost, median, shoulder, centre]);
+    assert.equal(c.base, id); assert.deepEqual(c.flags, []);
+  }
+  assert.equal(classOf('nonsense').id, 'street');
+});
+
+test('every road class: lane centres increase inside the asphalt, and the dividers sit between lanes', () => {
+  for (const c of CLASSES) {
+    const lc = c.laneCentres, last = lc[lc.length - 1]!;
+    lc.forEach((v, i) => { if (i) assert.ok(v > lc[i - 1]!, c.id); assert.ok(Math.abs(v) < c.h - c.shoulder, c.id); });
+    const lo = Math.min(...lc.map(Math.abs)), hi = Math.max(...lc.map(Math.abs));
+    for (const l of c.laneLines) {
+      if (c.oneway) assert.ok(l > lc[0]! && l < last, c.id);
+      else assert.ok(Math.abs(l) > lo && Math.abs(l) < hi, c.id);
+    }
+  }
+});
+
+test('the variant lists name real classes of their type', () => {
+  for (const [t, ids] of Object.entries(VARIANTS)) for (const id of ids) { assert.ok(CLASS[id], id); assert.equal(CLASS[id]!.base, t); }
+});
+
+test('catalogue paint and trees: a turn lane paints its centre markings, one-way lanes are not mirrored, grand boulevards plant medians, grass medians and plain streets do not', () => {
+  const fx = (id: string) => {
+    const e = new NetEditor(new RoadNetwork());
+    e.addLegs([leg(0, 0, 60, 0)], CLASS[id]!, 0); e.commit(); e.net.rebuild(true);
+    return (e.net as unknown as { routeFeatures(r: Route): Fx }).routeFeatures([...e.net.routes][0]!);
+  };
+  const lines = (f: Fx, color: string) => f.lines.filter(l => l.color === color).map(l => l.offset).sort((a, b) => a - b);
+  const yellow = '#d6b23b', white = 'rgba(238,238,230,0.92)';
+  const trees = (f: Fx) => f.autoProps.filter(a => a.kind === 'tree').length;
+  assert.deepEqual(lines(fx('arterial.tl'), yellow), [-0.875, -0.7, 0.7, 0.875]);
+  assert.deepEqual(lines(fx('arterial'), white), [-2, 2]);
+  assert.deepEqual(lines(fx('arterial.ow'), white), [-2, 0, 2]);
+  assert.ok(trees(fx('grand')) > 0);
+  assert.equal(trees(fx('grand.gr')), 0);
+  assert.ok(trees(fx('street.tr')) > 0);
+  assert.equal(trees(fx('street')), 0);
 });
