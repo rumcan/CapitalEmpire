@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -20,6 +20,7 @@ _Last updated: 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 t
 | B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 done (the player places the stadium). Comes before 6R.5–6R.8 (the owner's order) |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
+| Paint tool (ground areas; design in [PAINT-TOOL.md](PAINT-TOOL.md)) | **Done** (2026-10-19, branch `claude/frosty-wilson-452c74`, merged up to main `3311ce9`; not yet merged into main, not pushed). Section below |
 
 ## Decisions so far
 
@@ -1402,6 +1403,43 @@ small public car parks on open town lots as part of the town's growth (a small t
   over a road no longer upgrades it; widening is the Add lane tool); bulldozing a town building buys the lot out (paid as
   compensation; queued).
 
+
+## The Paint tool (ground areas): done 2026-10-19
+
+The owner's ask: paint a solid shape with a brush, filled with pavement, gravel, dirt or a road colour/texture; shrink/grow
+and turn the texture (pavement aligned to the perspective by default); a small/medium/large border with its own texture.
+Design: [PAINT-TOOL.md](PAINT-TOOL.md). Built on its own branch (`claude/frosty-wilson-452c74`), merged up to main `3311ce9`.
+
+What was built:
+- `src/game/paint.ts`: the area model (polygon + texture, scale, angle, border size and texture), validity (3–200 corners,
+  on the map, no crossing edges, at least 1 tile², at most 256 tiles a side), lasso simplification, hit test, save
+  tuples. `tests/paint.test.ts`.
+- Painted areas ride the lot ground channel (`LotPatch.paint`, key `paint:<id>`), so the workers re-bake only the chunks
+  under an edit, at once. `GroundPainter.drawPaints` (renderer.ts): over the lot ground, under bridges, verges and roads
+  (a road across a plaza paints over it). Textures: pavers, sidewalk slabs (running bond of the slab sprites + grime),
+  concrete, the three asphalts, road gravel, gravel, dirt, field, grass. The texture is turned and scaled in tile space
+  about the map origin (pattern = G · the screen pattern), so pavers turn on the ground and equal settings join without
+  a seam; angle 0 = the iso grid. Borders: a band inside the edge in any texture, a kerb, or a row of slab sprites.
+  The planner map fills areas flat.
+- `src/game/paint-tool.ts` + `src/PaintPanel.tsx`: tool **Paint** (key **C**; A is the camera). Draw (click corners,
+  click the first / double-click / Enter to close, Backspace, Esc; or press and drag a freehand outline), Pick (click an
+  area; the panel then restyles it live; Delete removes it), Erase (click an area). Preview in the road tool's style:
+  translucent fill in the texture's colour, border band, amber dashed outline and corners; red with the crossing edges
+  and the reason by the cursor when invalid. Corners snap to whole tiles (toggle). Saved as `paints` (optional field, no
+  version bump). Free for now (decoration).
+- Engine and App edits are a few delegating lines (setTool, pointer and key hooks, overlay branch, save/load/reset,
+  the TOOLS entry, the panel and the status line).
+
+Verified: typecheck clean; `npm test` all pass except the known timing flake (ext-terrain2 "20 seeds ... under 4 s":
+7.9 s for seed 1 on the busy local machine). In the browser (own server, port 5177): drew an area by corners (pavers on
+the iso grid), picked it and changed it to slabs at 30° with a medium kerb, added six more (dark asphalt with a slab rim,
+gravel with a small kerb, dirt with a grass rim, pavers at 45°, worn asphalt, road gravel at 50% with an asphalt rim),
+roads paint over them; erase removed one; a freehand lasso made a 15-corner gravel area with a slab rim; a bow-tie
+preview turns red with "Edges cross"; save + reload brought all areas back identical. Chunk bakes under painted areas are
+no slower than plain ones (80 vs 115 ms per chunk on the busy machine, noise dominates). Benchmark (worker PC, RTX 3080, Chrome, size 1): every stage at 60 fps (vsync), cpu avg / p95 ms: street 30% 0.39 / 0.5, street 17% 0.58 / 0.7, district 8% 0.97 / 1.1, district 4.5% 1.65 / 2.0, planner 2% 0.68 / 0.8, whole map 0.76 / 0.9: inside the GAME-PLAN 2.3 budgets (the bench city has no painted areas; paint only costs at bake time). Note: `scripts/worker/run.sh` fails in a git worktree (`cp .git/index`: `.git` is a file there); the runner used `git rev-parse --git-path index` instead.
+
+Open (for the owner): a price per m² by texture; dragging an area's corners after placing; whether the bulldozer should
+also remove paint (now only the Paint tool's Erase does).
 
 ## Phase B, the businesses (GAME-PLAN 1.0.00): in progress
 
