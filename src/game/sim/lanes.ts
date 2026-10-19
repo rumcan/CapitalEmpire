@@ -1,6 +1,6 @@
 // The lane graph: directed lanes, junction connectors and movements derived from the road network. Pure TS, no DOM.
 // Geometry is in tiles; lengths, s positions and speeds are in metres and m/s.
-import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, slipCorner, slipOn, sub, vlen } from '../network';
+import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, MINI_ISLAND, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, slipCorner, slipOn, sub, vlen } from '../network';
 import { BOOTH_W, PLAZA_LEN, TAPER } from '../event/config';
 import { plazaKey, type TollDef } from '../event/toll';
 import { GREEN_CAP, MIN_GREEN } from './signals';
@@ -397,9 +397,9 @@ export class LaneGraph {
   }
   /** a junction of three or more arms, not a roundabout: signals, or priorities at a plain node */
   private junction(n: Node, io: ArmIO[], nl: number[], mv: number[]) {
-    const M = io.length, sig = n.type === 'signal' || n.type === 'slip', major = sig ? [] : majorArms(io);
+    const M = io.length, sig = n.type === 'signal' || n.type === 'slip', stop = n.type === 'stop', major = sig || stop ? [] : majorArms(io);
     let minorCtl: number = CTL.YIELD;
-    if (!sig) { let hi = 0; for (const x of io) if (major[x.i]) hi = Math.max(hi, x.a.cls.order); minorCtl = hi >= 2 ? CTL.STOP : CTL.YIELD; }
+    if (!sig && !stop) { let hi = 0; for (const x of io) if (major[x.i]) hi = Math.max(hi, x.a.cls.order); minorCtl = hi >= 2 ? CTL.STOP : CTL.YIELD; }
     const armPhase = new Array<number>(M).fill(-1);
     // an arm with no inbound lanes (a one-way road running out) gets no phase: its signals never go green
     const hasIn = io.map(x => this.dsegs[x.inD]!.lanes.length > 0);
@@ -465,7 +465,8 @@ export class LaneGraph {
           // a right turn at a slipway corner too short for a plan yields from the stop line; at an off corner it is an ordinary signal connector
           if (t === 'R' && slipOn(n, x.a, y.a)) { c.ctl = CTL.YIELD; c.phase = -1; c.prio = 1; }
           if (sp && c.ctl === CTL.SIGNAL) { const pl = sp.phaseLanes[c.phase]!, f = (aL ?? inL).id; if (!pl.includes(f)) pl.push(f); }
-        } else if (major[x.i]) { c.ctl = CTL.FREE; c.prio = t === 'L' ? 2 : 3; }
+        } else if (stop) { c.ctl = CTL.STOP; c.prio = 1; }
+        else if (major[x.i]) { c.ctl = CTL.FREE; c.prio = t === 'L' ? 2 : 3; }
         else { c.ctl = minorCtl; c.prio = t === 'R' ? 1 : 0; }
         paths.push([inL.id, ...(aL ? [aL.id] : []), c.id, ...(dL ? [dL.id] : []), outL.id]);
       }
@@ -476,10 +477,12 @@ export class LaneGraph {
    *  enters the ring lane of its rank from the right (the rightmost to lane 0, the next to lane 1, clamped), and the leftmost lane also
    *  enters the innermost. Exits: from every ring lane to the exit road's lane of the same rank (an inner exit crosses the outer lanes,
    *  so it has prio 2 and gives way). Movements: the first exit (right) only from the outer lane, the last exit (left) and U-turns only
-   *  from the innermost, straight on from any. With one ring lane every lane goes through lane 0, as before. */
+   *  from the innermost, straight on from any. (Lane by exit, as spiral markings, was tried 2026-10-19: it starved 2-lane rings and let an
+   *  inner exit clip a car just in on the outer lane of a 3-lane ring.) With one ring lane every lane goes through lane 0, as before. */
   private ring(n: Node, io: ArmIO[], nl: number[], mv: number[]) {
-    const M = io.length, RL = n.rl ?? 1, inner = RL - 1, o = keyOf(n), th = io.map(x => x.a.ang);
-    const rcOf = (k: number) => n.rb - RB_LANE * (k + 0.5);
+    // a mini-roundabout has one ring lane, on a small circle inside the crossing (its island is MINI_ISLAND across)
+    const mini = n.type === 'mini', M = io.length, RL = mini ? 1 : n.rl ?? 1, inner = RL - 1, o = keyOf(n), th = io.map(x => x.a.ang);
+    const rcOf = (k: number) => mini ? MINI_ISLAND + 1.4 : n.rb - RB_LANE * (k + 0.5);
     const dl = io.map(x => Math.asin(Math.min(0.8, laneOff(x.a.seg, x.a.seg.cls.laneCentres.length - 1) / rcOf(0))) + 0.12);
     const ord = io.map((_, i) => i).sort((p, q) => th[q] - th[p]), pos = new Array<number>(M);
     ord.forEach((a, p) => { pos[a] = p; });
@@ -489,7 +492,7 @@ export class LaneGraph {
     const at = (t: number, k: number): Pt => { const r = rcOf(k); return { x: n.x + r * Math.cos(t), y: n.y + r * Math.sin(t) }; };
     const tan = (t: number): Pt => ({ x: Math.sin(t), y: -Math.cos(t) });
     const arc = (a0: number, a1: number, k: number): Pt[] => { const seg = Math.max(1, Math.ceil(Math.abs(a1 - a0) / 0.25)), P: Pt[] = []; for (let j = 0; j <= seg; j++) P.push(at(a0 + (a1 - a0) * j / seg, k)); return P; };
-    const rvOf = (k: number) => clamp(Math.sqrt(3 * rcOf(k) * MPT), 4, 11);
+    const rvOf = (k: number) => mini ? 6 : clamp(Math.sqrt(3 * rcOf(k) * MPT), 4, 11);
     // the ring arcs of each ring lane: sh[k][i] runs through arm i's mouth, lg[k][i] on to the next arm
     const sh: Lane[][] = [], lg: Lane[][] = [];
     for (let k = 0; k < RL; k++) {

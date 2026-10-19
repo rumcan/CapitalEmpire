@@ -1058,6 +1058,26 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **Multi-lane roundabouts: cars stopping on the ring (the owner, 2026-10-19: "cars drive in the 3-lane roundabout, stop
+  in the middle, wait, then leave, and all the lanes wait for them"): FIXED.** Cause (probe `output/probe/rbstop.ts`):
+  the exit gate's diverge rule (sim.ts `gate`) held an exiting ring car until the car ahead going on around was 6 m past
+  the fork; ring cars follow 2–5 m apart, so nearly every exit behind a through car stopped dead on the ring and held
+  the lane. Now the separation counts our own distance to the fork too (the strict rule only when that car stands).
+  Tried and dropped: lane by exit (spiral markings): it starved 2-lane rings (arterial 800: 34 s) and let an inner exit
+  clip a car just in on the outer lane of a 3-lane ring. Junction bench (SEEDS=4, before → after): arterial 2-lane 800
+  veh/h 4-way 9.7 → 7.5 s; 3-lane 1000 veh/h 26.2 → 23.4 s (T 14.3 → 14.2); street 2-lane 600: 10.8 → 10.6 s; no
+  overlaps. Worker: `sim:gate` PASS 43,233 arrived (was 43,482), 107 towed (97), 0 lost, 3.42 ms; `town:gate` PASS
+  (5,142, 0 jams). Not seen live: the browser test ring got no traffic; the owner should reload and retest.
+- **Junction editor, the rest (6R.4): all-way stop and mini-roundabout: DONE** (design: the addendum in
+  `docs/JUNCTION-UX.md`). 'stop': every connector STOP at equal priority, so the longest waiter goes first; 'mini': the
+  ring logic on one lane inside the crossing (island 1.2 tiles, painted white with a yellow rim; ring 6 m/s), arms up to
+  2 lanes each way. Junction tool: brushes and Type control Plain · 4-way stop · Mini · Lights · Roundabout, Tab flips
+  through them, badges 4S / MR, $300 / $1,500, open from 1985. Bench (street 300 veh/h per arm, SEEDS=4): plain 2.9 s,
+  all-way stop 14.9 s, mini 4.3 s (10 min, 1 seed), signal 15.5 s, roundabout 4.9 s. Browser: panel, a stop and a mini
+  on street crossings (the mini paints right). **Open:** stop bars did not show in the lead's browser pane (signals too), but a
+  headless GroundPainter render draws them right beyond each zebra: likely a stale ground bake in that tab; recheck on
+  a fresh load. **Left over:** mini at 400 veh/h per arm towed 3; the
+  arterial mini showed 2 overlaps; give-way dashes on the mini not visible (same cause as the stop bars?).
 - **The road catalogue (6R.2): DONE (2026-10-19).** Design in `docs/ROAD-CATALOGUE.md` (from C:S2's road categories and
   Replace tool, C:S1's upgrade tool, Road Builder / NE2). Every `RoadClass` now has `base` (type), `flags`, `family`,
   `vmax`, `laneLines[]`, `oneway`, `medianTrees`, `streetTrees`; the seven old ids are the plain variants with unchanged
@@ -1096,7 +1116,9 @@ small public car parks on open town lots as part of the town's growth (a small t
   the calendar and the signal tiers; all ten Arena PRs merged (#1–#10, several finished by the lead on their branches);
   wired in: driver variety, traffic incidents, names, disasters (off by default), farms. Pushed to origin up to `4204cb0`;
   later commits are local (ask before pushing).
-  - **Next (after 6R.2, done above): the rest of the junction editor (6R.4)**: the types the tool still lacks, all-way
+  - **Next (6R.2 and the rest of 6R.4 are done above): Phase B, the businesses** (GAME-PLAN 1.0.00; research first as
+    ROAD-CATALOGUE.md / JUNCTION-UX.md; wire `ext/taxi`, `ext/subway`, T010's economics when its PR comes). *(Was:)* the rest of
+    the junction editor (6R.4): the types the tool still lacks, all-way
     stop, two-way stop and the **mini-roundabout** (a small painted circle, take turns, yield to the right), as Plain's
     control options in the junction tool (research first, as JUNCTION-UX.md); then **Phase B** (the owner's order puts the
     businesses after steps 1–4). *(Was:)* the road catalogue (6R.2): a parametric road model (lanes each way 1–3, one-way, median none / painted /
@@ -1280,8 +1302,8 @@ small public car parks on open town lots as part of the town's growth (a small t
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
 Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially
-'Handover 2' at the top of 'Phase 6R progress' (the road catalogue, 6R.2, is done; the next job is **the rest of the junction
-editor, 6R.4**: all-way stop, two-way stop and mini-roundabouts; then Phase B, the businesses). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
+'Handover 2' at the top of 'Phase 6R progress' (the road catalogue 6R.2 and the junction editor 6R.4 are done; the next job is
+**Phase B, the businesses**, GAME-PLAN 1.0.00). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
 tiers, done) and 1.0.0 (the owner's road and town changes), docs/ROAD-CATALOGUE.md (the road types) and docs/JUNCTION-UX.md (how the junction tool was
 redesigned from Cities: Skylines and TM:PE; follow the same research-first approach for the road tool). Carry on through the queue without asking between steps;
 still ask before pushing. Delegate coding to haiku-coder and checks to haiku-runner (the worker PC is `cworker`,

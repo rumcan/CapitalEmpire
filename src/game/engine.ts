@@ -39,7 +39,7 @@ import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
-const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
+const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
 /** what the lights' upgrades cost, by the tier they reach (index = tier: 0 fixed-time is free, 1 actuated, 2 adaptive) */
 export const UPGRADE_COST: readonly number[] = [0, 1500, 3000];
 /** the upgrade each signal tier brings, for the year toasts (index = tier; 0 has none) */
@@ -119,6 +119,9 @@ const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5,
 const PARK_CARS: number[][] = [[], [], [], []];
 LIBRARY.forEach((it, i) => { const m = /^static:[a-z]+_([enws])(?:-v2)?$/.exec(it.id); if (it.kind === 'car' && m) PARK_CARS['eswn'.indexOf(m[1]!)]!.push(i); });
 
+/** whether node n's arms are small enough for a mini-roundabout: 2 lanes each way at most (a one-way road: 4 lanes) */
+const miniFits = (n: Node): boolean => n.arms.every(a => a.cls.laneCentres.length <= (a.cls.oneway ? 4 : 2));
+
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
   dpr = 1; cw = 1; ch = 1; cssW = 1; cssH = 1;
@@ -145,8 +148,8 @@ export class Game {
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
-  /** the junction tool's brush: 'select' (a click selects a junction), or a type that a click installs on the junction (plain, signal, roundabout) */
-  brush: 'select' | 'plain' | 'signal' | 'roundabout' = 'select';
+  /** the junction tool's brush: 'select' (a click selects a junction), or a type that a click installs on the junction (plain, stop, mini, signal, roundabout) */
+  brush: 'select' | 'plain' | 'stop' | 'mini' | 'signal' | 'roundabout' = 'select';
   /** the ring lanes a roundabout installed (or re-laned) by the junction tool gets; set by the Roundabout card's chips and by Tab */
   ringLanes: 1 | 2 | 3 = 1;
   /** the junction the tool has selected (its panel section and map overlay); read it with selectedNode, which follows the rebuilds */
@@ -763,8 +766,9 @@ export class Game {
     const cost = ring ? Math.max(0, variantCost(t, rl) - variantCost(t, n.rl ?? 1)) : variantCost(t, rl);
     let why = '';
     if (!this.junctionOpen(t)) { const lk = unlockOf('junction', t)!; why = this.eventMode ? `${spec.name} needs the Roundabout card` : `${spec.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`; }
-    else if (same && (t !== 'roundabout' || (n.rl ?? 1) === rl)) why = t === 'signal' ? 'It already has traffic lights' : t === 'plain' ? 'It is already plain' : `It already has a ${rl}-lane ring`;
+    else if (same && (t !== 'roundabout' || (n.rl ?? 1) === rl)) why = t === 'signal' ? 'It already has traffic lights' : t === 'plain' ? 'It is already plain' : t === 'stop' ? 'It is already an all-way stop' : t === 'mini' ? 'It is already a mini-roundabout' : `It already has a ${rl}-lane ring`;
     else if (n.arms.length < spec.minDeg) why = t === 'roundabout' ? 'A roundabout needs a junction or a bend in the road' : 'Needs a junction of three or more roads';
+    else if (t === 'mini' && !miniFits(n)) why = 'Too big for a mini-roundabout (2 lanes each way at most)';
     else if (cost > this.money) why = `Not enough money: ${ring ? `the ${rl}-lane ring` : spec.name.toLowerCase()} costs $${cost.toLocaleString()}`;
     return { cost, why };
   }
@@ -781,6 +785,7 @@ export class Game {
     if (n.type !== t) this.edit.setNodeType(n, t);
     if (t === 'signal') this.edit.setSignal(n, signalTierOpen(this.traffic.round.year), undefined);
     if (t === 'roundabout') { this.edit.setNodeFlags(n, !!n.wide, !!n.tl, rl); this.ringLanes = rl; }
+    else if ((t === 'stop' || t === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1); // no options on a stop or a mini: its flags go
     this.commitNetwork(); this.puff(n.x, n.y, 8);
     const m = this.net.nodeAt({ x: n.x, y: n.y }) ?? n; this.selectedJunction = m;
     const warn = this.armWarn(m);
@@ -871,6 +876,8 @@ export class Game {
       const parts: string[] = [];
       if (isLights(n)) parts.push(TIER_BADGE[n.sig ?? 1]!);
       if (n.type === 'roundabout') parts.push(`RB ${n.rl ?? 1}`);
+      if (n.type === 'stop') parts.push('4S');
+      if (n.type === 'mini') parts.push('MR');
       if (n.wide) parts.push('W');
       if (n.tl) parts.push('TL');
       const sl = n.type === 'slip' ? slipsOn(n).length : 0;
@@ -929,7 +936,7 @@ export class Game {
     if (hit) { this.slipClick(hit.n, hit.c); return; }
     const t = this.tileAt(mx, my);
     if (this.brush === 'select') { this.selectedJunction = this.net.nearestNode(t, 2, 5); this.emit(); return; }
-    const type: NodeType = this.brush === 'signal' ? 'signal' : this.brush === 'roundabout' ? 'roundabout' : 'plain', minDeg = JUNCTIONS.find(j => j.id === type)!.minDeg;
+    const type: NodeType = this.brush, minDeg = JUNCTIONS.find(j => j.id === type)!.minDeg;
     const n = this.net.nearestNode(t, minDeg, 5);
     if (!n) { this.toast(minDeg > 2 ? 'Click a junction where three or more roads meet' : 'Click a junction or a bend in the road', 'warn'); return; }
     this.installType(n, type, this.ringLanes); this.emit();
@@ -956,7 +963,7 @@ export class Game {
   private flipJunction(dir: 1 | -1) {
     const n = this.hover ? this.net.nearestNode(this.hover, 2, 5) : null;
     if (!n) { this.toast('Hover a junction or a bend in the road', 'warn'); return; }
-    const fits = VARIANTS.filter(v => this.junctionOpen(v.type) && (v.type === 'plain' || n.arms.length >= JUNCTIONS.find(j => j.id === v.type)!.minDeg));
+    const fits = VARIANTS.filter(v => this.junctionOpen(v.type) && (v.type === 'plain' || n.arms.length >= JUNCTIONS.find(j => j.id === v.type)!.minDeg) && (v.type !== 'mini' || miniFits(n)));
     const i = fits.findIndex(v => v.type === n.type && (v.type !== 'roundabout' || v.rl === (n.rl ?? 1)));
     const k = i < 0 ? (dir > 0 ? 0 : fits.length - 1) : (i + dir + fits.length) % fits.length;
     if (k === i) { this.toast('No other junction type is open for this junction yet', 'warn'); return; }
@@ -970,6 +977,7 @@ export class Game {
     if (lit && !hadLights) this.edit.setSignal(n, signalTierOpen(this.traffic.round.year), undefined);
     if (v.type === 'slip') this.edit.setSlipOff(n, []);
     if (v.type === 'roundabout') this.edit.setNodeFlags(n, !!n.wide, !!n.tl, v.rl);
+    else if ((v.type === 'stop' || v.type === 'mini') && (n.wide || n.tl)) this.edit.setNodeFlags(n, false, false, n.rl ?? 1);
     this.commitNetwork(); this.puff(n.x, n.y, 8);
     const m = this.net.nodeAt({ x: n.x, y: n.y }) ?? n; this.selectedJunction = m;
     const warn = this.armWarn(m);
@@ -1111,7 +1119,7 @@ export class Game {
       else if (d.kind === 'park') this.parkUpdate(mx, my);
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
     if (this.tool === 'select' && !d) this.hoverRoad = this.hoverProp ? '' : this.roadNameAt(this.hover);
-    if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.brush === 'plain' || this.brush === 'signal' ? 3 : 2, 5);
+    if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.brush === 'roundabout' || this.brush === 'select' ? 2 : 3, 5);
     if (this.tool === 'lane') this.laneUpdate(this.hover);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
     if (this.tool === 'toll') this.tollUpdate(mx, my);

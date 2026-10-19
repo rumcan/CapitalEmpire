@@ -9,7 +9,7 @@ export const CAP_LANE = 30;
 /** the speed, m/s, from which CAP_LANE holds */
 const V_CAP = 13.4;
 const LN2 = Math.LN2, LOS_LETTERS = 'ABCDEF';
-const TYPE_NAME: Record<string, string> = { plain: 'Junction', signal: 'Traffic lights', slip: 'Lights + slipways', roundabout: 'Roundabout' };
+const TYPE_NAME: Record<string, string> = { plain: 'Junction', stop: 'All-way stop', mini: 'Mini-roundabout', signal: 'Traffic lights', slip: 'Lights + slipways', roundabout: 'Roundabout' };
 
 /** a junction (a node of 3 or more segs, or a roundabout): loss in veh-s per game hour, through in veh per game hour, delay in s per veh */
 export interface Junction { key: string; x: number; y: number; type: string; arms: number; loss: number; through: number; delay: number; los: string }

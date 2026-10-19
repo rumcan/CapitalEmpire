@@ -720,20 +720,30 @@ function BusPanel({ game }: { game: Game }) {
   );
 }
 
+/** the junction types the tool offers as brushes and in the Type control */
+type JunctionKind = 'plain' | 'stop' | 'mini' | 'signal' | 'roundabout';
 /** the segment and card names of the junction tool's types */
-const SEG_NAME: Record<'plain' | 'signal' | 'roundabout', string> = { plain: 'Plain', signal: 'Lights', roundabout: 'Roundabout' };
-/** the junction tool's panel: the brush cards (Select, then Plain, Lights and Roundabout with its ring-lane chips), then the selected junction (SelectedJunction) */
+const SEG_NAME: Record<JunctionKind, string> = { plain: 'Plain', stop: 'All-way stop', mini: 'Mini-roundabout', signal: 'Lights', roundabout: 'Roundabout' };
+/** the short labels of the selected junction's Type control */
+const SEG_SHORT: Record<JunctionKind, string> = { plain: 'Plain', stop: '4-way stop', mini: 'Mini', signal: 'Lights', roundabout: 'Roundabout' };
+/** the junction types the tool's brushes and the Type control offer, in the order the Tab flip goes */
+const JUNCTION_KINDS: JunctionKind[] = ['plain', 'stop', 'mini', 'signal', 'roundabout'];
+/** the one-line help under the Type control for the types with no options */
+const KIND_HELP: Record<string, string> = { stop: 'Every approach stops; the car that waited longest goes first.', mini: 'A painted island; drivers give way to the circle and take turns.' };
+/** the junction tool's panel: the brush cards (Select, then Plain, All-way stop, Mini-roundabout, Lights and Roundabout with its ring-lane chips), then the selected junction (SelectedJunction) */
 function JunctionPanel({ game }: { game: Game }) {
   const b = game.brush, n = game.selectedNode();
   const hint = b === 'select' ? 'Hover a junction to outline it and click to select it. Tab flips the type under the pointer; Esc deselects, then returns to Select.'
     : b === 'plain' ? 'Click a junction to make it plain. Right-click resets a junction to plain (free).'
+    : b === 'stop' ? 'Click a junction to make it an all-way stop. Right-click resets a junction to plain (free).'
+    : b === 'mini' ? 'Click a junction to paint a mini-roundabout in it (arms of 2 lanes each way at most). Right-click resets a junction to plain.'
     : b === 'signal' ? 'Click a junction to install traffic lights (the best tier open this year). Right-click resets a junction to plain.'
     : `Click a junction or a bend to install a ${game.ringLanes}-lane roundabout. Right-click resets a junction to plain.`;
   // with a junction selected the brushes shrink to one row of chips, so the junction's own options fit (as the reference games keep the selection first)
   if (n) return (
     <Panel title="Junctions">
       <div className="flex flex-wrap items-center gap-1 text-xs">
-        {(['select', 'plain', 'signal', 'roundabout'] as const).map(t => <button key={t} className={`chip ${b === t ? 'chip-on' : ''}`} onClick={() => { game.brush = t; game.emit(); }}>{t === 'select' ? 'Select' : SEG_NAME[t]}</button>)}
+        {(['select', ...JUNCTION_KINDS] as const).map(t => <button key={t} className={`chip ${b === t ? 'chip-on' : ''}`} onClick={() => { game.brush = t; game.emit(); }}>{t === 'select' ? 'Select' : SEG_NAME[t]}</button>)}
       </div>
       <SelectedJunction game={game} n={n} />
     </Panel>
@@ -745,7 +755,7 @@ function JunctionPanel({ game }: { game: Game }) {
           <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">Select</span><span className="text-amber-300">free</span></div>
           <div className="text-[10px] text-slate-400">Click a junction to select it and set its type and options</div>
         </button>
-        {(['plain', 'signal', 'roundabout'] as const).map(t => {
+        {JUNCTION_KINDS.map(t => {
           const lk = game.junctionOpen(t) ? null : unlockOf('junction', t)!, spec = JUNCTIONS.find(j => j.id === t)!, on = b === t;
           return (
             <div key={t} className="space-y-1">
@@ -767,12 +777,12 @@ function JunctionPanel({ game }: { game: Game }) {
     </Panel>
   );
 }
-/** the selected junction: its name and roads, its type (a segmented control: Plain, Lights, Roundabout, each with its price or the reason it cannot apply)
- *  and only the options of that type: Plain has wide corners and turn lanes; Lights has the slipways, wide corners, turn lanes and the signals (tier,
- *  upgrades, the fixed-time split); a roundabout has its ring lanes */
+/** the selected junction: its name and roads, its type (a segmented control: Plain, 4-way stop, Mini, Lights, Roundabout, each with its price or the
+ *  reason it cannot apply) and only the options of that type: Plain has wide corners and turn lanes; Lights has the slipways, wide corners, turn lanes
+ *  and the signals (tier, upgrades, the fixed-time split); a roundabout has its ring lanes; a stop or a mini has no options, only its one-line help */
 function SelectedJunction({ game, n }: { game: Game; n: Node }) {
-  const lights = isLights(n), segs = ['plain', 'signal', 'roundabout'] as const;
-  const active = (t: 'plain' | 'signal' | 'roundabout') => (t === 'signal' ? lights : n.type === t);
+  const lights = isLights(n), segs = JUNCTION_KINDS;
+  const active = (t: JunctionKind) => (t === 'signal' ? lights : n.type === t);
   const blocked = segs.filter(t => !active(t)).map(t => game.installCheck(n, t, game.ringLanes).why).filter(Boolean);
   return (
     <div className="mt-2 space-y-2 border-t border-white/10 pt-2 text-xs">
@@ -782,10 +792,11 @@ function SelectedJunction({ game, n }: { game: Game; n: Node }) {
         <div className="flex gap-1">
           {segs.map(t => {
             const { cost } = game.installCheck(n, t, game.ringLanes);
-            return <button key={t} className={`chip flex-1 ${active(t) ? 'chip-on' : ''}`} onClick={() => game.setSelectedType(t)}><span className="block">{SEG_NAME[t]}</span><span className="block text-[10px] opacity-80">{active(t) ? 'now' : cost ? money(cost) : 'free'}</span></button>;
+            return <button key={t} className={`chip flex-1 ${active(t) ? 'chip-on' : ''}`} onClick={() => game.setSelectedType(t)}><span className="block">{SEG_SHORT[t]}</span><span className="block text-[10px] opacity-80">{active(t) ? 'now' : cost ? money(cost) : 'free'}</span></button>;
           })}
         </div>
         {blocked.map((w, i) => <p key={i} className="mt-1 text-[10px] text-amber-300">{w}</p>)}
+        {KIND_HELP[n.type] && <p className="mt-1 text-[11px] text-slate-400">{KIND_HELP[n.type]}</p>}
       </div>
       {n.type === 'plain' && <div className="space-y-2"><FlagRow game={game} n={n} k="wide" /><FlagRow game={game} n={n} k="tl" /></div>}
       {lights && (
@@ -953,7 +964,7 @@ function hintFor(g: Game) {
   switch (g.tool) {
     case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`;
     case 'junction': {
-      const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : 'plain';
+      const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';
       return h ? `Click to make this junction ${what} · right-click resets it to plain · Tab flips the type` : `Hover a junction (three or more roads; roundabouts also work on bends) to make it ${what} · Esc returns to Select`;
     }
@@ -978,7 +989,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>
           <li>Five road types: <b>Lane</b> (single lane), <b>Street</b> (2 lanes, sidewalks, your choice of centre line), <b>Road</b> (wider, darker asphalt with paved shoulders inside yellow edge lines and a gravel verge), <b>Avenue</b> and <b>Boulevard</b> (2 / 4 lanes around a tree-lined median).</li>
           <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
-          <li><b>Junctions</b>: the tool's brush is Select, Plain, Lights or Roundabout (1–3 ring lanes); a click with a type brush makes that junction the type, and right-click resets one to plain. Select a junction to set its type and options in the panel: wide corners and turn lanes, slipways on each corner (the + and × on the map; they need long approaches), the signal tier with its upgrades and the fixed-time green split, or the roundabout's ring lanes. Tab flips the junction under the pointer through the types; Esc deselects, then returns to Select.</li>
+          <li><b>Junctions</b>: the tool's brush is Select, Plain, All-way stop, Mini-roundabout, Lights or Roundabout (1–3 ring lanes); a click with a type brush makes that junction the type, and right-click resets one to plain. Select a junction to set its type and options in the panel: wide corners and turn lanes, slipways on each corner (the + and × on the map; they need long approaches), the signal tier with its upgrades and the fixed-time green split, or the roundabout's ring lanes. Tab flips the junction under the pointer through the types; Esc deselects, then returns to Select.</li>
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
           <li><b>Signals</b> (Junctions tool, a lit junction selected): new lights take the best tier open in the year (fixed-time; actuated loop detectors from 1990, adaptive from 2000, paid upgrades). Set each phase's green time in the panel or upgrade; the year shows beside the event's run.</li>
           <li><b>Career</b>: milestones at 250, 1,000, 2,500, 4,000 and 6,000 residents unlock road classes, junctions and tunnels and pay grants; 6,000 wins. Bankruptcy loses.</li>

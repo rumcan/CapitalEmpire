@@ -20,7 +20,7 @@ export interface Milestone {
 
 /** the milestones in order (index 0 is the hamlet every town starts as); each unlocks what it lists, on top of the ones below */
 export const MILESTONES: Milestone[] = [
-  { pop: 0, name: 'Hamlet', classes: ['gravel', 'lane', 'street'], junctions: ['plain', 'signal'], tunnels: false, grant: 0 },
+  { pop: 0, name: 'Hamlet', classes: ['gravel', 'lane', 'street'], junctions: ['plain', 'stop', 'mini', 'signal'], tunnels: false, grant: 0 },
   { pop: 250, name: 'Village', classes: ['road'], junctions: [], tunnels: false, grant: 10000 },
   { pop: 1000, name: 'Small town', classes: [], junctions: ['roundabout'], tunnels: false, grant: 20000 },
   { pop: 2500, name: 'Town', classes: ['avenue', 'arterial'], junctions: ['slip'], tunnels: true, grant: 30000 },

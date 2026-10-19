@@ -10,7 +10,7 @@ export type ClassId = string;
 export type TypeId = 'gravel' | 'lane' | 'street' | 'road' | 'avenue' | 'arterial' | 'boulevard' | 'six' | 'grand' | 'divided';
 /** the size family a type sits in (the road tool's headers) */
 export type Family = 'small' | 'medium' | 'large' | 'rural';
-export type NodeType = 'plain' | 'signal' | 'slip' | 'roundabout';
+export type NodeType = 'plain' | 'stop' | 'mini' | 'signal' | 'slip' | 'roundabout';
 export interface Pt { x: number; y: number }
 export interface Leg { a: Pt; b: Pt }
 export type BBox = [number, number, number, number];
@@ -109,12 +109,16 @@ export const WIDER: Partial<Record<ClassId, ClassId>> = {
   boulevard: 'grand', 'boulevard.gr': 'grand.gr', 'street.ow': 'arterial.ow', 'arterial.ow': 'six.ow', 'street.ow.tr': 'arterial.ow.tr', 'arterial.ow.tr': 'six.ow',
 };
 export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number; minDeg: number }[] = [
-  { id: 'plain', name: 'Plain', desc: 'Rounded corners and crossings', cost: 0, minDeg: 3 },
+  { id: 'plain', name: 'Plain', desc: 'Priority: the bigger road runs through, side roads stop or yield (two-way stop)', cost: 0, minDeg: 3 },
+  { id: 'stop', name: 'All-way stop', desc: 'Every approach stops; first come, first served', cost: 300, minDeg: 3 },
+  { id: 'mini', name: 'Mini-roundabout', desc: 'A painted island in the crossing; take turns', cost: 1500, minDeg: 3 },
   { id: 'signal', name: 'Traffic lights', desc: 'Signals, stop lines', cost: 2500, minDeg: 3 },
   { id: 'slip', name: 'Lights + slipways', desc: 'Signals with channelised turn lanes', cost: 6000, minDeg: 3 },
   { id: 'roundabout', name: 'Roundabout', desc: 'Circle with a planted island', cost: 8000, minDeg: 2 },
 ];
 export const R_SLIP = 12, SLIP_LANE = 2.2, RB_LANE = 2.5;
+/** a mini-roundabout's painted island radius, tiles (about 4 m across); its one ring lane's centre line is MINI_ISLAND + 1.4 out */
+export const MINI_ISLAND = 1.2;
 /** a wide node's corners (n.wide, not a slip corner) are this many times the class's corner radius */
 const WIDE_CORNER = 2.2;
 /** a painted turn arrow's length (tiles) and its width factor on the unit shape (arrowPts) */
@@ -588,7 +592,8 @@ export class RoadNetwork {
     for (const n of live) {
       n.arms = n.segs.map(s => { const other = s.a === n ? s.b : s.a, d = sub(other, n), L = vlen(d), dir = mul(d, 1 / L); return { seg: s, other, dir, nrm: perp(dir), ang: Math.atan2(dir.y, dir.x), len: L, cls: s.cls, h: s.cls.h, walk: s.cls.walk, reachEdge: 0, reachCentre: 0, lineInset: 0, medianInset: 0, xw: -1, stop: -1, hasOpp: false }; }).sort((p, q) => p.ang - q.ang);
       const rl = n.rl ?? 1;
-      n.rb = n.type === 'roundabout' && n.arms.length >= 2 ? Math.max(RB_BASE[rl], Math.max(...n.arms.map(a => a.h)) + 2 + rl * RB_LANE) : 0;
+      n.rb = n.type === 'roundabout' && n.arms.length >= 2 ? Math.max(RB_BASE[rl], Math.max(...n.arms.map(a => a.h)) + 2 + rl * RB_LANE)
+        : n.type === 'mini' && n.arms.length >= 3 ? Math.max(4, Math.max(...n.arms.map(a => a.h)) + 1) : 0;
     }
     for (const n of live) this.analyseNode(n);
     // routes through the changed nodes go, and are walked again from their segments
@@ -617,7 +622,7 @@ export class RoadNetwork {
   }
   private analyseNode(n: Node) {
     const arms = n.arms, k = arms.length;
-    const junction = k >= 3 || n.rb > 0, signal = n.type === 'signal' || n.type === 'slip';
+    const junction = k >= 3 || n.rb > 0, signal = n.type === 'signal' || n.type === 'slip' || n.type === 'stop';
     for (const a of arms) {
       let reachEdge = 0, reachCentre = 0; a.hasOpp = false;
       for (const b of arms) {
@@ -747,7 +752,7 @@ export class RoadNetwork {
       walkF.push(feat('disc', discPath(N, ra + a.walk), 0, a.cls.walkTex, walkOrder(a.cls.walkTex), bbw));
       asphF.push(feat('disc', discPath(N, ra), 0, a.cls.tex, a.cls.order, bbw, 'butt', kerbed(a.cls)));
       if (kerbed(a.cls)) slabRuns.push({ kind: 'arc', c: N, r0: ra, r1: ra + a.walk, a0: a.ang + 0.3, a1: a.ang + TAU - 0.3, seed: (Math.abs(n.x * 31 + n.y * 17) | 0) });
-    } else if (n.rb) {
+    } else if (n.rb && n.type !== 'mini') {
       const R = n.rb, wmax = Math.max(...arms.map(a => a.walk)), top = arms.reduce((p, q) => (q.cls.order > p.cls.order ? q : p)), bbd = bboxOf([N], R + wmax + 0.3);
       walkF.push(feat('disc', discPath(N, R + wmax), 0, top.cls.walkTex, walkOrder(top.cls.walkTex), bbd));
       asphF.push(feat('disc', discPath(N, R), 0, top.cls.tex, top.cls.order, bbd, 'butt', kerbed(top.cls)));
@@ -811,6 +816,20 @@ export class RoadNetwork {
         if (poly.length >= 3) asphF.push(feat('poly', polyPath(poly), 0, A.cls.tex, A.cls.order, bboxOf(poly, 0.3), 'butt', kerbed(A.cls)));
       }
     }
+    // a mini-roundabout: a white island with a yellow rim in the plain crossing, and a dashed give-way line across each inbound approach at the ring's edge
+    if (n.type === 'mini') {
+      const R = n.rb, ring = (r: number) => { const P: Pt[] = []; for (let i = 0; i < 24; i++) P.push({ x: n.x + Math.cos((Math.PI * 2 * i) / 24) * r, y: n.y + Math.sin((Math.PI * 2 * i) / 24) * r }); return P; };
+      // the white fill: one closed stroke of radius MINI_ISLAND / 2 and width MINI_ISLAND covers the disc
+      const fill = ring(MINI_ISLAND / 2), rim = ring(MINI_ISLAND);
+      lines.push({ pts: fill, closed: true, width: MINI_ISLAND, color: WHITE, dash: null, r: 0, offset: 0, bbox: bboxOf(fill, MINI_ISLAND / 2 + 0.2) });
+      lines.push({ pts: rim, closed: true, width: 0.15, color: YELLOW, dash: null, r: 0, offset: 0, bbox: bboxOf(rim, 0.3) });
+      for (const a of arms) {
+        if (a.cls.oneway && a.seg.a === n) continue;
+        const rn = { x: a.dir.y, y: -a.dir.x }, lo = a.cls.oneway ? -a.h + 0.2 : a.cls.median / 2 + 0.2, at = add(N, mul(a.dir, R + 0.35));
+        const p0 = add(at, mul(rn, lo)), p1 = add(at, mul(rn, a.h - 0.2));
+        lines.push({ pts: [p0, p1], closed: false, width: 0.3, color: WHITE, dash: [0.45, 0.3], r: 0, offset: 0, bbox: bboxOf([p0, p1], 0.5) });
+      }
+    }
     if (k >= 3 || n.rb) for (const a of arms) {
       const rn = { x: a.dir.y, y: -a.dir.x }, m = a.cls.median / 2;
       if (a.xw >= 0) {
@@ -847,7 +866,7 @@ export class RoadNetwork {
         else { put('S', c - 0.35 * sg); if (j === nl - 1) put('R', c + 0.2 * sg); }
       }
     }
-    if (this.paintData && (k === 1 || n.rb)) fx.lazy = () => { const l = emptyLitter(); this.nodeLitter(n, l); return l; };
+    if (this.paintData && (k === 1 || (n.rb && n.type !== 'mini'))) fx.lazy = () => { const l = emptyLitter(); this.nodeLitter(n, l); return l; };
     // leaves reach at most a sidewalk past the curb
     if (k === 1) bb = unionBox(bb, bboxOf([N], arms[0].h + arms[0].cls.bulb + arms[0].walk + 1));
     if (n.rb) bb = unionBox(bb, bboxOf([N], n.rb + 2));
@@ -896,7 +915,7 @@ export class RoadNetwork {
       const span = Math.PI * 2 - 0.9, start = back - span / 2 + Math.PI, steps = Math.ceil(span * R / 2.5);
       for (let i = 0; i < steps; i++) { const t0 = start + (span * i) / steps, t1 = start + (span * (i + 1)) / steps, P = { x: n.x + Math.cos(t0) * R, y: n.y + Math.sin(t0) * R }, Q = { x: n.x + Math.cos(t1) * R, y: n.y + Math.sin(t1) * R }, d = sub(Q, P), L = vlen(d); if (L < 0.05) continue; const u = mul(d, 1 / L), nIn = norm(sub(n, P)); this.litterRun(fx, P, u, nIn, L, a.walk, rng, g, true, R); }
     }
-    if (n.rb) {
+    if (n.rb && n.type !== 'mini') {
       const rng = mulberry(((n.x * 7919) ^ (n.y * 104729)) >>> 0), g = gaussOf(rng), R = n.rb, steps = Math.ceil(Math.PI * 2 * R / 2.5);
       for (let i = 0; i < steps; i++) { const t0 = (Math.PI * 2 * i) / steps, t1 = (Math.PI * 2 * (i + 1)) / steps, P = { x: n.x + Math.cos(t0) * R, y: n.y + Math.sin(t0) * R }, Q = { x: n.x + Math.cos(t1) * R, y: n.y + Math.sin(t1) * R }, d = sub(Q, P), L = vlen(d), u = mul(d, 1 / L), nIn = norm(sub(n, P)); this.litterRun(fx, P, u, nIn, L, 1, rng, g, true, R); }
       const ri = R - (n.rl ?? 1) * RB_LANE;

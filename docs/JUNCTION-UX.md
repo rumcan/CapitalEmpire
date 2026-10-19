@@ -65,3 +65,26 @@ the slipway count), so you can see what every junction has without selecting it.
 - `App.tsx`: the Junctions panel: brush cards, then the selected-junction section (type, options, signals).
 - `network.ts` painter: turn arrows on approaches of `n.tl` nodes; a bigger corner radius for `n.wide` nodes; the
   'slip' type stays in saves (a slip node is shown as Lights with slipways).
+
+## Addendum (2026-10-19): stop signs and mini-roundabouts (6R.4)
+
+The owner asked for "mini-roundabouts (a small yellow circle in the road where drivers take turns) instead of two stop
+streets", and the junction editor list has all-way and two-way stops.
+
+**Reference:** TM:PE sets a priority sign per road end (Priority / Yield / Stop): all ends on Stop is an all-way stop,
+the main road on Priority and the side roads on Stop is a two-way stop. Mini-roundabouts (UK, SA, now the US: FHWA)
+have a **traversable painted island** (about 4 m across, a white or yellow dome), an inscribed circle under ~28 m, for
+roads up to ~50 km/h; entering traffic gives way to traffic already on the circle; capacity is below a single-lane
+roundabout but above an all-way stop, in the space of an ordinary crossing.
+([FHWA mini-roundabouts](https://highways.dot.gov/media/19871), [OSM mini_roundabout](https://wiki.openstreetmap.org/Tag:highway=mini_roundabout))
+
+**Ours:** two more types in the junction tool, between Plain and Lights:
+- **Plain** stays the priority junction (the bigger road runs through; side roads stop or yield): this is the two-way
+  stop, and its card says so.
+- **All-way stop** ('stop'): every approach stops at the line, then the car that has waited longest goes (first come,
+  first served). Painted: a stop bar and "STOP" on every inbound approach. $300. Badge **4S**.
+- **Mini-roundabout** ('mini'): no new land: the ring sits inside the crossing (outer radius the widest arm's half width
+  + 1 tile, at least 4 tiles; island radius 1.2 tiles, painted white with a yellow rim, no kerb, no tree); one ring lane,
+  entries yield to the ring (the roundabout logic at a small radius, ring speed ~6 m/s), so drivers take turns.
+  Arms of up to 2 lanes each way (bigger roads: "too big for a mini-roundabout"). $1,500. Badge **MR**.
+Both open from the start (1985) and in event mode; Tab flips through Plain → All-way stop → Mini → Lights → Roundabout.

@@ -44,7 +44,7 @@ export const BUSINESS = 1.5;
 /** upkeep per day: this share of the build cost per tile (1%: a road costs its price again in 100 days, so roads must earn their keep through the lots they serve) (times STRUCT_COST[kind] for bridges and tunnels) */
 export const UPKEEP = 0.01;
 /** signal upkeep per day by junction type (others 0), $ */
-export const SIGNAL_UPKEEP: Record<string, number> = { signal: 20, slip: 40, roundabout: 10 };
+export const SIGNAL_UPKEEP: Record<string, number> = { signal: 20, slip: 40, roundabout: 10, stop: 1, mini: 2 };
 
 /** what the player is paid for a lot the town builds on, $ (with town centres; 0 on gravel): LOT_PRICE times the frontage class value times SALE_SHARE, rounded */
 export function saleOf(cls: string): number { return cls === 'gravel' ? 0 : Math.round(LOT_PRICE * (CLASS_VALUE[classOf(cls).base] ?? 1) * SALE_SHARE); }

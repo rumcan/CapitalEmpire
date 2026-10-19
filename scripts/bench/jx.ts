@@ -16,6 +16,7 @@ const Q = Number(process.argv[2] ?? 120), MIN = Number(process.argv[3] ?? 15), C
 type Shape = '4' | 'T';
 const cases: { name: string; shape: Shape; type: NodeType }[] = [
   { name: 'plain 4-way', shape: '4', type: 'plain' }, { name: 'plain T', shape: 'T', type: 'plain' },
+  { name: 'all-way stop 4-way', shape: '4', type: 'stop' }, { name: 'all-way stop T', shape: 'T', type: 'stop' }, { name: 'mini 4-way', shape: '4', type: 'mini' }, { name: 'mini T', shape: 'T', type: 'mini' },
   { name: 'signal 4-way', shape: '4', type: 'signal' }, { name: 'signal T', shape: 'T', type: 'signal' },
   { name: 'slip 4-way', shape: '4', type: 'slip' }, { name: 'roundabout 4-way', shape: '4', type: 'roundabout' }, { name: 'roundabout T', shape: 'T', type: 'roundabout' },
 ];
@@ -77,8 +78,9 @@ function run(shape: Shape, type: NodeType, rate: number, minutes: number, seed =
 // the free-flow time of each movement: one car alone through a plain junction (no lights: a red wait is delay, not free-flow time)
 const free = new Map<string, number>();
 function freeTime(shape: Shape, type: NodeType, from: Arm, to: Arm): number {
-  const k = `${shape}${type === 'roundabout' ? 'rb' : ''}${from}${to}`; if (free.has(k)) return free.get(k)!;
-  const g = build(shape, type === 'roundabout' ? type : 'plain', type === 'roundabout'), sim = new Sim(g, 10, 1);
+  // a ring type's free-flow time is on its ring geometry; the others' is plain (a stop sign's wait is delay)
+  const ring = type === 'roundabout' || type === 'mini', k = `${shape}${ring ? type : ''}${from}${to}`; if (free.has(k)) return free.get(k)!;
+  const g = build(shape, ring ? type : 'plain', ring), sim = new Sim(g, 10, 1);
   const d = g.dsegs.find(q => q && q.from.x === ENDS[from][0] && q.from.y === ENDS[from][1])!, o = g.dsegs.find(q => q && q.to.x === ENDS[to][0] && q.to.y === ENDS[to][1])!;
   const i = sim.spawnAt(d.lanes[d.lanes.length - 1]!, 2, o.id, Math.min(30, o.len - 2)); let t = 0;
   while (sim.alive[i] && t < 6000) { sim.step(); t++; }
