@@ -14,8 +14,10 @@ import { CAR_COLOURS } from './traffic';
 import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
-import { insideSite, placeStadium, siteAt, siteWhy, type Site } from './event/site';
-import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, STADIUM_COST, STADIUM_H, STADIUM_W, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
+import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
+import { BUSINESS, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
+import { freshStats, ownedOf, type BizDef, type BizStats } from './business/state';
+import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
 import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
 import walkersUrl from '../assets/characters/walkers.png';
@@ -114,6 +116,8 @@ const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.
 /** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame */
 const FARMS_PER_FRAME = 4;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
+/** a business's rect fill by family (alpha 0.5): sports amber, leisure violet, tourism teal, transport sky blue, property lime */
+const FAMILY_FILL: Record<BusinessType['family'], string> = { sports: 'rgba(245,158,11,0.5)', leisure: 'rgba(139,92,246,0.5)', tourism: 'rgba(20,184,166,0.5)', transport: 'rgba(14,165,233,0.5)', property: 'rgba(132,204,22,0.5)' };
 const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5, 0.3][i & 3]!, c = [[0, 0, 0], [76, 175, 80], [47, 123, 217], [255, 140, 26], [217, 70, 239], [255, 255, 255]][i >> 2]!; return `rgb(${Math.round(c[0]! * k)},${Math.round(c[1]! * k)},${Math.round(c[2]! * k)})`; });
 /** the library cars by facing (index 0 +x e, 1 +y s, 2 -x w, 3 -y n): the sprites of the parked cars, picked by bay index */
 const PARK_CARS: number[][] = [[], [], [], []];
@@ -218,13 +222,15 @@ export class Game {
    *  whether R has flipped the way in, and the toll tool's plan at the cursor (seg null: no road within 4 tiles; why: the reason it cannot be built, '' if it can) */
   tollDefs: TollDef[] = []; private tollSegs = new Map<number, Seg>(); private tollGround = new Set<string>(); tollBooths = START_BOOTHS; private tollFlip = false;
   private tollHover: null | { mx: number; my: number; seg: Seg | null; a: Pt; b: Pt; why: string; cost: number; booths: number } = null;
-  /** the stadium as the player placed it, [x, y, w, h] tiles (saved; null: none): the main thread's copy, the city worker gets each change (setStadium),
-   *  and its site (siteAt, cached: see setStadiumDef) */
-  stadiumDef: [number, number, number, number] | null = null; private stadiumSite: Site | null = null;
-  /** the business tool: whether R has turned the stadium's footprint (bizRot), and its ghost at the cursor (null: none; def: the footprint's
-   *  [x, y, w, h]; site: its site; why: the reason it cannot be built, '' if it can) */
+  /** the businesses as the player placed them (saved; ids 1..n in the save's order): the main thread's copy, the city worker gets each change
+   *  (setBusinesses); the stadium's site (siteAt, cached: see setBizDefs) */
+  bizDefs: BizDef[] = []; private stadiumSite: Site | null = null;
+  /** the type in hand: the Business tool builds it (see selectBizType) */
+  bizType: BusinessId = 'stadium';
+  /** the business tool: whether R has turned the footprint (bizRot), and its ghost at the cursor (null: none; def: the business it would be, id 0;
+   *  site: its site; why: the reason it cannot be built, '' if it can) */
   private bizRot = false;
-  private bizHover: null | { mx: number; my: number; def: [number, number, number, number]; site: Site; why: string } = null;
+  private bizHover: null | { mx: number; my: number; def: BizDef; site: Site; why: string } = null;
   /** the add-lane tool's plan at the cursor: the straight run of road under it (segs; none on a toll plaza), the class it widens to (null: already the widest),
    *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
   laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string } = null;
@@ -309,7 +315,7 @@ export class Game {
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
-    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round);
+    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats);
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -565,7 +571,7 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
-    this.ground.invalidateAll(); this.syncParks(); this.traffic.setStadium(this.stadiumDef); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
+    this.ground.invalidateAll(); this.syncParks(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
   }
 
@@ -681,14 +687,15 @@ export class Game {
     }
     return false;
   }
-  /** does a road corridor of half width hw run into the stadium (its footprint padded by 2 tiles)? false with no site yet */
-  private crossesStadium(legs: Leg[], hw: number): boolean {
-    const site = this.site; if (!site) return false;
+  /** does a road corridor of half width hw run into a business? (the stadium's footprint padded by 2 tiles, the others' by 1) */
+  private crossesBiz(legs: Leg[], hw: number): boolean {
+    if (!this.bizDefs.length) return false;
     for (const l of legs) {
       const d = sub(l.b, l.a), L = vlen(d); if (!L) continue;
       const u = mul(d, 1 / L), n = perp(u);
       for (let s = 0; s <= L; s += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
-        if (insideSite(site, l.a.x + u.x * s + n.x * o, l.a.y + u.y * s + n.y * o, 2)) return true;
+        const x = l.a.x + u.x * s + n.x * o, y = l.a.y + u.y * s + n.y * o;
+        for (const b of this.bizDefs) { const p = b.type === 'stadium' ? 2 : 1; if (x >= b.x - p && x < b.x + b.w + p && y >= b.y - p && y < b.y + b.h + p) return true; }
       }
     }
     return false;
@@ -722,9 +729,9 @@ export class Game {
     }
     return false;
   }
-  /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads); or the stadium */
+  /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads); or a business */
   private blockedForRoad(legs: Leg[], hw: number): boolean {
-    if (this.crossesStadium(legs, hw)) return true;
+    if (this.crossesBiz(legs, hw)) return true;
     for (const l of legs) {
       const d = sub(l.b, l.a), L = vlen(d); if (!L) continue;
       const u = mul(d, 1 / L), n = perp(u);
@@ -766,7 +773,7 @@ export class Game {
     if (kinds.includes(SK.TUNNEL) && !this.tunnelsOpen()) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
-    if (this.crossesStadium(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross the stadium', 'warn'); return; }
+    if (this.crossesBiz(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a business', 'warn'); return; }
     if (this.crossesPark(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a car park', 'warn'); return; }
     if (this.crossesToll(legs, cls.h + cls.walk)) { this.toast('Roads cannot cross a toll plaza', 'warn'); return; }
     const total = this.net.legsLength(parts);
@@ -1363,26 +1370,40 @@ export class Game {
   }
 
   // ---------- the event (Phase 5 step 2c) ----------
-  /** the stadium's site: the one the player placed (null: none yet; see setStadiumDef) */
+  /** the stadium's site: the one the player placed (null: none yet; see setBizDefs) */
   get site(): Site | null { return this.stadiumSite; }
-  /** sets the stadium's spot (null: none) and its site from it (cached here, so the drawing needs no allocation) */
-  private setStadiumDef(def: [number, number, number, number] | null) { this.stadiumDef = def; this.stadiumSite = def ? siteAt(def[0], def[1], def[2], def[3]) : null; }
+  /** the placed stadium's spot as [x, y, w, h] tiles (null: none) */
+  get stadiumDef(): [number, number, number, number] | null { const s = this.bizDefs.find(d => d.type === 'stadium'); return s ? [s.x, s.y, s.w, s.h] : null; }
+  /** sets the placed businesses and the stadium's site from them (cached here, so the drawing needs no allocation) */
+  private setBizDefs(defs: BizDef[]) { this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null; }
   /** the game's own spot for the stadium on this valley (placeStadium), as [x, y, w, h] tiles; null without towns or a fit */
   private gameSpot(): [number, number, number, number] | null { const s = placeStadium(this.terrain.cls, this.townPts); return s ? [s.x, s.y, s.w, s.h] : null; }
-  /** the business tool's ghost at the cursor: the stadium's footprint centred on the tile under it (R turns it), with the reason it cannot go there */
+  /** how many businesses of type t are placed */
+  private bizCount(t: BusinessId): number { let n = 0; for (const d of this.bizDefs) if (d.type === t) n++; return n; }
+  /** whether a type is open to build: the dev sandbox's unlock-all, else its unlock is met by the businesses owned (see ownedBiz) */
+  bizOpen(t: BusinessId): boolean { return this.sandboxUnlock || unlockedBy(this.ownedBiz()).includes(t); }
+  /** the businesses owned as the unlock tree reads them: each placed one with its stats from the worker (fresh until the worker has sent them) */
+  ownedBiz(): Owned[] { return ownedOf(this.bizDefs.map(d => this.traffic.biz.find(v => v.id === d.id) ?? { ...d, ...freshStats(d.id) })); }
+  /** the type in hand: the Business tool builds it, and the ghost follows (R turns its footprint) */
+  selectBizType(t: BusinessId) { this.bizType = t; if (this.bizHover) this.bizUpdate(this.bizHover.mx, this.bizHover.my); this.emit(); }
+  /** the business tool's ghost at the cursor: the type in hand's footprint centred on the tile under it (R turns it), with the reason it cannot go there */
   private bizUpdate(mx: number, my: number) {
-    const t = this.tileAt(mx, my), w = this.bizRot ? STADIUM_H : STADIUM_W, h = this.bizRot ? STADIUM_W : STADIUM_H;
+    const t = this.tileAt(mx, my), B = BUSINESS[this.bizType], w = this.bizRot ? B.footprint.h : B.footprint.w, h = this.bizRot ? B.footprint.w : B.footprint.h;
     const x = Math.round(t.x - w / 2), y = Math.round(t.y - h / 2), site = siteAt(x, y, w, h);
-    this.bizHover = { mx, my, def: [x, y, w, h], site, why: this.bizWhy(site) };
+    this.bizHover = { mx, my, def: { id: 0, type: this.bizType, x, y, w, h }, site, why: this.bizWhy(B, site) };
   }
-  /** why a stadium on site s cannot be built ('' if it can): the spot itself (siteWhy), a stadium already, a road, a car park or a building in the way, the money */
-  private bizWhy(s: Site): string {
-    return (this.stadiumDef ? 'You have a stadium already (demolish it first)' : '')
-      || siteWhy(s, this.terrain.cls, this.townPts)
+  /** why business type B cannot be built on site s ('' if it can), in order: not open (its unlock's text); the most of its type already; the spot (siteWhy:
+   *  the town's distance, water); a road within 2 tiles; a car park in the way; another business within 2 tiles; a building; the money */
+  private bizWhy(B: BusinessType, s: Site): string {
+    const plural = B.name.endsWith('y') ? B.name.slice(0, -1) + 'ies' : B.name + 's';
+    return (!this.bizOpen(B.id) ? unlockText(B, this.ownedBiz()) : '')
+      || (this.bizCount(B.id) >= B.max ? (B.id === 'stadium' ? 'You have a stadium already (demolish it first)' : `You have the most ${plural} already (${B.max})`) : '')
+      || siteWhy(s, this.terrain.cls, this.townPts, B.townMin, B.water)
       || (this.roadNearRect(s.x, s.y, s.w, s.h, 2) ? 'A road runs through it' : '')
       || (this.parkDefs.some(p => p.x < s.x + s.w + 1 && p.x + p.w > s.x - 1 && p.y < s.y + s.h + 1 && p.y + p.h > s.y - 1) ? 'A car park is in the way' : '')
+      || (this.bizDefs.some(d => d.x < s.x + s.w + 2 && d.x + d.w > s.x - 2 && d.y < s.y + s.h + 2 && d.y + d.h > s.y - 2) ? 'Another business is in the way' : '')
       || (this.lotsUnder(s) ? 'Buildings stand there' : '')
-      || (STADIUM_COST > this.money ? `Not enough money: the stadium costs $${STADIUM_COST.toLocaleString()}` : '');
+      || (B.buildCost > this.money ? `Not enough money: the ${B.name.toLowerCase()} costs $${B.buildCost.toLocaleString()}` : '');
   }
   /** whether a road runs through the rect (x, y, w, h) grown by pad tiles: each seg's centre line sampled every 0.5 tiles, against the rect grown by pad and the seg's half-width */
   private roadNearRect(x: number, y: number, w: number, h: number, pad: number): boolean {
@@ -1394,23 +1415,28 @@ export class Game {
     }
     return false;
   }
-  /** the business tool's click: a valid, affordable stadium is built on the ghost (the worker gets its spot); else the toast says why */
+  /** the business tool's click: a valid, affordable business is built on the ghost (the worker gets the list); else the toast says why */
   private bizClick() {
     const h = this.bizHover; if (!h) return;
     if (h.why) { this.toast(h.why, 'warn'); return; }
-    this.traffic.spend('construction', STADIUM_COST);
-    this.setStadiumDef(h.def); this.traffic.setStadium(h.def); this.farmsUpdate();
-    this.scheduleSave(); this.toast(`Stadium built (-$${STADIUM_COST.toLocaleString()})`, 'good');
+    const B = BUSINESS[h.def.type];
+    this.traffic.spend('construction', B.buildCost);
+    this.setBizDefs([...this.bizDefs, { ...h.def, id: Math.max(0, ...this.bizDefs.map(d => d.id)) + 1 }]);
+    this.traffic.setBusinesses(this.bizDefs); this.farmsUpdate();
+    this.scheduleSave(); this.toast(`${B.name} built (-$${B.buildCost.toLocaleString()})`, 'good');
     this.bizUpdate(h.mx, h.my); this.emit();
   }
-  /** demolishes the stadium (between rounds only): half its price comes back, and the worker drops its site */
-  demolishStadium() {
-    if (!this.stadiumDef) return;
-    if (this.traffic.round.stage !== 'free') { this.toast('Not while a round runs', 'warn'); return; }
-    this.traffic.spend('construction', -STADIUM_COST / 2);
-    this.setStadiumDef(null); this.traffic.setStadium(null); this.farmsUpdate();
-    this.scheduleSave(); this.toast(`Stadium demolished (+$${(STADIUM_COST / 2).toLocaleString()})`, 'good'); this.emit();
+  /** demolishes a business by id (the stadium between rounds only): half its build cost comes back, and the worker drops it */
+  demolishBusiness(id: number) {
+    const d = this.bizDefs.find(q => q.id === id); if (!d) return;
+    if (d.type === 'stadium' && this.traffic.round.stage !== 'free') { this.toast('Not while a round runs', 'warn'); return; }
+    const B = BUSINESS[d.type];
+    this.traffic.spend('construction', -B.buildCost / 2);
+    this.setBizDefs(this.bizDefs.filter(q => q.id !== id)); this.traffic.setBusinesses(this.bizDefs); this.farmsUpdate();
+    this.scheduleSave(); this.toast(`${B.name} demolished (+$${(B.buildCost / 2).toLocaleString()})`, 'good'); this.emit();
   }
+  /** demolishes the stadium (between rounds only; see demolishBusiness) */
+  demolishStadium() { const s = this.bizDefs.find(d => d.type === 'stadium'); if (s) this.demolishBusiness(s.id); }
   /** announces an event round: the build (10 minutes of wall clock) starts; the city worker refuses unless the round is free */
   startRound() { this.traffic.startRound(); this.toast('The event is announced: 10 minutes to build'); this.emit(); }
   /** ends the build now: the crowd's run to kick-off begins */
@@ -1419,6 +1445,8 @@ export class Game {
   closeRound() { this.traffic.closeRound(); this.emit(); }
   /** moves the camera to the stadium's centre, keeping the zoom */
   goToSite() { const s = this.site; if (!s) return; this.cam.X = worldX(s.c.x, s.c.y); this.cam.Y = worldY(s.c.x, s.c.y); this.clampCam(); this.emit(); }
+  /** moves the camera to a business's centre, keeping the zoom */
+  goToBusiness(id: number) { const d = this.bizDefs.find(q => q.id === id); if (!d) return; const cx = d.x + d.w / 2, cy = d.y + d.h / 2; this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.clampCam(); this.emit(); }
 
   // ---------- car parks (Phase 5 step 3b) ----------
   /** the index of the car park under tile t, or -1 */
@@ -1876,7 +1904,8 @@ export class Game {
       tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
       buses: this.busDefs.map((d): [number, number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats, d.town ?? -1]),
       cardsApplied: this.cardsApplied,
-      stadium: this.stadiumDef,
+      biz: this.bizDefs.map((d): [BusinessId, number, number, number, number] => [d.type, d.x, d.y, d.w, d.h]),
+      bizStats: this.bizDefs.map((d, k): BizStats => { const v = this.traffic.biz.find(q => q.id === d.id) ?? freshStats(d.id); return { id: k + 1, level: v.level, xp: v.xp, sat: v.sat, goodDays: v.goodDays, revenue: v.revenue, visitors: v.visitors, today: { ...v.today } }; }),
       speed: this.net.speedTier,
     };
     try { return await writeSave(d); } catch { return 0; }
@@ -1884,8 +1913,9 @@ export class Game {
   private load(d: SaveV5): boolean {
     try {
       this.genTerrain(d.seed);
-      // an old save (no stadium field) had the game's spot; a save of a new game has the player's (or none)
-      this.setStadiumDef(d.stadium !== undefined ? d.stadium : this.gameSpot());
+      // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
+      if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
+      else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }
       for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind]);
       if (d.speed) this.edit.setSpeedTier(Math.min(3, Math.max(0, d.speed | 0)) as 0 | 1 | 2 | 3);
       this.net.rebuild(true);
@@ -1909,7 +1939,7 @@ export class Game {
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null;
-    this.setStadiumDef(null); this.bizHover = null;
+    this.setBizDefs([]); this.bizHover = null;
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
@@ -2392,6 +2422,7 @@ export class Game {
     this.drawInspect(ctx);
     this.drawGroundOverlays(ctx);
     this.drawStadium(ctx);
+    this.drawBusinesses(ctx);
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
@@ -2491,11 +2522,32 @@ export class Game {
     ctx.fillStyle = '#ffbe3c';
     for (const d of s.doors) { const p = this.screen(d.x, d.y); ctx.beginPath(); ctx.arc(p.x, p.y, 6 * dpr, 0, Math.PI * 2); ctx.fill(); }
   }
-  /** the business tool's ghost at the cursor: the stadium's footprint (green where it can go, else red) with its doors, and the reason beside the cursor if it cannot */
+  /** a business's rect drawn: its fill and the white outline (the placeholder art, until Phase 8) */
+  private drawBizRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, fill: string) {
+    this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#e9edf2'; ctx.lineWidth = 2 * this.dpr; ctx.stroke();
+  }
+  /** the placed businesses other than the stadium: each rect in its family's fill, and its label (name and level) at the centre (every zoom) */
+  private drawBusinesses(ctx: CanvasRenderingContext2D) {
+    const dpr = this.dpr;
+    for (const d of this.bizDefs) {
+      if (d.type === 'stadium') continue;
+      const B = BUSINESS[d.type], c = this.screen(d.x + d.w / 2, d.y + d.h / 2), label = `${B.name.toUpperCase()} · L${this.traffic.biz.find(v => v.id === d.id)?.level ?? 1}`;
+      this.drawBizRect(ctx, d.x, d.y, d.w, d.h, FAMILY_FILL[B.family]);
+      ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
+      ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
+      ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+    }
+  }
+  /** the business tool's ghost at the cursor: the footprint (green where it can go, else red; the stadium's with its doors) and the reason beside the cursor if
+   *  it cannot. With the type in hand at its max only the hint shows (a red footprint would hide the real one) */
   private drawBizPreview(ctx: CanvasRenderingContext2D) {
     const h = this.bizHover; if (!h) return;
-    // with a stadium built only the hint shows (a red footprint would hide the real one)
-    if (!this.stadiumDef) this.drawSite(ctx, h.site, h.why ? 'rgba(230,80,80,0.35)' : 'rgba(60,200,90,0.35)');
+    if (this.bizCount(this.bizType) < BUSINESS[this.bizType].max) {
+      const fill = h.why ? 'rgba(230,80,80,0.35)' : 'rgba(60,200,90,0.35)';
+      if (this.bizType === 'stadium') this.drawSite(ctx, h.site, fill); else this.drawBizRect(ctx, h.def.x, h.def.y, h.def.w, h.def.h, fill);
+    }
     if (h.why) this.hintAt(ctx, h.mx, h.my, h.why, true);
   }
   /** a hint label beside the cursor at (mx, my) (screen px, as the tools' why): the text in red when bad, else green */

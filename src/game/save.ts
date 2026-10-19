@@ -7,6 +7,8 @@ import type { LotTuple } from './lots/town';
 import type { BudgetSave } from './budget';
 import type { CareerSave } from './career';
 import type { RoundSave } from './event/round';
+import type { BusinessId } from './business/catalogue';
+import type { BizStats } from './business/state';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -60,9 +62,13 @@ export interface SaveV5 {
   buses?: [number, number, number, number, number, number, number, number?][];
   /** how many of the round's cards the game has applied to its tolls and bus routes (optional, no version bump; missing = all of them) */
   cardsApplied?: number;
-  /** the stadium the player placed as [x, y, w, h] tiles (top-left and size), or null for none (optional, no version bump; missing = an old save:
-   *  the game's spot, placeStadium, as the engine's load gives it) */
+  /** old (Phase B step 1): the stadium the player placed as [x, y, w, h] tiles, or null for none. Not written any more: a save without biz reads it as
+   *  the stadium (id 1); a save with neither had the game's spot (placeStadium, as the engine's load gives it) */
   stadium?: [number, number, number, number] | null;
+  /** the placed businesses as [type, x, y, w, h] (top-left tile and size, turned; ids 1..n in this order; optional: a save without it reads stadium) */
+  biz?: [BusinessId, number, number, number, number][];
+  /** each business's stats, in the order of biz (its id is its place: 1..n; optional: missing = fresh) */
+  bizStats?: BizStats[];
   /** the roads' speed-limit tier (0 to 3; absent: 0) */
   speed?: number;
 }

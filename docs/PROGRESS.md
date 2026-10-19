@@ -17,7 +17,7 @@ _Last updated: 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 t
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | **Done** (2026-10-18; the gate passed on seed 1), not pushed (the owner is away). Steps, numbers and the gate below |
 | 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
 | 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
-| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 done (the player places the stadium). Comes before 6R.5–6R.8 (the owner's order) |
+| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 and B.2 done (the player places the stadium; the business catalogue and tree). Comes before 6R.5–6R.8 (the owner's order) |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 
@@ -1461,15 +1461,33 @@ unlocks; budgets met).
     PASS (20,961 arrived, 61 towed, 0 lost): the same numbers as before.
   - Left: the in-browser bench path (`opts.bench`) starts with no stadium (headless benches unaffected); clearing the town
     mid-round leaves the worker's site until the round closes (the worker refuses setStadium mid-round).
-- **Next: B.2, the business model and catalogue** (design first: the business list on the City replacing the single
-  `site`, the types table in `src/game/business/` following T010's API shape so its PR can drop in, the Businesses panel
-  with the tree; the stadium stays type one and keeps the rounds).
+- **B.2 The business model and catalogue (2026-10-19 late night): DONE.** `src/game/business/catalogue.ts` (the lead's design: 12
+  types in five families with T010's API shape, plus kind event/visit/fleet/estate, opening hours, party size, demand rate and
+  trip-time falloff, max owned, town distance, the water rule; `dailyDemand`, `satisfactionAfter`, `levelFromXp`, `unlockedBy`,
+  `unlockText`) and `state.ts` (BizDef, BizStats, BizView). The tree: the stadium → sports bar and bus company (stadium L2), golf
+  course and fishing resort (stadium L3); sports bar → diner (2 good days); bus company → taxi company (3 good days); golf →
+  golf estate (golf L2) and casino (5 good days); fishing → tackle shop (3 good days) and motel (fishing L2); casino → hotel
+  (casino L2). The engine keeps `bizDefs` (saved as `biz` + `bizStats`; an old save's `stadium` becomes business 1); the worker
+  keeps each business's stats by id (`City.setBusinesses`, `restoreBiz`, `bizView`; the stadium's level is the round's) and
+  posts them (`biz` message); the town keeps its lots and gravel roads off every business; roads may not cross one. The
+  Business tool's panel lists the catalogue by family: owned ones (level, satisfaction, revenue, Go to, Demolish for half),
+  Build on open types, locked ones greyed with their unlock and progress ("Sports bar: 2 good days (now 0)"). Other
+  businesses are drawn as family-coloured rects with "NAME · L1". Tests: business-catalogue (every type reachable from the
+  stadium, spin-offs consistent, demand and satisfaction curves, levels, unlock text), business-city (stats by id, the
+  stadium kept mid-round, restore).
+  - Browser-checked (port 5175): an old save's stadium came in as business 1; a sports bar and a fishing resort built
+    (−$30,000, −$90,000), demolish +half; reasons: road in the way, casino too close to a town, the water rule, the most of a
+    type, a second stadium; saved and reloaded with `?unlock=0`: the list and the worker's stats back, the sports bar,
+    golf and diner locked with their texts. Checks: typecheck clean; `npm test` 434/435 (ext-terrain2's timing only).
+- **Next: B.3, daily businesses in the sim**: visitor cars from the towns' homes to each visit business's door (the nearest
+  road), demand by `dailyDemand` with real driving minutes (tau shortened to 3–10 min), on time / late / missed, revenue per
+  arrival, satisfaction, good days, XP and levels at each day's close, every business's upkeep.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
 Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially
-'Handover 2' at the top of 'Phase 6R progress' (6R.1–6R.4 are done), and the **Phase B** section (the businesses: B.1 done, next
-B.2; design in docs/BUSINESSES.md). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
+'Handover 2' at the top of 'Phase 6R progress' (6R.1–6R.4 are done), and the **Phase B** section (the businesses: B.1–B.2 done, next
+B.3; design in docs/BUSINESSES.md). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
 tiers, done) and 1.0.0 (the owner's road and town changes), docs/ROAD-CATALOGUE.md (the road types) and docs/JUNCTION-UX.md (how the junction tool was
 redesigned from Cities: Skylines and TM:PE; follow the same research-first approach for the road tool). Carry on through the queue without asking between steps;
 still ask before pushing. Delegate coding to haiku-coder and checks to haiku-runner (the worker PC is `cworker`,

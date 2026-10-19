@@ -12,7 +12,9 @@ import { shortName } from './game/ext/names';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
-import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, STADIUM_COST, STADIUM_H, STADIUM_W, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
+import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
+import { BUSINESS, BUSINESSES, unlockText, type BusinessType } from './game/business/catalogue';
+import { freshStats } from './game/business/state';
 import type { SurgeView } from './game/event/surge';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
@@ -687,22 +689,50 @@ function ParkPanel({ game }: { game: Game }) {
   );
 }
 
-/** the business tool: the stadium (the one business so far), its cost and footprint; once built, its Go to and Demolish buttons (demolishing only between rounds) */
+/** the business families in the panel's order */
+const FAMILIES: BusinessType['family'][] = ['sports', 'leisure', 'tourism', 'transport', 'property'];
+
+/** the business tool: the catalogue by family, in a scrollable list; each type's card (see BizCard) */
 function BusinessPanel({ game }: { game: Game }) {
   const free = game.traffic.round.stage === 'free';
   return (
     <Panel title="Business">
-      <div className="rounded-lg bg-white/5 p-2 text-xs">
-        <div className="flex justify-between"><b className="text-slate-100">Stadium</b><span>{money(STADIUM_COST)}</span></div>
-        <div className="flex justify-between text-slate-400"><span>{STADIUM_W} × {STADIUM_H} tiles</span></div>
-        <p className="mt-1 leading-relaxed text-slate-300">Runs the event rounds; the crowd drives to it from the towns, so the spot sets how hard the traffic is.</p>
+      <div className="max-h-[60vh] overflow-y-auto pr-1">
+        {FAMILIES.map(f => (
+          <div key={f}>
+            <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{f}</div>
+            {BUSINESSES.filter(b => b.family === f).map(b => <BizCard key={b.id} game={game} b={b} free={free} />)}
+          </div>
+        ))}
       </div>
-      {game.stadiumDef
-        ? <div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="text-emerald-300">Built</span>
-            <div className="flex gap-2"><button className="btn" onClick={() => game.goToSite()}>Go to</button>
-              <button className="btn" disabled={!free} onClick={() => game.demolishStadium()}>Demolish (+{money(STADIUM_COST / 2)})</button></div></div>
-        : <p className="mt-2 text-xs text-amber-200">Click open land to build it · R rotates</p>}
     </Panel>
+  );
+}
+
+/** one type's card in the business panel: its name, cost, footprint (tiles, the most you may own) and blurb; each placed one as a row (level, satisfaction,
+ *  revenue; Go to, Demolish: the stadium's only between rounds); a Build button when it is open and under its most (it becomes the type in hand, the card
+ *  highlighted); greyed, with its unlock, while it is not open */
+function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean }) {
+  const open = game.bizOpen(b.id), placed = game.bizDefs.filter(d => d.type === b.id), under = placed.length < b.max, sel = game.bizType === b.id;
+  return (
+    <div className={`mt-1 rounded-lg p-2 text-xs ${sel ? 'bg-amber-300/10 ring-1 ring-amber-300/60' : 'bg-white/5'} ${open ? '' : 'opacity-50'}`}>
+      <div className="flex justify-between"><b className="text-slate-100">{b.name}</b><span>{money(b.buildCost)}</span></div>
+      <div className="flex justify-between text-slate-400"><span>{b.footprint.w} × {b.footprint.h} tiles · up to {b.max}</span></div>
+      <p className="mt-1 leading-relaxed text-slate-300">{b.blurb}</p>
+      {placed.map(d => {
+        const v = game.traffic.biz.find(q => q.id === d.id) ?? freshStats(d.id);
+        return (
+          <div key={d.id} className="mt-1 flex items-center justify-between gap-2 border-t border-white/10 pt-1">
+            <span className="text-emerald-300">{`L${v.level} · ${Math.round(v.sat * 100)}% · ${money(v.revenue)}`}</span>
+            <div className="flex gap-2"><button className="btn" onClick={() => game.goToBusiness(d.id)}>Go to</button>
+              <button className="btn" disabled={b.id === 'stadium' && !free} onClick={() => game.demolishBusiness(d.id)}>Demolish (+{money(b.buildCost / 2)})</button></div>
+          </div>
+        );
+      })}
+      {!open && <p className="mt-1 text-amber-200">{unlockText(b, game.ownedBiz())}</p>}
+      {open && under && <button className="btn mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
+      {open && under && sel && <p className="mt-1 text-amber-200">Click open land to build it · R rotates</p>}
+    </div>
   );
 }
 
@@ -1013,7 +1043,7 @@ function hintFor(g: Game) {
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
-    case 'business': return 'BUSINESS: click open land to build the stadium · R rotates · the closer to the towns, the easier its traffic';
+    case 'business': return `BUSINESS: click open land to build a ${BUSINESS[g.bizType].name.toLowerCase()} · R rotates${g.bizType === 'stadium' ? ' · the closer to the towns, the easier its traffic' : ''}`;
     case 'bus': return g.busPick ? 'BUS ROUTE: click a road near the stadium for the doors stop · Esc cancels' : 'BUS ROUTE: click a road beside a car park for the lot stop · with Bulldoze (X), click a stop to remove its route (no refund)';
     default: return 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
   }
