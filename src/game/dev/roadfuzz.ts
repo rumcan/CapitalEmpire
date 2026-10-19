@@ -196,3 +196,64 @@ export function roadReplay(game: Game, box: [number, number, number, number], lo
   G.setTool('select');
   return out;
 }
+
+/** the painted surface (asphalt, walk, median, island) at tile point (x, y) near box b: true if any road or junction feature covers it */
+function pavedAt(net: RoadNetwork, ctx: CanvasRenderingContext2D, fx: { walkF: { kind: string; path: Path2D; w: number; cap: string; bbox: number[] }[]; asphF: unknown[]; medianF: unknown[]; islandF: unknown[] }[], x: number, y: number): boolean {
+  for (const f of fx) for (const list of [f.asphF, f.walkF, f.medianF, f.islandF] as { kind: string; path: Path2D; w: number; cap: string; bbox: number[] }[][]) for (const t of list) {
+    const b = t.bbox; if (x < b[0]! || x > b[2]! || y < b[1]! || y > b[3]!) continue;
+    if (t.kind === 'stroke') { ctx.lineWidth = t.w; ctx.lineCap = t.cap as CanvasLineCap; if (ctx.isPointInStroke(t.path, x, y)) return true; }
+    else if (ctx.isPointInPath(t.path, x, y)) return true;
+  }
+  void net; return false;
+}
+
+/** the bare spots (grass) almost enclosed by road surface around node n: sample points every half tile within r of it; an unpaved one with
+ *  surface within 3 tiles in at least 7 of 8 directions is a hole (a missing wedge, a notch). Returns their count and one sample */
+export function junctionHoles(net: RoadNetwork, n: Node, r: number): { holes: number; at: Pt | null } {
+  const ctx = document.createElement('canvas').getContext('2d')!;
+  const N = net as unknown as { nodeFx: Map<Node, { bbox: number[] }>; routeFx: Map<unknown, { bbox: number[] }> };
+  const box = [n.x - r - 4, n.y - r - 4, n.x + r + 4, n.y + r + 4];
+  const fx = [...N.nodeFx.values(), ...N.routeFx.values()].filter(f => f.bbox[0]! <= box[2]! && f.bbox[2]! >= box[0]! && f.bbox[1]! <= box[3]! && f.bbox[3]! >= box[1]!) as unknown as Parameters<typeof pavedAt>[2];
+  const memo = new Map<string, boolean>(), paved = (x: number, y: number) => { const k = `${x},${y}`; let v = memo.get(k); if (v === undefined) memo.set(k, (v = pavedAt(net, ctx, fx, x, y))); return v; };
+  let holes = 0, at: Pt | null = null;
+  for (let dx = -r; dx <= r; dx += 0.5) for (let dy = -r; dy <= r; dy += 0.5) {
+    const x = n.x + dx, y = n.y + dy; if (paved(x, y)) continue;
+    let hit = 0;
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, ux = Math.cos(a), uy = Math.sin(a); for (let s = 0.5; s <= 3; s += 0.5) if (paved(Math.round((x + ux * s) * 2) / 2, Math.round((y + uy * s) * 2) / 2)) { hit++; break; } }
+    if (hit >= 7) { holes++; at ??= { x, y }; }
+  }
+  return { holes, at };
+}
+
+/** builds junction after junction of every main road with every side road (T at several angles, a crossing, a main road ending under a V or
+ *  across a road, a bend with a side road) in an empty box, one at a time, and reports those with holes (junctionHoles). The owner,
+ *  2026-10-19: "make a bunch of weird connections and check all of them" */
+export function junctionGallery(game: Game, opts: { mains?: string[]; sides?: string[]; at?: Pt } = {}): { cases: number; bad: { name: string; holes: number; at: Pt | null }[] } {
+  const G = game as unknown as Tools & { edit: { addLegs(legs: { a: Pt; b: Pt }[], cls: unknown, style: number): void } };
+  const C = opts.at ?? (() => { for (let k = 0; k < 400; k++) { const p = { x: 300 + Math.floor(Math.random() * 1448), y: 300 + Math.floor(Math.random() * 1448) }; if (![...G.net.segsNear(p, 140)].length) return p; } throw new Error('no empty box'); })();
+  const box: [number, number, number, number] = [C.x - 120, C.y - 120, C.x + 120, C.y + 120];
+  const cls = (id: string) => CLASSES.find(c => c.id === id)!;
+  const mains = opts.mains ?? ['arterial', 'boulevard', 'six', 'grand', 'divided', 'six.ow', 'arterial.ow', 'road', 'avenue'];
+  const sides = opts.sides ?? ['gravel', 'lane', 'street', 'road', 'avenue', 'arterial'];
+  const L = 60, deg = Math.PI / 180, out: { name: string; holes: number; at: Pt | null }[] = []; let cases = 0;
+  const ray = (a: number) => ({ x: C.x + Math.round(Math.cos(a) * L), y: C.y + Math.round(Math.sin(a) * L) });
+  for (const m of mains) for (const s of sides) {
+    const shapes: [string, { a: Pt; b: Pt }[], { a: Pt; b: Pt }[]][] = [];
+    for (const th of [30, 45, 60, 90, 120, 135, 150]) shapes.push([`T ${th}°`, [{ a: ray(Math.PI), b: C }, { a: C, b: ray(0) }], [{ a: C, b: ray(-th * deg) }]]);
+    for (const th of [45, 60, 90]) shapes.push([`end under a V ±${th}°`, [{ a: ray(90 * deg), b: C }], [{ a: ray(-90 * deg - th * deg), b: C }, { a: C, b: ray(-90 * deg + th * deg) }]]);
+    for (const th of [90, 45]) shapes.push([`end across a road at ${th}°`, [{ a: ray(90 * deg), b: C }], [{ a: ray(-90 * deg - th * deg), b: C }, { a: C, b: ray(90 * deg - th * deg) }]]);
+    for (const th of [90, 45]) shapes.push([`crossing at ${th}°`, [{ a: ray(Math.PI), b: C }, { a: C, b: ray(0) }], [{ a: ray(th * deg), b: C }, { a: C, b: ray(th * deg + Math.PI) }]]);
+    // two roads only: the main road turning a corner into the side road's type (and straight on, a class change)
+    for (const th of [45, 90, 135, 180]) shapes.push([`corner ${th}° into it`, [{ a: ray(Math.PI), b: C }], [{ a: C, b: ray(Math.PI - th * deg) }]]);
+    for (const th of [45, 90, 135]) shapes.push([`bend ${th}° with a side road`, [{ a: ray(Math.PI), b: C }, { a: C, b: ray(Math.PI - (180 - th) * deg) }], [{ a: C, b: ray(-60 * deg) }]]);
+    for (const [name, ml, sl] of shapes) {
+      cases++;
+      G.edit.addLegs(ml, cls(m), 0); G.edit.addLegs(sl, cls(s), 0); G.commitNetwork();
+      const n = G.net.nodeAt(C);
+      if (n) { const r = Math.max(...n.arms.map(a => a.h + a.walk)) * 2 + 8, h = junctionHoles(G.net, n, r); if (h.holes) out.push({ name: `${m} + ${s}: ${name}`, holes: h.holes, at: h.at }); }
+      else out.push({ name: `${m} + ${s}: ${name} (no node)`, holes: -1, at: null });
+      clearBox(G, box);
+    }
+  }
+  return { cases, bad: out };
+}

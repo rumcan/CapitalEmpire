@@ -782,6 +782,9 @@ export class Sim {
     const out = nd && (ring || nd.arms.length >= 3) ? this.outOf(this.plan[i]!, this.pi[i] + 1, ring) : -1;
     // a roundabout entry is granted only when its ring lane is clear for its length plus 2 m from the merge (strict: no reservation on it either)
     if (out >= 0 && !this.roomFor(i, out, ring && this.lLink[this.lane[i]] === 1)) return false;
+    // a mini's ring is a few car lengths round: an entry also needs the arc after its own clear, or all four arms entered at once and each
+    // waited for the next (the mini bench gridlocked once arterials ran at 60 km/h, 2026-10-19)
+    if (out >= 0 && ring && nd!.type === 'mini' && this.lLink[this.lane[i]] === 1) for (const nx of this.g.lanes[out]!.next) if (this.g.lanes[nx]!.kind === LK.RING && !this.roomFor(i, nx, true)) return false;
     if (!this.clearOf(i, C)) return false;
     this.grant[i] = c; this.granted[c].push(i);
     if (this.resv[i] >= 0) this.unReserve(i);
@@ -930,6 +933,19 @@ export class Sim {
               if (gm < gap) { gap = gm; vl = this.v[w]; al = this.acc[w]; hard = true; }
               break;
             }
+          }
+        }
+        // a ring car does not drive into a crossing an exit still occupies (a car on the exit with its body over the crossing point): it
+        // stops short of it, on this arc or the next. (Ring cars hold priority, but an inner-lane exit pulling away from a stop could still be
+        // over the outer lane when a ring car arrived: the 2-lane ring bench, once arterials ran at 60 km/h, 2026-10-19)
+        if (lanes[id]!.kind === LK.RING) for (const [rl, base] of [[id, -si], [pi + 1 < P.length ? P[pi + 1]! : -1, d0]] as const) {
+          if (rl < 0 || lanes[rl]!.kind !== LK.RING) continue;
+          for (const cf of lanes[rl]!.conflicts) {
+            // (only an exit, a lane from the ring to a road, and a car on it moving or already over the point: a car waiting on an entry for
+            // the ring is not given way to, or ring and entry held each other on a mini)
+            const X = lanes[cf.lane]!; if (cf.merge || !X.prev.some(p => lanes[p]!.kind === LK.RING) || !X.next.some(q => lanes[q]!.kind === LK.LINK)) continue;
+            const dd = base + cf.s - 1.5; if (dd < -0.5 || dd > LOOKAHEAD) continue;
+            for (const w of Q[cf.lane]!) if ((this.v[w] > 0.3 || this.s[w] > cf.os) && this.s[w] > cf.os - 2 && this.s[w] - this.len[w] < cf.os + 1) { if (dd < gap) { gap = Math.max(0, dd); vl = 0; al = 0; hard = true; } break; }
           }
         }
         // a plan that ends in a lane going nowhere: stop at its end (a plan merely not extended yet ends at a link lane with exits)

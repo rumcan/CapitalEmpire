@@ -19,6 +19,10 @@ export const START_YEAR = 1985;
 export const SIGNAL_TIER_YEAR = [1985, 1990, 2000];
 /** the best signal tier open in year: the last tier whose year has come (before the first: 0) */
 export function signalTierOpen(year: number): 0 | 1 | 2 { return Math.max(0, SIGNAL_TIER_YEAR.filter(y => year >= y).length - 1) as 0 | 1 | 2; }
+/** the years the speed-limit tiers open (index = tier: +0, +20, +40, +60 km/h on every road; see network SPEED_BONUS_KMH) */
+export const SPEED_TIER_YEAR = [1985, 1990, 1995, 2000];
+/** the highest speed-limit tier open in year */
+export function speedTierOpen(year: number): 0 | 1 | 2 | 3 { return Math.max(0, SPEED_TIER_YEAR.filter(y => year >= y).length - 1) as 0 | 1 | 2 | 3; }
 
 /** the round as the UI sees it: its stage, level, runs, the year (START_YEAR + runs), the build and surge left (s), the crowd by town (cars), the upkeep
  *  paid so far this round ($), the tolls taken so far this round ($), the last result, the surge's counts by town (while it runs or its result is in;

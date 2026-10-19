@@ -1,6 +1,6 @@
 // The lane graph: directed lanes, junction connectors and movements derived from the road network. Pure TS, no DOM.
 // Geometry is in tiles; lengths, s positions and speeds are in metres and m/s.
-import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, MINI_ISLAND, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, slipCorner, slipOn, sub, vlen } from '../network';
+import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, type SpeedTier, MINI_ISLAND, RB_LANE, SK, speedOf, add, cross, dot, keyOf, mul, norm, perp, slipCorner, slipOn, sub, vlen } from '../network';
 import { BOOTH_W, PLAZA_LEN, TAPER } from '../event/config';
 import { plazaKey, type TollDef } from '../event/toll';
 import { GREEN_CAP, MIN_GREEN } from './signals';
@@ -203,17 +203,21 @@ export class LaneGraph {
   update(net: RoadNetwork) {
     this.version++; this.removed = []; this.changed = [];
     const A = new Set<Node>();
+    // a new speed-limit tier: every lane is built again at its new limit
+    const respeed = this.speed !== net.speedTier; this.speed = net.speedTier;
     // 1. purge what is gone
     for (const [s, ids] of this.segDs) if (!net.segs.has(s)) { for (const n of [s.a, s.b]) if (isLive(net, n)) A.add(n); this.dropSeg(s, ids); }
     for (const n of new Set<Node>([...this.nodeLanes.keys(), ...this.nodeMoves.keys(), ...this.signals.keys()])) if (!isLive(net, n)) this.dropNode(n);
     // 2. the nodes to re-analyse
-    if (net.lastFull || this.segDs.size === 0) { for (const n of net.nodes.values()) if (isLive(net, n)) A.add(n); }
+    if (net.lastFull || respeed || this.segDs.size === 0) { for (const n of net.nodes.values()) if (isLive(net, n)) A.add(n); }
     else for (const n of net.lastNodes) if (isLive(net, n)) A.add(n);
     // 3. directed segs and link lanes of the segs between re-analysed nodes (and new segs); 4. the node lanes, and 5. the ids freed
     const S: Seg[] = [];
     for (const s of net.segs) if ((A.has(s.a) && A.has(s.b)) || !this.segDs.has(s)) S.push(s);
     this.rebuildArea(A, S);
   }
+  /** the speed-limit tier the lanes were built at (see speedOf) */
+  private speed: SpeedTier = 0;
 
   /** the toll gates as the player placed them (defs, the full list; the graph keeps the map, so later updates build the booths too):
    *  the segs whose toll changed (added, removed or the booths changed) and their end nodes are rebuilt as update() rebuilds edited ones.
@@ -293,7 +297,7 @@ export class LaneGraph {
     const from = dir ? s.b : s.a, to = dir ? s.a : s.b, key = `${keyOf(from)}>${keyOf(to)}`;
     const id = this.alloc(this.deadD, this.freeD, this.dsegs, key);
     const u = norm(sub(to, from)), r = perp(u), [iF, iT] = dsegInsets(s, from, to), lanes: number[] = [];
-    const d: DSeg = { id, key, seg: s, dir, from, to, lanes, len: 0, vmax: s.cls.vmax, out: [] };
+    const d: DSeg = { id, key, seg: s, dir, from, to, lanes, len: 0, vmax: speedOf(s.cls, this.speed), out: [] };
     this.dsegs[id] = d;
     // a one-way seg runs a to b only: its b to a dseg is kept (segDs stays a pair) but has no lanes, booths or movements
     const none = s.cls.oneway && dir === 1;
@@ -516,7 +520,9 @@ export class LaneGraph {
       const ins = this.dsegs[io[i].inD]!.lanes, nIn = ins.length;
       ent.push([]);
       for (let k = 0; k < nIn; k++) {
-        const inL = this.L(ins[k]!), nat = Math.min(nIn - 1 - k, inner), want = [nat];
+        // an approach of two or more lanes per ring lane spreads evenly over the ring lanes (six into three: two each), so cars enter side by side
+        // and a pair zips into each ring lane; clamped, four of six lanes fed the inner ring lane one car at a time (the owner, 2026-10-19)
+        const inL = this.L(ins[k]!), nat = nIn >= 2 * RL && RL > 1 ? Math.min(inner, Math.floor((nIn - 1 - k) * RL / nIn)) : Math.min(nIn - 1 - k, inner), want = [nat];
         if (k === 0 && inner !== nat) want.push(inner);
         ent[i].push([]);
         for (const m of want) {

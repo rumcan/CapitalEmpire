@@ -65,6 +65,8 @@ export interface SaveV5 {
   stadium?: [number, number, number, number] | null;
   /** the painted ground areas as [tex, scale, angle, border, btex, pts] (the Paint tool, docs/PAINT-TOOL.md; ids 1..n in this order; optional, no version bump; missing = none) */
   paints?: [string, number, number, number, string, number[]][];
+  /** the roads' speed-limit tier (0 to 3; absent: 0) */
+  speed?: number;
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',

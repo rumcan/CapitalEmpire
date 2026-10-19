@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, RB_LANE, ringRadius, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
+import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
@@ -16,7 +16,7 @@ import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { insideSite, placeStadium, siteAt, siteWhy, type Site } from './event/site';
 import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, STADIUM_COST, STADIUM_H, STADIUM_W, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
-import { Round, SIGNAL_TIER_YEAR, signalTierOpen } from './event/round';
+import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
 import walkersUrl from '../assets/characters/walkers.png';
 import { plazaEdge, plazaIslands, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
@@ -205,7 +205,8 @@ export class Game {
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
   // input
-  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean } = null;
+  /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
+  private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the car park drag (the park tool, left button): the tile where it began and the one under the pointer (x1, y1), the rect it makes (def, id 0),
    *  its built park (null if not valid), the verdict (why: the reason it cannot be built, '' if it can) and the cost; mx, my: the cursor (CSS px) */
   private parkDrag: null | { x0: number; y0: number; x1: number; y1: number; def: CarParkDef; park: CarPark | null; why: string; cost: number; mx: number; my: number } = null;
@@ -1181,7 +1182,7 @@ export class Game {
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
       }
-      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false }; return;
+      this.dragging = { kind: 'pan', sx: mx, sy: my, camX: this.cam.X, camY: this.cam.Y, moved: false, build: this.tool === 'road' && e.button === 2 }; return;
     }
     if (e.button !== 0) return;
     switch (this.tool) {
@@ -1213,7 +1214,13 @@ export class Game {
     if (this.tool === 'business') this.bizUpdate(mx, my);
     if (this.tool === 'bus') this.busUpdate(mx, my);
   }
-  pointerUp() { if (this.dragging?.kind === 'park') this.parkRelease(); this.dragging = null; }
+  pointerUp() {
+    const d = this.dragging;
+    if (d?.kind === 'park') this.parkRelease();
+    // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
+    if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
+    this.dragging = null;
+  }
   pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.busHover = null; this.laneHover = null; }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
@@ -1815,6 +1822,15 @@ export class Game {
   classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
   /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
   junctionOpen(t: NodeType): boolean { return this.sandboxUnlock ? true : this.eventMode ? t !== 'roundabout' || this.traffic.round.cards.includes('roundabout') : junctionUnlocked(t, this.reached); }
+  /** the highest speed-limit tier open: the year's (see speedTierOpen), all of them with the dev sandbox's unlock-all */
+  speedTierMax(): 0 | 1 | 2 | 3 { return this.sandboxUnlock ? 3 : speedTierOpen(this.traffic.round.year); }
+  /** every road's speed limit raised by the tier's km/h (0 the roads' own limits): free, once its year has come; the lanes rebuild at the new limits */
+  setSpeedTier(t: 0 | 1 | 2 | 3) {
+    if (t > this.speedTierMax()) { this.toast(`+${SPEED_BONUS_KMH[t]} km/h speed limits from ${SPEED_TIER_YEAR[t]}`, 'warn'); return; }
+    if (t === this.net.speedTier) return;
+    this.edit.setSpeedTier(t); this.commitNetwork();
+    this.toast(t ? `Speed limits +${SPEED_BONUS_KMH[t]} km/h on every road (up to 140)` : "Speed limits back to each road's own", 'good');
+  }
   /** the best signal tier open: the year's (see signalTierOpen), every tier with the dev sandbox's unlock-all */
   signalTier(): 0 | 1 | 2 { return this.sandboxUnlock ? 2 : signalTierOpen(this.traffic.round.year); }
   /** tunnels are open: always in event mode, else as the Career unlocks them */
@@ -1861,6 +1877,7 @@ export class Game {
       buses: this.busDefs.map((d): [number, number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats, d.town ?? -1]),
       cardsApplied: this.cardsApplied,
       stadium: this.stadiumDef,
+      speed: this.net.speedTier,
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -1870,6 +1887,7 @@ export class Game {
       // an old save (no stadium field) had the game's spot; a save of a new game has the player's (or none)
       this.setStadiumDef(d.stadium !== undefined ? d.stadium : this.gameSpot());
       for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind]);
+      if (d.speed) this.edit.setSpeedTier(Math.min(3, Math.max(0, d.speed | 0)) as 0 | 1 | 2 | 3);
       this.net.rebuild(true);
       for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
