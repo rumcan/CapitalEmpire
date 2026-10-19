@@ -1140,6 +1140,21 @@ small public car parks on open town lots as part of the town's growth (a small t
     interchanges (with the highways, 6R.5). **Arena tasks with no PR yet:** T007 fuzz testing, T010 business economics,
     T013 roads and land. **Note:** the owner's dev server on 5174 had died (it served stale modules mid-edit); the lead
     started the project's launch.json server on 5174 in its place.
+  - **The calendar and the signal tiers: DONE** (commit `988fbb7`, GAME-PLAN 1.0.01). The year is 1985 + the rounds finished
+    (in the HUD; toasts at 1990 and 2000). Lights per junction: `Node.sig` 0 fixed-time / 1 actuated / 2 adaptive and
+    `Node.split` (fixed-time green seconds per phase), saved in the node entry and replayed in the workers; new lights get
+    the best open tier; the Junctions tool's **Signals** mode: the tier, a green-split slider per phase with the cycle
+    length, upgrades ($1,500 actuated from 1990, $3,000 adaptive from 2000). **Adaptive** (lead's design after two Haiku
+    attempts lost to actuated): max pressure with a lost-time margin (gap-out as actuated; hand over early when another
+    phase's queue beats the served demand by 8 cars; up to 60 s green; the busiest phase next; a platoon held only when
+    nothing waits). Over 6 seeds it beats actuated: street 500 veh/h 4-way 41.8 vs 46.6 s, T 17.7 vs 23.5; arterial 800
+    4-way 25.0 vs 28.6, T 17.9 vs 22.8 (light traffic, street 300: within noise). Browser-checked on street, arterial and
+    mixed crossings (new lights fixed-time in 1985, split slider applied, upgrades and the 1987 refusal). **Note:** new
+    games now start with fixed-time lights, which have less capacity than the Phase 5 gate's actuated ones: re-run the
+    event gate when the rounds are next tuned. **The junction bench moved to `scripts/bench/jx.ts`** (output/dbg was
+    wiped; the other dbg scripts, event2/rb/rbgeo, are gone): `npx esbuild scripts/bench/jx.ts --bundle --platform=node
+    --format=esm --outfile=output/jx.mjs`, then `SEEDS=6 SIGTIER=1 node output/jx.mjs 500 15 street signal`; single
+    runs near saturation are very noisy (per-seed means range 35–63 s), so compare with SEEDS.
   - **Per-corner slipways: DONE** (commit `3a24eae`; browser-checked on street, arterial and mixed crossings: add and
     remove corners, the last one off gives plain lights, roundabouts refused, lane graph clean; the corner click searches
     18 tiles around, the island sits ~12 out).
