@@ -279,13 +279,14 @@ function loopSpec(F: Frame, sa: 1 | -1, sb: 1 | -1, r: number, from: 'A' | 'B', 
   return { from, to, kind, turn, anc };
 }
 /** Minor (corner) arc in quadrant (sa, sb), from road `from` to the other road, arriving on the other road's outward ray. */
-function directSpec(F: Frame, sa: 1 | -1, sb: 1 | -1, r: number, from: 'A' | 'B', turn: 'L' | 'R'): Spec {
+function directSpec(F: Frame, sa: 1 | -1, sb: 1 | -1, r: number, from: 'A' | 'B'): Spec {
   const c = circFor(F, sa, sb, Math.max(r, NEED_T / (Math.PI - circFor(F, sa, sb, r).phi)));
   const th0 = from === 'A' ? c.thA : c.thB, th1 = from === 'A' ? c.thB : c.thA;
   const sw = angD(th0, th1);
   const anc = arcAnc(F, c, th0, sw, 2);
   anc[0]!.z = from === 'A' ? F.zA : F.zB;
   anc[2]!.z = from === 'A' ? F.zB : F.zA;
+  const turn: 'L' | 'R' = cross(anc[0]!.t, anc[anc.length - 1]!.t) > 0 ? 'L' : 'R'; // from the traffic directions at the two ends
   return { from, to: from === 'A' ? 'B' : 'A', kind: 'direct', turn, anc };
 }
 
@@ -353,17 +354,17 @@ function specsFor(type: InterchangeType, F: Frame): Spec[] {
   if (type === 'cloverleaf') return [
     loopSpec(F, 1, 1, R_CLOVER, 'A', 'B', 'L'), loopSpec(F, -1, -1, R_CLOVER, 'A', 'B', 'L'),
     loopSpec(F, -1, 1, R_CLOVER, 'B', 'A', 'L'), loopSpec(F, 1, -1, R_CLOVER, 'B', 'A', 'L'),
-    directSpec(F, 1, 1, R_CLOVER, 'B', 'R'), directSpec(F, -1, 1, R_CLOVER, 'B', 'R'),
-    directSpec(F, -1, -1, R_CLOVER, 'B', 'R'), directSpec(F, 1, -1, R_CLOVER, 'B', 'R'),
+    directSpec(F, 1, 1, R_CLOVER, 'A'), directSpec(F, -1, 1, R_CLOVER, 'B'),
+    directSpec(F, -1, -1, R_CLOVER, 'A'), directSpec(F, 1, -1, R_CLOVER, 'B'),
   ];
   if (type === 'stack') return [
     semiFly(F, 'A', 1, 14), semiFly(F, 'A', -1, 14),
     semiFly(F, 'B', 1, 21), semiFly(F, 'B', -1, 21),
-    directSpec(F, 1, 1, R_CLOVER, 'B', 'R'), directSpec(F, -1, 1, R_CLOVER, 'B', 'R'),
-    directSpec(F, -1, -1, R_CLOVER, 'B', 'R'), directSpec(F, 1, -1, R_CLOVER, 'B', 'R'),
+    directSpec(F, 1, 1, R_CLOVER, 'A'), directSpec(F, -1, 1, R_CLOVER, 'B'),
+    directSpec(F, -1, -1, R_CLOVER, 'A'), directSpec(F, 1, -1, R_CLOVER, 'B'),
   ];
   if (type === 'trumpet') return [
-    directSpec(F, 1, -1, R_CLOVER, 'A', 'R'), directSpec(F, 1, 1, R_CLOVER, 'B', 'R'),
+    directSpec(F, 1, -1, R_CLOVER, 'A'), directSpec(F, 1, 1, R_CLOVER, 'B'),
     loopSpec(F, 1, 1, R_CLOVER, 'A', 'B', 'L'), loopSpec(F, 1, -1, R_FLY, 'A', 'B', 'L', undefined, 'fly'),
   ];
   // roundabout-interchange: ring at ground under A (over); four slips, each entering or leaving the ring at 45-degree points

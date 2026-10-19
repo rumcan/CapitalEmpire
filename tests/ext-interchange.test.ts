@@ -521,3 +521,25 @@ test('T004 stack: flyovers are semi-direct (no loop), top within 100 m of the cr
     assert.ok(Math.max(w, h) <= 1200, `stack ${ang}deg footprint ${w.toFixed(0)} x ${h.toFixed(0)} m`);
   }
 });
+
+// Diamond and parclo are exempt: their turns are made at at-grade terminals, so each terminal ramp carries its
+// main turn only (diamond: A-east off turns L, A-west off L, the two on-ramps R; parclo: two loops L, two terminal ramps R).
+test('T004 two-way types (cloverleaf, stack): two right and two left turns in each direction, from the right road to the other', () => {
+  for (const type of ['cloverleaf', 'stack'] as InterchangeType[]) for (const ang of [90, 60]) {
+    const [A, B] = crossingRoads(ang);
+    const ic = makeInterchange(A, B, type);
+    assert.equal(ic.ok, true, `${type} ${ang}deg: ${ic.why}`);
+    const count = (from: 'A' | 'B', to: 'A' | 'B', turn: 'L' | 'R') => ic.ramps.filter(r => r.from === from && r.to === to && r.turn === turn).length;
+    const tag = `${type} ${ang}deg`;
+    assert.equal(count('A', 'B', 'R'), 2, `${tag} A->B right turns`);
+    assert.equal(count('B', 'A', 'R'), 2, `${tag} B->A right turns`);
+    assert.equal(count('A', 'B', 'L'), 2, `${tag} A->B left turns`);
+    assert.equal(count('B', 'A', 'L'), 2, `${tag} B->A left turns`);
+    for (const r of ic.ramps) {
+      const [s, e] = endsOf(r);
+      const fromPts = r.from === 'A' ? A.pts : B.pts, toPts = r.to === 'A' ? A.pts : B.pts;
+      assert.ok(distRoad(s, fromPts) <= END_TOL, `${tag} ${r.from}->${r.to} ${r.turn}: start not on road ${r.from}`);
+      assert.ok(distRoad(e, toPts) <= END_TOL, `${tag} ${r.from}->${r.to} ${r.turn}: end not on road ${r.to}`);
+    }
+  }
+});
