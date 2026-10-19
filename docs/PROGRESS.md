@@ -1075,6 +1075,8 @@ small public car parks on open town lots as part of the town's growth (a small t
     shapes) and counts bare spots almost enclosed by surface (`junctionHoles`); 198 flagged before, the rest now small slivers at 30-60
     degree corners of the narrowest roads and a grand boulevard folding back at 45 degrees (left).
   - Right-click in the road tool builds the route, as Enter (a right drag still pans).
+  - A gravel road (or any road with a gravel shoulder) meeting a road with sidewalks: the sidewalk wraps round the corners on to it,
+    runs along both its edges to the mouth, then tapers to nothing over 10 tiles (`GRAVEL_TAPER`); browser-checked street x gravel.
   - Checks: road tests 117/117, typecheck clean; full `npm test` earlier 418/421 (timing budgets only); `town:gate` and `sim:gate` PASS.
 - **Junction wedges and parked cars (2026-10-19 night): DONE.** At a junction of 3+ arms each arm is now paved (and its walk
   laid) from the node to where its road's own surface starts (`nodeFeatures`): a street at 45° to a wide road, or a wide one-way

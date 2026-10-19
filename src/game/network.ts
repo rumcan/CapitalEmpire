@@ -861,6 +861,18 @@ export class RoadNetwork {
         asphF.push(feat('poly', polyPath(pa), 0, wide.cls.tex, wide.cls.order, bboxOf(pa, 0.3), 'butt', kerbed(wide.cls)));
         walkF.push(feat('poly', polyPath(pw), 0, wide.cls.walkTex, walkOrder(wide.cls.walkTex), bboxOf(pw, 0.3)));
       }
+      // a gravel road (no kerb) meeting a road with sidewalks: the sidewalk wraps round the corners on to it and runs along both its edges at
+      // full width to the mouth, then tapers off to nothing over GRAVEL_TAPER tiles (the owner, 2026-10-19: "pavement around the outside and
+      // then tapers off slowly to nothing")
+      const slab = arms.filter(x => kerbed(x.cls)), sw = slab.length ? Math.max(...slab.map(x => x.walk)) : 0;
+      if (k >= 2 && sw > 0) for (const a of arms) {
+        if (kerbed(a.cls) || a.cls.walkTex !== 'gravel') continue;
+        const t0 = Math.min(a.len * 0.5, a.reachEdge + a.cls.rConcave + 0.35), t1 = Math.min(a.len * 0.6, t0 + GRAVEL_TAPER), m0 = add(N, mul(a.dir, t0)), m1 = add(N, mul(a.dir, t1));
+        for (const sg of [1, -1] as const) {
+          const nv = mul(a.nrm, sg), q = [add(N, mul(nv, a.h)), add(N, mul(nv, a.h + sw)), add(m0, mul(nv, a.h + sw)), add(m1, mul(nv, a.h)), add(m0, mul(nv, a.h))];
+          walkF.push(feat('poly', polyPath(q), 0, 'slabs', walkOrder('slabs'), bboxOf(q, 0.3)));
+        }
+      }
       // each arm paved (and its walk laid) from the node out to where its road's own surface starts (the route's end inset): the boxes and corner
       // patches left wedges where an arm's surface starts far out, as a street meeting a wide road at 45 degrees, or a wide one-way turning at
       // a junction (the owner, 2026-10-19: "this wedge missing instead of a smooth turn")
@@ -1048,6 +1060,8 @@ export class RoadNetwork {
 
 const feat = (kind: Feature['kind'], path: Path2D, w: number, tex: string, order: number, bbox: BBox, cap: Feature['cap'] = 'butt', kerb = true): Feature => ({ kind, path, w, tex, order, bbox, cap, kerb });
 const kerbed = (c: RoadClass) => c.walkTex === 'slabs';
+/** how far a sidewalk that wrapped on to a gravel road at a junction runs on along its edges before it is gone (tiles) */
+const GRAVEL_TAPER = 10;
 const walkOrder = (t: string) => (t === 'slabs' ? 1 : 0);
 const gaussOf = (r: () => number) => () => { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); };
 const leafSize = (r: () => number, k: string) => { const u = r(); return (k === 'stray' ? 0.96 : 1) * (u < 0.22 ? 0.11 + r() * 0.08 : u < 0.58 ? 0.2 + r() * 0.1 : u < 0.88 ? 0.32 + r() * 0.15 : 0.49 + r() * 0.16); };
