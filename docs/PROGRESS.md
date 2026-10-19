@@ -1059,6 +1059,12 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **Junction wedges and parked cars (2026-10-19 night): DONE.** At a junction of 3+ arms each arm is now paved (and its walk
+  laid) from the node to where its road's own surface starts (`nodeFeatures`): a street at 45° to a wide road, or a wide one-way
+  turning at a junction, left an unpaved wedge (the owner's screenshots). Browser-checked: six-lane one-way turning with a street at
+  45°, arterial with a 45° street, six-lane into a diagonal cross street. `CAR_SCALE` (0.8) now in sprites.ts covers parked cars too
+  (shrunk about their footprint's middle; 1,236 checked at 0.8). Road tests 91/91.  Next asked by the owner: a paint tool for filled
+  shapes (pavement, gravel, dirt, road textures; scale, rotate, border sizes; textures aligned to the iso view by default).
 - **The road builder's stress test, and what it found (2026-10-19 night): DONE.** The owner: "put the road builder through its
   paces". `src/game/dev/roadfuzz.ts` (dev server only): `__roadFuzz(seed, steps, { half })` drives the real tools through the Game
   (routes of every class and variant, 90/45 bends, Shift, Replace, bulldozer, every junction type incl. 1-3 lane rings, Add lane,
