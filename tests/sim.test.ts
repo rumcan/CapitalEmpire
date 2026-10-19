@@ -154,12 +154,12 @@ function crossing(len: number): { e: NetEditor; g: LaneGraph } {
 const centre = (e: NetEditor): Node => e.net.nodeAt({ x: 300, y: 300 })!;
 
 test('signal phases: actuated: a phase with no call rests on green; a call for the other phase ends the green after 7 s, then amber 3 s and all-red 2 s; a car within 30 m holds the green to 40 s', () => {
-  const mk = (): SignalPlan => ({ node: null as unknown as Node, armPhase: [0, 1], phases: 2, green: 18, amber: 3, allRed: 2, offset: 0, idx: 0, stage: 0, el: 0, phaseLanes: [[0], [1]] });
-  const lLen = new Float64Array([100, 100]), s = new Float64Array(2);
+  const mk = (): SignalPlan => ({ node: null as unknown as Node, mode: 1, armPhase: [0, 1], phases: 2, green: 18, greens: [18, 18], amber: 3, allRed: 2, offset: 0, idx: 0, stage: 0, el: 0, phaseLanes: [[0], [1]] });
+  const lLen = new Float64Array([100, 100]), s = new Float64Array(2), spd = new Float64Array(2);
   /** the steps (1-based) at which the plan's state changes: [step, idx, stage], the first being the start */
   const log = (p: SignalPlan, onLane: number[][], steps: number) => {
     const out: number[][] = []; let last = '';
-    for (let k = 1; k <= steps; k++) { stepSignals([p], onLane, s, lLen, DT, false, 0); const key = `${p.idx}.${p.stage}`; if (key !== last) { out.push([k, p.idx, p.stage]); last = key; } }
+    for (let k = 1; k <= steps; k++) { stepSignals([p], onLane, s, spd, lLen, DT, false, 0); const key = `${p.idx}.${p.stage}`; if (key !== last) { out.push([k, p.idx, p.stage]); last = key; } }
     return out;
   };
   // no call: phase 0 stays on green for 120 s
@@ -171,7 +171,7 @@ test('signal phases: actuated: a phase with no call rests on green; a call for t
   s[0] = 80; s[1] = 50;
   assert.deepEqual(log(mk(), [[0], [1]], 400), [[1, 0, 0], [400, 0, 1]], 'a car within 30 m extends the green to 40 s');
   // the fixed-time reference (fixed = true, at time t): the old 18 s / 3 s / 2 s cycle, phase 0 green 0-18, amber 18-21, red to 23, phase 1 green 23-41
-  const f = mk(), at = (t: number) => { stepSignals([f], [[], []], s, lLen, DT, true, t); return [f.idx, f.stage]; };
+  const f = mk(), at = (t: number) => { stepSignals([f], [[], []], s, spd, lLen, DT, true, t); return [f.idx, f.stage]; };
   assert.deepEqual([at(0), at(17.9), at(18.5), at(21.5)], [[0, 0], [0, 0], [0, 1], [0, 2]]);
   assert.deepEqual([at(23.5), at(41.5), at(46.5)], [[1, 0], [1, 1], [0, 0]], 'the fixed cycle repeats');
   assert.equal(phaseState(f, 0, 0), SIG.GREEN, 'phaseState reads the state');

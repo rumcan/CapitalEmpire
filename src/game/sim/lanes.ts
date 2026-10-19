@@ -3,6 +3,7 @@
 import { type Arm, type Node, type Pt, type RoadNetwork, type Seg, RB_LANE, SK, add, cross, dot, keyOf, mul, norm, perp, slipCorner, slipOn, sub, vlen } from '../network';
 import { BOOTH_W, PLAZA_LEN, TAPER } from '../event/config';
 import { plazaKey, type TollDef } from '../event/toll';
+import { GREEN_CAP, MIN_GREEN } from './signals';
 
 /** metres per tile */
 export const MPT = 2;
@@ -45,8 +46,9 @@ export interface DSeg { id: number; key: string; seg: Seg; dir: 0 | 1; from: Nod
 export interface Movement { id: number; key: string; node: Node; from: number; to: number; turn: Turn; paths: number[][]; len: number }
 /** signal plan of a node: armPhase[i] = phase of arm i (node.arms order); times in seconds. green, amber, allRed and offset are the fixed-time
  *  reference cycle (Sim.fixedSignals); the runtime state is actuated (signals.ts): idx the phase served, stage 0 green, 1 amber, 2 all-red,
- *  el the seconds in the stage; phaseLanes[k] are the LINK lanes feeding the connectors of phase k */
-export interface SignalPlan { node: Node; armPhase: number[]; phases: number; green: number; amber: number; allRed: number; offset: number;
+ *  el the seconds in the stage; phaseLanes[k] are the LINK lanes feeding the connectors of phase k. mode: the lights' tier (0 fixed-time, 1 actuated,
+ *  2 adaptive; from node.sig); greens[k]: phase k's green seconds in the fixed-time cycle (node.split, clamped, else green) */
+export interface SignalPlan { node: Node; mode: 0 | 1 | 2; armPhase: number[]; phases: number; green: number; greens: number[]; amber: number; allRed: number; offset: number;
   idx: number; stage: number; el: number; phaseLanes: number[][] }
 
 /** the arm of a node at one of its arms' directed segments */
@@ -404,7 +406,9 @@ export class LaneGraph {
         while (j < M && (armPhase[j] >= 0 || dot(io[i].a.dir, io[j].a.dir) >= -0.7)) j++;
         armPhase[i] = phases; if (j < M) armPhase[j] = phases; phases++;
       }
-      sp = { node: n, armPhase, phases, green: 18, amber: 3, allRed: 2, offset: Math.abs(n.x * 7 + n.y * 13) % (phases * 23), idx: 0, stage: 0, el: 0, phaseLanes: Array.from({ length: phases }, () => []) };
+      const green = 18;
+      sp = { node: n, mode: n.sig ?? 1, armPhase, phases, green, greens: Array.from({ length: phases }, (_, k) => n.split?.[k] !== undefined ? Math.min(GREEN_CAP, Math.max(MIN_GREEN, n.split[k]!)) : green),
+        amber: 3, allRed: 2, offset: Math.abs(n.x * 7 + n.y * 13) % (phases * 23), idx: 0, stage: 0, el: 0, phaseLanes: Array.from({ length: phases }, () => []) };
       this.signals.set(n, sp);
     }
     // a planned slip (slipPlan): an approach lane (flare 1) on each inbound link lane that reaches past its stop line, a departure lane (flare 2)

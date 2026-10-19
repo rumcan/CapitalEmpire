@@ -36,6 +36,7 @@ export type NetOp =
   | { k: 'type'; x: number; y: number; type: NodeType }
   | { k: 'flags'; x: number; y: number; wide: boolean; tl: boolean; rl?: 1 | 2 | 3 }
   | { k: 'slips'; x: number; y: number; off: number[] }
+  | { k: 'signal'; x: number; y: number; sig: 0 | 1 | 2; split?: number[] }
   | { k: 'rebuild'; full: boolean }
   | { k: 'clear' };
 

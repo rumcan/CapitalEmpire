@@ -15,6 +15,7 @@ export function netToOps(net: RoadNetwork): NetOp[] {
   for (const n of net.nodes.values()) if (n.type !== 'plain') ops.push({ k: 'type', x: n.x, y: n.y, type: n.type });
   for (const n of net.nodes.values()) if (n.wide || n.tl || (n.rl ?? 1) > 1) ops.push({ k: 'flags', x: n.x, y: n.y, wide: !!n.wide, tl: !!n.tl, rl: n.rl ?? 1 });
   for (const n of net.nodes.values()) if (n.slipOff?.length) ops.push({ k: 'slips', x: n.x, y: n.y, off: n.slipOff });
+  for (const n of net.nodes.values()) if (n.sig !== undefined || n.split?.length) ops.push({ k: 'signal', x: n.x, y: n.y, sig: n.sig ?? 1, split: n.split });
   ops.push({ k: 'rebuild', full: true });
   return ops;
 }
@@ -37,6 +38,7 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
       case 'type': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeType(nd, op.type, false); break; }
       case 'flags': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeFlags(nd, op.wide, op.tl, op.rl ?? nd.rl ?? 1, false); break; }
       case 'slips': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setSlipOff(nd, op.off, false); break; }
+      case 'signal': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setSignal(nd, op.sig, op.split, false); break; }
       case 'rebuild': n.rebuild(op.full); break;
       case 'clear': n.clear(); break;
     }
@@ -73,19 +75,24 @@ function extendRun(n: Node, cur: Seg, s: Seg, skip: (x: Seg) => boolean, out: Se
 
 /** a node's save entry: [x, y, type], with a 4th element when it has flags: 1 widened turns, 2 turn lanes, and bits 4 and 8 the
  *  roundabout's ring lanes less one (rl = 1 + (f >> 2 & 3)); a 5th element when a slip node has corners without a slipway (their in-arms, armDeg;
- *  the 4th is then 0 when there are no flags) */
-export type NodeEntry = [number, number, string, number?, number[]?];
+ *  the 4th is then 0 when there are no flags); a 6th element when the lights have a tier or a split: [sig, ...split] (sig 0 fixed-time, 1 actuated,
+ *  2 adaptive; the 4th and 5th are then written too, 0 and [] when absent) */
+export type NodeEntry = [number, number, string, number?, number[]?, number[]?];
 export function nodeEntry(n: Node): NodeEntry {
   const f = (n.wide ? 1 : 0) | (n.tl ? 2 : 0) | (((n.rl ?? 1) - 1) << 2), off = n.slipOff?.length ? n.slipOff : null;
+  const sg = n.sig !== undefined || n.split?.length ? [n.sig ?? 1, ...(n.split ?? [])] : null;
+  if (sg) return [n.x, n.y, n.type, f, off ?? [], sg];
   if (off) return [n.x, n.y, n.type, f, off];
   return f ? [n.x, n.y, n.type, f] : [n.x, n.y, n.type];
 }
-/** a saved node entry as edits: its type, flags and slipways on the node there (no node there: skipped; no 4th element: no flags; no 5th: every corner has its slipway) */
-export function applyNodeEntry(e: NetEditor, [x, y, type, f, off]: NodeEntry) {
+/** a saved node entry as edits: its type, flags, slipways and signal tier on the node there (no node there: skipped; no 4th element: no flags; no 5th:
+ *  every corner has its slipway; no 6th: the default tier and split) */
+export function applyNodeEntry(e: NetEditor, [x, y, type, f, off, sg]: NodeEntry) {
   const n = e.net.nodeAt({ x, y }); if (!n) return;
   e.setNodeType(n, type as NodeType);
   if (f) e.setNodeFlags(n, !!(f & 1), !!(f & 2), Math.min(3, 1 + ((f >> 2) & 3)) as 1 | 2 | 3);
   if (off?.length && type === 'slip') e.setSlipOff(n, off);
+  if (sg?.length && (type === 'signal' || type === 'slip')) e.setSignal(n, sg[0] as 0 | 1 | 2, sg.length > 1 ? sg.slice(1) : undefined);
 }
 
 /** Edits the main thread's network and records the same edits for the ground workers. */
@@ -106,6 +113,8 @@ export class NetEditor {
   setNodeFlags(n: Node, wide: boolean, tl: boolean, rl: 1 | 2 | 3 = n.rl ?? 1) { this.ops.push({ k: 'flags', x: n.x, y: n.y, wide, tl, rl }); this.net.setNodeFlags(n, wide, tl, rl, false); }
   /** the slip node's corners without a slipway (their in-arms, armDeg; empty = all have one) */
   setSlipOff(n: Node, off: number[]) { this.ops.push({ k: 'slips', x: n.x, y: n.y, off }); this.net.setSlipOff(n, off, false); }
+  /** the lights' tier (0 fixed-time, 1 actuated, 2 adaptive) and the fixed-time green seconds of each phase (split; none = 18 s each) */
+  setSignal(n: Node, sig: 0 | 1 | 2, split?: number[]) { this.ops.push({ k: 'signal', x: n.x, y: n.y, sig, split }); this.net.setSignal(n, sig, split, false); }
   clear() { this.net.clear(); this.ops = [{ k: 'clear' }]; }
   /** rebuild here, and hand back the ops (ending in the same rebuild) for the workers */
   commit(full = false): NetOp[] {

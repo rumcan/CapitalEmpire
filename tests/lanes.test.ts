@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, armDeg, slipIn, type Leg, type Node } from '../src/game/network';
-import { NetEditor, applyOps } from '../src/game/netops';
+import { NetEditor, applyNodeEntry, applyOps, netToOps, nodeEntry } from '../src/game/netops';
 import type { NetOp } from '../src/game/ground-protocol';
 import { CTL, LK, LaneGraph, checkGraph, laneAt, type Lane, type Movement } from '../src/game/sim/lanes';
 
@@ -322,4 +322,49 @@ test('a slip crossing with every corner off has no slipways, and turning it to l
   assert.deepEqual(checkGraph(g), []);
   assert.ok(liveLanes(g).every(l => l.flare === undefined));
   assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
+});
+
+test('signal tiers: sig 0 with split [10, 30] is a fixed-time plan with greens [10, 30]; unset sig is actuated with 18 s greens; splits are clamped; incremental = fresh', () => {
+  const e = new NetEditor(new RoadNetwork()), g = new LaneGraph(), log: NetOp[] = [];
+  const commit = () => { log.push(...e.commit()); g.update(e.net); };
+  const sigOf = (): string => [...g.signals.values()].map(p => `${p.mode} ${p.greens.join(',')}`).join(';');
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); commit();
+  const n = at(e, 50, 50);
+  e.setNodeType(n, 'signal'); commit();
+  assert.equal(g.signals.get(n)!.mode, 1); assert.deepEqual(g.signals.get(n)!.greens, [18, 18]);
+  e.setSignal(n, 0, [10, 30]); commit();
+  assert.equal(g.signals.get(n)!.mode, 0); assert.deepEqual(g.signals.get(n)!.greens, [10, 30]);
+  assert.deepEqual(checkGraph(g), []);
+  assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
+  assert.equal(sigOf(), '0 10,30');
+  e.setSignal(n, 2, [3, 90]); commit();
+  assert.equal(sigOf(), '2 7,60', 'a split is clamped to [MIN_GREEN, 60]');
+  e.setSignal(n, 2); commit();
+  assert.equal(sigOf(), '2 18,18');
+  assert.deepEqual(snapshot(g), snapshot(freshFrom(log)));
+  // a type other than a signal drops the tier and the split; a slip keeps them
+  e.setSignal(n, 0, [10, 30]); commit();
+  e.setNodeType(n, 'slip'); commit();
+  assert.equal(n.sig, 0); assert.deepEqual(n.split, [10, 30]);
+  e.setNodeType(n, 'roundabout'); commit();
+  assert.equal(n.sig, undefined); assert.equal(n.split, undefined);
+});
+
+test('signal tiers in the save: the 6th element [sig, ...split] round trips; an old entry loads with the default tier and split', () => {
+  const build = () => { const e = new NetEditor(new RoadNetwork()); e.addLegs([leg(0, 50, 100, 50)], CLASS.street, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); e.commit(); return e; };
+  const e = build(), n = e.net.nodeAt({ x: 50, y: 50 })!;
+  e.setNodeType(n, 'signal'); e.commit();
+  assert.deepEqual(nodeEntry(n), [50, 50, 'signal']);
+  e.setSignal(n, 0, [10, 30]); e.commit();
+  assert.deepEqual(nodeEntry(n), [50, 50, 'signal', 0, [], [0, 10, 30]]);
+  const f = build(); applyNodeEntry(f, nodeEntry(n));
+  const m = f.net.nodeAt({ x: 50, y: 50 })!;
+  assert.equal(m.sig, 0); assert.deepEqual(m.split, [10, 30]);
+  e.setSignal(n, 2); e.commit();
+  assert.deepEqual(nodeEntry(n), [50, 50, 'signal', 0, [], [2]]);
+  const h = new RoadNetwork(); applyOps(h, netToOps(e.net));
+  assert.equal(h.nodeAt({ x: 50, y: 50 })!.sig, 2);
+  const old = build(); applyNodeEntry(old, [50, 50, 'signal']);
+  const o = old.net.nodeAt({ x: 50, y: 50 })!;
+  assert.equal(o.sig, undefined); assert.equal(o.split, undefined);
 });

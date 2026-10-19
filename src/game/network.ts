@@ -171,8 +171,9 @@ function walkAlong(pts: Pt[], closed: boolean, first: number, step: number, fn: 
 /* ---------- data ---------- */
 /** a junction or bend; wide = widened turns (connectors at 2x the radius for speed), tl = turn lanes (lane 0 turns left only, at a 3+ arm junction) */
 /** rl: a roundabout's ring lanes (unset = 1; lane 0 is the outer one); slipOff: a slip node's corners with no slipway, each named by its right turn's
- *  in-arm (armDeg); unset or empty = every corner has one */
-export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean; rl?: 1 | 2 | 3; slipOff?: number[] }
+ *  in-arm (armDeg); unset or empty = every corner has one; sig: the lights' tier (0 fixed-time, 1 actuated, 2 adaptive; unset = 1); split: the
+ *  fixed-time green seconds of each signal phase, in the plan's phase order (unset = 18 s each) */
+export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean; rl?: 1 | 2 | 3; slipOff?: number[]; sig?: 0 | 1 | 2; split?: number[] }
 /** how a segment is built: on the ground, on a bridge, or in a tunnel */
 export const SK = { GROUND: 0, BRIDGE: 1, TUNNEL: 2 } as const; export type SegKind = 0 | 1 | 2;
 export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind }
@@ -409,8 +410,15 @@ export class RoadNetwork {
     if (inner(p1)) this.link(this.node(p1), this.keep(b), cls, style, kind);
     if (rebuild) this.rebuild();
   }
-  /** a node's type; a type other than a slip drops the node's slipways (slipOff) */
-  setNodeType(n: Node, type: NodeType, rebuild = true) { n.type = type; if (type !== 'slip') n.slipOff = undefined; this.touched.add(n); if (rebuild) this.rebuild(); }
+  /** a node's type; a type other than a slip drops the node's slipways (slipOff), and a type other than a signal or a slip drops its signal tier and split */
+  setNodeType(n: Node, type: NodeType, rebuild = true) {
+    n.type = type; if (type !== 'slip') n.slipOff = undefined;
+    if (type !== 'signal' && type !== 'slip') { n.sig = undefined; n.split = undefined; }
+    this.touched.add(n); if (rebuild) this.rebuild();
+  }
+  /** the lights' tier (0 fixed-time, 1 actuated, 2 adaptive) and the fixed-time green seconds of each phase (split; empty or unset = 18 s each); the
+   *  lane graph reads them at the node */
+  setSignal(n: Node, sig: 0 | 1 | 2, split?: number[], rebuild = true) { n.sig = sig; n.split = split?.length ? [...split] : undefined; this.touched.add(n); if (rebuild) this.rebuild(); }
   /** the slip node's corners without a slipway (their in-arms, armDeg; empty = all of them have one); the lane graph and the painter read it at the node */
   setSlipOff(n: Node, off: number[], rebuild = true) { n.slipOff = off.length ? [...off] : undefined; this.touched.add(n); if (rebuild) this.rebuild(); }
   /** the node's widened-turns and turn-lane flags and its roundabout's ring lanes (the lane graph reads them at the node) */

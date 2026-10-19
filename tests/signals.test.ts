@@ -6,8 +6,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
-import { LK, LaneGraph, checkGraph } from '../src/game/sim/lanes';
+import { LK, LaneGraph, checkGraph, type SignalPlan } from '../src/game/sim/lanes';
 import { DT, Sim } from '../src/game/sim/sim';
+import { fixedToRed, stepSignals } from '../src/game/sim/signals';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -68,4 +69,78 @@ test('signals: actuated plans put more vehicles through a 900 + 150 veh/h crossi
   console.log(`signals actuated: ${a.through.toFixed(0)} veh/h through (north ${a.north.toFixed(0)}), north mean wait ${a.meanWait.toFixed(1)} s, towed ${a.towed}`);
   assert.ok(a.through > f.through, `actuated ${a.through.toFixed(0)} veh/h through against fixed ${f.through.toFixed(0)}`);
   assert.ok(a.meanWait < f.meanWait, `north wait ${a.meanWait.toFixed(1)} s actuated against ${f.meanWait.toFixed(1)} s fixed`);
+});
+
+/** a two-phase plan for stepSignals: phase 0 on lane 0, phase 1 on lane 1, with the tier, the fixed-time greens, amber 3 s and all-red 2 s */
+const plan2 = (mode: 0 | 1 | 2, greens = [18, 18]): SignalPlan => ({ node: null as unknown as SignalPlan['node'], mode, armPhase: [0, 1], phases: 2, green: 18, greens, amber: 3, allRed: 2, offset: 0, idx: 0, stage: 0, el: 0, phaseLanes: [[0], [1]] });
+/** a three-phase plan: phase k on lane k */
+const plan3 = (mode: 0 | 1 | 2): SignalPlan => ({ node: null as unknown as SignalPlan['node'], mode, armPhase: [0, 1, 2], phases: 3, green: 18, greens: [18, 18, 18], amber: 3, allRed: 2, offset: 0, idx: 0, stage: 0, el: 0, phaseLanes: [[0], [1], [2]] });
+/** the time (s) at which plan p first leaves its green, stepped alone among the given cars (lLen 200 m: a car at s is 200 - s m from the line); Infinity past secs */
+function greenEnd(p: SignalPlan, onLane: number[][], s: Float64Array, spd: Float64Array, secs: number): number {
+  const lLen = new Float64Array([200, 200, 200]);
+  for (let k = 1; k <= Math.round(secs / DT); k++) { stepSignals([p], onLane, s, spd, lLen, DT, false, 0); if (p.stage !== 0) return k * DT; }
+  return Infinity;
+}
+/** true if the value is the given time (s) to within two sim steps */
+const at = (x: number, t: number) => Math.abs(x - t) < 2 * DT;
+
+test('fixed-time tier: phase 0 is green 10 s then amber and all-red, phase 1 green 30 s; fixedToRed matches the cycle; mode 0 steps as fixed with fixed off', () => {
+  const p = plan2(0, [10, 30]), s = new Float64Array(2), spd = new Float64Array(2), lLen = new Float64Array([200, 200]);
+  const stepAt = (t: number) => { stepSignals([p], [[], []], s, spd, lLen, DT, false, t); return [p.idx, p.stage]; };
+  // the cycle: phase 0 green 0-10, amber 10-13, all-red 13-15; phase 1 green 15-45, amber 45-48, all-red 48-50
+  assert.deepEqual([stepAt(0), stepAt(9.5), stepAt(10.5), stepAt(13.5), stepAt(15.5), stepAt(44.5), stepAt(45.5), stepAt(48.5), stepAt(50.5)], [[0, 0], [0, 0], [0, 1], [0, 2], [1, 0], [1, 0], [1, 1], [1, 2], [0, 0]]);
+  // fixedToRed: 8 s from t 5 to the red of phase 0 (green 5 s + amber 3 s); 2.5 s from amber at 10.5 to red at 13; 28 s from t 20 to phase 1's red at 48
+  assert.equal(fixedToRed(p, 5), 8); assert.equal(fixedToRed(p, 10.5), 2.5); assert.equal(fixedToRed(p, 20), 28);
+  // with fixed = true the same cycle (the reference) gives the same states
+  const q = plan2(0, [10, 30]), fixedAt = (t: number) => { stepSignals([q], [[], []], s, spd, lLen, DT, true, t); return [q.idx, q.stage]; };
+  assert.deepEqual([fixedAt(10.5), fixedAt(15.5), fixedAt(45.5)], [[0, 1], [1, 0], [1, 1]]);
+  // a fixed-time plan rests on its cycle whatever the cars do
+  s[0] = 190;
+  const r = plan2(0, [10, 30]); stepSignals([r], [[0], [1]], s, spd, lLen, DT, false, 5);
+  assert.deepEqual([r.idx, r.stage], [0, 0]);
+});
+
+test('adaptive: gap-out ends the green as actuated does (no car within 30 m, a car waiting elsewhere: 7 s)', () => {
+  // lane 0 (served): a stopped car 100 m out; lane 1: a stopped car 50 m out
+  const s = new Float64Array([100, 150]), spd = new Float64Array(2), onLane = [[0], [1]];
+  assert.ok(at(greenEnd(plan2(1), onLane, s, spd, 60), 7), 'actuated: 7 s');
+  assert.ok(at(greenEnd(plan2(2), onLane, s, spd, 60), 7), 'adaptive: 7 s');
+});
+
+test('adaptive: a queue elsewhere of the served demand + PRESSURE (9 against 1) ends the green at 7 s; one car less (8) does not, and the green runs to GREEN_CAP', () => {
+  // served: one stopped car 20 m out (within EXT_M, so the gap-out holds); the other phase: n stopped cars 50 m out
+  const queue = (n: number) => {
+    const s = new Float64Array(1 + n).fill(150); s[0] = 180;
+    return { s, spd: new Float64Array(1 + n), onLane: [[0], Array.from({ length: n }, (_, i) => i + 1)] };
+  };
+  const nine = queue(9), eight = queue(8);
+  assert.ok(at(greenEnd(plan2(2), nine.onLane, nine.s, nine.spd, 90), 7), 'nine waiting: handed over at 7 s');
+  assert.ok(at(greenEnd(plan2(2), eight.onLane, eight.s, eight.spd, 90), 60), 'eight waiting: the green holds to GREEN_CAP');
+  assert.ok(at(greenEnd(plan2(1), eight.onLane, eight.s, eight.spd, 90), 40), 'actuated: the same green ends at 40 s');
+});
+
+test('adaptive: a fast car 100 m out holds the green while nothing waits elsewhere, and not when one car waits', () => {
+  // lane 0 (served): a fast car 100 m out; lane 1: a car 50 m out that is moving (calls, does not wait) or stopped (waits)
+  const s = new Float64Array([100, 150]);
+  const onLane = [[0], [1]];
+  assert.ok(at(greenEnd(plan2(2), onLane, s, new Float64Array([10, 10]), 90), 60), 'nothing waits: the platoon holds to GREEN_CAP');
+  assert.ok(at(greenEnd(plan2(2), onLane, s, new Float64Array([10, 0]), 90), 7), 'one car waits: no platoon hold, the green ends at 7 s');
+  assert.ok(at(greenEnd(plan2(1), onLane, s, new Float64Array([10, 10]), 90), 7), 'actuated: a car 100 m out does not hold it');
+});
+
+test('adaptive: after all-red the busiest phase is served next (phase 2, three cars against phase 1\'s one); actuated takes the first called one (phase 1)', () => {
+  // phase 1: one stopped car 50 m out; phase 2: three stopped cars 30-50 m out; the served phase 0 is empty and ends at 7 s
+  const s = new Float64Array([150, 170, 160, 150]), spd = new Float64Array(4), lLen = new Float64Array([200, 200, 200]);
+  const onLane = [[], [0], [1, 2, 3]];
+  const nextServed = (p: SignalPlan) => { for (let k = 1; k <= 1000; k++) { stepSignals([p], onLane, s, spd, lLen, DT, false, 0); if (p.stage === 0 && p.idx !== 0) return p.idx; } return -1; };
+  assert.equal(nextServed(plan3(2)), 2, 'adaptive: the busiest phase');
+  assert.equal(nextServed(plan3(1)), 1, 'actuated: the first called phase');
+});
+
+test('adaptive: the fixed argument (Sim.fixedSignals, the A/B switch) forces the fixed-time reference on an adaptive plan', () => {
+  const s = new Float64Array([180, 150, 150]), spd = new Float64Array(3), lLen = new Float64Array([200, 200]);
+  const q = plan2(2); stepSignals([q], [[0, 1], [2]], s, spd, lLen, DT, true, 0);
+  assert.deepEqual([q.idx, q.stage], [0, 0]);
+  stepSignals([q], [[0, 1], [2]], s, spd, lLen, DT, true, 24);
+  assert.deepEqual([q.idx, q.stage], [1, 0], 'the fixed cycle of 18 + 3 + 2 s: phase 1 green from 23 s');
 });

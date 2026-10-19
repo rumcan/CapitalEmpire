@@ -463,7 +463,7 @@ export class Sim {
   /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
   step() {
     const t0 = performance.now();
-    stepSignals(this.plans, this.onLane, this.s, this.lLen, DT, this.fixedSignals, this.t);
+    stepSignals(this.plans, this.onLane, this.s, this.v, this.lLen, DT, this.fixedSignals, this.t);
     this.accelerate();
     this.changeLanes();
     this.integrate();
@@ -779,9 +779,10 @@ export class Sim {
   }
 
   /** seconds until signal plan p turns the phase now green or amber red (the plan is not red for that phase): the amber left; a green
-   *  lasts at least MIN_GREEN s when another phase is called, and never ends while none is (Infinity) */
+   *  lasts at least MIN_GREEN s when another phase is called, and never ends while none is (Infinity). Fixed-time plans (mode 0) and the
+   *  fixed-time reference (fixedSignals) read the cycle */
   private toRed(p: SignalPlan): number {
-    if (this.fixedSignals) return fixedToRed(p, this.t);
+    if (this.fixedSignals || p.mode === 0) return fixedToRed(p, this.t);
     if (p.stage === 1) return p.amber - p.el;
     return demandElsewhere(p, this.onLane, this.s, this.lLen) ? Math.max(0, MIN_GREEN - p.el) + p.amber : Infinity;
   }

@@ -6,7 +6,7 @@ import { generateTerrain } from '../src/game/terrain';
 import { townCentres } from '../src/game/lots/seedtowns';
 import { crowdFor, insideSite, placeStadium } from '../src/game/event/site';
 import { CARDS, DRAFT, ENTRY_S, EVENT_START_MONEY, EXPRESS_ENTRY, L1_CARS, LEVEL_MUL, PAYOUT_BASE, PAYOUT_PIVOT, PENALTY, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout } from '../src/game/event/config';
-import { Round, draftFor, type RoundSave } from '../src/game/event/round';
+import { Round, START_YEAR, draftFor, signalTierOpen, type RoundSave } from '../src/game/event/round';
 import { City } from '../src/game/city';
 import { GAME_DAY, START_MONEY } from '../src/game/budget';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
@@ -280,4 +280,12 @@ test('City with towns: the books take no property or business and the career wai
   assert.ok([...d.segs].length > 0, 'the roads are still there (upkeep)');
   city.step(20);
   assert.equal(city.career.reached, 0, 'no milestones with towns');
+});
+
+test('the calendar: the view\'s year is START_YEAR + runs (1985 at run 0, 1990 at run 5); the signal tiers open in 1985, 1990 and 2000', () => {
+  const r = new Round();
+  assert.equal(START_YEAR, 1985); assert.equal(r.view().year, 1985);
+  r.runs = 5; assert.equal(r.view().year, 1990);
+  assert.equal(signalTierOpen(1984), 0); assert.equal(signalTierOpen(1985), 0); assert.equal(signalTierOpen(1989), 0);
+  assert.equal(signalTierOpen(1990), 1); assert.equal(signalTierOpen(1999), 1); assert.equal(signalTierOpen(2000), 2); assert.equal(signalTierOpen(2030), 2);
 });

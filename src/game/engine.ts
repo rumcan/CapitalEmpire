@@ -15,7 +15,7 @@ import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { insideSite, type Site } from './event/site';
 import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
-import { Round } from './event/round';
+import { Round, SIGNAL_TIER_YEAR, signalTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
 import walkersUrl from '../assets/characters/walkers.png';
 import { plazaEdge, plazaIslands, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
@@ -39,6 +39,10 @@ import type { DisasterKind } from './ext/disasters';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
+/** what the lights' upgrades cost, by the tier they reach (index = tier: 0 fixed-time is free, 1 actuated, 2 adaptive) */
+export const UPGRADE_COST: readonly number[] = [0, 1500, 3000];
+/** the upgrade each signal tier brings, for the year toasts (index = tier; 0 has none) */
+const SIGNAL_TOAST = ['', 'actuated traffic lights (loop detectors)', 'adaptive traffic lights'];
 
 /** a game day and a game hour, sim s (one sim second is one game minute) */
 const GAME_DAY = 1440, GAME_HOUR = 60;
@@ -143,7 +147,11 @@ export class Game {
   /** the ring lanes a roundabout installed (or re-laned) by the junction tool gets; set by the panel's chips and by Tab */
   ringLanes: 1 | 2 | 3 = 1;
   /** the junction tool's mode: 'type' installs junctionType; 'wide' and 'tl' toggle the widened-turns and turn-lane flags on the junction clicked */
-  junctionMode: 'type' | 'wide' | 'tl' | 'slips' = 'type';
+  junctionMode: 'type' | 'wide' | 'tl' | 'slips' | 'signals' = 'type';
+  /** the lights (a signal or slip node) selected in the Signals mode, for its panel (a rebuild may replace the object: see selectedLightsNode) */
+  selectedLights: Node | null = null;
+  /** the year seen last frame (0: none yet): a signal tier's year coming in toasts (see yearCheck) */
+  private seenYear = 0;
   selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
   /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
   showAccess = false;
@@ -839,6 +847,7 @@ export class Game {
     }
   }
   private junctionClick(mx: number, my: number) {
+    if (this.junctionMode === 'signals') { this.signalsClick(mx, my); return; }
     if (this.junctionMode === 'slips') { this.slipClick(mx, my); return; }
     if (this.junctionMode !== 'type') { this.flagClick(mx, my); return; }
     const t = this.tileAt(mx, my), spec = JUNCTIONS.find(j => j.id === this.junctionType)!;
@@ -851,7 +860,10 @@ export class Game {
     const cost = ring ? Math.max(0, variantCost('roundabout', rl) - variantCost('roundabout', n.rl ?? 1)) : variantCost(this.junctionType, rl);
     if (cost > this.money) { this.toast(`Not enough money: ${ring ? `the ${rl}-lane ring` : spec.name} costs $${cost.toLocaleString()}`, 'warn'); return; }
     this.traffic.spend('construction', cost);
+    const hadLights = n.type === 'signal' || n.type === 'slip';
     if (!ring) this.edit.setNodeType(n, this.junctionType);
+    // new lights get the best tier open in the year (the split is the default)
+    if (!ring && !hadLights && (this.junctionType === 'signal' || this.junctionType === 'slip')) this.edit.setSignal(n, signalTierOpen(this.traffic.round.year), undefined);
     if (this.junctionType === 'roundabout') this.edit.setNodeFlags(n, !!n.wide, !!n.tl, rl);
     this.commitNetwork();
     this.puff(n.x, n.y, 8);
@@ -879,13 +891,45 @@ export class Game {
     if (cost > this.money) { this.toast(`Not enough money: ${name} costs $${price.toLocaleString()}`, 'warn'); return; }
     this.traffic.spend('construction', cost);
     this.junctionType = v.type; if (v.type === 'roundabout') this.ringLanes = v.rl;
+    const hadLights = n.type === 'signal' || n.type === 'slip', lit = v.type === 'signal' || v.type === 'slip';
     this.edit.setNodeType(n, v.type);
+    if (lit && !hadLights) this.edit.setSignal(n, signalTierOpen(this.traffic.round.year), undefined);
     if (v.type === 'slip') this.edit.setSlipOff(n, []);
     if (v.type === 'roundabout') this.edit.setNodeFlags(n, !!n.wide, !!n.tl, v.rl);
     this.commitNetwork(); this.puff(n.x, n.y, 8);
     const warn = this.armWarn(n);
     if (warn) this.toast(warn, 'warn');
     else this.toast(`${name} (${price ? '$' + price.toLocaleString() : 'free'}) · Tab for the next type`, 'good');
+  }
+  /** the junction tool in 'signals' mode: a click on a junction with lights selects it for its panel; any other click clears the selection */
+  private signalsClick(mx: number, my: number) {
+    const n = this.net.nearestNode(this.tileAt(mx, my), 2, 5);
+    this.selectedLights = n && (n.type === 'signal' || n.type === 'slip') ? n : null; this.emit();
+  }
+  /** the selected lights' node as it is now (a rebuild may have replaced the object), or null: none selected, or it has no lights any more */
+  selectedLightsNode(): Node | null {
+    const s = this.selectedLights; if (!s) return null;
+    const n = this.net.nodeAt({ x: s.x, y: s.y }); return n && (n.type === 'signal' || n.type === 'slip') ? n : null;
+  }
+  /** the fixed-time green seconds of each phase (the panel's sliders, once released): sets the lights to fixed-time and commits the network */
+  setSplit(n: Node, split: number[]) { this.edit.setSignal(n, 0, split); this.commitNetwork(); }
+  /** buys the selected lights' upgrade to tier (1 actuated, 2 adaptive): the tier's year must have come and the cost be paid; the split is kept */
+  upgradeSignal(tier: 1 | 2) {
+    const n = this.selectedLightsNode(); if (!n || (n.sig ?? 1) >= tier) return;
+    const name = tier === 1 ? 'Actuated' : 'Adaptive', cost = UPGRADE_COST[tier]!;
+    if (signalTierOpen(this.traffic.round.year) < tier) { this.toast(`${name} lights from ${SIGNAL_TIER_YEAR[tier]}`, 'warn'); return; }
+    if (cost > this.money) { this.toast(`Not enough money: ${name.toLowerCase()} lights cost $${cost.toLocaleString()}`, 'warn'); return; }
+    this.traffic.spend('construction', cost);
+    this.edit.setSignal(n, tier, n.split);
+    this.commitNetwork(); this.puff(n.x, n.y, 8);
+    this.toast(`${name} lights${tier === 1 ? ' (loop detectors)' : ''} installed for $${cost.toLocaleString()}`, 'good');
+  }
+  /** the calendar: the year against the one seen last frame; a signal tier's year coming in toasts once (the first frame only records the year) */
+  private yearCheck() {
+    const y = this.traffic.round.year, was = this.seenYear; this.seenYear = y;
+    // a jump of more than one year is a load (or a new valley), not a finished round: no toast
+    if (!was || y !== was + 1) return;
+    for (let i = 1; i < SIGNAL_TIER_YEAR.length; i++) if (was < SIGNAL_TIER_YEAR[i]! && y >= SIGNAL_TIER_YEAR[i]!) this.toast(`${SIGNAL_TIER_YEAR[i]}: ${SIGNAL_TOAST[i]} available: upgrade lights in the Junctions tool's Signals mode`, 'good');
   }
   private bulldozeAt(mx: number, my: number, first: boolean) {
     const t = this.tileAt(mx, my);
@@ -1044,6 +1088,7 @@ export class Game {
     this.keys.add(e.key);
     switch (e.key) {
       case 'Escape':
+        if (this.selectedLights) { this.selectedLights = null; this.emit(); }
         if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); break; }
         if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); break; }
         if (this.route.length) this.cancelRoute(); else { this.selected = null; this.emit(); } break;
@@ -1789,6 +1834,7 @@ export class Game {
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.parkDefs.length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
+    this.yearCheck();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();

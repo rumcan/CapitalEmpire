@@ -13,12 +13,19 @@ export interface Stuck { label: string; x: number; y: number; loss: number }
  *  the road and signal upkeep and loan interest paid while it ran, $, the tolls taken while it ran, $ (absent when none), the payout (signed, $: see config payout), the net (toll + payout - upkeep, $),
  *  the previous run's rate at the same stadium level (null: none), the top bottlenecks at kick-off, whether it was perfect (rate >= PERFECT_RATE), and each town's counts at kick-off (see TownResult) */
 export interface RoundResult { level: number; run: number; sent: number; arrived: number; rate: number; upkeep: number; toll?: number; payout: number; net: number; prevRate: number | null; stuck: Stuck[]; perfect: boolean; byTown: TownResult[] }
-/** the round as the UI sees it: its stage, level, runs, the build and surge left (s), the crowd by town (cars), the upkeep paid so far
- *  this round ($), the tolls taken so far this round ($), the last result, the surge's counts by town (while it runs or its result is in; null otherwise),
- *  the player level (xp), the cards taken (in order), and the draft open now (null: none) */
-export interface RoundView { stage: Stage; level: number; runs: number; buildLeft: number; surgeLeft: number; crowd: number[]; upkeep: number; toll: number; last: RoundResult | null; surge: SurgeView | null; xp: number; cards: CardId[]; draft: CardId[] | null }
-/** the round as saved (the view, without the surge: a save restores the surge only as far as the round goes) */
-export type RoundSave = Omit<RoundView, 'surge'>;
+/** the game's first year: run 0 is START_YEAR (the calendar; the year is derived from the runs, so nothing new is saved) */
+export const START_YEAR = 1985;
+/** the year each signal tier opens (index = the tier: 0 fixed-time, 1 actuated, 2 adaptive) */
+export const SIGNAL_TIER_YEAR = [1985, 1990, 2000];
+/** the best signal tier open in year: the last tier whose year has come (before the first: 0) */
+export function signalTierOpen(year: number): 0 | 1 | 2 { return Math.max(0, SIGNAL_TIER_YEAR.filter(y => year >= y).length - 1) as 0 | 1 | 2; }
+
+/** the round as the UI sees it: its stage, level, runs, the year (START_YEAR + runs), the build and surge left (s), the crowd by town (cars), the upkeep
+ *  paid so far this round ($), the tolls taken so far this round ($), the last result, the surge's counts by town (while it runs or its result is in;
+ *  null otherwise), the player level (xp), the cards taken (in order), and the draft open now (null: none) */
+export interface RoundView { stage: Stage; level: number; runs: number; year: number; buildLeft: number; surgeLeft: number; crowd: number[]; upkeep: number; toll: number; last: RoundResult | null; surge: SurgeView | null; xp: number; cards: CardId[]; draft: CardId[] | null }
+/** the round as saved (the view, without the surge and the year: a save restores the surge only as far as the round goes) */
+export type RoundSave = Omit<RoundView, 'surge' | 'year'>;
 
 /** the draft offered at kick-off: DRAFT distinct cards (fewer when the pool has fewer), drawn by a seeded stream (SURGE_SEED + 1000 * xp + runs)
  *  from the pool: every upgrade, and each unlock not yet taken; null when the pool is empty */
@@ -102,7 +109,7 @@ export class Round {
   }
   /** the round as the UI and the save see it */
   view(): RoundView {
-    return { stage: this.stage, level: this.level, runs: this.runs, buildLeft: this.buildLeft, surgeLeft: this.surgeLeft, crowd: this.crowd, upkeep: this.upkeep, toll: this.toll, last: this.last, surge: null, xp: this.xp, cards: this.cards, draft: this.draft };
+    return { stage: this.stage, level: this.level, runs: this.runs, year: START_YEAR + this.runs, buildLeft: this.buildLeft, surgeLeft: this.surgeLeft, crowd: this.crowd, upkeep: this.upkeep, toll: this.toll, last: this.last, surge: null, xp: this.xp, cards: this.cards, draft: this.draft };
   }
   /** a round from a save: a build or surge saved mid-way restores as free (its crowd and upkeep dropped), keeping the level, the runs, the cards, the xp
    *  and the last result; an eval or a free round keeps its crowd, upkeep and draft too; no save: a fresh round (old saves: xp 1, no cards, no draft) */

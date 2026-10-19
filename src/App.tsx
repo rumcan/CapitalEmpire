@@ -1,8 +1,10 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS } from './game/engine';
+import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
-import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST } from './game/network';
+import { CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, type Node } from './game/network';
+import { SIGNAL_TIER_YEAR } from './game/event/round';
+import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { shortName } from './game/ext/names';
@@ -336,7 +338,7 @@ function RoundPanel({ game }: { game: Game }) {
         {r.stage === 'free' && (
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-slate-100">Run {r.runs + 1}</span>
+              <span className="text-sm font-semibold text-slate-100">{r.year} · Run {r.runs + 1}</span>
               <div className="flex gap-1">{goBtn}<button className="chip chip-on" onClick={() => game.startRound()}>Start the event</button></div>
             </div>
             {last && <p className="text-xs text-slate-300">Last run: {last.arrived}/{last.sent * PARTY} fans arrived ({Math.round(last.rate * 100)}%)</p>}
@@ -694,16 +696,16 @@ function BusPanel({ game }: { game: Game }) {
 }
 
 function JunctionPanel({ game }: { game: Game }) {
-  const n = game.hoverNode, mode = game.junctionMode;
+  const n = game.hoverNode, mode = game.junctionMode, lit = !!n && (n.type === 'signal' || n.type === 'slip');
   const flags = n ? [n.wide ? 'widened turns' : '', n.tl ? 'turn lanes' : ''].filter(Boolean).join(', ') : '';
   return (
     <Panel title="Junctions">
-      <div className="flex items-center gap-1 text-xs">
-        {([['type', 'Type'], ['wide', 'Widen turns'], ['tl', 'Turn lanes'], ['slips', 'Slipways']] as const).map(([m, label]) => (
+      <div className="flex flex-wrap items-center gap-1 text-xs">
+        {([['type', 'Type'], ['wide', 'Widen turns'], ['tl', 'Turn lanes'], ['slips', 'Slipways'], ['signals', 'Signals']] as const).map(([m, label]) => (
           <button key={m} className={`chip ${mode === m ? 'chip-on' : ''}`} onClick={() => { game.junctionMode = m; game.emit(); }}>{label}</button>
         ))}
       </div>
-      {mode === 'type' ? (
+      {mode === 'signals' ? <SignalsPanel game={game} /> : mode === 'type' ? (
         <>
           <p className="mt-2 text-xs text-slate-300">Pick a type, then click a junction. Lights add stop lines and signals on every corner; slipways add channelised turn lanes with islands (needs long approaches); roundabouts get a planted island. Tab flips the junction under the pointer through the types (Shift+Tab back).</p>
           <div className="mt-2 grid grid-cols-1 gap-1">
@@ -733,8 +735,57 @@ function JunctionPanel({ game }: { game: Game }) {
           ? `Widen turns (${money(FLAG_COST.wide)}): the corners at this junction take up to twice the speed. Click a junction or bend to turn it on; click again to remove it.`
           : `Turn lanes (${money(FLAG_COST.tl)}, two-lane roads): the leftmost lane takes left turns only; the others go straight on or right. Click a junction of three or more roads to turn it on; click again to remove it.`}</p>
       )}
-      <p className="mt-2 text-[11px] text-slate-500">{n ? `${game.junctionName(n) ? `${game.junctionName(n)} · ` : ''}Junction of ${n.arms.length} roads (${n.type === 'roundabout' ? `roundabout, ${n.rl ?? 1} ring lane${(n.rl ?? 1) > 1 ? 's' : ''}` : JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()})${flags ? `, with ${flags}` : ''} — click to ${mode === 'type' ? 'convert' : 'toggle'}` : 'Hover a junction to highlight it.'}</p>
+      <p className="mt-2 text-[11px] text-slate-500">{n ? `${game.junctionName(n) ? `${game.junctionName(n)} · ` : ''}Junction of ${n.arms.length} roads (${n.type === 'roundabout' ? `roundabout, ${n.rl ?? 1} ring lane${(n.rl ?? 1) > 1 ? 's' : ''}` : JUNCTIONS.find(j => j.id === n.type)?.name.toLowerCase()}${lit ? `, ${TIER_WORD[n.sig ?? 1]}` : ''})${flags ? `, with ${flags}` : ''} — click to ${mode === 'type' ? 'convert' : mode === 'signals' ? (lit ? 'select' : 'deselect') : 'toggle'}` : 'Hover a junction to highlight it.'}</p>
     </Panel>
+  );
+}
+
+/** the lights' tier names (the Signals panel's title) and the words the hover line gives them (index = tier) */
+const TIER_LABEL = ['Fixed-time lights', 'Actuated lights', 'Adaptive lights'], TIER_WORD = ['fixed-time', 'actuated', 'adaptive'];
+/** the compass points (E first, counter-clockwise: north is up the map, so y grows south), and the same eight from north (for phase labels) */
+const COMPASS = ['E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE'], NORTH_FIRST = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+/** a signal phase's label: the compass names of the arms it serves, e.g. N–S */
+function phaseLabel(n: Node, armPhase: number[], k: number): string {
+  const names = new Set<string>();
+  n.arms.forEach((a, i) => { if (armPhase[i] === k) names.add(COMPASS[(Math.round(Math.atan2(-a.dir.y, a.dir.x) / (Math.PI / 4)) + 8) % 8]!); });
+  return [...names].sort((a, b) => NORTH_FIRST.indexOf(a) - NORTH_FIRST.indexOf(b)).join('–') || `Phase ${k + 1}`;
+}
+/** the Signals mode's panel: the selected lights (see SignalsDetail), or a hint to pick some */
+function SignalsPanel({ game }: { game: Game }) {
+  const n = game.selectedLightsNode();
+  if (!n) return <p className="mt-2 text-xs text-slate-300">Click a junction with traffic lights (or lights with slipways) to see and set its signals. Esc clears.</p>;
+  return <SignalsDetail key={`${n.x},${n.y}`} game={game} n={n} />;
+}
+/** the selected lights: the tier, the fixed-time green split (a slider per phase, committed on release, with the cycle length) and the upgrades (paid, by year) */
+function SignalsDetail({ game, n }: { game: Game; n: Node }) {
+  const tier = n.sig ?? 1, year = game.traffic.round.year, plan = game.lanes.signals.get(n);
+  const [draft, setDraft] = useState<number[] | null>(null);
+  const greens = draft ?? plan?.greens ?? [], cycle = greens.reduce((s, g) => s + g, 0) + 5 * greens.length;
+  /** the slider's release: the split is set (the lights become fixed-time) and the network commits, once */
+  const release = () => { if (draft && plan && draft.some((g, k) => g !== plan.greens[k])) game.setSplit(n, draft); setDraft(null); };
+  const up = (t: 1 | 2, label: string) => {
+    const ok = year >= SIGNAL_TIER_YEAR[t]!;
+    return <button className={`chip ${ok ? 'chip-on' : ''}`} disabled={!ok} onClick={() => game.upgradeSignal(t)}>{ok ? `Upgrade to ${label} (${money(UPGRADE_COST[t]!)})` : `${label[0]!.toUpperCase()}${label.slice(1)} lights from ${SIGNAL_TIER_YEAR[t]}`}</button>;
+  };
+  return (
+    <div className="mt-2 space-y-2 text-xs">
+      <div className="flex items-baseline justify-between gap-2"><span className="font-semibold text-slate-100">{TIER_LABEL[tier]}</span>{tier === 0 && plan && <span className="text-slate-400">cycle {cycle} s</span>}</div>
+      {tier === 0 && plan && (
+        <div className="space-y-1">
+          {greens.map((g, k) => (
+            <label key={k} className="flex items-center gap-2">
+              <span className="w-16 shrink-0 text-slate-300">{phaseLabel(n, plan.armPhase, k)}</span>
+              <input type="range" min={MIN_GREEN} max={GREEN_CAP} step={1} value={g} className="flex-1" onChange={e => { const d = [...greens]; d[k] = +e.target.value; setDraft(d); }} onPointerUp={release} onKeyUp={release} />
+              <span className="w-10 text-right tabular-nums text-slate-200">{g} s</span>
+            </label>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-wrap gap-1">
+        {tier < 1 && up(1, 'actuated')}
+        {tier < 2 && up(2, 'adaptive')}
+      </div>
+    </div>
   );
 }
 
@@ -801,6 +852,7 @@ function hintFor(g: Game) {
   switch (g.tool) {
     case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start`;
     case 'junction': if (g.junctionMode === 'slips') return g.hoverNode ? 'Click a corner of a junction with lights to add or remove its slipway' : 'Hover a junction with lights (three or more roads) to pick its corner';
+      if (g.junctionMode === 'signals') return g.hoverNode && (g.hoverNode.type === 'signal' || g.hoverNode.type === 'slip') ? 'Click to set the signals of these lights (Esc clears)' : 'Hover a junction with traffic lights to set its signals';
       if (g.junctionMode !== 'type') return g.hoverNode ? `Click to ${g.junctionMode === 'wide' ? 'widen the turns here' : 'toggle the turn lanes here'}` : 'Hover a junction or bend';
       return g.hoverNode ? `Click to install ${JUNCTIONS.find(j => j.id === g.junctionType)!.name.toLowerCase()} here · Tab flips the type` : 'Hover a junction (three or more roads; roundabouts also work on bends) · Tab flips the type';
     case 'lane': { const h = g.laneHover; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way';
@@ -826,6 +878,7 @@ function Help({ onClose }: { onClose: () => void }) {
           <li>Bends can be 90° or 45° (Q toggles); hold Shift to draw one straight run in any of the eight directions. Crossing an existing road makes a junction; to widen a road, use the Add lane tool.</li>
           <li><b>Junctions</b> can become traffic lights (signals on every corner, stop lines), lights with slipways (channelised turn lanes and islands — needs long straight approaches) or roundabouts with a planted island. Roundabouts also work on a bend. Tab flips the junction under the pointer through the types (roundabouts with 1, 2 or 3 ring lanes; Shift+Tab goes back).</li>
           <li>The town pays property tax (more on better roads, less where traffic jams) and business takings for every customer who arrives on time; roads and signals cost upkeep. Click the treasury for the books and loans; five days in the red and you are bankrupt. Everything autosaves in this browser.</li>
+          <li><b>Signals</b> (Junctions tool, Signals mode): new lights take the best tier open in the year (fixed-time; actuated loop detectors from 1990, adaptive from 2000, paid upgrades). Click lit junctions to set each phase's green time or upgrade; the year shows beside the event's run.</li>
           <li><b>Career</b>: milestones at 250, 1,000, 2,500, 4,000 and 6,000 residents unlock road classes, junctions and tunnels and pay grants; 6,000 wins. Bankruptcy loses.</li>
           <li>Camera: drag with the right mouse button or the Select tool, scroll to zoom (max = the builder's 30%), WASD / arrows to pan, G for the grid.</li>
           <li>Space pauses (tap it; hold it and drag to pan); , and . change the speed; H skips to the next rush hour.</li>
