@@ -14,12 +14,14 @@ import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
 import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, STADIUM_COST, STADIUM_H, STADIUM_W, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
 import type { SurgeView } from './game/event/surge';
+import { PaintPanel } from './PaintPanel';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
   { id: 'road', label: 'Roads', key: 'R', icon: '🛣️' },
   { id: 'junction', label: 'Junctions', key: 'J', icon: '🚦' },
   { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
+  { id: 'paint', label: 'Paint', key: 'C', icon: '🖌️' },
   { id: 'park', label: 'Car park', key: 'P', icon: '🅿️' },
   { id: 'toll', label: 'Toll gate', key: 'T', icon: '🛂' },
   { id: 'bus', label: 'Bus route', key: 'U', icon: '🚌' },
@@ -164,6 +166,7 @@ export default function App() {
                   <p className="text-xs text-slate-300">Click an object to remove it (half its price is refunded). Click or drag along a road to tear it up piece by piece — the ends become cul-de-sacs and curbs, corners, crossings and markings redraw themselves instantly.</p>
                 </Panel>
               )}
+              {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
@@ -1010,6 +1013,7 @@ function hintFor(g: Game) {
     case 'lane': { const h = g.laneHover, rev = ' · Right-click a one-way road to reverse it'; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way' + rev;
       return (h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`) + rev; }
     case 'bulldoze': return 'Click objects or roads to remove them';
+    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
