@@ -187,3 +187,16 @@ test('a short last piece of arterial before a 2-lane ring: a car starting in the
   assert.equal(entries.length, 1, `ring entries: ${entries.join(', ')}`);
   assert.ok(!entries[0]!.endsWith(':1'), `entered the outer ring lane (${entries[0]})`);
 });
+
+test('the bulldozer near a 3-lane ring takes the arm on to the ring node (no stub left inside the ring); further out, a short piece', () => {
+  const { e, n } = roundabout('arterial', 3), at = (y: number) => e.net.pieceNear({ x: C, y: C - y })!;
+  // just outside the circle (rb 15): the piece runs to the node
+  const p = at(19), ends = [p.p0, p.p1].map(q => Math.round(Math.hypot(q.x - C, q.y - C)));
+  assert.ok(ends.includes(0), `the piece reaches the node: ends at ${ends.join(', ')} tiles from it`);
+  e.net.removePiece(p);
+  const m = e.net.nodeAt({ x: C, y: C })!;
+  assert.equal(m.arms.length, 3, 'the ring keeps its other three arms');
+  // far out: a short piece, not reaching the ring
+  const f = at(60), fe = [f.p0, f.p1].map(q => Math.hypot(q.x - C, q.y - C));
+  assert.ok(Math.min(...fe) > n.rb + 10, `a far piece stays out of the ring (${fe.map(v => v.toFixed(0)).join(', ')})`);
+});

@@ -3,7 +3,7 @@ import { ATLAS_PAGES, LIBRARY } from './library';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, ringRadius, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
-import { MIN_SEP, checkLegs, replaceCuts, snapPoint, type Snap } from './snap';
+import { MIN_SEP, checkLegs, replaceCuts, ringStubs, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
@@ -572,10 +572,14 @@ export class Game {
     if (!legs.length) return '';
     // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
     const c0 = this.cursorSnap(), last = this.route[this.route.length - 1], cs = c0 && last ? this.aim(last, c0) : c0, onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
-    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, this.replaceMode ? new Set(this.routeCuts(legs).map(c => c.seg)) : undefined);
+    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, new Set(this.routeCuts(legs).map(c => c.seg)));
   }
-  /** the road pieces the route bulldozes with Replace on (none otherwise): see replaceCuts */
-  private routeCuts(legs: Leg[]): PieceSel[] { return this.replaceMode && legs.length ? replaceCuts(this.net, legs, this.cls) : []; }
+  /** the road pieces the route bulldozes: with Replace on, those it clashes with (see replaceCuts); always, the hidden stubs inside a ring it joins (see ringStubs) */
+  private routeCuts(legs: Leg[]): PieceSel[] {
+    if (!legs.length) return [];
+    const stubs = ringStubs(this.net, legs), cuts = this.replaceMode ? replaceCuts(this.net, legs, this.cls) : [];
+    return [...stubs, ...cuts.filter(c => !stubs.some(x => x.seg === c.seg))];
+  }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
     const dx = p.x - from.x, dy = p.y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
@@ -647,7 +651,7 @@ export class Game {
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
-    const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, this.replaceMode ? new Set(this.routeCuts(all).map(c => c.seg)) : undefined) : '';
+    const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, new Set(this.routeCuts(all).map(c => c.seg))) : '';
     if (why) { this.toast(why, 'warn'); return; }
     for (const l of add) this.route.push(l.b);
     this.routeLast = s; this.emit();
@@ -735,7 +739,7 @@ export class Game {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
-    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, this.replaceMode ? new Set(cuts.map(c => c.seg)) : undefined);
+    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, new Set(cuts.map(c => c.seg)));
     if (block) { this.toast(block, 'warn'); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);

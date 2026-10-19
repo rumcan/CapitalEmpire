@@ -511,6 +511,10 @@ export class RoadNetwork {
       // long enough that the two new dead ends (with their turning circles) do not touch
       const half = Math.max(1.5, s.cls.h + s.cls.bulb + 1);
       let s0 = Math.max(0, t - half), s1 = Math.min(L, t + half); if (s0 < 2) s0 = 0; if (L - s1 < 2) s1 = L;
+      // a piece reaching into a roundabout's circle (its walk, and room for the new dead end) takes the arm on to the ring's node: a stub
+      // left inside the ring ran its lanes on to the island, and each click broke off one more piece (the owner, 2026-10-19)
+      const ring = (n: Node) => (n.rb > 0 ? n.rb + Math.max(0, ...n.arms.map(a => a.walk)) + half : 0);
+      if (s0 < ring(s.a)) s0 = 0; if (L - s1 < ring(s.b)) s1 = L;
       bd = dist; best = { seg: s, p0: add(s.a, mul(u, s0)), p1: add(s.a, mul(u, s1)) };
     }
     return best;

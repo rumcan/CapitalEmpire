@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg, type PieceSel } from '../src/game/network';
-import { checkLegs, replaceCuts, snapPoint, MIN_SEP, MIN_ANGLE } from '../src/game/snap';
+import { checkLegs, replaceCuts, ringStubs, snapPoint, MIN_SEP, MIN_ANGLE } from '../src/game/snap';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
@@ -192,4 +192,16 @@ test('Replace: an arterial over a ring arm into the ring centre cuts that arm on
   const cuts = replaceCuts(n, [leg(150, 50, 150, 100)], CLASS.arterial);
   assert.equal(cuts.length, 1, cuts.map(x => `${x.seg.a.x},${x.seg.a.y}-${x.seg.b.x},${x.seg.b.y}`).join(' '));
   assert.ok([cuts[0]!.seg.a, cuts[0]!.seg.b].some(p => p.y === 50) && [cuts[0]!.seg.a, cuts[0]!.seg.b].includes(c));
+});
+
+test('a hidden stub inside a ring (an arm bulldozed down to a dead end under its paving) is cleared by a route that joins the ring', () => {
+  const { n, c } = ringNet();
+  // the N arm cut back to a 6-tile dead end inside the circle
+  const north = c.segs.find(s => (s.a === c ? s.b : s.a).y === 50)!;
+  n.removePiece({ seg: north, p0: { x: 150, y: 50 }, p1: { x: 150, y: 94 } });
+  const r = [leg(150, 100, 150, 40)];
+  assert.equal(checkLegs(n, r, null, null, CLASS.street), 'A road is already there: bulldoze it first');
+  const stubs = ringStubs(n, r);
+  assert.equal(stubs.length, 1);
+  assert.equal(checkLegs(n, r, null, null, CLASS.street, new Set(stubs.map(x => x.seg))), '');
 });

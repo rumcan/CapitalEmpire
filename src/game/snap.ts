@@ -229,3 +229,16 @@ export function replaceCuts(net: RoadNetwork, legs: Leg[], cls: RoadClass): Piec
   }
   return out;
 }
+
+/** the hidden stubs a route clears at a roundabout it starts or ends on: an arm of the ring's node that ends in a dead end inside the ring's
+ *  circle (left there by bulldozing it piece by piece; under the ring's paving it is not seen, but the road tool still found a road there:
+ *  the owner, 2026-10-19). Each is taken whole, Replace on or off */
+export function ringStubs(net: RoadNetwork, legs: Leg[]): PieceSel[] {
+  const out: PieceSel[] = [];
+  if (!legs.length) return out;
+  for (const e of [legs[0]!.a, legs[legs.length - 1]!.b]) {
+    const n = net.nodeAt(e); if (!n || ringReach(n) <= 0) continue;
+    for (const s of n.segs) { const m = s.a === n ? s.b : s.a; if (m.segs.length === 1 && dist(m, n) <= ringReach(n) + EPS && !out.some(c => c.seg === s)) out.push({ seg: s, p0: s.a, p1: s.b }); }
+  }
+  return out;
+}
