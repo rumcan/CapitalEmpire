@@ -51,6 +51,10 @@ export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number
   { id: 'roundabout', name: 'Roundabout', desc: 'Circle with a planted island', cost: 8000, minDeg: 2 },
 ];
 export const R_SLIP = 12, SLIP_LANE = 2.2, RB_LANE = 2.5;
+/** a wide node's corners (n.wide, not a slip corner) are this many times the class's corner radius */
+const WIDE_CORNER = 2.2;
+/** a painted turn arrow's length (tiles) and its width factor on the unit shape (arrowPts) */
+const ARROW_LEN = 2.4, ARROW_W = 1.3;
 /** a roundabout's outer edge radius for 1, 2 or 3 ring lanes, tiles (14, 22 and 30 m); the widest arm can make it bigger */
 export const RB_BASE: Record<1 | 2 | 3, number> = { 1: 7, 2: 11, 3: 15 };
 /** the junction flags the junction tool sells: widened turns, and turn lanes (2-lane roads) */
@@ -220,6 +224,15 @@ function segIntersections(P: Pt, Q: Pt, A: Pt, B: Pt): [number, number][] {
   if (tA > eps && tA < 1 - eps) out.push([tA, 0]); if (tB > eps && tB < 1 - eps) out.push([tB, 1]);
   if (uP > eps && uP < 1 - eps) out.push([0, uP]); if (uQ > eps && uQ < 1 - eps) out.push([1, uQ]);
   return out;
+}
+/** a turn arrow's outline on an approach, world points: its tip t tiles from the junction centre along arm a, in the lane at lat
+ *  (tiles, to the arm's right); kind S (straight, 1 tile long, 0.35 wide), L (a left turn) or R (a right turn, the L mirrored) */
+function arrowPts(N: Pt, a: Arm, t: number, lat: number, kind: 'S' | 'L' | 'R'): Pt[] {
+  const rn = { x: a.dir.y, y: -a.dir.x }, sg = kind === 'R' ? -1 : 1;
+  const shape: [number, number][] = kind === 'S' ? [[0.5, 0], [0.15, 0.175], [0.15, 0.07], [-0.5, 0.07], [-0.5, -0.07], [0.15, -0.07], [0.15, -0.175]]
+    : [[-0.5, -0.07], [0.27, -0.07], [0.27, 0.45], [0.375, 0.45], [0.2, 0.75], [0.025, 0.45], [0.13, 0.45], [0.13, 0.07], [-0.5, 0.07]];
+  // drawn at road size: ARROW_LEN tiles long (~5 m, as painted turn arrows are), ARROW_W times the unit shape's width (the turn head stays in its lane)
+  return shape.map(([x, y]) => add(add(N, mul(a.dir, t + ARROW_LEN * (0.5 - x))), mul(rn, lat - sg * y * ARROW_W)));
 }
 function cornerPatch(N: Pt, a: Pt, hA: number, b: Pt, hB: number, phi: number, R: number) {
   const nA = perp(a), nB = perp(b);
@@ -660,6 +673,7 @@ export class RoadNetwork {
         const tan = Math.tan(phi / 2), minLen = Math.min(A.len, B.len);
         const slip = slipOn(n, A, B);
         let R = slip ? R_SLIP : Math.min(A.cls.rConcave, B.cls.rConcave);
+        if (n.wide && !slip) R *= WIDE_CORNER;
         R = Math.min(R, 0.45 * minLen * tan); if (R < 0.15) continue;
         const wide = A.cls.order >= B.cls.order ? A : B;
         const cp = cornerPatch(N, A.dir, A.h, B.dir, B.h, phi, R); if (!cp) continue;
@@ -711,6 +725,17 @@ export class RoadNetwork {
         const lane = (m + a.h) / 2, start = a.stop >= 0 ? a.stop + 0.5 : a.xw >= 0 ? a.xw + 1.6 : a.reachEdge + 0.4;
         tyres.push({ x: n.x, y: n.y, ang: a.ang, start, lat: [lane - 0.55, lane + 0.55], len: 4.5 });
         bb = unionBox(bb, bboxOf([add(N, mul(a.dir, start + 4.5))], a.h + 1));
+      }
+    }
+    // turn arrows (n.tl, 3+ arms; the lane graph's rule: lane 0 turns left, the other lanes go straight and the last one right too),
+    // on each approach with 2+ lanes, 3 m before its stop line (or its corner); white bars, so the wear mask chips them too
+    if (n.tl && k >= 3 && !n.rb) for (const a of arms) {
+      const nl = a.cls.laneCentres.length, t = (a.stop >= 0 ? a.stop + 0.35 : a.reachEdge + a.cls.rConcave + 0.3) + 1.5;
+      if (nl < 2 || t + 1.5 > a.len) continue;
+      for (let j = 0; j < nl; j++) {
+        const c = a.cls.laneCentres[j], put = (kind: 'S' | 'L' | 'R', lat: number) => { const q = arrowPts(N, a, t, lat, kind); bars.push({ path: polyPath(q), bbox: bboxOf(q, 0.3) }); };
+        if (j === 0) put('L', c);
+        else { put('S', c - 0.35); if (j === nl - 1) put('R', c + 0.2); }
       }
     }
     if (this.paintData && (k === 1 || n.rb)) fx.lazy = () => { const l = emptyLitter(); this.nodeLitter(n, l); return l; };

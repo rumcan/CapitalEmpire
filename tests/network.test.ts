@@ -1,7 +1,7 @@
 // Headless network tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, KEY_CLASSES, RoadNetwork, WIDER, armDeg, slipIn, type ClassId, type Leg, type Node, type Route, type Seg } from '../src/game/network';
+import { CLASS, KEY_CLASSES, RoadNetwork, WIDER, armDeg, slipIn, type ClassId, type Fx, type Leg, type Node, type Route, type Seg } from '../src/game/network';
 import { NetEditor, applyNodeEntry, applyOps, netToOps, nodeEntry, straightChain } from '../src/game/netops';
 import { CTL, LaneGraph, type Movement } from '../src/game/sim/lanes';
 import { rle, unrle } from '../src/game/save';
@@ -223,4 +223,32 @@ test('slipways: off corners ride in the save entry as a 5th element, load back w
   const h = new RoadNetwork(); applyOps(h, netToOps(e.net));
   assert.deepEqual(h.nodeAt({ x: 50, y: 50 })!.slipOff, [degs[0]!]);
   assert.deepEqual(laneSnap(h), laneSnap(e.net));
+});
+
+test('turn arrows: a 4-arm arterial crossing with turn lanes paints 3 arrows (left, straight, right) on each of its 4 approaches, and none without', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 100, 50)], CLASS.arterial, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.arterial, 0); e.commit();
+  const n = e.net.nodeAt({ x: 50, y: 50 })!;
+  const bars = () => (e.net as unknown as { nodeFx: Map<Node, Fx> }).nodeFx.get(n)!.bars;
+  assert.equal(bars().length, 0);
+  e.setNodeFlags(n, false, true); e.commit();
+  assert.equal(bars().length, 12);
+  // each arrow belongs to the arm its bbox centre lies furthest out along
+  const along = (b: { bbox: number[] }, a: { dir: { x: number; y: number } }) => ((b.bbox[0] + b.bbox[2]) / 2 - n.x) * a.dir.x + ((b.bbox[1] + b.bbox[3]) / 2 - n.y) * a.dir.y;
+  const owner = (b: { bbox: number[] }) => n.arms.reduce((p, q) => (along(b, q) > along(b, p) ? q : p));
+  for (const a of n.arms) assert.equal(bars().filter(b => owner(b) === a && along(b, a) > 3).length, 3);
+});
+
+test('wide corners: a wide node rounds its corners at 2.2 times the class radius (the kerb arc follows), and a plain node keeps its own', () => {
+  const corner = (wide: boolean) => {
+    const e = new NetEditor(new RoadNetwork());
+    e.addLegs([leg(0, 50, 100, 50)], CLASS.arterial, 0); e.addLegs([leg(50, 0, 50, 100)], CLASS.arterial, 0); e.commit();
+    const n = e.net.nodeAt({ x: 50, y: 50 })!;
+    e.setNodeFlags(n, wide, false); e.commit();
+    const arcs = (e.net as unknown as { nodeFx: Map<Node, Fx> }).nodeFx.get(n)!.slabRuns.flatMap(s => (s.kind === 'arc' ? [s.r1] : []));
+    return Math.max(...arcs);
+  };
+  const plain = corner(false), wide = corner(true);
+  assert.ok(Math.abs((plain - 0.02) - CLASS.arterial.rConcave) < 1e-9);
+  assert.ok(Math.abs((wide - 0.02) / (plain - 0.02) - 2.2) < 1e-9);
 });
