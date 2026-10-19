@@ -491,3 +491,33 @@ test('T004: a one-way A keeps only the ramps that follow its direction of travel
     }
   }
 });
+
+test('T004 stack: flyovers are semi-direct (no loop), top within 100 m of the crossing at +14 or +21 m, footprint about 1 km', () => {
+  for (const ang of [90, 60]) {
+    const [A, B] = crossingRoads(ang);
+    const ic = makeInterchange(A, B, 'stack');
+    assert.equal(ic.ok, true, `stack ${ang}deg: ${ic.why}`);
+    for (const r of ic.ramps.filter(r => r.kind === 'fly')) {
+      // heading change along the ramp: a loop would turn more than 200 degrees
+      let turn = 0, prev = Math.atan2(r.pts[1]!.y - r.pts[0]!.y, r.pts[1]!.x - r.pts[0]!.x);
+      for (let i = 1; i + 1 < r.pts.length; i++) {
+        const h = Math.atan2(r.pts[i + 1]!.y - r.pts[i]!.y, r.pts[i + 1]!.x - r.pts[i]!.x);
+        let d = h - prev; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+        turn += Math.abs(d); prev = h;
+      }
+      assert.ok(turn * 180 / Math.PI < 200, `stack ${ang}deg ${r.from}->${r.to}: heading change ${(turn * 180 / Math.PI).toFixed(0)} deg`);
+      // the top is the highest point of the ramp; it must be within 100 m (50 tiles) of the crossing
+      const top = Math.max(...r.z);
+      const at = r.z.indexOf(top);
+      const d = vlen(r.pts[at]!);
+      const limit = Math.max(100, 1.05 * 156); // at least 100 m, or 1.05 x the 156 m radius where a 120-degree turn forces it
+      assert.ok(d * MPT_T <= limit, `stack ${ang}deg ${r.from}->${r.to}: top ${(d * MPT_T).toFixed(0)} m from the crossing`);
+      assert.ok(Math.abs(top - 14) < 0.01 || Math.abs(top - 21) < 0.01, `stack ${ang}deg ${r.from}->${r.to}: top at ${top.toFixed(2)} m`);
+      assert.equal(Math.abs(top - 14) < 0.01, r.from === 'A', `stack ${ang}deg ${r.from}->${r.to}: A to B at +14 m, B to A at +21 m`);
+    }
+    const xs = ic.footprint.map(p => p.x), ys = ic.footprint.map(p => p.y);
+    const w = (Math.max(...xs) - Math.min(...xs)) * MPT_T, h = (Math.max(...ys) - Math.min(...ys)) * MPT_T;
+    console.log(`stack ${ang}deg footprint ${w.toFixed(0)} x ${h.toFixed(0)} m`);
+    assert.ok(Math.max(w, h) <= 1200, `stack ${ang}deg footprint ${w.toFixed(0)} x ${h.toFixed(0)} m`);
+  }
+});

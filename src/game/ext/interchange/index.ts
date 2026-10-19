@@ -26,7 +26,7 @@ const CLEAR_M = 7; // 5.5 m clearance + 1.5 m deck between levels that cross
 const BLEND = 0.25; // share of each ramp's rise that is a parabolic blend at each end
 const MAX_GRADE = 0.06;
 const STEP_T = 4; // sample spacing, tiles (8 m)
-const ARMS = [0.4, 0.55, 0.7, 0.85, 1.0, 1.2, 1.5, 1.9]; // Bezier arm lengths as a fraction of each chord
+const ARMS = [0.25, 0.3, 0.35, 0.4, 0.55, 0.7, 0.85, 1.0, 1.2, 1.5, 1.9]; // Bezier arm lengths as a fraction of each chord
 const ANG_MIN = 25; // degrees, below this the crossing is too acute for the generator
 
 // ── vec helpers ──
@@ -143,7 +143,7 @@ function heights(pts: Pt[], keys: { i: number; z: number }[]): number[] {
 }
 
 // ── ramps from anchors ──
-interface Anc { p: Pt; t: Pt; z?: number; arm?: number }
+interface Anc { p: Pt; t: Pt; z?: number; arm?: number; armOut?: number }
 /** Joins anchors with Beziers that keep each tangent; returns sampled points and heights, or the reason it failed.
  *  Anchors with a fixed circle arm keep it; the others search arm lengths at each end. */
 function ramp(anc: Anc[], rMin: number, valid: (pts: Pt[], z: number[]) => boolean): { pts: Pt[]; z: number[] } | string {
@@ -154,7 +154,7 @@ function ramp(anc: Anc[], rMin: number, valid: (pts: Pt[], z: number[]) => boole
     for (let i = 0; i + 1 < n; i++) {
       const a = anc[i]!, b = anc[i + 1]!, ch = vlen(sub(b.p, a.p));
       const fixed = a.arm !== undefined && b.arm !== undefined;
-      const arm0 = fixed ? a.arm! : Math.max(i === 0 ? Math.min(TAPER_T, 0.6 * ch) : 0, k0 * ch);
+      const arm0 = fixed ? (a.armOut ?? a.arm!) : Math.max(i === 0 ? Math.min(TAPER_T, 0.6 * ch) : 0, k0 * ch);
       const arm1 = fixed ? b.arm! : Math.max(i + 2 === n ? Math.min(TAPER_T, 0.6 * ch) : 0, k1 * ch);
       bezier(a.p, add(a.p, mul(a.t, arm0)), sub(b.p, mul(b.t, arm1)), b.p, pts);
       idx.push(pts.length - 1);
@@ -289,6 +289,53 @@ function directSpec(F: Frame, sa: 1 | -1, sb: 1 | -1, r: number, from: 'A' | 'B'
   return { from, to: from === 'A' ? 'B' : 'A', kind: 'direct', turn, anc };
 }
 
+const R_SEMI = 78; // stack flyover turn radius, tiles (156 m)
+const H_SEMI_A = 12; // stack flyovers from A run this far (tiles) beside A, on its right
+const H_SEMI_B = 24; // stack flyovers from B run this far beside B, on its right (kept apart from the A ones)
+const LEG = 130; // run along the from road before the turn (an S-bend of 12-24 tiles needs about 100 tiles for 150 m)
+/** Semi-direct stack flyover: leaves `from` on its right, runs beside it, turns left through the crossing angle
+ *  over the crossing, and joins the other road on its far (left) side. The turn is an arc of radius R_SEMI tangent
+ *  to the leg beside the from road and to the far road's offset line, so its top is about 0.3 R from the centre.
+ *  No loop: the heading changes by the crossing angle (90 degrees at a right-angle crossing). */
+function semiFly(F: Frame, from: 'A' | 'B', s: 1 | -1, top: number): Spec {
+  const to: 'A' | 'B' = from === 'A' ? 'B' : 'A';
+  const R = R_SEMI, h = from === 'A' ? H_SEMI_A : H_SEMI_B;
+  const U = mul(from === 'A' ? F.ua : F.ub, s); // traffic direction on the from road
+  const V = unitV({ x: -U.y, y: U.x }); // left of U
+  const dirTo = from === 'A' ? F.ub : F.ua;
+  const sTo: 1 | -1 = dot(dirTo, V) >= 0 ? 1 : -1;
+  const W = mul(dirTo, sTo); // far road, leaving the crossing on the left
+  const N = unitV({ x: -W.y, y: W.x }); // left of W: the flyover approaches the far road from this side
+  // centre C: R from the leg line (offset -h from the from road) and R + h from the far road
+  const a1 = dot(V, V), b1 = dot(V, N), a2 = dot(N, V), b2 = dot(N, N);
+  const r1 = R - h, r2 = R + h; // signed distances along V and N from O
+  const det = a1 * b2 - b1 * a2;
+  const Cu = (r1 * b2 - b1 * r2) / det, Cv = (a1 * r2 - a2 * r1) / det;
+  const C = add(F.O, add(mul(V, Cu), mul(N, Cv)));
+  const onArc = (phi: number): Pt => add(C, add(mul(U, R * Math.cos(phi)), mul(V, R * Math.sin(phi))));
+  const tanArc = (phi: number): Pt => unitV(add(mul(U, -Math.sin(phi)), mul(V, Math.cos(phi))));
+  const P1 = add(C, mul(V, -R)); // end of the leg beside the from road, start of the turn (heading U)
+  const Pe = add(C, mul(N, -R)); // end of the turn, heading W, beside the far road
+  const phiE = Math.atan2(dot(mul(N, -1), V), dot(mul(N, -1), U)); // angle of Pe seen from C
+  // the top is the point of the turn nearest the crossing (kept clear of its ends)
+  const psi = Math.atan2(dot(sub(F.O, C), V), dot(sub(F.O, C), U));
+  const phiM = Math.min(Math.max(psi, -Math.PI / 2 + 0.25 * (phiE + Math.PI / 2)), phiE - 0.25 * (phiE + Math.PI / 2));
+  const arcIn = (4 / 3) * Math.tan((phiM + Math.PI / 2) / 4) * R, arcOut = (4 / 3) * Math.tan((phiE - phiM) / 4) * R; // Bezier arms either side of the top
+  // the join: far enough along the far road that the descent after the top stays under 6%
+  const needT = ((4 / 3) * (top - (to === 'A' ? F.zA : F.zB)) / MAX_GRADE) / MPT; // tiles of path after the top
+  const D2 = Math.max(150, dot(sub(Pe, F.O), W) + Math.max(60, needT * 1.02 - R * (phiE - phiM)));
+  const S = onRoad(from, (dot(sub(P1, F.O), U) - LEG) * s), E = onRoad(to, D2 * sTo); // the start is on the road a leg before the turn
+  const zFrom = from === 'A' ? F.zA : F.zB, zTo = to === 'A' ? F.zA : F.zB;
+  return { from, to, kind: 'fly', turn: 'L', anc: [
+    { p: S, t: U, z: zFrom },
+    { p: P1, t: U, arm: arcIn },
+    { p: onArc(phiM), t: tanArc(phiM), arm: arcIn, armOut: arcOut, z: top },
+    { p: Pe, t: W, arm: arcOut },
+    { p: E, t: W, z: zTo },
+  ] };
+  function onRoad(road: 'A' | 'B', d: number): Pt { return road === 'A' ? F.ax(d) : F.bx(d); }
+}
+
 function specsFor(type: InterchangeType, F: Frame): Spec[] {
   const { ax, bt, ua, na, zA, zB } = F;
   const m = (v: Pt) => mul(v, -1);
@@ -310,8 +357,8 @@ function specsFor(type: InterchangeType, F: Frame): Spec[] {
     directSpec(F, -1, -1, R_CLOVER, 'B', 'R'), directSpec(F, 1, -1, R_CLOVER, 'B', 'R'),
   ];
   if (type === 'stack') return [
-    loopSpec(F, 1, 1, R_FLY, 'A', 'B', 'L', { i: 2, z: 21 }, 'fly'), loopSpec(F, -1, -1, R_FLY, 'A', 'B', 'L', { i: 2, z: 21 }, 'fly'),
-    loopSpec(F, -1, 1, R_FLY, 'B', 'A', 'L', { i: 1, z: 14 }, 'fly'), loopSpec(F, 1, -1, R_FLY, 'B', 'A', 'L', { i: 1, z: 14 }, 'fly'),
+    semiFly(F, 'A', 1, 14), semiFly(F, 'A', -1, 14),
+    semiFly(F, 'B', 1, 21), semiFly(F, 'B', -1, 21),
     directSpec(F, 1, 1, R_CLOVER, 'B', 'R'), directSpec(F, -1, 1, R_CLOVER, 'B', 'R'),
     directSpec(F, -1, -1, R_CLOVER, 'B', 'R'), directSpec(F, 1, -1, R_CLOVER, 'B', 'R'),
   ];
