@@ -2522,6 +2522,9 @@ export class Game {
     if (this.tool === 'road') {
       const legs = this.previewLegs(), cls = this.cls, cs = this.cursorSnap(), block = this.routeBlock(legs), bad = block !== '', cuts = this.routeCuts(legs);
       if (legs.length) {
+        // the pieces Replace will take up: amber and dashed, under the route (drawn red on top they made a buildable route look refused, the
+        // owner, 2026-10-19; red stays the colour of a refusal)
+        if (cuts.length) { this.setIso(ctx); ctx.beginPath(); for (const c of cuts) strip([{ a: c.p0, b: c.p1 }], c.seg.cls.h + c.seg.cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(251,191,36,0.22)'; ctx.fill(); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]); }
         this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = cls.walkTex === 'gravel' ? 'rgba(150,140,120,0.45)' : 'rgba(230,200,160,0.45)'; ctx.fill();
         this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h); ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2542,8 +2545,6 @@ export class Game {
           }
           ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.stroke();
         }
-        // the pieces Replace will bulldoze: outlined red, as the bulldozer's hover piece
-        if (cuts.length) { this.setIso(ctx); ctx.beginPath(); for (const c of cuts) strip([{ a: c.p0, b: c.p1 }], c.seg.cls.h + c.seg.cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke(); }
         const pts = [...this.route, legs[legs.length - 1].b];
         for (const p of pts) { const s = this.screen(p.x, p.y); ctx.fillStyle = '#ffd866'; ctx.beginPath(); ctx.arc(s.x, s.y, 4 * this.dpr, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#4a3200'; ctx.lineWidth = 1.5; ctx.stroke(); }
       } else if (cs) {
