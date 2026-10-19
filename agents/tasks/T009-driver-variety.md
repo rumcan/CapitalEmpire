@@ -1,6 +1,6 @@
 # T009 · Driver variety (driver styles and the ACC car-following model)
 
-Status: open
+Status: in review (#7)
 Module: `src/game/ext/drivers/` · Tests: `tests/ext-drivers.test.ts`
 Spec by the lead, 2026-10-18. Read `agents/arena/INSTRUCTIONS.md` first.
 
