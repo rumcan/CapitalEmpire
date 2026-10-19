@@ -14,8 +14,8 @@ import { CAR_COLOURS } from './traffic';
 import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
-import { insideSite, type Site } from './event/site';
-import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
+import { insideSite, placeStadium, siteAt, siteWhy, type Site } from './event/site';
+import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, STADIUM_COST, STADIUM_H, STADIUM_W, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
 import { Round, SIGNAL_TIER_YEAR, signalTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
 import walkersUrl from '../assets/characters/walkers.png';
@@ -217,6 +217,13 @@ export class Game {
    *  whether R has flipped the way in, and the toll tool's plan at the cursor (seg null: no road within 4 tiles; why: the reason it cannot be built, '' if it can) */
   tollDefs: TollDef[] = []; private tollSegs = new Map<number, Seg>(); private tollGround = new Set<string>(); tollBooths = START_BOOTHS; private tollFlip = false;
   private tollHover: null | { mx: number; my: number; seg: Seg | null; a: Pt; b: Pt; why: string; cost: number; booths: number } = null;
+  /** the stadium as the player placed it, [x, y, w, h] tiles (saved; null: none): the main thread's copy, the city worker gets each change (setStadium),
+   *  and its site (siteAt, cached: see setStadiumDef) */
+  stadiumDef: [number, number, number, number] | null = null; private stadiumSite: Site | null = null;
+  /** the business tool: whether R has turned the stadium's footprint (bizRot), and its ghost at the cursor (null: none; def: the footprint's
+   *  [x, y, w, h]; site: its site; why: the reason it cannot be built, '' if it can) */
+  private bizRot = false;
+  private bizHover: null | { mx: number; my: number; def: [number, number, number, number]; site: Site; why: string } = null;
   /** the add-lane tool's plan at the cursor: the straight run of road under it (segs; none on a toll plaza), the class it widens to (null: already the widest),
    *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
   laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string } = null;
@@ -557,12 +564,12 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
-    this.ground.invalidateAll(); this.syncParks(); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
+    this.ground.invalidateAll(); this.syncParks(); this.traffic.setStadium(this.stadiumDef); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
   }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.tollHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
+  setTool(t: Tool) { if (this.tool !== t) { this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -1181,6 +1188,7 @@ export class Game {
       case 'road': this.roadClick(mx, my); break;
       case 'junction': this.junctionClick(mx, my); break;
       case 'toll': this.tollUpdate(mx, my); this.tollClick(); break;
+      case 'business': this.bizUpdate(mx, my); this.bizClick(); break;
       case 'bus': this.busUpdate(mx, my); this.busClick(); break;
       case 'lane': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
@@ -1202,10 +1210,11 @@ export class Game {
     if (this.tool === 'lane') this.laneUpdate(this.hover);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
     if (this.tool === 'toll') this.tollUpdate(mx, my);
+    if (this.tool === 'business') this.bizUpdate(mx, my);
     if (this.tool === 'bus') this.busUpdate(mx, my);
   }
   pointerUp() { if (this.dragging?.kind === 'park') this.parkRelease(); this.dragging = null; }
-  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.busHover = null; this.laneHover = null; }
+  pointerLeave() { this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.busHover = null; this.laneHover = null; }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
     const piece = t ? this.net.pieceNear(t) : null;
@@ -1257,12 +1266,15 @@ export class Game {
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
       case 'e': case 'E': this.replaceMode = !this.replaceMode; this.toast(this.replaceMode ? 'Replace: on (roads in the way are bulldozed)' : 'Replace: off', 'info'); this.emit(); break;
-      case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); } else this.setTool('road'); break;
+      case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); }
+        else if (this.tool === 'business') { this.bizRot = !this.bizRot; if (this.bizHover) this.bizUpdate(this.bizHover.mx, this.bizHover.my); this.emit(); }
+        else this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
       case 'x': case 'X': this.setTool('bulldoze'); break;
       case 'p': case 'P': this.setTool('park'); break;
       case 't': case 'T': this.setTool('toll'); break;
       case 'u': case 'U': this.setTool('bus'); break;
+      case 'm': case 'M': this.setTool('business'); break;
       case 'n': case 'N': this.setTool('lane'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case '1': case '2': case '3': case '4': case '5': case '6': { const c = KEY_CLASSES[+e.key - 1]; if (c) { this.roadClass = c; this.setTool('road'); } break; }
@@ -1344,8 +1356,54 @@ export class Game {
   }
 
   // ---------- the event (Phase 5 step 2c) ----------
-  /** the stadium's site as the city worker placed it (null: none yet; it follows each terrain) */
-  get site(): Site | null { return this.traffic.site; }
+  /** the stadium's site: the one the player placed (null: none yet; see setStadiumDef) */
+  get site(): Site | null { return this.stadiumSite; }
+  /** sets the stadium's spot (null: none) and its site from it (cached here, so the drawing needs no allocation) */
+  private setStadiumDef(def: [number, number, number, number] | null) { this.stadiumDef = def; this.stadiumSite = def ? siteAt(def[0], def[1], def[2], def[3]) : null; }
+  /** the game's own spot for the stadium on this valley (placeStadium), as [x, y, w, h] tiles; null without towns or a fit */
+  private gameSpot(): [number, number, number, number] | null { const s = placeStadium(this.terrain.cls, this.townPts); return s ? [s.x, s.y, s.w, s.h] : null; }
+  /** the business tool's ghost at the cursor: the stadium's footprint centred on the tile under it (R turns it), with the reason it cannot go there */
+  private bizUpdate(mx: number, my: number) {
+    const t = this.tileAt(mx, my), w = this.bizRot ? STADIUM_H : STADIUM_W, h = this.bizRot ? STADIUM_W : STADIUM_H;
+    const x = Math.round(t.x - w / 2), y = Math.round(t.y - h / 2), site = siteAt(x, y, w, h);
+    this.bizHover = { mx, my, def: [x, y, w, h], site, why: this.bizWhy(site) };
+  }
+  /** why a stadium on site s cannot be built ('' if it can): the spot itself (siteWhy), a stadium already, a road, a car park or a building in the way, the money */
+  private bizWhy(s: Site): string {
+    return (this.stadiumDef ? 'You have a stadium already (demolish it first)' : '')
+      || siteWhy(s, this.terrain.cls, this.townPts)
+      || (this.roadNearRect(s.x, s.y, s.w, s.h, 2) ? 'A road runs through it' : '')
+      || (this.parkDefs.some(p => p.x < s.x + s.w + 1 && p.x + p.w > s.x - 1 && p.y < s.y + s.h + 1 && p.y + p.h > s.y - 1) ? 'A car park is in the way' : '')
+      || (this.lotsUnder(s) ? 'Buildings stand there' : '')
+      || (STADIUM_COST > this.money ? `Not enough money: the stadium costs $${STADIUM_COST.toLocaleString()}` : '');
+  }
+  /** whether a road runs through the rect (x, y, w, h) grown by pad tiles: each seg's centre line sampled every 0.5 tiles, against the rect grown by pad and the seg's half-width */
+  private roadNearRect(x: number, y: number, w: number, h: number, pad: number): boolean {
+    for (const s of this.net.segs) {
+      const g = s.cls.h + pad, ax = s.a.x, ay = s.a.y, bx = s.b.x, by = s.b.y;
+      if (Math.max(ax, bx) < x - g || Math.min(ax, bx) > x + w + g || Math.max(ay, by) < y - g || Math.min(ay, by) > y + h + g) continue;
+      const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 0.5));
+      for (let k = 0; k <= n; k++) { const f = k / n; if (rectDist({ x: ax + (bx - ax) * f, y: ay + (by - ay) * f }, x, y, w, h) <= g) return true; }
+    }
+    return false;
+  }
+  /** the business tool's click: a valid, affordable stadium is built on the ghost (the worker gets its spot); else the toast says why */
+  private bizClick() {
+    const h = this.bizHover; if (!h) return;
+    if (h.why) { this.toast(h.why, 'warn'); return; }
+    this.traffic.spend('construction', STADIUM_COST);
+    this.setStadiumDef(h.def); this.traffic.setStadium(h.def); this.farmsUpdate();
+    this.scheduleSave(); this.toast(`Stadium built (-$${STADIUM_COST.toLocaleString()})`, 'good');
+    this.bizUpdate(h.mx, h.my); this.emit();
+  }
+  /** demolishes the stadium (between rounds only): half its price comes back, and the worker drops its site */
+  demolishStadium() {
+    if (!this.stadiumDef) return;
+    if (this.traffic.round.stage !== 'free') { this.toast('Not while a round runs', 'warn'); return; }
+    this.traffic.spend('construction', -STADIUM_COST / 2);
+    this.setStadiumDef(null); this.traffic.setStadium(null); this.farmsUpdate();
+    this.scheduleSave(); this.toast(`Stadium demolished (+$${(STADIUM_COST / 2).toLocaleString()})`, 'good'); this.emit();
+  }
   /** announces an event round: the build (10 minutes of wall clock) starts; the city worker refuses unless the round is free */
   startRound() { this.traffic.startRound(); this.toast('The event is announced: 10 minutes to build'); this.emit(); }
   /** ends the build now: the crowd's run to kick-off begins */
@@ -1596,11 +1654,7 @@ export class Game {
     }
     const short = !h.why && h.cost > this.money, bad = !!h.why || short;
     const text = h.why || (short ? `Not enough money: $${h.cost.toLocaleString()}` : `${h.booths} booths · $${h.cost.toLocaleString()}`);
-    const x = h.mx * dpr + 14 * dpr, y = h.my * dpr - 12 * dpr;
-    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
-    ctx.fillStyle = bad ? '#fecaca' : '#bbf7d0'; ctx.fillText(text, x, y);
-    ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+    this.hintAt(ctx, h.mx, h.my, text, bad);
   }
 
   // ---------- shuttle bus routes (Phase 5 step 6b) ----------
@@ -1755,8 +1809,8 @@ export class Game {
   get reached() { return this.traffic.career.reached; }
   /** true once the career is won (WIN_POP residents; it stays so) */
   get won() { return this.traffic.career.won; }
-  /** event mode: a stadium site exists, and the event's rules replace the Career's unlocks (see classOpen, junctionOpen, tunnelsOpen) */
-  get eventMode(): boolean { return this.site !== null; }
+  /** event mode: the valley has town centres (the stadium is then the player's to place: see site), and the event's rules replace the Career's unlocks (see classOpen, junctionOpen, tunnelsOpen) */
+  get eventMode(): boolean { return this.townPts.length > 0; }
   /** a road class is open to build: every class in event mode, else as the Career unlocks it */
   classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
   /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
@@ -1806,12 +1860,15 @@ export class Game {
       tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
       buses: this.busDefs.map((d): [number, number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats, d.town ?? -1]),
       cardsApplied: this.cardsApplied,
+      stadium: this.stadiumDef,
     };
     try { return await writeSave(d); } catch { return 0; }
   }
   private load(d: SaveV5): boolean {
     try {
       this.genTerrain(d.seed);
+      // an old save (no stadium field) had the game's spot; a save of a new game has the player's (or none)
+      this.setStadiumDef(d.stadium !== undefined ? d.stadium : this.gameSpot());
       for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind]);
       this.net.rebuild(true);
       for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
@@ -1834,6 +1891,7 @@ export class Game {
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null;
+    this.setStadiumDef(null); this.bizHover = null;
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
@@ -2322,6 +2380,7 @@ export class Game {
     this.drawWalkers(ctx, now);
     this.drawTolls(ctx);
     this.drawTollPreview(ctx);
+    this.drawBizPreview(ctx);
     this.drawBusPreview(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
@@ -2394,21 +2453,40 @@ export class Game {
     }
   }
 
-  /** the stadium's placeholder art (until Phase 8): the footprint with its pitch inset 8 tiles, the 4 doors, and the label at the centre (every zoom) */
+  /** the stadium's placeholder art (until Phase 8): the placed site, and the label at the centre (every zoom) */
   private drawStadium(ctx: CanvasRenderingContext2D) {
     const s = this.site; if (!s) return;
-    const dpr = this.dpr, I = 8;
-    const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
-    rect(s.x, s.y, s.w, s.h); ctx.fillStyle = 'rgba(150,160,175,0.55)'; ctx.fill();
-    rect(s.x + I, s.y + I, s.w - 2 * I, s.h - 2 * I); ctx.fillStyle = 'rgba(70,140,70,0.55)'; ctx.fill();
-    rect(s.x, s.y, s.w, s.h); ctx.strokeStyle = '#e9edf2'; ctx.lineWidth = 2 * dpr; ctx.stroke();
-    ctx.fillStyle = '#ffbe3c';
-    for (const d of s.doors) { const p = this.screen(d.x, d.y); ctx.beginPath(); ctx.arc(p.x, p.y, 6 * dpr, 0, Math.PI * 2); ctx.fill(); }
-    const c = this.screen(s.c.x, s.c.y), label = `STADIUM · L${this.traffic.round.level}`;
+    this.drawSite(ctx, s, 'rgba(150,160,175,0.55)');
+    const dpr = this.dpr, c = this.screen(s.c.x, s.c.y), label = `STADIUM · L${this.traffic.round.level}`;
     ctx.font = `bold ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round'; ctx.lineWidth = 4 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
     ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+  /** a stadium site drawn: the footprint in fill, its pitch inset 8 tiles, the outline and the 4 doors (the placed stadium and the business ghost) */
+  private drawSite(ctx: CanvasRenderingContext2D, s: Site, fill: string) {
+    const dpr = this.dpr, I = 8;
+    const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
+    rect(s.x, s.y, s.w, s.h); ctx.fillStyle = fill; ctx.fill();
+    rect(s.x + I, s.y + I, s.w - 2 * I, s.h - 2 * I); ctx.fillStyle = 'rgba(70,140,70,0.55)'; ctx.fill();
+    rect(s.x, s.y, s.w, s.h); ctx.strokeStyle = '#e9edf2'; ctx.lineWidth = 2 * dpr; ctx.stroke();
+    ctx.fillStyle = '#ffbe3c';
+    for (const d of s.doors) { const p = this.screen(d.x, d.y); ctx.beginPath(); ctx.arc(p.x, p.y, 6 * dpr, 0, Math.PI * 2); ctx.fill(); }
+  }
+  /** the business tool's ghost at the cursor: the stadium's footprint (green where it can go, else red) with its doors, and the reason beside the cursor if it cannot */
+  private drawBizPreview(ctx: CanvasRenderingContext2D) {
+    const h = this.bizHover; if (!h) return;
+    // with a stadium built only the hint shows (a red footprint would hide the real one)
+    if (!this.stadiumDef) this.drawSite(ctx, h.site, h.why ? 'rgba(230,80,80,0.35)' : 'rgba(60,200,90,0.35)');
+    if (h.why) this.hintAt(ctx, h.mx, h.my, h.why, true);
+  }
+  /** a hint label beside the cursor at (mx, my) (screen px, as the tools' why): the text in red when bad, else green */
+  private hintAt(ctx: CanvasRenderingContext2D, mx: number, my: number, text: string, bad: boolean) {
+    const dpr = this.dpr, x = mx * dpr + 14 * dpr, y = my * dpr - 12 * dpr;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
+    ctx.fillStyle = bad ? '#fecaca' : '#bbf7d0'; ctx.fillText(text, x, y);
+    ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
   }
   /** the road tool's snap mark: an amber ring on a node or a dead end, a tick across the road on a road; nothing on the grid */
   private drawSnapMark(ctx: CanvasRenderingContext2D, s: Snap) {

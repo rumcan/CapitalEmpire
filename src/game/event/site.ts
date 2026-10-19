@@ -3,7 +3,7 @@
 import { MAP } from '../iso';
 import { TC } from '../terrain/types';
 import type { Pt } from '../network';
-import { L1_CARS, LEVEL_MUL, SITE_MARGIN, SITE_MAX, SITE_MIN, STADIUM_H, STADIUM_W } from './config';
+import { L1_CARS, LEVEL_MUL, SITE_MARGIN, SITE_MAX, SITE_MIN, STADIUM_H, STADIUM_TOWN_MIN, STADIUM_W } from './config';
 
 /** the stadium's site: the footprint rectangle (top-left tile x, y and its size w, h in tiles), its centre c, and its 4 doors (the middle of
  *  each side, the third tile outside: north, east, south, west) */
@@ -22,6 +22,23 @@ function buildable(cls: Uint8Array): Int32Array {
     S[(y + 1) * N + x + 1] = S[y * N + x + 1]! + S[(y + 1) * N + x]! - S[y * N + x]! + b;
   }
   return S;
+}
+
+/** the site with top-left tile (x, y) and size w x h tiles: its centre at the middle, and its 4 doors (the middle of each side, the third tile outside) */
+export function siteAt(x: number, y: number, w: number, h: number): Site {
+  const cx = x + w / 2, cy = y + h / 2, x1 = x + w, y1 = y + h;
+  return { x, y, w, h, c: { x: cx, y: cy }, doors: [{ x: cx, y: y - 3 }, { x: x1 + 2, y: cy }, { x: cx, y: y1 + 2 }, { x: x - 3, y: cy }] };
+}
+
+/** why a stadium on site s cannot stand there ('' when it can), checked in order: the footprint within SITE_MARGIN of the map's edges; every tile
+ *  open land (GROUND or PATCH: no water, creek, bank or hill); the centre at least STADIUM_TOWN_MIN from each town centre (centres: tiles) */
+export function siteWhy(s: Site, cls: Uint8Array, centres: Pt[]): string {
+  if (s.x < SITE_MARGIN || s.y < SITE_MARGIN || s.x + s.w > MAP - SITE_MARGIN || s.y + s.h > MAP - SITE_MARGIN) return 'Too close to the map edge';
+  for (let y = s.y; y < s.y + s.h; y++) for (let x = s.x; x < s.x + s.w; x++) {
+    const c = cls[y * MAP + x]; if (c !== TC.GROUND && c !== TC.PATCH) return 'Needs open land (no water, creek, bank or hill)';
+  }
+  for (const t of centres) if (Math.hypot(t.x - s.c.x, t.y - s.c.y) < STADIUM_TOWN_MIN) return 'Too close to a town: stadiums stand outside the towns';
+  return '';
 }
 
 /** the centre search with the farthest distance maxD over the integral image S (see buildable); the best site or null */
@@ -46,8 +63,7 @@ function search(S: Int32Array, centres: Pt[], maxD: number): Site | null {
       const score = (dmax - dmin) + 0.25 * (dsum / centres.length);
       if (score < bestScore) {
         bestScore = score;
-        best = { x: x0, y: y0, w: STADIUM_W, h: STADIUM_H, c: { x: cx, y: cy }, doors: [
-          { x: cx, y: y0 - 3 }, { x: x1 + 2, y: cy }, { x: cx, y: y1 + 2 }, { x: x0 - 3, y: cy } ] };
+        best = siteAt(x0, y0, STADIUM_W, STADIUM_H);
       }
     }
   }

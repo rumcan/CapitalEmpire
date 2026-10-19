@@ -12,7 +12,7 @@ import { shortName } from './game/ext/names';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
-import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
+import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, STADIUM_COST, STADIUM_H, STADIUM_W, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
 import type { SurgeView } from './game/event/surge';
 
 const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
@@ -24,6 +24,7 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'toll', label: 'Toll gate', key: 'T', icon: '🛂' },
   { id: 'bus', label: 'Bus route', key: 'U', icon: '🚌' },
   { id: 'lane', label: 'Add lane', key: 'N', icon: '➕' },
+  { id: 'business', label: 'Business', key: 'M', icon: '🏟️' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** a signed money figure: +$X or −$X */
@@ -165,6 +166,7 @@ export default function App() {
               )}
               {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
+              {game.tool === 'business' && <BusinessPanel game={game} />}
               {game.tool === 'bus' && <BusPanel game={game} />}
               {game.tool === 'select' && <SelectPanel game={game} />}
             </div>
@@ -191,6 +193,12 @@ export default function App() {
           {game.panel === 'budget' && <BudgetPanel game={game} />}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
+          {game.eventMode && !game.site && (
+            <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-24 z-20 flex items-center gap-3 rounded-xl border border-white/10 bg-slate-950/85 p-3 text-sm text-slate-200 shadow-lg backdrop-blur`}>
+              <span>Place your stadium to start the events</span>
+              <button className="chip" onClick={() => game.setTool('business')}>Business tool (M)</button>
+            </div>
+          )}
           {game.panel === 'bottlenecks' && <BottleneckPanel game={game} />}
           {game.showWin && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
@@ -675,6 +683,25 @@ function ParkPanel({ game }: { game: Game }) {
   );
 }
 
+/** the business tool: the stadium (the one business so far), its cost and footprint; once built, its Go to and Demolish buttons (demolishing only between rounds) */
+function BusinessPanel({ game }: { game: Game }) {
+  const free = game.traffic.round.stage === 'free';
+  return (
+    <Panel title="Business">
+      <div className="rounded-lg bg-white/5 p-2 text-xs">
+        <div className="flex justify-between"><b className="text-slate-100">Stadium</b><span>{money(STADIUM_COST)}</span></div>
+        <div className="flex justify-between text-slate-400"><span>{STADIUM_W} × {STADIUM_H} tiles</span></div>
+        <p className="mt-1 leading-relaxed text-slate-300">Runs the event rounds; the crowd drives to it from the towns, so the spot sets how hard the traffic is.</p>
+      </div>
+      {game.stadiumDef
+        ? <div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="text-emerald-300">Built</span>
+            <div className="flex gap-2"><button className="btn" onClick={() => game.goToSite()}>Go to</button>
+              <button className="btn" disabled={!free} onClick={() => game.demolishStadium()}>Demolish (+{money(STADIUM_COST / 2)})</button></div></div>
+        : <p className="mt-2 text-xs text-amber-200">Click open land to build it · R rotates</p>}
+    </Panel>
+  );
+}
+
 /** the toll gate tool: how it works, the price per car (at the round's level), the booths a new gate has and its cost, and the list of toll gates (Go) */
 function TollPanel({ game }: { game: Game }) {
   const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST;
@@ -982,6 +1009,7 @@ function hintFor(g: Game) {
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
+    case 'business': return 'BUSINESS: click open land to build the stadium · R rotates · the closer to the towns, the easier its traffic';
     case 'bus': return g.busPick ? 'BUS ROUTE: click a road near the stadium for the doors stop · Esc cancels' : 'BUS ROUTE: click a road beside a car park for the lot stop · with Bulldoze (X), click a stop to remove its route (no refund)';
     default: return 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
   }

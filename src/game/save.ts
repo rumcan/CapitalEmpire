@@ -60,6 +60,9 @@ export interface SaveV5 {
   buses?: [number, number, number, number, number, number, number, number?][];
   /** how many of the round's cards the game has applied to its tolls and bus routes (optional, no version bump; missing = all of them) */
   cardsApplied?: number;
+  /** the stadium the player placed as [x, y, w, h] tiles (top-left and size), or null for none (optional, no version bump; missing = an old save:
+   *  the game's spot, placeStadium, as the engine's load gives it) */
+  stadium?: [number, number, number, number] | null;
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',

@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -17,6 +17,7 @@ _Last updated: 2026-10-19 night (road builder stress test and its fixes, junctio
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | **Done** (2026-10-18; the gate passed on seed 1), not pushed (the owner is away). Steps, numbers and the gate below |
 | 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
 | 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
+| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 done (the player places the stadium). Comes before 6R.5–6R.8 (the owner's order) |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 
@@ -1371,11 +1372,61 @@ small public car parks on open town lots as part of the town's growth (a small t
   compensation; queued).
 
 
+## Phase B, the businesses (GAME-PLAN 1.0.00): in progress
+
+Started 2026-10-19 late night, after 6R.1–6R.4 (the owner's order: steps 1–4 of 6R, then Phase B, then 6R.5–6R.8). The
+design, with the research (Cities: Skylines 1/2 unique and signature buildings, OpenTTD cargo income, RollerCoaster Tycoon),
+is [BUSINESSES.md](BUSINESSES.md): the player places and pays for businesses (the stadium first), revenue per visitor who
+arrives, a tree unlocked by success, cards as upgrades. It replaces Phase 6's game-placed events.
+
+**Decisions (lead, 2026-10-19):**
+- The stadium costs **$200,000** and the event valley's starting fund rises from $600,000 to **$800,000** (EVENT_START_MONEY),
+  so a new game's room for roads, the toll, car parks and buses is unchanged. Demolishing (between rounds only) refunds half.
+- A placed stadium needs open land (GROUND or PATCH tiles), SITE_MARGIN (64 tiles) from the edges, its centre at least
+  **200 tiles from every town centre** (STADIUM_TOWN_MIN), no road within 2 tiles, no car park, no town buildings. One
+  stadium per game until B.2's catalogue.
+- Headless runs and tests keep the game's spot (`City.autoStadium`, default true); the browser's worker sets it false.
+  Old saves (no `stadium` field) get the game's spot (placeStadium on the main thread), so they play as before.
+- `Game.eventMode` now means "the valley has towns" (it was "a site exists"): the event rules (all classes open, the
+  Roundabout card) hold before the stadium is placed.
+
+Steps (from BUSINESSES.md): **B.1** the player places the stadium; **B.2** the business model and catalogue (the City's
+business list, saved; the Businesses panel with the tree); **B.3** daily businesses in the sim (gravity demand, visitor trips,
+revenue per arrival, satisfaction, upkeep; the sports bar first); **B.4** the stadium's tickets, XP and levels, the tree
+opening by success, cards as upgrades; **B.5** transport businesses (the bus company; the taxi company wiring `ext/taxi`);
+**B.6** property and tourists (the golf estate's lots, hotels, tourists from the map edge; T010's economics if its PR
+comes); **B.7** the Phase B gate (headless: a scripted player with the stadium and three spin-offs, solvent 30 days, 4+
+unlocks; budgets met).
+
+### Phase B progress
+- **B.1 The player places the stadium (2026-10-19 late night): DONE.** A new valley starts with no stadium: a panel says
+  "Place your stadium to start the events" with a button to the **Business tool (key M)**. The tool's panel has the stadium
+  card ($200,000 · 100 × 80 tiles); a ghost follows the cursor (green, or red with the reason beside the cursor: map edge,
+  open land, too close to a town, a road, a car park, buildings, money, a stadium already); **R** turns it; a click pays and
+  builds; the panel then shows Built, Go to and Demolish (+$100,000, refused while a round runs). Code: `siteAt` and `siteWhy`
+  in event/site.ts; `City.autoStadium`, `suggested`, `setStadium` (refused mid-round) and the `stadium` worker message; in
+  engine.ts `stadiumDef` (main thread authoritative, saved as `stadium: [x, y, w, h] | null`), `bizUpdate/bizWhy/bizClick`,
+  `roadNearRect`, `demolishStadium`, `drawSite` and `hintAt` (shared with the toll tool's label); farms re-derive after a
+  build or demolish. Test: tests/stadium-place.test.ts (siteAt doors, siteWhy reasons, autoStadium off/on, setStadium
+  refused mid-round).
+  - Browser-checked (port 5176; the 5174 port was taken): new valley with no stadium and the hint; green and red ghosts with
+    the reasons (water, edge, town, road, a stadium already); R rotation; build (−$200,000 with real money, `?money=0`),
+    save, reload (kept, the worker in sync), demolish (+$100,000), rebuild; roads of gravel, street and arterial refused
+    across it (and an arterial skimming its edge); a round starts, builds and surges from the placed stadium (crowd 80/80/80);
+    demolish refused mid-surge; no console errors.
+  - Checks: typecheck clean; `npm test` 419/419 on the worker; `town:gate` PASS (5,124 pop, 0 jams); `sim:gate -- 1 10000`
+    PASS (20,961 arrived, 61 towed, 0 lost): the same numbers as before.
+  - Left: the in-browser bench path (`opts.bench`) starts with no stadium (headless benches unaffected); clearing the town
+    mid-round leaves the worker's site until the round closes (the worker refuses setStadium mid-round).
+- **Next: B.2, the business model and catalogue** (design first: the business list on the City replacing the single
+  `site`, the types table in `src/game/business/` following T010's API shape so its PR can drop in, the Businesses panel
+  with the tree; the stadium stays type one and keeps the rounds).
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
 Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially
-'Handover 2' at the top of 'Phase 6R progress' (the road catalogue 6R.2 and the junction editor 6R.4 are done; the next job is
-**Phase B, the businesses**, GAME-PLAN 1.0.00). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
+'Handover 2' at the top of 'Phase 6R progress' (6R.1–6R.4 are done), and the **Phase B** section (the businesses: B.1 done, next
+B.2; design in docs/BUSINESSES.md). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
 tiers, done) and 1.0.0 (the owner's road and town changes), docs/ROAD-CATALOGUE.md (the road types) and docs/JUNCTION-UX.md (how the junction tool was
 redesigned from Cities: Skylines and TM:PE; follow the same research-first approach for the road tool). Carry on through the queue without asking between steps;
 still ask before pushing. Delegate coding to haiku-coder and checks to haiku-runner (the worker PC is `cworker`,

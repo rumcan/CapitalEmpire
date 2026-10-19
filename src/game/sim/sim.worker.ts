@@ -14,7 +14,7 @@ import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 /** wall-clock frame period, ms; the sim is stepped once per DT of its speed. A skip (fast-forward) runs for SKIP_MS of each frame */
 const FRAME_MS = 100, SKIP_MS = 70, TOWN_EVERY = 10;
-const city = new City(1);
+const city = new City(1); city.autoStadium = false; // the player places the stadium (see City.autoStadium)
 let speed = 1, forcePost = false, wasAlive = false, townPosted = 0;
 /** the event round's stage as the books were last posted for it (the build and the surge move on the clock: a change posts the books) */
 let roundStage = city.round.stage;
@@ -149,6 +149,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'option': city.option(m.id); break;
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); postBudget(null); break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
+      case 'stadium': city.setStadium(m.at); post({ t: 'site', site: city.site }); break;
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
       case 'buses': city.setBusRoutes(m.defs); forcePost = true; break;

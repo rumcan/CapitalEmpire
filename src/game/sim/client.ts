@@ -144,6 +144,8 @@ export class SimClient {
   startRound() { this.post({ t: 'round', op: 'start' }); }
   /** the car parks (the full list, each time): the worker builds their bays and entrances on the network it has */
   setParks(defs: CarParkDef[]) { this.post({ t: 'parks', defs }); }
+  /** the player's stadium (its footprint [x, y, w, h] tiles; null: none): the worker's site follows (see City.setStadium) */
+  setStadium(at: [number, number, number, number] | null) { this.post({ t: 'stadium', at }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */

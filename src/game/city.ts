@@ -23,7 +23,7 @@ import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
-import { crowdFor, placeStadium, type Site } from './event/site';
+import { crowdFor, placeStadium, siteAt, type Site } from './event/site';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 
@@ -124,6 +124,10 @@ export class City {
   centres: Pt[] = [];
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
+  /** a new valley gets the game's stadium spot (suggested) as its site; the browser's worker sets this false, so the player places the stadium (setStadium) */
+  autoStadium = true;
+  /** the game's spot for the stadium on this valley (placeStadium; null without towns): the default site when autoStadium is on */
+  suggested: Site | null = null;
   /** the towns grown by the last close (closeRound: a perfect run only; null otherwise): the new lots' events, and the residents of each town reached */
   grown: { events: TownEvent[]; pops: number[] } | null = null;
   /** the surge of the round (event/surge.ts: planned at the surge's start, counted through the eval; null outside) and the road components of the
@@ -223,7 +227,7 @@ export class City {
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
     this.hours = []; this.builds = 0;
     this.planRnd = seededRnd(seed); this.planHour = -1; this.pendingGrow = false;
-    this.site = towns.length ? placeStadium(cls, towns) : null; this.round = new Round(); this.grown = null; this.sim.entryS = ENTRY_S;
+    this.suggested = towns.length ? placeStadium(cls, towns) : null; this.site = this.autoStadium ? this.suggested : null; this.round = new Round(); this.grown = null; this.sim.entryS = ENTRY_S;
     this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses();
     // a new valley has no incidents: the old ones' blocks are lifted, the module starts again
     this.resetIncidents(seed);
@@ -244,6 +248,11 @@ export class City {
     return this.upkeepC = r;
   }
 
+  /** places the stadium with its footprint at [x, y, w, h] tiles (siteAt), or takes it away (null); refused (false, nothing changes) while a round is under way */
+  setStadium(at: [number, number, number, number] | null): boolean {
+    if (this.round.stage !== 'free') return false;
+    this.site = at ? siteAt(at[0], at[1], at[2], at[3]) : null; return true;
+  }
   /** starts a round (free only, with a site): the crowd by town population (crowdFor at the round's level), and the clock frozen at the next
    *  EVENT_CLOCK (18:00 today, or tomorrow's if the clock is past it); false if there is no site or a round is under way */
   startRound(): boolean {

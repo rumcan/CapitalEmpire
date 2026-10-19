@@ -28,6 +28,10 @@ export const SITE_MIN = 500;
 export const SITE_MAX = 1250;
 /** the stadium's footprint keeps this many tiles from the map's edges */
 export const SITE_MARGIN = 64;
+/** what the player pays to build the stadium, $ (demolishing gives back half) */
+export const STADIUM_COST = 200000;
+/** the nearest a placed stadium's centre may be to a town centre, tiles */
+export const STADIUM_TOWN_MIN = 200;
 /** a car park's bay width along its row, tiles */
 export const BAY_W = 1.25;
 /** a car park's bay depth (the row's depth from its aisle), tiles */
@@ -107,8 +111,9 @@ export const LOT_PRICE = 2000;
 /** with town centres: the share of a lot's price the player is paid for it (see LOT_PRICE) */
 export const SALE_SHARE = 0.3;
 
-/** the treasury of a new valley with town centres, $ (the single town starts with START_MONEY: see budget.ts startMoney) */
-export const EVENT_START_MONEY = 600000;
+/** the treasury of a new valley with town centres, $ (the single town starts with START_MONEY: see budget.ts startMoney); the stadium's cost
+ *  (STADIUM_COST) is added to the old 600000, so a new game's spending room is unchanged */
+export const EVENT_START_MONEY = 800000;
 /** the payout of a round at rate 1 and level 1, $ (the curve: see payout) */
 export const PAYOUT_BASE = 100000;
 /** the arrival rate at which a round pays nothing (the curve's pivot) */
