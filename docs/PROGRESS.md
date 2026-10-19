@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -1129,6 +1129,17 @@ small public car parks on open town lots as part of the town's growth (a small t
     terrain v2 (switch the generator), subways and taxis (with the business layer), grade and interchanges (with the
     highways, 6R.5). Known: the slip fork overlap (a diverge rule); the timing tests ("accACC ns per call", terrain
     "under 4 s") fail when the dev PC is loaded.
+  - **2026-10-19 morning: all ten Arena PRs merged.** **#3 interchanges merged** (finished on the branch: each type its own
+    topology; the four-level stack with semi-direct flyovers at +14/+21 m, R 156 m, ~1 km across, no loops; one-way
+    roads honoured; the lead's probe caught every outer right-turn ramp running B→A on the cloverleaf and the stack, fixed;
+    all rules at 90° and 60°). **Disasters wired** (commit `c421976`, off by default; dev `traffic.disastersOn(true)`,
+    `traffic.forceDisaster(kind)`; browser: a forced flood warned, closed 3 roads by the river, drew its area).
+    **Farms wired** (commit `dbe6d1a`; browser: 8 farms along a new country road; the lead's fix: the town cuts lots
+    along every road, so only lots the town builds on push a farm out). **Left to wire:** terrain v2 as the map
+    generator (tune: fewer lakes than 9.5%, hills toward 35%), subways and taxis (with the business layer), grade and
+    interchanges (with the highways, 6R.5). **Arena tasks with no PR yet:** T007 fuzz testing, T010 business economics,
+    T013 roads and land. **Note:** the owner's dev server on 5174 had died (it served stale modules mid-edit); the lead
+    started the project's launch.json server on 5174 in its place.
   - **Per-corner slipways: DONE** (commit `3a24eae`; browser-checked on street, arterial and mixed crossings: add and
     remove corners, the last one off gives plain lights, roundabouts refused, lane graph clean; the corner click searches
     18 tiles around, the island sits ~12 out).
