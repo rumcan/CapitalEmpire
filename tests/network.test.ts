@@ -1,7 +1,7 @@
 // Headless network tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, CLASSES, KEY_CLASSES, RoadNetwork, VARIANTS, WIDER, armDeg, classOf, slipIn, type ClassId, type Fx, type Leg, type Node, type Route, type Seg } from '../src/game/network';
+import { CLASS, CLASSES, KEY_CLASSES, RoadNetwork, SPEED_CAP, VARIANTS, WIDER, armDeg, classOf, slipIn, speedOf, type ClassId, type Fx, type Leg, type Node, type Route, type Seg } from '../src/game/network';
 import { NetEditor, applyNodeEntry, applyOps, netToOps, nodeEntry, straightChain } from '../src/game/netops';
 import { CTL, LaneGraph, type Movement } from '../src/game/sim/lanes';
 import { rle, unrle } from '../src/game/save';
@@ -365,4 +365,26 @@ test('the bulldozer next to a T: the new dead end of a grand boulevard clears th
   // and a click in the middle of a long road still takes a short piece
   const q = n.pieceNear({ x: 170, y: 100 })!, len = Math.hypot(q.p1.x - q.p0.x, q.p1.y - q.p0.y);
   assert.ok(len < 40, `a piece of ${len.toFixed(1)} tiles`);
+});
+
+test('speed limits rise with the road: gravel and lanes slowest, then street, avenue, road and arterial, boulevard, divided and six-lane, grand fastest', () => {
+  const kmh = (id: string) => Math.round(CLASS[id]!.vmax * 3.6);
+  const order = ['gravel', 'street', 'avenue', 'arterial', 'boulevard', 'six', 'grand'];
+  for (let i = 1; i < order.length; i++) assert.ok(kmh(order[i]!) > kmh(order[i - 1]!), `${order[i]} (${kmh(order[i]!)}) faster than ${order[i - 1]} (${kmh(order[i - 1]!)})`);
+  assert.equal(kmh('gravel'), 30); assert.equal(kmh('grand'), 90);
+  // every variant keeps its type's limit
+  for (const c of CLASSES) assert.equal(c.vmax, CLASS[c.base]!.vmax, `${c.id}`);
+});
+
+test('speed tiers: every road +20, +40, +60 km/h, capped at 140; the lanes rebuild at the new limit, and the tier replays from the ops', () => {
+  for (const t of [0, 1, 2, 3] as const) assert.ok(Math.abs(speedOf(CLASS.street!, t) * 3.6 - (40 + 20 * t)) < 0.01);
+  assert.ok(Math.abs(speedOf(CLASS.grand!, 3) - SPEED_CAP) < 1e-9, 'grand + 60 is capped at 140');
+  const e = new NetEditor(new RoadNetwork()); e.addLegs([leg(100, 100, 200, 100)], CLASS.arterial!, 0); e.commit();
+  const g = new LaneGraph(); g.update(e.net);
+  const vOf = () => { const d = g.dsegs.find(x => x && x.lanes.length)!; return g.lanes[d.lanes[0]!]!.vmax; };
+  assert.ok(Math.abs(vOf() * 3.6 - 60) < 0.01);
+  e.setSpeedTier(2); e.commit(); g.update(e.net);
+  assert.ok(Math.abs(vOf() * 3.6 - 100) < 0.01, `arterial +40: ${(vOf() * 3.6).toFixed(1)} km/h`);
+  const fresh = new RoadNetwork(); applyOps(fresh, netToOps(e.net));
+  assert.equal(fresh.speedTier, 2);
 });

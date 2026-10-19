@@ -2,8 +2,8 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
-import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, TYPES, VARIANTS, type Family, type Node } from './game/network';
-import { SIGNAL_TIER_YEAR } from './game/event/round';
+import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, SPEED_BONUS_KMH, TYPES, VARIANTS, speedOf, type Family, type Node } from './game/network';
+import { SIGNAL_TIER_YEAR, SPEED_TIER_YEAR } from './game/event/round';
 import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
 import { isLights, junctionCorners, slipRule } from './game/junctions';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
@@ -59,7 +59,7 @@ export default function App() {
     Object.assign(window as unknown as Record<string, unknown>, { __game: g, __CLASSES: CLASSES });
     // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
     // game: StrictMode mounts twice, and the first game is disposed)
-    if (import.meta.env.DEV) void import('./game/dev/roadfuzz').then(m => Object.assign(window as unknown as Record<string, unknown>, { __roadFuzz: (seed?: number, steps?: number, o?: Parameters<typeof m.roadFuzz>[3]) => m.roadFuzz((window as unknown as { __game: Game }).__game, seed, steps, o), __roadReplay: (box: [number, number, number, number], log: string[], upTo?: number) => m.roadReplay((window as unknown as { __game: Game }).__game, box, log, upTo) }));
+    if (import.meta.env.DEV) void import('./game/dev/roadfuzz').then(m => Object.assign(window as unknown as Record<string, unknown>, { __roadFuzz: (seed?: number, steps?: number, o?: Parameters<typeof m.roadFuzz>[3]) => m.roadFuzz((window as unknown as { __game: Game }).__game, seed, steps, o), __roadReplay: (box: [number, number, number, number], log: string[], upTo?: number) => m.roadReplay((window as unknown as { __game: Game }).__game, box, log, upTo), __junctionGallery: (o?: Parameters<typeof m.junctionGallery>[1]) => m.junctionGallery((window as unknown as { __game: Game }).__game, o) }));
     setGame(g);
     const unsub = g.subscribe(bump);
     g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));
@@ -601,7 +601,7 @@ function RoadPanel({ game }: { game: Game }) {
                 <div key={`${f.id}-${t.id}`}>
                   <button className={`card ${on ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
                     <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span></div>
-                    <div className="text-[10px] text-slate-400">{c.desc}</div>
+                    <div className="text-[10px] text-slate-400">{c.desc} · {Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h</div>
                   </button>
                   {on && VARIANTS[t.id].length > 1 && (
                     <div className="mb-1 ml-2 mt-1">
@@ -631,6 +631,10 @@ function RoadPanel({ game }: { game: Game }) {
         <button className={`chip ${game.replaceMode ? 'chip-on' : ''}`} onClick={() => { game.replaceMode = !game.replaceMode; game.emit(); }} title="E toggles">{game.replaceMode ? 'On' : 'Off'}</button>
         <span className="ml-auto text-[10px] text-slate-500">Roads in the way are bulldozed</span>
       </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1 text-xs">
+        <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Speed limits</span>
+        {([0, 1, 2, 3] as const).map(t => { const open = t <= game.speedTierMax(); return <button key={t} className={`chip ${game.net.speedTier === t ? 'chip-on' : ''} ${open ? '' : 'opacity-50'}`} onClick={() => game.setSpeedTier(t)} title={open ? (t ? `Every road +${SPEED_BONUS_KMH[t]} km/h (up to 140)` : 'Each road its own limit') : `From ${SPEED_TIER_YEAR[t]}`}>{t ? `+${SPEED_BONUS_KMH[t]}` : 'Standard'}</button>; })}
+      </div>
       {cls.centre === 'style' && (
         <div className="mt-2 flex items-center gap-1">
           <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Centre line</span>
@@ -650,7 +654,7 @@ function RoadPanel({ game }: { game: Game }) {
         <button className="chip" disabled={!game.route.length} onClick={() => game.undoRoutePoint()} title="Backspace">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">Double-click the last point or press Enter to build. To widen a road, use the Add lane tool. Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[11px] text-slate-500">Double-click the last point, press Enter or right-click to build. To widen a road, use the Add lane tool. Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -997,7 +1001,7 @@ function SelectPanel({ game }: { game: Game }) {
 
 function hintFor(g: Game) {
   switch (g.tool) {
-    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
+    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click, Enter or right-click to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';

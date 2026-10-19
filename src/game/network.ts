@@ -50,16 +50,16 @@ export interface RoadClass {
 }
 /** the plain road types: the seven presets (their numbers are the saved game's, do not change them) and the three new ones */
 const PLAIN: RoadClass[] = [
-  { id: 'gravel', name: 'Gravel', desc: 'Unpaved · 1 lane each way · 5 m · dusty', base: 'gravel', flags: [], family: 'small', vmax: 8, h: 1.25, walk: 0.35, walkTex: 'gravel', median: 0, shoulder: 0, tex: 'gravel', rConcave: 1.2, bulb: 0.6, cost: 40, order: -1, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [0.62] },
-  { id: 'lane', name: 'Lane', desc: 'Single lane · 4 m · footpath', base: 'lane', flags: [], family: 'small', vmax: 8, h: 1, walk: 0.6, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltWorn', rConcave: 0.8, bulb: 0, cost: 70, order: 0, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [0] },
-  { id: 'street', name: 'Street', desc: '2 lanes · 6.5 m · sidewalks', base: 'street', flags: [], family: 'small', vmax: 11, h: 1.625, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphalt', rConcave: 1.75, bulb: 1, cost: 150, order: 1, crosswalk: true, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'style', laneCentres: [0.8] },
-  { id: 'road', name: 'Road', desc: '2 lanes + shoulders · 12 m · yellow edge lines', base: 'road', flags: [], family: 'rural', vmax: 17, h: 3, walk: 0.75, walkTex: 'gravel', median: 0, shoulder: 1, tex: 'asphaltDark', rConcave: 2.5, bulb: 0, cost: 220, order: 2, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'dashed', laneCentres: [1] },
-  { id: 'avenue', name: 'Avenue', desc: '2 lanes · tree-lined median · 14 m', base: 'avenue', flags: [], family: 'medium', vmax: 14, h: 3.5, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 2.5, bulb: 1, cost: 320, order: 3, crosswalk: true, laneLines: [], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [2.25] },
-  { id: 'arterial', name: 'Arterial', desc: '4 lanes · no median · 16 m', base: 'arterial', flags: [], family: 'medium', vmax: 14, h: 4, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltDark', rConcave: 2.75, bulb: 1, cost: 400, order: 3, crosswalk: true, laneLines: [2], oneway: false, medianTrees: false, streetTrees: false, centre: 'style', laneCentres: [1, 3] },
-  { id: 'boulevard', name: 'Boulevard', desc: '4 lanes · tree-lined median · 20 m', base: 'boulevard', flags: [], family: 'large', vmax: 17, h: 5, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 3, bulb: 1, cost: 480, order: 4, crosswalk: true, laneLines: [3], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [2, 4] },
-  { id: 'six', name: 'Six-lane', desc: '6 lanes · painted median · 22 m', base: 'six', flags: [], family: 'large', vmax: 17, h: 5.5, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltDark', rConcave: 3, bulb: 1, cost: 560, order: 4, crosswalk: true, laneLines: [2, 3.75], oneway: false, medianTrees: false, streetTrees: false, centre: 'double', laneCentres: [1.125, 2.875, 4.625] },
-  { id: 'grand', name: 'Grand boulevard', desc: '6 lanes · tree-lined median · 25 m', base: 'grand', flags: [], family: 'large', vmax: 17, h: 6.25, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 3.25, bulb: 1, cost: 620, order: 4, crosswalk: true, laneLines: [2.75, 4.5], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [1.875, 3.625, 5.375] },
-  { id: 'divided', name: 'Divided road', desc: '4 lanes · grass median · shoulders · 24 m', base: 'divided', flags: [], family: 'rural', vmax: 20, h: 6, walk: 0.75, walkTex: 'gravel', median: 3, shoulder: 1, tex: 'asphaltDark', rConcave: 3, bulb: 0, cost: 520, order: 3, crosswalk: false, laneLines: [3.25], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [2.375, 4.125] },
+  { id: 'gravel', name: 'Gravel', desc: 'Unpaved · 1 lane each way · 5 m · dusty', base: 'gravel', flags: [], family: 'small', vmax: 8.333, h: 1.25, walk: 0.35, walkTex: 'gravel', median: 0, shoulder: 0, tex: 'gravel', rConcave: 1.2, bulb: 0.6, cost: 40, order: -1, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [0.62] },
+  { id: 'lane', name: 'Lane', desc: 'Single lane · 4 m · footpath', base: 'lane', flags: [], family: 'small', vmax: 8.333, h: 1, walk: 0.6, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltWorn', rConcave: 0.8, bulb: 0, cost: 70, order: 0, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [0] },
+  { id: 'street', name: 'Street', desc: '2 lanes · 6.5 m · sidewalks', base: 'street', flags: [], family: 'small', vmax: 11.111, h: 1.625, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphalt', rConcave: 1.75, bulb: 1, cost: 150, order: 1, crosswalk: true, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'style', laneCentres: [0.8] },
+  { id: 'road', name: 'Road', desc: '2 lanes + shoulders · 12 m · yellow edge lines', base: 'road', flags: [], family: 'rural', vmax: 16.667, h: 3, walk: 0.75, walkTex: 'gravel', median: 0, shoulder: 1, tex: 'asphaltDark', rConcave: 2.5, bulb: 0, cost: 220, order: 2, crosswalk: false, laneLines: [], oneway: false, medianTrees: false, streetTrees: false, centre: 'dashed', laneCentres: [1] },
+  { id: 'avenue', name: 'Avenue', desc: '2 lanes · tree-lined median · 14 m', base: 'avenue', flags: [], family: 'medium', vmax: 13.889, h: 3.5, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 2.5, bulb: 1, cost: 320, order: 3, crosswalk: true, laneLines: [], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [2.25] },
+  { id: 'arterial', name: 'Arterial', desc: '4 lanes · no median · 16 m', base: 'arterial', flags: [], family: 'medium', vmax: 16.667, h: 4, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltDark', rConcave: 2.75, bulb: 1, cost: 400, order: 3, crosswalk: true, laneLines: [2], oneway: false, medianTrees: false, streetTrees: false, centre: 'style', laneCentres: [1, 3] },
+  { id: 'boulevard', name: 'Boulevard', desc: '4 lanes · tree-lined median · 20 m', base: 'boulevard', flags: [], family: 'large', vmax: 19.444, h: 5, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 3, bulb: 1, cost: 480, order: 4, crosswalk: true, laneLines: [3], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [2, 4] },
+  { id: 'six', name: 'Six-lane', desc: '6 lanes · painted median · 22 m', base: 'six', flags: [], family: 'large', vmax: 22.222, h: 5.5, walk: 1.025, walkTex: 'slabs', median: 0, shoulder: 0, tex: 'asphaltDark', rConcave: 3, bulb: 1, cost: 560, order: 4, crosswalk: true, laneLines: [2, 3.75], oneway: false, medianTrees: false, streetTrees: false, centre: 'double', laneCentres: [1.125, 2.875, 4.625] },
+  { id: 'grand', name: 'Grand boulevard', desc: '6 lanes · tree-lined median · 25 m', base: 'grand', flags: [], family: 'large', vmax: 25.0, h: 6.25, walk: 1.025, walkTex: 'slabs', median: 2, shoulder: 0, tex: 'asphaltDark', rConcave: 3.25, bulb: 1, cost: 620, order: 4, crosswalk: true, laneLines: [2.75, 4.5], oneway: false, medianTrees: true, streetTrees: false, centre: 'none', laneCentres: [1.875, 3.625, 5.375] },
+  { id: 'divided', name: 'Divided road', desc: '4 lanes · grass median · shoulders · 24 m', base: 'divided', flags: [], family: 'rural', vmax: 22.222, h: 6, walk: 0.75, walkTex: 'gravel', median: 3, shoulder: 1, tex: 'asphaltDark', rConcave: 3, bulb: 0, cost: 520, order: 3, crosswalk: false, laneLines: [3.25], oneway: false, medianTrees: false, streetTrees: false, centre: 'none', laneCentres: [2.375, 4.125] },
 ];
 /** the lanes of a one-way type (keyed by its base): a lane for each direction of the two-way type, across the whole width */
 const ONEWAY: Record<string, Partial<RoadClass>> = {
@@ -125,6 +125,12 @@ const WIDE_CORNER = 2.2;
 const ARROW_LEN = 2.4, ARROW_W = 1.3;
 /** a roundabout's outer edge radius for 1, 2 or 3 ring lanes, tiles (14, 22 and 30 m); the widest arm can make it bigger */
 export const RB_BASE: Record<1 | 2 | 3, number> = { 1: 7, 2: 11, 3: 15 };
+/** the speed-limit tiers: every road's limit raised by this many km/h (tier 0 the classes' own limits, which rise with the road's size), capped at
+ *  SPEED_CAP (140 km/h). The owner, 2026-10-19: gravel slowest, rising to the biggest roads, then +20, +40 and +60 km/h as unlocks */
+export const SPEED_BONUS_KMH = [0, 20, 40, 60] as const, SPEED_CAP = 140 / 3.6;
+export type SpeedTier = 0 | 1 | 2 | 3;
+/** a road class's speed limit (m/s) at speed tier t */
+export const speedOf = (cls: RoadClass, t: SpeedTier) => Math.min(SPEED_CAP, cls.vmax + SPEED_BONUS_KMH[t] / 3.6);
 /** the outer radius (tiles) of a roundabout of rl ring lanes on arms of half widths hs: its base size, or the widest arm plus 2 tiles and the ring lanes */
 export const ringRadius = (hs: number[], rl: 1 | 2 | 3) => Math.max(RB_BASE[rl], Math.max(...hs) + 2 + rl * RB_LANE);
 /** the junction flags the junction tool sells: widened turns, and turn lanes (2-lane roads) */
@@ -561,6 +567,9 @@ export class RoadNetwork {
   }
   /** the lights' tier (0 fixed-time, 1 actuated, 2 adaptive) and the fixed-time green seconds of each phase (split; empty or unset = 18 s each); the
    *  lane graph reads them at the node */
+  /** the speed-limit tier of every road (see speedOf); the lane graph rebuilds all its lanes when it changes */
+  speedTier: SpeedTier = 0;
+  setSpeedTier(t: SpeedTier, rebuild = true) { this.speedTier = t; if (rebuild) this.rebuild(true); }
   setSignal(n: Node, sig: 0 | 1 | 2, split?: number[], rebuild = true) { n.sig = sig; n.split = split?.length ? [...split] : undefined; this.touched.add(n); if (rebuild) this.rebuild(); }
   /** the slip node's corners without a slipway (their in-arms, armDeg; empty = all of them have one); the lane graph and the painter read it at the node */
   setSlipOff(n: Node, off: number[], rebuild = true) { n.slipOff = off.length ? [...off] : undefined; this.touched.add(n); if (rebuild) this.rebuild(); }
@@ -600,6 +609,7 @@ export class RoadNetwork {
     return f.litter;
   }
   clear() {
+    this.speedTier = 0;
     this.litterLRU.clear();
     this.nodes.clear(); this.segs.clear(); this.routes.clear(); this.routeOf.clear(); this.routeFx.clear(); this.nodeFx.clear();
     this.segGrid.clear(); this.fxGrid.clear(); this.poolGrid.clear(); this.pools = []; this.occ.fill(0); this.touched.clear(); this.removed.clear(); this.version++;
@@ -811,10 +821,24 @@ export class RoadNetwork {
         const A = arms[i], B = arms[(i + 1) % k];
         const phi = (((B.ang - A.ang) % TAU) + TAU) % TAU;
         if (phi < 0.12 || phi > Math.PI - 0.05) continue;
+        // the surface between the two arms' facing kerbs, from the node to where the kerbs meet (N, A's kerb at the node, the corner, B's): a
+        // wide road whose end the other roads leave at an angle left triangles past the node unpaved, beside them and in the V between two
+        // arms (the owner's screenshots, 2026-10-19). It lies between kerbs, so it never paves past one
+        {
+          const FA = add(N, mul(perp(A.dir), A.h)), FB = sub(N, mul(perp(B.dir), B.h)), Cq = lineHit(FA, A.dir, FB, B.dir), top = A.cls.order >= B.cls.order ? A : B;
+          if (Cq && vlen(sub(Cq, N)) < 4 * (A.h + B.h) + 8) { const q = [N, FA, Cq, FB]; asphF.push(feat('poly', polyPath(q), 0, top.cls.tex, top.cls.order, bboxOf(q, 0.3), 'butt', kerbed(top.cls))); }
+          // the same for the walks (under the asphalt): the walk round the corner runs on from one arm's to the other's instead of stopping square at
+          // the node (the owner's screenshot: a wide road's sidewalk ended short of the crossing road's)
+          const WA = add(N, mul(perp(A.dir), A.h + A.walk)), WB = sub(N, mul(perp(B.dir), B.h + B.walk)), Cw = lineHit(WA, A.dir, WB, B.dir), wt = (A.walk >= B.walk ? A : B).cls.walkTex;
+          if (Cw && vlen(sub(Cw, N)) < 4 * (A.h + B.h + A.walk + B.walk) + 8) { const q = [N, WA, Cw, WB]; walkF.push(feat('poly', polyPath(q), 0, wt, walkOrder(wt), bboxOf(q, 0.3))); }
+        }
         const tan = Math.tan(phi / 2), minLen = Math.min(A.len, B.len);
         const slip = slipOn(n, A, B);
         let R = slip ? R_SLIP : Math.min(A.cls.rConcave, B.cls.rConcave);
         if (n.wide && !slip) R *= WIDE_CORNER;
+        // a sharp corner rounds wider (x 1.2 rad / phi under about 70 degrees): at a fixed radius the tip of the corner between two roads
+        // meeting at 30 degrees stayed a grass sliver several tiles long (the junction gallery, 2026-10-19)
+        if (!slip && phi < 1.2) R *= 1.2 / phi;
         R = Math.min(R, 0.45 * minLen * tan); if (R < 0.15) continue;
         const wide = A.cls.order >= B.cls.order ? A : B;
         const cp = cornerPatch(N, A.dir, A.h, B.dir, B.h, phi, R); if (!cp) continue;
@@ -840,6 +864,20 @@ export class RoadNetwork {
       // each arm paved (and its walk laid) from the node out to where its road's own surface starts (the route's end inset): the boxes and corner
       // patches left wedges where an arm's surface starts far out, as a street meeting a wide road at 45 degrees, or a wide one-way turning at
       // a junction (the owner, 2026-10-19: "this wedge missing instead of a smooth turn")
+      // two arms straight on at a junction of 3+ with different widths: a taper on each side no other arm joins, from the wide edge at the node
+      // to the narrow edge (over twice the step, 2.5 tiles at least); without it the wide road's kerb stopped at the node and the narrow road's
+      // started a step in, a jagged notch (the owner's screenshot of a wide one-way turning with a street straight on, 2026-10-19)
+      if (k >= 3) for (let i = 0; i < k; i++) for (let j = i + 1; j < k; j++) {
+        const P = arms[i]!, R2 = arms[j]!; if (dot(P.dir, R2.dir) >= -0.96 || Math.abs(P.h + P.walk - R2.h - R2.walk) < 0.3) continue;
+        const [wide, narrow] = P.h + P.walk >= R2.h + R2.walk ? [P, R2] : [R2, P], nn = perp(narrow.dir);
+        const T = Math.min(Math.max(2.5, 2 * (wide.h + wide.walk - narrow.h - narrow.walk)), 0.6 * narrow.len), E = add(N, mul(narrow.dir, T));
+        for (const sg of [1, -1] as const) {
+          const sv = mul(nn, sg); if (arms.some(o => o !== wide && o !== narrow && dot(o.dir, sv) > 0.15)) continue;
+          const pa = [N, add(N, mul(sv, wide.h)), add(E, mul(sv, narrow.h)), E], pw = [N, add(N, mul(sv, wide.h + wide.walk)), add(E, mul(sv, narrow.h + narrow.walk)), E];
+          walkF.push(feat('poly', polyPath(pw), 0, wide.cls.walkTex, walkOrder(wide.cls.walkTex), bboxOf(pw, 0.3)));
+          asphF.push(feat('poly', polyPath(pa), 0, wide.cls.tex, wide.cls.order, bboxOf(pa, 0.3), 'butt', kerbed(wide.cls)));
+        }
+      }
       if (k >= 3) for (const a of arms) {
         const t = a.reachEdge + (n.type === 'slip' ? R_SLIP : a.cls.rConcave) + 0.35, e = add(N, mul(a.dir, t));
         const band = (h: number) => [add(N, mul(a.nrm, h)), add(e, mul(a.nrm, h)), sub(e, mul(a.nrm, h)), sub(N, mul(a.nrm, h))], pa = band(a.h), pw = band(a.h + a.walk);

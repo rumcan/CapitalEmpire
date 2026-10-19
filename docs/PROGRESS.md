@@ -1059,6 +1059,23 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **Speed limits, ring and mini traffic, junction surfaces, right-click build (2026-10-19 late): DONE.**
+  - *Speed limits by road size* (km/h): gravel and lane 30, street 40, avenue 50, road and arterial 60, boulevard 70, divided and six-lane
+    80, grand 90 (were 29 to 72, not in size order). *Speed tiers* +20/+40/+60 km/h on every road, capped at 140 (`SPEED_BONUS_KMH`,
+    `speedOf`, `RoadNetwork.speedTier`, a 'speed' netop, saved), open from 1990/1995/2000 (`SPEED_TIER_YEAR`; all in dev); chosen in the
+    Roads panel ("Speed limits" chips), each road card shows its km/h. The lane graph rebuilds every lane when the tier changes.
+  - Faster arterials exposed two ring faults: an inner-lane exit pulling away could still be over the outer lane when a ring car arrived
+    (now a ring car stops short of an exit crossing a car on the exit occupies, `accelerate`), and a mini's ring gridlocked with all four
+    arms in (a mini entry now also needs the arc after its own clear). Bench (600 veh/h, arterial): 1/2/3 ring lanes 46.0/5.3/4.4 s, 0
+    overlaps, 0 towed. An approach of 2+ lanes per ring lane spreads evenly over the ring lanes (six into three: two each) so cars enter
+    side by side; the equal-priority merge rule (longest wait first) gives the zipper order. A/B sim:gate step time unchanged.
+  - *Junction surfaces*: between each pair of arms under 180 degrees apart the asphalt and the walk are filled from the node to where the
+    facing kerbs (walk edges) meet; a sharp corner rounds wider (x 1.2 rad / phi); two arms straight on with different widths taper
+    (over twice the step) on each side no other arm joins. `__junctionGallery()` (dev) builds 918 junctions (9 main x 6 side roads x 17
+    shapes) and counts bare spots almost enclosed by surface (`junctionHoles`); 198 flagged before, the rest now small slivers at 30-60
+    degree corners of the narrowest roads and a grand boulevard folding back at 45 degrees (left).
+  - Right-click in the road tool builds the route, as Enter (a right drag still pans).
+  - Checks: road tests 117/117, typecheck clean; full `npm test` earlier 418/421 (timing budgets only); `town:gate` and `sim:gate` PASS.
 - **Junction wedges and parked cars (2026-10-19 night): DONE.** At a junction of 3+ arms each arm is now paved (and its walk
   laid) from the node to where its road's own surface starts (`nodeFeatures`): a street at 45° to a wide road, or a wide one-way
   turning at a junction, left an unpaved wedge (the owner's screenshots). Browser-checked: six-lane one-way turning with a street at

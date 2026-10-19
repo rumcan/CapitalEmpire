@@ -16,6 +16,7 @@ export function netToOps(net: RoadNetwork): NetOp[] {
   for (const n of net.nodes.values()) if (n.wide || n.tl || (n.rl ?? 1) > 1) ops.push({ k: 'flags', x: n.x, y: n.y, wide: !!n.wide, tl: !!n.tl, rl: n.rl ?? 1 });
   for (const n of net.nodes.values()) if (n.slipOff?.length) ops.push({ k: 'slips', x: n.x, y: n.y, off: n.slipOff });
   for (const n of net.nodes.values()) if (n.sig !== undefined || n.split?.length) ops.push({ k: 'signal', x: n.x, y: n.y, sig: n.sig ?? 1, split: n.split });
+  if (net.speedTier) ops.push({ k: 'speed', tier: net.speedTier });
   ops.push({ k: 'rebuild', full: true });
   return ops;
 }
@@ -39,6 +40,7 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
       case 'flags': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setNodeFlags(nd, op.wide, op.tl, op.rl ?? nd.rl ?? 1, false); break; }
       case 'slips': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setSlipOff(nd, op.off, false); break; }
       case 'signal': { const nd = n.nodeAt({ x: op.x, y: op.y }); if (nd) n.setSignal(nd, op.sig, op.split, false); break; }
+      case 'speed': n.setSpeedTier(op.tier, false); break;
       case 'rebuild': n.rebuild(op.full); break;
       case 'clear': n.clear(); break;
     }
@@ -114,6 +116,8 @@ export class NetEditor {
   /** the slip node's corners without a slipway (their in-arms, armDeg; empty = all have one) */
   setSlipOff(n: Node, off: number[]) { this.ops.push({ k: 'slips', x: n.x, y: n.y, off }); this.net.setSlipOff(n, off, false); }
   /** the lights' tier (0 fixed-time, 1 actuated, 2 adaptive) and the fixed-time green seconds of each phase (split; none = 18 s each) */
+  /** every road's speed-limit tier (see speedOf) */
+  setSpeedTier(t: 0 | 1 | 2 | 3) { this.ops.push({ k: 'speed', tier: t }); this.net.setSpeedTier(t, false); }
   setSignal(n: Node, sig: 0 | 1 | 2, split?: number[]) { this.ops.push({ k: 'signal', x: n.x, y: n.y, sig, split }); this.net.setSignal(n, sig, split, false); }
   clear() { this.net.clear(); this.ops = [{ k: 'clear' }]; }
   /** rebuild here, and hand back the ops (ending in the same rebuild) for the workers */
