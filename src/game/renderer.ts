@@ -1,11 +1,11 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
-import { POOL_ANCHOR, PPM } from './ground-art';
+import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { quadBox, type LotPatch } from './ground-protocol';
+import { quadBox, type LotPatch, type PatchTex } from './ground-protocol';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -23,8 +23,10 @@ export const PLAN_BLOCK_COLOURS = ['#c9b79a', '#d98f5a', '#e8d27a', '#8fae6a', '
 const LOT_CELL = 32;
 /** the asphalt of the planner map (the same colour as the roads) */
 const PLAN_ASPHALT = '#3c4150';
-/** a patch's quad as a path (tile space) */
-const quadPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); p.lineTo(pts[2], pts[3]); p.lineTo(pts[4], pts[5]); p.lineTo(pts[6], pts[7]); p.closePath(); return p; };
+/** a patch's polygon as a closed path (tile space), all its points in order */
+const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
+/** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
+const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += pts[2 * i] * pts[2 * j + 1] - pts[2 * j] * pts[2 * i + 1]; } return a / 2; };
 
 /** Paints ground chunks (the full-quality bake) and planner chunks (the far-zoom map). Runs in the ground workers. */
 export class GroundPainter {
@@ -113,7 +115,9 @@ export class GroundPainter {
     shape('river', 0, this.planColour('water'));
     shape('creek', 0, this.planColour('water'));
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
-    for (const p of this.lotsIn(box)) { ctx.fillStyle = p.tex === 'asphalt' ? PLAN_ASPHALT : this.planColour(p.tex); ctx.fill(quadPath(p.pts)); }
+    const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : this.planColour(t as TexName);
+    const lotAll = this.lotsIn(box), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    for (const p of [...lotAll.filter(p => !p.paint), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), this.planColour('roadgravel')); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
@@ -129,14 +133,14 @@ export class GroundPainter {
   }
 
   /** a screen-space texture aligned to the world origin, for a context whose transform is the chunk's iso matrix */
-  private screenPattern(g: C2D, name: TexName, L: number, X0: number, Y0: number, Minv: DOMMatrix) {
+  private screenPattern(g: C2D, name: TexName, L: number, X0: number, Y0: number, Minv: DOMMatrix, G?: DOMMatrix) {
     const img = this.tex.image(name, L), p = g.createPattern(img, 'repeat')!;
     const ox = ((X0 * L) % img.width + img.width) % img.width, oy = ((Y0 * L) % img.height + img.height) % img.height;
-    p.setTransform(Minv.multiply(new DOMMatrix([1, 0, 0, 1, -ox, -oy]))); return p;
+    const T0 = Minv.multiply(new DOMMatrix([1, 0, 0, 1, -ox, -oy])); p.setTransform(G ? G.multiply(T0) : T0); return p;
   }
-  /** the asphalt mosaic, which lives in ground (tile) space: one period = MOSAIC_TILES tiles */
-  private groundPattern(g: C2D, img: Cnv) {
-    const p = g.createPattern(img, 'repeat')!, s = MOSAIC_TILES / img.width; p.setTransform(new DOMMatrix([s, 0, 0, s, 0, 0])); return p;
+  /** the asphalt mosaic, which lives in ground (tile) space: one period = MOSAIC_TILES tiles; G turns it about the origin */
+  private groundPattern(g: C2D, img: Cnv, G?: DOMMatrix) {
+    const p = g.createPattern(img, 'repeat')!, s = MOSAIC_TILES / img.width, S = new DOMMatrix([s, 0, 0, s, 0, 0]); p.setTransform(G ? G.multiply(S) : S); return p;
   }
 
   /** one ground chunk (CHUNK_W x CHUNK_H world px) at cache level L: the full-quality bake. lite = a district chunk
@@ -186,12 +190,12 @@ export class GroundPainter {
     const shiftM = (dy: number) => new DOMMatrix([1, 0, 0, 1, 0, dy * L]).multiply(M);
     // ---- 1a. lot ground (driveways, walks, car parks, yards) before the verges and roads: each patch in its surface,
     //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines
-    const lots = this.lotsIn(box);
+    const all = this.lotsIn(box), lots = all.filter(p => !p.paint), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     if (lots.length) {
       const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('base', L)) : null;
       for (const p of lots) {
-        const path = quadPath(p.pts);
-        ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : pat(p.tex); ctx.fill(path);
+        const path = polyPath(p.pts);
+        ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : pat(p.tex as TexName); ctx.fill(path);
         if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad') {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }
@@ -208,6 +212,8 @@ export class GroundPainter {
       }
       ctx.setTransform(M);
     }
+    // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
+    if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
     for (const b of brs) {
       const path = linePath(b.pts, false);
@@ -421,6 +427,68 @@ export class GroundPainter {
         g.restore();
       }
     }
+  }
+
+  /** the painted areas of a chunk (the Paint tool), in id order: each polygon filled with its texture through G (turned and
+   *  scaled in tile space about the origin), an optional border band inside its edge, and a thin rim for the paved textures */
+  private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
+    for (const p of paints) {
+      const st = p.paint!, path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(st.s, st.s), pb = quadBox(p.pts);
+      const r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
+      if (r[2] <= r[0] || r[3] <= r[1]) continue;
+      const asph = p.tex === 'asphalt' || p.tex === 'asphaltDark' || p.tex === 'asphaltWorn', paved = asph || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs';
+      /** paints texture t over the area: a fill of its rectangle (w = 0), or a stroke of its edge w tiles wide */
+      const lay = (t: string, w: number) => {
+        const put = (style: string | CanvasPattern) => { if (w) { ctx.strokeStyle = style; ctx.lineWidth = w; ctx.stroke(path); } else { ctx.fillStyle = style; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); } };
+        const tone = (col: string, op: GlobalCompositeOperation, alpha: number) => { ctx.globalCompositeOperation = op; ctx.globalAlpha = alpha; put(col); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; };
+        if (t === 'kerb') { ctx.strokeStyle = this.tex.curb.joint; ctx.lineWidth = w; ctx.stroke(path); ctx.strokeStyle = this.tex.curb.top; ctx.lineWidth = Math.max(0.02, w - 0.08); ctx.stroke(path); return; }
+        if (t === 'slabs') {
+          put(this.tex.curb.top);
+          if (!lite) {
+            if (w) {
+              // one row of slab sprites along each edge, on the inside (the sign of the area says which normal points in)
+              const n = p.pts.length / 2, sg = signedArea(p.pts) > 0 ? 1 : -1;
+              for (let i = 0; i < n; i++) {
+                const j = (i + 1) % n, ax = p.pts[2 * i], ay = p.pts[2 * i + 1], bx = p.pts[2 * j], by = p.pts[2 * j + 1], len = Math.hypot(bx - ax, by - ay);
+                if (len < 1e-6) continue;
+                const ux = (bx - ax) / len, uy = (by - ay) / len, seed = Math.round(ax * 4) * 73856093 ^ Math.round(ay * 4) * 19349663 ^ Math.round(bx * 4) * 83492791;
+                this.drawSlabs(ctx, { kind: 'straight', a: { x: ax, y: ay }, b: { x: bx, y: by }, n: { x: -uy * sg, y: ux * sg }, w0: -(CURB_TOP + CURB_JOINT), w1: w / 2, visible: false, seed }, box);
+              }
+            } else this.slabGrid(ctx, G, r, M);
+          }
+          ctx.globalCompositeOperation = 'multiply'; put(this.screenPattern(ctx, 'grime', L, X0, Y0, Minv)); ctx.globalCompositeOperation = 'source-over';
+          return;
+        }
+        if (t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn') {
+          put(this.groundPattern(ctx, this.tex.mosaicFor('base', L), G));
+          if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
+          if (t === 'asphaltWorn') { tone('rgb(150,150,150)', 'multiply', 0.5); tone('rgb(190,180,160)', 'screen', 0.22); }
+          return;
+        }
+        put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
+      };
+      ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
+      lay(p.tex, 0);
+      if (st.b > 0) { ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); lay(st.bt, 2 * st.b); }
+      else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
+      ctx.restore();
+    }
+  }
+  /** sidewalk slab sprites in a running bond over the rectangle r (tiles), in texture space: a tile is G (u, v), so the
+   *  slabs turn with the area; the seeds depend on the cell only, so neighbouring chunks agree */
+  private slabGrid(g: C2D, G: DOMMatrix, r: number[], M: DOMMatrix) {
+    const SW = SLAB_LEN * SLAB_CELL[1] / SLAB_CELL[0], Gi = G.inverse();
+    let u0 = Infinity, v0 = Infinity, u1 = -Infinity, v1 = -Infinity;
+    for (const [x, y] of [[r[0], r[1]], [r[2], r[1]], [r[0], r[3]], [r[2], r[3]]]) { const q = Gi.transformPoint(new DOMPoint(x, y)); u0 = Math.min(u0, q.x); v0 = Math.min(v0, q.y); u1 = Math.max(u1, q.x); v1 = Math.max(v1, q.y); }
+    const j0 = Math.floor(v0 / SW) - 1, j1 = Math.ceil(v1 / SW) + 1, k0 = Math.floor(u0 / SLAB_LEN) - 2, k1 = Math.ceil(u1 / SLAB_LEN) + 1;
+    if ((j1 - j0 + 1) * (k1 - k0 + 1) > 20000) return;
+    const img = this.tex.slabs;
+    g.setTransform(M.multiply(G)); g.imageSmoothingEnabled = true;
+    for (let j = j0; j <= j1; j++) for (let k = k0; k <= k1; k++) {
+      const rng = mulberry((k * 73856093) ^ (j * 19349663) ^ 0x5eed), [sx, sy, sw, sh] = this.tex.slabRect(this.tex.slabIndex(false, rng()));
+      g.drawImage(img, sx, sy, sw, sh, k * SLAB_LEN + (j & 1 ? SLAB_LEN / 2 : 0) - 0.01, j * SW - 0.01, SLAB_LEN + 0.02, SW + 0.02);
+    }
+    g.setTransform(M);
   }
 
   private drawLitter(ctx: C2D, net: FxView, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {

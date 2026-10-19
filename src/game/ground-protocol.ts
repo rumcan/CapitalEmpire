@@ -5,8 +5,14 @@ import type { LineStyle } from './types';
 import type { Waterway } from './terrain/types';
 import type { BBox } from './network';
 
-/** a ground patch of a lot: an oriented quad (4 corners, tiles, in order) and its surface */
-export interface LotPatch { pts: number[] /* x0 y0 x1 y1 x2 y2 x3 y3 */; tex: 'paving' | 'pad' | 'asphalt' | 'dirt' | 'gravel' | 'field'; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */ }
+/** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
+ *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id) */
+export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number }
+
+/** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
+export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'asphalt' | 'dirt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass'; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */; paint?: PatchPaint }
+/** the surface of a ground patch */
+export type PatchTex = LotPatch['tex'];
 
 /** the tile box of one patch (its corners, floored and ceiled) */
 export function quadBox(pts: number[]): BBox {
