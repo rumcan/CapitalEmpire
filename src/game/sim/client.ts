@@ -50,6 +50,9 @@ function put(out: Float32Array, k: number, tx: number, ty: number, r: number, g:
 }
 
 /** The city worker's side: the cars of the sim, as typed arrays indexed by slot (n = the sim's slot count, 0 before the first frame), the parcels and the town. */
+/** the moving cars' sprite scale (the owner, 2026-10-19: 20% smaller on the map) */
+export const CAR_SCALE = 0.8;
+
 export class SimClient {
   private worker: Worker;
   /** the parcels by key (geometry and the town's state) */
@@ -275,16 +278,16 @@ export class SimClient {
     for (let i = 0; i < this.n; i++) {
       if (!this.alive[i] || this.tunnel[i]) continue;
       const x = this.px[i], y = this.py[i]; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
-      const a = this.ang[i], hx = Math.cos(a), hy = Math.sin(a), rx = -hy, ry = hx, hl = HALF[this.kind[i] % HALF.length]!;
+      const a = this.ang[i], hx = Math.cos(a), hy = Math.sin(a), rx = -hy, ry = hx, hl = HALF[this.kind[i] % HALF.length]! * CAR_SCALE, w = CAR_SCALE; // lamps sit on the scaled car
       const fx = x + hx * hl, fy = y + hy * hl, bx = x - hx * hl, by = y - hy * hl;
-      k = put(out, k, fx + rx * 0.28, fy + ry * 0.28, 1, 0.93, 0.75, 0.9);
-      k = put(out, k, fx - rx * 0.28, fy - ry * 0.28, 1, 0.93, 0.75, 0.9);
+      k = put(out, k, fx + rx * 0.28 * w, fy + ry * 0.28 * w, 1, 0.93, 0.75, 0.9);
+      k = put(out, k, fx - rx * 0.28 * w, fy - ry * 0.28 * w, 1, 0.93, 0.75, 0.9);
       const ta = this.brake[i] ? 1 : 0.55;
-      k = put(out, k, bx + rx * 0.3, by + ry * 0.3, 1, 0.12, 0.08, ta);
-      k = put(out, k, bx - rx * 0.3, by - ry * 0.3, 1, 0.12, 0.08, ta);
+      k = put(out, k, bx + rx * 0.3 * w, by + ry * 0.3 * w, 1, 0.12, 0.08, ta);
+      k = put(out, k, bx - rx * 0.3 * w, by - ry * 0.3 * w, 1, 0.12, 0.08, ta);
       const sg = this.sig[i];
       if (blink && sg) {
-        const q = sg === 1 ? -0.36 : 0.36, cx = rx * q, cy = ry * q, fh = hl * 0.95;
+        const q = (sg === 1 ? -0.36 : 0.36) * w, cx = rx * q, cy = ry * q, fh = hl * 0.95;
         k = put(out, k, x + hx * fh + cx, y + hy * fh + cy, 1, 0.6, 0.1, 1);
         k = put(out, k, x - hx * fh + cx, y - hy * fh + cy, 1, 0.6, 0.1, 1);
       }
@@ -307,8 +310,9 @@ export class SimClient {
       if (!this.alive[i] || this.tunnel[i]) continue;
       const x = this.px[i], y = this.py[i]; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
       const f = F[this.kind[i] % F.length][this.head[i]];
-      let d = this.pool[k]; if (!d) this.pool.push((d = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0 }));
-      d.item = f.item; d.flip = f.flip; d.x = x - f.ox; d.y = y - f.oy; d.x0 = x - f.hx; d.x1 = x + f.hx; d.y0 = y - f.hy; d.y1 = y + f.hy;
+      let d = this.pool[k]; if (!d) this.pool.push((d = { item: 0, x: 0, y: 0, flip: false, scale: CAR_SCALE, x0: 0, y0: 0, x1: 0, y1: 0 }));
+      // drawn at CAR_SCALE about the car's centre: the anchor and footprint offsets scale with it
+      d.item = f.item; d.flip = f.flip; d.scale = CAR_SCALE; d.x = x - f.ox * CAR_SCALE; d.y = y - f.oy * CAR_SCALE; d.x0 = x - f.hx * CAR_SCALE; d.x1 = x + f.hx * CAR_SCALE; d.y0 = y - f.hy * CAR_SCALE; d.y1 = y + f.hy * CAR_SCALE;
       out.push(d); k++;
     }
     return out;
