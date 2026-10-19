@@ -1058,6 +1058,19 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **The junction tool, rebuilt (2026-10-19, the owner: "no visual cue on the map", "why isn't type the parent"; then "don't
+  lose what we have, research and make it better").** Design in `docs/JUNCTION-UX.md` (from Cities: Skylines II's road
+  tools, TM:PE and C:S1's junction view). **Brush** cards (Select · Plain · Lights · Roundabout with ring lanes): a type
+  brush applies to every junction you click, right-click resets to plain. **Select** a junction: an outline ring, its
+  name, the type as a segmented control, and only that type's options: Plain (wide corners, turn lanes), Lights
+  (slipways n of k with All / None and a "+" / "×" button at each corner on the map, wide corners, turn lanes, the signal
+  tier, upgrades and the fixed-time split), Roundabout (ring lanes). Slipways are an option of Lights now (the 'slip'
+  type stays in saves). **On the road:** turn lanes paint road-size turn arrows, wide corners a 2.2x kerb radius.
+  **Badges** at every junction while the tool is open (F / A / Ad, RB n, W, TL, SL n). Every earlier feature kept.
+  Commits `a0c1c34` (painting), the merge of the tool, and the polish after the browser check (brushes shrink to chips
+  while a junction is selected, panels scroll above the legend, a same-type click just selects, the badge above the
+  ring). Browser-checked with real clicks on arterial, street and mixed crossings: select, add a slipway at a corner,
+  switch type, brush, right-click reset; lane graph clean.
 - **Handover 2 (2026-10-19 morning; the chat got long, a fresh chat continues).** Done since Handover 1 (details in the
   entries below): approach flares; the junction UI (ring lanes, the Tab type flip, slipways per corner, the Signals mode);
   the calendar and the signal tiers; all ten Arena PRs merged (#1–#10, several finished by the lead on their branches);
