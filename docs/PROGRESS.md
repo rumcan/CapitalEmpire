@@ -1259,7 +1259,8 @@ small public car parks on open town lots as part of the town's growth (a small t
 Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially
 'Handover 2' at the top of 'Phase 6R progress' (the next job is **the road catalogue, 6R.2**: a parametric road model
 with one-way roads and a variant flip). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
-tiers, done) and 1.0.0 (the owner's road and town changes). Carry on through the queue without asking between steps;
+tiers, done) and 1.0.0 (the owner's road and town changes), and docs/JUNCTION-UX.md (how the junction tool was
+redesigned from Cities: Skylines and TM:PE; follow the same research-first approach for the road tool). Carry on through the queue without asking between steps;
 still ask before pushing. Delegate coding to haiku-coder and checks to haiku-runner (the worker PC is `cworker`,
 192.168.0.8, via scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go, and
 test every road/junction change in the browser across road classes before calling it done. The owner tests on
