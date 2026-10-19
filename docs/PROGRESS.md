@@ -1059,6 +1059,18 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **NEXT (asked by the owner, 2026-10-19 night, not started): road upgrade/downgrade tools and fair costs.**
+  - The Add lane tool (`laneUpdate`/`laneClick` in engine.ts, `WIDER` in network.ts) jumps gravel straight to arterial. Make it a ladder
+    of single steps: gravel -> street -> road -> arterial ("double") -> six ("triple"); lane -> street; keep avenue -> boulevard -> grand
+    and the one-way and variant chains. Add the reverse (a NARROWER map) and a Downgrade mode.
+  - Toolbar (`TOOLS` in App.tsx): replace the ➕ Add lane button with Upgrade and Downgrade buttons (toggles), with fitting icons.
+  - Costs: an upgrade charges only the difference (new class cost - old, x length x STRUCT_COST); a downgrade refunds the difference;
+    the bulldozer refunds the removed road's value (measure the network's road value before and after, so `tidyEnds` trims count);
+    Replace charges the new road less the value of the pieces it removes.
+  - Check in the browser across classes (the owner's rule), with the junction gallery (`__junctionGallery`) after any class change.
+- **Also open:** the Replace preview fix (15176e6: cut pieces amber and dashed under the route) is committed but not yet seen in the
+  browser: the app did not load while the Phase B session had half-done edits in the main checkout (App.tsx import errors).
+  Phase B (B.2 next) and the paint tool (its own worktree, branch claude/frosty-wilson-452c74) run in their own sessions.
 - **Speed limits, ring and mini traffic, junction surfaces, right-click build (2026-10-19 late): DONE.**
   - *Speed limits by road size* (km/h): gravel and lane 30, street 40, avenue 50, road and arterial 60, boulevard 70, divided and six-lane
     80, grand 90 (were 29 to 72, not in size order). *Speed tiers* +20/+40/+60 km/h on every road, capped at 140 (`SPEED_BONUS_KMH`,
