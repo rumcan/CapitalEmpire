@@ -30,6 +30,7 @@ import { compose, isCarPark, type ComposeState, type LotGeom } from './lots/comp
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
+import { FarmMap, claimedLots, composeFarm } from './ext/farms';
 import { SIG, shown, sigKey } from './sim/signals';
 import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
@@ -104,7 +105,9 @@ const LOT_NAME = ['lot', 'residential lot', 'commercial lot', 'industrial lot', 
 const LOT_BLOCKS_MS = 5000, BLOCK = 40;
 /** the library index by id, and the props the town's lots add (auto 'lot:' + key) */
 const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
-const isLotProp = (p: Prop) => !!p.auto && p.auto.startsWith('lot:');
+const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.startsWith('farm:'));
+/** the farms composed per frame at most (the rest wait in the queue), so a big network does not stall a frame */
+const FARMS_PER_FRAME = 4;
 /** the lot fills by use * 4 + decline (EMPTY, RES green, COM blue, IND orange, TOUR magenta, GOV white), darker with each decline step */
 const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5, 0.3][i & 3]!, c = [[0, 0, 0], [76, 175, 80], [47, 123, 217], [255, 140, 26], [217, 70, 239], [255, 255, 255]][i >> 2]!; return `rgb(${Math.round(c[0]! * k)},${Math.round(c[1]! * k)},${Math.round(c[2]! * k)})`; });
 /** the library cars by facing (index 0 +x e, 1 +y s, 2 -x w, 3 -y n): the sprites of the parked cars, picked by bay index */
@@ -215,6 +218,8 @@ export class Game {
   private saveTimer = 0; private blocksTimer = 0;
   /** the town's lots: their props by key, the keys queued to apply, the lots staged by the contact sheet (stageLots; they win until a reset) */
   private lotProps = new Map<string, Prop[]>(); private lotQueue = new Set<string>(); private staged = new Map<string, { g: LotGeom; st: ComposeState }>();
+  /** the farms (ext/farms): the accepted parcels follow the network; their props by key (auto 'farm:' + key, never saved), the keys queued to compose, the dev switch */
+  private farmMap = new FarmMap(); private farmProps = new Map<string, Prop[]>(); private farmQueue = new Set<string>(); private farmsEnabled = true; private farmTick = 0;
   /** scratch for the starter check (the lot's box, the props found); the planner's last building refresh (ms) and the timer of the town's lot refresh */
   private lotBox: BBox = [0, 0, 0, 0]; private lotHits = new Set<Prop>(); private blocksAt = -Infinity; private lotBlocksTimer = 0;
   private raf = 0; private last = 0;
@@ -460,6 +465,41 @@ export class Game {
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
     this.setLotGround(key, c.ground);
   }
+  /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
+   *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
+  private farmsUpdate(full = false) {
+    if (!this.farmsEnabled || !this.terrain) return;
+    const { added, removed } = this.farmMap.update(this.net, { cls: this.terrain.cls, seed: this.seed }, { towns: this.townPts, site: this.site, parks: this.parkDefs }, this.traffic.lots, full || this.net.lastFull);
+    for (const k of removed) this.dropFarm(k);
+    for (const k of added) this.farmQueue.add(k);
+  }
+  /** a farm's props and ground go, and it leaves the compose queue */
+  private dropFarm(key: string) {
+    this.farmQueue.delete(key);
+    const ps = this.farmProps.get(key);
+    if (ps) { for (const p of ps) if (this.props.has(p)) this.removeProp(p); this.farmProps.delete(key); }
+    this.setLotGround('farm:' + key, null);
+  }
+  /** every farm goes (a reset, the farms switched off) */
+  private dropAllFarms() {
+    for (const k of [...this.farmMap.farms.keys(), ...this.farmProps.keys()]) this.dropFarm(k);
+    this.farmMap.clear(); this.farmQueue.clear();
+  }
+  /** a farm composes on apply: its farmhouse, barn and fields as auto props ('farm:' + key, never saved) and its ground patches; at most FARMS_PER_FRAME a frame */
+  private applyFarmQueue() {
+    const q = this.farmQueue; if (!q.size) return;
+    let k = 0;
+    for (const key of q) { if (k++ >= FARMS_PER_FRAME) break; q.delete(key); this.placeFarm(key); }
+  }
+  private placeFarm(key: string) {
+    const f = this.farmMap.farms.get(key); if (!f) return;
+    this.dropFarm(key);
+    const c = composeFarm(f.p, f.seed), ps: Prop[] = [], pk = 'farm:' + key;
+    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, pk)); }
+    this.farmProps.set(key, ps); this.setLotGround(pk, c.ground);
+  }
+  /** the dev switch (window.__game.farmsOn(false)): farms on (the default) or off; off removes every farm's props and ground */
+  farmsOn(on: boolean) { this.farmsEnabled = on; if (on) this.farmsUpdate(true); else this.dropAllFarms(); }
   /** median trees, roundabout trees and traffic lights follow the road network (only what the last rebuild changed) */
   private syncAutoProps(added: AutoProp[], removed: AutoProp[]) {
     for (const a of removed) { const p = this.autoByKey.get(autoKey(a)); if (p) this.removeProp(p); }
@@ -491,7 +531,7 @@ export class Game {
     const ops = this.edit.commit(); this.lanes.update(this.net);
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
-    this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals();
+    this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate();
     this.syncLamps(); if (this.parkDefs.length) this.syncParks(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
     this.scheduleSave(); this.emit();
   }
@@ -502,6 +542,7 @@ export class Game {
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false);
     this.ground.invalidateAll(); this.syncParks(); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
+    this.farmsUpdate(true);
   }
 
   // ---------- road routing ----------
@@ -1593,6 +1634,7 @@ export class Game {
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
+    this.dropAllFarms();
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
@@ -1743,7 +1785,9 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
-    this.applyLotQueue(); this.flushLotGround();
+    this.applyLotQueue(); this.applyFarmQueue(); this.flushLotGround();
+    // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
+    if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.parkDefs.length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;

@@ -196,11 +196,13 @@ export class GroundPainter {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }
       }
-      const bays = lots.filter(p => p.lines && p.lines.length);
-      if (bays.length) {
+      // lines: parking bays in worn off-white; furrows (field and dirt patches, the farms' crop rows) in dark brown
+      for (const furrow of [true, false]) {
+        const set = lots.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') === furrow));
+        if (!set.length) continue;
         const lb = this.buffer('lotLines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineCap = 'butt'; lg.lineJoin = 'round';
-        lg.strokeStyle = 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(0.08, minW); lg.beginPath();
-        for (const p of bays) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); }
+        lg.strokeStyle = furrow ? 'rgba(74,58,36,0.5)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(0.08, minW); lg.beginPath();
+        for (const p of set) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); }
         lg.stroke(); lg.setTransform(M); lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = this.screenPattern(lg, 'wear', L, X0, Y0, Minv); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
         composite(lb);
       }
