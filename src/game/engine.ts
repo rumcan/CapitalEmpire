@@ -1,9 +1,9 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
+import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, ringRadius, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
-import { MIN_SEP, checkLegs, snapPoint, type Snap } from './snap';
+import { MIN_SEP, checkLegs, replaceCuts, snapPoint, type Snap } from './snap';
 import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
@@ -148,6 +148,8 @@ export class Game {
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
+  /** Replace on (E): finishing a route first bulldozes the road pieces it would clash with (replaceCuts in snap.ts), then builds it */
+  replaceMode = false;
   /** the junction tool's brush: 'select' (a click selects a junction), or a type that a click installs on the junction (plain, stop, mini, signal, roundabout) */
   brush: 'select' | 'plain' | 'stop' | 'mini' | 'signal' | 'roundabout' = 'select';
   /** the ring lanes a roundabout installed (or re-laned) by the junction tool gets; set by the Roundabout card's chips and by Tab */
@@ -570,8 +572,10 @@ export class Game {
     if (!legs.length) return '';
     // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
     const c0 = this.cursorSnap(), last = this.route[this.route.length - 1], cs = c0 && last ? this.aim(last, c0) : c0, onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
-    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls);
+    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, this.replaceMode ? new Set(this.routeCuts(legs).map(c => c.seg)) : undefined);
   }
+  /** the road pieces the route bulldozes with Replace on (none otherwise): see replaceCuts */
+  private routeCuts(legs: Leg[]): PieceSel[] { return this.replaceMode && legs.length ? replaceCuts(this.net, legs, this.cls) : []; }
   /** legs from `from` to `p`: a right-angle bend, or (45° mode) a diagonal followed by a straight */
   private legsTo(from: Pt, p: Pt, straight = false): Leg[] {
     const dx = p.x - from.x, dy = p.y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
@@ -643,7 +647,7 @@ export class Game {
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
-    const why = add.length ? checkLegs(this.net, [...legs, ...add], this.routeFrom, s, this.cls) : '';
+    const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, this.replaceMode ? new Set(this.routeCuts(all).map(c => c.seg)) : undefined) : '';
     if (why) { this.toast(why, 'warn'); return; }
     for (const l of add) this.route.push(l.b);
     this.routeLast = s; this.emit();
@@ -731,7 +735,7 @@ export class Game {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
-    const block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls);
+    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, this.replaceMode ? new Set(cuts.map(c => c.seg)) : undefined);
     if (block) { this.toast(block, 'warn'); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
@@ -750,6 +754,7 @@ export class Game {
     for (const p of cleared) this.removeProp(p);
     const now = performance.now(), dur = Math.min(4000, 700 + total * 70);
     const cum: number[] = []; let acc = 0; for (const l of parts) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
+    for (const c of cuts) this.edit.removePiece(c);
     this.edit.addLegs(parts, cls, this.lineStyle, kinds);
     this.commitNetwork(true, now + dur + 150);
     this.builds.push({ legs: parts, cls, t0: now, dur, total, cum });
@@ -757,7 +762,7 @@ export class Game {
     if (comp) this.traffic.spend('compensation', comp);
     this.route = [];
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
-    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
+    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''}` : ''}`, 'good');
     // a one-way road that ends in a dead end traps cars: warned, not refused
     if (cls.oneway && parts.length && [parts[0]!.a, parts[parts.length - 1]!.b].some(p => this.net.nodeAt(p)?.segs.length === 1)) this.toast('A one-way road that ends in a dead end traps cars', 'warn');
   }
@@ -771,6 +776,9 @@ export class Game {
     else if (same && (t !== 'roundabout' || (n.rl ?? 1) === rl)) why = t === 'signal' ? 'It already has traffic lights' : t === 'plain' ? 'It is already plain' : t === 'stop' ? 'It is already an all-way stop' : t === 'mini' ? 'It is already a mini-roundabout' : `It already has a ${rl}-lane ring`;
     else if (n.arms.length < spec.minDeg) why = t === 'roundabout' ? 'A roundabout needs a junction or a bend in the road' : 'Needs a junction of three or more roads';
     else if (t === 'mini' && !miniFits(n)) why = 'Too big for a mini-roundabout (2 lanes each way at most)';
+    // an arm that ends inside the ring (another junction or a bend within its radius plus 2 tiles): its road would run on to the island and cars
+    // turned at its end there (the owner's 3-lane ring, 2026-10-19: an arterial met the street 10 tiles from the junction made a ring)
+    else if (t === 'roundabout' && n.arms.some(a => a.len < ringRadius(n.arms.map(b => b.h), rl) + 2)) { const need = ringRadius(n.arms.map(b => b.h), rl) + 2, a = n.arms.reduce((p, q) => (q.len < p.len ? q : p)); why = `Too close to the next junction or bend: a ${rl}-lane ring needs arms of ${Math.ceil(need * 2)} m (one is ${Math.round(a.len * 2)} m)`; }
     else if (cost > this.money) why = `Not enough money: ${ring ? `the ${rl}-lane ring` : spec.name.toLowerCase()} costs $${cost.toLocaleString()}`;
     return { cost, why };
   }
@@ -1179,6 +1187,7 @@ export class Game {
       case 'f': case 'F': this.setFlow(!this.showFlow); this.emit(); break;
       case 'b': case 'B': this.panel = this.panel === 'bottlenecks' ? null : 'bottlenecks'; if (this.panel) this.traffic.requestReport(); this.emit(); break;
       case 'q': case 'Q': this.bendMode = this.bendMode === 90 ? 45 : 90; this.emit(); break;
+      case 'e': case 'E': this.replaceMode = !this.replaceMode; this.toast(this.replaceMode ? 'Replace: on (roads in the way are bulldozed)' : 'Replace: off', 'info'); this.emit(); break;
       case 'r': case 'R': if (this.tool === 'toll') { this.tollFlip = !this.tollFlip; if (this.tollHover) this.tollUpdate(this.tollHover.mx, this.tollHover.my); this.emit(); } else this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
       case 'x': case 'X': this.setTool('bulldoze'); break;
@@ -2346,7 +2355,7 @@ export class Game {
   private drawGroundOverlays(ctx: CanvasRenderingContext2D) {
     const strip = (legs: Leg[], hw: number) => { for (const l of legs) { const d = sub(l.b, l.a), len = vlen(d) || 1, u = mul(d, 1 / len), n = perp(u); const c = [add(sub(l.a, mul(u, hw)), mul(n, hw)), add(add(l.b, mul(u, hw)), mul(n, hw)), sub(add(l.b, mul(u, hw)), mul(n, hw)), sub(sub(l.a, mul(u, hw)), mul(n, hw))]; ctx.moveTo(c[0].x, c[0].y); for (let k = 1; k < 4; k++) ctx.lineTo(c[k].x, c[k].y); ctx.closePath(); } };
     if (this.tool === 'road') {
-      const legs = this.previewLegs(), cls = this.cls, cs = this.cursorSnap(), block = this.routeBlock(legs), bad = block !== '';
+      const legs = this.previewLegs(), cls = this.cls, cs = this.cursorSnap(), block = this.routeBlock(legs), bad = block !== '', cuts = this.routeCuts(legs);
       if (legs.length) {
         this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = cls.walkTex === 'gravel' ? 'rgba(150,140,120,0.45)' : 'rgba(230,200,160,0.45)'; ctx.fill();
@@ -2368,6 +2377,8 @@ export class Game {
           }
           ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.stroke();
         }
+        // the pieces Replace will bulldoze: outlined red, as the bulldozer's hover piece
+        if (cuts.length) { this.setIso(ctx); ctx.beginPath(); for (const c of cuts) strip([{ a: c.p0, b: c.p1 }], c.seg.cls.h + c.seg.cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke(); }
         const pts = [...this.route, legs[legs.length - 1].b];
         for (const p of pts) { const s = this.screen(p.x, p.y); ctx.fillStyle = '#ffd866'; ctx.beginPath(); ctx.arc(s.x, s.y, 4 * this.dpr, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#4a3200'; ctx.lineWidth = 1.5; ctx.stroke(); }
       } else if (cs) {

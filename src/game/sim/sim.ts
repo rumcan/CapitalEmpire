@@ -52,6 +52,10 @@ const DIVERGE = 6;
 /** a ring exit's gap to a car coming on an outer ring lane it crosses: s at its speed, and m at least (4 s / 10 m: no overlaps on the
  *  bench at 600 veh/h per arm; 2 s / 6 m let cars touch) */
 const EXIT_GAP = 4, EXIT_MIN = 10;
+/** a dseg shorter than this (m) leaves too little room to change lanes on it: the movement at its end is chosen one junction early (Sim.ahead),
+ *  so the lane before it is picked for both (a short last piece of an arterial before a ring let no car reach the ring lane its exit needs:
+ *  they went round the inner ring, out and back; the owner's 2-lane ring, 2026-10-19) */
+const LOOK = 80;
 /** the queue of the junction ahead: the last this many metres of a LINK lane (Sim.lossQ) */
 const QUEUE_M = 100;
 /** a copy of a Float64Array a in one of length m (the per-lane sums keep their values when the lists grow) */
@@ -88,6 +92,8 @@ export class Sim {
   /** junction control per slot: the connector granted (-1), the lane where its room is reserved (-1), seconds waiting at a line,
    *  1 once stopped at a line, the movement it wants at the end of its lane (-1 = none) */
   grant: Int32Array; resv: Int32Array; wait: Float32Array; stopped: Uint8Array; want: Int32Array;
+  /** the movement chosen early at the end of the next dseg when that one is short (see LOOK; -1 none) */
+  ahead: Int32Array;
   /** routing per slot: the destination dseg (-1 = none, a random walk), metres along it, the dsegs still to take (null = none),
    *  the junction decisions in a row that found no finite cost */
   dest: Int32Array; destS: Float64Array; route: (number[] | null)[]; noRoute: Uint8Array;
@@ -213,7 +219,7 @@ export class Sim {
     this.vtype = new Uint8Array(cap); this.v0f = new Float32Array(cap); this.lat = new Float32Array(cap);
     this.move = new Int32Array(cap).fill(-1); this.plan = new Array<number[] | null>(cap).fill(null);
     this.pi = new Int16Array(cap); this.stuck = new Float32Array(cap); this.vg = new Float64Array(cap).fill(Infinity);
-    this.grant = new Int32Array(cap).fill(-1); this.resv = new Int32Array(cap).fill(-1); this.want = new Int32Array(cap).fill(-1);
+    this.grant = new Int32Array(cap).fill(-1); this.resv = new Int32Array(cap).fill(-1); this.want = new Int32Array(cap).fill(-1); this.ahead = new Int32Array(cap).fill(-1);
     this.wait = new Float32Array(cap); this.stopped = new Uint8Array(cap);
     this.dest = new Int32Array(cap).fill(-1); this.destS = new Float64Array(cap); this.route = new Array<number[] | null>(cap).fill(null);
     this.noRoute = new Uint8Array(cap);
@@ -268,7 +274,7 @@ export class Sim {
     let pending = 0;
     for (let i = 0; i < this.cap; i++) {
       if (!this.alive[i]) continue;
-      this.route[i] = null;
+      this.route[i] = null; this.ahead[i] = -1;
       const bus = this.bus[i]! >= 0;
       // a bus is kept on its lane (or moved to the nearest one) and planned to its stop again (busHome); only a bus whose route is gone is removed (its fans logged)
       if (bus && !this.busHome(i)) { this.free(i); continue; }
@@ -648,7 +654,7 @@ export class Sim {
   /** a bus with no stop to drive to waits where it is: no destination (dest -1), a plan that is its lane alone, and it holds still (accelerate);
    *  the next graph update or route change points it at its stop again */
   private hold(i: number): boolean {
-    this.dest[i] = -1; this.unbind(i); this.plan[i] = [this.lane[i]!]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1;
+    this.dest[i] = -1; this.unbind(i); this.plan[i] = [this.lane[i]!]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; this.ahead[i] = -1;
     return true;
   }
   /** the bus step (once per step, after tow): a bus within its jam gap s0 + 1 m of its target stop and under 0.5 m/s is at the stop and dwells there. At the lot
@@ -1057,6 +1063,12 @@ export class Sim {
       const here = this.reach(w, cur), there = this.reach(w, T);
       if (!here && there) bias = 1 + 2 * Math.max(0, 1 - (LC - S[i]) / 150);
       else if (here && !there) bias = -1000;
+      // both reach it: the lane whose path through w lands where the movement chosen early (ahead) can be reached
+      else if (here && this.ahead[i]! >= 0) {
+        const h2 = this.reach2(w, cur, this.ahead[i]!), t2 = this.reach2(w, T, this.ahead[i]!);
+        if (!h2 && t2) bias = 1 + 2 * Math.max(0, 1 - (LC - S[i]) / 150);
+        else if (h2 && !t2) bias = -1000;
+      }
     }
     // an obstacle near ahead on this lane and none near on the target: a strong reason to change
     if (this.blocks.size && this.blockAhead(cur, S[i]) <= BLOCK_NEAR && this.blockAhead(T, sN) > BLOCK_NEAR) bias += 2;
@@ -1177,9 +1189,12 @@ export class Sim {
     // a bus with no stop to drive to waits (see hold); a car with none walks at random
     if (bus && this.dest[i]! < 0) return this.hold(i);
     const outs = d ? d.out : [];
+    const early = this.ahead[i]!; this.ahead[i] = -1;
     if (!outs.length) { this.unbind(i); this.plan[i] = [L]; this.pi[i] = 0; this.move[i] = -1; this.want[i] = -1; return true; }
     let w: number;
     if (this.dest[i]! < 0) w = this.randomMove(outs);
+    // chosen one junction early (the dseg is short, see LOOK)
+    else if (early >= 0 && outs.includes(early)) w = early;
     else {
       w = this.steer(i, dsId, outs);
       if (w < 0 && bus) return this.hold(i);
@@ -1191,6 +1206,9 @@ export class Sim {
       } else this.noRoute[i] = 0;
     }
     this.want[i] = w;
+    // the dseg after w is short: its movement is chosen now too, so the lane here is picked for both (see LOOK)
+    const m = g.moves[w], d2 = m ? g.dsegs[m.to] : null;
+    if (!bus && this.dest[i]! >= 0 && d2 && d2.len < LOOK && d2.out.length > 1 && m!.to !== this.dest[i]) { const w2 = this.steer(i, m!.to, d2.out); if (w2 >= 0) this.ahead[i] = w2; }
     this.planFrom(i, L, -1);
     return true;
   }
@@ -1243,7 +1261,7 @@ export class Sim {
       if (n) { let k = Math.floor(this.rnd() * n); for (const x of outs) if (this.reach(x, L) && k-- === 0) { m = x; break; } }
     }
     this.move[i] = m;
-    this.plan[i] = m >= 0 ? this.start(m, L) ?? this.chain(L) : this.chain(L);
+    this.plan[i] = m >= 0 ? this.start(m, L, m === this.want[i] ? this.ahead[i]! : -1) ?? this.chain(L) : this.chain(L);
     this.pi[i] = 0;
     // a plan from an approach lane onto a booth: the vehicle is bound to that booth lane until it is on it (or leaves the plan)
     const P = this.plan[i]!;
@@ -1253,11 +1271,13 @@ export class Sim {
   private unbind(i: number) { const b = this.boundTo[i]!; if (b >= 0) { this.bound[b]!--; this.boundTo[i] = -1; } }
 
   /** the plan a movement gives from lane L: its path from L, or a path whose second lane L feeds (its first lane replaced by L); null if none */
-  private start(mid: number, L: number): number[] | null {
+  private start(mid: number, L: number, w2 = -1): number[] | null {
     const m = this.g.moves[mid]!, nx = this.g.lanes[L]!.next;
-    // several paths from L (a toll gate's fan-out to its booths): the one whose booth lane (its third) has the fewest vehicles, the lowest index on a tie
+    // several paths from L (a toll gate's fan-out to its booths): the one whose booth lane (its third) has the fewest vehicles, the lowest index on a tie;
+    // with a movement chosen early (w2), only those whose last lane reaches it, if any does
+    const ok = (p: number[]) => w2 < 0 || this.reach(w2, p[p.length - 1]!), any = w2 >= 0 && m.paths.some(p => p[0] === L && ok(p));
     let best: number[] | null = null, bn = Infinity;
-    for (const p of m.paths) if (p[0] === L) { const b = p[2]!, c = this.onLane[b]!.length + this.bound[b]!; if (c < bn) { bn = c; best = p; } }
+    for (const p of m.paths) if (p[0] === L && (!any || ok(p))) { const b = p[2]!, c = this.onLane[b]!.length + this.bound[b]!; if (c < bn) { bn = c; best = p; } }
     if (best) return best.slice();
     for (const p of m.paths) if (nx.includes(p[1])) { const q = p.slice(); q[0] = L; return q; }
     return null;
@@ -1272,6 +1292,13 @@ export class Sim {
     return false;
   }
 
+  /** true if movement mid has a path from lane L whose last lane has a plan for movement w2 (the lane before a short dseg, see LOOK) */
+  private reach2(mid: number, L: number, w2: number): boolean {
+    const m = this.g.moves[mid]; if (!m) return false;
+    const nx = this.g.lanes[L]!.next;
+    for (const p of m.paths) if ((p[0] === L || nx.includes(p[1]!)) && this.reach(w2, p[p.length - 1]!)) return true;
+    return false;
+  }
   /** lane L followed by next[0] lanes up to and including the first LINK lane (the fallback plan) */
   private chain(L: number): number[] {
     const lanes = this.g.lanes, P = [L];

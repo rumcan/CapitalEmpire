@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -1058,6 +1058,31 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **Rings at awkward joins, and the road tool's Replace mode (2026-10-19 evening): DONE.**
+  - *Cars dived into the ring and U-turned at the centre.* Cause: an arterial met the street 10 tiles from a junction
+    (allowed: MIN_SEP 8) and the junction was made a 3-lane ring (rb 15): the arterial's own node sat inside the ring,
+    its lanes ran on to the island and cars turned at its dead end there. The junction tool now refuses a ring whose
+    arm is shorter than its radius + 2 tiles (`installCheck`, `ringRadius` in network.ts): "Too close to the next
+    junction or bend: a 3-lane ring needs arms of 34 m (one is 20 m)".
+  - *A road could be left anywhere on a ring.* `snapPoint`: any point in a ring's circle (rb + walk) snaps to its node;
+    `checkLegs` rule 5: a leg may not enter a ring's circle except to end on its node ("Roads join a roundabout at its
+    centre"; a leg from an arm's far node only keeps its centre line off the circle).
+  - *Cars missed their ring lane after a short last piece of road* (a 45° bend near the ring): when the next dseg is
+    under LOOK (80 m), the movement at its end is chosen one junction early (`Sim.ahead`), MOBIL biases the lane for
+    both, and `start` takes the path that reaches it. Probe (skewed 2-lane ring, 900 veh/h): looping trips 16 → 7 and
+    25 → 8 (no bend: 6). Test in roundabout.test.ts (fails before). sim:gate A/B, 1–2 days, 10k cars, seeds 1–3: all
+    PASS, arrivals level (seed 2 +0.7 %, seed 3 −0.2 %; seed 1 −4 % was noise), mean speed 2–3 % lower (4.42 → 4.3
+    m/s), towed 4–13 a day. `SEED` env for gate.ts added for such A/Bs.
+  - *Replace mode* (Roads panel switch under Bends, key E; Shift stays the straight run): finishing a route first
+    bulldozes the pieces it clashes with (`replaceCuts` in snap.ts: a seg along it, beside it in the corridor, or met
+    at a shallow angle; a seg crossed at 30°+ away from its nodes, or leaving a route node at 30°+ from every way the
+    route leaves it, is kept), then builds; checkLegs judges those segs as gone (`skip`). A route end on an old road
+    cuts it exactly there, so the rest joins. Cut pieces show red while drawing. Also: a leg may now pass over an
+    existing junction at 30°+ without a click there. Browser-tested: arterial over a street's middle, six-lane over a
+    road through a crossing, grand boulevard along a 45° street, arterial over a ring arm into the ring centre (the arm
+    beyond the ring kept). 8 Replace / ring tests in snap.test.ts.
+  - Checks: typecheck clean; `npm test` 406/407 (ext-terrain2's 4 s timing on a loaded PC); `town:gate` PASS (5,124
+    pop, 0 jams).
 - **3-lane rings, the owner's follow-ups (2026-10-19 afternoon): DONE.**
   - *Cars dived to the island, went round, out the way they came and back in.* Cause: a car that could not get into
     its movement's approach lane (no gap in a queue) got a **random** movement its lane allows (sim.ts `planFrom`), often

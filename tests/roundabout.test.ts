@@ -169,3 +169,21 @@ test('ring lanes round trip: the save entry keeps them (bits 4 and 8 of the flag
   applyOps(fresh, netToOps(e.net));
   assert.equal(fresh.nodeAt({ x: C, y: C })?.rl, 3);
 });
+
+test('a short last piece of arterial before a 2-lane ring: a car starting in the left lane for the first exit changes lanes before it and enters the ring once', () => {
+  // streets W, E and S and an arterial in at 45 degrees that bends 14 tiles out (its last piece is too short to change lanes on): the
+  // arterial's first exit is W, from its right lane only. Without the early choice the car kept the left lane, went round the inner ring and came back
+  const e = new NetEditor(new RoadNetwork()), A = { x: C + 60, y: C - 62 };
+  e.addLegs([leg(C - 80, C, C + 80, C), leg(C, C, C, C + 80)], CLASS.street, 0);
+  e.addLegs([leg(C, C, C + 14, C - 14), leg(C + 14, C - 14, A.x, A.y)], CLASS.arterial, 0); e.commit();
+  const n = e.net.nodeAt({ x: C, y: C })!; e.setNodeType(n, 'roundabout'); e.setNodeFlags(n, false, false, 2); e.commit();
+  const g = new LaneGraph(); g.update(e.net);
+  const from = g.dsegs.find(d => d && d.from.x === A.x && d.from.y === A.y)!, to = g.dsegs.find(d => d && d.to.x === C - 80 && d.to.y === C)!;
+  const sim = new Sim(g, 10, 1), i = sim.spawnAt(from.lanes[0]!, 2, to.id, Math.min(30, to.len - 2));
+  assert.ok(i >= 0);
+  const entries: string[] = [];
+  for (let k = 0; k < 3000 && sim.alive[i]; k++) { sim.step(); const l = g.lanes[sim.lane[i]!]!; if (l.kind === LK.CONN && l.key.startsWith('E') && entries[entries.length - 1] !== l.key) entries.push(l.key); }
+  assert.ok(!sim.alive[i], 'the car arrived');
+  assert.equal(entries.length, 1, `ring entries: ${entries.join(', ')}`);
+  assert.ok(!entries[0]!.endsWith(':1'), `entered the outer ring lane (${entries[0]})`);
+});

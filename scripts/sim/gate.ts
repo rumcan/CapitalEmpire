@@ -25,7 +25,7 @@ const tBuild = performance.now();
 benchNetwork(e, 1);
 const g = new LaneGraph(); g.update(e.net);
 const built = Math.round(performance.now() - tBuild);
-const sim = new Sim(g, cars, 1);
+const sim = new Sim(g, cars, Number(process.env.SEED ?? 1)); // SEED: another run of the same bench (A/B checks)
 sim.profile = false;
 sim.setTarget(cars);
 console.log(`[gate] ${g.lanes.filter(Boolean).length} lanes, ${e.net.segs.size} segs; ${days} days (${steps} steps), ${cars} cars; built in ${built} ms`);

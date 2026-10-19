@@ -615,6 +615,11 @@ function RoadPanel({ game }: { game: Game }) {
         {([90, 45] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title="Q toggles">{b}°</button>)}
         <span className="ml-auto text-[10px] text-slate-500">Shift: straight line</span>
       </div>
+      <div className="mt-2 flex items-center gap-1 text-xs">
+        <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Replace</span>
+        <button className={`chip ${game.replaceMode ? 'chip-on' : ''}`} onClick={() => { game.replaceMode = !game.replaceMode; game.emit(); }} title="E toggles">{game.replaceMode ? 'On' : 'Off'}</button>
+        <span className="ml-auto text-[10px] text-slate-500">Roads in the way are bulldozed</span>
+      </div>
       {cls.centre === 'style' && (
         <div className="mt-2 flex items-center gap-1">
           <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Centre line</span>
@@ -962,7 +967,7 @@ function SelectPanel({ game }: { game: Game }) {
 
 function hintFor(g: Game) {
   switch (g.tool) {
-    case 'road': return g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`;
+    case 'road': return (g.route.length ? `Route: ${g.route.length} point(s) — click to extend, double-click / Enter to build, Backspace to undo, Esc to cancel, Shift for a straight 45° run` : `BUILDING NEW ROADS — Draw a connected route: click where the ${g.cls.name.toLowerCase()} should start${VARIANTS[g.cls.base]!.length > 1 ? ' · Tab flips the variant' : ''}`) + ' · E: replace';
     case 'junction': {
       const s = g.selectedNode(), h = g.hoverNode, what = g.brush === 'signal' ? 'traffic lights' : g.brush === 'roundabout' ? `a ${g.ringLanes}-lane roundabout` : g.brush === 'stop' ? 'an all-way stop' : g.brush === 'mini' ? 'a mini-roundabout' : 'plain';
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';

@@ -125,6 +125,8 @@ const WIDE_CORNER = 2.2;
 const ARROW_LEN = 2.4, ARROW_W = 1.3;
 /** a roundabout's outer edge radius for 1, 2 or 3 ring lanes, tiles (14, 22 and 30 m); the widest arm can make it bigger */
 export const RB_BASE: Record<1 | 2 | 3, number> = { 1: 7, 2: 11, 3: 15 };
+/** the outer radius (tiles) of a roundabout of rl ring lanes on arms of half widths hs: its base size, or the widest arm plus 2 tiles and the ring lanes */
+export const ringRadius = (hs: number[], rl: 1 | 2 | 3) => Math.max(RB_BASE[rl], Math.max(...hs) + 2 + rl * RB_LANE);
 /** the junction flags the junction tool sells: widened turns, and turn lanes (2-lane roads) */
 export const FLAG_COST = { wide: 3000, tl: 2000 };
 /** each ring lane a roundabout has beyond the first */
@@ -592,7 +594,7 @@ export class RoadNetwork {
     for (const n of live) {
       n.arms = n.segs.map(s => { const other = s.a === n ? s.b : s.a, d = sub(other, n), L = vlen(d), dir = mul(d, 1 / L); return { seg: s, other, dir, nrm: perp(dir), ang: Math.atan2(dir.y, dir.x), len: L, cls: s.cls, h: s.cls.h, walk: s.cls.walk, reachEdge: 0, reachCentre: 0, lineInset: 0, medianInset: 0, xw: -1, stop: -1, hasOpp: false }; }).sort((p, q) => p.ang - q.ang);
       const rl = n.rl ?? 1;
-      n.rb = n.type === 'roundabout' && n.arms.length >= 2 ? Math.max(RB_BASE[rl], Math.max(...n.arms.map(a => a.h)) + 2 + rl * RB_LANE)
+      n.rb = n.type === 'roundabout' && n.arms.length >= 2 ? ringRadius(n.arms.map(a => a.h), rl)
         : n.type === 'mini' && n.arms.length >= 3 ? Math.max(4, Math.max(...n.arms.map(a => a.h)) + 1) : 0;
     }
     for (const n of live) this.analyseNode(n);
