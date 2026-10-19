@@ -1058,6 +1058,33 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **Handover 2 (2026-10-19 morning; the chat got long, a fresh chat continues).** Done since Handover 1 (details in the
+  entries below): approach flares; the junction UI (ring lanes, the Tab type flip, slipways per corner, the Signals mode);
+  the calendar and the signal tiers; all ten Arena PRs merged (#1–#10, several finished by the lead on their branches);
+  wired in: driver variety, traffic incidents, names, disasters (off by default), farms. Pushed to origin up to `4204cb0`;
+  later commits are local (ask before pushing).
+  - **Next: the road catalogue (6R.2)**: a parametric road model (lanes each way 1–3, one-way, median none / painted /
+    planted, shoulders, sidewalks, trees, a centre turn lane, bus lanes, gravel) and the real-life types built from it in
+    families (small, medium, large, rural); one-way in the lane graph and the painter (arrows, no centre line); the
+    variant flip key (cycles the variants of the type in hand). Today's classes are the fixed `CLASSES` table in
+    network.ts (`h`, `laneCentres`, `median`, `shoulder`, `walk`, textures, costs; `WIDER` jumps gravel/lane/street/road
+    straight to arterial): design the model so the old classes are presets of it and old saves load. Arena task T013
+    (roads and land: a one-step up/down ladder with prices, building over lots with a confirm, natural town layouts)
+    overlaps the ladder: coordinate (wire T013's ladder onto the catalogue when its PR comes).
+  - **Then:** highways and ramps (6R.5; wire the merged `ext/grade` profiles and `ext/interchange` ramps); the hillier
+    terrain (6R.6: switch to the merged `ext/terrain2`, tune lakes below 9.5% and hills toward 35%); the towns as seeds
+    with a growth target (6R.7); the road set check (6R.8); then **Phase B, the businesses** (GAME-PLAN 1.0.00; wire
+    `ext/taxi`, `ext/subway`, and T010's economics when its PR comes).
+  - **Left over:** the slip fork overlap (a straight car and a right-turner side by side at the flare start; a diverge
+    rule like the roundabout's); left pockets on the flares (the 'tl' flag) and the "brave drivers" on the shoulder
+    (`ext/drivers` has `wantsShoulder`); re-run the event gate (new games start with fixed-time lights); the
+    load-sensitive timing tests ("accACC ... ns per call", terrain "20 seeds ... under 4 s") fail when the dev PC is busy.
+  - **Arena:** no open PRs; tasks without a PR: T007 fuzz testing, T010 business economics, T013 roads and land. The
+    owner's rule: finish PRs yourself on their branches (worktree per PR, haiku-coder, your own probes), merge, wire in;
+    no review comments.
+  - **Workflow notes:** the junction bench is `scripts/bench/jx.ts` (use SEEDS); the owner's dev server on 5174 died
+    last night and the lead runs the launch.json server there (if the owner starts his own, stop the preview first);
+    the built-in browser pane pauses frames when hidden (call `__game.draw()` / the per-frame queues by hand for checks).
 - **Pushed to origin 2026-10-18 evening** (the owner's go-ahead): main at `4732855` (54 commits since Phase 4).
 - **Outside agents (the owner's request):** `AGENTS.md` and `agents/` (the Arena agent's instructions: code only, one task
   per branch and PR, standalone modules in `src/game/ext/<feature>/` with tests in `tests/ext-<feature>.test.ts`, the lead
@@ -1216,12 +1243,12 @@ small public car parks on open town lots as part of the town's growth (a small t
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
-Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially the
-'Handover' entry under 'Phase 6R progress' (the next job is the approach
-flares, the slipways cars actually use, with the design written there). Then GAME-PLAN sections 1.0.00
-(the businesses), 1.0.01 (the calendar and signal tiers) and 1.0.0 (the owner's road and town changes). Carry on
-through the queue without asking between steps; still ask before pushing. Delegate coding to haiku-coder and checks to
-haiku-runner (the worker PC is `cworker`, 192.168.0.8, via scripts/worker/run.sh), commit locally after each verified
-step, update docs/PROGRESS.md as you go, and test every road/junction change in the browser across road classes before
-calling it done. The owner tests on http://localhost:5174 (his dev server, live working folder): tell him when work
-lands. Review the Arena agent's PRs (agents/) and wire its modules in."
+Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially
+'Handover 2' at the top of 'Phase 6R progress' (the next job is **the road catalogue, 6R.2**: a parametric road model
+with one-way roads and a variant flip). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
+tiers, done) and 1.0.0 (the owner's road and town changes). Carry on through the queue without asking between steps;
+still ask before pushing. Delegate coding to haiku-coder and checks to haiku-runner (the worker PC is `cworker`,
+192.168.0.8, via scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go, and
+test every road/junction change in the browser across road classes before calling it done. The owner tests on
+http://localhost:5174: tell him when work lands. Arena PRs: finish them yourself on their branches, merge, and have a
+Haiku wire them in (no review comments)."
