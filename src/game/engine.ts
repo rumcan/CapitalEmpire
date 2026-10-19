@@ -771,6 +771,8 @@ export class Game {
   private installType(n: Node, t: NodeType, rl: 1 | 2 | 3): boolean {
     this.selectedJunction = n;
     const { cost, why } = this.installCheck(n, t, rl);
+    // the junction already is that type: the click just selects it (no warning)
+    if (why && /^It (already|is already)/.test(why)) { this.emit(); return false; }
     if (why) { this.toast(why, 'warn'); this.emit(); return false; }
     const relane = n.type === 'roundabout' && t === 'roundabout', name = JUNCTIONS.find(j => j.id === t)!.name;
     this.traffic.spend('construction', cost);
@@ -860,7 +862,9 @@ export class Game {
       const sl = n.type === 'slip' ? slipsOn(n).length : 0;
       if (sl) parts.push(`SL ${sl}`);
       if (!parts.length) continue;
-      const tag = parts.join(' · '), y = s.y - 14 * d, w = ctx.measureText(tag).width + 8 * d, h = 16 * d;
+      // the selected junction's badge sits above its ring, clear of the corner buttons
+      const sel = n === this.selectedNode(), rr = sel ? (Math.max(...n.arms.map(a => a.h)) + 1.5) * Math.SQRT1_2 : 0;
+      const tag = parts.join(' · '), y = sel ? this.screen(n.x - rr, n.y - rr).y - 22 * d : s.y - 14 * d, w = ctx.measureText(tag).width + 8 * d, h = 16 * d;
       ctx.fillStyle = 'rgba(15,23,42,0.85)'; ctx.fillRect(s.x - w / 2, y - h / 2, w, h);
       ctx.fillStyle = '#fde68a'; ctx.fillText(tag, s.x, y);
     }

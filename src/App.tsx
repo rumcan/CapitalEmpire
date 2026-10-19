@@ -152,7 +152,7 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <div className="w-[310px] rounded-xl border border-white/10 bg-slate-950/80 p-3 shadow-lg backdrop-blur">
+            <div className="w-[310px] max-h-[calc(100vh-20rem)] overflow-y-auto rounded-xl border border-white/10 bg-slate-950/80 p-3 shadow-lg backdrop-blur">
               {game.tool === 'road' && <RoadPanel game={game} />}
               {game.tool === 'junction' && <JunctionPanel game={game} />}
               {game.tool === 'bulldoze' && (
@@ -705,6 +705,15 @@ function JunctionPanel({ game }: { game: Game }) {
     : b === 'plain' ? 'Click a junction to make it plain. Right-click resets a junction to plain (free).'
     : b === 'signal' ? 'Click a junction to install traffic lights (the best tier open this year). Right-click resets a junction to plain.'
     : `Click a junction or a bend to install a ${game.ringLanes}-lane roundabout. Right-click resets a junction to plain.`;
+  // with a junction selected the brushes shrink to one row of chips, so the junction's own options fit (as the reference games keep the selection first)
+  if (n) return (
+    <Panel title="Junctions">
+      <div className="flex flex-wrap items-center gap-1 text-xs">
+        {(['select', 'plain', 'signal', 'roundabout'] as const).map(t => <button key={t} className={`chip ${b === t ? 'chip-on' : ''}`} onClick={() => { game.brush = t; game.emit(); }}>{t === 'select' ? 'Select' : SEG_NAME[t]}</button>)}
+      </div>
+      <SelectedJunction game={game} n={n} />
+    </Panel>
+  );
   return (
     <Panel title="Junctions">
       <div className="mt-1 grid grid-cols-1 gap-1">
@@ -731,7 +740,6 @@ function JunctionPanel({ game }: { game: Game }) {
         })}
       </div>
       <p className="mt-2 text-[11px] text-slate-400">{hint}</p>
-      {n && <SelectedJunction game={game} n={n} />}
     </Panel>
   );
 }
