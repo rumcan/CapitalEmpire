@@ -300,3 +300,36 @@ test('catalogue paint and trees: a turn lane paints its centre markings, one-way
   assert.ok(trees(fx('street.tr')) > 0);
   assert.equal(trees(fx('street')), 0);
 });
+
+test('one-way catalogue: the one-way and one-way-with-trees ids are built and listed, and their descriptions read right', () => {
+  for (const id of ['street.ow.tr', 'arterial.ow.tr', 'six.ow']) assert.ok(CLASS[id], id);
+  assert.deepEqual(VARIANTS.street, ['street', 'street.ow', 'street.tr', 'street.ow.tr']);
+  assert.deepEqual(VARIANTS.six, ['six', 'six.ow']);
+  assert.equal(CLASS['street.ow']!.desc, '2 lanes one way · 6.5 m · sidewalks');
+  assert.equal(CLASS['arterial.ow']!.desc, '4 lanes one way · 16 m');
+  assert.equal(CLASS['six.ow']!.desc, '6 lanes one way · 22 m');
+  assert.equal(CLASS['arterial.ow.tr']!.flags.join('.'), 'ow.tr');
+  assert.equal(WIDER['street.ow.tr'], 'arterial.ow.tr');
+  assert.equal(WIDER['arterial.ow.tr'], 'six.ow');
+});
+
+test('one-way routes: an arterial.ow route of 60 tiles paints white direction arrows on its lanes and no yellow centre line', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 0, 60, 0)], CLASS['arterial.ow']!, 0); e.commit(); e.net.rebuild(true);
+  const f = (e.net as unknown as { routeFeatures(r: Route): Fx }).routeFeatures([...e.net.routes][0]!);
+  assert.equal(f.lines.filter(l => l.color === '#d6b23b').length, 0, 'no yellow centre line');
+  assert.ok(f.bars.length >= 4 * 2, `${f.bars.length} arrows`);
+});
+
+test('one-way junctions: at a signal, an inbound one-way arm has a stop bar across its whole width, an outbound one-way arm none', () => {
+  const e = new NetEditor(new RoadNetwork());
+  e.addLegs([leg(0, 50, 50, 50)], CLASS['street.ow']!, 0); e.addLegs([leg(50, 50, 100, 50)], CLASS['street.ow']!, 0);
+  e.addLegs([leg(50, 0, 50, 100)], CLASS.street, 0); e.commit();
+  const n = e.net.nodeAt({ x: 50, y: 50 })!;
+  e.setNodeType(n, 'signal'); e.commit();
+  const bars = (e.net as unknown as { nodeFx: Map<Node, Fx> }).nodeFx.get(n)!.bars;
+  assert.equal(bars.length, 3, 'a stop bar on each of the three arms that take traffic into the node');
+  const full = bars.filter(b => b.bbox[3] - b.bbox[1] > 3);
+  assert.equal(full.length, 1, 'one full-width bar');
+  assert.ok((full[0]!.bbox[0] + full[0]!.bbox[2]) / 2 < 50, 'on the inbound (west) arm');
+});

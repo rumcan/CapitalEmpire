@@ -291,9 +291,11 @@ export class LaneGraph {
     const u = norm(sub(to, from)), r = perp(u), [iF, iT] = dsegInsets(s, from, to), lanes: number[] = [];
     const d: DSeg = { id, key, seg: s, dir, from, to, lanes, len: 0, vmax: s.cls.vmax, out: [] };
     this.dsegs[id] = d;
-    const booths = this.tollBooths(key, s, from, to, iF + iT);
+    // a one-way seg runs a to b only: its b to a dseg is kept (segDs stays a pair) but has no lanes, booths or movements
+    const none = s.cls.oneway && dir === 1;
+    const booths = none ? 0 : this.tollBooths(key, s, from, to, iF + iT);
     if (booths) { d.toll = booths; this.boothLanes(d, s, booths, iF, iT, u, r); }
-    else for (let k = 0; k < s.cls.laneCentres.length; k++) {
+    else if (!none) for (let k = 0; k < s.cls.laneCentres.length; k++) {
       const off = laneOff(s, k);
       const p0 = add(add(from, mul(u, iF)), mul(r, off)), p1 = add(sub(to, mul(u, iT)), mul(r, off));
       lanes.push(this.mkLane(`${key}#${k}`, LK.LINK, [p0, p1], d.vmax, null, s.kind === SK.TUNNEL, id, k).id);
@@ -364,6 +366,7 @@ export class LaneGraph {
   private deadEnd(io: ArmIO[], nl: number[], mv: number[], n: Node) {
     for (const x of io) {
       const ins = this.dsegs[x.inD]!.lanes, outs = this.dsegs[x.outD]!.lanes, paths: number[][] = [];
+      if (!ins.length || !outs.length) continue;
       for (let k = 0; k < ins.length; k++) {
         const inL = this.L(ins[k]), outL = this.L(outs[Math.min(k, outs.length - 1)]), c = this.conn(n, inL, outL, true, nl);
         paths.push([inL.id, c.id, outL.id]);
@@ -374,6 +377,7 @@ export class LaneGraph {
   private twoArms(io: ArmIO[], nl: number[], mv: number[], n: Node) {
     for (const x of io) {
       const y = io[x.i === 0 ? 1 : 0], ins = this.dsegs[x.inD]!.lanes, outs = this.dsegs[y.outD]!.lanes, paths: number[][] = [];
+      if (!ins.length || !outs.length) continue;
       const t = turnOf(this.uOf(x.inD), this.uOf(y.outD)), tt: Turn = t === 'U' ? 'S' : t;
       // a toll gate ahead: every in lane to every booth (one connector each); out of a toll gate: every booth lane to the next dseg's lane 0
       if (this.dsegs[y.outD]!.toll) {
@@ -397,14 +401,18 @@ export class LaneGraph {
     let minorCtl: number = CTL.YIELD;
     if (!sig) { let hi = 0; for (const x of io) if (major[x.i]) hi = Math.max(hi, x.a.cls.order); minorCtl = hi >= 2 ? CTL.STOP : CTL.YIELD; }
     const armPhase = new Array<number>(M).fill(-1);
+    // an arm with no inbound lanes (a one-way road running out) gets no phase: its signals never go green
+    const hasIn = io.map(x => this.dsegs[x.inD]!.lanes.length > 0);
     let phases = 0, sp: SignalPlan | null = null;
     if (sig) {
       for (let i = 0; i < M; i++) {
-        if (armPhase[i] >= 0) continue;
+        if (armPhase[i] >= 0 || !hasIn[i]) continue;
         let j = i + 1;
-        while (j < M && (armPhase[j] >= 0 || dot(io[i].a.dir, io[j].a.dir) >= -0.7)) j++;
+        while (j < M && (armPhase[j] >= 0 || !hasIn[j] || dot(io[i].a.dir, io[j].a.dir) >= -0.7)) j++;
         armPhase[i] = phases; if (j < M) armPhase[j] = phases; phases++;
       }
+    }
+    if (sig && phases) {
       const green = 18;
       sp = { node: n, mode: n.sig ?? 1, armPhase, phases, green, greens: Array.from({ length: phases }, (_, k) => n.split?.[k] !== undefined ? Math.min(GREEN_CAP, Math.max(MIN_GREEN, n.split[k]!)) : green),
         amber: 3, allRed: 2, offset: Math.abs(n.x * 7 + n.y * 13) % (phases * 23), idx: 0, stage: 0, el: 0, phaseLanes: Array.from({ length: phases }, () => []) };
@@ -435,6 +443,7 @@ export class LaneGraph {
       const t = turnOf(this.uOf(x.inD), this.uOf(y.outD));
       if (t === 'U') continue;
       const ins = this.dsegs[x.inD]!.lanes, outs = this.dsegs[y.outD]!.lanes, nIn = ins.length, nOut = outs.length, paths: number[][] = [];
+      if (!nIn || !nOut) continue;
       const planned = t === 'R' && plan.pairs.some(([a, b]) => a === x.a && b === y.a);
       for (let k = 0; k < nIn; k++) {
         // turn lanes (n.tl): lane 0 is for the left turns only; straight on from the other lanes, right from the last one
@@ -515,7 +524,10 @@ export class LaneGraph {
     for (let m = 0; m < RL; m++) {
       exX.push([]); exOut.push([]);
       for (let j = 0; j < M; j++) {
-        const outs = this.dsegs[io[j].outD]!.lanes, outL = this.L(outs[Math.max(0, outs.length - 1 - m)]!), t = th[j] + dl[j];
+        const outs = this.dsegs[io[j].outD]!.lanes;
+        // an arm with no outbound lanes (a one-way road running in) has no exit connectors (-1 placeholders)
+        if (!outs.length) { exX[m]!.push(-1); exOut[m]!.push(-1); continue; }
+        const outL = this.L(outs[Math.max(0, outs.length - 1 - m)]!), t = th[j] + dl[j];
         const P = bezier(at(t, m), tan(t), startPt(outL), startDir(outL), false);
         const x = this.mkLane(`X${outL.key}${m ? `:${m}` : ''}`, LK.CONN, P, connVmax(P, Math.min(rvOf(m), outL.vmax)), n, outL.tunnel);
         x.prio = m ? 2 : 3; link(lg[m][ord[(pos[j] - 1 + M) % M]]!, x); link(x, outL); nl.push(x.id);
@@ -527,13 +539,14 @@ export class LaneGraph {
     for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
       const cat = i === j ? 'U' : j === ord[(pos[i] + 1) % M] ? 'R' : j === ord[(pos[i] - 1 + M) % M] ? 'L' : 'S';
       const ins = this.dsegs[io[i].inD]!.lanes, paths: number[][] = [];
+      if (!ins.length || !this.dsegs[io[j].outD]!.lanes.length) continue;
       for (let k = 0; k < ins.length; k++) for (const [m, eid] of want(cat, ent[i][k]!)) {
         const path = [ins[k]!, eid, lg[m][i]!.id];
         for (let q = (pos[i] + 1) % M; ord[q] !== j; q = (q + 1) % M) path.push(sh[m][ord[q]]!.id, lg[m][ord[q]]!.id);
         path.push(exX[m]![j]!, exOut[m]![j]!);
         paths.push(path);
       }
-      this.move(n, io[i].inD, io[j].outD, i === j ? 'U' : turnOf(this.uOf(io[i].inD), this.uOf(io[j].outD)), paths, mv);
+      if (paths.length) this.move(n, io[i].inD, io[j].outD, i === j ? 'U' : turnOf(this.uOf(io[i].inD), this.uOf(io[j].outD)), paths, mv);
     }
   }
   /** conflicts between the connectors and arcs of one node: merges at a shared lane end, crossings elsewhere */
@@ -578,7 +591,7 @@ export function checkGraph(g: LaneGraph): string[] {
   }
   for (const d of g.dsegs) {
     if (!d) continue;
-    if (!d.lanes.length) out.push(`${d.key}: no lanes`);
+    if (!d.lanes.length && !(d.seg.cls.oneway && d.dir === 1)) out.push(`${d.key}: no lanes`);
     for (const id of d.lanes) if (!L[id]) out.push(`${d.key}: lane ${id} missing`);
   }
   return out;

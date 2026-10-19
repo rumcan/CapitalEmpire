@@ -63,7 +63,7 @@ ladder with prices plugs onto this later.
 ## One-way
 
 - A one-way road runs from `seg.a` to `seg.b`: the order it was drawn in. Splits keep the order already; drawing over an
-  existing segment the other way does not flip it. **Right-click a one-way road with the Add lane tool reverses the
+  existing segment the other way reverses it (the old seg is replaced). **Right-click a one-way road with the Add lane tool reverses the
   whole straight chain** (as C:S1's upgrade tool), free.
 - **Lanes:** `laneCentres` of a one-way class run across the whole width, left to right (`street.ow`: −0.8, 0.8;
   `arterial.ow`: −3, −1, 1, 3). The b-to-a directed seg gets no lanes; junction movements and routes skip it.

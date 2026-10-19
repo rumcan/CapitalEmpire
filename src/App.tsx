@@ -957,8 +957,8 @@ function hintFor(g: Game) {
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';
       return h ? `Click to make this junction ${what} · right-click resets it to plain · Tab flips the type` : `Hover a junction (three or more roads; roundabouts also work on bends) to make it ${what} · Esc returns to Select`;
     }
-    case 'lane': { const h = g.laneHover; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way';
-      return h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`; }
+    case 'lane': { const h = g.laneHover, rev = ' · Right-click a one-way road to reverse it'; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way' + rev;
+      return (h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`) + rev; }
     case 'bulldoze': return 'Click objects or roads to remove them';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';

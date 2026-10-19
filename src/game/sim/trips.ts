@@ -148,15 +148,18 @@ export interface Drive { lane: number; s: number }
 export interface Built { lot: Lot; use: number; pop: number; jobs: number }
 
 /** the driveway of a lot: the outermost link lane of the directed seg whose traffic has the lot on its right (the lanes sit on
- *  perp(u), the right-hand side of the heading u, so dot(perp(u), lot.n) > 0), with s the projection of the frontage midpoint on
+ *  perp(u), the right-hand side of the heading u, so dot(perp(u), lot.n) > 0; a one-way seg has only its forward lanes, so a lot on its left
+ *  takes their leftmost lane), with s the projection of the frontage midpoint on
  *  it (m, clamped to [DRIVE_END, len - DRIVE_END]). byseg maps a seg to its dseg ids (else the dsegs are scanned). null if none. */
 export function driveway(lot: Lot, g: LaneGraph, byseg?: Map<Seg, number[]>): Drive | null {
   const ids = byseg ? byseg.get(lot.seg) ?? [] : g.dsegs.flatMap(d => d && d.seg === lot.seg ? [d.id] : []);
   for (const id of ids) {
     const d = g.dsegs[id];
     if (!d || d.seg !== lot.seg || !d.lanes.length) continue;
-    if (dot(perp(norm(sub(d.to, d.from))), lot.n) <= 0) continue;
-    const ln = g.lanes[d.lanes[d.lanes.length - 1]!]!;
+    // a one-way seg's only lanes are its forward dseg's: a lot on its left takes the leftmost lane, one on its right the rightmost
+    const side = dot(perp(norm(sub(d.to, d.from))), lot.n);
+    if (side <= 0 && !d.seg.cls.oneway) continue;
+    const ln = g.lanes[d.lanes[side > 0 ? d.lanes.length - 1 : 0]!]!;
     if (ln.len < 2 * DRIVE_END) return null;
     const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm(sub({ x: ln.pts[2]!, y: ln.pts[3]! }, p0));
     const s = Math.min(ln.len - DRIVE_END, Math.max(DRIVE_END, dot(sub(lot.front, p0), u) * MPT));

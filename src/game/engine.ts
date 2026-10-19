@@ -753,6 +753,8 @@ export class Game {
     this.route = [];
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
     this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}`, 'good');
+    // a one-way road that ends in a dead end traps cars: warned, not refused
+    if (cls.oneway && parts.length && [parts[0]!.a, parts[parts.length - 1]!.b].some(p => this.net.nodeAt(p)?.segs.length === 1)) this.toast('A one-way road that ends in a dead end traps cars', 'warn');
   }
   /** what installing type t on node n costs (a roundabout re-laned pays the difference: a fall is free) and why it cannot be done: locked, already so,
    *  too few roads, or not enough money ('' when it can). rl: the ring lanes of a roundabout */
@@ -843,6 +845,18 @@ export class Game {
     for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.a, b: s.b }], h.to, s.style, [s.kind]); }
     this.commitNetwork(); this.puff(h.segs[0]!.a.x, h.segs[0]!.a.y, 8);
     this.toast(`Added a lane: ${Math.round(tiles * 2)} m to ${h.to.name.toLowerCase()}`, 'good');
+    this.laneUpdate(this.hover);
+  }
+  /** the add-lane tool's right-click: the one-way straight run under the pointer is reversed (each seg replaced with its b-to-a, free); a two-way road is refused */
+  private laneReverse(mx: number, my: number) {
+    this.laneUpdate(this.tileAt(mx, my));
+    const h = this.laneHover; if (!h || !h.segs.length) { this.toast('Point at a road', 'warn'); return; }
+    const s0 = h.segs[0]!;
+    if (!s0.cls.oneway) { this.toast('Only one-way roads can be reversed', 'warn'); return; }
+    let tiles = 0;
+    for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.b, b: s.a }], s.cls, s.style, [s.kind]); }
+    this.commitNetwork();
+    this.toast(`Reversed ${Math.round(tiles * 2)} m of one-way ${classOf(s0.cls.base).name.toLowerCase()}`, 'good');
     this.laneUpdate(this.hover);
   }
   /** the junction tool's badges (street and district zoom, drawn while the tool is open): one label per junction in view, dark like the old tags: its control
@@ -1061,6 +1075,7 @@ export class Game {
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
     if (this.keys.has(' ')) this.spacePanned = true;
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
+    if (this.tool === 'lane' && e.button === 2) { this.laneReverse(mx, my); return; }
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
         // a car under the pointer (street tier) is inspected; else a prop is selected; else, with the flow on, the junction there is watched
@@ -2326,6 +2341,19 @@ export class Game {
         if (cls.median) { this.setIso(ctx); ctx.beginPath(); strip(legs, cls.median / 2); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(90,160,70,0.55)'; ctx.fill(); }
         this.setIso(ctx); ctx.beginPath(); for (const l of legs) { ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); } ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.strokeStyle = bad ? '#f87171' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
+        if (cls.oneway) {
+          // the flow: a white chevron every 15 tiles on the centre line, in the drawn direction
+          this.setIso(ctx); ctx.beginPath();
+          for (const l of legs) {
+            const dx = l.b.x - l.a.x, dy = l.b.y - l.a.y, L = Math.hypot(dx, dy); if (L < 0.01) continue;
+            const ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+            for (let s = Math.min(7.5, L / 2); s < L; s += 15) {
+              const px = l.a.x + ux * s, py = l.a.y + uy * s, tx = px - ux * 0.6, ty = py - uy * 0.6;
+              ctx.moveTo(tx + nx * 0.8, ty + ny * 0.8); ctx.lineTo(px + ux * 0.6, py + uy * 0.6); ctx.lineTo(tx - nx * 0.8, ty - ny * 0.8);
+            }
+          }
+          ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.stroke();
+        }
         const pts = [...this.route, legs[legs.length - 1].b];
         for (const p of pts) { const s = this.screen(p.x, p.y); ctx.fillStyle = '#ffd866'; ctx.beginPath(); ctx.arc(s.x, s.y, 4 * this.dpr, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#4a3200'; ctx.lineWidth = 1.5; ctx.stroke(); }
       } else if (cs) {

@@ -1058,6 +1058,26 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
+- **The road catalogue (6R.2): DONE (2026-10-19).** Design in `docs/ROAD-CATALOGUE.md` (from C:S2's road categories and
+  Replace tool, C:S1's upgrade tool, Road Builder / NE2). Every `RoadClass` now has `base` (type), `flags`, `family`,
+  `vmax`, `laneLines[]`, `oneway`, `medianTrees`, `streetTrees`; the seven old ids are the plain variants with unchanged
+  numbers (old saves load; `classOf()` falls back to street). New types: **six-lane** (3+3, painted median), **grand
+  boulevard** (3+3, planted), **divided road** (rural 2+2, grass median, shoulders). Variants: **one-way** (street 2 lanes,
+  arterial 4, six-lane 6), **centre turn lane** (arterial, TWLTL markings), **street trees**, **grass median**. The road
+  panel groups types Small / Medium / Large / Rural with variant chips; **Tab / Shift+Tab flips the variant**. Add lane:
+  arterial → six-lane, boulevard → grand (flags kept). Unlocks by type (six/divided at Large town, grand at City).
+  **One-way:** flows seg.a → seg.b as drawn; drawing over it the other way reverses it; **right-click with Add lane
+  reverses a straight run** (free); the b→a dseg has no lanes; junctions, rings, signals (no phase for an arm with no
+  inbound lanes), driveways and car-park sinks handle it; painted arrows every 15 tiles, full-width stop bar on an
+  inbound arm, none on an outbound one; the preview shows chevrons; a one-way dead end warns. Commits `df4a700` (the
+  catalogue) and the one-way commit. `npm test` 386 pass; worker gates: `sim:gate -- 2 10000` PASS (43,482 arrived, 97 towed, 0 lost, 3.87 ms per
+  step), `town:gate` PASS (pop 5,142, 0 jams, 1.48 ms). **Browser-checked:** grand, six-lane, turn-lane arterial and
+  tree street painted; Tab cycles arterial's variants; a one-way street through lights (no head on the outbound arm),
+  a one-way arterial through a 2-lane roundabout (lane overlay: entries only from the inbound arm), reversed by
+  right-click (the ring's entries moved); a town street turned one-way: 10 live cars, 52 forward moves, 0 against the
+  flow; no console errors. **Left over:** bus lanes (with Phase B's bus business), asymmetric roads (2+1) and highways
+  (6R.5); the ring's entry geometry uses the last lane's offset on one-way arms; turn arrows on a one-way's last lane
+  keep the two-way S+R rule; street trees every 8 m look dense (try 10–12 m).
 - **The junction tool, rebuilt (2026-10-19, the owner: "no visual cue on the map", "why isn't type the parent"; then "don't
   lose what we have, research and make it better").** Design in `docs/JUNCTION-UX.md` (from Cities: Skylines II's road
   tools, TM:PE and C:S1's junction view). **Brush** cards (Select · Plain · Lights · Roundabout with ring lanes): a type
@@ -1076,7 +1096,10 @@ small public car parks on open town lots as part of the town's growth (a small t
   the calendar and the signal tiers; all ten Arena PRs merged (#1–#10, several finished by the lead on their branches);
   wired in: driver variety, traffic incidents, names, disasters (off by default), farms. Pushed to origin up to `4204cb0`;
   later commits are local (ask before pushing).
-  - **Next: the road catalogue (6R.2)**: a parametric road model (lanes each way 1–3, one-way, median none / painted /
+  - **Next (after 6R.2, done above): the rest of the junction editor (6R.4)**: the types the tool still lacks, all-way
+    stop, two-way stop and the **mini-roundabout** (a small painted circle, take turns, yield to the right), as Plain's
+    control options in the junction tool (research first, as JUNCTION-UX.md); then **Phase B** (the owner's order puts the
+    businesses after steps 1–4). *(Was:)* the road catalogue (6R.2): a parametric road model (lanes each way 1–3, one-way, median none / painted /
     planted, shoulders, sidewalks, trees, a centre turn lane, bus lanes, gravel) and the real-life types built from it in
     families (small, medium, large, rural); one-way in the lane graph and the painter (arrows, no centre line); the
     variant flip key (cycles the variants of the type in hand). Today's classes are the fixed `CLASSES` table in
@@ -1257,9 +1280,9 @@ small public car parks on open town lots as part of the town's growth (a small t
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
 Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially
-'Handover 2' at the top of 'Phase 6R progress' (the next job is **the road catalogue, 6R.2**: a parametric road model
-with one-way roads and a variant flip). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
-tiers, done) and 1.0.0 (the owner's road and town changes), and docs/JUNCTION-UX.md (how the junction tool was
+'Handover 2' at the top of 'Phase 6R progress' (the road catalogue, 6R.2, is done; the next job is **the rest of the junction
+editor, 6R.4**: all-way stop, two-way stop and mini-roundabouts; then Phase B, the businesses). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
+tiers, done) and 1.0.0 (the owner's road and town changes), docs/ROAD-CATALOGUE.md (the road types) and docs/JUNCTION-UX.md (how the junction tool was
 redesigned from Cities: Skylines and TM:PE; follow the same research-first approach for the road tool). Carry on through the queue without asking between steps;
 still ask before pushing. Delegate coding to haiku-coder and checks to haiku-runner (the worker PC is `cworker`,
 192.168.0.8, via scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go, and

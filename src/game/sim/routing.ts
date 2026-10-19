@@ -314,7 +314,9 @@ export class Router {
 
   /** true if dseg cur's `to` node is within LOCAL_TILES of the point s metres along dseg e's first lane */
   near(cur: number, e: number, s: number): boolean {
-    laneAt(this.g.lanes[this.g.dsegs[e]!.lanes[0]!]!, s, this.pt);
+    const e0 = this.g.dsegs[e]!.lanes[0];
+    if (e0 === undefined) return false; // an empty dseg (a one-way's back direction) has no lanes to be near
+    laneAt(this.g.lanes[e0]!, s, this.pt);
     const t = this.g.dsegs[cur]!.to;
     return Math.hypot(t.x - this.pt.x, t.y - this.pt.y) <= LOCAL_TILES;
   }

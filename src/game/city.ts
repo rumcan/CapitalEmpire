@@ -86,6 +86,11 @@ function nearestDoor(doors: Pt[], p: Pt): Pt | null {
   for (const d of doors) { const x = Math.hypot(d.x - p.x, d.y - p.y); if (x < bd) { bd = x; best = d; } }
   return best;
 }
+/** the unit normal a car park on `side` (0 W, 1 N, 2 E, 3 S) faces away from its frontage: the side of the road it sits on */
+const parkPv = (side: number): Pt => ({ x: side === 0 ? -1 : side === 2 ? 1 : 0, y: side === 1 ? -1 : side === 3 ? 1 : 0 });
+/** the lane of dseg d a car park on `side` takes its sinks on: the outermost lane on the park's side; a one-way seg's only lanes are its forward
+ *  dseg's, so a park on its left takes the leftmost lane (lanes[0]) */
+const sinkLane = (d: DSeg, side: number): number => d.lanes[d.seg.cls.oneway && dot(perp(norm(sub(d.to, d.from))), parkPv(side)) < 0 ? 0 : d.lanes.length - 1]!;
 
 /** One city: feed it the network ops (netOps), the terrain (terrain) and the sim steps (step). The worker and the gate share it. */
 /** a natural disaster as the main thread draws it: its area (tiles, flat x, y pairs), its times (sim s; end Infinity for a quake until repaired) and its
@@ -719,12 +724,12 @@ export class City {
   private sinksAt(k: number, p: CarPark, e: Pt): Sink[] {
     const near = new Set(this.net.segsNear(e, 2)), side = p.side, vert = side % 2 === 0;
     // the park lies on the side of the road that faces away from the frontage's outward normal
-    const pv: Pt = { x: side === 0 ? -1 : side === 2 ? 1 : 0, y: side === 1 ? -1 : side === 3 ? 1 : 0 };
+    const pv = parkPv(side);
     let R: DSeg | null = null;
     for (const d of this.g.dsegs) {
       if (!d || !d.lanes.length || !near.has(d.seg)) continue;
       const h = norm(sub(d.to, d.from));
-      if (Math.abs(vert ? h.y : h.x) < 0.98 || dot(perp(h), pv) <= 0) continue;
+      if (Math.abs(vert ? h.y : h.x) < 0.98 || (dot(perp(h), pv) <= 0 && !d.seg.cls.oneway)) continue;
       R = d; break;
     }
     if (!R) return [];
@@ -732,7 +737,7 @@ export class City {
     for (const d of this.g.dsegs) if (d && d !== R && d.seg === R.seg && d.lanes.length) { ds.push(d); break; }
     const out: Sink[] = [];
     for (const d of ds) {
-      const ln = this.g.lanes[d.lanes[d.lanes.length - 1]!]!;
+      const ln = this.g.lanes[sinkLane(d, side)]!;
       if (ln.len < 2 * SINK_END) { if (d === R) return []; continue; }
       const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm({ x: ln.pts[2]! - p0.x, y: ln.pts[3]! - p0.y }), h = norm(sub(d.to, d.from));
       out.push({ park: k, dseg: d.id, s: Math.min(ln.len - SINK_END, Math.max(SINK_END, dot(sub(e, p0), u) * MPT)), next: 0, q: [], qz: [], ux: h.x, uy: h.y });
@@ -765,7 +770,7 @@ export class City {
       P.sinks.push(j);
       if (d) P.comp = this.compOf(d.seg);
       const q = { x: 0, y: 0, hx: 0, hy: 0 };
-      if (d) laneAt(this.g.lanes[d.lanes[d.lanes.length - 1]!]!, K.s, q);
+      if (d) laneAt(this.g.lanes[sinkLane(d, this.parks[K.park]!.side)]!, K.s, q);
       P.pts.push({ x: q.x, y: q.y }); P.dirs.push({ x: K.ux ?? 0, y: K.uy ?? 0 });
     });
     return L;
@@ -969,7 +974,7 @@ export class City {
         laneAt(this.g.lanes[lane]!, s, q);
         // the sink that points from the car's origin toward its entrance (matchSink; round-robin over the cars sent)
         const j = P.sinks[matchSink(P, q, sent)]!, K = this.sim.sinks[j]!, dd = this.g.dsegs[K.dseg]!;
-        laneAt(this.g.lanes[dd.lanes[dd.lanes.length - 1]!]!, K.s, sp);
+        laneAt(this.g.lanes[sinkLane(dd, this.parks[k]!.side)]!, K.s, sp);
         if (!joined.has(this.g.dsegs[this.g.lanes[lane]!.dseg]!.seg) || (a < 100 && Math.hypot(sp.x - q.x, sp.y - q.y) < PARK_TEST_M)) continue;
         done = this.sim.spawnAt(lane, s, K.dseg, K.s, 0, j) >= 0;
       }

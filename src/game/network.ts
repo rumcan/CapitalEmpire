@@ -72,11 +72,15 @@ const FLAG: Record<string, (c: RoadClass) => Partial<RoadClass>> = {
   tr: c => ({ streetTrees: true, cost: c.cost + 20, name: c.name + ' with trees', desc: c.desc + ' · trees' }),
   gr: c => ({ medianTrees: false, cost: c.cost - 20, name: c.name + ' (grass median)', desc: c.desc.replace('tree-lined', 'grass') }),
   tl: () => ({ h: 4.875, laneCentres: [1.875, 3.875], laneLines: [2.875], centre: 'twltl', cost: 460, name: 'Arterial + turn lane', desc: '4 lanes · centre turn lane · 20 m' }),
-  ow: c => ({ oneway: true, centre: 'none', name: c.name + ' (one-way)', ...ONEWAY[c.base] }),
+  ow: c => {
+    const lanes = ONEWAY[c.base]!.laneCentres!.length;
+    const rest = c.desc.split(' · ').filter(p => !p.includes('median')).slice(1);
+    return { oneway: true, centre: 'none', name: c.name + ' (one-way)', desc: [`${lanes} lanes one way`, ...rest].join(' · '), ...ONEWAY[c.base] };
+  },
 };
 const applyFlag = (c: RoadClass, f: string): RoadClass => ({ ...c, ...FLAG[f]!(c), id: c.id + '.' + f, flags: [...c.flags, f] });
-/** the variants that are built (the Tab key's list is VARIANTS); the one-way ones are not listed yet */
-const BUILT: [TypeId, string[]][] = [['street', ['tr']], ['avenue', ['gr']], ['arterial', ['tl']], ['arterial', ['tr']], ['arterial', ['tl', 'tr']], ['boulevard', ['gr']], ['grand', ['gr']], ['street', ['ow']], ['arterial', ['ow']], ['six', ['ow']]];
+/** the variants that are built (the Tab key's list is VARIANTS) */
+const BUILT: [TypeId, string[]][] = [['street', ['tr']], ['avenue', ['gr']], ['arterial', ['tl']], ['arterial', ['tr']], ['arterial', ['tl', 'tr']], ['boulevard', ['gr']], ['grand', ['gr']], ['street', ['ow']], ['arterial', ['ow']], ['six', ['ow']], ['street', ['ow', 'tr']], ['arterial', ['ow', 'tr']]];
 const PLAIN_BY_ID = Object.fromEntries(PLAIN.map(c => [c.id, c])) as Record<string, RoadClass>;
 /** every road class: the plain types, then their variants */
 export const CLASSES: RoadClass[] = [...PLAIN, ...BUILT.map(([t, fl]) => fl.reduce(applyFlag, PLAIN_BY_ID[t]!))];
@@ -86,8 +90,8 @@ export const CLASS = Object.fromEntries(CLASSES.map(c => [c.id, c])) as Record<s
 export function classOf(id: string): RoadClass { return CLASS[id] ?? CLASS.street! }
 /** the variant ids of each type, in Tab order (the road tool's Tab key cycles them) */
 export const VARIANTS: Record<TypeId, string[]> = {
-  gravel: ['gravel'], lane: ['lane'], street: ['street', 'street.tr'], road: ['road'], avenue: ['avenue', 'avenue.gr'],
-  arterial: ['arterial', 'arterial.tl', 'arterial.tr', 'arterial.tl.tr'], boulevard: ['boulevard', 'boulevard.gr'], six: ['six'], grand: ['grand', 'grand.gr'], divided: ['divided'],
+  gravel: ['gravel'], lane: ['lane'], street: ['street', 'street.ow', 'street.tr', 'street.ow.tr'], road: ['road'], avenue: ['avenue', 'avenue.gr'],
+  arterial: ['arterial', 'arterial.ow', 'arterial.tl', 'arterial.tr', 'arterial.ow.tr', 'arterial.tl.tr'], boulevard: ['boulevard', 'boulevard.gr'], six: ['six', 'six.ow'], grand: ['grand', 'grand.gr'], divided: ['divided'],
 };
 /** the road tool's palette by size family (gravel is in two families) */
 export const TYPES: { id: TypeId; family: Family }[] = [
@@ -102,7 +106,7 @@ export const KEY_CLASSES: ClassId[] = ['gravel', 'lane', 'street', 'road', 'aven
 export const WIDER: Partial<Record<ClassId, ClassId>> = {
   gravel: 'arterial', lane: 'arterial', street: 'arterial', 'street.tr': 'arterial.tr', road: 'arterial',
   avenue: 'boulevard', 'avenue.gr': 'boulevard.gr', arterial: 'six', 'arterial.tl': 'six', 'arterial.tr': 'six', 'arterial.tl.tr': 'six',
-  boulevard: 'grand', 'boulevard.gr': 'grand.gr', 'street.ow': 'arterial.ow', 'arterial.ow': 'six.ow',
+  boulevard: 'grand', 'boulevard.gr': 'grand.gr', 'street.ow': 'arterial.ow', 'arterial.ow': 'six.ow', 'street.ow.tr': 'arterial.ow.tr', 'arterial.ow.tr': 'six.ow',
 };
 export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number; minDeg: number }[] = [
   { id: 'plain', name: 'Plain', desc: 'Rounded corners and crossings', cost: 0, minDeg: 3 },
@@ -293,9 +297,32 @@ function segIntersections(P: Pt, Q: Pt, A: Pt, B: Pt): [number, number][] {
 }
 /** a turn arrow's outline on an approach, world points: its tip t tiles from the junction centre along arm a, in the lane at lat
  *  (tiles, to the arm's right); kind S (straight, 1 tile long, 0.35 wide), L (a left turn) or R (a right turn, the L mirrored) */
+/** the straight arrow's unit outline (tip at +x, along the heading; y across it) */
+const S_SHAPE: [number, number][] = [[0.5, 0], [0.15, 0.175], [0.15, 0.07], [-0.5, 0.07], [-0.5, -0.07], [0.15, -0.07], [0.15, -0.175]];
+/** a straight white arrow on a one-way lane, centred at c, pointing along the unit heading u, lateral is along perp(u) */
+function flowArrowPts(c: Pt, u: Pt): Pt[] {
+  const pu = perp(u);
+  return S_SHAPE.map(([x, y]) => add(add(c, mul(u, ARROW_LEN * x)), mul(pu, y * ARROW_W)));
+}
+/** the direction arrows of a one-way route: one per lane (lats, along perp of the flow) every 15 tiles, the first 6 tiles in from each end of pts (in flow order) */
+function flowArrows(pts: Pt[], closed: boolean, lats: number[]): Poly[] {
+  const out: Poly[] = [], ring = closed ? [...pts, pts[0]!] : pts, runs = ring.length - 1;
+  let total = 0; for (let k = 0; k < runs; k++) total += vlen(sub(ring[k + 1]!, ring[k]!));
+  for (let s = 6; s <= total - 6; s += 15) {
+    let acc = 0;
+    for (let k = 0; k < runs; k++) {
+      const a = ring[k]!, b = ring[k + 1]!, l = vlen(sub(b, a));
+      if (acc + l < s) { acc += l; continue; }
+      const u = mul(sub(b, a), 1 / (l || 1)), p = add(a, mul(u, s - acc));
+      for (const c of lats) { const q = flowArrowPts(add(p, mul(perp(u), c)), u); out.push({ path: polyPath(q), bbox: bboxOf(q, 0.3) }); }
+      break;
+    }
+  }
+  return out;
+}
 function arrowPts(N: Pt, a: Arm, t: number, lat: number, kind: 'S' | 'L' | 'R'): Pt[] {
   const rn = { x: a.dir.y, y: -a.dir.x }, sg = kind === 'R' ? -1 : 1;
-  const shape: [number, number][] = kind === 'S' ? [[0.5, 0], [0.15, 0.175], [0.15, 0.07], [-0.5, 0.07], [-0.5, -0.07], [0.15, -0.07], [0.15, -0.175]]
+  const shape: [number, number][] = kind === 'S' ? S_SHAPE
     : [[-0.5, -0.07], [0.27, -0.07], [0.27, 0.45], [0.375, 0.45], [0.2, 0.75], [0.025, 0.45], [0.13, 0.45], [0.13, 0.07], [-0.5, 0.07]];
   // drawn at road size: ARROW_LEN tiles long (~5 m, as painted turn arrows are), ARROW_W times the unit shape's width (the turn head stays in its lane)
   return shape.map(([x, y]) => add(add(N, mul(a.dir, t + ARROW_LEN * (0.5 - x))), mul(rn, lat - sg * y * ARROW_W)));
@@ -458,7 +485,9 @@ export class RoadNetwork {
     for (let i = 0; i + 1 < pts.length; i++) {
       const a = this.node(pts[i]), b = this.node(pts[i + 1]); if (a === b) continue;
       const ex = a.segs.find(s => s.a === b || s.b === b);
-      if (ex) { if (ex.cls !== cls || ex.style !== style || ex.kind !== kind) { ex.cls = cls; ex.style = style; ex.kind = kind; this.touched.add(a); this.touched.add(b); } } else this.link(a, b, cls, style, kind);
+      if (ex && cls.oneway && ex.a === b) { this.unlink(ex); this.link(this.keep(a), this.keep(b), cls, style, kind); }
+      else if (ex) { if (ex.cls !== cls || ex.style !== style || ex.kind !== kind) { ex.cls = cls; ex.style = style; ex.kind = kind; this.touched.add(a); this.touched.add(b); } }
+      else this.link(a, b, cls, style, kind);
     }
   }
   /** add legs (kinds[i] is leg i's structure kind, ground by default); pass rebuild=false to batch several calls before one rebuild() */
@@ -696,6 +725,11 @@ export class RoadNetwork {
       if (centre === 'dashed') push(0.12, YELLOW, cls.id === 'road' ? [2, 1.4] : [1.6, 1.2], 0);
       else if (centre === 'double') { push(0.1, YELLOW, null, 0.17); push(0.1, YELLOW, null, -0.17); }
       else if (centre === 'twltl') for (const s of [1, -1]) { push(0.1, YELLOW, null, s * 0.875); push(0.1, YELLOW, [1.6, 1.2], s * 0.7); }
+      // a one-way route's flow: seg a to seg b; the first seg's a is nodes[0] means the flow runs in pts order
+      if (cls.oneway) {
+        const n0 = r.nodes[0], n1 = r.nodes[1], s0 = r.segs.find(s => (s.a === n0 && s.b === n1) || (s.a === n1 && s.b === n0));
+        if (s0) fx.bars.push(...flowArrows(s0.a === n0 ? base : base.slice().reverse(), r.closed, cls.laneCentres));
+      }
     }
     if (this.paintData) { if (r.kind !== SK.BRIDGE) this.decalsFor(r, fx.decals); fx.lazy = () => { const l = emptyLitter(); this.routeLitter(r, l); return l; }; }
     fx.bbox = bboxOf(r.pts, cls.h + cls.walk + 1.5);
@@ -788,8 +822,10 @@ export class RoadNetwork {
         }
         zebra.push({ path: p, bbox: bboxOf([add(N, mul(a.dir, a.xw))], a.h + 1.5) });
       }
-      if (a.stop >= 0) {
-        const q = [add(add(N, mul(a.dir, a.stop)), mul(rn, m + 0.15)), add(add(N, mul(a.dir, a.stop + 0.35)), mul(rn, m + 0.15)), add(add(N, mul(a.dir, a.stop + 0.35)), mul(rn, a.h - 0.15)), add(add(N, mul(a.dir, a.stop)), mul(rn, a.h - 0.15))];
+      // a one-way arm: an inbound one's stop bar spans the whole width, an outbound one has none
+      if (a.stop >= 0 && !(a.cls.oneway && a.seg.a === n)) {
+        const lo = a.cls.oneway ? -a.h : m;
+        const q = [add(add(N, mul(a.dir, a.stop)), mul(rn, lo + 0.15)), add(add(N, mul(a.dir, a.stop + 0.35)), mul(rn, lo + 0.15)), add(add(N, mul(a.dir, a.stop + 0.35)), mul(rn, a.h - 0.15)), add(add(N, mul(a.dir, a.stop)), mul(rn, a.h - 0.15))];
         bars.push({ path: polyPath(q), bbox: bboxOf(q, 0.3) });
       }
       if (a.h >= 2 && a.len > (a.stop >= 0 ? a.stop : a.reachEdge) + 7) {
@@ -801,12 +837,14 @@ export class RoadNetwork {
     // turn arrows (n.tl, 3+ arms; the lane graph's rule: lane 0 turns left, the other lanes go straight and the last one right too),
     // on each approach with 2+ lanes, 3 m before its stop line (or its corner); white bars, so the wear mask chips them too
     if (n.tl && k >= 3 && !n.rb) for (const a of arms) {
+      // an outbound-only one-way arm has no lanes to turn from; a one-way inbound arm's signed lane centres are used as they are (the offsets mirror towards its own side)
+      if (a.cls.oneway && a.seg.a === n) continue;
       const nl = a.cls.laneCentres.length, t = (a.stop >= 0 ? a.stop + 0.35 : a.reachEdge + a.cls.rConcave + 0.3) + 1.5;
       if (nl < 2 || t + 1.5 > a.len) continue;
       for (let j = 0; j < nl; j++) {
-        const c = a.cls.laneCentres[j], put = (kind: 'S' | 'L' | 'R', lat: number) => { const q = arrowPts(N, a, t, lat, kind); bars.push({ path: polyPath(q), bbox: bboxOf(q, 0.3) }); };
+        const c = a.cls.laneCentres[j], sg = a.cls.oneway ? Math.sign(c) : 1, put = (kind: 'S' | 'L' | 'R', lat: number) => { const q = arrowPts(N, a, t, lat, kind); bars.push({ path: polyPath(q), bbox: bboxOf(q, 0.3) }); };
         if (j === 0) put('L', c);
-        else { put('S', c - 0.35); if (j === nl - 1) put('R', c + 0.2); }
+        else { put('S', c - 0.35 * sg); if (j === nl - 1) put('R', c + 0.2 * sg); }
       }
     }
     if (this.paintData && (k === 1 || n.rb)) fx.lazy = () => { const l = emptyLitter(); this.nodeLitter(n, l); return l; };
