@@ -5,6 +5,7 @@ import { MAP } from '../src/game/iso';
 import { TC, makeNoise } from '../src/game/terrain';
 import { FOREST_CELL } from '../src/game/forest';
 import { TOWN_TREE_S, townTreeCell } from '../src/game/towntrees';
+import { OWNER_SCALE } from '../src/game/lots/scales';
 
 const SEED = 7;
 const clump = makeNoise(SEED ^ 0x7c1a);
@@ -27,7 +28,8 @@ test('a town cell on open ground plants between 20% and 90% of its grid points, 
   assert.ok(trees.length >= 0.2 * n && trees.length <= 0.9 * n, `planted ${trees.length} of ${n}`);
   assert.deepEqual(townTreeCell(SEED, cls, clump, 5, 5, always, always), trees);
   for (const tr of trees) {
-    assert.ok(tr.scale >= 1.1 && tr.scale <= 2.8, `scale ${tr.scale} (the lot trees' sizes, OWNER_SCALE, +-10%)`);
+    const k = (OWNER_SCALE as Record<string, number>)[tr.id] ?? 1.5;
+    assert.ok(tr.scale >= 0.9 * k - 1e-9 && tr.scale <= 1.1 * k + 1e-9, `${tr.id} scale ${tr.scale}: the lot trees' size ${k} +-10%`);
     assert.equal(typeof tr.flip, 'boolean');
   }
 });
