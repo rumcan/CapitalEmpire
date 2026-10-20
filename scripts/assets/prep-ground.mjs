@@ -111,8 +111,9 @@ import soil from '../assets/ground/soil.webp';
 import decals from '../assets/ground/decals.webp';
 import lotAsphalt from '../assets/ground/lot-asphalt.webp';
 import lotDecals from '../assets/ground/lot-decals.webp';
+import nature from '../assets/ground/nature.webp';
 
-export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves, soil, decals, lotAsphalt, lotDecals };
+export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves, soil, decals, lotAsphalt, lotDecals, nature };
 export type GroundArt = typeof GROUND_ART;
 /** painted px per metre of the road kit (manifest.json pxPerM) */
 export const PPM = 55.2;

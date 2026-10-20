@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
+import { bakeVariant, lotVariants } from './lot-variants.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
 const OUT = path.join(ROOT, 'src/assets/atlas');
@@ -103,6 +104,15 @@ for (const size of ['adult', 'kid']) {
   }
 }
 
+// ---- 1c. the baked house lots (lot-variants.mjs): one picture per variant, rendered straight at mip-0 resolution, the whole lot
+// as its footprint and the house as its planner block
+for (const v of lotVariants()) {
+  const b = await bakeVariant(v, MIP0), { data, info } = await sharp(b.png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const t = trim(data, info.width, info.height);
+  const it = { name: v.name, cat: 'Lots', kind: 'lot', w: b.w, h: b.h, ax: b.ax, ay: b.ay, boxes: b.boxes, block: b.block, solid: 0, big: true, door: false };
+  sprites.push({ id: v.id, cat: 'Lots', it, cost: 0, crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 / MIP0, qy0: t.y0 / MIP0, qx1: (t.x1 + 1) / MIP0, qy1: (t.y1 + 1) / MIP0 });
+}
+
 // ---- 2. shelf packing into PAGE x PAGE pages (positions aligned so every mip lands on whole pixels). The walkers get their own
 // pages with a 4 px gutter on a 4 px grid: they are drawn at the street tier only, so the far mips never sample them
 const pages = [];
@@ -147,7 +157,7 @@ const imports = [], pageRows = [];
 files.forEach((row, p) => { const vars = row.map((f, m) => { const v = `p${p}m${m}`; imports.push(`import ${v} from '../assets/atlas/${f}';`); return v; }); pageRows.push(`[${vars.join(', ')}]`); });
 const lib = sprites.map(s => {
   const it = s.it, e = { id: s.id, name: it.name, cat: s.cat, kind: KIND_OF_CAT[it.cat] ?? it.kind, w: it.w, h: it.h, ax: it.ax, ay: it.ay, boxes: it.boxes, solid: it.solid, big: it.big, door: !!it.door, cost: s.cost };
-  if (it.glows) e.glows = it.glows; if (it.doorAt) e.doorAt = it.doorAt;
+  if (it.glows) e.glows = it.glows; if (it.doorAt) e.doorAt = it.doorAt; if (it.block) e.block = it.block;
   e.tex = [s.page, +(s.px / PAGE).toFixed(6), +(s.py / PAGE).toFixed(6), +((s.px + s.cw) / PAGE).toFixed(6), +((s.py + s.ch) / PAGE).toFixed(6)];
   e.quad = [+s.qx0.toFixed(2), +s.qy0.toFixed(2), +s.qx1.toFixed(2), +s.qy1.toFixed(2)];
   return e;

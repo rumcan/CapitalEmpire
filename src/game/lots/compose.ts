@@ -408,6 +408,24 @@ function res(B: Build, st: ComposeState) {
   for (let b = 0.8; b <= sb - 0.6; b += 1.4) for (let a = 0.8; a <= W - 0.8; a += 1.4) B.put(pick(r, BUSHES), a, b, { plant: true });
 }
 
+/** the baked house lots (scripts/assets/lot-variants.mjs) by size and facing: 'w x d front|rear' -> [normal ids, neglected ids] */
+const BAKED = new Map<string, [string[], string[]]>();
+for (const it of LIBRARY) {
+  const m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(it.id); if (!m) continue;
+  const k = `${m[1]}x${m[2]} ${m[3]}`; let e = BAKED.get(k); if (!e) BAKED.set(k, (e = [[], []]));
+  e[/neglected/.test(it.name) ? 1 : 0].push(it.id);
+}
+/** a house lot as one baked picture (the whole lot: house, yard, fences, decals), when its size has variants: the variant by the
+ *  lot's slot along its street (neighbours differ), the neglected ones from decline 2; null when none fits */
+function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
+  const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`); if (!e) return null;
+  const pool = st.decline >= 2 && e[1].length ? e[1] : e[0]; if (!pool.length) return null;
+  const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
+  const id = pool[(((slot + mix(street) % 7) % pool.length) + pool.length) % pool.length];
+  const c = B.P(lot.w / 2, lot.d / 2);
+  return { props: [{ id, x: c.x, y: c.y, flip: B.flip, scale: 1 }], ground: [] };
+}
+
 /** a shop or venue with a car park beside it (two bays when the lot allows), a lamp at its corner, a front row by the door
  *  (bike rack, bin, bench, bushes along the shop front), a hvac unit at the side, a tree row along the side lot line and the
  *  bins at the back; a tour venue adds a second bench, a picnic table, a phone booth and a sign */
@@ -592,7 +610,7 @@ export function compose(lot: LotGeom, st: ComposeState): Composition {
   B.noCars = st.decline >= 3;
   if (st.use === LU.NONE || st.level === LV.EMPTY) vacant(B);
   else if (st.level === LV.BUILDING) site(B);
-  else if (st.use === LU.RES) res(B, st);
+  else if (st.use === LU.RES) { const b = baked(B, lot, st); if (b) return b; res(B, st); }
   else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); }
   else if (st.use === LU.TOUR) com(B, st, true);
   else if (st.use === LU.IND) ind(B, st);

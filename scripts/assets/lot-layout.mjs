@@ -115,6 +115,8 @@ export const STORY_NAMES = Object.keys(STORIES);
 /** the owner's scale for a sprite (a variation takes its original's), or 1 */
 export const ownerScale = id => { const it = LIB.get(id); const b = it ? baseOf(it) : id; return SCALES[id]?.scale ?? SCALES[b]?.scale ?? 1; };
 
+/** does a house fit a W x D lot at the owner's scale (with the deepest setback and room for a back yard) */
+export const fitsLot = (id, W, D) => { const s = ownerScale(id), [hx, hy] = half(id, s); return 2 * hx <= W - 0.8 && 2 * hy <= D - 7 - 9; };
 /** the footprint half extents (metres) of a sprite at scale s (its base box; swapped when mirrored) */
 function half(id, s = 1, flip = false) {
   const it = LIB.get(id), boxes = OVR[id]?.boxes ?? OVR[baseOf(it)]?.boxes;
@@ -145,7 +147,7 @@ export function layoutLot({ W, D, rear = false, story = 'family', seed = 1, hous
 
   // ---- the house: the biggest that leaves room for the drive, 5-7 m back from the front edge
   const neg = story === 'neglected', DW = 3.2, setback = between(5, 7);
-  const pool = neg && RUNDOWN.length ? RUNDOWN : rear ? REARS : HOUSES;
+  const pool = rear ? REARS : neg && RUNDOWN.length ? RUNDOWN : HOUSES;   // a rear lot shows a rear view, run down or not
   let best = null;
   const order = houseId ? [houseId, ...[...pool].sort(() => r() - 0.5)] : [...pool].sort(() => r() - 0.5);
   for (const id of order) {

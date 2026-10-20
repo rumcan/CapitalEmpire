@@ -220,6 +220,8 @@ export class Textures {
   decals!: Cnv; soil!: Cnv;
   /** the builder's flat ground decals (lot-decals.ts LOT_DECALS rects) the Lot Composer lays in lots */
   lotDecals!: Cnv;
+  /** the nature patches (nature-patches.ts NATURE rects) scattered over open grass */
+  nature!: Cnv;
   /** screen direction (radians) of the pool stamp's streak for a road running along world X (town-scene.mjs stampAngle) */
   stampAngle = 0;
   curb: CurbColours = { joint: '#8a6a48', top: '#f0dfbe', face: ['#dcc29a', '#c8a876', '#a98652'], gutter: ['#1a1620', '#2a2430', '#3a3444'], faceHidden: '#d8c6a0' };
@@ -230,8 +232,8 @@ export class Textures {
   async build(art: GroundArt, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
     const steps = PAINTED.length + 10; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
-    const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals].map(loadImage));
-    this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg);
+    const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature].map(loadImage));
+    this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
     for (const name of PAINTED) { this.store(name, gen(name)); await tick(); }
     // ---- asphalt mosaics: one seed layout, three paintings (unlit, lit 0.4, lit 0.9)

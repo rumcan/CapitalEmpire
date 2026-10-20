@@ -3,13 +3,13 @@
 import { canvas, ctx2d, type CurbColours, type Cnv, type Textures } from './textures';
 
 /** bump when the texture generation code changes, so stale caches are rebuilt */
-const TEX_VERSION = 'tex-7';
+const TEX_VERSION = 'tex-8';
 export interface TexSnapshot { names: string[]; bitmaps: ImageBitmap[]; curb: CurbColours; stampAngle: number }
 
 function entries(t: Textures): [string, Cnv][] {
   const out: [string, Cnv][] = [...t.mips.entries()].map(([k, v]) => ['mip:' + k, v]);
   for (const [k, list] of t.mosaics) list.forEach((c, i) => out.push([`mosaic:${k}:${i}`, c]));
-  out.push(['slabs', t.slabs], ['leaves', t.leaves], ['pool1', t.pool1], ['pool2', t.pool2], ['decals', t.decals], ['soil', t.soil], ['lotDecals', t.lotDecals]);
+  out.push(['slabs', t.slabs], ['leaves', t.leaves], ['pool1', t.pool1], ['pool2', t.pool2], ['decals', t.decals], ['soil', t.soil], ['lotDecals', t.lotDecals], ['nature', t.nature]);
   return out;
 }
 export async function snapshot(t: Textures): Promise<TexSnapshot> {

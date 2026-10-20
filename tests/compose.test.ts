@@ -21,10 +21,7 @@ const byId = new Map(LIBRARY.map(i => [i.id, i]));
 const STREET = new Set(['gen:trash-cans-row', 'world:mailbox', 'world:streetlamp', 'town:bus_stop', 'town:phone_booth', 'town:street_sign', 'town:utility_pole', 'world:hydrant', 'expansion:parking-meter', 'expansion:leaf-bags']);
 const isFence = (id: string) => { const k = byId.get(id)?.kind; return k === 'fencex' || k === 'fencey' || id === 'world:hedge'; };
 const isWheel = (id: string) => id === 'expansion:wheel-stop';
-const isCar = (id: string) => byId.get(id)?.cat === 'Vehicles';
 const isUpright = (id: string) => !isFence(id) && !isWheel(id);
-const isHouse = (id: string) => byId.get(id)?.cat === 'Houses' && byId.get(id)?.kind === 'house';
-const isRear = (id: string) => /^expansion:(ranch|cottage|dormer|duplex|victorian)-rear$/.test(id);
 
 /** the footprint of a placed prop in world tiles (the engine's footprint: the union of its boxes) */
 function fpOf(p: Placed): [number, number, number, number] {
@@ -102,45 +99,29 @@ test('300 combos: every prop and patch lies inside its lot, and no two uprights 
   }
 });
 
-test('RES at BUILT: 14-56 uprights, exactly one main house, facing the road (front on +X/+Y lots, rear view on -X/-Y lots)', () => {
+test('RES at BUILT: one baked lot of the lot size, facing the road (front variants on +X/+Y lots, rear on -X/-Y), mirrored with the lot, centred on it', () => {
   let n = 0;
   for (const lot of LOTS) for (let seed = 1; seed <= 4; seed++) {
     const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: (lot.id * 97 + seed * 7919) >>> 0 };
-    const c = compose(lot, st);
-    const ups = c.props.filter(p => isUpright(p.id)).length;
-    assert.ok(ups >= 14 && ups <= 56, `${lot.key} seed ${st.seed}: ${ups} uprights; ${c.props.map(p => p.id).join(' ')}`);
-    const houses = c.props.filter(p => isHouse(p.id) || isRear(p.id));
-    assert.equal(houses.length, 1, `${lot.key} w${lot.w} d${lot.d} seed ${st.seed}: ${houses.length} main houses; props ${c.props.map(p => p.id).join(' ')}`);
-    const F = { x: -lot.n.x, y: -lot.n.y };
+    const c = compose(lot, st), F = { x: -lot.n.x, y: -lot.n.y };
     const flip = Math.abs(F.x) > Math.abs(F.y), rear = flip ? F.x < 0 : F.y < 0;
-    const h = houses[0];
-    assert.equal(h.flip, flip, `${lot.key}: house flip`);
-    assert.equal(isRear(h.id), rear, `${lot.key}: house front or rear view`);
+    assert.equal(c.props.length, 1, `${lot.key}: ${c.props.map(p => p.id).join(' ')}`);
+    const p = c.props[0], m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(p.id);
+    assert.ok(m, `${lot.key}: ${p.id} is not a baked lot`);
+    assert.deepEqual([+m![1], +m![2], m![3]], [lot.w, lot.d, rear ? 'rear' : 'front'], `${lot.key}: ${p.id}`);
+    assert.equal(p.flip, flip, `${lot.key}: flip`);
+    const cx = lot.o.x + (lot.u.x * lot.w + lot.n.x * lot.d) / 2, cy = lot.o.y + (lot.u.y * lot.w + lot.n.y * lot.d) / 2;
+    assert.ok(Math.hypot(p.x - cx, p.y - cy) < 1e-6, `${lot.key}: not centred`);
+    assert.ok(!/neglected/.test(byId.get(p.id)!.name), `${lot.key}: a neglected lot at decline 0`);
     n++;
   }
   assert.ok(n > 100);
-});
-
-test('drives and walks reach the front edge and carry no uprights except cars', () => {
-  let checked = 0;
-  for (const lot of LOTS) for (let seed = 1; seed <= 3; seed++) {
-    const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: (lot.id * 31 + seed * 104729) >>> 0 };
-    const c = compose(lot, st);
-    for (const g of c.ground) {
-      if (g.tex !== 'paving') continue;
-      const bs = []; for (let k = 0; k < g.pts.length; k += 2) bs.push(toLot(lot, g.pts[k], g.pts[k + 1]).b);
-      assert.ok(Math.min(...bs) <= 0.05, `${lot.key}: a paving patch does not reach the front edge`);
-      const [x0, y0, x1, y1] = [Math.min(...g.pts.filter((_, k) => k % 2 === 0)), Math.min(...g.pts.filter((_, k) => k % 2 === 1)), Math.max(...g.pts.filter((_, k) => k % 2 === 0)), Math.max(...g.pts.filter((_, k) => k % 2 === 1))];
-      for (const p of c.props) {
-        if (isCar(p.id)) continue;
-        const f = fpOf(p);
-        const ix = Math.min(f[2], x1) - Math.max(f[0], x0), iy = Math.min(f[3], y1) - Math.max(f[1], y0);
-        assert.ok(!(ix > 0.05 && iy > 0.05), `${lot.key}: ${p.id} stands on a drive or walk`);
-      }
-      checked++;
-    }
-  }
-  assert.ok(checked > 100, `only ${checked} drives and walks`);
+  // neighbours along a street never share a variant; decline 2 takes the neglected ones
+  const rows = new Map<string, { a: number; id: string }[]>();
+  for (const lot of LOTS) { const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props[0].id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
+  for (const r of rows.values()) { r.sort((p, q) => p.a - q.a); for (let i = 1; i < r.length; i++) if (Math.abs(r[i].a - r[i - 1].a - LOTS[0].w) < 0.01) assert.notEqual(r[i].id, r[i - 1].id, 'two neighbours share a variant'); }
+  const neg = compose(LOTS[0], { use: LU.RES, level: LV.BUILT, decline: 2, seed: 5 }).props[0];
+  assert.match(byId.get(neg.id)!.name, /neglected/);
 });
 
 test('determinism: the same input composes the same; another seed composes differently', () => {
@@ -148,7 +129,8 @@ test('determinism: the same input composes the same; another seed composes diffe
   for (const { lot, st } of COMBOS) {
     const a = JSON.stringify(compose(lot, st)), b = JSON.stringify(compose(lot, st));
     assert.equal(a, b, `${lot.key} ${JSON.stringify(st)}: not deterministic`);
-    if (a === JSON.stringify(compose(lot, { ...st, seed: (st.seed + 1) >>> 0 }))) same++;
+    // a baked house lot is chosen by its place on the street, not its seed
+    if (st.use !== LU.RES && a === JSON.stringify(compose(lot, { ...st, seed: (st.seed + 1) >>> 0 }))) same++;
   }
   assert.ok(same <= COMBOS.length * 0.05, `${same} of ${COMBOS.length} combos did not change with the seed`);
 });
@@ -177,7 +159,7 @@ test('the average uprights per archetype (log)', () => {
   const lines = [...sum.keys()].map(k => `${k}: ${(sum.get(k)! / cnt.get(k)!).toFixed(1)}`);
   console.log(`uprights per lot (decline 0, ${LOTS.length} lots x 2 seeds)\n  ${lines.join('\n  ')}`);
   const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
-  assert.ok(avg('RES BUILT') >= 12);
+  assert.equal(avg('RES BUILT'), 1, 'a house lot is one baked picture');
   for (const u of ['COM', 'IND', 'TOUR', 'GOV']) assert.ok(avg(`${u} BUILT`) >= 14, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want 14+`);
 });
 
@@ -196,7 +178,7 @@ test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for 
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '861b82d4'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '6dfd49de'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '6700f011'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a645ff9f'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '46b265c6'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '33ea9a15'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);

@@ -3,6 +3,7 @@ import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub
 import { MOSAIC_TILES, SOIL_H, SOIL_R, SOIL_STAMPS, SOIL_W, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
 import { DECALS, POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { LOT_DECALS } from './lot-decals';
+import { NATURE, NATURE_RES } from './nature-patches';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
@@ -120,7 +121,7 @@ export class GroundPainter {
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
     const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : this.planColour(t as TexName);
     const lotAll = this.lotsIn(box), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
-    for (const p of [...lotAll.filter(p => !p.paint), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
+    for (const p of [...lotAll.filter(p => !p.paint && p.tex !== 'marks'), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), this.planColour('roadgravel')); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
@@ -502,10 +503,12 @@ export class GroundPainter {
    *  tufts) at 0.7-1.3x their size, flipped at random, 55-95% opaque. Drawn over the grass before everything else, so the
    *  terrain layers, lots and roads cover them; skipped on hills, water and banks. */
   private drawDressing(ctx: C2D, box: BBox, L: number, M: DOMMatrix) {
-    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, soil: number[] = [], dec: number[] = [];
+    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, soil: number[] = [], dec: number[] = [], nat: number[] = [];
     const ground = (x: number, y: number) => x >= 0 && y >= 0 && x < MAP && y < MAP && this.terrain[Math.floor(y) * MAP + Math.floor(x)] <= TC.PATCH;
-    for (let ry = Math.floor((ty0 - 4) / DRESS); ry <= Math.floor((ty1 + 4) / DRESS); ry++) for (let rx = Math.floor((tx0 - 4) / DRESS); rx <= Math.floor((tx1 + 4) / DRESS); rx++) {
+    for (let ry = Math.floor((ty0 - 8) / DRESS); ry <= Math.floor((ty1 + 8) / DRESS); ry++) for (let rx = Math.floor((tx0 - 8) / DRESS); rx <= Math.floor((tx1 + 8) / DRESS); rx++) {
       const r = mulberry(((rx * 7919) ^ (ry * 104729) ^ 0xdeca1) >>> 0);
+      // a nature patch (16 m of composed decals) in 45% of the regions, from its own stream so the rest stays as it was
+      { const q = mulberry(((rx * 15485863) ^ (ry * 32452843) ^ 0x7a7e) >>> 0); if (q() < 0.45 && NATURE.length) { const x = (rx + q()) * DRESS, y = (ry + q()) * DRESS, k = Math.floor(q() * NATURE.length), s = (0.85 + q() * 0.55) * (q() < 0.5 ? -1 : 1); if (ground(x, y)) nat.push(x, y, k, s); } }
       if (r() < 0.3) { const x = (rx + r()) * DRESS, y = (ry + r()) * DRESS, rad = (1.5 + r() * 2.8) * 45, k = Math.floor(r() * SOIL_STAMPS); if (ground(x, y)) soil.push(x, y, rad, k); }
       for (let i = 0; i < 12; i++) {
         const k = r() < 0.82 ? Math.floor(r() * 5) : r() < 0.7 ? 5 + Math.floor(r() * 3) : 8, x = (rx + r()) * DRESS, y = (ry + r()) * DRESS, s = 0.7 + r() * 0.6, flip = r() < 0.5 ? -1 : 1, a = 0.55 + r() * 0.4;
@@ -513,6 +516,12 @@ export class GroundPainter {
       }
     }
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    for (let i = 0; i < nat.length; i += 4) {
+      const S = M.transformPoint(new DOMPoint(nat[i], nat[i + 1])), n = NATURE[nat[i + 2]], s = nat[i + 3];
+      ctx.globalAlpha = 0.92; ctx.setTransform(L * s, 0, 0, L * Math.abs(s), S.x, S.y);
+      ctx.drawImage(tex.nature, n.x, n.y, n.w, n.h, -n.ox, -n.oy, n.w / NATURE_RES, n.h / NATURE_RES);
+    }
+    ctx.globalAlpha = 1;
     for (let i = 0; i < soil.length; i += 4) {
       const S = M.transformPoint(new DOMPoint(soil[i], soil[i + 1])), f = soil[i + 2] / SOIL_R;
       ctx.setTransform(L * f, 0, 0, L * f, S.x, S.y); ctx.drawImage(tex.soil, soil[i + 3] * SOIL_W, 0, SOIL_W, SOIL_H, -SOIL_W / 2, -SOIL_H / 2, SOIL_W, SOIL_H);

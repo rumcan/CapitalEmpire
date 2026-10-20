@@ -564,7 +564,12 @@ export class Game {
   }
   private sendBlocks(invalidate: boolean) {
     const out: number[] = [];
-    for (const p of this.props) { const it = LIBRARY[p.item]; if (!it.big || it.kind === 'car') continue; out.push(p.x0, p.y0, p.x1, p.y1, BUILDING_KINDS[it.kind] ?? 2); }
+    for (const p of this.props) {
+      const it = LIBRARY[p.item]; if (!it.big || it.kind === 'car') continue;
+      // a baked lot shows its house (block, metres around the anchor; mirrored with the lot), not the whole lot
+      if (it.block) { const b = it.block, f = p.flip, s = p.scale / 2, hx = (f ? b.hy : b.hx) * s, hy = (f ? b.hx : b.hy) * s, cx = p.x + (f ? b.dy : b.dx) * s, cy = p.y + (f ? b.dx : b.dy) * s; out.push(cx - hx, cy - hy, cx + hx, cy + hy, BUILDING_KINDS.house ?? 0); continue; }
+      out.push(p.x0, p.y0, p.x1, p.y1, BUILDING_KINDS[it.kind] ?? 2);
+    }
     this.blocksAt = performance.now();
     this.ground.blocks(new Float32Array(out));
     if (invalidate) this.ground.invalidate([0, 0, MAP, MAP], false, 0, 'p');
