@@ -1,8 +1,9 @@
 // The Paint tool's data model (docs/PAINT-TOOL.md): pure helpers, no DOM, no canvas, importable from node tests.
 import { MAP } from './iso';
+import type { GrassTex } from './grass-art';
 
-/** the fill textures a painted area can take (the ground textures the roads and sidewalks already use) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'gravel' | 'dirt' | 'field' | 'grass';
+/** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the grass-v1 grasses) */
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'gravel' | 'dirt' | 'field' | 'grass' | GrassTex;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
@@ -27,6 +28,14 @@ export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'dirt', name: 'Dirt', col: '#56402f' },
   { id: 'field', name: 'Field', col: '#5a4a2e' },
   { id: 'grass', name: 'Grass', col: '#4f6b2e' },
+  { id: 'lawnLush', name: 'Lush lawn', col: '#4b641d' },
+  { id: 'lawnWorn', name: 'Worn lawn', col: '#696a29' },
+  { id: 'lawnClover', name: 'Clover lawn', col: '#5a6a1e' },
+  { id: 'golfGreen', name: 'Putting green', col: '#4d6e18' },
+  { id: 'golfFairway', name: 'Fairway', col: '#6b762d' },
+  { id: 'golfRough', name: 'Rough', col: '#586322' },
+  { id: 'meadowLush', name: 'Meadow', col: '#686d20' },
+  { id: 'meadowFlowers', name: 'Wildflowers', col: '#6a6c2f' },
 ];
 /** the border textures: the kerb first, then every fill texture */
 export const BORDER_TEXES: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...PAINT_TEXES];
