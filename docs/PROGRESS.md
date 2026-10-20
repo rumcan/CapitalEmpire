@@ -18,7 +18,7 @@ _Last updated: 2026-10-19 evening, paint branch (the Paint tool: ground areas, d
 | 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
 | 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
 | B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 and B.2 done (the player places the stadium; the business catalogue and tree). Comes before 6R.5–6R.8 (the owner's order) |
-| UI. The Maple Falls look (the owner's mockup, [docs/ui/](ui/)) | **Queued** (asked 2026-10-20): its own chat, after the road upgrade ladder. Section below |
+| UI. The Maple Falls look (the owner's mockup, [docs/ui/](ui/)) | **Step 1 done** (2026-10-20): icons, top bar, rail, road panel, hint bar. Open: minimap, event card picture. Section below |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 | Paint tool (ground areas; design in [PAINT-TOOL.md](PAINT-TOOL.md)) | **Done** (2026-10-19, branch `claude/frosty-wilson-452c74`, merged up to main `3311ce9`; not yet merged into main, not pushed). Section below |
@@ -1465,7 +1465,19 @@ no slower than plain ones (80 vs 115 ms per chunk on the busy machine, noise dom
 Open (for the owner): a price per m² by texture; dragging an area's corners after placing; whether the bulldozer should
 also remove paint (now only the Paint tool's Erase does).
 
-## Phase UI, the Maple Falls look (the owner's mockup, 2026-10-20): queued
+## Phase UI, the Maple Falls look (the owner's mockup, 2026-10-20): step 1 done
+
+**Done (2026-10-20, merged to main):** `scripts/assets/prep-ui-icons.mjs` cuts the sheet into 50 named 64 px WebP icons
+(`src/assets/ui/icons/`, ~120 KB); `src/ui/Icon.tsx`; `src/ui/RoadThumb.tsx` draws each road class from its own fields (surface,
+walks, median, trees, lane and centre lines, shoulders, one-way arrows); the theme classes in `src/index.css` (`glass`, `btn-icon`,
+`btn-gold`, `chip-on`, `rail-tab`, `seg`, `keycap`, `font-display`, `label-caps`). App.tsx (coded by haiku-coder, reviewed): the top bar
+(logo, stat tiles with icons from 1900 px, speed/zoom groups, icon buttons, a gear menu for Save / New town / Empty map; it wraps to two
+rows below about 1440 px and the rail and stadium card move down with it), the rail by group with a segmented tool row, Upgrade and
+Downgrade panels, Road Construction rows with thumbnails and gold prices, icon variant chips, the hint bar with keycaps, glass toasts,
+stats and stadium cards. Checked in the browser at 1920, 1600 and 1366 px, no console errors. The zoom slider is gone (the buttons,
+scroll and the keys still zoom). **Open:** the minimap (bottom left; none exists yet), the event card's stadium picture and level chip,
+the Zones / Utilities / Services / Parks tabs (no such tools yet), panel restyles beyond the header for the junction and business panels.
+
 
 The owner sent a mockup of the whole screen and an icon sheet, and asked for a task to build that UI. Run it in its own chat, research
 first (as JUNCTION-UX.md did), one panel per committed step, each checked in the browser at 1920 x 1080 and on a laptop-sized window.
