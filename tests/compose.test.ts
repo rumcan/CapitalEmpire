@@ -76,6 +76,8 @@ function lotsOfGrid(): Lot[] {
 }
 
 const LOTS = lotsOfGrid();
+/** does the library have a baked picture for the lot's size (exactly w x d tiles, e.g. 8 x 15) */
+const bakedSize = (l: Lot) => LIBRARY.some(it => it.id.startsWith(`lot:${l.w}x${l.d}-`));
 /** the 300 (lot, use, level, decline, seed) combos, deterministic */
 const COMBOS: { lot: Lot; st: ComposeState }[] = (() => {
   const rnd = mulberry(20261018), out: { lot: Lot; st: ComposeState }[] = [];
@@ -108,6 +110,8 @@ test('RES at BUILT: one baked lot of the lot size, facing the road (front varian
     const c = compose(lot, st), F = { x: -lot.n.x, y: -lot.n.y };
     const flip = Math.abs(F.x) > Math.abs(F.y), rear = flip ? F.x < 0 : F.y < 0;
     const lots = c.props.filter(p => p.id.startsWith('lot:'));
+    // a lot of a size with no baked picture (a block lot's cell) is composed live: no picture, the same fence layer
+    if (!bakedSize(lot)) { assert.equal(lots.length, 0, `${lot.key}: a baked picture of another size`); assert.ok(c.props.some(p => /fence-privacy/.test(p.id)), `${lot.key}: no privacy panels`); continue; }
     assert.equal(lots.length, 1, `${lot.key}: ${c.props.map(p => p.id).join(' ')}`);
     // the fence layer: panels on the lot's own side line, and plants, beside the baked picture (which has no fences)
     assert.ok(c.props.some(p => /fence-privacy/.test(p.id)), `${lot.key}: no privacy panels`);
@@ -123,7 +127,7 @@ test('RES at BUILT: one baked lot of the lot size, facing the road (front varian
   assert.ok(n > 100);
   // neighbours along a street never share a variant; decline 2 takes the neglected ones
   const rows = new Map<string, { a: number; id: string }[]>();
-  for (const lot of LOTS) { const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props.find(p => p.id.startsWith('lot:'))!.id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
+  for (const lot of LOTS) { if (!bakedSize(lot)) continue; const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props.find(p => p.id.startsWith('lot:'))!.id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
   for (const r of rows.values()) { r.sort((p, q) => p.a - q.a); for (let i = 1; i < r.length; i++) if (Math.abs(r[i].a - r[i - 1].a - LOTS[0].w) < 0.01) assert.notEqual(r[i].id, r[i - 1].id, 'two neighbours share a variant'); }
   const neg = compose(LOTS[0], { use: LU.RES, level: LV.BUILT, decline: 2, seed: 5 }).props.find(p => p.id.startsWith('lot:'))!;
   assert.match(byId.get(neg.id)!.name, /neglected/);
@@ -256,13 +260,13 @@ function digest(c: Composition): string {
 
 test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries; panels off their line)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '75138a2f'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '3e285176'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'df97a71b'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '1725d98f'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '4f6e1d92'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'c13feb0e'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'edb5c879'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '040044dd'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, 'aba19478'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '3be60e10'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'a0e989a3'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '56e10b4c'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '13b63dfb'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'f1214ba0'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
   assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));

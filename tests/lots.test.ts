@@ -196,3 +196,26 @@ test('a roundabout grown to 3 ring lanes: no lot reaches into its circle (its ed
     assert.deepEqual(fingerprint(lm), fingerprint(fresh), `ring ${rl}: incremental equals full`);
   }
 });
+
+test('a closed 40-tile street square: the lots inside it are block lots (key blk:), and no two lots overlap', () => {
+  const sq = [leg(0, 0, 40, 0), leg(40, 0, 40, 40), leg(40, 40, 0, 40), leg(0, 40, 0, 0)];
+  const e = new NetEditor(new RoadNetwork()); e.addLegs(sq, CLASS.street, 0); e.commit(true);
+  const lm = new LotMap(); lm.update(e.net, null);
+  const lots = [...lm.lots.values()], inside = lots.filter(l => l.c.x > 0 && l.c.x < 40 && l.c.y > 0 && l.c.y < 40);
+  console.log(`square: ${inside.length} block lots inside, ${lots.length - inside.length} frontage lots outside`);
+  assert.ok(inside.length >= 4, `lots inside ${inside.length}`);
+  for (const l of inside) assert.ok(l.key.startsWith('blk:'), `not a block lot: ${l.key}`);
+  assertNoOverlaps(lots);
+});
+
+test('a 6x6 street grid: a street that splits a corner block gives the same lots as a full rebuild of the edited network', () => {
+  // 6 lines each way at 40 tiles from 40 to 240 (a 5 x 5 grid of blocks); the new leg cuts the corner block at x = 60
+  const sixGrid = (e: NetEditor) => { for (let k = 0; k < 6; k++) { const v = 40 + 40 * k; e.addLegs([leg(40, v, 240, v)], CLASS.street, 0); e.addLegs([leg(v, 40, v, 240)], CLASS.street, 0); } e.commit(); };
+  const inc = new NetEditor(new RoadNetwork()); sixGrid(inc);
+  const lm = new LotMap(); lm.update(inc.net, null);
+  inc.addLegs([leg(60, 40, 60, 80)], CLASS.street, 0); inc.commit(); lm.update(inc.net, null);
+  const full = new NetEditor(new RoadNetwork()); sixGrid(full); full.addLegs([leg(60, 40, 60, 80)], CLASS.street, 0); full.commit();
+  const fm = new LotMap(); fm.update(full.net, null);
+  assert.ok(fm.lots.size > 0, 'lots');
+  assert.deepEqual(fingerprint(lm), fingerprint(fm));
+});

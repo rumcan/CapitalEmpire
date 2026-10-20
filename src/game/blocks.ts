@@ -37,10 +37,15 @@ function straight(s: number[], xy: number[]): number[] {
   return s;
 }
 
-/** the blocks of the ground roads: every interior face with an area in [BLOCK_MIN_AREA, maxArea] */
-export function enclosedBlocks(net: RoadNetwork, maxArea = BLOCK_MAX_AREA): Block[] {
+/** the blocks of the ground roads: every interior face with an area in [BLOCK_MIN_AREA, maxArea]. With a box, the face walk runs only on
+ *  the segs whose bbox touches it (ends outside are fine): the faces that touch the box are exact when the box is padded by more than a block's reach */
+export function enclosedBlocks(net: RoadNetwork, maxArea = BLOCK_MAX_AREA, box?: [number, number, number, number]): Block[] {
   const segs: Seg[] = [];
-  for (const s of net.segs) if (s.kind === SK.GROUND && (s.a.x !== s.b.x || s.a.y !== s.b.y)) segs.push(s);
+  for (const s of net.segs) {
+    if (s.kind !== SK.GROUND || (s.a.x === s.b.x && s.a.y === s.b.y)) continue;
+    if (box && (Math.max(s.a.x, s.b.x) < box[0] || Math.min(s.a.x, s.b.x) > box[2] || Math.max(s.a.y, s.b.y) < box[1] || Math.min(s.a.y, s.b.y) > box[3])) continue;
+    segs.push(s);
+  }
   // nodes get indices; each seg gives half-edges 2k (a->b) and 2k+1 (b->a)
   const ids = new Map<Node, number>(), xy: number[] = [];
   const idOf = (n: Node) => { let i = ids.get(n); if (i === undefined) { i = ids.size; ids.set(n, i); xy.push(n.x, n.y); } return i; };
