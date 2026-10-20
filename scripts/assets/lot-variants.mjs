@@ -6,9 +6,9 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import sharp from 'sharp';
 import { LIB, render, toScreen } from './lot-render.mjs';
-import { CARS, HOUSES, REARS, fitsLot, layoutLot, ownerScale } from './lot-layout.mjs';
+import { CARS, HOUSES, REARS, RUNDOWN, fitsLot, half, layoutLot, ownerScale } from './lot-layout.mjs';
 import { ROOT } from './source.mjs';
-import { applyLotEdits } from './overrides.mjs';
+import { applyLotEdits, readLotEdits } from './overrides.mjs';
 
 /** the lot sizes the town makes (tiles: w along the street x d deep; 2 m per tile) and how many variants each gets */
 export const LOT_SIZES = [{ w: 8, d: 15, front: 10, rear: 6 }];
@@ -28,9 +28,16 @@ export function boundsOf(items, W, D) {
   return [Math.floor(x0) - 2, Math.floor(y0) - 2, Math.ceil(x1) + 2, Math.ceil(y1) + 2];
 }
 
-/** every variant: { id, name, W, D (metres), rear, story, items, house: { id, x, y, scale } } */
+/** every variant: { id, name, W, D (metres), rear, story, items, raw (the layout before the owner's edits, with any swapped house),
+ *  houseIdx (the house's index in raw: the owner's edits are keyed by index), house: { id, x, y, scale }, swapped (the house rejected,
+ *  when another stands in its place) }.
+ *  The owner rejects a lot's house in the sprite studio (Lots tab: Delete on the house). The lot then gets another house of its pool in
+ *  the same spot (its front wall where the old one's was, centred on it), so the owner's other edits, keyed by index, still apply: the
+ *  first in the pool's deck order that no other lot uses, no lot has rejected, and whose footprint fits within the old house's (a little
+ *  slack; else the smallest that fits the lot). A lot's rejects are its deleted original plus its edits' `houseRejects` list (a replacement
+ *  deleted in turn). The deck itself never changes (a lot's layout and so its indices depend on it). */
 export function lotVariants() {
-  const out = [];
+  const out = [], all = readLotEdits(), plans = [];
   for (const sz of LOT_SIZES) {
     const W = sz.w * 2, D = sz.d * 2;
     for (const rear of [false, true]) {
@@ -39,10 +46,35 @@ export function lotVariants() {
       for (let i = 0; i < n; i++) {
         const story = stories[i % stories.length], seed = 1000 * sz.w + 100 * (rear ? 1 : 0) + i + 1;
         const l = layoutLot({ W, D, rear, story, seed, house: story === 'neglected' && !rear ? undefined : houses[i % houses.length], car: cars[i % cars.length] });
-        const id = `lot:${sz.w}x${sz.d}-${rear ? 'rear' : 'front'}-${i}`, items = applyLotEdits(id, l.items);
-        out.push({ id, name: `House lot ${sz.w}x${sz.d} ${rear ? 'rear' : 'front'} ${i + 1} (${story})`, W, D, rear, story, items, raw: l.items, house: items.find(p => p.id === l.house.id && Math.abs(p.x - l.house.x) < 3) ?? l.house });
+        const id = `lot:${sz.w}x${sz.d}-${rear ? 'rear' : 'front'}-${i}`, e = all[id] ?? {};
+        const houseIdx = l.items.findIndex(p => p.id === l.house.id && Math.abs(p.x - l.house.x) < 1e-6 && Math.abs(p.y - l.house.y) < 1e-6);
+        const rejects = [...(houseIdx >= 0 && e[houseIdx]?.del ? [l.house.id] : []), ...(e.houseRejects ?? [])];
+        plans.push({ sz, i, W, D, rear, story, l, id, e, houseIdx, rejects, pool: rear ? REARS : story === 'neglected' && RUNDOWN.length ? RUNDOWN : houses });
       }
     }
+  }
+  // the houses rejected anywhere are used nowhere; the houses kept are not dealt again
+  const rejected = new Set(plans.flatMap(p => p.rejects)), used = new Set(plans.filter(p => !p.rejects.length).map(p => p.l.house.id)), uses = new Map();
+  for (const p of plans) if (!p.rejects.length) uses.set(p.l.house.id, (uses.get(p.l.house.id) ?? 0) + 1);
+  for (const p of plans) {
+    const { sz, i, W, D, rear, story, l, id, e, houseIdx } = p;
+    let raw = l.items, edits = all, swapped = null;
+    if (p.rejects.length && houseIdx >= 0) {
+      const old = l.items[houseIdx], [ohx, ohy] = half(old.id, old.scale, old.flip), front = rear ? old.y - ohy : old.y + ohy;
+      const fit = (pool, slack, fresh = true) => (fresh ? pool : [...pool].sort((a, b) => (uses.get(a) ?? 0) - (uses.get(b) ?? 0))).find(h => !rejected.has(h) && (!fresh || !used.has(h)) && fitsLot(h, W, D) && (([hx, hy]) => hx <= ohx + slack && hy <= ohy + slack)(half(h, ownerScale(h), old.flip)));
+      // an unused house of the pool first; with none left (the rear-view pool is small), the least used one another lot has too, rather than none
+      const full = rear ? REARS : HOUSES, pick = fit(p.pool, 0.4) ?? fit(p.pool, 1.5) ?? fit(full, 1.5) ?? fit(p.pool, 1.5, false) ?? fit(full, 3, false);
+      if (pick) {
+        used.add(pick); uses.set(pick, (uses.get(pick) ?? 0) + 1); swapped = old.id;
+        const s = +ownerScale(pick).toFixed(3), [, hy] = half(pick, s, old.flip);
+        raw = l.items.map((q, k) => k === houseIdx ? { ...q, id: pick, scale: s, y: +(rear ? front + hy : front - hy).toFixed(3) } : q);
+        // the house's own edit (its delete) is spent on the swap; the rest of the lot's edits apply as keyed
+        const own = { ...e }; delete own[houseIdx]; edits = { ...all, [id]: own };
+      }
+    }
+    const items = applyLotEdits(id, raw, edits), h = raw[houseIdx] ?? l.house;
+    out.push({ id, name: `House lot ${sz.w}x${sz.d} ${rear ? 'rear' : 'front'} ${i + 1} (${story})`, W, D, rear, story, items, raw, houseIdx, swapped,
+      house: items.find(q => q.id === h.id && Math.abs(q.x - h.x) < 3) ?? h });
   }
   return out;
 }

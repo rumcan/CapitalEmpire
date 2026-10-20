@@ -1,1 +1,1024 @@
-{}
+{
+ "expansion:garage-rear": {
+  "at": "2026-10-20T16:12:32.838Z",
+  "name": "Timber garage — rear view",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 288,
+  "h": 233.50684931506848,
+  "quad": [
+   0,
+   0,
+   288.12,
+   233.12
+  ]
+ },
+ "expansion:kennel": {
+  "at": "2026-10-20T16:34:09.020Z",
+  "name": "Empty backyard dog run",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 160,
+  "h": 119.03801396431342,
+  "quad": [
+   0,
+   0,
+   159.8,
+   119.26
+  ]
+ },
+ "expansion:ranch-rear": {
+  "at": "2026-10-20T16:12:30.350Z",
+  "name": "Low ranch house — rear view",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 544,
+  "h": 339.086925795053,
+  "quad": [
+   0,
+   0,
+   543.82,
+   339.31
+  ]
+ },
+ "gen:fence-chainlink": {
+  "at": "2026-10-20T16:33:16.860Z",
+  "name": "Chain-link fence (8 m)",
+  "cat": "Fences",
+  "kind": "fencey",
+  "w": 269.5,
+  "h": 205,
+  "quad": [
+   0,
+   1.67,
+   270,
+   203.33
+  ]
+ },
+ "gen:fence-picket-gate": {
+  "at": "2026-10-20T16:33:18.162Z",
+  "name": "Picket fence with gate (6 m)",
+  "cat": "Fences",
+  "kind": "fencex",
+  "w": 213,
+  "h": 149.5,
+  "quad": [
+   0,
+   0,
+   213.33,
+   148.33
+  ]
+ },
+ "gen:fence-privacy-wood": {
+  "at": "2026-10-20T16:29:22.142Z",
+  "name": "Privacy fence (8 m)",
+  "cat": "Fences",
+  "kind": "fencex",
+  "w": 304.5,
+  "h": 221.5,
+  "quad": [
+   1.31,
+   1.31,
+   303.03,
+   219.07
+  ]
+ },
+ "gen:house-l-ranch": {
+  "at": "2026-10-20T16:41:20.256Z",
+  "name": "Ranch — L-shape, corner porch",
+  "cat": "Houses",
+  "kind": "house",
+  "w": 610.8,
+  "h": 414.3,
+  "quad": [
+   0,
+   0,
+   610.72,
+   414.26
+  ]
+ },
+ "gen:inflatable-pumpkin": {
+  "at": "2026-10-20T16:29:10.202Z",
+  "name": "Inflatable jack-o-lantern",
+  "cat": "Halloween",
+  "kind": "pumpkin",
+  "w": 104.1,
+  "h": 121.9,
+  "quad": [
+   0,
+   0,
+   103.33,
+   121.67
+  ]
+ },
+ "gen:wall-brick-low": {
+  "at": "2026-10-20T16:33:20.188Z",
+  "name": "Low brick wall (8 m)",
+  "cat": "Fences",
+  "kind": "fencex",
+  "w": 412.8,
+  "h": 322.5,
+  "quad": [
+   0,
+   0,
+   413.15,
+   322.02
+  ]
+ },
+ "gen:wall-stone-dry": {
+  "at": "2026-10-20T16:33:21.867Z",
+  "name": "Fieldstone wall (8 m)",
+  "cat": "Fences",
+  "kind": "fencex",
+  "w": 413,
+  "h": 341.1,
+  "quad": [
+   0,
+   0,
+   413.15,
+   341.76
+  ]
+ },
+ "ref:building-barn": {
+  "at": "2026-10-20T16:23:19.486Z",
+  "name": "Barn",
+  "cat": "Landmarks",
+  "kind": "venue",
+  "w": 469.4,
+  "h": 341.7,
+  "quad": [
+   0,
+   0,
+   469.57,
+   342.02
+  ]
+ },
+ "ref:building-church": {
+  "at": "2026-10-20T16:23:30.341Z",
+  "name": "Church",
+  "cat": "Landmarks",
+  "kind": "venue",
+  "w": 598.7,
+  "h": 793.3,
+  "quad": [
+   0,
+   0,
+   597.88,
+   792.77
+  ]
+ },
+ "ref:building-drive-in-screen": {
+  "at": "2026-10-20T16:23:34.790Z",
+  "name": "Drive In Screen",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 652,
+  "h": 500.8,
+  "quad": [
+   0,
+   0.97,
+   651.03,
+   500.64
+  ]
+ },
+ "ref:building-mausoleum": {
+  "at": "2026-10-20T16:23:42.854Z",
+  "name": "Mausoleum",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 277.3,
+  "h": 344.7,
+  "quad": [
+   0,
+   0,
+   276.9,
+   344.8
+  ]
+ },
+ "ref:building-school": {
+  "at": "2026-10-20T16:23:49.158Z",
+  "name": "School",
+  "cat": "Landmarks",
+  "kind": "venue",
+  "w": 661.7,
+  "h": 366.7,
+  "quad": [
+   0,
+   0,
+   660.81,
+   367.04
+  ]
+ },
+ "ref:halloween-hay-bales": {
+  "at": "2026-10-20T16:29:06.808Z",
+  "name": "Hay Bales",
+  "cat": "Halloween",
+  "kind": "decor",
+  "w": 111.1,
+  "h": 85.6,
+  "quad": [
+   0,
+   0,
+   111.28,
+   85.99
+  ]
+ },
+ "ref:halloween-lantern": {
+  "at": "2026-10-20T16:29:11.544Z",
+  "name": "Lantern",
+  "cat": "Halloween",
+  "kind": "decor",
+  "w": 71.1,
+  "h": 126.9,
+  "quad": [
+   0,
+   0,
+   71.71,
+   127.11
+  ]
+ },
+ "ref:halloween-mums": {
+  "at": "2026-10-20T16:29:12.132Z",
+  "name": "Mums",
+  "cat": "Halloween",
+  "kind": "decor",
+  "w": 80.8,
+  "h": 67.2,
+  "quad": [
+   0,
+   0,
+   81.44,
+   66.63
+  ]
+ },
+ "ref:halloween-pumpkin-cluster": {
+  "at": "2026-10-20T16:29:07.617Z",
+  "name": "Pumpkin Cluster",
+  "cat": "Halloween",
+  "kind": "pumpkin",
+  "w": 95.9,
+  "h": 76.7,
+  "quad": [
+   0,
+   0,
+   95.59,
+   76.74
+  ]
+ },
+ "ref:halloween-sheet-ghost": {
+  "at": "2026-10-20T16:29:10.941Z",
+  "name": "Sheet Ghost",
+  "cat": "Halloween",
+  "kind": "decor",
+  "w": 91.5,
+  "h": 163.7,
+  "quad": [
+   0,
+   0,
+   91.26,
+   162.97
+  ]
+ },
+ "ref:halloween-witch-sign": {
+  "at": "2026-10-20T16:29:12.716Z",
+  "name": "Witch Sign",
+  "cat": "Halloween",
+  "kind": "decor",
+  "w": 86.1,
+  "h": 112.3,
+  "quad": [
+   0,
+   0,
+   85.71,
+   112.7
+  ]
+ },
+ "ref:landmark-fountain": {
+  "at": "2026-10-20T16:23:51.638Z",
+  "name": "Fountain",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 225.9,
+  "h": 250.5,
+  "quad": [
+   0,
+   0,
+   226.37,
+   250.49
+  ]
+ },
+ "static:garage_timber-v2": {
+  "at": "2026-10-20T16:08:57.309Z",
+  "name": "Garage Timber V2",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 277.6,
+  "h": 223,
+  "quad": [
+   0,
+   0,
+   277.55,
+   223.13
+  ]
+ },
+ "town:hardware": {
+  "at": "2026-10-20T16:16:41.170Z",
+  "name": "Bellamy Hardware",
+  "cat": "Shops & services",
+  "kind": "venue",
+  "w": 457.7,
+  "h": 449.5,
+  "quad": [
+   0,
+   0,
+   457.65,
+   449.51
+  ]
+ },
+ "variation:expansion-aboveground-pool-ad890f8a-ns:1": {
+  "at": "2026-10-20T16:36:00.955Z",
+  "name": "Vintage steel-sided backyard pool — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 203.6467529817257,
+  "h": 154.98779430467619,
+  "quad": [
+   0,
+   0,
+   203.33,
+   155
+  ]
+ },
+ "variation:expansion-aboveground-pool-ad890f8a-ns:2": {
+  "at": "2026-10-20T16:35:59.476Z",
+  "name": "Vintage steel-sided backyard pool — A north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 200.04238567231462,
+  "h": 152.28451882261788,
+  "quad": [
+   0,
+   0,
+   200,
+   151.67
+  ]
+ },
+ "variation:expansion-aboveground-pool-ad890f8a-ns:3": {
+  "at": "2026-10-20T16:36:04.634Z",
+  "name": "Vintage steel-sided backyard pool — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 185.17437052099396,
+  "h": 169.85580945599688,
+  "quad": [
+   0,
+   0,
+   185,
+   170
+  ]
+ },
+ "variation:expansion-aboveground-pool-ad890f8a-ns:4": {
+  "at": "2026-10-20T16:36:06.724Z",
+  "name": "Vintage steel-sided backyard pool — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 185.62491643467033,
+  "h": 167.60307988761497,
+  "quad": [
+   0,
+   0,
+   185,
+   168.33
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d-ns:1": {
+  "at": "2026-10-20T16:38:27.268Z",
+  "name": "Charcoal kettle barbecue — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 33.582795698924734,
+  "h": 56.43010752688172,
+  "quad": [
+   0,
+   0,
+   33.33,
+   56.67
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d-ns:2": {
+  "at": "2026-10-20T16:38:31.964Z",
+  "name": "Charcoal kettle barbecue — A north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 34.13333333333333,
+  "h": 54.365591397849464,
+  "quad": [
+   0,
+   0,
+   33.33,
+   55
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d-ns:3": {
+  "at": "2026-10-20T16:38:33.284Z",
+  "name": "Charcoal kettle barbecue — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 44.45591397849462,
+  "h": 54.22795698924731,
+  "quad": [
+   0,
+   0,
+   45,
+   55
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d-ns:4": {
+  "at": "2026-10-20T16:38:39.739Z",
+  "name": "Charcoal kettle barbecue — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 51.2,
+  "h": 54.22795698924731,
+  "quad": [
+   0,
+   0,
+   51.67,
+   55
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d:1": {
+  "at": "2026-10-20T16:38:20.129Z",
+  "name": "Charcoal kettle barbecue — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 32.54356164383562,
+  "h": 54.7068493150685,
+  "quad": [
+   0,
+   0,
+   33.33,
+   55
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d:2": {
+  "at": "2026-10-20T16:38:22.545Z",
+  "name": "Charcoal kettle barbecue — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 33.525479452054796,
+  "h": 62.14136986301371,
+  "quad": [
+   0,
+   0,
+   33.33,
+   61.67
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d:3": {
+  "at": "2026-10-20T16:38:23.939Z",
+  "name": "Charcoal kettle barbecue — variation 3",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 50.779178082191784,
+  "h": 63.68438356164384,
+  "quad": [
+   0,
+   0,
+   50,
+   63.33
+  ]
+ },
+ "variation:expansion-barbecue-f2dcc56d:4": {
+  "at": "2026-10-20T16:38:24.934Z",
+  "name": "Charcoal kettle barbecue — variation 4",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 51.20000000000001,
+  "h": 55.82904109589042,
+  "quad": [
+   0,
+   0,
+   51.67,
+   55
+  ]
+ },
+ "variation:expansion-basketball-hoop-9b9117b6-ns:2": {
+  "at": "2026-10-20T16:35:08.893Z",
+  "name": "Old driveway basketball hoop — A north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 75.18461538461538,
+  "h": 197.72307692307695,
+  "quad": [
+   0,
+   0,
+   75,
+   198.33
+  ]
+ },
+ "variation:expansion-basketball-hoop-9b9117b6-ns:3": {
+  "at": "2026-10-20T16:35:09.503Z",
+  "name": "Old driveway basketball hoop — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 85.9846153846154,
+  "h": 195.64615384615385,
+  "quad": [
+   0,
+   0,
+   86.67,
+   195
+  ]
+ },
+ "variation:expansion-basketball-hoop-9b9117b6-ns:4": {
+  "at": "2026-10-20T16:35:10.143Z",
+  "name": "Old driveway basketball hoop — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 86.4,
+  "h": 197.30769230769232,
+  "quad": [
+   0,
+   0,
+   86.67,
+   196.67
+  ]
+ },
+ "variation:expansion-basketball-hoop-9b9117b6:1": {
+  "at": "2026-10-20T16:35:01.132Z",
+  "name": "Old driveway basketball hoop — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 64.95539568345325,
+  "h": 127.4244604316547,
+  "quad": [
+   0,
+   0,
+   65,
+   126.67
+  ]
+ },
+ "variation:expansion-basketball-hoop-9b9117b6:2": {
+  "at": "2026-10-20T16:35:02.193Z",
+  "name": "Old driveway basketball hoop — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 50.6589928057554,
+  "h": 144.5179856115108,
+  "quad": [
+   0,
+   0,
+   50,
+   145
+  ]
+ },
+ "variation:expansion-basketball-hoop-9b9117b6:3": {
+  "at": "2026-10-20T16:35:03.115Z",
+  "name": "Old driveway basketball hoop — variation 3",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 86.4,
+  "h": 144.5179856115108,
+  "quad": [
+   0,
+   0,
+   86.67,
+   145
+  ]
+ },
+ "variation:expansion-basketball-hoop-9b9117b6:4": {
+  "at": "2026-10-20T16:35:04.277Z",
+  "name": "Old driveway basketball hoop — variation 4",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 69.61726618705036,
+  "h": 137.99136690647484,
+  "quad": [
+   0,
+   0,
+   70,
+   138.33
+  ]
+ },
+ "variation:expansion-chainlink-x-4a0ed35b-ns:4": {
+  "at": "2026-10-20T16:31:19.038Z",
+  "name": "Chain-link fence — X axis — B north view",
+  "cat": "Fences",
+  "kind": "fencex",
+  "w": 140.53522727272727,
+  "h": 85.86477272727272,
+  "quad": [
+   0,
+   0,
+   140,
+   86.67
+  ]
+ },
+ "variation:expansion-chicken-coop-dcbbad53:1": {
+  "at": "2026-10-20T16:34:55.536Z",
+  "name": "Backyard chicken coop — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 144,
+  "h": 132.3116883116883,
+  "quad": [
+   0,
+   0,
+   143.33,
+   131.67
+  ]
+ },
+ "variation:expansion-fence-privacy-x-dd8abdb9-ns:2": {
+  "at": "2026-10-20T16:32:14.401Z",
+  "name": "Privacy fence — X — A north view",
+  "cat": "Fences",
+  "kind": "fencex",
+  "w": 118.57590361445783,
+  "h": 86.63855421686746,
+  "quad": [
+   0,
+   0,
+   118.33,
+   86.67
+  ]
+ },
+ "variation:expansion-glasshouse-df2aec71:1": {
+  "at": "2026-10-20T16:34:56.808Z",
+  "name": "Old backyard glasshouse — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 192,
+  "h": 192,
+  "quad": [
+   0,
+   0,
+   191.67,
+   191.67
+  ]
+ },
+ "variation:expansion-ivy-arbor-98271e67-plain-corner:1": {
+  "at": "2026-10-20T16:36:52.846Z",
+  "name": "Weathered garden arbor with ivy — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 83.2,
+  "h": 94.52857142857142,
+  "quad": [
+   0,
+   0,
+   83.33,
+   95
+  ]
+ },
+ "variation:expansion-mobile-home-c191731d-plain:1": {
+  "at": "2026-10-20T16:35:23.850Z",
+  "name": "Old aluminium mobile home — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 352,
+  "h": 285.1547749725576,
+  "quad": [
+   0,
+   0,
+   351.67,
+   285
+  ]
+ },
+ "variation:expansion-outhouse-16f117d1-plain-corner:1": {
+  "at": "2026-10-20T16:35:25.242Z",
+  "name": "Weathered timber outhouse — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 89.6,
+  "h": 89.31912225705328,
+  "quad": [
+   0,
+   0,
+   90,
+   90
+  ]
+ },
+ "variation:expansion-outhouse-16f117d1-plain:1": {
+  "at": "2026-10-20T16:35:31.047Z",
+  "name": "Weathered timber outhouse — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 89.6,
+  "h": 110.39179487179486,
+  "quad": [
+   0,
+   0,
+   90,
+   110
+  ]
+ },
+ "variation:expansion-treehouse-2128dfc1-plain-corner:1": {
+  "at": "2026-10-20T16:34:58.965Z",
+  "name": "1980s backyard treehouse — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 256,
+  "h": 262.28863868986696,
+  "quad": [
+   0,
+   0,
+   256.67,
+   261.67
+  ]
+ },
+ "variation:gen-back-patio-pool-3b943d52-plain:1": {
+  "at": "2026-10-20T16:13:39.299Z",
+  "name": "House back — patio & pool — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 577.9,
+  "h": 567.1981481481481,
+  "quad": [
+   1.67,
+   0,
+   576.67,
+   566.67
+  ]
+ },
+ "variation:gen-house-duplex-c39d1a23-plain:1": {
+  "at": "2026-10-20T16:11:43.610Z",
+  "name": "Duplex — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 599.6,
+  "h": 569.2483471074381,
+  "quad": [
+   1.67,
+   1.67,
+   600,
+   570
+  ]
+ },
+ "variation:static-garage_brick-db72ce3e-plain:1": {
+  "at": "2026-10-20T16:09:01.655Z",
+  "name": "Garage Brick — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 262.1,
+  "h": 237.90615384615387,
+  "quad": [
+   0,
+   0,
+   261.67,
+   238.33
+  ]
+ },
+ "variation:static-garage_timber-c8cdaada-plain:1": {
+  "at": "2026-10-20T16:08:45.299Z",
+  "name": "Garage Timber — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 257,
+  "h": 239.83250249252245,
+  "quad": [
+   0,
+   0,
+   256.67,
+   240
+  ]
+ },
+ "variation:static-shop_brick_rear-v2-580e269d-plain:1": {
+  "at": "2026-10-20T16:18:19.701Z",
+  "name": "Shop Brick Rear V2 — variation 1",
+  "cat": "Shops & services",
+  "kind": "building",
+  "w": 436.5,
+  "h": 422.95011086474506,
+  "quad": [
+   0,
+   0,
+   436.67,
+   421.67
+  ]
+ },
+ "variation:static-shop_market_rear-v2-0888bd32-plain:1": {
+  "at": "2026-10-20T16:18:49.211Z",
+  "name": "Shop Market Rear V2 — variation 1",
+  "cat": "Shops & services",
+  "kind": "building",
+  "w": 459.3,
+  "h": 417.0152380952381,
+  "quad": [
+   0,
+   0,
+   460,
+   416.67
+  ]
+ },
+ "variation:world-house_3-577a8e37-plain:1": {
+  "at": "2026-10-20T16:08:15.039Z",
+  "name": "House 3 — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 493.8,
+  "h": 433.039453125,
+  "quad": [
+   0,
+   0,
+   493.33,
+   433.33
+  ]
+ },
+ "variation:world-house_4-bad739b4-plain:1": {
+  "at": "2026-10-20T16:08:30.034Z",
+  "name": "House 4 — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 423.00000000000006,
+  "h": 464.5813106796117,
+  "quad": [
+   1.67,
+   1.67,
+   423.33,
+   465
+  ]
+ },
+ "variation:world-primary_school-49016b3f-plain:1": {
+  "at": "2026-10-20T16:22:07.977Z",
+  "name": "Primary School — variation 1",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 620.3,
+  "h": 544.9546596858638,
+  "quad": [
+   1.67,
+   1.67,
+   618.33,
+   545
+  ]
+ },
+ "variation:world-school-c76151d3-plain:1": {
+  "at": "2026-10-20T16:21:42.588Z",
+  "name": "School — variation 1",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 671.5,
+  "h": 673.072599531616,
+  "quad": [
+   1.67,
+   1.67,
+   670,
+   671.67
+  ]
+ },
+ "variation:world-trashcan-76186b58-ns:2": {
+  "at": "2026-10-20T16:28:59.485Z",
+  "name": "Trashcan — A north view",
+  "cat": "Street furniture",
+  "kind": "decor",
+  "w": 37,
+  "h": 55.57676348547718,
+  "quad": [
+   0,
+   0,
+   36.67,
+   55
+  ]
+ },
+ "variation:world-trashcan-76186b58-ns:3": {
+  "at": "2026-10-20T16:29:01.895Z",
+  "name": "Trashcan — B south view",
+  "cat": "Street furniture",
+  "kind": "decor",
+  "w": 35.004149377593365,
+  "h": 56.95850622406639,
+  "quad": [
+   0,
+   0,
+   35,
+   56.67
+  ]
+ },
+ "variation:world-trashcan-76186b58-ns:4": {
+  "at": "2026-10-20T16:29:02.638Z",
+  "name": "Trashcan — B north view",
+  "cat": "Street furniture",
+  "kind": "decor",
+  "w": 35.15767634854772,
+  "h": 56.95850622406639,
+  "quad": [
+   0,
+   0,
+   35,
+   56.67
+  ]
+ },
+ "variation:world-trashcan-76186b58:1": {
+  "at": "2026-10-20T16:28:44.573Z",
+  "name": "Trashcan — variation 1",
+  "cat": "Street furniture",
+  "kind": "decor",
+  "w": 16.98511166253102,
+  "h": 27.451612903225808,
+  "quad": [
+   0,
+   0,
+   16.67,
+   26.67
+  ]
+ },
+ "variation:world-trashcan-76186b58:2": {
+  "at": "2026-10-20T16:28:49.721Z",
+  "name": "Trashcan — variation 2",
+  "cat": "Street furniture",
+  "kind": "decor",
+  "w": 35.43920595533499,
+  "h": 24.88089330024814,
+  "quad": [
+   0,
+   0,
+   35,
+   25
+  ]
+ },
+ "variation:world-trashcan-76186b58:3": {
+  "at": "2026-10-20T16:28:51.182Z",
+  "name": "Trashcan — variation 3",
+  "cat": "Street furniture",
+  "kind": "decor",
+  "w": 37,
+  "h": 25.707196029776675,
+  "quad": [
+   0,
+   0,
+   36.67,
+   25
+  ]
+ },
+ "variation:world-trashcan-76186b58:4": {
+  "at": "2026-10-20T16:28:55.050Z",
+  "name": "Trashcan — variation 4",
+  "cat": "Street furniture",
+  "kind": "decor",
+  "w": 36.265508684863526,
+  "h": 29.563275434243177,
+  "quad": [
+   0,
+   0,
+   36.67,
+   30
+  ]
+ },
+ "world:candy_stand": {
+  "at": "2026-10-20T16:29:09.281Z",
+  "name": "Candy Stand",
+  "cat": "Halloween",
+  "kind": "shop",
+  "w": 265,
+  "h": 260.3,
+  "quad": [
+   0,
+   0,
+   265.26,
+   259.61
+  ]
+ },
+ "world:pumpkin_0": {
+  "at": "2026-10-20T16:29:04.691Z",
+  "name": "Pumpkin 0",
+  "cat": "Halloween",
+  "kind": "pumpkin",
+  "w": 38.8,
+  "h": 34,
+  "quad": [
+   0,
+   0,
+   38.47,
+   34.2
+  ]
+ },
+ "world:pumpkin_1": {
+  "at": "2026-10-20T16:29:05.291Z",
+  "name": "Pumpkin 1",
+  "cat": "Halloween",
+  "kind": "pumpkin",
+  "w": 55.5,
+  "h": 34.3,
+  "quad": [
+   0,
+   0,
+   55.8,
+   33.99
+  ]
+ },
+ "world:scarecrow": {
+  "at": "2026-10-20T16:29:06.236Z",
+  "name": "Scarecrow",
+  "cat": "Halloween",
+  "kind": "decor",
+  "w": 73.8,
+  "h": 169.5,
+  "quad": [
+   0,
+   0,
+   74.03,
+   168.8
+  ]
+ }
+}
