@@ -18,6 +18,7 @@ _Last updated: 2026-10-19 evening, paint branch (the Paint tool: ground areas, d
 | 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
 | 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
 | B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 and B.2 done (the player places the stadium; the business catalogue and tree). Comes before 6R.5–6R.8 (the owner's order) |
+| UI. The Maple Falls look (the owner's mockup, [docs/ui/](ui/)) | **Queued** (asked 2026-10-20): its own chat, after the road upgrade ladder. Section below |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 | Paint tool (ground areas; design in [PAINT-TOOL.md](PAINT-TOOL.md)) | **Done** (2026-10-19, branch `claude/frosty-wilson-452c74`, merged up to main `3311ce9`; not yet merged into main, not pushed). Section below |
@@ -1060,17 +1061,22 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
-- **NEXT (asked by the owner, 2026-10-19 night, not started): road upgrade/downgrade tools and fair costs.**
-  - The Add lane tool (`laneUpdate`/`laneClick` in engine.ts, `WIDER` in network.ts) jumps gravel straight to arterial. Make it a ladder
-    of single steps: gravel -> street -> road -> arterial ("double") -> six ("triple"); lane -> street; keep avenue -> boulevard -> grand
-    and the one-way and variant chains. Add the reverse (a NARROWER map) and a Downgrade mode.
-  - Toolbar (`TOOLS` in App.tsx): replace the ➕ Add lane button with Upgrade and Downgrade buttons (toggles), with fitting icons.
-  - Costs: an upgrade charges only the difference (new class cost - old, x length x STRUCT_COST); a downgrade refunds the difference;
-    the bulldozer refunds the removed road's value (measure the network's road value before and after, so `tidyEnds` trims count);
-    Replace charges the new road less the value of the pieces it removes.
-  - Check in the browser across classes (the owner's rule), with the junction gallery (`__junctionGallery`) after any class change.
-- **Also open:** the Replace preview fix (15176e6: cut pieces amber and dashed under the route) is committed but not yet seen in the
-  browser: the app did not load while the Phase B session had half-done edits in the main checkout (App.tsx import errors).
+- **Road upgrade/downgrade ladder and fair costs (asked 2026-10-19 night, done 2026-10-20, branch `claude/road-ladder`).**
+  - `WIDER` is now one step at a time: gravel -> street -> road -> arterial -> six (lane -> street); avenue -> boulevard -> grand; the
+    one-way, trees and grass-median chains as before (street.tr -> arterial.tr, the road has no tree variant). `NARROWER` walks it back
+    (turn-lane arterial -> road; gravel, lane, avenue and divided are the bottoms; six, grand and divided the tops).
+  - Toolbar: ➕ Add lane replaced by ⏫ Upgrade road (N, tool id still `lane`) and ⏬ Downgrade road (Y, tool `downgrade`); both toggles,
+    both reverse a one-way run on right-click. The Downgrade preview is blue, Upgrade amber, refused red.
+  - Costs (`segValue` = length x class cost x STRUCT_COST, `roadValue` sums the map): an upgrade charges (new - old) x length, a downgrade
+    refunds it; the bulldozer refunds the fall in `roadValue` (so the dead ends `tidyEnds` trims count); Replace charges the new road less
+    the measured value of what it removes (negative = a refund), and its preview (`routeCost`) shows the net.
+  - Checked in the browser (dev server from the worktree): all 16 classes up and down (each charge = class difference x length; up then down
+    nets $0), a gravel run clicked down and up through street, road, arterial to six with the toasts and hints; bulldozer refunds on five
+    classes = the value removed; Replace street->arterial $10,000, grand->street refund $18,800, road->road $0, preview = paid.
+    Junction gallery: 1,134 junctions, 130 flagged (137 before; it builds at a random spot), none without a node. Tests: 421/422 (the one failure, "20 seeds ... under 4 s", is timing: seed 5 took 4.6 s while the
+    machine was busy; no road code in it).
+- **Replace preview fix (15176e6): seen in the browser 2026-10-20** (from the `claude/road-ladder` worktree): an arterial route laid over a
+  street with Replace on shows the street piece amber with a dashed outline under the yellow route, nothing red; the build replaced it.
   Phase B (B.2 next) and the paint tool (its own worktree, branch claude/frosty-wilson-452c74) run in their own sessions.
 - **Speed limits, ring and mini traffic, junction surfaces, right-click build (2026-10-19 late): DONE.**
   - *Speed limits by road size* (km/h): gravel and lane 30, street 40, avenue 50, road and arterial 60, boulevard 70, divided and six-lane
@@ -1452,6 +1458,37 @@ no slower than plain ones (80 vs 115 ms per chunk on the busy machine, noise dom
 
 Open (for the owner): a price per m² by texture; dragging an area's corners after placing; whether the bulldozer should
 also remove paint (now only the Paint tool's Erase does).
+
+## Phase UI, the Maple Falls look (the owner's mockup, 2026-10-20): queued
+
+The owner sent a mockup of the whole screen and an icon sheet, and asked for a task to build that UI. Run it in its own chat, research
+first (as JUNCTION-UX.md did), one panel per committed step, each checked in the browser at 1920 x 1080 and on a laptop-sized window.
+
+- **References** (committed): [docs/ui/mockup-road-panel.webp](ui/mockup-road-panel.webp) (the target screen) and
+  [docs/ui/icon-sheet.webp](ui/icon-sheet.webp) (48 gold-on-charcoal icons: maple leaf, road, house, junction, bulldozer, bus, power, civic,
+  tree, buildings, bank, people, briefcase, sun, income bars, gear, trophy, calendar, info, compass, terrain, layers, chart, camera, the
+  play/pause/speed and zoom buttons, pin, one-way arrow, trees, sidewalk, forest, road edge, hills, fullscreen, help, chevrons, swap, open, close).
+- **What the mockup asks for**:
+  1. *Top bar*: the logo (maple leaf, "Maple Falls / Town builder"), the level ring with its progress bar and cards, then tiles for
+     treasury, population, jobs, day and clock (sun icon) and daily income (red when negative); on the right the speed group (pause, 1x,
+     2x, 4x, 8x, 20x, the active one gold) and icon buttons (camera, terrain, layers, stats, settings).
+  2. *Left rail*: big icon tabs with labels (Roads, Zones, Junctions, Bulldoze, Transport, Utilities, Services, Parks, Buildings), the
+     active one gold-outlined. The current tools map onto these: Roads (road, Upgrade, Downgrade), Junctions, Bulldoze, Transport (bus
+     routes, car parks, toll gates), Buildings (the businesses); Zones, Utilities, Services and Parks show as locked or are left out until
+     they exist.
+  3. *Road Construction panel*: title, help (?), a short description, then the classes grouped Small / Medium / Large (and Rural) with a
+     thumbnail of the road, its name, lanes, width and speed, and its price per 2 m; the selected class expands to its variant chips
+     (Plain, One-way, Trees, Sidewalks), the same variants VARIANTS / Tab already cycle. Locked classes keep the lock line.
+  4. *Event card* (top right): trophy, "Event: Stadium", the level chip, era and run, a sentence, the stadium picture, View Event and a
+     gold Start Event button (the stadium round's existing HUD).
+  5. *Bottom*: the minimap with N and the view box, the town name chip with a dropdown; the hint bar (info icon, the hint, key caps such
+     as R Replace, Tab Flip, Esc Cancel); the stats card (fps, sprites, props, segs, the Cars cap 97 / 1k / 5k / 10k, the Growth slider,
+     pop and jobs).
+- **Style**: dark charcoal glass panels with soft rounded corners, gold (#f5b52e-ish) accents and outlines, a serif display face for the
+  logo and panel titles, small caps section labels. Icons: cut the sheet into single transparent PNG/WebP sprites (an art script in
+  `scripts/`), not emoji; the toolbar's emoji (including the new Upgrade and Downgrade arrows) go when the icons land.
+- **Keep**: every existing tool, key and hint; the canvas size and the performance budgets (GAME-PLAN 2.3: the UI must not cost frame
+  time; check with `npm run bench`). The road thumbnails can be rendered from the game's own road painter.
 
 ## Phase B, the businesses (GAME-PLAN 1.0.00): in progress
 
