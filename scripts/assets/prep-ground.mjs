@@ -5,11 +5,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ROOT, fromBranch } from './source.mjs';
+import { ROOT, TOT, fromBranch } from './source.mjs';
 
 const OUT = path.join(ROOT, 'src/assets/ground');
 const BRANCH = 'town/builder-in-repo', BASE = 'art/town-ground/';
 fs.mkdirSync(OUT, { recursive: true });
+// The owner's two seamless dirt paintings are vendored so future rebuilds also work without local output files.
+for (const [source, dest] of [['soil-mud-v2-base.png', 'rocky-dirt.webp'], ['soil-mud-base.png', 'rocky-dirt-alt.webp']]) {
+  const input = path.join(TOT, 'output/terrain-materials', source), output = path.join(OUT, dest);
+  if (fs.existsSync(input)) await sharp(input).webp({ quality: 92, effort: 6 }).toFile(output);
+  else if (!fs.existsSync(output)) throw new Error('Missing vendored dirt painting: ' + output);
+}
 const get = rel => fromBranch(BRANCH, BASE + rel);
 const rgba = async buf => { const { data, info } = await sharp(buf).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); return { w: info.width, h: info.height, px: data }; };
 
@@ -108,12 +114,14 @@ import grassA from '../assets/ground/grass-base.webp';
 import grassB from '../assets/ground/grass-v2-base.webp';
 import leaves from '../assets/ground/leaves.webp';
 import soil from '../assets/ground/soil.webp';
+import rockyDirt from '../assets/ground/rocky-dirt.webp';
+import rockyDirtAlt from '../assets/ground/rocky-dirt-alt.webp';
 import decals from '../assets/ground/decals.webp';
 import lotAsphalt from '../assets/ground/lot-asphalt.webp';
 import lotDecals from '../assets/ground/lot-decals.webp';
 import nature from '../assets/ground/nature.webp';
 
-export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves, soil, decals, lotAsphalt, lotDecals, nature };
+export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves, soil, rockyDirt, rockyDirtAlt, decals, lotAsphalt, lotDecals, nature };
 export type GroundArt = typeof GROUND_ART;
 /** painted px per metre of the road kit (manifest.json pxPerM) */
 export const PPM = 55.2;

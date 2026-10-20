@@ -16,6 +16,8 @@ import { MILESTONES, WIN_POP, unlockOf } from './game/career';
 import { BUS_ROUTE_COST, CARDS, CURB_BAY_COST, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
 import { BUSINESS, BUSINESSES, ESTATE_LOTS, unlockText, type BusinessType } from './game/business/catalogue';
 import { freshStats } from './game/business/state';
+import { BUSINESS_IMAGE } from './game/business/art';
+import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { Icon, type IconName } from './ui/Icon';
@@ -855,6 +857,7 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
   const open = game.bizOpen(b.id), placed = game.bizDefs.filter(d => d.type === b.id), under = placed.length < b.max, sel = game.bizType === b.id;
   return (
     <div className={`mt-1 rounded-lg p-2 text-xs ${sel ? 'bg-amber-300/10 ring-1 ring-amber-300/60' : 'bg-white/5'} ${open ? '' : 'opacity-50'}`}>
+      <img src={BUSINESS_THUMBS[BUSINESS_IMAGE[b.id]]} alt={b.name} className="mb-2 h-28 w-full rounded-md bg-slate-950/40 object-contain" loading="lazy" />
       <div className="flex justify-between"><b className="text-slate-100">{b.name}</b><span>{money(b.buildCost)}</span></div>
       <div className="flex justify-between text-slate-400"><span>{b.footprint.w} × {b.footprint.h} tiles · up to {b.max}</span></div>
       <p className="mt-1 leading-relaxed text-slate-300">{b.blurb}</p>

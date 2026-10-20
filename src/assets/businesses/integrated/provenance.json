@@ -1,0 +1,457 @@
+{
+  "source": "TrickOrTreat/output/capital-empire-art-2026-10-20/sliced/builtin",
+  "masters": "CapitalEmpire/src/assets/businesses/capital-v1/png",
+  "delivery": "capital-v1",
+  "items": [
+    {
+      "id": "stadium",
+      "sourceSheet": "sliced/builtin/stadium.png",
+      "sourceCrop": [
+        6,
+        6,
+        1525,
+        1011
+      ]
+    },
+    {
+      "id": "golf-clubhouse",
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        30,
+        49,
+        765,
+        627
+      ]
+    },
+    {
+      "id": "golf-pro-shop",
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        802,
+        232,
+        439,
+        385
+      ]
+    },
+    {
+      "id": "golf-cart-garage",
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        23,
+        768,
+        662,
+        435
+      ]
+    },
+    {
+      "id": "golf-halfway-pavilion",
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        695,
+        725,
+        539,
+        457
+      ]
+    },
+    {
+      "id": "golf-green-kidney-flagged",
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        23,
+        160,
+        591,
+        384
+      ]
+    },
+    {
+      "id": "golf-fairway-curved",
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        657,
+        77,
+        574,
+        530
+      ]
+    },
+    {
+      "id": "golf-bunker-organic",
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        52,
+        737,
+        556,
+        437
+      ]
+    },
+    {
+      "id": "golf-tee-box",
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        657,
+        807,
+        573,
+        335
+      ]
+    },
+    {
+      "id": "golf-cart-sw",
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        42,
+        89,
+        535,
+        540
+      ]
+    },
+    {
+      "id": "golf-cart-se",
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        694,
+        115,
+        522,
+        525
+      ]
+    },
+    {
+      "id": "golf-pin-red-equipment",
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        257,
+        718,
+        203,
+        421
+      ]
+    },
+    {
+      "id": "golf-bag-trolley",
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        772,
+        691,
+        354,
+        472
+      ]
+    },
+    {
+      "id": "sportsbar",
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        20,
+        88,
+        655,
+        581
+      ]
+    },
+    {
+      "id": "diner",
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        652,
+        172,
+        594,
+        464
+      ]
+    },
+    {
+      "id": "buscompany",
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        8,
+        709,
+        693,
+        473
+      ]
+    },
+    {
+      "id": "taxi",
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        710,
+        769,
+        535,
+        418
+      ]
+    },
+    {
+      "id": "casino",
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        29,
+        78,
+        693,
+        603
+      ]
+    },
+    {
+      "id": "hotel",
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        746,
+        68,
+        497,
+        648
+      ]
+    },
+    {
+      "id": "motel",
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        41,
+        780,
+        584,
+        374
+      ]
+    },
+    {
+      "id": "estate-villa",
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        643,
+        750,
+        603,
+        464
+      ]
+    },
+    {
+      "id": "fishing-lodge",
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        17,
+        112,
+        670,
+        541
+      ]
+    },
+    {
+      "id": "tackle",
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        703,
+        196,
+        534,
+        485
+      ]
+    },
+    {
+      "id": "fishing-cabin",
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        17,
+        702,
+        591,
+        474
+      ]
+    },
+    {
+      "id": "fishing-boathouse",
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        642,
+        711,
+        594,
+        476
+      ]
+    },
+    {
+      "id": "fishing-dock-rope",
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        48,
+        113,
+        534,
+        434
+      ]
+    },
+    {
+      "id": "fishing-dock-lifebuoy",
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        681,
+        143,
+        522,
+        440
+      ]
+    },
+    {
+      "id": "fishing-bass-boat",
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        39,
+        723,
+        598,
+        411
+      ]
+    },
+    {
+      "id": "fishing-rental-kiosk",
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        676,
+        661,
+        542,
+        539
+      ]
+    },
+    {
+      "id": "golf-green-unflagged",
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        32,
+        160,
+        607,
+        392
+      ]
+    },
+    {
+      "id": "golf-fairway-dogleg",
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        655,
+        59,
+        577,
+        576
+      ]
+    },
+    {
+      "id": "golf-pond",
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        42,
+        713,
+        590,
+        480
+      ]
+    },
+    {
+      "id": "golf-bunker-crescent",
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        659,
+        720,
+        577,
+        470
+      ]
+    },
+    {
+      "id": "golf-footbridge",
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        59,
+        115,
+        534,
+        433
+      ]
+    },
+    {
+      "id": "golf-bench-course-map",
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        669,
+        100,
+        554,
+        486
+      ]
+    },
+    {
+      "id": "golf-patio-table",
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        64,
+        641,
+        499,
+        528
+      ]
+    },
+    {
+      "id": "golf-mower",
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        634,
+        710,
+        573,
+        461
+      ]
+    },
+    {
+      "id": "golf-pin-red",
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        287,
+        76,
+        198,
+        468
+      ]
+    },
+    {
+      "id": "golf-pin-yellow",
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        886,
+        77,
+        198,
+        468
+      ]
+    },
+    {
+      "id": "golf-driving-range",
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        27,
+        649,
+        674,
+        514
+      ]
+    },
+    {
+      "id": "golf-practice-net",
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        740,
+        682,
+        500,
+        454
+      ]
+    },
+    {
+      "id": "bus-sw",
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        24,
+        137,
+        595,
+        466
+      ]
+    },
+    {
+      "id": "bus-se",
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        643,
+        137,
+        593,
+        489
+      ]
+    },
+    {
+      "id": "taxi-sw",
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        28,
+        823,
+        591,
+        324
+      ]
+    },
+    {
+      "id": "taxi-se",
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        644,
+        814,
+        583,
+        335
+      ]
+    }
+  ]
+}

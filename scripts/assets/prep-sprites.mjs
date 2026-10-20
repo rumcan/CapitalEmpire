@@ -203,6 +203,8 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   '// w,h,ax,ay are display px at the native 128 px-per-tile scale; boxes are footprints in metres (2 m per tile).',
   '// tex = [page, u0, v0, u1, v1] in the atlas; quad = the trimmed picture inside the w x h display rectangle.',
   "import type { LibItem } from './types';",
+  "import { appendCars } from './cars-library';",
+  "import { appendBusinesses } from './business-library';",
   ...imports, '',
   `/** atlas pages: one row per page, one url per mip (scale ${MIP0} x 2^-mip of native) */`,
   `export const ATLAS_PAGES: string[][] = [${pageRows.join(', ')}];`,
@@ -222,7 +224,9 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'for (let i = 0; i < WF.length / 9; i++) {',
   '  const p = WALKER_PEOPLE[Math.floor(i / (WALK_DIRS.length * WALK_FRAMES))], o = i * 9;',
   "  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * WALK_FRAMES)}`, name: p.id, cat: 'Townspeople', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [WF[o], WF[o + 1], WF[o + 2], WF[o + 3], WF[o + 4]], quad: [WF[o + 5], WF[o + 6], WF[o + 7], WF[o + 8]] });",
-  '}', ''].join('\n'));
+  '}',
+  'appendCars(LIBRARY, ATLAS_PAGES);',
+  'appendBusinesses(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);

@@ -18,13 +18,14 @@ import type { BayRowDef } from './event/rows';
 import type { CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV5 } from './save';
-import { CAR_COLOURS } from './traffic';
+import { CAR_COLOURS, parkedCar } from './traffic';
 import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
 import { BUSINESS, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
 import { freshStats, ownedOf, type BizDef, type BizStats } from './business/state';
+import { businessArt } from './business/art';
 import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PD_CELL, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
 import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
@@ -164,9 +165,6 @@ const FARMS_PER_FRAME = 4;
 /** a business's rect fill by family (alpha 0.5): sports amber, leisure violet, tourism teal, transport sky blue, property lime */
 const FAMILY_FILL: Record<BusinessType['family'], string> = { sports: 'rgba(245,158,11,0.5)', leisure: 'rgba(139,92,246,0.5)', tourism: 'rgba(20,184,166,0.5)', transport: 'rgba(14,165,233,0.5)', property: 'rgba(132,204,22,0.5)' };
 const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5, 0.3][i & 3]!, c = [[0, 0, 0], [76, 175, 80], [47, 123, 217], [255, 140, 26], [217, 70, 239], [255, 255, 255]][i >> 2]!; return `rgb(${Math.round(c[0]! * k)},${Math.round(c[1]! * k)},${Math.round(c[2]! * k)})`; });
-/** the library cars by facing (index 0 +x e, 1 +y s, 2 -x w, 3 -y n): the sprites of the parked cars, picked by bay index */
-const PARK_CARS: number[][] = [[], [], [], []];
-LIBRARY.forEach((it, i) => { const m = /^static:[a-z]+_([enws])(?:-v2)?$/.exec(it.id); if (it.kind === 'car' && m) PARK_CARS['eswn'.indexOf(m[1]!)]!.push(i); });
 
 /** whether node n's arms are small enough for a mini-roundabout: 2 lanes each way at most (a one-way road: 4 lanes) */
 const miniFits = (n: Node): boolean => n.arms.every(a => a.cls.laneCentres.length <= (a.cls.oneway ? 4 : 2));
@@ -1561,7 +1559,14 @@ export class Game {
   /** the placed stadium's spot as [x, y, w, h] tiles (null: none) */
   get stadiumDef(): [number, number, number, number] | null { const s = this.bizDefs.find(d => d.type === 'stadium'); return s ? [s.x, s.y, s.w, s.h] : null; }
   /** sets the placed businesses and the stadium's site from them (cached here, so the drawing needs no allocation) */
-  private setBizDefs(defs: BizDef[]) { for (const d of [...this.bizDefs, ...defs]) this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h); this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null; }
+  private businessProps: Prop[] = [];
+  private setBizDefs(defs: BizDef[]) {
+    for (const p of this.businessProps) this.sprites.remove(p);
+    for (const d of [...this.bizDefs, ...defs]) this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h);
+    this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
+    this.businessProps = defs.flatMap(d => businessArt(d, LIBRARY, LIB_INDEX));
+    for (const p of this.businessProps) this.sprites.add(p);
+  }
   /** the game's own spot for the stadium on this valley (placeStadium), as [x, y, w, h] tiles; null without towns or a fit */
   private gameSpot(): [number, number, number, number] | null { const s = placeStadium(this.terrain.cls, this.townPts); return s ? [s.x, s.y, s.w, s.h] : null; }
   /** how many businesses of type t are placed */
@@ -1752,8 +1757,8 @@ export class Game {
     for (let i = 0; i < want; i++) {
       const key = `park:${id}:${i}`, have = this.parkCars.get(key);
       if (have && this.props.has(have)) continue;
-      const bay = pk!.bays[i]!, item = PARK_CARS[bay.dir]![i % PARK_CARS[bay.dir]!.length]!, b = LIBRARY[item]!.boxes[0]!;
-      this.parkCars.set(key, this.addProp(item, bay.x - b.dx / 2, bay.y - b.dy / 2, false, 1, key));
+      const bay = pk!.bays[i]!, facing = parkedCar(i, bay.dir);
+      this.parkCars.set(key, this.addProp(facing.item, bay.x - facing.ox, bay.y - facing.oy, facing.flip, 1, key));
     }
     for (let i = want; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
   }
@@ -2839,10 +2844,10 @@ export class Game {
     }
   }
 
-  /** the stadium's placeholder art (until Phase 8): the placed site, and the label at the centre (every zoom) */
+  /** Stadium label; the planner retains a footprint while detail tiers use the sorted artwork. */
   private drawStadium(ctx: CanvasRenderingContext2D) {
     const s = this.site; if (!s) return;
-    this.drawSite(ctx, s, 'rgba(150,160,175,0.55)');
+    if (this.cam.z < PLANNER_Z) this.drawSite(ctx, s, 'rgba(150,160,175,0.55)');
     const dpr = this.dpr, c = this.screen(s.c.x, s.c.y), label = `STADIUM · L${this.traffic.round.level}`;
     ctx.font = `bold ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round'; ctx.lineWidth = 4 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
@@ -2864,13 +2869,13 @@ export class Game {
     this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#e9edf2'; ctx.lineWidth = 2 * this.dpr; ctx.stroke();
   }
-  /** the placed businesses other than the stadium: each rect in its family's fill, and its label (name and level) at the centre (every zoom) */
+  /** Placed business labels; footprint fills only at planner zoom, below the detailed artwork tier. */
   private drawBusinesses(ctx: CanvasRenderingContext2D) {
     const dpr = this.dpr;
     for (const d of this.bizDefs) {
       if (d.type === 'stadium') continue;
       const B = BUSINESS[d.type], c = this.screen(d.x + d.w / 2, d.y + d.h / 2), label = `${B.name.toUpperCase()} · L${this.traffic.biz.find(v => v.id === d.id)?.level ?? 1}`;
-      this.drawBizRect(ctx, d.x, d.y, d.w, d.h, FAMILY_FILL[B.family]);
+      if (this.cam.z < PLANNER_Z) this.drawBizRect(ctx, d.x, d.y, d.w, d.h, FAMILY_FILL[B.family]);
       ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
@@ -2884,6 +2889,18 @@ export class Game {
     if (this.bizCount(this.bizType) < BUSINESS[this.bizType].max) {
       const fill = h.why ? 'rgba(230,80,80,0.35)' : 'rgba(60,200,90,0.35)';
       if (this.bizType === 'stadium') this.drawSite(ctx, h.site, fill); else this.drawBizRect(ctx, h.def.x, h.def.y, h.def.w, h.def.h, fill);
+      // Use the same composition and projection as the placed business, over its validity footprint.
+      const ze = this.cam.z * this.dpr;
+      ctx.save(); ctx.globalAlpha = h.why ? .35 : .65;
+      for (const p of businessArt(h.def, LIBRARY, LIB_INDEX)) {
+        const it = LIBRARY[p.item], [page, u0, v0, u1, v1] = it.tex, image = this.pageImages[page];
+        if (!image?.naturalWidth) continue;
+        const r = spriteRect(p), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2;
+        const w = (r[2] - r[0]) * ze, height = (r[3] - r[1]) * ze;
+        ctx.save(); ctx.translate(p.flip ? x + w : x, y); if (p.flip) ctx.scale(-1, 1);
+        ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, 0, 0, w, height); ctx.restore();
+      }
+      ctx.restore();
     }
     if (h.why) this.hintAt(ctx, h.mx, h.my, h.why, true);
   }

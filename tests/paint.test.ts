@@ -1,6 +1,7 @@
 // Headless tests for the Paint tool's data model: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { PaintTool } from '../src/game/paint-tool';
 import {
   DEFAULT_STYLE, areaAt, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insidePoly, polyArea, simplify, snapPt, toTuple,
   type BorderSize, type BorderTex, type PaintArea, type PaintTex, type PaintTuple,
@@ -12,6 +13,24 @@ const L_SHAPE = [0, 0, 4, 0, 4, 2, 2, 2, 2, 4, 0, 4];
 const HEX = [1, 0, 0.5, 0.866, -0.5, 0.866, -1, 0, -0.5, -0.866, 0.5, -0.866].map(v => v + 10);
 /** a value the save or a panel could hand over that the types would not allow (for the clamp tests) */
 const junk = <T>(v: unknown) => v as T;
+
+test('rocky dirt saves keep both paintings and border styles when reloaded into ground patches', () => {
+  const tuples: PaintTuple[] = [
+    ['rockyDirt', 1.5, 30, 2, 'rockyDirtAlt', SQUARE],
+    ['rockyDirtAlt', 0.5, -45, 1, 'rockyDirt', L_SHAPE],
+    ['dirt', 1, 0, 0, 'kerb', SQUARE],
+  ];
+  const sent = new Map<string, unknown>();
+  const host = { setLotGround: (key: string, patches: unknown) => { sent.set(key, patches); }, emit() {}, save() {}, toast() {} };
+  const first = new PaintTool(host);
+  first.load(tuples);
+  const saved = JSON.parse(JSON.stringify(first.save())) as PaintTuple[];
+  const reloaded = new PaintTool(host);
+  reloaded.load(saved);
+  assert.deepEqual(reloaded.save(), tuples);
+  assert.deepEqual(sent.get('paint:1'), [{ pts: SQUARE, tex: 'rockyDirt', paint: { s: 1.5, a: 30, b: 0.5, bt: 'rockyDirtAlt', z: 1 } }]);
+  assert.deepEqual(sent.get('paint:2'), [{ pts: L_SHAPE, tex: 'rockyDirtAlt', paint: { s: 0.5, a: -45, b: 0.25, bt: 'rockyDirt', z: 2 } }]);
+});
 
 test('polyArea: the sign follows the winding, the value is the area in tiles²', () => {
   assert.equal(polyArea([0, 0, 1, 0, 1, 1, 0, 1]), 1);

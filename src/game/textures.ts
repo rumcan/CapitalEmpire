@@ -8,7 +8,7 @@ import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT
  *    lamp-light response (manifest.json light.DMU / DSG) at I = 0.4 and I = 0.9 for the reflection pools;
  *  - grass: the two approved 256 px grass paintings mixed in hex patches and by low-frequency noise (screen space);
  *  - curbs and slabs: colours and sprites straight from the kit. */
-export type TexName = 'grass' | GrassTex | 'meadow' | 'dirt' | 'gravel' | 'roadgravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek' | 'rock';
+export type TexName = 'grass' | GrassTex | 'meadow' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'roadgravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek' | 'rock';
 const PAINTED: TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear', 'forest', 'water', 'bank', 'creek', 'rock', 'roadgravel'];
 /** screen-space textures are authored at 0.8 px per world px; mip-mapped per cache level */
 export const AUTHOR = 0.8;
@@ -232,11 +232,15 @@ export class Textures {
 
   async build(art: GroundArt, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
-    const steps = PAINTED.length + 10 + GRASS_PAINT.length; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
-    const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature].map(loadImage));
+    const steps = PAINTED.length + 12 + GRASS_PAINT.length; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
+    const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
     for (const name of PAINTED) { this.store(name, gen(name)); await tick(); }
+    // The seamless square paintings are compressed vertically for the isometric ground plane.
+    // Store every mip through the same path as other painted materials, including worker snapshots.
+    this.store('rockyDirt', toCanvas(rockyDirtImg, Math.round(rockyDirtImg.width * AUTHOR), Math.round(rockyDirtImg.height * AUTHOR / 2))); await tick();
+    this.store('rockyDirtAlt', toCanvas(rockyDirtAltImg, Math.round(rockyDirtAltImg.width * AUTHOR), Math.round(rockyDirtAltImg.height * AUTHOR / 2))); await tick();
     // ---- asphalt mosaics: one seed layout, three paintings (unlit, lit 0.4, lit 0.9)
     const srcA = toCanvas(asA), srcB = toCanvas(asB);
     const lit = (src: Cnv, I: number) => {

@@ -1,8 +1,12 @@
+import rockyDirt from './assets/ground/rocky-dirt.webp';
+import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
 import { BORDER_TEXES, BORDER_W, PAINT_TEXES, edgeAngle, type BorderSize } from './game/paint';
 import type { PaintMode } from './game/paint-tool';
 
 const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }];
+const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
+const swatch = (t: { id: string; col: string }) => ({ backgroundColor: t.col, backgroundImage: DIRT_SWATCHES[t.id] ? `url(${DIRT_SWATCHES[t.id]})` : undefined, backgroundSize: 'cover' });
 const BORDERS = ['None', 'Small', 'Medium', 'Large'];
 
 /** the Paint tool's panel: mode, texture, scale, angle, border and the snap setting (docs/PAINT-TOOL.md) */
@@ -25,7 +29,7 @@ export function PaintPanel({ game }: { game: Game }) {
       <div className="mt-1 text-xs text-slate-300">{help}</div>
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
-        {PAINT_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={{ background: t.col }} />{t.name}</button>)}
+        {PAINT_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
       </div>
       <div className="mt-2 text-[11px] text-slate-400">Scale</div>
       <div className="flex items-center gap-1">
@@ -52,7 +56,7 @@ export function PaintPanel({ game }: { game: Game }) {
         <>
           <div className="mt-2 text-[11px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">
-            {BORDER_TEXES.map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={{ background: t.col }} />{t.name}</button>)}
+            {BORDER_TEXES.map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
           </div>
         </>
       )}

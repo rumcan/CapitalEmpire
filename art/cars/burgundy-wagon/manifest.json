@@ -1,0 +1,411 @@
+{
+  "model": "burgundy-wagon",
+  "identity": "burgundy station wagon, chrome bumpers, matching burgundy roof, black roof rack",
+  "atlasFile": "burgundy-wagon__8-directions.png",
+  "atlasWidth": 2188,
+  "atlasHeight": 942,
+  "cellWidth": 547,
+  "cellHeight": 471,
+  "atlasPivotPixels": {
+    "x": 273.5,
+    "y": 447
+  },
+  "previewFile": "burgundy-wagon__preview.png",
+  "directionOrder": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "worldAngleMapping": {
+    "screenToWorldDegrees": {
+      "N": 225,
+      "NE": 270,
+      "E": 315,
+      "SE": 0,
+      "S": 45,
+      "SW": 90,
+      "W": 135,
+      "NW": 180
+    },
+    "worldAngleDefinition": "atan2(worldDeltaY, worldDeltaX), degrees modulo 360",
+    "projection": {
+      "screenX": "(worldX - worldY) * 64",
+      "screenY": "(worldX + worldY) * 32"
+    },
+    "screenHeadingMeaning": "Vehicle nose direction on screen; N points up, E points right. Diagonal nose axes have a 2:1 screen slope."
+  },
+  "views": [
+    {
+      "key": "N",
+      "screenNoseDirection": "up",
+      "file": "burgundy-wagon__N.png",
+      "width": 232,
+      "height": 423,
+      "anchorPixels": {
+        "x": 116.0,
+        "y": 423
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 0,
+        "y": 0,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 157,
+        "y": 24
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_0\\world-car_0-cf8f927b-3.webp",
+        "sourceFrame": 3,
+        "sourceAlphaBounds": [
+          3,
+          2,
+          235,
+          425
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\burgundy-wagon\\burgundy-wagon__N.png",
+        "width": 232,
+        "height": 423,
+        "resized": false,
+        "sourceHasAlpha": true
+      },
+      "worldAngleDegrees": 225
+    },
+    {
+      "key": "NE",
+      "screenNoseDirection": "up-right",
+      "file": "burgundy-wagon__NE.png",
+      "width": 499,
+      "height": 267,
+      "anchorPixels": {
+        "x": 249.5,
+        "y": 267
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 547,
+        "y": 0,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 180
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "generatedView": "NE",
+        "flipHorizontal": false
+      },
+      "worldAngleDegrees": 270
+    },
+    {
+      "key": "E",
+      "screenNoseDirection": "right",
+      "file": "burgundy-wagon__E.png",
+      "width": 495,
+      "height": 217,
+      "anchorPixels": {
+        "x": 247.5,
+        "y": 217
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1094,
+        "y": 0,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 26,
+        "y": 230
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_0\\world-car_0-cf8f927b-1.webp",
+        "sourceFrame": 1,
+        "sourceAlphaBounds": [
+          3,
+          2,
+          498,
+          219
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\burgundy-wagon\\burgundy-wagon__E.png",
+        "width": 495,
+        "height": 217,
+        "resized": false,
+        "sourceHasAlpha": true
+      },
+      "worldAngleDegrees": 315
+    },
+    {
+      "key": "SE",
+      "screenNoseDirection": "down-right",
+      "file": "burgundy-wagon__SE.png",
+      "width": 499,
+      "height": 340,
+      "anchorPixels": {
+        "x": 249.5,
+        "y": 340
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1641,
+        "y": 0,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 107
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_0\\world-car_0-cf8f927b-4.webp",
+        "sourceFrame": 4,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          501,
+          342
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\burgundy-wagon\\burgundy-wagon__SE.png",
+        "width": 499,
+        "height": 340,
+        "resized": false,
+        "sourceHasAlpha": true
+      },
+      "worldAngleDegrees": 0
+    },
+    {
+      "key": "S",
+      "screenNoseDirection": "down",
+      "file": "burgundy-wagon__S.png",
+      "width": 238,
+      "height": 420,
+      "anchorPixels": {
+        "x": 119.0,
+        "y": 420
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 0,
+        "y": 471,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 154,
+        "y": 27
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_0\\world-car_0-cf8f927b-2.webp",
+        "sourceFrame": 2,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          240,
+          422
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\burgundy-wagon\\burgundy-wagon__S.png",
+        "width": 238,
+        "height": 420,
+        "resized": false,
+        "sourceHasAlpha": true
+      },
+      "worldAngleDegrees": 45
+    },
+    {
+      "key": "SW",
+      "screenNoseDirection": "down-left",
+      "file": "burgundy-wagon__SW.png",
+      "width": 499,
+      "height": 340,
+      "anchorPixels": {
+        "x": 249.5,
+        "y": 340
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 547,
+        "y": 471,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 107
+      },
+      "mirrorOf": "SE",
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_0\\world-car_0-cf8f927b-4.webp",
+        "sourceFrame": 4,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          501,
+          342
+        ],
+        "flipHorizontal": true,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\burgundy-wagon\\burgundy-wagon__SW.png",
+        "width": 499,
+        "height": 340,
+        "resized": false,
+        "sourceHasAlpha": true
+      },
+      "worldAngleDegrees": 90
+    },
+    {
+      "key": "W",
+      "screenNoseDirection": "left",
+      "file": "burgundy-wagon__W.png",
+      "width": 495,
+      "height": 217,
+      "anchorPixels": {
+        "x": 247.5,
+        "y": 217
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1094,
+        "y": 471,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 26,
+        "y": 230
+      },
+      "mirrorOf": "E",
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_0\\world-car_0-cf8f927b-1.webp",
+        "sourceFrame": 1,
+        "sourceAlphaBounds": [
+          3,
+          2,
+          498,
+          219
+        ],
+        "flipHorizontal": true,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\burgundy-wagon\\burgundy-wagon__W.png",
+        "width": 495,
+        "height": 217,
+        "resized": false,
+        "sourceHasAlpha": true
+      },
+      "worldAngleDegrees": 135
+    },
+    {
+      "key": "NW",
+      "screenNoseDirection": "up-left",
+      "file": "burgundy-wagon__NW.png",
+      "width": 499,
+      "height": 267,
+      "anchorPixels": {
+        "x": 249.5,
+        "y": 267
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1641,
+        "y": 471,
+        "width": 547,
+        "height": 471
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 180
+      },
+      "mirrorOf": "NE",
+      "provenance": {
+        "generatedView": "NE",
+        "flipHorizontal": true
+      },
+      "worldAngleDegrees": 180
+    }
+  ],
+  "generatedNE": {
+    "originalGeneratedPath": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a158de-40bb-76a0-a8cf-db37ad7e3815\\exec-bb57746b-66ce-42b4-ba24-8c325c3fc2c8.png",
+    "archivedGeneratedPath": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\raw-ne\\burgundy-wagon__generated-NE.png",
+    "rawSha256": "0a7ca1639348ab9efad97267a942fe3d41df7264a628397115829a8e3fc25553",
+    "originalSize": [
+      1536,
+      1024
+    ],
+    "originalNonzeroAlphaBounds": [
+      43,
+      19,
+      1474,
+      1008
+    ],
+    "alphaCutoff": 8,
+    "trimBounds": [
+      139,
+      152,
+      1472,
+      864
+    ],
+    "trimmedSize": [
+      1333,
+      712
+    ],
+    "targetReferenceView": "SE",
+    "targetReferenceWidth": 499,
+    "resizeRatio": 0.3743435858964741,
+    "resizedSize": [
+      499,
+      267
+    ],
+    "resizeFilter": "LANCZOS",
+    "upscaled": false,
+    "backgroundMethod": "True alpha supplied by image generator; only alpha values <= cutoff discarded."
+  },
+  "sourcePlan": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\burgundy-wagon__plan.json",
+  "placementNote": "Common atlas pivot aligns the provisional bottom-center pixel anchor in each frame, to within half a pixel for odd widths. It does not establish stable ground-contact motion in the game.",
+  "cameraNote": "Directions mean vehicle nose direction on the screen. Diagonal headings use a 2:1 screen slope. Existing source views retain their original perspective."
+}
