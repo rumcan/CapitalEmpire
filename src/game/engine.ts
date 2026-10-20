@@ -10,7 +10,7 @@ import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { lotBatch, type LotPatch } from './ground-protocol';
 import { PaintTool } from './paint-tool';
-import type { PaintTuple } from './paint';
+import { areaAt, type PaintTuple } from './paint';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV5 } from './save';
 import { CAR_COLOURS } from './traffic';
@@ -28,7 +28,8 @@ import { plazaEdge, plazaIslands, plazaLocal, plazaOutline, plazaPoint, plazaQua
 import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
-import { FOREST_CELL, forestCell } from './forest';
+import { FOREST_CELL, forestCell, type ForestTree } from './forest';
+import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
@@ -87,6 +88,22 @@ function walkerSprite(ctx: CanvasRenderingContext2D, sheet: HTMLImageElement, x:
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
 function segDist(p: Pt, s: Seg): number { const d = sub(s.b, s.a), L2 = dot(d, d) || 1, k = Math.min(1, Math.max(0, dot(sub(p, s.a), d) / L2)); return vlen(sub(p, add(s.a, mul(d, k)))); }
+/** a lot's rectangle as a box x0 y0 x1 y1 (tiles): its corner o, the unit sides u (length w) and n (length d) */
+function lotBoxOf(o: ArrayLike<number>, u: ArrayLike<number>, n: ArrayLike<number>, w: number, d: number): number[] {
+  const ax = o[0]! + u[0]! * w, ay = o[1]! + u[1]! * w, bx = o[0]! + n[0]! * d, by = o[1]! + n[1]! * d, cx = ax + n[0]! * d, cy = ay + n[1]! * d;
+  return [Math.min(o[0]!, ax, bx, cx), Math.min(o[1]!, ay, by, cy), Math.max(o[0]!, ax, bx, cx), Math.max(o[1]!, ay, by, cy)];
+}
+/** the distance from tile (x, y) to a lot's rectangle (0 inside), the lot's frame as in lotBoxOf */
+function lotGap(l: LotView, x: number, y: number): number {
+  const dx = x - l.o[0], dy = y - l.o[1], a = dx * l.u[0] + dy * l.u[1], b = dx * l.n[0] + dy * l.n[1];
+  return Math.hypot(Math.max(0, -a, a - l.w), Math.max(0, -b, b - l.d));
+}
+/** whether box b (x0 y0 x1 y1) comes within g tiles of the cell rectangle x0 y0 x1 y1 */
+function boxNear(b: number[], x0: number, y0: number, x1: number, y1: number, g: number): boolean { return b[0]! < x1 + g && b[2]! > x0 - g && b[1]! < y1 + g && b[3]! > y0 - g; }
+/** a toll gate's plaza as a box (its two ends, and the plaza's width at its booths, plus a margin) */
+function tollBox(d: TollDef): number[] { const m = 10 + d.booths * BOOTH_W; return [Math.min(d.ax, d.bx) - m, Math.min(d.ay, d.by) - m, Math.max(d.ax, d.bx) + m, Math.max(d.ay, d.by) + m]; }
+/** the box of a flat x y list of points (a paint area's outline or a ground patch), tiles */
+function ptsBox(p: number[]): number[] { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (let i = 0; i < p.length; i += 2) { x0 = Math.min(x0, p[i]!); x1 = Math.max(x1, p[i]!); y0 = Math.min(y0, p[i + 1]!); y1 = Math.max(y1, p[i + 1]!); } return [x0, y0, x1, y1]; }
 /** a piece of a screen-space label at (x, y), left-aligned, filled in col and outlined in the stroke style; returns the x after it */
 function labelPiece(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, col: string): number { ctx.strokeText(s, x, y); ctx.fillStyle = col; ctx.fillText(s, x, y); return x + ctx.measureText(s).width; }
 
@@ -147,6 +164,8 @@ export class Game {
   sprites = new SpriteTiles();
   /** forest: slope field and clearing noise of the terrain; trees planted per FOREST_CELL cell (key cj * 32 + ci), drawn as sprites only, never in props */
   private slope: Float32Array = new Float32Array(0); private clearing: Noise = makeNoise(0); private forest = new Map<number, Prop[]>(); private forestItem = new Map<string, number>();
+  /** town trees: the same cells (key cj * 32 + ci) planted on the free ground in and around the towns, sprites only; the clump noise; the boxes of the lots and painted areas last seen (a change drops the cells around them) */
+  private townClump: Noise = makeNoise(0); private townTrees = new Map<number, Prop[]>(); private lotBoxes = new Map<string, number[]>(); private paintBoxes = new Map<string, number[]>();
   /** tunnel mouths of the network: key of the last synced set, and the points themselves */
   private portalKey = ''; private portalPts: PortalRec[] = [];
   ground: GroundCache;
@@ -215,7 +234,7 @@ export class Game {
    *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
   private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX); private pedNet = -1; private pedTick = 0; private pedLots = -1;
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -347,6 +366,8 @@ export class Game {
     this.names = new Names(seed); this.townPts = townCentres(this.terrain); this.roadNames = new RoadNames(this.names, this.townPts);
     for (const ps of this.forest.values()) for (const p of ps) this.sprites.remove(p);
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
+    for (const ps of this.townTrees.values()) for (const p of ps) this.sprites.remove(p);
+    this.townTrees.clear(); this.perf.townTrees = 0; this.townClump = makeNoise(this.terrain.seed ^ 0x7c1a); this.lotBoxes.clear(); this.paintBoxes.clear();
   }
   dead = false;
   destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); }
@@ -414,25 +435,35 @@ export class Game {
     if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') this.scheduleBlocks(isLotProp(p));
   }
   /** after moving, flipping or scaling a prop */
-  /** plant the forest cells near the view (world px rectangle): nearest to the view centre first, at most two cells per frame */
+  /** plant the forest and town-tree cells near the view (world px rectangle): nearest to the view centre first, at most two cells per frame (forest and town together).
+   *  A town cell has key + N * N (N cells a side) */
   private plantForest(X0: number, Y0: number, X1: number, Y1: number) {
-    const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = 8, N = MAP / FOREST_CELL;
+    const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = 8, N = MAP / FOREST_CELL, NN = N * N;
     const ci0 = clamp(Math.floor((Math.min(a.x, b.x, c.x, d.x) - g) / FOREST_CELL), 0, N - 1), ci1 = clamp(Math.floor((Math.max(a.x, b.x, c.x, d.x) + g) / FOREST_CELL), 0, N - 1);
     const cj0 = clamp(Math.floor((Math.min(a.y, b.y, c.y, d.y) - g) / FOREST_CELL), 0, N - 1), cj1 = clamp(Math.floor((Math.max(a.y, b.y, c.y, d.y) + g) / FOREST_CELL), 0, N - 1);
     let todo: number[] | null = null;
     for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
-      const key = cj * N + ci; if (this.forest.has(key)) continue;
-      if (!todo) todo = []; todo.push(key);
+      const key = cj * N + ci;
+      if (!this.forest.has(key)) { if (!todo) todo = []; todo.push(key); }
+      if (!this.townTrees.has(key)) { if (!todo) todo = []; todo.push(key + NN); }
     }
     if (!todo) return;
     const m = tileOf((X0 + X1) / 2, (Y0 + Y1) / 2), mx = clamp(Math.floor(m.x / FOREST_CELL), 0, N - 1), my = clamp(Math.floor(m.y / FOREST_CELL), 0, N - 1);
-    const dd = (k: number) => ((k % N) - mx) ** 2 + (Math.floor(k / N) - my) ** 2;
+    const dd = (q: number) => { const k = q % NN; return ((k % N) - mx) ** 2 + (Math.floor(k / N) - my) ** 2; };
     todo.sort((p, q) => dd(p) - dd(q));
-    for (let k = 0; k < Math.min(2, todo.length); k++) this.plantCell(todo[k], todo[k] % N, Math.floor(todo[k] / N));
+    for (let k = 0; k < Math.min(2, todo.length); k++) {
+      const q = todo[k]!, key = q % NN;
+      if (q >= NN) this.plantTownCell(key, key % N, Math.floor(key / N)); else this.plantCell(key, key % N, Math.floor(key / N));
+    }
   }
   /** plant one forest cell as sprites (not props: no selection, bulldozing or saving) */
   private plantCell(key: number, ci: number, cj: number) {
-    const trees = forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj), out: Prop[] = [];
+    const out = this.treeSprites(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj));
+    this.forest.set(key, out); this.perf.forest += out.length;
+  }
+  /** the sprites of planted trees (not props), skipping the ones in front of a tunnel mouth */
+  private treeSprites(trees: ForestTree[]): Prop[] {
+    const out: Prop[] = [];
     for (const tr of trees) {
       if (this.inPortal(tr.x, tr.y)) continue;
       let item = this.forestItem.get(tr.id);
@@ -442,7 +473,48 @@ export class Game {
       const p: Prop = { uid: this.nextUid++, item, x: ax, y: ay, flip: tr.flip, scale: tr.scale, ...this.footprint(it, ax, ay, tr.flip, tr.scale) };
       this.sprites.add(p); out.push(p);
     }
-    this.forest.set(key, out); this.perf.forest += out.length;
+    return out;
+  }
+  /** plant one town-tree cell as sprites: the predicates are built from the lots, roads, businesses, car parks, toll plazas, painted areas and portals near the cell */
+  private plantTownCell(key: number, ci: number, cj: number) {
+    const x0 = ci * FOREST_CELL, y0 = cj * FOREST_CELL, x1 = x0 + FOREST_CELL, y1 = y0 + FOREST_CELL, g = 30;
+    const lots: LotView[] = [];
+    for (const l of this.traffic.lots.values()) if (boxNear(lotBoxOf(l.o, l.u, l.n, l.w, l.d), x0, y0, x1, y1, g)) lots.push(l);
+    const bizs = this.bizDefs.filter(d => boxNear([d.x, d.y, d.x + d.w, d.y + d.h], x0, y0, x1, y1, g));
+    const parks = this.parkDefs.filter(d => boxNear([d.x, d.y, d.x + d.w, d.y + d.h], x0, y0, x1, y1, g));
+    const tolls: [TollDef, Seg][] = [];
+    for (const d of this.tollDefs) { const s = this.tollSegs.get(d.id); if (s && boxNear(tollBox(d), x0, y0, x1, y1, g)) tolls.push([d, s]); }
+    const paints = this.paint.areas.filter(a => boxNear(ptsBox(a.pts), x0, y0, x1, y1, g));
+    const near = (x: number, y: number) => { for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
+    const free = (x: number, y: number, r: number) => {
+      for (const l of lots) if (lotGap(l, x, y) < r) return false;
+      const p = { x, y };
+      for (const s of this.net.segsNear(p, r + 16)) if (segDist(p, s) < s.cls.h + s.cls.walk + r + 0.5) return false;
+      for (const d of bizs) if (x > d.x - r && x < d.x + d.w + r && y > d.y - r && y < d.y + d.h + r) return false;
+      for (const d of parks) if (x > d.x - r - 1 && x < d.x + d.w + r + 1 && y > d.y - r - 1 && y < d.y + d.h + r + 1) return false;
+      for (const [d, s] of tolls) { const f = plazaLocal(d, x, y); if (f.t >= -r && f.t <= PLAZA_LEN + r && f.o >= -s.cls.h - r && f.o <= plazaEdge(d.booths, laneOff(s, 0)) + r) return false; }
+      if (paints.length) for (let k = 0; k < 9; k++) { const a = k * Math.PI / 4; if (areaAt(paints, x + (k < 8 ? Math.cos(a) * r : 0), y + (k < 8 ? Math.sin(a) * r : 0))) return false; }
+      return !this.inPortal(x, y);
+    };
+    const out = this.treeSprites(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near));
+    this.townTrees.set(key, out); this.perf.townTrees += out.length;
+  }
+  /** the town-tree cells whose box (30 tiles around the cell) touches the box x0 y0 x1 y1 lose their trees: plantForest plants them again */
+  private dropTownTrees(x0: number, y0: number, x1: number, y1: number) {
+    const N = MAP / FOREST_CELL, g = 30;
+    for (const [k, ps] of this.townTrees) {
+      const ci = k % N, cj = Math.floor(k / N);
+      if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, g)) continue;
+      for (const p of ps) this.sprites.remove(p);
+      this.perf.townTrees -= ps.length; this.townTrees.delete(k);
+    }
+  }
+  /** a lot's rectangle changed (or went): the town trees around its old and new box are dropped (a change of level alone does not move the trees) */
+  private townLotChanged(key: string, box: number[] | null) {
+    const old = this.lotBoxes.get(key);
+    if (old && box && old.every((v, i) => v === box[i])) return;
+    if (old) this.dropTownTrees(old[0]!, old[1]!, old[2]!, old[3]!);
+    if (box) { this.dropTownTrees(box[0]!, box[1]!, box[2]!, box[3]!); this.lotBoxes.set(key, box); } else this.lotBoxes.delete(key);
   }
   /** no trees in front of a tunnel mouth: a short strip out of the portal, as wide as its road plus margin */
   private inPortal(x: number, y: number): boolean {
@@ -474,7 +546,16 @@ export class Game {
     for (const b of changed) this.ground.invalidate(b, false, 0, 'gm');
   }
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
-  setLotGround(key: string, patches: LotPatch[] | null) { this.lotPending.set(key, patches); }
+  setLotGround(key: string, patches: LotPatch[] | null) {
+    if (key.startsWith('paint:')) this.paintChanged(key, patches);
+    this.lotPending.set(key, patches);
+  }
+  /** a painted area went or came: the town trees around its old and new outline are dropped */
+  private paintChanged(key: string, patches: LotPatch[] | null) {
+    const old = this.paintBoxes.get(key);
+    if (old) this.dropTownTrees(old[0]!, old[1]!, old[2]!, old[3]!);
+    if (patches?.length) { const b = ptsBox(patches[0]!.pts); this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); this.paintBoxes.set(key, b); } else this.paintBoxes.delete(key);
+  }
   private flushLotGround() { if (!this.lotPending.size) return; const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop); }
   /** the town's lots: up to 40 queued keys a frame (more while the queue is over 2,000, up to 400), so a loaded city fills in */
   private applyLotQueue() {
@@ -485,8 +566,10 @@ export class Game {
   }
   /** a lot follows the town: composed from its town state; dropped when EMPTY, gone or holding a starter building (a staged lot is as it was staged) */
   private applyLot(key: string) {
-    const st = this.staged.get(key); if (st) { this.placeLot(key, st.g, st.st); return; }
-    const v = this.traffic.lots.get(key);
+    const st = this.staged.get(key);
+    const v = st ? undefined : this.traffic.lots.get(key);
+    this.townLotChanged(key, st ? lotBoxOf([st.g.o.x, st.g.o.y], [st.g.u.x, st.g.u.y], [st.g.n.x, st.g.n.y], st.g.w, st.g.d) : v ? lotBoxOf(v.o, v.u, v.n, v.w, v.d) : null);
+    if (st) { this.placeLot(key, st.g, st.st); return; }
     if (!v || v.level === LV.EMPTY || this.starterIn(v)) { this.dropLot(key); return; }
     this.placeLot(key, { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, { use: v.use, level: v.level, decline: v.decline, seed: v.seed });
   }
@@ -583,7 +666,7 @@ export class Game {
   private commitNetwork(keepPrev = false, until = 0) {
     const ops = this.edit.commit(); this.lanes.update(this.net);
     this.ground.netOps(ops); this.traffic.netOps(ops);
-    if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
+    if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); this.dropTownTrees(d[0], d[1], d[2], d[3]); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate();
     this.syncLamps(); if (this.parkDefs.length) this.syncParks(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
     this.scheduleSave(); this.emit();
@@ -1426,7 +1509,7 @@ export class Game {
   /** the placed stadium's spot as [x, y, w, h] tiles (null: none) */
   get stadiumDef(): [number, number, number, number] | null { const s = this.bizDefs.find(d => d.type === 'stadium'); return s ? [s.x, s.y, s.w, s.h] : null; }
   /** sets the placed businesses and the stadium's site from them (cached here, so the drawing needs no allocation) */
-  private setBizDefs(defs: BizDef[]) { this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null; }
+  private setBizDefs(defs: BizDef[]) { for (const d of [...this.bizDefs, ...defs]) this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h); this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null; }
   /** the game's own spot for the stadium on this valley (placeStadium), as [x, y, w, h] tiles; null without towns or a fit */
   private gameSpot(): [number, number, number, number] | null { const s = placeStadium(this.terrain.cls, this.townPts); return s ? [s.x, s.y, s.w, s.h] : null; }
   /** how many businesses of type t are placed */
@@ -1536,6 +1619,7 @@ export class Game {
     if (pd.cost > this.money) { this.toast(`Not enough money: a car park this size costs $${pd.cost.toLocaleString()}`, 'warn'); return; }
     const id = Math.max(0, ...this.parkDefs.map(d => d.id)) + 1, bays = pd.park.bays.length;
     this.parkDefs.push({ ...pd.def, id });
+    this.dropTownTrees(pd.def.x, pd.def.y, pd.def.x + pd.def.w, pd.def.y + pd.def.h);
     this.traffic.spend('construction', pd.cost);
     this.syncParks();
     this.toast(`Car park: ${bays} bays ($${pd.cost.toLocaleString()})`, 'good');
@@ -1565,7 +1649,7 @@ export class Game {
   /** the ground patch keys of the car parks (park:{id}) baked now */
   private parkGround = new Set<string>();
   /** removes car park k (no refund): its parked cars go with it */
-  private removePark(k: number) { this.dropParkCars(this.parkDefs[k]!.id); this.parkDefs.splice(k, 1); this.syncParks(); }
+  private removePark(k: number) { const d = this.parkDefs[k]!; this.dropParkCars(d.id); this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h); this.parkDefs.splice(k, 1); this.syncParks(); }
   /** removes the parked car props of car park id (they are contiguous from bay 0) */
   private dropParkCars(id: number) {
     for (let i = 0; ; i++) { const key = `park:${id}:${i}`, p = this.parkCars.get(key); if (!p) break; this.removeProp(p); this.parkCars.delete(key); }
@@ -1679,7 +1763,7 @@ export class Game {
     if (h.why) { this.toast(h.why, 'warn'); return; }
     if (h.cost > this.money) { this.toast(`Not enough money: a toll gate with ${h.booths} booths costs $${h.cost.toLocaleString()}`, 'warn'); return; }
     const s = h.seg, id = Math.max(0, ...this.tollDefs.map(d => d.id)) + 1, def: TollDef = { id, ax: h.a.x, ay: h.a.y, bx: h.b.x, by: h.b.y, booths: h.booths };
-    this.tollDefs.push(def);
+    this.tollDefs.push(def); { const b = tollBox(def); this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); }
     this.edit.addLegs([{ a: h.a, b: h.b }], s.cls, s.style, [SK.GROUND]);
     this.commitNetwork();
     if (!this.tollDefs.includes(def)) { this.toast('The road would not take a toll gate here', 'warn'); this.tollUpdate(h.mx, h.my); return; }
@@ -1704,7 +1788,8 @@ export class Game {
   }
   /** removes toll gate k (no refund): its plaza's ground goes; the road stays */
   private removeToll(k: number) {
-    const d = this.tollDefs[k]!, key = `toll:${d.id}`;
+    const d = this.tollDefs[k]!, key = `toll:${d.id}`, b = tollBox(d);
+    this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!);
     this.tollDefs.splice(k, 1); this.tollSegs.delete(d.id); this.setLotGround(key, null); this.tollGround.delete(key);
     this.traffic.setTolls(this.tollDefs);
   }
@@ -1936,7 +2021,7 @@ export class Game {
     const cards = this.traffic.round.cards;
     for (let i = this.cardsApplied; i < cards.length; i++) {
       const id = cards[i]!;
-      if (id === 'booths') { this.tollBooths += 2; for (const d of this.tollDefs) d.booths += 2; this.syncTolls(true); }
+      if (id === 'booths') { this.tollBooths += 2; for (const d of this.tollDefs) { d.booths += 2; const b = tollBox(d); this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); } this.syncTolls(true); }
       else if (id === 'buses') { this.busFleet += 4; for (const d of this.busDefs) d.buses += 4; this.traffic.setBusRoutes(this.busDefs); }
       else if (id === 'doubledecker') { this.busSeats = DECK_SEATS; for (const d of this.busDefs) d.seats = Math.max(d.seats, DECK_SEATS); this.traffic.setBusRoutes(this.busDefs); }
       this.toast(`Card: ${CARDS.find(c => c.id === id)!.name}`, 'good');
@@ -1997,7 +2082,7 @@ export class Game {
   private reset() {
     this.edit.clear(); this.snapshot = null;
     for (const p of [...this.props]) this.removeProp(p);
-    this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0;
+    this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0; this.townTrees.clear(); this.perf.townTrees = 0; this.lotBoxes.clear(); this.paintBoxes.clear();
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear();

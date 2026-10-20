@@ -7,7 +7,7 @@ import { TC, sampleField } from './terrain/types';
 export const FOREST_CELL = 64;
 /** library ids of the forest trees */
 export const FOREST_BROAD = ['ref:tree-maple-crimson', 'world:tree_oak_0', 'world:tree_oak_1', 'world:tree_oak_2', 'ref:tree-birch-gold'];
-const BROAD_W = [0.4, 0.15, 0.15, 0.15, 0.15];
+export const BROAD_W = [0.4, 0.15, 0.15, 0.15, 0.15];
 /** library ids of the conifers */
 export const FOREST_CONIFER = ['world:tree_pine_0', 'world:tree_pine_1', 'ref:tree-spruce-blue'];
 /** one planted tree: x, y is its ground point in tiles, id a library id, scale and flip as for a prop */
