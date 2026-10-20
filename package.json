@@ -20,6 +20,7 @@
     "towns:gate": "esbuild scripts/sim/towns-gate.ts --bundle --platform=node --format=esm --outfile=output/sim/towns-gate.mjs --log-level=warning && node output/sim/towns-gate.mjs",
     "fix:gate": "esbuild scripts/sim/fix-gate.ts --bundle --platform=node --format=esm --outfile=output/sim/fix-gate.mjs --log-level=warning && node output/sim/fix-gate.mjs",
     "event:gate": "esbuild scripts/sim/event-gate.ts --bundle --platform=node --format=esm --outfile=output/sim/event-gate.mjs --log-level=warning && node output/sim/event-gate.mjs",
+    "biz:gate": "esbuild scripts/sim/biz-gate.ts --bundle --platform=node --format=esm --outfile=output/sim/biz-gate.mjs --log-level=warning && node output/sim/biz-gate.mjs",
     "terrain:preview": "esbuild scripts/terrain/preview.ts --bundle --platform=node --format=esm --outfile=output/terrain/preview.mjs --log-level=warning && node output/terrain/preview.mjs"
   },
   "dependencies": {
