@@ -104,6 +104,9 @@ export class SimClient {
   /** the heat map's per-dseg speed ratio (mean v / lane vmax, 1 = free) and density (vehicles per km per lane) as the worker last sent them
    *  (null until the first), and the performance.now() of that message (see heatOn) */
   heatRatio: Float32Array | null = null; heatDens: Float32Array | null = null; heatAt = 0;
+  /** the congestion over time per dseg id (heatHist, delay per lane-km, EMA of about 6 game hours) and the parking demand per cell (parkDemand, cars per
+   *  game hour, cells of PD_CELL tiles), as the worker last sent them (null until the first heat) */
+  heatHist: Float32Array | null = null; parkDemand: Float32Array | null = null;
   n = 0;
   alive = new Uint8Array(0); px = new Float32Array(0); py = new Float32Array(0);
   /** 4-facing index of the heading: 0 +x, 1 +y, 2 -x, 3 -y */
@@ -212,7 +215,7 @@ export class SimClient {
     if (m.t === 'site') { this.site = m.site; return; }
     if (m.t === 'biz') { this.biz = m.list; return; }
     if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
-    if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatAt = performance.now(); return; }
+    if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatHist = m.hist; this.parkDemand = m.pdem; this.heatAt = performance.now(); return; }
     if (m.t === 'disasters') { this.disasters = m.active; this.onDisasters?.(m.notes); return; }
     if (m.t === 'grow') {
       const legs: Leg[] = [];

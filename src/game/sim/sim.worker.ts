@@ -60,8 +60,8 @@ let heatOn = false, heatGeomV = -1, heatNext = 0;
 function postHeat() {
   const sim = city.sim;
   if (sim.heatVersion !== heatGeomV) { heatGeomV = sim.heatVersion; const geom = sim.heatGeometry(); post({ t: 'heatGeom', version: heatGeomV, geom }, [geom.buffer as ArrayBuffer]); }
-  const ratio = sim.heatRatio.slice(), dens = sim.heatDens.slice();
-  post({ t: 'heat', version: heatGeomV, ratio, dens }, [ratio.buffer as ArrayBuffer, dens.buffer as ArrayBuffer]);
+  const ratio = sim.heatRatio.slice(), dens = sim.heatDens.slice(), hist = sim.heatHist.slice(), pdem = sim.parkDemand.slice();
+  post({ t: 'heat', version: heatGeomV, ratio, dens, hist, pdem }, [ratio.buffer as ArrayBuffer, dens.buffer as ArrayBuffer, hist.buffer as ArrayBuffer, pdem.buffer as ArrayBuffer]);
   heatNext = performance.now() + HEAT_MS;
 }
 

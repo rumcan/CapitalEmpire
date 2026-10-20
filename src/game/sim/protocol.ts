@@ -45,6 +45,7 @@ export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimSt
   | { t: 'budget'; save: BudgetSave; career: CareerSave; day: number; ledger: Ledger | null } | { t: 'milestone'; newly: Milestone[]; won: boolean } | { t: 'report'; report: Report; hours: HourStat[] }
   | { t: 'car'; info: CarInfo | null } | { t: 'watch'; node: [number, number] | null; n: number; lines: Float32Array } | { t: 'site'; site: Site | null }
   | { t: 'biz'; list: BizView[] }
-  | { t: 'heatGeom'; version: number; geom: Float32Array } | { t: 'heat'; version: number; ratio: Float32Array; dens: Float32Array };
+  | { t: 'heatGeom'; version: number; geom: Float32Array } | { t: 'heat'; version: number; ratio: Float32Array; dens: Float32Array; hist: Float32Array; pdem: Float32Array };
 /** (heatGeom: the heat map's geometry for heatVersion version, 6 floats per dseg id (see Sim.heatGeometry), posted when the version changed while on;
- *  heat: each dseg's speed ratio and density (copies) for that version, every 500 ms while on; report: the bottleneck report, and the game hours' snapshots (HourStat, newest last), a copy; car: the inspected car, with every frame (null once it is gone); watch: the watched junction's x, y (null: none), the crossings since it was set, and their lines, 4 floats each (origin x, y, destination x, y), at most 256) */
+ *  heat: each dseg's speed ratio and density (copies) for that version, every 500 ms while on, and its congestion over time (hist: heatHist, the delay per lane-km
+ *  as an EMA of about 6 game hours) and the parking demand per PD_CELL cell (pdem: parkDemand, cars per game hour); report: the bottleneck report, and the game hours' snapshots (HourStat, newest last), a copy; car: the inspected car, with every frame (null once it is gone); watch: the watched junction's x, y (null: none), the crossings since it was set, and their lines, 4 floats each (origin x, y, destination x, y), at most 256) */

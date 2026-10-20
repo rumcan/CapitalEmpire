@@ -140,7 +140,10 @@ export default function App() {
                 <button className="btn" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)">+</button>
                 <span className="ml-1 w-14 text-right text-xs tabular-nums text-slate-300" title="Zoom relative to the town builder's 100%">{Math.round(game.cam.z * 100)}%</span>
               </div>
-              <button className={`btn ${game.showFlow ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.setFlow(!game.showFlow); bump(); }} title="Live congestion heat map (F)">Flow</button>
+              <button className={`btn ${game.showFlow ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.setFlow(!game.showFlow); bump(); }} title="Traffic heat map (F)">Flow</button>
+              {game.showFlow && (['time', 'now'] as const).map(m => (
+                <button key={m} className={`btn ${game.flowMode === m ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
+              ))}
               <button className={`btn ${game.panel === 'bottlenecks' ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)">Bottlenecks</button>
               <button className={`btn ${game.showGrid ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)">Grid</button>
               <button className="btn" onClick={() => game.save()} title="Saved automatically; force a save now">Save</button>
@@ -673,6 +676,10 @@ function ParkPanel({ game }: { game: Game }) {
         <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
       </p>
       <div className="mt-2 text-xs text-amber-300">{money(LOT_TILE_COST)} per tile</div>
+      <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
+        <input type="checkbox" checked={game.showParkDemand} onChange={e => { game.setParkDemand(e.target.checked); game.emit(); }} />
+        Show parking demand (cars per hour wanting a space)
+      </label>
       <div className="mt-2 max-h-64 overflow-y-auto">
         {game.parkDefs.length === 0 && <p className="text-xs text-slate-400">No car parks yet.</p>}
         {game.parkDefs.map(d => {

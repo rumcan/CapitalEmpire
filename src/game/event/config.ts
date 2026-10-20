@@ -149,3 +149,5 @@ export const CARDS = [
 export type CardId = (typeof CARDS)[number]['id'];
 /** the cards offered at each kick-off (fewer when the pool has fewer left) */
 export const DRAFT = 3;
+/** the parking demand's cells (Sim.parkDemand, the Car park panel's overlay) are PD_CELL tiles square */
+export const PD_CELL = 16;

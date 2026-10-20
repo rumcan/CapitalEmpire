@@ -56,6 +56,31 @@ interface CurbDef { id: number; ax: number; ay: number; bx: number; by: number }
   lights up amber (red with the reason: "needs 2 lanes this way", a junction-free straight run, ...). Click to add;
   clicking an existing curb removes it. Cost per bay: CURB_BAY_COST.
 
+## 3. Entrance and exit gates (art)
+
+The owner asked for an entrance and an exit, with art from the RUN.world image generator. Two sheets were generated
+(art/parking/README.md): an entrance gate (ticket pillar + boom barrier), an exit gate (pay station + barrier), a P sign, an
+attendant kiosk, a pay-and-display machine and an IN sign, packed into the atlas as `ce:parking-*` (category Parking).
+Placement is automatic: every car park and bay-row lot gets an entrance gate and an exit gate side by side at its
+entrance, just past the sidewalk, their arms across the driveway (along the road; a prop's flip turns them for roads
+along Y), with a P sign beside them; on-street runs get a P sign and a pay-and-display machine on the sidewalk at their
+middle. They are auto props (not saved), rebuilt with the parks.
+
+## 4. Parking fee
+
+Every car that parks (car parks, bay-row lots, on-street) pays one fee, set in the Car park panel ($0–$50, default $5),
+into the treasury on its own ledger line (`Budget.parking`, today.parking). The City books it each step from the
+cars the sim parked (`Sim.parkedNow`).
+
+## 5. Heat maps over time
+
+The owner: "a heat map is over time, not right now". The Flow overlay gets two views: **Over time** (the default)
+and **Now** (today's live bands). Over time = per road direction, the delay its cars suffered (the sum of 1 − v/vmax
+per lane-km, an EMA of about 6 game hours: HIST_TAU = 360 sim s), drawn as a glow from yellow to red where traffic keeps
+jamming. **Parking demand** (a toggle in the Car park panel): per 16-tile cell, the cars per game hour that wanted to
+park there (trips ending at a shop, office, factory, tourist or civic lot, and every car reaching a car park
+entrance, parked or turned away), the same 6-hour EMA, shaded blue to red, with the number written at street zoom.
+
 ## Saving
 
-New optional fields `rows: [ax, ay, bx, by, side, bay, col][]` and `curbs: [ax, ay, bx, by][]` (ids 1..n in order). No version bump.
+New optional fields `rows: [ax, ay, bx, by, side, bay, col][]`, `curbs: [ax, ay, bx, by][]` (ids 1..n in order) and `parkFee`. No version bump.
