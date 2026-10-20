@@ -1465,7 +1465,7 @@ no slower than plain ones (80 vs 115 ms per chunk on the busy machine, noise dom
 Open (for the owner): a price per m² by texture; dragging an area's corners after placing; whether the bulldozer should
 also remove paint (now only the Paint tool's Erase does).
 
-## Phase UI, the Maple Falls look (the owner's mockup, 2026-10-20): step 1 done
+## Phase UI, the Maple Falls look (the owner's mockup, 2026-10-20): steps 1 and 2 done
 
 **Done (2026-10-20, merged to main):** `scripts/assets/prep-ui-icons.mjs` cuts the sheet into 50 named 64 px WebP icons
 (`src/assets/ui/icons/`, ~120 KB); `src/ui/Icon.tsx`; `src/ui/RoadThumb.tsx` draws each road class from its own fields (surface,
@@ -1477,6 +1477,23 @@ Downgrade panels, Road Construction rows with thumbnails and gold prices, icon v
 stats and stadium cards. Checked in the browser at 1920, 1600 and 1366 px, no console errors. The zoom slider is gone (the buttons,
 scroll and the keys still zoom). **Open:** the minimap (bottom left; none exists yet), the event card's stadium picture and level chip,
 the Zones / Utilities / Services / Parks tabs (no such tools yet), panel restyles beyond the header for the junction and business panels.
+
+**Step 2 done (2026-10-20, merged to main):** `src/ui/Minimap.tsx` (haiku-coder, reviewed): a 200 x 100 px isometric minimap bottom left
+(so the view box is a rectangle): terrain classes drawn once per valley (one pixel per 8 x 8 tiles), lots as dots and roads by asphalt
+width (three colours) rebuilt when `net.version` changes (lots at most every 500 ms), the gold view box from `tileAt` of the screen corners
+redrawn only when the camera moves (its own rAF check, no work otherwise); N marker; click or drag moves the camera with the new
+`Game.lookAt(x, y, z?)` (jumpTo zooms in and turns the flow overlay on, wrong for a minimap). The town chip beside it: "Maple Falls /
+Overview" below DISTRICT_Z, else the nearest town; its dropdown goes to Overview or each town. RoundPanel is now the mockup's event card
+(trophy, level chip, era and run, a sentence per stage, View Event, gold Start Event / Start now; the build and surge clocks and town rows
+kept). The stadium picture is cut from the mockup (`scripts/assets/prep-ui-event.mjs` -> `src/assets/ui/art/stadium.webp`, 8 KB): the game
+has no stadium art yet; replace it when Phase 8's art lands. Layout: the top bar's wrap width depends on its content (the dev badge
+wraps it even at 1600 px), so a ResizeObserver puts its bottom in `--hud-top`, which places the rail, the road panel's height and the
+right-hand cards (the old `max-[1439px]` rules are gone); the hint bar centres in the lane between the town chip and the stats card; the road
+panel and the legends stop above the minimap. Checked in the browser at 1920, 1600 and 1366 px (no overlaps, the dropdown, a town jump and a
+minimap drag), typecheck and build pass (5.61 MB), tests 446/447 (the 4 s wall-clock terrain test, which passes on rerun). Bench (local
+iGPU, Edge, not the worker): every stage under the 8 ms frame budget (street 30% 1.3 ms avg, whole map 2.1 ms); run it on the worker
+after a push for numbers comparable with the table above. **Open:** the Zones / Utilities / Services / Parks tabs, the junction and
+business panel restyles, real stadium art.
 
 
 The owner sent a mockup of the whole screen and an icon sheet, and asked for a task to build that UI. Run it in its own chat, research

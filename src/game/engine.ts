@@ -1286,6 +1286,11 @@ export class Game {
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam();
     this.focus = { x, y, t: performance.now() }; this.setFlow(true); this.emit();
   }
+  /** centres the camera on tile (x, y) as it is (the minimap, the town chip); a zoom z, when given, replaces the camera's (clamped) */
+  lookAt(x: number, y: number, z?: number) {
+    if (z !== undefined) this.cam.z = clamp(z, ZOOM_MIN, ZOOM_MAX);
+    this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit();
+  }
   /** shows or hides the flow overlay (the Flow button, key F, a jump) and turns the worker's heat map on or off with it (see SimClient.heatOn); callers emit */
   setFlow(on: boolean) { this.showFlow = on; this.traffic.heatOn(on); }
   keyDown(e: KeyboardEvent) {

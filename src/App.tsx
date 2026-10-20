@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
@@ -19,6 +19,8 @@ import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
+import { Minimap } from './ui/Minimap';
+import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
 const GROUPS: { id: string; label: string; icon: IconName; tools: { id: Tool; label: string; key: string; icon: IconName }[] }[] = [
@@ -65,6 +67,14 @@ export default function App() {
   const last = useRef<Record<string, Tool>>({});
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);
+  /** the top bar wraps to two rows on narrow windows (how wide depends on its content): --hud-top follows its bottom, and the rail and the
+   *  right-hand cards sit under it */
+  const hudRo = useRef<ResizeObserver | null>(null);
+  const topBar = useCallback((el: HTMLDivElement | null) => {
+    hudRo.current?.disconnect(); hudRo.current = null; if (!el) return;
+    hudRo.current = new ResizeObserver(() => document.documentElement.style.setProperty('--hud-top', `${Math.round(el.getBoundingClientRect().bottom)}px`));
+    hudRo.current.observe(el);
+  }, []);
 
   useEffect(() => { if (game && !game.bankrupt) setWatch(false); });
   // the round's clocks (the build, the surge) show mm:ss: re-render 4 times a second while one runs
@@ -125,7 +135,7 @@ export default function App() {
 
       {game && game.ready && (
         <>
-          <div className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
+          <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
             <div className="pointer-events-auto glass flex items-center gap-3 px-4 py-2">
               <div className="flex items-center gap-2.5">
                 <Icon name="leaf" size={38} />
@@ -176,7 +186,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="absolute left-3 top-[5.75rem] z-20 flex items-start gap-2 max-[1439px]:top-[9.5rem]">
+          <div className="absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2">
             <div className="glass flex flex-col gap-1 p-1.5">
               {GROUPS.map(g => (
                 <button key={g.id} onClick={() => game.setTool(last.current[g.id] ?? g.tools[0]!.id)} title={g.label} className={`rail-tab ${gid === g.id ? 'rail-tab-on' : ''}`}>
@@ -185,7 +195,7 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <div className="glass w-[330px] max-h-[calc(100vh-11rem)] overflow-y-auto p-3 max-[1439px]:max-h-[calc(100vh-14.5rem)]">
+            <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3">
               {grp && grp.tools.length > 1 && (
                 <div className="seg mb-3">
                   {grp.tools.map(t => (
@@ -219,9 +229,12 @@ export default function App() {
             </div>
           </div>
 
-          <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs">
-            <Icon name="info" size={18} />
-            <span>{keyed(hintFor(game))}</span>
+          {/* the hint bar, centred in the lane between the minimap's town chip and the stats card */}
+          <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex justify-center">
+            <div className="flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs">
+              <Icon name="info" size={18} />
+              <span>{keyed(hintFor(game))}</span>
+            </div>
           </div>
           {(game.showAccess || game.cam.z < PLANNER_Z) && <AccessLegend game={game} />}
           {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} />}
@@ -233,7 +246,7 @@ export default function App() {
           </div>
 
           {(game.traffic.car || game.traffic.watch?.node) && (
-            <div className="absolute left-[444px] top-24 z-20 flex w-64 flex-col gap-2">
+            <div className="absolute left-[444px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
               {game.traffic.car && <CarPanel game={game} />}
               {game.traffic.watch?.node && <RoutesPanel game={game} />}
             </div>
@@ -242,7 +255,7 @@ export default function App() {
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.eventMode && !game.site && (
-            <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-24 z-20 flex items-center gap-3 glass p-3 text-sm max-[1439px]:top-[9.5rem]`}>
+            <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />
               <span>Place your stadium to start the events</span>
               <button className="btn-gold" onClick={() => game.setTool('business')}>Business tool (M)</button>
@@ -273,6 +286,7 @@ export default function App() {
             </div>
           )}
 
+          <Minimap game={game} />
           <PerfPanel game={game} />
           {help && <Help onClose={() => setHelp(false)} />}
         </>
@@ -339,7 +353,7 @@ function BudgetPanel({ game }: { game: Game }) {
   const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Land sales', l.sales ?? 0, true], ['Road upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
   const maxLoans = Budget.from(b).maxLoans(game.traffic.pop);
   return (
-    <div className="absolute right-3 top-24 z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+    <div className="absolute right-3 top-[var(--hud-top,6rem)] z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
       <Panel title={`Budget — day ${game.day}`}>
         {l ? (
           <div className="space-y-0.5 text-xs">
@@ -394,43 +408,48 @@ function liveRows(v: SurgeView): TownRow[] {
 /** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock).
  *  Docked top right (left of a right-hand panel when one is open); the eval stage has its own screen (EvalScreen) */
 function RoundPanel({ game }: { game: Game }) {
-  const r = game.traffic.round, last = r.last, goBtn = <button className="chip" onClick={() => game.goToSite()}>Go to stadium</button>;
+  const r = game.traffic.round, last = r.last;
   const crowd = r.crowd.map((c, i) => `Town ${String.fromCharCode(65 + i)} ${c}`).join(' · ') + (r.crowd.length ? ' cars' : '');
+  const sentence = r.stage === 'free' ? 'Host a major stadium event to boost happiness, income and the local economy.'
+    : r.stage === 'build' ? 'Fans are on their way: finish the roads before kick-off.' : 'Kick-off: the crowd is driving to the stadium.';
   return (
     // on the right, out of the way of building; left of the budget or bottleneck panel when one of those is open there
-    <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-24 z-20 w-[400px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur`}>
-      <Panel title={`Event: Stadium · Level ${r.level}`}>
-        {r.stage === 'free' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-slate-100">{r.year} · Run {r.runs + 1}</span>
-              <div className="flex gap-1">{goBtn}<button className="chip chip-on" onClick={() => game.startRound()}>Start the event</button></div>
+    <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 w-[440px] max-w-[calc(100vw-1.5rem)] glass overflow-hidden`}>
+      <img src={stadiumArt} alt="" className="pointer-events-none absolute right-0 top-0 h-[128px] w-[192px] object-cover" style={{ maskImage: 'linear-gradient(to right, transparent, black 45%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 45%)' }} />
+      <div className="relative p-3">
+        <div className="flex items-start gap-2">
+          <Icon name="trophy" size={34} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-display text-base font-bold tracking-wide text-[var(--gold-hi)] uppercase">Event: Stadium</span>
+              <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[10px] font-bold uppercase text-[var(--gold-hi)]">Level {r.level}</span>
             </div>
-            {last && <p className="text-xs text-slate-300">Last run: {last.arrived}/{last.sent * PARTY} fans arrived ({Math.round(last.rate * 100)}%)</p>}
+            <span className="text-sm">{r.year} – Run {r.runs + 1}</span>
           </div>
-        )}
+        </div>
+        <p className="mt-2 max-w-[15rem] text-xs text-slate-300">{sentence}</p>
+        {r.stage === 'free' && last && <p className="text-[11px] text-slate-400">Last run: {last.arrived}/{last.sent * PARTY} fans arrived ({Math.round(last.rate * 100)}%)</p>}
         {r.stage === 'build' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-2xl font-bold tabular-nums text-amber-200">Build · {mmss(Math.ceil(r.buildLeft))}</span>
-              <div className="flex gap-1">{goBtn}<button className="chip chip-on" onClick={() => game.startNow()}>Start now</button></div>
-            </div>
+          <div className="mt-2 space-y-2">
+            <span className="block text-xl font-bold tabular-nums text-[var(--gold-hi)]">Build · {mmss(Math.ceil(r.buildLeft))}</span>
             <p className="text-xs text-slate-300">{crowd}</p>
             <p className="text-xs text-slate-400">upkeep {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
         )}
         {r.stage === 'surge' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-2xl font-bold tabular-nums text-amber-200">Kick-off in {mmss(Math.ceil(r.surgeLeft))}</span>
-              {goBtn}
-            </div>
+          <div className="mt-2 space-y-2">
+            <span className="block text-xl font-bold tabular-nums text-[var(--gold-hi)]">Kick-off in {mmss(Math.ceil(r.surgeLeft))}</span>
             {r.surge && <SurgeTowns rows={liveRows(r.surge)} total={{ fans: r.surge.fans.reduce((a, b) => a + b, 0), sent: r.surge.sent.reduce((a, b) => a + b, 0) }} />}
             <p className="text-xs text-slate-300">{crowd}</p>
             <p className="text-xs text-slate-400">upkeep {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
         )}
-      </Panel>
+        <div className="mt-3 flex gap-2">
+          <button className="btn flex-1 py-2 text-sm" onClick={() => game.goToSite()}><Icon name="calendar" size={18} />View Event</button>
+          {r.stage === 'free' && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startRound()}><Icon name="start" size={18} />Start Event</button>}
+          {r.stage === 'build' && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startNow()}><Icon name="start" size={18} />Start now</button>}
+        </div>
+      </div>
     </div>
   );
 }
@@ -506,7 +525,7 @@ function BottleneckPanel({ game }: { game: Game }) {
   // items under 0.1 veh-min an hour are noise (a car slowing for a turn), not bottlenecks
   const top = (game.traffic.report?.top ?? []).filter(it => it.loss >= 6);
   return (
-    <div className="absolute right-3 top-24 z-20 max-h-[calc(100vh-18rem)] w-72 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
+    <div className="absolute right-3 top-[var(--hud-top,6rem)] z-20 max-h-[calc(100vh-18rem)] w-72 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
       <Panel title="Bottlenecks">
         <p className="mb-2 text-xs text-slate-400">Time lost in the last game hour or so, worst first</p>
         {top.length ? (
@@ -600,7 +619,7 @@ function BeforeAfter({ game }: { game: Game }) {
 const ACCESS_LEGEND: [string, string][] = [['full growth (< 1.3)', '#3ddc84'], ['slowed (1.3–1.8)', '#ffb020'], ['stopped (> 1.8)', '#ff3b3b']];
 function AccessLegend({ game }: { game: Game }) {
   return (
-    <div className="pointer-events-none absolute bottom-14 left-3 z-20 w-56 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur">
+    <div className="pointer-events-none absolute bottom-[9.5rem] left-3 z-20 w-56 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur">
       {ACCESS_LEGEND.map(([t, c]) => (
         <div key={t} className="flex items-center gap-2"><span className="inline-block h-2.5 w-3 rounded-sm" style={{ background: c }} />{t}</div>
       ))}
@@ -612,7 +631,7 @@ function AccessLegend({ game }: { game: Game }) {
 const HEAT_LEGEND: [string, string][] = [['Flowing — 75%+ of the speed limit', HEAT_COLS[0]!], ['Slow — 50–75%', HEAT_COLS[1]!], ['Heavy — 25–50%', HEAT_COLS[2]!], ['Stopped — under 25%', HEAT_COLS[3]!]];
 function HeatLegend({ raised }: { raised: boolean }) {
   return (
-    <div className={`pointer-events-none absolute ${raised ? 'bottom-[10rem]' : 'bottom-14'} left-3 z-20 w-64 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur`}>
+    <div className={`pointer-events-none absolute ${raised ? 'bottom-[17rem]' : 'bottom-[9.5rem]'} left-3 z-20 w-64 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur`}>
       <div className="mb-1 font-bold text-slate-100">Congestion · live</div>
       {HEAT_LEGEND.map(([t, c]) => (
         <div key={t} className="flex items-center gap-2"><span className="inline-block h-1 w-4 shrink-0 rounded-full" style={{ background: c }} />{t}</div>
