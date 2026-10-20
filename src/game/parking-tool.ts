@@ -27,6 +27,8 @@ export interface ParkingHost {
   mapSize: number;
   /** the toll plaza dseg keys (curbs may not overlap them) */
   tollKeys(): Set<string>;
+  /** '' if the quad (x0 y0 ... x3 y3, tiles) is free of the town's buildings and the stadium, else the reason (optional: tests leave it out) */
+  occupied?(quad: number[]): string;
 }
 
 /** the most a car pays ($) */
@@ -106,8 +108,8 @@ export class ParkingTool {
   cost = 0;
   /** the hovered run as resolved (its bays and strip), or the existing curb (hoverExisting), or null */
   private shown: Curb | null = null;
-  /** the ground keys sent last time (row:<id>, curb:<id>) */
-  private keys = new Set<string>();
+  /** the ground patches sent last time by key (row:<id>, curb:<id>), as JSON: an unchanged patch is not sent again (each send re-bakes its chunks) */
+  private keys = new Map<string, string>();
   private host: ParkingHost;
 
   constructor(host: ParkingHost) { this.host = host; }
@@ -115,20 +117,20 @@ export class ParkingTool {
   /** the next free id of a list: its largest id + 1 */
   nextId(list: { id: number }[]): number { let m = 0; for (const d of list) if (d.id > m) m = d.id; return m + 1; }
 
-  /** re-sends every row's and curb's ground patch and drops the keys no longer in use (a curb whose run is gone is dropped) */
+  /** sends each row's and curb's ground patch when it changed, and drops the keys no longer in use (a curb whose run is gone is dropped) */
   private ground() {
-    const net = this.host.net(), now = new Set<string>();
+    const net = this.host.net(), now = new Map<string, string>();
+    const put = (k: string, p: LotPatch) => { const j = JSON.stringify(p); now.set(k, j); if (this.keys.get(k) !== j) this.host.setLotGround(k, [p]); };
     for (const r of this.rows) {
-      const k = 'row:' + r.id, p: LotPatch = { pts: rowQuad(r), tex: 'asphalt', lines: rowLines(r) };
+      const p: LotPatch = { pts: rowQuad(r), tex: 'asphalt', lines: rowLines(r) };
       if (r.col === 'yellow') p.lineCol = 'yellow';
-      now.add(k); this.host.setLotGround(k, [p]);
+      put('row:' + r.id, p);
     }
     for (const d of this.curbs) {
       const c = resolveCurb(net, d); if (!c) continue;
-      const k = 'curb:' + d.id; now.add(k);
-      this.host.setLotGround(k, [{ pts: curbQuad(c), tex: 'asphalt', top: true, lines: curbLines(c) }]);
+      put('curb:' + d.id, { pts: curbQuad(c), tex: 'asphalt', top: true, lines: curbLines(c) });
     }
-    for (const k of this.keys) if (!now.has(k)) this.host.setLotGround(k, null);
+    for (const k of this.keys.keys()) if (!now.has(k)) this.host.setLotGround(k, null);
     this.keys = now;
   }
 
@@ -178,7 +180,7 @@ export class ParkingTool {
   /** reads row d into the preview: its bay count, its cost, and why it cannot go ('' if it can) */
   private aim(d: BayRowDef) {
     this.count = rowBays(d).length; this.cost = this.count * ROW_BAY_COST;
-    this.why = rowCheck(d, this.host.terrain(), this.roads(d), this.rows, this.host.mapSize) || (this.cost > this.host.money() ? 'not enough money' : '');
+    this.why = rowCheck(d, this.host.terrain(), this.roads(d), this.rows, this.host.mapSize) || (this.host.occupied?.(rowQuad(d)) ?? '') || (this.cost > this.host.money() ? 'not enough money' : '');
   }
 
   /** the row whose paving holds tile t, or null */

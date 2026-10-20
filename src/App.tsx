@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { FLOW_COLS, Game, HEAT_COLS, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
+import { FLOW_COLS, Game, HEAT_COLS, HIST_RAMP, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
+import { ROW_BAY_COST, rowLots } from './game/event/rows';
 import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
 import { type LibItem, type Tool } from './game/types';
 import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, SPEED_BONUS_KMH, TYPES, VARIANTS, speedOf, type Family, type Node } from './game/network';
@@ -12,7 +13,7 @@ import { shortName } from './game/ext/names';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
-import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
+import { BUS_ROUTE_COST, CARDS, CURB_BAY_COST, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
 import { BUSINESS, BUSINESSES, ESTATE_LOTS, unlockText, type BusinessType } from './game/business/catalogue';
 import { freshStats } from './game/business/state';
 import type { SurgeView } from './game/event/surge';
@@ -240,7 +241,7 @@ export default function App() {
             </div>
           </div>
           {(game.showAccess || game.cam.z < PLANNER_Z) && <AccessLegend game={game} />}
-          {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} />}
+          {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} time={game.flowMode === 'time'} />}
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (
@@ -632,14 +633,24 @@ function AccessLegend({ game }: { game: Game }) {
 }
 /** the heat map's bands, bottom-left above the hint bar (raised: above the access legend too; see Game.drawFlow) */
 const HEAT_LEGEND: [string, string][] = [['Flowing — 75%+ of the speed limit', HEAT_COLS[0]!], ['Slow — 50–75%', HEAT_COLS[1]!], ['Heavy — 25–50%', HEAT_COLS[2]!], ['Stopped — under 25%', HEAT_COLS[3]!]];
-function HeatLegend({ raised }: { raised: boolean }) {
+/** the over-time view's gradient: the ramp of the congestion glow (HIST_RAMP, drawHeatHist) */
+const HIST_GRADIENT = `linear-gradient(90deg, ${HIST_RAMP.map(c => `rgb(${c.join(',')})`).join(', ')})`;
+/** the flow legend: the over-time view (time: the delay each road lost over about 6 game hours, a gradient) or the live bands */
+function HeatLegend({ raised, time }: { raised: boolean; time: boolean }) {
   return (
     <div className={`pointer-events-none absolute ${raised ? 'bottom-[17rem]' : 'bottom-[9.5rem]'} left-3 z-20 w-64 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] text-slate-300 shadow-lg backdrop-blur`}>
-      <div className="mb-1 font-bold text-slate-100">Congestion · live</div>
-      {HEAT_LEGEND.map(([t, c]) => (
-        <div key={t} className="flex items-center gap-2"><span className="inline-block h-1 w-4 shrink-0 rounded-full" style={{ background: c }} />{t}</div>
-      ))}
-      <div className="mt-1 border-t border-white/10 pt-1 text-[10px] text-slate-400">speed against the limit, each direction; updated twice a second</div>
+      {time ? <>
+        <div className="mb-1 font-bold text-slate-100">Congestion · over time</div>
+        <div className="h-2 w-full rounded-full" style={{ background: HIST_GRADIENT }} />
+        <div className="mt-0.5 flex justify-between text-[10px] text-slate-300"><span>some delay</span><span>jams every day</span></div>
+        <div className="mt-1 border-t border-white/10 pt-1 text-[10px] text-slate-400">where cars lost time over the last ~6 game hours</div>
+      </> : <>
+        <div className="mb-1 font-bold text-slate-100">Congestion · live</div>
+        {HEAT_LEGEND.map(([t, c]) => (
+          <div key={t} className="flex items-center gap-2"><span className="inline-block h-1 w-4 shrink-0 rounded-full" style={{ background: c }} />{t}</div>
+        ))}
+        <div className="mt-1 border-t border-white/10 pt-1 text-[10px] text-slate-400">speed against the limit, each direction; updated twice a second</div>
+      </>}
     </div>
   );
 }
@@ -758,20 +769,47 @@ function RoadPanel({ game }: { game: Game }) {
   );
 }
 
-/** the car park tool: how to place one, its cost per tile, and the list of car parks (Go; a dev-only test of 50 cars) */
+/** the Car park tool's modes: Rectangle (a car park by drag), Rows (bays laid along a drag) and On-street (parallel bays along a road's kerb) */
+const PARK_MODES: { id: 'rect' | 'rows' | 'curb'; label: string }[] = [{ id: 'rect', label: 'Rectangle' }, { id: 'rows', label: 'Rows' }, { id: 'curb', label: 'On-street' }];
+
+/** the car park tool: its mode and how to place with it, the parking fee, the lots and runs with their cars, the parks' cars (rectangles: the list; Go;
+ *  a dev-only test of 50 cars) */
 function ParkPanel({ game }: { game: Game }) {
-  const views = game.traffic.parks;
+  const views = game.traffic.parks, pk = game.parking, mode = pk.mode;
   return (
     <Panel title="Car park" icon="pin">
-      <p className="text-xs leading-relaxed text-slate-300">
-        <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
-      </p>
-      <div className="mt-2 text-xs text-amber-300">{money(LOT_TILE_COST)} per tile</div>
+      <div className="flex flex-wrap gap-1">
+        {PARK_MODES.map(m => <button key={m.id} className={`chip ${mode === m.id ? 'chip-on' : ''}`} onClick={() => { pk.mode = m.id; game.emit(); }}>{m.label}</button>)}
+      </div>
+      {mode === 'rect' && <>
+        <p className="mt-2 text-xs leading-relaxed text-slate-300">
+          <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
+        </p>
+        <div className="mt-2 text-xs text-amber-300">{money(LOT_TILE_COST)} per tile</div>
+      </>}
+      {mode === 'rows' && <>
+        <p className="mt-2 text-xs leading-relaxed text-slate-300">Drag to lay a row of bays along the drag. Tab flips the side, Shift snaps the angle to 15°. Click a row to remove it.</p>
+        <div className="mt-2 flex gap-1">{([90, 60, 45] as const).map(a => <button key={a} className={`chip ${pk.bay === a ? 'chip-on' : ''}`} onClick={() => { pk.bay = a; game.emit(); }}>{a}°</button>)}</div>
+        <div className="mt-1 flex gap-1">{(['yellow', 'white'] as const).map(c => <button key={c} className={`chip ${pk.col === c ? 'chip-on' : ''}`} onClick={() => { pk.col = c; game.emit(); }}>{c === 'yellow' ? 'Yellow' : 'White'}</button>)}</div>
+        <div className="mt-2 text-xs text-amber-300">{`$${ROW_BAY_COST} per bay`}</div>
+      </>}
+      {mode === 'curb' && <>
+        <p className="mt-2 text-xs leading-relaxed text-slate-300">Hover a road: the kerb on the pointer's side gets parallel bays. Roads with 2+ lanes that way give up their kerb lane; plain roads park on the shoulder. Click again to remove.</p>
+        <div className="mt-2 text-xs text-amber-300">{`$${CURB_BAY_COST} per bay`}</div>
+      </>}
+      <div className="mt-2 flex items-center gap-2 text-xs text-slate-200">
+        <span>Parking fee per car</span>
+        <button className="btn" onClick={() => pk.setFee(pk.fee - 1)}>−</button>
+        <span className="tabular-nums">{`$${pk.fee}`}</span>
+        <button className="btn" onClick={() => pk.setFee(pk.fee + 1)}>+</button>
+      </div>
+      <div className="mt-2 text-xs tabular-nums text-slate-200">{`${rowLots(pk.rows).length} lots · ${pk.curbs.length} on-street runs`}</div>
+      {game.extraParks.map(p => { const v = views.find(q => q.id === p.id); return v ? <div key={p.id} className="text-xs tabular-nums text-slate-300">{`P · ${v.parked}/${v.bays}`}</div> : null; })}
       <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
         <input type="checkbox" checked={game.showParkDemand} onChange={e => { game.setParkDemand(e.target.checked); game.emit(); }} />
         Show parking demand (cars per hour wanting a space)
       </label>
-      <div className="mt-2 max-h-64 overflow-y-auto">
+      {mode === 'rect' && <div className="mt-2 max-h-64 overflow-y-auto">
         {game.parkDefs.length === 0 && <p className="text-xs text-slate-400">No car parks yet.</p>}
         {game.parkDefs.map(d => {
           const v = views.find(q => q.id === d.id);
@@ -785,7 +823,7 @@ function ParkPanel({ game }: { game: Game }) {
             </div>
           );
         })}
-      </div>
+      </div>}
     </Panel>
   );
 }
@@ -1164,7 +1202,7 @@ function hintFor(g: Game) {
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
     case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
-    case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
+    case 'park': return g.parking.mode === 'rows' ? 'ROWS: drag along the ground to lay bays · Tab flips the side · Shift snaps 15° · click a row to remove it' : g.parking.mode === 'curb' ? 'ON-STREET: hover a road and click the kerb to park along it · click again to remove' : 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
     case 'business': return `BUSINESS: click open land to build a ${BUSINESS[g.bizType].name.toLowerCase()} · R rotates${g.bizType === 'stadium' ? ' · the closer to the towns, the easier its traffic' : ''}`;
     case 'bus': return g.busPick ? 'BUS ROUTE: click a road near the stadium for the doors stop · Esc cancels' : 'BUS ROUTE: click a road beside a car park for the lot stop · with Bulldoze (X), click a stop to remove its route (no refund)';
