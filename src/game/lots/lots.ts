@@ -2,9 +2,12 @@
 // A lot is an oriented rectangle fronting one side of a road seg (a Cities: Skylines zone cell, not a face of the road graph).
 // Along-road positions sit on a global lattice, so a split road keeps its lots; the depth stops short of other roads, and
 // lots on bad terrain are dropped. Overlaps are settled by priority (road order, then seg length, then key).
+// A block (blocks.ts) that a grid of fences can cut is filled with its block lots (blocklots.ts) first; the frontage lots clash with them.
 import { MAP } from '../iso';
 import { Grid, SK, dot, mul, perp, sub, unionBox, vlen, type BBox, type Node, type Pt, type RoadClass, type RoadNetwork, type Seg } from '../network';
 import { TC } from '../terrain/types';
+import { BLOCK_MAX_AREA, enclosedBlocks, type Block } from '../blocks';
+import { blockLots, inBlock, type BlockCut } from './blocklots';
 
 export interface Lot {
   key: string; id: number;
@@ -21,13 +24,19 @@ export interface Lot {
 export const BRANCH = 40, RESERVE = 4;
 const SIZE: Record<string, [number, number]> = { gravel: [8, 15], lane: [8, 15], street: [8, 15], road: [10, 16], avenue: [12, 18], arterial: [13, 19], boulevard: [16, 20], six: [13, 19], grand: [16, 20], divided: [10, 16] };
 /** the shallowest lot kept; the clearance added to another road's h + walk; the share of bad terrain allowed; the overlap tolerance */
-const MIN_D = 6, CLEAR = 0.5, BAD_MAX = 0.1, TOL = 0.25;
+const MIN_D = 6, CLEAR = 0.5, TOL = 0.25;
+/** the share of a lot's samples allowed on bad terrain (exported for the block lots) */
+export const BAD_MAX = 0.1;
 /** how far past a lot's half diagonal a ring's node can be and its circle still reach the lot (the biggest ring's clearance is about 22) */
 const RING_NEAR = 26;
 /** how far a lot can reach from its seg (its depth plus the verge), and how far an edit's recompute scope reaches past its box */
 const REACH = 27, SCOPE = 2 * REACH;
 /** the spatial grid's cell, tiles */
 const CELL = 32;
+/** how far past an edit's scope the block face walk reads segs: a block that touches the scope is at most ~70 tiles across with its sides, and 100 leaves the walk's faces exact there */
+const BLOCK_REACH = 100;
+/** the most block cuts kept at once (each is a few dozen cells); past it the cache starts again */
+const CUT_CAP = 4000;
 
 const hund = (v: number) => Math.round(v * 100);
 const isBad = (c: number) => c === TC.HILL || c === TC.WATER || c === TC.CREEK || c === TC.BANK;
@@ -40,6 +49,9 @@ function endReach(n: Node, cls: RoadClass): number {
 const segLen = (s: Seg) => Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y);
 function segBox(s: Seg): BBox { return [Math.min(s.a.x, s.b.x), Math.min(s.a.y, s.b.y), Math.max(s.a.x, s.b.x), Math.max(s.a.y, s.b.y)]; }
 const touches = (b: BBox, z: BBox) => b[0] <= z[2] && b[2] >= z[0] && b[1] <= z[3] && b[3] >= z[1];
+/** the same tests without an array: does a seg's box (or a lot's rectangle) touch a box (the update scan runs them on every lot) */
+const segTouches = (s: Seg, z: BBox) => Math.min(s.a.x, s.b.x) <= z[2] && Math.max(s.a.x, s.b.x) >= z[0] && Math.min(s.a.y, s.b.y) <= z[3] && Math.max(s.a.y, s.b.y) >= z[1];
+const lotTouches = (l: Lot, z: BBox) => { const ax = l.o.x + l.u.x * l.w, ay = l.o.y + l.u.y * l.w, bx = l.o.x + l.n.x * l.d, by = l.o.y + l.n.y * l.d, cx = ax + l.n.x * l.d, cy = ay + l.n.y * l.d; return Math.min(l.o.x, ax, bx, cx) <= z[2] && Math.max(l.o.x, ax, bx, cx) >= z[0] && Math.min(l.o.y, ay, by, cy) <= z[3] && Math.max(l.o.y, ay, by, cy) >= z[1]; };
 const pad = (b: BBox, p: number): BBox => [b[0] - p, b[1] - p, b[2] + p, b[3] + p];
 /** the box of a lot's rectangle (origin o, along u, away n, w by d) */
 function rectBox(o: Pt, u: Pt, n: Pt, w: number, d: number): BBox {
@@ -47,6 +59,8 @@ function rectBox(o: Pt, u: Pt, n: Pt, w: number, d: number): BBox {
   return [Math.min(o.x, ax, bx, cx), Math.min(o.y, ay, by, cy), Math.max(o.x, ax, bx, cx), Math.max(o.y, ay, by, cy)];
 }
 const boxOf = (l: Lot) => rectBox(l.o, l.u, l.n, l.w, l.d);
+/** the box of a block's outline (its corners) */
+function blockBox(b: Block): BBox { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (let i = 0; i < b.pts.length; i += 2) { x0 = Math.min(x0, b.pts[i]!); y0 = Math.min(y0, b.pts[i + 1]!); x1 = Math.max(x1, b.pts[i]!); y1 = Math.max(y1, b.pts[i + 1]!); } return [x0, y0, x1, y1]; }
 /** the rectangle's three corners that define it (origin, far along, far away): equal rounded corners mean the same rectangle */
 function sameRect(p: Lot, q: Lot): boolean {
   if (p.w !== q.w || p.d !== q.d) return false;
@@ -100,8 +114,8 @@ function depthOf(o: Pt, u: Pt, n: Pt, W: number, D: number): number {
   for (let j = 0; j <= D; j++) for (let i = 0; i <= W; i++) if (blocked(o.x + u.x * i + n.x * j, o.y + u.y * i + n.y * j)) return j - 1;
   return D;
 }
-/** the share of a lot's samples (depth d) on HILL, WATER, CREEK, BANK or off the map */
-function badShare(terr: Uint8Array, o: Pt, u: Pt, n: Pt, W: number, d: number): number {
+/** the share of a lot's samples (depth d) on HILL, WATER, CREEK, BANK or off the map (exported for the block lots) */
+export function badShare(terr: Uint8Array, o: Pt, u: Pt, n: Pt, W: number, d: number): number {
   let bad = 0;
   for (let j = 0; j <= d; j++) for (let i = 0; i <= W; i++) {
     const x = Math.floor(o.x + u.x * i + n.x * j), y = Math.floor(o.y + u.y * i + n.y * j);
@@ -156,7 +170,7 @@ function clearAlong(list: Seg[], s: Seg, p: Pt, n: Pt, reach: number): number {
   return best;
 }
 /** the candidate lots of one seg, both sides, on the global lattice that its usable span covers */
-function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[]) {
+function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[], skip?: (x: number, y: number) => boolean) {
   if (s.kind !== SK.GROUND) return;
   const dv = sub(s.b, s.a), L = vlen(dv); if (L < 1e-6) return;
   const u = mul(dv, 1 / L), pu = perp(u), cls = s.cls, [W, D] = SIZE[cls.base], r0 = cls.h + cls.walk;
@@ -174,6 +188,8 @@ function segLots(net: RoadNetwork, s: Seg, terr: Uint8Array | null, out: Lot[]) 
     for (let k = kLo; k <= kHi; k++) {
       const lo = k * W, m0 = Math.floor((lo - RESERVE) / BRANCH) + 1, onLattice = m0 * BRANCH < lo + W + RESERVE;
       const o = { x: f.x + u.x * k * W + n.x * r0, y: f.y + u.y * k * W + n.y * r0 };
+      // a candidate whose centre lies in a subdivided block is not built: the block's own lots fill it (checked before the costly searches)
+      if (skip && skip(o.x + u.x * W / 2 + n.x * D / 2, o.y + u.y * W / 2 + n.y * D / 2)) continue;
       blockers(net, s, o, u, n, W, D);
       // the midline cap: half the clear distance to the verge of the road behind, from the front corners and the midpoint
       const fm = { x: o.x + u.x * W / 2, y: o.y + u.y * W / 2 }, fe = { x: o.x + u.x * W, y: o.y + u.y * W };
@@ -196,6 +212,10 @@ export class LotMap {
   /** the lots by key */
   lots = new Map<string, Lot>();
   private grid = new Grid<Lot>(CELL); private hits = new Set<Lot>(); private nextId = 1; private terr: Uint8Array | null = null;
+  /** the blocks that carry block lots, by block key: the block's box and its lots' keys (cleared when the scope touches the box) */
+  private blocks = new Map<string, { box: BBox; keys: string[] }>();
+  /** the cut of each block (blocklots.ts), by block key: cleared with the block, and reset when it grows past CUT_CAP */
+  private cuts = new Map<string, BlockCut>();
 
   /** after net.rebuild: recompute the lots near the edit; returns the keys removed and the lots added (a lot whose key keeps its rectangle keeps its object) */
   update(net: RoadNetwork, terrainCls: Uint8Array | null): { added: Lot[]; removed: string[] } {
@@ -214,16 +234,33 @@ export class LotMap {
     const Zr = pad(Z, REACH);
     // 1. the lots to replace: those on a seg in scope or on a seg that is gone; lots outside whose box reaches the scope are re-tested as fixed
     const old = new Map<string, Lot>(), fixed: Lot[] = [];
+    // the block lots of every recorded block the scope touches (by its old box, so a block that is gone or changed is cleared too)
+    for (const [bk, e] of this.blocks) if (touches(e.box, Z)) { for (const k of e.keys) { const l = this.lots.get(k); if (l) old.set(k, l); } this.blocks.delete(bk); this.cuts.delete(bk); }
     for (const l of this.lots.values()) {
-      if (!net.segs.has(l.seg) || touches(segBox(l.seg), Z)) old.set(l.key, l);
-      else if (touches(boxOf(l), Zr)) { old.set(l.key, l); fixed.push(l); }
+      if (old.has(l.key)) continue;
+      if (!net.segs.has(l.seg) || segTouches(l.seg, Z)) old.set(l.key, l);
+      else if (lotTouches(l, Zr)) { old.set(l.key, l); fixed.push(l); }
     }
     for (const l of old.values()) { this.lots.delete(l.key); this.grid.remove(l); }
-    // 2. the candidates of the segs in scope and the fixed lots, in priority order
-    const items: Lot[] = [];
-    for (const s of net.segs) if (touches(segBox(s), Z)) segLots(net, s, this.terr, items);
-    for (const l of fixed) items.push(l);
-    items.sort(prio);
+    // 2. the block lots first (they win every overlap), then the candidates of the segs in scope and the fixed lots, in priority order
+    const items: Lot[] = [], subs: number[][] = [], subBoxes: BBox[] = [];
+    // a finite scope reads only the segs near it: a block that touches the scope is at most ~70 tiles across (BLOCK_REACH covers its sides and insets)
+    for (const b of enclosedBlocks(net, BLOCK_MAX_AREA, Number.isFinite(Z[0]) ? pad(Z, BLOCK_REACH) : undefined)) {
+      const box = blockBox(b); if (!touches(box, Z)) continue;
+      const bl = blockLots(net, b, this.terr, this.cuts); if (!bl) continue;
+      this.blocks.set(b.key, { box, keys: bl.map(l => l.key) });
+      subs.push(b.pts); subBoxes.push(box);
+      for (const l of bl) items.push(l);
+    }
+    if (this.cuts.size > CUT_CAP) this.cuts.clear();
+    // the frontage candidates and the old frontage lots whose centre lies in a subdivided block are skipped (they would clash with its lots)
+    const inSub = (x: number, y: number) => { for (let i = 0; i < subs.length; i++) { const bx = subBoxes[i]!; if (x >= bx[0] && x <= bx[2] && y >= bx[1] && y <= bx[3] && inBlock(subs[i]!, x, y)) return true; } return false; };
+    for (const l of fixed) if (l.key.startsWith('blk:')) items.push(l);
+    const rest: Lot[] = [];
+    for (const s of net.segs) if (segTouches(s, Z)) segLots(net, s, this.terr, rest, inSub);
+    for (const l of fixed) if (!l.key.startsWith('blk:') && !inSub(l.c.x, l.c.y)) rest.push(l);
+    rest.sort(prio);
+    for (const l of rest) items.push(l);
     // 3. accept in priority order: a lot that overlaps an accepted one is dropped
     for (const c of items) {
       if (this.clashes(c)) continue;
