@@ -25,21 +25,25 @@ const LOT_RES = 0.45;
 // ---------------------------------------------------------------- the game's sprites (src/game/library.ts)
 function library() {
   const src = fs.readFileSync(path.join(ROOT, 'src/game/library.ts'), 'utf8'), out = [];
-  for (const m of src.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h }); }
+  for (const m of src.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h, quad: e.quad }); }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
-  people.forEach((p, i) => { const o = ((i * 5 + 0) * 5 + 0) * 9; if (wf.length > o + 4) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5), w: p.w, h: p.h }); });
+  people.forEach((p, i) => { const o = ((i * 5 + 0) * 5 + 0) * 9; if (wf.length > o + 8) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5), w: p.w, h: p.h, quad: wf.slice(o + 5, o + 9), ax: p.ax, ay: p.ay }); });
   return out;
 }
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
 /** a sprite's picture as the game has it, cut from the atlas (cached on disk, so a removed sprite still shows after a rebuild) */
 async function thumb(id) {
-  const f = path.join(CACHE, safe(id) + '.png');
-  if (fs.existsSync(f)) return fs.readFileSync(f);
-  const s = library().find(x => x.id === id); if (!s?.tex) return null;
-  const [p, u0, v0, u1, v1] = s.tex, page = path.join(ATLAS, `sprites-${p}-0.webp`), m = await sharp(page).metadata();
+  const f = path.join(CACHE, safe(id) + '.png'), stamp = f + '.json';
+  const s = library().find(x => x.id === id);
+  // Removed sprites lose their atlas entry; their last picture must survive a rebuild.
+  if (!s?.tex) return fs.existsSync(f) ? fs.readFileSync(f) : null;
+  const [p, u0, v0, u1, v1] = s.tex, page = path.join(ATLAS, `sprites-${p}-0.webp`), stat = fs.statSync(page);
+  const version = JSON.stringify([s.tex, s.quad, stat.size, stat.mtimeMs]);
+  if (fs.existsSync(f) && fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8') === version) return fs.readFileSync(f);
+  const m = await sharp(page).metadata();
   const left = Math.round(u0 * m.width), top = Math.round(v0 * m.height), width = Math.max(1, Math.round((u1 - u0) * m.width)), height = Math.max(1, Math.round((v1 - v0) * m.height));
-  const png = await sharp(page).extract({ left, top, width, height }).resize(480, 400, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
-  fs.writeFileSync(f, png); return png;
+  const png = await sharp(page).extract({ left, top, width, height }).resize(1200, 1200, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
+  fs.writeFileSync(f, png); fs.writeFileSync(stamp, version); return png;
 }
 
 // ---------------------------------------------------------------- lots: the variants with the owner's edits, their pictures and hit boxes
@@ -105,15 +109,16 @@ http.createServer(async (req, res) => {
     // library
     if (P === '/api/sprites') {
       const list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
-      for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100 });
-      for (const s of list) { s.base = s.kind === 'walker' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = sc[s.id] ?? s.base; delete s.tex; }
-      const ref = list.find(s => s.kind === 'walker');
-      return json({ sprites: list, removed: rm, ref: ref ? { id: ref.id, w: ref.w, h: ref.h } : null });
+      for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
+      for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; }
+      // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
+      const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
+      return json({ sprites: list, removed: rm, walkers });
     }
     if (P.startsWith('/thumb/')) return png(await thumb(decodeURIComponent(P.slice(7))));
     if (req.method === 'POST' && (P === '/api/remove' || P === '/api/restore')) {
       const { id } = await body(req), rm = readRemoved(), s = library().find(x => x.id === id);
-      if (P === '/api/remove' && id) { await thumb(id).catch(() => null); rm[id] = { at: new Date().toISOString(), name: s?.name ?? rm[id]?.name, cat: s?.cat ?? rm[id]?.cat, kind: s?.kind ?? rm[id]?.kind, w: s?.w, h: s?.h }; }
+      if (P === '/api/remove' && id) { await thumb(id).catch(() => null); rm[id] = { ...rm[id], at: new Date().toISOString(), ...Object.fromEntries(['name', 'cat', 'kind', 'w', 'h', 'quad', 'ax', 'ay'].filter(k => s?.[k] !== undefined).map(k => [k, s[k]])) }; }
       else delete rm[id];
       writeRemoved(rm); return json({ removed: rm });
     }
