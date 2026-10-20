@@ -1594,14 +1594,13 @@ unlocks; budgets met).
   arrival, satisfaction, good days, XP and levels at each day's close, every business's upkeep.
 
 ### Start prompt for a fresh chat
-"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first: Phase 5 is done,
-Phase 6 is paused after its step 1, and **Phase 6R (roads first)** is in progress: read its section, especially
-'Handover 2' at the top of 'Phase 6R progress' (6R.1–6R.4 are done), and the **Phase B** section (the businesses: B.1–B.2 done, next
-B.3; design in docs/BUSINESSES.md). Then GAME-PLAN sections 1.0.00 (the businesses), 1.0.01 (the calendar and signal
-tiers, done) and 1.0.0 (the owner's road and town changes), docs/ROAD-CATALOGUE.md (the road types) and docs/JUNCTION-UX.md (how the junction tool was
-redesigned from Cities: Skylines and TM:PE; follow the same research-first approach for the road tool). Carry on through the queue without asking between steps;
-still ask before pushing. Delegate coding to haiku-coder and checks to haiku-runner (the worker PC is `cworker`,
-192.168.0.8, via scripts/worker/run.sh), commit locally after each verified step, update docs/PROGRESS.md as you go, and
-test every road/junction change in the browser across road classes before calling it done. The owner tests on
-http://localhost:5174: tell him when work lands. Arena PRs: finish them yourself on their branches, merge, and have a
-Haiku wire them in (no review comments)."
+"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road
+Upgrade/Downgrade ladder with fair costs, houses following a widened road, and the Maple Falls HUD (UI steps 1-2). Next in the owner's
+order is **Phase B** (the businesses; design in docs/BUSINESSES.md): B.1-B.2 done, **B.3 next** (daily businesses in the sim), then
+6R.5-6R.8 (highways, terrain, towns as seeds, the road set check). B.3 may already be under way in the main checkout (uncommitted
+src/game/business/visits.ts, catalogue.ts, sim/sim.ts): ask the owner whether that session is still running before touching them;
+if it is, work on the side queue in your own worktree instead (UI step 3: the junction and business panel restyles; the stop-bar recheck
+in 6R; the open items in 'Known issues'). Carry on through the queue without asking between steps; still ask before pushing. Delegate
+coding to haiku-coder (in the background for small jobs) and checks to haiku-runner (the worker PC `cworker`, 192.168.0.8, via
+scripts/worker/run.sh); commit locally after each verified step and merge to main when verified; update docs/PROGRESS.md as you go;
+test every road/junction/UI change in the browser on your own dev server port (5174 is the owner's). Tell the owner when work lands."
