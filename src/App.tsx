@@ -17,20 +17,31 @@ import { BUSINESS, BUSINESSES, unlockText, type BusinessType } from './game/busi
 import { freshStats } from './game/business/state';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
+import { Icon, type IconName } from './ui/Icon';
+import { RoadThumb } from './ui/RoadThumb';
 
-const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
-  { id: 'select', label: 'Select / Pan', key: 'V', icon: '🖱️' },
-  { id: 'road', label: 'Roads', key: 'R', icon: '🛣️' },
-  { id: 'junction', label: 'Junctions', key: 'J', icon: '🚦' },
-  { id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: '🚜' },
-  { id: 'paint', label: 'Paint', key: 'C', icon: '🖌️' },
-  { id: 'park', label: 'Car park', key: 'P', icon: '🅿️' },
-  { id: 'toll', label: 'Toll gate', key: 'T', icon: '🛂' },
-  { id: 'bus', label: 'Bus route', key: 'U', icon: '🚌' },
-  { id: 'lane', label: 'Upgrade road', key: 'N', icon: '⏫' },
-  { id: 'downgrade', label: 'Downgrade road', key: 'Y', icon: '⏬' },
-  { id: 'business', label: 'Business', key: 'M', icon: '🏟️' },
+/** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
+const GROUPS: { id: string; label: string; icon: IconName; tools: { id: Tool; label: string; key: string; icon: IconName }[] }[] = [
+  { id: 'select', label: 'Select', icon: 'compass', tools: [{ id: 'select', label: 'Select / Pan', key: 'V', icon: 'compass' }] },
+  { id: 'roads', label: 'Roads', icon: 'road', tools: [
+    { id: 'road', label: 'Build', key: 'R', icon: 'road' },
+    { id: 'lane', label: 'Upgrade', key: 'N', icon: 'up' },
+    { id: 'downgrade', label: 'Downgrade', key: 'Y', icon: 'down' },
+    { id: 'paint', label: 'Paint', key: 'C', icon: 'road-edge' },
+  ] },
+  { id: 'junction', label: 'Junctions', icon: 'junction', tools: [{ id: 'junction', label: 'Junctions', key: 'J', icon: 'junction' }] },
+  { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
+  { id: 'transport', label: 'Transport', icon: 'bus', tools: [
+    { id: 'bus', label: 'Bus route', key: 'U', icon: 'bus' },
+    { id: 'park', label: 'Car park', key: 'P', icon: 'pin' },
+    { id: 'toll', label: 'Toll gate', key: 'T', icon: 'swap' },
+  ] },
+  { id: 'business', label: 'Buildings', icon: 'buildings', tools: [{ id: 'business', label: 'Business', key: 'M', icon: 'buildings' }] },
 ];
+/** the rail group a tool belongs to ('' for none) */
+const groupOf = (t: Tool) => GROUPS.find(g => g.tools.some(x => x.id === t))?.id ?? '';
+/** the hint's key words, drawn as keycaps */
+const KEY_WORDS = /\b(Esc|Tab|Enter|Shift|Backspace|Space|Delete)\b/;
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 /** a signed money figure: +$X or −$X */
 const sgn = (n: number) => (n < 0 ? '−' : '+') + money(Math.abs(n));
@@ -48,6 +59,10 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
+  /** the settings menu (Save, New town, Empty map) open under its gear */
+  const [menu, setMenu] = useState(false);
+  /** the last tool picked in each rail group, so a group's tab returns to it */
+  const last = useRef<Record<string, Tool>>({});
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);
 
@@ -78,6 +93,8 @@ export default function App() {
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
+  const gid = game ? groupOf(game.tool) : '', grp = GROUPS.find(g => g.id === gid);
+  if (game) last.current[gid] = game.tool;
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
@@ -108,64 +125,88 @@ export default function App() {
 
       {game && game.ready && (
         <>
-          <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-start justify-between p-3">
-            <div className="pointer-events-auto flex items-center gap-3 rounded-xl border border-white/10 bg-slate-950/75 px-4 py-2 shadow-lg backdrop-blur">
-              <div>
-                <div className="text-base font-bold leading-tight text-amber-200">Maple Falls</div>
-                <div className="text-[10px] uppercase tracking-[0.25em] text-amber-400/70">Town Builder</div>
+          <div className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
+            <div className="pointer-events-auto glass flex items-center gap-3 px-4 py-2">
+              <div className="flex items-center gap-2.5">
+                <Icon name="leaf" size={38} />
+                <div className="max-[1599px]:hidden">
+                  <div className="whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]">Maple Falls</div>
+                  <div className="label-caps whitespace-nowrap">Town Builder</div>
+                </div>
               </div>
-              <div className="mx-1 h-8 w-px bg-white/10" />
+              <div className="h-9 w-px bg-white/10" />
               {game.eventMode
-                ? <Stat label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
-                : <Stat label="Career" {...careerStat(game)} tone="text-amber-200" />}
-              <Stat label="Treasury" value={game.unlimited ? '∞' : money(game.money)}tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
-              <Stat label="Population" value={game.traffic.pop.toLocaleString()} />
-              <Stat label="Jobs" value={game.traffic.jobs.toLocaleString()} />
-              <Stat label="Day" value={String(game.day)} sub={hhmm(game.clock())} />
-              <Stat label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
+                ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
+                : <Stat icon="trophy" label="Career" {...careerStat(game)} tone="text-amber-200" />}
+              <Stat icon="bank" label="Treasury" value={game.unlimited ? '∞' : money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
+              <Stat icon="people" label="Population" value={game.traffic.pop.toLocaleString()} />
+              <Stat icon="briefcase" label="Jobs" value={game.traffic.jobs.toLocaleString()} />
+              <Stat icon="sun" label="Day" value={String(game.day)} sub={hhmm(game.clock())} />
+              <Stat icon="income" label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
               {(game.growth !== 1 || game.unlimited || !game.stamped) && (
                 <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
                   dev: {[game.growth !== 1 && `grow ${game.growth}×`, game.unlimited && '∞ $', !game.stamped && 'no stamp', game.unlockAll && 'all unlocked'].filter(Boolean).join(' · ')}
                 </div>
               )}
             </div>
-            <div className="pointer-events-auto flex items-center gap-2">
-              <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/75 px-2 py-1.5 shadow-lg backdrop-blur">
-                <button className="btn" onClick={() => game.togglePause()} title="Pause (Space)">{game.speed ? '⏸' : '▶'}</button>
+            <div className="pointer-events-auto ml-auto flex items-center gap-2">
+              <div className="glass flex items-center gap-1 px-2 py-1.5">
+                <button className="btn-icon" onClick={() => game.togglePause()} title="Pause (Space)"><Icon name={game.speed ? 'pause' : 'play'} size={22} /></button>
                 {SPEEDS.map(k => <button key={k} className={`chip ${game.speed === k ? 'chip-on' : ''}`} onClick={() => game.setSpeed(k)} title="Speed (, and .)">{k}×</button>)}
-                <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} title="Skip to the next rush hour (H)">{game.traffic.skipping ? 'Skipping…' : '⏭ Rush'}</button>
+                <button className="chip disabled:opacity-40" disabled={game.traffic.skipping} onClick={() => game.skipToRush()} title="Skip to the next rush hour (H)"><Icon name="skip" size={16} />{game.traffic.skipping ? 'Skipping…' : ''}</button>
               </div>
-              <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/75 px-2 py-1.5 shadow-lg backdrop-blur">
-                <button className="btn" onClick={() => game.zoomAt(Math.max(ZOOM_MIN, game.cam.z / 1.25))} title="Zoom out (-)">−</button>
-                <input type="range" min={Math.log(ZOOM_MIN)} max={Math.log(ZOOM_MAX)} step={0.01} value={Math.log(game.cam.z)} onChange={e => game.zoomAt(Math.exp(+e.target.value))} className="w-28 accent-amber-400" />
-                <button className="btn" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)">+</button>
-                <span className="ml-1 w-14 text-right text-xs tabular-nums text-slate-300" title="Zoom relative to the town builder's 100%">{Math.round(game.cam.z * 100)}%</span>
+              <div className="glass flex items-center gap-1 px-2 py-1.5">
+                <button className="btn-icon" onClick={() => game.zoomAt(Math.max(ZOOM_MIN, game.cam.z / 1.25))} title="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
+                <button className="btn-icon" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
-              <button className={`btn ${game.showFlow ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.setFlow(!game.showFlow); bump(); }} title="Live congestion heat map (F)">Flow</button>
-              <button className={`btn ${game.panel === 'bottlenecks' ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)">Bottlenecks</button>
-              <button className={`btn ${game.showGrid ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)">Grid</button>
-              <button className="btn" onClick={() => game.save()} title="Saved automatically; force a save now">Save</button>
-              <button className="btn" onClick={() => { if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
-              <button className="btn" onClick={() => { if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>
-              <button className="btn" onClick={() => setHelp(true)}>?</button>
+              <button className={`btn-icon ${game.showFlow ? 'on' : ''}`} onClick={() => { game.setFlow(!game.showFlow); bump(); }} title="Live congestion heat map (F)"><Icon name="layers" size={22} /></button>
+              <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
+              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)"><Icon name="fullscreen" size={22} /></button>
+              <div className="relative">
+                <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
+                {menu && (
+                  <div className="glass absolute right-0 top-full z-30 mt-2 flex w-44 flex-col gap-1 p-2">
+                    <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>
+                  </div>
+                )}
+              </div>
+              <button className="btn-icon" onClick={() => setHelp(true)} title="How it works"><Icon name="help" size={22} /></button>
             </div>
           </div>
 
-          <div className="absolute left-3 top-24 z-20 flex items-start gap-2">
-            <div className="flex flex-col gap-1 rounded-xl border border-white/10 bg-slate-950/80 p-1.5 shadow-lg backdrop-blur">
-              {TOOLS.map(t => (
-                <button key={t.id} onClick={() => game.setTool(t.id)} title={`${t.label} (${t.key})`}
-                  className={`flex h-12 w-14 flex-col items-center justify-center rounded-lg text-[10px] leading-tight transition ${game.tool === t.id ? 'bg-amber-400 text-slate-900 shadow' : 'text-slate-300 hover:bg-white/10'}`}>
-                  <span className="text-lg leading-none">{t.icon}</span>
-                  <span className="mt-0.5">{t.label.split(' ')[0]}</span>
+          <div className="absolute left-3 top-[5.75rem] z-20 flex items-start gap-2 max-[1439px]:top-[9.5rem]">
+            <div className="glass flex flex-col gap-1 p-1.5">
+              {GROUPS.map(g => (
+                <button key={g.id} onClick={() => game.setTool(last.current[g.id] ?? g.tools[0]!.id)} title={g.label} className={`rail-tab ${gid === g.id ? 'rail-tab-on' : ''}`}>
+                  <Icon name={g.icon} size={30} />
+                  <span>{g.label}</span>
                 </button>
               ))}
             </div>
-            <div className="w-[310px] max-h-[calc(100vh-20rem)] overflow-y-auto rounded-xl border border-white/10 bg-slate-950/80 p-3 shadow-lg backdrop-blur">
+            <div className="glass w-[330px] max-h-[calc(100vh-11rem)] overflow-y-auto p-3 max-[1439px]:max-h-[calc(100vh-14.5rem)]">
+              {grp && grp.tools.length > 1 && (
+                <div className="seg mb-3">
+                  {grp.tools.map(t => (
+                    <button key={t.id} className={game.tool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={`${t.label} (${t.key})`}><Icon name={t.icon} size={16} />{t.label}</button>
+                  ))}
+                </div>
+              )}
               {game.tool === 'road' && <RoadPanel game={game} />}
+              {game.tool === 'lane' && (
+                <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. You pay only the difference.">
+                  <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
+                </Panel>
+              )}
+              {game.tool === 'downgrade' && (
+                <Panel title="Downgrade roads" icon="down" desc="Click a straight run of road to take it one size down the same ladder. The difference is refunded.">
+                  <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
+                </Panel>
+              )}
               {game.tool === 'junction' && <JunctionPanel game={game} />}
               {game.tool === 'bulldoze' && (
-                <Panel title="Bulldoze">
+                <Panel title="Bulldoze" icon="bulldozer">
                   <p className="text-xs text-slate-300">Click an object to remove it (half its price is refunded). Click or drag along a road to tear it up piece by piece — the ends become cul-de-sacs and curbs, corners, crossings and markings redraw themselves instantly.</p>
                 </Panel>
               )}
@@ -178,20 +219,21 @@ export default function App() {
             </div>
           </div>
 
-          <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/10 bg-slate-950/75 px-4 py-1.5 text-xs text-slate-300 shadow-lg backdrop-blur">
-            {hintFor(game)}
+          <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs">
+            <Icon name="info" size={18} />
+            <span>{keyed(hintFor(game))}</span>
           </div>
           {(game.showAccess || game.cam.z < PLANNER_Z) && <AccessLegend game={game} />}
           {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} />}
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (
-              <div key={t.id} className={`rounded-lg px-3 py-1.5 text-sm shadow-lg ${t.kind === 'warn' ? 'bg-red-500/90 text-white' : t.kind === 'good' ? 'bg-emerald-500/90 text-white' : 'bg-slate-800/90 text-slate-100'}`}>{t.text}</div>
+              <div key={t.id} className="glass px-3 py-1.5 text-sm"><span className={t.kind === 'warn' ? 'text-red-300' : t.kind === 'good' ? 'text-emerald-300' : ''}>{t.text}</span></div>
             ))}
           </div>
 
           {(game.traffic.car || game.traffic.watch?.node) && (
-            <div className="absolute left-[390px] top-24 z-20 flex w-64 flex-col gap-2">
+            <div className="absolute left-[444px] top-24 z-20 flex w-64 flex-col gap-2">
               {game.traffic.car && <CarPanel game={game} />}
               {game.traffic.watch?.node && <RoutesPanel game={game} />}
             </div>
@@ -200,9 +242,10 @@ export default function App() {
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.eventMode && !game.site && (
-            <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-24 z-20 flex items-center gap-3 rounded-xl border border-white/10 bg-slate-950/85 p-3 text-sm text-slate-200 shadow-lg backdrop-blur`}>
+            <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-24 z-20 flex items-center gap-3 glass p-3 text-sm max-[1439px]:top-[9.5rem]`}>
+              <Icon name="trophy" size={32} />
               <span>Place your stadium to start the events</span>
-              <button className="chip" onClick={() => game.setTool('business')}>Business tool (M)</button>
+              <button className="btn-gold" onClick={() => game.setTool('business')}>Business tool (M)</button>
             </div>
           )}
           {game.panel === 'bottlenecks' && <BottleneckPanel game={game} />}
@@ -234,8 +277,7 @@ export default function App() {
           {help && <Help onClose={() => setHelp(false)} />}
         </>
       )}
-      <style>{`.btn{border-radius:.6rem;border:1px solid rgba(255,255,255,.1);background:rgba(2,6,23,.75);padding:.35rem .7rem;font-size:.75rem;color:#e2e8f0;backdrop-filter:blur(6px)}.btn:hover{background:rgba(255,255,255,.12)}.chip{border-radius:.5rem;border:1px solid rgba(255,255,255,.1);padding:.3rem .55rem;font-size:.7rem;color:#cbd5e1}.chip:hover{background:rgba(255,255,255,.1)}.chip-on{background:rgba(251,191,36,.9);color:#0f172a;border-color:transparent}.card{display:flex;flex-direction:column;align-items:flex-start;border-radius:.6rem;border:1px solid rgba(255,255,255,.1);padding:.4rem .55rem;text-align:left}.card:hover{background:rgba(255,255,255,.08)}.card-on{border-color:#fbbf24;background:rgba(251,191,36,.18)}`}</style>
-    </div>
+        </div>
   );
 }
 
@@ -249,7 +291,7 @@ function Thumb({ it, size }: { it: LibItem; size: number }) {
 function PerfPanel({ game }: { game: Game }) {
   const p = game.perf;
   return (
-    <div className="absolute bottom-3 right-3 z-20 w-56 rounded-xl border border-white/10 bg-slate-950/80 p-2 text-[11px] tabular-nums text-slate-300 shadow-lg backdrop-blur">
+    <div className="absolute bottom-3 right-3 z-20 w-56 glass p-2 text-[11px] tabular-nums">
       <div className="flex justify-between"><span>{p.fps.toFixed(0)} fps · {p.tier}</span><span>cpu {p.cpuMs.toFixed(1)} ms</span></div>
       <div className="flex justify-between text-slate-400"><span>{p.instances.toLocaleString()} sprites · {p.draws} draws</span><span>{p.uploadKB.toFixed(0)} KB</span></div>
       <div className="flex justify-between text-slate-400"><span>{game.props.size.toLocaleString()} props · {game.net.segs.size.toLocaleString()} segs</span><span>bake {p.chunksPending}</span></div>
@@ -267,17 +309,22 @@ function PerfPanel({ game }: { game: Game }) {
   );
 }
 
-/** a top-bar figure: its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
-function Stat({ label, value, sub, tone, subTone, bar, onClick }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; bar?: number; onClick?: () => void }) {
+/** a top-bar figure: its icon (in a square, when given), its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
+function Stat({ label, value, sub, tone, subTone, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
   return (
-    <div className={`px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick}>
-      <div className="text-[10px] uppercase tracking-wider text-slate-400">{label}</div>
-      <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
-      {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'}`}>{sub}</div>}
-      {bar !== undefined && <div className="mt-0.5 h-1 w-28 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(bar * 100)}%` }} /></div>}
+    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick}>
+      {icon && <div className="glass-2 hidden h-8 w-8 shrink-0 place-items-center min-[1900px]:grid"><Icon name={icon} size={24} /></div>}
+      <div>
+        <div className="label-caps">{label}</div>
+        <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
+        {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'}`}>{sub}</div>}
+        {bar !== undefined && <div className="mt-0.5 h-1 w-28 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(bar * 100)}%` }} /></div>}
+      </div>
     </div>
   );
 }
+/** a hint's key words as keycaps: the words in KEY_WORDS are split out (odd parts) and drawn as .keycap */
+function keyed(s: string) { return s.split(KEY_WORDS).map((p, i) => (i % 2 ? <span key={i} className="keycap">{p}</span> : p)); }
 
 /** the Career figure: the milestone reached, the next one and how far the population is from it (from the last milestone's residents to the next one's); Career won at the last */
 function careerStat(game: Game): { value: string; sub: string; bar?: number } {
@@ -578,14 +625,34 @@ function HeatLegend({ raised }: { raised: boolean }) {
 function debtDaysLine(d: number) {
   return d > 0 ? <p className="mt-2 text-xs text-red-300">In the red for {d} day{d === 1 ? '' : 's'}: bankrupt in {DEBT_DAYS - d} unless the books recover.</p> : null;
 }
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (<div><div className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">{title}</div>{children}</div>);
+/** a panel: its title (with an icon, a header row with the icon in a gold-lined box and the one-line desc under the title) and its body */
+function Panel({ title, children, icon, desc }: { title: string; children: React.ReactNode; icon?: IconName; desc?: string }) {
+  if (!icon) return (<div><div className="font-display text-base font-bold text-amber-200 mb-2">{title}</div>{children}</div>);
+  return (
+    <div>
+      <div className="mb-3 flex items-start gap-3">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--gold-line)] bg-black/30"><Icon name={icon} size={30} /></div>
+        <div className="min-w-0">
+          <div className="font-display text-lg font-bold">{title}</div>
+          {desc && <div className="mt-0.5 text-[11px] leading-snug text-[var(--muted)]">{desc}</div>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
 }
 
 /** the road tool's size headers, in order */
-const ROAD_FAMILIES: { id: Family; label: string }[] = [{ id: 'small', label: 'Small' }, { id: 'medium', label: 'Medium' }, { id: 'large', label: 'Large' }, { id: 'rural', label: 'Rural' }];
+const ROAD_FAMILIES: { id: Family; label: string; desc: string }[] = [
+  { id: 'small', label: 'Small', desc: 'For residential areas and low traffic.' },
+  { id: 'medium', label: 'Medium', desc: 'For higher traffic and main routes.' },
+  { id: 'large', label: 'Large', desc: 'For major connections and high density.' },
+  { id: 'rural', label: 'Rural', desc: 'Between the towns: shoulders, no sidewalks.' },
+];
 /** the variant chip labels, by a variant's flags joined with dots ('' is the plain type) */
 const VARIANT_LABEL: Record<string, string> = { '': 'Plain', tr: 'Trees', gr: 'Grass median', tl: 'Turn lane', 'tl.tr': 'Turn lane + trees', ow: 'One-way', 'ow.tr': 'One-way + trees' };
+/** the variant chip icons, by the same flags */
+const VARIANT_ICON: Record<string, IconName> = { '': 'road', tr: 'trees', gr: 'forest', tl: 'swap', 'tl.tr': 'swap', ow: 'oneway', 'ow.tr': 'oneway' };
 
 function RoadPanel({ game }: { game: Game }) {
   const legs = game.previewLegs(), block = game.routeBlock(legs);
@@ -593,28 +660,32 @@ function RoadPanel({ game }: { game: Game }) {
   const cost = game.routeCost(), comp = game.routeCompensation();
   const cls = game.cls;
   return (
-    <Panel title="Building new roads">
-      <p className="text-xs leading-relaxed text-slate-300">
-        <b className="text-slate-100">Draw a connected route.</b> Click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions with rounded corners and crossings automatically.
-      </p>
-      <div className="mt-2 flex flex-col gap-1">
+    <Panel title="Road Construction" icon="road" desc="Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.">
+      <div className="mt-2 flex flex-col gap-2">
         {ROAD_FAMILIES.map(f => (
           <div key={f.id}>
-            <div className="mt-1 text-[10px] uppercase tracking-wider text-slate-400">{f.label}</div>
+            <div className="mb-1 flex items-baseline gap-2"><span className="label-caps">{f.label}</span><span className="truncate text-[10px] text-[var(--muted)]">{f.desc}</span></div>
             {TYPES.filter(t => t.family === f.id).map(t => {
               const c = CLASS[t.id]!, lk = game.classOpen(t.id) ? null : unlockOf('class', t.id)!, on = game.cls.base === t.id;
               return (
                 <div key={`${f.id}-${t.id}`}>
-                  <button className={`card ${on ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
-                    <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">{c.name}</span><span className="text-amber-300">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span></div>
-                    <div className="text-[10px] text-slate-400">{c.desc} · {Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h</div>
+                  <button className={`card mb-1 ${on ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
+                    <div className="flex w-full items-center gap-2.5">
+                      <RoadThumb cls={c} w={84} h={36} />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-slate-100">{c.name}</div>
+                        <div className="text-[10px] text-[var(--muted)]">{[...c.desc.split(' · ').filter(p => /\d/.test(p)), `${Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h`].join(' · ')}</div>
+                      </div>
+                      <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span>
+                    </div>
                   </button>
                   {on && VARIANTS[t.id].length > 1 && (
                     <div className="mb-1 ml-2 mt-1">
                       <div className="flex flex-wrap items-center gap-1 text-xs">
                         {VARIANTS[t.id].map(v => {
                           const vc = CLASS[v]!;
-                          return <button key={v} className={`chip ${game.roadClass === v ? 'chip-on' : ''}`} onClick={() => { game.roadClass = v; game.emit(); }}>{VARIANT_LABEL[vc.flags.join('.')] ?? vc.name}</button>;
+                          const fl = vc.flags.join('.');
+                          return <button key={v} className={`chip ${game.roadClass === v ? 'chip-on' : ''}`} onClick={() => { game.roadClass = v; game.emit(); }}><Icon name={VARIANT_ICON[fl] ?? 'road'} size={14} />{VARIANT_LABEL[fl] ?? vc.name}</button>;
                         })}
                         <span className="ml-auto text-[10px] text-slate-500">Tab: flip</span>
                       </div>
@@ -660,7 +731,7 @@ function RoadPanel({ game }: { game: Game }) {
         <button className="chip" disabled={!game.route.length} onClick={() => game.undoRoutePoint()} title="Backspace">Undo</button>
         <button className="chip" disabled={!game.route.length} onClick={() => game.cancelRoute()} title="Esc">Cancel</button>
       </div>
-      <p className="mt-2 text-[11px] text-slate-500">Double-click the last point, press Enter or right-click to build. To widen a road, use the Add lane tool. Trees and small items in the way are cleared; buildings block the route.</p>
+      <p className="mt-2 text-[11px] text-slate-500">Double-click the last point, press Enter or right-click to build. To widen or narrow a road, use Upgrade (N) or Downgrade (Y). Trees and small items in the way are cleared; buildings block the route.</p>
     </Panel>
   );
 }
@@ -669,7 +740,7 @@ function RoadPanel({ game }: { game: Game }) {
 function ParkPanel({ game }: { game: Game }) {
   const views = game.traffic.parks;
   return (
-    <Panel title="Car park">
+    <Panel title="Car park" icon="pin">
       <p className="text-xs leading-relaxed text-slate-300">
         <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
       </p>
@@ -700,7 +771,7 @@ const FAMILIES: BusinessType['family'][] = ['sports', 'leisure', 'tourism', 'tra
 function BusinessPanel({ game }: { game: Game }) {
   const free = game.traffic.round.stage === 'free';
   return (
-    <Panel title="Business">
+    <Panel title="Business" icon="buildings">
       <div className="max-h-[60vh] overflow-y-auto pr-1">
         {FAMILIES.map(f => (
           <div key={f}>
@@ -744,7 +815,7 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
 function TollPanel({ game }: { game: Game }) {
   const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST;
   return (
-    <Panel title="Toll gate">
+    <Panel title="Toll gate" icon="swap">
       <p className="text-xs leading-relaxed text-slate-300">
         <b className="text-slate-100">Click a straight road.</b> The gate is a plaza across it: each car that passes a booth pays {money(price)}. Drivers avoid a toll road when a free way exists, so close the free ways. R flips the way in. Roads cannot cross the plaza; bulldozing it removes the gate (the road stays, no refund).
       </p>
@@ -771,7 +842,7 @@ function TollPanel({ game }: { game: Game }) {
 function BusPanel({ game }: { game: Game }) {
   const cost = game.busDefs.length ? BUS_ROUTE_COST : 0;
   return (
-    <Panel title="Bus route">
+    <Panel title="Bus route" icon="bus">
       <p className="text-xs leading-relaxed text-slate-300">
         <b className="text-slate-100">Click a road beside a car park, then a road near the stadium.</b> Fans walk from the bays to the stop and queue there; the buses carry them to the doors. Without a route they walk all the way. Esc cancels; with Bulldoze (X), click a stop to remove its route (no refund).
       </p>
@@ -814,7 +885,7 @@ function JunctionPanel({ game }: { game: Game }) {
     : `Click a junction or a bend to install a ${game.ringLanes}-lane roundabout. Right-click resets a junction to plain.`;
   // with a junction selected the brushes shrink to one row of chips, so the junction's own options fit (as the reference games keep the selection first)
   if (n) return (
-    <Panel title="Junctions">
+    <Panel title="Junctions" icon="junction">
       <div className="flex flex-wrap items-center gap-1 text-xs">
         {(['select', ...JUNCTION_KINDS] as const).map(t => <button key={t} className={`chip ${b === t ? 'chip-on' : ''}`} onClick={() => { game.brush = t; game.emit(); }}>{t === 'select' ? 'Select' : SEG_NAME[t]}</button>)}
       </div>
@@ -822,7 +893,7 @@ function JunctionPanel({ game }: { game: Game }) {
     </Panel>
   );
   return (
-    <Panel title="Junctions">
+    <Panel title="Junctions" icon="junction">
       <div className="mt-1 grid grid-cols-1 gap-1">
         <button className={`card ${b === 'select' ? 'card-on' : ''}`} onClick={() => { game.brush = 'select'; game.emit(); }}>
           <div className="flex w-full items-center justify-between text-xs"><span className="font-semibold text-slate-100">Select</span><span className="text-amber-300">free</span></div>
