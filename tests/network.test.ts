@@ -1,7 +1,7 @@
 // Headless network tests: npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASS, CLASSES, KEY_CLASSES, RoadNetwork, SPEED_CAP, VARIANTS, WIDER, armDeg, classOf, slipIn, speedOf, type ClassId, type Fx, type Leg, type Node, type Route, type Seg } from '../src/game/network';
+import { CLASS, CLASSES, KEY_CLASSES, RoadNetwork, SPEED_CAP, NARROWER, VARIANTS, WIDER, armDeg, classOf, slipIn, speedOf, type ClassId, type Fx, type Leg, type Node, type Route, type Seg } from '../src/game/network';
 import { NetEditor, applyNodeEntry, applyOps, netToOps, nodeEntry, straightChain } from '../src/game/netops';
 import { CTL, LaneGraph, type Movement } from '../src/game/sim/lanes';
 import { rle, unrle } from '../src/game/save';
@@ -166,11 +166,22 @@ test('the add-lane run: a straight run stops at a junction, a bend, a class chan
   assert.deepEqual(straightChain(b, x => x === b), []);
 });
 
-test('the add-lane classes: gravel, lane, street and road widen to arterial, avenue to boulevard, arterial to six, boulevard to grand; the six and grand are the widest', () => {
-  assert.equal(WIDER.gravel, 'arterial'); assert.equal(WIDER.lane, 'arterial'); assert.equal(WIDER.street, 'arterial'); assert.equal(WIDER.road, 'arterial');
-  assert.equal(WIDER.avenue, 'boulevard');
-  assert.equal(WIDER.arterial, 'six'); assert.equal(WIDER.boulevard, 'grand'); assert.equal(WIDER.six, undefined); assert.equal(WIDER.grand, undefined);
+test('the upgrade ladder goes one step at a time: gravel and lane to street, street to road, road to arterial, arterial to six; avenue to boulevard to grand; the six and grand are the top', () => {
+  assert.equal(WIDER.gravel, 'street'); assert.equal(WIDER.lane, 'street'); assert.equal(WIDER.street, 'road'); assert.equal(WIDER.road, 'arterial');
+  assert.equal(WIDER.arterial, 'six'); assert.equal(WIDER.avenue, 'boulevard'); assert.equal(WIDER.boulevard, 'grand');
+  assert.equal(WIDER.six, undefined); assert.equal(WIDER.grand, undefined); assert.equal(WIDER.divided, undefined);
   assert.deepEqual(KEY_CLASSES, ['gravel', 'lane', 'street', 'road', 'avenue', 'boulevard']);
+});
+
+test('the downgrade ladder walks the upgrade ladder back: every step down is a step up the other way, every class is real, each step changes the cost', () => {
+  assert.equal(NARROWER.six, 'arterial'); assert.equal(NARROWER.arterial, 'road'); assert.equal(NARROWER.road, 'street'); assert.equal(NARROWER.street, 'gravel');
+  assert.equal(NARROWER.grand, 'boulevard'); assert.equal(NARROWER.boulevard, 'avenue'); assert.equal(NARROWER['six.ow'], 'arterial.ow');
+  assert.equal(NARROWER.gravel, undefined); assert.equal(NARROWER.lane, undefined); assert.equal(NARROWER.avenue, undefined);
+  for (const [from, to] of Object.entries(NARROWER)) { assert.ok(CLASS[from] && CLASS[to!], from); assert.equal(WIDER[to!] !== undefined, true, `${to} has a step up`); }
+  for (const [from, to] of Object.entries(WIDER)) { assert.ok(CLASS[from] && CLASS[to!], from); assert.ok(CLASS[to!]!.cost > CLASS[from]!.cost, `${from} -> ${to} costs more`); }
+  for (const [from, to] of Object.entries(NARROWER)) assert.ok(CLASS[to!]!.cost < CLASS[from]!.cost, `${from} -> ${to} costs less`);
+  // a plain chain round-trips: up then down comes back
+  for (const id of ['street', 'road', 'arterial', 'boulevard', 'street.ow', 'arterial.ow']) assert.equal(NARROWER[WIDER[id]!], id, id);
 });
 
 test('a flags op: netToOps carries a node\'s widened turns and turn lanes, and a replay sets them; unflagged nodes add no op', () => {

@@ -102,11 +102,20 @@ export const TYPES: { id: TypeId; family: Family }[] = [
 ];
 /** the classes the keys 1 to 6 pick, in key order (the arterial is picked in the panel) */
 export const KEY_CLASSES: ClassId[] = ['gravel', 'lane', 'street', 'road', 'avenue', 'boulevard'];
-/** the class the add-lane tool widens a road to (one more lane each way); a class not listed is the widest */
+/** the class the Upgrade tool takes a road to: one step up the ladder gravel -> street -> road -> arterial -> six-lane (a lane goes to a street),
+ *  avenue -> boulevard -> grand, and the same steps for the one-way and tree variants (a street with trees skips the road, which has none). A class
+ *  not listed is the top of its ladder */
 export const WIDER: Partial<Record<ClassId, ClassId>> = {
-  gravel: 'arterial', lane: 'arterial', street: 'arterial', 'street.tr': 'arterial.tr', road: 'arterial',
-  avenue: 'boulevard', 'avenue.gr': 'boulevard.gr', arterial: 'six', 'arterial.tl': 'six', 'arterial.tr': 'six', 'arterial.tl.tr': 'six',
-  boulevard: 'grand', 'boulevard.gr': 'grand.gr', 'street.ow': 'arterial.ow', 'arterial.ow': 'six.ow', 'street.ow.tr': 'arterial.ow.tr', 'arterial.ow.tr': 'six.ow',
+  gravel: 'street', lane: 'street', street: 'road', road: 'arterial', arterial: 'six', 'arterial.tl': 'six', 'arterial.tr': 'six', 'arterial.tl.tr': 'six',
+  'street.tr': 'arterial.tr', avenue: 'boulevard', 'avenue.gr': 'boulevard.gr', boulevard: 'grand', 'boulevard.gr': 'grand.gr',
+  'street.ow': 'arterial.ow', 'arterial.ow': 'six.ow', 'street.ow.tr': 'arterial.ow.tr', 'arterial.ow.tr': 'six.ow',
+};
+/** the class the Downgrade tool takes a road to: one step back down WIDER's ladders (a six-lane to an arterial, a turn-lane arterial to a road).
+ *  A class not listed is the bottom of its ladder (gravel, the lane, the divided road) */
+export const NARROWER: Partial<Record<ClassId, ClassId>> = {
+  street: 'gravel', road: 'street', arterial: 'road', 'arterial.tl': 'road', six: 'arterial', 'arterial.tr': 'street.tr', 'arterial.tl.tr': 'street.tr',
+  boulevard: 'avenue', 'boulevard.gr': 'avenue.gr', grand: 'boulevard', 'grand.gr': 'boulevard.gr',
+  'arterial.ow': 'street.ow', 'six.ow': 'arterial.ow', 'arterial.ow.tr': 'street.ow.tr',
 };
 export const JUNCTIONS: { id: NodeType; name: string; desc: string; cost: number; minDeg: number }[] = [
   { id: 'plain', name: 'Plain', desc: 'Priority: the bigger road runs through, side roads stop or yield (two-way stop)', cost: 0, minDeg: 3 },

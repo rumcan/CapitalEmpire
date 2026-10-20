@@ -2,7 +2,7 @@
 
 The owner asked for "all the road types that exist in real life" (as Cities: Skylines has), one-way for every type, and a
 way to flip through the variants of a type. Today the road tool is a flat list of seven fixed classes (`CLASSES` in
-network.ts) and the Add lane tool jumps most of them straight to the arterial.
+network.ts) and the Add lane tool jumped most of them straight to the arterial (now the Upgrade and Downgrade tools, one step at a time).
 
 ## What the reference games do
 
@@ -54,16 +54,19 @@ workers keep reading `s.cls.h`, `s.cls.laneCentres` and friends), and the catalo
 
 Bus lanes are left for Phase B (the bus business); asymmetric roads (2 + 1) and highways come with 6R.5.
 
-**Add lane** (the in-place upgrade) widens by type: street → arterial, arterial → six, avenue → boulevard, boulevard →
-grand, keeping the flags the wider type has (a one-way street becomes a one-way arterial). Arena task T013's one-step
-ladder with prices plugs onto this later.
+**Upgrade (N) and Downgrade (Y)** (the in-place tools, 2026-10-20) move the straight run under the pointer one step along a ladder
+(`WIDER` / `NARROWER` in network.ts): gravel → street → road → arterial → six-lane (a lane goes up to a street), avenue → boulevard →
+grand, and the same steps for the variants (one-way street → arterial → six; a street with trees → arterial with trees; a turn-lane
+arterial → six, and down to a road). An upgrade charges the difference between the two classes (cost x length x the bridge/tunnel
+factor), a downgrade refunds it. The bulldozer refunds the value of the road it removes (with the dead ends it trims), and Replace
+charges the new road less the value of the pieces it takes away (a smaller road over a bigger one is a refund).
 
 **Unlocks** follow the type (`base`): a variant is open when its type is.
 
 ## One-way
 
 - A one-way road runs from `seg.a` to `seg.b`: the order it was drawn in. Splits keep the order already; drawing over an
-  existing segment the other way reverses it (the old seg is replaced). **Right-click a one-way road with the Add lane tool reverses the
+  existing segment the other way reverses it (the old seg is replaced). **Right-click a one-way road with the Upgrade or Downgrade tool reverses the
   whole straight chain** (as C:S1's upgrade tool), free.
 - **Lanes:** `laneCentres` of a one-way class run across the whole width, left to right (`street.ow`: −0.8, 0.8;
   `arterial.ow`: −3, −1, 1, 3). The b-to-a directed seg gets no lanes; junction movements and routes skip it.

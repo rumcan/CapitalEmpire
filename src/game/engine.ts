@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY } from './library';
-import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
+import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
@@ -227,7 +227,7 @@ export class Game {
   private bizHover: null | { mx: number; my: number; def: [number, number, number, number]; site: Site; why: string } = null;
   /** the add-lane tool's plan at the cursor: the straight run of road under it (segs; none on a toll plaza), the class it widens to (null: already the widest),
    *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
-  laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string } = null;
+  laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string; down: boolean } = null;
   /** the shuttle bus routes as the player drew them (saved; ids 1..n, a route's index is its sim index), the bus tool's first stop once it is chosen (its
    *  road point, tiles, its car park's id, and its town when the stop is beside a town's car park lot; null until then), and the tool's plan at the cursor
    *  (see busUpdate: the stop it would place, x, y, its car park or town, and why not) */
@@ -623,7 +623,14 @@ export class Game {
     if (this.route.length && cs) { const last = this.route[this.route.length - 1]!; legs.push(...this.legsTo(last, this.aim(last, cs).p, this.keys.has('Shift'))); }
     return legs;
   }
-  routeCost() { return this.structured(this.previewLegs()).cost; }
+  /** what the route under the pointer costs: the new road less the value of the pieces Replace (or a ring's hidden stubs) takes away (negative: a refund) */
+  routeCost() { const legs = this.previewLegs(); return Math.round(this.structured(legs).cost - this.piecesValue(this.routeCuts(legs))); }
+  /** the value of a road seg: its length x its class's cost x its kind's factor (STRUCT_COST: a bridge or a tunnel costs more), what building it charged */
+  private segValue(s: Seg) { return vlen(sub(s.b, s.a)) * s.cls.cost * STRUCT_COST[s.kind]; }
+  /** the value of every road on the map (see segValue): the bulldozer and Replace refund the fall in it, so the dead ends tidyEnds trims count too */
+  private roadValue() { let v = 0; for (const s of this.net.segs) v += this.segValue(s); return v; }
+  /** the value of road pieces (a part of a seg each), before they are cut */
+  private piecesValue(cuts: PieceSel[]) { let v = 0; for (const c of cuts) v += vlen(sub(c.p1, c.p0)) * c.seg.cls.cost * STRUCT_COST[c.seg.kind]; return v; }
   /** the town's built-up lots (BUILDING or more) that the legs' centre lines run through: sampled every half tile, a point counts when it is
    *  at least half a tile inside the lot's rectangle (o, along u, away n, w by d) */
   private lotsInLegs(legs: Leg[]): LotView[] {
@@ -760,7 +767,7 @@ export class Game {
     if (!legs.length) { this.cancelRoute(); return; }
     const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, new Set(cuts.map(c => c.seg)));
     if (block) { this.toast(block, 'warn'); return; }
-    const cls = this.cls, st = this.structured(legs), { parts, kinds, cost, lens } = st;
+    const cls = this.cls, st = this.structured(legs), { parts, kinds, cost: build, lens } = st, cost = Math.round(build - this.piecesValue(cuts));
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
     if (!this.classOpen(cls.id)) { const lk = unlockOf('class', cls.id)!; this.toast(`${cls.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     if (kinds.includes(SK.TUNNEL) && !this.tunnelsOpen()) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
@@ -777,16 +784,20 @@ export class Game {
     for (const p of cleared) this.removeProp(p);
     const now = performance.now(), dur = Math.min(4000, 700 + total * 70);
     const cum: number[] = []; let acc = 0; for (const l of parts) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
+    // Replace charges the new road less the value of what it takes away: the cut pieces and the dead ends tidyEnds trims after them, measured
+    let removed = this.roadValue();
     for (const c of cuts) this.edit.removePiece(c);
+    removed -= this.roadValue();
     this.edit.addLegs(parts, cls, this.lineStyle, kinds);
-    if (cuts.length) this.tidyEnds(cuts.flatMap(c => [c.p0, c.p1, c.seg.a, c.seg.b]));
+    if (cuts.length) { const v = this.roadValue(); this.tidyEnds(cuts.flatMap(c => [c.p0, c.p1, c.seg.a, c.seg.b])); removed += v - this.roadValue(); }
+    const paid = Math.round(build - removed);
     this.commitNetwork(true, now + dur + 150);
     this.builds.push({ legs: parts, cls, t0: now, dur, total, cum });
-    this.traffic.spend('construction', cost);
+    this.traffic.spend('construction', paid);
     if (comp) this.traffic.spend('compensation', comp);
     this.route = [];
     const structs = [lens[SK.BRIDGE] ? `${Math.round(lens[SK.BRIDGE] * 2)} m bridge` : '', lens[SK.TUNNEL] ? `${Math.round(lens[SK.TUNNEL] * 2)} m tunnel` : ''].filter(Boolean);
-    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} for $${cost.toLocaleString()}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''}` : ''}`, 'good');
+    this.toast(`Built ${Math.round(total * 2)} m of ${cls.name.toLowerCase()}${structs.length ? ` (${structs.join(', ')})` : ''} ${paid < 0 ? `(refund $${(-paid).toLocaleString()})` : `for $${paid.toLocaleString()}`}${comp ? `, $${comp.toLocaleString()} compensation for ${hit.length} building${hit.length > 1 ? 's' : ''}` : ''}${cleared.length ? ` (cleared ${cleared.length} item${cleared.length > 1 ? 's' : ''})` : ''}${cuts.length ? `, replaced ${cuts.length} road piece${cuts.length > 1 ? 's' : ''} worth $${Math.round(removed).toLocaleString()}` : ''}`, 'good');
     // a one-way road that ends in a dead end traps cars: warned, not refused
     if (cls.oneway && parts.length && [parts[0]!.a, parts[parts.length - 1]!.b].some(p => this.net.nodeAt(p)?.segs.length === 1)) this.toast('A one-way road that ends in a dead end traps cars', 'warn');
   }
@@ -879,22 +890,23 @@ export class Game {
   }
   /** a click on a corner's + or × (see cornerHit): that corner's slipway turns on (SLIP_CORNER_COST) or off (free), the others kept */
   private slipClick(n: Node, c: Corner) { const cur = slipsOn(n); this.setSlipways(n, c.on ? cur.filter(d => d !== c.deg) : [...cur, c.deg]); }
-  /** the add-lane tool's plan at tile t (null: no tile): the straight run of road under it (see straightChain; a toll plaza has none), the class it widens
-   *  to, its cost and why it cannot be built */
+  /** the Upgrade (or Downgrade) tool's plan at tile t (null: no tile): the straight run of road under it (see straightChain; a toll plaza has none), the
+   *  class it goes to (one step along WIDER, or back along NARROWER), what it costs (the difference between the two classes over the run; negative on a
+   *  downgrade: a refund) and why it cannot be done */
   private laneUpdate(t: Pt | null) {
-    const piece = t ? this.net.pieceNear(t) : null;
-    if (!piece) { this.laneHover = t ? { segs: [], to: null, cost: 0, why: 'Point at a road' } : null; return; }
+    const down = this.tool === 'downgrade', piece = t ? this.net.pieceNear(t) : null;
+    if (!piece) { this.laneHover = t ? { segs: [], to: null, cost: 0, why: 'Point at a road', down } : null; return; }
     const tolls = [...this.tollSegs.values()], seg = piece.seg;
-    const segs = straightChain(seg, x => tolls.includes(x)), wider = WIDER[seg.cls.id], to = wider ? classOf(wider) : null;
-    let raw = 0; for (const s of segs) raw += vlen(sub(s.b, s.a)) * (to ? to.cost : 0) * STRUCT_COST[s.kind];
+    const segs = straightChain(seg, x => tolls.includes(x)), next = (down ? NARROWER : WIDER)[seg.cls.id], to = next ? classOf(next) : null;
+    let raw = 0; if (to) for (const s of segs) raw += vlen(sub(s.b, s.a)) * (to.cost - s.cls.cost) * STRUCT_COST[s.kind];
     const cost = Math.round(raw);
     let why = '';
-    if (tolls.includes(seg)) why = 'Toll plazas cannot be widened';
-    else if (!to) why = 'Already the widest road (more in Phase 7)';
-    else if (!this.classOpen(to.id)) { const lk = unlockOf('class', to.id)!; why = `${to.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`; }
-    else if (this.widenClash(segs, to)) why = 'No room to widen: another road is too close';
-    else if (cost > this.money) why = `Not enough money: ${to.name.toLowerCase()} costs $${cost.toLocaleString()}`;
-    this.laneHover = { segs, to, cost, why };
+    if (tolls.includes(seg)) why = down ? 'Toll plazas cannot be narrowed' : 'Toll plazas cannot be widened';
+    else if (!to) why = down ? `${seg.cls.name} is already the smallest road of its kind` : `${seg.cls.name} is already the biggest road of its kind (more in Phase 7)`;
+    else if (!down && !this.classOpen(to.id)) { const lk = unlockOf('class', to.id)!; why = `${to.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`; }
+    else if (to.h + to.walk > seg.cls.h + seg.cls.walk && this.widenClash(segs, to)) why = 'No room to widen: another road is too close';
+    else if (cost > this.money) why = `Not enough money: ${to.name.toLowerCase()} costs $${cost.toLocaleString()} more`;
+    this.laneHover = { segs, to, cost, why, down };
   }
   /** true when widening the run segs to class to would make their corridors meet a road they do not meet already (a new overlap, not the contact a
    *  junction has), or would put a seg through the circle of a roundabout or mini the run does not touch (a ring the run ends at re-sizes itself) */
@@ -913,19 +925,21 @@ export class Game {
     }
     return false;
   }
-  /** the add-lane tool's click: every seg of the run goes up to the next class (its kind and line style kept); the network rebuilds at once */
+  /** the Upgrade (Downgrade) tool's click: every seg of the run goes one class up (down), its kind and line style kept, and the difference is charged
+   *  (refunded); the network rebuilds at once */
   private laneClick() {
     const h = this.laneHover; if (!h) return;
-    if (!h.to) { this.toast('Already the widest road (more in Phase 7)', 'warn'); return; }
-    if (!h.segs.length || h.why) { this.toast(h.why || 'Point at a road', 'warn'); return; }
+    if (!h.segs.length || !h.to || h.why) { this.toast(h.why || 'Point at a road', 'warn'); return; }
     this.traffic.spend('construction', h.cost);
     let tiles = 0;
+    const from = h.segs[0]!.cls.name.toLowerCase();
     for (const s of h.segs) { tiles += vlen(sub(s.b, s.a)); this.edit.addLegs([{ a: s.a, b: s.b }], h.to, s.style, [s.kind]); }
     this.commitNetwork(); this.puff(h.segs[0]!.a.x, h.segs[0]!.a.y, 8);
-    this.toast(`Added a lane: ${Math.round(tiles * 2)} m to ${h.to.name.toLowerCase()}`, 'good');
+    const price = h.cost < 0 ? `refund $${(-h.cost).toLocaleString()}` : `$${h.cost.toLocaleString()}`;
+    this.toast(`${h.down ? 'Downgraded' : 'Upgraded'} ${Math.round(tiles * 2)} m of ${from} to ${h.to.name.toLowerCase()} (${price})`, 'good');
     this.laneUpdate(this.hover);
   }
-  /** the add-lane tool's right-click: the one-way straight run under the pointer is reversed (each seg replaced with its b-to-a, free); a two-way road is refused */
+  /** the Upgrade and Downgrade tools' right-click: the one-way straight run under the pointer is reversed (each seg replaced with its b-to-a, free); a two-way road is refused */
   private laneReverse(mx: number, my: number) {
     this.laneUpdate(this.tileAt(mx, my));
     const h = this.laneHover; if (!h || !h.segs.length) { this.toast('Point at a road', 'warn'); return; }
@@ -1090,7 +1104,10 @@ export class Game {
     }
     const piece = this.net.pieceNear(t);
     if (!piece) { if (first) this.buyOut(t); return; }
+    const before = this.roadValue(), name = piece.seg.cls.name.toLowerCase();
     this.edit.removePiece(piece); this.tidyEnds([piece.p0, piece.p1, piece.seg.a, piece.seg.b]);
+    const refund = Math.round(before - this.roadValue()); // the piece and the dead ends tidyEnds trimmed after it
+    if (refund > 0) { this.traffic.spend('construction', -refund); this.toast(`Removed ${name} (+$${refund.toLocaleString()})`); }
     this.commitNetwork();
     this.hoverPiece = this.net.pieceNear(t);
     this.puff(t.x, t.y, 10);
@@ -1170,7 +1187,7 @@ export class Game {
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
     if (this.keys.has(' ')) this.spacePanned = true;
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
-    if (this.tool === 'lane' && e.button === 2) { this.laneReverse(mx, my); return; }
+    if ((this.tool === 'lane' || this.tool === 'downgrade') && e.button === 2) { this.laneReverse(mx, my); return; }
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
         // a car under the pointer (street tier) is inspected; else a prop is selected; else, with the flow on, the junction there is watched
@@ -1191,7 +1208,7 @@ export class Game {
       case 'toll': this.tollUpdate(mx, my); this.tollClick(); break;
       case 'business': this.bizUpdate(mx, my); this.bizClick(); break;
       case 'bus': this.busUpdate(mx, my); this.busClick(); break;
-      case 'lane': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
+      case 'lane': case 'downgrade': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
       case 'park': { const t = this.tileAt(mx, my), r = Math.round; this.parkDrag = { x0: r(t.x), y0: r(t.y), x1: r(t.x), y1: r(t.y), def: { id: 0, x: 0, y: 0, w: 0, h: 0 }, park: null, why: '', cost: 0, mx, my }; this.dragging = { kind: 'park', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; this.parkUpdate(mx, my); break; }
     }
@@ -1208,7 +1225,7 @@ export class Game {
     } else if (this.tool === 'select') this.hoverProp = this.propAt(mx, my);
     if (this.tool === 'select' && !d) this.hoverRoad = this.hoverProp ? '' : this.roadNameAt(this.hover);
     if (this.tool === 'junction') this.hoverNode = this.net.nearestNode(this.hover, this.brush === 'roundabout' || this.brush === 'select' ? 2 : 3, 5);
-    if (this.tool === 'lane') this.laneUpdate(this.hover);
+    if (this.tool === 'lane' || this.tool === 'downgrade') this.laneUpdate(this.hover);
     if (this.tool === 'bulldoze') this.hoverPiece = this.net.pieceNear(this.hover);
     if (this.tool === 'toll') this.tollUpdate(mx, my);
     if (this.tool === 'business') this.bizUpdate(mx, my);
@@ -1283,6 +1300,7 @@ export class Game {
       case 'u': case 'U': this.setTool('bus'); break;
       case 'm': case 'M': this.setTool('business'); break;
       case 'n': case 'N': this.setTool('lane'); break;
+      case 'y': case 'Y': this.setTool('downgrade'); break;
       case 'v': case 'V': this.setTool('select'); break;
       case '1': case '2': case '3': case '4': case '5': case '6': { const c = KEY_CLASSES[+e.key - 1]; if (c) { this.roadClass = c; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
@@ -2572,13 +2590,13 @@ export class Game {
         this.setIso(ctx); ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = 'rgba(255,216,102,0.22)'; ctx.fill(); ctx.strokeStyle = '#ffd866'; ctx.lineWidth = 2; ctx.setLineDash([8, 5]); ctx.stroke(); ctx.setLineDash([]);
       }
-    } else if (this.tool === 'lane' && this.laneHover?.segs.length) {
-      // the run the add-lane tool would widen: amber where it can go, red where not
+    } else if ((this.tool === 'lane' || this.tool === 'downgrade') && this.laneHover?.segs.length) {
+      // the run the Upgrade (Downgrade) tool would change: amber (blue) where it can go, red where not
       const h = this.laneHover, cls = h.segs[0]!.cls, legs = h.segs.map(s => ({ a: s.a, b: s.b }));
       this.setIso(ctx); ctx.beginPath(); strip(legs, cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = h.why ? 'rgba(240,80,60,0.3)' : 'rgba(255,216,102,0.3)'; ctx.fill();
+      ctx.fillStyle = h.why ? 'rgba(240,80,60,0.3)' : h.down ? 'rgba(96,165,250,0.3)' : 'rgba(255,216,102,0.3)'; ctx.fill();
       this.setIso(ctx); ctx.beginPath(); for (const l of legs) { ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); } ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.strokeStyle = h.why ? '#f87171' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = h.why ? '#f87171' : h.down ? '#60a5fa' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
     } else if (this.tool === 'bulldoze' && this.hoverPiece) {
       const pc = this.hoverPiece, cls = pc.seg.cls;
       this.setIso(ctx); ctx.beginPath(); strip([{ a: pc.p0, b: pc.p1 }], cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);

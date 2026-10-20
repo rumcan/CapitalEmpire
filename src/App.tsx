@@ -23,7 +23,8 @@ const TOOLS: { id: Tool; label: string; key: string; icon: string }[] = [
   { id: 'park', label: 'Car park', key: 'P', icon: '🅿️' },
   { id: 'toll', label: 'Toll gate', key: 'T', icon: '🛂' },
   { id: 'bus', label: 'Bus route', key: 'U', icon: '🚌' },
-  { id: 'lane', label: 'Add lane', key: 'N', icon: '➕' },
+  { id: 'lane', label: 'Upgrade road', key: 'N', icon: '⏫' },
+  { id: 'downgrade', label: 'Downgrade road', key: 'Y', icon: '⏬' },
   { id: 'business', label: 'Business', key: 'M', icon: '🏟️' },
 ];
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -1007,9 +1008,11 @@ function hintFor(g: Game) {
       if (g.brush === 'select') return s ? 'Click a corner’s + or × to add or remove its slipway (lights) · Esc deselects, then returns to Select' : h ? 'Click to select this junction · Tab flips its type' : 'Hover a junction to outline it · click to select it · Tab flips the type';
       return h ? `Click to make this junction ${what} · right-click resets it to plain · Tab flips the type` : `Hover a junction (three or more roads; roundabouts also work on bends) to make it ${what} · Esc returns to Select`;
     }
-    case 'lane': { const h = g.laneHover, rev = ' · Right-click a one-way road to reverse it'; if (!h || !h.segs.length) return 'ADD A LANE — hover a straight road: its run lights up; click to widen it one lane each way' + rev;
-      return (h.why || `ADD A LANE — click to widen this ${h.segs.length > 1 ? 'run' : 'road'} to ${h.to!.name.toLowerCase()} for ${money(h.cost)}`) + rev; }
-    case 'bulldoze': return 'Click objects or roads to remove them';
+    case 'lane': case 'downgrade': {
+      const h = g.laneHover, up = g.tool === 'lane', head = up ? 'UPGRADE' : 'DOWNGRADE', rev = ' · Right-click a one-way road to reverse it';
+      if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
+      return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
+    case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';

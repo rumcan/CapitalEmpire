@@ -1060,15 +1060,20 @@ upgrades; it replaces Phase 6's events), then steps 5–8 (highways, terrain, to
 small public car parks on open town lots as part of the town's growth (a small task alongside).
 
 ### Phase 6R progress
-- **NEXT (asked by the owner, 2026-10-19 night, not started): road upgrade/downgrade tools and fair costs.**
-  - The Add lane tool (`laneUpdate`/`laneClick` in engine.ts, `WIDER` in network.ts) jumps gravel straight to arterial. Make it a ladder
-    of single steps: gravel -> street -> road -> arterial ("double") -> six ("triple"); lane -> street; keep avenue -> boulevard -> grand
-    and the one-way and variant chains. Add the reverse (a NARROWER map) and a Downgrade mode.
-  - Toolbar (`TOOLS` in App.tsx): replace the ➕ Add lane button with Upgrade and Downgrade buttons (toggles), with fitting icons.
-  - Costs: an upgrade charges only the difference (new class cost - old, x length x STRUCT_COST); a downgrade refunds the difference;
-    the bulldozer refunds the removed road's value (measure the network's road value before and after, so `tidyEnds` trims count);
-    Replace charges the new road less the value of the pieces it removes.
-  - Check in the browser across classes (the owner's rule), with the junction gallery (`__junctionGallery`) after any class change.
+- **Road upgrade/downgrade ladder and fair costs (asked 2026-10-19 night, done 2026-10-20, branch `claude/road-ladder`).**
+  - `WIDER` is now one step at a time: gravel -> street -> road -> arterial -> six (lane -> street); avenue -> boulevard -> grand; the
+    one-way, trees and grass-median chains as before (street.tr -> arterial.tr, the road has no tree variant). `NARROWER` walks it back
+    (turn-lane arterial -> road; gravel, lane, avenue and divided are the bottoms; six, grand and divided the tops).
+  - Toolbar: ➕ Add lane replaced by ⏫ Upgrade road (N, tool id still `lane`) and ⏬ Downgrade road (Y, tool `downgrade`); both toggles,
+    both reverse a one-way run on right-click. The Downgrade preview is blue, Upgrade amber, refused red.
+  - Costs (`segValue` = length x class cost x STRUCT_COST, `roadValue` sums the map): an upgrade charges (new - old) x length, a downgrade
+    refunds it; the bulldozer refunds the fall in `roadValue` (so the dead ends `tidyEnds` trims count); Replace charges the new road less
+    the measured value of what it removes (negative = a refund), and its preview (`routeCost`) shows the net.
+  - Checked in the browser (dev server from the worktree): all 16 classes up and down (each charge = class difference x length; up then down
+    nets $0), a gravel run clicked down and up through street, road, arterial to six with the toasts and hints; bulldozer refunds on five
+    classes = the value removed; Replace street->arterial $10,000, grand->street refund $18,800, road->road $0, preview = paid.
+    Junction gallery: 1,134 junctions, 130 flagged (137 before; it builds at a random spot), none without a node. Tests: 421/422 (the one failure, "20 seeds ... under 4 s", is timing: seed 5 took 4.6 s while the
+    machine was busy; no road code in it).
 - **Also open:** the Replace preview fix (15176e6: cut pieces amber and dashed under the route) is committed but not yet seen in the
   browser: the app did not load while the Phase B session had half-done edits in the main checkout (App.tsx import errors).
   Phase B (B.2 next) and the paint tool (its own worktree, branch claude/frosty-wilson-452c74) run in their own sessions.
