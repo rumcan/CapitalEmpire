@@ -192,6 +192,8 @@ export class LaneGraph {
   changed: number[] = [];
   /** the toll gates' booths by inbound dseg key (setTolls); a dseg with a key here is a toll dseg when its seg qualifies (tollBooths) */
   tolls = new Map<string, number>();
+  /** the dseg keys whose kerb lane is on-street parking (setCurbs): their outermost lane is not built */
+  curbs = new Set<string>();
   private segDs = new Map<Seg, [number, number]>();
   private nodeLanes = new Map<Node, number[]>();
   private nodeMoves = new Map<Node, number[]>();
@@ -229,6 +231,24 @@ export class LaneGraph {
     for (const [k, b] of next) if (this.tolls.get(k) !== b) diff.add(k);
     for (const k of this.tolls.keys()) if (!next.has(k)) diff.add(k);
     this.tolls = next;
+    if (!diff.size) return false;
+    this.version++; this.removed = []; this.changed = [];
+    const A = new Set<Node>(), S: Seg[] = [];
+    for (const [s, ids] of this.segDs) {
+      if (!ids.some(id => { const d = this.dsegs[id]; return !!d && diff.has(d.key); })) continue;
+      S.push(s); for (const n of [s.a, s.b]) if (isLive(net, n)) A.add(n);
+    }
+    this.rebuildArea(A, S);
+    return true;
+  }
+
+  /** the on-street parking kerbs as the player placed them (keys: the directed seg keys of the parked runs, the full list; the graph keeps the set, so
+   *  later updates build the curbs too): the segs whose kerb changed and their end nodes are rebuilt as setTolls rebuilds them. Returns false if none changed */
+  setCurbs(keys: string[], net: RoadNetwork): boolean {
+    const next = new Set(keys), diff = new Set<string>();
+    for (const k of next) if (!this.curbs.has(k)) diff.add(k);
+    for (const k of this.curbs) if (!next.has(k)) diff.add(k);
+    this.curbs = next;
     if (!diff.size) return false;
     this.version++; this.removed = []; this.changed = [];
     const A = new Set<Node>(), S: Seg[] = [];
@@ -303,7 +323,7 @@ export class LaneGraph {
     const none = s.cls.oneway && dir === 1;
     const booths = none ? 0 : this.tollBooths(key, s, from, to, iF + iT);
     if (booths) { d.toll = booths; this.boothLanes(d, s, booths, iF, iT, u, r); }
-    else if (!none) for (let k = 0; k < s.cls.laneCentres.length; k++) {
+    else if (!none) for (let k = 0; k < s.cls.laneCentres.length - (this.curbs.has(key) && s.cls.laneCentres.length >= 2 ? 1 : 0); k++) {
       const off = laneOff(s, k);
       const p0 = add(add(from, mul(u, iF)), mul(r, off)), p1 = add(sub(to, mul(u, iT)), mul(r, off));
       lanes.push(this.mkLane(`${key}#${k}`, LK.LINK, [p0, p1], d.vmax, null, s.kind === SK.TUNNEL, id, k).id);

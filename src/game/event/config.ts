@@ -56,6 +56,14 @@ export const MAX_ENTRANCES = 3;
 export const FRONT_GAP = 3;
 /** the shortest side of a car park, tiles */
 export const MIN_PARK = 12;
+/** the tiles between the centres of on-street parking bays (6 m), along the kerb */
+export const CURB_BAY = 3;
+/** the tiles kept clear at each end of an on-street parking run */
+export const CURB_END = 4;
+/** the fewest bays an on-street parking run may have */
+export const CURB_MIN_BAYS = 4;
+/** what each on-street parking bay costs to build, $ */
+export const CURB_BAY_COST = 60;
 /** the toll gate's plaza: the toll piece of road, tiles (the plaza seg's length) */
 export const PLAZA_LEN = 30;
 /** the tiles at each end of the plaza over which the booth lanes fan out and back in */
@@ -153,3 +161,5 @@ export const TICKET_UP = 3;
 export function promoMul(cards: readonly CardId[]): number { return PROMO_MUL ** cards.filter(c => c === 'promo').length; }
 /** the stadium's ticket price of the cards taken, $: its price per visitor plus TICKET_UP for each season card */
 export function ticketPrice(cards: readonly CardId[]): number { return BUSINESS.stadium.pricePerVisitor + TICKET_UP * cards.filter(c => c === 'season').length; }
+/** the parking demand's cells (Sim.parkDemand, the Car park panel's overlay) are PD_CELL tiles square */
+export const PD_CELL = 16;

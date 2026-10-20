@@ -67,6 +67,13 @@ export interface SaveV5 {
   stadium?: [number, number, number, number] | null;
   /** the painted ground areas as [tex, scale, angle, border, btex, pts] (the Paint tool, docs/PAINT-TOOL.md; ids 1..n in this order; optional, no version bump; missing = none) */
   paints?: [string, number, number, number, string, number[]][];
+  /** the Car park tool's bay rows as [ax, ay, bx, by, side, bay, col] (the drag, side 1 or -1, bay 90/60/45, col white or yellow; ids 1..n in this order;
+   *  optional, no version bump; missing = none; docs/PARKING.md) */
+  rows?: [number, number, number, number, number, number, string][];
+  /** the on-street runs as [ax, ay, bx, by] (traffic from a to b, bays on its right kerb; ids 1..n in this order; optional, no version bump; missing = none) */
+  curbs?: [number, number, number, number][];
+  /** the parking fee per car ($, 0 to 50; optional, no version bump; missing = $5) */
+  parkFee?: number;
   /** the placed businesses as [type, x, y, w, h] (top-left tile and size, turned; ids 1..n in this order; optional: a save without it reads stadium) */
   biz?: [BusinessId, number, number, number, number][];
   /** each business's stats, in the order of biz (its id is its place: 1..n; optional: missing = fresh) */
