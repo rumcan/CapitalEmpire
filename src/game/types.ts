@@ -15,6 +15,8 @@ export interface LibItem {
   ay: number;
   /** footprint boxes in metres (2 m per tile) around the anchor */
   boxes: Box[];
+  /** a baked lot (kind 'lot'): the house's footprint, drawn as its building block on the planner map (boxes cover the whole lot) */
+  block?: Box;
   solid: number;
   big: boolean;
   door: boolean;

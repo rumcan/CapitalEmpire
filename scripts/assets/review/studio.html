@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sprite studio</title>
+<style>
+:root{--bg:#16180f;--panel:#1d2014;--card:#22261a;--line:#3a4128;--ink:#e9e4d2;--dim:#9aa184;--red:#d0543a;--green:#6fa34a;--gold:#e0b04a;--sel:#5ee6ff}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.35 system-ui,sans-serif;display:flex;flex-direction:column}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+h1{font-size:16px;margin:0 8px 0 0}.tab{background:none;border:1px solid var(--line);color:var(--dim);border-radius:6px;padding:6px 12px;cursor:pointer;font-weight:600}.tab.on{color:var(--ink);border-color:var(--gold);background:#2a2e1c}
+.btn{border:0;border-radius:6px;padding:6px 10px;font-weight:600;cursor:pointer;color:#fff;background:#4a5236}.btn:disabled{opacity:.45;cursor:default}
+.gold{background:var(--gold);color:#1a1606}.red{background:var(--red)}.green{background:var(--green)}
+#status{color:var(--dim);font-size:12px;max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+input{background:#11130b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:6px 10px;min-width:180px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}.chip{background:#11130b;border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:3px 9px;cursor:pointer;font-size:12px}.chip.on{color:var(--ink);border-color:var(--gold)}
+.view{flex:1;overflow:auto;display:none}.view.on{display:block}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.grid{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;padding:16px}
+#v-lib.person-cursor{cursor:none}#v-lib .bar{cursor:auto}#v-lib button,#v-lib input,#v-lib select,#v-lib .chip{cursor:pointer}
+#man{position:fixed;pointer-events:none;z-index:20;display:none;filter:drop-shadow(0 0 1px #000)}
+select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:200px}.card.removed{opacity:.45;border-color:var(--red)}
+.stage{display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(#2b3120,#323a24);padding:10px;min-height:60px}
+.stage img{display:block}.meta{padding:8px}.name{font-weight:600}.cat{font-size:11px;color:var(--gold)}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
+.row{display:flex;gap:6px;padding:0 8px 8px;align-items:center}.row .btn{flex:1}.scale{font:12px ui-monospace,monospace;color:var(--ink);min-width:70px;text-align:center}
+.lots{display:grid;grid-template-columns:240px 1fr 280px;gap:0;height:100%}.lots>div{overflow:auto}
+.list{border-right:1px solid var(--line)}.li{padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}.li.on{background:#2a2e1c;color:var(--gold)}.li small{color:var(--dim)}
+.canvas{position:relative;padding:16px}.canvas img{display:block;cursor:crosshair}.hi{position:absolute;border:2px solid var(--sel);pointer-events:none;border-radius:3px;box-shadow:0 0 0 1px #000a}
+.side{border-left:1px solid var(--line);padding:12px}.side h3{margin:4px 0 8px;font-size:14px}.pad{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin:8px 0}.pad .btn{padding:8px 0}
+.hint{color:var(--dim);font-size:12px;margin:6px 0}
+.person{background:var(--card);border:1px solid var(--line);border-radius:8px;margin:12px 16px;padding:8px}
+.prow{display:flex;align-items:center;gap:8px;margin:4px 0}.prow .d{width:30px;color:var(--gold);font-weight:700}.fr{position:relative;cursor:pointer;border:2px solid transparent;border-radius:4px;background:#2b3120}
+.fr.mir{border-color:var(--sel)}.fr.need{border-color:var(--red)}.fr .bdg{position:absolute;left:2px;top:2px;font-size:10px;font-weight:700;background:#11130bdd;color:var(--gold);border-radius:3px;padding:1px 3px;white-space:nowrap}.fr .bdg:empty{display:none}.bdg.ok{color:var(--green)}.bdg.need{color:var(--red)}
+.pop{position:fixed;z-index:30;background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:10px;width:min(480px,calc(100vw - 32px));max-height:80vh;overflow:auto;box-shadow:0 8px 24px #000c}.pop h4{margin:0 0 8px;font-size:13px}.pop .sec{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.pop input{min-width:0;padding:4px 6px}.pop input[type=checkbox]{padding:0;margin:0 4px 0 0}.pop .btn{flex:0 0 auto}
+.pop .gr{display:flex;align-items:center;gap:4px;margin:2px 0}.pop .gr .d{width:30px;color:var(--gold);font-weight:700;font-size:12px}.pop .gr img{height:48px;cursor:pointer;border-radius:3px;background:#2b3120;border:2px solid transparent}.pop .gr img:hover{border-color:var(--sel)}
+.drop{border:2px dashed var(--line);border-radius:6px;padding:14px;text-align:center;color:var(--dim);margin-top:6px}.drop.over{border-color:var(--gold);color:var(--ink)}.msg{color:var(--dim);font-size:12px;min-height:14px;margin-top:6px}
+#needed{padding:6px 16px 0;align-items:center}#needed b{font-weight:600;margin-right:4px}.fr img{display:block;height:96px}.fr span{position:absolute;right:2px;bottom:0;font-size:10px;color:var(--dim)}.anim{margin-left:16px;border-left:1px solid var(--line);padding-left:12px}
+@media (max-width:800px){.lots{grid-template-columns:1fr}.list{max-height:200px}}
+</style></head><body>
+<header><h1>Sprite studio</h1>
+<button class="tab on" data-v="lib">Library</button><button class="tab" data-v="lots">Lots</button><button class="tab" data-v="people">People</button>
+<span style="flex:1"></span><span id="status"></span><button class="btn gold" id="rb">Rebuild game sprites</button></header>
+
+<img id="man" alt=""><div class="view on" id="v-lib">
+ <div class="bar"><input id="q" placeholder="Search id or name"><div class="chips" id="cats"></div><span style="flex:1"></span>
+  <label class="hint">Size on screen <input id="zoom" type="range" min="0.15" max="1.2" step="0.05" value="0.35" style="min-width:120px;vertical-align:middle"></label>
+  <label class="hint">You are <select id="who"></select></label><span id="count" class="hint"></span></div>
+ <div class="hint" style="padding:0 16px">Every sprite is shown at the size the game draws it, and your pointer is a townsperson at the same scale (feet on the pointer): stand him at a door to check it. Smaller / Bigger change the sprite everywhere it is placed.</div>
+ <div class="grid" id="grid"></div>
+</div>
+
+<div class="view" id="v-lots"><div class="lots"><div class="list" id="lotlist"></div>
+ <div class="canvas" id="lotcanvas"><div class="hint">Pick a lot on the left, then click a sprite in it.</div></div>
+ <div class="side" id="lotside"><h3>Nothing selected</h3><div class="hint">Click a sprite in the lot. Alt-click picks the ground decal under the click instead of the upright.</div></div></div></div>
+
+<div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to fix it: mirror it, use another frame (of any facing) in its place, or mark it as needing a new frame and drop the new picture in. Rebuild game sprites to put the fixes in the game. The strip on the right plays the row as the game does (walk frames 1-4).</div><div id="needed" class="chips"></div><div id="people"></div></div>
+
+<script>
+const $=s=>document.querySelector(s), el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);for(const c of k)if(c!=null)e.append(c);return e};
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.json());
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));placeMan();if(b.dataset.v==='lots'&&!lots.length)loadLots();if(b.dataset.v==='people'&&!peopleLoaded)loadPeople();});
+
+// ---------------- library
+let all=[],removed={},walkers=[],me=null,cat='',q='',K=0.35,pointer=null;   // K: display px per native game px, the same for every sprite and the man
+async function loadLib(){const r=await (await fetch('/api/sprites')).json();all=r.sprites;removed=r.removed;walkers=r.walkers;
+ const w=$('#who'),previous=me?.id;w.innerHTML='';for(const p of walkers)w.append(el('option',{value:p.id,textContent:p.name}));me=walkers.find(p=>p.id===previous)||walkers[0]||null;if(me)w.value=me.id;man();cats();draw();}
+/** the man: his trimmed picture at K, his feet (the anchor) on the pointer */
+function man(){const m=$('#man');$('#v-lib').classList.toggle('person-cursor',!!me);if(!me){m.style.display='none';return;}m.src='/thumb/'+encodeURIComponent(me.id);const q=me.quad;m.style.width=(q[2]-q[0])*K+'px';m.style.height=(q[3]-q[1])*K+'px';placeMan();}
+function placeMan(){const m=$('#man'),target=pointer&&document.elementFromPoint(pointer.x,pointer.y);if(!me||!$('#v-lib').classList.contains('on')||!target?.closest('#v-lib')||target.closest('button,input,select,.chip,.bar')){m.style.display='none';return;}
+ const q=me.quad,fx=((me.ax??(q[0]+q[2])/2)-q[0])*K,fy=((me.ay??q[3])-q[1])*K;m.style.display='block';m.style.left=(pointer.x-fx)+'px';m.style.top=(pointer.y-fy)+'px';}
+document.addEventListener('mousemove',e=>{pointer={x:e.clientX,y:e.clientY};placeMan();});
+document.addEventListener('mouseleave',()=>{pointer=null;placeMan();});
+window.addEventListener('blur',()=>{pointer=null;placeMan();});
+document.addEventListener('scroll',placeMan,true);
+$('#zoom').oninput=e=>{K=+e.target.value;man();draw();};
+$('#who').onchange=e=>{me=walkers.find(p=>p.id===e.target.value)||null;man();};
+function cats(){const c=[...new Set(all.map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c,'Removed']){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
+function stage(s){
+  // the trimmed picture at the size the game draws it: (quad) x scale x K, never capped, so Bigger really is bigger
+  const q=s.quad, w=(q[2]-q[0])*s.scale*K, h=(q[3]-q[1])*s.scale*K;
+  return el('div',{className:'stage'},el('img',{src:'/thumb/'+encodeURIComponent(s.id),loading:'lazy',style:`width:${w}px;height:${h}px`}));
+}
+function draw(){const g=$('#grid');g.innerHTML='';let n=0;
+ const list=all.filter(s=>(cat==='Removed'?removed[s.id]:!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));
+ for(const s of list.slice(0,400)){n++;const off=!!removed[s.id];
+  const rm=el('button',{className:'btn '+(off?'green':'red'),textContent:off?'Restore':'Remove from game'});
+  rm.onclick=async()=>{await post('/api/'+(off?'restore':'remove'),{id:s.id});await loadLib();};
+  const sc=el('span',{className:'scale',textContent:'× '+s.scale.toFixed(2)+(Math.abs(s.scale-s.base)>1e-3?' *':'')});
+  const size=f=>async()=>{const r=await post('/api/scale',f?{id:s.id,factor:f}:{id:s.id,reset:true});s.scale=r.scale;draw();};
+  const fixed=s.cat==='Lots'||s.kind==='walker'||s.kind==='car';
+  g.append(el('div',{className:'card'+(off?' removed':'')},stage(s),el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id})),
+   fixed?null:el('div',{className:'row'},el('button',{className:'btn',textContent:'Smaller',onclick:size(1/1.08)}),sc,el('button',{className:'btn',textContent:'Bigger',onclick:size(1.08)})),
+   !fixed&&Math.abs(s.scale-s.base)>1e-3?el('div',{className:'row'},el('button',{className:'btn',textContent:'Reset size (×'+s.base.toFixed(2)+')',onclick:size(0)})):null,
+   el('div',{className:'row'},rm)));}
+ $('#count').textContent=`${list.length} shown${list.length>400?' (first 400: search to narrow)':''} · ${Object.keys(removed).length} removed`;}
+$('#q').oninput=e=>{q=e.target.value.toLowerCase();draw();};
+
+// ---------------- lots
+let lots=[],lot=null,sel=null;
+async function loadLots(){lots=await (await fetch('/api/lots')).json();const l=$('#lotlist');l.innerHTML='';for(const v of lots){const d=el('div',{className:'li'+(lot&&lot.id===v.id?' on':'')},v.name,el('br'),el('small',{textContent:v.id+(v.edits?` · ${v.edits} edited`:'')}));d.onclick=()=>openLot(v.id);l.append(d);}}
+async function openLot(id,keep){lot=await (await fetch('/api/lot/'+encodeURIComponent(id))).json();if(!keep)sel=null;loadLots();
+ const c=$('#lotcanvas');c.innerHTML='';const img=el('img',{src:'/lot/'+encodeURIComponent(id)+'.png?'+Date.now(),width:lot.w,height:lot.h});
+ img.onclick=e=>{const r=img.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const hits=lot.items.filter(it=>x>=it.r[0]&&y>=it.r[1]&&x<=it.r[0]+it.r[2]&&y<=it.r[1]+it.r[3]&&(e.altKey?it.flat:!it.flat));
+  // the topmost hit, preferring the smallest picture (a bush in front of a house)
+  hits.sort((a,b)=>a.r[2]*a.r[3]-b.r[2]*b.r[3]);sel=hits[0]?hits[0].idx:null;side();};
+ c.append(img);side();}
+function side(){const s=$('#lotside'),c=$('#lotcanvas');c.querySelectorAll('.hi').forEach(h=>h.remove());const it=lot&&lot.items.find(i=>i.idx===sel);
+ if(!it){s.innerHTML='<h3>Nothing selected</h3><div class="hint">Click a sprite in the lot. Alt-click picks the ground decal under the click.</div>';return;}
+ c.append(el('div',{className:'hi',style:`left:${16+it.r[0]}px;top:${16+it.r[1]}px;width:${it.r[2]}px;height:${it.r[3]}px`}));
+ const op=o=>async()=>{await post('/api/lot-edit',{lot:lot.id,idx:it.idx,op:o});if(o==='delete')sel=null;openLot(lot.id,true);};
+ s.innerHTML='';s.append(el('h3',{textContent:it.name}),el('div',{className:'id',textContent:it.id}),el('div',{className:'hint',textContent:`at ${it.x.toFixed(2)}, ${it.y.toFixed(2)} m · scale ${it.scale.toFixed(2)}${it.flip?' · mirrored':''}${it.edited?' · edited':''}`}),
+  el('div',{className:'hint',textContent:'Move 0.25 m along the ground:'}),
+  el('div',{className:'pad'},el('button',{className:'btn',textContent:'↖',title:'-X',onclick:op('x-')}),el('span'),el('button',{className:'btn',textContent:'↗',title:'-Y',onclick:op('y-')}),el('span'),el('span'),el('span'),el('button',{className:'btn',textContent:'↙',title:'+Y',onclick:op('y+')}),el('span'),el('button',{className:'btn',textContent:'↘',title:'+X',onclick:op('x+')})),
+  el('div',{className:'row',style:'padding:0;margin:8px 0'},el('button',{className:'btn',textContent:'Smaller',onclick:op('smaller')}),el('button',{className:'btn',textContent:'Bigger',onclick:op('bigger')}),el('button',{className:'btn',textContent:'Mirror',onclick:op('flip')})),
+  el('div',{className:'row',style:'padding:0;margin:8px 0'},el('button',{className:'btn red',textContent:'Delete from this lot',onclick:op('delete')}),el('button',{className:'btn',textContent:'Undo edits',onclick:op('reset')})),
+  el('div',{className:'hint',textContent:'To take this sprite out of the whole game, remove it in the Library tab.'}));}
+
+// ---------------- people
+const PDIRS=['S','SE','E','NE','N'], WF_RE=/^use(-mirror)?:(?:(S|SE|E|NE|N):)?([0-4])$/;   // the fix codes (scripts/assets/walker-fix.mjs)
+let peopleLoaded=false,peopleAll=[],popEl=null;
+const ppid=id=>'pp-'+id.replace(/[^a-z0-9_-]/gi,'_'), frameUrl=(pid,d,k,q)=>`/frame/${encodeURIComponent(pid+'|'+d+'|'+k)}?${q}`;
+/** a cell's badge: M, NEW, NEW ✓ (picture in), or the frame it takes: →3, →SE2, M→3 */
+const fixBadge=(op,has)=>{const m=WF_RE.exec(op);return op==='mirror'?'M':op==='new'?(has?'NEW ✓':'NEW'):m?(m[1]?'M':'')+'→'+(m[2]||'')+m[3]:'';};
+const fixText=op=>{const m=WF_RE.exec(op);return op==='mirror'?'mirrored':op==='new'?'new frame needed':m?(m[2]?m[2]+' ':'')+'frame '+m[3]+(m[1]?' mirrored':''):'as drawn';};
+const send=async(u,b)=>{const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();};
+const closePop=()=>{popEl?.remove();popEl=null};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop()});
+document.addEventListener('mousedown',e=>{if(popEl&&!popEl.contains(e.target))closePop()});
+/** the walk frames still needing new art, as chips (a click scrolls to that person) */
+async function showNeeded(){const list=await (await fetch('/api/frames-needed')).json(),box=$('#needed');box.innerHTML='';box.append(el('b',{textContent:`Walk frames needing new art: ${list.length}`}));
+ for(const n of list)box.append(el('span',{className:'chip'+(n.has?' on':''),title:n.has?'picture dropped in: rebuild to use it':'no picture yet',textContent:`${n.id.replace(/^person:/,'')} · ${n.dir} · frame ${n.frame}${n.has?' ✓':''}`,onclick:()=>document.getElementById(ppid(n.id))?.scrollIntoView({block:'center'})}));}
+/** a frame cell shows its fix: the mirror outline, the red outline while a new picture is missing, and the badge */
+const paint=c=>{const op=c.p.fixes[c.d]?.[c.k]??'',has=c.p.newFrames.includes(c.d+'-'+c.k);c.f.classList.toggle('mir',op==='mirror');c.f.classList.toggle('need',op==='new'&&!has);c.f.title=fixText(op)+' (click to fix)';c.bdg.textContent=fixBadge(op,has);c.bdg.className='bdg'+(op==='new'?has?' ok':' need':'');};
+/** after a change: the person's fixes, the cell's picture (cache-busted), its badge, the needed list */
+const applyFix=(c,r)=>{c.p.fixes=r.fixes;if(r.has&&!c.p.newFrames.includes(c.d+'-'+c.k))c.p.newFrames.push(c.d+'-'+c.k);c.img.src=frameUrl(c.p.id,c.d,c.k,Date.now());paint(c);showNeeded();};
+/** the fix panel for one frame: as drawn, mirror, another frame in its place (any facing, mirrored or not), or a new picture */
+function openFix(c){closePop();const cur=c.p.fixes[c.d]?.[c.k]??'',msg=el('div',{className:'msg'}),at=c.f.getBoundingClientRect();
+ const done=async(op,close)=>{try{applyFix(c,await send('/api/walker-fix',{id:c.p.id,dir:c.d,frame:c.k,op}));if(close)closePop();else msg.textContent='Saved: '+fixText(op)}catch(e){msg.textContent='Failed: '+e.message}};
+ const mir=el('input',{type:'checkbox',checked:/^use-mirror:/.test(cur)}), pick=(dir,k2)=>done(`use${mir.checked?'-mirror':''}:${dir===c.d?'':dir+':'}${k2}`,true);
+ const grid=el('div',{},...PDIRS.map(dir=>el('div',{className:'gr'},el('span',{className:'d',textContent:dir}),...[0,1,2,3,4].map(k2=>el('img',{src:frameUrl(c.p.id,dir,k2,'orig=1'),loading:'lazy',title:`${dir} frame ${k2}`,onclick:()=>pick(dir,k2)})))));
+ const upload=async f=>{if(!f||!/^image\/(png|webp)$/.test(f.type)){msg.textContent='Pick a PNG or WebP picture';return}
+  try{const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=()=>rej(fr.error);fr.readAsDataURL(f)});
+   applyFix(c,await send('/api/walker-frame',{id:c.p.id,dir:c.d,frame:c.k,png:b64}));msg.textContent='Saved. Rebuild game sprites to put it in the game.'}catch(e){msg.textContent='Failed: '+e.message}};
+ const file=el('input',{type:'file',accept:'image/png,image/webp',onchange:()=>upload(file.files[0])}), drop=el('div',{className:'drop',textContent:'…or drop a PNG / WebP picture here'});
+ drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};drop.ondragleave=()=>drop.classList.remove('over');drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');upload(e.dataTransfer.files[0])};
+ const dropSec=el('div',{className:'sec',hidden:cur!=='new'},el('div',{className:'hint',textContent:'The new picture is fitted into the frame, bottom-aligned.'}),file,drop);
+ popEl=el('div',{className:'pop'},el('h4',{textContent:`${c.p.id.replace(/^person:/,'')} · ${c.d} · frame ${c.k===0?'idle':c.k} · now: ${fixText(cur)}`}),
+  el('div',{className:'row',style:'padding:0 0 4px;flex-wrap:wrap'},el('button',{className:'btn',textContent:'As drawn',onclick:()=>done('',true)}),el('button',{className:'btn',textContent:'Mirror',onclick:()=>done('mirror',true)}),el('button',{className:'btn gold',textContent:'New frame needed',onclick:()=>{dropSec.hidden=false;done('new',false)}})),
+  el('div',{className:'sec'},el('div',{className:'hint',textContent:'Use another frame in its place (any facing):'}),el('label',{className:'hint'},mir,'mirrored'),grid),
+  dropSec,msg);
+ document.body.append(popEl);const W=popEl.offsetWidth,H=popEl.offsetHeight,below=at.bottom+6;
+ popEl.style.left=Math.max(8,Math.min(at.left,innerWidth-W-8))+'px';popEl.style.top=(below+H>innerHeight?Math.max(8,at.top-H-6):below)+'px';}
+async function loadPeople(){peopleLoaded=true;peopleAll=await (await fetch('/api/people')).json();showNeeded();const box=$('#people');box.innerHTML='';
+ for(const p of peopleAll){p.cells={};const card=el('div',{className:'person',id:ppid(p.id)},el('div',{className:'name',textContent:p.id}));
+  for(const d of p.dirs){const row=el('div',{className:'prow'},el('span',{className:'d',textContent:d}));p.cells[d]=[];
+   for(let k=0;k<5;k++){const img=el('img',{src:frameUrl(p.id,d,k,0),loading:'lazy'}),bdg=el('b',{className:'bdg'}),f=el('div',{className:'fr'},img,bdg,el('span',{textContent:k===0?'idle':k})),c={p,d,k,f,img,bdg};
+    f.onclick=()=>openFix(c);p.cells[d].push(c);paint(c);row.append(f);}
+   const anim=el('img',{className:'anim',style:'height:96px'});let t=1;setInterval(()=>{const i=p.cells[d][t].img;if(i.complete)anim.src=i.src;t=t%4+1;},125);row.append(anim);card.append(row);}
+  box.append(card);}}
+
+// ---------------- rebuild
+$('#rb').onclick=async()=>{await post('/api/rebuild');poll();};
+async function poll(){const j=await (await fetch('/api/status')).json(),s=$('#status'),b=$('#rb');if(!j){s.textContent='';b.disabled=false;return;}
+ b.disabled=!j.done;s.textContent=j.done?(j.code?'Rebuild failed: '+j.log.trim().split('\n').pop():'Rebuilt: reload the game'):`Rebuilding (${Math.round((Date.now()-j.started)/60000)} min): ${j.step.split('/').pop()}`;if(!j.done)setTimeout(poll,3000);}
+loadLib();poll();
+</script></body></html>

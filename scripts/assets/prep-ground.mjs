@@ -54,6 +54,26 @@ await sharp({ create: { width: 144 * slabNames.length, height: 100, channels: 4,
 // ---------------------------------------------------------------- grass bases at the approved 256 px screen repeat
 for (const name of ['grass-base.png', 'grass-v2-base.png']) await sharp(await get('terrain/' + name)).resize(256, 256, { fit: 'fill', kernel: 'lanczos3' }).webp({ quality: 92 }).toFile(path.join(OUT, name.replace('.png', '.webp')));
 
+// ---------------------------------------------------------------- the builder's grass dressing (town-scene.mjs loadSources): the bare-soil
+// base at the same 256 px repeat, and the grass/leaf decals and tufts at their base widths in world px, packed in one strip
+await sharp(await get('terrain/soil-mud-v2-base.png')).resize(256, 256, { fit: 'fill', kernel: 'lanczos3' }).webp({ quality: 92 }).toFile(path.join(OUT, 'soil.webp'));
+const DECAL_SRC = [['decal-01-lush-grass', 'grass', 230], ['decal-02-dry-golden-grass', 'grass', 230], ['decal-03-moss-groundcover', 'grass', 250], ['decal-04-low-weeds', 'grass', 190], ['decal-05-thin-grass', 'grass', 210], ['decal-06-orange-leaf-scatter', 'leaves', 170], ['decal-07-red-leaf-cluster', 'leaves', 150], ['decal-08-yellow-leaf-scatter', 'leaves', 150], ['scatter-grass-tufts', 'tufts', 260]];
+const decals = []; let dx = 0, dh = 0;
+for (const [file, kind, base] of DECAL_SRC) {
+  const buf = await get(`terrain/${file}.png`), m = await sharp(buf).metadata(), h = Math.round(base * m.height / m.width);
+  decals.push({ input: await sharp(buf).resize(base, h, { fit: 'fill', kernel: 'lanczos3' }).png().toBuffer(), left: dx + 1, top: 1, meta: { kind, x: dx + 1, y: 1, w: base, h } });
+  dx += base + 2; dh = Math.max(dh, h + 2);
+}
+await sharp({ create: { width: dx, height: dh, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite(decals.map(({ input, left, top }) => ({ input, left, top }))).webp({ quality: 92, alphaQuality: 100, effort: 6 }).toFile(path.join(OUT, 'decals.webp'));
+// ---------------------------------------------------------------- car-park asphalt: the ~28 m painting, its mean moved a touch lighter and greyer than the road's
+{
+  const { w, h, px } = await rgba(await get('paving/lot-asphalt-3.png'));
+  const m = [0, 0, 0]; for (let i = 0; i < w * h; i++) for (let k = 0; k < 3; k++) m[k] += px[i * 4 + k] / (w * h);
+  const target = [shared[0] * 1.06 + 2, shared[1] * 1.06 + 2, shared[2] * 1.02], out = Buffer.alloc(w * h * 3);
+  for (let i = 0; i < w * h; i++) for (let k = 0; k < 3; k++) out[i * 3 + k] = Math.max(0, Math.min(255, Math.round(px[i * 4 + k] - m[k] + target[k])));
+  await sharp(out, { raw: { width: w, height: h, channels: 3 } }).webp({ quality: 92, effort: 6 }).toFile(path.join(OUT, 'lot-asphalt.webp'));
+}
+
 // ---------------------------------------------------------------- leaves: the builder's sprites, filtered like loadSources, packed into an atlas
 const meta = JSON.parse((await get('roads/leaves.json')).toString());
 const by = { tiny: [], orange: [], yellow: [] };
@@ -87,8 +107,13 @@ import slabs from '../assets/ground/slabs.webp';
 import grassA from '../assets/ground/grass-base.webp';
 import grassB from '../assets/ground/grass-v2-base.webp';
 import leaves from '../assets/ground/leaves.webp';
+import soil from '../assets/ground/soil.webp';
+import decals from '../assets/ground/decals.webp';
+import lotAsphalt from '../assets/ground/lot-asphalt.webp';
+import lotDecals from '../assets/ground/lot-decals.webp';
+import nature from '../assets/ground/nature.webp';
 
-export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves };
+export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves, soil, decals, lotAsphalt, lotDecals, nature };
 export type GroundArt = typeof GROUND_ART;
 /** painted px per metre of the road kit (manifest.json pxPerM) */
 export const PPM = 55.2;
@@ -102,5 +127,9 @@ export const LEAF_COLS = ${cols};
 export const LEAVES: { i: number; dim: number; round: boolean }[] = ${JSON.stringify(leafMeta)};
 /** the manifest's pool stamp anchor: lampU (px along), curbRow (px across) */
 export const POOL_ANCHOR: [number, number] = [190, 20.5];
+/** the builder's grass decals in decals.webp (x, y, w, h in px = world px at scale 1): grass patches, leaf scatters, tufts */
+export const DECALS: { kind: 'grass' | 'leaves' | 'tufts'; x: number; y: number; w: number; h: number }[] = ${JSON.stringify(decals.map(d => d.meta))};
+/** the car-park asphalt painting spans this many metres */
+export const LOT_ASPHALT_M = 28;
 `);
 console.log('leaves kept', kept.length, 'atlas', cols, 'x', rows);

@@ -12,6 +12,7 @@ import type { Lot } from './lots';
 export type LotGeom = Pick<Lot, 'o' | 'u' | 'n' | 'w' | 'd'>;
 import { LU, LV } from './town';
 import { OWNER_SCALE } from './scales';
+import { LOT_DECALS } from '../lot-decals';
 
 export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number }
 export interface Composition { props: Placed[]; ground: LotPatch[] }
@@ -21,13 +22,17 @@ export interface ComposeState { use: number; level: number; decline: number; see
 type Pt = { x: number; y: number };
 type Box4 = [number, number, number, number];
 /** a placed candidate: the anchor (ground point) and its footprint in world tiles */
-interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; street: boolean; plant: boolean }
+interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean }
 /** a sprite at a size and orientation: its footprint relative to the anchor */
 interface Spec { id: string; s: number; flip: boolean; h: Box4 }
-interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean }
-interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
+interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean }
+interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
 interface Pair { x: string; y: string }
 
+/** the flat ground decals by group (lot-decals.ts): index lists */
+const MARKS: Record<string, number[]> = {};
+LOT_DECALS.forEach((d, i) => (MARKS[d.group] ??= []).push(i));
+const MARK_ID = new Map(LOT_DECALS.map((d, i) => [d.id, i]));
 /** the tolerances: an item may reach this far past the lot (street items: into the verge), and touching is not overlap */
 const REACH = 0.3, VERGE = 1.2, EPS = 0.02;
 /** the largest share of the smaller footprint two uprights may share */
@@ -53,7 +58,7 @@ const pick = (r: () => number, a: string[]): string => a[Math.floor(r() * a.leng
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
 const HOUSE_FRONT = cat(i => i.cat === 'Houses' && i.kind === 'house');
-const HOUSE_REAR = names(['expansion:ranch-rear']);
+const HOUSE_REAR = names(['expansion:ranch-rear', 'expansion:cottage-rear', 'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear']);
 const HOUSE_RUNDOWN = names(['expansion:rundown-house']);
 const GARAGE_FRONT = names(['static:garage_timber', 'static:garage_brick', 'static:garage_brick-v2']);
 const GARAGE_REAR = names(['expansion:garage-rear']);
@@ -74,10 +79,24 @@ const JUNK = names(['expansion:junk-car', 'expansion:appliance-pile', 'expansion
 const SCRAP = names(['expansion:scrap-engine', 'expansion:tyre-stack', 'expansion:yard-workbench', 'expansion:air-compressor']);
 const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle', 'expansion:appliance-pile']);
 const TRAILERS = names(['expansion:camper', 'expansion:boxcar', 'expansion:boat-trailer', 'expansion:utility-trailer', 'expansion:lean-to-shed']);
-const PICKET: Pair = { x: 'world:fence_picket_x', y: 'world:fence_picket_y' };
 const PRIVACY: Pair = { x: 'expansion:fence-privacy-x', y: 'expansion:fence-privacy-y' };
 const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
-const HEDGE: Pair = { x: 'world:hedge', y: 'world:hedge' };
+/** flower beds (the soft plants), porch pumpkins, and the bigger Halloween yard pieces (Maple Falls in October) */
+const FLOWERS = names(['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'ref:halloween-mums']);
+const PUMPKINS = names(['world:pumpkin_0', 'world:pumpkin_1']);
+const SPOOKY = names(['ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost', 'world:scarecrow', 'expansion:blowmold-ghost', 'expansion:yard-spider', 'expansion:yard-coffin', 'ref:halloween-witch-sign', 'ref:halloween-lantern', 'world:grave_0', 'world:grave_1', 'world:grave_2']);
+/** the school and pedestrian signs (TrickOrTreat road sign set) for the kerb by a civic building */
+const SCHOOL_SIGNS = cat(i => /^variation:sign-pedestrians-school-/.test(i.id));
+const DEAD_TREES = names(['world:tree_dead_0', 'world:tree_dead_1', 'world:tree_dead_2']);
+/** the props each household story adds to the back yard (one of each, in this order, as they fit) */
+const STORY_KIT: Record<string, string[]> = {
+  family: names(['expansion:sandbox', 'expansion:kiddie-pool', 'expansion:tricycle', 'expansion:wagon', 'expansion:washing-line']),
+  retired: names(['expansion:glasshouse', 'expansion:rain-barrel', 'expansion:compost-bin', 'expansion:garden-pump', 'expansion:patio-swing']),
+  worker: names(['expansion:woodpile', 'expansion:rideon-mower', 'expansion:canoe', 'expansion:lawn-roller', 'expansion:washing-line']),
+  party: names(['expansion:firepit', 'expansion:hot-tub', 'expansion:camping-cooler', 'expansion:brick-barbecue']),
+  mechanic: names(['expansion:motorcycle-front', 'expansion:rototiller', 'expansion:oil-drums']),
+  neglected: names(['expansion:attic-trunk', 'expansion:antique-pram', 'expansion:crt-curb', 'expansion:outhouse']),
+};
 
 /** does an axis-aligned footprint overlap a convex quad (8 numbers, corners in order); touching is not overlap */
 function hit(fp: Box4, q: number[]): boolean {
@@ -112,6 +131,8 @@ class Build {
   /** the road direction from the lot (-n) */
   readonly F: Pt;
   readonly items: Item[] = []; readonly patches: Patch[] = [];
+  /** flat ground decals: index, x, y (world tiles), scale (negative: mirrored), alpha */
+  readonly marks: number[] = [];
   /** no cars at all (derelict); the upright cap for plants (the rest are kept) */
   noCars = false; cap = 28;
   readonly r: () => number;
@@ -128,7 +149,8 @@ class Build {
   /** a sprite at a seeded size (owner scale times mul, varied by 5%) with its footprint: the union of its boxes, as the engine draws it */
   spec(id: string, o: Opt = {}): Spec | null {
     if (!BY.has(id)) return null;
-    const flip = !!o.flip, s = (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
+    // cars at 1: the engine draws a parked car at CAR_SCALE, the size of the cars on the road
+    const flip = !!o.flip, s = BY.get(id)!.cat === 'Vehicles' ? 1 : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
     return { id, s, flip, h: boxOf(id, s, flip) };
   }
   /** the half extent of a spec along the lot's u (ea) and n (eb) */
@@ -143,7 +165,7 @@ class Build {
   atW(g: Spec | null, c: Pt, o: Opt = {}): Item | null {
     if (!g) return null;
     const it = BY.get(g.id)!, h = g.h, x = c.x - (h[0] + h[2]) / 2, y = c.y - (h[1] + h[3]) / 2;
-    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car: it.cat === 'Vehicles', wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', street: !!o.street, plant: !!o.plant };
+    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car: it.cat === 'Vehicles', wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant };
     this.items.push(item); return item;
   }
   /** a spec with its footprint centre at a lot-frame point (a along u, b along n) */
@@ -152,7 +174,7 @@ class Build {
   put(id: string, a: number, b: number, o: Opt = {}): Item | null { return this.at(this.spec(id, o), a, b, o); }
   /** a straight run of fence or hedge segments end to end from (a0, b0) to (a1, b1); the sprite axis follows the run;
    *  segments whose centre falls in gap (fractions of the run) are left out */
-  run(kind: Pair, a0: number, b0: number, a1: number, b1: number, gap?: [number, number]) {
+  run(kind: Pair, a0: number, b0: number, a1: number, b1: number, gap?: [number, number], drop = 0) {
     const p0 = this.P(a0, b0), p1 = this.P(a1, b1), dx = p1.x - p0.x, dy = p1.y - p0.y, L = Math.hypot(dx, dy);
     if (L < 1e-6) return;
     const g = this.spec(Math.abs(dx) >= Math.abs(dy) ? kind.x : kind.y);
@@ -163,9 +185,53 @@ class Build {
     for (let i = 0; i < n; i++) {
       const t = (left + (i + 0.5) * step) / L;
       if (gap && t >= gap[0] && t <= gap[1]) continue;
+      if (drop && this.r() < drop) continue;
       this.atW(g, { x: p0.x + dx * t, y: p0.y + dy * t });
     }
   }
+  /** a boundary run in tiles: 4 m panels at a constant height; the final panel meets the endpoint with a small seam overlap */
+  boundaryRun(kind: Pair, a0: number, b0: number, a1: number, b1: number) {
+    const p0 = this.P(a0, b0), p1 = this.P(a1, b1), dx = p1.x - p0.x, dy = p1.y - p0.y, L = Math.hypot(dx, dy);
+    const ax = Math.abs(dx) >= Math.abs(dy), id = ax ? kind.x : kind.y;
+    if (L < 1e-6 || !BY.has(id)) return;
+    const h = boxOf(id, 1, false), span = ax ? h[2] - h[0] : h[3] - h[1];
+    if (span <= 0) return;
+    const size = Math.min(2, L), s = size / span, count = Math.ceil(L / size - 1e-9), hs = boxOf(id, s, false);
+    // the panel's footprint lies wholly on the line's higher-coordinate side (a few cm: the board is 0.1 tiles thick): the painter (sprites.ts
+    // isBehind) then sorts the lot behind the line (a baked lot picture is one prop over its whole lot) before the fence, and the lot in front
+    // after it. A footprint straddling the line overlapped both lots and the lot behind could sort after it, painting its bushes and decals
+    // over the boards
+    const ox = ax ? 0 : (hs[2] - hs[0]) / 2 + 0.01, oy = ax ? (hs[3] - hs[1]) / 2 + 0.01 : 0;
+    for (let i = 0; i < count; i++) {
+      const start = Math.min(i * size, L - size), t = (start + size / 2) / L;
+      this.atW({ id, s, flip: false, h: hs }, { x: p0.x + dx * t + ox, y: p0.y + dy * t + oy }, { boundary: true });
+    }
+  }
+  /** a fence on all four sides, inset by e: the front in kind f (with the gap, fractions of the width), the sides and back in kind k;
+   *  drives, walks and car parks cut their own gaps (done() drops fence panels that stand on them) */
+  ring(f: Pair, k: Pair, e: number, gap?: [number, number], drop = 0) {
+    const { W, D } = this;
+    this.run(f, 0, e, W, e, gap, drop);
+    this.run(k, e, e, e, D - e, undefined, drop); this.run(k, W - e, e, W - e, D - e, undefined, drop);
+    this.run(k, 0, D - e, W, D - e, undefined, drop);
+  }
+  /** a vegetable bed (lot-frame rectangle; keep it clear of the house, it bars uprights): a field patch with furrows every half tile along u */
+  bed(a0: number, b0: number, a1: number, b1: number) {
+    const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
+    if (A1 - A0 < 1 || B1 - B0 < 1) return;
+    const lines: number[] = [];
+    for (let b = B0 + 0.25; b < B1 - 0.1; b += 0.5) { const p = this.P(A0 + 0.15, b), q = this.P(A1 - 0.15, b); lines.push(p.x, p.y, q.x, q.y); }
+    this.patches.push({ kind: 'bed', tex: 'field', quad: this.quad(A0, B0, A1, B1), lines });
+  }
+  /** a flat decal from a group (or one id) centred at a lot-frame point, at 0.8-1.2x, mirrored at random, 70-100% opaque */
+  mark(group: string, a: number, b: number, size = 1) {
+    const list = MARKS[group] ?? (MARK_ID.has(group) ? [MARK_ID.get(group)!] : []);
+    if (!list.length) return;
+    const i = list[Math.floor(this.r() * list.length)], p = this.P(clamp(a, 0.4, this.W - 0.4), clamp(b, 0.4, this.D - 0.4)), s = size * (0.8 + 0.4 * this.r());
+    this.marks.push(i, +p.x.toFixed(3), +p.y.toFixed(3), +(this.r() < 0.5 ? -s : s).toFixed(3), +(0.7 + 0.3 * this.r()).toFixed(2));
+  }
+  /** n decals from a group at seeded points of a lot-frame rectangle */
+  marksIn(group: string, a0: number, b0: number, a1: number, b1: number, n: number, size = 1) { for (let i = 0; i < n; i++) this.mark(group, a0 + (a1 - a0) * this.r(), b0 + (b1 - b0) * this.r(), size); }
   /** a ground patch over the lot-frame rectangle (clamped to the lot) */
   pave(kind: Patch['kind'], a0: number, b0: number, a1: number, b1: number, tex: LotPatch['tex']) {
     const A0 = clamp(a0, 0, this.W), A1 = clamp(a1, 0, this.W), B0 = clamp(b0, 0, this.D), B1 = clamp(b1, 0, this.D);
@@ -233,7 +299,8 @@ class Build {
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
     for (const it of this.items) {
-      if (!this.inside(it) || this.onPatch(it)) continue;
+      // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
+      if (!this.inside(it) || (!it.boundary && this.onPatch(it))) continue;
       if (!it.fence && !it.wheel) {
         if (it.plant && ups >= this.cap) continue;
         if (acc.some(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP)) continue;
@@ -242,6 +309,8 @@ class Build {
       acc.push(it); props.push({ id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s });
     }
     const ground: LotPatch[] = this.patches.map(p => (p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }));
+    // the decals last, bounded by the lot grown 2 tiles (a decal is up to 4 m across)
+    if (this.marks.length) ground.push({ pts: this.quad(-2, -2, this.W + 2, this.D + 2), tex: 'marks', marks: this.marks });
     return { props, ground };
   }
 }
@@ -285,7 +354,10 @@ function res(B: Build, st: ComposeState) {
   const car = (pool: string[]) => { const v = B.vehicle(pool, dA0 + DW / 2, slot); if (v) slot += v.span + 0.2; };
   if (story === 'worker') { car(PICKUPS); car(CARS); } else if (story !== 'neglected') car(CARS);
   if (up && story !== 'neglected') car(CARS);
-  const bk = sb + hd + 1;   // the back yard starts behind the house
+  const bk = sb + hd + 1, neg = story === 'neglected';   // the back yard starts behind the house
+  // the porch: pumpkins either side of the walk (most houses: it is October), and for some a Halloween display in the front yard
+  if (story !== 'neglected' && r() < 0.8) for (const sx of [-1, 1]) if (r() < 0.8) B.put(pick(r, PUMPKINS), ca + sx * (0.75 + 0.3 * r()), sb - 0.45);
+  if (story !== 'neglected' && r() < 0.35) B.scatter(SPOOKY, 0.9, 1.0, W - 0.9, Math.max(1.2, sb - 1.2), 2 + Math.floor(r() * 2));
   if (story === 'family') {
     B.put('expansion:trampoline', W / 2, bk + 2.2);
     if (W >= 11) B.put('gen:back-swingset', W - 3, D - 3.2);
@@ -295,6 +367,7 @@ function res(B: Build, st: ComposeState) {
   } else if (story === 'retired') {
     B.put('expansion:birdhouse-post', 1.0, bk + 1.5);
     B.put('world:bench', W / 2, bk + 1.2);
+    B.bed(1.2, Math.max(bk + 0.4, D - 3.6), Math.min(W - 1.2, 5.2), D - 1.4);
   } else if (story === 'party') {
     if (up || r() < 0.7) B.put('expansion:aboveground-pool', W / 2, bk + 2.5);
     B.put('expansion:barbecue', W - 1.4, bk + 1.2);
@@ -302,35 +375,102 @@ function res(B: Build, st: ComposeState) {
     B.put('gen:cooler-lawnchairs', W / 2 - 1.6, bk + 0.8);
   } else if (story === 'mechanic') {
     B.scatter(SCRAP, 0.8, bk, W - 0.8, D - 0.8, 4);
-  } else {
+  } else if (story === 'neglected') {
     B.put('expansion:junk-car', W / 2, D - 2.6);
     B.put('expansion:appliance-pile', 1.4, bk + 0.8);
-  }
-  // trees in the back corners and by the side; bins and the mailbox at the kerb by the drive
+    B.put(pick(r, DEAD_TREES), W - 1.4, bk + 1.2, { plant: true });
+  } else if (r() < 0.5) B.bed(W - 4.6, Math.max(bk + 0.4, D - 3.4), W - 1.2, D - 1.4);
+  // the ground: leaf drifts in the yards (it is autumn), worn grass where the kids and the dog play, an oil stain on the drive,
+  // litter and mud when neglected, pinecones and twigs under the trees
+  B.marksIn('leaves', 0.8, 0.8, W - 0.8, sb - 0.4, 1 + Math.floor(r() * 2));
+  B.marksIn('leaves', 0.8, bk, W - 0.8, D - 0.8, 1 + Math.floor(r() * 2));
+  if (story === 'family') { B.mark('worn', W / 2, bk + 2.2, 1.4); B.mark('worn', 1.6, D - 2.0); }
+  if (story !== 'retired' && r() < 0.6) B.mark('stain', dA0 + DW / 2, 1.2 + r() * 2, 0.8);
+  if (neg) { B.marksIn('litter', 0.8, 0.8, W - 0.8, D - 0.8, 2 + Math.floor(r() * 2)); B.mark('worn', W / 2, D - 2.6, 1.5); B.mark('rubbish', 1.4, bk + 2); }
+  if (r() < 0.5) B.mark('woods', r() < 0.5 ? 1.2 : W - 1.2, D - 1.6);
+  // the story's own kit along the back yard, then the trees in the back corners and by the side
+  const kit = STORY_KIT[story] ?? [];
+  kit.forEach((id, i) => B.put(id, 1.4 + ((i + 0.5) / kit.length) * (W - 2.8), bk + 0.9 + r() * Math.max(0.2, D - bk - 2.4)));
   B.put(pick(r, TREES), 0.9, D - 1.2, { plant: true });
   B.put(pick(r, TREES), W - 0.9, D - 1.2, { plant: true });
   if (story !== 'neglected') B.put(pick(r, TREES), W - 0.8, sb + 2.5, { plant: true });
-  const bx = L ? DW + 0.5 : W - DW - 0.5;
+  if (r() < 0.25) B.put('expansion:satellite-dish', ca + hw / 2 + 0.6, bk - 0.4);
+  // the kerb by the drive: the bins, the mailbox and (autumn) leaf bags; a hydrant on some lots
+  const bx = L ? DW + 0.5 : W - DW - 0.5, sx = L ? 1 : -1;
   B.put('gen:trash-cans-row', bx, -0.35, { street: true });
-  B.put('world:mailbox', bx + (L ? 0.9 : -0.9), -0.35, { street: true });
-  // fences: a picket front (a hedge for retired), the sides and rear in privacy board (chain for the mechanic); none in front when neglected
-  if (story === 'retired') B.run(HEDGE, 0, 0.45, W, 0.45);
-  else if (story !== 'neglected') B.run(PICKET, 0, 0.2, W, 0.2);
-  const sideFence = story === 'retired' ? PICKET : story === 'mechanic' ? CHAIN : PRIVACY;
-  B.run(sideFence, 0.2, sb + 1, 0.2, D - 0.2);
-  B.run(sideFence, W - 0.2, sb + 1, W - 0.2, D - 0.2);
-  B.run(sideFence, 0, D - 0.2, W, D - 0.2);
-  // plants: packed against the house front and sides, then along the back fence (fewer when neglected)
-  // neglected yards keep the same lines at half the density
-  const dense = story === 'neglected' ? 2 : 1;
-  B.cap = (story === 'neglected' ? 12 : 12 + Math.floor(r() * 12)) + (up ? 4 : 0);
-  for (let a = ca - hw / 2 - 0.6; a <= ca + hw / 2 + 0.6; a += dense) B.put(pick(r, BUSHES), a, sb - 0.8, { plant: true });
+  B.put('world:mailbox', bx + sx * 0.9, -0.35, { street: true });
+  if (r() < 0.5) B.put('expansion:leaf-bags', bx + sx * 2.1, -0.4, { street: true });
+  if (r() < 0.15) B.put('world:hydrant', L ? W - 0.6 : 0.6, -0.4, { street: true });
+  // plants: a flower bed in the front yard, packed against the house front and sides
+  // (neglected yards keep the same lines at half the density, and run to weeds)
+  const dense = neg ? 2 : 1;
+  B.cap = (neg ? 16 : 24 + Math.floor(r() * 14)) + (up ? 6 : 0);
+  if (!neg) for (let a = 0.9; a <= W - 0.9; a += 1.1) B.put(pick(r, FLOWERS), a, 0.8, { plant: true });
+  for (let a = ca - hw / 2 - 0.6; a <= ca + hw / 2 + 0.6; a += dense) B.put(pick(r, neg ? BUSHES : FLOWERS.concat(BUSHES)), a, sb - 0.8, { plant: true });
   for (const sx of [-1, 1]) for (let b = sb + 0.8; b <= sb + 2 * hd - 0.5; b += 1.2 * dense) B.put(pick(r, BUSHES), ca + sx * (hw / 2 + 0.7), b, { plant: true });
-  for (let a = 1; a <= W - 1; a += 1.6 * dense) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
-  for (const a of [0.9, W - 0.9]) for (let b = bk; b <= D - 1.5; b += 1.2 * dense) B.put(pick(r, BUSHES), a, b, { plant: true });
   // the rest of the back and front yards in beds, last in order: the cap decides how many of these stay
   for (let b = bk + 0.6; b <= D - 1.2; b += 1.4) for (let a = 1.6; a <= W - 1.4; a += 1.4) B.put(pick(r, BUSHES), a, b, { plant: true });
   for (let b = 0.8; b <= sb - 0.6; b += 1.4) for (let a = 0.8; a <= W - 0.8; a += 1.4) B.put(pick(r, BUSHES), a, b, { plant: true });
+}
+
+/** the baked house lots (scripts/assets/lot-variants.mjs) by size and facing: 'w x d front|rear' -> [normal ids, neglected ids] */
+const BAKED = new Map<string, [string[], string[]]>();
+for (const it of LIBRARY) {
+  const m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(it.id); if (!m) continue;
+  const k = `${m[1]}x${m[2]} ${m[3]}`; let e = BAKED.get(k); if (!e) BAKED.set(k, (e = [[], []]));
+  e[/neglected/.test(it.name) ? 1 : 0].push(it.id);
+}
+/** a house lot as one baked picture (house, yard and decals), when its size has variants: the variant by the
+ *  lot's slot along its street (neighbours differ), the neglected ones from decline 2; null when none fits */
+function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
+  const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`); if (!e) return null;
+  const pool = st.decline >= 2 && e[1].length ? e[1] : e[0]; if (!pool.length) return null;
+  const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
+  const id = pool[(((slot + mix(street) % 7) % pool.length) + pool.length) % pool.length];
+  const c = B.P(lot.w / 2, lot.d / 2);
+  return { props: [{ id, x: c.x, y: c.y, flip: B.flip, scale: 1 }], ground: [] };
+}
+
+/** the fence grid of a baked house lot, drawn as its own layer (the lot picture has no fences): wooden privacy panels on the
+ *  lower world-coordinate side line (every lot owns one side) from the back line to 3.65 tiles (7.3 m)
+ *  from the front edge, the same on every lot so neighbours' fences meet, and on the back line when n points to +X/+Y (of two
+ *  lots back to back exactly one owns it). Along the inside of all three inner lines (so both faces
+ *  of every fence are planted): shrubs, ferns and grasses with gaps, now and then a young tree; leaf drifts and tufts at the
+ *  fence bases. Each neighbour supplies the planting on its own side of a shared line. */
+const FENCE_PLANTS = names(['town:fern', 'town:ornamental_grass']).concat(BUSHES.filter(id => id !== 'world:hedge'));
+/** one deterministic deck; each street slot gets three consecutive young-tree choices before the deck repeats */
+const FENCE_TREES = (() => {
+  const deck = TREES.filter(id => !/-ns:/.test(id)).sort(), r = mulberry(0x66e3);
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  return deck;
+})();
+const FENCE_FRONT = 3.65;
+function fenceLayer(B: Build, lot: LotGeom) {
+  const { W, D, r } = B, side = lot.u.x + lot.u.y > 0 ? 0 : W;
+  const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / W), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
+  const treeStart = mix(street, lot.n.x + 1, lot.n.y + 1) + slot * 3;
+  let trees = 0;
+  B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
+  if (lot.n.x + lot.n.y > 0) B.boundaryRun(PRIVACY, 0, D, W, D);
+  const plant = (a: number, b: number) => {
+    const u = r();
+    if (u >= 0.78) return;
+    const young = u < 0.08 && trees < Math.min(3, FENCE_TREES.length);
+    const treeIndex = ((treeStart + trees) % FENCE_TREES.length + FENCE_TREES.length) % FENCE_TREES.length;
+    const id = young ? FENCE_TREES[treeIndex] : pick(r, FENCE_PLANTS);
+    if (young) trees++;
+    const g = B.spec(id, { mul: young ? 0.65 : 0.8 + 0.3 * r() });
+    if (!g) return;
+    // Keep a young tree's full footprint inside the yard; a fixed 0.45-tile inset discards nearly every tree.
+    const ea = B.ea(g), eb = B.eb(g);
+    if (ea * 2 > W || eb * 2 > D - FENCE_FRONT) return;
+    B.at(g, clamp(a, ea, W - ea), clamp(b, FENCE_FRONT + eb, D - eb), { plant: true });
+  };
+  for (const a of [0.45, W - 0.45]) for (let b = FENCE_FRONT + 0.6; b < D - 0.6; b += 1.0 + 0.6 * r()) plant(a, b);
+  for (let a = 1.2; a < W - 1.2; a += 1.0 + 0.6 * r()) plant(a, D - 0.45);
+  const base = (a: number, b: number) => { B.mark('leaves', a, b, 0.7 + 0.3 * r()); B.mark('tufts', a, b, 0.55 + 0.2 * r()); };
+  for (const a of [0.5, W - 0.5]) for (let b = FENCE_FRONT + 0.5; b < D - 0.5; b += 2) base(a, b);
+  for (let a = 1; a < W - 1; a += 2) base(a, D - 0.5);
 }
 
 /** a shop or venue with a car park beside it (two bays when the lot allows), a lamp at its corner, a front row by the door
@@ -343,11 +483,18 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   if (!ss) return;
   const sw = 2 * B.ea(ss), sd = 2 * B.eb(ss), sb = 1 + r(), ca = 0.3 + sw / 2;
   B.at(ss, ca, sb + B.eb(ss));
+  // a commercial lot is asphalt all over, with sidewalk slabs from the street to the shop front (both patches carry uprights)
+  B.pave('yard', 0, 0, W, D, 'asphalt');
+  B.pave('yard', 0, 0, Math.min(W, sw + 0.6), sb, 'slabs');
   if (!rear) {
     B.put('town:bike_rack', ca - 1.0, sb - 0.9);
     B.put('world:trashcan', ca - 0.1, sb - 0.5);
     B.put('world:bench', ca + 0.9, sb - 0.7);
-    for (let a = 0.6; a <= sw; a += 1.4) B.put(pick(r, BUSHES), a, sb - 0.7, { plant: true });
+    // the shop door: pumpkins and mums for October, an ice freezer or milk crates out front
+    if (r() < 0.7) { B.put(pick(r, PUMPKINS), ca - 0.6, sb - 0.35); B.put(pick(r, PUMPKINS), ca + 0.5, sb - 0.35); }
+    B.put(r() < 0.5 ? 'expansion:ice-freezer' : 'expansion:milk-crates', ca + sw / 2 - 0.6, sb - 0.5);
+    if (r() < 0.3) B.put(pick(r, SPOOKY), 0.8, 0.8);
+    for (let a = 0.6; a <= sw; a += 1.4) B.put(pick(r, FLOWERS.concat(BUSHES)), a, sb - 0.7, { plant: true });
   }
   const pA0 = 0.6 + sw;
   B.carPark(pA0, W - 0.3);
@@ -356,6 +503,15 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   B.put('town:dumpster', sw * 0.3 + 0.5, D - 1.3);
   B.put('town:delivery_crates', sw * 0.7 + 0.2, D - 1.2);
   B.put('expansion:hvac-unit', sw + 0.6, sb + sd / 2);
+  B.put('expansion:utility-cabinet', sw + 0.5, sb + sd - 0.4);
+  B.put('expansion:bread-delivery-rack', sw * 0.5 + 0.6, D - 1.0);
+  B.put('expansion:parking-meter', W - 1.6, -0.35, { street: true });
+  if (r() < 0.4) B.put('world:hydrant', 0.5, -0.4, { street: true });
+  if (r() < 0.5) B.put('expansion:shopping-cart', W - 1.2, BAY_DEPTH + 0.6);
+  // the car park's oil stains and wear, litter by the bins, leaves along the back
+  B.marksIn('stain', pA0, 0.3, W - 0.3, BAY_DEPTH, 1 + Math.floor((W - pA0) / 4), 0.9);
+  B.mark('litter', sw * 0.3 + 1.6, D - 1.6); if (r() < 0.5) B.mark('rubbish', sw * 0.3 + 0.4, D - 2.4, 0.8);
+  B.marksIn('leaves', 0.8, D - 2.5, W - 0.8, D - 0.6, 1);
   for (let b = sb + 0.6; b <= D - 1.5; b += 2) B.put(pick(r, TREES), W - 0.6, b, { plant: true });
   B.put(pick(r, TREES), 0.6, D - 0.6, { plant: true });
   for (let a = 3; a <= W - 1.6; a += 1.4) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
@@ -390,6 +546,10 @@ function park(B: Build, st: ComposeState) {
     if (r() < fill) B.vehicle(CARS, a, STRIP + 0.3);
   }
   B.put('town:street_sign', dA0 + DRIVE / 2, -0.4, { street: true });
+  B.put('expansion:parking-meter', pA0 + 0.6, -0.35, { street: true });
+  // oil stains in the bays, wheel wear on the drive, the odd bit of litter
+  B.marksIn('stain', pA0, STRIP, pA1, STRIP + BAY_DEPTH, Math.max(1, Math.floor(n / 2)), 0.9);
+  B.mark('town:wheel_wear', dA0 + DRIVE / 2, 1.2 + r() * Math.max(0, D - 3)); B.mark('litter', pA0 + r() * (pA1 - pA0), D - 1.2);
 }
 
 /** a civic building (or a back view) on the left of a paved forecourt: a tree row, benches and planters, a lamp pair and a bus stop
@@ -415,6 +575,11 @@ function civic(B: Build, st: ComposeState) {
   B.put(pick(r, TREES), W - 0.6, D - 0.6, { plant: true });
   for (let a = 1.4; a <= W - 1.4; a += 1.4) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
   if (st.decline >= 1) B.put(pick(r, BUSHES), W / 2, sb + 2 * eb + 1, { plant: true });
+  B.put('world:trashcan', cx + 2.2, sb - 0.5);
+  B.put(pick(r, SCHOOL_SIGNS), W - 0.5, -0.4, { street: true });
+  if (r() < 0.6) B.put('ref:halloween-hay-bales', cx + ea - 0.6, sb - 1.6);
+  for (let b = sb + 0.8; b <= D - 1.5; b += 1.6) B.put(pick(r, FLOWERS), 0.8, b, { plant: true });
+  B.marksIn('leaves', 0.8, sb + 2 * eb + 0.6, W - 0.8, D - 0.8, 2); if (r() < 0.5) B.mark('litter', cx + 1.4, sb - 1.2, 0.8);
 }
 
 /** a yard of gravel with a shed at the back, a second shed or trailer, a chain-link fence with a gate gap at the front,
@@ -443,9 +608,12 @@ function ind(B: Build, st: ComposeState) {
     for (let j = 0; j < m; j++) B.put(pick(r, CLUTTER), ca + (r() - 0.5) * 2.4, cb + (r() - 0.5) * 2.4);
   }
   for (let b = 2; b <= D - 1.5; b += 3) B.put(pick(r, BUSHES), 0.9, b, { plant: true });
+  // tyre tracks in the mud from the gate, oil and gravel spilt, rubbish by the shed
+  B.mark('mud', W / 2, 2.5, 1.2); B.mark('mud', W / 2 + (r() - 0.5) * 3, D / 2, 1.2);
+  B.marksIn('stain', 1, 1, W - 1, D - 1, 2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2); B.mark('rubbish', W - 1.6, D - 2.4);
 }
 
-/** a construction site: dirt, cement bags, rubble, a cable spool, a pickup and a temporary fence; no building */
+/** a construction site: dirt, cement bags, rubble, a cable spool and a pickup; no building */
 function site(B: Build) {
   const { W, D, r, flip } = B;
   B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
@@ -454,7 +622,9 @@ function site(B: Build) {
   B.put('expansion:concrete-rubble', W - 1.6, 2.2);
   B.put('expansion:cable-spool', W - 1.4, D - 2.2);
   B.vehicle(PICKUPS, W / 2, 0.8);
-  B.run(CHAIN, 0.4, 0.4, W - 0.4, 0.4, [0.35, 0.65]);
+  B.mark('mud', W / 2, 2.4, 1.2); B.mark('expansion:mud-footprints', W / 2, D / 2); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
+  B.put('expansion:lumber-bundle', 1.6, D - 1.6);
+  B.put('expansion:pallet-stack', W - 2.2, D - 1.4);
   if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5, { flip });
 }
 
@@ -464,6 +634,12 @@ function vacant(B: Build) {
   B.put(pick(r, BUSHES), W * 0.3, D * 0.5, { plant: true });
   B.put(pick(r, BUSHES), W * 0.7, D * 0.7, { plant: true });
   B.put(pick(r, TREES), W * 0.5, D * 0.3, { plant: true });
+  // gone to weeds: tall grass and ferns, a dead tree, now and then a dumped item
+  B.scatter(names(['town:ornamental_grass', 'town:fern', 'world:bush_2']), 0.8, 0.8, W - 0.8, D - 0.8, 5 + Math.floor(r() * 4), { plant: true });
+  if (r() < 0.4) B.put(pick(r, DEAD_TREES), W * (0.2 + 0.6 * r()), D * (0.5 + 0.3 * r()), { plant: true });
+  if (r() < 0.25) B.put(pick(r, JUNK), W * (0.3 + 0.4 * r()), D * 0.75);
+  B.marksIn('leaves', 0.8, 0.8, W - 0.8, D - 0.8, 2); B.mark('worn', W * (0.3 + 0.4 * r()), D * (0.3 + 0.4 * r()), 1.5);
+  if (r() < 0.4) B.mark('rubbish', W * (0.2 + 0.6 * r()), D * (0.6 + 0.3 * r())); if (r() < 0.6) B.mark('woods', W * r(), D * r());
 }
 
 /** is a built or upgraded commercial lot a public car park: the lot's seed falls in the first 15% (seed % 100 < 15).
@@ -476,7 +652,7 @@ export function compose(lot: LotGeom, st: ComposeState): Composition {
   B.noCars = st.decline >= 3;
   if (st.use === LU.NONE || st.level === LV.EMPTY) vacant(B);
   else if (st.level === LV.BUILDING) site(B);
-  else if (st.use === LU.RES) res(B, st);
+  else if (st.use === LU.RES) { const b = baked(B, lot, st); if (b) { fenceLayer(B, lot); const f = B.done(); return { props: [...b.props, ...f.props], ground: f.ground }; } res(B, st); fenceLayer(B, lot); }
   else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); }
   else if (st.use === LU.TOUR) com(B, st, true);
   else if (st.use === LU.IND) ind(B, st);

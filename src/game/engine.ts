@@ -1,5 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
-import { ATLAS_PAGES, LIBRARY } from './library';
+import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
@@ -51,6 +52,8 @@ const SIGNAL_TOAST = ['', 'actuated traffic lights (loop detectors)', 'adaptive 
 
 /** a game day and a game hour, sim s (one sim second is one game minute) */
 const GAME_DAY = 1440, GAME_HOUR = 60;
+/** the most townspeople walking at once */
+const PED_MAX = 3000;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
 export const SPEEDS = [1, 2, 4, 8, 20] as const;
 /** the flow colours by v/c (below 0.5, below 0.8, below 1, and 1 or more; the Bottlenecks legend) and the junction LOS badge colours, A to F */
@@ -208,6 +211,10 @@ export class Game {
   /** car light points, reused each frame (grown to 7 points per sim slot) */
   private lightBuf = new Float32Array(0);
   // perf
+  /** the townspeople on the sidewalks (ext/pedestrians): the sidewalks follow the network (net.version), one walker per two
+   *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
+  private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX); private pedNet = -1; private pedTick = 0; private pedLots = -1;
+  private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
   // input
@@ -560,7 +567,12 @@ export class Game {
   }
   private sendBlocks(invalidate: boolean) {
     const out: number[] = [];
-    for (const p of this.props) { const it = LIBRARY[p.item]; if (!it.big || it.kind === 'car') continue; out.push(p.x0, p.y0, p.x1, p.y1, BUILDING_KINDS[it.kind] ?? 2); }
+    for (const p of this.props) {
+      const it = LIBRARY[p.item]; if (!it.big || it.kind === 'car') continue;
+      // a baked lot shows its house (block, metres around the anchor; mirrored with the lot), not the whole lot
+      if (it.block) { const b = it.block, f = p.flip, s = p.scale / 2, hx = (f ? b.hy : b.hx) * s, hy = (f ? b.hx : b.hy) * s, cx = p.x + (f ? b.dy : b.dx) * s, cy = p.y + (f ? b.dx : b.dy) * s; out.push(cx - hx, cy - hy, cx + hx, cy + hy, BUILDING_KINDS.house ?? 0); continue; }
+      out.push(p.x0, p.y0, p.x1, p.y1, BUILDING_KINDS[it.kind] ?? 2);
+    }
     this.blocksAt = performance.now();
     this.ground.blocks(new Float32Array(out));
     if (invalidate) this.ground.invalidate([0, 0, MAP, MAP], false, 0, 'p');
@@ -2142,6 +2154,38 @@ export class Game {
     g.fill(); return this.mask;
   }
 
+  /** the townspeople: new sidewalks when the network changed (looked at twice a second), the head count from the built lots */
+  private updatePeds(dt: number) {
+    if (!WALKER_PEOPLE.length) return;
+    if (this.pedTick++ % 30 === 0) {
+      if (this.pedNet !== this.net.version) {
+        this.pedNet = this.net.version;
+        // town sidewalks only (slab sidewalks, not the rural verges), and never in a tunnel
+        const roads = [...this.net.routes].filter(r => r.cls.walkTex === 'slabs' && r.kind !== SK.TUNNEL).map(r => ({ pts: r.pts, h: r.cls.h, walk: r.cls.walk, closed: r.closed }));
+        this.peds.setSidewalks(sidewalks(roads));
+      }
+      // the doors: every built lot's frontage, a tile in (houses are homes; shops, work, civic buildings and venues are places)
+      const built = this.traffic?.built ?? 0;
+      if (built !== this.pedLots && this.traffic) {
+        this.pedLots = built; const doors: Door[] = [];
+        for (const l of this.traffic.lots.values()) if (l.level >= LV.BUILT) doors.push({ x: l.o[0] + l.u[0] * l.w / 2 + l.n[0], y: l.o[1] + l.u[1] * l.w / 2 + l.n[1], kind: l.use === 1 ? 0 : 1 });
+        this.peds.setDoors(doors);
+      }
+      this.peds.populate(Math.min(PED_MAX, built * 0.5));
+    }
+    if (this.speed) this.peds.step(dt);
+  }
+  /** the walkers in a tile box as movers (reused Drawables): each its person's frame for its facing (mirrored on the west side) */
+  private pedMovers(x0: number, y0: number, x1: number, y1: number): Drawable[] {
+    const m = this.peds.inBox(x0, y0, x1, y1, this.pedView), out = this.pedDraw; out.length = m;
+    for (let k = 0; k < m; k++) {
+      const v = this.pedView[k], [row, mirror] = FACING_ROW[v.face]!, d = out[k] ?? (out[k] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: true });
+      d.item = WALKER_BASE + (v.person * WALK_DIRS.length + row) * WALK_FRAMES + v.frame; d.x = v.x; d.y = v.y; d.flip = mirror;
+      d.x0 = v.x - 0.12; d.y0 = v.y - 0.12; d.x1 = v.x + 0.12; d.y1 = v.y + 0.12;
+    }
+    return out;
+  }
+
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
@@ -2170,6 +2214,7 @@ export class Game {
     for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
     this.particles = this.particles.filter(p => p.age < p.life);
     this.traffic?.update(now);
+    this.updatePeds(dt);
     // the followed car: the camera centres on its interpolated place (the info itself comes at 10 Hz)
     if (this.followCar && this.traffic.car) {
       const tr = this.traffic, i = this.inspecting, live = tr.alive[i] === 1, x = live ? tr.px[i]! : tr.car!.x, y = live ? tr.py[i]! : tr.car!.y;
@@ -2235,7 +2280,8 @@ export class Game {
       const c = [tileOf(X0, Y0), tileOf(X1, Y0), tileOf(X0, Y1), tileOf(X1, Y1)], pad = 6;
       // cars in tunnels are not drawn (the sim client skips them)
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
-      const movers: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
+      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
+      const movers = tier === 'street' && this.peds.n ? cars.concat(this.pedMovers(bx0, by0, bx1, by1)) : cars;
       this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), street = tier === 'street';
       // car lights (night): lamps and beam glows of the cars in the same box, uploaded with the sprites
