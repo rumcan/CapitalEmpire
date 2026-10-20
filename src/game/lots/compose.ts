@@ -64,10 +64,14 @@ const GARAGE_FRONT = names(['static:garage_timber', 'static:garage_brick', 'stat
 const GARAGE_REAR = names(['expansion:garage-rear']);
 const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id));
 const BUSHES = cat(i => i.kind === 'bush');
-const SHOP_FRONT = names(['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:fish_tackle', 'world:video_rental', 'ref:building-grocery']);
-const SHOP_REAR = names(['static:shop_brick_rear', 'static:shop_brick_rear-v2', 'static:shop_market_rear', 'static:shop_market_rear-v2']);
+/** ids with their plain variations in the library ('town:bakery' -> 'variation:town-bakery-<hash>-plain:1'), the ones the game has */
+const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
+/** every front-facing shop the game has, with its variations (the street fronts deal from it, see com) */
+const SHOP_FRONT = withVariations(['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:fish_tackle', 'town:barber', 'town:hardware', 'world:video_rental', 'world:video',
+  'ref:building-grocery', 'ref:building-corner-shop', 'ref:building-corner-store']);
+const SHOP_REAR = withVariations(['static:shop_brick_rear', 'static:shop_brick_rear-v2', 'static:shop_market_rear', 'static:shop_market_rear-v2']);
 const BOARDED = names(['expansion:boarded-store-rear', 'expansion:derelict-two-storey']);
-const VENUE = names(['world:diner', 'world:arcade', 'ref:building-gas-canopy']);
+const VENUE = withVariations(['world:diner', 'world:arcade', 'world:snack_bar', 'ref:building-gas-canopy']);
 const CIVIC = names(['town:firestation', 'town:postoffice', 'world:primary_school', 'world:church', 'world:school']);
 const SHED = names(['ref:building-farm-shed', 'expansion:abandoned-workshop']);
 const BARN = names(['world:barn']);
@@ -243,17 +247,17 @@ class Build {
   }
   /** a car park along the lot front from a0 to a1: bay lines every BAY tiles, BAY_DEPTH deep, a wheel stop at each bay's end,
    *  and a car in about half the bays (seeded) */
-  carPark(a0: number, a1: number) {
+  carPark(a0: number, a1: number, b0 = 0) {
     const n = Math.floor((a1 - a0) / BAY + 1e-9);
     if (n < 1) return;
     const lines: number[] = [];
-    for (let k = 0; k <= n; k++) { const p = this.P(a0 + k * BAY, 0), q = this.P(a0 + k * BAY, BAY_DEPTH); lines.push(p.x, p.y, q.x, q.y); }
-    this.patches.push({ kind: 'lot', tex: 'asphalt', quad: this.quad(a0, 0, a0 + n * BAY, BAY_DEPTH), lines });
+    for (let k = 0; k <= n; k++) { const p = this.P(a0 + k * BAY, b0), q = this.P(a0 + k * BAY, b0 + BAY_DEPTH); lines.push(p.x, p.y, q.x, q.y); }
+    this.patches.push({ kind: 'lot', tex: 'asphalt', quad: this.quad(a0, b0, a0 + n * BAY, b0 + BAY_DEPTH), lines });
     const flip = Math.abs(this.u.x) < Math.abs(this.u.y);
     for (let k = 0; k < n; k++) {
       const a = a0 + k * BAY + BAY / 2;
-      this.put(WHEEL, a, BAY_DEPTH - 0.4, { flip });
-      if (this.r() < 0.5) this.vehicle(CARS, a, 0.3);
+      this.put(WHEEL, a, b0 + BAY_DEPTH - 0.4, { flip });
+      if (this.r() < 0.5) this.vehicle(CARS, a, b0 + 0.3);
     }
   }
   /** a car (or pickup) facing the road best, from a pool, with its near edge at b0 along the lot's n */
@@ -476,50 +480,63 @@ function fenceLayer(B: Build, lot: LotGeom) {
 /** a shop or venue with a car park beside it (two bays when the lot allows), a lamp at its corner, a front row by the door
  *  (bike rack, bin, bench, bushes along the shop front), a hvac unit at the side, a tree row along the side lot line and the
  *  bins at the back; a tour venue adds a second bench, a picnic table, a phone booth and a sign */
+/** the front of a commercial building: this far back from the lot's street edge (tiles): its paved apron, a shop-front sidewalk with the benches */
+const SHOP_FRONT_B = 1.4;
+/** a commercial lot as one shop of a street front (a main street, a strip of shops): the building at the front of the lot, against the lot's
+ *  lower world-coordinate side line like every lot of the street (as the fences', see fenceLayer), so neighbours line up along the sidewalk
+ *  with only an alley between; at its owner scale, never shrunk (a lot that fits no building is a small car park); dealt from the street's
+ *  own shuffled deck by the lot's slot along it, so neighbouring shops differ; the car park, bins and deliveries behind it */
 function com(B: Build, st: ComposeState, tour: boolean) {
   const { W, D, r, rear, flip } = B;
   const pool = st.decline >= 2 ? BOARDED : rear ? SHOP_REAR : tour ? VENUE : SHOP_FRONT;
-  const ss = specFit(B, pool, Math.max(2.4, W - 4.9), D - 3.5, { flip });
+  const ok = pool.filter(id => { const [w, d] = B.fit(id, flip); return w <= W - 0.3 && d <= D - SHOP_FRONT_B - 1.2; });
+  if (!ok.length) { park(B, st); return; }
+  // the street's deck (seeded by the street line and its side), dealt by the slot along it
+  const slot = Math.round((B.o.x * B.u.x + B.o.y * B.u.y) / W), street = Math.round(B.o.x * B.n.x + B.o.y * B.n.y);
+  const deck = [...ok].sort(), dr = mulberry(mix(street, B.n.x + 2, B.n.y + 2, rear ? 1 : 0));
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(dr() * (i + 1)); [deck[i], deck[j]] = [deck[j]!, deck[i]!]; }
+  const ss = B.spec(deck[((slot % deck.length) + deck.length) % deck.length]!, { flip });
   if (!ss) return;
-  const sw = 2 * B.ea(ss), sd = 2 * B.eb(ss), sb = 1 + r(), ca = 0.3 + sw / 2;
-  B.at(ss, ca, sb + B.eb(ss));
-  // a commercial lot is asphalt all over, with sidewalk slabs from the street to the shop front (both patches carry uprights)
+  const sw = 2 * B.ea(ss), sd = 2 * B.eb(ss), low = B.u.x + B.u.y > 0, ca = low ? 0.15 + sw / 2 : W - 0.15 - sw / 2, back = SHOP_FRONT_B + sd;
+  B.at(ss, ca, SHOP_FRONT_B + sd / 2);
+  // asphalt all over, the sidewalk's slabs on to the shop front (both patches carry uprights)
   B.pave('yard', 0, 0, W, D, 'asphalt');
-  B.pave('yard', 0, 0, Math.min(W, sw + 0.6), sb, 'slabs');
+  B.pave('yard', 0, 0, W, SHOP_FRONT_B, 'slabs');
+  // the alley: the strip beside the building on the other side line (the neighbour's building stands across it)
+  const al0 = low ? ca + sw / 2 : 0, al1 = low ? W : ca - sw / 2, alley = al1 - al0, am = (al0 + al1) / 2;
   if (!rear) {
-    B.put('town:bike_rack', ca - 1.0, sb - 0.9);
-    B.put('world:trashcan', ca - 0.1, sb - 0.5);
-    B.put('world:bench', ca + 0.9, sb - 0.7);
+    B.put('world:bench', ca - sw / 4, 0.5);
+    B.put('world:trashcan', ca + sw / 4, 0.45);
+    if (r() < 0.6) B.put('town:bike_rack', ca, 0.55);
+    B.put('expansion:parking-meter', ca + sw / 2 - 0.4, -0.35, { street: true });
     // the shop door: pumpkins and mums for October, an ice freezer or milk crates out front
-    if (r() < 0.7) { B.put(pick(r, PUMPKINS), ca - 0.6, sb - 0.35); B.put(pick(r, PUMPKINS), ca + 0.5, sb - 0.35); }
-    B.put(r() < 0.5 ? 'expansion:ice-freezer' : 'expansion:milk-crates', ca + sw / 2 - 0.6, sb - 0.5);
-    if (r() < 0.3) B.put(pick(r, SPOOKY), 0.8, 0.8);
-    for (let a = 0.6; a <= sw; a += 1.4) B.put(pick(r, FLOWERS.concat(BUSHES)), a, sb - 0.7, { plant: true });
+    if (r() < 0.7) { B.put(pick(r, PUMPKINS), ca - 0.6, SHOP_FRONT_B - 0.3); B.put(pick(r, PUMPKINS), ca + 0.5, SHOP_FRONT_B - 0.3); }
+    if (alley >= 1.2) B.put(r() < 0.5 ? 'expansion:ice-freezer' : 'expansion:milk-crates', am, SHOP_FRONT_B + 0.4);
+    if (r() < 0.3) B.put(pick(r, SPOOKY), am, 0.3);
   }
-  const pA0 = 0.6 + sw;
-  B.carPark(pA0, W - 0.3);
-  B.put('world:streetlamp', W - 0.4, -0.4, { street: true });
-  B.pave('yard', 0.3, D - 3.2, 0.3 + sw, D - 0.4, 'pad');
-  B.put('town:dumpster', sw * 0.3 + 0.5, D - 1.3);
-  B.put('town:delivery_crates', sw * 0.7 + 0.2, D - 1.2);
-  B.put('expansion:hvac-unit', sw + 0.6, sb + sd / 2);
-  B.put('expansion:utility-cabinet', sw + 0.5, sb + sd - 0.4);
-  B.put('expansion:bread-delivery-rack', sw * 0.5 + 0.6, D - 1.0);
-  B.put('expansion:parking-meter', W - 1.6, -0.35, { street: true });
-  if (r() < 0.4) B.put('world:hydrant', 0.5, -0.4, { street: true });
-  if (r() < 0.5) B.put('expansion:shopping-cart', W - 1.2, BAY_DEPTH + 0.6);
-  // the car park's oil stains and wear, litter by the bins, leaves along the back
-  B.marksIn('stain', pA0, 0.3, W - 0.3, BAY_DEPTH, 1 + Math.floor((W - pA0) / 4), 0.9);
-  B.mark('litter', sw * 0.3 + 1.6, D - 1.6); if (r() < 0.5) B.mark('rubbish', sw * 0.3 + 0.4, D - 2.4, 0.8);
-  B.marksIn('leaves', 0.8, D - 2.5, W - 0.8, D - 0.6, 1);
-  for (let b = sb + 0.6; b <= D - 1.5; b += 2) B.put(pick(r, TREES), W - 0.6, b, { plant: true });
-  B.put(pick(r, TREES), 0.6, D - 0.6, { plant: true });
-  for (let a = 3; a <= W - 1.6; a += 1.4) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
+  B.put('world:streetlamp', low ? W - 0.4 : 0.4, -0.4, { street: true });
+  if (r() < 0.4) B.put('world:hydrant', low ? 0.5 : W - 0.5, -0.4, { street: true });
+  // the alley: bins, the hvac unit and the utility cabinet against the wall, litter
+  if (alley >= 1.2) {
+    B.put('town:dumpster', am, back - 0.8);
+    B.put('expansion:hvac-unit', am, SHOP_FRONT_B + sd / 2);
+    B.put('expansion:utility-cabinet', am, SHOP_FRONT_B + 1.2);
+    B.mark('litter', am, back - 1.6); if (r() < 0.5) B.mark('rubbish', am, back - 2.4, 0.8);
+  }
+  // behind: the car park along the back (its bays from the back wall), the deliveries at the wall, trees and bushes on the back line
+  const pb = back + 1.2;
+  if (D - pb >= BAY_DEPTH + 0.3) { B.carPark(0.3, W - 0.3, pb); B.marksIn('stain', 0.3, pb, W - 0.3, pb + BAY_DEPTH, 1 + Math.floor(W / 4), 0.9); }
+  else { B.pave('yard', 0.3, back + 0.2, W - 0.3, D - 0.3, 'pad'); if (alley < 1.2) B.put('town:dumpster', ca, back + 0.8); }
+  B.put('town:delivery_crates', ca - sw / 4, back + 0.6);
+  B.put('expansion:bread-delivery-rack', ca + sw / 4, back + 0.6);
+  if (r() < 0.5) B.put('expansion:shopping-cart', ca, back + 1.0);
+  B.marksIn('leaves', 0.8, D - 1.6, W - 0.8, D - 0.6, 1);
+  for (let a = 1; a <= W - 1; a += 1.6) B.put(pick(r, BUSHES), a, D - 0.6, { plant: true });
+  if (r() < 0.6) B.put(pick(r, TREES), low ? W - 0.7 : 0.7, D - 0.8, { plant: true });
   if (tour) {
-    B.put('world:bench', W - 1.0, sb + 1.6);
-    B.put('town:picnic_table', W - 1.8, sb + 4.5);
-    B.put('town:phone_booth', 0.6, -0.4, { street: true });
-    B.put('town:street_sign', pA0 + 0.4, -0.4, { street: true });
+    B.put('town:picnic_table', am, back + 0.8);
+    B.put('town:phone_booth', low ? W - 1.2 : 1.2, -0.4, { street: true });
+    B.put('town:street_sign', ca, -0.6, { street: true });
   }
 }
 

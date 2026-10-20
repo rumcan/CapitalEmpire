@@ -7,6 +7,9 @@ import type { Built } from '../sim/trips';
 import { PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
+/** shops gather in rows: a lot's shop neighbours (within COM_ROW tiles, on the same side of the street) raise its shop score by COM_PULL each
+ *  (up to two) and lower its house score to COM_PUSH times (see useFor) */
+const COM_ROW = 14, COM_PULL = 0.9, COM_PUSH = 0.55;
 export const LV = { EMPTY: 0, BUILDING: 1, BUILT: 2, UPGRADED: 3 } as const;
 export interface LotState { key: string; use: number; level: number; decline: number /* 0 ok, 1 shabby, 2 boarded, 3 derelict */; since: number /* sim s of the last change */; seed: number; pop: number; jobs: number }
 /** a saved lot: key, use, level, decline, seed, since (sim s of the last change) */
@@ -270,11 +273,19 @@ export class Town {
       const t = TARGET[u + 1] * w[u] / tot;
       mul[u] = this.occ < MIN_OCC ? 1 : Math.min(3, Math.max(0.3, 1 + 2 * (t - this.cnt[u + 1] / this.occ) / t));
     }
-    let nr = 0;
-    for (const s of this.states.values()) if (s.use === LU.RES && s.level !== LV.EMPTY && dist(this.geo.get(s.key)!.c, l.c) <= 30) nr++;
+    // the residents near (industry keeps away from them), and the shops beside it on the same side of the same street: shops gather in a row
+    // (a strip of shops, a main street), so a lot with shop neighbours is likely a shop too, and less likely a house
+    let nr = 0, nc = 0;
+    for (const s of this.states.values()) {
+      if (s.level === LV.EMPTY) continue;
+      const g = this.geo.get(s.key)!, d = dist(g.c, l.c);
+      if (s.use === LU.RES && d <= 30) nr++;
+      if (s.use === LU.COM && d <= COM_ROW && g.n.x * l.n.x + g.n.y * l.n.y > 0.9) nc++;
+    }
     const de = dist(l.c, ctx.entry), wat = ctx.water(l.c.x, l.c.y);
     sc[0] = (1 + (cid === 'gravel' || cid === 'lane' || cid === 'street' ? 0.5 : 0)) * mul[0];
-    sc[1] = (0.5 + (cid === 'road' || cid === 'avenue' || cid === 'arterial' ? 0.6 : 0) + (cid === 'boulevard' ? 1 : 0) + (l.corner ? 0.4 : 0)) * mul[1];
+    sc[1] = (0.5 + (cid === 'road' || cid === 'avenue' || cid === 'arterial' ? 0.6 : 0) + (cid === 'boulevard' ? 1 : 0) + (l.corner ? 0.4 : 0)) * mul[1] * (1 + COM_PULL * Math.min(2, nc));
+    if (nc) sc[0] *= COM_PUSH;
     sc[2] = (0.2 + (de <= 120 ? 1.2 : 0)) * (nr > 4 ? 0.3 : 1) * mul[2];
     sc[3] = (0.1 + (wat <= 40 ? 1 : 0) + (cid === 'boulevard' ? 0.6 : 0)) * mul[3];
     let best = LU.RES, bv = -1;
