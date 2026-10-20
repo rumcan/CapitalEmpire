@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { ROOT, TOT } from './source.mjs';
+import { REMOVED } from './removed.mjs';
 
 /** the decals the composer uses, by group (the group names are what compose.ts asks for) */
 const GROUPS = {
@@ -26,7 +27,7 @@ const PAGE_W = 2048, GAP = 2, tiles = [], meta = [];
 let x = 0, y = 0, rowH = 0;
 for (const [group, ids] of Object.entries(GROUPS)) for (const id of ids) {
   const it = byId.get(id);
-  if (!it || it.hidden || !it.flat || !fs.existsSync(path.join(dir, it.file))) { console.warn('skip', id); continue; }
+  if (!it || it.hidden || !it.flat || REMOVED.has(id) || !fs.existsSync(path.join(dir, it.file))) { console.warn('skip', id); continue; }
   const w = Math.round(it.w), h = Math.round(it.h);
   if (x + w + GAP > PAGE_W) { x = 0; y += rowH + GAP; rowH = 0; }
   tiles.push({ input: await sharp(path.join(dir, it.file)).resize(w, h, { fit: 'fill', kernel: 'lanczos3' }).png().toBuffer(), left: x + 1, top: y + 1 });

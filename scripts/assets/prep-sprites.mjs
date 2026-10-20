@@ -14,6 +14,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
 import { bakeVariant, lotVariants } from './lot-variants.mjs';
+import { REMOVED } from './removed.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
 const OUT = path.join(ROOT, 'src/assets/atlas');
@@ -57,7 +58,7 @@ const KIND_OF_CAT = { 'Derelict town': 'building', 'Scrapyard clutter': 'decor' 
 // ---- 1. every sprite at mip-0 size, trimmed to its alpha
 const sprites = [], seen = new Set();
 for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
-  if (seen.has(id)) continue; seen.add(id);
+  if (seen.has(id) || REMOVED.has(id)) continue; seen.add(id);
   const it = items[id]; if (!it) { console.warn('missing', id); continue; }
   let buf;
   if (it.src) buf = fs.readFileSync(it.src);
@@ -92,7 +93,7 @@ for (const size of ['adult', 'kid']) {
   const dir = path.join(TOT, 'art/people', size); if (!fs.existsSync(dir)) { console.warn('no people at', dir); continue; }
   for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) {
     const m = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')), sheet = path.join(dir, file.replace(/\.json$/, '.webp'));
-    if (!fs.existsSync(sheet)) continue;
+    if (!fs.existsSync(sheet) || REMOVED.has(m.id)) continue;
     const k = 0.5, fw = m.frameWidth, fh = m.frameHeight, W = Math.round(fw * k * MIP0), H = Math.round(fh * k * MIP0), pi = people.length;
     people.push({ id: m.id, size, w: fw * k, h: fh * k, ax: m.anchor.x * k, ay: m.anchor.y * k, m: m.heightMetres, fps: m.walkFps || 8 });
     for (const d of WALK_DIRS) for (let fr = 0; fr < WALK_FRAMES; fr++) {
@@ -106,7 +107,7 @@ for (const size of ['adult', 'kid']) {
 
 // ---- 1c. the baked house lots (lot-variants.mjs): one picture per variant, rendered straight at mip-0 resolution, the whole lot
 // as its footprint and the house as its planner block
-for (const v of lotVariants()) {
+for (const v of lotVariants().filter(v => !REMOVED.has(v.id))) {
   const b = await bakeVariant(v, MIP0), { data, info } = await sharp(b.png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const t = trim(data, info.width, info.height);
   const it = { name: v.name, cat: 'Lots', kind: 'lot', w: b.w, h: b.h, ax: b.ax, ay: b.ay, boxes: b.boxes, block: b.block, solid: 0, big: true, door: false };

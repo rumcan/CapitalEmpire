@@ -6,7 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-export const TOT = path.resolve(process.env.TOT_REPO || path.join(ROOT, '../TrickOrTreat'));
+/** TrickOrTreat: TOT_REPO, else the sibling of this checkout, else the sibling of the main checkout (from a .claude/worktrees/<name> worktree) */
+export const TOT = path.resolve(process.env.TOT_REPO || [path.join(ROOT, '../TrickOrTreat'), path.join(ROOT, '../../../../TrickOrTreat')].find(p => fs.existsSync(path.join(p, '.git'))) || path.join(ROOT, '../TrickOrTreat'));
 const RAW = 'https://raw.githubusercontent.com/rumcan/TrickOrTreat';
 const hasRepo = fs.existsSync(path.join(TOT, '.git'));
 

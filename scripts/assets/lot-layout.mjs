@@ -13,6 +13,7 @@
 // scales with the lot (its lawn area, fence length, trees and story).
 import { LIB } from './lot-render.mjs';
 import { fromBranch } from './source.mjs';
+import { REMOVED } from './removed.mjs';
 
 /** the owner's placement scales (places-v5 scales.json: the scale each sprite is drawn at on the Maple Falls map) */
 const SCALES = JSON.parse((await fromBranch('town/builder-in-repo', 'scripts/town-builder/places-v5/scales.json')).toString('utf8'));
@@ -21,7 +22,7 @@ let OVR = {}; try { OVR = JSON.parse((await fromBranch('main', 'scripts/town-bui
 
 /** a seeded random stream (mulberry32) */
 export function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-const ok = id => { const i = LIB.get(id); return !!i && !i.hidden; };
+const ok = id => { const i = LIB.get(id); return !!i && !i.hidden && !REMOVED.has(id); };
 const have = ids => ids.filter(ok);
 
 // ---------------------------------------------------------------- the flat decals: one scenario each (or a reason)
@@ -83,7 +84,7 @@ export function coverage() {
 // (tagged facing:south or facing:north) do not sit on an iso lot and are left out; corner views and the originals are kept.
 const tagsOf = it => it.tags || [], baseOf = it => tagsOf(it).find(t => t.startsWith('variation-of:'))?.slice(13) ?? it.id;
 const iso = it => !tagsOf(it).some(t => t === 'facing:south' || t === 'facing:north');
-const all = f => [...LIB.values()].filter(it => !it.hidden && !it.flat && iso(it) && f(it)).map(it => it.id);
+const all = f => [...LIB.values()].filter(it => !it.hidden && !it.flat && !REMOVED.has(it.id) && iso(it) && f(it)).map(it => it.id);
 /** front-facing houses: the house sprites and their corner-view variations (no garages, no house backs) */
 export const HOUSES = all(it => it.category === 'Houses' && /^(world:house_[0-9]|gen:house-)/.test(baseOf(it)));
 /** rear views for lots whose street is behind them */
