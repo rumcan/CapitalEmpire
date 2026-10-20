@@ -72,6 +72,8 @@ import p13m1 from '../assets/atlas/sprites-13-1.webp';
 import p13m2 from '../assets/atlas/sprites-13-2.webp';
 import p13m3 from '../assets/atlas/sprites-13-3.webp';
 import p13m4 from '../assets/atlas/sprites-13-4.webp';
+import { appendCars } from './cars-library';
+import { appendBusinesses } from './business-library';
 
 /** atlas pages: one row per page, one url per mip (scale 0.6 x 2^-mip of native) */
 export const ATLAS_PAGES: string[][] = [[p0m0, p0m1, p0m2, p0m3, p0m4], [p1m0, p1m1, p1m2, p1m3, p1m4], [p2m0, p2m1, p2m2, p2m3, p2m4], [p3m0, p3m1, p3m2, p3m3, p3m4], [p4m0, p4m1, p4m2, p4m3, p4m4], [p5m0, p5m1, p5m2, p5m3, p5m4], [p6m0, p6m1, p6m2, p6m3, p6m4], [p7m0, p7m1, p7m2, p7m3, p7m4], [p8m0, p8m1, p8m2, p8m3, p8m4], [p9m0, p9m1, p9m2, p9m3, p9m4], [p10m0, p10m1, p10m2, p10m3, p10m4], [p11m0, p11m1, p11m2, p11m3, p11m4], [p12m0, p12m1, p12m2, p12m3, p12m4], [p13m0, p13m1, p13m2, p13m3, p13m4]];
@@ -1013,3 +1015,6 @@ for (let i = 0; i < WF.length / 9; i++) {
   const p = WALKER_PEOPLE[Math.floor(i / (WALK_DIRS.length * WALK_FRAMES))], o = i * 9;
   LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * WALK_FRAMES)}`, name: p.id, cat: 'Townspeople', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [WF[o], WF[o + 1], WF[o + 2], WF[o + 3], WF[o + 4]], quad: [WF[o + 5], WF[o + 6], WF[o + 7], WF[o + 8]] });
 }
+
+appendCars(LIBRARY, ATLAS_PAGES);
+appendBusinesses(LIBRARY, ATLAS_PAGES);

@@ -1,0 +1,38 @@
+import { BUSINESS, type BusinessId } from './catalogue';
+import type { BizDef } from './state';
+import type { LibItem, Prop } from '../types';
+
+/** The representative delivered sprite for each business's catalogue card. */
+export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel' };
+// Positions and sizes are fractions of the canonical parcel; R exchanges its world axes.
+type Piece = [string, number, number, number];
+const single = (id: string): Piece[] => [[id, 0.5, 0.5, 0.88]];
+const LAYOUT: Record<BusinessId, Piece[]> = {
+  stadium: single('stadium'), sportsbar: single('sportsbar'), buscompany: single('buscompany'), diner: single('diner'), taxi: single('taxi'),
+  tackle: single('tackle'), casino: single('casino'), hotel: single('hotel'), motel: single('motel'),
+  estate: [[ 'estate-villa', .25, .28, .25 ], ['estate-villa', .7, .28, .25], ['estate-villa', .25, .72, .25], ['estate-villa', .7, .72, .25]],
+  golf: [
+    ['golf-fairway-curved', .25, .25, .4], ['golf-fairway-dogleg', .65, .3, .4], ['golf-fairway-curved', .33, .65, .4],
+    ['golf-green-kidney-flagged', .13, .12, .15], ['golf-green-unflagged', .78, .14, .15], ['golf-green-kidney-flagged', .16, .82, .15],
+    ['golf-pond', .65, .55, .21], ['golf-bunker-organic', .2, .4, .12], ['golf-bunker-crescent', .58, .12, .11],
+    ['golf-tee-box', .45, .38, .09], ['golf-tee-box', .45, .83, .09], ['golf-footbridge', .63, .55, .08],
+    ['golf-clubhouse', .8, .8, .19], ['golf-pro-shop', .9, .61, .1], ['golf-cart-garage', .58, .9, .11],
+    ['golf-halfway-pavilion', .08, .55, .09], ['golf-driving-range', .84, .4, .14], ['golf-practice-net', .88, .5, .05],
+    ['golf-patio-table', .69, .83, .035], ['golf-bench-course-map', .7, .7, .04], ['golf-cart-sw', .7, .9, .04],
+  ],
+  fishing: [ ['fishing-lodge', .45, .45, .38], ['fishing-cabin', .18, .2, .18], ['fishing-cabin', .18, .7, .18],
+    ['fishing-boathouse', .78, .45, .22], ['fishing-dock-rope', .82, .2, .14], ['fishing-dock-lifebuoy', .85, .7, .14],
+    ['fishing-rental-kiosk', .54, .83, .12], ['fishing-bass-boat', .93, .7, .1] ],
+};
+
+/** Derive render-only props from a saved business parcel (tiles); no extra props enter the save or simulation. */
+export function businessArt(def: BizDef, library: LibItem[], index: ReadonlyMap<string, number>): Prop[] {
+  const canonical = BUSINESS[def.type].footprint, flip = def.w === canonical.h && def.h === canonical.w;
+  return LAYOUT[def.type].flatMap(([id, u, v, fraction], n) => {
+    const item = index.get('business:' + id); if (item === undefined) return [];
+    const it = library[item], scale = 64 * (def.w + def.h) * fraction / it.w;
+    const x = def.x + (flip ? v : u) * def.w, y = def.y + (flip ? u : v) * def.h;
+    const radius = Math.min(def.w, def.h) * fraction * .35;
+    return [{ uid: -1000000 - def.id * 100 - n, item, x, y, flip, scale, x0: x - radius, y0: y - radius, x1: x + radius, y1: y + radius, auto: 'business-art' }];
+  });
+}

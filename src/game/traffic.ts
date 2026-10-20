@@ -1,29 +1,29 @@
-/** Car sprite facings for the sim client (sim/client.ts): per car type, the sprite and footprint for each of the four
- *  headings (+x, +y, -x, -y). The cars themselves are simulated in the sim worker (sim/sim.worker.ts). */
+/** Per vehicle type, eight painted headings in world-angle order (+x through +x-y).
+ *  The cars themselves are simulated in the sim worker (sim/sim.worker.ts). */
 import { LIBRARY } from './library';
+import { CAR_DIRECTIONS, carHeading } from './ext/car-art';
+export { carHeading } from './ext/car-art';
 
 const byId = (id: string) => LIBRARY.findIndex(i => i.id === id);
-/** per car type and heading (+x, +y, -x, -y): sprite, flip, and the footprint around the lane point */
+/** Sprite, flip and tile footprint around the lane point. */
 interface Facing { item: number; flip: boolean; ox: number; oy: number; hx: number; hy: number }
 let FACINGS: Facing[][] = [];
 /** the car sprite sets, one per car type, each with a facing per heading (built once) */
 export function facings() {
   if (FACINGS.length) return FACINGS;
-  const c = { e: byId('static:compact_e'), s: byId('static:compact_s'), w: byId('static:compact_w'), n: byId('static:compact_n'), van: byId('static:van_e'), vanB: byId('static:van_e-v2'), pick: byId('static:pickup_n'), pickB: byId('static:pickup_n-v2'), nb: byId('static:compact_n-v2') };
-  const sets: [number, boolean][][] = [[[c.e, false], [c.s, false], [c.w, false], [c.n, false]]];
-  if (c.van >= 0) sets.push([[c.van, false], [c.van, true], [c.w, false], [c.nb >= 0 ? c.nb : c.n, false]]);
-  if (c.vanB >= 0) sets.push([[c.vanB, false], [c.vanB, true], [c.w, false], [c.n, false]]);
-  if (c.pick >= 0) sets.push([[c.e, false], [c.s, false], [c.pick, true], [c.pick, false]]);
-  if (c.pickB >= 0) sets.push([[c.e, false], [c.s, false], [c.pickB, true], [c.pickB, false]]);
-  // the shuttle bus (vehicle type 5, see VTYPES): placeholder art, the schoolbus flipped on the s and n headings
-  const bus = byId('world:schoolbus'), bi = bus >= 0 ? bus : c.e;
-  while (sets.length < 5) sets.push(sets[0]!);
-  sets.push([[bi, false], [bi, true], [bi, false], [bi, true]]);
+  const models = ['burgundy-wagon', 'navy-wood-panel-wagon'];
+  const sets: [number, boolean][][] = Array.from({ length: 5 }, (_, type) => CAR_DIRECTIONS.map(dir => [byId(`cars:${models[type % models.length]}:${dir}`), false]));
+  // Shuttle bus (vehicle type 5): separate placeholder art until a complete bus pack is supplied.
+  const bus = byId('world:schoolbus');
+  sets.push(Array.from({ length: 8 }, (_, heading) => [bus, Math.round(heading / 2) % 2 === 1]));
   FACINGS = sets.map(set => set.map(([item, flip]) => {
+    if (item < 0) throw new Error('Missing directional vehicle art; rebuild supplemental cars atlas');
     const b = LIBRARY[item].boxes[0];
     return { item, flip, ox: (flip ? b.dy : b.dx) / 2, oy: (flip ? b.dx : b.dy) / 2, hx: (flip ? b.hy : b.hx) / 2, hy: (flip ? b.hx : b.hy) / 2 };
   }));
   return FACINGS;
 }
+/** Painted car for a parking bay's cardinal direction: 0 +x, 1 +y, 2 -x, 3 -y. */
+export function parkedCar(type: number, direction: number): Facing { return facings()[type % 5]![carHeading(direction * Math.PI / 2)]!; }
 /** body colours of the cars (the planner dots), by car type */
-export const CAR_COLOURS = [[0.95, 0.85, 0.55], [0.9, 0.45, 0.35], [0.6, 0.8, 0.95], [0.85, 0.85, 0.85], [0.7, 0.9, 0.6], [0.95, 0.6, 0.15]];
+export const CAR_COLOURS = [[0.48, 0.13, 0.18], [0.12, 0.19, 0.3], [0.48, 0.13, 0.18], [0.12, 0.19, 0.3], [0.48, 0.13, 0.18], [0.95, 0.6, 0.15]];

@@ -1,0 +1,411 @@
+{
+  "model": "navy-wood-panel-wagon",
+  "identity": "navy blue station wagon with brown woodgrain side panel, chrome trim, dark blue roof and roof rack",
+  "atlasFile": "navy-wood-panel-wagon__8-directions.png",
+  "atlasWidth": 2216,
+  "atlasHeight": 970,
+  "cellWidth": 554,
+  "cellHeight": 485,
+  "atlasPivotPixels": {
+    "x": 277.0,
+    "y": 461
+  },
+  "previewFile": "navy-wood-panel-wagon__preview.png",
+  "directionOrder": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "worldAngleMapping": {
+    "screenToWorldDegrees": {
+      "N": 225,
+      "NE": 270,
+      "E": 315,
+      "SE": 0,
+      "S": 45,
+      "SW": 90,
+      "W": 135,
+      "NW": 180
+    },
+    "worldAngleDefinition": "atan2(worldDeltaY, worldDeltaX), degrees modulo 360",
+    "projection": {
+      "screenX": "(worldX - worldY) * 64",
+      "screenY": "(worldX + worldY) * 32"
+    },
+    "screenHeadingMeaning": "Vehicle nose direction on screen; N points up, E points right. Diagonal nose axes have a 2:1 screen slope."
+  },
+  "views": [
+    {
+      "key": "N",
+      "screenNoseDirection": "up",
+      "worldAngleDegrees": 225,
+      "file": "navy-wood-panel-wagon__N.png",
+      "width": 229,
+      "height": 437,
+      "anchorPixels": {
+        "x": 114.5,
+        "y": 437
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 0,
+        "y": 0,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 162,
+        "y": 24
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_1\\world-car_1-a53c4fd9-3.webp",
+        "sourceFrame": 3,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          231,
+          439
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\navy-wood-panel-wagon\\navy-wood-panel-wagon__N.png",
+        "width": 229,
+        "height": 437,
+        "resized": false,
+        "sourceHasAlpha": true
+      }
+    },
+    {
+      "key": "NE",
+      "screenNoseDirection": "up-right",
+      "worldAngleDegrees": 270,
+      "file": "navy-wood-panel-wagon__NE.png",
+      "width": 506,
+      "height": 257,
+      "anchorPixels": {
+        "x": 253.0,
+        "y": 257
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 554,
+        "y": 0,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 204
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "generatedView": "NE",
+        "flipHorizontal": false
+      }
+    },
+    {
+      "key": "E",
+      "screenNoseDirection": "right",
+      "worldAngleDegrees": 315,
+      "file": "navy-wood-panel-wagon__E.png",
+      "width": 500,
+      "height": 209,
+      "anchorPixels": {
+        "x": 250.0,
+        "y": 209
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1108,
+        "y": 0,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 27,
+        "y": 252
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_1\\world-car_1-a53c4fd9-1.webp",
+        "sourceFrame": 1,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          502,
+          211
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\navy-wood-panel-wagon\\navy-wood-panel-wagon__E.png",
+        "width": 500,
+        "height": 209,
+        "resized": false,
+        "sourceHasAlpha": true
+      }
+    },
+    {
+      "key": "SE",
+      "screenNoseDirection": "down-right",
+      "worldAngleDegrees": 0,
+      "file": "navy-wood-panel-wagon__SE.png",
+      "width": 506,
+      "height": 366,
+      "anchorPixels": {
+        "x": 253.0,
+        "y": 366
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1662,
+        "y": 0,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 95
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_1\\world-car_1-a53c4fd9-4.webp",
+        "sourceFrame": 4,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          508,
+          368
+        ],
+        "flipHorizontal": true,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\navy-wood-panel-wagon\\navy-wood-panel-wagon__SE.png",
+        "width": 506,
+        "height": 366,
+        "resized": false,
+        "sourceHasAlpha": true
+      }
+    },
+    {
+      "key": "S",
+      "screenNoseDirection": "down",
+      "worldAngleDegrees": 45,
+      "file": "navy-wood-panel-wagon__S.png",
+      "width": 234,
+      "height": 429,
+      "anchorPixels": {
+        "x": 117.0,
+        "y": 429
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 0,
+        "y": 485,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 160,
+        "y": 32
+      },
+      "mirrorOf": null,
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_1\\world-car_1-a53c4fd9-2.webp",
+        "sourceFrame": 2,
+        "sourceAlphaBounds": [
+          1,
+          2,
+          235,
+          431
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\navy-wood-panel-wagon\\navy-wood-panel-wagon__S.png",
+        "width": 234,
+        "height": 429,
+        "resized": false,
+        "sourceHasAlpha": true
+      }
+    },
+    {
+      "key": "SW",
+      "screenNoseDirection": "down-left",
+      "worldAngleDegrees": 90,
+      "file": "navy-wood-panel-wagon__SW.png",
+      "width": 506,
+      "height": 366,
+      "anchorPixels": {
+        "x": 253.0,
+        "y": 366
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 554,
+        "y": 485,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 95
+      },
+      "mirrorOf": "SE",
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_1\\world-car_1-a53c4fd9-4.webp",
+        "sourceFrame": 4,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          508,
+          368
+        ],
+        "flipHorizontal": false,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\navy-wood-panel-wagon\\navy-wood-panel-wagon__SW.png",
+        "width": 506,
+        "height": 366,
+        "resized": false,
+        "sourceHasAlpha": true
+      }
+    },
+    {
+      "key": "W",
+      "screenNoseDirection": "left",
+      "worldAngleDegrees": 135,
+      "file": "navy-wood-panel-wagon__W.png",
+      "width": 500,
+      "height": 209,
+      "anchorPixels": {
+        "x": 250.0,
+        "y": 209
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1108,
+        "y": 485,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 27,
+        "y": 252
+      },
+      "mirrorOf": "E",
+      "provenance": {
+        "source": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\art\\town-variations\\world-car_1\\world-car_1-a53c4fd9-1.webp",
+        "sourceFrame": 1,
+        "sourceAlphaBounds": [
+          2,
+          2,
+          502,
+          211
+        ],
+        "flipHorizontal": true,
+        "preparedPng": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\known-views\\navy-wood-panel-wagon\\navy-wood-panel-wagon__W.png",
+        "width": 500,
+        "height": 209,
+        "resized": false,
+        "sourceHasAlpha": true
+      }
+    },
+    {
+      "key": "NW",
+      "screenNoseDirection": "up-left",
+      "worldAngleDegrees": 180,
+      "file": "navy-wood-panel-wagon__NW.png",
+      "width": 506,
+      "height": 257,
+      "anchorPixels": {
+        "x": 253.0,
+        "y": 257
+      },
+      "anchorNormalized": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorStatus": "Provisional bottom-center of alpha-trimmed sprite; wheel contact and motion need game review.",
+      "atlasCell": {
+        "x": 1662,
+        "y": 485,
+        "width": 554,
+        "height": 485
+      },
+      "atlasContentOffset": {
+        "x": 24,
+        "y": 204
+      },
+      "mirrorOf": "NE",
+      "provenance": {
+        "generatedView": "NE",
+        "flipHorizontal": true
+      }
+    }
+  ],
+  "generatedNE": {
+    "originalGeneratedPath": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a158de-40bb-76a0-a8cf-db37ad7e3815\\exec-40dc63f4-15d6-43d6-9f9d-0a1ba58787aa.png",
+    "archivedGeneratedPath": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\raw-ne\\navy-wood-panel-wagon__generated-NE.png",
+    "rawSha256": "ddba7c5af7a5be5185f72a8b84d37ef234ba1ea90c84d9aca898acae63939afa",
+    "originalSize": [
+      1536,
+      1024
+    ],
+    "originalNonzeroAlphaBounds": [
+      0,
+      21,
+      1487,
+      998
+    ],
+    "alphaCutoff": 8,
+    "trimBounds": [
+      114,
+      172,
+      1483,
+      868
+    ],
+    "trimmedSize": [
+      1369,
+      696
+    ],
+    "targetReferenceView": "SE",
+    "targetReferenceWidth": 506,
+    "resizeRatio": 0.3696128560993426,
+    "resizedSize": [
+      506,
+      257
+    ],
+    "resizeFilter": "LANCZOS",
+    "upscaled": false,
+    "backgroundMethod": "True alpha supplied by image generator; only alpha values <= cutoff discarded."
+  },
+  "sourcePlan": "C:\\Work Admin\\PERSONAL\\Repos\\TrickOrTreat\\output\\capital-empire-cars-2026-10-20\\reference-8way\\navy-wood-panel-wagon__plan.json",
+  "placementNote": "Common atlas pivot aligns the provisional bottom-center pixel anchor in each frame, to within half a pixel for odd widths. It does not establish stable ground-contact motion in the game.",
+  "cameraNote": "Directions mean vehicle nose direction on the screen. Diagonal headings use a 2:1 screen slope. Existing source views retain their original perspective."
+}
