@@ -1,5 +1,5 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
-import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
+import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
  *  - asphalt: the owner's painted asphalt (flattened), laid in 1.6 m hex patches with random offsets so it never repeats,
@@ -172,6 +172,42 @@ function gen(name: TexName): Cnv {
   return c;
 }
 
+/** bare-soil stamps (town-scene.mjs soil patches): an ellipse of radius SOIL_R world px across and half that down, ragged by
+ *  noise and feathered, the soil painting at 80% inside; SOIL_W x SOIL_H each, at the authoring scale 1 world px per px */
+export const SOIL_STAMPS = 4, SOIL_R = 100, SOIL_W = 3.2 * SOIL_R, SOIL_H = 1.6 * SOIL_R;
+function soilStamps(soil: Cnv) {
+  const c = canvas(SOIL_W * SOIL_STAMPS, SOIL_H), g = ctx2d(c);
+  g.fillStyle = g.createPattern(soil, 'repeat')!; g.fillRect(0, 0, c.width, c.height);
+  const d = g.getImageData(0, 0, c.width, c.height), D = d.data;
+  for (let k = 0; k < SOIL_STAMPS; k++) {
+    const n = fbm(311 + k * 7, SOIL_W, SOIL_H, 8, 3);
+    for (let y = 0; y < SOIL_H; y++) for (let x = 0; x < SOIL_W; x++) {
+      const dx = (x - SOIL_W / 2) / SOIL_R, dy = (y - SOIL_H / 2) / (SOIL_R * 0.5), e = smooth(1.05, 0.7, Math.hypot(dx, dy) + (n(x, y) - 0.5) * 0.9);
+      D[(y * c.width + k * SOIL_W + x) * 4 + 3] = e * 0.8 * 255;
+    }
+  }
+  g.putImageData(d, 0, 0); return c;
+}
+/** the car-park asphalt (town-scene.mjs lotAsphalt): soft overlapping 4.5-tile patches of the 28 m painting at random windows,
+ *  over the MOSAIC_TILES period in tile space like the road mosaic; its own large-scale tone is the variation */
+function lotMosaic(src: Cnv) {
+  const S = MOSAIC_TILES * MOSAIC_PX, c = canvas(S, S), g = ctx2d(c), scale = MOSAIC_PX / 2 / (src.width / LOT_ASPHALT_M);
+  const d0 = ctx2d(src).getImageData(0, 0, src.width, src.height).data, mean = [0, 0, 0];
+  for (let i = 0; i < d0.length; i += 4) for (let k = 0; k < 3; k++) mean[k] += d0[i + k] / (d0.length / 4);
+  g.fillStyle = `rgb(${mean.map(Math.round).join(',')})`; g.fillRect(0, 0, S, S);
+  const n = 3, sp = S / n, R = sp * 0.85, P = Math.ceil(2 * R) + 2, patch = canvas(P, P), pg = ctx2d(patch), soft = canvas(P, P), r = mulberry(5150);
+  { const sg = ctx2d(soft), gr = sg.createRadialGradient(P / 2, P / 2, 0, P / 2, P / 2, R); gr.addColorStop(0, '#000'); gr.addColorStop(0.45, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = gr; sg.fillRect(0, 0, P, P); }
+  const W = src.width * scale, H = src.height * scale;
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const ox = R + r() * Math.max(1, W - 2 * R), oy = R + r() * Math.max(1, H - 2 * R);
+    pg.globalCompositeOperation = 'source-over'; pg.clearRect(0, 0, P, P); pg.drawImage(src, P / 2 - ox, P / 2 - oy, W, H);
+    pg.globalCompositeOperation = 'destination-in'; pg.drawImage(soft, 0, 0);
+    const X = (i + 0.5 + (j & 1 ? 0.5 : 0)) * sp - P / 2, Y = (j + 0.5) * sp - P / 2;
+    for (const wx of [-S, 0, S]) for (const wy of [-S, 0, S]) { const x = X + wx, y = Y + wy; if (x > -P && x < S && y > -P && y < S) g.drawImage(patch, x, y); }
+  }
+  return c;
+}
+
 export interface CurbColours { joint: string; top: string; face: string[]; gutter: string[]; faceHidden: string }
 export interface LeafSprite { i: number; dim: number; round: boolean }
 
@@ -180,6 +216,10 @@ export class Textures {
   /** asphalt mosaics in tile space, by variant ('base' | 'lit1' | 'lit2') and mip (px per tile) */
   mosaics = new Map<string, Cnv[]>();
   slabs!: Cnv; leaves!: Cnv; pool1!: Cnv; pool2!: Cnv;
+  /** the builder's grass decals (ground-art DECALS rects) and SOIL_STAMPS ragged bare-soil stamps in a row (SOIL_W x SOIL_H each) */
+  decals!: Cnv; soil!: Cnv;
+  /** the builder's flat ground decals (lot-decals.ts LOT_DECALS rects) the Lot Composer lays in lots */
+  lotDecals!: Cnv;
   /** screen direction (radians) of the pool stamp's streak for a road running along world X (town-scene.mjs stampAngle) */
   stampAngle = 0;
   curb: CurbColours = { joint: '#8a6a48', top: '#f0dfbe', face: ['#dcc29a', '#c8a876', '#a98652'], gutter: ['#1a1620', '#2a2430', '#3a3444'], faceHidden: '#d8c6a0' };
@@ -189,9 +229,9 @@ export class Textures {
 
   async build(art: GroundArt, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
-    const steps = PAINTED.length + 8; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
-    const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves].map(loadImage));
-    this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg);
+    const steps = PAINTED.length + 10; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
+    const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals].map(loadImage));
+    this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg);
     await tick();
     for (const name of PAINTED) { this.store(name, gen(name)); await tick(); }
     // ---- asphalt mosaics: one seed layout, three paintings (unlit, lit 0.4, lit 0.9)
@@ -206,6 +246,7 @@ export class Textures {
     this.mosaics.set('base', this.mipChain(this.mosaic(seeds, srcA, srcB))); await tick();
     this.mosaics.set('lit1', this.mipChain(this.mosaic(seeds, lit(srcA, 0.4), lit(srcB, 0.4)))); await tick();
     this.mosaics.set('lit2', this.mipChain(this.mosaic(seeds, lit(srcA, 0.9), lit(srcB, 0.9)))); await tick();
+    this.mosaics.set('lot', this.mipChain(lotMosaic(toCanvas(lotImg)))); await tick();
     // ---- grass: hex-mixed paintings with low-frequency tone, in screen space
     const gA = toCanvas(grassA, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)), gB = toCanvas(grassB, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR));
     const grass = this.grass(gA, gB);
@@ -267,7 +308,7 @@ export class Textures {
   }
   private mipChain(c: Cnv) { const out = [c]; while (out[out.length - 1].width > 96) out.push(downscale(out[out.length - 1], 0.5)); return out; }
   /** the asphalt mosaic mip for a cache level (screen px per world px): never upsampled */
-  mosaicFor(variant: 'base' | 'lit1' | 'lit2', L: number) {
+  mosaicFor(variant: 'base' | 'lit1' | 'lit2' | 'lot', L: number) {
     const chain = this.mosaics.get(variant)!, want = 128 * L; let pick = chain[0];
     for (const m of chain) { if (m.width / MOSAIC_TILES >= want) pick = m; else break; }
     return pick;

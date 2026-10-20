@@ -8,8 +8,12 @@ import slabs from '../assets/ground/slabs.webp';
 import grassA from '../assets/ground/grass-base.webp';
 import grassB from '../assets/ground/grass-v2-base.webp';
 import leaves from '../assets/ground/leaves.webp';
+import soil from '../assets/ground/soil.webp';
+import decals from '../assets/ground/decals.webp';
+import lotAsphalt from '../assets/ground/lot-asphalt.webp';
+import lotDecals from '../assets/ground/lot-decals.webp';
 
-export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves };
+export const GROUND_ART = { asphaltA, asphaltB, curbVisible, curbHidden, pool, slabs, grassA, grassB, leaves, soil, decals, lotAsphalt, lotDecals };
 export type GroundArt = typeof GROUND_ART;
 /** painted px per metre of the road kit (manifest.json pxPerM) */
 export const PPM = 55.2;
@@ -23,3 +27,7 @@ export const LEAF_COLS = 12;
 export const LEAVES: { i: number; dim: number; round: boolean }[] = [{"i":0,"dim":16,"round":true},{"i":1,"dim":16,"round":true},{"i":2,"dim":17,"round":true},{"i":3,"dim":18,"round":true},{"i":4,"dim":18,"round":true},{"i":5,"dim":19,"round":true},{"i":6,"dim":19,"round":true},{"i":7,"dim":20,"round":true},{"i":8,"dim":21,"round":true},{"i":9,"dim":21,"round":true},{"i":10,"dim":22,"round":true},{"i":11,"dim":22,"round":true},{"i":12,"dim":23,"round":true},{"i":13,"dim":23,"round":true},{"i":14,"dim":24,"round":true},{"i":15,"dim":24,"round":true},{"i":16,"dim":25,"round":true},{"i":17,"dim":25,"round":true},{"i":18,"dim":26,"round":true},{"i":19,"dim":28,"round":true},{"i":20,"dim":29,"round":true},{"i":21,"dim":30,"round":true},{"i":22,"dim":31,"round":true},{"i":23,"dim":38,"round":true},{"i":24,"dim":41,"round":true},{"i":25,"dim":44,"round":true},{"i":26,"dim":25,"round":false},{"i":27,"dim":29,"round":false},{"i":28,"dim":57,"round":false},{"i":29,"dim":61,"round":false},{"i":30,"dim":71,"round":false},{"i":31,"dim":15,"round":false},{"i":32,"dim":18,"round":false},{"i":33,"dim":20,"round":false},{"i":34,"dim":23,"round":false},{"i":35,"dim":24,"round":false},{"i":36,"dim":26,"round":false},{"i":37,"dim":27,"round":false},{"i":38,"dim":29,"round":false},{"i":39,"dim":31,"round":false},{"i":40,"dim":33,"round":false},{"i":41,"dim":33,"round":false},{"i":42,"dim":35,"round":false},{"i":43,"dim":35,"round":false},{"i":44,"dim":38,"round":false},{"i":45,"dim":40,"round":false},{"i":46,"dim":42,"round":false},{"i":47,"dim":46,"round":false}];
 /** the manifest's pool stamp anchor: lampU (px along), curbRow (px across) */
 export const POOL_ANCHOR: [number, number] = [190, 20.5];
+/** the builder's grass decals in decals.webp (x, y, w, h in px = world px at scale 1): grass patches, leaf scatters, tufts */
+export const DECALS: { kind: 'grass' | 'leaves' | 'tufts'; x: number; y: number; w: number; h: number }[] = [{"kind":"grass","x":1,"y":1,"w":230,"h":230},{"kind":"grass","x":233,"y":1,"w":230,"h":153},{"kind":"grass","x":465,"y":1,"w":250,"h":250},{"kind":"grass","x":717,"y":1,"w":190,"h":190},{"kind":"grass","x":909,"y":1,"w":210,"h":210},{"kind":"leaves","x":1121,"y":1,"w":170,"h":170},{"kind":"leaves","x":1293,"y":1,"w":150,"h":115},{"kind":"leaves","x":1445,"y":1,"w":150,"h":100},{"kind":"tufts","x":1597,"y":1,"w":260,"h":260}];
+/** the car-park asphalt painting spans this many metres */
+export const LOT_ASPHALT_M = 28;

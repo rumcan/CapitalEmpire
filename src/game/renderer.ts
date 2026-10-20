@@ -1,7 +1,8 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
-import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
-import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
+import { MOSAIC_TILES, SOIL_H, SOIL_R, SOIL_STAMPS, SOIL_W, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
+import { DECALS, POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
+import { LOT_DECALS } from './lot-decals';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
@@ -12,6 +13,8 @@ const TILE_PX = Math.hypot(HW, HH);
 /** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m) */
 const CURB_TOP = 0.065, CURB_JOINT = 0.04, FACE_WORLD = 7.5, GUTTER = 0.2;
 const SLAB_LEN = 1.25;
+/** grass dressing regions (tiles): each is 256 m², the builder's 512 px region at zoom 1 */
+const DRESS = 8;
 /** bridge geometry in world px at zoom 1: deck thickness, deck underside to water, railing height */
 const DECK_T = 12, PIER_H = 40, RAIL_H = 10;
 const YELLOW = 'rgba(246,168,36,0.93)', WHITE = 'rgba(229,225,207,0.9)';
@@ -166,6 +169,7 @@ export class GroundPainter {
     // ---- 1. terrain: grass; meadow and forest floor through soft noise-edged class masks; river banks and creek beds from
     //      the smoothed waterway lines; the baked hillshade; then the river water (flat, so unshaded)
     ctx.fillStyle = pat('grass'); ctx.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
+    if (L >= 0.05) { this.drawDressing(ctx, box, L, M); ctx.setTransform(M); }
     const bw = tx1 - tx0, bh = ty1 - ty0;
     /** an RGBA image over the tile box (res px per tile), stretched onto g through the iso transform (bilinear) */
     const overlay = (g: C2D, img: { data: Uint8ClampedArray; W: number; H: number }, res: number) => { const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0); g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(s, tx0, ty0, img.W / res, img.H / res); };
@@ -190,9 +194,9 @@ export class GroundPainter {
     const shiftM = (dy: number) => new DOMMatrix([1, 0, 0, 1, 0, dy * L]).multiply(M);
     // ---- 1a. lot ground (driveways, walks, car parks, yards) before the verges and roads: each patch in its surface,
     //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines
-    const all = this.lotsIn(box), lots = all.filter(p => !p.paint), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    const all = this.lotsIn(box), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     if (lots.length) {
-      const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('base', L)) : null;
+      const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('lot', L)) : null;
       for (const p of lots) {
         const path = polyPath(p.pts);
         ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : pat(p.tex as TexName); ctx.fill(path);
@@ -212,6 +216,8 @@ export class GroundPainter {
       }
       ctx.setTransform(M);
     }
+    // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) over their ground
+    if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
@@ -489,6 +495,48 @@ export class GroundPainter {
       g.drawImage(img, sx, sy, sw, sh, k * SLAB_LEN + (j & 1 ? SLAB_LEN / 2 : 0) - 0.01, j * SW - 0.01, SLAB_LEN + 0.02, SW + 0.02);
     }
     g.setTransform(M);
+  }
+
+  /** the builder's grass dressing (town-scene.mjs regionDressing), seeded per DRESS-tile region so chunks agree: a bare-soil
+   *  patch in 30% of regions, then about 12 soft decals per region (82% the five grass patches, the rest leaf scatters and
+   *  tufts) at 0.7-1.3x their size, flipped at random, 55-95% opaque. Drawn over the grass before everything else, so the
+   *  terrain layers, lots and roads cover them; skipped on hills, water and banks. */
+  private drawDressing(ctx: C2D, box: BBox, L: number, M: DOMMatrix) {
+    const [tx0, ty0, tx1, ty1] = box, tex = this.tex, soil: number[] = [], dec: number[] = [];
+    const ground = (x: number, y: number) => x >= 0 && y >= 0 && x < MAP && y < MAP && this.terrain[Math.floor(y) * MAP + Math.floor(x)] <= TC.PATCH;
+    for (let ry = Math.floor((ty0 - 4) / DRESS); ry <= Math.floor((ty1 + 4) / DRESS); ry++) for (let rx = Math.floor((tx0 - 4) / DRESS); rx <= Math.floor((tx1 + 4) / DRESS); rx++) {
+      const r = mulberry(((rx * 7919) ^ (ry * 104729) ^ 0xdeca1) >>> 0);
+      if (r() < 0.3) { const x = (rx + r()) * DRESS, y = (ry + r()) * DRESS, rad = (1.5 + r() * 2.8) * 45, k = Math.floor(r() * SOIL_STAMPS); if (ground(x, y)) soil.push(x, y, rad, k); }
+      for (let i = 0; i < 12; i++) {
+        const k = r() < 0.82 ? Math.floor(r() * 5) : r() < 0.7 ? 5 + Math.floor(r() * 3) : 8, x = (rx + r()) * DRESS, y = (ry + r()) * DRESS, s = 0.7 + r() * 0.6, flip = r() < 0.5 ? -1 : 1, a = 0.55 + r() * 0.4;
+        if (ground(x, y)) dec.push(x, y, k, s * flip, a);
+      }
+    }
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    for (let i = 0; i < soil.length; i += 4) {
+      const S = M.transformPoint(new DOMPoint(soil[i], soil[i + 1])), f = soil[i + 2] / SOIL_R;
+      ctx.setTransform(L * f, 0, 0, L * f, S.x, S.y); ctx.drawImage(tex.soil, soil[i + 3] * SOIL_W, 0, SOIL_W, SOIL_H, -SOIL_W / 2, -SOIL_H / 2, SOIL_W, SOIL_H);
+    }
+    for (let i = 0; i < dec.length; i += 5) {
+      const S = M.transformPoint(new DOMPoint(dec[i], dec[i + 1])), d = DECALS[dec[i + 2]], s = dec[i + 3];
+      ctx.globalAlpha = dec[i + 4]; ctx.setTransform(L * s, 0, 0, L * Math.abs(s), S.x, S.y);
+      ctx.drawImage(tex.decals, d.x, d.y, d.w, d.h, -d.w / 2, -d.h / 2, d.w, d.h);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /** the lots' flat decals: each centred on its ground point, screen-aligned like the builder's, scaled and mirrored */
+  private drawMarks(ctx: C2D, patches: LotPatch[], L: number, M: DOMMatrix, box: BBox) {
+    const [tx0, ty0, tx1, ty1] = box, img = this.tex.lotDecals;
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    for (const p of patches) for (let k = 0, m = p.marks ?? []; k + 4 < m.length; k += 5) {
+      const d = LOT_DECALS[m[k]], x = m[k + 1], y = m[k + 2], s = m[k + 3];
+      if (!d || x < tx0 - 4 || x > tx1 + 4 || y < ty0 - 4 || y > ty1 + 4) continue;
+      const S = M.transformPoint(new DOMPoint(x, y));
+      ctx.globalAlpha = m[k + 4]; ctx.setTransform(L * s, 0, 0, L * Math.abs(s), S.x, S.y);
+      ctx.drawImage(img, d.x, d.y, d.w, d.h, -d.w / 2, -d.h / 2, d.w, d.h);
+    }
+    ctx.globalAlpha = 1;
   }
 
   private drawLitter(ctx: C2D, net: FxView, L: number, M: DOMMatrix, box: BBox, W: number, H: number) {

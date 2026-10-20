@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ROOT, fromExport, libraryItems } from './source.mjs';
+import { ROOT, fromBranch, fromExport, libraryItems } from './source.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
 const OUT = path.join(ROOT, 'src/assets/atlas');
@@ -22,9 +22,11 @@ const town = JSON.parse((await fromExport('town.json')).toString());
 const items = town.items, fromLib = await libraryItems(new Set(Object.keys(items)));
 for (const [id, it] of Object.entries(fromLib)) items[id] = it;
 
-// the largest scale the game draws each id at: the owner's lot table (+5% composer jitter) and the forest (up to 1.5)
+// the largest scale the game draws each id at: the owner's lot table (+5% composer jitter) and the forest (up to 1.5). The table is
+// read from its source (prep-scales.mjs then writes it into scales.ts for the ids packed here), so the run order does not matter
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
-const OWNER = Object.fromEntries([...read('src/game/lots/scales.ts').matchAll(/"([^"]+)":\s*([0-9.]+)/g)].map(m => [m[1], +m[2]]));
+const SCALES = JSON.parse((await fromBranch('town/builder-in-repo', 'scripts/town-builder/places-v5/scales.json')).toString('utf8'));
+const OWNER = Object.fromEntries(Object.entries(SCALES).filter(([, v]) => typeof v?.scale === 'number').map(([k, v]) => [k, v.scale]));
 const FOREST = new Set([...read('src/game/forest.ts').matchAll(/'([a-z]+:[^']+)'/g)].map(m => m[1]));
 const maxScale = id => Math.max(1, (OWNER[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5 : 0);
 // every item of one export category (the Lot Composer kit takes whole categories)
@@ -36,8 +38,8 @@ const SEL = {
   'Landmarks': ['world:church', 'world:gazebo', 'world:watertower', 'ref:landmark-windmill', 'world:barn', 'world:primary_school', ...all('Landmarks & venues'), ...all('Park & sports')],
   'Trees & plants': ['world:tree_oak_0', 'world:tree_oak_1', 'world:tree_oak_2', 'world:tree_pine_0', 'world:tree_pine_1', 'ref:tree-maple-crimson', 'ref:tree-birch-gold', 'ref:tree-spruce-blue', 'world:bush_0', 'world:bush_1', 'world:hedge', 'town:hydrangea', ...all('Trees & plants')],
   'Vehicles': Object.keys(items).filter(id => items[id].cat === 'Vehicles'),
-  'Street furniture': ['world:streetlamp', 'world:hydrant', 'world:mailbox', 'world:bench', 'world:trashcan', 'town:stop_sign', 'town:street_sign', 'town:traffic_light', 'town:bus_stop', 'town:phone_booth', 'town:utility_pole', 'town:bike_rack', 'town:picnic_table', 'town:planter_square', ...all('City utility details'), 'town:dumpster', 'town:delivery_crates'],
-  'Halloween': ['world:pumpkin_0', 'world:pumpkin_1', 'world:scarecrow', 'ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'world:candy_stand', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost'],
+  'Street furniture': ['world:streetlamp', 'world:hydrant', 'world:mailbox', 'world:bench', 'world:trashcan', 'town:stop_sign', 'town:street_sign', 'town:traffic_light', 'town:bus_stop', 'town:phone_booth', 'town:utility_pole', 'town:bike_rack', 'town:picnic_table', 'town:planter_square', ...all('City utility details'), 'town:dumpster', 'town:delivery_crates', ...all('Street furniture')],
+  'Halloween': ['world:pumpkin_0', 'world:pumpkin_1', 'world:scarecrow', 'ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'world:candy_stand', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost', ...all('Halloween')],
   'Fences': ['world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood', ...all('Correct-angle fences'), ...all('Fences & walls')],
   'Yard': ['gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line', ...all('Backyard structures'), ...all('Backyard furniture'), ...all('Backyard stories'), ...all('POI dressing')],
   'Industry': [...all('Scrapyard clutter'), ...all('Derelict town'), ...all('New industrial buildings')],

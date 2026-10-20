@@ -18,13 +18,13 @@ const O = 40, STEP = 40, LINES = 4, at = (k: number) => O + k * STEP, last = at(
 
 const byId = new Map(LIBRARY.map(i => [i.id, i]));
 /** the street-placed items (the verge in front of a lot, up to 1.2 tiles) */
-const STREET = new Set(['gen:trash-cans-row', 'world:mailbox', 'world:streetlamp', 'town:bus_stop', 'town:phone_booth', 'town:street_sign', 'town:utility_pole']);
+const STREET = new Set(['gen:trash-cans-row', 'world:mailbox', 'world:streetlamp', 'town:bus_stop', 'town:phone_booth', 'town:street_sign', 'town:utility_pole', 'world:hydrant', 'expansion:parking-meter', 'expansion:leaf-bags']);
 const isFence = (id: string) => { const k = byId.get(id)?.kind; return k === 'fencex' || k === 'fencey' || id === 'world:hedge'; };
 const isWheel = (id: string) => id === 'expansion:wheel-stop';
 const isCar = (id: string) => byId.get(id)?.cat === 'Vehicles';
 const isUpright = (id: string) => !isFence(id) && !isWheel(id);
 const isHouse = (id: string) => byId.get(id)?.cat === 'Houses' && byId.get(id)?.kind === 'house';
-const isRear = (id: string) => id === 'expansion:ranch-rear';
+const isRear = (id: string) => /^expansion:(ranch|cottage|dormer|duplex|victorian)-rear$/.test(id);
 
 /** the footprint of a placed prop in world tiles (the engine's footprint: the union of its boxes) */
 function fpOf(p: Placed): [number, number, number, number] {
@@ -49,7 +49,8 @@ function share(p: number[], q: number[]): number {
 }
 /** the lot's frame corners of a placed footprint (tiles) */
 function fpCorners(l: Lot, f: number[]) { return [[f[0], f[1]], [f[2], f[1]], [f[2], f[3]], [f[0], f[3]]].map(([x, y]) => toLot(l, x, y)); }
-/** the composition is inside the lot: props within 0.3 tiles (street items up to 1.2 into the verge), patches within 0.3 */
+/** the composition is inside the lot: props within 0.3 tiles (street items up to 1.2 into the verge), patches within 0.3, and the
+ *  flat decals' centres inside the lot (their 'marks' patch only bounds them, 2 tiles out) */
 function insideLot(l: Lot, c: Composition): string[] {
   const bad: string[] = [];
   for (const p of c.props) {
@@ -57,6 +58,7 @@ function insideLot(l: Lot, c: Composition): string[] {
     for (const q of fpCorners(l, fpOf(p))) if (q.a < -0.3 || q.a > l.w + 0.3 || q.b < minB || q.b > l.d + 0.3) { bad.push(`prop ${p.id}`); break; }
   }
   for (const g of c.ground) {
+    if (g.tex === 'marks') { for (let k = 0, m = g.marks ?? []; k + 4 < m.length; k += 5) { const q = toLot(l, m[k + 1], m[k + 2]); if (q.a < 0 || q.a > l.w || q.b < 0 || q.b > l.d) { bad.push('mark'); break; } } continue; }
     for (let k = 0; k < g.pts.length; k += 2) { const q = toLot(l, g.pts[k], g.pts[k + 1]); if (q.a < -0.3 || q.a > l.w + 0.3 || q.b < -0.3 || q.b > l.d + 0.3) { bad.push(`patch ${g.tex}`); break; } }
   }
   return bad;
@@ -100,13 +102,13 @@ test('300 combos: every prop and patch lies inside its lot, and no two uprights 
   }
 });
 
-test('RES at BUILT: 12-28 uprights, exactly one main house, facing the road (front on +X/+Y lots, rear view on -X/-Y lots)', () => {
+test('RES at BUILT: 14-56 uprights, exactly one main house, facing the road (front on +X/+Y lots, rear view on -X/-Y lots)', () => {
   let n = 0;
   for (const lot of LOTS) for (let seed = 1; seed <= 4; seed++) {
     const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: (lot.id * 97 + seed * 7919) >>> 0 };
     const c = compose(lot, st);
     const ups = c.props.filter(p => isUpright(p.id)).length;
-    assert.ok(ups >= 12 && ups <= 28, `${lot.key} seed ${st.seed}: ${ups} uprights; ${c.props.map(p => p.id).join(' ')}`);
+    assert.ok(ups >= 14 && ups <= 56, `${lot.key} seed ${st.seed}: ${ups} uprights; ${c.props.map(p => p.id).join(' ')}`);
     const houses = c.props.filter(p => isHouse(p.id) || isRear(p.id));
     assert.equal(houses.length, 1, `${lot.key} w${lot.w} d${lot.d} seed ${st.seed}: ${houses.length} main houses; props ${c.props.map(p => p.id).join(' ')}`);
     const F = { x: -lot.n.x, y: -lot.n.y };
@@ -182,25 +184,23 @@ test('the average uprights per archetype (log)', () => {
 /** the digest of a composition: FNV-1a over its props and ground (positions to 3 decimals) */
 function digest(c: Composition): string {
   const s = c.props.map(p => `${p.id}|${p.x.toFixed(3)}|${p.y.toFixed(3)}|${p.flip ? 1 : 0}|${p.scale.toFixed(4)}`).join(';') + '#' +
-    c.ground.map(g => `${g.tex}:${g.pts.map(v => v.toFixed(3)).join(',')}:${(g.lines ?? []).map(v => v.toFixed(3)).join(',')}`).join(';');
+    c.ground.map(g => `${g.tex}:${g.pts.map(v => v.toFixed(3)).join(',')}:${(g.lines ?? []).map(v => v.toFixed(3)).join(',')}:${(g.marks ?? []).join(',')}`).join(';');
   let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
   return h.toString(16).padStart(8, '0');
 }
 
-test('non-car-park compositions are unchanged: digests of fixed seeds taken before the public car parks', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for the fenced, dressed lots)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '129ac854'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '4c443fe6'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '77e4e197'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '276f5df8'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e838e1b7'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a2520c8b'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'ab078bae'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '38f6b250'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '87a1d43e'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '861b82d4'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '6dfd49de'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '6700f011'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a645ff9f'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '33ea9a15'],
   ];
-  for (const [i, st, want] of CASES) {
-    assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
-    assert.equal(digest(compose(LOTS[i], st)), want, `${LOTS[i].key} ${JSON.stringify(st)}`);
-  }
+  for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
+  assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));
 });
 
 test('about 15% of built commercial lots are public car parks: a car park has an asphalt bay patch and no building', () => {
