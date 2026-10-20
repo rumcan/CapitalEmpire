@@ -9,6 +9,7 @@ import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, stru
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { lotBatch, type LotPatch } from './ground-protocol';
+import { blockDiff, enclosedBlocks, type Block } from './blocks';
 import { PaintTool } from './paint-tool';
 import type { PaintTuple } from './paint';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
@@ -152,6 +153,8 @@ export class Game {
   ground: GroundCache;
   /** lot ground edits made since the last frame (key -> patches, or null to drop), sent as one message per frame */
   private lotPending = new Map<string, LotPatch[] | null>();
+  /** the city blocks with a lawn ground patch, by key (blocks.ts) */
+  private blocks = new Map<string, Block>();
   /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
   pageImages: HTMLImageElement[] = []; private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
   ready = false; loadProgress = 0;
@@ -475,6 +478,12 @@ export class Game {
   }
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
   setLotGround(key: string, patches: LotPatch[] | null) { this.lotPending.set(key, patches); }
+  /** the city blocks' lawns: the enclosed faces of the ground streets get a lawn patch; faces that closed or opened are sent or dropped */
+  private syncBlocks() {
+    const next = enclosedBlocks(this.net); const { set, drop } = blockDiff(this.blocks, next);
+    for (const k of drop) { this.blocks.delete(k); this.setLotGround(k, null); }
+    for (const b of set) { this.blocks.set(b.key, b); this.setLotGround(b.key, [{ pts: b.pts, tex: ('lawn' + b.tex) as LotPatch['tex'] }]); }
+  }
   private flushLotGround() { if (!this.lotPending.size) return; const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop); }
   /** the town's lots: up to 40 queued keys a frame (more while the queue is over 2,000, up to 400), so a loaded city fills in */
   private applyLotQueue() {
@@ -585,7 +594,7 @@ export class Game {
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate();
-    this.syncLamps(); if (this.parkDefs.length) this.syncParks(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
+    this.syncLamps(); this.syncBlocks(); if (this.parkDefs.length) this.syncParks(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
     this.scheduleSave(); this.emit();
   }
   private afterLoad() {
@@ -593,7 +602,7 @@ export class Game {
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
-    this.syncLamps(); this.sendBlocks(false);
+    this.syncLamps(); this.sendBlocks(false); this.syncBlocks();
     this.ground.invalidateAll(); this.syncParks(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
   }
@@ -2005,6 +2014,7 @@ export class Game {
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
+    for (const k of this.blocks.keys()) this.setLotGround(k, null); this.blocks.clear();
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.dropAllFarms();
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];

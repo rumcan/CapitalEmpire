@@ -27,6 +27,8 @@ export const PLAN_BLOCK_COLOURS = ['#c9b79a', '#d98f5a', '#e8d27a', '#8fae6a', '
 const LOT_CELL = 32;
 /** the asphalt of the planner map (the same colour as the roads) */
 const PLAN_ASPHALT = '#3c4150';
+/** a city block lawn (blocks.ts): a lot patch in one of the three backyard textures, painted over the grass before the dressing */
+const isLawn = (p: LotPatch) => p.tex === 'lawn0' || p.tex === 'lawn1' || p.tex === 'lawn2';
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
@@ -119,7 +121,7 @@ export class GroundPainter {
     shape('river', 0, this.planColour('water'));
     shape('creek', 0, this.planColour('water'));
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
-    const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : this.planColour(t as TexName);
+    const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : t === 'lawn0' || t === 'lawn1' || t === 'lawn2' ? this.planColour('grass') : this.planColour(t as TexName);
     const lotAll = this.lotsIn(box), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     for (const p of [...lotAll.filter(p => !p.paint && p.tex !== 'marks'), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
@@ -169,7 +171,9 @@ export class GroundPainter {
 
     // ---- 1. terrain: grass; meadow and forest floor through soft noise-edged class masks; river banks and creek beds from
     //      the smoothed waterway lines; the baked hillshade; then the river water (flat, so unshaded)
+    const all = this.lotsIn(box), lawns = all.filter(isLawn);
     ctx.fillStyle = pat('grass'); ctx.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
+    for (const p of lawns) { ctx.fillStyle = pat(p.tex as TexName); ctx.fill(polyPath(p.pts)); }
     if (L >= 0.05) { this.drawDressing(ctx, box, L, M); ctx.setTransform(M); }
     const bw = tx1 - tx0, bh = ty1 - ty0;
     /** an RGBA image over the tile box (res px per tile), stretched onto g through the iso transform (bilinear) */
@@ -195,7 +199,7 @@ export class GroundPainter {
     const shiftM = (dy: number) => new DOMMatrix([1, 0, 0, 1, 0, dy * L]).multiply(M);
     // ---- 1a. lot ground (driveways, walks, car parks, yards) before the verges and roads: each patch in its surface,
     //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines
-    const all = this.lotsIn(box), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    const marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && p.tex !== 'marks' && !isLawn(p)), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     if (lots.length) {
       const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('lot', L)) : null;
       for (const p of lots) {

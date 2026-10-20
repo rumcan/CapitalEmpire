@@ -1,4 +1,5 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
+import { LAWN_ART } from './lawn-art';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -7,7 +8,7 @@ import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT
  *    lamp-light response (manifest.json light.DMU / DSG) at I = 0.4 and I = 0.9 for the reflection pools;
  *  - grass: the two approved 256 px grass paintings mixed in hex patches and by low-frequency noise (screen space);
  *  - curbs and slabs: colours and sprites straight from the kit. */
-export type TexName = 'grass' | 'meadow' | 'dirt' | 'gravel' | 'roadgravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek' | 'rock';
+export type TexName = 'grass' | 'lawn0' | 'lawn1' | 'lawn2' | 'meadow' | 'dirt' | 'gravel' | 'roadgravel' | 'field' | 'paving' | 'pad' | 'outside' | 'grime' | 'wear' | 'forest' | 'water' | 'bank' | 'creek' | 'rock';
 const PAINTED: TexName[] = ['dirt', 'gravel', 'field', 'paving', 'pad', 'grime', 'wear', 'forest', 'water', 'bank', 'creek', 'rock', 'roadgravel'];
 /** screen-space textures are authored at 0.8 px per world px; mip-mapped per cache level */
 export const AUTHOR = 0.8;
@@ -231,7 +232,7 @@ export class Textures {
 
   async build(art: GroundArt, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
-    const steps = PAINTED.length + 10; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
+    const steps = PAINTED.length + 11; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
@@ -253,6 +254,9 @@ export class Textures {
     const gA = toCanvas(grassA, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)), gB = toCanvas(grassB, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR));
     const grass = this.grass(gA, gB);
     this.store('grass', grass);
+    // ---- city block lawns: the three backyard paintings, hex-mixed like the grass so they never repeat on a block
+    for (let i = 0; i < LAWN_ART.length; i++) { const img = await loadImage(LAWN_ART[i]!), l = toCanvas(img, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)); this.store(('lawn' + i) as TexName, this.grass(l, l)); }
+    await tick();
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#8c8c86'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('outside', c); }
     await tick();
