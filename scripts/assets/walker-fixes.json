@@ -1,25 +1,97 @@
 {
  "person:adult:businessman": {
+  "S": {
+   "3": "use:1",
+   "4": "use:1"
+  },
   "SE": {
-   "4": "mirror"
+   "3": "new",
+   "4": "new"
+  },
+  "E": {
+   "3": "new",
+   "4": "new"
+  },
+  "NE": {
+   "0": "new",
+   "4": "new"
+  },
+  "N": {
+   "1": "new",
+   "2": "new",
+   "3": "new"
   }
  },
  "person:adult:coach": {
   "SE": {
    "3": "mirror",
    "4": "mirror"
+  },
+  "S": {
+   "4": "use:1"
+  },
+  "E": {
+   "2": "new",
+   "4": "new"
+  },
+  "NE": {
+   "1": "use:3",
+   "2": "new",
+   "3": "new",
+   "4": "new"
+  },
+  "N": {
+   "2": "new",
+   "4": "new"
   }
  },
  "person:adult:construction-worker": {
   "SE": {
-   "3": "mirror",
-   "4": "mirror"
+   "2": "new",
+   "3": "new",
+   "4": "new"
+  },
+  "S": {
+   "1": "use:4",
+   "2": "mirror"
+  },
+  "E": {
+   "2": "new",
+   "3": "new",
+   "4": "new"
+  },
+  "NE": {
+   "1": "new",
+   "2": "new",
+   "3": "new",
+   "4": "new"
+  },
+  "N": {
+   "2": "new",
+   "3": "new",
+   "4": "new"
   }
  },
  "person:adult:dad-polo": {
   "SE": {
    "3": "mirror",
    "4": "mirror"
+  },
+  "E": {
+   "2": "new",
+   "3": "new",
+   "4": "new"
+  },
+  "NE": {
+   "1": "use:3",
+   "2": "new",
+   "3": "new",
+   "4": "new"
+  },
+  "N": {
+   "1": "new",
+   "3": "new",
+   "4": "new"
   }
  },
  "person:adult:farmer": {

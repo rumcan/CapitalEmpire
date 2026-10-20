@@ -90,7 +90,7 @@ const all = f => [...LIB.values()].filter(it => !it.hidden && !it.flat && !REMOV
 export const HOUSES = all(it => it.category === 'Houses' && /^(world:house_[0-9]|gen:house-)/.test(baseOf(it)));
 /** rear views for lots whose street is behind them */
 export const REARS = all(it => it.category === 'House rear & side views' && /-rear$/.test(baseOf(it)) && !/garage/.test(baseOf(it)));
-const RUNDOWN = all(it => /rundown-house/.test(baseOf(it)));
+export const RUNDOWN = all(it => /rundown-house/.test(baseOf(it)));
 const treeLike = it => it.category === 'Trees & plants' && /tree|pine|spruce|fir|maple|birch|oak/.test(it.id);
 /** broadleaf trees, conifers and dead trees: every tree the library has */
 export const MAPLES = all(it => treeLike(it) && !/pine|spruce|fir|dead/.test(it.id));
@@ -124,7 +124,7 @@ export const mapScale = id => { const it = LIB.get(id); const b = it ? baseOf(it
 /** does a house fit a W x D lot at the owner's scale (with the deepest setback and room for a back yard) */
 export const fitsLot = (id, W, D) => { const s = ownerScale(id), [hx, hy] = half(id, s); return 2 * hx <= W - 0.8 && 2 * hy <= D - 7 - 9; };
 /** the footprint half extents (metres) of a sprite at scale s (its base box; swapped when mirrored) */
-function half(id, s = 1, flip = false) {
+export function half(id, s = 1, flip = false) {
   const it = LIB.get(id), boxes = OVR[id]?.boxes ?? OVR[baseOf(it)]?.boxes;
   let hx, hy;
   if (boxes?.length) { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const b of boxes) { x0 = Math.min(x0, (b.dx || 0) - b.hx / 2); x1 = Math.max(x1, (b.dx || 0) + b.hx / 2); y0 = Math.min(y0, (b.dy || 0) - b.hy / 2); y1 = Math.max(y1, (b.dy || 0) + b.hy / 2); } hx = (x1 - x0) / 2; hy = (y1 - y0) / 2; }

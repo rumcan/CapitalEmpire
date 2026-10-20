@@ -53,7 +53,8 @@ function lotState(id) {
   const v = lotVariants().find(x => x.id === id); if (!v) return null;
   const edits = readLotEdits()[id] ?? {};
   // every raw placement with its edit applied (deleted ones left out), remembering its index (edits are keyed by it)
-  const items = v.raw.map((p, i) => { const e = edits[i]; if (e?.del) return null; return { ...p, idx: i, x: +(p.x + (e?.dx ?? 0)).toFixed(3), y: +(p.y + (e?.dy ?? 0)).toFixed(3), scale: e?.scale ?? p.scale, flip: e?.flip ?? p.flip, edited: !!e }; }).filter(Boolean);
+  // (a rejected house's delete is spent on its replacement: v.raw has the new house at v.houseIdx, see lot-variants.mjs)
+  const items = v.raw.map((p, i) => { const e = v.swapped && i === v.houseIdx ? undefined : edits[i]; if (e?.del) return null; return { ...p, idx: i, x: +(p.x + (e?.dx ?? 0)).toFixed(3), y: +(p.y + (e?.dy ?? 0)).toFixed(3), scale: e?.scale ?? p.scale, flip: e?.flip ?? p.flip, edited: !!e }; }).filter(Boolean);
   const box = boundsOf(items, v.W, v.D);
   return { v, items, box, edits };
 }
@@ -152,7 +153,11 @@ http.createServer(async (req, res) => {
       if (op === 'y+') cur.dy = +((cur.dy ?? 0) + step).toFixed(2); if (op === 'y-') cur.dy = +((cur.dy ?? 0) - step).toFixed(2);
       if (op === 'bigger') cur.scale = +(scale * 1.08).toFixed(3); if (op === 'smaller') cur.scale = +(scale / 1.08).toFixed(3);
       if (op === 'flip') cur.flip = !(cur.flip ?? raw.flip);
-      if (op === 'delete') cur.del = true;
+      // deleting the lot's house rejects it: another house of its pool takes its spot (lot-variants.mjs); a replacement deleted in turn
+      // joins the lot's houseRejects, so the next one is tried; reset on the house brings the original back
+      const isHouse = +idx === v.houseIdx;
+      if (op === 'delete') { cur.del = true; if (isHouse && v.swapped) e.houseRejects = [...new Set([...(e.houseRejects ?? []), raw.id])]; }
+      if (op === 'reset' && isHouse) delete e.houseRejects;
       if (op === 'reset') delete e[idx]; else e[idx] = cur;
       if (!Object.keys(e).length) delete all[lot];
       writeLotEdits(all); return json({ ok: true });
