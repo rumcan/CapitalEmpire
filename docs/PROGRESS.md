@@ -1075,6 +1075,12 @@ small public car parks on open town lots as part of the town's growth (a small t
     classes = the value removed; Replace street->arterial $10,000, grand->street refund $18,800, road->road $0, preview = paid.
     Junction gallery: 1,134 junctions, 130 flagged (137 before; it builds at a random spot), none without a node. Tests: 421/422 (the one failure, "20 seeds ... under 4 s", is timing: seed 5 took 4.6 s while the
     machine was busy; no road code in it).
+- **Houses follow an upgraded road (the owner, 2026-10-20: "they stay fixed and bleed over the road with hedges").** A widened road
+  moves its lots back to the new verge (same key, the town keeps the house) but the client only re-composed a lot on a town event, so
+  the old props stayed over the road. `TrafficClient.onLotsMoved` now reports lots whose rectangle changed and the engine re-queues them.
+  Checked in the browser: a street run downgraded to gravel and back, its houses' nearest props 2.1 -> 1.1 -> 2.1 tiles from the centre
+  line (hook off: they stay put). A class change that changes the lot width (street 8 -> road 10 tiles) changes the lot keys, so those
+  houses are demolished rather than moved (as before); on gravel the town also keeps its side-street spots free (some lots go).
 - **Replace preview fix (15176e6): seen in the browser 2026-10-20** (from the `claude/road-ladder` worktree): an arterial route laid over a
   street with Replace on shows the street piece amber with a dashed outline under the yellow route, nothing red; the build replaced it.
   Phase B (B.2 next) and the paint tool (its own worktree, branch claude/frosty-wilson-452c74) run in their own sessions.
