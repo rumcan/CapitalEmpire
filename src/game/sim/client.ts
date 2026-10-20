@@ -61,6 +61,8 @@ export class SimClient {
   access: Float32Array = new Float32Array(256).fill(1); builtZone = new Uint8Array(256);
   /** called with the events of each town message (after the lots are updated) */
   onTown?: (events: TownEvent[]) => void;
+  /** lots whose rectangle changed while their town state stayed (a road widened or narrowed under them moves its lots' fronts): the engine composes them again */
+  onLotsMoved?: (keys: string[]) => void;
   /** called with the gravel extension the town plans (the engine builds it, or skips it); the worker waits for its net ops */
   onGrow?: (legs: Leg[]) => void;
   /** the city's books as the worker last sent them (the treasury is also moved on spend, before the worker's answer), the game day, and called with each day's ledger as it closes */
@@ -235,7 +237,9 @@ export class SimClient {
     const keep = new Set<string>();
     for (const r of added) keep.add(r.key);
     for (const k of removed) if (!keep.has(k)) this.lots.delete(k);
-    for (const r of added) { const old = this.lots.get(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
+    const moved: string[] = [];
+    for (const r of added) { const old = this.lots.get(r.key); if (old) moved.push(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
+    if (moved.length) this.onLotsMoved?.(moved);
   }
   private resize(cap: number) {
     this.n = cap; this.prev = null;

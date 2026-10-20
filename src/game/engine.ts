@@ -274,6 +274,8 @@ export class Game {
     this.sandboxUnlock = q.has('unlock') ? q.get('unlock') === '1' : dev;
     this.traffic.onGrow = (legs) => this.townGrow(legs);
     this.traffic.onTown = (events) => { for (const e of events) this.lotQueue.add(e.key); };
+    // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
+    this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
     this.traffic.onLedger = (l) => {
       if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
