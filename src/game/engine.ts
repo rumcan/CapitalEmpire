@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
 import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
-import { FACING_ROW, Pedestrians, sidewalks, type WalkerView } from './ext/pedestrians';
+import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
@@ -213,7 +213,7 @@ export class Game {
   // perf
   /** the townspeople on the sidewalks (ext/pedestrians): the sidewalks follow the network (net.version), one walker per two
    *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
-  private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX); private pedNet = -1; private pedTick = 0;
+  private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX); private pedNet = -1; private pedTick = 0; private pedLots = -1;
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
@@ -2147,7 +2147,14 @@ export class Game {
         const roads = [...this.net.routes].filter(r => r.cls.walkTex === 'slabs' && r.kind !== SK.TUNNEL).map(r => ({ pts: r.pts, h: r.cls.h, walk: r.cls.walk, closed: r.closed }));
         this.peds.setSidewalks(sidewalks(roads));
       }
-      this.peds.populate(Math.min(PED_MAX, (this.traffic?.built ?? 0) * 0.5));
+      // the doors: every built lot's frontage, a tile in (houses are homes; shops, work, civic buildings and venues are places)
+      const built = this.traffic?.built ?? 0;
+      if (built !== this.pedLots && this.traffic) {
+        this.pedLots = built; const doors: Door[] = [];
+        for (const l of this.traffic.lots.values()) if (l.level >= LV.BUILT) doors.push({ x: l.o[0] + l.u[0] * l.w / 2 + l.n[0], y: l.o[1] + l.u[1] * l.w / 2 + l.n[1], kind: l.use === 1 ? 0 : 1 });
+        this.peds.setDoors(doors);
+      }
+      this.peds.populate(Math.min(PED_MAX, built * 0.5));
     }
     if (this.speed) this.peds.step(dt);
   }

@@ -200,8 +200,9 @@ export class GroundPainter {
       const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('lot', L)) : null;
       for (const p of lots) {
         const path = polyPath(p.pts);
-        ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : pat(p.tex as TexName); ctx.fill(path);
-        if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad') {
+        if (p.tex === 'slabs') { ctx.save(); ctx.clip(path); ctx.fillStyle = tex.curb.top; ctx.fill(path); if (!lite) this.slabGrid(ctx, new DOMMatrix(), quadBox(p.pts), M); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = pat('grime'); ctx.fill(path); ctx.restore(); ctx.setTransform(M); }
+        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : pat(p.tex as TexName); ctx.fill(path); }
+        if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs') {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }
       }

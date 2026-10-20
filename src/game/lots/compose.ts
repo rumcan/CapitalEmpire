@@ -152,7 +152,8 @@ class Build {
   /** a sprite at a seeded size (owner scale times mul, varied by 5%) with its footprint: the union of its boxes, as the engine draws it */
   spec(id: string, o: Opt = {}): Spec | null {
     if (!BY.has(id)) return null;
-    const flip = !!o.flip, s = (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
+    // cars at 1: the engine draws a parked car at CAR_SCALE, the size of the cars on the road
+    const flip = !!o.flip, s = BY.get(id)!.cat === 'Vehicles' ? 1 : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
     return { id, s, flip, h: boxOf(id, s, flip) };
   }
   /** the half extent of a spec along the lot's u (ea) and n (eb) */
@@ -436,6 +437,9 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   if (!ss) return;
   const sw = 2 * B.ea(ss), sd = 2 * B.eb(ss), sb = 1 + r(), ca = 0.3 + sw / 2;
   B.at(ss, ca, sb + B.eb(ss));
+  // a commercial lot is asphalt all over, with sidewalk slabs from the street to the shop front (both patches carry uprights)
+  B.pave('yard', 0, 0, W, D, 'asphalt');
+  B.pave('yard', 0, 0, Math.min(W, sw + 0.6), sb, 'slabs');
   if (!rear) {
     B.put('town:bike_rack', ca - 1.0, sb - 0.9);
     B.put('world:trashcan', ca - 0.1, sb - 0.5);

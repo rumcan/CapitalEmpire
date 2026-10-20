@@ -113,6 +113,10 @@ const STORIES = {
   neglected: [have(['expansion:junk-car', 'expansion:outhouse']), have(['expansion:appliance-pile', 'expansion:attic-trunk', 'expansion:crt-curb', 'expansion:tyre-stack', 'expansion:antique-pram'])],
 };
 export const STORY_NAMES = Object.keys(STORIES);
+/** parked cars at the size the game draws cars on the road (src/game/sprites.ts CAR_SCALE) */
+const CAR_SCALE = 0.8;
+/** the side fences run from the back line to this far from the front edge on every lot, so neighbours' fences meet */
+const SIDE_FENCE_END = 7.3;
 /** the owner's scale for a sprite (a variation takes its original's), or 1 */
 export const ownerScale = id => { const it = LIB.get(id); const b = it ? baseOf(it) : id; return SCALES[id]?.scale ?? SCALES[b]?.scale ?? 1; };
 
@@ -174,7 +178,7 @@ export function layoutLot({ W, D, rear = false, story = 'family', seed = 1, hous
   ups.push([doorX - 0.8, front, doorX + 0.8, D]);
   if (story !== 'neglected' && r() < 0.6) {
     const cy = D - 2.8, car = carId ?? pick(CARS);
-    if (car) { put(car, dx, cy, { scale: own(car, 0.04) }); decal('carSpot', dx, cy + 0.4, 0.8, { z: 2 }); }
+    if (car) { put(car, dx, cy, { scale: CAR_SCALE }); decal('carSpot', dx, cy + 0.4, 0.8, { z: 2 }); }
   }
   if (r() < 0.3) decal('paper', dx + between(-0.8, 0.8), D - between(1, 4), 0.8, { z: 3 });
   const kerbX = driveLeft ? DW + 1.0 : W - DW - 1.0;
@@ -211,8 +215,9 @@ export function layoutLot({ W, D, rear = false, story = 'family', seed = 1, hous
   };
   const priv = neg || story === 'mechanic' ? ['expansion:chainlink-x', 'expansion:chainlink-y', 4] : ['expansion:fence-privacy-x', 'expansion:fence-privacy-y', 4];
   // (laid in the front-facing frame: a rear lot is mirrored at the end, so its side fence still runs from its back line)
-  if (!rear) run(priv[0], priv[1], 0, 0.1, W, 0.1, priv[2]);
-  run(priv[0], priv[1], 0.1, 0.1, 0.1, front - 0.3, priv[2]);
+  // on the lot lines themselves (X = 0, Y = 0), the same length on every lot
+  if (!rear) run(priv[0], priv[1], 0, 0, W, 0, priv[2]);
+  run(priv[0], priv[1], 0, 0, 0, D - SIDE_FENCE_END, priv[2]);
   if (!neg && r() < 0.35) {
     const lowX = 'world:fence_picket_x';
     for (let x = 1; x < W - 0.5; x += 2) { if (Math.abs(x - doorX) < 1.3 || Math.abs(x - dx) < DW / 2 + 0.6) continue; put(lowX, x, D - 0.25, {}); fence.push([x, D - 0.25, true]); }
@@ -258,6 +263,21 @@ export function layoutLot({ W, D, rear = false, story = 'family', seed = 1, hous
     if (pine) decal('pineFloor', t.x + between(-0.4, 0.4), t.y + between(0, 0.6), between(0.6, 0.9), { z: 1 });
     else if (!dead) { for (let k = 0, n = 2 + Math.floor(r() * 2 + (big ? 2 : 0)); k < n; k++) decal('treeLeaves', t.x + between(-1, 3), t.y + between(-1, 3), between(0.5, 0.9), { z: 1 }); decal('fenceLeaves', t.x + between(0.5, 2.5), t.y + between(0.5, 2.5), between(0.6, 1.0), { z: 1 }); }
     if (dead || (big && r() < 0.5)) decal('deadwood', t.x + between(-0.5, 1), t.y + between(0, 1), between(0.6, 0.9), { z: 1 });
+  }
+
+  // ---- the side yards between neighbours: a planted strip along each side line (shrubs, ferns, grasses, now and then a young
+  // tree); then every open patch of lawn filled from a jittered grid ~2.2 m apart: a plant, a young tree or a small nature
+  // cluster (grass, moss and leaf decals), wherever it fits clear of the house, the paving and what is already there
+  const young = id => ownerScale(id) * between(0.55, 0.8);
+  for (const sx of [0.8, W - 0.8]) for (let y = 1.2; y < D - 1.4; y += between(1.4, 2.2)) {
+    if (r() < 0.12) { const id = nextMaple(); stand(id, sx, y, { scale: young(id), gap: 0.4 }); }
+    else if (r() < 0.75) stand(pick(PLANTS), sx + between(-0.2, 0.2), y, { scale: between(0.8, 1.15), gap: 0.1 });
+  }
+  for (let y = 1.3; y < D - 1.3; y += 2.2) for (let x = 1.4; x < W - 1.3; x += 2.2) {
+    const px = x + between(-0.7, 0.7), py = y + between(-0.7, 0.7), u = r();
+    if (u < 0.34) stand(pick(PLANTS), px, py, { scale: between(0.75, 1.1), gap: 0.3 });
+    else if (u < 0.42) { const id = r() < 0.6 ? nextMaple() : nextPine(); const p = stand(id, px, py, { scale: young(id), gap: 0.7 }); if (p) decal(/pine|spruce/.test(id) ? 'pineFloor' : 'treeLeaves', px + 0.4, py + 0.5, 0.6, { z: 1 }); }
+    else if (u < 0.75 && free(px - 0.8, py - 0.8, px + 0.8, py + 0.8, 0)) { decal('lawn', px, py, between(0.45, 0.75)); decal(r() < 0.6 ? 'treeLeaves' : 'fenceLeaves', px + between(-0.6, 0.6), py + between(-0.6, 0.6), between(0.45, 0.8), { z: 1 }); }
   }
 
   // ---- the lawn: grass decals and leaf scatters by area (one per ~30 m2 and ~45 m2 of open lawn)

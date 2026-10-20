@@ -80,7 +80,11 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
 // ---- 1b. the townspeople's walk sheets (TrickOrTreat art/people/{adult,kid}): 5 stored facings (S, SE, E, NE, N; the west side
 // is the east mirrored) x 5 frames (idle, walk1-4) per person. The art is 128 px per metre and the game draws people at 64 (the
 // player kids' scale), so a frame is packed at 0.6 x half its size
-const WALK_DIRS = ['S', 'SE', 'E', 'NE', 'N'], WALK_FRAMES = 5, people = [], walkers = [];
+const WALK_DIRS = ['S', 'SE', 'E', 'NE', 'N'], WALK_FRAMES = 5, people = [], walkers = [], flipped = [];
+/** person id -> facing -> frame -> 'mirror' | 'use:<frame>' | 'use-mirror:<frame>' (scripts/assets/walker-fixes.json, the studio's People tab) */
+const WALKER_FIXES = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/assets/walker-fixes.json'), 'utf8')); } catch { return {}; } })();
+/** a frame mirrored left to right (RGBA, W x H) */
+const mirror = (d, W, H) => { const o = Buffer.alloc(d.length); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) d.copy(o, (y * W + W - 1 - x) * 4, (y * W + x) * 4, (y * W + x) * 4 + 4); return o; };
 const trim = (data, W, H) => {
   let x0 = W, y0 = H, x1 = -1, y1 = -1;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (data[(y * W + x) * 4 + 3] > 2) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
@@ -96,11 +100,22 @@ for (const size of ['adult', 'kid']) {
     if (!fs.existsSync(sheet) || REMOVED.has(m.id)) continue;
     const k = 0.5, fw = m.frameWidth, fh = m.frameHeight, W = Math.round(fw * k * MIP0), H = Math.round(fh * k * MIP0), pi = people.length;
     people.push({ id: m.id, size, w: fw * k, h: fh * k, ax: m.anchor.x * k, ay: m.anchor.y * k, m: m.heightMetres, fps: m.walkFps || 8 });
-    for (const d of WALK_DIRS) for (let fr = 0; fr < WALK_FRAMES; fr++) {
-      const row = m.directions.indexOf(d);
-      const { data } = await sharp(sheet).extract({ left: fr * fw, top: row * fh, width: fw, height: fh }).resize(W, H, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-      const t = trim(data, W, H);   // display px = packed px / MIP0
-      walkers.push({ id: `${m.id}:${d}:${fr}`, person: pi, crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 / MIP0, qy0: t.y0 / MIP0, qx1: (t.x1 + 1) / MIP0, qy1: (t.y1 + 1) / MIP0 });
+    const rows = {};
+    for (const d of ['E', 'SE', 'NE', 'S', 'N']) {
+      const row = m.directions.indexOf(d), frames = [];
+      for (let fr = 0; fr < WALK_FRAMES; fr++) frames.push((await sharp(sheet).extract({ left: fr * fw, top: row * fh, width: fw, height: fh }).resize(W, H, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })).data);
+      // the generated sheets have the odd frame facing the other way (or from another row): fixed by the row's majority
+      // the generated sheets have the odd frame facing the other way, or taken from another row: the owner's fixes from the
+      // sprite studio (People tab): 'mirror', or 'use:<frame>' (that frame of this row, applied as drawn)
+      const fx = WALKER_FIXES[m.id]?.[d] ?? {}, orig = [...frames];
+      for (const [k, op] of Object.entries(fx)) { const i = +k; if (op === 'mirror') frames[i] = mirror(orig[i], W, H); else if (/^use:d$/.test(op)) frames[i] = orig[+op.slice(4)]; else if (/^use-mirror:d$/.test(op)) frames[i] = mirror(orig[+op.slice(11)], W, H); if (op) flipped.push(`${m.id} ${d} ${i} ${op}`); }
+      rows[d] = frames;
+    }
+    for (const d of WALK_DIRS) {
+      rows[d].forEach((data, fr) => {
+        const t = trim(data, W, H);   // display px = packed px / MIP0
+        walkers.push({ id: `${m.id}:${d}:${fr}`, person: pi, crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 / MIP0, qy0: t.y0 / MIP0, qx1: (t.x1 + 1) / MIP0, qy1: (t.y1 + 1) / MIP0 });
+      });
     }
   }
 }
@@ -188,6 +203,6 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   '  const p = WALKER_PEOPLE[Math.floor(i / (WALK_DIRS.length * WALK_FRAMES))], o = i * 9;',
   "  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * WALK_FRAMES)}`, name: p.id, cat: 'Townspeople', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [WF[o], WF[o + 1], WF[o + 2], WF[o + 3], WF[o + 4]], quad: [WF[o + 5], WF[o + 6], WF[o + 7], WF[o + 8]] });",
   '}', ''].join('\n'));
-console.log(`walkers: ${people.length} people, ${walkers.length} frames`);
+console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);
 console.log(`sprites ${sprites.length}, pages ${pages.length}, fill ${(used / (pages.length * PAGE * PAGE) * 100).toFixed(0)}%`);

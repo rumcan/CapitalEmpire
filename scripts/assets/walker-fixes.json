@@ -1,0 +1,139 @@
+{
+ "person:adult:coach": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:construction-worker": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:dad-polo": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:farmer": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:gardener-woman": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:grandma": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:grandpa": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:jogger": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:librarian": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:mail-carrier": {
+  "SE": {
+   "4": "mirror"
+  }
+ },
+ "person:adult:mall-woman": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:mechanic": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:milkman": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:mom-groceries": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:nurse": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:office-woman": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:police-officer": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:priest": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:shopkeeper": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:skater-young-man": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:teen-girl": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:teen-walkman": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ },
+ "person:adult:waitress": {
+  "SE": {
+   "3": "mirror",
+   "4": "mirror"
+  }
+ }
+}
