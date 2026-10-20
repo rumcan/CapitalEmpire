@@ -1,0 +1,128 @@
+{
+ "ce:parking-entry": {
+  "name": "Car park entrance gate",
+  "cat": "Parking",
+  "file": "art/parking/parking-entry.webp",
+  "local": true,
+  "w": 152,
+  "h": 93.6,
+  "ax": 42,
+  "ay": 68.8,
+  "boxes": [
+   {
+    "hx": 0.8,
+    "hy": 0.45,
+    "dx": 0,
+    "dy": 0
+   }
+  ],
+  "kind": "decor",
+  "solid": 1,
+  "big": false
+ },
+ "ce:parking-exit": {
+  "name": "Car park exit gate",
+  "cat": "Parking",
+  "file": "art/parking/parking-exit.webp",
+  "local": true,
+  "w": 157.2,
+  "h": 100.8,
+  "ax": 45.2,
+  "ay": 79.6,
+  "boxes": [
+   {
+    "hx": 0.8,
+    "hy": 0.45,
+    "dx": 0,
+    "dy": 0
+   }
+  ],
+  "kind": "decor",
+  "solid": 1,
+  "big": false
+ },
+ "ce:parking-sign": {
+  "name": "Parking sign",
+  "cat": "Parking",
+  "file": "art/parking/parking-sign.webp",
+  "local": true,
+  "w": 40.69,
+  "h": 140,
+  "ax": 20.35,
+  "ay": 138.79,
+  "boxes": [
+   {
+    "hx": 0.1,
+    "hy": 0.1,
+    "dx": 0,
+    "dy": 0
+   }
+  ],
+  "kind": "decor",
+  "solid": 1,
+  "big": false
+ },
+ "ce:parking-kiosk": {
+  "name": "Car park attendant kiosk",
+  "cat": "Parking",
+  "file": "art/parking/parking-kiosk.webp",
+  "local": true,
+  "w": 95.4,
+  "h": 125,
+  "ax": 48.28,
+  "ay": 100.57,
+  "boxes": [
+   {
+    "hx": 0.75,
+    "hy": 0.75,
+    "dx": 0,
+    "dy": 0
+   }
+  ],
+  "kind": "decor",
+  "solid": 1,
+  "big": false
+ },
+ "ce:parking-paystation": {
+  "name": "Pay-and-display machine",
+  "cat": "Parking",
+  "file": "art/parking/parking-paystation.webp",
+  "local": true,
+  "w": 33.35,
+  "h": 70,
+  "ax": 16.68,
+  "ay": 62.3,
+  "boxes": [
+   {
+    "hx": 0.25,
+    "hy": 0.2,
+    "dx": 0,
+    "dy": 0
+   }
+  ],
+  "kind": "decor",
+  "solid": 1,
+  "big": false
+ },
+ "ce:parking-in-sign": {
+  "name": "Car park IN sign",
+  "cat": "Parking",
+  "file": "art/parking/parking-in-sign.webp",
+  "local": true,
+  "w": 37.29,
+  "h": 48,
+  "ax": 18.74,
+  "ay": 41.04,
+  "boxes": [
+   {
+    "hx": 0.5,
+    "hy": 0.1,
+    "dx": 0,
+    "dy": 0
+   }
+  ],
+  "kind": "decor",
+  "solid": 1,
+  "big": false
+ }
+}

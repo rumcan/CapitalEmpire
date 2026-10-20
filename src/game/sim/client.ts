@@ -23,6 +23,8 @@ import type { Site } from '../event/site';
 import type { CardId } from '../event/config';
 import type { CarParkDef, ParkView } from '../event/carpark';
 import type { TollDef } from '../event/toll';
+import type { BayRowDef } from '../event/rows';
+import type { CurbDef } from '../event/curb';
 import type { BusRouteDef } from '../event/bus';
 import type { BizDef, BizStats, BizView } from '../business/state';
 
@@ -150,6 +152,8 @@ export class SimClient {
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
   setTolls(defs: TollDef[]) { this.post({ t: 'tolls', defs }); }
+  /** the bay rows and the on-street runs as the player drew them (the full lists) and the parking fee per car ($): the worker builds them as car parks (see City.setParking) */
+  setParking(rows: BayRowDef[], curbs: CurbDef[], fee: number) { this.post({ t: 'parking', rows, curbs, fee }); }
   /** ends the build now: the surge (the crowd's run to kick-off) begins */
   startNow() { this.post({ t: 'round', op: 'now' }); }
   /** closes the round's eval: the round is free again and the clock runs on */

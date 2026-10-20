@@ -54,6 +54,14 @@ export const MAX_ENTRANCES = 3;
 export const FRONT_GAP = 3;
 /** the shortest side of a car park, tiles */
 export const MIN_PARK = 12;
+/** the tiles between the centres of on-street parking bays (6 m), along the kerb */
+export const CURB_BAY = 3;
+/** the tiles kept clear at each end of an on-street parking run */
+export const CURB_END = 4;
+/** the fewest bays an on-street parking run may have */
+export const CURB_MIN_BAYS = 4;
+/** what each on-street parking bay costs to build, $ */
+export const CURB_BAY_COST = 60;
 /** the toll gate's plaza: the toll piece of road, tiles (the plaza seg's length) */
 export const PLAZA_LEN = 30;
 /** the tiles at each end of the plaza over which the booth lanes fan out and back in */

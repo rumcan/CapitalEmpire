@@ -16,6 +16,12 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 
 const town = JSON.parse((await fromExport('town.json')).toString());
 const items = town.items;
+// CapitalEmpire's own sprites (art/<set>/items.json, the export's item format plus local: true; e.g. the car park gates, art/parking)
+const LOCAL = {};
+for (const set of fs.readdirSync(path.join(ROOT, 'art'), { withFileTypes: true })) {
+  const f = path.join(ROOT, 'art', set.name, 'items.json');
+  if (set.isDirectory() && fs.existsSync(f)) for (const [id, it] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) { items[id] = it; (LOCAL[it.cat] ??= []).push(id); }
+}
 // every item of one export category (the Lot Composer kit takes whole categories)
 const all = c => Object.keys(items).filter(id => items[id].cat === c);
 // an id may sit in several lists: the first list that names it wins (see `seen` in step 1)
@@ -30,8 +36,9 @@ const SEL = {
   'Fences': ['world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood', ...all('Correct-angle fences'), ...all('Fences & walls')],
   'Yard': ['gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line', ...all('Backyard structures'), ...all('Backyard furniture'), ...all('Backyard stories'), ...all('POI dressing')],
   'Industry': [...all('Scrapyard clutter'), ...all('Derelict town')],
+  ...LOCAL,
 };
-const COST = { 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300 };
+const COST = { 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300, 'Parking': 300 };
 // export categories whose kind the engine needs to see differently (derelict houses are not occupied houses)
 const KIND_OF_CAT = { 'Derelict town': 'building', 'Scrapyard clutter': 'decor' };
 
@@ -41,7 +48,7 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   if (seen.has(id)) continue; seen.add(id);
   const it = items[id]; if (!it) { console.warn('missing', id); continue; }
   const file = it.file.split('/').pop();
-  let buf; try { buf = await fromExport('sprites-hd/' + file); } catch { buf = await fromExport('sprites/' + file); }
+  let buf; if (it.local) buf = fs.readFileSync(path.join(ROOT, it.file)); else try { buf = await fromExport('sprites-hd/' + file); } catch { buf = await fromExport('sprites/' + file); }
   const W = Math.max(1, Math.round(it.w * MIP0)), H = Math.max(1, Math.round(it.h * MIP0));
   const { data } = await sharp(buf).ensureAlpha().resize(W, H, { fit: 'fill', kernel: 'lanczos3' }).raw().toBuffer({ resolveWithObject: true });
   let x0 = W, y0 = H, x1 = -1, y1 = -1;

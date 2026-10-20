@@ -116,7 +116,7 @@ export class GroundPainter {
     shape('creek', 0, this.planColour('water'));
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
     const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : this.planColour(t as TexName);
-    const lotAll = this.lotsIn(box), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     for (const p of [...lotAll.filter(p => !p.paint), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
@@ -190,7 +190,7 @@ export class GroundPainter {
     const shiftM = (dy: number) => new DOMMatrix([1, 0, 0, 1, 0, dy * L]).multiply(M);
     // ---- 1a. lot ground (driveways, walks, car parks, yards) before the verges and roads: each patch in its surface,
     //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines
-    const all = this.lotsIn(box), lots = all.filter(p => !p.paint), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    const all = this.lotsIn(box).filter(p => !p.top), tops = this.lotsIn(box).filter(p => p.top && p.lines?.length), lots = all.filter(p => !p.paint), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     if (lots.length) {
       const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('base', L)) : null;
       for (const p of lots) {
@@ -201,11 +201,12 @@ export class GroundPainter {
         }
       }
       // lines: parking bays in worn off-white; furrows (field and dirt patches, the farms' crop rows) in dark brown
-      for (const furrow of [true, false]) {
-        const set = lots.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') === furrow));
+      // (and yellow parking lines, the bay rows that ask for them)
+      for (const kind of ['furrow', 'white', 'yellow'] as const) {
+        const set = lots.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') ? 'furrow' : p.lineCol === 'yellow' ? 'yellow' : 'white') === kind);
         if (!set.length) continue;
         const lb = this.buffer('lotLines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineCap = 'butt'; lg.lineJoin = 'round';
-        lg.strokeStyle = furrow ? 'rgba(74,58,36,0.5)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(0.08, minW); lg.beginPath();
+        lg.strokeStyle = kind === 'furrow' ? 'rgba(74,58,36,0.5)' : kind === 'yellow' ? 'rgba(238,192,46,0.9)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(kind === 'yellow' ? 0.1 : 0.08, minW); lg.beginPath();
         for (const p of set) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); }
         lg.stroke(); lg.setTransform(M); lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = this.screenPattern(lg, 'wear', L, X0, Y0, Minv); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
         composite(lb);
@@ -317,9 +318,11 @@ export class GroundPainter {
         ctx.fillStyle = g; for (const lat of t.lat) ctx.fillRect(t.start, -lat - 0.11, t.len, 0.22); ctx.restore();
       }
       const lines = net.lines.filter(l => vis(l.bbox)), zebra = net.zebra.filter(z => vis(z.bbox)), bars = net.bars.filter(b => vis(b.bbox));
-      if (lines.length || zebra.length || bars.length) {
+      if (lines.length || zebra.length || bars.length || tops.length) {
         const lb = this.buffer('lines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineJoin = 'round';
         for (const l of lines) drawLine(lg, l, minW);
+        // on-street parking marks (lot ground patches drawn on top): the edge line and the bay ticks
+        if (tops.length) { lg.strokeStyle = WHITE; lg.lineCap = 'butt'; lg.lineWidth = Math.max(0.08, minW); lg.beginPath(); for (const p of tops) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lg.moveTo(p.lines![k], p.lines![k + 1]); lg.lineTo(p.lines![k + 2], p.lines![k + 3]); } lg.stroke(); }
         lg.fillStyle = WHITE; for (const z of zebra) lg.fill(z.path); for (const b of bars) lg.fill(b.path);
         // chipped paint: keep the line where the wear mask is opaque
         lg.setTransform(M); lg.globalCompositeOperation = 'destination-in'; lg.fillStyle = this.screenPattern(lg, 'wear', L, X0, Y0, Minv); lg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
