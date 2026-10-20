@@ -25,6 +25,9 @@ import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, siteAt, type Site } from './event/site';
 import { freshStats, type BizDef, type BizStats, type BizView } from './business/state';
+import { Visits, ON_TIME_RATIO, type Door, type VisitBiz, type VisitHome } from './business/visits';
+import { BUSINESS, GOOD_SAT, levelFromXp, satisfactionAfter } from './business/catalogue';
+import { driveway } from './sim/trips';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 
@@ -43,6 +46,8 @@ const SINK_END = 3, PARK_TEST_M = 300;
 /** a shuttle route's buses are spawned this many m apart back along the kerb lane from the lot stop; its stops must be within BUS_REACH tiles of the
  *  player's points, and kept BUS_END m clear of the lane's ends */
 const BUS_GAP = 15, BUS_REACH = 4, BUS_END = 3;
+/** the visit businesses' own random stream (business/visits.ts), never the sim's */
+const VISIT_SEED = 104729;
 
 /** the distance (tiles, capped) to the nearest WATER on the 4-tile cells (a cell is wet if one of its tiles is): a two-pass chamfer, in tiles */
 function waterField(terr: Uint8Array): Float32Array {
@@ -129,6 +134,10 @@ export class City {
   businesses: BizView[] = [];
   /** each placed business's stats by id (kept across setBusinesses while it stands; restoreBiz fills them from a save) */
   private bizStats = new Map<number, BizStats>();
+  /** the visit businesses' cars (business/visits.ts) and their random stream; the game day planned last (-1: none) */
+  visits = new Visits(); private visitRnd = seededRnd(VISIT_SEED); private visitDay = -1;
+  /** scratch points for the doors and the trip lookups */
+  private doorQ = { x: 0, y: 0, hx: 0, hy: 0 };
   /** a new valley gets the game's stadium spot (suggested) as its site; the browser's worker sets this false, so the player places the stadium (setStadium) */
   autoStadium = true;
   /** the game's spot for the stadium on this valley (placeStadium; null without towns): the default site when autoStadium is on */
@@ -261,11 +270,15 @@ export class City {
     const cur = this.businesses.find(b => b.type === 'stadium'), locked = this.round.stage !== 'free';
     const others = defs.filter(d => d.type !== 'stadium'), keep: BizDef[] = cur ? [{ id: cur.id, type: 'stadium', x: cur.x, y: cur.y, w: cur.w, h: cur.h }] : [];
     const next: BizDef[] = locked ? [...keep, ...others] : defs;
-    const stats = new Map<number, BizStats>();
+    const stats = new Map<number, BizStats>(), old = new Set(this.businesses.map(b => b.id));
     this.businesses = next.map(d => { const s = this.bizStats.get(d.id) ?? freshStats(d.id); stats.set(d.id, s); return { ...d, ...s }; });
     this.bizStats = stats;
     const st = this.businesses.find(b => b.type === 'stadium');
     this.site = st ? siteAt(st.x, st.y, st.w, st.h) : null;
+    // a business taken away loses its pending cars; the doors follow the new list, and the day's plan takes the new one in (the rest of its hours)
+    for (const id of old) if (!stats.has(id)) this.visits.drop(id);
+    this.visits.onGraph(this.visitDoors());
+    if (this.round.stage === 'free') this.planVisits(); else this.visitDay = -1;
   }
   /** fills the stats of the placed businesses from a save (by id; after setBusinesses, see the townState message) */
   restoreBiz(stats: BizStats[] = []): void {
@@ -346,8 +359,10 @@ export class City {
     this.budget.unlimited = this.unlimited;
     if (!s) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career ?? undefined);
-    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null;
+    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null; this.resetVisits();
   }
+  /** the visit cars start again (a new book or valley: the plans are not saved; the day's plan is made again at the next step) */
+  private resetVisits(): void { this.visits.endDay(); this.visitDay = -1; }
 
   /** the dev sandbox's options: the growth speed k (the town's Town.speed, and the planner's slots and window) and unlimited money (every budget); the defaults are the game's */
   setGrowth(k: number): void { this.growSpeed = k; this.town.speed = k; }
@@ -369,7 +384,9 @@ export class City {
     for (const s of this.net.segs) segs.push({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind });
     for (const n of this.net.nodes.values()) nodes.push(n.type);
     const tr = this.sim.trade, t0 = this.tradeAt;
-    return { lots, segs, nodes, trade: towns ? { arrived: 0, punctual: 0 } : { arrived: tr.arrived - t0.arrived, punctual: tr.punctual - t0.punctual }, pop: this.town.pop };
+    let bizUpkeep = 0;
+    for (const b of this.businesses) bizUpkeep += BUSINESS[b.type].upkeepPerDay;
+    return { lots, segs, nodes, trade: towns ? { arrived: 0, punctual: 0 } : { arrived: tr.arrived - t0.arrived, punctual: tr.punctual - t0.punctual }, pop: this.town.pop, bizUpkeep };
   }
 
   /** the growth option by id (see GROWTH_OPTIONS) */
@@ -414,7 +431,7 @@ export class City {
     if (part.length) applyOps(this.net, part);
     this.labelComps();
     if (this.busDefs.length) this.resolveBuses();
-    this.sim.onGraph(); this.upkeepC = null;
+    this.sim.onGraph(); this.upkeepC = null; this.visits.onGraph(this.visitDoors());
     // the closure blocks follow the lanes: the new graph's lanes of the closed segs get them (the old ids' are lifted there)
     if (rebuilt && this.closed.size) this.applyClosures();
     // the car parks are built again on the new network (a frontage road split or replaced by the edit leaves the old build on a dead seg;
@@ -442,7 +459,7 @@ export class City {
     this.sim.t = simT; this.sim.shift = shift; this.resetIncidents(this.incSeed); this.resetDisasters(this.disSeed);
     this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career);
-    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null;
+    this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null; this.resetVisits();
     const ev = this.town.restore(saved, this.sim.clock); this.syncHour = -1;
     return ev;
   }
@@ -467,6 +484,8 @@ export class City {
     let milestones = NO_MILESTONES, won = false;
     if (hr !== this.syncHour) {
       this.pushHour(hr); this.syncHour = hr; this.town.access.set(this.sim.access); this.builtSync();
+      // once a game hour a visit business with no plan yet today (no road or no homes when it was placed) gets another try
+      this.visitDay = -1;
       // with towns (centres) there is no career: its milestones and grants wait (the event's money is the income, see dayIn)
       if (!this.centres.length) {
         const u = this.career.update(this.town.pop);
@@ -490,6 +509,12 @@ export class City {
     if (this.surge && rs === 'surge') this.surge.step(this.sim, this.g, this.busWalk);
     this.drainParty();
     this.drainBus();
+    this.drainVisits();
+    // the visit businesses' cars: planned once a day (and once a business is placed), spawned while no round is under way
+    if (rs === 'free') {
+      if (this.visitDay < 0) this.planVisits();
+      this.visits.step(this.sim, this.g, this.sim.clock);
+    }
     if (this.crowd) { this.crowd.step(WALK_V * n * DT / MPT); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
@@ -497,7 +522,12 @@ export class City {
     for (const e of events) if (e.kind === 'build') { this.builds++; if (towns) this.sell(e.key); }
     const d = this.budget.dayOf(this.sim.clock); let ledger: Ledger | null = null;
     if (this.dayIdx < 0) this.dayIdx = d;
-    else if (d > this.dayIdx) { ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d; }
+    else if (d > this.dayIdx) {
+      this.closeVisits();
+      ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d;
+      // the new day's visits are planned now, or when the round is free again (step)
+      this.visitDay = -1; if (this.round.stage === 'free') this.planVisits();
+    }
     return { events, grow: this.planGrow(), ledger, milestones, won };
   }
 
@@ -747,7 +777,7 @@ export class City {
     this.tollDefs = defs.slice();
     if (!this.g.setTolls(defs, this.net)) return;
     if (this.busDefs.length) this.resolveBuses();
-    this.sim.onGraph(); this.upkeepC = null;
+    this.sim.onGraph(); this.upkeepC = null; this.visits.onGraph(this.visitDoors());
     if (this.closed.size) this.applyClosures();
     if (this.parks.length) this.resolveSinks();
     if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
@@ -1060,6 +1090,102 @@ export class City {
 
   /** a lot on a paved road the town builds on is sold: the player is paid its price (saleOf: nothing on gravel) */
   private sell(key: string): void { const l = this.lots.lots.get(key), n = l ? saleOf(l.cls) : 0; if (n) this.budget.sale(n); }
+
+  /** a visit business's door on the road (see Door): for each of the footprint's 4 door points, the dseg of the segs within 6 tiles that has its
+   *  business on its right (a one-way seg has one dseg), nearest the door point; null when no road is near or the lane is under 6 m. Visit types only */
+  private bizDoor(b: BizDef): Door | null {
+    if (BUSINESS[b.type].kind !== 'visit') return null;
+    const c = { x: b.x + b.w / 2, y: b.y + b.h / 2 }, q = this.doorQ;
+    let best: Door | null = null, bd = Infinity;
+    for (const p of siteAt(b.x, b.y, b.w, b.h).doors) {
+      const near = new Set(this.net.segsNear(p, 6));
+      for (const d of this.g.dsegs) {
+        if (!d || !d.lanes.length || !near.has(d.seg)) continue;
+        if (!d.seg.cls.oneway && dot(perp(norm(sub(d.to, d.from))), sub(c, p)) <= 0) continue;
+        const ln = this.g.lanes[d.lanes[d.lanes.length - 1]!]!;
+        if (ln.len < 6) continue;
+        const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm({ x: ln.pts[2]! - p0.x, y: ln.pts[3]! - p0.y });
+        const s = Math.min(ln.len - 3, Math.max(3, dot(sub(p, p0), u) * MPT));
+        laneAt(ln, s, q);
+        const dist = Math.hypot(q.x - p.x, q.y - p.y);
+        if (dist < bd) { bd = dist; best = { dseg: d.id, s }; }
+      }
+    }
+    return best;
+  }
+  /** each visit business's door by id (bizDoor; null: none) */
+  private visitDoors(): Map<number, Door | null> {
+    const out = new Map<number, Door | null>();
+    for (const b of this.businesses) if (BUSINESS[b.type].kind === 'visit') out.set(b.id, this.bizDoor(b));
+    return out;
+  }
+  /** the day's visit plans: each visit business (the ones with no plan yet today) gets its departures (Visits.plan) from the towns' homes, with the
+   *  trip times from each town's most populous home's driveway to its door. Needs the town centres and a visit business; sets visitDay */
+  private planVisits(): void {
+    const K = this.centres.length, list = this.businesses.filter(b => BUSINESS[b.type].kind === 'visit');
+    if (!K || !list.length) return;
+    const dayStart = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
+    const homes: VisitHome[][] = [], pops: number[] = [], from: number[] = [];
+    for (let k = 0; k < K; k++) { homes.push([]); pops.push(0); from.push(-1); }
+    for (const b of builtLots(this.town, this.lots)) {
+      const k = this.town.townOf(b.lot.key);
+      if (b.use === LU.RES && b.pop > 0 && k >= 0 && k < K) homes[k]!.push({ lot: b.lot, town: k, pop: b.pop });
+    }
+    // a town's trips start at its most populous home's driveway (the dseg it leaves from; -1 none)
+    for (let k = 0; k < K; k++) {
+      let h: VisitHome | null = null;
+      for (const x of homes[k]!) { pops[k]! += x.pop; if (!h || x.pop > h.pop) h = x; }
+      const dr = h ? driveway(h.lot, this.g) : null;
+      from[k] = dr ? this.g.lanes[dr.lane]!.dseg : -1;
+    }
+    const vb: VisitBiz[] = [], q = this.doorQ;
+    for (const b of list) {
+      const st = this.bizStats.get(b.id)!, door = this.bizDoor(b), tripMin: number[] = [];
+      // the door's point on its lane: where the trip ends (the time to its zone from each town's driveway)
+      if (door) { const dd = this.g.dsegs[door.dseg]!; laneAt(this.g.lanes[dd.lanes[dd.lanes.length - 1]!]!, door.s, q); }
+      // a town whose roads do not join the door's road sends no one (the zone table's time is to the door's zone, which a road of another
+      // component can share)
+      const dc = door ? this.compOf(this.g.dsegs[door.dseg]!.seg) : -1;
+      for (let k = 0; k < K; k++) {
+        if (!door || from[k]! < 0 || this.compOf(this.g.dsegs[from[k]!]!.seg) !== dc) { tripMin.push(Infinity); continue; }
+        tripMin.push(this.sim.router.timeTo(from[k]!, zoneOf(q.x, q.y)) / 60);
+      }
+      vb.push({ id: b.id, type: BUSINESS[b.type], level: st.level, sat: st.sat, door, tripMin });
+    }
+    this.visits.plan(dayStart, this.sim.clock, vb, homes, pops, this.visitRnd);
+    this.visitDay = this.budget.dayOf(this.sim.clock);
+  }
+  /** the visit cars that left the sim (Sim.visitOut, cleared): each is counted by the visits; an arrival is a sale (the business's price times its party,
+   *  booked as business takings) and a visitor; a lost car is a miss */
+  private drainVisits(): void {
+    const vo = this.sim.visitOut;
+    for (let k = 0; k < vo.length; k += 3) {
+      const id = vo[k]!, kind = vo[k + 1]!, ratio = vo[k + 2]!;
+      this.visits.event(id, kind, ratio);
+      const s = this.bizStats.get(id), b = s ? this.businesses.find(x => x.id === id) : undefined;
+      if (!s || !b) continue;
+      if (kind === 1) { s.today.missed++; continue; }
+      const type = BUSINESS[b.type], r = type.pricePerVisitor * type.party;
+      s.revenue += r; s.today.revenue += r; s.today.visitors++; s.visitors++;
+      if (ratio > ON_TIME_RATIO) s.today.late++;
+      this.budget.bizIncome(r);
+    }
+    vo.length = 0;
+  }
+  /** the day's close for the visits: each visit business's counts make its satisfaction move, its xp and level, and a good day; then every business's
+   *  today is cleared */
+  private closeVisits(): void {
+    const counts = this.visits.endDay();
+    for (const b of this.businesses) {
+      const s = this.bizStats.get(b.id); if (!s) continue;
+      const c = counts.get(b.id);
+      if (c) {
+        s.sat = satisfactionAfter(s.sat, c.onTime, c.late, c.missed); s.xp += c.onTime; s.level = levelFromXp(s.xp);
+        if (s.sat >= GOOD_SAT && c.onTime + c.late > 0) s.goodDays++;
+      }
+      s.today = { visitors: 0, late: 0, missed: 0, revenue: 0 };
+    }
+  }
 
   /** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
    *  (no net ops back yet: the next net batch clears it, and so does an hour, in case the engine skipped it). With towns, at most one

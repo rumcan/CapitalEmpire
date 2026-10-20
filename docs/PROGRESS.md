@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-20 afternoon (B.3 daily visit businesses); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -17,7 +17,7 @@ _Last updated: 2026-10-19 evening, paint branch (the Paint tool: ground areas, d
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | **Done** (2026-10-18; the gate passed on seed 1), not pushed (the owner is away). Steps, numbers and the gate below |
 | 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
 | 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
-| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 and B.2 done (the player places the stadium; the business catalogue and tree). Comes before 6R.5–6R.8 (the owner's order) |
+| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1-B.3 done (the player places the stadium; the business catalogue and tree; daily visit businesses with revenue, satisfaction and upkeep). Comes before 6R.5–6R.8 (the owner's order) |
 | UI. The Maple Falls look (the owner's mockup, [docs/ui/](ui/)) | **Step 1 done** (2026-10-20): icons, top bar, rail, road panel, hint bar. Open: minimap, event card picture. Section below |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
@@ -111,6 +111,9 @@ Other numbers:
 - **The test traffic is a placeholder** (no car following, cars pass through each other). The real sim is Phase 2.
 - **The worker bench sometimes never gets WebGL** ("GPU: unknown", heap stuck at 8 MB, never ready). Seen twice;
   a plain retry worked. `bench.mjs` now relaunches the browser (up to 3 tries) when WebGL is missing.
+- **`npm run event:gate` fails on main (found 2026-10-20, not caused by B.3):** (b) B's rate 48.33% equals A's (needs +10 points;
+  towns fixed 2) and (c) C's rate 99.58% (needs 99.95%); the same numbers on a clean checkout of `9f05008`. Its scenarios predate the
+  player-placed stadium and later road changes; to look at.
 - **The forest only plants as the camera arrives** (2 cells per frame), so a fast pan at district zoom shows trees
   popping in at the edges.
 
@@ -1589,18 +1592,36 @@ unlocks; budgets met).
     (−$30,000, −$90,000), demolish +half; reasons: road in the way, casino too close to a town, the water rule, the most of a
     type, a second stadium; saved and reloaded with `?unlock=0`: the list and the worker's stats back, the sports bar,
     golf and diner locked with their texts. Checks: typecheck clean; `npm test` 434/435 (ext-terrain2's timing only).
-- **Next: B.3, daily businesses in the sim**: visitor cars from the towns' homes to each visit business's door (the nearest
-  road), demand by `dailyDemand` with real driving minutes (tau shortened to 3–10 min), on time / late / missed, revenue per
-  arrival, satisfaction, good days, XP and levels at each day's close, every business's upkeep.
+- **B.3 Daily businesses in the sim (2026-10-20): DONE.** `src/game/business/visits.ts` (class `Visits`): at each day's start (and when a
+  business is placed, and once a game hour for one not yet planned) each visit business's demand, `round(dailyDemand)` with each town's
+  driving minutes from the router's zone table (`Router.timeTo`, at the current costs; tau now in real minutes, 3-10), becomes departures from
+  the towns' homes (a town by pop x exp(-min / tau), a home by residents) spread over its opening hours; the cars drive from their driveways to
+  the business's door (`City.bizDoor`: the nearest road within 6 tiles of a footprint door, the direction with the business on its right),
+  tagged in the sim (`Sim.visit`, `visitOut`). A town whose roads do not join the door's road sends no one (zone tables are per 128-tile zone,
+  so without the component check an island bar's cars were planned and lost: found in the browser). Each arrival pays price x party
+  (`Budget.bizIncome`, the ledger's Business line); arrivals over 2x their ideal time are late. The day's close: satisfaction moves 30% toward
+  (on time + half late) / all (unspawned and lost cars are missed), XP += on-time cars, the level from XP, a good day at sat >= 0.75 with
+  visitors; every business pays its upkeep per day (the ledger's line is now "Upkeep": roads and businesses; **the stadium's $1,500/day is now
+  charged too**, as BUSINESSES.md says). The worker posts the business stats hourly (was: only at the day's close); the Business panel shows a
+  visit business's day ("Today: 25 cars (0 late, 0 missed) · $450 · 0 good days"). Plans are not saved: a load plans the rest of the day.
+  - Browser-checked (port 5177, headless Edge driving `window.__game`, new valleys with `?stamp=1`): a sports bar beside a town road gets
+    16-25 cars by 20:00-23:00, $18 each, satisfaction 0.80 -> 0.84-0.86 and a good day at the close, the ledger's Business line matching; a bar
+    on a road not joined to the towns planned and lost all its cars (sat 0.80 -> 0.56) before the fix. Headless (harness seeds 1-3, a bar
+    by each town): 22-50 cars planned a day, nearly all on time, none lost. No console errors (one 404 resource, also on main).
+  - Checks: typecheck clean; `npm test` 453/453 on the worker (new tests/business-visits.test.ts, 6 tests incl. the island bar);
+    `town:gate` PASS (5,130 pop, 0 jams); `sim:gate -- 1 10000` PASS (21,074 arrived, 58 towed, 0 lost).
+  - Left: Visits' own misses (no driveway, past the door) are counted at the close but not in the panel's live "missed"; only the towns'
+    most populous home's component is checked (homes of a split town on another component are lost and missed); demand is modest (20-50
+    cars a day for a bar by a 1,000-resident town; tune with B.7's gate).
+- **Next: B.4, the stadium's tickets and the unlocks** (a ticket per fan arrived; XP and levels for the stadium from its rounds; the tree
+  opening by success; cards as business and road upgrades), then B.5-B.7, then 6R.5-6R.8.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road
 Upgrade/Downgrade ladder with fair costs, houses following a widened road, and the Maple Falls HUD (UI steps 1-2). Next in the owner's
-order is **Phase B** (the businesses; design in docs/BUSINESSES.md): B.1-B.2 done, **B.3 next** (daily businesses in the sim), then
-6R.5-6R.8 (highways, terrain, towns as seeds, the road set check). B.3 may already be under way in the main checkout (uncommitted
-src/game/business/visits.ts, catalogue.ts, sim/sim.ts): ask the owner whether that session is still running before touching them;
-if it is, work on the side queue in your own worktree instead (UI step 3: the junction and business panel restyles; the stop-bar recheck
-in 6R; the open items in 'Known issues'). Carry on through the queue without asking between steps; still ask before pushing. Delegate
+order is **Phase B** (the businesses; design in docs/BUSINESSES.md): B.1-B.3 done, **B.4 next** (the stadium's tickets and the unlocks), then
+B.5-B.7, then 6R.5-6R.8 (highways, terrain, towns as seeds, the road set check). Check `git status` and `git worktree list` first: another
+session may have uncommitted work in the main checkout or a worktree (ask the owner before touching it). Carry on through the queue without asking between steps; still ask before pushing. Delegate
 coding to haiku-coder (in the background for small jobs) and checks to haiku-runner (the worker PC `cworker`, 192.168.0.8, via
 scripts/worker/run.sh); commit locally after each verified step and merge to main when verified; update docs/PROGRESS.md as you go;
 test every road/junction/UI change in the browser on your own dev server port (5174 is the owner's). Tell the owner when work lands."

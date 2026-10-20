@@ -245,6 +245,15 @@ export class Router {
     this.tableMs = performance.now() - t0;
   }
 
+  /** the driving time (s, at the current costs) from the end of dseg d to zone z (Infinity if unknown or unreachable) */
+  timeTo(d: number, z: number): number {
+    if (!this.g) return Infinity;
+    const D = this.table(z).D;
+    if (!(d >= 0 && d < D.length)) return Infinity;
+    const v = D[d]!;
+    return Number.isFinite(v) ? v : Infinity;
+  }
+
   /** the logit choice at the end of a dseg among the movements `outs` (no U unless it is the only one): cost of the movement +
    *  its dseg + the zone table from there; keeps the costs within max(20, 25%) of the least, weights exp(-(c - cmin) / theta).
    *  Returns the movement, or -1 when none has a finite cost. */

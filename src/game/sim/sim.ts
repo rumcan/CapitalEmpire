@@ -148,6 +148,9 @@ export class Sim {
   /** per slot: the surge party the car belongs to (its town index), -1 none (see spawnAt); a party car that leaves the sim logs its exit in partyOut
    *  as the pair [town, kind]: kind 0 parked, 1 turned away, 2 lost (see out). The City reads and clears partyOut each step */
   party: Int8Array; partyOut: number[] = [];
+  /** per slot: the business the car visits (its id, see business/visits.ts), -1 none (see spawnAt). A visit car leaves the sim as a triple in visitOut:
+   *  [business id, kind, ratio], kind 0 arrived (ratio: its trip time over its ideal, as score computes it), 1 lost. The City reads and clears visitOut each step */
+  visit: Int16Array; visitOut: number[] = [];
   /** per slot: the shuttle route the bus drives (its index in busRoutes; -1 none), its leg (0 to the doors stop, 1 to the lot stop), its fans on board,
    *  the seconds it has dwelt at its stop, and the seconds of its current boarding or alighting (see busStep) */
   bus: Int16Array; busLeg: Uint8Array; busLoad: Int32Array; busDwell: Float32Array; busBoard: Float32Array;
@@ -227,7 +230,7 @@ export class Sim {
     this.lotTrips = new LotTrips(this.rnd);
     this.t0 = new Float64Array(cap); this.ideal = new Float64Array(cap); this.oz = new Uint8Array(cap); this.tag = new Uint8Array(cap);
     this.ox = new Float32Array(cap); this.oy = new Float32Array(cap); this.dX = new Float32Array(cap); this.dY = new Float32Array(cap);
-    this.sink = new Int16Array(cap).fill(-1); this.party = new Int8Array(cap).fill(-1);
+    this.sink = new Int16Array(cap).fill(-1); this.party = new Int8Array(cap).fill(-1); this.visit = new Int16Array(cap).fill(-1);
     this.paid = new Uint8Array(cap); this.dwell = new Float32Array(cap); this.boundTo = new Int32Array(cap).fill(-1);
     this.bus = new Int16Array(cap).fill(-1); this.busLeg = new Uint8Array(cap); this.busLoad = new Int32Array(cap); this.busDwell = new Float32Array(cap); this.busBoard = new Float32Array(cap);
     this.busKey = new Array<string>(cap).fill(''); this.busX = new Float64Array(cap); this.busY = new Float64Array(cap);
@@ -361,7 +364,16 @@ export class Sim {
 
   /** a party car leaves the sim as kind (0 parked, 1 turned away, 2 lost): logged in partyOut as [town, kind]; a car of no party logs nothing. Called before
    *  its slot is freed (despawn logs a lost car; a car is logged once: the party is cleared) */
-  private out(i: number, kind: number) { const p = this.party[i]!; if (p >= 0) { this.partyOut.push(p, kind); this.party[i] = -1; } }
+  private out(i: number, kind: number) {
+    const p = this.party[i]!; if (p >= 0) { this.partyOut.push(p, kind); this.party[i] = -1; }
+    // a visit car that leaves the sim lost is logged as [business, 1, 0] (an arrival is logged by visitArrive, which clears the tag first)
+    if (kind === 2 && this.visit[i]! >= 0) { this.visitOut.push(this.visit[i]!, 1, 0); this.visit[i] = -1; }
+  }
+  /** a visit car reached its door: logged in visitOut as [business, 0, ratio], the trip's time over its ideal (as score computes it, but not capped) */
+  private visitArrive(i: number, ln: Lane) {
+    const ideal = Math.max(this.ideal[i]! + this.s[i]! / ln.vmax, 10);
+    this.visitOut.push(this.visit[i]!, 0, (this.t - this.t0[i]!) / ideal); this.visit[i] = -1;
+  }
   /** removes the surge party's cars without logging them (the round's close) */
   dropParty(): void { for (let i = 0; i < this.cap; i++) if (this.alive[i] && this.party[i]! >= 0) { this.party[i] = -1; this.despawn(i); } }
 
@@ -369,7 +381,8 @@ export class Sim {
   setTarget(n: number) {
     this.target = Math.max(0, Math.min(this.cap, Math.floor(n)));
     // the buses are not cars: the trim takes cars only (fill aims at the cars the same way)
-    for (let i = this.cap - 1; i >= 0 && this.active - this.busN > this.target; i--) if (this.bus[i]! < 0) this.despawn(i);
+    // the surge's party cars and the business visitors are not background traffic either: the trim takes the others
+    for (let i = this.cap - 1; i >= 0 && this.active - this.busN > this.target; i--) if (this.bus[i]! < 0 && this.party[i]! < 0 && this.visit[i]! < 0) this.despawn(i);
   }
 
   /** one spawn attempt: an origin (Trips) and a destination at least 300 m away. Refused, and counted in stats.throttled, when the
@@ -387,9 +400,10 @@ export class Sim {
 
   /** adds one vehicle at s metres on link lane `lane`, heading for `dest` (a dseg; -1 = a random walk) at destS metres along it,
    *  its trip tagged with the destination lot's use (LU; 0 = none), and bound for sink (an index into sinks; -1 = none: a car park
-   *  bound vehicle has dest = the sink's dseg and destS = the sink's s); returns its slot, -1 if there is no room on the lane or no
+   *  bound vehicle has dest = the sink's dseg and destS = the sink's s), as the surge party `party` (a town; -1 none) and as a visit to
+   *  business `visit` (an id; -1 none); returns its slot, -1 if there is no room on the lane or no
    *  free slot, or -2 if it was lost at once (no route) */
-  spawnAt(lane: number, s: number, dest: number, destS: number, tag = 0, sink = -1, party = -1): number {
+  spawnAt(lane: number, s: number, dest: number, destS: number, tag = 0, sink = -1, party = -1, visit = -1): number {
     const ln = this.g.lanes[lane];
     if (!ln) return -1;
     // a car bound for a sink is refused on its line or past it (it would arrive at once, past a gate that is not held for it)
@@ -406,7 +420,7 @@ export class Sim {
     this.rnd(); this.drivers.assign(i, 'car'); this.v0f[i] = this.drivers.v0f[i]!; this.vtype[i] = vt; this.len[i] = L; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
     this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = tag;
-    this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = sink; this.party[i] = party;
+    this.dest[i] = dest; this.destS[i] = destS; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = sink; this.party[i] = party; this.visit[i] = visit;
     laneAt(ln, s, this.pt); this.ox[i] = this.pt.x; this.oy[i] = this.pt.y; this.setDest(i);
     const q = this.onLane[lane];
     let k = 0; while (k < q.length && this.s[q[k]] > s) k++;
@@ -530,7 +544,7 @@ export class Sim {
       const ln = lanes[this.lane[i]]!;
       if (ln.kind === LK.LINK && ln.dseg === this.dest[i] && this.s[i] >= this.destS[i]!) {
         const k = this.sink[i];
-        if (k >= 0) this.enter(i, k, ln); else { this.score(i, ln); this.stats.arrived++; this.despawn(i); }
+        if (k >= 0) this.enter(i, k, ln); else { if (this.visit[i]! >= 0) this.visitArrive(i, ln); this.score(i, ln); this.stats.arrived++; this.despawn(i); }
       }
     }
     this.drain();
@@ -610,7 +624,7 @@ export class Sim {
     this.v0f[i] = 1; this.vtype[i] = BUS_VT; this.len[i] = BUS_LEN; this.lat[i] = 0; this.stuck[i] = 0;
     this.grant[i] = -1; this.resv[i] = -1; this.wait[i] = 0; this.stopped[i] = 0;
     this.t0[i] = this.t; this.ideal[i] = -s / ln.vmax; this.oz[i] = this.router.zoneD[ln.dseg]!; this.tag[i] = 0;
-    this.dest[i] = R.lot.dseg; this.destS[i] = R.lot.s; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = -1; this.party[i] = -1;
+    this.dest[i] = R.lot.dseg; this.destS[i] = R.lot.s; this.route[i] = null; this.noRoute[i] = 0; this.sink[i] = -1; this.party[i] = -1; this.visit[i] = -1;
     this.bus[i] = r; this.busLeg[i] = 1; this.busLoad[i] = 0; this.busDwell[i] = 0; this.busBoard[i] = 0; this.busN++;
     laneAt(ln, s, this.pt); this.ox[i] = this.pt.x; this.oy[i] = this.pt.y; this.setDest(i);
     this.busKey[i] = ln.key; this.busX[i] = this.pt.x; this.busY[i] = this.pt.y;
@@ -1355,7 +1369,7 @@ export class Sim {
     this.busOff(i);
     if (this.grant[i] >= 0) this.unGrant(i);
     if (this.resv[i] >= 0) this.unReserve(i);
-    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.party[i] = -1; this.paid[i] = 0; this.dwell[i] = 0; this.unbind(i); this.active--;
+    this.alive[i] = 0; this.plan[i] = null; this.route[i] = null; this.sink[i] = -1; this.party[i] = -1; this.visit[i] = -1; this.paid[i] = 0; this.dwell[i] = 0; this.unbind(i); this.active--;
     if (i < this.hint) this.hint = i;
   }
 

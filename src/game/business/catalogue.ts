@@ -12,7 +12,7 @@ export type BusinessKind = 'event' | 'visit' | 'fleet' | 'estate';
 export interface Unlock { parent: BusinessId | null; level?: number; goodDays?: number; revenue?: number }
 /** a business type: its id, name, family, kind, footprint (tiles, before R turns it), build cost ($), upkeep ($ a game day), price per visitor ($: a
  *  ticket, a meal, a green fee, a room night, a fare; for estate the price of one lot), the party a visitor car carries, its opening hours (game
- *  hours, [open, close); visit only), the cars a day per 1000 residents at no trip time and level 1 (visit only), the trip time in game minutes over
+ *  hours, [open, close); visit only), the cars a day per 1000 residents at no trip time and level 1 (visit only), the driving time in real minutes (sim s / 60; the map is ~10 minutes across) over
  *  which that demand falls by e (visit only), how many the player may own, the nearest its centre may be to a town centre (tiles), whether it must
  *  stand by water (within WATER_REACH tiles of a water tile), its unlock, its spin-offs, and one line for the panel */
 export interface BusinessType {
@@ -39,37 +39,37 @@ export const BUSINESSES: BusinessType[] = [
     hours: [18, 21], rate: 0, tau: 0, max: 1, townMin: 200, water: false, unlock: { parent: null }, spinOffs: ['sportsbar', 'buscompany', 'golf', 'fishing'],
     blurb: 'Runs the event rounds; the crowd drives to it from the towns, so the spot sets how hard the traffic is.' },
   { id: 'sportsbar', name: 'Sports bar', family: 'leisure', kind: 'visit', footprint: { w: 14, h: 10 }, buildCost: 30000, upkeepPerDay: 200, pricePerVisitor: 9, party: 2,
-    hours: [16, 24], rate: 60, tau: 10, max: 3, townMin: 0, water: false, unlock: { parent: 'stadium', level: 2 }, spinOffs: ['diner'],
+    hours: [16, 24], rate: 60, tau: 4, max: 3, townMin: 0, water: false, unlock: { parent: 'stadium', level: 2 }, spinOffs: ['diner'],
     blurb: 'Fans come in the evenings; close to the homes it fills up, far away it stays empty.' },
   { id: 'buscompany', name: 'Bus company', family: 'transport', kind: 'fleet', footprint: { w: 30, h: 20 }, buildCost: 50000, upkeepPerDay: 400, pricePerVisitor: 1, party: 1,
     hours: [0, 24], rate: 0, tau: 0, max: 1, townMin: 0, water: false, unlock: { parent: 'stadium', level: 2 }, spinOffs: ['taxi'],
     blurb: 'The depot of your buses: every rider of a town bus or a shuttle pays a fare.' },
   { id: 'diner', name: 'Diner', family: 'leisure', kind: 'visit', footprint: { w: 12, h: 10 }, buildCost: 20000, upkeepPerDay: 120, pricePerVisitor: 6, party: 2,
-    hours: [7, 22], rate: 80, tau: 8, max: 3, townMin: 0, water: false, unlock: { parent: 'sportsbar', goodDays: 2 }, spinOffs: [],
+    hours: [7, 22], rate: 80, tau: 3, max: 3, townMin: 0, water: false, unlock: { parent: 'sportsbar', goodDays: 2 }, spinOffs: [],
     blurb: 'Breakfast to supper; people only drive a few minutes for a meal.' },
   { id: 'taxi', name: 'Taxi company', family: 'transport', kind: 'fleet', footprint: { w: 16, h: 12 }, buildCost: 25000, upkeepPerDay: 250, pricePerVisitor: 0, party: 1,
     hours: [0, 24], rate: 0, tau: 0, max: 1, townMin: 0, water: false, unlock: { parent: 'buscompany', goodDays: 3 }, spinOffs: [],
     blurb: 'Taxis wait at the stadium and the towns and carry fans who would have driven.' },
   { id: 'golf', name: 'Golf course', family: 'leisure', kind: 'visit', footprint: { w: 150, h: 110 }, buildCost: 180000, upkeepPerDay: 900, pricePerVisitor: 22, party: 4,
-    hours: [7, 19], rate: 25, tau: 20, max: 1, townMin: 150, water: false, unlock: { parent: 'stadium', level: 3 }, spinOffs: ['estate', 'casino'],
+    hours: [7, 19], rate: 25, tau: 6, max: 1, townMin: 150, water: false, unlock: { parent: 'stadium', level: 3 }, spinOffs: ['estate', 'casino'],
     blurb: 'Foursomes all day; golfers drive further than diners, but not past a jam.' },
   { id: 'estate', name: 'Golf estate', family: 'property', kind: 'estate', footprint: { w: 80, h: 60 }, buildCost: 50000, upkeepPerDay: 100, pricePerVisitor: 12000, party: 1,
     hours: [0, 24], rate: 0, tau: 0, max: 2, townMin: 0, water: false, unlock: { parent: 'golf', level: 2 }, spinOffs: [],
     blurb: 'Private lots by the course: each one the town builds on is sold to you first.' },
   { id: 'fishing', name: 'Bass-fishing resort', family: 'tourism', kind: 'visit', footprint: { w: 60, h: 40 }, buildCost: 90000, upkeepPerDay: 500, pricePerVisitor: 18, party: 3,
-    hours: [5, 20], rate: 20, tau: 25, max: 1, townMin: 100, water: true, unlock: { parent: 'stadium', level: 3 }, spinOffs: ['tackle', 'motel'],
+    hours: [5, 20], rate: 20, tau: 8, max: 1, townMin: 100, water: true, unlock: { parent: 'stadium', level: 3 }, spinOffs: ['tackle', 'motel'],
     blurb: 'Must stand by water; anglers leave at dawn and drive a long way for a good lake.' },
   { id: 'tackle', name: 'Fish-and-tackle shop', family: 'tourism', kind: 'visit', footprint: { w: 10, h: 8 }, buildCost: 15000, upkeepPerDay: 80, pricePerVisitor: 15, party: 1,
-    hours: [5, 18], rate: 15, tau: 15, max: 2, townMin: 0, water: false, unlock: { parent: 'fishing', goodDays: 3 }, spinOffs: [],
+    hours: [5, 18], rate: 15, tau: 5, max: 2, townMin: 0, water: false, unlock: { parent: 'fishing', goodDays: 3 }, spinOffs: [],
     blurb: 'Bait and gear; best on the way from the towns to the resort.' },
   { id: 'casino', name: 'Casino', family: 'leisure', kind: 'visit', footprint: { w: 60, h: 40 }, buildCost: 300000, upkeepPerDay: 2000, pricePerVisitor: 45, party: 2,
-    hours: [18, 24], rate: 40, tau: 25, max: 1, townMin: 150, water: false, unlock: { parent: 'golf', goodDays: 5 }, spinOffs: ['hotel'],
+    hours: [18, 24], rate: 40, tau: 8, max: 1, townMin: 150, water: false, unlock: { parent: 'golf', goodDays: 5 }, spinOffs: ['hotel'],
     blurb: 'The big evening draw: high spending, and a rush of cars after dark.' },
   { id: 'hotel', name: 'Hotel', family: 'tourism', kind: 'visit', footprint: { w: 30, h: 24 }, buildCost: 150000, upkeepPerDay: 800, pricePerVisitor: 55, party: 2,
-    hours: [14, 23], rate: 6, tau: 30, max: 2, townMin: 0, water: false, unlock: { parent: 'casino', level: 2 }, spinOffs: [],
+    hours: [14, 23], rate: 6, tau: 10, max: 2, townMin: 0, water: false, unlock: { parent: 'casino', level: 2 }, spinOffs: [],
     blurb: 'Room nights for casino and stadium guests; tourists come in from the highway.' },
   { id: 'motel', name: 'Motel', family: 'tourism', kind: 'visit', footprint: { w: 30, h: 16 }, buildCost: 60000, upkeepPerDay: 300, pricePerVisitor: 28, party: 2,
-    hours: [15, 24], rate: 8, tau: 30, max: 2, townMin: 0, water: false, unlock: { parent: 'fishing', level: 2 }, spinOffs: [],
+    hours: [15, 24], rate: 8, tau: 10, max: 2, townMin: 0, water: false, unlock: { parent: 'fishing', level: 2 }, spinOffs: [],
     blurb: 'Cheap rooms for anglers and fans; tourists come in from the highway.' },
 ];
 /** a type by id */
@@ -78,7 +78,7 @@ export const BUSINESS: Record<BusinessId, BusinessType> = Object.fromEntries(BUS
 /** the level for xp (1..LEVEL_XP.length): the last level whose XP is reached */
 export function levelFromXp(xp: number): number { let L = 1; for (let i = 1; i < LEVEL_XP.length; i++) if (xp >= LEVEL_XP[i]!) L = i + 1; return L; }
 
-/** a visit business's demand, cars a game day: the sum over its catchment (each town's residents and its trip time in game minutes) of
+/** a visit business's demand, cars a game day: the sum over its catchment (each town's residents and its driving time in real minutes, sim s / 60) of
  *  rate / 1000 * pop * exp(-tripMin / tau), times 1 + 0.25 per level above 1, times 0.5 + 0.5 * satisfaction (a satisfied business draws up to
  *  twice an unhappy one's crowd), times mul (the cards); 0 for any other kind. Falls with trip time (traffic decides it) */
 export function dailyDemand(type: BusinessType, level: number, catchment: { pop: number; tripMin: number }[], satisfaction: number, mul = 1): number {

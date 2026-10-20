@@ -350,7 +350,7 @@ function careerStat(game: Game): { value: string; sub: string; bar?: number } {
 /** the city's books: the last closed day's ledger, the net of the last 14 days as bars, the loans and the debt */
 function BudgetPanel({ game }: { game: Game }) {
   const b = game.traffic.budget, l = game.ledger, H = b.history.slice(-14), mx = Math.max(1, ...H.map(v => Math.abs(v.net)));
-  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Land sales', l.sales ?? 0, true], ['Road upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
+  const rows: [string, number, boolean][] = l ? [['Property tax', l.property, true], ['Business', l.business, true], ['Grants', l.grants ?? 0, true], ['Land sales', l.sales ?? 0, true], ['Upkeep', l.upkeep, false], ['Signal upkeep', l.signals, false], ['Loan interest', l.interest, false], ['Construction', l.construction, false], ['Compensation', l.compensation, false]] : [];
   const maxLoans = Budget.from(b).maxLoans(game.traffic.pop);
   return (
     <div className="absolute right-3 top-[var(--hud-top,6rem)] z-20 w-72 rounded-xl border border-white/10 bg-slate-950/85 p-3 shadow-lg backdrop-blur">
@@ -804,7 +804,7 @@ function BusinessPanel({ game }: { game: Game }) {
 }
 
 /** one type's card in the business panel: its name, cost, footprint (tiles, the most you may own) and blurb; each placed one as a row (level, satisfaction,
- *  revenue; Go to, Demolish: the stadium's only between rounds); a Build button when it is open and under its most (it becomes the type in hand, the card
+ *  revenue; Go to, Demolish: the stadium's only between rounds; a visit type's day so far below it); a Build button when it is open and under its most (it becomes the type in hand, the card
  *  highlighted); greyed, with its unlock, while it is not open */
 function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean }) {
   const open = game.bizOpen(b.id), placed = game.bizDefs.filter(d => d.type === b.id), under = placed.length < b.max, sel = game.bizType === b.id;
@@ -816,10 +816,13 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
       {placed.map(d => {
         const v = game.traffic.biz.find(q => q.id === d.id) ?? freshStats(d.id);
         return (
-          <div key={d.id} className="mt-1 flex items-center justify-between gap-2 border-t border-white/10 pt-1">
-            <span className="text-emerald-300">{`L${v.level} · ${Math.round(v.sat * 100)}% · ${money(v.revenue)}`}</span>
-            <div className="flex gap-2"><button className="btn" onClick={() => game.goToBusiness(d.id)}>Go to</button>
-              <button className="btn" disabled={b.id === 'stadium' && !free} onClick={() => game.demolishBusiness(d.id)}>Demolish (+{money(b.buildCost / 2)})</button></div>
+          <div key={d.id} className="mt-1 border-t border-white/10 pt-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-emerald-300">{`L${v.level} · ${Math.round(v.sat * 100)}% · ${money(v.revenue)}`}</span>
+              <div className="flex gap-2"><button className="btn" onClick={() => game.goToBusiness(d.id)}>Go to</button>
+                <button className="btn" disabled={b.id === 'stadium' && !free} onClick={() => game.demolishBusiness(d.id)}>Demolish (+{money(b.buildCost / 2)})</button></div>
+            </div>
+            {b.kind === 'visit' && <div className="text-slate-400">{`Today: ${v.today.visitors} cars (${v.today.late} late, ${v.today.missed} missed) · ${money(v.today.revenue)} · ${v.goodDays} good days`}</div>}
           </div>
         );
       })}

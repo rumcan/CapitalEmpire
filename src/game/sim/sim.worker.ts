@@ -116,7 +116,8 @@ function frame() {
   if (city.round.stage !== roundStage) { roundStage = city.round.stage; postBudget(null); }
   const hr = Math.floor(city.sim.t / HOUR);
   // not while fast-forwarding (an hour passes almost every frame then); the first frame after the skip posts it
-  if (hr !== reportHour && !(skipUntil > city.sim.t)) { reportHour = hr; postReport(); }
+  // the businesses' stats go out with it (the visit businesses' day so far)
+  if (hr !== reportHour && !(skipUntil > city.sim.t)) { reportHour = hr; postReport(); postBiz(); }
   if (watching && performance.now() >= watchNext) postWatch();
   if (heatOn && performance.now() >= heatNext) postHeat();
   // the disasters go when they changed (warnings, starts, ends, repairs): not per frame
