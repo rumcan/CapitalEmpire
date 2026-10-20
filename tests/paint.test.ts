@@ -104,6 +104,12 @@ test('save round trip: areas → tuples → JSON → areas gives the same areas;
   assert.deepEqual(kept, areas);
 });
 
+test('save round trip: a grass-v1 texture (golfGreen) keeps its name through toTuple → JSON → fromTuples', () => {
+  const area: PaintArea = { id: 1, pts: [0, 0, 6, 0, 6, 6, 0, 6], tex: 'golfGreen', scale: 2, angle: 15, border: 1, btex: 'lawnWorn' };
+  const back = fromTuples(JSON.parse(JSON.stringify([toTuple(area)])) as PaintTuple[]);
+  assert.deepEqual(back, [area]);
+});
+
 test('edgeAngle: a first edge along +y is 90, along -y is -90, along +x is 0 (as clampStyle keeps them)', () => {
   assert.equal(edgeAngle([0, 0, 0, 3, 3, 3, 3, 0]), 90);
   assert.equal(edgeAngle([0, 3, 0, 0, 3, 0, 3, 3]), -90);
