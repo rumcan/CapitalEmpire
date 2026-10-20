@@ -88,6 +88,8 @@ const IRON: Pair = { x: 'world:fence_iron_x', y: 'world:fence_iron_y' };
 const FLOWERS = names(['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'ref:halloween-mums']);
 const PUMPKINS = names(['world:pumpkin_0', 'world:pumpkin_1']);
 const SPOOKY = names(['ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost', 'world:scarecrow', 'expansion:blowmold-ghost', 'expansion:yard-spider', 'expansion:yard-coffin', 'ref:halloween-witch-sign', 'ref:halloween-lantern', 'world:grave_0', 'world:grave_1', 'world:grave_2']);
+/** the school and pedestrian signs (TrickOrTreat road sign set) for the kerb by a civic building */
+const SCHOOL_SIGNS = cat(i => /^variation:sign-pedestrians-school-/.test(i.id));
 const DEAD_TREES = names(['world:tree_dead_0', 'world:tree_dead_1', 'world:tree_dead_2']);
 /** the props each household story adds to the back yard (one of each, in this order, as they fit) */
 const STORY_KIT: Record<string, string[]> = {
@@ -510,6 +512,7 @@ function civic(B: Build, st: ComposeState) {
   for (let a = 1.4; a <= W - 1.4; a += 1.4) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
   if (st.decline >= 1) B.put(pick(r, BUSHES), W / 2, sb + 2 * eb + 1, { plant: true });
   B.put('world:trashcan', cx + 2.2, sb - 0.5);
+  B.put(pick(r, SCHOOL_SIGNS), W - 0.5, -0.4, { street: true });
   if (r() < 0.6) B.put('ref:halloween-hay-bales', cx + ea - 0.6, sb - 1.6);
   for (let b = sb + 0.8; b <= D - 1.5; b += 1.6) B.put(pick(r, FLOWERS), 0.8, b, { plant: true });
   B.marksIn('leaves', 0.8, sb + 2 * eb + 0.6, W - 0.8, D - 0.8, 2); if (r() < 0.5) B.mark('litter', cx + 1.4, sb - 1.2, 0.8);

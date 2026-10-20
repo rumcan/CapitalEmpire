@@ -54,7 +54,7 @@ function fpCorners(l: Lot, f: number[]) { return [[f[0], f[1]], [f[2], f[1]], [f
 function insideLot(l: Lot, c: Composition): string[] {
   const bad: string[] = [];
   for (const p of c.props) {
-    const minB = STREET.has(p.id) ? -1.2 : -0.3;
+    const minB = STREET.has(p.id) || p.id.startsWith('variation:sign-') ? -1.2 : -0.3;
     for (const q of fpCorners(l, fpOf(p))) if (q.a < -0.3 || q.a > l.w + 0.3 || q.b < minB || q.b > l.d + 0.3) { bad.push(`prop ${p.id}`); break; }
   }
   for (const g of c.ground) {

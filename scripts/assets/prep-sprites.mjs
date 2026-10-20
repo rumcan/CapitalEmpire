@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ROOT, fromBranch, fromExport, libraryItems } from './source.mjs';
+import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
 const OUT = path.join(ROOT, 'src/assets/atlas');
@@ -75,23 +75,57 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   sprites.push({ id, cat, it, cost, crop, cw, ch: chh, qx0: x0 / res, qy0: y0 / res, qx1: (x1 + 1) / res, qy1: (y1 + 1) / res });
 }
 
-// ---- 2. shelf packing into PAGE x PAGE pages (positions aligned so every mip lands on whole pixels)
-const al = v => Math.ceil(v / ALIGN) * ALIGN;
-const order = sprites.map((_, i) => i).sort((a, b) => sprites[b].ch - sprites[a].ch);
-const pages = []; let page = null;
-const newPage = () => { page = { shelves: [], sprites: [] }; pages.push(page); };
-newPage();
-for (const i of order) {
-  const s = sprites[i], w = al(s.cw + 2 * GUT), h = al(s.ch + 2 * GUT);
-  if (w > PAGE || h > PAGE) throw new Error(`${s.id} is too big for a ${PAGE} page`);
-  const place = pg => {
-    for (const sh of pg.shelves) if (h <= sh.h && sh.x + w <= PAGE) { const at = [sh.x, sh.y]; sh.x += w; return at; }
-    const y = pg.shelves.reduce((m, sh) => Math.max(m, sh.y + sh.h), 0); if (y + h > PAGE) return null;
-    pg.shelves.push({ y, h, x: w }); return [0, y];
-  };
-  let at = place(page); if (!at) { newPage(); at = place(page); }
-  s.page = pages.length - 1; s.px = at[0] + GUT; s.py = at[1] + GUT; page.sprites.push(s);
+// ---- 1b. the townspeople's walk sheets (TrickOrTreat art/people/{adult,kid}): 5 stored facings (S, SE, E, NE, N; the west side
+// is the east mirrored) x 5 frames (idle, walk1-4) per person. The art is 128 px per metre and the game draws people at 64 (the
+// player kids' scale), so a frame is packed at 0.6 x half its size
+const WALK_DIRS = ['S', 'SE', 'E', 'NE', 'N'], WALK_FRAMES = 5, people = [], walkers = [];
+const trim = (data, W, H) => {
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (data[(y * W + x) * 4 + 3] > 2) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) { x0 = y0 = 0; x1 = y1 = 0; }
+  const cw = x1 - x0 + 1, ch = y1 - y0 + 1, crop = Buffer.alloc(cw * ch * 4);
+  for (let y = 0; y < ch; y++) data.copy(crop, y * cw * 4, ((y0 + y) * W + x0) * 4, ((y0 + y) * W + x1 + 1) * 4);
+  return { crop, cw, ch, x0, y0, x1, y1 };
+};
+for (const size of ['adult', 'kid']) {
+  const dir = path.join(TOT, 'art/people', size); if (!fs.existsSync(dir)) { console.warn('no people at', dir); continue; }
+  for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) {
+    const m = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')), sheet = path.join(dir, file.replace(/\.json$/, '.webp'));
+    if (!fs.existsSync(sheet)) continue;
+    const k = 0.5, fw = m.frameWidth, fh = m.frameHeight, W = Math.round(fw * k * MIP0), H = Math.round(fh * k * MIP0), pi = people.length;
+    people.push({ id: m.id, size, w: fw * k, h: fh * k, ax: m.anchor.x * k, ay: m.anchor.y * k, m: m.heightMetres, fps: m.walkFps || 8 });
+    for (const d of WALK_DIRS) for (let fr = 0; fr < WALK_FRAMES; fr++) {
+      const row = m.directions.indexOf(d);
+      const { data } = await sharp(sheet).extract({ left: fr * fw, top: row * fh, width: fw, height: fh }).resize(W, H, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const t = trim(data, W, H);   // display px = packed px / MIP0
+      walkers.push({ id: `${m.id}:${d}:${fr}`, person: pi, crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 / MIP0, qy0: t.y0 / MIP0, qx1: (t.x1 + 1) / MIP0, qy1: (t.y1 + 1) / MIP0 });
+    }
+  }
 }
+
+// ---- 2. shelf packing into PAGE x PAGE pages (positions aligned so every mip lands on whole pixels). The walkers get their own
+// pages with a 4 px gutter on a 4 px grid: they are drawn at the street tier only, so the far mips never sample them
+const pages = [];
+function pack(list, gut, align) {
+  const al = v => Math.ceil(v / align) * align;
+  const order = list.map((_, i) => i).sort((a, b) => list[b].ch - list[a].ch);
+  let page = null;
+  const newPage = () => { page = { shelves: [], sprites: [] }; pages.push(page); };
+  newPage();
+  for (const i of order) {
+    const s = list[i], w = al(s.cw + 2 * gut), h = al(s.ch + 2 * gut);
+    if (w > PAGE || h > PAGE) throw new Error(`${s.id} is too big for a ${PAGE} page`);
+    const place = pg => {
+      for (const sh of pg.shelves) if (h <= sh.h && sh.x + w <= PAGE) { const at = [sh.x, sh.y]; sh.x += w; return at; }
+      const y = pg.shelves.reduce((m, sh) => Math.max(m, sh.y + sh.h), 0); if (y + h > PAGE) return null;
+      pg.shelves.push({ y, h, x: w }); return [0, y];
+    };
+    let at = place(page); if (!at) { newPage(); at = place(page); }
+    s.page = pages.length - 1; s.px = at[0] + gut; s.py = at[1] + gut; page.sprites.push(s);
+  }
+}
+pack(sprites, GUT, ALIGN);
+if (walkers.length) pack(walkers, 4, 4);
 
 // ---- 3. pages and their mips
 const files = [];
@@ -130,6 +164,19 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   `export const ATLAS_MIP0 = ${MIP0};`,
   'export const LIBRARY: LibItem[] = [',
   ...lib.map(e => '  ' + JSON.stringify(e) + ','),
-  '];', ''].join('\n'));
+  '];',
+  '/** the townspeople (TrickOrTreat art/people): display size and anchor (feet) at the native scale, height in metres, walk frames per second */',
+  `export const WALKER_PEOPLE: { id: string; size: string; w: number; h: number; ax: number; ay: number; m: number; fps: number }[] = ${JSON.stringify(people.map(p => ({ ...p, w: +p.w.toFixed(2), h: +p.h.toFixed(2), ax: +p.ax.toFixed(2), ay: +p.ay.toFixed(2) })))};`,
+  '/** facings stored per person (the west side is the east mirrored) and frames per facing (0 idle, 1-4 the walk) */',
+  `export const WALK_DIRS = ${JSON.stringify(WALK_DIRS)}, WALK_FRAMES = ${WALK_FRAMES};`,
+  '/** every walker frame (person, facing, frame in order): page, u0, v0, u1, v1, then the quad x0, y0, x1, y1 */',
+  `const WF = [${walkers.map(w => [w.page, ...[w.px / PAGE, w.py / PAGE, (w.px + w.cw) / PAGE, (w.py + w.ch) / PAGE].map(v => +v.toFixed(6)), ...[w.qx0, w.qy0, w.qx1, w.qy1].map(v => +v.toFixed(2))].join(',')).join(',')}];`,
+  '/** the index of the first walker frame in LIBRARY: frame (person p, facing d, frame f) is WALKER_BASE + (p * WALK_DIRS.length + d) * WALK_FRAMES + f */',
+  'export const WALKER_BASE = LIBRARY.length;',
+  'for (let i = 0; i < WF.length / 9; i++) {',
+  '  const p = WALKER_PEOPLE[Math.floor(i / (WALK_DIRS.length * WALK_FRAMES))], o = i * 9;',
+  "  LIBRARY.push({ id: `${p.id}:${i % (WALK_DIRS.length * WALK_FRAMES)}`, name: p.id, cat: 'Townspeople', kind: 'walker', w: p.w, h: p.h, ax: p.ax, ay: p.ay, boxes: [{ hx: 0.25, hy: 0.25, dx: 0, dy: 0 }], solid: 0, big: false, door: false, cost: 0, tex: [WF[o], WF[o + 1], WF[o + 2], WF[o + 3], WF[o + 4]], quad: [WF[o + 5], WF[o + 6], WF[o + 7], WF[o + 8]] });",
+  '}', ''].join('\n'));
+console.log(`walkers: ${people.length} people, ${walkers.length} frames`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);
 console.log(`sprites ${sprites.length}, pages ${pages.length}, fill ${(used / (pages.length * PAGE * PAGE) * 100).toFixed(0)}%`);
