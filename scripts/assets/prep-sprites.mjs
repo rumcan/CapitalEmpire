@@ -1,21 +1,32 @@
 // Pack the curated town-builder sprites (TrickOrTreat public export, public/assets/town-built) into GPU atlas pages.
 //   node scripts/assets/prep-sprites.mjs
 // Scale contract: the export's w,h,ax,ay are display px at the builder's native 128 px per tile. The game never zooms
-// closer than 30%, which on a dpr-2 screen is 0.6 device px per native px, so mip 0 is 0.6x native. Every page also
+// closer than 30%, which on a dpr-2 screen is 0.6 device px per native px, so mip 0 is 0.6x native for a sprite drawn
+// at scale 1. A sprite the game draws bigger (the owner's lot scales, the forest) is packed at 0.6x its largest scale,
+// as far as its painted source goes, so it is never stretched at the closest zoom (scripts/assets/audit-sprites.mjs).
+// Besides the export (the sprites the owner's painted town uses), every upright sprite of a local TrickOrTreat town
+// builder library is packed too (source.mjs libraryItems), so the whole art set is available. Every page also
 // ships 0.3x, 0.15x, 0.075x and 0.0375x mips (the whole page downsampled, so one set of UVs serves every level).
 // Sprites are trimmed to their alpha and padded with a gutter wide enough to survive the smallest mip.
 // Writes src/assets/atlas/sprites-<page>-<mip>.webp and src/game/library.ts.
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ROOT, fromExport } from './source.mjs';
+import { ROOT, fromExport, libraryItems } from './source.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
 const OUT = path.join(ROOT, 'src/assets/atlas');
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
 
 const town = JSON.parse((await fromExport('town.json')).toString());
-const items = town.items;
+const items = town.items, fromLib = await libraryItems(new Set(Object.keys(items)));
+for (const [id, it] of Object.entries(fromLib)) items[id] = it;
+
+// the largest scale the game draws each id at: the owner's lot table (+5% composer jitter) and the forest (up to 1.5)
+const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
+const OWNER = Object.fromEntries([...read('src/game/lots/scales.ts').matchAll(/"([^"]+)":\s*([0-9.]+)/g)].map(m => [m[1], +m[2]]));
+const FOREST = new Set([...read('src/game/forest.ts').matchAll(/'([a-z]+:[^']+)'/g)].map(m => m[1]));
+const maxScale = id => Math.max(1, (OWNER[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5 : 0);
 // every item of one export category (the Lot Composer kit takes whole categories)
 const all = c => Object.keys(items).filter(id => items[id].cat === c);
 // an id may sit in several lists: the first list that names it wins (see `seen` in step 1)
@@ -29,9 +40,14 @@ const SEL = {
   'Halloween': ['world:pumpkin_0', 'world:pumpkin_1', 'world:scarecrow', 'ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'world:candy_stand', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost'],
   'Fences': ['world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood', ...all('Correct-angle fences'), ...all('Fences & walls')],
   'Yard': ['gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line', ...all('Backyard structures'), ...all('Backyard furniture'), ...all('Backyard stories'), ...all('POI dressing')],
-  'Industry': [...all('Scrapyard clutter'), ...all('Derelict town')],
+  'Industry': [...all('Scrapyard clutter'), ...all('Derelict town'), ...all('New industrial buildings')],
+  // from the full TrickOrTreat library (after the export's lists, so existing sprites keep their order)
+  'More houses': [...all('House rear & side views')],
+  'Road signs': [...all('Road signs')],
+  'Arcade': [...all('Arcade furniture'), ...all('Arcade decor')],
+  'Odds & ends': [...all('Town odds & ends'), ...all('Halloween yard details')],
 };
-const COST = { 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300 };
+const COST = { 'More houses': 9000, 'Road signs': 150, 'Arcade': 600, 'Odds & ends': 200, 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300 };
 // export categories whose kind the engine needs to see differently (derelict houses are not occupied houses)
 const KIND_OF_CAT = { 'Derelict town': 'building', 'Scrapyard clutter': 'decor' };
 
@@ -40,9 +56,12 @@ const sprites = [], seen = new Set();
 for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   if (seen.has(id)) continue; seen.add(id);
   const it = items[id]; if (!it) { console.warn('missing', id); continue; }
-  const file = it.file.split('/').pop();
-  let buf; try { buf = await fromExport('sprites-hd/' + file); } catch { buf = await fromExport('sprites/' + file); }
-  const W = Math.max(1, Math.round(it.w * MIP0)), H = Math.max(1, Math.round(it.h * MIP0));
+  let buf;
+  if (it.src) buf = fs.readFileSync(it.src);
+  else { const file = it.file.split('/').pop(); try { buf = await fromExport('sprites-hd/' + file); } catch { buf = await fromExport('sprites/' + file); } }
+  // packed at its largest drawn scale, but never past the painted source's own pixels
+  const res = Math.min(MIP0 * maxScale(id), (await sharp(buf).metadata()).width / it.w);
+  const W = Math.max(1, Math.round(it.w * res)), H = Math.max(1, Math.round(it.h * res));
   const { data } = await sharp(buf).ensureAlpha().resize(W, H, { fit: 'fill', kernel: 'lanczos3' }).raw().toBuffer({ resolveWithObject: true });
   let x0 = W, y0 = H, x1 = -1, y1 = -1;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (data[(y * W + x) * 4 + 3] > 2) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
@@ -51,7 +70,7 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   for (let y = 0; y < chh; y++) data.copy(crop, y * cw * 4, ((y0 + y) * W + x0) * 4, ((y0 + y) * W + x1 + 1) * 4);
   const area = it.boxes.reduce((s, b) => s + b.hx * b.hy * 4, 0) || 1, base = COST[cat];
   const cost = Math.round(base * (0.6 + 0.4 * Math.min(3, area / (base > 5000 ? 30 : 1))) / 10) * 10;
-  sprites.push({ id, cat, it, cost, crop, cw, ch: chh, qx0: x0 / MIP0, qy0: y0 / MIP0, qx1: (x1 + 1) / MIP0, qy1: (y1 + 1) / MIP0 });
+  sprites.push({ id, cat, it, cost, crop, cw, ch: chh, qx0: x0 / res, qy0: y0 / res, qx1: (x1 + 1) / res, qy1: (y1 + 1) / res });
 }
 
 // ---- 2. shelf packing into PAGE x PAGE pages (positions aligned so every mip lands on whole pixels)
