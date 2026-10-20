@@ -254,14 +254,14 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries; panels off their line; the studio removals)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '9970f3e9'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '0ab2d72c'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '3f58c0af'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '77b75859'],
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '6082037a'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'c0ac3f7c'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '07fb62fd'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '4f6e1d92'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '06a6313a'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '0e375359'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '4b9b96d5'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);

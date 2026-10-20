@@ -33,6 +33,8 @@ interface Pair { x: string; y: string }
 const MARKS: Record<string, number[]> = {};
 LOT_DECALS.forEach((d, i) => (MARKS[d.group] ??= []).push(i));
 const MARK_ID = new Map(LOT_DECALS.map((d, i) => [d.id, i]));
+/** the generated leaf drifts (gen:drift-*) are painted as heaps of big leaves: drawn at full size each leaf came out as big as a car (the owner, 2026-10-20), so they are drawn at this share of their size */
+const DRIFT_K = 0.35;
 /** the tolerances: an item may reach this far past the lot (street items: into the verge), and touching is not overlap */
 const REACH = 0.3, VERGE = 1.2, EPS = 0.02;
 /** the largest share of the smaller footprint two uprights may share */
@@ -227,7 +229,7 @@ class Build {
   mark(group: string, a: number, b: number, size = 1) {
     const list = MARKS[group] ?? (MARK_ID.has(group) ? [MARK_ID.get(group)!] : []);
     if (!list.length) return;
-    const i = list[Math.floor(this.r() * list.length)], p = this.P(clamp(a, 0.4, this.W - 0.4), clamp(b, 0.4, this.D - 0.4)), s = size * (0.8 + 0.4 * this.r());
+    const i = list[Math.floor(this.r() * list.length)], p = this.P(clamp(a, 0.4, this.W - 0.4), clamp(b, 0.4, this.D - 0.4)), s = size * (0.8 + 0.4 * this.r()) * (LOT_DECALS[i]!.id.startsWith('gen:drift-') ? DRIFT_K : 1);
     this.marks.push(i, +p.x.toFixed(3), +p.y.toFixed(3), +(this.r() < 0.5 ? -s : s).toFixed(3), +(0.7 + 0.3 * this.r()).toFixed(2));
   }
   /** n decals from a group at seeded points of a lot-frame rectangle */

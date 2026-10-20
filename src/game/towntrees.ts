@@ -3,11 +3,13 @@ import { MAP, mulberry } from './iso';
 import { fbm, hash2, type Noise } from './terrain/noise';
 import { TC } from './terrain/types';
 import { BROAD_W, FOREST_BROAD, FOREST_CELL, FOREST_CONIFER, type ForestTree } from './forest';
+import { OWNER_SCALE } from './lots/scales';
 
 /** spacing of the jittered global grid of the town trees, in tiles */
-const S = 3;
+export const TOWN_TREE_S = 4.5;
+const S = TOWN_TREE_S;
 /** the clearance a town tree needs from the roads, lots and the rest, in tiles (its trunk and footprint) */
-const CLEAR = 1.2;
+const CLEAR = 1.6;
 
 /** the town trees of cell (ci, cj): a pure function of the seed, the terrain, the clump noise and the predicates, so cells plant in any order and never overlap.
  *  A point is kept when it is in a town (near), on GROUND or PATCH, and free of the roads and lots (free, with CLEAR tiles); clumps keep most of their points and the open lawn some */
@@ -32,7 +34,7 @@ export function townTreeCell(seed: number, cls: Uint8Array, clump: Noise, ci: nu
         for (; k < BROAD_W.length - 1; k++) { acc += BROAD_W[k]!; if (u < acc) break; }
         id = FOREST_BROAD[k]!;
       }
-      const scale = 0.75 + r() * 0.4, flip = r() < 0.5;
+      const scale = ((OWNER_SCALE as Record<string, number>)[id] ?? 1.5) * (0.9 + r() * 0.2), flip = r() < 0.5;
       out.push({ x, y, id, scale, flip });
     }
   }
