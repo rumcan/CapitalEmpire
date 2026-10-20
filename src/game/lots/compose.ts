@@ -22,10 +22,10 @@ export interface ComposeState { use: number; level: number; decline: number; see
 type Pt = { x: number; y: number };
 type Box4 = [number, number, number, number];
 /** a placed candidate: the anchor (ground point) and its footprint in world tiles */
-interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; street: boolean; plant: boolean }
+interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean }
 /** a sprite at a size and orientation: its footprint relative to the anchor */
 interface Spec { id: string; s: number; flip: boolean; h: Box4 }
-interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean }
+interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean }
 interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
 interface Pair { x: string; y: string }
 
@@ -79,11 +79,8 @@ const JUNK = names(['expansion:junk-car', 'expansion:appliance-pile', 'expansion
 const SCRAP = names(['expansion:scrap-engine', 'expansion:tyre-stack', 'expansion:yard-workbench', 'expansion:air-compressor']);
 const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle', 'expansion:appliance-pile']);
 const TRAILERS = names(['expansion:camper', 'expansion:boxcar', 'expansion:boat-trailer', 'expansion:utility-trailer', 'expansion:lean-to-shed']);
-const PICKET: Pair = { x: 'world:fence_picket_x', y: 'world:fence_picket_y' };
 const PRIVACY: Pair = { x: 'expansion:fence-privacy-x', y: 'expansion:fence-privacy-y' };
 const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
-const HEDGE: Pair = { x: 'world:hedge', y: 'world:hedge' };
-const IRON: Pair = { x: 'world:fence_iron_x', y: 'world:fence_iron_y' };
 /** flower beds (the soft plants), porch pumpkins, and the bigger Halloween yard pieces (Maple Falls in October) */
 const FLOWERS = names(['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'ref:halloween-mums']);
 const PUMPKINS = names(['world:pumpkin_0', 'world:pumpkin_1']);
@@ -168,7 +165,7 @@ class Build {
   atW(g: Spec | null, c: Pt, o: Opt = {}): Item | null {
     if (!g) return null;
     const it = BY.get(g.id)!, h = g.h, x = c.x - (h[0] + h[2]) / 2, y = c.y - (h[1] + h[3]) / 2;
-    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car: it.cat === 'Vehicles', wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', street: !!o.street, plant: !!o.plant };
+    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car: it.cat === 'Vehicles', wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant };
     this.items.push(item); return item;
   }
   /** a spec with its footprint centre at a lot-frame point (a along u, b along n) */
@@ -190,6 +187,19 @@ class Build {
       if (gap && t >= gap[0] && t <= gap[1]) continue;
       if (drop && this.r() < drop) continue;
       this.atW(g, { x: p0.x + dx * t, y: p0.y + dy * t });
+    }
+  }
+  /** a boundary run in tiles: 4 m panels at a constant height; the final panel meets the endpoint with a small seam overlap */
+  boundaryRun(kind: Pair, a0: number, b0: number, a1: number, b1: number) {
+    const p0 = this.P(a0, b0), p1 = this.P(a1, b1), dx = p1.x - p0.x, dy = p1.y - p0.y, L = Math.hypot(dx, dy);
+    const ax = Math.abs(dx) >= Math.abs(dy), id = ax ? kind.x : kind.y;
+    if (L < 1e-6 || !BY.has(id)) return;
+    const h = boxOf(id, 1, false), span = ax ? h[2] - h[0] : h[3] - h[1];
+    if (span <= 0) return;
+    const size = Math.min(2, L), s = size / span, count = Math.ceil(L / size - 1e-9);
+    for (let i = 0; i < count; i++) {
+      const start = Math.min(i * size, L - size), t = (start + size / 2) / L;
+      this.atW({ id, s, flip: false, h: boxOf(id, s, false) }, { x: p0.x + dx * t, y: p0.y + dy * t }, { boundary: true });
     }
   }
   /** a fence on all four sides, inset by e: the front in kind f (with the gap, fractions of the width), the sides and back in kind k;
@@ -284,7 +294,8 @@ class Build {
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
     for (const it of this.items) {
-      if (!this.inside(it) || this.onPatch(it)) continue;
+      // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
+      if (!this.inside(it) || (!it.boundary && this.onPatch(it))) continue;
       if (!it.fence && !it.wheel) {
         if (it.plant && ups >= this.cap) continue;
         if (acc.some(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP)) continue;
@@ -385,25 +396,13 @@ function res(B: Build, st: ComposeState) {
   B.put('world:mailbox', bx + sx * 0.9, -0.35, { street: true });
   if (r() < 0.5) B.put('expansion:leaf-bags', bx + sx * 2.1, -0.4, { street: true });
   if (r() < 0.15) B.put('world:hydrant', L ? W - 0.6 : 0.6, -0.4, { street: true });
-  // fenced all round: the front (a picket; a hedge for retired; a sagging chain-link with missing panels when neglected), the
-  // front-yard sides to match (picket beside a hedge), the sides and back behind the house in privacy board (chain for the
-  // mechanic and neglected); the drive and the walk cut their gaps
-  const drop = neg ? 0.3 : 0;
-  if (story === 'retired') B.run(HEDGE, 0, 0.45, W, 0.45); else B.run(neg ? CHAIN : PICKET, 0, 0.2, W, 0.2, undefined, drop);
-  const yard = neg ? CHAIN : PICKET, back = story === 'retired' ? PICKET : story === 'mechanic' || neg ? CHAIN : PRIVACY;
-  B.run(yard, 0.2, 0.2, 0.2, sb + 1, undefined, drop); B.run(yard, W - 0.2, 0.2, W - 0.2, sb + 1, undefined, drop);
-  B.run(back, 0.2, sb + 1, 0.2, D - 0.2, undefined, drop);
-  B.run(back, W - 0.2, sb + 1, W - 0.2, D - 0.2, undefined, drop);
-  B.run(back, 0, D - 0.2, W, D - 0.2, undefined, drop);
-  // plants: a flower bed inside the front fence, packed against the house front and sides, then along the back fence
+  // plants: a flower bed in the front yard, packed against the house front and sides
   // (neglected yards keep the same lines at half the density, and run to weeds)
   const dense = neg ? 2 : 1;
   B.cap = (neg ? 16 : 24 + Math.floor(r() * 14)) + (up ? 6 : 0);
   if (!neg) for (let a = 0.9; a <= W - 0.9; a += 1.1) B.put(pick(r, FLOWERS), a, 0.8, { plant: true });
   for (let a = ca - hw / 2 - 0.6; a <= ca + hw / 2 + 0.6; a += dense) B.put(pick(r, neg ? BUSHES : FLOWERS.concat(BUSHES)), a, sb - 0.8, { plant: true });
   for (const sx of [-1, 1]) for (let b = sb + 0.8; b <= sb + 2 * hd - 0.5; b += 1.2 * dense) B.put(pick(r, BUSHES), ca + sx * (hw / 2 + 0.7), b, { plant: true });
-  for (let a = 1; a <= W - 1; a += 1.6 * dense) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
-  for (const a of [0.9, W - 0.9]) for (let b = bk; b <= D - 1.5; b += 1.2 * dense) B.put(pick(r, BUSHES), a, b, { plant: true });
   // the rest of the back and front yards in beds, last in order: the cap decides how many of these stay
   for (let b = bk + 0.6; b <= D - 1.2; b += 1.4) for (let a = 1.6; a <= W - 1.4; a += 1.4) B.put(pick(r, BUSHES), a, b, { plant: true });
   for (let b = 0.8; b <= sb - 0.6; b += 1.4) for (let a = 0.8; a <= W - 0.8; a += 1.4) B.put(pick(r, BUSHES), a, b, { plant: true });
@@ -416,7 +415,7 @@ for (const it of LIBRARY) {
   const k = `${m[1]}x${m[2]} ${m[3]}`; let e = BAKED.get(k); if (!e) BAKED.set(k, (e = [[], []]));
   e[/neglected/.test(it.name) ? 1 : 0].push(it.id);
 }
-/** a house lot as one baked picture (the whole lot: house, yard, fences, decals), when its size has variants: the variant by the
+/** a house lot as one baked picture (house, yard and decals), when its size has variants: the variant by the
  *  lot's slot along its street (neighbours differ), the neglected ones from decline 2; null when none fits */
 function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
   const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`); if (!e) return null;
@@ -425,6 +424,48 @@ function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
   const id = pool[(((slot + mix(street) % 7) % pool.length) + pool.length) % pool.length];
   const c = B.P(lot.w / 2, lot.d / 2);
   return { props: [{ id, x: c.x, y: c.y, flip: B.flip, scale: 1 }], ground: [] };
+}
+
+/** the fence grid of a baked house lot, drawn as its own layer (the lot picture has no fences): wooden privacy panels on the
+ *  lower world-coordinate side line (every lot owns one side) from the back line to 3.65 tiles (7.3 m)
+ *  from the front edge, the same on every lot so neighbours' fences meet, and on the back line when n points to +X/+Y (of two
+ *  lots back to back exactly one owns it). Along the inside of all three inner lines (so both faces
+ *  of every fence are planted): shrubs, ferns and grasses with gaps, now and then a young tree; leaf drifts and tufts at the
+ *  fence bases. Each neighbour supplies the planting on its own side of a shared line. */
+const FENCE_PLANTS = names(['town:fern', 'town:ornamental_grass']).concat(BUSHES.filter(id => id !== 'world:hedge'));
+/** one deterministic deck; each street slot gets three consecutive young-tree choices before the deck repeats */
+const FENCE_TREES = (() => {
+  const deck = TREES.filter(id => !/-ns:/.test(id)).sort(), r = mulberry(0x66e3);
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  return deck;
+})();
+const FENCE_FRONT = 3.65;
+function fenceLayer(B: Build, lot: LotGeom) {
+  const { W, D, r } = B, side = lot.u.x + lot.u.y > 0 ? 0 : W;
+  const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / W), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
+  const treeStart = mix(street, lot.n.x + 1, lot.n.y + 1) + slot * 3;
+  let trees = 0;
+  B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
+  if (lot.n.x + lot.n.y > 0) B.boundaryRun(PRIVACY, 0, D, W, D);
+  const plant = (a: number, b: number) => {
+    const u = r();
+    if (u >= 0.78) return;
+    const young = u < 0.08 && trees < Math.min(3, FENCE_TREES.length);
+    const treeIndex = ((treeStart + trees) % FENCE_TREES.length + FENCE_TREES.length) % FENCE_TREES.length;
+    const id = young ? FENCE_TREES[treeIndex] : pick(r, FENCE_PLANTS);
+    if (young) trees++;
+    const g = B.spec(id, { mul: young ? 0.65 : 0.8 + 0.3 * r() });
+    if (!g) return;
+    // Keep a young tree's full footprint inside the yard; a fixed 0.45-tile inset discards nearly every tree.
+    const ea = B.ea(g), eb = B.eb(g);
+    if (ea * 2 > W || eb * 2 > D - FENCE_FRONT) return;
+    B.at(g, clamp(a, ea, W - ea), clamp(b, FENCE_FRONT + eb, D - eb), { plant: true });
+  };
+  for (const a of [0.45, W - 0.45]) for (let b = FENCE_FRONT + 0.6; b < D - 0.6; b += 1.0 + 0.6 * r()) plant(a, b);
+  for (let a = 1.2; a < W - 1.2; a += 1.0 + 0.6 * r()) plant(a, D - 0.45);
+  const base = (a: number, b: number) => { B.mark('leaves', a, b, 0.7 + 0.3 * r()); B.mark('tufts', a, b, 0.55 + 0.2 * r()); };
+  for (const a of [0.5, W - 0.5]) for (let b = FENCE_FRONT + 0.5; b < D - 0.5; b += 2) base(a, b);
+  for (let a = 1; a < W - 1; a += 2) base(a, D - 0.5);
 }
 
 /** a shop or venue with a car park beside it (two bays when the lot allows), a lamp at its corner, a front row by the door
@@ -466,8 +507,6 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   B.marksIn('stain', pA0, 0.3, W - 0.3, BAY_DEPTH, 1 + Math.floor((W - pA0) / 4), 0.9);
   B.mark('litter', sw * 0.3 + 1.6, D - 1.6); if (r() < 0.5) B.mark('rubbish', sw * 0.3 + 0.4, D - 2.4, 0.8);
   B.marksIn('leaves', 0.8, D - 2.5, W - 0.8, D - 0.6, 1);
-  // fenced at the sides and back behind the shop (privacy board; the car park and its drive stay open to the street)
-  B.run(PRIVACY, 0.2, sb + sd + 0.3, 0.2, D - 0.2); B.run(PRIVACY, W - 0.2, BAY_DEPTH + 0.6, W - 0.2, D - 0.2); B.run(PRIVACY, 0, D - 0.2, W, D - 0.2);
   for (let b = sb + 0.6; b <= D - 1.5; b += 2) B.put(pick(r, TREES), W - 0.6, b, { plant: true });
   B.put(pick(r, TREES), 0.6, D - 0.6, { plant: true });
   for (let a = 3; a <= W - 1.6; a += 1.4) B.put(pick(r, BUSHES), a, D - 0.9, { plant: true });
@@ -506,8 +545,6 @@ function park(B: Build, st: ComposeState) {
   // oil stains in the bays, wheel wear on the drive, the odd bit of litter
   B.marksIn('stain', pA0, STRIP, pA1, STRIP + BAY_DEPTH, Math.max(1, Math.floor(n / 2)), 0.9);
   B.mark('town:wheel_wear', dA0 + DRIVE / 2, 1.2 + r() * Math.max(0, D - 3)); B.mark('litter', pA0 + r() * (pA1 - pA0), D - 1.2);
-  // chain-link at the sides and back (the drive cuts its own gap), a tree row along the back
-  B.run(CHAIN, 0.2, STRIP, 0.2, D - 0.2); B.run(CHAIN, W - 0.2, STRIP, W - 0.2, D - 0.2); B.run(CHAIN, 0, D - 0.2, W, D - 0.2);
 }
 
 /** a civic building (or a back view) on the left of a paved forecourt: a tree row, benches and planters, a lamp pair and a bus stop
@@ -538,8 +575,6 @@ function civic(B: Build, st: ComposeState) {
   if (r() < 0.6) B.put('ref:halloween-hay-bales', cx + ea - 0.6, sb - 1.6);
   for (let b = sb + 0.8; b <= D - 1.5; b += 1.6) B.put(pick(r, FLOWERS), 0.8, b, { plant: true });
   B.marksIn('leaves', 0.8, sb + 2 * eb + 0.6, W - 0.8, D - 0.8, 2); if (r() < 0.5) B.mark('litter', cx + 1.4, sb - 1.2, 0.8);
-  // a wrought-iron fence all round with the entrance open, a hedge behind it along the sides
-  B.ring(IRON, IRON, 0.2, [Math.max(0, (cx - 1.6) / W), Math.min(1, (cx + 1.6) / W)]);
 }
 
 /** a yard of gravel with a shed at the back, a second shed or trailer, a chain-link fence with a gate gap at the front,
@@ -573,7 +608,7 @@ function ind(B: Build, st: ComposeState) {
   B.marksIn('stain', 1, 1, W - 1, D - 1, 2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2); B.mark('rubbish', W - 1.6, D - 2.4);
 }
 
-/** a construction site: dirt, cement bags, rubble, a cable spool, a pickup and a temporary fence; no building */
+/** a construction site: dirt, cement bags, rubble, a cable spool and a pickup; no building */
 function site(B: Build) {
   const { W, D, r, flip } = B;
   B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
@@ -582,7 +617,6 @@ function site(B: Build) {
   B.put('expansion:concrete-rubble', W - 1.6, 2.2);
   B.put('expansion:cable-spool', W - 1.4, D - 2.2);
   B.vehicle(PICKUPS, W / 2, 0.8);
-  B.ring(CHAIN, CHAIN, 0.4, [0.35, 0.65]);
   B.mark('mud', W / 2, 2.4, 1.2); B.mark('expansion:mud-footprints', W / 2, D / 2); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
   B.put('expansion:lumber-bundle', 1.6, D - 1.6);
   B.put('expansion:pallet-stack', W - 2.2, D - 1.4);
@@ -595,11 +629,10 @@ function vacant(B: Build) {
   B.put(pick(r, BUSHES), W * 0.3, D * 0.5, { plant: true });
   B.put(pick(r, BUSHES), W * 0.7, D * 0.7, { plant: true });
   B.put(pick(r, TREES), W * 0.5, D * 0.3, { plant: true });
-  // gone to weeds: tall grass and ferns, a dead tree, now and then a dumped item; an old chain-link with panels missing
+  // gone to weeds: tall grass and ferns, a dead tree, now and then a dumped item
   B.scatter(names(['town:ornamental_grass', 'town:fern', 'world:bush_2']), 0.8, 0.8, W - 0.8, D - 0.8, 5 + Math.floor(r() * 4), { plant: true });
   if (r() < 0.4) B.put(pick(r, DEAD_TREES), W * (0.2 + 0.6 * r()), D * (0.5 + 0.3 * r()), { plant: true });
   if (r() < 0.25) B.put(pick(r, JUNK), W * (0.3 + 0.4 * r()), D * 0.75);
-  B.ring(CHAIN, CHAIN, 0.3, [0.4, 0.6], 0.35);
   B.marksIn('leaves', 0.8, 0.8, W - 0.8, D - 0.8, 2); B.mark('worn', W * (0.3 + 0.4 * r()), D * (0.3 + 0.4 * r()), 1.5);
   if (r() < 0.4) B.mark('rubbish', W * (0.2 + 0.6 * r()), D * (0.6 + 0.3 * r())); if (r() < 0.6) B.mark('woods', W * r(), D * r());
 }
@@ -614,7 +647,7 @@ export function compose(lot: LotGeom, st: ComposeState): Composition {
   B.noCars = st.decline >= 3;
   if (st.use === LU.NONE || st.level === LV.EMPTY) vacant(B);
   else if (st.level === LV.BUILDING) site(B);
-  else if (st.use === LU.RES) { const b = baked(B, lot, st); if (b) return b; res(B, st); }
+  else if (st.use === LU.RES) { const b = baked(B, lot, st); if (b) { fenceLayer(B, lot); const f = B.done(); return { props: [...b.props, ...f.props], ground: f.ground }; } res(B, st); fenceLayer(B, lot); }
   else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); }
   else if (st.use === LU.TOUR) com(B, st, true);
   else if (st.use === LU.IND) ind(B, st);

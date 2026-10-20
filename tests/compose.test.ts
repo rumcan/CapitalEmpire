@@ -7,6 +7,7 @@ import { LotMap, type Lot } from '../src/game/lots/lots';
 import { compose, isCarPark, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
+import { LOT_DECALS } from '../src/game/lot-decals';
 import { mulberry } from '../src/game/iso';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
@@ -93,7 +94,8 @@ test('300 combos: every prop and patch lies inside its lot, and no two uprights 
   for (const { lot, st } of COMBOS) {
     const c = compose(lot, st), bad = insideLot(lot, c);
     assert.deepEqual(bad, [], `${lot.key} ${JSON.stringify(st)}: outside the lot`);
-    const ups = c.props.filter(p => isUpright(p.id)).map(p => fpOf(p));
+    // A baked lot's box bounds the whole picture, including lawn; it is not an upright collision footprint.
+    const ups = c.props.filter(p => isUpright(p.id) && !p.id.startsWith('lot:')).map(p => fpOf(p));
     for (let i = 0; i < ups.length; i++) for (let j = i + 1; j < ups.length; j++)
       assert.ok(share(ups[i], ups[j]) <= 0.35 + 1e-9, `${lot.key} ${JSON.stringify(st)}: uprights overlap ${Math.round(100 * share(ups[i], ups[j]))}%`);
   }
@@ -105,8 +107,11 @@ test('RES at BUILT: one baked lot of the lot size, facing the road (front varian
     const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: (lot.id * 97 + seed * 7919) >>> 0 };
     const c = compose(lot, st), F = { x: -lot.n.x, y: -lot.n.y };
     const flip = Math.abs(F.x) > Math.abs(F.y), rear = flip ? F.x < 0 : F.y < 0;
-    assert.equal(c.props.length, 1, `${lot.key}: ${c.props.map(p => p.id).join(' ')}`);
-    const p = c.props[0], m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(p.id);
+    const lots = c.props.filter(p => p.id.startsWith('lot:'));
+    assert.equal(lots.length, 1, `${lot.key}: ${c.props.map(p => p.id).join(' ')}`);
+    // the fence layer: panels on the lot's own side line, and plants, beside the baked picture (which has no fences)
+    assert.ok(c.props.some(p => /fence-privacy/.test(p.id)), `${lot.key}: no privacy panels`);
+    const p = lots[0], m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(p.id);
     assert.ok(m, `${lot.key}: ${p.id} is not a baked lot`);
     assert.deepEqual([+m![1], +m![2], m![3]], [lot.w, lot.d, rear ? 'rear' : 'front'], `${lot.key}: ${p.id}`);
     assert.equal(p.flip, flip, `${lot.key}: flip`);
@@ -118,10 +123,76 @@ test('RES at BUILT: one baked lot of the lot size, facing the road (front varian
   assert.ok(n > 100);
   // neighbours along a street never share a variant; decline 2 takes the neglected ones
   const rows = new Map<string, { a: number; id: string }[]>();
-  for (const lot of LOTS) { const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props[0].id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
+  for (const lot of LOTS) { const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props.find(p => p.id.startsWith('lot:'))!.id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
   for (const r of rows.values()) { r.sort((p, q) => p.a - q.a); for (let i = 1; i < r.length; i++) if (Math.abs(r[i].a - r[i - 1].a - LOTS[0].w) < 0.01) assert.notEqual(r[i].id, r[i - 1].id, 'two neighbours share a variant'); }
-  const neg = compose(LOTS[0], { use: LU.RES, level: LV.BUILT, decline: 2, seed: 5 }).props[0];
+  const neg = compose(LOTS[0], { use: LU.RES, level: LV.BUILT, decline: 2, seed: 5 }).props.find(p => p.id.startsWith('lot:'))!;
   assert.match(byId.get(neg.id)!.name, /neglected/);
+});
+
+test('residential fence boundaries meet exactly in every orientation, with one owner per shared line', () => {
+  const frames = [
+    { u: { x: 1, y: 0 }, n: { x: 0, y: 1 } },
+    { u: { x: -1, y: 0 }, n: { x: 0, y: -1 } },
+    { u: { x: 0, y: 1 }, n: { x: -1, y: 0 } },
+    { u: { x: 0, y: -1 }, n: { x: 1, y: 0 } },
+  ];
+  const state: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: 553 };
+  const near = (a: number, b: number) => Math.abs(a - b) < 1e-7;
+  const fences = (lot: Lot, decline = 0) => compose(lot, { ...state, decline }).props.filter(p => isFence(p.id));
+  const centre = (lot: Lot, p: Placed) => { const f = fpOf(p); return toLot(lot, (f[0] + f[2]) / 2, (f[1] + f[3]) / 2); };
+  const covers = (lot: Lot, panels: Placed[], axis: 'a' | 'b', from: number, to: number) => {
+    const spans = panels.map(p => { const q = fpCorners(lot, fpOf(p)).map(c => c[axis]); return [Math.min(...q), Math.max(...q)]; }).sort((a, b) => a[0] - b[0]);
+    assert.ok(spans.length > 0, 'missing fence run');
+    assert.equal(spans.length, Math.ceil((to - from) / 2 - 1e-9), 'each shared run must have exactly one owner');
+    assert.ok(near(spans[0][0], from) && near(spans[spans.length - 1][1], to), `run must fill ${from}..${to}: ${JSON.stringify(spans)}`);
+    for (let i = 0; i < spans.length; i++) {
+      assert.ok(near(spans[i][1] - spans[i][0], 2), 'every panel must remain 4 m long');
+      assert.ok(near(panels[i].scale, panels[0].scale), 'panel heights must remain constant');
+      if (i) assert.ok(spans[i][0] <= spans[i - 1][1] + 1e-7 && spans[i][0] > spans[i - 1][0], 'gap or duplicate panel in run');
+    }
+  };
+  for (const frame of frames) {
+    const lot: Lot = { ...LOTS[0], ...frame, o: { x: 100, y: 100 }, w: 8, d: 15 };
+    const ownSide = lot.u.x + lot.u.y > 0 ? 0 : lot.w;
+    for (const decline of [0, 1, 2, 3]) {
+      const panels = fences(lot, decline), side = panels.filter(p => near(centre(lot, p).a, ownSide)), back = panels.filter(p => near(centre(lot, p).b, lot.d));
+      assert.ok(panels.every(p => p.id === 'expansion:fence-privacy-x' || p.id === 'expansion:fence-privacy-y'), 'all residential boundaries stay wooden');
+      assert.equal(panels.length, side.length + back.length, 'fence on an unowned line');
+      covers(lot, side, 'b', 3.65, lot.d);
+      if (lot.n.x + lot.n.y > 0) covers(lot, back, 'a', 0, lot.w); else assert.equal(back.length, 0);
+    }
+    // An unbaked lot has drive/walk patches; those must not clip the shared boundary panels away.
+    const fallback: Lot = { ...lot, w: 9 }, fallbackSide = lot.u.x + lot.u.y > 0 ? 0 : fallback.w;
+    const fallbackPanels = fences(fallback);
+    covers(fallback, fallbackPanels.filter(p => near(centre(fallback, p).a, fallbackSide)), 'b', 3.65, fallback.d);
+    if (fallback.n.x + fallback.n.y > 0) covers(fallback, fallbackPanels.filter(p => near(centre(fallback, p).b, fallback.d)), 'a', 0, fallback.w);
+    const neighbour: Lot = { ...lot, o: { x: lot.o.x + lot.u.x * lot.w, y: lot.o.y + lot.u.y * lot.w } };
+    const sharedSide = [...fences(lot), ...fences(neighbour)].filter(p => near(centre(lot, p).a, lot.w));
+    covers(lot, sharedSide, 'b', 3.65, lot.d);
+    const behind: Lot = { ...lot, n: { x: -lot.n.x, y: -lot.n.y }, o: { x: lot.o.x + lot.n.x * lot.d * 2, y: lot.o.y + lot.n.y * lot.d * 2 } };
+    const sharedBack = [...fences(lot), ...fences(behind)].filter(p => near(centre(lot, p).b, lot.d));
+    covers(lot, sharedBack, 'a', 0, lot.w);
+    const c = compose(lot, state), marks = c.ground.filter(g => g.tex === 'marks').flatMap(g => g.marks ?? []);
+    const trees = c.props.filter(p => byId.get(p.id)?.kind === 'tree').map(p => p.id);
+    const nextTrees = compose(neighbour, state).props.filter(p => byId.get(p.id)?.kind === 'tree').map(p => p.id);
+    assert.equal(new Set(trees).size, trees.length, 'a fence tree repeats within one lot');
+    assert.ok(nextTrees.every(id => !trees.includes(id)), 'adjacent lots must receive different young trees');
+    assert.ok(marks.length > 0, 'fence layer needs its own ground marks');
+    for (const group of ['leaves', 'tufts']) for (const side of [0.5, lot.w - 0.5]) {
+      let found = false;
+      for (let i = 0; i < marks.length; i += 5) if (LOT_DECALS[marks[i]].group === group && Math.abs(toLot(lot, marks[i + 1], marks[i + 2]).a - side) < 0.01) found = true;
+      assert.ok(found, `${group} missing on side ${side}`);
+    }
+  }
+});
+
+test('commercial, civic, vacant and construction lots have no fence rings; industrial yards retain chain-link', () => {
+  for (const use of [LU.COM, LU.TOUR, LU.GOV, LU.NONE, LU.RES]) for (const level of [LV.EMPTY, LV.BUILDING, LV.BUILT]) {
+    if (use === LU.RES && level === LV.BUILT) continue;
+    const c = compose(LOTS[0], { use, level, decline: 0, seed: 123456 });
+    assert.ok(!c.props.some(p => isFence(p.id)), `unexpected fence at use ${use}, level ${level}`);
+  }
+  assert.ok(compose(LOTS[0], { use: LU.IND, level: LV.BUILT, decline: 0, seed: 123456 }).props.some(p => /chainlink/.test(p.id)));
 });
 
 test('determinism: the same input composes the same; another seed composes differently', () => {
@@ -159,7 +230,7 @@ test('the average uprights per archetype (log)', () => {
   const lines = [...sum.keys()].map(k => `${k}: ${(sum.get(k)! / cnt.get(k)!).toFixed(1)}`);
   console.log(`uprights per lot (decline 0, ${LOTS.length} lots x 2 seeds)\n  ${lines.join('\n  ')}`);
   const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
-  assert.equal(avg('RES BUILT'), 1, 'a house lot is one baked picture');
+  assert.ok(avg('RES BUILT') >= 6, 'a house lot is one baked picture plus its fence layer (panels and planting)');
   for (const u of ['COM', 'IND', 'TOUR', 'GOV']) assert.ok(avg(`${u} BUILT`) >= 14, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want 14+`);
 });
 
@@ -171,15 +242,15 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for the fenced, dressed lots)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '38f6b250'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '87a1d43e'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '861b82d4'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '6dfd49de'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '6700f011'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '46b265c6'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '33ea9a15'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '75138a2f'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '3e285176'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'df97a71b'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '1725d98f'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '4f6e1d92'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '5069c450'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'edb5c879'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
   assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));

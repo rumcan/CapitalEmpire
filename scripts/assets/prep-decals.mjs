@@ -15,6 +15,7 @@ const GROUPS = {
   litter: ['town:paper_litter', 'town:bag_litter', 'gen:litter-candy', 'gen:litter-fastfood', 'gen:litter-newspaper', 'poi:newspaper-cup-litter', 'poi:candy-soda-litter', 'expansion:can-litter'],
   rubbish: ['gen:rubbish-bags', 'gen:rubbish-cardboard'],
   woods: ['gen:pinecones-needles', 'gen:twigs-branches'],
+  tufts: ['decal:scatter-grass-tufts'],
   stain: ['town:oil_stain', 'town:paving_wear', 'town:wheel_wear', 'expansion:paint-spill'],
   gravel: ['town:gravel_spill', 'gen:gravel-spill'],
   mud: ['expansion:mud-tracks-x', 'expansion:mud-tracks-y', 'expansion:mud-footprints', 'expansion:mud-arc'],

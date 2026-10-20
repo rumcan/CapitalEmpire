@@ -6,8 +6,8 @@
 // What the owner's map does, and what this follows (22 houses, per house): the house at scale 1.2-1.45 set 5-7 m back from
 // the walk; a slab walk to the door and a paved drive on one side, a car on half of them; 5 plants against the house,
 // 1-2 maples or oaks at 1.2-2.2, 2 pines along the back; 1-2 Halloween pieces at the porch; a back-yard structure and one or
-// two pieces of yard furniture; ~16 leaf decals, ~4 dirt patches, pinecones under the pines; wooden privacy fences on the
-// inner lot lines (the shared back line and one side, back to the house front), front yards open or with a low fence.
+// two pieces of yard furniture; ~16 leaf decals, ~4 dirt patches, pinecones under the pines. The game draws the wooden
+// privacy fences and their planting/ground decals separately on shared lot lines; front yards stay open.
 //
 // Every flat decal the builder library has is covered by a SCENARIO below (or excluded with a reason), and every scenario
 // scales with the lot (its lawn area, fence length, trees and story).
@@ -116,8 +116,6 @@ const STORIES = {
 export const STORY_NAMES = Object.keys(STORIES);
 /** parked cars at the size the game draws cars on the road (src/game/sprites.ts CAR_SCALE) */
 const CAR_SCALE = 0.8;
-/** the side fences run from the back line to this far from the front edge on every lot, so neighbours' fences meet */
-const SIDE_FENCE_END = 7.3;
 /** the owner's scale for a sprite (a variation takes its original's), or 1 */
 export const ownerScale = id => { const it = LIB.get(id); const b = it ? baseOf(it) : id; return SCALE_OVERRIDES[id] ?? SCALES[id]?.scale ?? SCALES[b]?.scale ?? 1; };
 /** the owner's map scale for a sprite, ignoring the studio's overrides */
@@ -209,27 +207,8 @@ export function layoutLot({ W, D, rear = false, story = 'family', seed = 1, hous
   for (let k = 0, n = 2 + Math.floor(r() * 3); k < n; k++) decal('houseLeaves', between(hcx - best.hx, hcx + best.hx), front + between(0.3, 0.9), between(0.7, 1.1), { z: 2 });
   decal('longShade', hcx + best.hx * 0.3, back - 0.6, 0.8);
 
-  // ---- the inner fences: the back line (front-facing lots own it) and the low-X side line from the back to the house front;
-  // a low front fence on some lots, open at the walk and the drive
-  const fence = [];
-  const run = (idx, idy, x0, y0, x1, y1, panel) => {
-    const L = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.round(L / panel)), along = Math.abs(x1 - x0) >= Math.abs(y1 - y0), id = along ? idx : idy, s = L / n / panel;
-    for (let k = 0; k < n; k++) { const t = (k + 0.5) / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t; put(id, x, y, { scale: s }); fence.push([x, y, along]); }
-  };
-  const priv = neg || story === 'mechanic' ? ['expansion:chainlink-x', 'expansion:chainlink-y', 4] : ['expansion:fence-privacy-x', 'expansion:fence-privacy-y', 4];
-  // (laid in the front-facing frame: a rear lot is mirrored at the end, so its side fence still runs from its back line)
-  // on the lot lines themselves (X = 0, Y = 0), the same length on every lot
-  if (!rear) run(priv[0], priv[1], 0, 0, W, 0, priv[2]);
-  run(priv[0], priv[1], 0, 0, 0, D - SIDE_FENCE_END, priv[2]);
-  if (!neg && r() < 0.35) {
-    const lowX = 'world:fence_picket_x';
-    for (let x = 1; x < W - 0.5; x += 2) { if (Math.abs(x - doorX) < 1.3 || Math.abs(x - dx) < DW / 2 + 0.6) continue; put(lowX, x, D - 0.25, {}); fence.push([x, D - 0.25, true]); }
-  }
-  // leaves blown against the fences, tufts at their bases (one per ~3 m of fence)
-  for (const [x, y, along] of fence) {
-    if (r() < 0.6) decal('fenceLeaves', x + (along ? between(-1, 1) : 0.8), y + (along ? 0.8 : between(-1, 1)), between(0.55, 0.9));
-    if (r() < 0.4) decal('fenceTufts', x + (along ? between(-1, 1) : 0.4), y + (along ? 0.4 : between(-1, 1)), between(0.4, 0.6));
-  }
+  // no fences here: the game draws the fence grid on the lot lines as its own layer, with its own plants and decals
+  // (src/game/lots/compose.ts fenceLayer), so a baked lot is the house and its yard only
 
   // ---- the back yard by story: one or two structures, two to four pieces; their wear on the grass
   const yard = [0.6, 0.6, W - 0.6, Math.max(1.4, back - 0.8)];
@@ -268,15 +247,12 @@ export function layoutLot({ W, D, rear = false, story = 'family', seed = 1, hous
     if (dead || (big && r() < 0.5)) decal('deadwood', t.x + between(-0.5, 1), t.y + between(0, 1), between(0.6, 0.9), { z: 1 });
   }
 
-  // ---- the side yards between neighbours: a planted strip along each side line (shrubs, ferns, grasses, now and then a young
-  // tree); then every open patch of lawn filled from a jittered grid ~2.2 m apart: a plant, a young tree or a small nature
-  // cluster (grass, moss and leaf decals), wherever it fits clear of the house, the paving and what is already there
+  // ---- every open patch of lawn filled from a jittered grid ~2.2 m apart: a plant, a young tree or a small nature cluster
+  // (grass, moss and leaf decals), wherever it fits clear of the house, the paving and what is already there (the side lines
+  // stay clear for the fence layer's planting)
   const young = id => ownerScale(id) * between(0.55, 0.8);
-  for (const sx of [0.8, W - 0.8]) for (let y = 1.2; y < D - 1.4; y += between(1.4, 2.2)) {
-    if (r() < 0.12) { const id = nextMaple(); stand(id, sx, y, { scale: young(id), gap: 0.4 }); }
-    else if (r() < 0.75) stand(pick(PLANTS), sx + between(-0.2, 0.2), y, { scale: between(0.8, 1.15), gap: 0.1 });
-  }
-  for (let y = 1.3; y < D - 1.3; y += 2.2) for (let x = 1.4; x < W - 1.3; x += 2.2) {
+
+  for (let y = 1.6; y < D - 1.3; y += 2.2) for (let x = 1.9; x < W - 1.8; x += 2.2) {
     const px = x + between(-0.7, 0.7), py = y + between(-0.7, 0.7), u = r();
     if (u < 0.34) stand(pick(PLANTS), px, py, { scale: between(0.75, 1.1), gap: 0.3 });
     else if (u < 0.42) { const id = r() < 0.6 ? nextMaple() : nextPine(); const p = stand(id, px, py, { scale: young(id), gap: 0.7 }); if (p) decal(/pine|spruce/.test(id) ? 'pineFloor' : 'treeLeaves', px + 0.4, py + 0.5, 0.6, { z: 1 }); }

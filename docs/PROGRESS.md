@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-20 evening, art branch claude/sprites-and-people (TrickOrTreat sprites, baked lots, townspeople, sprite studio; docs/ART-PIPELINE.md); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -22,6 +22,7 @@ _Last updated: 2026-10-19 evening, paint branch (the Paint tool: ground areas, d
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 | Paint tool (ground areas; design in [PAINT-TOOL.md](PAINT-TOOL.md)) | **Done** (2026-10-19, branch `claude/frosty-wilson-452c74`, merged up to main `3311ce9`; not yet merged into main, not pushed). Section below |
+| Art: TrickOrTreat sprites, baked lots, townspeople ([ART-PIPELINE.md](ART-PIPELINE.md)) | **In progress** (2026-10-20, branch `claude/sprites-and-people`). Section below |
 
 ## Decisions so far
 
@@ -1507,6 +1508,37 @@ first (as JUNCTION-UX.md did), one panel per committed step, each checked in the
   `scripts/`), not emoji; the toolbar's emoji (including the new Upgrade and Downgrade arrows) go when the icons land.
 - **Keep**: every existing tool, key and hint; the canvas size and the performance budgets (GAME-PLAN 2.3: the UI must not cost frame
   time; check with `npm run bench`). The road thumbnails can be rendered from the game's own road painter.
+
+## Art: TrickOrTreat sprites, baked house lots, townspeople, the sprite studio (2026-10-20)
+
+Branch `claude/sprites-and-people`. How it all works and the owner's rules for lots: [ART-PIPELINE.md](ART-PIPELINE.md). Read it
+before touching lots, sprites or ground art.
+
+Done:
+- The atlas has every upright TrickOrTreat sprite at 0.6x its largest drawn scale (audit: 0 stretched), plus 16 baked house
+  lots and 40 townspeople (5 facings x 5 frames). 15 pages.
+- Ground: the builder's grass/leaf decals, bare soil, car-park asphalt, lot flat decals, nature patches over open grass;
+  commercial lots on asphalt with slab frontages. Planner map skips decal patches; ground workers wait for textures.
+- House lots: one baked picture per lot (house, yard, story pieces, plants, decals; owner's scales; varied houses, trees and
+  cars); the fence grid drawn separately on the lot lines with its own planting and decals (compose.ts fenceLayer).
+- Townspeople: walk home -> place -> home along the sidewalks, only appearing at doors; stable across road edits.
+- The sprite studio (port 5179) for the owner: remove sprites, fix sizes, edit lot placements, mirror walk frames, rebuild.
+
+Numbers: npm test 449+ pass; 2 timing tests fail on the dev PC (terrain 20 seeds < 4 s, accACC ns/call), run them on the worker.
+
+Open / next:
+1. Verify the fence layer in the game (fences meet between neighbours, back-to-back lots get one fence, plants on both faces)
+   and send the owner a screenshot; re-pin the compose test digests if they moved.
+2. GPU memory: 15 pages ~336 MB at dpr 2 vs the 96 MB budget (GAME-PLAN 2.3). Owner to decide (compressed textures, fewer
+   lot variants, dropping unused sets).
+3. Road signs (150) and the arcade sets are packed but unused: they need a per-sign mapping (which sign is which) before the
+   road builder or the composer can place them.
+4. Kid walk sheets have other bad frames (front views in back rows): fix them in the studio's People tab.
+5. More lot sizes: only 8x15 tiles is baked; the farmhouse, the long ranch and the duplex do not fit it and wait for bigger lots.
+6. The benchmark (`npm run worker:bench`) has not been run since the atlas grew.
+7. TrickOrTreat side: 52 south/north buildings blocked by RUN's image credits; a retry loop in TrickOrTreat
+   `output/imagegen/town-variations/2026-10-20-buildings-plain/` slices them into the builder library when credits return. The
+   lot generator picks new art up on the next rebuild; square-on views are skipped.
 
 ## Phase B, the businesses (GAME-PLAN 1.0.00): in progress
 
