@@ -50,7 +50,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
  <div class="canvas" id="lotcanvas"><div class="hint">Pick a lot on the left, then click a sprite in it.</div></div>
  <div class="side" id="lotside"><h3>Nothing selected</h3><div class="hint">Click a sprite in the lot. Alt-click picks the ground decal under the click instead of the upright.</div></div></div></div>
 
-<div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to fix it: mirror it, use another frame (of any facing) in its place, or mark it as needing a new frame and drop the new picture in. Rebuild game sprites to put the fixes in the game. The strip on the right plays the row as the game does (walk frames 1-4).</div><div id="needed" class="chips"></div><div id="people"></div></div>
+<div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to fix it: mirror it, use another frame (of any facing) in its place, or mark it as needing a new frame and drop the new picture in. Rebuild game sprites to put the fixes in the game. The strip on the right plays the walk as the game does (frames 1-8).</div><div id="needed" class="chips"></div><div id="people"></div></div>
 
 <script>
 const $=s=>document.querySelector(s), el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);for(const c of k)if(c!=null)e.append(c);return e};
@@ -113,7 +113,7 @@ function side(){const s=$('#lotside'),c=$('#lotcanvas');c.querySelectorAll('.hi'
   el('div',{className:'hint',textContent:'To take this sprite out of the whole game, remove it in the Library tab.'}));}
 
 // ---------------- people
-const PDIRS=['S','SE','E','NE','N'], WF_RE=/^use(-mirror)?:(?:(S|SE|E|NE|N):)?([0-4])$/;   // the fix codes (scripts/assets/walker-fix.mjs)
+const PDIRS=['S','SW','W','NW','N','NE','E','SE'], WF_RE=/^use(-mirror)?:(?:(S|SW|W|NW|N|NE|E|SE):)?([0-8])$/;   // the fix codes (scripts/assets/walker-fix.mjs)
 let peopleLoaded=false,peopleAll=[],popEl=null;
 const ppid=id=>'pp-'+id.replace(/[^a-z0-9_-]/gi,'_'), frameUrl=(pid,d,k,q)=>`/frame/${encodeURIComponent(pid+'|'+d+'|'+k)}?${q}`;
 /** a cell's badge: M, NEW, NEW ✓ (picture in), or the frame it takes: →3, →SE2, M→3 */
@@ -134,7 +134,7 @@ const applyFix=(c,r)=>{c.p.fixes=r.fixes;if(r.has&&!c.p.newFrames.includes(c.d+'
 function openFix(c){closePop();const cur=c.p.fixes[c.d]?.[c.k]??'',msg=el('div',{className:'msg'}),at=c.f.getBoundingClientRect();
  const done=async(op,close)=>{try{applyFix(c,await send('/api/walker-fix',{id:c.p.id,dir:c.d,frame:c.k,op}));if(close)closePop();else msg.textContent='Saved: '+fixText(op)}catch(e){msg.textContent='Failed: '+e.message}};
  const mir=el('input',{type:'checkbox',checked:/^use-mirror:/.test(cur)}), pick=(dir,k2)=>done(`use${mir.checked?'-mirror':''}:${dir===c.d?'':dir+':'}${k2}`,true);
- const grid=el('div',{},...PDIRS.map(dir=>el('div',{className:'gr'},el('span',{className:'d',textContent:dir}),...[0,1,2,3,4].map(k2=>el('img',{src:frameUrl(c.p.id,dir,k2,'orig=1'),loading:'lazy',title:`${dir} frame ${k2}`,onclick:()=>pick(dir,k2)})))));
+ const grid=el('div',{},...PDIRS.map(dir=>el('div',{className:'gr'},el('span',{className:'d',textContent:dir}),...[...Array(c.p.frames).keys()].map(k2=>el('img',{src:frameUrl(c.p.id,dir,k2,'orig=1'),loading:'lazy',title:`${dir} frame ${k2}`,onclick:()=>pick(dir,k2)})))));
  const upload=async f=>{if(!f||!/^image\/(png|webp)$/.test(f.type)){msg.textContent='Pick a PNG or WebP picture';return}
   try{const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=()=>rej(fr.error);fr.readAsDataURL(f)});
    applyFix(c,await send('/api/walker-frame',{id:c.p.id,dir:c.d,frame:c.k,png:b64}));msg.textContent='Saved. Rebuild game sprites to put it in the game.'}catch(e){msg.textContent='Failed: '+e.message}};
@@ -150,9 +150,9 @@ function openFix(c){closePop();const cur=c.p.fixes[c.d]?.[c.k]??'',msg=el('div',
 async function loadPeople(){peopleLoaded=true;peopleAll=await (await fetch('/api/people')).json();showNeeded();const box=$('#people');box.innerHTML='';
  for(const p of peopleAll){p.cells={};const card=el('div',{className:'person',id:ppid(p.id)},el('div',{className:'name',textContent:p.id}));
   for(const d of p.dirs){const row=el('div',{className:'prow'},el('span',{className:'d',textContent:d}));p.cells[d]=[];
-   for(let k=0;k<5;k++){const img=el('img',{src:frameUrl(p.id,d,k,0),loading:'lazy'}),bdg=el('b',{className:'bdg'}),f=el('div',{className:'fr'},img,bdg,el('span',{textContent:k===0?'idle':k})),c={p,d,k,f,img,bdg};
+   for(let k=0;k<p.frames;k++){const img=el('img',{src:frameUrl(p.id,d,k,0),loading:'lazy'}),bdg=el('b',{className:'bdg'}),f=el('div',{className:'fr'},img,bdg,el('span',{textContent:k===0?'idle':k})),c={p,d,k,f,img,bdg};
     f.onclick=()=>openFix(c);p.cells[d].push(c);paint(c);row.append(f);}
-   const anim=el('img',{className:'anim',style:'height:96px'});let t=1;setInterval(()=>{const i=p.cells[d][t].img;if(i.complete)anim.src=i.src;t=t%4+1;},125);row.append(anim);card.append(row);}
+   const anim=el('img',{className:'anim',style:'height:96px'});let t=1;setInterval(()=>{const i=p.cells[d][t].img;if(i.complete)anim.src=i.src;t=t%(p.frames-1)+1;},125);row.append(anim);card.append(row);}
   box.append(card);}}
 
 // ---------------- rebuild

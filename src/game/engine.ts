@@ -213,7 +213,7 @@ export class Game {
   // perf
   /** the townspeople on the sidewalks (ext/pedestrians): the sidewalks follow the network (net.version), one walker per two
    *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
-  private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX); private pedNet = -1; private pedTick = 0; private pedLots = -1;
+  private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX, WALK_FRAMES - 1); private pedNet = -1; private pedTick = 0; private pedLots = -1;
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];

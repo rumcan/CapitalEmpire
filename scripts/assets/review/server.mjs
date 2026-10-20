@@ -2,7 +2,7 @@
 //   Library: every sprite as the game has it (cut from the atlas), beside a person for scale: remove it from the game, or make it
 //            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json)
 //   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
-//   People:  every townsperson's walk rows, animated: fix any frame that faces the wrong way (mirror it, use another frame in its
+//   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
 //   Rebuild: runs the asset steps again, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
@@ -29,7 +29,9 @@ function library() {
   const src = fs.readFileSync(path.join(ROOT, 'src/game/library.ts'), 'utf8'), out = [];
   for (const m of src.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h, quad: e.quad }); }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
-  people.forEach((p, i) => { const o = ((i * 5 + 0) * 5 + 0) * 9; if (wf.length > o + 8) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5), w: p.w, h: p.h, quad: wf.slice(o + 5, o + 9), ax: p.ax, ay: p.ay }); });
+  // WF holds every frame of every person (per person: WALK_DIRS x WALK_FRAMES frames of 9 numbers); the first one (idle, facing S) is the picture
+  const perPerson = (/WALK_DIRS = (\[[^\]]*\])/.exec(src) ? JSON.parse(/WALK_DIRS = (\[[^\]]*\])/.exec(src)[1]).length : 0) * +(/WALK_FRAMES = (\d+)/.exec(src)?.[1] ?? 0);
+  people.forEach((p, i) => { const o = i * perPerson * 9; if (perPerson && wf.length > o + 8) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5), w: p.w, h: p.h, quad: wf.slice(o + 5, o + 9), ax: p.ax, ay: p.ay }); });
   return out;
 }
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
@@ -66,18 +68,20 @@ async function lotPicture(id) {
   if (lotPics.size > 40) lotPics.clear(); lotPics.set(key, png); return png;
 }
 
-// ---------------------------------------------------------------- people: frames from the TrickOrTreat sheets with the fixes applied
-const PEOPLE_DIRS = ['S', 'SE', 'E', 'NE', 'N'];
+// ---------------------------------------------------------------- people: the 3D renders (art/people3d/<id>/) with the fixes applied
+const PEOPLE_DIRS = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE'];
+const PEOPLE3D = path.join(ROOT, 'art/people3d');
 function people() {
   const out = [];
-  for (const size of ['adult', 'kid']) {
-    const dir = path.join(TOT, 'art/people', size); if (!fs.existsSync(dir)) continue;
-    for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) { const m = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); out.push({ id: m.id, sheet: path.join(dir, f.replace(/\.json$/, '.webp')), m }); }
+  for (const d of fs.existsSync(PEOPLE3D) ? fs.readdirSync(PEOPLE3D).sort() : []) {
+    const sheet = path.join(PEOPLE3D, d, 'sheet.webp'), json = path.join(PEOPLE3D, d, 'sheet.json');
+    if (!fs.existsSync(sheet) || !fs.existsSync(json)) continue;
+    const m = JSON.parse(fs.readFileSync(json, 'utf8')); out.push({ id: m.id, sheet, m });
   }
   return out;
 }
-/** the directions with a dropped-in picture for this person, as 'DIR-k' */
-const newFrameList = pid => PEOPLE_DIRS.flatMap(d => [0, 1, 2, 3, 4].filter(k => fs.existsSync(newFramePath(ROOT, pid, d, k))).map(k => `${d}-${k}`));
+/** the frames (per direction) with a dropped-in picture for this person, as 'DIR-k' */
+const newFrameList = p => PEOPLE_DIRS.flatMap(d => p.m.frames.map((_, k) => k).filter(k => fs.existsSync(newFramePath(ROOT, p.id, d, k))).map(k => `${d}-${k}`));
 /** a frame with its fix applied (as the game draws it), or as the sheet has it when asDrawn */
 async function frame(pid, d, k, asDrawn) {
   const p = people().find(x => x.id === pid); if (!p) return null;
@@ -163,7 +167,7 @@ http.createServer(async (req, res) => {
       writeLotEdits(all); return json({ ok: true });
     }
     // people
-    if (P === '/api/people') { const fx = readWalkerFixes(); return json(people().map(p => ({ id: p.id, dirs: PEOPLE_DIRS, fixes: fx[p.id] ?? {}, newFrames: newFrameList(p.id) }))); }
+    if (P === '/api/people') { const fx = readWalkerFixes(); return json(people().map(p => ({ id: p.id, dirs: PEOPLE_DIRS, frames: p.m.frames.length, fixes: fx[p.id] ?? {}, newFrames: newFrameList(p), meta: p.m }))); }
     if (P === '/api/frames-needed') {
       const out = []; for (const [id, rows] of Object.entries(readWalkerFixes())) for (const [dir, row] of Object.entries(rows)) for (const [k, op] of Object.entries(row)) if (op === 'new') out.push({ id, dir, frame: +k, has: fs.existsSync(newFramePath(ROOT, id, dir, k)) });
       return json(out);
@@ -173,7 +177,7 @@ http.createServer(async (req, res) => {
       const b = await body(req), { id, dir, frame: k } = b, fx = readWalkerFixes();
       // a body without op toggles mirror, as it did before the studio had other fixes
       const code = b.op === undefined ? (fx[id]?.[dir]?.[k] === 'mirror' ? '' : 'mirror') : b.op, fix = parseFix(code);
-      if ((code !== '' && !fix) || !people().some(p => p.id === id) || !PEOPLE_DIRS.includes(dir) || !(+k >= 0 && +k <= 4)) { res.writeHead(400); return res.end('bad fix'); }
+      if ((code !== '' && !fix) || !people().some(p => p.id === id) || !PEOPLE_DIRS.includes(dir) || !(+k >= 0 && +k <= 8)) { res.writeHead(400); return res.end('bad fix'); }
       const row = ((fx[id] ??= {})[dir] ??= {});
       if (code) row[k] = fixCode(fix); else delete row[k];
       if (!Object.keys(row).length) delete fx[id][dir]; if (!Object.keys(fx[id]).length) delete fx[id];
@@ -181,7 +185,7 @@ http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && P === '/api/walker-frame') {
       const { id, dir, frame: k, png: b64 } = await body(req), f = +k;
-      if (!people().some(p => p.id === id) || !PEOPLE_DIRS.includes(dir) || !(f >= 0 && f <= 4)) { res.writeHead(400); return res.end('bad frame'); }
+      if (!people().some(p => p.id === id) || !PEOPLE_DIRS.includes(dir) || !(f >= 0 && f <= 8)) { res.writeHead(400); return res.end('bad frame'); }
       let pic; try { pic = await sharp(Buffer.from(b64 ?? '', 'base64')).png().toBuffer(); } catch { res.writeHead(400); return res.end('not a picture'); }
       const file = newFramePath(ROOT, id, dir, f); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, pic);
       const fx = readWalkerFixes(), row = ((fx[id] ??= {})[dir] ??= {});

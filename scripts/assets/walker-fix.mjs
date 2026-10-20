@@ -2,16 +2,16 @@
 // scripts/assets/walker-fixes.json as { personId: { DIR: { frameIndex: code } } } and applied by prep-sprites.mjs and by the
 // studio's /frame/ route. A code is one of:
 //   'mirror'                  the frame flipped left to right
-//   'use:<k>'                 frame k of the same facing (row), as drawn
+//   'use:<k>'                 frame k (0 idle, 1-8 the walk) of the same facing (row), as drawn
 //   'use-mirror:<k>'          the same, flipped
-//   'use:<DIR>:<k>'           frame k of the facing DIR (S SE E NE N)
+//   'use:<DIR>:<k>'           frame k of the facing DIR (S SW W NW N NE E SE)
 //   'use-mirror:<DIR>:<k>'    the same, flipped
 //   'new'                     a new picture is needed; the owner drops it in (newFramePath)
 // '' (or anything else) means no fix.
 import path from 'node:path';
 
 export const NEW_FRAMES_DIR = 'scripts/assets/walker-frames';
-const USE = /^use(-mirror)?:(?:(S|SE|E|NE|N):)?([0-4])$/;
+const USE = /^use(-mirror)?:(?:(S|SW|W|NW|N|NE|E|SE):)?([0-8])$/;
 
 /** a fix code as an object: { kind: 'mirror' } | { kind: 'use', dir, frame, mirror } | { kind: 'new' }; null for '' and unknown codes */
 export function parseFix(op) {

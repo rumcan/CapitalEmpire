@@ -1,0 +1,13 @@
+{
+  "generationId": "66d1a474-7d2c-4981-bf78-5262ec27c625",
+  "prompt": "An ordinary adult woman from a 1985 small American town, average build, shoulder-length wavy brown hair, a plain fitted light-blue long-sleeved blouse tucked into plain dark straight trousers, plain flat brown shoes. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic adult proportions, stylised hand-painted game look. No props, nothing in the hands, no logos.",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "text-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "C:\\Work Admin\\PERSONAL\\Repos\\CapitalEmpire\\.claude\\worktrees\\sprites-and-people\\art\\people3d\\base_woman\\model.glb",
+  "status": "saved",
+  "sha256": "ffd9ea3bf6a87646129b778f7244431632991aa7826b92820db2c8f5fcbb4bec",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/66d1a474-7d2c-4981-bf78-5262ec27c625/model.compressed.glb",
+  "seed": 2028344802
+}
