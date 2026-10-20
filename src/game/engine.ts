@@ -231,6 +231,8 @@ export class Game {
   /** the businesses as the player placed them (saved; ids 1..n in the save's order): the main thread's copy, the city worker gets each change
    *  (setBusinesses); the stadium's site (siteAt, cached: see setBizDefs) */
   bizDefs: BizDef[] = []; private stadiumSite: Site | null = null;
+  /** the types open to build at the last businesses message (null: none yet, or a new valley or a load: the next one only records them; see bizUnlocks) */
+  private bizOpenSeen: Set<BusinessId> | null = null;
   /** the type in hand: the Business tool builds it (see selectBizType) */
   bizType: BusinessId = 'stadium';
   /** the business tool: whether R has turned the footprint (bizRot), and its ghost at the cursor (null: none; def: the business it would be, id 0;
@@ -292,6 +294,7 @@ export class Game {
       if (won) { this.showWin = true; this.toast(`${WIN_POP.toLocaleString()} residents: the Career is won`, 'good'); }
       this.scheduleSave(); this.emit();
     };
+    this.traffic.onBiz = () => this.bizUnlocks();
   }
   get cls() { return classOf(this.roadClass); }
 
@@ -1420,6 +1423,14 @@ export class Game {
   bizOpen(t: BusinessId): boolean { return this.sandboxUnlock || unlockedBy(this.ownedBiz()).includes(t); }
   /** the businesses owned as the unlock tree reads them: each placed one with its stats from the worker (fresh until the worker has sent them) */
   ownedBiz(): Owned[] { return ownedOf(this.bizDefs.map(d => this.traffic.biz.find(v => v.id === d.id) ?? { ...d, ...freshStats(d.id) })); }
+  /** the unlock toasts: each type now open to build (see bizOpen) that was not open at the last businesses message gets one; the first message after a
+   *  new valley or a load only records what is open */
+  private bizUnlocks(): void {
+    if (this.sandboxUnlock) return;
+    const open = new Set(unlockedBy(this.ownedBiz()));
+    if (this.bizOpenSeen) for (const id of open) if (!this.bizOpenSeen.has(id)) this.toast(`${BUSINESS[id].name} unlocked: build it with the Business tool (M)`, 'good');
+    this.bizOpenSeen = open;
+  }
   /** the type in hand: the Business tool builds it, and the ghost follows (R turns its footprint) */
   selectBizType(t: BusinessId) { this.bizType = t; if (this.bizHover) this.bizUpdate(this.bizHover.mx, this.bizHover.my); this.emit(); }
   /** the business tool's ghost at the cursor: the type in hand's footprint centred on the tile under it (R turns it), with the reason it cannot go there */
@@ -1949,6 +1960,7 @@ export class Game {
   }
   private load(d: SaveV5): boolean {
     try {
+      this.bizOpenSeen = null;
       this.genTerrain(d.seed);
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
       if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
@@ -1977,7 +1989,7 @@ export class Game {
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear();
-    this.setBizDefs([]); this.bizHover = null;
+    this.setBizDefs([]); this.bizHover = null; this.bizOpenSeen = null;
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);

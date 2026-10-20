@@ -87,6 +87,8 @@ export class SimClient {
   round: RoundView = NO_ROUND; site: Site | null = null;
   /** the player's businesses with their stats as the worker last sent them (see postBiz; a copy each time) */
   biz: BizView[] = [];
+  /** called after each businesses message (the list is the worker's, with each one's stats; see biz) */
+  onBiz?: () => void;
   /** the car parks' counts as the worker last sent them (with each frame; see ParkView) */
   parks: ParkView[] = [];
   /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
@@ -208,7 +210,7 @@ export class SimClient {
     if (m.t === 'car') { if (this.slot >= 0 && (!m.info || m.info.slot === this.slot)) this.car = m.info; return; }
     if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }
     if (m.t === 'site') { this.site = m.site; return; }
-    if (m.t === 'biz') { this.biz = m.list; return; }
+    if (m.t === 'biz') { this.biz = m.list; this.onBiz?.(); return; }
     if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
     if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatAt = performance.now(); return; }
     if (m.t === 'disasters') { this.disasters = m.active; this.onDisasters?.(m.notes); return; }

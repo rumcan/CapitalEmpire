@@ -12,6 +12,7 @@ import { laneAt } from '../src/game/sim/lanes';
 import type { Lot } from '../src/game/lots/lots';
 import { Visits, type VisitBiz, type VisitHome } from '../src/game/business/visits';
 import { BUSINESS, START_SAT, dailyDemand } from '../src/game/business/catalogue';
+import type { CardId } from '../src/game/event/config';
 import type { BizDef } from '../src/game/business/state';
 import { GAME_DAY, type Ledger } from '../src/game/budget';
 import { seededRnd } from '../src/game/lots/roads';
@@ -28,7 +29,7 @@ const BAR: BizDef = { id: 2, type: 'sportsbar', x: 300, y: 366, w: 14, h: 10 };
 const FAR: BizDef = { id: 3, type: 'sportsbar', x: 900, y: 900, w: 14, h: 10 };
 
 /** a City on open ground with the street grid around the first centre, its towns stamped (homes built, so the day's plan has them), and the given businesses placed */
-function gridCity(defs: BizDef[] = []): City {
+function gridCity(defs: BizDef[] = [], cards: CardId[] = []): City {
   const city = new City(7);
   city.autoStadium = false;
   city.terrain(new Uint8Array(MAP * MAP), { x: 40, y: 40 }, 7, CENTRES);
@@ -39,9 +40,17 @@ function gridCity(defs: BizDef[] = []): City {
   }
   city.netOps(e.commit(true));
   city.stamp(300);
+  city.round.cards = cards; // before setBusinesses: its day's plan reads the cards
   city.setBusinesses(defs);
   return city;
 }
+
+test('the Promotion card: a bar plans more cars with it than without (same seed and towns)', () => {
+  const plain = gridCity([BAR]), promo = gridCity([BAR], ['promo']);
+  const n0 = plain.visits.counts(BAR.id).planned, n1 = promo.visits.counts(BAR.id).planned;
+  assert.ok(n0 > 0, `the bar plans cars without the card (${n0})`);
+  assert.ok(n1 > n0, `${n1} cars with the card, ${n0} without`);
+});
 
 test('plan: round(dailyDemand) departures, all in the opening hours, none before from; a business with no door plans none', () => {
   const day = 3 * GAME_DAY, lot = { key: 'h' } as unknown as Lot;

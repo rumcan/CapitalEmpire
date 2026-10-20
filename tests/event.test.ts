@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import { generateTerrain } from '../src/game/terrain';
 import { townCentres } from '../src/game/lots/seedtowns';
 import { crowdFor, insideSite, placeStadium } from '../src/game/event/site';
-import { CARDS, DRAFT, ENTRY_S, EVENT_START_MONEY, EXPRESS_ENTRY, L1_CARS, LEVEL_MUL, PAYOUT_BASE, PAYOUT_PIVOT, PENALTY, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout } from '../src/game/event/config';
+import { CARDS, DRAFT, ENTRY_S, EVENT_START_MONEY, EXPRESS_ENTRY, L1_CARS, LEVEL_MUL, PAYOUT_BASE, PAYOUT_PIVOT, PENALTY, SITE_MAX, SITE_MIN, EVENT_CLOCK, BUILD_S, SURGE_S, payout, promoMul, ticketPrice } from '../src/game/event/config';
+import type { FanCounts } from '../src/game/event/crowd';
 import { Round, START_YEAR, draftFor, signalTierOpen, type RoundSave } from '../src/game/event/round';
 import { City } from '../src/game/city';
 import { GAME_DAY, START_MONEY } from '../src/game/budget';
@@ -156,6 +157,32 @@ test('City round: the clock freezes at 18:00; money falls with the upkeep over b
   assert.equal(city.closeRound(), true);
   assert.equal(city.round.stage, 'free'); assert.equal(city.round.runs, 1);
   assert.equal(city.sim.frozen, false, 'closeRound unfreezes the clock');
+});
+
+test('the cards: promoMul compounds 1.2 for each promo card; ticketPrice is the stadium\'s $12 plus $3 for each season card', () => {
+  assert.equal(promoMul([]), 1);
+  assert.ok(Math.abs(promoMul(['promo', 'promo']) - 1.44) < 1e-9, '1.2 squared');
+  assert.equal(ticketPrice([]), 12);
+  assert.equal(ticketPrice(['season', 'booths', 'season']), 18);
+});
+
+test('City kick-off: a ticket per fan at the doors at the season price, booked as business takings and in the net', () => {
+  const city = new City(7);
+  city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7, CENTRES);
+  city.netOps(gridEditor().commit(true));
+  // the fans at the doors at kick-off, faked: 30 from the first town, 10 from the second
+  (city as unknown as { fanCounts(): FanCounts }).fanCounts = () => ({ fans: [30, 10, 0], atStop: [0, 0, 0], onBus: [0, 0, 0] });
+  assert.equal(city.startRound(), true);
+  city.round.cards = ['season', 'season'];
+  city.wall(BUILD_S / 2); city.wall(BUILD_S / 2);
+  let steps = 0;
+  while (city.round.stage === 'surge' && steps++ < 200) city.step(100);
+  const L = city.round.last;
+  assert.ok(L, 'a result');
+  assert.equal(L.arrived, 40);
+  assert.equal(L.tickets, 40 * ticketPrice(['season', 'season']), '40 tickets at $18');
+  assert.equal(L.net, (L.toll ?? 0) + (L.tickets ?? 0) + L.payout - L.upkeep, 'the net takes the tickets');
+  assert.equal(city.budget.today.biz ?? 0, L.tickets, 'the tickets are business takings');
 });
 
 test('payout: the curve from the pivot: PENALTY at rate 0, half of it at half the pivot, 0 at the pivot, half PAYOUT_BASE midway above it, PAYOUT_BASE at 1; level 2 is x LEVEL_MUL', () => {

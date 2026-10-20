@@ -113,7 +113,7 @@ function frame() {
     postCareer(r);
   }
   // the round's stage moved (the build ends, kick-off: the payout is booked then): the books go out so the treasury shows it at once
-  if (city.round.stage !== roundStage) { roundStage = city.round.stage; postBudget(null); }
+  if (city.round.stage !== roundStage) { roundStage = city.round.stage; postBudget(null); postBiz(); }
   const hr = Math.floor(city.sim.t / HOUR);
   // not while fast-forwarding (an hour passes almost every frame then); the first frame after the skip posts it
   // the businesses' stats go out with it (the visit businesses' day so far)

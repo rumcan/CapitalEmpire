@@ -18,7 +18,7 @@ import { zoneOf } from './sim/routing';
 import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensation, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
-import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, tollPrice, type CardId } from './event/config';
+import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
@@ -867,7 +867,16 @@ export class City {
     let arrived = 0; for (const f of c.fans) arrived += f;
     L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / (L.sent * PARTY) : 0;
     // the money: the payout (signed) is paid now, the net is the toll and payout less the upkeep; the bottlenecks as the crowd meets them
-    L.perfect = L.rate >= PERFECT_RATE; L.payout = payout(L.rate, L.level); L.net = (L.toll ?? 0) + L.payout - L.upkeep;
+    L.perfect = L.rate >= PERFECT_RATE; L.payout = payout(L.rate, L.level);
+    // the tickets: a ticket per fan at the doors (booked as business takings); the stadium's stats take the round's arrivals and its rate
+    const tk = arrived * ticketPrice(this.round.cards);
+    if (tk > 0) { L.tickets = tk; this.budget.bizIncome(tk); }
+    L.net = (L.toll ?? 0) + (L.tickets ?? 0) + L.payout - L.upkeep;
+    const st = this.businesses.find(b => b.type === 'stadium'), s = st ? this.bizStats.get(st.id) : undefined;
+    if (s) {
+      s.revenue += tk; s.visitors += arrived; s.xp += arrived; s.today.visitors += arrived; s.today.revenue += tk;
+      s.sat = Math.min(1, Math.max(0, s.sat + 0.3 * (L.rate - s.sat))); if (L.perfect) s.goodDays++;
+    }
     L.stuck = this.report(5).top.map(i => ({ label: i.label, x: i.x, y: i.y, loss: i.loss }));
     this.budget.payout(L.payout);
   }
@@ -1152,7 +1161,7 @@ export class City {
       }
       vb.push({ id: b.id, type: BUSINESS[b.type], level: st.level, sat: st.sat, door, tripMin });
     }
-    this.visits.plan(dayStart, this.sim.clock, vb, homes, pops, this.visitRnd);
+    this.visits.plan(dayStart, this.sim.clock, vb, homes, pops, this.visitRnd, promoMul(this.round.cards));
     this.visitDay = this.budget.dayOf(this.sim.clock);
   }
   /** the visit cars that left the sim (Sim.visitOut, cleared): each is counted by the visits; an arrival is a sale (the business's price times its party,

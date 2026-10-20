@@ -480,7 +480,7 @@ function EvalScreen({ game }: { game: Game }) {
           ))}
         </div>
         <p className="text-sm text-slate-200">
-          Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span> · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span>
+          Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span>
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">

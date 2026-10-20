@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-20 afternoon (B.3 daily visit businesses); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-20 afternoon (B.3 daily visit businesses, B.4 tickets and cards); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
@@ -17,7 +17,7 @@ _Last updated: 2026-10-20 afternoon (B.3 daily visit businesses); before that 20
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | **Done** (2026-10-18; the gate passed on seed 1), not pushed (the owner is away). Steps, numbers and the gate below |
 | 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
 | 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
-| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1-B.3 done (the player places the stadium; the business catalogue and tree; daily visit businesses with revenue, satisfaction and upkeep). Comes before 6R.5–6R.8 (the owner's order) |
+| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1-B.4 done (the player places the stadium; the business catalogue and tree; daily visit businesses; the stadium's tickets, business cards and unlock toasts). Comes before 6R.5–6R.8 (the owner's order) |
 | UI. The Maple Falls look (the owner's mockup, [docs/ui/](ui/)) | **Step 1 done** (2026-10-20): icons, top bar, rail, road panel, hint bar. Open: minimap, event card picture. Section below |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
@@ -1613,14 +1613,29 @@ unlocks; budgets met).
   - Left: Visits' own misses (no driveway, past the door) are counted at the close but not in the panel's live "missed"; only the towns'
     most populous home's component is checked (homes of a split town on another component are lost and missed); demand is modest (20-50
     cars a day for a bar by a 1,000-resident town; tune with B.7's gate).
-- **Next: B.4, the stadium's tickets and the unlocks** (a ticket per fan arrived; XP and levels for the stadium from its rounds; the tree
-  opening by success; cards as business and road upgrades), then B.5-B.7, then 6R.5-6R.8.
+- **B.4 The stadium's tickets and the unlocks (2026-10-20): DONE.** At kick-off the stadium earns a ticket per fan at the doors
+  (`ticketPrice`: $12, +$3 per Season tickets card), booked as business takings (`Budget.bizIncome`) and shown in the result as
+  "Tickets" (`RoundResult.tickets`; the net is toll + tickets + payout - upkeep). The stadium's stats take the round: fans as visitors
+  and XP, its revenue, satisfaction 30% toward the arrival rate, a good day for a perfect run (its level stays the round's: the crowd
+  depends on it). Two new upgrade cards: **Promotion** (every visit business draws 20% more: `promoMul`, the `mul` of `dailyDemand`) and
+  **Season tickets**. The tree already opened by levels and good days (B.3 gives the visit businesses theirs); a toast now says when a
+  type unlocks ("Sports bar unlocked: build it with the Business tool (M)"; not on a load or a new valley, not with dev unlock-all).
+  The worker posts the business stats when the round's stage changes too. The event gate's money check (a) counts the tickets.
+  - Browser-checked (port 5177, headless Edge, `?stamp=1&unlock=0`): a stadium east of a town with an avenue and a 144-bay car park, a
+    round run to its eval: 249 fans in, tickets $2,988 (= 249 x $12), net -$13,703 = -$6,167 payout + $2,988 - $10,524 upkeep; the
+    eval screen's line "Toll · Tickets · Payout · Upkeep · Net"; the draft offered Season tickets and Promotion; the stadium's stats
+    (249 visitors and XP, sat 0.80 -> 0.66); the unlock toasts for the sports bar and the bus company at stadium level 2.
+  - Checks: typecheck clean; `npm test` 456/456 on the worker (tests: the card formulas, a kick-off's tickets with faked fan counts, a
+    Promotion bar planning more cars); `event:gate` (a) PASS with the tickets ($4,176 of them), (b) and (c) fail as on main (Known issues).
+  - Left: no browser check of a real level-up (needs a perfect round); a demolished and rebuilt parent toasts its unlocks again.
+- **Next: B.5, transport businesses**: the bus company (the town buses and shuttles as its fleet, a fare per rider: Sim.busEv boardings)
+  and the taxi company (wire `ext/taxi`: ranks at the stadium and the towns, taxis as sim vehicles, fares). Then B.6, B.7, then 6R.5-6R.8.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road
 Upgrade/Downgrade ladder with fair costs, houses following a widened road, and the Maple Falls HUD (UI steps 1-2). Next in the owner's
-order is **Phase B** (the businesses; design in docs/BUSINESSES.md): B.1-B.3 done, **B.4 next** (the stadium's tickets and the unlocks), then
-B.5-B.7, then 6R.5-6R.8 (highways, terrain, towns as seeds, the road set check). Check `git status` and `git worktree list` first: another
+order is **Phase B** (the businesses; design in docs/BUSINESSES.md): B.1-B.4 done, **B.5 next** (the bus and taxi companies), then
+B.6-B.7, then 6R.5-6R.8 (highways, terrain, towns as seeds, the road set check). Check `git status` and `git worktree list` first: another
 session may have uncommitted work in the main checkout or a worktree (ask the owner before touching it). Carry on through the queue without asking between steps; still ask before pushing. Delegate
 coding to haiku-coder (in the background for small jobs) and checks to haiku-runner (the worker PC `cworker`, 192.168.0.8, via
 scripts/worker/run.sh); commit locally after each verified step and merge to main when verified; update docs/PROGRESS.md as you go;

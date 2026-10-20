@@ -1,5 +1,7 @@
 // The event's tunables (Phase 5 step 2b): the stadium site, the crowd, the build and the surge, the clock a round freezes at. Pure TS, no DOM.
 
+import { BUSINESS } from '../business/catalogue';
+
 /** the build of a round, wall-clock s (the stadium goes up while the sim runs on) */
 export const BUILD_S = 600;
 /** the surge of a round, sim s from kick-off to the eval (the clock is frozen meanwhile) */
@@ -136,8 +138,18 @@ export const CARDS = [
   { id: 'doubledecker', name: 'Double-decker buses', desc: 'Buses seat 100 instead of 60', kind: 'unlock' },
   { id: 'buses', name: '+4 buses', desc: 'Every bus route gets four more buses, and new routes too', kind: 'upgrade' },
   { id: 'express', name: 'Express entry', desc: 'Car park entrances let a car in every 1.4 s instead of 2', kind: 'unlock' },
+  { id: 'promo', name: 'Promotion', desc: 'Every visit business draws 20% more customers', kind: 'upgrade' },
+  { id: 'season', name: 'Season tickets', desc: 'The stadium ticket costs $3 more', kind: 'upgrade' },
 ] as const;
 /** a card's id (see CARDS) */
 export type CardId = (typeof CARDS)[number]['id'];
 /** the cards offered at each kick-off (fewer when the pool has fewer left) */
 export const DRAFT = 3;
+/** the demand multiplier each Promotion card gives every visit business (compounding) */
+export const PROMO_MUL = 1.2;
+/** the stadium's ticket rise each Season tickets card gives, $ */
+export const TICKET_UP = 3;
+/** the visit demand multiplier of the cards taken: PROMO_MUL to the number of promo cards */
+export function promoMul(cards: readonly CardId[]): number { return PROMO_MUL ** cards.filter(c => c === 'promo').length; }
+/** the stadium's ticket price of the cards taken, $: its price per visitor plus TICKET_UP for each season card */
+export function ticketPrice(cards: readonly CardId[]): number { return BUSINESS.stadium.pricePerVisitor + TICKET_UP * cards.filter(c => c === 'season').length; }

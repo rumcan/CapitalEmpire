@@ -1,6 +1,6 @@
 // The event gate (Phase 5 gate, headless): one Level 1 round per scenario on the seed's valley (harness.ts setupTowns), after 120 s of everyday traffic.
 // A (naive): the hub build with road links, a 6-booth toll gate on each link that has room, the two car parks, no bus; the round is stepped to its eval
-// and the treasury must move by the toll + payout - upkeep (within $1). B (fix and replay, the same city as A): the first card offered is taken and the
+// and the treasury must move by the toll + tickets + payout - upkeep (within $1). B (fix and replay, the same city as A): the first card offered is taken and the
 // round closed; then each town whose late cars at A's kick-off are at least 20% of its sent cars is fixed: its spine (the grid's two middle lines through
 // the node nearest its centre, out to the grid's last nodes within 200 tiles) widened to arterials, an arterial bypass from its spine end nearest the hub end to
 // the hub end, and its link road to the hub widened one class (the
@@ -135,9 +135,9 @@ function runRound(H: Harness, s: number, m: Meter): { s: number; r: RoundResult 
   return { s, r: city.round.last, before, after: city.budget.money };
 }
 
-/** the treasury's move over a round against its books: toll + payout - upkeep */
+/** the treasury's move over a round against its books: toll + tickets + payout - upkeep */
 function reconcile(r: RoundResult | null, before: number, after: number) {
-  const delta = after - before, expect = r ? (r.toll ?? 0) + r.payout - r.upkeep : NaN;
+  const delta = after - before, expect = r ? (r.toll ?? 0) + (r.tickets ?? 0) + r.payout - r.upkeep : NaN;
   return { before: Math.round(before), after: Math.round(after), delta: Math.round(delta * 100) / 100, expect: Math.round(expect * 100) / 100, ok: !!r && Math.abs(delta - expect) <= MONEY_TOL };
 }
 
@@ -248,7 +248,7 @@ const rA = A.r, moneyA = reconcile(rA, A.before, A.after);
 console.log(line('A naive', rA, mA));
 if (rA) console.log(`[A] stuck ${JSON.stringify(rA.stuck.map(i => [i.label, Math.round(i.x), Math.round(i.y), Math.round(i.loss)]))}`);
 console.log(`[A] parks ${hub.parks.map(d => { const p = buildPark(HA.city.net, d); return `${p?.bays.length ?? 0} bays/${p?.entrances.length ?? 0} entrances`; }).join(', ')}; tolls ${hub.tolls.length} x ${BOOTHS} booths`);
-console.log(`[A] treasury $${moneyA.before} → $${moneyA.after}: moved $${moneyA.delta}, toll + payout - upkeep $${moneyA.expect}`);
+console.log(`[A] treasury $${moneyA.before} → $${moneyA.after}: moved $${moneyA.delta}, toll + tickets + payout - upkeep $${moneyA.expect}`);
 scen.A = { rate: rA?.rate ?? null, sent: rA?.sent ?? null, arrived: rA?.arrived ?? null, toll: rA?.toll ?? 0, payout: rA?.payout ?? null, upkeep: rA?.upkeep ?? null, net: rA?.net ?? null,
   byTown: rA?.byTown ?? [], stuck: rA?.stuck ?? [], money: moneyA, surge: mA, parks: hub.parks.length, tolls: hub.tolls.length };
 
@@ -308,7 +308,7 @@ const passB = !!rA && !!rB && rB.rate >= rA.rate + LIFT;
 const passC = !!rC && rC.rate >= PERFECT_RATE;
 const passD = all.n > 0 && meanMs <= MEAN_MS && all.max <= MAX_MS;
 const pc = (v: number | null | undefined) => (v === null || v === undefined ? '-' : `${(100 * v).toFixed(2)}%`);
-console.log(`(a) ${passA ? 'PASS' : 'FAIL'}: A reached its eval (rate ${pc(rA?.rate)}); the treasury moved $${moneyA.delta} against toll + payout - upkeep = $${moneyA.expect} (within $${MONEY_TOL})`);
+console.log(`(a) ${passA ? 'PASS' : 'FAIL'}: A reached its eval (rate ${pc(rA?.rate)}); the treasury moved $${moneyA.delta} against toll + tickets + payout - upkeep = $${moneyA.expect} (within $${MONEY_TOL})`);
 console.log(`(b) ${passB ? 'PASS' : 'FAIL'}: B's rate ${pc(rB?.rate)} against A's ${pc(rA?.rate)} (needs at least +${(LIFT * 100).toFixed(0)} points); towns fixed ${fixedTowns.length ? fixedTowns.join(', ') : 'none'}`);
 console.log(`(c) ${passC ? 'PASS' : 'FAIL'}: C's rate ${pc(rC?.rate)} (needs at least ${(PERFECT_RATE * 100).toFixed(2)}%)`);
 console.log(`(d) ${passD ? 'PASS' : 'FAIL'}: sim time per step mean ${meanMs.toFixed(2)} ms (needs at most ${MEAN_MS}), max ${all.max.toFixed(2)} ms (needs at most ${MAX_MS}) over ${all.n} surge steps; cars alive at peak ${all.peak} (party ${all.peakParty})`);
