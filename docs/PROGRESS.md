@@ -18,6 +18,7 @@ _Last updated: 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 t
 | 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
 | 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
 | B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1 done (the player places the stadium). Comes before 6R.5–6R.8 (the owner's order) |
+| UI. The Maple Falls look (the owner's mockup, [docs/ui/](ui/)) | **Queued** (asked 2026-10-20): its own chat, after the road upgrade ladder. Section below |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
 
@@ -1414,6 +1415,37 @@ small public car parks on open town lots as part of the town's growth (a small t
   over a road no longer upgrades it; widening is the Add lane tool); bulldozing a town building buys the lot out (paid as
   compensation; queued).
 
+
+## Phase UI, the Maple Falls look (the owner's mockup, 2026-10-20): queued
+
+The owner sent a mockup of the whole screen and an icon sheet, and asked for a task to build that UI. Run it in its own chat, research
+first (as JUNCTION-UX.md did), one panel per committed step, each checked in the browser at 1920 x 1080 and on a laptop-sized window.
+
+- **References** (committed): [docs/ui/mockup-road-panel.webp](ui/mockup-road-panel.webp) (the target screen) and
+  [docs/ui/icon-sheet.webp](ui/icon-sheet.webp) (48 gold-on-charcoal icons: maple leaf, road, house, junction, bulldozer, bus, power, civic,
+  tree, buildings, bank, people, briefcase, sun, income bars, gear, trophy, calendar, info, compass, terrain, layers, chart, camera, the
+  play/pause/speed and zoom buttons, pin, one-way arrow, trees, sidewalk, forest, road edge, hills, fullscreen, help, chevrons, swap, open, close).
+- **What the mockup asks for**:
+  1. *Top bar*: the logo (maple leaf, "Maple Falls / Town builder"), the level ring with its progress bar and cards, then tiles for
+     treasury, population, jobs, day and clock (sun icon) and daily income (red when negative); on the right the speed group (pause, 1x,
+     2x, 4x, 8x, 20x, the active one gold) and icon buttons (camera, terrain, layers, stats, settings).
+  2. *Left rail*: big icon tabs with labels (Roads, Zones, Junctions, Bulldoze, Transport, Utilities, Services, Parks, Buildings), the
+     active one gold-outlined. The current tools map onto these: Roads (road, Upgrade, Downgrade), Junctions, Bulldoze, Transport (bus
+     routes, car parks, toll gates), Buildings (the businesses); Zones, Utilities, Services and Parks show as locked or are left out until
+     they exist.
+  3. *Road Construction panel*: title, help (?), a short description, then the classes grouped Small / Medium / Large (and Rural) with a
+     thumbnail of the road, its name, lanes, width and speed, and its price per 2 m; the selected class expands to its variant chips
+     (Plain, One-way, Trees, Sidewalks), the same variants VARIANTS / Tab already cycle. Locked classes keep the lock line.
+  4. *Event card* (top right): trophy, "Event: Stadium", the level chip, era and run, a sentence, the stadium picture, View Event and a
+     gold Start Event button (the stadium round's existing HUD).
+  5. *Bottom*: the minimap with N and the view box, the town name chip with a dropdown; the hint bar (info icon, the hint, key caps such
+     as R Replace, Tab Flip, Esc Cancel); the stats card (fps, sprites, props, segs, the Cars cap 97 / 1k / 5k / 10k, the Growth slider,
+     pop and jobs).
+- **Style**: dark charcoal glass panels with soft rounded corners, gold (#f5b52e-ish) accents and outlines, a serif display face for the
+  logo and panel titles, small caps section labels. Icons: cut the sheet into single transparent PNG/WebP sprites (an art script in
+  `scripts/`), not emoji; the toolbar's emoji (including the new Upgrade and Downgrade arrows) go when the icons land.
+- **Keep**: every existing tool, key and hint; the canvas size and the performance budgets (GAME-PLAN 2.3: the UI must not cost frame
+  time; check with `npm run bench`). The road thumbnails can be rendered from the game's own road painter.
 
 ## Phase B, the businesses (GAME-PLAN 1.0.00): in progress
 
