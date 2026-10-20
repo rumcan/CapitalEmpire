@@ -170,6 +170,9 @@ export default function App() {
                 <button className="btn-icon" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
               <button className={`btn-icon ${game.showFlow ? 'on' : ''}`} onClick={() => { game.setFlow(!game.showFlow); bump(); }} title="Live congestion heat map (F)"><Icon name="layers" size={22} /></button>
+              {game.showFlow && (['time', 'now'] as const).map(m => (
+                <button key={m} className={`btn ${game.flowMode === m ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
+              ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
               <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)"><Icon name="fullscreen" size={22} /></button>
               <div className="relative">
@@ -764,6 +767,10 @@ function ParkPanel({ game }: { game: Game }) {
         <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
       </p>
       <div className="mt-2 text-xs text-amber-300">{money(LOT_TILE_COST)} per tile</div>
+      <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
+        <input type="checkbox" checked={game.showParkDemand} onChange={e => { game.setParkDemand(e.target.checked); game.emit(); }} />
+        Show parking demand (cars per hour wanting a space)
+      </label>
       <div className="mt-2 max-h-64 overflow-y-auto">
         {game.parkDefs.length === 0 && <p className="text-xs text-slate-400">No car parks yet.</p>}
         {game.parkDefs.map(d => {

@@ -1,6 +1,6 @@
 // The traffic simulation core: IDM car following on the lane graph, vehicles in fixed slots. Pure TS, no DOM.
 // Hot paths (step, writeFrame) are allocation-free; plans are only built when a vehicle picks a movement.
-import { mulberry } from '../iso';
+import { MAP, mulberry } from '../iso';
 import { CAR } from './idm';
 import { Drivers, accACC, idm, iidm } from '../ext/drivers';
 import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt, nearestLink } from './lanes';
@@ -9,7 +9,7 @@ import { Router } from './routing';
 import { LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
-import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_Q, ENTRY_S, MAX_DWELL, MIN_DWELL, SERVICE_S } from '../event/config';
+import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_Q, ENTRY_S, MAX_DWELL, MIN_DWELL, PD_CELL, SERVICE_S } from '../event/config';
 import type { BusRoute } from '../event/bus';
 
 /** seconds per step */
@@ -58,6 +58,8 @@ const EXIT_GAP = 4, EXIT_MIN = 10;
 const LOOK = 80;
 /** the queue of the junction ahead: the last this many metres of a LINK lane (Sim.lossQ) */
 const QUEUE_M = 100;
+/** the time constant (sim s, about 6 game hours) of the heat over time (heatHist) and of the parking demand (parkDemand) */
+const HIST_TAU = 360;
 /** a copy of a Float64Array a in one of length m (the per-lane sums keep their values when the lists grow) */
 const grow64 = (a: Float64Array, m: number) => { const b = new Float64Array(m); b.set(a); return b; };
 /** the free-flow ratio of a trip (its time over its ideal time, see Sim.score). Measured (output/calib, random mode) on a 10 x 10 street
@@ -213,8 +215,15 @@ export class Sim {
   /** the live heat per dseg id, updated once per sim second (heatTick): the EMA (about 5 s) of the mean of v / lane vmax over the vehicles on
    *  its lanes, relaxing to 1 when it is empty; the EMA of its density (vehicles per km per lane). heatVersion is bumped when the dseg list changes (onGraph) */
   heatRatio = new Float32Array(0); heatDens = new Float32Array(0); heatVersion = 0;
-  /** the heat's bookkeeping: the key and lane count of each dseg id at the last onGraph, and the per-second sums of v / vmax and counts per dseg id */
-  private hKey: string[] = []; private hNL: number[] = []; private hSum = new Float64Array(0); private hCnt = new Uint32Array(0);
+  /** the congestion over time per dseg id: the EMA (HIST_TAU sim s, about 6 game hours) of the delay on its lanes: the sum over its vehicles of
+   *  (1 − v / lane vmax) per lane-km (equivalent stopped cars per lane-km); 0 = never slowed */
+  heatHist = new Float32Array(0);
+  /** the parking demand over time: per cell of PD_CELL tiles (MAP / PD_CELL squared), the EMA (HIST_TAU s) of the rate of cars that wanted to park there,
+   *  in cars per game hour: each trip that ends at a lot of use COM or above (Sim.score, tag >= LU.COM) and each car that reaches a car park entrance
+   *  (Sim.enter, parked or turned away). pdHits holds the events of the cell since the last heatTick */
+  parkDemand = new Float32Array((MAP / PD_CELL) ** 2); private pdHits = new Float32Array((MAP / PD_CELL) ** 2); private pdPt = { x: 0, y: 0, hx: 0, hy: 0 };
+  /** the heat's bookkeeping: the key and lane count of each dseg id at the last onGraph, and the per-second sums of v / vmax, counts and (1 − v / vmax) per dseg id */
+  private hKey: string[] = []; private hNL: number[] = []; private hSum = new Float64Array(0); private hCnt = new Uint32Array(0); private hDel = new Float64Array(0);
 
   /** an empty sim of cap vehicle slots on graph g; call onGraph() after every graph update */
   constructor(g: LaneGraph, cap: number, seed: number) {
@@ -306,15 +315,15 @@ export class Sim {
   private heatGraph() {
     const g = this.g, nD = g.dsegs.length, N = Math.max(nD, this.hKey.length);
     if (this.heatRatio.length < N) {
-      const m = Math.max(N, 2 * this.heatRatio.length), r = new Float32Array(m).fill(1), e = new Float32Array(m);
-      r.set(this.heatRatio); e.set(this.heatDens);
-      this.heatRatio = r; this.heatDens = e; this.hSum = new Float64Array(m); this.hCnt = new Uint32Array(m);
+      const m = Math.max(N, 2 * this.heatRatio.length), r = new Float32Array(m).fill(1), e = new Float32Array(m), h = new Float32Array(m);
+      r.set(this.heatRatio); e.set(this.heatDens); h.set(this.heatHist);
+      this.heatRatio = r; this.heatDens = e; this.heatHist = h; this.hSum = new Float64Array(m); this.hCnt = new Uint32Array(m); this.hDel = new Float64Array(m);
     }
     let bump = false;
     for (let d = 0; d < N; d++) {
       const dg = g.dsegs[d] ?? null, k = dg ? dg.key : '', nl = dg ? dg.lanes.length : 0;
       if (this.hKey[d] === k && this.hNL[d] === nl) continue;
-      bump = true; this.hKey[d] = k; this.hNL[d] = nl; this.heatRatio[d] = 1; this.heatDens[d] = 0;
+      bump = true; this.hKey[d] = k; this.hNL[d] = nl; this.heatRatio[d] = 1; this.heatDens[d] = 0; this.heatHist[d] = 0;
     }
     if (bump) this.heatVersion++;
   }
@@ -323,21 +332,33 @@ export class Sim {
    *  the ratio moves toward the mean by 0.2 (an EMA of about 5 s), or toward 1 when it is empty; the density moves toward n / (km x lanes) */
   private heatTick() {
     const g = this.g, nD = g.dsegs.length, Q = this.onLane, V = this.v, lanes = g.lanes, S = this.hSum, C = this.hCnt, R = this.heatRatio, D = this.heatDens;
-    S.fill(0, 0, nD); C.fill(0, 0, nD);
+    const DL = this.hDel, H = this.heatHist, PD = this.parkDemand, PH = this.pdHits;
+    S.fill(0, 0, nD); C.fill(0, 0, nD); DL.fill(0, 0, nD);
     for (let id = 0; id < Q.length; id++) {
       const q = Q[id]!;
       if (!q.length || !this.lLink[id]) continue;
       const ln = lanes[id]; if (!ln) continue;
       const d = ln.dseg, vm = this.lVmax[id]!;
-      for (const i of q) { S[d]! += V[i]! / vm; C[d]!++; }
+      for (const i of q) { S[d]! += V[i]! / vm; C[d]!++; DL[d]! += Math.max(0, 1 - V[i]! / vm); }
     }
     for (let d = 0; d < nD; d++) {
       const dg = g.dsegs[d]; if (!dg) continue;
       const n = C[d]!, per = dg.len / 1000 * dg.lanes.length;
       R[d] = n ? R[d]! + 0.2 * (S[d]! / n - R[d]!) : R[d]! + 0.2 * (1 - R[d]!);
       D[d] = D[d]! + 0.2 * ((per > 0 ? n / per : 0) - D[d]!);
+      H[d] = H[d]! + ((per > 0 ? DL[d]! / per : 0) - H[d]!) / HIST_TAU;
     }
+    for (let c = 0; c < PD.length; c++) { PD[c] = PD[c]! + PH[c]! - PD[c]! / HIST_TAU; PH[c] = 0; }
   }
+
+  /** a car that wanted to park at (x, y), tiles: its share of the cell's demand rate (60 / HIST_TAU per event, so N events per sim s
+   *  settle at N × 60 cars per game hour, see parkDemand) goes into the cell's pending hits */
+  private demandAt(x: number, y: number) {
+    const N = MAP / PD_CELL, cx = Math.min(N - 1, Math.max(0, Math.floor(x / PD_CELL))), cy = Math.min(N - 1, Math.max(0, Math.floor(y / PD_CELL)));
+    this.pdHits[cy * N + cx]! += 60 / HIST_TAU;
+  }
+  /** a car (slot i) that wanted a space stops at its point on lane ln (see demandAt) */
+  private wantPark(i: number, ln: Lane) { laneAt(ln, this.s[i]!, this.pdPt); this.demandAt(this.pdPt.x, this.pdPt.y); }
 
   /** the heat map's geometry, 6 floats per dseg id: from x, y and to x, y (tiles), the lateral offset (tiles) of the centre of its lanes
    *  along perp(direction), the side its lanes are on, and its lane count; NaN for a dead id. A new array each call (on a heatVersion change) */
@@ -444,7 +465,7 @@ export class Sim {
   private score(i: number, ln: Lane) {
     const ideal = Math.max(this.ideal[i]! + this.s[i]! / ln.vmax, 10), act = Math.min(this.t - this.t0[i]!, 6 * ideal);
     this.stats.ratioSum += act / ideal; this.stats.ratioN++;
-    if (this.tag[i]! >= LU.COM) { this.trade.arrived++; this.trade.punctual += Math.min(1, act > 0 ? FREE * ideal / act : 1); }
+    if (this.tag[i]! >= LU.COM) { this.trade.arrived++; this.trade.punctual += Math.min(1, act > 0 ? FREE * ideal / act : 1); if (this.sink[i]! < 0) this.wantPark(i, ln); }
     this.bump(this.oz[i]!, act, ideal); this.bump(this.router.zoneD[ln.dseg]!, act, ideal);
   }
   /** one trip (actual and ideal seconds, the actual capped at 6x) into zone z's sums, and its access */
@@ -562,6 +583,7 @@ export class Sim {
    *  Either way it leaves the sim */
   private enter(i: number, k: number, ln: Lane) {
     const K = this.sinks[k]!, P = this.parks[K.park]!;
+    this.wantPark(i, ln);
     if (P.parked + this.queuedAt(K.park) >= P.bays) { P.turned++; this.out(i, 1); this.despawn(i); return; }
     K.q.push(this.party[i]!); K.qz.push(this.oz[i]!); this.party[i] = -1;
     this.score(i, ln); this.stats.arrived++; this.despawn(i);

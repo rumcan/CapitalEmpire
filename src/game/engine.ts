@@ -20,7 +20,7 @@ import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
 import { BUSINESS, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
 import { freshStats, ownedOf, type BizDef, type BizStats } from './business/state';
-import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
+import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PD_CELL, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
 import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
 import walkersUrl from '../assets/characters/walkers.png';
@@ -60,6 +60,22 @@ export const SPEEDS = [1, 2, 4, 8, 20] as const;
 export const FLOW_COLS = ['#3ddc84', '#ffd23f', '#ff8c1a', '#ff3b3b'];
 /** the heat map's bands by speed against the limit: Flowing (75%+), Slow (50-75%), Heavy (25-50%), Stopped (under 25%); see Game.drawFlow */
 export const HEAT_COLS = ['#0ca30c', '#fab219', '#ec835a', '#d03b3b'];
+/** the rgb of k (0 to 1) on a ramp of evenly spaced colour stops */
+function rampRGB(stops: number[][], k: number): number[] { const t = clamp(k, 0, 1) * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(t)), f = t - i, a = stops[i]!, b = stops[i + 1]!; return [0, 1, 2].map(j => a[j]! + (b[j]! - a[j]!) * f); }
+/** the congestion over time (drawHeatHist): 16 bins of k = log2(delay) / log2(60), clamped to 0 to 1 (k at each bin's middle): a glow (rgba, alpha 0.25 + 0.55 k),
+ *  an opaque core, and a width (6 + 14 k); the ramp runs yellow, orange, red, deep magenta */
+const HIST_BINS = 16, HIST_LOG = Math.log2(60), HIST_RAMP = [[255, 226, 59], [255, 140, 26], [235, 40, 40], [150, 0, 110]];
+const HIST_GLOW: string[] = [], HIST_CORE: string[] = [];
+for (let b = 0; b < HIST_BINS; b++) {
+  const k = (b + 0.5) / HIST_BINS, c = rampRGB(HIST_RAMP, k).map(v => Math.round(v));
+  HIST_GLOW.push(`rgba(${c[0]},${c[1]},${c[2]},${(0.25 + 0.55 * k).toFixed(3)})`); HIST_CORE.push(`rgb(${c[0]},${c[1]},${c[2]})`);
+}
+/** the parking demand (drawParkDemand): 16 bins of k = min(1, log2(1 + cars per game hour) / log2(121)), blue (k 0), amber (0.5), red (1); the fill is rgba, alpha 0.15 + 0.35 k */
+const PD_BINS = 16, PD_LOG = Math.log2(121);
+const PD_FILL: string[] = Array.from({ length: PD_BINS }, (_, b) => {
+  const k = (b + 0.5) / PD_BINS, c = rampRGB([[59, 130, 246], [255, 176, 32], [239, 68, 68]], k).map(v => Math.round(v));
+  return `rgba(${c[0]},${c[1]},${c[2]},${(0.15 + 0.35 * k).toFixed(3)})`;
+});
 export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: '#ffd23f', D: '#ff8c1a', E: '#ff3b3b', F: '#ff3b3b' };
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
@@ -174,10 +190,16 @@ export class Game {
   private growN = new Int32Array(256); private declN = new Int32Array(256); growTot = 0; declTot = 0; private growStamp = -Infinity;
   /** the flow overlay (key F, the Flow button, a jump): the live congestion heat map of each road direction (see drawFlow and setFlow) */
   showFlow = false;
+  /** the flow overlay's view: 'time' the congestion over time (heat over hours, the default), 'now' the live bands */
+  flowMode: 'time' | 'now' = 'time';
+  /** the parking demand overlay (the Car park panel's toggle): cells shaded by the cars that wanted to park there per game hour */
+  showParkDemand = false;
   /** the key (sigKey) of each main-thread signal plan, built once: the render loop reads it every frame */
   private sigKeys = new WeakMap<object, string>();
   /** the heat map's scratch: each dseg's band and lane key (255: not drawn), the keys in drawing order, and the counts, starts and fills per key */
   private heatKey = new Uint8Array(0); private heatOrd = new Int32Array(0);
+  private histKey = new Uint8Array(0); private histOrd = new Int32Array(0);
+  private histCnt = new Int32Array(HIST_BINS); private histStart = new Int32Array(HIST_BINS); private histFill = new Int32Array(HIST_BINS);
   private heatCnt = new Int32Array(32); private heatStart = new Int32Array(32); private heatFill = new Int32Array(32);
   /** the right-hand panel: the budget (the treasury), the bottlenecks (key B), or none */
   panel: 'budget' | 'bottlenecks' | null = null;
@@ -1307,7 +1329,9 @@ export class Game {
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit();
   }
   /** shows or hides the flow overlay (the Flow button, key F, a jump) and turns the worker's heat map on or off with it (see SimClient.heatOn); callers emit */
-  setFlow(on: boolean) { this.showFlow = on; this.traffic.heatOn(on); }
+  setFlow(on: boolean) { this.showFlow = on; this.traffic.heatOn(on || this.showParkDemand); }
+  /** shows or hides the parking demand overlay (the Car park panel) and keeps the worker's heat on with it; callers emit */
+  setParkDemand(on: boolean) { this.showParkDemand = on; this.traffic.heatOn(on || this.showFlow); }
   keyDown(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     this.keys.add(e.key);
@@ -2409,11 +2433,11 @@ export class Game {
     }
     return false;
   }
-  /** the traffic flow (key F): the live congestion heat map (see drawHeat) when the worker's geometry and heat are in, then the focus ring of a jump (4 s) */
+  /** the traffic flow (key F): the congestion over time (drawHeatHist) or the live heat map (drawHeat, see flowMode) when the worker's geometry and heat are in, then the focus ring of a jump (4 s) */
   private drawFlow(ctx: CanvasRenderingContext2D) {
-    const tr = this.traffic, G = tr.heatGeom, R = tr.heatRatio, D = tr.heatDens, now = performance.now();
+    const tr = this.traffic, G = tr.heatGeom, R = tr.heatRatio, D = tr.heatDens, H = tr.heatHist, now = performance.now();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (this.showFlow && G && R && D) this.drawHeat(ctx, G, R, D, now);
+    if (this.showFlow && G) { if (this.flowMode === 'time') { if (H) this.drawHeatHist(ctx, G, H); } else if (R && D) this.drawHeat(ctx, G, R, D, now); }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.lineCap = 'butt';
     const fo = this.focus, age = fo ? now - fo.t : Infinity;
     if (fo && age < 4000) {
@@ -2469,6 +2493,68 @@ export class Game {
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+  /** the congestion over time (SimClient.heatHist: the delay per lane-km, an EMA of about 6 game hours): each dseg with a mean delay of one stopped car
+   *  per lane-km or more (H >= 1) gets a glow along its lanes' side, coloured and widened by k = log2(H) / log2(60) (see HIST_GLOW). Screen space, one path per
+   *  bin, hot bins drawn last (on top); culled to the view as drawHeat, the ids counting-sorted into the scratch arrays (no allocation) */
+  private drawHeatHist(ctx: CanvasRenderingContext2D, G: Float32Array, H: Float32Array) {
+    const ze = this.cam.z * this.dpr, cX = this.cam.X, cY = this.cam.Y, cw2 = this.cw / 2, ch2 = this.ch / 2, pad = 4;
+    const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
+    const x0 = Math.min(c0.x, top.x) - pad, x1 = Math.max(c1.x, bot.x) + pad, y0 = Math.min(c1.y, top.y) - pad, y1 = Math.max(c0.y, bot.y) + pad;
+    const nD = Math.min(G.length / 6, H.length) | 0;
+    if (this.histKey.length < nD) { this.histKey = new Uint8Array(nD); this.histOrd = new Int32Array(nD); }
+    const K = this.histKey, ord = this.histOrd, cnt = this.histCnt, start = this.histStart, fill = this.histFill;
+    // pass 1: the bin of each dseg drawn (dead ids are NaN, under a delay of 1 is not drawn): 255 = none
+    cnt.fill(0);
+    for (let d = 0; d < nD; d++) {
+      const o = 6 * d, fx = G[o]!, fy = G[o + 1]!, tx = G[o + 2]!, ty = G[o + 3]!;
+      K[d] = 255;
+      if (Number.isNaN(fx) || H[d]! < 1 || Math.max(fx, tx) < x0 || Math.min(fx, tx) > x1 || Math.max(fy, ty) < y0 || Math.min(fy, ty) > y1) continue;
+      const b = Math.min(HIST_BINS - 1, Math.floor(clamp(Math.log2(H[d]!) / HIST_LOG, 0, 1) * HIST_BINS));
+      K[d] = b; cnt[b] = cnt[b]! + 1;
+    }
+    // pass 2: the start of each bin in ord; pass 3: the dsegs of each bin, in dseg order
+    let s = 0;
+    for (let b = 0; b < HIST_BINS; b++) { start[b] = s; fill[b] = s; s += cnt[b]!; }
+    for (let d = 0; d < nD; d++) { const b = K[d]!; if (b !== 255) { const p = fill[b]!; fill[b] = p + 1; ord[p] = d; } }
+    ctx.lineCap = 'round';
+    for (let b = 0; b < HIST_BINS; b++) {
+      const n0 = start[b]!, n1 = n0 + cnt[b]!;
+      if (n1 === n0) continue;
+      const k = (b + 0.5) / HIST_BINS, w = (6 + 14 * k) * this.dpr;
+      ctx.beginPath();
+      for (let j = n0; j < n1; j++) {
+        const o = 6 * ord[j]!, fx = G[o]!, fy = G[o + 1]!, tx = G[o + 2]!, ty = G[o + 3]!, dx = tx - fx, dy = ty - fy, L = Math.hypot(dx, dy) || 1, off = G[o + 4]!;
+        const ox = -dy / L * off, oy = dx / L * off;
+        ctx.moveTo((worldX(fx + ox, fy + oy) - cX) * ze + cw2, (worldY(fx + ox, fy + oy) - cY) * ze + ch2);
+        ctx.lineTo((worldX(tx + ox, ty + oy) - cX) * ze + cw2, (worldY(tx + ox, ty + oy) - cY) * ze + ch2);
+      }
+      ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = HIST_GLOW[b]!; ctx.lineWidth = w; ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = HIST_CORE[b]!; ctx.lineWidth = 0.4 * w; ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
+  /** the parking demand (SimClient.parkDemand, the Car park panel's toggle): each PD_CELL cell with 0.5 cars per game hour or more, shaded blue (low)
+   *  to red (high) by its bin (PD_FILL); at the district and street tiers the cells over 5 are labelled with their cars per game hour (rounded).
+   *  Supply (bays) is not drawn here */
+  private drawParkDemand(ctx: CanvasRenderingContext2D) {
+    const PD = this.traffic.parkDemand; if (!PD) return;
+    const N = MAP / PD_CELL, dpr = this.dpr;
+    this.setIso(ctx);
+    for (let c = 0; c < PD.length; c++) {
+      const v = PD[c]!; if (v < 0.5) continue;
+      ctx.fillStyle = PD_FILL[Math.min(PD_BINS - 1, Math.floor(clamp(Math.log2(1 + v) / PD_LOG, 0, 1) * PD_BINS))]!;
+      ctx.fillRect((c % N) * PD_CELL, ((c / N) | 0) * PD_CELL, PD_CELL, PD_CELL);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.cam.z < DISTRICT_Z) return;
+    ctx.font = `bold ${11 * dpr}px sans-serif`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = '#0f172a'; ctx.fillStyle = '#fff';
+    for (let c = 0; c < PD.length; c++) {
+      const v = PD[c]!; if (v <= 5) continue;
+      const p = this.screen((c % N) * PD_CELL + PD_CELL / 2, ((c / N) | 0) * PD_CELL + PD_CELL / 2), t = String(Math.round(v));
+      const x = p.x - ctx.measureText(t).width / 2;
+      ctx.strokeText(t, x, p.y); ctx.fillText(t, x, p.y);
+    }
+  }
   /** the car inspector and the junction routes (see SimClient.car and .watch): the inspected car's route ahead (cyan, dashed after its first
    *  stretch), its origin (blue) and destination (orange) dots, and a ring on the car; the watched junction's recorded crossings, from their
    *  origins (blue) and to their destinations (orange), and a ring on the junction */
@@ -2515,6 +2601,7 @@ export class Game {
     if (this.traffic && this.cam.z >= DISTRICT_Z) { this.drawDisasters(ctx); this.drawSignals(ctx); this.drawIncidents(ctx); }
     if (this.tool === 'junction') { if (this.cam.z >= PLANNER_Z) this.drawJunctionBadges(ctx); this.drawSelectedJunction(ctx); }
     this.drawFlow(ctx);
+    if (this.showParkDemand) this.drawParkDemand(ctx);
     this.drawInspect(ctx);
     this.drawGroundOverlays(ctx);
     this.drawStadium(ctx);

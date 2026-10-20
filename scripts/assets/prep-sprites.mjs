@@ -25,6 +25,12 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 const town = JSON.parse((await fromExport('town.json')).toString());
 const items = town.items, fromLib = await libraryItems(new Set(Object.keys(items)));
 for (const [id, it] of Object.entries(fromLib)) items[id] = it;
+// CapitalEmpire's own sprites (art/<set>/items.json, the export's item format plus local: true; e.g. the car park gates, art/parking)
+const LOCAL = {};
+for (const set of fs.readdirSync(path.join(ROOT, 'art'), { withFileTypes: true })) {
+  const f = path.join(ROOT, 'art', set.name, 'items.json');
+  if (set.isDirectory() && fs.existsSync(f)) for (const [id, it] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) { items[id] = it; (LOCAL[it.cat] ??= []).push(id); }
+}
 
 // the largest scale the game draws each id at: the owner's lot table (+5% composer jitter) and the forest (up to 1.5). The table is
 // read from its source (prep-scales.mjs then writes it into scales.ts for the ids packed here), so the run order does not matter
@@ -52,8 +58,9 @@ const SEL = {
   'Road signs': [...all('Road signs')],
   'Arcade': [...all('Arcade furniture'), ...all('Arcade decor')],
   'Odds & ends': [...all('Town odds & ends'), ...all('Halloween yard details')],
+  ...LOCAL,
 };
-const COST = { 'More houses': 9000, 'Road signs': 150, 'Arcade': 600, 'Odds & ends': 200, 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300 };
+const COST = { 'More houses': 9000, 'Road signs': 150, 'Arcade': 600, 'Odds & ends': 200, 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300, 'Parking': 300 };
 // export categories whose kind the engine needs to see differently (derelict houses are not occupied houses)
 const KIND_OF_CAT = { 'Derelict town': 'building', 'Scrapyard clutter': 'decor' };
 
@@ -64,6 +71,7 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   const it = items[id]; if (!it) { console.warn('missing', id); continue; }
   let buf;
   if (it.src) buf = fs.readFileSync(it.src);
+  else if (it.local) buf = fs.readFileSync(path.join(ROOT, it.file));
   else { const file = it.file.split('/').pop(); try { buf = await fromExport('sprites-hd/' + file); } catch { buf = await fromExport('sprites/' + file); } }
   // packed at its largest drawn scale, but never past the painted source's own pixels
   const res = Math.min(MIP0 * maxScale(id), (await sharp(buf).metadata()).width / it.w);

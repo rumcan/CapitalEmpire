@@ -23,6 +23,8 @@ import type { Site } from '../event/site';
 import type { CardId } from '../event/config';
 import type { CarParkDef, ParkView } from '../event/carpark';
 import type { TollDef } from '../event/toll';
+import type { BayRowDef } from '../event/rows';
+import type { CurbDef } from '../event/curb';
 import type { BusRouteDef } from '../event/bus';
 import type { BizDef, BizStats, BizView } from '../business/state';
 
@@ -106,6 +108,9 @@ export class SimClient {
   /** the heat map's per-dseg speed ratio (mean v / lane vmax, 1 = free) and density (vehicles per km per lane) as the worker last sent them
    *  (null until the first), and the performance.now() of that message (see heatOn) */
   heatRatio: Float32Array | null = null; heatDens: Float32Array | null = null; heatAt = 0;
+  /** the congestion over time per dseg id (heatHist, delay per lane-km, EMA of about 6 game hours) and the parking demand per cell (parkDemand, cars per
+   *  game hour, cells of PD_CELL tiles), as the worker last sent them (null until the first heat) */
+  heatHist: Float32Array | null = null; parkDemand: Float32Array | null = null;
   n = 0;
   alive = new Uint8Array(0); px = new Float32Array(0); py = new Float32Array(0);
   /** 4-facing index of the heading: 0 +x, 1 +y, 2 -x, 3 -y */
@@ -154,6 +159,8 @@ export class SimClient {
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
   setTolls(defs: TollDef[]) { this.post({ t: 'tolls', defs }); }
+  /** the bay rows and the on-street runs as the player drew them (the full lists) and the parking fee per car ($): the worker builds them as car parks (see City.setParking) */
+  setParking(rows: BayRowDef[], curbs: CurbDef[], fee: number) { this.post({ t: 'parking', rows, curbs, fee }); }
   /** ends the build now: the surge (the crowd's run to kick-off) begins */
   startNow() { this.post({ t: 'round', op: 'now' }); }
   /** closes the round's eval: the round is free again and the clock runs on */
@@ -212,7 +219,7 @@ export class SimClient {
     if (m.t === 'site') { this.site = m.site; return; }
     if (m.t === 'biz') { this.biz = m.list; this.onBiz?.(); return; }
     if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
-    if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatAt = performance.now(); return; }
+    if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatHist = m.hist; this.parkDemand = m.pdem; this.heatAt = performance.now(); return; }
     if (m.t === 'disasters') { this.disasters = m.active; this.onDisasters?.(m.notes); return; }
     if (m.t === 'grow') {
       const legs: Leg[] = [];

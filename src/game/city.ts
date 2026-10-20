@@ -28,7 +28,9 @@ import { freshStats, type BizDef, type BizStats, type BizView } from './business
 import { Visits, ON_TIME_RATIO, type Door, type VisitBiz, type VisitHome } from './business/visits';
 import { BUSINESS, ESTATE_LOTS, ESTATE_SAT, GOOD_SAT, levelFromXp, satisfactionAfter } from './business/catalogue';
 import { driveway } from './sim/trips';
-import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
+import { buildPark, parkBox, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
+import { lotPark, rowLots, rowQuad, type BayRowDef } from './event/rows';
+import { resolveCurb, type Curb, type CurbDef } from './event/curb';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 import { Taxis, type Order, type Rank } from './ext/taxi';
 
@@ -113,11 +115,16 @@ function nearestDoor(doors: Pt[], p: Pt): Pt | null {
   for (const d of doors) { const x = Math.hypot(d.x - p.x, d.y - p.y); if (x < bd) { bd = x; best = d; } }
   return best;
 }
-/** the unit normal a car park on `side` (0 W, 1 N, 2 E, 3 S) faces away from its frontage: the side of the road it sits on */
-const parkPv = (side: number): Pt => ({ x: side === 0 ? -1 : side === 2 ? 1 : 0, y: side === 1 ? -1 : side === 3 ? 1 : 0 });
-/** the lane of dseg d a car park on `side` takes its sinks on: the outermost lane on the park's side; a one-way seg's only lanes are its forward
- *  dseg's, so a park on its left takes the leftmost lane (lanes[0]) */
-const sinkLane = (d: DSeg, side: number): number => d.lanes[d.seg.cls.oneway && dot(perp(norm(sub(d.to, d.from))), parkPv(side)) < 0 ? 0 : d.lanes.length - 1]!;
+/** the lane of dseg d a car park with unit pv (from its frontage road into the park, see CarPark) takes its sinks on: the outermost lane on the park's
+ *  side; a one-way seg's only lanes are its forward dseg's, so a park on its left takes the leftmost lane (lanes[0]) */
+const sinkLane = (d: DSeg, pv: Pt): number => d.lanes[d.seg.cls.oneway && dot(perp(norm(sub(d.to, d.from))), pv) < 0 ? 0 : d.lanes.length - 1]!;
+/** the axis box (x, y, w, h) of a bay row's paved quad (rowQuad: its 4 corners as x, y pairs) */
+function rowBox(r: BayRowDef): { x: number; y: number; w: number; h: number } {
+  const q = rowQuad(r);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < 8; i += 2) { x0 = Math.min(x0, q[i]!); x1 = Math.max(x1, q[i]!); y0 = Math.min(y0, q[i + 1]!); y1 = Math.max(y1, q[i + 1]!); }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
 
 /** One city: feed it the network ops (netOps), the terrain (terrain) and the sim steps (step). The worker and the gate share it. */
 /** a natural disaster as the main thread draws it: its area (tiles, flat x, y pairs), its times (sim s; end Infinity for a quake until repaired) and its
@@ -180,6 +187,8 @@ export class City {
   /** the car parks as the player placed them (parkDefs, the full list), and the ones built on the network (parks: buildPark; a park with no
    *  frontage or under 10 bays is left out; parks[k] is sim.parks[k] and the sinks' park index) */
   parkDefs: CarParkDef[] = []; parks: CarPark[] = [];
+  /** the bay rows and on-street runs as the player placed them (full lists), the curbs resolved on the network, and the parking fee per car ($) */
+  rowDefs: BayRowDef[] = []; curbDefs: CurbDef[] = []; curbs: Curb[] = []; parkFee = 5;
   /** the shuttle routes as the player drew them (busDefs, the full list: a route's index is its sim index), their resolved stops' points (tiles; null:
    *  unresolved, the route is inactive), and the crowd of the surge (event/crowd.ts: the walkers, the queues, the fans on the buses; null outside the
    *  surge, its eval included) */
@@ -204,7 +213,8 @@ export class City {
     const s = this.site;
     if (s && x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) return true;
     for (const b of this.businesses) if (b.type !== 'stadium' && x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true;
-    for (const p of this.parkDefs) if (x > p.x - 4 && x < p.x + p.w + 4 && y > p.y - 4 && y < p.y + p.h + 4) return true;
+    for (const p of this.parkDefs) { const b = parkBox(p); if (x > b.x - 4 && x < b.x + b.w + 4 && y > b.y - 4 && y < b.y + b.h + 4) return true; }
+    for (const r of this.rowDefs) { const b = rowBox(r); if (x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true; }
     for (const d of this.tollDefs) if (segPointDist(x, y, d.ax, d.ay, d.bx, d.by) < 12) return true;
     for (const b of this.busPts) if (b && (Math.hypot(b.lot.x - x, b.lot.y - y) < 6 || Math.hypot(b.doors.x - x, b.doors.y - y) < 6)) return true;
     return false;
@@ -244,11 +254,11 @@ export class City {
 
   /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), or another business (padded by 2 tiles), so the town never builds there */
   private reserved(l: Lot): boolean {
-    if (!this.site && !this.parkDefs.length && !this.businesses.length) return false;
+    if (!this.site && !this.parkDefs.length && !this.rowDefs.length && !this.businesses.length) return false;
     const ax = l.o.x + l.u.x * l.w, ay = l.o.y + l.u.y * l.w, bx = l.o.x + l.n.x * l.d, by = l.o.y + l.n.y * l.d, cx = ax + l.n.x * l.d, cy = ay + l.n.y * l.d;
     const x0 = Math.min(l.o.x, ax, bx, cx), x1 = Math.max(l.o.x, ax, bx, cx), y0 = Math.min(l.o.y, ay, by, cy), y1 = Math.max(l.o.y, ay, by, cy);
     const hit = (r: { x: number; y: number; w: number; h: number }) => x1 > r.x - 1 && x0 < r.x + r.w + 1 && y1 > r.y - 1 && y0 < r.y + r.h + 1;
-    return (!!this.site && hit(this.site)) || this.parkDefs.some(hit) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 }));
+    return (!!this.site && hit(this.site)) || this.parkDefs.some(p => hit(parkBox(p))) || this.rowDefs.some(r => hit(rowBox(r))) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 }));
   }
   /** the access per zone (256): the sim's live copy (the town reads its own copy, taken each game hour) */
   get access(): Float32Array { return this.sim.access; }
@@ -472,7 +482,8 @@ export class City {
     if (rebuilt && this.closed.size) this.applyClosures();
     // the car parks are built again on the new network (a frontage road split or replaced by the edit leaves the old build on a dead seg;
     // the counts are kept by id), and with them the sinks
-    if (this.parkDefs.length) this.setParks(this.parkDefs);
+    if (this.curbDefs.length) this.applyCurbs();
+    if (this.parkDefs.length || this.rowDefs.length || this.curbDefs.length) this.setParks(this.parkDefs);
     if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
     this.graphMs = performance.now() - t0;
     this.lanes = 0; for (const ln of this.g.lanes) if (ln) this.lanes++;
@@ -515,6 +526,9 @@ export class City {
   step(n: number): { events: TownEvent[]; grow: Leg[] | null; ledger: Ledger | null; milestones: Milestone[]; won: boolean } {
     const t0 = performance.now();
     this.calls++;
+    // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them
+    const pk = this.sim.parkedNow.length >> 1;
+    if (pk && this.parkFee > 0) this.budget.parking(pk * this.parkFee);
     this.sim.parkedNow.length = 0;
     const hr = Math.floor(this.sim.clock / GAME_HOUR);
     let milestones = NO_MILESTONES, won = false;
@@ -800,14 +814,34 @@ export class City {
   setParks(defs: CarParkDef[]): void {
     const old = this.parks, st = this.sim.parks, parks: CarPark[] = [], states: ParkState[] = [];
     this.parkDefs = defs.slice();
-    for (const d of defs) {
-      const p = buildPark(this.net, d);
-      if (!p) continue;
+    // each built park keeps its counts by id (the car parks, then the bay-row lots, then the on-street curbs, whose ids are -curb id)
+    const add = (p: CarPark): void => {
       const k = old.findIndex(q => q.id === p.id), o = k >= 0 ? st[k] : undefined;
       parks.push(p); states.push({ bays: p.bays.length, parked: o?.parked ?? 0, turned: o?.turned ?? 0 });
-    }
+    };
+    for (const d of defs) { const p = buildPark(this.net, d); if (p) add(p); }
+    for (const rs of rowLots(this.rowDefs)) { const p = lotPark(this.net, rs); if (p) add(p); }
+    for (const c of this.curbs) add({ id: -c.id, x: c.entrance.x, y: c.entrance.y, w: 0, h: 0, side: 0, seg: c.seg, entrances: [c.entrance], bays: c.bays, pv: c.pv, curb: true });
     this.parks = parks; this.sim.parks = states; this.resolveSinks();
     if (this.surge) this.surge.relink(this.surgeParks());
+  }
+  /** the bay rows, the on-street runs and the parking fee as the player set them (the full lists, each time): the runs resolve on the network
+   *  (applyCurbs), then every car park is built again (setParks) with the lots and the curbs */
+  setParking(rows: BayRowDef[], curbs: CurbDef[], fee: number): void {
+    this.rowDefs = rows.slice(); this.curbDefs = curbs.slice(); this.parkFee = fee;
+    this.applyCurbs();
+    this.setParks(this.parkDefs);
+  }
+  /** the on-street runs resolved on the network (curbs: resolveCurb); the kerb lanes of the runs that drop them leave the lane graph (LaneGraph.setCurbs).
+   *  As the toll booths: the sim's lanes and the buses follow when a kerb changed; the sinks follow in setParks */
+  private applyCurbs(): void {
+    this.curbs = this.curbDefs.map(d => resolveCurb(this.net, d)).filter((c): c is Curb => !!c);
+    const keys: string[] = [];
+    for (const c of this.curbs) if (c.drop) for (const k of c.keys) keys.push(k);
+    if (!this.g.setCurbs(keys, this.net)) return;
+    if (this.busDefs.length) this.resolveBuses();
+    this.sim.onGraph(); this.upkeepC = null;
+    if (this.closed.size) this.applyClosures();
   }
   /** the toll gates as the player placed them (defs, the full list, each time): the lane graph's booths (LaneGraph.setTolls); the sim's lanes and
    *  the car parks' sinks follow when a booth changed. The graph keeps the map, so each network batch builds the booths too */
@@ -830,22 +864,22 @@ export class City {
    *  traffic has the park on its right (the lanes sit on perp of the heading, as driveway reads them), and the opposite dseg of its seg. Each sits
    *  on its outermost lane, s at e's projection on that lane, with ux, uy its direction. None if the right-hand dseg is missing or too short */
   private sinksAt(k: number, p: CarPark, e: Pt): Sink[] {
-    const near = new Set(this.net.segsNear(e, 2)), side = p.side, vert = side % 2 === 0;
-    // the park lies on the side of the road that faces away from the frontage's outward normal
-    const pv = parkPv(side);
+    const near = new Set(this.net.segsNear(e, 2)), pv = p.pv;
+    // the park lies on the side of the road that faces away from the frontage (its pv); the road runs along the frontage (perp of pv)
     let R: DSeg | null = null;
     for (const d of this.g.dsegs) {
       if (!d || !d.lanes.length || !near.has(d.seg)) continue;
       const h = norm(sub(d.to, d.from));
-      if (Math.abs(vert ? h.y : h.x) < 0.98 || (dot(perp(h), pv) <= 0 && !d.seg.cls.oneway)) continue;
+      if (Math.abs(dot(h, perp(pv))) < 0.98 || (dot(perp(h), pv) <= 0 && !d.seg.cls.oneway)) continue;
       R = d; break;
     }
     if (!R) return [];
+    // an on-street run's sinks are on its own direction only (no U-turn into the kerb)
     const ds: DSeg[] = [R];
-    for (const d of this.g.dsegs) if (d && d !== R && d.seg === R.seg && d.lanes.length) { ds.push(d); break; }
+    if (!p.curb) for (const d of this.g.dsegs) if (d && d !== R && d.seg === R.seg && d.lanes.length) { ds.push(d); break; }
     const out: Sink[] = [];
     for (const d of ds) {
-      const ln = this.g.lanes[sinkLane(d, side)]!;
+      const ln = this.g.lanes[sinkLane(d, pv)]!;
       if (ln.len < 2 * SINK_END) { if (d === R) return []; continue; }
       const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm({ x: ln.pts[2]! - p0.x, y: ln.pts[3]! - p0.y }), h = norm(sub(d.to, d.from));
       out.push({ park: k, dseg: d.id, s: Math.min(ln.len - SINK_END, Math.max(SINK_END, dot(sub(e, p0), u) * MPT)), next: 0, q: [], qz: [], ux: h.x, uy: h.y });
@@ -878,7 +912,7 @@ export class City {
       P.sinks.push(j);
       if (d) P.comp = this.compOf(d.seg);
       const q = { x: 0, y: 0, hx: 0, hy: 0 };
-      if (d) laneAt(this.g.lanes[sinkLane(d, this.parks[K.park]!.side)]!, K.s, q);
+      if (d) laneAt(this.g.lanes[sinkLane(d, this.parks[K.park]!.pv)]!, K.s, q);
       P.pts.push({ x: q.x, y: q.y }); P.dirs.push({ x: K.ux ?? 0, y: K.uy ?? 0 });
     });
     return L;
@@ -1102,7 +1136,7 @@ export class City {
         laneAt(this.g.lanes[lane]!, s, q);
         // the sink that points from the car's origin toward its entrance (matchSink; round-robin over the cars sent)
         const j = P.sinks[matchSink(P, q, sent)]!, K = this.sim.sinks[j]!, dd = this.g.dsegs[K.dseg]!;
-        laneAt(this.g.lanes[sinkLane(dd, this.parks[k]!.side)]!, K.s, sp);
+        laneAt(this.g.lanes[sinkLane(dd, this.parks[k]!.pv)]!, K.s, sp);
         if (!joined.has(this.g.dsegs[this.g.lanes[lane]!.dseg]!.seg) || (a < 100 && Math.hypot(sp.x - q.x, sp.y - q.y) < PARK_TEST_M)) continue;
         done = this.sim.spawnAt(lane, s, K.dseg, K.s, 0, j) >= 0;
       }

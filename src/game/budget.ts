@@ -110,7 +110,7 @@ export function compensation(l: { use: number; level: number; decline: number })
 /** a stretch's upkeep per day, $: its length times the class cost, the upkeep share, times the structure's multiplier */
 export function segUpkeep(s: SegIn): number { return s.len * classOf(s.cls).cost * UPKEEP * STRUCT_COST[s.kind]!; }
 
-/** one game day's books, whole dollars; costs are positive, net = property + business + grants + toll - upkeep - signals - interest - construction - compensation */
+/** one game day's books, whole dollars; costs are positive, net = property + business + grants + toll + parking - upkeep - signals - interest - construction - compensation */
 export interface Ledger {
   /** the game day */
   day: number;
@@ -122,6 +122,8 @@ export interface Ledger {
   grants: number;
   /** the toll gates' takings in (absent when none: read it as 0, as old ledgers have none) */
   toll?: number;
+  /** the parking fees in (absent when none: read it as 0, as old ledgers have none) */
+  parking?: number;
   /** the land sales in (lots the town builds on paved roads, see saleOf; absent when none: read it as 0) */
   sales?: number;
   /** the event's payout (signed: negative is a cost; absent when none: read it as 0) */
@@ -157,7 +159,7 @@ export class Budget {
   /** true once debtDays reached DEBT_DAYS (it stays so) */
   bankrupt = false;
   /** today's construction and compensation spending, grants and live upkeep (paid while a round runs), $ (booked by the next endDay) */
-  today: { construction: number; compensation: number; grants: number; upkeepLive: number; /** the toll takings today (absent when none) */ toll?: number; /** the land sales today (absent when none) */ sales?: number; /** the payout today (signed; absent when none) */ payout?: number; /** the business takings today (absent when none) */ biz?: number } = { construction: 0, compensation: 0, grants: 0, upkeepLive: 0 };
+  today: { construction: number; compensation: number; grants: number; upkeepLive: number; /** the toll takings today (absent when none) */ toll?: number; /** the parking fees today (absent when none) */ parking?: number; /** the land sales today (absent when none) */ sales?: number; /** the payout today (signed; absent when none) */ payout?: number; /** the business takings today (absent when none) */ biz?: number } = { construction: 0, compensation: 0, grants: 0, upkeepLive: 0 };
   /** the ledgers, newest last (at most 30) */
   history: Ledger[] = [];
   /** dev sandbox: spending is booked in the ledger but the treasury does not move, and endDay keeps it and the debt at their values (not saved) */
@@ -176,6 +178,8 @@ export class Budget {
   grant(n: number) { this.money += n; this.today.grants += n; }
   /** books n $ of toll takings into the treasury now: shows as toll income in the next ledger (as grant does, unlimited included) */
   toll(n: number) { this.money += n; this.today.toll = (this.today.toll ?? 0) + n; }
+  /** books n $ of parking fees into the treasury now: shows as parking income in the next ledger (as toll does, unlimited included) */
+  parking(n: number) { this.money += n; this.today.parking = (this.today.parking ?? 0) + n; }
   /** books n $ of land sales into the treasury now: shows as sales income in the next ledger (as toll does, unlimited included) */
   sale(n: number) { this.money += n; this.today.sales = (this.today.sales ?? 0) + n; }
   /** books n $ of business takings (the visit businesses' sales) into the treasury now: shows in the next ledger's business line (as toll does, unlimited included) */
@@ -204,9 +208,10 @@ export class Budget {
     const tl = Math.round(this.today.toll ?? 0); // the tolls are in the treasury already (see toll)
     const pay = Math.round(this.today.payout ?? 0); // the payout is too (see payout)
     const sl = Math.round(this.today.sales ?? 0); // the sales are too (see sale)
+    const pk = Math.round(this.today.parking ?? 0); // the parking fees are in the treasury already too (see parking)
     this.money += p + b - u - sg - it - bu; // the grants, today's spending and the business takings are in the treasury already
-    const L: Ledger = { day, property: p, business: b + bz, grants: g, ...(tl ? { toll: tl } : {}), ...(sl ? { sales: sl } : {}), ...(pay ? { payout: pay } : {}), upkeep: u + lv + bu, signals: sg, interest: it, construction: c, compensation: k, net: p + b + bz + g + tl + sl + pay - u - lv - bu - sg - it - c - k, money: this.money };
-    this.today.construction = 0; this.today.compensation = 0; this.today.grants = 0; this.today.upkeepLive = 0; delete this.today.toll; delete this.today.sales; delete this.today.payout; delete this.today.biz;
+    const L: Ledger = { day, property: p, business: b + bz, grants: g, ...(tl ? { toll: tl } : {}), ...(pk ? { parking: pk } : {}), ...(sl ? { sales: sl } : {}), ...(pay ? { payout: pay } : {}), upkeep: u + lv + bu, signals: sg, interest: it, construction: c, compensation: k, net: p + b + bz + g + tl + pk + sl + pay - u - lv - bu - sg - it - c - k, money: this.money };
+    this.today.construction = 0; this.today.compensation = 0; this.today.grants = 0; this.today.upkeepLive = 0; delete this.today.toll; delete this.today.parking; delete this.today.sales; delete this.today.payout; delete this.today.biz;
     if (this.unlimited) { this.money = m0; this.debtDays = 0; this.bankrupt = false; }
     else { this.debtDays = this.money < 0 ? this.debtDays + 1 : 0; this.bankrupt ||= this.debtDays >= DEBT_DAYS; }
     this.history.push(L); if (this.history.length > 30) this.history.shift();
