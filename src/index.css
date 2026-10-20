@@ -1,1 +1,48 @@
 @import "tailwindcss";
+
+/* The Maple Falls look (the owner's mockup, docs/ui/mockup-road-panel.webp): dark charcoal glass panels, gold accents and outlines,
+   a serif display face for the logo and panel titles, small caps section labels. */
+:root {
+  --gold: #f5b52e;
+  --gold-hi: #ffd166;
+  --gold-line: rgba(245, 181, 46, 0.55);
+  --gold-wash: rgba(245, 181, 46, 0.14);
+  --panel: rgba(20, 21, 25, 0.9);
+  --panel-2: rgba(32, 33, 38, 0.92);
+  --line: rgba(255, 255, 255, 0.08);
+  --ink: #efe9da;
+  --muted: #a9a394;
+}
+
+.font-display { font-family: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif; letter-spacing: 0.01em; }
+.label-caps { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+
+.glass { border-radius: 1rem; border: 1px solid var(--line); background: var(--panel); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04); backdrop-filter: blur(10px); color: var(--ink); }
+.glass-2 { border-radius: 0.75rem; border: 1px solid var(--line); background: var(--panel-2); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border-radius: 0.65rem; border: 1px solid var(--line); background: var(--panel-2); padding: 0.35rem 0.7rem; font-size: 0.75rem; color: var(--ink); }
+.btn:hover { border-color: var(--gold-line); }
+.btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem; border-radius: 0.7rem; border: 1px solid var(--line); background: var(--panel-2); }
+.btn-icon:hover { border-color: var(--gold-line); }
+.btn-icon.on { border-color: var(--gold); background: var(--gold-wash); }
+.btn-gold { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 0.65rem; background: linear-gradient(#ffc94a, #f0a91e); padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 700; color: #1b1406; box-shadow: 0 2px 10px rgba(245, 181, 46, 0.35); }
+.btn-gold:hover { filter: brightness(1.06); }
+
+.chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 0.55rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); padding: 0.3rem 0.6rem; font-size: 0.7rem; color: #d9d3c4; }
+.chip:hover { border-color: var(--gold-line); }
+.chip-on { background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; border-color: transparent; font-weight: 600; }
+
+.card { display: flex; flex-direction: column; align-items: flex-start; width: 100%; border-radius: 0.7rem; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); padding: 0.4rem 0.55rem; text-align: left; }
+.card:hover { border-color: var(--gold-line); }
+.card-on { border-color: var(--gold); background: var(--gold-wash); box-shadow: 0 0 0 1px rgba(245, 181, 46, 0.25); }
+
+.rail-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; width: 4.4rem; height: 4.2rem; border-radius: 0.8rem; border: 1px solid transparent; font-size: 0.7rem; color: #d9d3c4; }
+.rail-tab:hover { background: rgba(255, 255, 255, 0.05); }
+.rail-tab-on { border-color: var(--gold); background: var(--gold-wash); color: var(--gold-hi); box-shadow: inset 0 0 12px rgba(245, 181, 46, 0.18); }
+
+.seg { display: flex; gap: 0.25rem; border-radius: 0.7rem; background: rgba(0, 0, 0, 0.25); padding: 0.2rem; }
+.seg > button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; border-radius: 0.55rem; padding: 0.3rem 0.4rem; font-size: 0.7rem; color: #d9d3c4; }
+.seg > button:hover { background: rgba(255, 255, 255, 0.06); }
+.seg > button.on { background: linear-gradient(#ffc94a, #f0a91e); color: #1b1406; font-weight: 600; }
+
+.keycap { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; margin: 0 0.15rem; border-radius: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); padding: 0 0.3rem; font-size: 0.65rem; font-weight: 700; line-height: 1.2rem; color: var(--ink); }
