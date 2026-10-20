@@ -1074,8 +1074,8 @@ small public car parks on open town lots as part of the town's growth (a small t
     classes = the value removed; Replace street->arterial $10,000, grand->street refund $18,800, road->road $0, preview = paid.
     Junction gallery: 1,134 junctions, 130 flagged (137 before; it builds at a random spot), none without a node. Tests: 421/422 (the one failure, "20 seeds ... under 4 s", is timing: seed 5 took 4.6 s while the
     machine was busy; no road code in it).
-- **Also open:** the Replace preview fix (15176e6: cut pieces amber and dashed under the route) is committed but not yet seen in the
-  browser: the app did not load while the Phase B session had half-done edits in the main checkout (App.tsx import errors).
+- **Replace preview fix (15176e6): seen in the browser 2026-10-20** (from the `claude/road-ladder` worktree): an arterial route laid over a
+  street with Replace on shows the street piece amber with a dashed outline under the yellow route, nothing red; the build replaced it.
   Phase B (B.2 next) and the paint tool (its own worktree, branch claude/frosty-wilson-452c74) run in their own sessions.
 - **Speed limits, ring and mini traffic, junction surfaces, right-click build (2026-10-19 late): DONE.**
   - *Speed limits by road size* (km/h): gravel and lane 30, street 40, avenue 50, road and arterial 60, boulevard 70, divided and six-lane
