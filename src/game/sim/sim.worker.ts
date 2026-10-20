@@ -37,6 +37,9 @@ function postTown(ev: TownEvent[], force: boolean) {
 /** the books: the save, the career's save, the game day now, and the ledger of the day that just closed (null unless a day did) */
 function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), career: city.career.toJSON(), day: city.budget.dayOf(city.sim.clock), ledger }); }
 
+/** posts the businesses with their stats (after a change of the list, a day's close, a round's close, and a save's load) */
+function postBiz() { post({ t: 'biz', list: city.bizView() }); }
+
 /** a step's career news: the milestones it newly reached and the win, then the books (the grants moved the treasury); nothing if neither */
 function postCareer(r: { milestones: Milestone[]; won: boolean }) { if (!r.milestones.length && !r.won) return; post({ t: 'milestone', newly: r.milestones, won: r.won }); postBudget(null); }
 
@@ -98,7 +101,7 @@ function frame() {
       const r = city.step(20);
       postTown(r.events, false);
       if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
-      if (r.ledger) postBudget(r.ledger);
+      if (r.ledger) { postBudget(r.ledger); postBiz(); }
       postCareer(r);
     }
     if (city.sim.t >= skipUntil) { skipUntil = -1; forcePost = true; }
@@ -106,7 +109,7 @@ function frame() {
     const r = city.step(speed);
     postTown(r.events, false);
     if (r.grow) post({ t: 'grow', legs: r.grow.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]) });
-    if (r.ledger) postBudget(r.ledger);
+    if (r.ledger) { postBudget(r.ledger); postBiz(); }
     postCareer(r);
   }
   // the round's stage moved (the build ends, kick-off: the payout is booked then): the books go out so the treasury shows it at once
@@ -147,9 +150,9 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
-      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); postBudget(null); break;
+      case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); city.restoreBiz(m.biz); postBudget(null); postBiz(); break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
-      case 'stadium': city.setStadium(m.at); post({ t: 'site', site: city.site }); break;
+      case 'businesses': city.setBusinesses(m.defs); post({ t: 'site', site: city.site }); postBiz(); break;
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
       case 'buses': city.setBusRoutes(m.defs); forcePost = true; break;
@@ -161,7 +164,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'repairDisaster': city.repairDisaster(m.id, m.key); postBudget(null); break;
       case 'round':
         if (m.op === 'start') city.startRound(); else if (m.op === 'now') city.startNow(); else if (m.op === 'pick') city.pickCard(m.card);
-        else if (city.closeRound() && city.grown) postTown(city.grown.events, true);
+        else { if (city.closeRound() && city.grown) postTown(city.grown.events, true); postBiz(); }
         postBudget(null); forcePost = true; break;
       case 'spend': city.spend(m.kind, m.n); postBudget(null); break;
       case 'loan': city.loan(m.take); postBudget(null); break;

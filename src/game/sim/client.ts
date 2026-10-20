@@ -24,6 +24,7 @@ import type { CardId } from '../event/config';
 import type { CarParkDef, ParkView } from '../event/carpark';
 import type { TollDef } from '../event/toll';
 import type { BusRouteDef } from '../event/bus';
+import type { BizDef, BizStats, BizView } from '../business/state';
 
 /** frames arrive this often, ms: a car is drawn between the last two frames over that time */
 const FRAME_MS = 100;
@@ -82,6 +83,8 @@ export class SimClient {
   stats: SimStats = { ...EMPTY };
   /** the event round as the worker last sent it (with the frame stats; see startRound), and the stadium's site (null: none; with each terrain) */
   round: RoundView = NO_ROUND; site: Site | null = null;
+  /** the player's businesses with their stats as the worker last sent them (see postBiz; a copy each time) */
+  biz: BizView[] = [];
   /** the car parks' counts as the worker last sent them (with each frame; see ParkView) */
   parks: ParkView[] = [];
   /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
@@ -136,13 +139,13 @@ export class SimClient {
   /** the dev sandbox's options: the growth speed (1 = the game's) and unlimited money (spending does not move the treasury); stored as unlimited */
   sandbox(grow: number, money: boolean) { this.unlimited = money; this.post({ t: 'sandbox', grow, money }); }
   /** a saved town for the worker (its lots, the sim time, s, the clock's shift from it, and its books or the treasury of an old save): after the net ops of a load */
-  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave, shift = 0, round?: RoundSave) { this.post({ t: 'townState', lots, simT, budget, money, career, shift, round }); }
+  townState(lots: LotTuple[], simT: number, budget?: BudgetSave, money = START_MONEY, career?: CareerSave, shift = 0, round?: RoundSave, biz?: BizStats[]) { this.post({ t: 'townState', lots, simT, budget, money, career, shift, round, biz }); }
   /** starts an event round (the stadium's crowd comes to kick-off at 18:00 of the clock, which freezes): the build comes first */
   startRound() { this.post({ t: 'round', op: 'start' }); }
   /** the car parks (the full list, each time): the worker builds their bays and entrances on the network it has */
   setParks(defs: CarParkDef[]) { this.post({ t: 'parks', defs }); }
-  /** the player's stadium (its footprint [x, y, w, h] tiles; null: none): the worker's site follows (see City.setStadium) */
-  setStadium(at: [number, number, number, number] | null) { this.post({ t: 'stadium', at }); }
+  /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
+  setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
@@ -203,6 +206,7 @@ export class SimClient {
     if (m.t === 'car') { if (this.slot >= 0 && (!m.info || m.info.slot === this.slot)) this.car = m.info; return; }
     if (m.t === 'watch') { if (this.watching) this.watch = { node: m.node, n: m.n, lines: m.lines }; return; }
     if (m.t === 'site') { this.site = m.site; return; }
+    if (m.t === 'biz') { this.biz = m.list; return; }
     if (m.t === 'heatGeom') { this.heatGeom = m.geom; this.heatGeomVersion = m.version; return; }
     if (m.t === 'heat') { this.heatRatio = m.ratio; this.heatDens = m.dens; this.heatAt = performance.now(); return; }
     if (m.t === 'disasters') { this.disasters = m.active; this.onDisasters?.(m.notes); return; }

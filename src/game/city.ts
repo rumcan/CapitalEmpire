@@ -24,6 +24,7 @@ import { Crowd, type FanCounts } from './event/crowd';
 import type { TollDef } from './event/toll';
 import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, siteAt, type Site } from './event/site';
+import { freshStats, type BizDef, type BizStats, type BizView } from './business/state';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 
@@ -124,6 +125,10 @@ export class City {
   centres: Pt[] = [];
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
+  /** the player's businesses (setBusinesses: the full list, with each one's stats; the stadium's level is the round's, see bizView) */
+  businesses: BizView[] = [];
+  /** each placed business's stats by id (kept across setBusinesses while it stands; restoreBiz fills them from a save) */
+  private bizStats = new Map<number, BizStats>();
   /** a new valley gets the game's stadium spot (suggested) as its site; the browser's worker sets this false, so the player places the stadium (setStadium) */
   autoStadium = true;
   /** the game's spot for the stadium on this valley (placeStadium; null without towns): the default site when autoStadium is on */
@@ -154,11 +159,12 @@ export class City {
   private planRnd = seededRnd(1); private planHour = -1; private pendingGrow = false; private growAt = -Infinity;
   /** the toll gates as the player placed them (setTolls' defs, the full list): their plazas are no-go ground for the town's roads (with towns) */
   private tollDefs: TollDef[] = [];
-  /** the no-go zones of the town's roads (with towns, see RoadPlanCtx.blocked): the stadium site padded by 6 tiles, a car park padded by 4, within
-   *  12 tiles of a toll plaza seg, within 6 tiles of a bus stop point */
+  /** the no-go zones of the town's roads (with towns, see RoadPlanCtx.blocked): the stadium site padded by 6 tiles, the other businesses padded by 2,
+   *  a car park padded by 4, within 12 tiles of a toll plaza seg, within 6 tiles of a bus stop point */
   private blocked = (x: number, y: number): boolean => {
     const s = this.site;
     if (s && x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) return true;
+    for (const b of this.businesses) if (b.type !== 'stadium' && x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true;
     for (const p of this.parkDefs) if (x > p.x - 4 && x < p.x + p.w + 4 && y > p.y - 4 && y < p.y + p.h + 4) return true;
     for (const d of this.tollDefs) if (segPointDist(x, y, d.ax, d.ay, d.bx, d.by) < 12) return true;
     for (const b of this.busPts) if (b && (Math.hypot(b.lot.x - x, b.lot.y - y) < 6 || Math.hypot(b.doors.x - x, b.doors.y - y) < 6)) return true;
@@ -197,13 +203,13 @@ export class City {
     this.sim.lotTrips.joined = (a, b) => this.joinedLots(a, b);
   }
 
-  /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), so the town never builds there */
+  /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), or another business (padded by 2 tiles), so the town never builds there */
   private reserved(l: Lot): boolean {
-    if (!this.site && !this.parkDefs.length) return false;
+    if (!this.site && !this.parkDefs.length && !this.businesses.length) return false;
     const ax = l.o.x + l.u.x * l.w, ay = l.o.y + l.u.y * l.w, bx = l.o.x + l.n.x * l.d, by = l.o.y + l.n.y * l.d, cx = ax + l.n.x * l.d, cy = ay + l.n.y * l.d;
     const x0 = Math.min(l.o.x, ax, bx, cx), x1 = Math.max(l.o.x, ax, bx, cx), y0 = Math.min(l.o.y, ay, by, cy), y1 = Math.max(l.o.y, ay, by, cy);
     const hit = (r: { x: number; y: number; w: number; h: number }) => x1 > r.x - 1 && x0 < r.x + r.w + 1 && y1 > r.y - 1 && y0 < r.y + r.h + 1;
-    return (!!this.site && hit(this.site)) || this.parkDefs.some(hit);
+    return (!!this.site && hit(this.site)) || this.parkDefs.some(hit) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 }));
   }
   /** the access per zone (256): the sim's live copy (the town reads its own copy, taken each game hour) */
   get access(): Float32Array { return this.sim.access; }
@@ -248,10 +254,35 @@ export class City {
     return this.upkeepC = r;
   }
 
-  /** places the stadium with its footprint at [x, y, w, h] tiles (siteAt), or takes it away (null); refused (false, nothing changes) while a round is under way */
+  /** the businesses as the player placed them (defs, the full list, each time): each keeps its stats by id (a new id gets fresh ones; a removed one's go),
+   *  and the stadium's site is siteAt of the stadium entry (null: none). While a round is under way the stadium does not change: the current one stays in
+   *  place of whatever defs say about it */
+  setBusinesses(defs: BizDef[]): void {
+    const cur = this.businesses.find(b => b.type === 'stadium'), locked = this.round.stage !== 'free';
+    const others = defs.filter(d => d.type !== 'stadium'), keep: BizDef[] = cur ? [{ id: cur.id, type: 'stadium', x: cur.x, y: cur.y, w: cur.w, h: cur.h }] : [];
+    const next: BizDef[] = locked ? [...keep, ...others] : defs;
+    const stats = new Map<number, BizStats>();
+    this.businesses = next.map(d => { const s = this.bizStats.get(d.id) ?? freshStats(d.id); stats.set(d.id, s); return { ...d, ...s }; });
+    this.bizStats = stats;
+    const st = this.businesses.find(b => b.type === 'stadium');
+    this.site = st ? siteAt(st.x, st.y, st.w, st.h) : null;
+  }
+  /** fills the stats of the placed businesses from a save (by id; after setBusinesses, see the townState message) */
+  restoreBiz(stats: BizStats[] = []): void {
+    for (const s of stats) this.bizStats.set(s.id, { ...s, today: { ...s.today } });
+    this.businesses = this.businesses.map(b => ({ ...b, ...(this.bizStats.get(b.id) ?? freshStats(b.id)) }));
+  }
+  /** the businesses as the UI and the frame see them: copies, the stadium's level being the round's */
+  bizView(): BizView[] {
+    return this.businesses.map(b => ({ ...b, ...this.bizStats.get(b.id)!, today: { ...this.bizStats.get(b.id)!.today }, ...(b.type === 'stadium' ? { level: this.round.level } : {}) }));
+  }
+  /** places the stadium with its footprint at [x, y, w, h] tiles (siteAt), or takes it away (null); refused (false, nothing changes) while a round is under way.
+   *  Its id is the stadium's own, else the next after the highest */
   setStadium(at: [number, number, number, number] | null): boolean {
     if (this.round.stage !== 'free') return false;
-    this.site = at ? siteAt(at[0], at[1], at[2], at[3]) : null; return true;
+    const old = this.businesses.find(b => b.type === 'stadium'), defs: BizDef[] = this.businesses.filter(b => b.type !== 'stadium').map(b => ({ id: b.id, type: b.type, x: b.x, y: b.y, w: b.w, h: b.h }));
+    if (at) defs.push({ id: old?.id ?? Math.max(0, ...this.businesses.map(b => b.id)) + 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] });
+    this.setBusinesses(defs); return true;
   }
   /** starts a round (free only, with a site): the crowd by town population (crowdFor at the round's level), and the clock frozen at the next
    *  EVENT_CLOCK (18:00 today, or tomorrow's if the clock is past it); false if there is no site or a round is under way */
