@@ -196,10 +196,15 @@ class Build {
     if (L < 1e-6 || !BY.has(id)) return;
     const h = boxOf(id, 1, false), span = ax ? h[2] - h[0] : h[3] - h[1];
     if (span <= 0) return;
-    const size = Math.min(2, L), s = size / span, count = Math.ceil(L / size - 1e-9);
+    const size = Math.min(2, L), s = size / span, count = Math.ceil(L / size - 1e-9), hs = boxOf(id, s, false);
+    // the panel's footprint lies wholly on the line's higher-coordinate side (a few cm: the board is 0.1 tiles thick): the painter (sprites.ts
+    // isBehind) then sorts the lot behind the line (a baked lot picture is one prop over its whole lot) before the fence, and the lot in front
+    // after it. A footprint straddling the line overlapped both lots and the lot behind could sort after it, painting its bushes and decals
+    // over the boards
+    const ox = ax ? 0 : (hs[2] - hs[0]) / 2 + 0.01, oy = ax ? (hs[3] - hs[1]) / 2 + 0.01 : 0;
     for (let i = 0; i < count; i++) {
       const start = Math.min(i * size, L - size), t = (start + size / 2) / L;
-      this.atW({ id, s, flip: false, h: boxOf(id, s, false) }, { x: p0.x + dx * t, y: p0.y + dy * t }, { boundary: true });
+      this.atW({ id, s, flip: false, h: hs }, { x: p0.x + dx * t + ox, y: p0.y + dy * t + oy }, { boundary: true });
     }
   }
   /** a fence on all four sides, inset by e: the front in kind f (with the gap, fractions of the width), the sides and back in kind k;

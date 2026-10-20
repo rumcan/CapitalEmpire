@@ -138,6 +138,17 @@ test('residential fence boundaries meet exactly in every orientation, with one o
   ];
   const state: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: 553 };
   const near = (a: number, b: number) => Math.abs(a - b) < 1e-7;
+  // a panel stands a few cm off its line (its footprint wholly on the line's higher world-coordinate side, see Build.boundaryRun)
+  const onLine = (a: number, b: number) => Math.abs(a - b) < 0.1;
+  /** every panel's footprint touches its line from the higher world-coordinate side, never straddling it (the painter then sorts the lot behind
+   *  the line before the fence: a straddling panel let that lot's bushes and decals paint over the boards) */
+  const offLine = (lot: Lot, panels: Placed[], axis: 'a' | 'b', v: number) => {
+    const dir = axis === 'a' ? lot.n : lot.u, P = axis === 'a' ? { x: lot.o.x + lot.u.x * v, y: lot.o.y + lot.u.y * v } : { x: lot.o.x + lot.n.x * v, y: lot.o.y + lot.n.y * v };
+    for (const p of panels) {
+      const f = fpOf(p), [lo, L] = Math.abs(dir.x) < 0.5 ? [f[0], P.x] : [f[1], P.y];
+      assert.ok(lo >= L - 1e-6 && lo - L < 0.05, `panel footprint ${JSON.stringify(f)} must start at its line ${L.toFixed(3)} on the higher side`);
+    }
+  };
   const fences = (lot: Lot, decline = 0) => compose(lot, { ...state, decline }).props.filter(p => isFence(p.id));
   const centre = (lot: Lot, p: Placed) => { const f = fpOf(p); return toLot(lot, (f[0] + f[2]) / 2, (f[1] + f[3]) / 2); };
   const covers = (lot: Lot, panels: Placed[], axis: 'a' | 'b', from: number, to: number) => {
@@ -155,7 +166,8 @@ test('residential fence boundaries meet exactly in every orientation, with one o
     const lot: Lot = { ...LOTS[0], ...frame, o: { x: 100, y: 100 }, w: 8, d: 15 };
     const ownSide = lot.u.x + lot.u.y > 0 ? 0 : lot.w;
     for (const decline of [0, 1, 2, 3]) {
-      const panels = fences(lot, decline), side = panels.filter(p => near(centre(lot, p).a, ownSide)), back = panels.filter(p => near(centre(lot, p).b, lot.d));
+      const panels = fences(lot, decline), side = panels.filter(p => onLine(centre(lot, p).a, ownSide)), back = panels.filter(p => onLine(centre(lot, p).b, lot.d));
+      offLine(lot, side, 'a', ownSide); offLine(lot, back, 'b', lot.d);
       assert.ok(panels.every(p => p.id === 'expansion:fence-privacy-x' || p.id === 'expansion:fence-privacy-y'), 'all residential boundaries stay wooden');
       assert.equal(panels.length, side.length + back.length, 'fence on an unowned line');
       covers(lot, side, 'b', 3.65, lot.d);
@@ -164,13 +176,13 @@ test('residential fence boundaries meet exactly in every orientation, with one o
     // An unbaked lot has drive/walk patches; those must not clip the shared boundary panels away.
     const fallback: Lot = { ...lot, w: 9 }, fallbackSide = lot.u.x + lot.u.y > 0 ? 0 : fallback.w;
     const fallbackPanels = fences(fallback);
-    covers(fallback, fallbackPanels.filter(p => near(centre(fallback, p).a, fallbackSide)), 'b', 3.65, fallback.d);
-    if (fallback.n.x + fallback.n.y > 0) covers(fallback, fallbackPanels.filter(p => near(centre(fallback, p).b, fallback.d)), 'a', 0, fallback.w);
+    covers(fallback, fallbackPanels.filter(p => onLine(centre(fallback, p).a, fallbackSide)), 'b', 3.65, fallback.d);
+    if (fallback.n.x + fallback.n.y > 0) covers(fallback, fallbackPanels.filter(p => onLine(centre(fallback, p).b, fallback.d)), 'a', 0, fallback.w);
     const neighbour: Lot = { ...lot, o: { x: lot.o.x + lot.u.x * lot.w, y: lot.o.y + lot.u.y * lot.w } };
-    const sharedSide = [...fences(lot), ...fences(neighbour)].filter(p => near(centre(lot, p).a, lot.w));
+    const sharedSide = [...fences(lot), ...fences(neighbour)].filter(p => onLine(centre(lot, p).a, lot.w));
     covers(lot, sharedSide, 'b', 3.65, lot.d);
     const behind: Lot = { ...lot, n: { x: -lot.n.x, y: -lot.n.y }, o: { x: lot.o.x + lot.n.x * lot.d * 2, y: lot.o.y + lot.n.y * lot.d * 2 } };
-    const sharedBack = [...fences(lot), ...fences(behind)].filter(p => near(centre(lot, p).b, lot.d));
+    const sharedBack = [...fences(lot), ...fences(behind)].filter(p => onLine(centre(lot, p).b, lot.d));
     covers(lot, sharedBack, 'a', 0, lot.w);
     const c = compose(lot, state), marks = c.ground.filter(g => g.tex === 'marks').flatMap(g => g.marks ?? []);
     const trees = c.props.filter(p => byId.get(p.id)?.kind === 'tree').map(p => p.id);
@@ -242,14 +254,14 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries; panels off their line)', () => {
   const CASES: [number, ComposeState, string][] = [
     [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '75138a2f'],
     [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '3e285176'],
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'df97a71b'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '1725d98f'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '4f6e1d92'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '5069c450'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'c13feb0e'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'edb5c879'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
