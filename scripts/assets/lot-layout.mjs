@@ -14,6 +14,7 @@
 import { LIB } from './lot-render.mjs';
 import { fromBranch } from './source.mjs';
 import { REMOVED } from './removed.mjs';
+import { SCALE_OVERRIDES } from './overrides.mjs';
 
 /** the owner's placement scales (places-v5 scales.json: the scale each sprite is drawn at on the Maple Falls map) */
 const SCALES = JSON.parse((await fromBranch('town/builder-in-repo', 'scripts/town-builder/places-v5/scales.json')).toString('utf8'));
@@ -118,7 +119,9 @@ const CAR_SCALE = 0.8;
 /** the side fences run from the back line to this far from the front edge on every lot, so neighbours' fences meet */
 const SIDE_FENCE_END = 7.3;
 /** the owner's scale for a sprite (a variation takes its original's), or 1 */
-export const ownerScale = id => { const it = LIB.get(id); const b = it ? baseOf(it) : id; return SCALES[id]?.scale ?? SCALES[b]?.scale ?? 1; };
+export const ownerScale = id => { const it = LIB.get(id); const b = it ? baseOf(it) : id; return SCALE_OVERRIDES[id] ?? SCALES[id]?.scale ?? SCALES[b]?.scale ?? 1; };
+/** the owner's map scale for a sprite, ignoring the studio's overrides */
+export const mapScale = id => { const it = LIB.get(id); const b = it ? baseOf(it) : id; return SCALES[id]?.scale ?? SCALES[b]?.scale ?? 1; };
 
 /** does a house fit a W x D lot at the owner's scale (with the deepest setback and room for a back yard) */
 export const fitsLot = (id, W, D) => { const s = ownerScale(id), [hx, hy] = half(id, s); return 2 * hx <= W - 0.8 && 2 * hy <= D - 7 - 9; };

@@ -1,116 +1,159 @@
-// The sprite review tool: every sprite the game has, as the game has it (cut from the atlas), with one button to remove it from
-// the game (and one to bring it back). Removals go to scripts/assets/removed.json, which every asset step skips; "Rebuild"
-// runs the asset steps again so the game drops them.
+// The sprite studio: the owner's screen for fixing the game's sprites.
+//   Library: every sprite as the game has it (cut from the atlas), beside a person for scale: remove it from the game, or make it
+//            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json)
+//   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
+//   People:  every townsperson's walk rows, animated: mirror any frame that faces the wrong way (walker-fixes.json)
+//   Rebuild: runs the asset steps again, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ROOT } from '../source.mjs';
+import { ROOT, TOT } from '../source.mjs';
 import { readRemoved, writeRemoved } from '../removed.mjs';
+import { readLotEdits, readScales, readWalkerFixes, writeLotEdits, writeScales, writeWalkerFixes } from '../overrides.mjs';
+import { LIB, drawOrder, rectOf, render } from '../lot-render.mjs';
+import { mapScale } from '../lot-layout.mjs';
+import { boundsOf, lotVariants } from '../lot-variants.mjs';
 
 const PORT = +(process.argv[process.argv.indexOf('--port') + 1] || 5179) || 5179;
 const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'output/review/thumbs');
 fs.mkdirSync(CACHE, { recursive: true });
+const LOT_RES = 0.45;
 
-/** the game's sprites from src/game/library.ts: library items, and one entry per townsperson (their first walking frame) */
-function sprites() {
+// ---------------------------------------------------------------- the game's sprites (src/game/library.ts)
+function library() {
   const src = fs.readFileSync(path.join(ROOT, 'src/game/library.ts'), 'utf8'), out = [];
-  for (const m of src.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex }); }
+  for (const m of src.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h }); }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
-  people.forEach((p, i) => { const o = ((i * 5 + 0) * 5 + 1) * 9; if (wf.length > o + 4) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5) }); });
+  people.forEach((p, i) => { const o = ((i * 5 + 0) * 5 + 0) * 9; if (wf.length > o + 4) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5), w: p.w, h: p.h }); });
   return out;
 }
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
-/** a thumbnail (PNG): cut from the atlas page, cached on disk so a removed sprite still shows after the rebuild */
+/** a sprite's picture as the game has it, cut from the atlas (cached on disk, so a removed sprite still shows after a rebuild) */
 async function thumb(id) {
   const f = path.join(CACHE, safe(id) + '.png');
   if (fs.existsSync(f)) return fs.readFileSync(f);
-  const s = sprites().find(x => x.id === id); if (!s) return null;
+  const s = library().find(x => x.id === id); if (!s?.tex) return null;
   const [p, u0, v0, u1, v1] = s.tex, page = path.join(ATLAS, `sprites-${p}-0.webp`), m = await sharp(page).metadata();
   const left = Math.round(u0 * m.width), top = Math.round(v0 * m.height), width = Math.max(1, Math.round((u1 - u0) * m.width)), height = Math.max(1, Math.round((v1 - v0) * m.height));
-  const png = await sharp(page).extract({ left, top, width, height }).resize(360, 300, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
+  const png = await sharp(page).extract({ left, top, width, height }).resize(480, 400, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
   fs.writeFileSync(f, png); return png;
 }
 
-let job = null;   // the running rebuild: { log, done, code }
+// ---------------------------------------------------------------- lots: the variants with the owner's edits, their pictures and hit boxes
+function lotState(id) {
+  const v = lotVariants().find(x => x.id === id); if (!v) return null;
+  const edits = readLotEdits()[id] ?? {};
+  // every raw placement with its edit applied (deleted ones left out), remembering its index (edits are keyed by it)
+  const items = v.raw.map((p, i) => { const e = edits[i]; if (e?.del) return null; return { ...p, idx: i, x: +(p.x + (e?.dx ?? 0)).toFixed(3), y: +(p.y + (e?.dy ?? 0)).toFixed(3), scale: e?.scale ?? p.scale, flip: e?.flip ?? p.flip, edited: !!e }; }).filter(Boolean);
+  const box = boundsOf(items, v.W, v.D);
+  return { v, items, box, edits };
+}
+const lotPics = new Map();
+async function lotPicture(id) {
+  const st = lotState(id); if (!st) return null;
+  const key = id + JSON.stringify(st.edits); if (lotPics.has(key)) return lotPics.get(key);
+  const png = await render(st.items, st.box, LOT_RES, { background: { r: 70, g: 82, b: 42, alpha: 1 } });
+  if (lotPics.size > 40) lotPics.clear(); lotPics.set(key, png); return png;
+}
+
+// ---------------------------------------------------------------- people: frames from the TrickOrTreat sheets with the fixes applied
+const PEOPLE_DIRS = ['S', 'SE', 'E', 'NE', 'N'];
+function people() {
+  const out = [];
+  for (const size of ['adult', 'kid']) {
+    const dir = path.join(TOT, 'art/people', size); if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) { const m = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); out.push({ id: m.id, sheet: path.join(dir, f.replace(/\.json$/, '.webp')), m }); }
+  }
+  return out;
+}
+async function frame(pid, d, k) {
+  const p = people().find(x => x.id === pid); if (!p) return null;
+  const { m } = p, op = readWalkerFixes()[pid]?.[d]?.[k];
+  let img = sharp(p.sheet).extract({ left: k * m.frameWidth, top: m.directions.indexOf(d) * m.frameHeight, width: m.frameWidth, height: m.frameHeight });
+  let buf = await img.png().toBuffer();
+  if (op === 'mirror') buf = await sharp(buf).flop().png().toBuffer();
+  return sharp(buf).resize(Math.round(m.frameWidth * 0.5), Math.round(m.frameHeight * 0.5)).png().toBuffer();
+}
+
+// ---------------------------------------------------------------- rebuild
+let job = null;
 function rebuild() {
   if (job && !job.done) return job;
   const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
-  job = { log: '', done: false, code: 0, step: '' };
+  job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
     if (i >= steps.length) { job.done = true; job.log += '\nAll done: reload the game.\n'; return; }
     job.step = steps[i]; job.log += `\n> node ${steps[i]}\n`;
-    const p = spawn(process.execPath, [steps[i]], { cwd: ROOT, env: process.env });
+    const p = spawn(process.execPath, [steps[i]], { cwd: ROOT, env: { ...process.env, TOT_REPO: TOT } });
     p.stdout.on('data', d => { job.log += d; }); p.stderr.on('data', d => { job.log += d; });
     p.on('close', code => { if (code) { job.done = true; job.code = code; job.log += `\nFailed (${code}).\n`; } else run(i + 1); });
   };
   run(0); return job;
 }
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sprite review</title>
-<style>
-:root{--bg:#16180f;--card:#22261a;--line:#3a4128;--ink:#e9e4d2;--dim:#9aa184;--red:#d0543a;--green:#6fa34a;--gold:#e0b04a}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.35 system-ui,sans-serif}
-header{position:sticky;top:0;z-index:2;background:#1d2014ee;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-h1{font-size:16px;margin:0 12px 0 0}input{background:#11130b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:6px 10px;min-width:200px}
-.chip{background:#11130b;border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:12px}.chip.on{color:var(--ink);border-color:var(--gold)}
-.btn{border:0;border-radius:6px;padding:7px 12px;font-weight:600;cursor:pointer}.rebuild{background:var(--gold);color:#1a1606}.rebuild:disabled{opacity:.5}
-#status{color:var(--dim);font-size:12px;white-space:pre-wrap;max-width:420px;max-height:3.6em;overflow:hidden}
-main{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
-.card.removed{opacity:.45;border-color:var(--red)}.img{height:170px;display:flex;align-items:center;justify-content:center;background:#2b3120}
-.img img{max-width:100%;max-height:100%;image-rendering:auto}.meta{padding:8px;flex:1}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
-.name{font-weight:600;margin-bottom:2px}.cat{font-size:11px;color:var(--gold)}.act{padding:0 8px 8px}
-.act button{width:100%}.rm{background:var(--red);color:#fff}.rs{background:var(--green);color:#fff}
-@media (max-width:600px){main{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));padding:16px}header{padding:10px 16px}}
-</style></head><body>
-<header><h1>Sprite review</h1><input id="q" placeholder="Search id or name"><span id="cats"></span>
-<span style="flex:1"></span><span id="count"></span><button class="btn rebuild" id="rb">Rebuild game sprites</button><div id="status"></div></header>
-<main id="grid"></main>
-<script>
-let all=[],removed={},cat='',q='';
-const el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);for(const c of k)e.append(c);return e};
-async function load(){const r=await (await fetch('/api/sprites')).json();all=r.sprites;removed=r.removed;cats();draw();}
-function cats(){const c=[...new Set(all.map(s=>s.cat))].sort(),box=document.getElementById('cats');box.innerHTML='';
- for(const k of ['',...c,'Removed']){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
-function draw(){const g=document.getElementById('grid');g.innerHTML='';let n=0;
- const list=all.filter(s=>(cat==='Removed'?removed[s.id]:!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));
- for(const s of list){n++;const off=!!removed[s.id];
-  const b=el('button',{className:'btn '+(off?'rs':'rm'),textContent:off?'Restore':'Remove from game'});
-  b.onclick=async()=>{const r=await (await fetch('/api/'+(off?'restore':'remove'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:s.id})})).json();removed=r.removed;draw();count();};
-  g.append(el('div',{className:'card'+(off?' removed':'')},el('div',{className:'img'},el('img',{src:'/thumb/'+encodeURIComponent(s.id),loading:'lazy',alt:s.name})),
-   el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id})),el('div',{className:'act'},b)));}
- count(n);}
-function count(n){document.getElementById('count').textContent=(n!=null?n+' shown · ':'')+Object.keys(removed).length+' removed';}
-document.getElementById('q').oninput=e=>{q=e.target.value.toLowerCase();draw();};
-document.getElementById('rb').onclick=async()=>{await fetch('/api/rebuild',{method:'POST'});poll();};
-async function poll(){const j=await (await fetch('/api/status')).json(),s=document.getElementById('status'),b=document.getElementById('rb');
- if(!j){s.textContent='';b.disabled=false;return;}b.disabled=!j.done;s.textContent=j.done?(j.code?'Rebuild failed: see the terminal':'Rebuilt: reload the game'):'Rebuilding: '+j.step+' …';if(!j.done)setTimeout(poll,2000);}
-load();poll();
-</script></body></html>`;
 
 const body = req => new Promise(res => { let s = ''; req.on('data', d => { s += d; }); req.on('end', () => { try { res(JSON.parse(s || '{}')); } catch { res({}); } }); });
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x'), json = o => { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
+  const png = b => { if (!b) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-cache' }); res.end(b); };
+  const P = url.pathname;
   try {
-    if (url.pathname === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(PAGE); }
-    if (url.pathname === '/api/sprites') {
-      const list = sprites(), have = new Set(list.map(s => s.id)), rm = readRemoved();
-      // removed sprites that are gone from the atlas after a rebuild still show (from the thumbnail cache)
-      for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null });
-      return json({ sprites: list, removed: rm });
+    if (P === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/studio.html'), 'utf8')); }
+    // library
+    if (P === '/api/sprites') {
+      const list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
+      for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100 });
+      for (const s of list) { s.base = s.kind === 'walker' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = sc[s.id] ?? s.base; delete s.tex; }
+      const ref = list.find(s => s.kind === 'walker');
+      return json({ sprites: list, removed: rm, ref: ref ? { id: ref.id, w: ref.w, h: ref.h } : null });
     }
-    if (url.pathname.startsWith('/thumb/')) { const png = await thumb(decodeURIComponent(url.pathname.slice(7))); if (!png) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'max-age=3600' }); return res.end(png); }
-    if (req.method === 'POST' && (url.pathname === '/api/remove' || url.pathname === '/api/restore')) {
-      const { id } = await body(req), rm = readRemoved(), s = sprites().find(x => x.id === id);
-      if (url.pathname === '/api/remove' && id) { await thumb(id).catch(() => null); rm[id] = { at: new Date().toISOString(), name: s?.name ?? rm[id]?.name, cat: s?.cat ?? rm[id]?.cat, kind: s?.kind ?? rm[id]?.kind }; }
+    if (P.startsWith('/thumb/')) return png(await thumb(decodeURIComponent(P.slice(7))));
+    if (req.method === 'POST' && (P === '/api/remove' || P === '/api/restore')) {
+      const { id } = await body(req), rm = readRemoved(), s = library().find(x => x.id === id);
+      if (P === '/api/remove' && id) { await thumb(id).catch(() => null); rm[id] = { at: new Date().toISOString(), name: s?.name ?? rm[id]?.name, cat: s?.cat ?? rm[id]?.cat, kind: s?.kind ?? rm[id]?.kind, w: s?.w, h: s?.h }; }
       else delete rm[id];
       writeRemoved(rm); return json({ removed: rm });
     }
-    if (req.method === 'POST' && url.pathname === '/api/rebuild') return json(rebuild());
-    if (url.pathname === '/api/status') return json(job);
+    if (req.method === 'POST' && P === '/api/scale') {
+      const { id, factor, reset } = await body(req), sc = readScales();
+      if (reset) delete sc[id]; else { const cur = sc[id] ?? mapScale(id); sc[id] = +(cur * factor).toFixed(3); }
+      writeScales(sc); return json({ id, scale: sc[id] ?? mapScale(id), base: mapScale(id) });
+    }
+    // lots
+    if (P === '/api/lots') return json(lotVariants().map(v => ({ id: v.id, name: v.name, edits: Object.keys(readLotEdits()[v.id] ?? {}).length })));
+    if (P.startsWith('/lot/')) return png(await lotPicture(decodeURIComponent(P.slice(5)).replace(/\.png$/, '')));
+    if (P.startsWith('/api/lot/')) {
+      const st = lotState(decodeURIComponent(P.slice(9))); if (!st) return json(null);
+      const order = drawOrder(st.items).map(({ s, it }) => { const [l, t, w, h] = rectOf(s, it); return { idx: s.idx, id: s.id, name: it.name, flat: !!it.flat, x: s.x, y: s.y, scale: s.scale, flip: s.flip, edited: s.edited, r: [(l - st.box[0]) * LOT_RES, (t - st.box[1]) * LOT_RES, w * LOT_RES, h * LOT_RES] }; });
+      return json({ id: st.v.id, name: st.v.name, w: Math.round((st.box[2] - st.box[0]) * LOT_RES), h: Math.round((st.box[3] - st.box[1]) * LOT_RES), items: order });
+    }
+    if (req.method === 'POST' && P === '/api/lot-edit') {
+      const { lot, idx, op } = await body(req), all = readLotEdits(), e = (all[lot] ??= {}), cur = e[idx] ?? {}, v = lotVariants().find(x => x.id === lot), raw = v?.raw[idx];
+      if (!raw) return json({ ok: false });
+      const step = 0.25, scale = cur.scale ?? raw.scale;
+      if (op === 'x+') cur.dx = +((cur.dx ?? 0) + step).toFixed(2); if (op === 'x-') cur.dx = +((cur.dx ?? 0) - step).toFixed(2);
+      if (op === 'y+') cur.dy = +((cur.dy ?? 0) + step).toFixed(2); if (op === 'y-') cur.dy = +((cur.dy ?? 0) - step).toFixed(2);
+      if (op === 'bigger') cur.scale = +(scale * 1.08).toFixed(3); if (op === 'smaller') cur.scale = +(scale / 1.08).toFixed(3);
+      if (op === 'flip') cur.flip = !(cur.flip ?? raw.flip);
+      if (op === 'delete') cur.del = true;
+      if (op === 'reset') delete e[idx]; else e[idx] = cur;
+      if (!Object.keys(e).length) delete all[lot];
+      writeLotEdits(all); return json({ ok: true });
+    }
+    // people
+    if (P === '/api/people') { const fx = readWalkerFixes(); return json(people().map(p => ({ id: p.id, dirs: PEOPLE_DIRS, fixes: fx[p.id] ?? {} }))); }
+    if (P.startsWith('/frame/')) { const [pid, d, k] = decodeURIComponent(P.slice(7)).split('|'); return png(await frame(pid, d, +k)); }
+    if (req.method === 'POST' && P === '/api/walker-fix') {
+      const { id, dir, frame: k } = await body(req), fx = readWalkerFixes(), row = ((fx[id] ??= {})[dir] ??= {});
+      if (row[k] === 'mirror') delete row[k]; else row[k] = 'mirror';
+      if (!Object.keys(row).length) delete fx[id][dir]; if (!Object.keys(fx[id]).length) delete fx[id];
+      writeWalkerFixes(fx); return json({ fixes: fx[id] ?? {} });
+    }
+    if (req.method === 'POST' && P === '/api/rebuild') return json(rebuild());
+    if (P === '/api/status') return json(job && { ...job, log: job.log.slice(-600) });
     res.writeHead(404); res.end();
-  } catch (e) { res.writeHead(500); res.end(String(e)); }
-}).listen(PORT, '127.0.0.1', () => console.log(`sprite review: http://127.0.0.1:${PORT}/`));
+  } catch (e) { res.writeHead(500); res.end(String(e.stack || e)); }
+}).listen(PORT, '127.0.0.1', () => console.log(`sprite studio: http://127.0.0.1:${PORT}/`));

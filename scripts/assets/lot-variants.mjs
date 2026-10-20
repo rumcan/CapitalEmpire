@@ -8,6 +8,7 @@ import sharp from 'sharp';
 import { LIB, render, toScreen } from './lot-render.mjs';
 import { CARS, HOUSES, REARS, fitsLot, layoutLot, ownerScale } from './lot-layout.mjs';
 import { ROOT } from './source.mjs';
+import { applyLotEdits } from './overrides.mjs';
 
 /** the lot sizes the town makes (tiles: w along the street x d deep; 2 m per tile) and how many variants each gets */
 export const LOT_SIZES = [{ w: 8, d: 15, front: 10, rear: 6 }];
@@ -38,7 +39,8 @@ export function lotVariants() {
       for (let i = 0; i < n; i++) {
         const story = stories[i % stories.length], seed = 1000 * sz.w + 100 * (rear ? 1 : 0) + i + 1;
         const l = layoutLot({ W, D, rear, story, seed, house: story === 'neglected' && !rear ? undefined : houses[i % houses.length], car: cars[i % cars.length] });
-        out.push({ id: `lot:${sz.w}x${sz.d}-${rear ? 'rear' : 'front'}-${i}`, name: `House lot ${sz.w}x${sz.d} ${rear ? 'rear' : 'front'} ${i + 1} (${story})`, W, D, rear, story, items: l.items, house: l.house });
+        const id = `lot:${sz.w}x${sz.d}-${rear ? 'rear' : 'front'}-${i}`, items = applyLotEdits(id, l.items);
+        out.push({ id, name: `House lot ${sz.w}x${sz.d} ${rear ? 'rear' : 'front'} ${i + 1} (${story})`, W, D, rear, story, items, raw: l.items, house: items.find(p => p.id === l.house.id && Math.abs(p.x - l.house.x) < 3) ?? l.house });
       }
     }
   }

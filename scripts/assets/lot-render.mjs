@@ -23,6 +23,17 @@ async function img(file, w, h, flip) {
 /** the back-to-front key of an upright: the screen y of its footprint's front corner (its anchor plus half its footprint) */
 const depth = (s, it) => { const k = s.scale ?? 1, hx = (s.flip ? it.fh : it.fw) * k / 2, hy = (s.flip ? it.fw : it.fh) * k / 2; return s.x + s.y + hx + hy + (s.z ?? 0) * 0.001; };
 
+/** the placements in drawing order (flats by z then screen y, then the uprights back to front), each with its library item */
+export function drawOrder(placements) {
+  const flats = [], ups = [];
+  placements.forEach((s, i) => { const it = LIB.get(s.id); if (!it || !fs.existsSync(path.join(LIB_DIR, it.file))) return; (it.flat ? flats : ups).push({ s, it, i }); });
+  flats.sort((a, b) => (a.s.z ?? 0) - (b.s.z ?? 0) || (a.s.x + a.s.y) - (b.s.x + b.s.y));
+  ups.sort((a, b) => depth(a.s, a.it) - depth(b.s, b.it));
+  return [...flats, ...ups];
+}
+/** a placement's picture rectangle in native screen px: [left, top, width, height] */
+export function rectOf(s, it) { const k = s.scale ?? 1, [mx, my] = toScreen(s.x, s.y); return [s.flip ? mx - (it.w - it.ax) * k : mx - it.ax * k, my - it.ay * k, it.w * k, it.h * k]; }
+
 /**
  * Render placements { id, x, y, flip, scale, z? } (metres) at `res` px per native px.
  * `box` = [sx0, sy0, sx1, sy1] in native screen px (the picture's extent); `ground` (optional) = a function(ctx) returning

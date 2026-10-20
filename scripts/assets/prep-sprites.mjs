@@ -15,6 +15,7 @@ import sharp from 'sharp';
 import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
 import { bakeVariant, lotVariants } from './lot-variants.mjs';
 import { REMOVED } from './removed.mjs';
+import { SCALE_OVERRIDES } from './overrides.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
 const OUT = path.join(ROOT, 'src/assets/atlas');
@@ -28,7 +29,7 @@ for (const [id, it] of Object.entries(fromLib)) items[id] = it;
 // read from its source (prep-scales.mjs then writes it into scales.ts for the ids packed here), so the run order does not matter
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const SCALES = JSON.parse((await fromBranch('town/builder-in-repo', 'scripts/town-builder/places-v5/scales.json')).toString('utf8'));
-const OWNER = Object.fromEntries(Object.entries(SCALES).filter(([, v]) => typeof v?.scale === 'number').map(([k, v]) => [k, v.scale]));
+const OWNER = { ...Object.fromEntries(Object.entries(SCALES).filter(([, v]) => typeof v?.scale === 'number').map(([k, v]) => [k, v.scale])), ...SCALE_OVERRIDES };
 const FOREST = new Set([...read('src/game/forest.ts').matchAll(/'([a-z]+:[^']+)'/g)].map(m => m[1]));
 const maxScale = id => Math.max(1, (OWNER[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5 : 0);
 // every item of one export category (the Lot Composer kit takes whole categories)
