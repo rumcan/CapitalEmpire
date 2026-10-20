@@ -804,7 +804,7 @@ function BusinessPanel({ game }: { game: Game }) {
 }
 
 /** one type's card in the business panel: its name, cost, footprint (tiles, the most you may own) and blurb; each placed one as a row (level, satisfaction,
- *  revenue; Go to, Demolish: the stadium's only between rounds; a visit type's day so far below it); a Build button when it is open and under its most (it becomes the type in hand, the card
+ *  revenue; Go to, Demolish: the stadium's only between rounds; a visit or fleet type's day so far below it); a Build button when it is open and under its most (it becomes the type in hand, the card
  *  highlighted); greyed, with its unlock, while it is not open */
 function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean }) {
   const open = game.bizOpen(b.id), placed = game.bizDefs.filter(d => d.type === b.id), under = placed.length < b.max, sel = game.bizType === b.id;
@@ -823,6 +823,7 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
                 <button className="btn" disabled={b.id === 'stadium' && !free} onClick={() => game.demolishBusiness(d.id)}>Demolish (+{money(b.buildCost / 2)})</button></div>
             </div>
             {b.kind === 'visit' && <div className="text-slate-400">{`Today: ${v.today.visitors} cars (${v.today.late} late, ${v.today.missed} missed) · ${money(v.today.revenue)} · ${v.goodDays} good days`}</div>}
+            {b.kind === 'fleet' && <div className="text-slate-400">{`Today: ${v.today.visitors} ${b.id === 'taxi' ? 'rides' : 'riders'} · ${money(v.today.revenue)} · ${v.goodDays} good ${b.id === 'taxi' ? 'days' : 'rounds'}`}</div>}
           </div>
         );
       })}

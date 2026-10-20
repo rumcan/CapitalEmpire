@@ -30,6 +30,7 @@ import { BUSINESS, GOOD_SAT, levelFromXp, satisfactionAfter } from './business/c
 import { driveway } from './sim/trips';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
+import { Taxis, type Order, type Rank } from './ext/taxi';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -43,11 +44,27 @@ const NO_MILESTONES: Milestone[] = [];
 const WATER_N = MAP >> 2, WATER_CAP = 200;
 /** a sink's s is kept this far from its lane's ends, m (as driveway's DRIVE_END), and the dev car park test sends cars at least this far, tiles, where it can */
 const SINK_END = 3, PARK_TEST_M = 300;
+/** the shuttle riders a round needs for the bus company's good day */
+const BUS_GOOD_RIDERS = 100;
 /** a shuttle route's buses are spawned this many m apart back along the kerb lane from the lot stop; its stops must be within BUS_REACH tiles of the
  *  player's points, and kept BUS_END m clear of the lane's ends */
 const BUS_GAP = 15, BUS_REACH = 4, BUS_END = 3;
 /** the visit businesses' own random stream (business/visits.ts), never the sim's */
 const VISIT_SEED = 104729;
+/** the taxi company's random stream (its requests), never the sim's */
+const TAXI_SEED = 7121;
+/** the taxis in the company's fleet */
+const TAXI_FLEET = 6;
+/** the taxi requests a game day per 1000 residents */
+const TAXI_RATE = 10;
+/** the sim seconds a party waits for a taxi before it gives up (ext/taxi maxWait) */
+const TAXI_WAIT = 180;
+/** the dispatcher's straight-line speed guess, m/s (its travel times; the cars drive their own routes) */
+const TAXI_V = 10;
+/** the reach, tiles, of a rank's or a request's kerb: the road within this far of the door or the point */
+const TAXI_REACH = 8;
+/** the rides in a game day that make a taxi company's good day */
+const TAXI_GOOD = 10;
 
 /** the distance (tiles, capped) to the nearest WATER on the 4-tile cells (a cell is wet if one of its tiles is): a two-pass chamfer, in tiles */
 function waterField(terr: Uint8Array): Float32Array {
@@ -136,6 +153,15 @@ export class City {
   private bizStats = new Map<number, BizStats>();
   /** the visit businesses' cars (business/visits.ts) and their random stream; the game day planned last (-1: none) */
   visits = new Visits(); private visitRnd = seededRnd(VISIT_SEED); private visitDay = -1;
+  /** the taxi company's dispatcher (ext/taxi; null: no taxi company with a kerb at its door) and its cars: each taxi's position (tiles), the order it is
+   *  driving (or waiting to spawn), its car's slot (-1 none), the taxis that reached their targets since the last dispatch step, the day's requests not
+   *  yet posted (by time), the key of its ranks, the day planned (-1 none), the request ids, the random stream, the dispatcher's totals booked so far and
+   *  the rides booked so far */
+  taxis: Taxis | null = null;
+  private taxiAt: Pt[] = []; private taxiOrd: (Order | null)[] = []; private taxiCar: number[] = []; private taxiReached: number[] = [];
+  private taxiDue: { t: number; from: Pt; to: Pt; people: number }[] = [];
+  private taxiKey = ''; private taxiDay = -1; private taxiReq = 1; private taxiRnd = seededRnd(TAXI_SEED);
+  private taxiMoney = { rev: 0, cost: 0 }; private taxiServed = 0;
   /** scratch points for the doors and the trip lookups */
   private doorQ = { x: 0, y: 0, hx: 0, hy: 0 };
   /** a new valley gets the game's stadium spot (suggested) as its site; the browser's worker sets this false, so the player places the stadium (setStadium) */
@@ -279,6 +305,7 @@ export class City {
     for (const id of old) if (!stats.has(id)) this.visits.drop(id);
     this.visits.onGraph(this.visitDoors());
     if (this.round.stage === 'free') this.planVisits(); else this.visitDay = -1;
+    this.setupTaxis();
   }
   /** fills the stats of the placed businesses from a save (by id; after setBusinesses, see the townState message) */
   restoreBiz(stats: BizStats[] = []): void {
@@ -318,7 +345,9 @@ export class City {
   /** the build's wall-clock time (dt s): when it is done the surge begins */
   wall(dt: number): void { if (this.round.wall(dt)) this.beginSurge(); }
   /** the surge's clock starts (see Round.beginSurge; idempotent with the round's own start) */
-  private beginSurge(): void { this.round.beginSurge(); this.surge = this.planSurge(); this.startBuses(); }
+  private beginSurge(): void { this.round.beginSurge(); this.surge = this.planSurge(); this.startBuses(); this.busRiders = 0; }
+  /** the shuttle riders of the round so far (the bus company's good day: BUS_GOOD_RIDERS or more) */
+  private busRiders = 0;
   /** closes the eval: the round is free again and the clock runs on from where it was frozen. A perfect run's towns grow (growTowns; see grown).
    *  False unless in eval, and while the draft is open (see Round.close) */
   closeRound(): boolean {
@@ -362,7 +391,10 @@ export class City {
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null; this.resetVisits();
   }
   /** the visit cars start again (a new book or valley: the plans are not saved; the day's plan is made again at the next step) */
-  private resetVisits(): void { this.visits.endDay(); this.visitDay = -1; }
+  private resetVisits(): void {
+    this.visits.endDay(); this.visitDay = -1;
+    this.taxis = null; this.taxiDue = []; this.setupTaxis();
+  }
 
   /** the dev sandbox's options: the growth speed k (the town's Town.speed, and the planner's slots and window) and unlimited money (every budget); the defaults are the game's */
   setGrowth(k: number): void { this.growSpeed = k; this.town.speed = k; }
@@ -431,7 +463,7 @@ export class City {
     if (part.length) applyOps(this.net, part);
     this.labelComps();
     if (this.busDefs.length) this.resolveBuses();
-    this.sim.onGraph(); this.upkeepC = null; this.visits.onGraph(this.visitDoors());
+    this.sim.onGraph(); this.upkeepC = null; this.visits.onGraph(this.visitDoors()); this.setupTaxis();
     // the closure blocks follow the lanes: the new graph's lanes of the closed segs get them (the old ids' are lifted there)
     if (rebuilt && this.closed.size) this.applyClosures();
     // the car parks are built again on the new network (a frontage road split or replaced by the edit leaves the old build on a dead seg;
@@ -510,10 +542,12 @@ export class City {
     this.drainParty();
     this.drainBus();
     this.drainVisits();
+    this.drainTaxis();
     // the visit businesses' cars: planned once a day (and once a business is placed), spawned while no round is under way
     if (rs === 'free') {
       if (this.visitDay < 0) this.planVisits();
       this.visits.step(this.sim, this.g, this.sim.clock);
+      this.stepTaxis();
     }
     if (this.crowd) { this.crowd.step(WALK_V * n * DT / MPT); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
@@ -777,7 +811,7 @@ export class City {
     this.tollDefs = defs.slice();
     if (!this.g.setTolls(defs, this.net)) return;
     if (this.busDefs.length) this.resolveBuses();
-    this.sim.onGraph(); this.upkeepC = null; this.visits.onGraph(this.visitDoors());
+    this.sim.onGraph(); this.upkeepC = null; this.visits.onGraph(this.visitDoors()); this.setupTaxis();
     if (this.closed.size) this.applyClosures();
     if (this.parks.length) this.resolveSinks();
     if (this.surge) { this.surge.relink(this.surgeParks()); this.surge.onGraph(); }
@@ -877,6 +911,9 @@ export class City {
       s.revenue += tk; s.visitors += arrived; s.xp += arrived; s.today.visitors += arrived; s.today.revenue += tk;
       s.sat = Math.min(1, Math.max(0, s.sat + 0.3 * (L.rate - s.sat))); if (L.perfect) s.goodDays++;
     }
+    // the bus company: a round whose shuttles carried BUS_GOOD_RIDERS or more is a good day
+    const bc = this.businesses.find(b => b.type === 'buscompany'), bs = bc ? this.bizStats.get(bc.id) : undefined;
+    if (bs && this.busRiders >= BUS_GOOD_RIDERS) bs.goodDays++;
     L.stuck = this.report(5).top.map(i => ({ label: i.label, x: i.x, y: i.y, loss: i.loss }));
     this.budget.payout(L.payout);
   }
@@ -975,11 +1012,19 @@ export class City {
     const ev = this.sim.busEv, C = this.crowd;
     if (C) for (let k = 0; k < ev.length; k += 4) {
       const slot = ev[k]!, r = ev[k + 1]!, kind = ev[k + 2]!, n = ev[k + 3]!;
-      if (kind === 0) C.board(r, slot, n);
+      if (kind === 0) { C.board(r, slot, n); this.busFares(n); }
       else if (kind === 1) { for (let j = 0; j < n; j++) { const t = C.unloadOne(slot); if (t >= 0) this.walkDoor(t, this.busPts[r]?.doors ?? null, 1, -1); } }
       else C.requeue(r, slot);
     }
     ev.length = 0;
+  }
+  /** n fans boarded a shuttle: with a bus company, each pays its fare (booked as business takings, the company's visitors and revenue) */
+  private busFares(n: number): void {
+    this.busRiders += n;
+    const b = this.businesses.find(x => x.type === 'buscompany'), s = b ? this.bizStats.get(b.id) : undefined;
+    if (!s) return;
+    const r = n * BUSINESS.buscompany.pricePerVisitor;
+    s.revenue += r; s.today.revenue += r; s.visitors += n; s.today.visitors += n; s.xp += n; this.budget.bizIncome(r);
   }
   /** a party car of park k parked at its bay (an index into busPts' park list): its PARTY fans walk from the bay to the lot stop of the route of this
    *  car park with the shortest queue, or else to the nearest door */
@@ -1192,8 +1237,155 @@ export class City {
         s.sat = satisfactionAfter(s.sat, c.onTime, c.late, c.missed); s.xp += c.onTime; s.level = levelFromXp(s.xp);
         if (s.sat >= GOOD_SAT && c.onTime + c.late > 0) s.goodDays++;
       }
+      // a taxi company's good day: enough rides today (its rides are booked as they are made, see bookTaxis)
+      if (b.type === 'taxi' && s.today.visitors >= TAXI_GOOD) s.goodDays++;
       s.today = { visitors: 0, late: 0, missed: 0, revenue: 0 };
     }
+  }
+
+  /** the kerb of a point e (tiles): the outermost LINK lane of the road within reach tiles of e whose centre line is nearest e (as busStopAt, with the reach
+   *  given), and e's projection on it, kept BUS_END m clear of its ends: its lane, its dseg, its s (m) and its point (tiles). Null if no road is that near */
+  private kerbAt(e: Pt, reach: number): { lane: number; dseg: number; s: number; pt: Pt } | null {
+    const near = new Set(this.net.segsNear(e, reach));
+    let best: { dseg: number; lane: number; s: number; d: number; ln: Lane } | null = null;
+    for (const d of this.g.dsegs) {
+      if (!d || !d.lanes.length || !near.has(d.seg)) continue;
+      const lane = d.lanes[d.lanes.length - 1]!, ln = this.g.lanes[lane];
+      if (!ln || ln.kind !== LK.LINK || ln.len < 2 * BUS_END) continue;
+      const n = ln.pts.length, p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, p1 = { x: ln.pts[n - 2]!, y: ln.pts[n - 1]! };
+      const dist = pointSeg(e, p0, p1);
+      if (dist > reach || (best && dist >= best.d)) continue;
+      const u = norm(sub(p1, p0));
+      best = { dseg: d.id, lane, s: Math.min(ln.len - BUS_END, Math.max(BUS_END, dot(sub(e, p0), u) * MPT)), d: dist, ln };
+    }
+    if (!best) return null;
+    laneAt(best.ln, best.s, this.stopPt);
+    return { lane: best.lane, dseg: best.dseg, s: best.s, pt: { x: this.stopPt.x, y: this.stopPt.y } };
+  }
+  /** the kerb of a business's door: the door of its footprint (siteAt) nearest its kerb (kerbAt, within TAXI_REACH), as that kerb; null if no door has one */
+  private doorKerb(b: { x: number; y: number; w: number; h: number }): { lane: number; dseg: number; s: number; pt: Pt } | null {
+    let best: { lane: number; dseg: number; s: number; pt: Pt } | null = null, bd = Infinity;
+    for (const p of siteAt(b.x, b.y, b.w, b.h).doors) {
+      const k = this.kerbAt(p, TAXI_REACH); if (!k) continue;
+      const d = Math.hypot(k.pt.x - p.x, k.pt.y - p.y);
+      if (d < bd) { bd = d; best = k; }
+    }
+    return best;
+  }
+  /** the taxi company's dispatcher: its ranks are the company's door kerb (TAXI_FLEET taxis) and the stadium's door kerb (2 taxis, if a stadium stands).
+   *  Set up when the company has a kerb (rebuilt when the ranks move: taxiKey), else dropped with its cars. Called after each change of the businesses, the
+   *  roads and the tolls. A rebuilt dispatcher takes its cars off the road; the taxis start at their ranks, round-robin as Taxis places them */
+  private setupTaxis(): void {
+    const co = this.businesses.find(b => b.type === 'taxi'), ranks: Rank[] = [];
+    const door = co ? this.doorKerb(co) : null;
+    if (door) {
+      ranks.push({ id: 0, at: door.pt, capacity: TAXI_FLEET });
+      const st = this.businesses.find(b => b.type === 'stadium'), kerb = st ? this.doorKerb(st) : null;
+      if (kerb) ranks.push({ id: 1, at: kerb.pt, capacity: 2 });
+    }
+    const key = ranks.map(r => `${r.at.x.toFixed(2)},${r.at.y.toFixed(2)}`).join(';');
+    if (this.taxis && key === this.taxiKey) return;
+    this.bookTaxis();
+    this.sim.dropTaxis(); this.sim.taxiOut.length = 0;
+    this.taxis = null; this.taxiDue = []; this.taxiKey = key;
+    if (!ranks.length) return;
+    this.taxis = new Taxis(TAXI_SEED, ranks, TAXI_FLEET, (a, b) => Math.hypot(a.x - b.x, a.y - b.y) * MPT / TAXI_V);
+    this.taxiAt = []; this.taxiOrd = []; this.taxiCar = []; this.taxiReached = [];
+    for (let i = 0; i < TAXI_FLEET; i++) { this.taxiAt.push({ ...ranks[i % ranks.length]!.at }); this.taxiOrd.push(null); this.taxiCar.push(-1); }
+    this.taxiMoney = { rev: 0, cost: 0 }; this.taxiServed = 0; this.taxiDay = -1;
+  }
+  /** books the dispatcher's totals since the last booking: the fares into the treasury (and the company's revenue and today's), the driver and fuel costs
+   *  as the upkeep, and the rides served as the company's visitors (and xp) */
+  private bookTaxis(): void {
+    const T = this.taxis; if (!T) return;
+    const st = T.stats(), dRev = st.revenue - this.taxiMoney.rev, dCost = st.costs - this.taxiMoney.cost, dServed = st.served - this.taxiServed;
+    this.taxiMoney = { rev: st.revenue, cost: st.costs }; this.taxiServed = st.served;
+    const co = this.businesses.find(b => b.type === 'taxi'), s = co ? this.bizStats.get(co.id) : undefined;
+    if (dRev > 0) { this.budget.bizIncome(dRev); if (s) { s.revenue += dRev; s.today.revenue += dRev; } }
+    if (dCost > 0) this.budget.upkeepLive(dCost);
+    if (s && dServed > 0) { s.visitors += dServed; s.today.visitors += dServed; s.xp += dServed; }
+  }
+  /** the day's taxi requests (once a game day, with the taxis): n = round(TAXI_RATE / 1000 * residents) parties, each from a built home (by population) to
+   *  a visit business's door (half of them, when one has a door) or else to a home of another town (by population); its time uniform in the hours 7 to 24
+   *  of the day (none before now) and its party 1 to 3; only homes and doors on the road network of the company's rank. A home's point is its driveway's (as the visit cars leave from there: a lot's centre is too far from
+   *  the road for a kerb, TAXI_REACH). Sorted by time into taxiDue */
+  private planTaxis(): void {
+    this.taxiDay = this.budget.dayOf(this.sim.clock);
+    this.taxiDue = [];
+    // only rides the taxis can drive: homes and doors on the road network of the company's rank (towns start unjoined)
+    const co = this.businesses.find(b => b.type === 'taxi'), rk = co ? this.doorKerb(co) : null, rc = rk ? this.compOf(this.g.dsegs[rk.dseg]!.seg) : -2;
+    const homes: { town: number; pop: number; at: Pt }[] = [], q = this.doorQ;
+    for (const b of builtLots(this.town, this.lots)) {
+      if (b.use !== LU.RES || !(b.pop > 0)) continue;
+      const dr = driveway(b.lot, this.g); if (!dr || this.compOf(this.g.dsegs[this.g.lanes[dr.lane]!.dseg]!.seg) !== rc) continue;
+      laneAt(this.g.lanes[dr.lane]!, dr.s, q);
+      homes.push({ town: this.town.townOf(b.lot.key), pop: b.pop, at: { x: q.x, y: q.y } });
+    }
+    if (!homes.length) return;
+    const doors: Pt[] = [];
+    for (const b of this.businesses) {
+      if (BUSINESS[b.type].kind !== 'visit') continue;
+      const d = this.bizDoor(b); if (!d || this.compOf(this.g.dsegs[d.dseg]!.seg) !== rc) continue;
+      const dd = this.g.dsegs[d.dseg]!;
+      laneAt(this.g.lanes[dd.lanes[dd.lanes.length - 1]!]!, d.s, q);
+      doors.push({ x: q.x, y: q.y });
+    }
+    // a home by population (of the list given)
+    const pick = <H extends { pop: number }>(list: H[]): H => {
+      let tot = 0; for (const h of list) tot += h.pop;
+      let x = this.taxiRnd() * tot;
+      for (const h of list) { x -= h.pop; if (x < 0) return h; }
+      return list[list.length - 1]!;
+    };
+    const dayStart = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
+    const n = Math.round(TAXI_RATE / 1000 * this.town.pop), due: { t: number; from: Pt; to: Pt; people: number }[] = [];
+    for (let i = 0; i < n; i++) {
+      const from = pick(homes);
+      let to: Pt;
+      if (doors.length && this.taxiRnd() < 0.5) to = doors[Math.floor(this.taxiRnd() * doors.length)]!;
+      else { const others = homes.filter(h => h.town !== from.town); to = pick(others.length ? others : homes).at; }
+      const t = dayStart + (7 + this.taxiRnd() * 17) * 60, people = 1 + Math.floor(this.taxiRnd() * 3);
+      if (t < this.sim.clock) continue;
+      due.push({ t, from: from.at, to, people });
+    }
+    due.sort((a, b) => a.t - b.t);
+    this.taxiDue = due;
+  }
+  /** the taxi company's step (the round free, after the visits): the day's requests are planned, the due ones posted, the dispatcher steps on the taxis that
+   *  reached their targets, its totals are booked, and each taxi with a new order drives it as a car */
+  private stepTaxis(): void {
+    const T = this.taxis; if (!T) return;
+    if (this.taxiDay < this.budget.dayOf(this.sim.clock)) this.planTaxis();
+    while (this.taxiDue.length && this.taxiDue[0]!.t <= this.sim.clock) {
+      const d = this.taxiDue.shift()!;
+      T.request({ id: this.taxiReq++, from: d.from, to: d.to, people: d.people, t: this.sim.t, maxWait: TAXI_WAIT });
+    }
+    const reached = this.taxiReached; this.taxiReached = [];
+    for (const o of T.step(this.sim.t, reached)) this.taxiOrd[o.taxi] = o;
+    this.bookTaxis();
+    for (let i = 0; i < TAXI_FLEET; i++) if (this.taxiOrd[i] && this.taxiCar[i]! < 0) this.driveTaxi(i);
+  }
+  /** drives taxi i's order as a car: spawned at its kerb (taxiAt) bound for the order's kerb (kerbAt). A taxi with no kerb at either end, or whose destination
+   *  is on its own dseg just behind it, is there at once (reached at the next dispatch step). A car with no room on the kerb waits for the next step; a car
+   *  lost at once was logged by the sim in taxiOut (drainTaxis reaches the taxi) */
+  private driveTaxi(i: number): void {
+    const o = this.taxiOrd[i]!, from = this.kerbAt(this.taxiAt[i]!, TAXI_REACH), to = this.kerbAt(o.to, TAXI_REACH);
+    if (!from || !to || (from.dseg === to.dseg && to.s <= from.s + 5)) {
+      this.taxiAt[i] = { x: o.to.x, y: o.to.y }; this.taxiOrd[i] = null; this.taxiReached.push(i); return;
+    }
+    const slot = this.sim.spawnAt(from.lane, from.s, to.dseg, to.s, 0, -1, -1, -1, i);
+    if (slot >= 0) this.taxiCar[i] = slot;
+  }
+  /** the taxi cars that left the sim (Sim.taxiOut, cleared): a taxi whose car arrived or was lost is at its order's point, its order done, and it is reached
+   *  at the next dispatch step. Discarded with no taxis */
+  private drainTaxis(): void {
+    const to = this.sim.taxiOut;
+    if (this.taxis) for (let k = 0; k < to.length; k += 2) {
+      const i = to[k]!, o = this.taxiOrd[i];
+      if (!o) continue;
+      this.taxiAt[i] = { x: o.to.x, y: o.to.y }; this.taxiOrd[i] = null; this.taxiCar[i] = -1; this.taxiReached.push(i);
+    }
+    to.length = 0;
   }
 
   /** the town lays a gravel extension when it is short of land: at most once per game hour, and not while the last one is out
