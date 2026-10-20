@@ -196,3 +196,18 @@ test('a roundabout grown to 3 ring lanes: no lot reaches into its circle (its ed
     assert.deepEqual(fingerprint(lm), fingerprint(fresh), `ring ${rl}: incremental equals full`);
   }
 });
+
+test('a grid crossing made a 3-lane roundabout: no lot of any road around it (the corner lots of the side streets too) stays in its circle', () => {
+  // the owner's case: an intersection of a town grid turned into a roundabout left corner buildings standing in the ring
+  const e = new NetEditor(new RoadNetwork());
+  for (let k = 0; k < LINES; k++) e.addLegs([leg(O, at(k), last, at(k)), leg(at(k), O, at(k), last)], CLASS.street, 0);
+  e.commit();
+  const lm = new LotMap(); lm.update(e.net, null);
+  const C = { x: at(2), y: at(2) }, n = e.net.nodeAt(C)!;
+  e.setNodeType(n, 'roundabout'); e.commit(); lm.update(e.net, null);
+  e.setNodeFlags(e.net.nodeAt(C)!, false, false, 3); e.commit(); lm.update(e.net, null);
+  const m = e.net.nodeAt(C)!, R = ringClear(m);
+  for (const l of lm.lots.values()) for (const p of samples(l)) assert.ok(Math.hypot(p.x - C.x, p.y - C.y) > R - 1e-6, `lot ${l.key} (on ${l.cls}) reaches into the circle (r ${R.toFixed(1)})`);
+  const fresh = new LotMap(); fresh.update(e.net, null);
+  assert.deepEqual(fingerprint(lm), fingerprint(fresh), 'incremental equals full');
+});

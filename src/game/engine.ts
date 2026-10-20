@@ -830,6 +830,21 @@ export class Game {
   }
   /** what installing type t on node n costs (a roundabout re-laned pays the difference: a fall is free) and why it cannot be done: locked, already so,
    *  too few roads, or not enough money ('' when it can). rl: the ring lanes of a roundabout */
+  /** the placed (not a lot's) props a ring would stand on: those whose footprint reaches within the ring's outer edge (its radius, as the network
+   *  will make it, plus the widest arm's walk) of a roundabout or a mini installed at n (none for any other type). A road built over them is
+   *  refused for the big ones and clears the small ones (finishRoute); a ring does the same (the owner's ring, 2026-10-20: buildings stood in it) */
+  private ringProps(n: Node, t: NodeType, rl: 1 | 2 | 3): Prop[] {
+    const hs = n.arms.map(a => a.h), walk = Math.max(0, ...n.arms.map(a => a.walk));
+    const rb = t === 'roundabout' && n.arms.length >= 2 ? ringRadius(hs, rl) : t === 'mini' && n.arms.length >= 3 ? Math.max(4, Math.max(...hs) + 1) : 0;
+    if (!(rb > 0)) return [];
+    const R = rb + walk, out: Prop[] = [];
+    for (const p of this.propGrid.query([n.x - R, n.y - R, n.x + R, n.y + R])) {
+      if (p.auto) continue;
+      const dx = Math.max(p.x0 - n.x, 0, n.x - p.x1), dy = Math.max(p.y0 - n.y, 0, n.y - p.y1);
+      if (dx * dx + dy * dy < R * R) out.push(p);
+    }
+    return out;
+  }
   installCheck(n: Node, t: NodeType, rl: 1 | 2 | 3): { cost: number; why: string; hit: Seg[] } {
     const spec = JUNCTIONS.find(j => j.id === t)!, same = t === 'signal' ? isLights(n) : n.type === t, ring = t === 'roundabout' && n.type === 'roundabout';
     const cost = ring ? Math.max(0, variantCost(t, rl) - variantCost(t, n.rl ?? 1)) : variantCost(t, rl);
@@ -838,6 +853,7 @@ export class Game {
     else if (same && (t !== 'roundabout' || (n.rl ?? 1) === rl)) why = t === 'signal' ? 'It already has traffic lights' : t === 'plain' ? 'It is already plain' : t === 'stop' ? 'It is already an all-way stop' : t === 'mini' ? 'It is already a mini-roundabout' : `It already has a ${rl}-lane ring`;
     else if (n.arms.length < spec.minDeg) why = t === 'roundabout' ? 'A roundabout needs a junction or a bend in the road' : 'Needs a junction of three or more roads';
     else if (t === 'mini' && !miniFits(n)) why = 'Too big for a mini-roundabout (2 lanes each way at most)';
+    else if (this.ringProps(n, t, rl).some(p => LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car')) { const p = this.ringProps(n, t, rl).find(q => LIBRARY[q.item].big && LIBRARY[q.item].kind !== 'car')!; why = `${LIBRARY[p.item].name} is in the way — bulldoze it first`; }
     // an arm that ends inside the ring (another junction or a bend within its radius plus 2 tiles): its road would run on to the island and cars
     // turned at its end there (the owner's 3-lane ring, 2026-10-19: an arterial met the street 10 tiles from the junction made a ring)
     // (a multi-lane ring needs its radius plus 6 tiles: closer, its entries and exits squeezed into the next junction; this was only a warning after
@@ -874,6 +890,8 @@ export class Game {
     if (why && /^It (already|is already)/.test(why)) { this.emit(); return false; }
     if (why) { this.toast(why, 'warn'); this.emit(); return false; }
     const relane = n.type === 'roundabout' && t === 'roundabout', name = JUNCTIONS.find(j => j.id === t)!.name;
+    // the small placed items under the ring go, as under a new road (the big ones refused it: installCheck)
+    for (const p of this.ringProps(n, t, rl)) this.removeProp(p);
     this.traffic.spend('construction', cost);
     if (n.type !== t) this.edit.setNodeType(n, t);
     if (t === 'signal') this.edit.setSignal(n, this.signalTier(), undefined);
