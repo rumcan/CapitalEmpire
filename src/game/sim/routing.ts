@@ -245,10 +245,13 @@ export class Router {
     this.tableMs = performance.now() - t0;
   }
 
-  /** the driving time (s, at the current costs) from the end of dseg d to zone z (Infinity if unknown or unreachable) */
+  /** the driving time (s, at the current costs) from the end of dseg d to zone z (Infinity if unknown or unreachable); the table is brought up to the current graph first */
   timeTo(d: number, z: number): number {
     if (!this.g) return Infinity;
-    const D = this.table(z).D;
+    // a table from an older graph is rebuilt now, whatever the on-demand budget (the businesses' daily plans call this, not the cars), so a new
+    // dseg is not read past the end of an old table as unreachable
+    const T = this.table(z); if (T.gv !== this.gv) this.build(T);
+    const D = T.D;
     if (!(d >= 0 && d < D.length)) return Infinity;
     const v = D[d]!;
     return Number.isFinite(v) ? v : Infinity;

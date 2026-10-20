@@ -28,6 +28,10 @@ export const WATER_REACH = 6;
 export const START_SAT = 0.8;
 /** a day is good when its satisfaction is at least this and it had visitors */
 export const GOOD_SAT = 0.75;
+/** the lots a golf estate sells in all (its price is one lot; see City.closeVisits) */
+export const ESTATE_LOTS = 24;
+/** the satisfaction the golf course needs (at least this) for its estate to sell lots that day (0..1; see City.closeVisits) */
+export const ESTATE_SAT = 0.6;
 /** the XP each level needs (index = level - 1): level 1 at 0, level 5 at 7,000 satisfied visitor cars */
 export const LEVEL_XP = [0, 400, 1200, 3000, 7000];
 
@@ -49,13 +53,13 @@ export const BUSINESSES: BusinessType[] = [
     blurb: 'Breakfast to supper; people only drive a few minutes for a meal.' },
   { id: 'taxi', name: 'Taxi company', family: 'transport', kind: 'fleet', footprint: { w: 16, h: 12 }, buildCost: 25000, upkeepPerDay: 100, pricePerVisitor: 0, party: 1,
     hours: [0, 24], rate: 0, tau: 0, max: 1, townMin: 0, water: false, unlock: { parent: 'buscompany', goodDays: 3 }, spinOffs: [],
-    blurb: 'Taxis wait at the stadium and the towns and carry fans who would have driven.' },
+    blurb: 'Six taxis wait at its door (and the stadium\'s) and carry the towns\' parties to your businesses and the other towns, on the roads it can reach.' },
   { id: 'golf', name: 'Golf course', family: 'leisure', kind: 'visit', footprint: { w: 150, h: 110 }, buildCost: 180000, upkeepPerDay: 900, pricePerVisitor: 22, party: 4,
     hours: [7, 19], rate: 25, tau: 6, max: 1, townMin: 150, water: false, unlock: { parent: 'stadium', level: 3 }, spinOffs: ['estate', 'casino'],
     blurb: 'Foursomes all day; golfers drive further than diners, but not past a jam.' },
   { id: 'estate', name: 'Golf estate', family: 'property', kind: 'estate', footprint: { w: 80, h: 60 }, buildCost: 50000, upkeepPerDay: 100, pricePerVisitor: 12000, party: 1,
     hours: [0, 24], rate: 0, tau: 0, max: 2, townMin: 0, water: false, unlock: { parent: 'golf', level: 2 }, spinOffs: [],
-    blurb: 'Private lots by the course: each one the town builds on is sold to you first.' },
+    blurb: 'Private lots by the course: they sell while the golf course is popular, more at its higher levels (24 an estate).' },
   { id: 'fishing', name: 'Bass-fishing resort', family: 'tourism', kind: 'visit', footprint: { w: 60, h: 40 }, buildCost: 90000, upkeepPerDay: 500, pricePerVisitor: 18, party: 3,
     hours: [5, 20], rate: 20, tau: 8, max: 1, townMin: 100, water: true, unlock: { parent: 'stadium', level: 3 }, spinOffs: ['tackle', 'motel'],
     blurb: 'Must stand by water; anglers leave at dawn and drive a long way for a good lake.' },

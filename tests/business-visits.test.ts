@@ -28,11 +28,12 @@ const GRID = Array.from({ length: 8 }, (_, k) => 160 + 40 * k);
 const BAR: BizDef = { id: 2, type: 'sportsbar', x: 300, y: 366, w: 14, h: 10 };
 const FAR: BizDef = { id: 3, type: 'sportsbar', x: 900, y: 900, w: 14, h: 10 };
 
-/** a City on open ground with the street grid around the first centre, its towns stamped (homes built, so the day's plan has them), and the given businesses placed */
-function gridCity(defs: BizDef[] = [], cards: CardId[] = []): City {
+/** a City on open ground with the street grid around the first centre, its towns stamped (homes built, so the day's plan has them), and the given businesses placed;
+ *  the highway entry at `entry` (default: off the grid, so no tourists) */
+function gridCity(defs: BizDef[] = [], cards: CardId[] = [], entry: { x: number; y: number } = { x: 40, y: 40 }): City {
   const city = new City(7);
   city.autoStadium = false;
-  city.terrain(new Uint8Array(MAP * MAP), { x: 40, y: 40 }, 7, CENTRES);
+  city.terrain(new Uint8Array(MAP * MAP), entry, 7, CENTRES);
   const e = new NetEditor(new RoadNetwork());
   for (const v of GRID) {
     e.addLegs([leg(GRID[0]!, v, GRID[GRID.length - 1]!, v)], CLASS.street, 0);
@@ -147,4 +148,41 @@ test('a bar beside a road not joined to the towns\' roads (in the same routing z
   const bizDoor = (city as unknown as { bizDoor(b: BizDef): { dseg: number; s: number } | null }).bizDoor(island);
   assert.ok(bizDoor, 'the island bar has a door on its own street');
   assert.equal(city.visits.schedule().length, 0, 'no town can reach it: no cars planned');
+});
+
+test('plan: a home with no lot (a road start) gives its departures its drive, and no lot', () => {
+  const day = 3 * GAME_DAY, drive = { lane: 3, s: 20 };
+  const homes: VisitHome[][] = [[{ lot: null, town: 0, pop: 1000, drive }]];
+  const bar: VisitBiz = { id: 5, type: BUSINESS.sportsbar, level: 1, sat: 0.8, door: { dseg: 0, s: 5 }, tripMin: [0] };
+  const v = new Visits();
+  v.plan(day, day, [bar], homes, [1000], seededRnd(11));
+  const ts = v.schedule();
+  assert.ok(ts.length > 0, 'cars are planned');
+  for (const d of ts) { assert.equal(d.lot, null, 'no lot'); assert.deepEqual(d.drive, drive, 'the home\'s drive'); }
+});
+
+test('tourists: with a road at the highway entry, a motel plans cars that start at the entry (no lot); a sports bar in the same city plans none', () => {
+  const MOTEL: BizDef = { id: 4, type: 'motel', x: 380, y: 366, w: 30, h: 16 };
+  const city = gridCity([MOTEL, BAR], [], { x: 160, y: 200 });
+  const bizDoor = (city as unknown as { bizDoor(b: BizDef): { dseg: number; s: number } | null }).bizDoor(MOTEL);
+  assert.ok(bizDoor, 'the motel by the road has a door');
+  const ts = city.visits.schedule();
+  const tourists = ts.filter(d => d.id === MOTEL.id && d.lot === null);
+  assert.ok(tourists.length > 0, `the motel has tourist cars (${tourists.length})`);
+  assert.ok(tourists.every(d => d.drive), 'each tourist car carries the entry\'s drive');
+  assert.equal(ts.filter(d => d.id === BAR.id && d.lot === null).length, 0, 'a sports bar gets no tourists');
+});
+
+test('tourists: with the highway entry off the roads (no kerb within reach) there are no lot-less cars', () => {
+  const MOTEL: BizDef = { id: 4, type: 'motel', x: 380, y: 366, w: 30, h: 16 };
+  const city = gridCity([MOTEL]);
+  assert.ok(city.visits.schedule().length > 0, 'the motel still has its town\'s cars');
+  assert.equal(city.visits.schedule().filter(d => d.lot === null).length, 0, 'no tourists');
+  assert.equal(city.touristEntry().open, false, 'the entry is closed');
+});
+
+test('touristEntry: the entry point, open when a road is within reach of it', () => {
+  const open = gridCity([], [], { x: 160, y: 200 }).touristEntry();
+  assert.deepEqual({ x: open.x, y: open.y, open: open.open }, { x: 160, y: 200, open: true });
+  assert.equal(gridCity([], [], { x: 40, y: 40 }).touristEntry().open, false);
 });

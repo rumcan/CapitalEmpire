@@ -1646,8 +1646,28 @@ unlocks; budgets met).
   - Checks: typecheck clean; `npm test` 459/459 on the worker (new tests/business-taxi.test.ts: the rank, a day's rides booked as the
     dispatcher's revenue, the taxis dropped with the company); `sim:gate -- 1 10000` PASS (21,074 / 58 towed / 0 lost); `town:gate`
     PASS (5,130 pop, 0 jams).
-- **Next: B.6, property and tourists** (the golf estate's lots for sale; hotels by the casino; tourists from the map edge), then
-  B.7 (the Phase B gate and the balance), then 6R.5-6R.8.
+- **B.6 Property and tourists (2026-10-20): DONE.**
+  - *Golf estate:* at each day's close an estate sells lots, as many as the best golf course's level, while that course has
+    satisfaction >= 0.6 (`ESTATE_SAT`) **and had players that day** (a course nobody can reach keeps its starting satisfaction:
+    without the players rule its estate sold lots, seen in the browser); $12,000 a lot, 24 an estate (`ESTATE_LOTS`), booked as
+    business takings; the panel: "Lots sold: n/24 · last close +n ($)". The lots are not drawn as houses yet (art, later).
+  - *Tourists:* with a road within 12 tiles of the valley's highway entry (the map-edge point; the towns valley has no highway
+    until 6R.5, so the player must build one), the tourists are one more catchment in the visit plans: 300 "residents" per level of
+    each tourism business (fishing resort, tackle shop, hotel, motel), the casino and the stadium, starting at the entry's kerb
+    (`VisitHome.lot` null with a `drive`); only the tourism businesses and the casino draw them, and only on the entry's road network.
+    `City.touristEntry()`; the panel of those types says whether tourists come yet, with Go to the entry. Hotels already open by the
+    casino's level (B.2's tree).
+  - Fixed on the way: `Router.timeTo` rebuilds a zone table from an older graph (it was budget-limited: the town's gravel roads change
+    the graph all day, and a new dseg read past an old table's end gave "unreachable", so some visit businesses planned no one in the
+    browser). The taxi company's blurb says what it does now.
+  - Browser-checked (port 5177, headless Edge, `?stamp=1`): a motel by a town road planned 6 guests from the one town joined to its
+    road (a temporary log of the plan: the other towns' components differ, so Infinity) and got 5-7 a night ($56 each), a good day;
+    the estate and tourist panel lines. A golf course with players beside an estate was not reached in the browser (the placement
+    search found no spot joined to a town in those valleys); the estate rules are in tests/business-estate.test.ts.
+  - Checks: typecheck clean; `npm test` 467/467 on the worker (before the last two fixes: the players rule and the test data;
+    the business tests pass after them).
+- **Next: B.7, the Phase B gate and the balance** (headless: a scripted player with the stadium and three spin-offs, solvent 30 days,
+  4+ unlocks; the numbers: taxi wages vs the game hour, the bus company, visit demand), then 6R.5-6R.8.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road

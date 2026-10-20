@@ -18,15 +18,16 @@ const SPAWNED = 1, WAIT = 0, MISSED = -1;
 
 /** a door on the road: the dseg (the direction whose traffic has the business on its right) and s (m) along its lane */
 export interface Door { dseg: number; s: number }
-/** a home a visit car leaves from: its lot, its town, its residents (the weight) */
-export interface VisitHome { lot: Lot; town: number; pop: number }
+/** a home a visit car leaves from: its lot, its town, its residents (the weight). With lot null it is a fixed start on the road (the tourists' highway
+ *  entry), and drive is its driveway (the lane and s the cars spawn at); a lot's home has no drive and its driveway is looked up */
+export interface VisitHome { lot: Lot | null; town: number; pop: number; drive?: Drive }
 /** a visit business as the day's plan reads it: id, type, level, satisfaction, its door (null: no road near it: no visitors), and per town the driving
  *  minutes to it (real minutes, see catalogue.ts) */
 export interface VisitBiz { id: number; type: BusinessType; level: number; sat: number; door: Door | null; tripMin: number[] }
 /** a business's counts for the day: cars planned, spawned, arrived on time, arrived late, and missed (never spawned, or lost on the road) */
 export interface VisitCounts { planned: number; spawned: number; onTime: number; late: number; missed: number }
-/** a planned departure: its clock time (s), its business's id, and its home lot */
-interface Dep { t: number; id: number; lot: Lot }
+/** a planned departure: its clock time (s), its business's id, its home lot (null: a road start), and the home's drive when it has one */
+export interface Dep { t: number; id: number; lot: Lot | null; drive?: Drive }
 
 /** the index of the first cumulative weight above x (cum ascending; x in [0, cum[last])) */
 function pickCum(cum: number[], x: number): number {
@@ -74,10 +75,10 @@ export class Visits {
       const open = b.type.hours[0], span = b.type.hours[1] - b.type.hours[0];
       for (let i = 0; i < n; i++) {
         const j = pickCum(cumT, rnd() * tot), k = towns[j]!, ch = cumH[j]!;
-        const lot = homes[k]![pickCum(ch, rnd() * ch[ch.length - 1]!)]!.lot;
+        const h = homes[k]![pickCum(ch, rnd() * ch[ch.length - 1]!)]!;
         const u = rnd(), t = dayStart + (open + u * span) * 60;
         if (t < from) continue;
-        keep.push({ t, id: b.id, lot }); c.planned++;
+        keep.push({ t, id: b.id, lot: h.lot, drive: h.drive }); c.planned++;
       }
     }
     keep.sort((a, b) => a.t - b.t);
@@ -106,7 +107,7 @@ export class Visits {
   private spawn(d: Dep, sim: Sim, g: LaneGraph): number {
     const door = this.doors.get(d.id);
     if (!door) return MISSED;
-    const o = this.drive(d.lot, g);
+    const o = d.drive ?? (d.lot ? this.drive(d.lot, g) : null);
     if (!o) return MISSED;
     if (g.lanes[o.lane]!.dseg === door.dseg && o.s >= door.s) return MISSED;
     return sim.spawnAt(o.lane, o.s, door.dseg, door.s, 0, -1, -1, d.id) === -1 ? WAIT : SPAWNED;
@@ -156,5 +157,5 @@ export class Visits {
   onGraph(doors: Map<number, Door | null>): void { this.drives.clear(); this.bySeg = null; this.doors = new Map(doors); }
 
   /** the departures not yet spawned (clock s, business id, home lot), in order: for the tests */
-  schedule(): { t: number; id: number; lot: Lot }[] { return this.pend.concat(this.sched.slice(this.next)); }
+  schedule(): Dep[] { return this.pend.concat(this.sched.slice(this.next)); }
 }

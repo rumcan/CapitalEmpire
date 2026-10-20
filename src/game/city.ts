@@ -26,7 +26,7 @@ import { Round, type RoundSave, type RoundView } from './event/round';
 import { crowdFor, placeStadium, siteAt, type Site } from './event/site';
 import { freshStats, type BizDef, type BizStats, type BizView } from './business/state';
 import { Visits, ON_TIME_RATIO, type Door, type VisitBiz, type VisitHome } from './business/visits';
-import { BUSINESS, GOOD_SAT, levelFromXp, satisfactionAfter } from './business/catalogue';
+import { BUSINESS, ESTATE_LOTS, ESTATE_SAT, GOOD_SAT, levelFromXp, satisfactionAfter } from './business/catalogue';
 import { driveway } from './sim/trips';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
@@ -65,6 +65,10 @@ const TAXI_V = 10;
 const TAXI_REACH = 8;
 /** the rides in a game day that make a taxi company's good day */
 const TAXI_GOOD = 10;
+/** the tourists a level of each tourism-family business, the casino and the stadium draws (the tourist catchment's residents, see planVisits) */
+const TOURIST_PER_LEVEL = 300;
+/** the reach, tiles, of the highway entry's kerb: the road within this far of the entry brings the tourists in */
+const ENTRY_REACH = 12;
 
 /** the distance (tiles, capped) to the nearest WATER on the 4-tile cells (a cell is wet if one of its tiles is): a two-pass chamfer, in tiles */
 function waterField(terr: Uint8Array): Float32Array {
@@ -1174,7 +1178,9 @@ export class City {
     return out;
   }
   /** the day's visit plans: each visit business (the ones with no plan yet today) gets its departures (Visits.plan) from the towns' homes, with the
-   *  trip times from each town's most populous home's driveway to its door. Needs the town centres and a visit business; sets visitDay */
+   *  trip times from each town's most populous home's driveway to its door. With a road at the highway entry (kerbAt, ENTRY_REACH) the tourists are one
+   *  more catchment (no lot: they start at the entry's kerb), drawn by the tourism businesses and the casino only. Needs the town centres and a visit
+   *  business; sets visitDay */
   private planVisits(): void {
     const K = this.centres.length, list = this.businesses.filter(b => BUSINESS[b.type].kind === 'visit');
     if (!K || !list.length) return;
@@ -1189,9 +1195,19 @@ export class City {
     for (let k = 0; k < K; k++) {
       let h: VisitHome | null = null;
       for (const x of homes[k]!) { pops[k]! += x.pop; if (!h || x.pop > h.pop) h = x; }
-      const dr = h ? driveway(h.lot, this.g) : null;
+      const dr = h?.lot ? driveway(h.lot, this.g) : null;
       from[k] = dr ? this.g.lanes[dr.lane]!.dseg : -1;
     }
+    // the tourists come in from the highway entry: its kerb (within ENTRY_REACH) starts them, and their residents are the levels of the tourism
+    // businesses, the casino and the stadium (the stadium's level is the round's), TOURIST_PER_LEVEL each; a catchment after the towns
+    const ent = this.kerbAt(this.ctx.entry, ENTRY_REACH);
+    let touristPop = 0;
+    if (ent) for (const b of this.businesses) {
+      const t = BUSINESS[b.type];
+      if (t.family === 'tourism' || b.type === 'casino' || b.type === 'stadium') touristPop += TOURIST_PER_LEVEL * (b.type === 'stadium' ? this.round.level : this.bizStats.get(b.id)!.level);
+    }
+    const tourist = ent && touristPop > 0 ? ent : null, ec = tourist ? this.compOf(this.g.dsegs[tourist.dseg]!.seg) : -2;
+    if (tourist) { homes.push([{ lot: null, town: K, pop: touristPop, drive: { lane: tourist.lane, s: tourist.s } }]); pops.push(touristPop); }
     const vb: VisitBiz[] = [], q = this.doorQ;
     for (const b of list) {
       const st = this.bizStats.get(b.id)!, door = this.bizDoor(b), tripMin: number[] = [];
@@ -1204,10 +1220,14 @@ export class City {
         if (!door || from[k]! < 0 || this.compOf(this.g.dsegs[from[k]!]!.seg) !== dc) { tripMin.push(Infinity); continue; }
         tripMin.push(this.sim.router.timeTo(from[k]!, zoneOf(q.x, q.y)) / 60);
       }
+      // the tourist catchment: only the tourism businesses and the casino draw tourists, and only from the entry's road when it is on the door's component
+      if (tourist) {
+        const draws = BUSINESS[b.type].family === 'tourism' || b.type === 'casino';
+        tripMin.push(draws && door && ec === dc ? this.sim.router.timeTo(tourist.dseg, zoneOf(q.x, q.y)) / 60 : Infinity);
+      }
       vb.push({ id: b.id, type: BUSINESS[b.type], level: st.level, sat: st.sat, door, tripMin });
     }
-    this.visits.plan(dayStart, this.sim.clock, vb, homes, pops, this.visitRnd, promoMul(this.round.cards));
-    this.visitDay = this.budget.dayOf(this.sim.clock);
+    this.visits.plan(dayStart, this.sim.clock, vb, homes, pops, this.visitRnd, promoMul(this.round.cards));    this.visitDay = this.budget.dayOf(this.sim.clock);
   }
   /** the visit cars that left the sim (Sim.visitOut, cleared): each is counted by the visits; an arrival is a sale (the business's price times its party,
    *  booked as business takings) and a visitor; a lost car is a miss */
@@ -1227,7 +1247,7 @@ export class City {
     vo.length = 0;
   }
   /** the day's close for the visits: each visit business's counts make its satisfaction move, its xp and level, and a good day; then every business's
-   *  today is cleared */
+   *  today is cleared; then the golf estates sell their lots (see below) */
   private closeVisits(): void {
     const counts = this.visits.endDay();
     for (const b of this.businesses) {
@@ -1241,7 +1261,23 @@ export class City {
       if (b.type === 'taxi' && s.today.visitors >= TAXI_GOOD) s.goodDays++;
       s.today = { visitors: 0, late: 0, missed: 0, revenue: 0 };
     }
+    // the golf estates' lots: the best golf course (its highest level, with satisfaction at least ESTATE_SAT) sells its level's lots a day, up to
+    // ESTATE_LOTS in all; today shows the day's sales (the close's), and the takings are the day's business
+    // (a golf course counts only with players on the day closed: a course nobody can reach keeps its starting satisfaction but sells nothing)
+    const played = (id: number) => { const c = counts.get(id); return !!c && c.onTime + c.late > 0; };
+    const gl = Math.max(0, ...this.businesses.filter(b => b.type === 'golf' && this.bizStats.get(b.id)!.sat >= ESTATE_SAT && played(b.id)).map(b => this.bizStats.get(b.id)!.level));
+    for (const b of this.businesses) {
+      const s = this.bizStats.get(b.id);
+      if (b.type !== 'estate' || !s) continue;
+      const n = Math.min(gl, ESTATE_LOTS - s.visitors);
+      if (!(n > 0)) continue;
+      const r = n * BUSINESS[b.type].pricePerVisitor;
+      s.visitors += n; s.today.visitors = n; s.revenue += r; s.today.revenue = r; s.xp += n; s.goodDays++;
+      this.budget.bizIncome(r);
+    }
   }
+  /** the highway entry (tiles) and whether a road is within ENTRY_REACH tiles of it (open: the tourists come in from it, see planVisits) */
+  touristEntry(): { x: number; y: number; open: boolean } { return { x: this.ctx.entry.x, y: this.ctx.entry.y, open: this.kerbAt(this.ctx.entry, ENTRY_REACH) !== null }; }
 
   /** the kerb of a point e (tiles): the outermost LINK lane of the road within reach tiles of e whose centre line is nearest e (as busStopAt, with the reach
    *  given), and e's projection on it, kept BUS_END m clear of its ends: its lane, its dseg, its s (m) and its point (tiles). Null if no road is that near */

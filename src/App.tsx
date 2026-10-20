@@ -13,7 +13,7 @@ import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
 import { BUS_ROUTE_COST, CARDS, LOT_TILE_COST, PARTY, TOLL_BASE_COST, TOLL_BOOTH_COST, TOWN_GROWTH, tollPrice } from './game/event/config';
-import { BUSINESS, BUSINESSES, unlockText, type BusinessType } from './game/business/catalogue';
+import { BUSINESS, BUSINESSES, ESTATE_LOTS, unlockText, type BusinessType } from './game/business/catalogue';
 import { freshStats } from './game/business/state';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
@@ -823,13 +823,28 @@ function BizCard({ game, b, free }: { game: Game; b: BusinessType; free: boolean
                 <button className="btn" disabled={b.id === 'stadium' && !free} onClick={() => game.demolishBusiness(d.id)}>Demolish (+{money(b.buildCost / 2)})</button></div>
             </div>
             {b.kind === 'visit' && <div className="text-slate-400">{`Today: ${v.today.visitors} cars (${v.today.late} late, ${v.today.missed} missed) · ${money(v.today.revenue)} · ${v.goodDays} good days`}</div>}
+            {b.kind === 'estate' && <div className="text-slate-400">{`Lots sold: ${v.visitors}/${ESTATE_LOTS} · last close +${v.today.visitors} (${money(v.today.revenue)})`}</div>}
             {b.kind === 'fleet' && <div className="text-slate-400">{`Today: ${v.today.visitors} ${b.id === 'taxi' ? 'rides' : 'riders'} · ${money(v.today.revenue)} · ${v.goodDays} good ${b.id === 'taxi' ? 'days' : 'rounds'}`}</div>}
           </div>
         );
       })}
+      {open && (b.family === 'tourism' || b.id === 'casino') && <TouristLine game={game} />}
       {!open && <p className="mt-1 text-amber-200">{unlockText(b, game.ownedBiz())}</p>}
       {open && under && <button className="btn mt-2" onClick={() => game.selectBizType(b.id)}>{sel ? 'Selected' : 'Build'}</button>}
       {open && under && sel && <p className="mt-1 text-amber-200">Click open land to build it · R rotates</p>}
+    </div>
+  );
+}
+
+/** where the tourists come from: the highway entry at the map edge, and whether a road reaches it yet (within 12 tiles, as the city worker's
+ *  ENTRY_REACH); Go to looks at it */
+function TouristLine({ game }: { game: Game }) {
+  const h = game.terrain.highway, open = h.x >= 0 && game.net.segsNear(h, 12).size > 0;
+  if (h.x < 0) return null;
+  return (
+    <div className="mt-1 flex items-center justify-between gap-2 text-slate-400">
+      <span>{open ? 'Tourists drive in from the highway entry' : 'Tourists come once a road reaches the highway entry at the map edge'}</span>
+      <button className="btn shrink-0 whitespace-nowrap" onClick={() => game.lookAt(h.x, h.y)}>Go to</button>
     </div>
   );
 }
