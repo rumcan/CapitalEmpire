@@ -1708,6 +1708,31 @@ unlocks; budgets met).
 - **Next: B.7, the Phase B gate and the balance** (headless: a scripted player with the stadium and three spin-offs, solvent 30 days,
   4+ unlocks; the numbers: taxi wages vs the game hour, the bus company, visit demand), then 6R.5-6R.8.
 
+### The owner's requests, 2026-10-20 evening (branch `claude/preview`, the integration build on port 5183; not yet merged into main)
+`claude/preview` = main + `claude/sprites-and-people` (the owner's studio edits; the car, business and rocky dirt art, commit 4bb8017) +
+`claude/block-grass` + `claude/town-trees` + `claude/fenced-lots` + `claude/parking-merge`, the atlas re-baked over all of them (c387744).
+Checks on the worker: `npm test` 534/534, `town:gate` pass (pop 5,307, 0 jams, step max 8.7 ms); typecheck clean; browser-checked.
+- **Paint tool grasses** (`claude/block-grass` 305f793): the eight grass-v1 materials (Lush, Worn and Clover lawn, Putting green,
+  Fairway, Rough, Meadow, Wildflowers) as Paint textures, hex-mixed like the base grass (scripts/assets/prep-paint-grass.mjs). An
+  automatic lawn per street block was tried and taken out again (the owner's call); `src/game/blocks.ts` (the blocks enclosed by
+  ground streets: a planar face walk, keyed by their corners) stayed for the fenced lots. TEX_VERSION tex-12 with the rocky dirts.
+- **Town trees** (`claude/town-trees`): many random trees on the free ground in and around the towns (`src/game/towntrees.ts`;
+  planted like the forest, cell by cell as the camera arrives, within 24 tiles of a lot, never on roads, lots, businesses, car
+  parks, toll plazas or painted areas; clumped by noise; an edit drops the cells it touches and they replant). At the lot trees'
+  sizes (OWNER_SCALE +-10%, on a 4.5-tile grid): at 0.75-1.15x they read as bushes (the owner). Also: the generated leaf drift
+  decals (gen:drift-*) at DRIFT_K = 0.35 (their leaves were car-sized).
+- **Fenced lots** (`claude/fenced-lots` 0482155): a rectangular street block (16-70 tiles a side inside its streets) is cut by an
+  irregular fence grid and the lots are its cells (the owner chose "all sides, composed live"): an end column of lots facing each
+  side street, two rows facing the long streets meeting at an off-centre spine that may jog; widths 8-12 tiles, seeded by the
+  block key (`src/game/lots/blocklots.ts`; block lots go first in `LotMap.update`; the face walk reads only the segs within
+  BLOCK_REACH of an edit). About 8 lots a block (main: 4.4). Cost: a road edit ~1.7x main on the 40x40 bench (target was 1.5x);
+  each lot is composed live (~30 props, no baked picture fits): watch the props count and the load.
+- **Parking** (`claude/parking-merge`, by the B.6 session): the frosty-wilson parking work merged with main (bay rows, on-street,
+  angled car parks, the fee, heat maps over time) and wired into the Car park tool.
+- Open: the fenced lots' cost (the edit time, and ~30 props a lot); B.7 (`claude/b7-gate`, the B.6 session); the 3D townspeople
+  (`claude/people3d`, its own session) merge after the art. `scripts/worker/run.sh` fails inside a git worktree (`cp .git/index`:
+  use `git rev-parse --git-path index`). preview_start always serves the main checkout: serve a worktree from a terminal.
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road
 Upgrade/Downgrade ladder with fair costs, houses following a widened road, and the Maple Falls HUD (UI steps 1-2). Next in the owner's
