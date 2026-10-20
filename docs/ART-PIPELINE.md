@@ -57,7 +57,11 @@ on every lot so they meet), with planting along both faces and leaf drifts at th
 - **Library**: every sprite as the game has it, at true relative size (zoom slider), the pointer a townsperson at the same
   scale (feet on the pointer). Smaller/Bigger -> `scale-overrides.json`; Remove/Restore -> `removed.json`.
 - **Lots**: click a sprite in a baked lot to move (0.25 m), resize, mirror or delete it there -> `lot-edits.json`.
-- **People**: each townsperson's walk rows animated; click a frame to mirror it -> `walker-fixes.json`.
+- **People**: each townsperson's walk rows animated; click a frame to fix it -> `walker-fixes.json` (codes parsed by
+  `walker-fix.mjs`): `mirror`; `use:<k>` / `use-mirror:<k>` (another frame of the row); `use:<DIR>:<k>` / `use-mirror:<DIR>:<k>`
+  (a frame of another facing); `new` (a new frame is needed: drop its picture in the popover, saved to
+  `walker-frames/<person>/<DIR>-<k>.png`, contain-fitted to the frame cell at the pack; with no picture the pack keeps the old frame
+  and logs it). The "Walk frames needing new art" line lists every `new` frame.
 - **Rebuild**: runs the asset steps. Every step reads these files (`overrides.mjs`, `removed.mjs`).
 
 ## Townspeople (`src/game/ext/pedestrians/`)

@@ -27,7 +27,11 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 .hint{color:var(--dim);font-size:12px;margin:6px 0}
 .person{background:var(--card);border:1px solid var(--line);border-radius:8px;margin:12px 16px;padding:8px}
 .prow{display:flex;align-items:center;gap:8px;margin:4px 0}.prow .d{width:30px;color:var(--gold);font-weight:700}.fr{position:relative;cursor:pointer;border:2px solid transparent;border-radius:4px;background:#2b3120}
-.fr.mir{border-color:var(--sel)}.fr img{display:block;height:96px}.fr span{position:absolute;right:2px;bottom:0;font-size:10px;color:var(--dim)}.anim{margin-left:16px;border-left:1px solid var(--line);padding-left:12px}
+.fr.mir{border-color:var(--sel)}.fr.need{border-color:var(--red)}.fr .bdg{position:absolute;left:2px;top:2px;font-size:10px;font-weight:700;background:#11130bdd;color:var(--gold);border-radius:3px;padding:1px 3px;white-space:nowrap}.fr .bdg:empty{display:none}.bdg.ok{color:var(--green)}.bdg.need{color:var(--red)}
+.pop{position:fixed;z-index:30;background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:10px;width:min(480px,calc(100vw - 32px));max-height:80vh;overflow:auto;box-shadow:0 8px 24px #000c}.pop h4{margin:0 0 8px;font-size:13px}.pop .sec{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.pop input{min-width:0;padding:4px 6px}.pop input[type=checkbox]{padding:0;margin:0 4px 0 0}.pop .btn{flex:0 0 auto}
+.pop .gr{display:flex;align-items:center;gap:4px;margin:2px 0}.pop .gr .d{width:30px;color:var(--gold);font-weight:700;font-size:12px}.pop .gr img{height:48px;cursor:pointer;border-radius:3px;background:#2b3120;border:2px solid transparent}.pop .gr img:hover{border-color:var(--sel)}
+.drop{border:2px dashed var(--line);border-radius:6px;padding:14px;text-align:center;color:var(--dim);margin-top:6px}.drop.over{border-color:var(--gold);color:var(--ink)}.msg{color:var(--dim);font-size:12px;min-height:14px;margin-top:6px}
+#needed{padding:6px 16px 0;align-items:center}#needed b{font-weight:600;margin-right:4px}.fr img{display:block;height:96px}.fr span{position:absolute;right:2px;bottom:0;font-size:10px;color:var(--dim)}.anim{margin-left:16px;border-left:1px solid var(--line);padding-left:12px}
 @media (max-width:800px){.lots{grid-template-columns:1fr}.list{max-height:200px}}
 </style></head><body>
 <header><h1>Sprite studio</h1>
@@ -46,7 +50,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
  <div class="canvas" id="lotcanvas"><div class="hint">Pick a lot on the left, then click a sprite in it.</div></div>
  <div class="side" id="lotside"><h3>Nothing selected</h3><div class="hint">Click a sprite in the lot. Alt-click picks the ground decal under the click instead of the upright.</div></div></div></div>
 
-<div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to mirror it (outlined = mirrored). The strip on the right plays the row as the game does (walk frames 1-4).</div><div id="people"></div></div>
+<div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to fix it: mirror it, use another frame (of any facing) in its place, or mark it as needing a new frame and drop the new picture in. Rebuild game sprites to put the fixes in the game. The strip on the right plays the row as the game does (walk frames 1-4).</div><div id="needed" class="chips"></div><div id="people"></div></div>
 
 <script>
 const $=s=>document.querySelector(s), el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);for(const c of k)if(c!=null)e.append(c);return e};
@@ -109,15 +113,46 @@ function side(){const s=$('#lotside'),c=$('#lotcanvas');c.querySelectorAll('.hi'
   el('div',{className:'hint',textContent:'To take this sprite out of the whole game, remove it in the Library tab.'}));}
 
 // ---------------- people
-let peopleLoaded=false;
-async function loadPeople(){peopleLoaded=true;const ps=await (await fetch('/api/people')).json(),box=$('#people');box.innerHTML='';
- for(const p of ps){const card=el('div',{className:'person'},el('div',{className:'name',textContent:p.id}));
-  for(const d of p.dirs){const row=el('div',{className:'prow'},el('span',{className:'d',textContent:d}));const imgs=[];
-   for(let k=0;k<5;k++){const mir=p.fixes[d]&&p.fixes[d][k]==='mirror';const img=el('img',{src:`/frame/${encodeURIComponent(p.id+'|'+d+'|'+k)}?${mir?1:0}`,loading:'lazy'});imgs.push(img);
-    const f=el('div',{className:'fr'+(mir?' mir':''),title:mir?'mirrored: click to undo':'click to mirror'},img,el('span',{textContent:k===0?'idle':k}));
-    f.onclick=async()=>{const r=await post('/api/walker-fix',{id:p.id,dir:d,frame:k});p.fixes=r.fixes;const m=p.fixes[d]&&p.fixes[d][k]==='mirror';f.classList.toggle('mir',m);img.src=`/frame/${encodeURIComponent(p.id+'|'+d+'|'+k)}?${Date.now()}`;};
-    row.append(f);}
-   const anim=el('img',{className:'anim',style:'height:96px'});let t=1;setInterval(()=>{if(imgs[t].complete)anim.src=imgs[t].src;t=t%4+1;},125);row.append(anim);card.append(row);}
+const PDIRS=['S','SE','E','NE','N'], WF_RE=/^use(-mirror)?:(?:(S|SE|E|NE|N):)?([0-4])$/;   // the fix codes (scripts/assets/walker-fix.mjs)
+let peopleLoaded=false,peopleAll=[],popEl=null;
+const ppid=id=>'pp-'+id.replace(/[^a-z0-9_-]/gi,'_'), frameUrl=(pid,d,k,q)=>`/frame/${encodeURIComponent(pid+'|'+d+'|'+k)}?${q}`;
+/** a cell's badge: M, NEW, NEW ✓ (picture in), or the frame it takes: →3, →SE2, M→3 */
+const fixBadge=(op,has)=>{const m=WF_RE.exec(op);return op==='mirror'?'M':op==='new'?(has?'NEW ✓':'NEW'):m?(m[1]?'M':'')+'→'+(m[2]||'')+m[3]:'';};
+const fixText=op=>{const m=WF_RE.exec(op);return op==='mirror'?'mirrored':op==='new'?'new frame needed':m?(m[2]?m[2]+' ':'')+'frame '+m[3]+(m[1]?' mirrored':''):'as drawn';};
+const send=async(u,b)=>{const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json();};
+const closePop=()=>{popEl?.remove();popEl=null};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePop()});
+document.addEventListener('mousedown',e=>{if(popEl&&!popEl.contains(e.target))closePop()});
+/** the walk frames still needing new art, as chips (a click scrolls to that person) */
+async function showNeeded(){const list=await (await fetch('/api/frames-needed')).json(),box=$('#needed');box.innerHTML='';box.append(el('b',{textContent:`Walk frames needing new art: ${list.length}`}));
+ for(const n of list)box.append(el('span',{className:'chip'+(n.has?' on':''),title:n.has?'picture dropped in: rebuild to use it':'no picture yet',textContent:`${n.id.replace(/^person:/,'')} · ${n.dir} · frame ${n.frame}${n.has?' ✓':''}`,onclick:()=>document.getElementById(ppid(n.id))?.scrollIntoView({block:'center'})}));}
+/** a frame cell shows its fix: the mirror outline, the red outline while a new picture is missing, and the badge */
+const paint=c=>{const op=c.p.fixes[c.d]?.[c.k]??'',has=c.p.newFrames.includes(c.d+'-'+c.k);c.f.classList.toggle('mir',op==='mirror');c.f.classList.toggle('need',op==='new'&&!has);c.f.title=fixText(op)+' (click to fix)';c.bdg.textContent=fixBadge(op,has);c.bdg.className='bdg'+(op==='new'?has?' ok':' need':'');};
+/** after a change: the person's fixes, the cell's picture (cache-busted), its badge, the needed list */
+const applyFix=(c,r)=>{c.p.fixes=r.fixes;if(r.has&&!c.p.newFrames.includes(c.d+'-'+c.k))c.p.newFrames.push(c.d+'-'+c.k);c.img.src=frameUrl(c.p.id,c.d,c.k,Date.now());paint(c);showNeeded();};
+/** the fix panel for one frame: as drawn, mirror, another frame in its place (any facing, mirrored or not), or a new picture */
+function openFix(c){closePop();const cur=c.p.fixes[c.d]?.[c.k]??'',msg=el('div',{className:'msg'}),at=c.f.getBoundingClientRect();
+ const done=async(op,close)=>{try{applyFix(c,await send('/api/walker-fix',{id:c.p.id,dir:c.d,frame:c.k,op}));if(close)closePop();else msg.textContent='Saved: '+fixText(op)}catch(e){msg.textContent='Failed: '+e.message}};
+ const mir=el('input',{type:'checkbox',checked:/^use-mirror:/.test(cur)}), pick=(dir,k2)=>done(`use${mir.checked?'-mirror':''}:${dir===c.d?'':dir+':'}${k2}`,true);
+ const grid=el('div',{},...PDIRS.map(dir=>el('div',{className:'gr'},el('span',{className:'d',textContent:dir}),...[0,1,2,3,4].map(k2=>el('img',{src:frameUrl(c.p.id,dir,k2,'orig=1'),loading:'lazy',title:`${dir} frame ${k2}`,onclick:()=>pick(dir,k2)})))));
+ const upload=async f=>{if(!f||!/^image\/(png|webp)$/.test(f.type)){msg.textContent='Pick a PNG or WebP picture';return}
+  try{const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=()=>rej(fr.error);fr.readAsDataURL(f)});
+   applyFix(c,await send('/api/walker-frame',{id:c.p.id,dir:c.d,frame:c.k,png:b64}));msg.textContent='Saved. Rebuild game sprites to put it in the game.'}catch(e){msg.textContent='Failed: '+e.message}};
+ const file=el('input',{type:'file',accept:'image/png,image/webp',onchange:()=>upload(file.files[0])}), drop=el('div',{className:'drop',textContent:'…or drop a PNG / WebP picture here'});
+ drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};drop.ondragleave=()=>drop.classList.remove('over');drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');upload(e.dataTransfer.files[0])};
+ const dropSec=el('div',{className:'sec',hidden:cur!=='new'},el('div',{className:'hint',textContent:'The new picture is fitted into the frame, bottom-aligned.'}),file,drop);
+ popEl=el('div',{className:'pop'},el('h4',{textContent:`${c.p.id.replace(/^person:/,'')} · ${c.d} · frame ${c.k===0?'idle':c.k} · now: ${fixText(cur)}`}),
+  el('div',{className:'row',style:'padding:0 0 4px;flex-wrap:wrap'},el('button',{className:'btn',textContent:'As drawn',onclick:()=>done('',true)}),el('button',{className:'btn',textContent:'Mirror',onclick:()=>done('mirror',true)}),el('button',{className:'btn gold',textContent:'New frame needed',onclick:()=>{dropSec.hidden=false;done('new',false)}})),
+  el('div',{className:'sec'},el('div',{className:'hint',textContent:'Use another frame in its place (any facing):'}),el('label',{className:'hint'},mir,'mirrored'),grid),
+  dropSec,msg);
+ document.body.append(popEl);const W=popEl.offsetWidth,H=popEl.offsetHeight,below=at.bottom+6;
+ popEl.style.left=Math.max(8,Math.min(at.left,innerWidth-W-8))+'px';popEl.style.top=(below+H>innerHeight?Math.max(8,at.top-H-6):below)+'px';}
+async function loadPeople(){peopleLoaded=true;peopleAll=await (await fetch('/api/people')).json();showNeeded();const box=$('#people');box.innerHTML='';
+ for(const p of peopleAll){p.cells={};const card=el('div',{className:'person',id:ppid(p.id)},el('div',{className:'name',textContent:p.id}));
+  for(const d of p.dirs){const row=el('div',{className:'prow'},el('span',{className:'d',textContent:d}));p.cells[d]=[];
+   for(let k=0;k<5;k++){const img=el('img',{src:frameUrl(p.id,d,k,0),loading:'lazy'}),bdg=el('b',{className:'bdg'}),f=el('div',{className:'fr'},img,bdg,el('span',{textContent:k===0?'idle':k})),c={p,d,k,f,img,bdg};
+    f.onclick=()=>openFix(c);p.cells[d].push(c);paint(c);row.append(f);}
+   const anim=el('img',{className:'anim',style:'height:96px'});let t=1;setInterval(()=>{const i=p.cells[d][t].img;if(i.complete)anim.src=i.src;t=t%4+1;},125);row.append(anim);card.append(row);}
   box.append(card);}}
 
 // ---------------- rebuild

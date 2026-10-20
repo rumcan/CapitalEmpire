@@ -2,7 +2,8 @@
 //   Library: every sprite as the game has it (cut from the atlas), beside a person for scale: remove it from the game, or make it
 //            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json)
 //   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
-//   People:  every townsperson's walk rows, animated: mirror any frame that faces the wrong way (walker-fixes.json)
+//   People:  every townsperson's walk rows, animated: fix any frame that faces the wrong way (mirror it, use another frame in its
+//            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
 //   Rebuild: runs the asset steps again, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { spawn } from 'node:child_process';
@@ -16,6 +17,7 @@ import { readLotEdits, readScales, readWalkerFixes, writeLotEdits, writeScales, 
 import { LIB, drawOrder, rectOf, render } from '../lot-render.mjs';
 import { mapScale } from '../lot-layout.mjs';
 import { boundsOf, lotVariants } from '../lot-variants.mjs';
+import { fixCode, newFramePath, parseFix } from '../walker-fix.mjs';
 
 const PORT = +(process.argv[process.argv.indexOf('--port') + 1] || 5179) || 5179;
 const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'output/review/thumbs');
@@ -73,12 +75,19 @@ function people() {
   }
   return out;
 }
-async function frame(pid, d, k) {
+/** the directions with a dropped-in picture for this person, as 'DIR-k' */
+const newFrameList = pid => PEOPLE_DIRS.flatMap(d => [0, 1, 2, 3, 4].filter(k => fs.existsSync(newFramePath(ROOT, pid, d, k))).map(k => `${d}-${k}`));
+/** a frame with its fix applied (as the game draws it), or as the sheet has it when asDrawn */
+async function frame(pid, d, k, asDrawn) {
   const p = people().find(x => x.id === pid); if (!p) return null;
-  const { m } = p, op = readWalkerFixes()[pid]?.[d]?.[k];
-  let img = sharp(p.sheet).extract({ left: k * m.frameWidth, top: m.directions.indexOf(d) * m.frameHeight, width: m.frameWidth, height: m.frameHeight });
-  let buf = await img.png().toBuffer();
-  if (op === 'mirror') buf = await sharp(buf).flop().png().toBuffer();
+  const { m } = p, fix = asDrawn ? null : parseFix(readWalkerFixes()[pid]?.[d]?.[k]);
+  const cut = (dir, fr) => sharp(p.sheet).extract({ left: fr * m.frameWidth, top: m.directions.indexOf(dir) * m.frameHeight, width: m.frameWidth, height: m.frameHeight }).png().toBuffer();
+  const dropped = fix?.kind === 'new' ? newFramePath(ROOT, pid, d, k) : null;
+  let buf;
+  if (fix?.kind === 'use') buf = await cut(fix.dir ?? d, fix.frame);
+  else if (dropped && fs.existsSync(dropped)) buf = await sharp(dropped).resize(m.frameWidth, m.frameHeight, { fit: 'contain', position: 'bottom', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+  else buf = await cut(d, k);
+  if (fix?.kind === 'mirror' || fix?.mirror) buf = await sharp(buf).flop().png().toBuffer();
   return sharp(buf).resize(Math.round(m.frameWidth * 0.5), Math.round(m.frameHeight * 0.5)).png().toBuffer();
 }
 
@@ -149,13 +158,30 @@ http.createServer(async (req, res) => {
       writeLotEdits(all); return json({ ok: true });
     }
     // people
-    if (P === '/api/people') { const fx = readWalkerFixes(); return json(people().map(p => ({ id: p.id, dirs: PEOPLE_DIRS, fixes: fx[p.id] ?? {} }))); }
-    if (P.startsWith('/frame/')) { const [pid, d, k] = decodeURIComponent(P.slice(7)).split('|'); return png(await frame(pid, d, +k)); }
+    if (P === '/api/people') { const fx = readWalkerFixes(); return json(people().map(p => ({ id: p.id, dirs: PEOPLE_DIRS, fixes: fx[p.id] ?? {}, newFrames: newFrameList(p.id) }))); }
+    if (P === '/api/frames-needed') {
+      const out = []; for (const [id, rows] of Object.entries(readWalkerFixes())) for (const [dir, row] of Object.entries(rows)) for (const [k, op] of Object.entries(row)) if (op === 'new') out.push({ id, dir, frame: +k, has: fs.existsSync(newFramePath(ROOT, id, dir, k)) });
+      return json(out);
+    }
+    if (P.startsWith('/frame/')) { const [pid, d, k] = decodeURIComponent(P.slice(7)).split('|'); return png(await frame(pid, d, +k, url.searchParams.get('orig') === '1')); }
     if (req.method === 'POST' && P === '/api/walker-fix') {
-      const { id, dir, frame: k } = await body(req), fx = readWalkerFixes(), row = ((fx[id] ??= {})[dir] ??= {});
-      if (row[k] === 'mirror') delete row[k]; else row[k] = 'mirror';
+      const b = await body(req), { id, dir, frame: k } = b, fx = readWalkerFixes();
+      // a body without op toggles mirror, as it did before the studio had other fixes
+      const code = b.op === undefined ? (fx[id]?.[dir]?.[k] === 'mirror' ? '' : 'mirror') : b.op, fix = parseFix(code);
+      if ((code !== '' && !fix) || !people().some(p => p.id === id) || !PEOPLE_DIRS.includes(dir) || !(+k >= 0 && +k <= 4)) { res.writeHead(400); return res.end('bad fix'); }
+      const row = ((fx[id] ??= {})[dir] ??= {});
+      if (code) row[k] = fixCode(fix); else delete row[k];
       if (!Object.keys(row).length) delete fx[id][dir]; if (!Object.keys(fx[id]).length) delete fx[id];
       writeWalkerFixes(fx); return json({ fixes: fx[id] ?? {} });
+    }
+    if (req.method === 'POST' && P === '/api/walker-frame') {
+      const { id, dir, frame: k, png: b64 } = await body(req), f = +k;
+      if (!people().some(p => p.id === id) || !PEOPLE_DIRS.includes(dir) || !(f >= 0 && f <= 4)) { res.writeHead(400); return res.end('bad frame'); }
+      let pic; try { pic = await sharp(Buffer.from(b64 ?? '', 'base64')).png().toBuffer(); } catch { res.writeHead(400); return res.end('not a picture'); }
+      const file = newFramePath(ROOT, id, dir, f); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, pic);
+      const fx = readWalkerFixes(), row = ((fx[id] ??= {})[dir] ??= {});
+      if (row[f] !== 'new') { row[f] = 'new'; writeWalkerFixes(fx); }
+      return json({ fixes: fx[id], has: true });
     }
     if (req.method === 'POST' && P === '/api/rebuild') return json(rebuild());
     if (P === '/api/status') return json(job && { ...job, log: job.log.slice(-600) });

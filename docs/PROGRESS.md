@@ -1522,13 +1522,20 @@ Done:
 - House lots: one baked picture per lot (house, yard, story pieces, plants, decals; owner's scales; varied houses, trees and
   cars); the fence grid drawn separately on the lot lines with its own planting and decals (compose.ts fenceLayer).
 - Townspeople: walk home -> place -> home along the sidewalks, only appearing at doors; stable across road edits.
-- The sprite studio (port 5179) for the owner: remove sprites, fix sizes, edit lot placements, mirror walk frames, rebuild.
+- The sprite studio (port 5179) for the owner: remove sprites, fix sizes (shown at true relative size, the pointer a townsperson at
+  the same scale), edit lot placements, fix walk frames, rebuild. Walk frames (People tab, click a frame): mirror it, use another
+  frame of any facing in its place (`use:<k>`, `use:<DIR>:<k>`, mirrored forms), or mark it "new frame needed" and drop the new
+  picture in (saved to `scripts/assets/walker-frames/<person>/<DIR>-<k>.png`; until then the pack keeps the old frame and logs
+  "walk frames still needed"). The codes live in `scripts/assets/walker-fixes.json`, parsed by `scripts/assets/walker-fix.mjs`
+  (studio and pack share it).
+- Fences drawn over by the lot behind them (the owner saw decals and bushes on the boards): a panel's footprint straddled its lot
+  line, so the painter could sort the lot picture behind the fence after it. Panels now stand a few cm off the line on its higher
+  world-coordinate side (compose.ts boundaryRun; tests/compose.test.ts checks every panel).
 
 Numbers: npm test 449+ pass; 2 timing tests fail on the dev PC (terrain 20 seeds < 4 s, accACC ns/call), run them on the worker.
 
 Open / next:
-1. Verify the fence layer in the game (fences meet between neighbours, back-to-back lots get one fence, plants on both faces)
-   and send the owner a screenshot; re-pin the compose test digests if they moved.
+1. (Done 2026-10-20 evening: the fence layer checked in the game after the painter fix.)
 2. GPU memory: 15 pages ~336 MB at dpr 2 vs the 96 MB budget (GAME-PLAN 2.3). Owner to decide (compressed textures, fewer
    lot variants, dropping unused sets).
 3. Road signs (150) and the arcade sets are packed but unused: they need a per-sign mapping (which sign is which) before the
