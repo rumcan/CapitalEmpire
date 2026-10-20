@@ -1,0 +1,13 @@
+{
+  "generationId": "a2cf3080-2d39-4a3d-a80d-3d5a922264af",
+  "prompt": "An ordinary ten-year-old child from a 1985 small American town, realistic child proportions, short tousled light-brown hair, a plain red long-sleeved t-shirt, plain blue jeans, plain white sneakers. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic adult proportions, stylised hand-painted game look. No props, nothing in the hands, no logos.",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "text-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "C:\\Work Admin\\PERSONAL\\Repos\\CapitalEmpire\\.claude\\worktrees\\people3d\\art\\people3d\\base_kid\\model.glb",
+  "status": "saved",
+  "sha256": "2961e68866bfd982d92894e3d659eb479b28300fbbc34ebdda2e6adc850b3b11",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/a2cf3080-2d39-4a3d-a80d-3d5a922264af/model.compressed.glb",
+  "seed": 711220386
+}
