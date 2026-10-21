@@ -267,7 +267,9 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k) });
+  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o) });
+  /** the Paint tool's projection into css px (its handles' hit tests): tile (x, y) is at (o[0] + x*o[2] + y*o[4], o[1] + x*o[3] + y*o[5]) */
+  private paintAffine(o: number[]) { const s = this.screen(0, 0), ex = this.screen(1, 0), ey = this.screen(0, 1), d = this.dpr; o[0] = s.x / d; o[1] = s.y / d; o[2] = (ex.x - s.x) / d; o[3] = (ex.y - s.y) / d; o[4] = (ey.x - s.x) / d; o[5] = (ey.y - s.y) / d; }
   /** the Paint tool's snap distance: 10 css px in tiles */
   private get paintTol() { return 10 / (Math.hypot(HW, HH) * this.cam.z); }
   /** the Car park tool's bay rows, on-street runs and fee (docs/PARKING.md) */
@@ -1357,6 +1359,7 @@ export class Game {
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
     if (this.keys.has(' ')) this.spacePanned = true;
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
+    if (this.tool === 'paint' && e.button === 2 && this.paint.secondary(this.tileAt(mx, my), mx, my)) return;
     if ((this.tool === 'lane' || this.tool === 'downgrade') && e.button === 2) { this.laneReverse(mx, my); return; }
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
@@ -1404,7 +1407,7 @@ export class Game {
     if (this.tool === 'toll') this.tollUpdate(mx, my);
     if (this.tool === 'business') this.bizUpdate(mx, my);
     if (this.tool === 'bus') this.busUpdate(mx, my);
-    if (this.tool === 'paint') this.paint.pointerMove(this.hover, mx, my);
+    if (this.tool === 'paint') this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift'));
     if (this.tool === 'park') {
       if (this.parking.mode === 'rows') { if (this.hover) { this.parking.snap15 = this.keys.has('Shift'); this.parking.move(this.hover, mx, my); } }
       else if (this.parking.mode === 'curb') this.parking.hover(this.hover ? this.net.pieceNear(this.hover)?.seg ?? null : null, this.hover ?? { x: 0, y: 0 }, mx, my);
@@ -1419,7 +1422,7 @@ export class Game {
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     this.dragging = null;
   }
-  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.busHover = null; this.laneHover = null; }
+  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.busHover = null; this.laneHover = null; }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
     const piece = t ? this.net.pieceNear(t) : null;

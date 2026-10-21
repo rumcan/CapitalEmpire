@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaintTool } from '../src/game/paint-tool';
 import {
-  DEFAULT_STYLE, PAINT_TEXES, RADIUS_MAX, areaAt, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insidePoly, polyArea, roundCorners, simplify, snapPt, toTuple,
+  DEFAULT_STYLE, PAINT_TEXES, RADIUS_MAX, areaAt, boxOf, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insertCorner, insidePoly, moveCorner, polyArea, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts,
   type BorderSize, type BorderTex, type PaintArea, type PaintTex, type PaintTuple,
 } from '../src/game/paint';
 
@@ -21,7 +21,7 @@ test('rocky dirt saves keep both paintings and border styles when reloaded into 
     ['dirt', 1, 0, 0, 'kerb', SQUARE],
   ];
   const sent = new Map<string, unknown>();
-  const host = { setLotGround: (key: string, patches: unknown) => { sent.set(key, patches); }, emit() {}, save() {}, toast() {} };
+  const host = { setLotGround: (key: string, patches: unknown) => { sent.set(key, patches); }, emit() {}, save() {}, toast() {}, affine() {} };
   const first = new PaintTool(host);
   first.load(tuples);
   const saved = JSON.parse(JSON.stringify(first.save())) as PaintTuple[];
@@ -203,4 +203,85 @@ test('lotAsphalt (Car park asphalt): a valid fill and border texture, after Worn
   assert.equal(clampStyle({ ...DEFAULT_STYLE, btex: junk<BorderTex>('lotAsphalt') }).btex, 'lotAsphalt');
   const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 4), tex: 'lotAsphalt', scale: 1.5, angle: 0, border: 1, btex: 'lotAsphalt', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
   assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([toTuple(area)])) as PaintTuple[]), [area]);
+});
+
+test('moveCorner: the corner moves to the point rounded to quarter tiles; the input is not changed', () => {
+  const before = SQUARE.slice();
+  assert.deepEqual(moveCorner(SQUARE, 2, 3.3, 2.6), [0, 0, 2, 0, 3.25, 2.5, 0, 2]);
+  assert.deepEqual(SQUARE, before);
+});
+
+test('insertCorner: a corner on edge e takes index e+1; the last edge (back to corner 0) appends', () => {
+  assert.deepEqual(insertCorner(SQUARE, 0, 1, 0), [0, 0, 1, 0, 2, 0, 2, 2, 0, 2]);
+  assert.deepEqual(insertCorner(SQUARE, 1, 2, 1), [0, 0, 2, 0, 2, 1, 2, 2, 0, 2]);
+  assert.deepEqual(insertCorner(SQUARE, 3, 0, 1), [0, 0, 2, 0, 2, 2, 0, 2, 0, 1]);
+});
+
+test('removeCorner: drops corner i; a triangle cannot lose a corner (null)', () => {
+  assert.deepEqual(removeCorner(SQUARE, 1), [0, 0, 2, 2, 0, 2]);
+  const tri = removeCorner(SQUARE, 0)!;
+  assert.equal(tri.length, 6);
+  assert.equal(removeCorner(tri, 0), null);
+});
+
+test('translatePts: every corner moves by the offset, rounded to quarter tiles', () => {
+  assert.deepEqual(translatePts(SQUARE, 1, 0.5), [1, 0.5, 3, 0.5, 3, 2.5, 1, 2.5]);
+  assert.deepEqual(translatePts(SQUARE, 0.1, 0), [0, 0, 2, 0, 2, 2, 0, 2]);
+});
+
+test('rotatePts: 90° about the centre turns the square onto itself; 0° keeps it; other angles stay on quarter tiles', () => {
+  assert.deepEqual(rotatePts(SQUARE, 1, 1, 90), [2, 0, 2, 2, 0, 2, 0, 0]);
+  assert.deepEqual(rotatePts(SQUARE, 1, 1, 0), SQUARE);
+  const r = rotatePts(SQUARE, 1, 1, 30);
+  assert.ok(r.every(v => Math.round(v * 4) === v * 4));
+});
+
+test('scalePts: scales about an anchor corner; a factor of 0.5 about the far corner halves the square', () => {
+  assert.deepEqual(scalePts(SQUARE, 0, 0, 2, 2), [0, 0, 4, 0, 4, 4, 0, 4]);
+  assert.deepEqual(scalePts(SQUARE, 2, 2, 0.5, 0.5), [1, 1, 2, 1, 2, 2, 1, 2]);
+});
+
+test('boxOf: the axis-aligned box of the corners; rounding keeps quarter tiles', () => {
+  assert.deepEqual(boxOf(L_SHAPE), [0, 0, 4, 4]);
+  assert.deepEqual(boxOf(moveCorner(SQUARE, 0, 0.3, -0.2)), [0, -0.25, 2, 2]);
+});
+
+/** a host for the tool: sends and toasts are recorded; a tile is 10 css px along each axis */
+function toolHost() {
+  const sent: unknown[] = [], toasts: string[] = [];
+  const host = {
+    setLotGround: (k: string, p: unknown) => { sent.push([k, p]); }, emit() {}, save() {}, toast: (t: string) => { toasts.push(t); },
+    affine(o: number[]) { o[0] = 0; o[1] = 0; o[2] = 10; o[3] = 0; o[4] = 0; o[5] = 10; },
+  };
+  return { host, sent, toasts };
+}
+
+test('shape editing: a closed shape is selected; a corner drag moves it (snapped); a drag that crosses reverts and says why', () => {
+  const { host, toasts } = toolHost();
+  const tool = new PaintTool(host);
+  tool.pts = [0, 0, 4, 0, 4, 4, 0, 4];
+  tool.key({ key: 'Enter' } as KeyboardEvent);
+  assert.equal(tool.selected, 1);
+  tool.pointerDown({ x: 4, y: 0 }, 40, 0);
+  tool.pointerMove({ x: 3.4, y: 0.2 }, 34, 2);
+  tool.pointerUp(1);
+  assert.deepEqual(tool.areas[0]!.pts, [0, 0, 3, 0, 4, 4, 0, 4]);
+  tool.pointerDown({ x: 4, y: 4 }, 40, 40);
+  tool.pointerMove({ x: 0, y: 0 }, 0, 0);
+  tool.pointerUp(1);
+  assert.deepEqual(tool.areas[0]!.pts, [0, 0, 3, 0, 4, 4, 0, 4]);
+  assert.equal(toasts.length, 1);
+});
+
+test('shape editing: a right press on a corner removes it, a triangle keeps its 3 corners; empty ground is not a corner', () => {
+  const { host, toasts } = toolHost();
+  const tool = new PaintTool(host);
+  tool.pts = [0, 0, 4, 0, 4, 4, 0, 4];
+  tool.key({ key: 'Enter' } as KeyboardEvent);
+  assert.equal(tool.secondary({ x: 4, y: 0 }, 40, 0), true);
+  assert.deepEqual(tool.areas[0]!.pts, [0, 0, 4, 4, 0, 4]);
+  assert.equal(tool.secondary({ x: 4, y: 4 }, 40, 40), true);
+  assert.deepEqual(tool.areas[0]!.pts, [0, 0, 4, 4, 0, 4]);
+  assert.deepEqual(toasts, ['An area needs 3 corners']);
+  assert.equal(tool.secondary({ x: 20, y: 20 }, 200, 200), false);
 });
