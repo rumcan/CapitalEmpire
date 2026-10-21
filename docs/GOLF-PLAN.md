@@ -97,7 +97,7 @@ Pick 1 of 3 cards at each results screen, as today. The pool is in section 8.3.
   - Site: open, mostly flat land (GROUND or PATCH tiles), its clubhouse **150–350 tiles from the town centre**, joined to a town
     road by a short gravel or street drive, about **300 x 450 tiles** (600 x 900 m, about 54 ha) with room to grow to 18 holes
     on at least one side. Placed like the stadium's suggested spot today (`event/site.ts`).
-  - Layout: **9 holes in a loop out and back to the clubhouse**, par 35: 2 par 3s, 5 par 4s, 2 par 5s, about 2,700 m (the
+  - Layout: **9 holes in a loop out and back to the clubhouse**, par 36: 2 par 3s, 5 par 4s, 2 par 5s, about 2,700 m (the
     1968 standard nine of about 3,000 yards; Golf Course Industry). Holes are routed so each green is near the next tee.
   - **Everything is painted**, using the same paint areas the player edits: narrow, worn fairways (the "worn" variants), small
     greens with fringe borders, tees, rough everywhere inside the boundary, 4–6 bunkers, one pond, trees lining the holes
