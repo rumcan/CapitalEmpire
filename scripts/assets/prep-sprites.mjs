@@ -20,7 +20,10 @@ import { describe, newFramePath, parseFix } from './walker-fix.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
 const OUT = path.join(ROOT, 'src/assets/atlas');
-fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
+// empty the atlas folder file by file (retrying a file held for a moment by the indexer or a scanner) and keep the folder itself: on Windows
+// removing the folder fails while anything has it open (an Explorer window, a dev server's watcher), and left the atlas half deleted
+fs.mkdirSync(OUT, { recursive: true });
+for (const f of fs.readdirSync(OUT)) fs.rmSync(path.join(OUT, f), { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
 
 const town = JSON.parse((await fromExport('town.json')).toString());
 const items = town.items, fromLib = await libraryItems(new Set(Object.keys(items)));
