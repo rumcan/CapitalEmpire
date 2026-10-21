@@ -52,6 +52,7 @@ const APPENDED = [
   { file: 'src/game/east-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/east/east-${p}-0.webp` },
   { file: 'src/game/business-library.ts', re: /items: LibItem\[\] = (\[[^\n]*\]);\n/, page: p => `src/assets/businesses/integrated/business-${p}-0.webp` },
   { file: 'src/game/construction-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/construction/construction-${p}.webp` },
+  { file: 'src/game/golf-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/golf/golf-${p}.webp` },
 ];
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
 const DECAL_PAGE = path.join(ROOT, 'src/assets/ground/lot-decals.webp');
