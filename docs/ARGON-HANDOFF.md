@@ -52,8 +52,13 @@ current one. Save everything you write for this game into that folder._
   wiring (a new game is a golf game; save and load; legacy saves load as classic).
 
 ## 4. The next jobs, in order (keep this list current)
-1. **G1 finish** (Claude is on it): engine wiring (a new game is a golf game; save and load), build, browser check.
-2. **Town districts** (Claude is on it; the owner asked twice): every town has a clear commercial district (the lots on its main
+1. **G1 finish:** the engine wiring is on GitHub branch **`agent2/g1-engine`** (commit 35fadd5: a new game is a golf game with one
+   town, the old nine painted, a clubhouse, car park and drive; save and load; the golf HUD's view; skip to tournament; courses may
+   roll over hills). Its tests and typecheck pass; it is **not yet browser-checked or merged**. Next: run it (`npm run dev`), start a
+   new game, check the town, course, clubhouse, car park and drive, skip to the tournament and watch tier 1 run, save and reload,
+   check a legacy save still loads as three towns; then a PR into main with any fixes.
+2. **Town districts** (a Claude coder was on it 2026-10-21 evening; if it is not on main by the time you read this, write it as a
+   package; the owner asked twice): every town has a clear commercial district (the lots on its main
    asphalt street near the centre: shops only) and a clear industrial district (a 2 x 2 block corner of its grid toward the highway:
    works only); the rest residential with a few shops (`src/game/lots/districts.ts`, `useFor` in `src/game/lots/town.ts`).
 3. **G1c, course dressing:** tee markers and flagsticks at the layout's tees and pins, trees lining the holes, a cart path loop, benches.
