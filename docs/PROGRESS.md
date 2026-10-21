@@ -1943,6 +1943,15 @@ recommended defaults until the owner answers):**
   built eagerly in place of Paint's Concrete).
 - **Car park drives** (lots' car parks): a pay boom (`ce:parking-entry`, looks only, no fees) just inside the lot line in place of
   the street-name sign that stood at every drive; `Opt.paved` lets it stand on the drive's paving.
+- **Ground photos for the code-painted textures** (`claude/photo-ground`): lot dirt (building sites), gravel yards and verges,
+  gravel roads, farm fields and river/creek water now draw the photos (`GROUND_PHOTO` in renderer.ts; eager in every ground
+  worker, ~70 MB a worker, 1-3 workers). There are no separate lakes: the big water is rivers. Forest, rock, bank, creek bed,
+  meadow, paving and pad stay painted. **Paint at scale 2+ draws the full-resolution photo** (no pixelation at 400%), and the
+  mixed photos are 25% bigger (`PHOTO_SIZE` 1.25); TEX_VERSION tex-18.
+- **More TrickOrTreat art:** `output/imagegen/town-variations/*/sliced/run` is already almost all in the atlas (2026-10-17: 79 of 123,
+  7 removed by the owner; the rest flat decals, arcade clutter, 2 chain-link variants). The lot decals now take every recoloured
+  variation of their litter, leaf and grass decals plus the 2026-10-17 grass and leaf scatters (34 -> 123); building sites pick
+  their cement, rubble, spools, lumber and pallets from the recolours and sometimes get a forklift.
 - The in-game Remove (Del) deletes one prop on this map only; a town lot's props are not saved, so the lot puts them back when it is
   composed again. The studio's "Remove from game" is the way to drop a sprite everywhere.
 
