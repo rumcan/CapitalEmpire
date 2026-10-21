@@ -38,8 +38,9 @@ test('facing: the iso screen directions of moves along the tile axes and diagona
   assert.equal(name(1, -1), 'E'); assert.equal(name(-1, 1), 'W');
   assert.equal(name(1, 0), 'SE'); assert.equal(name(0, 1), 'SW');
   assert.equal(name(-1, 0), 'NW'); assert.equal(name(0, -1), 'NE');
-  // the west side is drawn as the east mirrored
-  assert.deepEqual(FACING_ROW[facing(0, 1)], [1, true]); assert.deepEqual(FACING_ROW[facing(1, 0)], [1, false]);
+  // every facing is its own sheet row, drawn for real (never mirrored)
+  FACINGS.forEach((_, i) => assert.deepEqual(FACING_ROW[i], [i, false]));
+  assert.deepEqual(FACING_ROW[facing(0, 1)], [facing(0, 1), false]); assert.deepEqual(FACING_ROW[facing(1, 0)], [facing(1, 0), false]);
 });
 
 test('sidewalks: both sides of a street at the kerb plus half the walk, cut back clear of the junctions', () => {
@@ -80,7 +81,7 @@ test('2,000 walkers for 5 sim minutes: out on the sidewalks (or crossing at a ju
   assert.ok(maxOut > 300, `only ${maxOut} out at once`);
 });
 
-test('speed and walk cycle: about 1.4 m/s; frames 1-4 cycle while walking', () => {
+test('speed and walk cycle: about 1.4 m/s; frames 1-8 cycle while walking', () => {
   const road: WalkRoad = { pts: [{ x: 0, y: 0 }, { x: 4000, y: 0 }], ...STREET, closed: false };
   const P = new Pedestrians(3, 10, 200);
   P.setDoors([{ x: 20, y: KERB + 2, kind: 0 }, { x: 3900, y: KERB + 2, kind: 1 }]); P.setSidewalks(sidewalks([road])); P.populate(200);
@@ -91,7 +92,8 @@ test('speed and walk cycle: about 1.4 m/s; frames 1-4 cycle while walking', () =
   const v = sum / n;
   assert.ok(n > 50, `${n} walkers measured`);
   assert.ok(v > WALK_SPEED * 0.75 && v < WALK_SPEED * 1.25, `mean speed ${v.toFixed(3)} tiles/s`);
-  for (const f of [1, 2, 3, 4]) assert.ok(seen.has(f), `frame ${f} never shown`);
+  for (const f of [1, 2, 3, 4, 5, 6, 7, 8]) assert.ok(seen.has(f), `frame ${f} never shown`);
+  assert.ok(!seen.has(9), 'frame 9 shown: only 8 walk frames');
 });
 
 test('determinism, and a road edit leaves the walkers on unchanged sidewalks exactly where they were', () => {

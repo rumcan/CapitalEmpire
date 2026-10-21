@@ -12,7 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
+import { ROOT, fromBranch, fromExport, libraryItems } from './source.mjs';
 import { bakeVariant, lotVariants } from './lot-variants.mjs';
 import { REMOVED } from './removed.mjs';
 import { SCALE_OVERRIDES } from './overrides.mjs';
@@ -87,10 +87,11 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   sprites.push({ id, cat, it, cost, crop, cw, ch: chh, qx0: x0 / res, qy0: y0 / res, qx1: (x1 + 1) / res, qy1: (y1 + 1) / res });
 }
 
-// ---- 1b. the townspeople's walk sheets (TrickOrTreat art/people/{adult,kid}): 5 stored facings (S, SE, E, NE, N; the west side
-// is the east mirrored) x 5 frames (idle, walk1-4) per person. The art is 128 px per metre and the game draws people at 64 (the
-// player kids' scale), so a frame is packed at 0.6 x half its size
-const WALK_DIRS = ['S', 'SE', 'E', 'NE', 'N'], WALK_FRAMES = 5, people = [], walkers = [], flipped = [], needed = [];
+// ---- 1b. the townspeople: the 3D renders (scripts/assets/people3d/render-person-3d.mjs -> art/people3d/<id>/sheet.webp + sheet.json).
+// Every facing is drawn for real (no mirroring): one row per facing in the sheet's order, and per person the columns idle, walk1..walkN.
+// The art is 128 px per metre; the game draws people at 64 (k = 0.5 of the art), so a frame is packed at 0.6 x half its size
+const WALK_DIRS = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE'], people = [], walkers = [], flipped = [], needed = [];
+let WALK_FRAMES = 0;
 /** person id -> facing -> frame -> fix code (scripts/assets/walker-fixes.json, the studio's People tab; see walker-fix.mjs) */
 const WALKER_FIXES = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/assets/walker-fixes.json'), 'utf8')); } catch { return {}; } })();
 /** a frame mirrored left to right (RGBA, W x H) */
@@ -103,42 +104,45 @@ const trim = (data, W, H) => {
   for (let y = 0; y < ch; y++) data.copy(crop, y * cw * 4, ((y0 + y) * W + x0) * 4, ((y0 + y) * W + x1 + 1) * 4);
   return { crop, cw, ch, x0, y0, x1, y1 };
 };
-for (const size of ['adult', 'kid']) {
-  const dir = path.join(TOT, 'art/people', size); if (!fs.existsSync(dir)) { console.warn('no people at', dir); continue; }
-  for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) {
-    const m = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')), sheet = path.join(dir, file.replace(/\.json$/, '.webp'));
-    if (!fs.existsSync(sheet) || REMOVED.has(m.id)) continue;
-    const k = 0.5, fw = m.frameWidth, fh = m.frameHeight, W = Math.round(fw * k * MIP0), H = Math.round(fh * k * MIP0), pi = people.length;
-    people.push({ id: m.id, size, w: fw * k, h: fh * k, ax: m.anchor.x * k, ay: m.anchor.y * k, m: m.heightMetres, fps: m.walkFps || 8 });
-    // the generated sheets have the odd frame facing the other way, or taken from another row: the owner's fixes from the sprite
-    // studio (People tab, walker-fix.mjs). Every row is read first, as sheet has it, so a fix can take a frame from any row
-    const orig = {}, rows = {};
-    for (const d of WALK_DIRS) {
-      const row = m.directions.indexOf(d); orig[d] = [];
-      for (let fr = 0; fr < WALK_FRAMES; fr++) orig[d].push(await sharp(sheet).extract({ left: fr * fw, top: row * fh, width: fw, height: fh }).resize(W, H, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer());
-    }
-    for (const d of WALK_DIRS) {
-      rows[d] = [...orig[d]];
-      for (const [k2, code] of Object.entries(WALKER_FIXES[m.id]?.[d] ?? {})) {
-        const i = +k2, op = parseFix(code); if (!op) continue;
-        if (op.kind === 'mirror') rows[d][i] = mirror(orig[d][i], W, H);
-        else if (op.kind === 'use') { const src = orig[op.dir ?? d][op.frame]; rows[d][i] = op.mirror ? mirror(src, W, H) : src; }
-        else if (op.kind === 'new') {
-          const np = newFramePath(ROOT, m.id, d, i);
-          if (fs.existsSync(np)) rows[d][i] = await sharp(np).resize(W, H, { fit: 'contain', position: 'bottom', background: { r: 0, g: 0, b: 0, alpha: 0 } }).ensureAlpha().raw().toBuffer();
-          else needed.push(`${m.id} ${d} ${i}`);
-        }
-        flipped.push(`${m.id} ${d} ${i} ${describe(code)}`);
+const PEOPLE3D = path.join(ROOT, 'art/people3d');
+for (const dirName of fs.existsSync(PEOPLE3D) ? fs.readdirSync(PEOPLE3D).sort() : []) {
+  const json = path.join(PEOPLE3D, dirName, 'sheet.json'), sheet = path.join(PEOPLE3D, dirName, 'sheet.webp');
+  if (!fs.existsSync(json) || !fs.existsSync(sheet)) continue;
+  const m = JSON.parse(fs.readFileSync(json, 'utf8'));
+  if (REMOVED.has(m.id)) continue;
+  if (m.directions.join(' ') !== WALK_DIRS.join(' ')) throw new Error(`${m.id}: rows ${m.directions.join(' ')}, expected ${WALK_DIRS.join(' ')}`);
+  if (WALK_FRAMES && m.frames.length !== WALK_FRAMES) throw new Error(`${m.id}: ${m.frames.length} frames, the other people have ${WALK_FRAMES}`);
+  WALK_FRAMES = m.frames.length;
+  const k = 0.5, fw = m.frameWidth, fh = m.frameHeight, W = Math.round(fw * k * MIP0), H = Math.round(fh * k * MIP0), pi = people.length;
+  people.push({ id: m.id, size: m.size, w: fw * k, h: fh * k, ax: m.anchor.x * k, ay: m.anchor.y * k, m: m.heightMetres, fps: m.walkFps || 8 });
+  // the owner's fixes from the sprite studio (People tab, walker-fix.mjs): every row is read first, as the sheet has it, so a fix can take a frame from any row
+  const orig = {}, rows = {};
+  for (const d of WALK_DIRS) {
+    const row = m.directions.indexOf(d); orig[d] = [];
+    for (let fr = 0; fr < WALK_FRAMES; fr++) orig[d].push(await sharp(sheet).extract({ left: fr * fw, top: row * fh, width: fw, height: fh }).resize(W, H, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer());
+  }
+  for (const d of WALK_DIRS) {
+    rows[d] = [...orig[d]];
+    for (const [k2, code] of Object.entries(WALKER_FIXES[m.id]?.[d] ?? {})) {
+      const i = +k2, op = parseFix(code); if (!op) continue;
+      if (op.kind === 'mirror') rows[d][i] = mirror(orig[d][i], W, H);
+      else if (op.kind === 'use') { const src = orig[op.dir ?? d][op.frame]; rows[d][i] = op.mirror ? mirror(src, W, H) : src; }
+      else if (op.kind === 'new') {
+        const np = newFramePath(ROOT, m.id, d, i);
+        if (fs.existsSync(np)) rows[d][i] = await sharp(np).resize(W, H, { fit: 'contain', position: 'bottom', background: { r: 0, g: 0, b: 0, alpha: 0 } }).ensureAlpha().raw().toBuffer();
+        else needed.push(`${m.id} ${d} ${i}`);
       }
-    }
-    for (const d of WALK_DIRS) {
-      rows[d].forEach((data, fr) => {
-        const t = trim(data, W, H);   // display px = packed px / MIP0
-        walkers.push({ id: `${m.id}:${d}:${fr}`, person: pi, crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 / MIP0, qy0: t.y0 / MIP0, qx1: (t.x1 + 1) / MIP0, qy1: (t.y1 + 1) / MIP0 });
-      });
+      flipped.push(`${m.id} ${d} ${i} ${describe(code)}`);
     }
   }
+  for (const d of WALK_DIRS) {
+    rows[d].forEach((data, fr) => {
+      const t = trim(data, W, H);   // display px = packed px / MIP0
+      walkers.push({ id: `${m.id}:${d}:${fr}`, person: pi, crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 / MIP0, qy0: t.y0 / MIP0, qx1: (t.x1 + 1) / MIP0, qy1: (t.y1 + 1) / MIP0 });
+    });
+  }
 }
+if (!WALK_FRAMES) { console.warn('no 3D people in art/people3d (run render-person-3d.mjs)'); WALK_FRAMES = 9; }
 
 // ---- 1c. the baked house lots (lot-variants.mjs): one picture per variant, rendered straight at mip-0 resolution, the whole lot
 // as its footprint and the house as its planner block
@@ -213,9 +217,9 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'export const LIBRARY: LibItem[] = [',
   ...lib.map(e => '  ' + JSON.stringify(e) + ','),
   '];',
-  '/** the townspeople (TrickOrTreat art/people): display size and anchor (feet) at the native scale, height in metres, walk frames per second */',
+  '/** the townspeople (art/people3d, 3D renders): display size and anchor (feet) at the native scale, height in metres, walk frames per second */',
   `export const WALKER_PEOPLE: { id: string; size: string; w: number; h: number; ax: number; ay: number; m: number; fps: number }[] = ${JSON.stringify(people.map(p => ({ ...p, w: +p.w.toFixed(2), h: +p.h.toFixed(2), ax: +p.ax.toFixed(2), ay: +p.ay.toFixed(2) })))};`,
-  '/** facings stored per person (the west side is the east mirrored) and frames per facing (0 idle, 1-4 the walk) */',
+  '/** the facings of every person (each drawn for real, none mirrored) and frames per facing (0 idle, 1 .. WALK_FRAMES-1 the walk) */',
   `export const WALK_DIRS = ${JSON.stringify(WALK_DIRS)}, WALK_FRAMES = ${WALK_FRAMES};`,
   '/** every walker frame (person, facing, frame in order): page, u0, v0, u1, v1, then the quad x0, y0, x1, y1 */',
   `const WF = [${walkers.map(w => [w.page, ...[w.px / PAGE, w.py / PAGE, (w.px + w.cw) / PAGE, (w.py + w.ch) / PAGE].map(v => +v.toFixed(6)), ...[w.qx0, w.qy0, w.qx1, w.qy1].map(v => +v.toFixed(2))].join(',')).join(',')}];`,

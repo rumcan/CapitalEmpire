@@ -67,10 +67,10 @@ export function facing(dx: number, dy: number): number {
   const sx = dx - dy, sy = (dx + dy) / 2, deg = (Math.atan2(sy, sx) * 180) / Math.PI;
   return ((Math.round((deg - 90) / 45) % 8) + 8) % 8;
 }
-/** a facing as a stored sheet row (S, SE, E, NE, N) and whether to mirror it (the west side is the east mirrored) */
-export const FACING_ROW: readonly [number, boolean][] = [[0, false], [1, true], [2, true], [3, true], [4, false], [3, false], [2, false], [1, false]];
+/** a facing as its sheet row (the 3D sheets draw all eight facings, so each is its own row and none is mirrored) */
+export const FACING_ROW: readonly [number, boolean][] = [[0, false], [1, false], [2, false], [3, false], [4, false], [5, false], [6, false], [7, false]];
 
-/** one walker in view (inBox): position (tiles), facing (0-7), walk frame (0 idle, 1-4), the person index */
+/** one walker in view (inBox): position (tiles), facing (0-7), walk frame (0 idle, 1..walkFrames), the person index */
 export interface WalkerView { x: number; y: number; face: number; frame: number; person: number }
 
 /** a door the walkers come out of and go into (tiles): a home (kind 0) or a place they go to (kind 1: shops, work, civic, venues) */
@@ -103,7 +103,8 @@ export class Pedestrians {
   private readonly dx: Float32Array; private readonly dy: Float32Array; private readonly hx: Float32Array; private readonly hy: Float32Array; private readonly inside: Float32Array;
   readonly x: Float32Array; readonly y: Float32Array; readonly face: Uint8Array;
 
-  constructor(seed: number, readonly people: number, readonly cap = 4096) {
+  /** `walkFrames` walk frames per cycle (1..walkFrames after the idle frame 0) */
+  constructor(seed: number, readonly people: number, readonly cap = 4096, readonly walkFrames = 8) {
     this.r = mulberry(seed >>> 0);
     this.sw = new Int32Array(cap); this.s = new Float64Array(cap); this.dir = new Int8Array(cap); this.spd = new Float32Array(cap);
     this.lat = new Float32Array(cap); this.dist = new Float32Array(cap); this.pause = new Float32Array(cap); this.who = new Uint16Array(cap);
@@ -250,8 +251,8 @@ export class Pedestrians {
       if (this.r() < dt * 0.02) this.pause[i] = 1 + this.r() * 3;   // now and then someone stops for a few seconds
     }
   }
-  /** the walk frame of walker i: 0 standing, else 1-4 by the metres walked */
-  frame(i: number) { return this.pause[i] > 0 ? 0 : 1 + (Math.floor(this.dist[i] / STRIDE_M) & 3); }
+  /** the walk frame of walker i: 0 standing, else 1..walkFrames by the metres walked (one cycle every walkFrames strides) */
+  frame(i: number) { return this.pause[i] > 0 ? 0 : 1 + (Math.floor(this.dist[i] / STRIDE_M) % this.walkFrames); }
   /** the walkers out in a tile box, written into out (reused objects, grown as needed); returns how many */
   inBox(x0: number, y0: number, x1: number, y1: number, out: WalkerView[]): number {
     let m = 0;

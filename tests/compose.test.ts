@@ -258,12 +258,12 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, 'ec11d614'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, 'f0389a80'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '29d20b11'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '295a052c'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '448b776c'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '0441b83f'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'f0506f5b'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '0e7c4386'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '56e10b4c'],
     [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'bc30f6ea'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '1ce2b5e2'],

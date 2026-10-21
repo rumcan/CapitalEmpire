@@ -98,6 +98,17 @@ function blockers(net: RoadNetwork, s: Seg, o: Pt, u: Pt, n: Pt, W: number, D: n
     if (touches(segBox(s2), pad(box, thr))) { near.push(s2); nearThr.push(thr); }
   }
 }
+/** whether a lot's rectangle reaches into the circle (its clearance, ringClear) of a roundabout or a mini near it: the circle's centre
+ *  clamped into the lot's own frame is within its radius */
+function inRing(net: RoadNetwork, l: Lot): boolean {
+  for (const s of net.segsNear(l.c, Math.hypot(l.w, l.d) / 2 + RING_NEAR)) for (const nd of [s.a, s.b]) {
+    const r = ringClear(nd); if (!(r > 0)) continue;
+    const v = sub(nd, l.o), a = Math.min(l.w, Math.max(0, dot(v, l.u))), b = Math.min(l.d, Math.max(0, dot(v, l.n)));
+    const px = l.o.x + l.u.x * a + l.n.x * b - nd.x, py = l.o.y + l.u.y * a + l.n.y * b - nd.y;
+    if (px * px + py * py < r * r) return true;
+  }
+  return false;
+}
 /** is (px, py) within a blocker's clearance (a seg's band or a ring's circle) */
 function blocked(px: number, py: number): boolean {
   for (let m = 0; m < rings.length; m++) { const dx = px - rings[m]!.x, dy = py - rings[m]!.y, r = ringR[m]!; if (dx * dx + dy * dy <= r * r) return true; }
@@ -250,15 +261,18 @@ export class LotMap {
       const bl = blockLots(net, b, this.terr, this.cuts); if (!bl) continue;
       this.blocks.set(b.key, { box, keys: bl.map(l => l.key) });
       subs.push(b.pts); subBoxes.push(box);
-      for (const l of bl) items.push(l);
+      // a ring grown at a block corner (a junction made a roundabout) reaches into the corner cells: those lots go, as the frontage lots do
+      for (const l of bl) if (!inRing(net, l)) items.push(l);
     }
     if (this.cuts.size > CUT_CAP) this.cuts.clear();
     // the frontage candidates and the old frontage lots whose centre lies in a subdivided block are skipped (they would clash with its lots)
     const inSub = (x: number, y: number) => { for (let i = 0; i < subs.length; i++) { const bx = subBoxes[i]!; if (x >= bx[0] && x <= bx[2] && y >= bx[1] && y <= bx[3] && inBlock(subs[i]!, x, y)) return true; } return false; };
-    for (const l of fixed) if (l.key.startsWith('blk:')) items.push(l);
+    for (const l of fixed) if (l.key.startsWith('blk:') && !inRing(net, l)) items.push(l);
     const rest: Lot[] = [];
     for (const s of net.segs) if (segTouches(s, Z)) segLots(net, s, this.terr, rest, inSub);
-    for (const l of fixed) if (!l.key.startsWith('blk:') && !inSub(l.c.x, l.c.y)) rest.push(l);
+    // (a lot kept from outside the scope is re-tested against the rings too: a junction made a roundabout grows a circle into the lots of the
+    // roads around it, and a corner lot fronting a side road would otherwise stay standing in the ring)
+    for (const l of fixed) if (!l.key.startsWith('blk:') && !inSub(l.c.x, l.c.y) && !inRing(net, l)) rest.push(l);
     rest.sort(prio);
     for (const l of rest) items.push(l);
     // 3. accept in priority order: a lot that overlaps an accepted one is dropped

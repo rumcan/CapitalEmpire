@@ -1,0 +1,13 @@
+{
+  "generationId": "07a5e0a0-ed3f-498e-80e1-42a60649bbaa",
+  "prompt": "An ordinary adult man from a 1985 small American town, average build, short neat brown hair, clean-shaven, plain mid-grey crew-neck sweater, plain dark blue straight jeans, plain brown leather shoes. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic adult proportions, stylised hand-painted game look. No props, nothing in the hands, no logos.",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "text-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "C:\\Work Admin\\PERSONAL\\Repos\\CapitalEmpire\\.claude\\worktrees\\sprites-and-people\\art\\people3d\\base_man\\model.glb",
+  "status": "saved",
+  "sha256": "93bba2590cd272bfd50ffa9b68b4402c3d789877b7237aa0f33bb22d52b7c20c",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/07a5e0a0-ed3f-498e-80e1-42a60649bbaa/model.compressed.glb",
+  "seed": 2106245387
+}
