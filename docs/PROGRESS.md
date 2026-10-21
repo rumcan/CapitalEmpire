@@ -1952,6 +1952,12 @@ recommended defaults until the owner answers):**
   7 removed by the owner; the rest flat decals, arcade clutter, 2 chain-link variants). The lot decals now take every recoloured
   variation of their litter, leaf and grass decals plus the 2026-10-17 grass and leaf scatters (34 -> 123); building sites pick
   their cement, rubble, spools, lumber and pallets from the recolours and sometimes get a forklift.
+- **Every isometric library building on the lots** (the owner: "use everything"): the house variations (kind 'building') and the
+  house backs (`REAR_VIEW`: north variants and gen:back-*) in the house pools, the 12 works buildings in industrial lots (their
+  painted signs are lettering: `PAINTED_SIGNS` in lettering.ts, never mirrored), water towers / silo / windmill on big works yards,
+  gazebo / fountain / jungle gyms as green centrepieces (axis-aligned greens only), and the derelict, church, barn and gas shop
+  variations; shops deal the wide classic fronts half the time. Counted over test lots: houses 14 -> 36 of 65 (the rest drawn
+  straight on, FRONTAL, by the owner's rule), industry 4 -> 19 of 22, landmarks 7 -> 10. The side-yard test now covers every house.
 - The in-game Remove (Del) deletes one prop on this map only; a town lot's props are not saved, so the lot puts them back when it is
   composed again. The studio's "Remove from game" is the way to drop a sprite everywhere.
 
