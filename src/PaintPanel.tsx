@@ -112,6 +112,40 @@ export function PaintPanel({ game }: { game: Game }) {
           <div className="flex flex-wrap gap-1">
             {BORDER_TEXES.map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
           </div>
+          <div className="mt-2 text-[11px] text-slate-400">Border scale</div>
+          <div className="flex items-center gap-1">
+            <button className="btn" onClick={() => p.setStyle({ bscale: s.bscale / 1.25 })}>−</button>
+            <span className="w-12 text-center text-xs text-slate-200">{`${Math.round(s.bscale * 100)}%`}</span>
+            <button className="btn" onClick={() => p.setStyle({ bscale: s.bscale * 1.25 })}>+</button>
+            <button className="btn" onClick={() => p.setStyle({ bscale: 1 })}>Reset</button>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">Border angle</div>
+          <div className="flex items-center gap-2">
+            <input type="range" min={-90} max={90} step={5} value={s.bangle} onChange={e => p.setStyle({ bangle: +e.target.value })} className="flex-1" />
+            <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.bangle)}°`}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <button className={`chip ${s.bangle === 0 ? 'chip-on' : ''}`} onClick={() => p.setStyle({ bangle: 0 })}>Grid 0°</button>
+            <button className={`chip ${s.bangle === 45 ? 'chip-on' : ''}`} onClick={() => p.setStyle({ bangle: 45 })}>45°</button>
+            <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => p.setStyle({ bangle: edgeAngle(pts) })}>Along first edge</button>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">Border tone</div>
+          <div className="flex flex-wrap gap-1">
+            {TONES.map(t => <button key={t.id} className={`chip ${s.btone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btone: t.id, btint: toneStyle(t.id, s.btint).tint })}>{t.label}</button>)}
+          </div>
+          {s.btone > 0 && (
+            <>
+              <div className="mt-2 text-[11px] text-slate-400">Border strength</div>
+              <div className="flex items-center gap-2">
+                <input type="range" min={0} max={100} step={5} value={Math.round(s.btoneAmt * 100)} onChange={e => p.setStyle({ btoneAmt: +e.target.value / 100 })} className="flex-1" />
+                <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.btoneAmt * 100)}%`}</span>
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-xs text-slate-200">
+                Border tint
+                <input type="color" value={s.btint} onChange={e => p.setStyle({ btint: e.target.value })} className="h-6 w-10 cursor-pointer bg-transparent" />
+              </div>
+            </>
+          )}
         </>
       )}
       <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">

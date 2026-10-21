@@ -492,11 +492,13 @@ export class GroundPainter {
   private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     for (const p of paints) {
       const st = p.paint!, path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(st.s, st.s), pb = quadBox(p.pts);
+      // the border band's own scale and angle (absent: the fill's, as before); without them it shares G
+      const bsx = st.bs ?? st.s, Gb = st.bs === undefined && st.ba === undefined ? G : new DOMMatrix().rotateSelf(0, 0, st.ba ?? st.a).scaleSelf(bsx, bsx);
       const r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
       if (r[2] <= r[0] || r[3] <= r[1]) continue;
       const asph = p.tex === 'asphalt' || p.tex === 'asphaltDark' || p.tex === 'asphaltWorn' || p.tex === 'lotAsphalt', paved = asph || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs';
       /** paints texture t over the area: a fill of its rectangle (w = 0), or a stroke of its edge w tiles wide */
-      const lay = (t: string, w: number) => {
+      const lay = (t: string, w: number, Gx: DOMMatrix, sx: number) => {
         const put = (style: string | CanvasPattern) => { if (w) { ctx.strokeStyle = style; ctx.lineWidth = w; ctx.stroke(path); } else { ctx.fillStyle = style; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); } };
         const tone = (col: string, op: GlobalCompositeOperation, alpha: number) => { ctx.globalCompositeOperation = op; ctx.globalAlpha = alpha; put(col); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; };
         if (t === 'kerb') { ctx.strokeStyle = this.tex.curb.joint; ctx.lineWidth = w; ctx.stroke(path); ctx.strokeStyle = this.tex.curb.top; ctx.lineWidth = Math.max(0.02, w - 0.08); ctx.stroke(path); return; }
@@ -512,31 +514,35 @@ export class GroundPainter {
                 const ux = (bx - ax) / len, uy = (by - ay) / len, seed = Math.round(ax * 4) * 73856093 ^ Math.round(ay * 4) * 19349663 ^ Math.round(bx * 4) * 83492791;
                 this.drawSlabs(ctx, { kind: 'straight', a: { x: ax, y: ay }, b: { x: bx, y: by }, n: { x: -uy * sg, y: ux * sg }, w0: -(CURB_TOP + CURB_JOINT), w1: w / 2, visible: false, seed }, box);
               }
-            } else this.slabGrid(ctx, G, r, M);
+            } else this.slabGrid(ctx, Gx, r, M);
           }
           ctx.globalCompositeOperation = 'multiply'; put(this.screenPattern(ctx, 'grime', L, X0, Y0, Minv)); ctx.globalCompositeOperation = 'source-over';
           return;
         }
         if (t === 'asphaltDark') {
-          put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * st.s), G));
+          put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * sx), Gx));
           if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
           return;
         }
-        if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * st.s), G)); return; }
+        if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * sx), Gx)); return; }
         if (isPhotoTex(t)) {
           // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
           if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
           // the photo itself at the mip this zoom and scale ask for (sharp at every scale); the mosaic only when the source is missing
-          const src = this.tex.sourceFor(t, L * st.s);
-          put(src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t))); return;
+          const src = this.tex.sourceFor(t, L * sx);
+          put(src ? this.groundPattern(ctx, src.img, Gx, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L * sx), Gx, this.tex.periodOf(t))); return;
         }
-        put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
+        put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, Gx));
       };
       ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
-      lay(p.tex, 0);
+      lay(p.tex, 0, G, st.s);
       // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
       if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
-      if (st.b > 0) { ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); lay(st.bt, 2 * st.b); }
+      if (st.b > 0) {
+        ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); lay(st.bt, 2 * st.b, Gb, bsx);
+        // the border's tone: the same path stroked over the band (Multiply or Screen of its tint at its strength), inside the clip
+        if (st.bto) { ctx.globalCompositeOperation = st.bto === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.bta ?? 0; ctx.strokeStyle = st.btc ?? '#000000'; ctx.lineWidth = 2 * st.b; ctx.stroke(path); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+      }
       else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
       ctx.restore();
     }
