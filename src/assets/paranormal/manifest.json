@@ -1,0 +1,141 @@
+{
+  "tommy": {
+    "file": "tommy.webp",
+    "cols": 6,
+    "rows": 4,
+    "fw": 64,
+    "fh": 96,
+    "ax": 32,
+    "ay": 90,
+    "rowFrames": [
+      4,
+      6,
+      4,
+      6
+    ],
+    "source": "generated/world/hero_tommy-964f2394e87fd1d5.png"
+  },
+  "jess": {
+    "file": "jess.webp",
+    "cols": 6,
+    "rows": 4,
+    "fw": 64,
+    "fh": 96,
+    "ax": 32,
+    "ay": 90,
+    "rowFrames": [
+      4,
+      6,
+      4,
+      6
+    ],
+    "source": "generated/world/hero_jess-86df4faed3cc211f.png"
+  },
+  "sam": {
+    "file": "sam.webp",
+    "cols": 6,
+    "rows": 4,
+    "fw": 64,
+    "fh": 96,
+    "ax": 32,
+    "ay": 90,
+    "rowFrames": [
+      4,
+      6,
+      4,
+      6
+    ],
+    "source": "generated/world/hero_sam-0738bee5fa941582.png"
+  },
+  "zombie": {
+    "file": "zombie.webp",
+    "cols": 6,
+    "rows": 1,
+    "fw": 64,
+    "fh": 96,
+    "ax": 32,
+    "ay": 90,
+    "rowFrames": [
+      6
+    ],
+    "source": "generated/world/enemy_zombie-9631a8f62ad6a6cb.png"
+  },
+  "skeleton": {
+    "file": "skeleton.webp",
+    "cols": 6,
+    "rows": 1,
+    "fw": 64,
+    "fh": 96,
+    "ax": 32,
+    "ay": 90,
+    "rowFrames": [
+      6
+    ],
+    "source": "generated/world/enemy_skeleton-7f9149a401e53fb0.png"
+  },
+  "ghost": {
+    "file": "ghost.webp",
+    "cols": 6,
+    "rows": 1,
+    "fw": 64,
+    "fh": 96,
+    "ax": 32,
+    "ay": 90,
+    "rowFrames": [
+      6
+    ],
+    "source": "generated/world/enemy_ghost-b5d239d43e81e016.png"
+  },
+  "werewolf": {
+    "file": "werewolf.webp",
+    "cols": 6,
+    "rows": 1,
+    "fw": 96,
+    "fh": 128,
+    "ax": 48,
+    "ay": 122,
+    "rowFrames": [
+      6
+    ],
+    "source": "generated/world/enemy_werewolf-2b1a37499d272fd1.png"
+  },
+  "witch": {
+    "file": "witch.webp",
+    "cols": 6,
+    "rows": 1,
+    "fw": 72,
+    "fh": 112,
+    "ax": 36,
+    "ay": 106,
+    "rowFrames": [
+      6
+    ],
+    "source": "generated/world/enemy_witch-09e58eafd78436bd.png"
+  },
+  "bat": {
+    "file": "bat.webp",
+    "cols": 4,
+    "rows": 1,
+    "fw": 64,
+    "fh": 56,
+    "ax": 32,
+    "ay": 52,
+    "rowFrames": [
+      4
+    ],
+    "source": "generated/world/enemy_bat-340be58333b35673.png"
+  },
+  "pumpkin": {
+    "file": "pumpkin.webp",
+    "cols": 6,
+    "rows": 1,
+    "fw": 64,
+    "fh": 80,
+    "ax": 32,
+    "ay": 76,
+    "rowFrames": [
+      6
+    ],
+    "source": "generated/world/enemy_pumpkin-67cbe1b124d5bcd9.png"
+  }
+}

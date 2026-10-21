@@ -175,7 +175,11 @@ export default function App() {
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
-                  <div className="glass absolute right-0 top-full z-30 mt-2 flex w-44 flex-col gap-1 p-2">
+                  <div className="glass absolute right-0 top-full z-30 mt-2 flex w-64 flex-col gap-1 p-2">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Recurring dark nights bring kids, monsters and traffic diversions every few game days">
+                      <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
+                      Natural &amp; paranormal disasters
+                    </label>
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>

@@ -672,6 +672,8 @@ export class City {
     this.liftClosures(); this.dl.clear(); this.closed.clear(); this.disMid.clear(); this.disNotes = [];
     this.disSeed = seed; this.disT = this.sim.t;
     this.dis = this.disasters && this.cls ? new Disasters(seed, this.cls, this.heightOf) : null;
+    // Enabling mid-game advances the scheduler without replaying historical road closures.
+    this.dis?.step(this.sim.t, []);
     this.applyClosures(); this.disChanged = true;
   }
   /** dev and tests: the next daily roll of the disasters is kind (Disasters.force); false when they are off */
@@ -721,6 +723,8 @@ export class City {
     if (r.started.length) {
       const by = new Map<string, RoadInfo>(); for (const info of roads) by.set(info.key, info);
       for (const d of r.started) {
+        // A skipped clock may contain both start and end; never reinstall its expired closure.
+        if (d.end <= t) continue;
         const keys = d.closures.map(c => c.key);
         for (const k of keys) {
           this.closed.set(k, (this.closed.get(k) ?? 0) + 1);

@@ -13,17 +13,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
+import { capitalItems } from './capital-art.mjs';
 import { bakeVariant, lotVariants } from './lot-variants.mjs';
 import { REMOVED } from './removed.mjs';
 import { SCALE_OVERRIDES } from './overrides.mjs';
 import { describe, newFramePath, parseFix } from './walker-fix.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
-const OUT = path.join(ROOT, 'src/assets/atlas');
+const ATLAS_OUT = path.join(ROOT, 'src/assets/atlas'), OUT = path.join(ROOT, 'output/atlas-next');
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
 
 const town = JSON.parse((await fromExport('town.json')).toString());
-const items = town.items, fromLib = await libraryItems(new Set(Object.keys(items)));
+const items = { ...town.items, ...capitalItems() }, fromLib = await libraryItems(new Set(Object.keys(items)));
 for (const [id, it] of Object.entries(fromLib)) items[id] = it;
 
 // the largest scale the game draws each id at: the owner's lot table (+5% composer jitter) and the forest (up to 1.5). The table is
@@ -37,6 +38,9 @@ const maxScale = id => Math.max(1, (OWNER[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5
 const all = c => Object.keys(items).filter(id => items[id].cat === c);
 // an id may sit in several lists: the first list that names it wins (see `seen` in step 1)
 const SEL = {
+  'Capital businesses': all('Capital businesses'),
+  'Capital vegetation': all('Capital vegetation'),
+  'Grass materials': all('Grass materials'),
   'Houses': ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick', ...all('Houses'), 'expansion:ranch-rear', 'expansion:garage-rear', ...all('House backs')],
   'Shops & services': ['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:postoffice', 'town:firestation', 'town:fish_tackle', 'world:diner', 'world:arcade', 'world:video_rental', 'ref:building-gas-canopy', ...all('Shops & services')],
   'Landmarks': ['world:church', 'world:gazebo', 'world:watertower', 'ref:landmark-windmill', 'world:barn', 'world:primary_school', ...all('Landmarks & venues'), ...all('Park & sports')],
@@ -53,7 +57,7 @@ const SEL = {
   'Arcade': [...all('Arcade furniture'), ...all('Arcade decor')],
   'Odds & ends': [...all('Town odds & ends'), ...all('Halloween yard details')],
 };
-const COST = { 'More houses': 9000, 'Road signs': 150, 'Arcade': 600, 'Odds & ends': 200, 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300 };
+const COST = { 'Capital businesses': 24000, 'Capital vegetation': 250, 'Grass materials': 0, 'More houses': 9000, 'Road signs': 150, 'Arcade': 600, 'Odds & ends': 200, 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300 };
 // export categories whose kind the engine needs to see differently (derelict houses are not occupied houses)
 const KIND_OF_CAT = { 'Derelict town': 'building', 'Scrapyard clutter': 'decor' };
 
@@ -174,11 +178,15 @@ for (let p = 0; p < pages.length; p++) {
   for (let m = 0; m < MIPS; m++) {
     const size = PAGE >> m, name = `sprites-${p}-${m}.webp`;
     let img = sharp(full); if (m) img = img.resize(size, size, { kernel: 'lanczos3' }).sharpen({ sigma: 0.45 + 0.1 * m });
-    await img.webp({ quality: m ? 90 : 88, alphaQuality: 100, effort: 6 }).toFile(path.join(OUT, name));
+    await img.webp({ quality: m ? 90 : 88, alphaQuality: 100, effort: 2 }).toFile(path.join(OUT, name));
     row.push(name);
   }
   files.push(row);
 }
+
+// Publish completed pages together; a failed rebuild keeps the previous atlas available.
+fs.rmSync(ATLAS_OUT, { recursive: true, force: true });
+fs.cpSync(OUT, ATLAS_OUT, { recursive: true });
 
 // ---- 4. library.ts
 const imports = [], pageRows = [];
