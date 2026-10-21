@@ -1,6 +1,6 @@
 {
-  "style": "Isometric game sprite for a cosy, painterly small-town builder game, in exactly the drawing style, camera angle, scale of detail and warm lighting of the reference images: a 2:1 isometric view from above, the object's lower-left and lower-right sides visible, as on the references. Detailed painterly rendering like the references: soft shading, textured materials (wood grain, fabric folds, metal sheen), warm late-afternoon autumn light from the upper right and glowing warm lamps; not a flat cartoon, no thick outlines. The whole object fits in the frame with a small margin. Only the object itself: no ground, no grass, no terrain, no people, no scenery. Plain white background.",
-  "negative": "text, letters, words, numbers, logo, watermark, signature, grass, lawn, ground plane, terrain, scenery, people, crowd, cast shadow on the background, photo, 3d render, front view, side view, flat cartoon, thick outlines, cel shading",
+  "style": "Isometric game sprite for a cosy, painterly small-town builder game, in exactly the drawing style, camera angle, scale of detail and warm lighting of the reference images: a 2:1 isometric view from above, the object's lower-left and lower-right sides visible, as on the references. Detailed painterly rendering like the references: soft shading, textured materials (wood grain, fabric folds, metal sheen), warm late-afternoon autumn light from the upper right and glowing warm lamps; not a flat cartoon, no thick outlines. The whole object fits in the frame with a small margin. Only the object itself: no ground, no grass, no terrain, no people, no scenery.",
+  "negative": "text, letters, words, numbers, logo, watermark, signature, grass, lawn, ground plane, terrain, scenery, people, crowd, cast shadow on the background, white background, transparent checkerboard, magenta or pink on the object, photo, 3d render, front view, side view, flat cartoon, thick outlines, cel shading",
   "refs": [
     "src/assets/businesses/capital-v1/png/golf-halfway-pavilion.png",
     "src/assets/businesses/capital-v1/png/golf-pro-shop.png"
@@ -42,10 +42,12 @@
       "size": "8 x 2 m, 2.4 m tall",
       "aspect": "4:3",
       "prompt": "A row of six portable toilet cabins for a golf tournament crowd: dark green moulded plastic cabins with white roofs and small vent pipes, standing side by side on a low wooden deck with a ramp at one end and a hand-wash station at the other, about 8 m long, 2 m deep and 2.4 m tall. The cabin doors face the lower-left of the image.",
-      "hx": 4,
-      "hy": 1,
-      "kind": "building"
+      "hx": 5.3,
+      "hy": 2,
+      "kind": "building",
+      "fit": "the chosen take has a 10.5 x 4 m deck (cabins measured at 2.4 m tall)"
     }
   ],
-  "note": "hx / hy: half extents of the footprint in metres (X runs down-right on screen, Y down-left); the front faces +Y (lower-left), so flipped it faces +X. prep-golf.mjs sizes each sprite from its footprint: native width 64 * (hx + hy) px."
+  "note": "hx / hy: half extents of the footprint in metres (X runs down-right on screen, Y down-left); the front faces +Y (lower-left), so flipped it faces +X. prep-golf.mjs sizes each sprite from its footprint: native width 64 * (hx + hy) px.",
+  "deliverable": "Deliverable: a PNG on ONE flat, uniform, pure magenta #FF00FF background covering the whole canvas and every gap inside or around the object (between parts, under overhangs, through railings, scaffolding, windows and holes). The magenta is a chroma key: no gradient, shading, noise, texture, vignette, floor, cast shadow or checkerboard on it. Never use magenta, hot pink or purple anywhere on the object itself. Crisp clean silhouette edges against the magenta, no glow or halo."
 }
