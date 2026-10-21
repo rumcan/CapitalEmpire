@@ -1,5 +1,5 @@
 // The sprite studio: the owner's screen for fixing the game's sprites.
-//   Library: every sprite as the game has it (cut from the atlas), beside a person for scale: remove it from the game, or make it
+//   Library: every sprite as the game has it (cut from the atlas) and every lot decal (leaf drifts, stains: the decal strip), beside a person for scale: remove it from the game, or make it
 //            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json)
 //   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
@@ -28,6 +28,9 @@ const LOT_RES = 0.45;
 function library() {
   const src = fs.readFileSync(path.join(ROOT, 'src/game/library.ts'), 'utf8'), out = [];
   for (const m of src.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h, quad: e.quad }); }
+  // the lot decals (src/game/lot-decals.ts): packed at their scale (prep-decals.mjs), so their rect is the game size; w/h here are the native size
+  const decals = fs.readFileSync(path.join(ROOT, 'src/game/lot-decals.ts'), 'utf8'), seen = new Set(out.map(s => s.id));
+  for (const m of decals.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]), it = LIB.get(e.id); if (!seen.has(e.id)) out.push({ id: e.id, name: e.id, cat: 'Decals', kind: 'decal', w: Math.round(it?.w ?? e.w), h: Math.round(it?.h ?? e.h), rect: [e.x, e.y, e.w, e.h] }); }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
   // WF holds every frame of every person (per person: WALK_DIRS x WALK_FRAMES frames of 9 numbers); the first one (idle, facing S) is the picture
   const perPerson = (/WALK_DIRS = (\[[^\]]*\])/.exec(src) ? JSON.parse(/WALK_DIRS = (\[[^\]]*\])/.exec(src)[1]).length : 0) * +(/WALK_FRAMES = (\d+)/.exec(src)?.[1] ?? 0);
@@ -35,17 +38,20 @@ function library() {
   return out;
 }
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
-/** a sprite's picture as the game has it, cut from the atlas (cached on disk, so a removed sprite still shows after a rebuild) */
+const DECAL_PAGE = path.join(ROOT, 'src/assets/ground/lot-decals.webp');
+/** a sprite's picture as the game has it, cut from the atlas, or a lot decal's from its strip (cached on disk, so a removed sprite still shows after a rebuild) */
 async function thumb(id) {
   const f = path.join(CACHE, safe(id) + '.png'), stamp = f + '.json';
   const s = library().find(x => x.id === id);
-  // Removed sprites lose their atlas entry; their last picture must survive a rebuild.
-  if (!s?.tex) return fs.existsSync(f) ? fs.readFileSync(f) : null;
-  const [p, u0, v0, u1, v1] = s.tex, page = path.join(ATLAS, `sprites-${p}-0.webp`), stat = fs.statSync(page);
-  const version = JSON.stringify([s.tex, s.quad, stat.size, stat.mtimeMs]);
+  // Removed sprites and decals lose their entry; their last picture must survive a rebuild.
+  if (!s?.tex && !s?.rect) return fs.existsSync(f) ? fs.readFileSync(f) : null;
+  const page = s.rect ? DECAL_PAGE : path.join(ATLAS, `sprites-${s.tex[0]}-0.webp`), stat = fs.statSync(page);
+  const version = JSON.stringify([s.rect ?? s.tex, s.quad, stat.size, stat.mtimeMs]);
   if (fs.existsSync(f) && fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8') === version) return fs.readFileSync(f);
   const m = await sharp(page).metadata();
-  const left = Math.round(u0 * m.width), top = Math.round(v0 * m.height), width = Math.max(1, Math.round((u1 - u0) * m.width)), height = Math.max(1, Math.round((v1 - v0) * m.height));
+  let left, top, width, height;
+  if (s.rect) [left, top, width, height] = s.rect;
+  else { const [, u0, v0, u1, v1] = s.tex; left = Math.round(u0 * m.width); top = Math.round(v0 * m.height); width = Math.max(1, Math.round((u1 - u0) * m.width)); height = Math.max(1, Math.round((v1 - v0) * m.height)); }
   const png = await sharp(page).extract({ left, top, width, height }).resize(1200, 1200, { fit: 'inside', withoutEnlargement: true }).png().toBuffer();
   fs.writeFileSync(f, png); fs.writeFileSync(stamp, version); return png;
 }
@@ -124,7 +130,7 @@ http.createServer(async (req, res) => {
     if (P === '/api/sprites') {
       const list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
       for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
-      for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; }
+      for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; }
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
       return json({ sprites: list, removed: rm, walkers });
@@ -138,8 +144,10 @@ http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && P === '/api/scale') {
       const { id, factor, reset } = await body(req), sc = readScales();
-      if (reset) delete sc[id]; else { const cur = sc[id] ?? mapScale(id); sc[id] = +(cur * factor).toFixed(3); }
-      writeScales(sc); return json({ id, scale: sc[id] ?? mapScale(id), base: mapScale(id) });
+      // a lot decal's base is 1 (prep-decals packs it at its scale), a sprite's is the owner's map scale
+      const base = (library().find(x => x.id === id)?.kind ?? readRemoved()[id]?.kind) === 'decal' ? 1 : mapScale(id);
+      if (reset) delete sc[id]; else { const cur = sc[id] ?? base; sc[id] = +(cur * factor).toFixed(3); }
+      writeScales(sc); return json({ id, scale: sc[id] ?? base, base });
     }
     // lots
     if (P === '/api/lots') return json(lotVariants().map(v => ({ id: v.id, name: v.name, edits: Object.keys(readLotEdits()[v.id] ?? {}).length })));
