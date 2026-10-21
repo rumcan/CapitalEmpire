@@ -106,7 +106,7 @@ export function trace(m: Mask): number[][] {
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; a2 += lp[2 * i]! * lp[2 * j + 1]! - lp[2 * j]! * lp[2 * i + 1]!; }
     if (a2 > 0) byBlob[label.get(eCell[e0]!)!]!.push(lp);
   }
-  // 4. each outer loop: drop collinear corners, one Chaikin cut, simplify, and check
+  // 4. each outer loop: drop collinear corners, resample, smooth, simplify, and check
   const res: number[][] = [];
   for (let id = 0; id < size.length; id++) {
     if (size[id]! * CELL * CELL < MIN_AREA) continue;
@@ -124,12 +124,8 @@ function outline(lp: number[]): number[] | null {
     if (cr !== 0) c.push(lp[2 * i]! * CELL, lp[2 * i + 1]! * CELL);
   }
   const k = c.length >> 1; if (k < 3) return null;
-  const sm: number[] = [];
-  for (let i = 0; i < k; i++) {
-    const j = (i + 1) % k, ax = c[2 * i]!, ay = c[2 * i + 1]!, bx = c[2 * j]!, by = c[2 * j + 1]!;
-    sm.push(0.75 * ax + 0.25 * bx, 0.75 * ay + 0.25 * by, 0.25 * ax + 0.75 * bx, 0.25 * ay + 0.75 * by);
-  }
-  let tol = 0.3;
+  const sm = smooth(resample(c, 0.5));
+  let tol = 0.12;
   for (let tries = 0; tries < 4; tries++, tol *= 2) {
     let t = tol, s = closed(sm, t);
     while ((s.length >> 1) > MAX_PTS && t < 1e3) s = closed(sm, t *= 1.5);
@@ -138,6 +134,37 @@ function outline(lp: number[]): number[] | null {
     if (e === '' || (e.startsWith('Too big') && !crossings(s).length && Math.abs(polyArea(s)) >= MIN_AREA)) return s;
   }
   return null;
+}
+
+/** a closed loop (flat x y list) resampled at even spacing of about step tiles (at least 3 points) */
+function resample(c: number[], step: number): number[] {
+  const k = c.length >> 1, L = (i: number) => { const j = (i + 1) % k; return Math.hypot(c[2 * j]! - c[2 * i]!, c[2 * j + 1]! - c[2 * i + 1]!); };
+  let per = 0;
+  for (let i = 0; i < k; i++) per += L(i);
+  const n = Math.max(3, Math.round(per / step)), h = per / n, out: number[] = [];
+  let i = 0, a = 0;
+  for (let q = 0; q < n; q++) {
+    const t = q * h;
+    while (i < k - 1 && a + L(i) < t) { a += L(i); i++; }
+    const j = (i + 1) % k, len = L(i), f = len > 0 ? (t - a) / len : 0;
+    out.push(c[2 * i]! + f * (c[2 * j]! - c[2 * i]!), c[2 * i + 1]! + f * (c[2 * j + 1]! - c[2 * i + 1]!));
+  }
+  return out;
+}
+
+/** 4 passes of a circular moving average over 9 neighbouring points (each point = the mean of itself and 4 on each side) */
+function smooth(p: number[]): number[] {
+  let cur = p;
+  for (let pass = 0; pass < 4; pass++) {
+    const n = cur.length >> 1, nxt: number[] = [];
+    for (let i = 0; i < n; i++) {
+      let sx = 0, sy = 0;
+      for (let d = -4; d <= 4; d++) { const j = ((i + d) % n + n) % n; sx += cur[2 * j]!; sy += cur[2 * j + 1]!; }
+      nxt.push(sx / 9, sy / 9);
+    }
+    cur = nxt;
+  }
+  return cur;
 }
 
 /** simplify a closed loop (the closing point is the first point again, dropped after) */

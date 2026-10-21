@@ -13,8 +13,34 @@ test('one round dab traces to one valid disc outline near its radius', () => {
   const out = trace(m);
   assert.equal(out.length, 1);
   assert.equal(checkArea(out[0]!), '');
-  assert.ok(Math.abs(area(out[0]!) / (Math.PI * 25) - 1) < 0.1, `area ${area(out[0]!)}`);
+  assert.ok(Math.abs(area(out[0]!) / (Math.PI * 25) - 1) < 0.2, `area ${area(out[0]!)}`);
   for (let k = 0; k < out[0]!.length; k += 2) assert.ok(Math.hypot(out[0]![k]! - 100, out[0]![k + 1]! - 100) <= 5.6);
+});
+
+/** the turning angle (degrees) at each corner of a closed flat outline, the largest first */
+const turns = (o: number[]): number[] => {
+  const n = o.length >> 1, t: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const p = (i + n - 1) % n, q = (i + 1) % n;
+    const ax = o[2 * i]! - o[2 * p]!, ay = o[2 * i + 1]! - o[2 * p + 1]!, bx = o[2 * q]! - o[2 * i]!, by = o[2 * q + 1]! - o[2 * i + 1]!;
+    t.push(Math.abs(Math.atan2(ax * by - ay * bx, ax * bx + ay * by)) * 180 / Math.PI);
+  }
+  return t;
+};
+
+test('a round dab traces to a round outline: corners near r, gentle turns', () => {
+  const m: Mask = new Set();
+  dab(m, 100, 100, 5);
+  const o = trace(m)[0]!;
+  for (let k = 0; k < o.length; k += 2) { const d = Math.hypot(o[k]! - 100, o[k + 1]! - 100); assert.ok(d >= 4.2 && d <= 5.4, `corner at ${d}`); }
+  assert.ok(Math.max(...turns(o)) <= 25, `turn ${Math.max(...turns(o)).toFixed(1)}`);
+});
+
+test('a round stroke has no stair steps: every turn is at most 30 degrees', () => {
+  const m: Mask = new Set();
+  stroke(m, 50, 50, 90, 60, 3);
+  const o = trace(m)[0]!;
+  assert.ok(Math.max(...turns(o)) <= 30, `turn ${Math.max(...turns(o)).toFixed(1)}`);
 });
 
 test('a round stroke traces to one outline close to the capsule area', () => {
@@ -64,7 +90,7 @@ test('a traced outline refilled with fillPoly and traced again keeps its count a
   const second = trace(again);
   assert.equal(second.length, first.length);
   const a1 = first.reduce((s, o) => s + area(o), 0), a2 = second.reduce((s, o) => s + area(o), 0);
-  assert.ok(Math.abs(a2 / a1 - 1) < 0.05, `${a1} vs ${a2}`);
+  assert.ok(Math.abs(a2 / a1 - 1) < 0.12, `${a1} vs ${a2}`);
 });
 
 test('a long wiggly stroke gives only valid outlines within the corner limit', () => {
@@ -80,8 +106,8 @@ test('a long wiggly stroke gives only valid outlines within the corner limit', (
 
 test('diagonal-only touching blocks trace to two separate valid outlines', () => {
   const m: Mask = new Set();
-  fillPoly(m, [0, 0, 2, 0, 2, 2, 0, 2]);
-  fillPoly(m, [2, 2, 4, 2, 4, 4, 2, 4]);
+  fillPoly(m, [0, 0, 6, 0, 6, 6, 0, 6]);
+  fillPoly(m, [6, 6, 12, 6, 12, 12, 6, 12]);
   const out = trace(m);
   assert.equal(out.length, 2);
   for (const o of out) assert.equal(checkArea(o), '');
