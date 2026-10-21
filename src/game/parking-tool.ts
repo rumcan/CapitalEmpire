@@ -128,7 +128,7 @@ export class ParkingTool {
     }
     for (const d of this.curbs) {
       const c = resolveCurb(net, d); if (!c) continue;
-      put('curb:' + d.id, { pts: curbQuad(c), tex: 'asphalt', top: true, lines: curbLines(c) });
+      put('curb:' + d.id, c.layby ? { pts: curbQuad(c), tex: 'asphalt', layby: true, lines: curbLines(c) } : { pts: curbQuad(c), tex: 'asphalt', top: true, lines: curbLines(c) });
     }
     for (const k of this.keys.keys()) if (!now.has(k)) this.host.setLotGround(k, null);
     this.keys = now;
