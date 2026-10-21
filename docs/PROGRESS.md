@@ -2096,4 +2096,13 @@ PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks l
 - **Next (the owner, 2026-10-21 night):** an easy **round isometric brush** for fairways, greens and cart paths, with presets the owner
   can edit: click the Fairway preset button and paint at once, the strokes belonging to a hole. Design and build next (art chat;
   the coder told in SECOND-AGENT.md). The owner's new art list is in GOLF-SPRITES.md "The owner's additions".
+- **Golf brush (the owner's request), on main:** Paint → **Golf brush** row: Fairway, Green, Tee, Rough, Bunker, Water, Cart path. One
+  click and you paint with a round brush (an iso ellipse; size slider, [ and ]); every stroke belongs to the chosen hole (1-18); strokes of
+  one kind on a hole join into one area (one border, no seams: `src/game/brush.ts` masks the strokes at half-tile cells and traces them
+  back to outlines); Rub out or Alt-drag erases (a fairway cut in two keeps both halves' borders). Draw order by kind (rough, water,
+  fairway, tee, bunker, green, cart path) above hand-drawn areas. Each preset's texture, border and size are editable and remembered
+  (localStorage). Paint areas carry optional `hole` / `kind` tags (save tuple elements 10, 11; plain areas unchanged). Browser-checked
+  on 5194. holes.ts does not read the tags yet (the coder's G2).
+- **Studio Rebuild fixed:** prep-sprites read `art/golf/items.json` (the golf prompts) as a local sprite set; it now takes only entries
+  marked `local`.
 
