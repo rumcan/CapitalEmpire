@@ -94,7 +94,8 @@ Pick 1 of 3 cards at each results screen, as today. The pool is in section 8.3.
 - **The highway entry** at the map edge stays: from tier 2 most of the crowd comes from off the map through it (section 5.2).
   More entries (a second highway, a regional road) open with the tiers.
 - **The old course, placed and painted by the game** at the new game:
-  - Site: open, mostly flat land (GROUND or PATCH tiles), its clubhouse **150–350 tiles from the town centre**, joined to a town
+  - Site: **outside the town, surrounded by farms** (the owned parcel, section 4.4; the farms are the land it buys to grow),
+    open, mostly flat land (GROUND or PATCH tiles), its clubhouse **150–350 tiles from the town centre**, joined to a town
     road by a short gravel or street drive, about **300 x 450 tiles** (600 x 900 m, about 54 ha) with room to grow to 18 holes
     on at least one side. Placed like the stadium's suggested spot today (`event/site.ts`).
   - Layout: **9 holes in a loop out and back to the clubhouse**, par 36: 2 par 3s, 5 par 4s, 2 par 5s, about 2,700 m (the
@@ -161,8 +162,12 @@ owner's three photos (fairway, new sod, rough) are already in the game at full r
 - From 9 to 18 holes (tier 3 needs 18), then **championship tees** for length (tier 4–5 minimums), a **practice range**, a
   putting green and a short-game area (the players' needs from tier 3), and a second nine on new land, which pushes the town's
   roads and parking outward.
-- Land: the course boundary is a painted area of rough; expanding means painting more of it on open land. Town lots and
-  farms in the way can be bought out at today's lot buy-out prices.
+- **Land (the owner, 2026-10-21; for realism, not a hard mechanic):** the course starts on **its own parcel outside the town,
+  surrounded by farms**. The player can only paint and build the course on land the course owns. It grows by **buying adjacent
+  land in square blocks**: farm blocks from the farmers (`ext/farms` fields) or blocks from the town. A block with houses on it is
+  bought out naturally: the houses go and the price is the same as for empty land, so buying never turns into a demolition puzzle.
+  The owned land shows as a soft boundary line (and a fence at the edge, later). Buying is a small panel action ("Buy this block,
+  $X"); prices rise a little as the town grows. Section 3 places the old nine's parcel so it has farmland on at least two sides.
 
 ### 4.5 The Paint tool as the course builder (details in [PAINT-TOOL.md](PAINT-TOOL.md))
 - A **Course** mode beside today's Draw / Pick / Erase: golf surfaces as the texture chips, **borders as collars** (a green
@@ -479,7 +484,7 @@ Each phase ends playable, verified in the browser, merged to main and live on th
 | --- | --- | --- | --- |
 | **G0** | **The pivot plan** (this document) | The design, the review, the sprite list, every plan doc updated | The owner's review of the open questions |
 | **G1** | **Golf mode foundation** | A new game = one town (6R.7 seed rules) + the old 9-hole course painted by the generator + clubhouse and car park; the calendar (12 months, one game day a year), skip to tournament week; the round becomes off-season → tournament day → results → draft; stadium and business tool off in golf mode; HUD: month, year, countdown, tier; legacy saves load | A new game shows the town and a valid 9-hole course; a year passes; the tier 1 tournament day starts on its date and runs with today's surge machinery |
-| **G2** | **The course builder** | Paint's course mode (golf surfaces, collars, smooth corners from `claude/paint-wip`, lasso smoothing, shape editing: auto-select after drawing, corner and edge handles, move / rotate / scale; tone filters: multiply / lighten with strength and tint); photo textures for every surface (lazy); tee and pin tools, hole derivation, par and length, validity; the course stats panel; costs, seed or sod, grow-in, maintenance | The player builds holes 10–18 in the browser; headless tests for hole derivation and validity; the course stats match hand-computed values |
+| **G2** | **The course builder** | Land: the owned parcel and buying adjacent farm or town blocks (houses bought out at the land price); Paint's course mode (golf surfaces, collars, smooth corners from `claude/paint-wip`, lasso smoothing, shape editing: auto-select after drawing, corner and edge handles, move / rotate / scale; tone filters: multiply / lighten with strength and tint); photo textures for every surface (lazy); tee and pin tools, hole derivation, par and length, validity; the course stats panel; costs, seed or sod, grow-in, maintenance | The player builds holes 10–18 in the browser; headless tests for hole derivation and validity; the course stats match hand-computed values |
 | **G3** | **Tournament days** | Spectator demand by tier and reputation; sources (town, highway, hotels) and modes (car, park and ride, walk, drop-off); the entrance gates and their queues; spectators inside by zone; the exit wave; on time, missed, exit time; tickets, parking, fares; the new results screen | `tournament:gate`: a scripted player runs a tier 1 and a tier 2 day; fixing the worst bottleneck raises the arrival rate measurably; the exit clears inside the target |
 | **G4** | **Tents and structures** | The Event tool (rent or buy; placement rules); tent economics (spend, catchment, capacity, queues, price card); grandstands and viewing; toilets and needs; leaderboards; sponsors' displays | Tent takings and queues respond to capacity and placement (headless); a tier 3 venue in the browser |
 | **G5** | **Progression and balance** | Reputation, the tour's requirements and verdicts, sponsors with performance bonuses, hospitality, TV (towers, compound, coverage), the new card pool, the town's growth by success, the money balance (section 7) | `year:gate`: a scripted 10-year campaign reaches tier 4 solvent; a careless one gets demoted |

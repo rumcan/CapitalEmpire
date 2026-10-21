@@ -490,11 +490,13 @@ const FENCE_TREES = (() => {
   return deck;
 })();
 const FENCE_FRONT = 3.65;
-/** the boundary fence of a lot: wooden privacy panels on its own side lines (the lower world-coordinate end along u, from the back line to
- *  FENCE_FRONT from the front edge, the same on every lot so neighbours' fences meet, and the back line when n points to +X/+Y: of two lots back
- *  to back exactly one owns it). Every use but industry draws these, so a shared line gets one fence whatever the two uses are. */
+/** the boundary fence of a lot: wooden privacy panels on its lines at the higher world-coordinate end: its side line there (along u, from the
+ *  back line to FENCE_FRONT from the front edge, the same on every lot so neighbours' fences meet) and its back line when n points to +X/+Y.
+ *  One rule for sides and backs, so every line between two lots is owned by exactly one of them (the lot on its lower side), whichever way the
+ *  two face: a block's end column meets its rows' sides with its back. Every use but industry draws these, so a shared line gets one fence
+ *  whatever the two uses are. */
 function boundaryFence(B: Build, lot: LotGeom) {
-  const { W, D } = B, side = lot.u.x + lot.u.y > 0 ? 0 : W;
+  const { W, D } = B, side = lot.u.x + lot.u.y > 0 ? W : 0;
   B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
   if (lot.n.x + lot.n.y > 0) B.boundaryRun(PRIVACY, 0, D, W, D);
 }
