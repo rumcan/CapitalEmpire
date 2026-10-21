@@ -1961,6 +1961,30 @@ recommended defaults until the owner answers):**
 - The in-game Remove (Del) deletes one prop on this map only; a town lot's props are not saved, so the lot puts them back when it is
   composed again. The studio's "Remove from game" is the way to drop a sprite everywhere.
 
+**Evening, 2026-10-21 (main, built to 5174; the art chat's handover):**
+- **Houses facing their street:** 8 rear views are drawn mirror-wise (back deck or porch on the +X wall): `REAR_X` in compose.ts flips
+  them the other way, so no house faces north on a north-south street. Baked rear lots `8x15-rear-0` and `-5` had the dormer rear
+  wrong: flipped through the studio's lot edits and re-baked. The 'garage rear' variation (a lettered feed store) left the garage
+  pool. **Not yet browser-checked** (the pane closed): stage a block (`__game.stageLots`) and look at the rear lots on both street
+  directions; if a house still faces wrong, find its id in the studio and add it to (or take it out of) `REAR_X`.
+- **Building sites:** the digger (the scrapyard crane art `expansion:junkyard-crane` and recolours) on 7 in 10 sites and a second
+  rubble heap; the rubble, cement, spools, lumber, pallets and forklift from their recolours (all in compose.ts `site`).
+- **Stadium picture** two thirds of its old size on the parcel (business/art.ts).
+- **The studio no longer keeps files open** (`sharp.cache(false)`): its Rebuild failed twice with EPERM deleting atlas pages while
+  the studio held them. If a Rebuild still fails that way, restart the 5179 studio and run it again.
+- River and creek banks in the dirt photo; Paint areas always draw the photo itself (sharp at every scale); gravel roads 3x.
+- **Two agents:** the second agent codes (its tasks in SECOND-AGENT.md, town districts first, then G1); this chat's successor does
+  the art with the owner. GitHub main pushed at ce68eca (the owner's go); later commits are local until the owner says push.
+
+### Start prompt for the art chat (the owner's new window, 2026-10-21 evening)
+"You are the art developer on Capital Empire (repo: CapitalEmpire), a golf events manager; you work with me (the owner) on the art,
+and a second agent writes the game code. Read CLAUDE.md, then docs/SECOND-AGENT.md (who owns which files, the merge lock, your
+art tasks A1-A4 and the coder's tasks), then docs/PROGRESS.md from 'The golf pivot' to the end, and docs/ART-PIPELINE.md. main lives
+in `.claude/worktrees/main-merge`; the main checkout has another session's uncommitted work: never touch it. TrickOrTreat is
+read-only. First check in the browser that houses face their street on both street directions (PROGRESS 'Evening, 2026-10-21'),
+then start A1 (the golf art pilot: 3-4 sprites for me to review). Land each verified step on main under the merge lock and rebuild
+so my 5174 server shows it; ask before pushing to GitHub."
+
 ## Handover, 2026-10-21 (the owner moves to a new chat on another account)
 
 ### Where everything is

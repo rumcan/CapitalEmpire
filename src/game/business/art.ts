@@ -9,7 +9,8 @@ export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', 
 type Piece = [string, number, number, number];
 const single = (id: string): Piece[] => [[id, 0.5, 0.5, 0.88]];
 const LAYOUT: Record<BusinessId, Piece[]> = {
-  stadium: single('stadium'), sportsbar: single('sportsbar'), buscompany: single('buscompany'), diner: single('diner'), taxi: single('taxi'),
+  // the stadium's picture at two thirds of the others' share of the parcel (the owner, 2026-10-21: it was 150% too big)
+  stadium: [['stadium', 0.5, 0.5, 0.88 / 1.5]], sportsbar: single('sportsbar'), buscompany: single('buscompany'), diner: single('diner'), taxi: single('taxi'),
   tackle: single('tackle'), casino: single('casino'), hotel: single('hotel'), motel: single('motel'),
   estate: [[ 'estate-villa', .25, .28, .25 ], ['estate-villa', .7, .28, .25], ['estate-villa', .25, .72, .25], ['estate-villa', .7, .72, .25]],
   golf: [
