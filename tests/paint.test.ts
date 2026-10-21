@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaintTool } from '../src/game/paint-tool';
 import {
-  DEFAULT_STYLE, RADIUS_MAX, areaAt, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insidePoly, polyArea, roundCorners, simplify, snapPt, toTuple,
+  DEFAULT_STYLE, PAINT_TEXES, RADIUS_MAX, areaAt, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insidePoly, polyArea, roundCorners, simplify, snapPt, toTuple,
   type BorderSize, type BorderTex, type PaintArea, type PaintTex, type PaintTuple,
 } from '../src/game/paint';
 
@@ -194,4 +194,13 @@ test('tone: the ground patch carries the tone only when it is on', () => {
   const base: PaintArea = { id: 4, pts: SQUARE, tex: 'paving', scale: 1, angle: 0, border: 0, btex: 'kerb', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
   assert.equal(PaintTool.patch(base).paint?.t, undefined);
   assert.deepEqual(PaintTool.patch({ ...base, tone: 1, toneAmt: 0.5, tint: '#101010' }).paint, { s: 1, a: 0, b: 0, bt: 'kerb', z: 4, t: 1, ta: 0.5, tc: '#101010' });
+});
+
+test('lotAsphalt (Car park asphalt): a valid fill and border texture, after Worn asphalt; it round-trips through toTuple and fromTuples', () => {
+  const ids = PAINT_TEXES.map(t => t.id);
+  assert.equal(ids[ids.indexOf('lotAsphalt') - 1], 'asphaltWorn');
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, tex: junk<PaintTex>('lotAsphalt') }).tex, 'lotAsphalt');
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, btex: junk<BorderTex>('lotAsphalt') }).btex, 'lotAsphalt');
+  const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 4), tex: 'lotAsphalt', scale: 1.5, angle: 0, border: 1, btex: 'lotAsphalt', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
+  assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([toTuple(area)])) as PaintTuple[]), [area]);
 });

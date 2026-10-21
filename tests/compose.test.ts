@@ -325,12 +325,12 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the concrete back yard (tex pad to concrete), for the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
     [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '8f7b1874'],
     [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '24db9c24'],
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'd2837fbf'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'e3044647'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '99809ab9'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'aae6d5c8'],
     [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'bc30f6ea'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '014361e4'],
@@ -368,4 +368,18 @@ test('public car parks: cars fill most bays at upgraded, fewer at decline 1, non
   }
   assert.ok(sum[0] > sum[1] && sum[1] > 0, `upgraded ${sum[0]} cars, decline 1 ${sum[1]}`);
   assert.ok(sum[0] >= sum[2], `upgraded ${sum[0]} cars, built ${sum[2]}`);
+});
+
+test('a commercial lot with no room for a car park paves its back yard in concrete (the Paint tool\'s photo), never the painted pad', () => {
+  const rnd = mulberry(20261021);
+  let yards = 0;
+  for (let i = 0; i < 200; i++) {
+    const lot = LOTS[i % LOTS.length];
+    const st: ComposeState = { use: LU.COM, level: i % 2 ? LV.BUILT : LV.UPGRADED, decline: 0, seed: Math.floor(rnd() * 4294967296) >>> 0 };
+    if (isCarPark(st)) continue;
+    const c = compose(lot, st);
+    assert.ok(c.ground.every(g => g.tex !== 'pad'), `${lot.key} ${JSON.stringify(st)}: a painted pad in a lot`);
+    if (c.ground.some(g => g.tex === 'concrete')) yards++;
+  }
+  assert.ok(yards > 0, 'no commercial lot got a concrete yard');
 });

@@ -3,7 +3,7 @@ import { MAP } from './iso';
 import type { GrassTex } from './grass-art';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the grass-v1 grasses) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | GrassTex;
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | GrassTex;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
@@ -21,10 +21,11 @@ export type PaintBox = [number, number, number, number];
 export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'paving', name: 'Pavers', col: '#a89c8c' },
   { id: 'slabs', name: 'Slabs', col: '#d8c8a8' },
-  { id: 'pad', name: 'Concrete', col: '#b9ada0' },
+  { id: 'pad', name: 'Concrete', col: '#bbb4a5' },
   { id: 'asphalt', name: 'Asphalt', col: '#30333f' },
   { id: 'asphaltDark', name: 'Dark asphalt', col: '#22242e' },
   { id: 'asphaltWorn', name: 'Worn asphalt', col: '#4a4a4c' },
+  { id: 'lotAsphalt', name: 'Car park asphalt', col: '#3a3b3f' },
   { id: 'roadgravel', name: 'Road gravel', col: '#62574a' },
   { id: 'gravel', name: 'Gravel', col: '#5b5752' },
   { id: 'dirt', name: 'Dirt', col: '#56402f' },

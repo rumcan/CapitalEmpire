@@ -645,7 +645,7 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   // no room; the deliveries at the wall, trees and bushes on the back line
   const pb = back + 0.8;
   if (lotPark) { parkingArea(B, 0.3, pb, W - 0.3, D - 0.3, { a0: dA0, a1: dA1 }, 0.5); B.marksIn('stain', 0.3, pb, W - 0.3, D - 0.3, 1 + Math.floor(W / 4), 0.9); }
-  else { B.pave('yard', 0.3, back + 0.2, W - 0.3, D - 0.3, 'pad'); if (alley < 1.2) B.put('town:dumpster', ca, back + 0.8); }
+  else { B.pave('yard', 0.3, back + 0.2, W - 0.3, D - 0.3, 'concrete'); if (alley < 1.2) B.put('town:dumpster', ca, back + 0.8); }
   B.put('town:delivery_crates', ca - sw / 4, back + 0.6);
   B.put('expansion:bread-delivery-rack', ca + sw / 4, back + 0.6);
   if (r() < 0.5) B.put('expansion:shopping-cart', ca, back + 1.0);

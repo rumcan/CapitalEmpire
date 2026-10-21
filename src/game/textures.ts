@@ -1,5 +1,5 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
-import { GRASS_PAINT, GRASS_PHOTO, type GrassTex } from './grass-art';
+import { GRASS_PAINT, PHOTO_TEX, type GrassTex } from './grass-art';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -232,7 +232,7 @@ export class Textures {
 
   async build(art: GroundArt, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
-    const steps = PAINTED.length + 12 + GRASS_PAINT.length + GRASS_PHOTO.length; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
+    const steps = PAINTED.length + 12 + GRASS_PAINT.length + PHOTO_TEX.length; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
@@ -260,13 +260,13 @@ export class Textures {
     this.store('grass', grass);
     // ---- the Paint tool's grass textures: the grass-v1 paintings, hex-mixed like the base grass so they never repeat
     for (const g of GRASS_PAINT) { const img = await loadImage(g.src), l = toCanvas(img, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)); this.store(g.tex, this.grass(l, l)); await tick(); }
-    // ---- the Paint tool's photo grasses: tile-space mosaics at native size (the seamless photo is the period), hex-mixed only if asked
-    for (const p of GRASS_PHOTO) {
+    // ---- the Paint tool's photo textures (grasses, concrete): tile-space mosaics at native size (the seamless photo is the period), hex-mixed only if asked
+    for (const p of PHOTO_TEX) {
       const c = toCanvas(await loadImage(p.src));
       // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
       const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
-      // mixed: 160 px per tile (80 px/m) over the 24 m period, the photo's p.mix metres scaled to that; plain: the photo is the period
-      this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(seeds, c, c, mean(), 160, c.width / p.mix) : c)); await tick();
+      // mixed: p.px pixels per tile (160 by default: 80 px/m over the 24 m period), the photo's p.mix metres scaled to that; plain: the photo is the period
+      this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(seeds, c, c, mean(), p.px ?? 160, c.width / p.mix) : c)); await tick();
     }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#8c8c86'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('outside', c); }
