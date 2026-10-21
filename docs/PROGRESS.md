@@ -2129,3 +2129,7 @@ PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks l
   upload .ts files with a .txt suffix). His usage limit reset at 18:13 on 2026-10-21. First job sent 18:15: a review of the G1 code
   (review-G1-argon.md) and the first Codex package, T-G2c-course-costs.md. Never run his unpack command: unpack bundles with a
   path-checked script and review before installing.
+
+## Handover, 2026-10-21 night (the art chat; the owner moves to a new PC)
+**Read [HANDOVER-ART.md](HANDOVER-ART.md) first:** where the art chat stopped, the unmerged branch `claude/brush-round`, and the next steps
+in order (brush-round, the studio Ground tab for the base grass, plant brushes, Course builder C1, hole presets in the game, golf art).
