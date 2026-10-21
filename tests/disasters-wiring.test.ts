@@ -124,3 +124,69 @@ test('a quake closes its bridge until it is repaired: the repair is paid, refuse
   assert.deepEqual(city.disasterFrame()?.notes.map(n => n.k), ['repaired', 'ended']);
   assert.equal(city.repairDisaster(d.id, c.key), false, 'nothing left to repair');
 });
+
+test('paranormal nights reroute real traffic around the haunted neighbourhood and reopen at dawn', () => {
+  const city = new City(1);
+  city.terrain(new Uint8Array(MAP * MAP), { x: 100, y: 300 }, 7, []);
+  const editor = new NetEditor(new RoadNetwork());
+  editor.addLegs([leg(100, 300, 200, 300), leg(200, 300, 400, 300), leg(400, 300, 500, 300),
+    leg(500, 300, 700, 300), leg(700, 300, 800, 300), leg(200, 300, 200, 500),
+    leg(200, 500, 800, 500), leg(800, 500, 800, 300)], CLASS.street, 0);
+  // A small dense neighbourhood attracts the night while the distant bypass stays open.
+  for (const x of [430, 440, 450, 460, 470]) editor.addLegs([leg(x, 290, x, 300), leg(x, 300, x, 310)], CLASS.street, 0);
+  city.netOps(editor.commit(true)); city.setIncidents(false); city.setDisasters(true);
+  assert.equal(city.forceDisaster('paranormal'), true);
+  city.sim.t = 1439.9; city.step(3);
+  const warning = city.disasterFrame();
+  assert.equal(warning?.notes[0]?.k, 'warned');
+  assert.equal(warning?.notes[0]?.kind, 'paranormal');
+  assert.equal(city.sim.blocks.size, 0, 'warning has not blocked any lanes');
+  city.sim.t = 1484.9; city.step(3);
+  const night = city.disasterFrame()?.active[0];
+  assert.equal(night?.kind, 'paranormal');
+  assert.ok(night!.closures.length >= 4);
+  const blocked = new Set(city.sim.blocks.keys());
+  assert.ok(blocked.size >= 8, 'several two-way roads are blocked');
+  const src = dsegsBetween(city, 100, 300, 200, 300).find(d => d.from.x === 100)!;
+  const dest = dsegsBetween(city, 800, 300, 700, 300).find(d => d.from.x === 800)!;
+  assert.ok(!blocked.has(src.lanes[0]!));
+  assert.ok(!blocked.has(dest.lanes[0]!));
+  const seen = new Set<number>();
+  for (let second = 0; second < 90; second++) {
+    city.sim.spawnAt(src.lanes[0]!, 10, dest.id, dest.len - 5, 0, -1, -1);
+    for (let tick = 0; tick < 10; tick++) {
+      city.step(1);
+      for (let car = 0; car < city.sim.cap; car++) if (city.sim.alive[car]) seen.add(city.sim.lane[car]!);
+    }
+  }
+  assert.ok(laneIds(dsegsBetween(city, 200, 500, 800, 500)).some(l => seen.has(l)), 'traffic takes the distant bypass');
+  assert.ok([...blocked].every(l => !seen.has(l)), 'no car enters a haunted road');
+  city.sim.t = night!.end + 1; city.step(10);
+  assert.equal(city.sim.blocks.size, 0, 'all night blocks are released at dawn');
+  assert.ok(city.disasterFrame()?.notes.some(n => n.k === 'ended' && n.kind === 'paranormal'));
+  city.setDisasters(false);
+  assert.equal(city.sim.blocks.size, 0, 'switching disasters off keeps every lane open');
+});
+
+test('enabling disasters late does not replay historical nights or leave expired traffic blocks', () => {
+  const city = ladder();
+  city.sim.t = 30 * 1440 + 500;
+  city.setDisasters(true); city.disasterFrame();
+  city.step(20);
+  assert.equal(city.sim.blocks.size, 0, 'no historic night should leave a live lane block');
+  assert.equal(city.disasterFrame(), null, 'enabling starts a fresh future schedule');
+  assert.equal(city.forceDisaster('paranormal'), true);
+  city.sim.t = 31 * 1440 - 0.1; city.step(3);
+  assert.ok(city.disasterFrame()?.notes.some(n => n.kind === 'paranormal' && n.k === 'warned'));
+});
+
+test('a skipped whole paranormal night leaves no historical road closures behind', () => {
+  const city = ladder(); city.setDisasters(true); city.disasterFrame();
+  city.forceDisaster('paranormal');
+  city.sim.t = 1440 + 45 + 240 + 5;
+  city.step(20);
+  const frame = city.disasterFrame();
+  assert.ok(frame?.notes.some(n => n.kind === 'paranormal' && n.k === 'ended'));
+  assert.equal(city.sim.blocks.size, 0, 'expired night cannot reapply its already-released closures');
+  assert.deepEqual(frame?.active, []);
+});

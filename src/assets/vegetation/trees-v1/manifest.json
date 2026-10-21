@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 1,
+  "provider": "built-in image_gen",
+  "count": 20,
+  "styleReference": "Existing game tree sprites, one reference per species, matching the user's autumn town screenshot.",
+  "projection": "Isometric game vegetation, matching existing per-species sprites.",
+  "integration": "Art only. Native sizes vary. Set world scale per species; proposed anchors are local trunk-base pixels.",
+  "items": [
+    {
+      "id": "tree-pine-tall",
+      "file": "png/tree-pine-tall.png",
+      "width": 307,
+      "height": 609,
+      "sourceSheet": "sliced/builtin/trees-pine.png",
+      "sourceCrop": [
+        180,
+        25,
+        299,
+        601
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 160,
+        "y": 605
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-pine-broad",
+      "file": "png/tree-pine-broad.png",
+      "width": 493,
+      "height": 587,
+      "sourceSheet": "sliced/builtin/trees-pine.png",
+      "sourceCrop": [
+        715,
+        47,
+        485,
+        579
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 241,
+        "y": 583
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-pine-irregular",
+      "file": "png/tree-pine-irregular.png",
+      "width": 393,
+      "height": 555,
+      "sourceSheet": "sliced/builtin/trees-pine.png",
+      "sourceCrop": [
+        186,
+        655,
+        385,
+        547
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 191,
+        "y": 551
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-pine-young",
+      "file": "png/tree-pine-young.png",
+      "width": 348,
+      "height": 442,
+      "sourceSheet": "sliced/builtin/trees-pine.png",
+      "sourceCrop": [
+        790,
+        764,
+        340,
+        434
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 174,
+        "y": 438
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-spruce-tall",
+      "file": "png/tree-spruce-tall.png",
+      "width": 365,
+      "height": 656,
+      "sourceSheet": "sliced/builtin/trees-spruce.png",
+      "sourceCrop": [
+        198,
+        12,
+        357,
+        648
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 185,
+        "y": 652
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-spruce-broad",
+      "file": "png/tree-spruce-broad.png",
+      "width": 586,
+      "height": 630,
+      "sourceSheet": "sliced/builtin/trees-spruce.png",
+      "sourceCrop": [
+        653,
+        40,
+        578,
+        622
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 291,
+        "y": 626
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-spruce-irregular",
+      "file": "png/tree-spruce-irregular.png",
+      "width": 477,
+      "height": 575,
+      "sourceSheet": "sliced/builtin/trees-spruce.png",
+      "sourceCrop": [
+        155,
+        671,
+        469,
+        567
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 233,
+        "y": 571
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-spruce-young",
+      "file": "png/tree-spruce-young.png",
+      "width": 442,
+      "height": 466,
+      "sourceSheet": "sliced/builtin/trees-spruce.png",
+      "sourceCrop": [
+        738,
+        763,
+        434,
+        458
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 213,
+        "y": 462
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-maple-tall",
+      "file": "png/tree-maple-tall.png",
+      "width": 368,
+      "height": 471,
+      "sourceSheet": "sliced/builtin/trees-maple.png",
+      "sourceCrop": [
+        171,
+        143,
+        360,
+        463
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 189,
+        "y": 467
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-maple-broad",
+      "file": "png/tree-maple-broad.png",
+      "width": 536,
+      "height": 429,
+      "sourceSheet": "sliced/builtin/trees-maple.png",
+      "sourceCrop": [
+        649,
+        185,
+        528,
+        421
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 277,
+        "y": 425
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-maple-irregular",
+      "file": "png/tree-maple-irregular.png",
+      "width": 489,
+      "height": 435,
+      "sourceSheet": "sliced/builtin/trees-maple.png",
+      "sourceCrop": [
+        128,
+        702,
+        481,
+        427
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 290,
+        "y": 431
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-maple-young",
+      "file": "png/tree-maple-young.png",
+      "width": 404,
+      "height": 379,
+      "sourceSheet": "sliced/builtin/trees-maple.png",
+      "sourceCrop": [
+        713,
+        756,
+        396,
+        371
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 212,
+        "y": 375
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-birch-tall",
+      "file": "png/tree-birch-tall.png",
+      "width": 254,
+      "height": 511,
+      "sourceSheet": "sliced/builtin/trees-birch.png",
+      "sourceCrop": [
+        219,
+        97,
+        246,
+        503
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 122,
+        "y": 507
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-birch-broad",
+      "file": "png/tree-birch-broad.png",
+      "width": 438,
+      "height": 494,
+      "sourceSheet": "sliced/builtin/trees-birch.png",
+      "sourceCrop": [
+        707,
+        114,
+        430,
+        486
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 236,
+        "y": 490
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-birch-irregular",
+      "file": "png/tree-birch-irregular.png",
+      "width": 365,
+      "height": 472,
+      "sourceSheet": "sliced/builtin/trees-birch.png",
+      "sourceCrop": [
+        162,
+        694,
+        357,
+        464
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 226,
+        "y": 468
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-birch-young",
+      "file": "png/tree-birch-young.png",
+      "width": 231,
+      "height": 374,
+      "sourceSheet": "sliced/builtin/trees-birch.png",
+      "sourceCrop": [
+        826,
+        790,
+        223,
+        366
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 122,
+        "y": 370
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-oak-tall",
+      "file": "png/tree-oak-tall.png",
+      "width": 395,
+      "height": 481,
+      "sourceSheet": "sliced/builtin/trees-oak.png",
+      "sourceCrop": [
+        132,
+        114,
+        387,
+        473
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 205,
+        "y": 477
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-oak-broad",
+      "file": "png/tree-oak-broad.png",
+      "width": 586,
+      "height": 435,
+      "sourceSheet": "sliced/builtin/trees-oak.png",
+      "sourceCrop": [
+        619,
+        161,
+        578,
+        427
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 292,
+        "y": 431
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-oak-irregular",
+      "file": "png/tree-oak-irregular.png",
+      "width": 489,
+      "height": 482,
+      "sourceSheet": "sliced/builtin/trees-oak.png",
+      "sourceCrop": [
+        115,
+        676,
+        481,
+        474
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 185,
+        "y": 478
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    },
+    {
+      "id": "tree-oak-young",
+      "file": "png/tree-oak-young.png",
+      "width": 385,
+      "height": 416,
+      "sourceSheet": "sliced/builtin/trees-oak.png",
+      "sourceCrop": [
+        743,
+        735,
+        377,
+        408
+      ],
+      "padding": 4,
+      "anchor": {
+        "x": 210,
+        "y": 412
+      },
+      "scale": null,
+      "note": "Anchor is proposed trunk-base local PNG pixels; verify in game. Native generated resolution; set world scale per species. Variants are naturally different sizes."
+    }
+  ],
+  "species": {
+    "pine": [
+      "tree-pine-tall",
+      "tree-pine-broad",
+      "tree-pine-irregular",
+      "tree-pine-young"
+    ],
+    "spruce": [
+      "tree-spruce-tall",
+      "tree-spruce-broad",
+      "tree-spruce-irregular",
+      "tree-spruce-young"
+    ],
+    "maple": [
+      "tree-maple-tall",
+      "tree-maple-broad",
+      "tree-maple-irregular",
+      "tree-maple-young"
+    ],
+    "birch": [
+      "tree-birch-tall",
+      "tree-birch-broad",
+      "tree-birch-irregular",
+      "tree-birch-young"
+    ],
+    "oak": [
+      "tree-oak-tall",
+      "tree-oak-broad",
+      "tree-oak-irregular",
+      "tree-oak-young"
+    ]
+  }
+}
