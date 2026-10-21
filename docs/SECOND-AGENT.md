@@ -110,8 +110,11 @@ and before spending more than 3,000 RUN credits on one task."
 - Regenerate the east-facing view of `world:video_rental` (its sign came out mirrored) and pack it with `prep-east.mjs`.
 - The 12 TrickOrTreat buildings the owner hid in the TrickOrTreat builder (`ref:building-diner`, `-farmhouse`, `-garage`,
   `-gas-shop`, `-house-cottage`, `-house-dormer`, `-house-garage`, `-house-large`, `-shop-blue`, `-snack-bar`,
-  `ref:landmark-gazebo`, `-gazebo-v2`) are not packed (hidden items are skipped on purpose). Ask the owner whether they want them;
-  if yes, add an allow-list to `prep-sprites.mjs` (never edit TrickOrTreat to unhide them).
+  `ref:landmark-gazebo`, `-gazebo-v2`) are not packed (hidden items are skipped on purpose). **The owner wants them (2026-10-21):**
+  add an allow-list of these ids to `prep-sprites.mjs` that packs them despite `hidden` (never edit TrickOrTreat to unhide them),
+  rebuild the atlas, check each in the studio at true size and that none is drawn straight on (add any that is to
+  `src/game/lots/frontal.ts` through the lead), then "For the lead": the ids and the pools they belong in (houses, shops, venues,
+  park centrepieces), since compose.ts is the lead's.
 
 ### Later (ask the owner first)
 - GPU memory: the atlas is 16 pages (about 336 MB at dpr 2) against the 96 MB budget in GAME-PLAN 2.3: options are compressed
