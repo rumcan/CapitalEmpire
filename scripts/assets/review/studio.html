@@ -78,19 +78,24 @@ function stage(s){
   // a lot decal (a leaf drift, a stain) is drawn over grass, so its edges show as they do in the yard
   return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},el('img',{src:'/thumb/'+encodeURIComponent(s.id),loading:'lazy',style:`width:${w}px;height:${h}px`}));
 }
-function draw(){const g=$('#grid');g.innerHTML='';let n=0;
- const list=all.filter(s=>(cat==='Removed'?removed[s.id]:!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));
- for(const s of list.slice(0,400)){n++;const off=!!removed[s.id];
+// every sprite is shown, in batches of 200: the sentinel at the end of the grid pulls in the next batch when it scrolls into view
+const more=el('div',{className:'more',style:'flex-basis:100%;height:1px'});
+let shown=[],shownAt=0;
+const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))addBatch();});
+function draw(){$('#grid').innerHTML='';shown=all.filter(s=>(cat==='Removed'?removed[s.id]:!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));shownAt=0;addBatch();}
+function addBatch(){const g=$('#grid'),end=Math.min(shown.length,shownAt+200);for(;shownAt<end;shownAt++)g.append(card(shown[shownAt]));
+ io.disconnect();if(shownAt<shown.length){g.append(more);io.observe(more);}else more.remove();
+ $('#count').textContent=`${shown.length} shown · ${Object.keys(removed).length} removed`;}
+function card(s){const off=!!removed[s.id];
   const rm=el('button',{className:'btn '+(off?'green':'red'),textContent:off?'Restore':'Remove from game'});
   rm.onclick=async()=>{await post('/api/'+(off?'restore':'remove'),{id:s.id});await loadLib();};
   const sc=el('span',{className:'scale',textContent:'× '+s.scale.toFixed(2)+(Math.abs(s.scale-s.base)>1e-3?' *':'')});
   const size=f=>async()=>{const r=await post('/api/scale',f?{id:s.id,factor:f}:{id:s.id,reset:true});s.scale=r.scale;draw();};
   const fixed=s.cat==='Lots'||s.kind==='walker'||s.kind==='car';
-  g.append(el('div',{className:'card'+(off?' removed':'')},stage(s),el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id})),
+  return el('div',{className:'card'+(off?' removed':'')},stage(s),el('div',{className:'meta'},el('div',{className:'name',textContent:s.name}),el('div',{className:'cat',textContent:s.cat+' · '+s.kind}),el('div',{className:'id',textContent:s.id})),
    fixed?null:el('div',{className:'row'},el('button',{className:'btn',textContent:'Smaller',onclick:size(1/1.08)}),sc,el('button',{className:'btn',textContent:'Bigger',onclick:size(1.08)})),
    !fixed&&Math.abs(s.scale-s.base)>1e-3?el('div',{className:'row'},el('button',{className:'btn',textContent:'Reset size (×'+s.base.toFixed(2)+')',onclick:size(0)})):null,
-   el('div',{className:'row'},rm)));}
- $('#count').textContent=`${list.length} shown${list.length>400?' (first 400: search to narrow)':''} · ${Object.keys(removed).length} removed`;}
+   el('div',{className:'row'},rm));}
 $('#q').oninput=e=>{q=e.target.value.toLowerCase();draw();};
 
 // ---------------- lots

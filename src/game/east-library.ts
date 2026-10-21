@@ -5,6 +5,8 @@ import e0m1 from '../assets/east/east-0-1.webp';
 import e0m2 from '../assets/east/east-0-2.webp';
 import e0m3 from '../assets/east/east-0-3.webp';
 import e0m4 from '../assets/east/east-0-4.webp';
+import { REMOVED_IDS } from './lots/scales';
+const removed = new Set(REMOVED_IDS);
 const PAGES: string[][] = [[e0m0, e0m1, e0m2, e0m3, e0m4]];
 const ITEMS: LibItem[] = [
   {"id":"east:ref:building-corner-shop","name":"Corner Shop (east)","cat":"Shops & services","kind":"venue","w":469.6,"h":443.5,"ax":234.8,"ay":330.7,"boxes":[{"hx":3.03,"hy":3.92,"dx":-0.15,"dy":-0.05}],"solid":2,"big":true,"door":true,"cost":29600,"glows":[{"x":352.5,"y":316.5,"r":30},{"x":397.6,"y":297.4,"r":33},{"x":267,"y":237.4,"r":36},{"x":95.4,"y":335.2,"r":34.5},{"x":224.8,"y":256.6,"r":34.5},{"x":356.3,"y":193.1,"r":33},{"x":47.2,"y":203.6,"r":31.5},{"x":93.4,"y":224.3,"r":31.5},{"x":310.4,"y":208.8,"r":27},{"x":203.1,"y":357.8,"r":30},{"x":146.7,"y":242.5,"r":22.5},{"x":48.2,"y":306,"r":24},{"x":304.7,"y":333.9,"r":19.5},{"x":146.8,"y":349.6,"r":22.5},{"x":401.1,"y":164.8,"r":25.5},{"x":431.9,"y":277.5,"r":28.5},{"x":277.3,"y":346.5,"r":31.5},{"x":244.3,"y":348.5,"r":16.5},{"x":241.6,"y":319.2,"r":16.5},{"x":244.3,"y":414.5,"r":22.5},{"x":255.8,"y":421.3,"r":24},{"x":351.2,"y":348.2,"r":21},{"x":364.8,"y":267.7,"r":12},{"x":420.5,"y":241.8,"r":12},{"x":438.8,"y":233.1,"r":12},{"x":346.1,"y":277.4,"r":12},{"x":327.1,"y":286.6,"r":10.5},{"x":314.8,"y":241.1,"r":15},{"x":401.9,"y":250.2,"r":10.5},{"x":383.6,"y":259.3,"r":12},{"x":309.3,"y":295.9,"r":10.5},{"x":291.1,"y":305.8,"r":10.5},{"x":455,"y":225.5,"r":12},{"x":305.8,"y":371.5,"r":13.5},{"x":205.3,"y":405.3,"r":13.5},{"x":236.9,"y":373.6,"r":13.5},{"x":240.7,"y":393.4,"r":10.5},{"x":144.7,"y":275.4,"r":13.5},{"x":403,"y":196.3,"r":12},{"x":46.2,"y":344,"r":12},{"x":146.6,"y":391.1,"r":12},{"x":208.1,"y":215.6,"r":9},{"x":303.9,"y":355.6,"r":4.5},{"x":276.7,"y":311.8,"r":4.5},{"x":150,"y":383.8,"r":7.5},{"x":55.5,"y":340.6,"r":3},{"x":252.1,"y":190.5,"r":3},{"x":201,"y":226.5,"r":3}],"tex":[0,0.609375,0.007813,0.844238,0.229492],"quad":[-0.24,0,469.6,443.47]},
@@ -27,5 +29,6 @@ export const EAST_PAIRS: [string, string][] = [["ref:building-corner-shop","east
 /** Append after the cars, on their own supplemental pages: each east item is its front mirrored, so drawn unflipped it is the front flipped. */
 export function appendEast(library: LibItem[], pages: string[][]) {
   const first = pages.length; pages.push(...PAGES);
-  for (const item of ITEMS) library.push({ ...item, tex: [first + item.tex[0], ...item.tex.slice(1)] as LibItem["tex"] });
+  // a removed east view goes too: its front (the id without 'east:') is removed, or the east id itself
+  for (const item of ITEMS) if (!removed.has(item.id) && !removed.has(item.id.replace(/^east:/, ''))) library.push({ ...item, tex: [first + item.tex[0], ...item.tex.slice(1)] as LibItem["tex"] });
 }

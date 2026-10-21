@@ -4,7 +4,7 @@
 //   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
-//   Rebuild: runs the asset steps again, so the game takes the changes.
+//   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -31,12 +31,25 @@ function library() {
   // the lot decals (src/game/lot-decals.ts): packed at their scale (prep-decals.mjs), so their rect is the game size; w/h here are the native size
   const decals = fs.readFileSync(path.join(ROOT, 'src/game/lot-decals.ts'), 'utf8'), seen = new Set(out.map(s => s.id));
   for (const m of decals.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]), it = LIB.get(e.id); if (!seen.has(e.id)) out.push({ id: e.id, name: e.id, cat: 'Decals', kind: 'decal', w: Math.round(it?.w ?? e.w), h: Math.round(it?.h ?? e.h), rect: [e.x, e.y, e.w, e.h] }); }
+  // the three libraries the game appends at runtime (appendCars, appendEast, appendBusinesses): each file's items, with the mip-0 page of the item's tex[0]
+  // as the game does (REMOVED_IDS in src/game/lots/scales.ts): a removed sprite is left out, and an east view goes with its front (no 'east:')
+  const have = new Set(out.map(s => s.id)), gone = readRemoved();
+  for (const a of APPENDED) {
+    const txt = a.re.exec(fs.readFileSync(path.join(ROOT, a.file), 'utf8'))[1].replace(/,(\s*)\]/g, '$1]');
+    for (const e of JSON.parse(txt)) if (!have.has(e.id) && !gone[e.id] && !gone[e.id.replace(/^east:/, '')]) { have.add(e.id); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h, quad: e.quad, ax: e.ax, ay: e.ay, page: path.join(ROOT, a.page(e.tex[0])) }); }
+  }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
   // WF holds every frame of every person (per person: WALK_DIRS x WALK_FRAMES frames of 9 numbers); the first one (idle, facing S) is the picture
   const perPerson = (/WALK_DIRS = (\[[^\]]*\])/.exec(src) ? JSON.parse(/WALK_DIRS = (\[[^\]]*\])/.exec(src)[1]).length : 0) * +(/WALK_FRAMES = (\d+)/.exec(src)?.[1] ?? 0);
   people.forEach((p, i) => { const o = i * perPerson * 9; if (perPerson && wf.length > o + 8) out.push({ id: p.id, name: p.id.replace(/^person:/, ''), cat: 'Townspeople', kind: 'walker', tex: wf.slice(o, o + 5), w: p.w, h: p.h, quad: wf.slice(o + 5, o + 9), ax: p.ax, ay: p.ay }); });
   return out;
 }
+// the appended libraries: the item array (one line in cars and businesses, several in east) and the page file for a page index
+const APPENDED = [
+  { file: 'src/game/cars-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/cars/cars-${p}.webp` },
+  { file: 'src/game/east-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/east/east-${p}-0.webp` },
+  { file: 'src/game/business-library.ts', re: /items: LibItem\[\] = (\[[^\n]*\]);\n/, page: p => `src/assets/businesses/integrated/business-${p}-0.webp` },
+];
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
 const DECAL_PAGE = path.join(ROOT, 'src/assets/ground/lot-decals.webp');
 /** a sprite's picture as the game has it, cut from the atlas, or a lot decal's from its strip (cached on disk, so a removed sprite still shows after a rebuild) */
@@ -45,7 +58,7 @@ async function thumb(id) {
   const s = library().find(x => x.id === id);
   // Removed sprites and decals lose their entry; their last picture must survive a rebuild.
   if (!s?.tex && !s?.rect) return fs.existsSync(f) ? fs.readFileSync(f) : null;
-  const page = s.rect ? DECAL_PAGE : path.join(ATLAS, `sprites-${s.tex[0]}-0.webp`), stat = fs.statSync(page);
+  const page = s.rect ? DECAL_PAGE : s.page ?? path.join(ATLAS, `sprites-${s.tex[0]}-0.webp`), stat = fs.statSync(page);
   const version = JSON.stringify([s.rect ?? s.tex, s.quad, stat.size, stat.mtimeMs]);
   if (fs.existsSync(f) && fs.existsSync(stamp) && fs.readFileSync(stamp, 'utf8') === version) return fs.readFileSync(f);
   const m = await sharp(page).metadata();
@@ -109,11 +122,18 @@ function rebuild() {
   const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
-    if (i >= steps.length) { job.done = true; job.log += '\nAll done: reload the game.\n'; return; }
+    if (i >= steps.length) return build();
     job.step = steps[i]; job.log += `\n> node ${steps[i]}\n`;
     const p = spawn(process.execPath, [steps[i]], { cwd: ROOT, env: { ...process.env, TOT_REPO: TOT } });
     p.stdout.on('data', d => { job.log += d; }); p.stderr.on('data', d => { job.log += d; });
     p.on('close', code => { if (code) { job.done = true; job.code = code; job.log += `\nFailed (${code}).\n`; } else run(i + 1); });
+  };
+  // the last step: the production build, so the test server on 5174 (vite preview of dist/) serves the new sprites
+  const build = () => {
+    job.step = 'npm run build'; job.log += '\n> npm run build\n';
+    const p = spawn('npm run build', { cwd: ROOT, shell: true, env: { ...process.env, TOT_REPO: TOT } });
+    p.stdout.on('data', d => { job.log += d; }); p.stderr.on('data', d => { job.log += d; });
+    p.on('close', code => { job.done = true; if (code) { job.code = code; job.log += `\nFailed (${code}).\n`; } else job.log += '\nAll done: reload the game (5174 serves the new build; the 5173 dev server reloads by itself).\n'; });
   };
   run(0); return job;
 }
@@ -130,7 +150,7 @@ http.createServer(async (req, res) => {
     if (P === '/api/sprites') {
       const list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
       for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
-      for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; }
+      for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
       return json({ sprites: list, removed: rm, walkers });
