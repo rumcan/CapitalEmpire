@@ -3,6 +3,7 @@ import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
 import { BORDER_TEXES, BORDER_W, BRUSH_PRESETS, PAINT_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
 import type { PaintMode } from './game/paint-tool';
+import { areaBuildCost } from './game/golf/costs';
 
 const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }, { id: 'hole', label: 'Golf hole' }, { id: 'brush', label: 'Brush' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
@@ -115,10 +116,10 @@ export function PaintPanel({ game }: { game: Game }) {
         </>
       )}
       <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
-        <input type="checkbox" checked={p.snap} onChange={e => { p.snap = e.target.checked; game.emit(); }} />
-        Snap corners to the grid
+      <input type="checkbox" checked={p.snap} onChange={e => { p.snap = e.target.checked; game.emit(); }} />
+      Snap corners to the grid
       </label>
-      <div className="mt-2 text-[11px] text-slate-400">{`${p.areas.length} painted area(s) · free (decoration)`}</div>
-    </div>
-  );
-}
+      <div className="mt-2 text-[11px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, 'seed')).toLocaleString()} · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>
+      </div>
+      );
+     }

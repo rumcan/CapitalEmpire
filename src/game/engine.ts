@@ -53,7 +53,11 @@ import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import type { GolfSave, GolfView } from './golf/mode';
 import { planGolfGame } from './golf/start';
+import { dressCourse } from './golf/dressing';
 import { monthsLeft, seasonLabel, yearOf } from './golf/calendar';
+import { surfaceOfTex } from './golf/costs';
+import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
+import type { CourseArea, CourseLayout } from './golf/types';
 import { tierInfo } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
 
@@ -276,7 +280,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed) });
+  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n) });
   /** the Paint tool's projection into css px (its handles' hit tests): tile (x, y) is at (o[0] + x*o[2] + y*o[4], o[1] + x*o[3] + y*o[5]) */
   private paintAffine(o: number[]) { const s = this.screen(0, 0), ex = this.screen(1, 0), ey = this.screen(0, 1), d = this.dpr; o[0] = s.x / d; o[1] = s.y / d; o[2] = (ex.x - s.x) / d; o[3] = (ex.y - s.y) / d; o[4] = (ey.x - s.x) / d; o[5] = (ey.y - s.y) / d; }
   /** the Paint tool's snap distance: 10 css px in tiles */
@@ -453,9 +457,13 @@ export class Game {
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
       this.paint.load(s.paints.map((a, i) => toTuple({ id: i + 1, ...a })));
       this.golf = s.save;
+      for (const p of dressCourse(s.layout, seed)) {
+      const i = LIB_INDEX.get(p.id);
+      if (i !== undefined) this.addProp(i, p.x, p.y, p.flip, p.scale);
+      }
       return true;
-    }
-    console.warn('golf: none of 8 seeds has a course beside its town; a classic game instead');
+      }
+      console.warn('golf: none of 8 seeds has a course beside its town; a classic game instead');
     return false;
   }
   dead = false;
@@ -2204,9 +2212,26 @@ export class Game {
   get golfMode(): boolean { return this.golf !== null; }
   /** the golf HUD's view (null outside golf mode) */
   golfView(): GolfView | null {
-    if (!this.golf) return null;
-    const c = this.traffic.clockTime(performance.now()), r = this.traffic.round, tier = this.golf.tier;
-    return { tier, tierName: tierInfo(tier).name, month: seasonLabel(r.stage !== 'free' ? c - 1 : c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
+  if (!this.golf) return null;
+  const c = this.traffic.clockTime(performance.now()), r = this.traffic.round, tier = this.golf.tier;
+  return { tier, tierName: tierInfo(tier).name, month: seasonLabel(r.stage !== 'free' ? c - 1 : c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
+  }
+  /** course stats panel view data (null outside golf mode), derived from painted areas and hole objects */
+  courseStatsView(): CourseStatsPanel | null {
+  if (!this.golf) return null;
+  const areas: CourseArea[] = this.paint.areas.map(a => ({
+  id: a.id,
+  surface: surfaceOfTex(a.tex) ?? 'other',
+  pts: a.pts,
+  }));
+  const layout: CourseLayout = {
+  areas,
+  tees: this.golf.tees,
+  pins: this.golf.pins,
+  aims: this.golf.aims,
+  clubhouse: this.golf.clubhouse,
+  };
+  return buildCourseStatsPanel(layout, this.golf.tier);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {

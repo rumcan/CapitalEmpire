@@ -7,14 +7,16 @@ import { townCentres, townGrid, TOWN_BLOCKS } from '../lots/seedtowns';
 import { generateOldNine } from './coursegen';
 import { courseAreas } from './paintcourse';
 import { canonicalSite, golfTownClasses, orientLayout, placeCourse } from './place';
+import { withCartPathLoop } from './dressing';
+import type { CourseLayout } from './types';
 import type { GolfSave, Rect } from './mode';
 
 /** the reputation a new golf game starts with (0..100; see reputationAfter in tour.ts) */
 export const GOLF_REP_START = 30;
 
 /** a new golf game's plan (planGolfGame): the town's centre, its street legs and their classes, the drive to the venue, the venue (the clubhouse
- *  parcel, rect), the car park (rect), the course's paints, and the golf state the save keeps */
-export interface GolfStart { centre: Pt; town: { legs: Leg[]; cls: ClassId[] }; drive: Leg[]; venue: Rect; carpark: Rect; paints: Omit<PaintArea, 'id'>[]; save: GolfSave }
+ * parcel, rect), the car park (rect), the course's paints, and the golf state the save keeps */
+export interface GolfStart { centre: Pt; town: { legs: Leg[]; cls: ClassId[] }; drive: Leg[]; venue: Rect; carpark: Rect; paints: Omit<PaintArea, 'id'>[]; save: GolfSave; layout: CourseLayout }
 
 /** the bounding rect (top-left x, y and size w, h, tiles) of a few rects */
 function boundsOf(rs: Rect[]): Rect {
@@ -33,10 +35,12 @@ export function planGolfGame(terrain: Terrain, seed: number): GolfStart | null {
   const g = townGrid(c, TOWN_BLOCKS, (x, y) => classAt(terrain, x, y));
   const plan = placeCourse(terrain.cls, c, g.legs.flatMap(l => [l.a, l.b]), seed);
   if (!plan) return null;
-  const lay = orientLayout(generateOldNine(canonicalSite(plan), seed), plan);
+  const rawLay = orientLayout(generateOldNine(canonicalSite(plan), seed), plan);
+  const lay = withCartPathLoop(rawLay);
   const parcel = boundsOf([plan.course, plan.venue, plan.carpark]);
   return {
-    centre: c, town: { legs: g.legs, cls: golfTownClasses(g.legs, c, plan.dir) }, drive: plan.drive, venue: plan.venue, carpark: plan.carpark, paints: courseAreas(lay),
-    save: { v: 1, tier: 1, rep: GOLF_REP_START, town: c, course: plan.course, parcel, dir: plan.dir, tees: lay.tees, pins: lay.pins, aims: lay.aims, clubhouse: lay.clubhouse },
+  centre: c, town: { legs: g.legs, cls: golfTownClasses(g.legs, c, plan.dir) }, drive: plan.drive, venue: plan.venue, carpark: plan.carpark, paints: courseAreas(lay),
+  save: { v: 1, tier: 1, rep: GOLF_REP_START, town: c, course: plan.course, parcel, dir: plan.dir, tees: lay.tees, pins: lay.pins, aims: lay.aims, clubhouse: lay.clubhouse },
+  layout: lay,
   };
 }

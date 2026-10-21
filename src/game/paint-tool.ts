@@ -4,6 +4,7 @@ import { BORDER_TEXES, BORDER_W, BRUSH_LAYER, BRUSH_PRESETS, DEFAULT_STYLE, MAX_
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, placeHole, type HolePreset, type PresetProp } from './golf/holepreset';
+import { areaBuildCost } from './golf/costs';
 
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush';
 /** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
@@ -26,7 +27,7 @@ function loadBrush(): Record<BrushKind, BrushSet> {
   return out;
 }
 /** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
-export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number }
+export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -248,13 +249,26 @@ export class PaintTool {
 
   /** closes the outline: a valid one becomes an area with the panel's style, and is selected (its handles show, its style is the panel's); an invalid one toasts why (a lasso is dropped, a click keeps its corners for Backspace) */
   private finish(fromLasso: boolean) {
-    if (this.pts.length < 6) { if (fromLasso) this.cancel(); return; }
-    const why = checkArea(this.pts);
-    if (why) { this.host.toast(why, 'warn'); if (fromLasso) this.cancel(); this.host.emit(); return; }
-    const a: PaintArea = { id: this.nextId++, pts: this.pts.slice(), ...this.style };
-    this.areas.push(a); this.send(a); this.cancel();
-    this.selected = a.id; this.hoverH = null; this.take(a);
-    this.host.save(); this.host.emit();
+  if (this.pts.length < 6) { if (fromLasso) this.cancel(); return; }
+  const why = checkArea(this.pts);
+  if (why) { this.host.toast(why, 'warn'); if (fromLasso) this.cancel(); this.host.emit(); return; }
+  if (this.host.golfMode?.()) {
+  const cost = Math.round(areaBuildCost(this.pts, this.style.tex, 'seed'));
+  if (cost > 0) {
+  const treasury = this.host.money?.() ?? 0;
+  if (treasury < cost) {
+  this.host.toast(`Not enough money: painting this costs $${cost.toLocaleString()} (treasury: $${Math.round(treasury).toLocaleString()})`, 'warn');
+  if (fromLasso) this.cancel();
+  this.host.emit();
+  return;
+  }
+  this.host.spend?.(cost);
+  }
+  }
+  const a: PaintArea = { id: this.nextId++, pts: this.pts.slice(), ...this.style };
+  this.areas.push(a); this.send(a); this.cancel();
+  this.selected = a.id; this.hoverH = null; this.take(a);
+  this.host.save(); this.host.emit();
   }
 
   /** removes an area and its ground (it re-bakes at once) */

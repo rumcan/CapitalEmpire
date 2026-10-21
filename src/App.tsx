@@ -24,6 +24,7 @@ import { BASE_GRASSES, baseGrassId, setBaseGrass } from './game/dev-grass';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
 import { Minimap } from './ui/Minimap';
+import { CourseStatsPanel } from './ui/CourseStatsPanel';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
@@ -67,6 +68,7 @@ export default function App() {
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New town, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
+  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);
   /** the last tool picked in each rail group, so a group's tab returns to it */
   const last = useRef<Record<string, Tool>>({});
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
@@ -155,6 +157,7 @@ export default function App() {
                 <>
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
+                  <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>
                   <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
                 </>
               ) : game.eventMode
@@ -271,12 +274,17 @@ export default function App() {
           </div>
 
           {(game.traffic.car || game.traffic.watch?.node) && (
-            <div className="absolute left-[444px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
-              {game.traffic.car && <CarPanel game={game} />}
-              {game.traffic.watch?.node && <RoutesPanel game={game} />}
-            </div>
+          <div className="absolute left-[444px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
+          {game.traffic.car && <CarPanel game={game} />}
+          {game.traffic.watch?.node && <RoutesPanel game={game} />}
+          </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
+          {courseStats && (
+          <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
+          <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); }} />
+          </div>
+          )}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.eventMode && !game.site && !game.golfMode && (
