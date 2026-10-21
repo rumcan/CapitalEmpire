@@ -244,3 +244,61 @@ export function edgeAngle(pts: number[]): number {
   const deg = Math.atan2(pts[3] - pts[1], pts[2] - pts[0]) * 180 / Math.PI;
   return wrapAngle(Math.round(deg * 1e6) / 1e6 + 0);
 }
+
+/** a tile value rounded to quarter tiles (no -0) */
+const q4 = (v: number) => Math.round(v * 4) / 4 + 0;
+
+/** a copy of the corners with corner i moved to (x, y) (quarter tiles): the shape editing of the Paint tool's handles */
+export function moveCorner(pts: number[], i: number, x: number, y: number): number[] {
+  const out = pts.map(q4);
+  out[2 * i] = q4(x); out[2 * i + 1] = q4(y);
+  return out;
+}
+
+/** a copy of the corners with a new corner at (x, y) on edge e (edge e runs from corner e to corner e+1; the new corner takes index e+1) */
+export function insertCorner(pts: number[], e: number, x: number, y: number): number[] {
+  const n = pts.length >> 1, k = e + 1, out: number[] = [];
+  for (let j = 0; j < n; j++) { if (j === k) out.push(q4(x), q4(y)); out.push(q4(pts[2 * j]!), q4(pts[2 * j + 1]!)); }
+  if (k >= n) out.push(q4(x), q4(y));
+  return out;
+}
+
+/** a copy of the corners without corner i; null when that would leave fewer than 3 */
+export function removeCorner(pts: number[], i: number): number[] | null {
+  const n = pts.length >> 1;
+  if (n <= 3) return null;
+  const out: number[] = [];
+  for (let j = 0; j < n; j++) if (j !== i) out.push(q4(pts[2 * j]!), q4(pts[2 * j + 1]!));
+  return out;
+}
+
+/** a copy of the corners moved by (dx, dy) (quarter tiles) */
+export function translatePts(pts: number[], dx: number, dy: number): number[] {
+  const out = pts.map(q4); const n = pts.length >> 1;
+  for (let j = 0; j < n; j++) { out[2 * j] = q4(pts[2 * j]! + dx); out[2 * j + 1] = q4(pts[2 * j + 1]! + dy); }
+  return out;
+}
+
+/** a copy of the corners turned by deg (degrees, counter-clockwise on the map's axes) about (cx, cy) (quarter tiles) */
+export function rotatePts(pts: number[], cx: number, cy: number, deg: number): number[] {
+  const r = deg * Math.PI / 180, c = Math.cos(r), s = Math.sin(r), n = pts.length >> 1, out: number[] = [];
+  for (let j = 0; j < n; j++) {
+    const x = pts[2 * j]! - cx, y = pts[2 * j + 1]! - cy;
+    out.push(q4(cx + x * c - y * s), q4(cy + x * s + y * c));
+  }
+  return out;
+}
+
+/** a copy of the corners scaled by (sx, sy) about the anchor (ax, ay) (quarter tiles) */
+export function scalePts(pts: number[], ax: number, ay: number, sx: number, sy: number): number[] {
+  const n = pts.length >> 1, out: number[] = [];
+  for (let j = 0; j < n; j++) out.push(q4(ax + (pts[2 * j]! - ax) * sx), q4(ay + (pts[2 * j + 1]! - ay) * sy));
+  return out;
+}
+
+/** the axis-aligned box [x0, y0, x1, y1] of the corners, tiles (not floored or ceiled) */
+export function boxOf(pts: number[]): PaintBox {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let k = 0; k + 1 < pts.length; k += 2) { x0 = Math.min(x0, pts[k]!); y0 = Math.min(y0, pts[k + 1]!); x1 = Math.max(x1, pts[k]!); y1 = Math.max(y1, pts[k + 1]!); }
+  return [x0, y0, x1, y1];
+}

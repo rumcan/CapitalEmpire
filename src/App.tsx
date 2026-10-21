@@ -115,7 +115,7 @@ export default function App() {
       <canvas
         ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
-        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : 'crosshair' }}
+        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.tool === 'paint' ? game.paint.cursorStyle : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
         onPointerMove={e => game?.pointerMove(e.nativeEvent)}
         onPointerUp={() => game?.pointerUp()}

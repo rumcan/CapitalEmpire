@@ -15,13 +15,15 @@ const toneStyle = (tone: 0 | 1 | 2, tint: string) => ({ tone, tint: tone === 2 &
 /** the Paint tool's panel: mode, texture, scale, angle, border and the snap setting (docs/PAINT-TOOL.md) */
 export function PaintPanel({ game }: { game: Game }) {
   const p = game.paint, s = p.style;
-  const picked = p.mode === 'pick' && p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
+  const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
-  const help = p.mode === 'draw'
-    ? 'Click corners; click the first one (or double-click / Enter) to close. Or press and drag to paint an outline freehand.'
-    : p.mode === 'pick'
-      ? (p.selected ? `Area #${p.selected}: the settings below change it. Delete removes it.` : 'Click an area to pick it.')
-      : 'Click an area to remove it.';
+  const help = p.selected
+    ? `Area #${p.selected}: drag its handles to reshape or move it; the settings below change it. Delete removes it (a corner under the pointer goes first).`
+    : p.mode === 'draw'
+      ? 'Click corners; click the first one (or double-click / Enter) to close. Or press and drag to paint an outline freehand.'
+      : p.mode === 'pick'
+        ? 'Click an area to pick it.'
+        : 'Click an area to remove it.';
   return (
     <div>
       <div className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Paint</div>
