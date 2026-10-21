@@ -1776,6 +1776,26 @@ Checks on the worker: `npm test` 534/534, `town:gate` pass (pop 5,307, 0 jams, s
   (`claude/people3d`, its own session) merge after the art. `scripts/worker/run.sh` fails inside a git worktree (`cp .git/index`:
   use `git rev-parse --git-path index`). preview_start always serves the main checkout: serve a worktree from a terminal.
 
+### main, 2026-10-21: everything merged (the owner: "merge everything")
+main now holds claude/preview (fast-forward), claude/b7-gate (B.7 done: the Phase B gate, stadium level from fans, road
+ownership and connection fees, taxi economics), claude/people3d (3D townspeople, shops at the street front, roundabout rings
+clear block lots too), claude/lot-fixes, claude/studio-decals and the owner's studio curation. The owner's test server:
+`npx vite preview --port 5174` of the production build in .claude/worktrees/main-merge; the sprite studio on 5179 from there.
+- **Lots** (claude/lot-fixes): block lots 10-14 wide; houses keep a 1.4-tile side yard; at most two different cars per drive,
+  never overlapping (the eight-direction car art in drives and bays); a boundary fence on every shared lot line whatever the
+  uses; car parks with a two-way entrance drive, rows flush on the outer edges with the wheel stops outside, the aisle between
+  (a planted double row in deep lots), bays 5.5 m; lots more than 20 degrees off the axes are small greens (the owner's call);
+  `src/game/lots/frontal.ts`: 56 building variations drawn straight on (not isometric) never go on lots.
+- **Studio:** the lot decals in the Library (Decals: remove, resize; prep-decals packs at the studio scale); the pointer is the
+  grown man. prep-sprites empties the atlas file by file with retries (a Windows EPERM left it half deleted).
+- Checks on main 1e511f0 (dev PC; the worker refused SSH all day): npm test 544/545 (ext-terrain2 wall clock), town:gate PASS
+  (pop 5,040), sim:gate PASS (21,074 / 58 / 0), biz:gate 1 30 PASS (lowest $249,382, 4 spin-offs, 6 open, step 1.87 ms).
+  A/B bench old vs new main on the dev PC: no regression (noise dominates; re-run on the worker when it is back).
+- Next: cars that visit a shop drive into its car park by the entrance and park (stage 2: the sim's car park sinks for lot
+  car parks); photo ground textures for the code-painted ones (pavers, concrete, dirt, gravel, field, forest floor, rock;
+  the Paint grasses redone as fairway/rough photos): waiting on the owner's choice of how to generate them; the variation
+  houses into the house pool after the owner's door-size pass.
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road
 Upgrade/Downgrade ladder with fair costs, houses following a widened road, and the Maple Falls HUD (UI steps 1-2). Next in the owner's
