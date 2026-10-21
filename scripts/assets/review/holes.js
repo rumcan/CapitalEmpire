@@ -108,7 +108,7 @@ function fit() {
   if (!(x1 >= x0)) { x0 = 0; y0 = 0; x1 = 10; y1 = 10; }
   const umin = (x0 - y1) * 32, umax = (x1 - y0) * 32, vmin = (x0 + y0) * 16, vmax = (x1 + y1) * 16;
   const uw = Math.max(1, umax - umin), vh = Math.max(1, vmax - vmin);
-  S.z = Math.min(6, Math.max(0.3, Math.min(S.cw * 0.9 / uw, S.ch * 0.9 / vh)));
+  S.z = Math.min(6, Math.max(0.04, Math.min(S.cw * 0.9 / uw, S.ch * 0.9 / vh)));
   S.ox = S.cw / 2 - (umin + umax) / 2 * S.z; S.oy = S.ch / 2 - (vmin + vmax) / 2 * S.z;
 }
 
@@ -217,7 +217,7 @@ cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', endDrag);
 cv.addEventListener('wheel', e => {
   e.preventDefault();
-  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, z0 = S.z, z1 = Math.min(6, Math.max(0.3, z0 * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, z0 = S.z, z1 = Math.min(6, Math.max(0.04, z0 * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
   S.ox = x - (x - S.ox) * z1 / z0; S.oy = y - (y - S.oy) * z1 / z0; S.z = z1; draw();
 }, { passive: false });
 
