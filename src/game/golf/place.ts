@@ -25,7 +25,7 @@ const DOOR = 3;
 const PARK_OFF = 3;
 /** the drive corridor: every tile within this many tiles of its centre line must be buildable */
 const DRIVE_HALF = 2;
-/** the course's buildable share of its rect (the rest may be water, bank or hill) */
+/** the course's playable share of its rect: open land or hills (a course rolls over hills; the rest may be water, creek or bank) */
 const COURSE_BUILD = 0.98;
 
 /** a placed course: dir (the side of the town the course lies on: 0 north, 1 east, 2 south, 3 west), the course rect, the venue and the car park
@@ -57,16 +57,18 @@ function frame(dir: 0 | 1 | 2 | 3, E: Pt, s0: number, s1: number, t0: number, t1
 
 /** the course's place beside the one town. Sizes (COURSE_SIZES) outermost, then the sides in a seeded shuffle of 0..3, then the drive length from
  *  D0 in steps of DSTEP while the venue centre stays within CLUB_MAX (and at least CLUB_MIN). The first candidate whose E is one of ends (the
- *  town legs' endpoints), whose course is COURSE_BUILD buildable, whose venue, car park and drive corridor are fully buildable (GROUND or PATCH),
+ *  town legs' endpoints), whose course is COURSE_BUILD playable (open land or hills), whose venue, car park and drive corridor are fully buildable (GROUND or PATCH),
  *  and whose course, venue and car park keep SITE_MARGIN from the map's edges, wins. cls: the terrain classes (MAP x MAP). Null when none fits. Deterministic. */
 export function placeCourse(cls: Uint8Array, centre: Pt, ends: Pt[], seed: number): CoursePlan | null {
-  const N = MAP + 1, S = new Int32Array(N * N);
+  // two integral images: S counts the buildable tiles (GROUND, PATCH), H the playable ones (those and HILL)
+  const N = MAP + 1, S = new Int32Array(N * N), H = new Int32Array(N * N);
   for (let y = 0; y < MAP; y++) for (let x = 0; x < MAP; x++) {
-    const c = cls[y * MAP + x], b = c === TC.GROUND || c === TC.PATCH ? 1 : 0;
-    S[(y + 1) * N + x + 1] = S[y * N + x + 1] + S[(y + 1) * N + x] - S[y * N + x] + b;
+    const c = cls[y * MAP + x], b = c === TC.GROUND || c === TC.PATCH ? 1 : 0, h = b || c === TC.HILL ? 1 : 0, i = (y + 1) * N + x + 1;
+    S[i] = S[y * N + x + 1] + S[(y + 1) * N + x] - S[y * N + x] + b;
+    H[i] = H[y * N + x + 1] + H[(y + 1) * N + x] - H[y * N + x] + h;
   }
-  /** the buildable tiles in r (r inside the map) */
-  const count = (r: Rect) => S[(r[1] + r[3]) * N + r[0] + r[2]] - S[r[1] * N + r[0] + r[2]] - S[(r[1] + r[3]) * N + r[0]] + S[r[1] * N + r[0]];
+  /** the tiles of r (r inside the map) counted by the integral image I (S: buildable, the default; H: playable) */
+  const count = (r: Rect, I = S) => I[(r[1] + r[3]) * N + r[0] + r[2]] - I[r[1] * N + r[0] + r[2]] - I[(r[1] + r[3]) * N + r[0]] + I[r[1] * N + r[0]];
   /** whether r lies inside the map, m tiles in from each edge */
   const inside = (r: Rect, m: number) => r[0] >= m && r[1] >= m && r[0] + r[2] <= MAP - m && r[1] + r[3] <= MAP - m;
   /** whether r lies inside the map and every tile of it is buildable */
@@ -85,7 +87,7 @@ export function placeCourse(cls: Uint8Array, centre: Pt, ends: Pt[], seed: numbe
       const carpark = frame(dir, E, D - PARK[1], D, -(PARK_OFF + PARK[0]), -PARK_OFF);
       const corridor = frame(dir, E, 0, D - DOOR, -DRIVE_HALF, DRIVE_HALF);
       if (!inside(course, SITE_MARGIN) || !inside(venue, SITE_MARGIN) || !inside(carpark, SITE_MARGIN)) continue;
-      if (count(course) < COURSE_BUILD * course[2] * course[3] || !full(venue) || !full(carpark) || !full(corridor)) continue;
+      if (count(course, H) < COURSE_BUILD * course[2] * course[3] || !full(venue) || !full(carpark) || !full(corridor)) continue;
       return { dir, course, venue, carpark, drive: [{ a: at(dir, E, 0, 0), b: at(dir, E, D - DOOR, 0) }] };
     }
   }

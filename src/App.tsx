@@ -438,9 +438,9 @@ function RoundPanel({ game }: { game: Game }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-display text-base font-bold tracking-wide text-[var(--gold-hi)] uppercase">{gv ? gv.tierName : 'Event: Stadium'}</span>
-              <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[10px] font-bold uppercase text-[var(--gold-hi)]">Level {r.level}</span>
+              <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[10px] font-bold uppercase text-[var(--gold-hi)]">{gv ? `T${gv.tier}` : `Level ${r.level}`}</span>
             </div>
-            <span className="text-sm">{r.year} – Run {r.runs + 1}</span>
+            <span className="text-sm">{gv ? gv.month : `${r.year} – Run ${r.runs + 1}`}</span>
           </div>
         </div>
         <p className="mt-2 max-w-[15rem] text-xs text-slate-300">{sentence}</p>
@@ -483,7 +483,7 @@ function EvalScreen({ game }: { game: Game }) {
         <div>
           <p><span className="text-4xl font-bold tabular-nums text-amber-200">{pct}%</span> <span className="text-sm text-slate-200">{golf ? 'of spectators in before tee-off' : 'of fans in before kick-off'}</span></p>
           <p className="text-xs text-slate-400">
-            {delta === null ? 'First run at this level'
+            {delta === null ? (golf ? 'First tournament' : 'First run at this level')
               : delta > 0 ? <span className="tabular-nums text-emerald-300">▲ +{delta} points since the last run</span>
               : delta < 0 ? <span className="tabular-nums text-red-300">▼ −{-delta} points since the last run</span>
               : 'No change since the last run'}

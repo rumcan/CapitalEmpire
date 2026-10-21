@@ -10,7 +10,7 @@ import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { lotBatch, type LotPatch } from './ground-protocol';
 import { PaintTool } from './paint-tool';
-import { areaAt, type PaintTuple } from './paint';
+import { areaAt, toTuple, type PaintTuple } from './paint';
 import { ParkingTool } from './parking-tool';
 import { gateSpots } from './parking-props';
 import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
@@ -50,6 +50,9 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import type { GolfSave, GolfView } from './golf/mode';
+import { planGolfGame } from './golf/start';
+import { monthsLeft, seasonLabel, yearOf } from './golf/calendar';
+import { tierInfo } from './golf/tour';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -391,7 +394,8 @@ export class Game {
     const save = opts.bench ? null : await readSave(); if (this.dead) return;
     let loaded: SaveV5 | null = null;
     if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
-    else if (!save || !this.load(save)) { this.genTerrain(newSeed()); this.seedTowns(); }
+    else if (!save && this.newGolfGame()) { /* a new golf game: its town, drive and course are laid (see newGolfGame) */ }
+    else if (!save || !this.load(save)) { this.golf = null; this.genTerrain(newSeed()); this.seedTowns(); }
     else loaded = save;
     tick(0.7);
     const tl = performance.now();
@@ -414,6 +418,32 @@ export class Game {
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
     for (const ps of this.townTrees.values()) for (const p of ps) this.sprites.remove(p);
     this.townTrees.clear(); this.perf.townTrees = 0; this.townClump = makeNoise(this.terrain.seed ^ 0x7c1a); this.lotBoxes.clear(); this.paintBoxes.clear();
+  }
+  /** a new golf game (golf/start.ts): the first seed of up to 8 whose valley has a course beside its town. Lays the town's streets (its avenue and
+   *  gravel, free town roads), the gravel drive, the camera on the centre, the clubhouse and car park, the course's paints and the golf state. False,
+   *  with nothing laid, when no seed fits (the caller then makes a classic game). */
+  private newGolfGame(): boolean {
+    for (let k = 0; k < 8; k++) {
+      const seed = newSeed();
+      this.genTerrain(seed);
+      const s = planGolfGame(this.terrain, seed);
+      if (!s) continue;
+      this.townPts = [s.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
+      const byClass = new Map<ClassId, Leg[]>();
+      s.town.legs.forEach((l, i) => { const id = s.town.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
+      for (const [id, legs] of byClass) this.edit.addLegs(legs, classOf(id), 0, undefined, true);
+      this.edit.addLegs(s.drive, classOf('gravel'), 0, undefined, true);
+      this.cam.X = worldX(s.centre.x, s.centre.y); this.cam.Y = worldY(s.centre.x, s.centre.y);
+      if (this.stampOn) this.stampPending = true;
+      const [vx, vy, vw, vh] = s.venue, [px, py, pw, ph] = s.carpark;
+      this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
+      this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
+      this.paint.load(s.paints.map((a, i) => toTuple({ id: i + 1, ...a })));
+      this.golf = s.save;
+      return true;
+    }
+    console.warn('golf: none of 8 seeds has a course beside its town; a classic game instead');
+    return false;
   }
   dead = false;
   destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); }
@@ -668,9 +698,15 @@ export class Game {
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
   private farmsUpdate(full = false) {
     if (!this.farmsEnabled || !this.terrain) return;
-    const { added, removed } = this.farmMap.update(this.net, { cls: this.terrain.cls, seed: this.seed }, { towns: this.townPts, site: this.site, parks: this.parkDefs }, this.traffic.lots, full || this.net.lastFull);
+    const { added, removed } = this.farmMap.update(this.net, { cls: this.terrain.cls, seed: this.seed }, { towns: this.townPts, site: this.site, parks: this.farmParks() }, this.traffic.lots, full || this.net.lastFull);
     for (const k of removed) this.dropFarm(k);
     for (const k of added) this.farmQueue.add(k);
+  }
+  /** what the farms keep clear of besides the town and the site: the car parks, and in golf mode the course's rect too (the farm map's update and stale checks read the same list) */
+  private farmParks(): { x: number; y: number; w: number; h: number }[] {
+    if (!this.golf) return this.parkDefs;
+    const [x, y, w, h] = this.golf.course;
+    return [...this.parkDefs, { x, y, w, h }];
   }
   /** a farm's props and ground go, and it leaves the compose queue */
   private dropFarm(key: string) {
@@ -747,10 +783,12 @@ export class Game {
     this.syncLamps(); this.sendBlocks(false);
     this.ground.invalidateAll(); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
+    // the worker's golf state (a new game or a load of one; a classic game turns it off)
+    this.traffic.setGolf(!!this.golf, this.golf?.tier ?? 1, this.golf?.rep ?? 0);
   }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (this.tool !== t) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.tool !== t) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -1586,7 +1624,7 @@ export class Game {
   /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
   private sendTerrain() {
     const t = this.terrain, h = t.highway;
-    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, townCentres(t).flatMap(p => [p.x, p.y]), t.height);
+    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height);
   }
   /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
   private townGrow(legs: Leg[]) {
@@ -1602,7 +1640,7 @@ export class Game {
   }
 
   // ---------- the event (Phase 5 step 2c) ----------
-  /** the stadium's site: the one the player placed (null: none yet; see setBizDefs) */
+  /** the stadium's site: the one the player placed (null: none yet; see setBizDefs). In golf mode, the clubhouse's site (the venue) */
   get site(): Site | null { return this.stadiumSite; }
   /** the placed stadium's spot as [x, y, w, h] tiles (null: none) */
   get stadiumDef(): [number, number, number, number] | null { const s = this.bizDefs.find(d => d.type === 'stadium'); return s ? [s.x, s.y, s.w, s.h] : null; }
@@ -1611,7 +1649,7 @@ export class Game {
   private setBizDefs(defs: BizDef[]) {
     for (const p of this.businessProps) this.sprites.remove(p);
     for (const d of [...this.bizDefs, ...defs]) this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h);
-    this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
+    this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium') ?? defs.find(d => d.type === 'clubhouse'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
     this.businessProps = defs.flatMap(d => businessArt(d, LIBRARY, LIB_INDEX));
     for (const p of this.businessProps) this.sprites.add(p);
   }
@@ -2135,9 +2173,21 @@ export class Game {
   /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
   get golfMode(): boolean { return this.golf !== null; }
   /** the golf HUD's view (null outside golf mode) */
-  golfView(): GolfView | null { return null; }
-  /** fast-forwards the season to the tournament (the end of the game day); golf mode only, not while the clock is frozen */
-  skipToTournament(): void { }
+  golfView(): GolfView | null {
+    if (!this.golf) return null;
+    const c = this.traffic.clockTime(performance.now()), r = this.traffic.round, tier = this.golf.tier;
+    return { tier, tierName: tierInfo(tier).name, month: seasonLabel(c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
+  }
+  /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
+  skipToTournament() {
+    if (!this.golf || this.traffic.skipping) return;
+    if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
+    const now = performance.now(), c = this.traffic.clockTime(now), target = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
+    const until = this.traffic.simTime(now) + (target - c) + 1; // one sim second past the target, so the worker's step crosses it
+    if (!this.speed) this.setSpeed(this.lastSpeed);
+    this.traffic.skip(until);
+    this.toast('Skipping to the tournament…');
+  }
   /** a road class is open to build: every class in event mode, else as the Career unlocks it */
   classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
   /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
@@ -2203,6 +2253,7 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
+      golf: this.golf ?? undefined,
     };
     try { return await writeSave(d); } catch { return 0; }
   }
@@ -2210,6 +2261,9 @@ export class Game {
     try {
       this.bizOpenSeen = null;
       this.genTerrain(d.seed);
+      // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
+      this.golf = d.golf ?? null;
+      if (d.golf) { this.townPts = [d.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
       if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
       else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }
@@ -2239,7 +2293,7 @@ export class Game {
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.parking.clear(); this.extraParks = []; this.extraCarIds.clear(); this.gateProps.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
-    this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear();
+    this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.golf = null;
     this.setBizDefs([]); this.bizHover = null; this.bizOpenSeen = null;
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
@@ -2249,8 +2303,11 @@ export class Game {
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
-    this.reset(); this.genTerrain(newSeed()); this.ground.terrain(this.terrain); this.sendTerrain();
-    this.seedTowns(); this.afterLoad();
+    this.reset(); const golf = this.newGolfGame();
+    if (!golf) this.genTerrain(newSeed());
+    this.ground.terrain(this.terrain); this.sendTerrain();
+    if (!golf) this.seedTowns(); // a golf game laid its town in newGolfGame
+    this.afterLoad();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
   }
@@ -2430,7 +2487,7 @@ export class Game {
     this.raf = requestAnimationFrame(this.frame);
     this.applyLotQueue(); this.applyFarmQueue(); this.flushLotGround(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
-    if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.parkDefs.length)) this.farmsUpdate(true);
+    if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
     this.yearCheck();
     const t0 = performance.now();
