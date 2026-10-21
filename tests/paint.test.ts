@@ -309,3 +309,18 @@ test('photoPeriod: a mixed photo repeats over the mixed period; a plain tile ove
   assert.equal(photoPeriod(PHOTO_TEX.find(p => p.tex === 'field')!, 12), 4);
   assert.equal(photoPeriod(PHOTO_TEX.find(p => p.tex === 'golfFairway')!, 12), 12);
 });
+
+test('brush tags: a plain area keeps a 10-element tuple; hole and kind round-trip; bad tags are dropped', () => {
+  const plain: PaintArea = { id: 1, pts: SQUARE, ...DEFAULT_STYLE };
+  assert.equal(toTuple(plain).length, 10);
+  const green: PaintArea = { id: 1, pts: SQUARE, ...DEFAULT_STYLE, hole: 3, kind: 'green' };
+  const t = toTuple(green);
+  assert.equal(t.length, 12);
+  assert.deepEqual([t[10], t[11]], [3, 'green']);
+  assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([t])) as PaintTuple[]), [green]);
+  const bad: PaintTuple[] = [
+    ['paving', 1, 0, 0, 'kerb', SQUARE, 0, 0, 0.35, '#000000', 0, 'green'],
+    ['paving', 1, 0, 0, 'kerb', SQUARE, 0, 0, 0.35, '#000000', 2.5, 'lava'],
+  ];
+  assert.deepEqual(fromTuples(bad), [{ id: 1, pts: SQUARE, ...DEFAULT_STYLE, kind: 'green' }, { id: 2, pts: SQUARE, ...DEFAULT_STYLE }]);
+});
