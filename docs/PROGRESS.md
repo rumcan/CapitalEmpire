@@ -1905,6 +1905,35 @@ recommended defaults until the owner answers):**
 - Experiments, **abandoned for now (the owner)**: pixel art via `claude-pxl` (a converted 8-angle wagon, a pixel town). 16 car headings
   need a 3D model (Hunyuan3D on the worker), not the image generator: noted for later.
 
+**The owner's requests, 2026-10-21 afternoon (main `982035c`, built to 5174; the studio on 5179 restarted from main-merge):**
+- **The owner's studio curation** (103 removals, resizes, made on 5179 and left uncommitted) is committed (1919ef9) with its atlas.
+- **Why "Rebuild game sprites" did not reach 5174:** 5174 is `vite preview` of `dist/`, and the rebuild only re-packed the atlas (and
+  5174 was not running). The studio's rebuild now ends with `npm run build`, so a reload of 5174 shows it.
+- **Why sprites were missing from the studio:** the Library drew only the first 400 of 1,087, and the cars (`cars-library.ts`), the
+  east-facing fronts (`east-library.ts`) and the business art (`business-library.ts`) were never read. Now every sprite is listed
+  (batches of 200 as you scroll; 1,159 with the removed ones). Removals reach those three libraries at runtime through
+  `REMOVED_IDS` (written by prep-scales into `lots/scales.ts`); the three pack scripts keep the skip; prep-east leaves out the east
+  view of a removed front and was re-run (11 east fronts now, packed at the owner's new sizes).
+- **House lots in the studio:** the Lots tab has only the 16 baked 8 x 15 lots. The fenced block lots (10-14 wide, most town houses)
+  are composed live per lot (`compose.ts res()`), so there is nothing of theirs to edit. **Open for the owner:** bake editable
+  presets for a few block-lot sizes (more atlas memory), or keep them live.
+- **Car parks over Paint:** painted areas were drawn after the lot ground, hiding car parks; the parking patches (asphalt with bay
+  lines) are now drawn after the painted areas (renderer.ts 1a'').
+- **On-street parking on a Street = lay-bys** (`curb.ts` `layby`): a one-lane-each-way road with a slab sidewalk takes parallel bays
+  in place of its sidewalk (bays at h + walk/2; the slabs gone there; road asphalt, bay ticks, a kerb on the outer side;
+  renderer.ts step 6b). The lots' street props (lamps, meters, hydrants, signs: `Placed.street`) are not placed inside a lay-by,
+  and the lots beside a changed lay-by are composed again (engine `laybys`, `laybyLots`). Farm lots are not filtered (none at kerbs).
+  The plan view still shows lay-bys as asphalt.
+- **Queue 1 done:** Paint shape handles browser-checked on 5174 (closed shape selected at once, corner drag, move, right-click
+  removes a corner, live re-bake); Bunker sand paints with its photo.
+- **Queue 2, the corner shop "square to neither street":** the cause is the art: `ref:building-corner-shop` and `-corner-store` have
+  their door on the building's corner (made for a corner lot), so on a mid-block lot they face neither street. The owner removed
+  both (and `ref:building-grocery`) in the studio on 2026-10-21, so it no longer shows. If they come back: a corner-building rule
+  (corner lots only, door toward the junction).
+- Checks: npm test 616/617 (ext-terrain2 timing flake); typecheck clean; compose digests re-pinned for the curation (lots 0 and 22);
+  lettering's east checks allow a half-pixel trim difference and removed fronts; browser-checked on 5174 (lay-bys, car park over
+  paint, kerb props cleared from lay-bys).
+
 ## Handover, 2026-10-21 (the owner moves to a new chat on another account)
 
 ### Where everything is
@@ -1929,9 +1958,8 @@ recommended defaults until the owner answers):**
   more than two or three test/build commands at once).
 
 ### The queue (in order)
-1. Browser-check the Paint shape handles and a lazy photo texture (paint a Bunker sand area: flat colour first, then the photo).
-2. Bug: **buildings not aligned to the road** (a corner shop square to neither street; screenshot 2026-10-21): check corner lots'
-   frontage choice and commercial facing in `src/game/lots/compose.ts` / `blocklots.ts`.
+1. (Done 2026-10-21 afternoon: Paint shape handles browser-checked.)
+2. (Explained 2026-10-21 afternoon: the corner-door art; the owner removed it. See the section above.)
 3. Regenerate world:video_rental's east view; pack the golf pro shop and cart garage (business atlas) later with the golf art.
 4. **G1 golf mode foundation** (GOLF-PLAN section 11): one town (6R.7 seed rules), the old nine from `coursegen.ts` painted as Paint
    areas on an owned parcel outside town with farms around it, the 12-month year (`calendar.ts`), the round as off-season →
@@ -1968,8 +1996,8 @@ The lead designs, briefs and reviews; `haiku-coder` writes code; `haiku-runner` 
 then docs/PROGRESS.md: its last sections 'The golf pivot' and 'Handover, 2026-10-21' say where everything is, the queue, and how to
 start the Haiku coders again. The design is docs/GOLF-PLAN.md (open questions in section 13: ask me for answers, the plan's
 recommendations are the defaults); the art list is docs/GOLF-SPRITES.md. main lives in the worktree `.claude/worktrees/main-merge`
-(the main checkout has another session's uncommitted paranormal work: don't touch it). Start with the handover queue: browser-check the
-Paint shape handles and lazy textures, fix the building alignment bug, then G1 (golf mode foundation). Run several haiku-coders in
+(the main checkout has another session's uncommitted paranormal work: don't touch it). Queue items 1 and 2 are done
+(see 'The owner's requests, 2026-10-21 afternoon'): start with G1 (golf mode foundation). Run several haiku-coders in
 parallel in their own worktrees as the handover describes, review and merge their work, and after each verified step merge to main and
 rebuild so my 5174 server shows it. Carry on through the queue without asking between steps; ask before pushing to GitHub. The worker
 PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks locally, at most two or three at a time (RAM)."
