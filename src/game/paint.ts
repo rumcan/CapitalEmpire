@@ -10,10 +10,15 @@ export type BorderTex = PaintTex | 'kerb';
 export type BorderSize = 0 | 1 | 2 | 3;
 /** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge, corners rounded by radius (tiles, 0 sharp),
  *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb') */
-export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string }
-/** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint]; elements 6 to 9 are optional on load (older saves have no radius, and none
- *  has no tone: they load sharp and untoned); toTuple always writes all ten */
-export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?];
+export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; hole?: number; kind?: BrushKind }
+/** the golf brush's kinds: the areas a stroke paints (BRUSH_PRESETS) */
+export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path';
+/** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint, hole, kind]; elements 6 to 9 are optional on load (older saves have no radius, and none
+ *  has no tone: they load sharp and untoned); 10 and 11 (the hole and the brush kind) are written only for a brush area, and absent on load for others; toTuple writes ten or twelve */
+export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?];
+/** the draw order layer of each brush kind (a patch's z is layer * 1e6 + id, so a later kind paints over an earlier one) */
+export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7 };
+const BRUSH_KIND_IDS = new Set<string>(Object.keys(BRUSH_LAYER));
 /** a tile box [x0, y0, x1, y1] */
 export type PaintBox = [number, number, number, number];
 
@@ -243,18 +248,36 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(s: T): T {
   };
 }
 
+/** the golf brush presets, in the panel's order: each kind's texture style and its brush radius r (tiles); the Paint panel's edits replace these (remembered) */
+export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> }[] = [
+  { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfFairway', border: 3, btex: 'golfFirstCut', radius: 0 }) },
+  { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfGreen', border: 2, btex: 'golfFringe' }) },
+  { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfTee', border: 1, btex: 'golfFirstCut' }) },
+  { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfRough', border: 0 }) },
+  { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: 'bunkerSand', border: 2, btex: 'golfRough' }) },
+  { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: 'waterDark', border: 2, btex: 'dirt' }) },
+  { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: 'asphalt', border: 0 }) },
+];
+
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
 
 /** a painted area as its save tuple (scale, angle, radius and strength to 3 decimals) */
-export function toTuple(a: PaintArea): PaintTuple { return [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint]; }
+export function toTuple(a: PaintArea): PaintTuple {
+  const t: PaintTuple = [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint];
+  if (a.kind) t.push(a.hole ?? 0, a.kind);
+  return t;
+}
 
-/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped (a missing radius is sharp, a missing tone is none) */
+/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped (a missing radius is sharp, a missing tone is none); a hole tag that is not a positive integer and a kind that is not a BrushKind are dropped */
 export function fromTuples(ts: PaintTuple[]): PaintArea[] {
   const out: PaintArea[] = [];
   for (const t of ts) {
     if (checkArea(t[5]) !== '') continue;
     const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex, radius: t[6] ?? 0, tone: (t[7] ?? 0) as 0 | 1 | 2, toneAmt: t[8] ?? DEFAULT_STYLE.toneAmt, tint: t[9] ?? DEFAULT_STYLE.tint });
-    out.push({ id: out.length + 1, pts: t[5].slice(), ...s });
+    const tags: { hole?: number; kind?: BrushKind } = {};
+    if (Number.isInteger(t[10]) && t[10]! > 0) tags.hole = t[10];
+    if (typeof t[11] === 'string' && BRUSH_KIND_IDS.has(t[11])) tags.kind = t[11] as BrushKind;
+    out.push({ id: out.length + 1, pts: t[5].slice(), ...s, ...tags });
   }
   return out;
 }
