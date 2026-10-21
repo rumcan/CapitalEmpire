@@ -1,6 +1,7 @@
 import { BUSINESS, type BusinessId } from './catalogue';
 import type { BizDef } from './state';
 import type { LibItem, Prop } from '../types';
+import { hasLettering } from '../lots/lettering';
 
 /** The representative delivered sprite for each business's catalogue card. */
 export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel' };
@@ -33,6 +34,7 @@ export function businessArt(def: BizDef, library: LibItem[], index: ReadonlyMap<
     const it = library[item], scale = 64 * (def.w + def.h) * fraction / it.w;
     const x = def.x + (flip ? v : u) * def.w, y = def.y + (flip ? u : v) * def.h;
     const radius = Math.min(def.w, def.h) * fraction * .35;
-    return [{ uid: -1000000 - def.id * 100 - n, item, x, y, flip, scale, x0: x - radius, y0: y - radius, x1: x + radius, y1: y + radius, auto: 'business-art' }];
+    // a sign reads backwards when mirrored: lettering stays unflipped on a rotated business (its place still turns with the parcel)
+    return [{ uid: -1000000 - def.id * 100 - n, item, x, y, flip: flip && !hasLettering(it.id, it.name), scale, x0: x - radius, y0: y - radius, x1: x + radius, y1: y + radius, auto: 'business-art' }];
   });
 }
