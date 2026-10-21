@@ -31,7 +31,8 @@ for (const [id, it] of Object.entries(fromLib)) items[id] = it;
 const LOCAL = {};
 for (const set of fs.readdirSync(path.join(ROOT, 'art'), { withFileTypes: true })) {
   const f = path.join(ROOT, 'art', set.name, 'items.json');
-  if (set.isDirectory() && fs.existsSync(f)) for (const [id, it] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) { items[id] = it; (LOCAL[it.cat] ??= []).push(id); }
+  // only entries marked local (art/golf/items.json is the golf prompts, packed by prep-golf.mjs, not a sprite set)
+  if (set.isDirectory() && fs.existsSync(f)) for (const [id, it] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) { if (!it?.local) continue; items[id] = it; (LOCAL[it.cat] ??= []).push(id); }
 }
 
 // the largest scale the game draws each id at: the owner's lot table (+5% composer jitter) and the forest (up to 1.5). The table is
