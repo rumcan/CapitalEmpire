@@ -4,7 +4,7 @@ import type { LibItem, Prop } from '../types';
 import { hasLettering } from '../lots/lettering';
 
 /** The representative delivered sprite for each business's catalogue card. */
-export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel' };
+export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel', clubhouse: 'golf-clubhouse' };
 // Positions and sizes are fractions of the canonical parcel; R exchanges its world axes.
 type Piece = [string, number, number, number];
 const single = (id: string): Piece[] => [[id, 0.5, 0.5, 0.88]];
@@ -21,6 +21,7 @@ const LAYOUT: Record<BusinessId, Piece[]> = {
     ['golf-halfway-pavilion', .08, .55, .09], ['golf-driving-range', .84, .4, .14], ['golf-practice-net', .88, .5, .05],
     ['golf-patio-table', .69, .83, .035], ['golf-bench-course-map', .7, .7, .04], ['golf-cart-sw', .7, .9, .04],
   ],
+  clubhouse: [['golf-clubhouse', .3, .5, .7], ['golf-pro-shop', .74, .3, .4], ['golf-cart-garage', .78, .75, .45], ['golf-bench-course-map', .55, .85, .1], ['golf-cart-sw', .6, .65, .1]],
   fishing: [ ['fishing-lodge', .45, .45, .38], ['fishing-cabin', .18, .2, .18], ['fishing-cabin', .18, .7, .18],
     ['fishing-boathouse', .78, .45, .22], ['fishing-dock-rope', .82, .2, .14], ['fishing-dock-lifebuoy', .85, .7, .14],
     ['fishing-rental-kiosk', .54, .83, .12], ['fishing-bass-boat', .93, .7, .1] ],

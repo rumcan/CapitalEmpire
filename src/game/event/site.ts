@@ -96,11 +96,10 @@ export function placeStadium(cls: Uint8Array, centres: Pt[]): Site | null {
 }
 
 /** the cars a round of the given level sends, split over the towns by population share (all zero: equal shares), by largest remainder:
- *  the parts sum to the total (round(L1_CARS * LEVEL_MUL ** (level - 1))); the ties go to the earlier towns */
-export function crowdFor(level: number, pops: number[]): number[] {
+ *  the parts sum to the total (round(L1_CARS * LEVEL_MUL ** (level - 1)) unless one is given: a golf tournament day's cars); the ties go to the earlier towns */
+export function crowdFor(level: number, pops: number[], total = Math.round(L1_CARS * LEVEL_MUL ** (level - 1))): number[] {
   const n = pops.length;
   if (!n) return [];
-  const total = Math.round(L1_CARS * LEVEL_MUL ** (level - 1));
   const sum = pops.reduce((a, b) => a + b, 0);
   const out = new Array<number>(n).fill(0), frac = new Array<number>(n).fill(0);
   let used = 0;
