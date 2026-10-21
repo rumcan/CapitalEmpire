@@ -36,7 +36,7 @@ export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'golfGreen', name: 'Putting green', col: '#4d6e18' },
   { id: 'golfFairway', name: 'Fairway', col: '#416114' },
   { id: 'golfSod', name: 'New sod', col: '#435d19' },
-  { id: 'golfRough', name: 'Rough', col: '#52571d' },
+  { id: 'golfRough', name: 'Rough', col: '#52571f' },
   { id: 'meadowLush', name: 'Meadow', col: '#686d20' },
   { id: 'meadowFlowers', name: 'Wildflowers', col: '#6a6c2f' },
 ];

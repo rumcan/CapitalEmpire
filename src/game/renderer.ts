@@ -472,12 +472,12 @@ export class GroundPainter {
           return;
         }
         if (t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn') {
-          put(this.groundPattern(ctx, this.tex.mosaicFor('base', L), G));
+          put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * st.s), G));
           if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
           if (t === 'asphaltWorn') { tone('rgb(150,150,150)', 'multiply', 0.5); tone('rgb(190,180,160)', 'screen', 0.22); }
           return;
         }
-        if (isPhotoGrass(t)) { put(this.groundPattern(ctx, this.tex.mosaicFor(t, L), G)); return; }
+        if (isPhotoGrass(t)) { put(this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G)); return; }
         put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
       };
       ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';

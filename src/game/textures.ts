@@ -265,7 +265,8 @@ export class Textures {
       const c = toCanvas(await loadImage(p.src));
       // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
       const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
-      this.mosaics.set(p.tex, this.mipChain(p.mix ? this.mosaic(seeds, c, c, mean()) : c)); await tick();
+      // mixed: 160 px per tile (80 px/m) over the 24 m period, the photo's p.mix metres scaled to that; plain: the photo is the period
+      this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(seeds, c, c, mean(), 160, c.width / p.mix) : c)); await tick();
     }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#8c8c86'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('outside', c); }
@@ -300,11 +301,11 @@ export class Textures {
     return out;
   }
   /** soft-edged, overlapping patches of the painting stamped in a staggered hex grid so neighbouring patches blend into each other rather than meeting at hard seams. All patches share the builder's flattened mean tone so overlaps never drift in brightness. */
-  private mosaic(seeds: ReturnType<Textures['mosaicSeeds']>, a: Cnv, b: Cnv, fill?: string) {
-    const S = MOSAIC_TILES * MOSAIC_PX, c = canvas(S, S), g = ctx2d(c);
+  private mosaic(seeds: ReturnType<Textures['mosaicSeeds']>, a: Cnv, b: Cnv, fill?: string, px = MOSAIC_PX, srcPPM = PPM) {
+    const S = MOSAIC_TILES * px, c = canvas(S, S), g = ctx2d(c);
     // one patch covers ~1.6 tiles so neighbours overlap; feather spans most of the overlap band
-    const R = 0.82 * MOSAIC_PX, feather = 0.5 * MOSAIC_PX, P = Math.ceil(R * 2) + 2;
-    const patch = canvas(P, P), pg = ctx2d(patch), scale = MOSAIC_PX / 2 / PPM;
+    const R = 0.82 * px, feather = 0.5 * px, P = Math.ceil(R * 2) + 2;
+    const patch = canvas(P, P), pg = ctx2d(patch), scale = px / 2 / srcPPM;
     const soft = canvas(P, P); { const sg = ctx2d(soft), gr = sg.createRadialGradient(P / 2, P / 2, 0, P / 2, P / 2, R); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.35, 'rgba(0,0,0,1)'); gr.addColorStop(0.35 + feather / R, 'rgba(0,0,0,0)'); sg.fillStyle = gr; sg.fillRect(0, 0, P, P); }
     g.fillStyle = fill ?? `rgb(${ASPHALT_MEAN.map(Math.round).join(',')})`; g.fillRect(0, 0, S, S);
     for (const s of seeds) {
@@ -313,7 +314,7 @@ export class Textures {
       pg.globalCompositeOperation = 'source-over'; pg.clearRect(0, 0, P, P);
       pg.drawImage(img, P / 2 - ox, P / 2 - oy, W, H);
       pg.globalCompositeOperation = 'destination-in'; pg.drawImage(soft, 0, 0);
-      const X = s.x * MOSAIC_PX - P / 2, Y = s.y * MOSAIC_PX - P / 2;
+      const X = s.x * px - P / 2, Y = s.y * px - P / 2;
       for (const wx of [-S, 0, S]) for (const wy of [-S, 0, S]) { const x = X + wx, y = Y + wy; if (x > -P && x < S && y > -P && y < S) g.drawImage(patch, x, y); }
     }
     // a whisper of extra grain over the whole period so adjacent patches feel like one painted surface

@@ -24,11 +24,11 @@ export const GRASS_PAINT: { tex: GrassTex; src: string }[] = [
 ];
 
 /** the photo grass textures, laid in tile space like the asphalt mosaic so the mowing stripes follow the paint area's angle and scale;
- *  src is the seamless photo at its mosaic size (a 12-tile period, or 6 m for rough), mix = hex-mixed so it never visibly repeats */
-export const GRASS_PHOTO: { tex: GrassTex; src: string; mix: boolean }[] = [
-  { tex: 'golfFairway', src: golfFairway, mix: false },
-  { tex: 'golfSod', src: golfSod, mix: false },
-  { tex: 'golfRough', src: golfRough, mix: true },
+ *  src is the seamless photo at its native size (1254 px); mix = the metres the photo covers when hex-mixed so it never visibly repeats (0 = a plain tile over the 12-tile period) */
+export const GRASS_PHOTO: { tex: GrassTex; src: string; mix: number }[] = [
+  { tex: 'golfFairway', src: golfFairway, mix: 0 },
+  { tex: 'golfSod', src: golfSod, mix: 0 },
+  { tex: 'golfRough', src: golfRough, mix: 6 },
 ];
 /** true for a grass texture laid as a tile-space photo (renderer.ts drawPaints), not a screen-space painting */
 export const isPhotoGrass = (t: string) => GRASS_PHOTO.some(p => p.tex === t);
