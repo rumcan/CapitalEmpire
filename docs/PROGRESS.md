@@ -1862,7 +1862,30 @@ The owner's requests during the planning (all written into GOLF-PLAN 4.5 / PAINT
 - Paranormal nights (T014): another session's uncommitted work in the main checkout (`feature/paranormal-nights`): untouched;
   the plan recommends parking it (open question 8).
 
-**Next:** the owner answers GOLF-PLAN section 13; fix the two bugs above; then **G1** (golf mode foundation).
+**Landed on main 2026-10-21 (after G0; the owner: "start an army of Haiku coders on the plan"; open questions on the lead's
+recommended defaults until the owner answers):**
+- Golf pure modules (G1–G4 groundwork, not wired into the game yet), `src/game/golf/`: `types.ts` (shared course types),
+  `calendar.ts` + `tour.ts` (months, the tournament day timeline, arrival and exit curves, the five tiers with cumulative needs,
+  reputation, day satisfaction, the tour's verdict), `holes.ts` (hole derivation from painted areas, tees, pins and aim points; par,
+  lengths, warnings; course stats), `coursegen.ts` (the old nine: par 36, about 2,340 m on a 300 x 450 site, 6 bunkers, a pond),
+  `tents.ts` + `venue.ts` (the structure catalogue, tent economics, gate queues, toilets, viewing). Tests: golf-tour 11,
+  golf-holes 10, golf-coursegen 9, golf-event 13.
+- **Fixed: mirrored shop signs** (`lots/lettering.ts`: 52 buildings and signs, 242 decor and road signs; rear views may mirror; an
+  `EAST_FACING` hook). Until the east-facing art is packed, +X-facing commercial lots fall back to other buildings or car parks
+  (compose test thresholds re-pinned: TOUR 12.2, COM 10.7). East-facing art for 17 shop fronts is being generated (RUN, the
+  grocery pilot reads "MAPLE FALLS GROCERY" correctly).
+- **Fixed: fences** in blocks with end columns: every lot fences its lines at the higher world-coordinate end (sides and back), so
+  every shared line has exactly one owner.
+- **Fixed: parked cars**: CAR_SCALE 0.88 (+10%, moving cars too), cars keep 0.4 tiles inside their own lot (the overlaps were
+  between neighbouring lots), the eight-way cars packed with lanczos3 + sharpen. The baked 8 x 15 lot pictures still hold 0.8 cars
+  until the next lot re-bake.
+- **Paint:** corner radius, tone filters (Multiply / Lighten, strength, tint), Concrete = the generated concrete photo (also the
+  commercial back yards; road islands keep the painted concrete), Car park asphalt as a Paint texture.
+- Checks: npm test 600/602 (the two timing flakes; the worker refused SSH, run locally); typecheck clean; browser-checked on 5186
+  (fences, signs, cars in bays); built to the owner's 5174.
+
+**Next:** east-facing shop art into the atlas (EAST_FACING); the building alignment bug; the golf textures packed as photo textures
+with lazy builds; Paint shape editing; then **G1** (golf mode foundation).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire), now a **golf events manager** (the owner's pivot, 2026-10-21). Read CLAUDE.md,
