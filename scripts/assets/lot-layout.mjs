@@ -114,8 +114,8 @@ const STORIES = {
   neglected: [have(['expansion:junk-car', 'expansion:outhouse']), have(['expansion:appliance-pile', 'expansion:attic-trunk', 'expansion:crt-curb', 'expansion:tyre-stack', 'expansion:antique-pram'])],
 };
 export const STORY_NAMES = Object.keys(STORIES);
-/** parked cars at the size the game draws cars on the road (src/game/sprites.ts CAR_SCALE) */
-const CAR_SCALE = 0.8;
+/** parked cars at the size the game draws cars on the road (src/game/ext/car-art/index.ts CAR_SCALE, 0.88 since 2026-10-21; was 0.8) */
+const CAR_SCALE = 0.88;
 /** the owner's scale for a sprite (a variation takes its original's), or 1 */
 export const ownerScale = id => { const it = LIB.get(id); const b = it ? baseOf(it) : id; return SCALE_OVERRIDES[id] ?? SCALES[id]?.scale ?? SCALES[b]?.scale ?? 1; };
 /** the owner's map scale for a sprite, ignoring the studio's overrides */

@@ -4,8 +4,9 @@ export const CAR_DIRECTIONS = ['SE', 'S', 'SW', 'W', 'NW', 'N', 'NE', 'E'] as co
 export function carHeading(angle: number): number {
   return ((Math.round(angle / (Math.PI / 4)) % 8) + 8) % 8;
 }
-/** every car is drawn this much smaller than its art, parked and moving (sprites.ts drawables of kind car; SimClient.visible): the owner, 2026-10-19 */
-export const CAR_SCALE = 0.8;
+/** every car is drawn this much smaller than its art, parked and moving (sprites.ts drawables of kind car; SimClient.visible): the owner, 2026-10-19;
+ *  0.88 (was 0.8): the owner, 2026-10-21, found all cars about 10% too small */
+export const CAR_SCALE = 0.88;
 /** World-axis bounding half sizes in metres of a 4.5 m long, 1.8 m wide car. */
 export function carFootprint(heading: number): { hx: number; hy: number } {
   const a = heading * Math.PI / 4, c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));

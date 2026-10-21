@@ -42,11 +42,14 @@ const DRIFT_K = 0.35;
 const REACH = 0.3, VERGE = 1.2, EPS = 0.02;
 /** the largest share of the smaller footprint two uprights may share */
 const OVERLAP = 0.35;
+/** a parked car or vehicle keeps this far (tiles) from each of its own lot's lines (sides, back and front): a car that would cross it moves
+ *  inward along the lot frame if that clears the lot's other items, else it is left out (see Build.fitCar) */
+const CAR_INSET = 0.4;
 /** the car park's bay pitch and depth, tiles (the depth is 5.5 m); the wheel stop id */
 const BAY = 2, BAY_DEPTH = 2.75, WHEEL = 'expansion:wheel-stop';
 /** the two-way aisle between the bay rows, the entrance drive's width (two lanes), a wheel stop's inset from a bay's outer edge, a nosed-in car's gap to its stop */
-/** NOSE: a parked car's centre this far short of its wheel stop: half the car (1.8 tiles: 4.5 m at CAR_SCALE) and a 0.15-tile gap, so its nose stops just short of the stop */
-const AISLE = 2.6, DRIVE_W = 2.6, STOP_IN = 0.35, NOSE = 1.05;
+/** NOSE: a parked car's centre this far short of its wheel stop: half a car at CAR_SCALE (the 4.5 m car is 3.96 m at 0.88: 0.99 tiles half) and a 0.15-tile gap, so its nose stops just short of the stop */
+const AISLE = 2.6, DRIVE_W = 2.6, STOP_IN = 0.35, NOSE = carFootprint(0).hx * CAR_SCALE / 2 + 0.15;
 /** the house band: the gap between the drive and the house (or its garage), and the side yard on the far side from the drive (tiles) */
 const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
 
@@ -177,11 +180,24 @@ class Build {
     const h = boxOf(id, OWNER_SCALE[id] ?? 1, flip), w = h[2] - h[0], d = h[3] - h[1];
     return [Math.abs(this.u.x) * w + Math.abs(this.u.y) * d, Math.abs(this.n.x) * w + Math.abs(this.n.y) * d];
   }
-  /** a spec with its footprint centre at a world point */
+  /** a car's footprint centre, moved along the lot frame so its footprint keeps CAR_INSET from each of the lot's lines (a car inside them is
+   *  returned as given). A move is refused (null) when it would land the car on another item of the lot, and when the lot is too small for the car */
+  fitCar(g: Spec, c: Pt): Pt | null {
+    const dx = c.x - this.o.x, dy = c.y - this.o.y, a = dx * this.u.x + dy * this.u.y, b = dx * this.n.x + dy * this.n.y;
+    const ea = this.ea(g), eb = this.eb(g), la = ea + CAR_INSET, lb = eb + CAR_INSET;
+    if (la > this.W - la || lb > this.D - lb) return null;
+    const a1 = clamp(a, la, this.W - la), b1 = clamp(b, lb, this.D - lb);
+    if (Math.abs(a1 - a) < 1e-3 && Math.abs(b1 - b) < 1e-3) return c;
+    const p = this.P(a1, b1), h = g.h, fp: Box4 = [p.x - (h[2] - h[0]) / 2, p.y - (h[3] - h[1]) / 2, p.x + (h[2] - h[0]) / 2, p.y + (h[3] - h[1]) / 2];
+    return this.items.some(it => share(it.fp, fp) > 0) ? null : p;
+  }
+  /** a spec with its footprint centre at a world point (a car's centre is fitted inside its lot first, see fitCar) */
   atW(g: Spec | null, c: Pt, o: Opt = {}): Item | null {
     if (!g) return null;
-    const it = BY.get(g.id)!, h = g.h, x = c.x - (h[0] + h[2]) / 2, y = c.y - (h[1] + h[3]) / 2;
-    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car: it.cat === 'Vehicles', wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant };
+    const it = BY.get(g.id)!, car = it.cat === 'Vehicles', cc = car ? this.fitCar(g, c) : c;
+    if (!cc) return null;
+    const h = g.h, x = cc.x - (h[0] + h[2]) / 2, y = cc.y - (h[1] + h[3]) / 2;
+    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant };
     this.items.push(item); return item;
   }
   /** a spec with its footprint centre at a lot-frame point (a along u, b along n) */
@@ -269,7 +285,7 @@ class Build {
     for (let k = 0; k < n; k++) {
       const a = a0 + k * BAY + BAY / 2;
       this.put(WHEEL, a, b0 + BAY_DEPTH - 0.4, { flip });
-      if (this.r() < 0.5) this.parked(a, b0 + 0.3 + this.carLen(false) / 2, false, k % 2);
+      if (this.r() < 0.5) this.parked(a, b0 + CAR_INSET + this.carLen(false) / 2, false, k % 2);
     }
   }
   /** a car (or pickup) facing the road best, from a pool, with its near edge at b0 along the lot's n (the old static art: the pickups) */
