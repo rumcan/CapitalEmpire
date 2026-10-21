@@ -27,10 +27,10 @@ export interface ComposeState { use: number; level: number; decline: number; see
 type Pt = { x: number; y: number };
 type Box4 = [number, number, number, number];
 /** a placed candidate: the anchor (ground point) and its footprint in world tiles */
-interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean }
+interface Item { id: string; x: number; y: number; flip: boolean; s: number; fp: Box4; car: boolean; wheel: boolean; fence: boolean; boundary: boolean; street: boolean; plant: boolean; /** stands on the paving (a drive's pay boom) */ paved?: boolean }
 /** a sprite at a size and orientation: its footprint relative to the anchor */
 interface Spec { id: string; s: number; flip: boolean; h: Box4 }
-interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean }
+interface Opt { flip?: boolean; mul?: number; street?: boolean; plant?: boolean; boundary?: boolean; paved?: boolean }
 interface Patch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: LotPatch['tex']; quad: number[]; lines?: number[] }
 interface Pair { x: string; y: string }
 
@@ -208,7 +208,7 @@ class Build {
     const it = BY.get(g.id)!, car = it.cat === 'Vehicles', cc = car ? this.fitCar(g, c) : c;
     if (!cc) return null;
     const h = g.h, x = cc.x - (h[0] + h[2]) / 2, y = cc.y - (h[1] + h[3]) / 2;
-    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant };
+    const item: Item = { id: g.id, x, y, flip: g.flip, s: g.s, fp: [x + h[0], y + h[1], x + h[2], y + h[3]], car, wheel: g.id === WHEEL, fence: it.kind === 'fencex' || it.kind === 'fencey' || g.id === 'world:hedge', boundary: !!o.boundary, street: !!o.street, plant: !!o.plant, ...(o.paved ? { paved: true } : {}) };
     this.items.push(item); return item;
   }
   /** a spec with its footprint centre at a lot-frame point (a along u, b along n) */
@@ -361,7 +361,7 @@ class Build {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
     for (const it of this.items) {
       // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
-      if (!this.inside(it) || (!it.boundary && this.onPatch(it))) continue;
+      if (!this.inside(it) || (!it.boundary && !it.paved && this.onPatch(it))) continue;
       // two cars never share ground (a car is kept only if it shares none with an earlier car)
       if (it.car && acc.some(a => a.car && share(a.fp, it.fp) > 0)) continue;
       if (!it.fence && !it.wheel) {
@@ -606,7 +606,7 @@ function parkingArea(B: Build, a0: number, b0: number, a1: number, b1: number, d
   // the entrance: its mouth at the street, its end at the street-side aisle
   if (drive) { B.pave('drive', drive.a0, 0, drive.a1, (g0 + (island ? c - ISLAND / 2 - BP : g1)) / 2, 'asphalt');
     // a pay boom across the drive just inside the lot line (looks only: the lots take no fees); the gate art's arm runs along X
-    B.put('ce:parking-entry', (drive.a0 + drive.a1) / 2, 0.8, { flip: Math.abs(B.u.y) > Math.abs(B.u.x) }); }
+    B.put('ce:parking-entry', (drive.a0 + drive.a1) / 2, 0.8, { flip: Math.abs(B.u.y) > Math.abs(B.u.x), paved: true }); }
   return bays;
 }
 /** a small green, for a lot whose frontage runs off the map axes (no building there faces the street): two trees, a bench by the front, bushes */

@@ -328,9 +328,9 @@ function digest(c: Composition): string {
 
 test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the pay boom at car park drives, the second studio curation, the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '5e8e1a04'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '0ae68510'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'efd945ad'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '933c9f97'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, 'c04fa0a5'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '7daecf63'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '86100265'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '784f67fd'],
     [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a79013ae'],
