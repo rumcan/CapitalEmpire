@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { SCALE_OVERRIDES } from './overrides.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const SRC = path.join(root, 'art/golf'), out = path.join(root, 'src/assets/golf');
@@ -61,7 +62,9 @@ fs.mkdirSync(review, { recursive: true });
 for (const p of pieces) {
   const meta = await sharp(p.png).metadata();
   p.w = 64 * (p.hx + p.hy); p.h = p.w * meta.height / meta.width;
-  p.width = Math.round(p.w * 0.6); p.height = Math.round(p.h * 0.6);
+  // packed at 0.6 x the largest scale the game draws it at (the owner's studio size, when bigger), so nothing is stretched
+  const k = 0.6 * Math.max(1, SCALE_OVERRIDES[p.id] ?? 1);
+  p.width = Math.round(p.w * k); p.height = Math.round(p.h * k);
   await sharp(p.png).toFile(path.join(review, `${p.id.slice('golf:'.length)}.png`));
 }
 function fits(page) {
