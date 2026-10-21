@@ -111,6 +111,21 @@ candidates to drop from the atlas for GPU memory: the Halloween sets (monsters, 
 | Park-and-ride sign, coach terminal shelters | 2–20 | front, rear | - | P2 |
 | Ride-share pick-up / drop-off sign and kerb paint | 2 | 2 | kerb paint is a decal | P2 |
 
+### The owner's additions (2026-10-21 night)
+All P1, no lettering (pictograms or blank boards):
+| Sprite | Notes |
+| --- | --- |
+| **Large plain white tents** (marquees, no branding) | 3 sizes (10 x 10, 15 x 10, 20 x 12 m); front and rear; the generic event tent |
+| **TV cameras** | camera on a tripod with operator, camera platform, the camera tower (section 4, raised to P1) |
+| **Course odds and ends** | gardening tools (rakes, shovels, wheelbarrow, hose reel, leaf blower), ball cleaners (ball washers), tee markers for the tee boxes (blue, white, red, gold) |
+| **First-tee sign** | a blank board on posts (lettering later, by hand) |
+| **Pro shop buildings** | 2-3 more variants beside `business:golf-pro-shop` |
+| **Tables with umbrellas** | patio tables, café sets, picnic tables with parasols |
+| **Golf estate gates** | a gatehouse and stone pillars with wrought-iron gates, sized for each road class that can enter the estate (lane, street, avenue) |
+| **More grass, bushes, flower beds** | ornamental grass clumps, shrubs, flower beds and planters for tees and the clubhouse |
+| **Flag poles** | single and in rows (plain coloured flags) |
+| **Golf cart bridges** | both axes (X and Y facings; flipping gives the other two), wood and stone |
+
 ## 5. People and vehicles (movers)
 | Sprite | Frames | Variants | Notes | P |
 | --- | --- | --- | --- | --- |
