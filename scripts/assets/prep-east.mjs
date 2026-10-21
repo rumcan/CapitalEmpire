@@ -10,10 +10,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { readRemoved } from './removed.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const SRC = path.join(root, 'art/east-facing'), ATLAS = path.join(root, 'src/assets/atlas'), OUT = path.join(root, 'src/assets/east');
 const PAGE = 2048, GUT = 16, ALIGN = 16, MIPS = 5;
 const r2 = v => +v.toFixed(2);
+const REMOVED = readRemoved();
 
 // the front items: the JSON lines of src/game/library.ts (one item per line, as prep-sprites.mjs writes them)
 const LIB = new Map(fs.readFileSync(path.join(root, 'src/game/library.ts'), 'utf8').split('\n').filter(l => l.startsWith('  {"id":'))
@@ -34,6 +36,8 @@ for (const f of names) {
   // <name> is the front's id with ':' replaced by '_' (town_grocery = town:grocery); the prefix (town, world, ref) has no '_'
   const name = f.slice(0, -4), cut = name.indexOf('_'), frontId = `${name.slice(0, cut)}:${name.slice(cut + 1)}`;
   const front = LIB.get(frontId);
+  // a front the owner removed in the sprite studio has no east view either (restore the front and pack again to bring it back)
+  if (!front && REMOVED[frontId]) { console.log(`${frontId}: removed in the studio, its east view left out`); continue; }
   if (!front) throw new Error(`${f}: no library item ${frontId}`);
   if (front.doorAt || front.block) throw new Error(`${frontId}: doorAt and block are not mirrored yet`);
   const [page, u0, v0, u1, v1] = front.tex, PX = Math.round(u0 * PAGE), PY = Math.round(v0 * PAGE), PW = Math.round((u1 - u0) * PAGE), PH = Math.round((v1 - v0) * PAGE);
