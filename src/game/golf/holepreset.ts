@@ -49,7 +49,7 @@ export function holePreset(seed: number): HolePreset {
     const a = rnd() * 2 * Math.PI, d = 3 * rnd(), x = RC + (RX + d) * Math.cos(a), y = (RY + d) * Math.sin(a);
     if (apart(x, y, 1.5, 'bush')) props.push({ kind: 'bush', x, y });
   }
-  for (let k = 0; k < 14; k++) {
+  for (let k = 0; k < 80; k++) {
     const x = -7 + 16 * rnd(), y = -7 + 14 * rnd();
     const ex = Math.max(-3 - x, x - 5, 0), ey = Math.max(Math.abs(y) - 3, 0), r = Math.hypot(ex, ey);
     if (r >= 1.5 && r <= 4 && (x < -3 || Math.abs(y) > 3) && apart(x, y, 1, 'flower')) props.push({ kind: 'flower', x, y });

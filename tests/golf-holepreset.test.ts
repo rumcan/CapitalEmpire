@@ -26,7 +26,7 @@ test('props: enough trees, bushes and flowers, and no tree or bush on the fairwa
   const count = (k: string) => p.props.filter(q => q.kind === k).length;
   assert.ok(count('tree') >= 40, `trees ${count('tree')}`);
   assert.ok(count('bush') >= 40, `bushes ${count('bush')}`);
-  assert.ok(count('flower') >= 6, `flowers ${count('flower')}`);
+  assert.ok(count('flower') >= 10, `flowers ${count('flower')}`);
   for (const q of p.props) {
     if (q.kind !== 'tree' && q.kind !== 'bush') continue;
     assert.ok(!insidePoly(fairway.pts, q.x, q.y), `${q.kind} on the fairway at ${q.x}, ${q.y}`);
