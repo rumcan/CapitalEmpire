@@ -2057,3 +2057,26 @@ recommendations are the defaults); the art list is docs/GOLF-SPRITES.md. main li
 parallel in their own worktrees as the handover describes, review and merge their work, and after each verified step merge to main and
 rebuild so my 5174 server shows it. Carry on through the queue without asking between steps; ask before pushing to GitHub. The worker
 PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks locally, at most two or three at a time (RAM)."
+
+## The coder track on the second PC, and Argon (2026-10-21 evening)
+
+- **Where:** the second agent (code) runs on the owner's second PC (RTMS-PierroS, 12 GB RAM): main is the plain checkout `C:\CapitalEmpire`,
+  coder worktrees `.claude/worktrees/agent2-*` (node_modules junction to the main checkout's). The art agent works on the dev PC; the two
+  sync only through GitHub. **The owner's standing go: push main after each verified step** (fetch and merge origin/main first).
+- **G1 so far (pushed):** `golf/place.ts` (the course beside the town: course, clubhouse venue 40 x 24, car park, gravel drive continuing
+  the main avenue; the town's one asphalt avenue and gravel branches), `golf/paintcourse.ts` (the old nine as Paint areas, cut into 200-tile
+  cells), the worker (`clubhouse` business placed by the game, its site the crowd's doors; `City.setGolf`; the tournament starts itself at
+  the day's end on the existing surge, tier 1 about 390 spectators at reputation 30), the golf HUD (App.tsx), and the season calendar
+  (one game day = one season, September to August; the tournament at the day's end: GOLF-PLAN question 1 on its recommended default).
+- **G1 engine wiring: GitHub branch `agent2/g1-engine` (35fadd5), tests and typecheck pass, NOT browser-checked or merged.** A new game is a
+  golf game (`golf/start.ts` planGolfGame, up to 8 terrain seeds; courses may roll over hills: ~20 of 30 valleys fit); SaveV5.golf (no
+  version bump; a save without it loads as classic); golfView, skipToTournament; the Business tool off in golf mode.
+- **Town districts** (the owner asked twice): a coder worked in the local worktree `agent2-g1-districts` (lots/districts.ts, useFor in
+  town.ts: the main asphalt street near the centre all shops, a 2 x 2 block works quarter toward the highway, IND nowhere else, COM x0.35
+  elsewhere). Check whether it landed; if not, redo it.
+- **Argon (Gemini "4 Argon", Task mode)** is the second engineer, reviewer and writer of Codex task packages (`docs/ARGON-HANDOFF.md`).
+  Chat: https://gemini.google.com/app/3efbd031d9eb187d (the built-in browser, the owner's Google account). Drive folder "Capital Empire -
+  Argon", id `11pAG2rlxViL4bby-cUapecWmP43gv7hC` (anyone with the link: viewer; download `https://drive.usercontent.google.com/download?id=<id>&export=download&confirm=t`;
+  upload .ts files with a .txt suffix). His usage limit reset at 18:13 on 2026-10-21. First job sent 18:15: a review of the G1 code
+  (review-G1-argon.md) and the first Codex package, T-G2c-course-costs.md. Never run his unpack command: unpack bundles with a
+  path-checked script and review before installing.
