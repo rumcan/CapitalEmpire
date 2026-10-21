@@ -3,7 +3,7 @@
 import { canvas, ctx2d, type CurbColours, type Cnv, type Textures } from './textures';
 
 /** bump when the texture generation code changes, so stale caches are rebuilt */
-const TEX_VERSION = 'tex-15';
+const TEX_VERSION = 'tex-16';
 export interface TexSnapshot { names: string[]; bitmaps: ImageBitmap[]; curb: CurbColours; stampAngle: number }
 
 function entries(t: Textures): [string, Cnv][] {
@@ -24,7 +24,9 @@ export function restore(t: Textures, s: TexSnapshot) {
     else if (name.startsWith('mosaic:')) { const [, k, idx] = name.split(':'); let l = mosaics.get(k); if (!l) mosaics.set(k, (l = [])); l[+idx] = c; }
     else (t as unknown as Record<string, Cnv>)[name] = c;
   });
-  t.mosaics = mosaics; t.curb = s.curb; t.stampAngle = s.stampAngle;
+  // merged, not replaced: a worker keeps the lazy photo textures it has built (a snapshot holds only those its builder had)
+  for (const [k, l] of mosaics) t.mosaics.set(k, l);
+  t.curb = s.curb; t.stampAngle = s.stampAngle;
 }
 
 /* ---- IndexedDB cache (works inside workers) ---- */

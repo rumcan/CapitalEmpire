@@ -6,6 +6,7 @@ import type { FromWorker, ToWorker } from './ground-protocol';
 import { applyOps } from './netops';
 import { GroundPainter } from './renderer';
 import { Textures } from './textures';
+import { EAGER_PHOTO, isPhotoTex } from './grass-art';
 import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -17,8 +18,8 @@ let texReady!: () => void;
 const hasTextures = new Promise<void>(res => { texReady = res; });
 const post = (m: FromWorker, transfer: Transferable[] = []) => scope.postMessage(m, transfer);
 
-scope.onmessage = async (e: MessageEvent<ToWorker>) => {
-  const m = e.data;
+/** one message: init and the texture pack run on arrival (init waits for the pack); every other message runs after the one before it */
+const handle = async (m: ToWorker) => {
   try {
     switch (m.t) {
       case 'init': {
@@ -40,7 +41,14 @@ scope.onmessage = async (e: MessageEvent<ToWorker>) => {
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
       case 'blocks': painter.blocks = m.data; break;
-      case 'lotground': painter.setLotGround(m.set, m.drop); break;
+      case 'lotground': {
+        // the lazy photo textures the edit's paint areas use are built first, so the chunks baked after it see them
+        const need = new Set<string>();
+        for (const [, ps] of m.set) for (const p of ps) if (p.paint && isPhotoTex(p.tex) && !EAGER_PHOTO.has(p.tex) && !tex.has(p.tex)) need.add(p.tex);
+        await Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
+        painter.setLotGround(m.set, m.drop);
+        break;
+      }
       case 'paint': {
         await hasTextures;
         const t0 = performance.now();
@@ -51,4 +59,11 @@ scope.onmessage = async (e: MessageEvent<ToWorker>) => {
       }
     }
   } catch (err) { post({ t: 'error', message: (err as Error).stack || String(err) }); }
+};
+/** the messages after init, one at a time in arrival order (a bake never overtakes the lot edit sent before it); the chain never rejects (handle catches) */
+let queue: Promise<void> = Promise.resolve();
+scope.onmessage = (e: MessageEvent<ToWorker>) => {
+  const m = e.data;
+  if (m.t === 'init' || m.t === 'textures') void handle(m);
+  else queue = queue.then(() => handle(m));
 };

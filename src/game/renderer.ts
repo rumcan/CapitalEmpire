@@ -1,7 +1,8 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, SOIL_H, SOIL_R, SOIL_STAMPS, SOIL_W, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
-import { isPhotoTex } from './grass-art';
+import { EAGER_PHOTO, isPhotoTex } from './grass-art';
+import { PAINT_TEXES } from './paint';
 import { DECALS, POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { LOT_DECALS } from './lot-decals';
 import { NATURE, NATURE_RES } from './nature-patches';
@@ -28,6 +29,8 @@ export const PLAN_BLOCK_COLOURS = ['#c9b79a', '#d98f5a', '#e8d27a', '#8fae6a', '
 const LOT_CELL = 32;
 /** the asphalt of the planner map (the same colour as the roads) */
 const PLAN_ASPHALT = '#3c4150';
+/** a Paint texture's swatch colour (its mean), the flat fill of a photo texture this worker has not built yet */
+const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [string, string]));
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
@@ -83,11 +86,14 @@ export class GroundPainter {
     return [Math.floor(Math.min(...corners.map(p => p.x))) - pad, Math.floor(Math.min(...corners.map(p => p.y))) - pad, Math.ceil(Math.max(...corners.map(p => p.x))) + pad, Math.ceil(Math.max(...corners.map(p => p.y))) + pad];
   }
 
-  /** the planner colour of a texture: its mean RGB at the planner mip, 20% desaturated and lifted 5% (cached) */
+  /** the planner colour of a texture: its mean RGB at the planner mip, 20% desaturated and lifted 5% (cached). It never depends on what this worker has built
+   *  (every worker must plan the same colour): a lazy photo with no planner mip of its own uses its Paint swatch */
   private planColour(name: string): string {
     let c = this.planCols.get(name);
     if (!c) {
-      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : isPhotoTex(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.image(name as TexName, 0.035), d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
+      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
+      if (!img) return PAINT_COL.get(name) ?? '#808080';
+      const d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
       const y = (0.3 * r + 0.59 * g + 0.11 * b) / n, lift = (s: number) => Math.round(Math.min(255, (s / n * 0.8 + y * 0.2) * 1.05));
       c = `rgb(${lift(r)},${lift(g)},${lift(b)})`; this.planCols.set(name, c);
@@ -143,9 +149,9 @@ export class GroundPainter {
     const ox = ((X0 * L) % img.width + img.width) % img.width, oy = ((Y0 * L) % img.height + img.height) % img.height;
     const T0 = Minv.multiply(new DOMMatrix([1, 0, 0, 1, -ox, -oy])); p.setTransform(G ? G.multiply(T0) : T0); return p;
   }
-  /** the asphalt mosaic, which lives in ground (tile) space: one period = MOSAIC_TILES tiles; G turns it about the origin */
-  private groundPattern(g: C2D, img: Cnv, G?: DOMMatrix) {
-    const p = g.createPattern(img, 'repeat')!, s = MOSAIC_TILES / img.width, S = new DOMMatrix([s, 0, 0, s, 0, 0]); p.setTransform(G ? G.multiply(S) : S); return p;
+  /** the asphalt mosaic, which lives in ground (tile) space: one period = period tiles (MOSAIC_TILES by default); G turns it about the origin */
+  private groundPattern(g: C2D, img: Cnv, G?: DOMMatrix, period = MOSAIC_TILES) {
+    const p = g.createPattern(img, 'repeat')!, s = period / img.width, S = new DOMMatrix([s, 0, 0, s, 0, 0]); p.setTransform(G ? G.multiply(S) : S); return p;
   }
 
   /** one ground chunk (CHUNK_W x CHUNK_H world px) at cache level L: the full-quality bake. lite = a district chunk
@@ -473,14 +479,17 @@ export class GroundPainter {
           ctx.globalCompositeOperation = 'multiply'; put(this.screenPattern(ctx, 'grime', L, X0, Y0, Minv)); ctx.globalCompositeOperation = 'source-over';
           return;
         }
-        if (t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn') {
+        if (t === 'asphalt' || t === 'asphaltDark') {
           put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * st.s), G));
           if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
-          if (t === 'asphaltWorn') { tone('rgb(150,150,150)', 'multiply', 0.5); tone('rgb(190,180,160)', 'screen', 0.22); }
           return;
         }
         if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * st.s), G)); return; }
-        if (isPhotoTex(t)) { put(this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G)); return; }
+        if (isPhotoTex(t)) {
+          // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
+          if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
+          put(this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t))); return;
+        }
         put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
       };
       ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';

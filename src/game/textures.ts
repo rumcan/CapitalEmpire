@@ -1,5 +1,5 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
-import { GRASS_PAINT, PHOTO_TEX, type GrassTex } from './grass-art';
+import { EAGER_PHOTO, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -216,6 +216,9 @@ export class Textures {
   mips = new Map<string, Cnv>();
   /** asphalt mosaics in tile space, by variant ('base' | 'lit1' | 'lit2') and mip (px per tile) */
   mosaics = new Map<string, Cnv[]>();
+  /** the period in tiles of each photo texture (photoPeriod: MOSAIC_TILES unless it is a plain tile with its own), and the lazy builds in progress */
+  periods = new Map<string, number>(PHOTO_TEX.map(p => [p.tex, photoPeriod(p, MOSAIC_TILES)]));
+  private photoBuilds = new Map<string, Promise<void>>();
   slabs!: Cnv; leaves!: Cnv; pool1!: Cnv; pool2!: Cnv;
   /** the builder's grass decals (ground-art DECALS rects) and SOIL_STAMPS ragged bare-soil stamps in a row (SOIL_W x SOIL_H each) */
   decals!: Cnv; soil!: Cnv;
@@ -232,7 +235,7 @@ export class Textures {
 
   async build(art: GroundArt, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
-    const steps = PAINTED.length + 12 + GRASS_PAINT.length + PHOTO_TEX.length; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
+    const steps = PAINTED.length + 12 + EAGER_PHOTO.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
@@ -258,16 +261,8 @@ export class Textures {
     const gA = toCanvas(grassA, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)), gB = toCanvas(grassB, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR));
     const grass = this.grass(gA, gB);
     this.store('grass', grass);
-    // ---- the Paint tool's grass textures: the grass-v1 paintings, hex-mixed like the base grass so they never repeat
-    for (const g of GRASS_PAINT) { const img = await loadImage(g.src), l = toCanvas(img, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)); this.store(g.tex, this.grass(l, l)); await tick(); }
-    // ---- the Paint tool's photo textures (grasses, concrete): tile-space mosaics at native size (the seamless photo is the period), hex-mixed only if asked
-    for (const p of PHOTO_TEX) {
-      const c = toCanvas(await loadImage(p.src));
-      // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
-      const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
-      // mixed: p.px pixels per tile (160 by default: 80 px/m over the 24 m period), the photo's p.mix metres scaled to that; plain: the photo is the period
-      this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(seeds, c, c, mean(), p.px ?? 160, c.width / p.mix) : c)); await tick();
-    }
+    // ---- the Paint tool's photo textures that every worker needs (grasses, concrete): built here; the others are built by ensure() on first use
+    for (const p of PHOTO_TEX) if (EAGER_PHOTO.has(p.tex)) { await this.buildPhoto(p); await tick(); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#8c8c86'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('outside', c); }
     await tick();
@@ -326,9 +321,31 @@ export class Textures {
   private mipChain(c: Cnv) { const out = [c]; while (out[out.length - 1].width > 96) out.push(downscale(out[out.length - 1], 0.5)); return out; }
   /** the asphalt mosaic mip for a cache level (screen px per world px): never upsampled */
   mosaicFor(variant: string, L: number) {
-    const chain = this.mosaics.get(variant)!, want = 128 * L; let pick = chain[0];
-    for (const m of chain) { if (m.width / MOSAIC_TILES >= want) pick = m; else break; }
+    const chain = this.mosaics.get(variant)!, period = this.periodOf(variant), want = 128 * L; let pick = chain[0];
+    for (const m of chain) { if (m.width / period >= want) pick = m; else break; }
     return pick;
+  }
+  /** the period in tiles of a ground texture in tile space (MOSAIC_TILES unless it is a plain photo with its own) */
+  periodOf(variant: string) { return this.periods.get(variant) ?? MOSAIC_TILES; }
+  /** true when a tile-space texture is built in this worker (the eager ones always are; a lazy photo once ensure has run) */
+  has(variant: string) { return this.mosaics.has(variant); }
+  /** builds a lazy photo texture (grass-art.ts PHOTO_TEX) the first time an area uses it; concurrent calls share one build;
+   *  a name that is not a photo, or is built already, resolves at once */
+  ensure(variant: string): Promise<void> {
+    if (this.has(variant)) return Promise.resolve();
+    const p = PHOTO_TEX.find(q => q.tex === variant);
+    if (!p) return Promise.resolve();
+    let b = this.photoBuilds.get(variant);
+    if (!b) this.photoBuilds.set(variant, b = this.buildPhoto(p).finally(() => this.photoBuilds.delete(variant)));
+    return b;
+  }
+  /** a photo texture's mip chain in tile space: hex-mixed over MOSAIC_TILES when p.mix > 0 (p.px pixels a tile, the photo's p.mix metres), else the plain photo as its period */
+  private async buildPhoto(p: PhotoTexEntry) {
+    const c = toCanvas(await loadImage(p.src));
+    // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
+    const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
+    // mixed: p.px pixels per tile (160 by default: 80 px/m over the 24 m period), the photo's p.mix metres scaled to that; plain: the photo is the period
+    this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / p.mix) : c));
   }
   private grass(gA: Cnv, gB: Cnv) {
     const c = canvas(BASE_W, BASE_H), g = ctx2d(c), HG = 192 * AUTHOR, cols = Math.round(BASE_W / HG), rows = Math.round(BASE_H / (HG * 0.866)), dx = BASE_W / cols, dy = BASE_H / rows;
