@@ -1934,6 +1934,18 @@ recommended defaults until the owner answers):**
   lettering's east checks allow a half-pixel trim difference and removed fronts; browser-checked on 5174 (lay-bys, car park over
   paint, kerb props cleared from lay-bys).
 
+**Later the same afternoon (main, built to 5174):**
+- **The owner's photo textures** (`output/grass` of the main checkout; masters now in `art/grass-photo/`): replacements for Grass,
+  Lush lawn, Worn lawn, First cut, Worn asphalt, Concrete, Bunker sand and Pine straw; **Asphalt and Gravel are photos now** (Dark
+  asphalt keeps the road's painted mosaic); new Paint textures Dry grass, Patched asphalt, Chip seal, Stained / Cracked / Old /
+  Weathered concrete, Water, Deep water, Clear water (all lazy). TEX_VERSION tex-17. The single-file build is 75 MB now.
+- **Town concrete yards** (the shops' back yards and loading pads, lot tex 'concrete') use the darker gravel photo (Chip seal,
+  built eagerly in place of Paint's Concrete).
+- **Car park drives** (lots' car parks): a pay boom (`ce:parking-entry`, looks only, no fees) just inside the lot line in place of
+  the street-name sign that stood at every drive; `Opt.paved` lets it stand on the drive's paving.
+- The in-game Remove (Del) deletes one prop on this map only; a town lot's props are not saved, so the lot puts them back when it is
+  composed again. The studio's "Remove from game" is the way to drop a sprite everywhere.
+
 ## Handover, 2026-10-21 (the owner moves to a new chat on another account)
 
 ### Where everything is
