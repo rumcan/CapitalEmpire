@@ -771,17 +771,21 @@ function ind(B: Build, st: ComposeState) {
 }
 
 /** a construction site: dirt, cement bags, rubble, a cable spool and a pickup; no building */
+/** a building site's pieces, each with its recolours (withVariations) */
+const SITE_KIT = { cement: withVariations(['expansion:cement-bags']), rubble: withVariations(['expansion:concrete-rubble']), spool: withVariations(['expansion:cable-spool']), forklift: withVariations(['expansion:forklift']), lumber: withVariations(['expansion:lumber-bundle']), pallet: withVariations(['expansion:pallet-stack']) };
 function site(B: Build) {
   const { W, D, r, flip } = B;
   B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
-  B.put('expansion:cement-bags', 1.2, 1.6);
-  B.put('expansion:cement-bags', 2.2, 1.2);
-  B.put('expansion:concrete-rubble', W - 1.6, 2.2);
-  B.put('expansion:cable-spool', W - 1.4, D - 2.2);
+  // each piece from its TrickOrTreat recolours too (SITE_KIT), so neighbouring sites differ
+  B.put(pick(r, SITE_KIT.cement), 1.2, 1.6);
+  B.put(pick(r, SITE_KIT.cement), 2.2, 1.2);
+  B.put(pick(r, SITE_KIT.rubble), W - 1.6, 2.2);
+  B.put(pick(r, SITE_KIT.spool), W - 1.4, D - 2.2);
+  if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2, { flip });
   B.vehicle(PICKUPS, W / 2, 0.8);
   B.mark('mud', W / 2, 2.4, 1.2); B.mark('expansion:mud-footprints', W / 2, D / 2); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
-  B.put('expansion:lumber-bundle', 1.6, D - 1.6);
-  B.put('expansion:pallet-stack', W - 2.2, D - 1.4);
+  B.put(pick(r, SITE_KIT.lumber), 1.6, D - 1.6);
+  B.put(pick(r, SITE_KIT.pallet), W - 2.2, D - 1.4);
   if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5, { flip });
 }
 
