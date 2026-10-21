@@ -3,15 +3,17 @@ import { MAP } from './iso';
 import type { GrassTex } from './grass-art';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the grass-v1 grasses) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | GrassTex;
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | GrassTex;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
 export type BorderSize = 0 | 1 | 2 | 3;
-/** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge */
-export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex }
-/** the save tuple: [tex, scale, angle, border, btex, pts] */
-export type PaintTuple = [string, number, number, number, string, number[]];
+/** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge, corners rounded by radius (tiles, 0 sharp),
+ *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb') */
+export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string }
+/** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint]; elements 6 to 9 are optional on load (older saves have no radius, and none
+ *  has no tone: they load sharp and untoned); toTuple always writes all ten */
+export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?];
 /** a tile box [x0, y0, x1, y1] */
 export type PaintBox = [number, number, number, number];
 
@@ -19,10 +21,11 @@ export type PaintBox = [number, number, number, number];
 export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'paving', name: 'Pavers', col: '#a89c8c' },
   { id: 'slabs', name: 'Slabs', col: '#d8c8a8' },
-  { id: 'pad', name: 'Concrete', col: '#b9ada0' },
+  { id: 'pad', name: 'Concrete', col: '#bbb4a5' },
   { id: 'asphalt', name: 'Asphalt', col: '#30333f' },
   { id: 'asphaltDark', name: 'Dark asphalt', col: '#22242e' },
   { id: 'asphaltWorn', name: 'Worn asphalt', col: '#4a4a4c' },
+  { id: 'lotAsphalt', name: 'Car park asphalt', col: '#3a3b3f' },
   { id: 'roadgravel', name: 'Road gravel', col: '#62574a' },
   { id: 'gravel', name: 'Gravel', col: '#5b5752' },
   { id: 'dirt', name: 'Dirt', col: '#56402f' },
@@ -52,11 +55,15 @@ export const MAX_SIDE = 256;
 export const MIN_AREA = 1;
 /** the texture scale range (1 = the textures' native size) */
 export const SCALE_MIN = 0.25, SCALE_MAX = 4;
+/** the largest corner radius in tiles (15 tiles = 30 m); 0 keeps the corners sharp */
+export const RADIUS_MAX = 15;
 /** the style a new area starts with */
-export const DEFAULT_STYLE: Omit<PaintArea, 'id' | 'pts'> = { tex: 'paving', scale: 1, angle: 0, border: 0, btex: 'kerb' };
+export const DEFAULT_STYLE: Omit<PaintArea, 'id' | 'pts'> = { tex: 'paving', scale: 1, angle: 0, border: 0, btex: 'kerb', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
 
 const TEX_IDS = new Set<string>(PAINT_TEXES.map(t => t.id));
 const BTEX_IDS = new Set<string>(BORDER_TEXES.map(t => t.id));
+/** a '#rrggbb' colour */
+const TINT_RE = /^#[0-9a-fA-F]{6}$/;
 
 /** the signed shoelace area in tiles² (positive when the outline runs counter-clockwise on the map's axes) */
 export function polyArea(pts: number[]): number {
@@ -70,6 +77,36 @@ export function polyBox(pts: number[]): PaintBox {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (let k = 0; k + 1 < pts.length; k += 2) { x0 = Math.min(x0, pts[k]); y0 = Math.min(y0, pts[k + 1]); x1 = Math.max(x1, pts[k]); y1 = Math.max(y1, pts[k + 1]); }
   return [Math.floor(x0), Math.floor(y0), Math.ceil(x1), Math.ceil(y1)];
+}
+
+/** the closed outline (x0 y0 x1 y1 ...) with every corner replaced by a circular arc of radius r (tiles): the arc is tangent to both edges, its tangent length is clamped to half the shorter neighbour edge, and it runs the short way round (about 5° a segment). Nearly straight corners and r <= 0 keep their points; r <= 0 returns a copy */
+export function roundCorners(pts: number[], r: number): number[] {
+  if (!(r > 0)) return pts.slice();
+  const n = pts.length >> 1, out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const px = pts[2 * i]!, py = pts[2 * i + 1]!;
+    const a = (i + n - 1) % n, b = (i + 1) % n;
+    const ax = pts[2 * a]! - px, ay = pts[2 * a + 1]! - py, bx = pts[2 * b]! - px, by = pts[2 * b + 1]! - py;
+    const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+    if (la === 0 || lb === 0) { out.push(px, py); continue; }
+    const ux = ax / la, uy = ay / la, vx = bx / lb, vy = by / lb;
+    const theta = Math.acos(Math.max(-1, Math.min(1, ux * vx + uy * vy)));
+    if (theta < 1e-6 || theta > Math.PI - 0.01) { out.push(px, py); continue; }
+    const th = Math.tan(theta / 2), sh = Math.sin(theta / 2);
+    const d = Math.min(r / th, 0.5 * Math.min(la, lb)), re = d * th;
+    // the arc's centre lies on the bisector of u and v, re / sin(theta / 2) from the corner
+    const hx = ux + vx, hy = uy + vy, k = re / (sh * Math.hypot(hx, hy));
+    const cx = px + hx * k, cy = py + hy * k;
+    const t1x = px + ux * d, t1y = py + uy * d, t2x = px + vx * d, t2y = py + vy * d;
+    const a1 = Math.atan2(t1y - cy, t1x - cx);
+    let sweep = Math.atan2(t2y - cy, t2x - cx) - a1; // wrapped into (-PI, PI]: the short way, |sweep| = PI - theta
+    if (sweep > Math.PI) sweep -= 2 * Math.PI; else if (sweep < -Math.PI) sweep += 2 * Math.PI;
+    const seg = Math.max(2, Math.ceil((Math.PI - theta) / (Math.PI / 18)));
+    out.push(t1x, t1y);
+    for (let s = 1; s < seg; s++) { const ang = a1 + sweep * s / seg; out.push(cx + re * Math.cos(ang), cy + re * Math.sin(ang)); }
+    out.push(t2x, t2y);
+  }
+  return out;
 }
 
 const orient = (ax: number, ay: number, bx: number, by: number, cx: number, cy: number) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
@@ -169,8 +206,9 @@ function wrapAngle(a: number): number { return a >= -90 && a <= 90 ? a : ((((a +
 
 const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 
-/** a copy of a style (or a whole area) with the scale, angle and border clamped and the textures checked (unknown → paving, kerb) */
+/** a copy of a style (or a whole area) with the scale, angle, border, radius and tone clamped and the textures and tint checked (unknown → paving, kerb; a bad tint → black, or white when lightening) */
 export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(s: T): T {
+  const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
     tex: TEX_IDS.has(s.tex) ? s.tex : 'paving',
@@ -178,20 +216,24 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(s: T): T {
     angle: wrapAngle(fin(s.angle, 0)),
     border: Math.min(3, Math.max(0, Math.round(fin(s.border, 0)))) as BorderSize,
     btex: BTEX_IDS.has(s.btex) ? s.btex : 'kerb',
+    radius: Math.min(RADIUS_MAX, Math.max(0, fin(s.radius, 0))),
+    tone,
+    toneAmt: Math.min(1, Math.max(0, fin(s.toneAmt, 0.35))),
+    tint: TINT_RE.test(s.tint) ? s.tint.toLowerCase() : tone === 2 ? '#ffffff' : '#000000',
   };
 }
 
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
 
-/** a painted area as its save tuple (scale and angle to 3 decimals) */
-export function toTuple(a: PaintArea): PaintTuple { return [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice()]; }
+/** a painted area as its save tuple (scale, angle, radius and strength to 3 decimals) */
+export function toTuple(a: PaintArea): PaintTuple { return [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint]; }
 
-/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped */
+/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped (a missing radius is sharp, a missing tone is none) */
 export function fromTuples(ts: PaintTuple[]): PaintArea[] {
   const out: PaintArea[] = [];
   for (const t of ts) {
     if (checkArea(t[5]) !== '') continue;
-    const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex });
+    const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex, radius: t[6] ?? 0, tone: (t[7] ?? 0) as 0 | 1 | 2, toneAmt: t[8] ?? DEFAULT_STYLE.toneAmt, tint: t[9] ?? DEFAULT_STYLE.tint });
     out.push({ id: out.length + 1, pts: t[5].slice(), ...s });
   }
   return out;

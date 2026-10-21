@@ -327,14 +327,14 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '2c4b0ca0'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '10468f2a'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'e1495467'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'e3044647'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'bff40625'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'bc30f6ea'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '476ad19e'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '83408906'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '85b72e29'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '86100265'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '784f67fd'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a79013ae'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '5ea65aa6'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
@@ -370,4 +370,18 @@ test('public car parks: cars fill most bays at upgraded, fewer at decline 1, non
   }
   assert.ok(sum[0] > sum[1] && sum[1] > 0, `upgraded ${sum[0]} cars, decline 1 ${sum[1]}`);
   assert.ok(sum[0] >= sum[2], `upgraded ${sum[0]} cars, built ${sum[2]}`);
+});
+
+test('a commercial lot with no room for a car park paves its back yard in concrete (the Paint tool\'s photo), never the painted pad', () => {
+  const rnd = mulberry(20261021);
+  let yards = 0;
+  for (let i = 0; i < 200; i++) {
+    const lot = LOTS[i % LOTS.length];
+    const st: ComposeState = { use: LU.COM, level: i % 2 ? LV.BUILT : LV.UPGRADED, decline: 0, seed: Math.floor(rnd() * 4294967296) >>> 0 };
+    if (isCarPark(st)) continue;
+    const c = compose(lot, st);
+    assert.ok(c.ground.every(g => g.tex !== 'pad'), `${lot.key} ${JSON.stringify(st)}: a painted pad in a lot`);
+    if (c.ground.some(g => g.tex === 'concrete')) yards++;
+  }
+  assert.ok(yards > 0, 'no commercial lot got a concrete yard');
 });

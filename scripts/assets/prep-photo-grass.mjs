@@ -1,5 +1,5 @@
-// Bundle the three grass photos for the Paint tool's photo grasses (textures.ts GRASS_PHOTO, mosaic()).
-// Reads fairway.png, fairway-sod.png and rough.png from the masters dir given as the first arg (default art/grass-photo under the repo root),
+// Bundle the Paint tool's photo textures (textures.ts PHOTO_TEX, mosaic()): the three photo grasses and the concrete.
+// Reads fairway.png, fairway-sod.png, rough.png and concrete.png from the masters dir given as the first arg (default art/grass-photo under the repo root),
 // writes src/assets/ground/paint-photo-*.webp at each master's native size (no resizing: the mosaic and the mip chain do the scaling,
 // so a painted area scaled up to 4x keeps the photo's detail), quality 92, and prints each one's size and mean colour (hex, the Paint panel swatch in paint.ts).
 // src/game/grass-art.ts imports the webps.
@@ -16,6 +16,7 @@ const JOBS = [
   { src: 'fairway.png', dst: 'paint-photo-fairway.webp' },
   { src: 'fairway-sod.png', dst: 'paint-photo-fairway-sod.webp' },
   { src: 'rough.png', dst: 'paint-photo-rough.webp' },
+  { src: 'concrete.png', dst: 'paint-photo-concrete.webp' },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });

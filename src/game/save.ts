@@ -69,8 +69,8 @@ export interface SaveV5 {
   /** old (Phase B step 1): the stadium the player placed as [x, y, w, h] tiles, or null for none. Not written any more: a save without biz reads it as
    *  the stadium (id 1); a save with neither had the game's spot (placeStadium, as the engine's load gives it) */
   stadium?: [number, number, number, number] | null;
-  /** the painted ground areas as [tex, scale, angle, border, btex, pts] (the Paint tool, docs/PAINT-TOOL.md; ids 1..n in this order; optional, no version bump; missing = none) */
-  paints?: [string, number, number, number, string, number[]][];
+  /** the painted ground areas as [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint] (the Paint tool, docs/PAINT-TOOL.md; ids 1..n in this order; optional, no version bump; missing = none; the last four are optional on load) */
+  paints?: [string, number, number, number, string, number[], number?, number?, number?, string?][];
   /** the Car park tool's bay rows as [ax, ay, bx, by, side, bay, col] (the drag, side 1 or -1, bay 90/60/45, col white or yellow; ids 1..n in this order;
    *  optional, no version bump; missing = none; docs/PARKING.md) */
   rows?: [number, number, number, number, number, number, string][];

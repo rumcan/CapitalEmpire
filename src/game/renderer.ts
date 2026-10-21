@@ -1,7 +1,7 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, SOIL_H, SOIL_R, SOIL_STAMPS, SOIL_W, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
-import { isPhotoGrass } from './grass-art';
+import { isPhotoTex } from './grass-art';
 import { DECALS, POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { LOT_DECALS } from './lot-decals';
 import { NATURE, NATURE_RES } from './nature-patches';
@@ -39,7 +39,7 @@ export class GroundPainter {
   /** the noise that wobbles the class edges (fixed seed) */
   private edgeNoise = makeNoise(7);
   /** planner colours per texture, computed once */
-  private planCols = new Map<TexName, string>();
+  private planCols = new Map<string, string>();
   blocks: PlanBlocks = new Float32Array(0);
   /** hillshade per height sample, and the waterways with their bboxes (grown for the shore) */
   shade: Float32Array = new Float32Array(HS * HS);
@@ -84,10 +84,10 @@ export class GroundPainter {
   }
 
   /** the planner colour of a texture: its mean RGB at the planner mip, 20% desaturated and lifted 5% (cached) */
-  private planColour(name: TexName): string {
+  private planColour(name: string): string {
     let c = this.planCols.get(name);
     if (!c) {
-      const img = isPhotoGrass(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.image(name, 0.035), d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
+      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : isPhotoTex(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.image(name as TexName, 0.035), d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
       const y = (0.3 * r + 0.59 * g + 0.11 * b) / n, lift = (s: number) => Math.round(Math.min(255, (s / n * 0.8 + y * 0.2) * 1.05));
       c = `rgb(${lift(r)},${lift(g)},${lift(b)})`; this.planCols.set(name, c);
@@ -120,7 +120,7 @@ export class GroundPainter {
     shape('river', 0, this.planColour('water'));
     shape('creek', 0, this.planColour('water'));
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
-    const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : this.planColour(t as TexName);
+    const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : this.planColour(t === 'concrete' ? 'pad' : t);
     const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     for (const p of [...lotAll.filter(p => !p.paint && p.tex !== 'marks'), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
@@ -199,11 +199,13 @@ export class GroundPainter {
     const all = this.lotsIn(box).filter(p => !p.top), tops = this.lotsIn(box).filter(p => p.top && p.lines?.length), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     if (lots.length) {
       const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('lot', L)) : null;
+      // the commercial yards' concrete: the Paint tool's photo under 'pad' (the road islands keep the painted concrete)
+      const lotConc = lots.some(p => p.tex === 'concrete') ? this.groundPattern(ctx, tex.mosaicFor('pad', L), undefined) : null;
       for (const p of lots) {
         const path = polyPath(p.pts);
         if (p.tex === 'slabs') { ctx.save(); ctx.clip(path); ctx.fillStyle = tex.curb.top; ctx.fill(path); if (!lite) this.slabGrid(ctx, new DOMMatrix(), quadBox(p.pts), M); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = pat('grime'); ctx.fill(path); ctx.restore(); ctx.setTransform(M); }
-        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : pat(p.tex as TexName); ctx.fill(path); }
-        if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs') {
+        else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : pat(p.tex as TexName); ctx.fill(path); }
+        if (p.tex === 'asphalt' || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'concrete' || p.tex === 'slabs') {
           ctx.save(); ctx.clip(path); ctx.strokeStyle = p.tex === 'asphalt' ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = p.tex === 'asphalt' ? 0.3 : 0.16; ctx.stroke(path); ctx.restore();
         }
       }
@@ -442,13 +444,13 @@ export class GroundPainter {
   }
 
   /** the painted areas of a chunk (the Paint tool), in id order: each polygon filled with its texture through G (turned and
-   *  scaled in tile space about the origin), an optional border band inside its edge, and a thin rim for the paved textures */
+   *  scaled in tile space about the origin), an optional tone filter over the fill, an optional border band inside its edge, and a thin rim for the paved textures */
   private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     for (const p of paints) {
       const st = p.paint!, path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(st.s, st.s), pb = quadBox(p.pts);
       const r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
       if (r[2] <= r[0] || r[3] <= r[1]) continue;
-      const asph = p.tex === 'asphalt' || p.tex === 'asphaltDark' || p.tex === 'asphaltWorn', paved = asph || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs';
+      const asph = p.tex === 'asphalt' || p.tex === 'asphaltDark' || p.tex === 'asphaltWorn' || p.tex === 'lotAsphalt', paved = asph || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs';
       /** paints texture t over the area: a fill of its rectangle (w = 0), or a stroke of its edge w tiles wide */
       const lay = (t: string, w: number) => {
         const put = (style: string | CanvasPattern) => { if (w) { ctx.strokeStyle = style; ctx.lineWidth = w; ctx.stroke(path); } else { ctx.fillStyle = style; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); } };
@@ -477,11 +479,14 @@ export class GroundPainter {
           if (t === 'asphaltWorn') { tone('rgb(150,150,150)', 'multiply', 0.5); tone('rgb(190,180,160)', 'screen', 0.22); }
           return;
         }
-        if (isPhotoGrass(t)) { put(this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G)); return; }
+        if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * st.s), G)); return; }
+        if (isPhotoTex(t)) { put(this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G)); return; }
         put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
       };
       ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
       lay(p.tex, 0);
+      // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
+      if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
       if (st.b > 0) { ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); lay(st.bt, 2 * st.b); }
       else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
       ctx.restore();

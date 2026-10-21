@@ -1,6 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
-import { BORDER_TEXES, BORDER_W, DEFAULT_STYLE, PAINT_TEXES, areaAt, checkArea, clampStyle, crossings, fromTuples, simplify, snapPt, toTuple, type PaintArea, type PaintTuple } from './paint';
+import { BORDER_TEXES, BORDER_W, DEFAULT_STYLE, PAINT_TEXES, areaAt, checkArea, clampStyle, crossings, fromTuples, roundCorners, simplify, snapPt, toTuple, type PaintArea, type PaintTuple } from './paint';
 
 export type PaintMode = 'draw' | 'pick' | 'erase';
 /** what the tool needs from the engine */
@@ -45,12 +45,21 @@ export class PaintTool {
   lasso = false;
   /** the reused buffer of outline() */
   private ol: number[] = [];
+  /** each area's rounded outline, kept until its radius or corners change (the overlay draws the picked and hovered areas every frame) */
+  private rounded = new WeakMap<PaintArea, { r: number; src: number[]; out: number[] }>();
   private host: PaintHost;
 
   constructor(host: PaintHost) { this.host = host; }
 
-  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order) */
-  static patch(a: PaintArea): LotPatch { return { pts: a.pts, tex: a.tex, paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: a.id } }; }
+  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on) */
+  static patch(a: PaintArea): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: a.tex, paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: a.id, ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}) } }; }
+
+  /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
+  private outlineOf(a: PaintArea): number[] {
+    let c = this.rounded.get(a);
+    if (!c || c.r !== a.radius || c.src !== a.pts) { c = { r: a.radius, src: a.pts, out: roundCorners(a.pts, a.radius) }; this.rounded.set(a, c); }
+    return c.out;
+  }
 
   /** sends an area's patch to the lot ground (key paint:<id>) */
   private send(a: PaintArea) { this.host.setLotGround('paint:' + a.id, [PaintTool.patch(a)]); }
@@ -225,11 +234,11 @@ export class PaintTool {
   /** fills (when fill is set) and outlines an area's polygon on the overlay; lw in css px */
   private shade(v: PaintView, a: PaintArea, fill: string | null, stroke: string, lw: number) {
     const ctx = v.ctx;
-    v.setIso(ctx); ctx.beginPath(); trace(ctx, a.pts, true); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    v.setIso(ctx); ctx.beginPath(); trace(ctx, this.outlineOf(a), true); ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (fill) { ctx.fillStyle = fill; ctx.fill(); }
     ctx.strokeStyle = stroke; ctx.lineWidth = lw * v.dpr; ctx.stroke();
   }
 
   /** copies a picked area's look into the panel's style */
-  private take(a: PaintArea) { this.style = { tex: a.tex, scale: a.scale, angle: a.angle, border: a.border, btex: a.btex }; }
+  private take(a: PaintArea) { this.style = { tex: a.tex, scale: a.scale, angle: a.angle, border: a.border, btex: a.btex, radius: a.radius, tone: a.tone, toneAmt: a.toneAmt, tint: a.tint }; }
 }
