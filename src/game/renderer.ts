@@ -34,6 +34,9 @@ const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [strin
 /** the painted ground textures a photo (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads (the dark grey
  *  Asphalt photo, the owner's call 2026-10-21), water */
 const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'asphalt'], ['field', 'field'], ['water', 'waterDark']]);
+/** a ground photo drawn this many times its size (the owner, 2026-10-21: the gravel roads' asphalt "a lot" bigger); the hex-mixed mosaic
+ *  still has 43 px a tile at 3x, above the 38 the closest zoom asks for */
+const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
@@ -160,7 +163,8 @@ export class GroundPainter {
    *  or this worker has not built it (the caller paints the screen texture) */
   private photoFill(g: C2D, t: string, L: number): CanvasPattern | null {
     const photo = GROUND_PHOTO.get(t); if (!photo || !this.tex.has(photo)) return null;
-    return this.groundPattern(g, this.tex.mosaicFor(photo, L), undefined, this.tex.periodOf(photo));
+    const k = GROUND_SCALE.get(t) ?? 1;
+    return this.groundPattern(g, this.tex.mosaicFor(photo, L * k), undefined, this.tex.periodOf(photo) * k);
   }
 
   /** one ground chunk (CHUNK_W x CHUNK_H world px) at cache level L: the full-quality bake. lite = a district chunk
