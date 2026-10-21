@@ -12,6 +12,7 @@ import type { Lot } from './lots';
 export type LotGeom = Pick<Lot, 'o' | 'u' | 'n' | 'w' | 'd'>;
 import { LU, LV } from './town';
 import { OWNER_SCALE } from './scales';
+import { FRONTAL } from './frontal';
 import { LOT_DECALS } from '../lot-decals';
 import { parkedCar } from '../traffic';
 import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
@@ -74,7 +75,7 @@ const GARAGE_REAR = names(['expansion:garage-rear']);
 const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id));
 const BUSHES = cat(i => i.kind === 'bush');
 /** ids with their plain variations in the library ('town:bakery' -> 'variation:town-bakery-<hash>-plain:1'), the ones the game has */
-const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
+const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => !FRONTAL.has(k) && base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
 /** every front-facing shop the game has, with its variations (the street fronts deal from it, see com) */
 const SHOP_FRONT = withVariations(['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:fish_tackle', 'town:barber', 'town:hardware', 'world:video_rental', 'world:video',
   'ref:building-grocery', 'ref:building-corner-shop', 'ref:building-corner-store']);

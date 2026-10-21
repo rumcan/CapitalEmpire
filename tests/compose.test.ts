@@ -250,7 +250,8 @@ test('the average uprights per archetype (log)', () => {
   assert.ok(avg('RES BUILT') >= 6, 'a house lot is one baked picture plus its fence layer (panels and planting)');
   for (const u of ['IND', 'TOUR', 'GOV']) assert.ok(avg(`${u} BUILT`) >= 14, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want 14+`);
   // a shop's car park now runs from its back wall to the back line (the bush row there goes): 12+ instead of 14+
-  assert.ok(avg('COM BUILT') >= 12, `COM BUILT averages ${avg('COM BUILT').toFixed(1)} uprights, want 12+`);
+  // 11.5: the car park takes the back bush row (2026-10-21), and the straight-on shop variations left the pool (frontal.ts)
+  assert.ok(avg('COM BUILT') >= 11.5, `COM BUILT averages ${avg('COM BUILT').toFixed(1)} uprights, want 11.5+`);
 });
 
 test('RES houses keep a side yard of 1.3 tiles or more from the side line away from the drive (unbaked widths 10.5 and 12.5, 30 seeds each)', () => {
@@ -323,9 +324,9 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '83b4d892'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '2042f6d1'],
     [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '60a8be0b'],
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'ee126ca0'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'e3044647'],
