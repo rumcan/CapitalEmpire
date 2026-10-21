@@ -2057,3 +2057,24 @@ recommendations are the defaults); the art list is docs/GOLF-SPRITES.md. main li
 parallel in their own worktrees as the handover describes, review and merge their work, and after each verified step merge to main and
 rebuild so my 5174 server shows it. Carry on through the queue without asking between steps; ask before pushing to GitHub. The worker
 PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks locally, at most two or three at a time (RAM)."
+
+## The art chat, 2026-10-21 night (main, built to 5174)
+- **Houses facing their street: browser-checked** (a staged 2 x 2 block, port 5191): the rear views (decks, porches, sheds,
+  swingsets) face their own yard and the front faces the street on both street directions (`REAR_X` houses on streets to the -X
+  side, plain rear views on the -Y side); the facing data agrees for all 23 houses of the block.
+- **"Merge everything" (the owner):** the main checkout's uncommitted work was T014 Paranormal nights (an earlier session's,
+  2026-10-20; `agents/tasks/T014-paranormal-nights.md`), now committed on `feature/paranormal-nights` (the checkout is clean) and
+  merged into main: recurring paranormal nights (roads closed, kids against monsters, lighting), a disasters toggle in Settings
+  (**on by default now**), the capital-v1 business masters (main's `prep-business-art.mjs` already packed them, so `capital-art.mjs`
+  no longer packs them a second time), generated trees v2 and grass materials in the atlas, two new base grasses. The grass-v1 PNG
+  masters are committed; their pixel-identical lossless webps (96 MB) are git-ignored. prep-sprites now builds in
+  `output/atlas-next/` and publishes at the end.
+- The owner's studio curation committed; the atlas re-packed (938 sprites, 16 pages, 0 stretched); compose digests re-pinned (the
+  curation moved four, the new trees in the lot tree pool three more).
+- **A1, the golf art pilot:** grandstand S, main leaderboard (blank), food tent, toilet block; generated on magenta and keyed locally
+  (ART-PIPELINE.md "The golf sprites"); packed by `prep-golf.mjs` on their own page (`appendGolf`). RUN's daily image cap ran out:
+  the toilet block is a white-background take with its edges cleaned; regenerate it on magenta after the cap resets.
+- Checks: npm test 670/672 (the ext-terrain2 timing flake, passes alone; a stale bundle of mine, removed); typecheck clean; 5174
+  loads with no console errors. The worker refused SSH again.
+- Next (art): the owner's review of the four pilot sprites (sizes in the studio: Smaller/Bigger), then the rest of the P1 list in
+  GOLF-SPRITES.md sections 3–5 in batches within RUN's daily cap; A2–A4.
