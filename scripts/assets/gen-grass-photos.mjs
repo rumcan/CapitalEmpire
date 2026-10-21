@@ -23,11 +23,11 @@ const LOOK = 'Seamless tileable ground texture. A real photograph taken looking 
 const NEG = 'perspective, horizon, sky, blur, text, watermark, border, vignette, cartoon, illustration, oversaturated';
 const SUBJECTS = {
   'concrete': 'a plain poured concrete slab, light warm grey, broom-finished surface, faint weathering stains, no joints, no cracks. The image covers about 4 x 4 metres.',
-  'asphalt': 'a smooth asphalt road surface in good condition, medium dark grey, fine stone aggregate, no markings. The image covers about 3 x 3 metres.',
-  'asphalt-dark': 'freshly laid new asphalt, very dark near-black, fine even aggregate, no markings. The image covers about 3 x 3 metres.',
+  'asphalt': 'smooth grey asphalt paving in good condition, fine stone aggregate, plain and even. The image covers about 3 x 3 metres.',
+  'asphalt-dark': 'new blacktop paving, very dark charcoal, fine even aggregate, plain. The image covers about 3 x 3 metres.',
   'asphalt-worn': 'old weathered asphalt, faded light grey, exposed aggregate, fine hairline cracks and a few darker patched repairs, no markings. The image covers about 4 x 4 metres.',
   'road-gravel': 'a compacted gravel road surface: crushed grey-brown stone packed into dusty earth, small loose stones on top. The image covers about 4 x 4 metres.',
-  'gravel': 'loose grey crushed-stone gravel, pebbles about 1 to 3 cm, a clean gravel path or driveway. The image covers about 2 x 2 metres.',
+  'gravel': 'a garden path of small loose grey pebbles, evenly spread. The image covers about 2 x 2 metres.',
   'dirt': 'bare brown soil: dry compacted earth with small clods, a few pebbles and twigs, no grass. The image covers about 4 x 4 metres.',
   'field': 'a ploughed farm field: straight parallel furrows of dark brown soil running horizontally across the whole image, evenly spaced. The image covers about 8 x 8 metres.',
   'grass': 'ordinary natural grassland ground, medium-length grass, mixed greens with a few yellowing blades, not mowed in stripes. The image covers about 6 x 6 metres.',
@@ -37,6 +37,17 @@ const SUBJECTS = {
   'golf-green': 'a golf putting green: extremely short, dense, smooth bentgrass with a very fine uniform texture and only a faint mowing grain, vivid healthy green. The image covers about 4 x 4 metres.',
   'meadow-lush': 'an uncut lush meadow: long grasses and leafy wild plants, varied natural greens, dense, a little untidy. The image covers about 6 x 6 metres.',
   'meadow-flowers': 'a wildflower meadow: long green grasses with scattered clusters of small wildflowers in yellow, white and purple, natural and not oversaturated. The image covers about 6 x 6 metres.',
+  // the golf course surfaces (the Paint tool will build the course: docs/GOLF-PLAN.md)
+  'golf-fringe': 'the fringe (collar) around a golf putting green: very short dense bentgrass, a little longer and coarser than the green, even healthy green. The image covers about 4 x 4 metres.',
+  'golf-tee': 'a golf tee box: short dense mown grass with a scattering of small divot scars and sand-filled divot marks, healthy green. The image covers about 4 x 4 metres.',
+  'golf-first-cut': 'the first cut of rough beside a golf fairway: evenly mown medium-length grass, a little darker and thicker than a fairway, no stripes. The image covers about 6 x 6 metres.',
+  'golf-fescue': 'deep native fescue rough on a links golf course: long wispy golden and green fescue grass, untidy and windblown. The image covers about 6 x 6 metres.',
+  'bunker-sand': 'a freshly raked golf bunker: fine pale tan sand with soft parallel rake lines. The image covers about 4 x 4 metres.',
+  'waste-sand': 'a sandy waste area on a golf course: coarse tan sand with scattered small pebbles and a few tufts of dry grass. The image covers about 6 x 6 metres.',
+  'pine-straw': 'pine straw ground cover under pine trees: a carpet of fallen brown pine needles with a few pine cones. The image covers about 4 x 4 metres.',
+  'bark-mulch': 'dark brown shredded bark mulch in a planting bed. The image covers about 3 x 3 metres.',
+  'spectator-path': 'a worn grass walkway where crowds have walked at an outdoor event: flattened, thinned grass with bare dry earth patches. The image covers about 6 x 6 metres.',
+  'wood-chips': 'a wood chip walking path: light brown wood chips, evenly spread. The image covers about 3 x 3 metres.',
 };
 const REFS = ['fairway', 'fairway-sod', 'rough'].map(f => path.join(OUT, 'refs', f + '.jpg'));
 
@@ -66,8 +77,11 @@ for (const [id, subject] of Object.entries(SUBJECTS)) {
   for (let n = 1; n <= N; n++) {
     let k = n; while (fs.existsSync(path.join(OUT, `${id}-${k}.png`))) k++;
     const target = path.join(OUT, `${id}-${k}.png`);
-    const out = await run(['generate', 'image', '--game-id', GAME_ID, '--model', MODEL, '--prompt', LOOK + subject, '--negative-prompt', NEG,
-      '--aspect-ratio', '1:1', ...(SIZE ? ['--image-size', SIZE] : []), '--json', '--out', target, ...REFS.flatMap(r => ['--reference-image', r])]);
+    let out;
+    try {
+      out = await run(['generate', 'image', '--game-id', GAME_ID, '--model', MODEL, '--prompt', LOOK + subject, '--negative-prompt', NEG,
+        '--aspect-ratio', '1:1', ...(SIZE ? ['--image-size', SIZE] : []), '--json', '--out', target, ...REFS.flatMap(r => ['--reference-image', r])]);
+    } catch (e) { console.log(id, 'FAILED:', e.message.split('\n').filter(l => /Exception|error/i.test(l)).join(' ') || e.message.slice(-200)); continue; }
     const j = JSON.parse(out.slice(out.indexOf('{')));
     const gid = j.generationId ?? j.data?.generationId ?? j.id;
     console.log(id, '->', path.relative(ROOT, target), 'credits', j.creditsUsed ?? j.credits ?? '?', 'generation', gid);
