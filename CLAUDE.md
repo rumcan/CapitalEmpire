@@ -1,7 +1,7 @@
 # CapitalEmpire: working rules for Claude
 
-Two agents share this repo (from 2026-10-21): the lead and a second agent; who owns which files and how to land work on main
-without clashing is in `docs/SECOND-AGENT.md`. Read `docs/PROGRESS.md` first: it says where the project is, what was decided, and what to do next. Open
+Two agents share this repo (from 2026-10-21): the second agent writes the game code, the first chat does the art with the owner;
+who owns which files and how to land work on main without clashing is in `docs/SECOND-AGENT.md`. Read `docs/PROGRESS.md` first: it says where the project is, what was decided, and what to do next. Open
 `docs/GAME-PLAN.md` only for the section the current task needs (it is long).
 
 ## How we work (the owner asked for this, to save tokens)

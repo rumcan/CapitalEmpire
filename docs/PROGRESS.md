@@ -1964,9 +1964,10 @@ recommended defaults until the owner answers):**
 ## Handover, 2026-10-21 (the owner moves to a new chat on another account)
 
 ### Where everything is
-- **Two agents from 2026-10-21:** the lead (golf G1-G6, engine, UI, lots) and a second agent (golf art G7, photo textures, the
-  sprite studio, the art pipeline). The split, the file ownership and the landing lock (`mkdir .claude/merge-lock` before merging
-  into main-merge, `rmdir` after the build) are in [SECOND-AGENT.md](SECOND-AGENT.md): the lead follows the same lock.
+- **Two agents from 2026-10-21:** the second agent writes the code (golf G1-G6, engine, UI, lots); the first chat does the art with
+  the owner (golf art G7, photo textures, the sprite studio, the art pipeline). The split, the file ownership, the landing lock
+  (`mkdir .claude/merge-lock` before merging into main-merge, `rmdir` after the build) and the second agent's start prompt are in
+  [SECOND-AGENT.md](SECOND-AGENT.md); both follow the same lock.
 - **main** = `.claude/worktrees/main-merge` (that worktree holds the `main` branch; the main checkout itself is on
   `feature/paranormal-nights` with **another session's uncommitted paranormal work: do not touch it**). Nothing is pushed to GitHub.
 - **The owner's test server: 5174** (`vite preview` of main-merge's `dist/`; Desktop folder "CapitalEmpire Servers": `1 Game - latest main
@@ -2022,6 +2023,7 @@ The lead designs, briefs and reviews; `haiku-coder` writes code; `haiku-runner` 
    alignment bug once the lead has found its cause.
 
 ### Start prompt for a fresh chat
+(Superseded 2026-10-21: the golf code now goes to the second agent: its start prompt is in [SECOND-AGENT.md](SECOND-AGENT.md).)
 "We're building Capital Empire (repo: CapitalEmpire), now a **golf events manager** (the owner's pivot, 2026-10-21). Read CLAUDE.md,
 then docs/PROGRESS.md: its last sections 'The golf pivot' and 'Handover, 2026-10-21' say where everything is, the queue, and how to
 start the Haiku coders again. The design is docs/GOLF-PLAN.md (open questions in section 13: ask me for answers, the plan's
