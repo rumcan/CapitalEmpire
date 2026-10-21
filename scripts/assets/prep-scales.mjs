@@ -10,7 +10,9 @@ import { SCALE_OVERRIDES } from './overrides.mjs';
 import { readRemoved } from './removed.mjs';
 const table = JSON.parse(Buffer.from(await fromBranch('town/builder-in-repo', 'scripts/town-builder/places-v5/scales.json')).toString('utf8'));
 const lib = fs.readFileSync(path.join(ROOT, 'src/game/library.ts'), 'utf8');
-const ids = [...new Set([...lib.matchAll(/"id":"([^"]+)"/g)].map(m => m[1]))].sort();
+// Supplemental sprites are appended at runtime, so their IDs are in the imported libraries rather than inline here.
+const sources = [lib, ...[...lib.matchAll(/import \{ append\w+ \} from '\.\/([^']+)';/g)].map(m => fs.readFileSync(path.join(ROOT, 'src/game', `${m[1]}.ts`), 'utf8'))];
+const ids = [...new Set(sources.flatMap(src => [...src.matchAll(/"id":"([^"]+)"/g)].map(m => m[1])))].sort();
 const out = [];
 for (const id of ids) { const s = SCALE_OVERRIDES[id] ?? table[id]?.scale; if (typeof s === 'number') out.push([id, +s.toFixed(3)]); }
 fs.mkdirSync(path.dirname(OUT), { recursive: true });

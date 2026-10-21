@@ -5,6 +5,7 @@ import type { LibItem } from './types';
 import { appendCars } from './cars-library';
 import { appendEast } from './east-library';
 import { appendBusinesses } from './business-library';
+import { appendConstruction } from './construction-library';
 import p0m0 from '../assets/atlas/sprites-0-0.webp';
 import p0m1 from '../assets/atlas/sprites-0-1.webp';
 import p0m2 from '../assets/atlas/sprites-0-2.webp';
@@ -1048,3 +1049,4 @@ for (let i = 0; i < WF.length / 9; i++) {
 appendCars(LIBRARY, ATLAS_PAGES);
 appendEast(LIBRARY, ATLAS_PAGES);
 appendBusinesses(LIBRARY, ATLAS_PAGES);
+appendConstruction(LIBRARY, ATLAS_PAGES);

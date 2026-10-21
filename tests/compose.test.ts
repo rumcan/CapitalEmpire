@@ -333,7 +333,7 @@ test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for 
     [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '09e4855a'],
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '5339f7e0'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'f761b282'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '02877c42'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, '867c5c17'],
     [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'ddac9cf4'],
     [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'f552c4f7'],
   ];

@@ -33,7 +33,7 @@ function library() {
   // the lot decals (src/game/lot-decals.ts): packed at their scale (prep-decals.mjs), so their rect is the game size; w/h here are the native size
   const decals = fs.readFileSync(path.join(ROOT, 'src/game/lot-decals.ts'), 'utf8'), seen = new Set(out.map(s => s.id));
   for (const m of decals.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]), it = LIB.get(e.id); if (!seen.has(e.id)) out.push({ id: e.id, name: e.id, cat: 'Decals', kind: 'decal', w: Math.round(it?.w ?? e.w), h: Math.round(it?.h ?? e.h), rect: [e.x, e.y, e.w, e.h] }); }
-  // the three libraries the game appends at runtime (appendCars, appendEast, appendBusinesses): each file's items, with the mip-0 page of the item's tex[0]
+  // the libraries the game appends at runtime: each file's items, with the mip-0 page of the item's tex[0]
   // as the game does (REMOVED_IDS in src/game/lots/scales.ts): a removed sprite is left out, and an east view goes with its front (no 'east:')
   const have = new Set(out.map(s => s.id)), gone = readRemoved();
   for (const a of APPENDED) {
@@ -51,6 +51,7 @@ const APPENDED = [
   { file: 'src/game/cars-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/cars/cars-${p}.webp` },
   { file: 'src/game/east-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/east/east-${p}-0.webp` },
   { file: 'src/game/business-library.ts', re: /items: LibItem\[\] = (\[[^\n]*\]);\n/, page: p => `src/assets/businesses/integrated/business-${p}-0.webp` },
+  { file: 'src/game/construction-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/construction/construction-${p}.webp` },
 ];
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
 const DECAL_PAGE = path.join(ROOT, 'src/assets/ground/lot-decals.webp');
@@ -121,7 +122,7 @@ async function frame(pid, d, k, asDrawn) {
 let job = null;
 function rebuild() {
   if (job && !job.done) return job;
-  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
+  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/prep-construction.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
     if (i >= steps.length) return build();

@@ -792,25 +792,32 @@ function ind(B: Build, st: ComposeState) {
   B.marksIn('stain', 1, 1, W - 1, D - 1, 2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2); B.mark('rubbish', W - 1.6, D - 2.4);
 }
 
-/** a construction site: dirt, cement bags, rubble, a cable spool and a pickup; no building */
-/** a building site's pieces, each with its recolours (withVariations) */
-const SITE_KIT = { cement: withVariations(['expansion:cement-bags']), rubble: withVariations(['expansion:concrete-rubble']), spool: withVariations(['expansion:cable-spool']), forklift: withVariations(['expansion:forklift']), lumber: withVariations(['expansion:lumber-bundle']), pallet: withVariations(['expansion:pallet-stack']), digger: withVariations(['expansion:junkyard-crane']) };
+/** building supplies grouped by their use; names() omits pieces removed in the studio */
+const SITE_KIT = {
+  masonry: names(['construction:brick-pallet', 'construction:block-pallet', 'construction:roof-tile-pallet', 'construction:cement-bag-pallet', 'construction:tile-crate', 'construction:stone-pallet', 'construction:mortar-tools']).concat(withVariations(['expansion:cement-bags'])),
+  aggregate: names(['construction:gravel-pile', 'construction:sand-pile']),
+  long: names(['construction:timber-stack', 'construction:pipe-bundle', 'construction:steel-beams', 'construction:rebar-bundle', 'construction:lumber-stack']).concat(withVariations(['expansion:lumber-bundle'])),
+  storage: names(['construction:pallet-stack', 'construction:mesh-rolls']).concat(withVariations(['expansion:pallet-stack'])),
+  rubble: withVariations(['expansion:concrete-rubble']), spool: withVariations(['expansion:cable-spool']), forklift: withVariations(['expansion:forklift']),
+};
+/** a dirt construction site: a digger, varied supplies, rubble, a cable spool and a pickup; no building */
 function site(B: Build) {
   const { W, D, r, flip } = B;
   B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
-  // each piece from its TrickOrTreat recolours too (SITE_KIT), so neighbouring sites differ
-  B.put(pick(r, SITE_KIT.cement), 1.2, 1.6);
-  B.put(pick(r, SITE_KIT.cement), 2.2, 1.2);
+  // The digger's source faces +X, so mirror it for streets along the other axis (+Y).
+  // Give the machine priority over the smaller props; done() applies the usual lot and collision checks.
+  B.put('construction:digger', W / 2 - 0.6, D / 2 + 1, { flip: !flip });
+  B.put(pick(r, SITE_KIT.masonry), 1.2, 1.6);
+  B.put(pick(r, SITE_KIT.masonry), 2.5, 1.2);
   B.put(pick(r, SITE_KIT.rubble), W - 1.6, 2.2);
+  B.put(pick(r, SITE_KIT.aggregate), W - 1.5, D * 0.3);
   B.put(pick(r, SITE_KIT.spool), W - 1.4, D - 2.2);
   if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2, { flip });
-  // the digger (the scrapyard crane art, tracked with an arm) mid-site, and a second rubble heap by it
-  if (r() < 0.7) B.put(pick(r, SITE_KIT.digger), W / 2 - 1.2, D / 2 + 1.5, { flip });
   B.put(pick(r, SITE_KIT.rubble), W / 2 - 2.6, D / 2 - 0.4);
   B.vehicle(PICKUPS, W / 2, 0.8);
   B.mark('mud', W / 2, 2.4, 1.2); B.mark('expansion:mud-footprints', W / 2, D / 2); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
-  B.put(pick(r, SITE_KIT.lumber), 1.6, D - 1.6);
-  B.put(pick(r, SITE_KIT.pallet), W - 2.2, D - 1.4);
+  B.put(pick(r, SITE_KIT.long), 1.6, D - 1.8, { flip });
+  B.put(pick(r, SITE_KIT.storage), W - 2.2, D - 1.4);
   if (r() < 0.5) B.put(pick(r, JUNK), W / 2, D - 1.5, { flip });
 }
 
