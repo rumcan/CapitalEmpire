@@ -1,5 +1,5 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
-import { EAGER_PHOTO, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
+import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -212,12 +212,17 @@ function lotMosaic(src: Cnv) {
 export interface CurbColours { joint: string; top: string; face: string[]; gutter: string[]; faceHidden: string }
 export interface LeafSprite { i: number; dim: number; round: boolean }
 
+/** a photo's source period in tiles (its full-resolution canvas repeats over it): a mixed photo covers its p.mix metres (PHOTO_SIZE bigger, 2 m tiles), a plain one its own period */
+const photoSrcPeriod = (id: string) => { const p = PHOTO_TEX.find(q => q.tex === id)!; return p.mix > 0 ? p.mix * PHOTO_SIZE / 2 : photoPeriod(p, MOSAIC_TILES); };
+
 export class Textures {
   mips = new Map<string, Cnv>();
   /** asphalt mosaics in tile space, by variant ('base' | 'lit1' | 'lit2') and mip (px per tile) */
   mosaics = new Map<string, Cnv[]>();
   /** the period in tiles of each photo texture (photoPeriod: MOSAIC_TILES unless it is a plain tile with its own), and the lazy builds in progress */
   periods = new Map<string, number>(PHOTO_TEX.map(p => [p.tex, photoPeriod(p, MOSAIC_TILES)]));
+  /** each built photo's full-resolution source canvas (sourceFor: a large Paint scale shows it, not the mosaic) */
+  photoSrc = new Map<string, Cnv>();
   private photoBuilds = new Map<string, Promise<void>>();
   slabs!: Cnv; leaves!: Cnv; pool1!: Cnv; pool2!: Cnv;
   /** the builder's grass decals (ground-art DECALS rects) and SOIL_STAMPS ragged bare-soil stamps in a row (SOIL_W x SOIL_H each) */
@@ -327,6 +332,13 @@ export class Textures {
   }
   /** the period in tiles of a ground texture in tile space (MOSAIC_TILES unless it is a plain photo with its own) */
   periodOf(variant: string) { return this.periods.get(variant) ?? MOSAIC_TILES; }
+  /** a photo's source canvas and its period in tiles when a Paint area at scale L (cache level times area scale) needs more px a tile
+   *  than the mosaic's top mip has (the mosaic is 128 px a tile at L = 1); null keeps the mosaic (far zooms, and the plain photos) */
+  sourceFor(variant: string, L: number): { img: Cnv; period: number } | null {
+    const img = this.photoSrc.get(variant), chain = this.mosaics.get(variant);
+    if (!img || !chain || 128 * L <= chain[0].width / this.periodOf(variant)) return null;
+    return { img, period: photoSrcPeriod(variant) };
+  }
   /** true when a tile-space texture is built in this worker (the eager ones always are; a lazy photo once ensure has run) */
   has(variant: string) { return this.mosaics.has(variant); }
   /** builds a lazy photo texture (grass-art.ts PHOTO_TEX) the first time an area uses it; concurrent calls share one build;
@@ -344,8 +356,9 @@ export class Textures {
     const c = toCanvas(await loadImage(p.src));
     // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
     const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
-    // mixed: p.px pixels per tile (160 by default: 80 px/m over the 24 m period), the photo's p.mix metres scaled to that; plain: the photo is the period
-    this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / p.mix) : c));
+    // mixed: p.px pixels per tile (160 by default: 80 px/m over the 24 m period), the photo's p.mix metres (PHOTO_SIZE bigger) scaled to that; plain: the photo is the period
+    this.photoSrc.set(p.tex, c);
+    this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / (p.mix * PHOTO_SIZE)) : c));
   }
   private grass(gA: Cnv, gB: Cnv) {
     const c = canvas(BASE_W, BASE_H), g = ctx2d(c), HG = 192 * AUTHOR, cols = Math.round(BASE_W / HG), rows = Math.round(BASE_H / (HG * 0.866)), dx = BASE_W / cols, dy = BASE_H / rows;

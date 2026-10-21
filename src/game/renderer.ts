@@ -31,6 +31,8 @@ const LOT_CELL = 32;
 const PLAN_ASPHALT = '#3c4150';
 /** a Paint texture's swatch colour (its mean), the flat fill of a photo texture this worker has not built yet */
 const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [string, string]));
+/** the painted ground textures the photo of the same ground (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads, water */
+const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'roadgravel'], ['field', 'field'], ['water', 'waterDark']]);
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
@@ -91,7 +93,7 @@ export class GroundPainter {
   private planColour(name: string): string {
     let c = this.planCols.get(name);
     if (!c) {
-      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
+      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
       if (!img) return PAINT_COL.get(name) ?? '#808080';
       const d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
@@ -153,6 +155,12 @@ export class GroundPainter {
   private groundPattern(g: C2D, img: Cnv, G?: DOMMatrix, period = MOSAIC_TILES) {
     const p = g.createPattern(img, 'repeat')!, s = period / img.width, S = new DOMMatrix([s, 0, 0, s, 0, 0]); p.setTransform(G ? G.multiply(S) : S); return p;
   }
+  /** the ground photo that replaces a painted ground texture (GROUND_PHOTO), in tile space under the current transform; null when there is none
+   *  or this worker has not built it (the caller paints the screen texture) */
+  private photoFill(g: C2D, t: string, L: number): CanvasPattern | null {
+    const photo = GROUND_PHOTO.get(t); if (!photo || !this.tex.has(photo)) return null;
+    return this.groundPattern(g, this.tex.mosaicFor(photo, L), undefined, this.tex.periodOf(photo));
+  }
 
   /** one ground chunk (CHUNK_W x CHUNK_H world px) at cache level L: the full-quality bake. lite = a district chunk
    *  (MID_K x MID_K ground chunks) for far zooms, without the detail too small to see there (slab sprites, litter,
@@ -163,7 +171,7 @@ export class GroundPainter {
     const cv = canvas(W, H), ctx = ctx2d(cv);
     const M = new DOMMatrix([HW * L, HH * L, -HW * L, HH * L, -X0 * L, -Y0 * L]), Minv = M.inverse();
     const pats = new Map<TexName, CanvasPattern>();
-    const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
+    const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.photoFill(ctx, n, L) ?? this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
     const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
     const paint = (g: C2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
@@ -182,7 +190,9 @@ export class GroundPainter {
     /** an RGBA image over the tile box (res px per tile), stretched onto g through the iso transform (bilinear) */
     const overlay = (g: C2D, img: { data: Uint8ClampedArray; W: number; H: number }, res: number) => { const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0); g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(s, tx0, ty0, img.W / res, img.H / res); };
     /** a texture through a mask: `mask` draws alpha into a chunk buffer, the texture fills it (source-in), then it is composited */
-    const layer = (name: TexName, mask: (g: C2D) => void) => { const b = this.buffer('layer', W, H), g = ctx2d(b); mask(g); g.globalCompositeOperation = 'source-in'; g.setTransform(M); g.fillStyle = this.screenPattern(g, name, L, X0, Y0, Minv); g.fillRect(tx0, ty0, bw, bh); g.globalCompositeOperation = 'source-over'; composite(b); };
+    const layer = (name: TexName, mask: (g: C2D) => void, fill: (g: C2D) => CanvasPattern | string = g => this.screenPattern(g, name, L, X0, Y0, Minv)) => { const b = this.buffer('layer', W, H), g = ctx2d(b); mask(g); g.globalCompositeOperation = 'source-in'; g.setTransform(M); g.fillStyle = fill(g); g.fillRect(tx0, ty0, bw, bh); g.globalCompositeOperation = 'source-over'; composite(b); };
+    /** the water: the photo in tile space (under M) when this worker has it, else the screen texture */
+    const water = (g: C2D): CanvasPattern | string => this.photoFill(g, 'water', L) ?? this.screenPattern(g, 'water', L, X0, Y0, Minv);
     const cres = lite ? 1 : 4;
     for (const [want, name] of [[TC.PATCH, 'meadow'], [TC.HILL, 'forest']] as const) { const a = classAlpha(this.terrain, want, tx0, ty0, bw, bh, cres, this.edgeNoise); if (a) layer(name, g => overlay(g, a, cres)); }
     const ra = rockAlpha(this.slope, tx0, ty0, bw, bh, cres, this.edgeNoise); if (ra) layer('rock', g => overlay(g, ra, cres));
@@ -190,9 +200,9 @@ export class GroundPainter {
     /** a feathered waterway mask: 4 nested shapes from extra + f down to extra - f (tiles), each adding a quarter of the alpha */
     const shore = (g: C2D, list: typeof near, extra: number, f: number, scale = 1) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of list) any = waterShape(p, w.w.pts, extra + f * (1 - (2 * s) / 3), box, scale) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };
     if (rivers.length) layer('bank', g => shore(g, rivers, 3, 0.8));
-    if (creeks.length) { layer('creek', g => shore(g, creeks, 0.5, 0.5)); layer('water', g => shore(g, creeks, 0, 0.25, 0.35)); }
+    if (creeks.length) { layer('creek', g => shore(g, creeks, 0.5, 0.5)); layer('water', g => shore(g, creeks, 0, 0.25, 0.35), water); }
     const sres = lite ? 0.25 : 0.5; overlay(ctx, shadeRGBA(this.shade, tx0, ty0, bw, bh, sres), sres); ctx.setTransform(M);
-    if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3));
+    if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);
 
     const walk = net.walkF.filter(f => vis(f.bbox)), asph = net.asphF.filter(f => vis(f.bbox));
     const med = net.medianF.filter(f => vis(f.bbox)), isl = net.islandF.filter(f => vis(f.bbox));
@@ -511,7 +521,9 @@ export class GroundPainter {
         if (isPhotoTex(t)) {
           // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
           if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
-          put(this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t))); return;
+          // a large Paint scale (2 or more) shows the photo itself: sharp where the mosaic's top mip would be too coarse
+          const src = st.s >= 2 ? this.tex.sourceFor(t, L * st.s) : null;
+          put(src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t))); return;
         }
         put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
       };
