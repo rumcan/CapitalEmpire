@@ -15,7 +15,9 @@ const OUT = path.join(ROOT, 'src/assets/ground');
 const MASTERS = process.argv[2] ? path.resolve(process.argv[2]) : path.join(ROOT, 'art/grass-photo');
 /** the generated ground photos, by master name (art/grass-photo/<name>.png) */
 const GENERATED = ['asphalt-worn', 'road-gravel', 'dirt', 'field', 'grass', 'lawn-lush', 'lawn-worn', 'lawn-clover', 'golf-green', 'meadow-lush', 'meadow-flowers',
-  'golf-fringe', 'golf-tee', 'golf-first-cut', 'golf-fescue', 'bunker-sand', 'waste-sand', 'pine-straw', 'bark-mulch', 'spectator-path', 'wood-chips'];
+  'golf-fringe', 'golf-tee', 'golf-first-cut', 'golf-fescue', 'bunker-sand', 'waste-sand', 'pine-straw', 'bark-mulch', 'spectator-path', 'wood-chips',
+  // the owner's photos of 2026-10-21 (output/grass): the new textures (the replacements overwrite their masters above)
+  'grass-dry', 'asphalt', 'asphalt-patched', 'gravel', 'chip-seal', 'concrete-stained', 'concrete-cracked', 'concrete-old', 'concrete-weathered', 'water', 'water-deep', 'water-clear'];
 const JOBS = [
   { src: 'fairway.png', dst: 'paint-photo-fairway.webp', q: 92 },
   { src: 'fairway-sod.png', dst: 'paint-photo-fairway-sod.webp', q: 92 },

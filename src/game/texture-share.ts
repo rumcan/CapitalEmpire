@@ -3,7 +3,7 @@
 import { canvas, ctx2d, type CurbColours, type Cnv, type Textures } from './textures';
 
 /** bump when the texture generation code changes, so stale caches are rebuilt */
-const TEX_VERSION = 'tex-16';
+const TEX_VERSION = 'tex-17';
 export interface TexSnapshot { names: string[]; bitmaps: ImageBitmap[]; curb: CurbColours; stampAngle: number }
 
 function entries(t: Textures): [string, Cnv][] {

@@ -502,7 +502,7 @@ export class GroundPainter {
           ctx.globalCompositeOperation = 'multiply'; put(this.screenPattern(ctx, 'grime', L, X0, Y0, Minv)); ctx.globalCompositeOperation = 'source-over';
           return;
         }
-        if (t === 'asphalt' || t === 'asphaltDark') {
+        if (t === 'asphaltDark') {
           put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * st.s), G));
           if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
           return;

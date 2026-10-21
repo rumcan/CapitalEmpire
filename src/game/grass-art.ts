@@ -24,6 +24,18 @@ import pineStraw from '../assets/ground/paint-photo-pine-straw.webp';
 import barkMulch from '../assets/ground/paint-photo-bark-mulch.webp';
 import spectatorPath from '../assets/ground/paint-photo-spectator-path.webp';
 import woodChips from '../assets/ground/paint-photo-wood-chips.webp';
+import photoGrassDry from '../assets/ground/paint-photo-grass-dry.webp';
+import photoAsphalt from '../assets/ground/paint-photo-asphalt.webp';
+import photoAsphaltPatched from '../assets/ground/paint-photo-asphalt-patched.webp';
+import photoGravel from '../assets/ground/paint-photo-gravel.webp';
+import photoChipSeal from '../assets/ground/paint-photo-chip-seal.webp';
+import photoConcreteStained from '../assets/ground/paint-photo-concrete-stained.webp';
+import photoConcreteCracked from '../assets/ground/paint-photo-concrete-cracked.webp';
+import photoConcreteOld from '../assets/ground/paint-photo-concrete-old.webp';
+import photoConcreteWeathered from '../assets/ground/paint-photo-concrete-weathered.webp';
+import photoWater from '../assets/ground/paint-photo-water.webp';
+import photoWaterDeep from '../assets/ground/paint-photo-water-deep.webp';
+import photoWaterClear from '../assets/ground/paint-photo-water-clear.webp';
 
 /** a grass texture the Paint tool can lay (a photo, see PHOTO_TEX; the golf grasses are the course's surfaces) */
 export type GrassTex = 'lawnLush' | 'lawnWorn' | 'lawnClover' | 'golfGreen' | 'golfFairway' | 'golfSod' | 'golfRough' | 'golfFringe' | 'golfTee' | 'golfFirstCut' | 'golfFescue' | 'meadowLush' | 'meadowFlowers';
@@ -60,6 +72,19 @@ export const PHOTO_TEX: PhotoTexEntry[] = [
   { tex: 'barkMulch', src: barkMulch, mix: 3, px: 128 },
   { tex: 'spectatorPath', src: spectatorPath, mix: 6, px: 128 },
   { tex: 'woodChips', src: woodChips, mix: 3, px: 128 },
+  // the owner's photos of 2026-10-21 (Asphalt and Gravel were painted in code before)
+  { tex: 'grassDry', src: photoGrassDry, mix: 6, px: 128 },
+  { tex: 'asphalt', src: photoAsphalt, mix: 4, px: 128 },
+  { tex: 'asphaltPatched', src: photoAsphaltPatched, mix: 4, px: 128 },
+  { tex: 'gravel', src: photoGravel, mix: 4, px: 128 },
+  { tex: 'chipSeal', src: photoChipSeal, mix: 4, px: 128 },
+  { tex: 'concreteStained', src: photoConcreteStained, mix: 4, px: 128 },
+  { tex: 'concreteCracked', src: photoConcreteCracked, mix: 4, px: 128 },
+  { tex: 'concreteOld', src: photoConcreteOld, mix: 4, px: 128 },
+  { tex: 'concreteWeathered', src: photoConcreteWeathered, mix: 4, px: 128 },
+  { tex: 'waterDark', src: photoWater, mix: 8, px: 128 },
+  { tex: 'waterDeep', src: photoWaterDeep, mix: 8, px: 128 },
+  { tex: 'waterClear', src: photoWaterClear, mix: 8, px: 128 },
 ];
 /** the photo textures built with the ground textures (every worker, shared by snapshot); the rest are built by Textures.ensure on first use */
 export const EAGER_PHOTO = new Set(['golfFairway', 'golfSod', 'golfRough', 'pad']);

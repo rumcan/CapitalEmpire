@@ -3,7 +3,7 @@ import { MAP } from './iso';
 import type { GrassTex } from './grass-art';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | GrassTex;
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
@@ -21,20 +21,27 @@ export type PaintBox = [number, number, number, number];
 export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'paving', name: 'Pavers', col: '#a89c8c' },
   { id: 'slabs', name: 'Slabs', col: '#d8c8a8' },
-  { id: 'pad', name: 'Concrete', col: '#bbb4a5' },
-  { id: 'asphalt', name: 'Asphalt', col: '#30333f' },
+  { id: 'pad', name: 'Concrete', col: '#999691' },
+  { id: 'concreteStained', name: 'Stained concrete', col: '#726759' },
+  { id: 'concreteCracked', name: 'Cracked concrete', col: '#736452' },
+  { id: 'concreteOld', name: 'Old concrete', col: '#7c6b59' },
+  { id: 'concreteWeathered', name: 'Weathered concrete', col: '#776551' },
+  { id: 'asphalt', name: 'Asphalt', col: '#404040' },
   { id: 'asphaltDark', name: 'Dark asphalt', col: '#22242e' },
-  { id: 'asphaltWorn', name: 'Worn asphalt', col: '#a9a8a3' },
+  { id: 'asphaltWorn', name: 'Worn asphalt', col: '#434343' },
   { id: 'lotAsphalt', name: 'Car park asphalt', col: '#3a3b3f' },
+  { id: 'asphaltPatched', name: 'Patched asphalt', col: '#444443' },
+  { id: 'chipSeal', name: 'Chip seal', col: '#48443f' },
   { id: 'roadgravel', name: 'Road gravel', col: '#7a6d5e' },
-  { id: 'gravel', name: 'Gravel', col: '#5b5752' },
+  { id: 'gravel', name: 'Gravel', col: '#4b4a48' },
   { id: 'dirt', name: 'Dirt', col: '#7a634c' },
   { id: 'rockyDirt', name: 'Rocky dirt', col: '#78452b' },
   { id: 'rockyDirtAlt', name: 'Rocky dirt alt', col: '#70432d' },
   { id: 'field', name: 'Field', col: '#493e35' },
-  { id: 'grass', name: 'Grass', col: '#586c24' },
-  { id: 'lawnLush', name: 'Lush lawn', col: '#3c551f' },
-  { id: 'lawnWorn', name: 'Worn lawn', col: '#515421' },
+  { id: 'grass', name: 'Grass', col: '#505d1c' },
+  { id: 'grassDry', name: 'Dry grass', col: '#595d1c' },
+  { id: 'lawnLush', name: 'Lush lawn', col: '#4a5e1a' },
+  { id: 'lawnWorn', name: 'Worn lawn', col: '#57591b' },
   { id: 'lawnClover', name: 'Clover lawn', col: '#48682d' },
   { id: 'golfGreen', name: 'Putting green', col: '#62812d' },
   { id: 'golfFairway', name: 'Fairway', col: '#416114' },
@@ -42,16 +49,19 @@ export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'golfRough', name: 'Rough', col: '#52571f' },
   { id: 'golfFringe', name: 'Fringe', col: '#405f16' },
   { id: 'golfTee', name: 'Tee', col: '#48631d' },
-  { id: 'golfFirstCut', name: 'First cut', col: '#3c541b' },
+  { id: 'golfFirstCut', name: 'First cut', col: '#595f20' },
   { id: 'golfFescue', name: 'Fescue', col: '#6a6235' },
-  { id: 'bunkerSand', name: 'Bunker sand', col: '#caab84' },
+  { id: 'bunkerSand', name: 'Bunker sand', col: '#ddcfbe' },
   { id: 'wasteSand', name: 'Waste sand', col: '#b5976f' },
-  { id: 'pineStraw', name: 'Pine straw', col: '#795943' },
+  { id: 'pineStraw', name: 'Pine straw', col: '#9a5a34' },
   { id: 'barkMulch', name: 'Bark mulch', col: '#513d33' },
   { id: 'spectatorPath', name: 'Spectator path', col: '#90865f' },
   { id: 'woodChips', name: 'Wood chips', col: '#b18152' },
   { id: 'meadowLush', name: 'Meadow', col: '#4a632b' },
   { id: 'meadowFlowers', name: 'Wildflowers', col: '#4e5f27' },
+  { id: 'waterDark', name: 'Water', col: '#0f2431' },
+  { id: 'waterDeep', name: 'Deep water', col: '#0d2330' },
+  { id: 'waterClear', name: 'Clear water', col: '#164959' },
 ];
 /** the border textures: the kerb first, then every fill texture */
 export const BORDER_TEXES: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...PAINT_TEXES];
