@@ -17,7 +17,7 @@ cd "$(git rev-parse --show-toplevel)"
 ssh "$HOST" "test -d '$DIR/.git' || (mkdir -p '$DIR' && cd '$DIR' && git init -q && git config core.autocrlf false && git config receive.denyCurrentBranch ignore && echo 'worker clone created at $DIR')"
 
 idx="$(mktemp)"; trap 'rm -f "$idx"' EXIT
-cp .git/index "$idx"
+cp "$(git rev-parse --git-path index)" "$idx"
 GIT_INDEX_FILE="$idx" git add -A
 tree="$(GIT_INDEX_FILE="$idx" git write-tree)"
 snap="$(git commit-tree "$tree" -p HEAD -m "worker snapshot of $(git rev-parse --short HEAD)")"
