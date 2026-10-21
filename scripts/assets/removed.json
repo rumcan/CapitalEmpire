@@ -755,6 +755,20 @@
    570
   ]
  },
+ "variation:ref-building-school-ce21bf67-plain:1": {
+  "at": "2026-10-21T05:01:20.651Z",
+  "name": "School — variation 1",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 661.7,
+  "h": 643.7789583333334,
+  "quad": [
+   0,
+   1.67,
+   660,
+   641.67
+  ]
+ },
  "variation:static-garage_brick-db72ce3e-plain:1": {
   "at": "2026-10-20T16:09:01.655Z",
   "name": "Garage Brick — variation 1",
