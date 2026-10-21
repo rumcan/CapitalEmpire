@@ -304,8 +304,8 @@ export class GroundPainter {
         tint(bands[1], -shift * 0.62); tint(bands[2], -shift * 0.3);
         composite(faceBands);
       }
-      // plain (verge) roads: a soft dark edge instead of a curb
-      if (plain.length) { ctx.strokeStyle = 'rgba(12,10,8,0.5)'; for (const f of plain) ring(ctx, f, Math.max(0.2, 2 * minW)); }
+      // plain (verge) roads: a soft dark edge instead of a curb, feathered by a 1 px blur (the owner: no hard vector line)
+      if (plain.length) { ctx.save(); ctx.filter = 'blur(1px)'; ctx.strokeStyle = 'rgba(12,10,8,0.5)'; for (const f of plain) ring(ctx, f, Math.max(0.2, 2 * minW)); ctx.restore(); ctx.setTransform(M); }
       // ---- 5. asphalt: the painted mosaic in ground space, per class tone
       // gravel roads are painted first, with their own pattern and no tones, so a paved road meeting one paints over it
       const gravelF = asph.filter(f => f.tex === 'gravel'), paved = asph.filter(f => f.tex !== 'gravel');
