@@ -1726,9 +1726,30 @@ unlocks; budgets met).
     upkeep $44-47k a day (nearly all roads, the towns' included; no tax in a towns valley) against $10-36k business takings, so the
     treasury goes from $170k to -$49k by day 30. Sports bar and diner earn about $2.3k a day by level 3 (payback ~9-14 days). The bus
     company earned nothing (no shuttles in that run; routes added since). Taxi wages and fares still run on real hours and minutes.
-  - **Next in B.7:** road ownership (a town flag on segs, kept through splits, upgrades, the net ops and saves; upkeep skips town segs)
-    and the connection fee; rerun the gate; then taxi time units and the spin-off numbers (payback ~10 days); the gate passing; then
-    6R.5-6R.8 with the owner's town rules above.
+  - *Road ownership and the connection fee (done):* `Seg.town` (network.ts) marks the towns' segs (the seed grids, their grown gravel,
+    the valley highway: engine townGrow/seedTowns/buildHighway, harness setup/setupTowns/growLegs); kept by splits and pieces, cleared
+    when the player rebuilds a seg with another class, style or kind; carried by the `legs` NetOp and netToOps, saved as an optional 8th
+    element of a seg record (old saves: all the player's). `upkeepRate`/`dayIn` skip town segs. `CONNECT_FEE` (budget.ts, by use) is
+    booked once per lot key (`feeKeys`, saved with the books) when a lot first completes beside a player's seg, in a towns valley;
+    the Ledger's `fees` line ("Connection fees" in the books panel). tests/road-owner.test.ts (6).
+  - *Taxis in game time (done):* ext/taxi takes a `TaxiEcon` (sim seconds per wage hour and per fare minute, wage, flag, per km, per
+    minute, fuel; defaults real time, so T011's tests stand); City passes `TAXI_ECON` (game hour 60 s, minute 1 s, $1 an hour a driver,
+    $2 + $1.50/km + $0.10 a game minute: about $14 a ride); `TAXI_RATE` 10 -> 20 requests per 1000 residents a day.
+  - *The numbers (the owner: payback ~10 days):* sports bar $9 -> $11; bus company $50,000 -> $30,000, shuttle fare $2 -> $8; taxi
+    company $25,000 -> $10,000, upkeep $100 -> $50. The gate's player draws 8 buses a route.
+  - **Gate result (local, 2026-10-21; the worker was unreachable): PASS.** 30 days, seed 1: (a) lowest treasury $225,714 (ends
+    $506k); (b) 4 spin-offs (sports bar day 2, bus company day 3 with 3 shuttle routes, diner day 4, taxi company day 6); (c) 6 types
+    open; (d) sim 1.81 ms mean, 20.1 ms max per step over the surges (8.2 ms max on a quieter run). Upkeep $7.6k a day (was $45k);
+    connection fees $53k (days 1-2, the towns building along the new link roads). Payback: sports bar ~12 days, diner ~8, taxi
+    company ~8, bus company ~13.5 (its routes extra). `npm test` 478/479 local (the one failure: the terrain2/accACC timing tests on
+    the loaded dev PC).
+  - **Open:** the rounds fall from 100% (L1) to 30-50% at L2 as the towns grow (3,100 -> 5,400 residents in 30 days), so the payout
+    turns into a penalty most days and the businesses carry the treasury; the owner's 6R.7 rule (towns grow by the player's success with
+    traffic) is the fix. The gate (d) needs a run on the worker when it is back. Not yet browser-checked: the connection fee line, the
+    taxi fares in the panel.
+- **Next:** browser-check B.7 (the books' Connection fees line, a taxi company's day), merge `claude/b7-gate` into the preview/main;
+  then 6R.5-6R.8 with the owner's town rules above (6R.7: one asphalt avenue and gravel branches, fixed commercial and industrial
+  districts, growth by traffic success).
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road

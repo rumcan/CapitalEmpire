@@ -15,7 +15,7 @@ import { bottlenecks, type Report } from './sim/bottlenecks';
 import { Incidents, type Exposure, type Incident, type Passage } from './ext/incidents';
 import { Disasters, type Disaster, type DisasterKind, type RoadInfo } from './ext/disasters';
 import { zoneOf } from './sim/routing';
-import { Budget, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensation, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
+import { Budget, CONNECT_FEE, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensation, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
 import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
@@ -30,7 +30,7 @@ import { BUSINESS, ESTATE_LOTS, ESTATE_SAT, GOOD_SAT, levelFromXp, satisfactionA
 import { driveway } from './sim/trips';
 import { buildPark, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
-import { Taxis, type Order, type Rank } from './ext/taxi';
+import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -56,7 +56,10 @@ const TAXI_SEED = 7121;
 /** the taxis in the company's fleet */
 const TAXI_FLEET = 6;
 /** the taxi requests a game day per 1000 residents */
-const TAXI_RATE = 10;
+const TAXI_RATE = 20;
+/** the taxis' clock and money in game time (a game hour is 60 sim s, a game minute 1 s; ext/taxi's defaults are real time): $1 an hour a driver,
+ *  $2 flag fall, $1.50 a km and $0.10 a game minute of wait and ride (a 2 km ride takes about 90 game minutes, so about $14), fuel as 1985 */
+const TAXI_ECON: TaxiEcon = { hourS: 60, minuteS: 1, driverPerHr: 1, flag: 2, perKm: 1.5, perMin: 0.1, fuelPerKm: 0.06 };
 /** the sim seconds a party waits for a taxi before it gives up (ext/taxi maxWait) */
 const TAXI_WAIT = 180;
 /** the dispatcher's straight-line speed guess, m/s (its travel times; the cars drive their own routes) */
@@ -287,7 +290,7 @@ export class City {
   upkeepRate(): number {
     if (this.upkeepC !== null) return this.upkeepC;
     let r = 0;
-    for (const s of this.net.segs) r += segUpkeep({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind });
+    for (const s of this.net.segs) if (!s.town) r += segUpkeep({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind }); // the towns' roads cost the player nothing (Seg.town)
     for (const n of this.net.nodes.values()) r += SIGNAL_UPKEEP[n.type] ?? 0;
     r += this.budget.loans * LOAN * LOAN_RATE;
     return this.upkeepC = r;
@@ -389,6 +392,7 @@ export class City {
    *  saved with them, or a fresh one (at the hamlet) if none is given */
   setBudget(s: BudgetSave | null, career?: CareerSave | null): void {
     this.budget = s ? Budget.from(s) : Budget.from(undefined, startMoney(this.centres.length > 0));
+    this.feeKeys = new Set(s?.feeKeys ?? []);
     this.budget.unlimited = this.unlimited;
     if (!s) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career ?? undefined);
@@ -417,7 +421,7 @@ export class City {
       const s = this.town.states.get(l.key);
       if (s && s.level >= LV.BUILT) lots.push({ use: s.use, level: s.level, decline: s.decline, cls: l.cls, access: this.sim.access[zoneOf(l.c.x, l.c.y)]! });
     }
-    for (const s of this.net.segs) segs.push({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind });
+    for (const s of this.net.segs) if (!s.town) segs.push({ cls: s.cls.id, len: Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y), kind: s.kind });
     for (const n of this.net.nodes.values()) nodes.push(n.type);
     const tr = this.sim.trade, t0 = this.tradeAt;
     let bizUpkeep = 0;
@@ -493,7 +497,7 @@ export class City {
    *  returns the 'complete' event per restored lot */
   restore(saved: LotTuple[], simT: number, budget?: BudgetSave, money?: number, career?: CareerSave, shift = 0): TownEvent[] {
     this.sim.t = simT; this.sim.shift = shift; this.resetIncidents(this.incSeed); this.resetDisasters(this.disSeed);
-    this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; if (!budget) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
+    this.budget = Budget.from(budget, money); this.budget.unlimited = this.unlimited; this.feeKeys = new Set(budget?.feeKeys ?? []); if (!budget) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     this.career = Career.from(career);
     this.dayIdx = -1; this.tradeAt = { ...this.sim.trade }; this.upkeepC = null; this.resetVisits();
     const ev = this.town.restore(saved, this.sim.clock); this.syncHour = -1;
@@ -506,7 +510,7 @@ export class City {
   unfreeze(): void { this.sim.unfreeze(); }
 
   /** the towns built at once (a new valley, or a perfect round's growth, see Town.stamp): each town grows to perTown residents, or to targets[k] when given; returns the 'complete' events (a new array) */
-  stamp(perTown: number, targets?: number[]): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.clock, targets); this.syncHour = -1; return ev; }
+  stamp(perTown: number, targets?: number[]): TownEvent[] { const ev = this.town.stamp(this.ctx, perTown, this.sim.clock, targets); this.syncHour = -1; if (this.centres.length) for (const e of ev) if (e.kind === 'complete') this.connect(e); return ev; }
 
   /** n sim steps (a frame at speed n), then the town to the sim time, then the planner (once a game hour). Returns the town's events
    *  (the array is reused: read it before the next call), the gravel extension the town lays now, if any (legs in tiles), and the
@@ -557,7 +561,7 @@ export class City {
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
     const towns = this.centres.length > 0;
-    for (const e of events) if (e.kind === 'build') { this.builds++; if (towns) this.sell(e.key); }
+    for (const e of events) { if (e.kind === 'build') { this.builds++; if (towns) this.sell(e.key); } else if (e.kind === 'complete' && towns) this.connect(e); }
     const d = this.budget.dayOf(this.sim.clock); let ledger: Ledger | null = null;
     if (this.dayIdx < 0) this.dayIdx = d;
     else if (d > this.dayIdx) {
@@ -1146,6 +1150,12 @@ export class City {
     return m ? { x: sx / m, y: sy / m } : this.centres[k]!;
   }
 
+  /** the lots whose connection fee is paid (for the whole game; saved with the books, see booksSave) */
+  private feeKeys = new Set<string>();
+  /** a town lot that completes (BUILT) beside one of the player's roads pays the player its CONNECT_FEE once per lot key; a lot on a town's road pays nothing */
+  private connect(e: TownEvent): void { const l = this.lots.lots.get(e.key), n = CONNECT_FEE[e.use] ?? 0; if (!l || !n || l.seg.town || this.feeKeys.has(e.key)) return; this.feeKeys.add(e.key); this.budget.fee(n); }
+  /** the books as saved: the budget's, with the lots whose connection fee is paid (feeKeys) */
+  booksSave(): BudgetSave { return { ...this.budget.toJSON(), feeKeys: [...this.feeKeys] }; }
   /** a lot on a paved road the town builds on is sold: the player is paid its price (saleOf: nothing on gravel) */
   private sell(key: string): void { const l = this.lots.lots.get(key), n = l ? saleOf(l.cls) : 0; if (n) this.budget.sale(n); }
 
@@ -1325,7 +1335,7 @@ export class City {
     this.sim.dropTaxis(); this.sim.taxiOut.length = 0;
     this.taxis = null; this.taxiDue = []; this.taxiKey = key;
     if (!ranks.length) return;
-    this.taxis = new Taxis(TAXI_SEED, ranks, TAXI_FLEET, (a, b) => Math.hypot(a.x - b.x, a.y - b.y) * MPT / TAXI_V);
+    this.taxis = new Taxis(TAXI_SEED, ranks, TAXI_FLEET, (a, b) => Math.hypot(a.x - b.x, a.y - b.y) * MPT / TAXI_V, TAXI_ECON);
     this.taxiAt = []; this.taxiOrd = []; this.taxiCar = []; this.taxiReached = [];
     for (let i = 0; i < TAXI_FLEET; i++) { this.taxiAt.push({ ...ranks[i % ranks.length]!.at }); this.taxiOrd.push(null); this.taxiCar.push(-1); }
     this.taxiMoney = { rev: 0, cost: 0 }; this.taxiServed = 0; this.taxiDay = -1;

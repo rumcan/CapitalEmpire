@@ -12,7 +12,7 @@ import { lotBatch, type LotPatch } from './ground-protocol';
 import { PaintTool } from './paint-tool';
 import type { PaintTuple } from './paint';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
-import { readSave, writeSave, clearSave, SAVE_VERSION, type SaveV5 } from './save';
+import { readSave, writeSave, clearSave, SAVE_VERSION, segRec, type SaveV5 } from './save';
 import { CAR_COLOURS } from './traffic';
 import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
@@ -1414,7 +1414,7 @@ export class Game {
     for (const p of near) if (!p.auto && !LIBRARY[p.item].big) this.removeProp(p);
     const now = performance.now(), total = this.net.legsLength(legs), dur = Math.min(4000, 700 + total * 70);
     const cum: number[] = []; let acc = 0; for (const l of legs) { cum.push(acc); acc += vlen(sub(l.b, l.a)); }
-    this.edit.addLegs(legs, cls, 2);
+    this.edit.addLegs(legs, cls, 2, undefined, true);
     this.commitNetwork(true, now + dur + 150);
     this.builds.push({ legs, cls, t0: now, dur, total, cum });
     if (now - this.growToast > 30000) { this.growToast = now; this.toast('The town laid a gravel road'); }
@@ -1953,7 +1953,7 @@ export class Game {
     if (this.benchMode) return 0;
     const d: SaveV5 = {
       version: SAVE_VERSION, map: MAP, seed: this.seed,
-      segs: [...this.net.segs].map(s => [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style, s.kind]),
+      segs: [...this.net.segs].map(segRec),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam },
@@ -1977,7 +1977,7 @@ export class Game {
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
       if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
       else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }
-      for (const [ax, ay, bx, by, cls, style, kind] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind]);
+      for (const [ax, ay, bx, by, cls, style, kind, town] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind], town ? true : undefined);
       if (d.speed) this.edit.setSpeedTier(Math.min(3, Math.max(0, d.speed | 0)) as 0 | 1 | 2 | 3);
       this.net.rebuild(true);
       for (const entry of d.nodes) applyNodeEntry(this.edit, entry);
@@ -2046,7 +2046,7 @@ export class Game {
       const g = townGrid(c, TOWN_BLOCKS, cls);
       g.legs.forEach((l, i) => { const id = g.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
     }
-    for (const [id, legs] of byClass) this.edit.addLegs(legs, classOf(id), 0);
+    for (const [id, legs] of byClass) this.edit.addLegs(legs, classOf(id), 0, undefined, true);
     this.cam.X = worldX(cs[0]!.x, cs[0]!.y); this.cam.Y = worldY(cs[0]!.x, cs[0]!.y);
     if (this.stampOn) this.stampPending = true;
   }
@@ -2106,7 +2106,7 @@ export class Game {
     const legs0: Leg[] = []; for (let i = 1; i < pts.length; i++) legs0.push({ a: pts[i - 1], b: pts[i] });
     const { legs, kinds } = splitByTerrain(legs0, hw, (x, y) => classAt(t, x, y));
     for (const p of this.propsNearLegs(legs, hw)) if (!LIBRARY[p.item].big) this.removeProp(p);
-    this.edit.addLegs(legs, CLASS.road, 0, kinds);
+    this.edit.addLegs(legs, CLASS.road, 0, kinds, true);
   }
   /** street lamps on the sidewalk's outer half along every kerbed street, both sides, staggered */
   lampsAlongRoads(net: RoadNetwork, every = 1) {

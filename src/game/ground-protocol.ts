@@ -39,7 +39,7 @@ export function lotBatch(pending: Map<string, LotPatch[] | null>): { set: [strin
 
 /** A network edit, replayed by every ground worker so their road networks match the main thread's exactly. */
 export type NetOp =
-  | { k: 'legs'; legs: number[]; cls: ClassId; style: LineStyle; kinds?: number[] }
+  | { k: 'legs'; legs: number[]; cls: ClassId; style: LineStyle; kinds?: number[]; town?: true /* the towns' legs (Seg.town) */ }
   | { k: 'piece'; seg: [number, number, number, number]; p0: [number, number]; p1: [number, number] }
   | { k: 'type'; x: number; y: number; type: NodeType }
   | { k: 'flags'; x: number; y: number; wide: boolean; tl: boolean; rl?: 1 | 2 | 3 }

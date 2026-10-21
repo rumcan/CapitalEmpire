@@ -35,7 +35,7 @@ function postTown(ev: TownEvent[], force: boolean) {
 }
 
 /** the books: the save, the career's save, the game day now, and the ledger of the day that just closed (null unless a day did) */
-function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.budget.toJSON(), career: city.career.toJSON(), day: city.budget.dayOf(city.sim.clock), ledger }); }
+function postBudget(ledger: Ledger | null) { post({ t: 'budget', save: city.booksSave(), career: city.career.toJSON(), day: city.budget.dayOf(city.sim.clock), ledger }); }
 
 /** posts the businesses with their stats (after a change of the list, a day's close, a round's close, and a save's load) */
 function postBiz() { post({ t: 'biz', list: city.bizView() }); }

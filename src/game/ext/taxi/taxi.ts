@@ -35,6 +35,11 @@ const DRIVER_PER_HR = 6.0;
 /** fuel cost in dollars per km */
 const FUEL_PER_KM = 0.06;
 
+/** the dispatcher's clock and money: sim seconds per wage hour and per fare minute, the driver's wage per hour, the flag fall, the fare per km
+ *  and per minute, the fuel per km ($). The defaults are real time and 1985 prices; the game passes its own (a game hour is 60 sim s) */
+export interface TaxiEcon { hourS: number; minuteS: number; driverPerHr: number; flag: number; perKm: number; perMin: number; fuelPerKm: number }
+export const REAL_ECON: TaxiEcon = { hourS: 3600, minuteS: 60, driverPerHr: DRIVER_PER_HR, flag: FLAG_FALL, perKm: PER_KM, perMin: PER_MIN, fuelPerKm: FUEL_PER_KM };
+
 /** one taxi in the fleet */
 interface Taxi {
   id: number;
@@ -79,7 +84,10 @@ export class Taxis {
   private lastT = -1;
   /** summed wait time (s) of served fares, for meanWait */
   private waitSum = 0;
-  constructor(seed: number, ranks: Rank[], fleet: number, travelTime: (a: Pt, b: Pt) => number) {
+  /** the clock and money (see TaxiEcon) */
+  private econ: TaxiEcon;
+  constructor(seed: number, ranks: Rank[], fleet: number, travelTime: (a: Pt, b: Pt) => number, econ: TaxiEcon = REAL_ECON) {
+    this.econ = econ;
     this.ranks = ranks.slice();
     this.rankById = new Map();
     for (const r of ranks) this.rankById.set(r.id, r);
@@ -171,7 +179,7 @@ export class Taxis {
   /** step the dispatcher at sim time t (seconds). reached is the list of taxi ids that just
    *  reached their previous Order target. Returns new orders for the caller to drive. */
   step(t: number, reached: number[]): Order[] {
-    if (this.lastT >= 0 && t > this.lastT) this.cost += this.taxis.length * ((t - this.lastT) / 3600) * DRIVER_PER_HR;
+    if (this.lastT >= 0 && t > this.lastT) this.cost += this.taxis.length * ((t - this.lastT) / this.econ.hourS) * this.econ.driverPerHr;
     if (t > this.lastT) this.lastT = t;
     const out: Order[] = [];
     // expire queued requests that exceeded their maxWait
@@ -194,7 +202,7 @@ export class Taxis {
         const req = this.active.get(tx.reqId);
         if (req) {
           const km = this.tileDist(tx.pos, req.from) / TILES_PER_KM;
-          this.cost += km * FUEL_PER_KM;
+          this.cost += km * this.econ.fuelPerKm;
           tx.pos = { x: req.from.x, y: req.from.y };
           this.accrueCosts(tx, t);
           tx.state = 'dropoff';
@@ -205,11 +213,11 @@ export class Taxis {
         const req = this.active.get(tx.reqId);
         if (req) {
           const km = this.tileDist(tx.pos, req.to) / TILES_PER_KM;
-          this.cost += km * FUEL_PER_KM;
+          this.cost += km * this.econ.fuelPerKm;
           tx.pos = { x: req.to.x, y: req.to.y };
-          const totalMin = Math.max(0, t - req.t) / 60;
+          const totalMin = Math.max(0, t - req.t) / this.econ.minuteS;
           const tripKm = this.tileDist(req.from, req.to) / TILES_PER_KM;
-          const fare = FLAG_FALL + PER_KM * tripKm + PER_MIN * totalMin;
+          const fare = this.econ.flag + this.econ.perKm * tripKm + this.econ.perMin * totalMin;
           this.rev += fare;
           this.waitSum += Math.max(0, t - req.t);
           this.nServed++;
@@ -224,7 +232,7 @@ export class Taxis {
           const r = this.rankById.get(tx.rankId);
           if (r) {
             const km = this.tileDist(tx.pos, r.at) / TILES_PER_KM;
-            this.cost += km * FUEL_PER_KM;
+            this.cost += km * this.econ.fuelPerKm;
             tx.pos = { x: r.at.x, y: r.at.y };
           }
         }

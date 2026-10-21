@@ -127,7 +127,7 @@ const stadiumCost = BUSINESS.stadium.buildCost;
 city.spend('construction', stadiumCost);
 // the roads (the generous build's network value, as the add-lane tool prices it) and the car parks
 /** the buses on each shuttle route the player draws with its bus company */
-const BUS_PER_ROUTE = 4;
+const BUS_PER_ROUTE = 8;
 /** the money the player keeps in hand after the opening build ($) */
 const OPEN_RESERVE = 20000;
 const v0 = netValue(city.net), parks = buildGenerous(H, false), roadCost = Math.round(netValue(city.net) - v0);
