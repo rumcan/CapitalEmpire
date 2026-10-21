@@ -48,8 +48,10 @@ test('shop signs carry lettering; houses, yards and natural sprites do not', () 
   assert.ok(hasLettering('gen:unknown-sprite', 'Maple Family Market'), 'the library name counts as well as the id');
   for (const id of ['variation:world-house_0-51fa4b80-plain:1', 'gen:house-l-shape', 'static:garage_brick', 'expansion:washing-line', 'expansion:kiddie-car', 'ref:landmark-windmill', 'ref:building-farm-shed', 'world:barn',
     'static:shop_brick_rear', 'static:shop_market_rear-v2', 'variation:static-shop_brick_rear-04db4dfa-plain:1', 'expansion:boarded-store-rear', 'variation:expansion-boarded-store-rear-d09a309a:1',
-    'variation:industrial-auto-body-shop-63875699:1', 'variation:industrial-brick-machine-shop-34206b23:1'])
+    ])
     assert.ok(!hasLettering(id), `${id} carries no lettering`);
+  // the works buildings and the water tower have signs painted on their walls (PAINTED_SIGNS)
+  for (const id of ['variation:industrial-auto-body-shop-63875699:1', 'variation:industrial-bottling-plant-13e91e4e:1', 'world:watertower']) assert.ok(hasLettering(id), `${id} carries a painted sign`);
   // whole residential and natural categories are plain
   const plain = new Set(['Houses', 'More houses', 'Trees & plants', 'Fences', 'Townspeople', 'Vehicles', 'Lots', 'Yard']);
   for (const it of LIBRARY) if (plain.has(it.cat)) assert.ok(!LETTERING_IDS.has(it.id), `${it.id} (${it.cat}) carries no lettering`);

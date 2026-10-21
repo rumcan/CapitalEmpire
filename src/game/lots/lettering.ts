@@ -21,13 +21,16 @@ const EXCLUDE = new Set<string>([
 ]);
 /** lettering the words miss: the commercial golf cart garage (its sign reads GARAGE, and 'garage' is not a word) */
 const INCLUDE = new Set<string>(['business:golf-cart-garage']);
+/** art with a sign painted on its walls, whatever its name says: the works buildings ("MAPLE FALLS BOTTLING CO", "BODY SHOP"...), the
+ *  abandoned workshop and the town water tower (the owner, 2026-10-21, when they joined the lots) */
+const PAINTED_SIGNS = /^(?:variation:industrial-|world:watertower$|expansion:abandoned-workshop$|variation:expansion-abandoned-workshop-)/;
 /** the rear views (a shop's back, a store's rear, with their variations) carry no readable sign: they may be flipped. The id decides, not the name */
 const REAR = /[-_]rear(?:[-_]v2)?(?=[-:]|$)/;
 
 /** does a sprite carry readable signs (never mirrored): its id or library name holds a shop word, unless excluded or a rear view; INCLUDE always holds.
  *  The east-facing art (east:*) is lettering too: it is drawn unflipped only, through EAST_FACING */
 export function hasLettering(id: string, name?: string): boolean {
-  if (INCLUDE.has(id) || id.startsWith('east:')) return true;
+  if (INCLUDE.has(id) || id.startsWith('east:') || PAINTED_SIGNS.test(id)) return true;
   if (EXCLUDE.has(id) || REAR.test(id)) return false;
   return SHOP.test(id) || (name !== undefined && SHOP.test(name));
 }

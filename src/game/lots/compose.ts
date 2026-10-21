@@ -78,24 +78,34 @@ const plain = (list: string[], flip: boolean | undefined) => (flip ? list.filter
 /** the sprite a front is drawn as, and its flip: a flipped front with east-facing art is that art, drawn unflipped; otherwise itself, as flipped */
 const faced = (id: string, flip: boolean): [string, boolean] => { const e = flip ? EAST_FACING[id] : undefined; return e ? [e, false] : [id, flip]; };
 
-const HOUSE_FRONT = cat(i => i.cat === 'Houses' && i.kind === 'house');
-const HOUSE_REAR = names(['expansion:ranch-rear', 'expansion:cottage-rear', 'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear']);
-const HOUSE_RUNDOWN = names(['expansion:rundown-house']);
-const GARAGE_FRONT = names(['static:garage_timber', 'static:garage_brick', 'static:garage_brick-v2']);
-const GARAGE_REAR = names(['expansion:garage-rear']);
-const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id));
-const BUSHES = cat(i => i.kind === 'bush');
 /** ids with their plain variations in the library ('town:bakery' -> 'variation:town-bakery-<hash>-plain:1'), the ones the game has */
 const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => !FRONTAL.has(k) && base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
+/** a library sprite drawn straight on (frontal.ts) or not isometric enough for a lot is never dealt; the house variations are kind 'building' */
+const isoBuilding = (i: LibItem) => !FRONTAL.has(i.id) && (i.kind === 'house' || i.kind === 'building');
+/** a rear view of a house: the north variations and the 'house back' sets (patio, pool, shed, swings, deck, porch) */
+const REAR_VIEW = /-north-|^gen:back-|^variation:gen-back-/;
+/** every isometric house front the library has, with the variations (the owner, 2026-10-21: use everything); garages go in their own pool */
+const HOUSE_FRONT = cat(i => i.cat === 'Houses' && isoBuilding(i) && !REAR_VIEW.test(i.id) && !/garage_|-garage-[0-9a-f]{8}|^ref:building-garage/.test(i.id));
+const HOUSE_REAR = withVariations(['expansion:ranch-rear', 'expansion:cottage-rear', 'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear']).concat(cat(i => i.cat === 'Houses' && isoBuilding(i) && REAR_VIEW.test(i.id)));
+const HOUSE_RUNDOWN = withVariations(['expansion:rundown-house']);
+const GARAGE_FRONT = withVariations(['static:garage_timber', 'static:garage_brick', 'static:garage_brick-v2']);
+const GARAGE_REAR = withVariations(['expansion:garage-rear']);
+const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id));
+const BUSHES = cat(i => i.kind === 'bush');
 /** every front-facing shop the game has, with its variations (the street fronts deal from it, see com) */
 const SHOP_FRONT = withVariations(['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:fish_tackle', 'town:barber', 'town:hardware', 'world:video_rental', 'world:video',
   'ref:building-grocery', 'ref:building-corner-shop', 'ref:building-corner-store']);
 const SHOP_REAR = withVariations(['static:shop_brick_rear', 'static:shop_brick_rear-v2', 'static:shop_market_rear', 'static:shop_market_rear-v2']);
-const BOARDED = names(['expansion:boarded-store-rear', 'expansion:derelict-two-storey']);
-const VENUE = withVariations(['world:diner', 'world:arcade', 'world:snack_bar', 'ref:building-gas-canopy']);
-const CIVIC = names(['town:firestation', 'town:postoffice', 'world:primary_school', 'world:church', 'world:school']);
-const SHED = names(['ref:building-farm-shed', 'expansion:abandoned-workshop']);
-const BARN = names(['world:barn']);
+const BOARDED = withVariations(['expansion:boarded-store-rear', 'expansion:derelict-two-storey']);
+const VENUE = withVariations(['world:diner', 'world:arcade', 'world:snack_bar', 'ref:building-gas-canopy']).concat(cat(i => i.id.startsWith('variation:ref-building-gas-shop-') && isoBuilding(i)));
+const CIVIC = withVariations(['town:firestation', 'town:postoffice', 'world:primary_school', 'world:church', 'world:school']);
+const SHED = withVariations(['ref:building-farm-shed', 'expansion:abandoned-workshop']);
+/** the works buildings (foundry, mill, depots, workshops: the industrial variations), and the tall pieces a big works yard may have */
+const WORKS = cat(i => /^(industrial:|variation:industrial-)/.test(i.id) && isoBuilding(i));
+const TOWERS = names(['world:watertower', 'ref:landmark-water-tower', 'ref:landmark-silo', 'ref:landmark-windmill']);
+/** a small green's centrepiece */
+const PARK_PIECES = names(['world:gazebo', 'ref:landmark-fountain-v2', 'world:junglegym_0', 'world:junglegym_1']);
+const BARN = withVariations(['world:barn', 'ref:building-barn']);
 /** cars with a facing letter in the name (n = -Y, s = +Y, e = +X, w = -X) */
 const CARS = cat(i => i.cat === 'Vehicles' && /_[news](-v2)?$/.test(i.id));
 const PICKUPS = CARS.filter(id => /pickup|van/.test(id));
@@ -612,6 +622,10 @@ function parkingArea(B: Build, a0: number, b0: number, a1: number, b1: number, d
 /** a small green, for a lot whose frontage runs off the map axes (no building there faces the street): two trees, a bench by the front, bushes */
 function green(B: Build) {
   const { W, D, r } = B;
+  // a centrepiece (gazebo, fountain, jungle gym) on a green that runs with the map axes (a lot more than 20 degrees off them stays plain)
+  const square = Math.min(Math.abs(B.u.x), Math.abs(B.u.y)) < Math.sin(Math.PI / 9);
+  const cp = square ? specFit(B, PARK_PIECES, W - 2, D - 2, { flip: B.flip }) : null;
+  if (cp && r() < 0.7) B.at(cp, W / 2, D / 2);
   B.put(pick(r, TREES), W * 0.3, D * 0.45, { plant: true });
   B.put(pick(r, TREES), W * 0.7, D * 0.7, { plant: true });
   B.put('world:bench', W / 2, 1.4);
@@ -639,7 +653,7 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   const deck = [...ok].sort(), dr = mulberry(mix(street, B.n.x + 2, B.n.y + 2, rear ? 1 : 0));
   for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(dr() * (i + 1)); [deck[i], deck[j]] = [deck[j]!, deck[i]!]; }
   // the shops that leave room for the drive beside them (its width and 0.3 clear of the shop), when any do
-  const room = deck.filter(id => W - B.fit(id, flip)[0] - 0.3 >= DRIVE_W), dk = room.length ? room : deck;
+  const room = deck.filter(id => W - B.fit(id, flip)[0] - 0.3 >= DRIVE_W), dk = room.length && r() < 0.5 ? room : deck;
   const ss = B.spec(dk[((slot % dk.length) + dk.length) % dk.length]!, { flip });
   if (!ss) return;
   const sw = 2 * B.ea(ss), sd = 2 * B.eb(ss), low = B.u.x + B.u.y > 0, ca = low ? 0.15 + sw / 2 : W - 0.15 - sw / 2, back = SHOP_FRONT_B + sd;
@@ -744,12 +758,14 @@ function civic(B: Build, st: ComposeState) {
 function ind(B: Build, st: ComposeState) {
   const { W, D, r, flip } = B;
   B.pave('yard', 0.4, 0.4, W - 0.4, D - 0.4, 'gravel');
-  const shed = st.decline >= 2 ? ['expansion:abandoned-workshop'] : W >= 12 ? [...SHED, ...BARN] : SHED;
+  const shed = st.decline >= 2 ? withVariations(['expansion:abandoned-workshop']) : W >= 12 ? [...SHED, ...BARN, ...WORKS] : [...SHED, ...WORKS];
   const sh = specFit(B, shed, W - 0.8, D - 3, { flip });
   const shB = D - (sh ? B.eb(sh) : 1.5) - 0.9;
   if (sh) B.at(sh, W / 2, shB);
   const tr = specFit(B, TRAILERS, W - 2.4, 4.5, { flip });
   if (tr) B.at(tr, B.ea(tr) + 0.8, 3 + B.eb(tr));
+  // a big works yard: sometimes a water tower, silo or windmill in the front corner away from the trailer
+  if (W >= 12 && st.decline < 2 && r() < 0.35) { const tw = specFit(B, TOWERS, 3.5, 3.5, { flip }); if (tw) B.at(tw, W - 0.8 - B.ea(tw), 1.5 + B.eb(tw)); }
   B.run(CHAIN, 0.4, 0.4, W - 0.4, 0.4, [0.35, 0.65]);
   B.run(CHAIN, 0.4, 0.4, 0.4, D - 0.4);
   B.run(CHAIN, W - 0.4, 0.4, W - 0.4, D - 0.4);
