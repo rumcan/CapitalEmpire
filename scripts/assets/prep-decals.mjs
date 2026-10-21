@@ -1,12 +1,14 @@
 // Pack the town builder's flat ground decals (leaf drifts, worn grass, litter, oil stains, mud tracks) that the Lot Composer
 // lays in yards, drives and car parks, into one strip for the ground painter. Read from the local TrickOrTreat builder library
 // (read only; items the owner hid there are left out). Writes src/assets/ground/lot-decals.webp and src/game/lot-decals.ts.
+// A decal the owner resized in the sprite studio (scale-overrides.json, default 1) is packed at that scale: w and h are the game size.
 //   node scripts/assets/prep-decals.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { ROOT, TOT } from './source.mjs';
 import { REMOVED } from './removed.mjs';
+import { readScales } from './overrides.mjs';
 
 /** the decals the composer uses, by group (the group names are what compose.ts asks for) */
 const GROUPS = {
@@ -23,13 +25,14 @@ const GROUPS = {
 const dir = path.join(TOT, 'output/town-builder/library'), file = path.join(dir, 'library.json');
 if (!fs.existsSync(file)) { console.error(`no TrickOrTreat library at ${file}: the lot decals stay as they are`); process.exit(1); }
 const byId = new Map(JSON.parse(fs.readFileSync(file, 'utf8')).items.map(i => [i.id, i]));
+const scales = readScales();
 
 const PAGE_W = 2048, GAP = 2, tiles = [], meta = [];
 let x = 0, y = 0, rowH = 0;
 for (const [group, ids] of Object.entries(GROUPS)) for (const id of ids) {
   const it = byId.get(id);
   if (!it || it.hidden || !it.flat || REMOVED.has(id) || !fs.existsSync(path.join(dir, it.file))) { console.warn('skip', id); continue; }
-  const w = Math.round(it.w), h = Math.round(it.h);
+  const s = scales[id] ?? 1, w = Math.max(1, Math.round(Math.round(it.w) * s)), h = Math.max(1, Math.round(Math.round(it.h) * s));
   if (x + w + GAP > PAGE_W) { x = 0; y += rowH + GAP; rowH = 0; }
   tiles.push({ input: await sharp(path.join(dir, it.file)).resize(w, h, { fit: 'fill', kernel: 'lanczos3' }).png().toBuffer(), left: x + 1, top: y + 1 });
   meta.push({ id, group, x: x + 1, y: y + 1, w, h });

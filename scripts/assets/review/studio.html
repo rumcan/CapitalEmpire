@@ -18,7 +18,7 @@ input{background:#11130b;border:1px solid var(--line);color:var(--ink);border-ra
 select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 8px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:200px}.card.removed{opacity:.45;border-color:var(--red)}
 .stage{display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(#2b3120,#323a24);padding:10px;min-height:60px}
-.stage img{display:block}.meta{padding:8px}.name{font-weight:600}.cat{font-size:11px;color:var(--gold)}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
+.stage.grass{background:#4f6b2c}.stage img{display:block}.meta{padding:8px}.name{font-weight:600}.cat{font-size:11px;color:var(--gold)}.id{font:11px ui-monospace,monospace;color:var(--dim);word-break:break-all}
 .row{display:flex;gap:6px;padding:0 8px 8px;align-items:center}.row .btn{flex:1}.scale{font:12px ui-monospace,monospace;color:var(--ink);min-width:70px;text-align:center}
 .lots{display:grid;grid-template-columns:240px 1fr 280px;gap:0;height:100%}.lots>div{overflow:auto}
 .list{border-right:1px solid var(--line)}.li{padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}.li.on{background:#2a2e1c;color:var(--gold)}.li small{color:var(--dim)}
@@ -75,7 +75,8 @@ function cats(){const c=[...new Set(all.map(s=>s.cat))].sort(),box=$('#cats');bo
 function stage(s){
   // the trimmed picture at the size the game draws it: (quad) x scale x K, never capped, so Bigger really is bigger
   const q=s.quad, w=(q[2]-q[0])*s.scale*K, h=(q[3]-q[1])*s.scale*K;
-  return el('div',{className:'stage'},el('img',{src:'/thumb/'+encodeURIComponent(s.id),loading:'lazy',style:`width:${w}px;height:${h}px`}));
+  // a lot decal (a leaf drift, a stain) is drawn over grass, so its edges show as they do in the yard
+  return el('div',{className:'stage'+(s.kind==='decal'?' grass':'')},el('img',{src:'/thumb/'+encodeURIComponent(s.id),loading:'lazy',style:`width:${w}px;height:${h}px`}));
 }
 function draw(){const g=$('#grid');g.innerHTML='';let n=0;
  const list=all.filter(s=>(cat==='Removed'?removed[s.id]:!cat||s.cat===cat)&&(!q||(s.id+' '+s.name).toLowerCase().includes(q)));
