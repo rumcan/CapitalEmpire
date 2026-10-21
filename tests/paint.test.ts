@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaintTool } from '../src/game/paint-tool';
+import { PHOTO_TEX, photoPeriod } from '../src/game/grass-art';
 import {
   DEFAULT_STYLE, PAINT_TEXES, RADIUS_MAX, areaAt, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insidePoly, polyArea, roundCorners, simplify, snapPt, toTuple,
   type BorderSize, type BorderTex, type PaintArea, type PaintTex, type PaintTuple,
@@ -203,4 +204,26 @@ test('lotAsphalt (Car park asphalt): a valid fill and border texture, after Worn
   assert.equal(clampStyle({ ...DEFAULT_STYLE, btex: junk<BorderTex>('lotAsphalt') }).btex, 'lotAsphalt');
   const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 4), tex: 'lotAsphalt', scale: 1.5, angle: 0, border: 1, btex: 'lotAsphalt', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
   assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([toTuple(area)])) as PaintTuple[]), [area]);
+});
+
+const GOLF_NEW: PaintTex[] = ['golfFringe', 'golfTee', 'golfFirstCut', 'golfFescue', 'bunkerSand', 'wasteSand', 'pineStraw', 'barkMulch', 'spectatorPath', 'woodChips'];
+test('the photo Paint textures: the new golf and sand ids follow Rough, are valid fill and border textures, round-trip, and are photos', () => {
+  const ids = PAINT_TEXES.map(t => t.id);
+  assert.equal(ids.indexOf('golfFringe'), ids.indexOf('golfRough') + 1);
+  for (const id of GOLF_NEW) {
+    assert.equal(clampStyle({ ...DEFAULT_STYLE, tex: id }).tex, id, id);
+    assert.equal(clampStyle({ ...DEFAULT_STYLE, btex: id }).btex, id, id);
+    const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 4), tex: id, scale: 1.5, angle: 0, border: 1, btex: id, radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
+    assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([toTuple(area)])) as PaintTuple[]), [area], id);
+    assert.ok(PHOTO_TEX.some(p => p.tex === id), `${id} has a photo`);
+  }
+  for (const p of PHOTO_TEX) assert.ok(ids.includes(p.tex as PaintTex), `${p.tex} is a Paint texture`);
+});
+
+test('photoPeriod: a mixed photo repeats over the mixed period; a plain tile over its own tiles (field: 4), or the mixed period when it has none', () => {
+  assert.equal(photoPeriod({ mix: 4 }, 12), 12);
+  assert.equal(photoPeriod({ mix: 0, tiles: 4 }, 12), 4);
+  assert.equal(photoPeriod({ mix: 0 }, 12), 12);
+  assert.equal(photoPeriod(PHOTO_TEX.find(p => p.tex === 'field')!, 12), 4);
+  assert.equal(photoPeriod(PHOTO_TEX.find(p => p.tex === 'golfFairway')!, 12), 12);
 });
