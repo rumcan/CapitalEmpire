@@ -87,7 +87,9 @@ export const PHOTO_TEX: PhotoTexEntry[] = [
   { tex: 'waterClear', src: photoWaterClear, mix: 8, px: 128 },
 ];
 /** the photo textures built with the ground textures (every worker, shared by snapshot); the rest are built by Textures.ensure on first use */
-export const EAGER_PHOTO = new Set(['golfFairway', 'golfSod', 'golfRough', 'chipSeal']);
+export const EAGER_PHOTO = new Set(['golfFairway', 'golfSod', 'golfRough', 'chipSeal', 'dirt', 'gravel', 'roadgravel', 'field', 'waterDark']);
+/** the mixed photos cover this many times their PHOTO_TEX metres (about 25% bigger than the photo as first laid out); the plain photos are not scaled */
+export const PHOTO_SIZE = 1.25;
 /** a photo texture's period in tiles: a mixed one repeats over the mixed period (MOSAIC_TILES, passed in: textures.ts imports this file);
  *  a plain tile over its own tiles, or the mixed period when it has none */
 export const photoPeriod = (p: { mix: number; tiles?: number }, mixed: number) => (p.mix > 0 ? mixed : p.tiles ?? mixed);

@@ -3,12 +3,13 @@
 import { canvas, ctx2d, type CurbColours, type Cnv, type Textures } from './textures';
 
 /** bump when the texture generation code changes, so stale caches are rebuilt */
-const TEX_VERSION = 'tex-17';
+const TEX_VERSION = 'tex-18';
 export interface TexSnapshot { names: string[]; bitmaps: ImageBitmap[]; curb: CurbColours; stampAngle: number }
 
 function entries(t: Textures): [string, Cnv][] {
   const out: [string, Cnv][] = [...t.mips.entries()].map(([k, v]) => ['mip:' + k, v]);
   for (const [k, list] of t.mosaics) list.forEach((c, i) => out.push([`mosaic:${k}:${i}`, c]));
+  for (const [k, c] of t.photoSrc) out.push(['photo:' + k, c]);
   out.push(['slabs', t.slabs], ['leaves', t.leaves], ['pool1', t.pool1], ['pool2', t.pool2], ['decals', t.decals], ['soil', t.soil], ['lotDecals', t.lotDecals], ['nature', t.nature]);
   return out;
 }
@@ -21,6 +22,7 @@ export function restore(t: Textures, s: TexSnapshot) {
   s.names.forEach((name, i) => {
     const b = s.bitmaps[i], c = canvas(b.width, b.height); ctx2d(c).drawImage(b, 0, 0); b.close();
     if (name.startsWith('mip:')) t.mips.set(name.slice(4), c);
+    else if (name.startsWith('photo:')) t.photoSrc.set(name.slice(6), c);
     else if (name.startsWith('mosaic:')) { const [, k, idx] = name.split(':'); let l = mosaics.get(k); if (!l) mosaics.set(k, (l = [])); l[+idx] = c; }
     else (t as unknown as Record<string, Cnv>)[name] = c;
   });
