@@ -3,21 +3,24 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-20 evening: the art branch claude/sprites-and-people merged (TrickOrTreat sprites, baked lots with a separate fence layer, townspeople, sprite studio with walk-frame fixes; docs/ART-PIPELINE.md); before that 2026-10-20 afternoon (B.3 daily visit businesses, B.4 tickets and cards, B.5 bus and taxi companies); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
+_Last updated: 2026-10-21: **the golf events pivot (v6)**: the plan, the review of all development and the golf sprite list
+([GOLF-PLAN.md](GOLF-PLAN.md), [GOLF-SPRITES.md](GOLF-SPRITES.md)); every plan doc updated; in-flight work parked (section "The golf
+pivot" near the end). Before that 2026-10-20 evening: the art branch claude/sprites-and-people merged (TrickOrTreat sprites, baked lots with a separate fence layer, townspeople, sprite studio with walk-frame fixes; docs/ART-PIPELINE.md); before that 2026-10-20 afternoon (B.3 daily visit businesses, B.4 tickets and cards, B.5 bus and taxi companies); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
 ## Where we are
 
 | Phase | Status |
 | --- | --- |
+| **Golf pivot (v6, 2026-10-21; [GOLF-PLAN.md](GOLF-PLAN.md))** | **G0 (the plan) done 2026-10-21**, waiting for the owner's answers to GOLF-PLAN section 13. Next: **G1 golf mode foundation** (one town, the old 9-hole course, the 12-month year, tier 1 tournament day). G7 (golf art) runs alongside |
 | 0. Scale foundation | **Done** (commit `88e64c4` plus the hand-off commit after it), pushed to origin 2026-10-17 |
 | 1. Terrain (maple valley for now) | **Done** (2026-10-17), pushed to origin. Steps and numbers below |
 | 2. Traffic core | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 3. Lot Composer + growth | **Done** (2026-10-18), pushed to origin 2026-10-18; the contact sheets wait for the owner's review |
 | 4. Budget + bottleneck loop | **Done** (2026-10-18), pushed to origin 2026-10-18. Steps, numbers and the gate below |
 | 5. Event round MVP: the stadium (v4, 2026-10-18) | **Done** (2026-10-18; the gate passed on seed 1), not pushed (the owner is away). Steps, numbers and the gate below |
-| 6. Expansion (new events, overlapping networks) | **Paused** after its step 1 (actuated signals): the owner put the roads first (Phase 6R below) |
-| 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | **In progress** (the owner's direction, 2026-10-18 evening) |
-| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **In progress** (started 2026-10-19 late night): B.1-B.5 done (the player places the stadium; the catalogue and tree; daily visit businesses; tickets, business cards and unlock toasts; the bus and taxi companies). Comes before 6R.5–6R.8 (the owner's order) |
+| 6. Expansion (new events, overlapping networks) | **Closed by v6** (2026-10-21): step 1 (actuated signals) done and kept; the event types and several events are dropped (GOLF-PLAN section 10) |
+| 6R. Roads first (catalogue, one-way, junction editor, roundabouts, snapping, towns as seeds, terrain) | 6R.1–6R.4 done. **v6 (2026-10-21):** 6R.5 (highways) moves into G6, 6R.6 (terrain) into G1/G2, 6R.7 (town seed) into G1; 6R.8 (road set check) stays |
+| B. The businesses (GAME-PLAN 1.0.00; design in [BUSINESSES.md](BUSINESSES.md)) | **Done and superseded by v6** (B.1–B.7 merged 2026-10-21; the businesses become tents: GOLF-PLAN section 6). Was: B.1-B.5 done (the player places the stadium; the catalogue and tree; daily visit businesses; tickets, business cards and unlock toasts; the bus and taxi companies). Comes before 6R.5–6R.8 (the owner's order) |
 | UI. The Maple Falls look (the owner's mockup, [docs/ui/](ui/)) | **Step 1 done** (2026-10-20): icons, top bar, rail, road panel, hint bar. Open: minimap, event card picture. Section below |
 | 7. Road builder pro | Not started (its lane, turn-widening and turn-lane tools move to Phase 5) |
 | 8. Look + eras | Not started. The art track can start any time; the stadium, the Toll Gate, car parks and buses come first |
@@ -25,6 +28,12 @@ _Last updated: 2026-10-20 evening: the art branch claude/sprites-and-people merg
 | Art: TrickOrTreat sprites, baked lots, townspeople ([ART-PIPELINE.md](ART-PIPELINE.md)) | **In progress** (2026-10-20, branch `claude/sprites-and-people`). Section below |
 
 ## Decisions so far
+
+- **The golf events pivot (the owner, 2026-10-21; GOLF-PLAN.md):** the game becomes a golf events manager: one town with an old
+  9-hole course; 12 months a year to upgrade the roads and the course; a yearly tournament as the live stress test, growing from a
+  club championship to a major; the Paint tool builds the course (no whole green or fairway sprites); the businesses become
+  tents for the event. Same loop, everything built is kept. The older decisions below stand where GOLF-PLAN.md does not change
+  them (the theme is now decided: golf).
 
 - **Setting (changed 2026-10-17):** a sleepy **maple-wooded town valley for now**, because all the art is Maple
   Falls maple. The 1980s Las Vegas desert is deferred to a later re-skin (GAME-PLAN section 7, item 4). Terrain
@@ -1809,12 +1818,60 @@ clear block lots too), claude/lot-fixes, claude/studio-decals and the owner's st
   15 worktrees. Keep at most one game tab open; close previews when done. ~12 worktrees are merged and could be removed
   (ask the owner first).
 
+## The golf pivot (v6, 2026-10-21): G0, the plan
+
+The owner pivoted the game to a **golf events manager** and asked for every plan updated, all development reviewed with the
+changes required, the future developments, and a list of golf tournament sprites; planning only, no golf code yet.
+
+Done (G0):
+- [GOLF-PLAN.md](GOLF-PLAN.md): the design (the year loop, the old 9-hole start, the painted course and holes, five tournament
+  tiers, spectators' sources and modes, gates and the venue, tents and structures, money, reputation and the tour, cards, the
+  town growing with the event, roads and the event traffic plan), **the review of every system** (section 10: keep / adapt /
+  replace / drop, with the changes required), the roadmap **G0–G9** (section 11), Arena task candidates, **14 open questions with
+  recommendations** (section 13) and the research sources.
+- [GOLF-SPRITES.md](GOLF-SPRITES.md): the sprite list (course furniture; tournament structures from camera towers to grandstands;
+  people; vehicles; the painted surfaces), sizes, views, priorities P1–P3, the art kept and the art retired.
+- Updated: GAME-PLAN.md (v6 header, decisions, theme, pointers), BUSINESSES.md (superseded by tents), PAINT-TOOL.md (the course
+  builder, plus the owner's shape editing and tone filter requests), PARKING.md (lot tags, field parking, the pay plaza),
+  ART-PIPELINE.md (the RUN texture generation and its limits), agents/README.md (task statuses), CLAUDE.md (one line).
+
+The owner's requests during the planning (all written into GOLF-PLAN 4.5 / PAINT-TOOL.md, phase G2):
+- **Shape editing:** a shape is selected as soon as it is closed, with transform handles: drag corners, insert corners on edges,
+  delete corners, move / rotate / scale the whole shape; the same on Pick.
+- **Tone filters:** Multiply (darker) and Lighten (lighter) per area, with strength and an optional tint.
+
+**Bugs reported 2026-10-21 (fix first, before G1):**
+1. **Mirrored buildings with lettering**: shop signs read backwards (the grocery "ЯƎƆOЯG", "YAUJ"). GAME-PLAN 2.2 says lettering is
+   never mirrored, but the composer flips any building. Fix: a "lettering" tag per sprite (set in the sprite studio's Library,
+   seeded by a pass over the commercial art), and the composer never flips a tagged sprite: it uses the rear view or another
+   building on the far side of a street.
+2. **Buildings not aligned to the road**: a corner shop stands square to neither street (screenshot 2026-10-21). Check the lot
+   frontage choice on corner lots and the facing the composer gives commercial buildings.
+
+**Parked work (resume after the owner's answers; GOLF-PLAN 10.1):**
+- `claude/paint-wip` (cda5446): the corner radius slider (tests pass bar timing; needs typecheck, build, browser check) and the
+  RUN texture script.
+- The texture batch (RUN, 2026-10-21, about 3,000 credits; 92,000 left): **in `output/grass-gen/` of the photo-grass worktree**:
+  putting green, concrete, worn asphalt, road gravel, dirt, field, grass, lush / worn / clover lawn, meadow, wildflowers, and the
+  golf set (fringe, tee, first cut, fescue, bunker sand, waste sand, pine straw, bark mulch, spectator walkway, wood chips).
+  **Asphalt, dark asphalt and gravel were blocked by RUN's safety filter on every wording tried** (two or three times each):
+  try other wording or references, or keep the code-painted asphalt and gravel for now. Next: review the takes with the owner, then
+  the photo pipeline for every Paint texture (lazy builds), G2.
+- Earlier today, on main and live on 5174: Paint has its own rail button; the owner's three photo grasses (Fairway, New sod,
+  Rough) at full resolution, with scale-aware mips (dfe9846).
+- Paranormal nights (T014): another session's uncommitted work in the main checkout (`feature/paranormal-nights`): untouched;
+  the plan recommends parking it (open question 8).
+
+**Next:** the owner answers GOLF-PLAN section 13; fix the two bugs above; then **G1** (golf mode foundation).
+
 ### Start prompt for a fresh chat
-"We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road
-Upgrade/Downgrade ladder with fair costs, houses following a widened road, and the Maple Falls HUD (UI steps 1-2). Next in the owner's
-order is **Phase B** (the businesses; design in docs/BUSINESSES.md): B.1-B.5 done, **B.6 next** (property and tourists), then
-B.7, then 6R.5-6R.8 (highways, terrain, towns as seeds, the road set check). Check `git status` and `git worktree list` first: another
-session may have uncommitted work in the main checkout or a worktree (ask the owner before touching it). Carry on through the queue without asking between steps; still ask before pushing. Delegate
-coding to haiku-coder (in the background for small jobs) and checks to haiku-runner (the worker PC `cworker`, 192.168.0.8, via
-scripts/worker/run.sh); commit locally after each verified step and merge to main when verified; update docs/PROGRESS.md as you go;
-test every road/junction/UI change in the browser on your own dev server port (5174 is the owner's). Tell the owner when work lands."
+"We're building Capital Empire (repo: CapitalEmpire), now a **golf events manager** (the owner's pivot, 2026-10-21). Read CLAUDE.md,
+docs/PROGRESS.md (the section 'The golf pivot' near the end) and docs/GOLF-PLAN.md first; the art list is docs/GOLF-SPRITES.md.
+G0 (the plan) is done. First fix the two bugs listed there (mirrored buildings with lettering; buildings not aligned to the road),
+then start **G1 golf mode foundation** with the owner's answers to GOLF-PLAN section 13 (ask for any still open). Parked work:
+branch `claude/paint-wip` (corner radius + the RUN texture script) and the generated textures in the photo-grass worktree's
+`output/grass-gen/`. Check `git status` and `git worktree list` first: another session may have uncommitted work in the main
+checkout (paranormal nights) or a worktree (ask the owner before touching it). Carry on through the queue without asking between
+steps; still ask before pushing to GitHub. After each verified step merge to local main and rebuild so the owner's 5174 shows it
+(Desktop launcher 'CapitalEmpire Servers'). Delegate coding to haiku-coder and checks to haiku-runner (the worker PC `cworker`,
+192.168.0.8, via scripts/worker/run.sh); update docs/PROGRESS.md as you go; test in the browser on your own port (5174 is the owner's)."

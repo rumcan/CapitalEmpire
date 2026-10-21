@@ -28,6 +28,9 @@ Read `docs/PROGRESS.md` first: it says where the project is, what was decided, a
 
 ## Project facts
 
+- **The game is a golf events manager** (the owner's pivot, 2026-10-21): the design is `docs/GOLF-PLAN.md`, the art list
+  `docs/GOLF-SPRITES.md`. GAME-PLAN.md's systems sections still hold; where they differ, GOLF-PLAN.md wins.
+
 - Vite + React + TypeScript, single-file build. WebGL2 rendering, ground painting in Web Workers on OffscreenCanvas.
 - Map: 2048 x 2048 tiles of 2 m (4 x 4 km). Closest zoom 30% (`ZOOM_MAX`), art at 0.6x native as mip 0.
 - Keep the road builder's instant, pretty roads: edits rebuild incrementally and the ground re-bakes itself. Never

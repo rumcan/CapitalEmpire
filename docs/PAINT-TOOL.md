@@ -114,9 +114,35 @@ turns red, the crossing edges are drawn red, and the reason shows beside the cur
 
 Water, roads and buildings do not block painting (roads draw over it; props stand on it).
 
+## The golf pivot: the Paint tool becomes the course builder (planned 2026-10-21, phase G2)
+
+Design: [GOLF-PLAN.md](GOLF-PLAN.md) sections 4.1–4.5. What changes here:
+- **Its own rail button** (done 2026-10-21; key C unchanged).
+- **Photo textures** (done for Fairway, New sod and Rough, 2026-10-21): seamless photos laid in **ground space**
+  (`GRASS_PHOTO` in `grass-art.ts`, `groundPattern` in `drawPaints`), so mowing stripes follow the map axes and the area's
+  angle. Plain tiles for striped ones (a 12-tile period); hex-mixed in ground space (`Textures.mosaic` at 160 px a tile) for the
+  rest. Full resolution, with the mip chosen by zoom times the area's scale, so scaling up stays sharp. **Next:** every Paint
+  texture as a photo (`PAINT_PHOTO`; the RUN batch in GOLF-SPRITES.md section 6), **built lazily** per worker (only textures in
+  use), because 20+ photo textures in each of three workers would cost hundreds of MB.
+- **Golf surfaces** as texture chips: green, fringe, tee, fairway, first cut, rough, fescue, bunker sand, waste sand, water,
+  cart path, pine straw, mulch, walkways, field parking. **Borders as collars**: a green with a fringe band, a fairway with a
+  first cut, a pond with a bank, a bunker with a grass lip.
+- **Smooth corners:** a per-area corner radius (0–30 m) that turns every corner into an arc (`roundCorners`), saved as an
+  optional 7th tuple element. Built and parked on branch `claude/paint-wip` (commit `cda5446`): resume, typecheck, browser-check.
+- **Shape editing (the owner, 2026-10-21):** a closed shape is **selected at once** with **transform handles**: corner handles
+  to drag (snapping as when drawing), edge-midpoint handles that insert a corner, Delete or right-click to remove a corner (3 is
+  the minimum), and a box with move, rotate and scale handles for the whole shape. Validity is checked live (red with the
+  reason, as when drawing); the area re-bakes while dragging (throttled to a few bakes a second). Pick shows the same handles on
+  any existing area. Undo covers each drag.
+- **Tone filters (the owner, 2026-10-21):** per area, **Multiply** (darker) or **Lighten** (screen: lighter), a strength slider
+  (0–100%) and an optional tint colour, applied after the texture in the area's bake (as the asphalt tones are today). Saved as
+  optional tuple elements (mode, strength, tint).
+- **Costs and grow-in:** painting costs money by surface and m², with seed or sod; seeded areas show a grow-in look until ready
+  (GOLF-PLAN 4.1). Erasing refunds nothing.
+- **Hole objects** belong to the course tools beside Paint: tee markers, pins, hole numbers, aim points (GOLF-PLAN 4.2).
+
 ## Not in this step (open)
 
-- **Cost.** Painting is free for now (decoration). A price per m² by texture is an open question for the owner.
-- Editing an area's corners after placing (pick → drag a corner). Pick + change settings, and erase + redraw, cover it
-  for now.
+- **Cost.** Painting is free for now (decoration). Planned for G2: a price per m² by surface (GOLF-PLAN 4.1, open question 12).
+- Editing an area's corners after placing: planned for G2 (shape editing, above).
 - The bulldozer leaves paint alone (it removes roads and objects); erase is the Paint tool's own.

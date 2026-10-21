@@ -26,6 +26,20 @@ largest scale the game draws it at (the owner's map scale + 5% composer jitter, 
 source, so nothing is stretched. Townspeople are drawn at half their art size (128 px/m art, 64 px/m game).
 GPU cost: 15 pages = about 336 MB with mips at dpr 2 (GAME-PLAN 2.3 budgets 96 MB: the owner has not decided yet).
 
+## Generated textures and the golf art (2026-10-21)
+- **Photo ground textures** come from the RUN.world CLI (`rundot`, signed in; the TrickOrTreat game's id) through
+  `scripts/assets/gen-grass-photos.mjs` (branch `claude/paint-wip`): the owner's three grass photos (`art/grass-photo/`) as
+  references, one subject per texture, output in the git-ignored `output/grass-gen/`. Each generation is removed from RUN's
+  library once downloaded (the 1 GB cap). `scripts/assets/prep-photo-grass.mjs` packs a chosen take into `src/assets/ground/`
+  at full resolution.
+- **Limits learned:** the model on the owner's plan (`gemini-3.1-flash-image-preview`, 120 credits) makes 1024 x 1024 images;
+  the 2K/4K model is not on the plan. So a texture stands for a small patch (2–8 m) and is hex-mixed over large areas. The
+  safety filter gives false positives on some wording ("a photograph shot straight down", "asphalt road surface", "crushed
+  stone"): reword and retry.
+- **The golf sprites** to make are listed in [GOLF-SPRITES.md](GOLF-SPRITES.md) (camera, facings, sizes, priorities). They go
+  through TrickOrTreat's sheet runner like every other sprite, then `prep-sprites.mjs`. The whole-hole golf sprites are retired
+  in golf mode (the holes are painted).
+
 ## Baked house lots (`lot-layout.mjs`, `lot-variants.mjs`, `lot-render.mjs`)
 A residential lot is ONE sprite: the house, yard, plants and ground decals rendered with the builder's own drawing rules
 (`lot-render.mjs`: screen = ((X - Y) * 32, (X + Y) * 16) px per metre, sprites by their library anchor, flats then shadows

@@ -1,6 +1,15 @@
-# Capital Empire: game plan (v4, event rounds)
+# Capital Empire: game plan (v6, the golf events manager)
 
-The game is played in **rounds**. An event (a sports stadium first) drops onto the map, and you have ten minutes to
+> **v6, the owner's pivot (2026-10-21): the game is a golf events manager.** One town with an old 9-hole course; each year
+> the player has 12 months to upgrade the roads and the course (painted with the Paint tool) and to plan the tournament's tents
+> and stands; then tournament week is the live stress test; the event grows from a club championship to a major with tens of
+> thousands a day. Same loop (build → live stress test → draft and expand), everything built so far kept, much more golf. **The
+> design is [GOLF-PLAN.md](GOLF-PLAN.md)** (loop, course, tournament, tents, money, progression, the review of all development,
+> phases G0–G9, open questions); the art list is [GOLF-SPRITES.md](GOLF-SPRITES.md). Where this file and GOLF-PLAN.md differ,
+> GOLF-PLAN.md wins. The sections below stay as the record and for the systems (road builder, sim, efficiency, lots) that carry
+> over unchanged.
+
+The v4 text (2026-10-18) follows. The game is played in **rounds**. An event (a sports stadium first) drops onto the map, and you have ten minutes to
 connect the surrounding towns to it: every car should pass your **Toll Gate** (your income, with the event payout), park in a sprawling
 lot, and ride your **shuttle bus** to the doors. Then the surge starts and you watch it live, spending the toll money
 as it comes in to fix the bottlenecks before kick-off. After the event you cash in, upgrade, level up and draft a new
@@ -12,6 +21,10 @@ sim, the towns and the tools it runs on. Section 1.0.6 lists where the earlier p
 Decisions made so far:
 | Topic | Decision |
 | --- | --- |
+| **Game (v6, 2026-10-21)** | **A golf events manager**: one town, an old 9-hole course, a yearly tournament growing through five tiers to a major. GOLF-PLAN.md |
+| **Year loop (v6)** | 12-month off-season (roads, course, tents and stands) → tournament days (arrival wave, play, exit wave) → results (money, reputation, the tour's verdict) → draft. One tournament = one year from 1985 |
+| **Course (v6)** | Painted with the Paint tool (greens, fairways, tees, bunkers, water); tee markers and pins are the only placed hole objects; holes, par and length are derived. No whole-hole sprites |
+| **Businesses (v6)** | Become **tents and event structures** (food, drinks, merchandise, hospitality, grandstands, TV towers...) with the Event tool; the bus and taxi companies stay as operators |
 | Setting | **For now: a sleepy maple-wooded town valley** (2026-10-17), because all the current art is Maple Falls maple. The 1980s Las Vegas desert valley described in this plan is **deferred**: it comes back as a re-skin once the desert art exists (see section 7). Eras advance over in-game time (80s, 90s, 2000s, today) as new art arrives. |
 | Map | 4 × 4 km = **2048 × 2048 tiles** (2 m tiles), up from 160. **Several autonomous towns on it**; the events drop in different places (2026-10-18, section 1.0.1). |
 | Core loop | **Event rounds** (v4, 2026-10-18): an event drops onto the map; a 10-minute build (roads, a Toll Gate, a parking lot, a shuttle bus route); a live stress test as the crowd surges in; then draft and expand (upgrades, level-up cards, the next event elsewhere). Income is the toll plus the event payout. Section 1.0. Replaces the v3 "tourism booms" idea of the same day. |
@@ -22,7 +35,10 @@ Decisions made so far:
 
 ---
 
-## 0. Theme (deferred to the end)
+## 0. Theme
+
+**Decided 2026-10-21 (v6): golf events.** You run the Maple Falls Open: the town's roads, its golf course and the traffic to the
+tournament each year (GOLF-PLAN.md). The text below is the earlier record.
 
 The theme (who you are and why you build the roads) is **open and comes last** (decided 2026-10-18): the game loop
 is designed first, and the theme is written afterwards to fit the final gameplay. The earlier alien-parasite story is
@@ -36,6 +52,10 @@ A logistics layer between the towns stays a later idea (section 7, item 14).
 ## 1. The game
 
 ### 1.0 The core loop: event rounds (v4, 2026-10-18)
+
+> **Replaced by v6 (2026-10-21):** the yearly golf tournament, GOLF-PLAN.md section 2 (the mapping from this loop is its
+> table). The machinery below (the round state machine, the surge, car parks, shuttles, walkers, the evaluation, the draft) is
+> reused by it. The stadium, the event types and the business tree (1.0.00) are superseded.
 
 The game is played in **rounds** of three stages. This replaces the single-town boomtown loop and the "tourism booms"
 idea of plan v3 (written the same day and dropped). Everything below this section (the road builder, the traffic
@@ -467,6 +487,10 @@ houses with porches (except as an older-town variant).
 As TrickOrTreat's `AGENTS.md` requires, we only **read** from its `output/town-builder/` and copy into this repo
 through prep scripts.
 
+**v6 (2026-10-21):** the art to make now is the golf list, [GOLF-SPRITES.md](GOLF-SPRITES.md) (course furniture, the
+tournament's structures from camera towers to grandstands, golfers and spectators, carts and coaches, the painted surfaces).
+The desert list below is deferred with the desert re-skin.
+
 ### 4.1 New art for the 1980s MVP (made with the TrickOrTreat pipeline)
 | Group | Items (front + rear view for buildings) |
 | --- | --- |
@@ -482,6 +506,12 @@ The art production is a **parallel track**. Placeholder art (recoloured existing
 ---
 
 ## 5. Phases
+
+**v6 (2026-10-21): the golf phases G0–G9 are in GOLF-PLAN.md section 11** (G1 golf mode foundation, G2 the course builder,
+G3 tournament days, G4 tents and structures, G5 progression and balance, G6 regional access and crowd scale, G7 golf art,
+G8 weather and practice days, G9 eras and extras). Phases 0–5 below are done; Phase 6's event types are dropped; the remaining
+road steps fold in (6R.5 into G6, 6R.6 into G1/G2, 6R.7 into G1, 6R.8 stays); Phase 7 (road builder pro) and Phase 8 (look and
+eras) continue, with Phase 8's event art replaced by the golf art (G7).
 
 Every phase ends with something playable and a measurable gate.
 
@@ -515,6 +545,11 @@ The art track runs alongside from Phase 1: terrain kit, then houses, then commer
 - **The balance of growth, traffic and money.** The headless sim (Phase 0) lets balance be tested with numbers.
 
 ## 7. Still open (they can wait until the phase that needs them)
+
+**v6 (2026-10-21):** the golf pivot's open questions (the off-season's time model, live tournament days, the toll gate, land
+shaping, green fees, the old businesses, legacy saves, paranormal nights, names, crowd sizes, tents rent or buy, painting
+costs, course lengths, GPU memory) are in GOLF-PLAN.md section 13. Below: items 5 (theme) and 7–13 are settled or superseded by
+v6; 0, 1, 2 and 14 still stand.
 0. **Growth options** (section 1.5): the exact set, how strongly each shifts allocation, and whether they unlock
    with population (Phase 3).
 1. Era pacing: how many real minutes per in-game year, and whether eras unlock by time or by population. **Moved to Phase 8
