@@ -1964,6 +1964,9 @@ recommended defaults until the owner answers):**
 ## Handover, 2026-10-21 (the owner moves to a new chat on another account)
 
 ### Where everything is
+- **Two agents from 2026-10-21:** the lead (golf G1-G6, engine, UI, lots) and a second agent (golf art G7, photo textures, the
+  sprite studio, the art pipeline). The split, the file ownership and the landing lock (`mkdir .claude/merge-lock` before merging
+  into main-merge, `rmdir` after the build) are in [SECOND-AGENT.md](SECOND-AGENT.md): the lead follows the same lock.
 - **main** = `.claude/worktrees/main-merge` (that worktree holds the `main` branch; the main checkout itself is on
   `feature/paranormal-nights` with **another session's uncommitted paranormal work: do not touch it**). Nothing is pushed to GitHub.
 - **The owner's test server: 5174** (`vite preview` of main-merge's `dist/`; Desktop folder "CapitalEmpire Servers": `1 Game - latest main
