@@ -11,6 +11,8 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import sharp from 'sharp';
+// no file cache: sharp keeps the atlas pages it read open, and on Windows the Rebuild then cannot delete them (EPERM)
+sharp.cache(false);
 import { ROOT, TOT } from '../source.mjs';
 import { readRemoved, writeRemoved } from '../removed.mjs';
 import { readLotEdits, readScales, readWalkerFixes, writeLotEdits, writeScales, writeWalkerFixes } from '../overrides.mjs';

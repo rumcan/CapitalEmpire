@@ -63,6 +63,15 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
 5. **Commits** end with the Co-Authored-By line from CLAUDE.md. Never push without the owner's yes.
 
 ## Your tasks, in order
+0. **Town districts first (the owner has asked twice; 6R.7, PROGRESS "The owner's requests"):** every town has a **clear commercial
+   district** and a **clear industrial district**: only shops (and venues) in the one, only works in the other, the rest
+   residential with a few shops scattered. Today nothing assigns districts (no code mentions one): a lot's use comes from the
+   town's growth alone (`src/game/lots/town.ts`), so shops and works are spread through every town. Suggested: the commercial
+   district is the blocks along the main avenue nearest the town centre (the main street), the industrial district a group of
+   blocks at the town's edge toward the highway or the river (gravel yards, away from the houses); seeded per town so it stays
+   put as the town grows; the planner's district colours or a label could show them. Keep the growth numbers and the gates
+   (`town:gate`, `sim:gate`, `biz:gate`) passing. Browser-check on a new valley: the owner must see a shop street and a works
+   quarter at a glance.
 1. **G1, golf mode foundation** (GOLF-PLAN section 11; PROGRESS.md "The queue" item 4 and "Starting the agents again" item 6): one
    town (the 6R.7 seed rules), the old nine from `src/game/golf/coursegen.ts` painted as Paint areas on an owned parcel outside town
    with farms around it, the 12-month year (`calendar.ts`), the round as off-season → tournament day → results → draft, the HUD

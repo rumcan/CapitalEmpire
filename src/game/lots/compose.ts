@@ -76,7 +76,13 @@ const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
  *  sprite with east-facing art (EAST_FACING) stays (it is drawn as that art, unflipped). Unflipped keeps the whole pool. */
 const plain = (list: string[], flip: boolean | undefined) => (flip ? list.filter(id => EAST_FACING[id] !== undefined || !hasLettering(id, BY.get(id)?.name)) : list);
 /** the sprite a front is drawn as, and its flip: a flipped front with east-facing art is that art, drawn unflipped; otherwise itself, as flipped */
-const faced = (id: string, flip: boolean): [string, boolean] => { const e = flip ? EAST_FACING[id] : undefined; return e ? [e, false] : [id, flip]; };
+/** rear views drawn the other way round (the back wall with its deck or porch faces +X, the house's front -X): unlike the other rear views
+ *  (back toward +Y, front -Y) they are drawn flipped on a lot whose street is north of it and unflipped when it is west, so a house always
+ *  faces its street (the owner, 2026-10-21: no house facing north on a north-south street). Sorted by eye from the studio's pictures. */
+const REAR_X = new Set(['variation:world-house_4-north-630f880a-plain:1', 'variation:ref-building-farmhouse-north-408a9ca6-plain:1', 'variation:ref-building-house-large-north-24d21776-plain:1',
+  'variation:gen-house-l-shape-north-79eba705-plain:1', 'expansion:dormer-rear', 'variation:expansion-dormer-rear-55d3cd77-plain:1', 'expansion:victorian-rear',
+  'variation:expansion-ranch-rear-bde86a42-plain-corner:1']);
+const faced = (id: string, flip: boolean): [string, boolean] => { if (REAR_X.has(id)) return [id, !flip]; const e = flip ? EAST_FACING[id] : undefined; return e ? [e, false] : [id, flip]; };
 
 /** ids with their plain variations in the library ('town:bakery' -> 'variation:town-bakery-<hash>-plain:1'), the ones the game has */
 const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => !FRONTAL.has(k) && base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
@@ -89,7 +95,7 @@ const HOUSE_FRONT = cat(i => i.cat === 'Houses' && isoBuilding(i) && !REAR_VIEW.
 const HOUSE_REAR = withVariations(['expansion:ranch-rear', 'expansion:cottage-rear', 'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear']).concat(cat(i => i.cat === 'Houses' && isoBuilding(i) && REAR_VIEW.test(i.id)));
 const HOUSE_RUNDOWN = withVariations(['expansion:rundown-house']);
 const GARAGE_FRONT = withVariations(['static:garage_timber', 'static:garage_brick', 'static:garage_brick-v2']);
-const GARAGE_REAR = withVariations(['expansion:garage-rear']);
+const GARAGE_REAR = withVariations(['expansion:garage-rear']).filter(id => id !== 'variation:expansion-garage-rear-91bcbe45:1');
 const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id));
 const BUSHES = cat(i => i.kind === 'bush');
 /** every front-facing shop the game has, with its variations (the street fronts deal from it, see com) */
@@ -788,7 +794,7 @@ function ind(B: Build, st: ComposeState) {
 
 /** a construction site: dirt, cement bags, rubble, a cable spool and a pickup; no building */
 /** a building site's pieces, each with its recolours (withVariations) */
-const SITE_KIT = { cement: withVariations(['expansion:cement-bags']), rubble: withVariations(['expansion:concrete-rubble']), spool: withVariations(['expansion:cable-spool']), forklift: withVariations(['expansion:forklift']), lumber: withVariations(['expansion:lumber-bundle']), pallet: withVariations(['expansion:pallet-stack']) };
+const SITE_KIT = { cement: withVariations(['expansion:cement-bags']), rubble: withVariations(['expansion:concrete-rubble']), spool: withVariations(['expansion:cable-spool']), forklift: withVariations(['expansion:forklift']), lumber: withVariations(['expansion:lumber-bundle']), pallet: withVariations(['expansion:pallet-stack']), digger: withVariations(['expansion:junkyard-crane']) };
 function site(B: Build) {
   const { W, D, r, flip } = B;
   B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
@@ -798,6 +804,9 @@ function site(B: Build) {
   B.put(pick(r, SITE_KIT.rubble), W - 1.6, 2.2);
   B.put(pick(r, SITE_KIT.spool), W - 1.4, D - 2.2);
   if (r() < 0.4) B.put(pick(r, SITE_KIT.forklift), W / 2 + 1.5, D / 2, { flip });
+  // the digger (the scrapyard crane art, tracked with an arm) mid-site, and a second rubble heap by it
+  if (r() < 0.7) B.put(pick(r, SITE_KIT.digger), W / 2 - 1.2, D / 2 + 1.5, { flip });
+  B.put(pick(r, SITE_KIT.rubble), W / 2 - 2.6, D / 2 - 0.4);
   B.vehicle(PICKUPS, W / 2, 0.8);
   B.mark('mud', W / 2, 2.4, 1.2); B.mark('expansion:mud-footprints', W / 2, D / 2); B.mark('expansion:mud-arc', W * 0.7, D - 2.2); B.marksIn('gravel', 1, 1, W - 1, D - 1, 2);
   B.put(pick(r, SITE_KIT.lumber), 1.6, D - 1.6);
