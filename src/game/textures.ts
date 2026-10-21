@@ -332,12 +332,17 @@ export class Textures {
   }
   /** the period in tiles of a ground texture in tile space (MOSAIC_TILES unless it is a plain photo with its own) */
   periodOf(variant: string) { return this.periods.get(variant) ?? MOSAIC_TILES; }
-  /** a photo's source canvas and its period in tiles when a Paint area at scale L (cache level times area scale) needs more px a tile
-   *  than the mosaic's top mip has (the mosaic is 128 px a tile at L = 1); null keeps the mosaic (far zooms, and the plain photos) */
+  /** the photos' own mip chains (the source halved down to 96 px), made on first use from photoSrc */
+  private photoMips = new Map<string, Cnv[]>();
+  /** a Paint area's photo at scale L (cache level times area scale): the smallest mip of the photo itself with the px a tile L asks for, and
+   *  its period in tiles. The Paint areas always draw this, never the hex-mixed mosaic: the mosaic is 128 px a tile (the photo has ~500)
+   *  and its feathered patches blend, so a Paint area at scale 1 or below looked soft and smeared (the owner, 2026-10-21). null: no photo */
   sourceFor(variant: string, L: number): { img: Cnv; period: number } | null {
-    const img = this.photoSrc.get(variant), chain = this.mosaics.get(variant);
-    if (!img || !chain || 128 * L <= chain[0].width / this.periodOf(variant)) return null;
-    return { img, period: photoSrcPeriod(variant) };
+    const src = this.photoSrc.get(variant); if (!src) return null;
+    let chain = this.photoMips.get(variant); if (!chain) this.photoMips.set(variant, chain = this.mipChain(src));
+    const period = photoSrcPeriod(variant), want = 128 * L; let img = chain[0];
+    for (const m of chain) { if (m.width / period >= want) img = m; else break; }
+    return { img, period };
   }
   /** true when a tile-space texture is built in this worker (the eager ones always are; a lazy photo once ensure has run) */
   has(variant: string) { return this.mosaics.has(variant); }

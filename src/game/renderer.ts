@@ -526,8 +526,8 @@ export class GroundPainter {
         if (isPhotoTex(t)) {
           // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
           if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
-          // a large Paint scale (2 or more) shows the photo itself: sharp where the mosaic's top mip would be too coarse
-          const src = st.s >= 2 ? this.tex.sourceFor(t, L * st.s) : null;
+          // the photo itself at the mip this zoom and scale ask for (sharp at every scale); the mosaic only when the source is missing
+          const src = this.tex.sourceFor(t, L * st.s);
           put(src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t))); return;
         }
         put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
