@@ -1,0 +1,848 @@
+{
+  "schemaVersion": 1,
+  "provider": "built-in image_gen",
+  "count": 45,
+  "styleReference": "User-attached TrickOrTreat autumn town screenshot, carried through the first stadium and golf buildings as style references.",
+  "projection": "Orthographic isometric; intended ground axes 2:1. Visual assets, not geometry-calibrated renders.",
+  "alpha": "RGBA; trimmed from alpha > 8; 4px transparent padding. No opaque background.",
+  "integration": "Art delivery only. No game code, library, map, save, or renderer changed. Anchors and scale require integration.",
+  "stadium": "One complete sprite, native source canvas 1536x1024. No artificial upscaling. Field markings are illustrative generated art.",
+  "businessCoverage": {
+    "stadium": [
+      "stadium"
+    ],
+    "sportsbar": [
+      "sportsbar"
+    ],
+    "buscompany": [
+      "buscompany",
+      "bus-sw",
+      "bus-se"
+    ],
+    "diner": [
+      "diner"
+    ],
+    "taxi": [
+      "taxi",
+      "taxi-sw",
+      "taxi-se"
+    ],
+    "golf": [
+      "golf-clubhouse",
+      "golf-pro-shop",
+      "golf-cart-garage",
+      "golf-halfway-pavilion",
+      "golf-green-kidney-flagged",
+      "golf-fairway-curved",
+      "golf-bunker-organic",
+      "golf-tee-box",
+      "golf-cart-sw",
+      "golf-cart-se",
+      "golf-pin-red-equipment",
+      "golf-bag-trolley",
+      "golf-green-unflagged",
+      "golf-fairway-dogleg",
+      "golf-pond",
+      "golf-bunker-crescent",
+      "golf-footbridge",
+      "golf-bench-course-map",
+      "golf-patio-table",
+      "golf-mower",
+      "golf-pin-red",
+      "golf-pin-yellow",
+      "golf-driving-range",
+      "golf-practice-net"
+    ],
+    "estate": [
+      "estate-villa"
+    ],
+    "fishing": [
+      "fishing-lodge",
+      "fishing-cabin",
+      "fishing-boathouse",
+      "fishing-dock-rope",
+      "fishing-dock-lifebuoy",
+      "fishing-bass-boat",
+      "fishing-rental-kiosk"
+    ],
+    "tackle": [
+      "tackle"
+    ],
+    "casino": [
+      "casino"
+    ],
+    "hotel": [
+      "hotel"
+    ],
+    "motel": [
+      "motel"
+    ]
+  },
+  "items": [
+    {
+      "id": "stadium",
+      "file": "png/stadium.png",
+      "width": 1533,
+      "height": 1019,
+      "sourceSheet": "sliced/builtin/stadium.png",
+      "sourceCrop": [
+        6,
+        6,
+        1525,
+        1011
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-clubhouse",
+      "file": "png/golf-clubhouse.png",
+      "width": 773,
+      "height": 635,
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        30,
+        49,
+        765,
+        627
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-pro-shop",
+      "file": "png/golf-pro-shop.png",
+      "width": 447,
+      "height": 393,
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        802,
+        232,
+        439,
+        385
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-cart-garage",
+      "file": "png/golf-cart-garage.png",
+      "width": 670,
+      "height": 443,
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        23,
+        768,
+        662,
+        435
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-halfway-pavilion",
+      "file": "png/golf-halfway-pavilion.png",
+      "width": 547,
+      "height": 465,
+      "sourceSheet": "sliced/builtin/golf-buildings.png",
+      "sourceCrop": [
+        695,
+        725,
+        539,
+        457
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-green-kidney-flagged",
+      "file": "png/golf-green-kidney-flagged.png",
+      "width": 599,
+      "height": 392,
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        23,
+        160,
+        591,
+        384
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-fairway-curved",
+      "file": "png/golf-fairway-curved.png",
+      "width": 582,
+      "height": 538,
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        657,
+        77,
+        574,
+        530
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-bunker-organic",
+      "file": "png/golf-bunker-organic.png",
+      "width": 564,
+      "height": 445,
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        52,
+        737,
+        556,
+        437
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-tee-box",
+      "file": "png/golf-tee-box.png",
+      "width": 581,
+      "height": 343,
+      "sourceSheet": "sliced/builtin/golf-terrain.png",
+      "sourceCrop": [
+        657,
+        807,
+        573,
+        335
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-cart-sw",
+      "file": "png/golf-cart-sw.png",
+      "width": 543,
+      "height": 548,
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        42,
+        89,
+        535,
+        540
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-cart-se",
+      "file": "png/golf-cart-se.png",
+      "width": 530,
+      "height": 533,
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        694,
+        115,
+        522,
+        525
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-pin-red-equipment",
+      "file": "png/golf-pin-red-equipment.png",
+      "width": 211,
+      "height": 429,
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        257,
+        718,
+        203,
+        421
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-bag-trolley",
+      "file": "png/golf-bag-trolley.png",
+      "width": 362,
+      "height": 480,
+      "sourceSheet": "sliced/builtin/golf-equipment.png",
+      "sourceCrop": [
+        772,
+        691,
+        354,
+        472
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "sportsbar",
+      "file": "png/sportsbar.png",
+      "width": 663,
+      "height": 589,
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        20,
+        88,
+        655,
+        581
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "diner",
+      "file": "png/diner.png",
+      "width": 602,
+      "height": 472,
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        652,
+        172,
+        594,
+        464
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "buscompany",
+      "file": "png/buscompany.png",
+      "width": 701,
+      "height": 481,
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        8,
+        709,
+        693,
+        473
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "taxi",
+      "file": "png/taxi.png",
+      "width": 543,
+      "height": 426,
+      "sourceSheet": "sliced/builtin/business-core.png",
+      "sourceCrop": [
+        710,
+        769,
+        535,
+        418
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "casino",
+      "file": "png/casino.png",
+      "width": 701,
+      "height": 611,
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        29,
+        78,
+        693,
+        603
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "hotel",
+      "file": "png/hotel.png",
+      "width": 505,
+      "height": 656,
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        746,
+        68,
+        497,
+        648
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "motel",
+      "file": "png/motel.png",
+      "width": 592,
+      "height": 382,
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        41,
+        780,
+        584,
+        374
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "estate-villa",
+      "file": "png/estate-villa.png",
+      "width": 611,
+      "height": 472,
+      "sourceSheet": "sliced/builtin/business-tourism.png",
+      "sourceCrop": [
+        643,
+        750,
+        603,
+        464
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "fishing-lodge",
+      "file": "png/fishing-lodge.png",
+      "width": 678,
+      "height": 549,
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        17,
+        112,
+        670,
+        541
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "tackle",
+      "file": "png/tackle.png",
+      "width": 542,
+      "height": 493,
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        703,
+        196,
+        534,
+        485
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "fishing-cabin",
+      "file": "png/fishing-cabin.png",
+      "width": 599,
+      "height": 482,
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        17,
+        702,
+        591,
+        474
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "fishing-boathouse",
+      "file": "png/fishing-boathouse.png",
+      "width": 602,
+      "height": 484,
+      "sourceSheet": "sliced/builtin/fishing-buildings.png",
+      "sourceCrop": [
+        642,
+        711,
+        594,
+        476
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "fishing-dock-rope",
+      "file": "png/fishing-dock-rope.png",
+      "width": 542,
+      "height": 442,
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        48,
+        113,
+        534,
+        434
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "fishing-dock-lifebuoy",
+      "file": "png/fishing-dock-lifebuoy.png",
+      "width": 530,
+      "height": 448,
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        681,
+        143,
+        522,
+        440
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "fishing-bass-boat",
+      "file": "png/fishing-bass-boat.png",
+      "width": 606,
+      "height": 419,
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        39,
+        723,
+        598,
+        411
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "fishing-rental-kiosk",
+      "file": "png/fishing-rental-kiosk.png",
+      "width": 550,
+      "height": 547,
+      "sourceSheet": "sliced/builtin/fishing-props.png",
+      "sourceCrop": [
+        676,
+        661,
+        542,
+        539
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-green-unflagged",
+      "file": "png/golf-green-unflagged.png",
+      "width": 615,
+      "height": 400,
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        32,
+        160,
+        607,
+        392
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-fairway-dogleg",
+      "file": "png/golf-fairway-dogleg.png",
+      "width": 585,
+      "height": 584,
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        655,
+        59,
+        577,
+        576
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-pond",
+      "file": "png/golf-pond.png",
+      "width": 598,
+      "height": 488,
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        42,
+        713,
+        590,
+        480
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-bunker-crescent",
+      "file": "png/golf-bunker-crescent.png",
+      "width": 585,
+      "height": 478,
+      "sourceSheet": "sliced/builtin/golf-terrain-variants.png",
+      "sourceCrop": [
+        659,
+        720,
+        577,
+        470
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-footbridge",
+      "file": "png/golf-footbridge.png",
+      "width": 542,
+      "height": 441,
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        59,
+        115,
+        534,
+        433
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-bench-course-map",
+      "file": "png/golf-bench-course-map.png",
+      "width": 562,
+      "height": 494,
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        669,
+        100,
+        554,
+        486
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-patio-table",
+      "file": "png/golf-patio-table.png",
+      "width": 507,
+      "height": 536,
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        64,
+        641,
+        499,
+        528
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-mower",
+      "file": "png/golf-mower.png",
+      "width": 581,
+      "height": 469,
+      "sourceSheet": "sliced/builtin/golf-furniture.png",
+      "sourceCrop": [
+        634,
+        710,
+        573,
+        461
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-pin-red",
+      "file": "png/golf-pin-red.png",
+      "width": 206,
+      "height": 476,
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        287,
+        76,
+        198,
+        468
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-pin-yellow",
+      "file": "png/golf-pin-yellow.png",
+      "width": 206,
+      "height": 476,
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        886,
+        77,
+        198,
+        468
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-driving-range",
+      "file": "png/golf-driving-range.png",
+      "width": 682,
+      "height": 522,
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        27,
+        649,
+        674,
+        514
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "golf-practice-net",
+      "file": "png/golf-practice-net.png",
+      "width": 508,
+      "height": 462,
+      "sourceSheet": "sliced/builtin/golf-practice.png",
+      "sourceCrop": [
+        740,
+        682,
+        500,
+        454
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "bus-sw",
+      "file": "png/bus-sw.png",
+      "width": 603,
+      "height": 474,
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        24,
+        137,
+        595,
+        466
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "bus-se",
+      "file": "png/bus-se.png",
+      "width": 601,
+      "height": 497,
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        643,
+        137,
+        593,
+        489
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "taxi-sw",
+      "file": "png/taxi-sw.png",
+      "width": 599,
+      "height": 332,
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        28,
+        823,
+        591,
+        324
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    },
+    {
+      "id": "taxi-se",
+      "file": "png/taxi-se.png",
+      "width": 591,
+      "height": 343,
+      "sourceSheet": "sliced/builtin/transport-vehicles.png",
+      "sourceCrop": [
+        644,
+        814,
+        583,
+        335
+      ],
+      "padding": 4,
+      "anchor": null,
+      "scale": null,
+      "note": "Native generated resolution. Integrator must set world scale and ground anchor; sizes between cells are not world-scale ratios."
+    }
+  ]
+}

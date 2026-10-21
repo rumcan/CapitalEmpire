@@ -10,6 +10,8 @@ painted with the Paint tool (textures, section 6). Sprites are the objects that 
 - **Facings:** unflipped art faces +Y, flipped art faces +X. **Buildings and stands need a front view and a rear view**, so they
   can face a hole or a road from any side. **Anything with lettering** (scoreboards, signs, banners, the tournament logo) needs
   its own art per side, because lettering is never mirrored.
+- **No lettering in the generated art (the owner, 2026-10-21):** signs are pictograms, banners and boards are blank; lettering
+  may be added by hand later, not now. So every golf sprite can be mirrored to face either way.
 - **Readability at 30% zoom:** anything under about 0.5 m becomes a ground decal or is drawn slightly over-size (tee markers,
   ball washers, rakes: marked "decal or 1.5x" below).
 - **No baked ground:** sprites come on transparent backgrounds with no grass under them. Shadows are soft and short, as on the
@@ -108,6 +110,21 @@ candidates to drop from the atlas for GPU memory: the Halloween sets (monsters, 
 | **Shuttle stop shelter and queue barriers** | 8 x 3 | front, rear | at the gates and park-and-ride lots | P1 |
 | Park-and-ride sign, coach terminal shelters | 2–20 | front, rear | - | P2 |
 | Ride-share pick-up / drop-off sign and kerb paint | 2 | 2 | kerb paint is a decal | P2 |
+
+### The owner's additions (2026-10-21 night)
+All P1, no lettering (pictograms or blank boards):
+| Sprite | Notes |
+| --- | --- |
+| **Large plain white tents** (marquees, no branding) | 3 sizes (10 x 10, 15 x 10, 20 x 12 m); front and rear; the generic event tent |
+| **TV cameras** | camera on a tripod with operator, camera platform, the camera tower (section 4, raised to P1) |
+| **Course odds and ends** | gardening tools (rakes, shovels, wheelbarrow, hose reel, leaf blower), ball cleaners (ball washers), tee markers for the tee boxes (blue, white, red, gold) |
+| **First-tee sign** | a blank board on posts (lettering later, by hand) |
+| **Pro shop buildings** | 2-3 more variants beside `business:golf-pro-shop` |
+| **Tables with umbrellas** | patio tables, café sets, picnic tables with parasols |
+| **Golf estate gates** | a gatehouse and stone pillars with wrought-iron gates, sized for each road class that can enter the estate (lane, street, avenue) |
+| **More grass, bushes, flower beds** | ornamental grass clumps, shrubs, flower beds and planters for tees and the clubhouse |
+| **Flag poles** | single and in rows (plain coloured flags) |
+| **Golf cart bridges** | both axes (X and Y facings; flipping gives the other two), wood and stone |
 
 ## 5. People and vehicles (movers)
 | Sprite | Frames | Variants | Notes | P |

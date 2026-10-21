@@ -20,6 +20,7 @@ import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
+import { BASE_GRASSES, baseGrassId, setBaseGrass } from './game/dev-grass';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
 import { Minimap } from './ui/Minimap';
@@ -189,7 +190,17 @@ export default function App() {
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
-                  <div className="glass absolute right-0 top-full z-30 mt-2 flex w-44 flex-col gap-1 p-2">
+                  <div className="glass absolute right-0 top-full z-30 mt-2 flex w-64 flex-col gap-1 p-2">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Recurring dark nights bring kids, monsters and traffic diversions every few game days">
+                      <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
+                      Natural &amp; paranormal disasters
+                    </label>
+                    <label className="flex items-center gap-2 px-2 py-1 text-xs" title="Developer setting: the map's base grass (reloads the game)">
+                      Dev: base grass
+                      <select className="ml-auto min-w-0 flex-1 rounded bg-black/40 px-1 py-0.5" value={baseGrassId()} onChange={e => setBaseGrass(e.target.value)}>
+                        {BASE_GRASSES.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      </select>
+                    </label>
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>
@@ -1213,7 +1224,7 @@ function hintFor(g: Game) {
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
-    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : 'PAINT: click an area to erase it';
+    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return g.parking.mode === 'rows' ? 'ROWS: drag along the ground to lay bays · Tab flips the side · Shift snaps 15° · click a row to remove it' : g.parking.mode === 'curb' ? 'ON-STREET: hover a road and click the kerb to park along it · click again to remove' : 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';

@@ -1,0 +1,32 @@
+{
+  "purpose": "Guide deliberate, visible variation in future Capital Empire art assets. Preserve each asset family's identity and game art style.",
+  "treeVariants": [
+    {
+      "id": "open",
+      "direction": "Airy crown with exposed branch channels; small separated leaf or needle clusters."
+    },
+    {
+      "id": "patchy",
+      "direction": "Asymmetric coverage; some limbs leafy and others bare; unevenly distributed clusters."
+    },
+    {
+      "id": "near-bare",
+      "direction": "Mostly exposed branch and twig network with only scattered living foliage. Preserve actual transparent gaps."
+    },
+    {
+      "id": "moderate",
+      "direction": "Fuller than the other variants but still broken into clusters with visible gaps; retain original dense v1 as the lush end of the range."
+    }
+  ],
+  "futureAssetRules": [
+    "Define the meaningful difference for every slot before generation; do not ask only for 'four variations'.",
+    "For trees vary foliage coverage, cluster size and distribution, branch architecture, canopy silhouette, maturity, and restrained within-species color accents.",
+    "Keep species, season, projection, lighting direction and painted texture consistent within each family.",
+    "Use natural asymmetry; avoid mirrored duplicates or merely scaling one design.",
+    "Judge variation at actual map scale: each variant must read differently when reduced to a small sprite.",
+    "Require true transparent spaces between exposed branches; reject opaque grey/brown canopy backdrops, detached noise, clipped crowns, cropped roots and overlapping subjects.",
+    "Generate no more than four subjects per sheet, with generous outer and center margins; inspect and slice each actual silhouette rather than assuming equal cells.",
+    "Preserve full alpha and record native dimensions, source crop and proposed trunk-base anchor. Set world scale during integration."
+  ],
+  "targetsAreArtDirection": "Coverage percentages in prompts are approximate direction, not measured output properties."
+}

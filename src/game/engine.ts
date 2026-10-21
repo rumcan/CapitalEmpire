@@ -1,4 +1,4 @@
-import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY } from './iso';
+import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
@@ -10,6 +10,8 @@ import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { lotBatch, type LotPatch } from './ground-protocol';
 import { PaintTool } from './paint-tool';
+import type { PresetProp } from './golf/holepreset';
+import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple } from './paint';
 import { ParkingTool } from './parking-tool';
 import { gateSpots } from './parking-props';
@@ -53,6 +55,7 @@ import type { GolfSave, GolfView } from './golf/mode';
 import { planGolfGame } from './golf/start';
 import { monthsLeft, seasonLabel, yearOf } from './golf/calendar';
 import { tierInfo } from './golf/tour';
+import { ParanormalRenderer } from './ext/paranormal-render';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -142,15 +145,15 @@ export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 /** a natural disaster's area colour and name (see Game.drawDisasters, disasterText) */
-const DISASTER_COL: Record<DisasterKind, string> = { flood: '#3b82f6', storm: '#9ca3af', landslide: '#92400e', wildfire: '#f97316', quake: '#a855f7' };
-const DISASTER_NAME: Record<DisasterKind, string> = { flood: 'Flood', storm: 'Storm', landslide: 'Landslide', wildfire: 'Wildfire', quake: 'Earthquake' };
+const DISASTER_COL: Record<DisasterKind, string> = { flood: '#3b82f6', storm: '#9ca3af', landslide: '#92400e', wildfire: '#f97316', quake: '#a855f7', paranormal: '#b08aff' };
+const DISASTER_NAME: Record<DisasterKind, string> = { flood: 'Flood', storm: 'Storm', landslide: 'Landslide', wildfire: 'Wildfire', quake: 'Earthquake', paranormal: 'Paranormal night' };
 /** the toast for a disaster's note (see City.disasterFrame): the warning, the start, the end, and the repairs */
 function disasterText(n: DisasterNote): string {
   const name = DISASTER_NAME[n.kind], money = `$${n.cost.toLocaleString()}`, roads = `${n.n} road${n.n === 1 ? '' : 's'}`;
   switch (n.k) {
-    case 'warned': return n.kind === 'flood' ? `Flood warning: roads near the river may close in ${Math.round(n.secs)} s` : `${name} warning: roads in the area may close in ${Math.round(n.secs)} s`;
-    case 'started': return n.kind === 'quake' ? `Earthquake: ${roads} closed (bridges, tunnels); click a red X to pay for its repair` : n.kind === 'flood' ? `Flood: the low roads by the river are closed (${roads})` : `${name}: ${roads} closed`;
-    case 'ended': return `${name} over: the roads are open again`;
+    case 'warned': return n.kind === 'paranormal' ? `Nightfall in ${Math.round(n.secs)} s: kids are preparing for a monster outbreak; expect traffic diversions` : n.kind === 'flood' ? `Flood warning: roads near the river may close in ${Math.round(n.secs)} s` : `${name} warning: roads in the area may close in ${Math.round(n.secs)} s`;
+    case 'started': return n.kind === 'paranormal' ? `Paranormal night: kids are fighting monsters; ${roads} closed and traffic is being diverted` : n.kind === 'quake' ? `Earthquake: ${roads} closed (bridges, tunnels); click a red X to pay for its repair` : n.kind === 'flood' ? `Flood: the low roads by the river are closed (${roads})` : `${name}: ${roads} closed`;
+    case 'ended': return n.kind === 'paranormal' ? 'Dawn: the monsters have vanished and traffic routes are open again' : `${name} over: the roads are open again`;
     case 'repaired': return `Repaired for ${money}`;
     case 'unpaid': return `Repair needs ${money}: not enough money`;
   }
@@ -273,7 +276,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o) });
+  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed) });
   /** the Paint tool's projection into css px (its handles' hit tests): tile (x, y) is at (o[0] + x*o[2] + y*o[4], o[1] + x*o[3] + y*o[5]) */
   private paintAffine(o: number[]) { const s = this.screen(0, 0), ex = this.screen(1, 0), ey = this.screen(0, 1), d = this.dpr; o[0] = s.x / d; o[1] = s.y / d; o[2] = (ex.x - s.x) / d; o[3] = (ex.y - s.y) / d; o[4] = (ey.x - s.x) / d; o[5] = (ey.y - s.y) / d; }
   /** the Paint tool's snap distance: 10 css px in tiles */
@@ -335,6 +338,14 @@ export class Game {
   private lotBox: BBox = [0, 0, 0, 0]; private lotHits = new Set<Prop>(); private blocksAt = -Infinity; private lotBlocksTimer = 0;
   private raf = 0; private last = 0;
   private mask: OffscreenCanvas | null = null;
+  private paranormalRenderer = new ParanormalRenderer();
+  /** Natural hazards and recurring monster nights; the settings preference survives reloads. */
+  disastersEnabled = true;
+  setDisasters(on: boolean) {
+    this.disastersEnabled = on; this.traffic.disastersOn(on);
+    try { localStorage.setItem('capitalempire.disasters', String(on)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
 
   constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement) {
     this.gl = new GLRenderer(canvas);
@@ -342,6 +353,7 @@ export class Game {
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl);
     this.traffic = new SimClient();
+    try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
@@ -383,6 +395,7 @@ export class Game {
 
   async init(opts: { bench?: number } = {}) {
     const tick = (p: number) => { this.loadProgress = p; this.emit(); };
+    if (opts.bench) this.disastersEnabled = false;
     if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; this.sandboxUnlock = false; }
     this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney); // before the terrain: the city worker reads its options from the first messages
     this.resize();
@@ -493,6 +506,22 @@ export class Game {
       if (f.x0 < p.x1 - 0.05 && f.x1 > p.x0 + 0.05 && f.y0 < p.y1 - 0.05 && f.y1 > p.y0 + 0.05) return 'Overlaps ' + pit.name;
     }
     return '';
+  }
+  /** places a golf hole's props (golf/holepreset.ts): a flag, trees, bushes and flowers from the library, picked and turned and sized by a seeded rnd; a prop that cannot be placed is skipped. Returns how many were placed */
+  placePresetProps(ps: PresetProp[], seed: number): number {
+    const trees = LIBRARY.flatMap((it, i) => it.kind === 'tree' && !/dead/.test(it.id) ? [i] : []), bushes = LIBRARY.flatMap((it, i) => it.kind === 'bush' ? [i] : []);
+    const flowers = ['town:hydrangea', 'town:fern', 'town:ornamental_grass'].flatMap(id => LIB_INDEX.get(id) ?? []);
+    const flag = LIB_INDEX.get('golf:flagstick') ?? LIB_INDEX.get('business:golf-pin-red');
+    const rnd = mulberry(seed * 7919); let n = 0;
+    for (const q of ps) {
+      const pool = q.kind === 'tree' ? trees : q.kind === 'bush' ? bushes : q.kind === 'flower' ? flowers : flag === undefined ? [] : [flag];
+      if (!pool.length) continue;
+      const i = pool[Math.floor(rnd() * pool.length)]!, flip = q.kind === 'flag' ? false : rnd() < 0.5;
+      const scale = (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (q.kind === 'flag' ? 1 : 0.9 + 0.2 * rnd());
+      if (this.canPlace(LIBRARY[i]!, q.x, q.y, flip, scale)) continue;
+      this.addProp(i, q.x, q.y, flip, scale); n++;
+    }
+    this.scheduleSave(); return n;
   }
   addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string): Prop {
     const f = this.footprint(LIBRARY[item], x, y, flip, scale);
@@ -1448,7 +1477,7 @@ export class Game {
       case 'bus': this.busUpdate(mx, my); this.busClick(); break;
       case 'lane': case 'downgrade': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
-      case 'paint': this.paint.pointerDown(this.tileAt(mx, my), mx, my); break;
+      case 'paint': this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); break;
       case 'park': {
         // the bay rows drag and the on-street click are the Parking tool's (docs/PARKING.md); the rectangle is the car park drag below
         if (this.parking.mode !== 'rect') { if (this.parking.mode === 'rows') this.parking.down(this.tileAt(mx, my)); else this.parking.click(); break; }
@@ -1625,6 +1654,7 @@ export class Game {
   private sendTerrain() {
     const t = this.terrain, h = t.highway;
     this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height);
+    this.traffic.disastersOn(this.disastersEnabled);
   }
   /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
   private townGrow(legs: Leg[]) {
@@ -2912,6 +2942,8 @@ export class Game {
       const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
+    if (this.traffic) this.paranormalRenderer.draw(ctx, this.canvas, this.traffic.disasters, this.traffic.simTime(now), now,
+      (x, y) => this.screen(x, y), HW * ze, this.dpr, this.props, LIBRARY);
   }
 
   /** the map's three town names at the district and planner tiers: white with a dark outline, centred on each town site (screen px) */

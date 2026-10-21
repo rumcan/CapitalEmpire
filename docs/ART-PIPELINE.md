@@ -17,8 +17,8 @@ to it, least of all its `output/town-builder/` (the owner's painted town and bui
 
 Full rebuild, from the checkout: `export TOT_REPO="C:/Work Admin/PERSONAL/Repos/TrickOrTreat"` (not needed from the main
 checkout), then `node scripts/assets/prep-sprites.mjs && node scripts/assets/prep-scales.mjs && node scripts/assets/audit-sprites.mjs`.
-The sprite studio's **Rebuild** button runs all of these. While prep-sprites runs, `src/assets/atlas/` is empty: the game and
-`npm test` cannot build until it finishes.
+The sprite studio's **Rebuild** button runs all of these. prep-sprites builds the pages in `output/atlas-next/` and publishes them to `src/assets/atlas/` at the end (since
+2026-10-21), so a failed rebuild keeps the old atlas; `src/game/library.ts` is rewritten last.
 
 ### Resolution
 The game's closest zoom is 30% on a dpr-2 screen, so mip 0 is 0.6 px per native px. Each sprite is packed at 0.6 x the
@@ -36,7 +36,14 @@ GPU cost: 15 pages = about 336 MB with mips at dpr 2 (GAME-PLAN 2.3 budgets 96 M
   the 2K/4K model is not on the plan. So a texture stands for a small patch (2–8 m) and is hex-mixed over large areas. The
   safety filter gives false positives on some wording ("a photograph shot straight down", "asphalt road surface", "crushed
   stone"): reword and retry.
-- **The golf sprites** to make are listed in [GOLF-SPRITES.md](GOLF-SPRITES.md) (camera, facings, sizes, priorities). They go
+- **The golf sprites (A1, 2026-10-21):** `node scripts/assets/gen-golf.mjs [--takes 2] [id ...]` generates each item in
+  `art/golf/items.json` (prompt, footprint `hx`/`hy`, the house style from two business sprites as references) one per image on **flat
+  magenta**, keyed locally by `key-magenta.mjs` (TrickOrTreat's keyMagenta, ported: edges un-mixed from the background). Do not use RUN's
+  `--remove-background` for these: on a white background it left a white halo on about 60% of the edge pixels (and white tents and
+  frames are part of the art). Takes in the git-ignored `output/golf-gen/`; copy the chosen one to `art/golf/<id>.png`, then
+  `node scripts/assets/prep-golf.mjs` packs `src/assets/golf/` + `src/game/golf-library.ts` (`appendGolf`, ids `golf:<id>`, cat
+  'Golf tournament'; native width 64 x (hx + hy)). **RUN has a daily image cap** (hit after about 10 images on 2026-10-21).
+- The golf sprites to make are listed in [GOLF-SPRITES.md](GOLF-SPRITES.md) (camera, facings, sizes, priorities). They go
   through TrickOrTreat's sheet runner like every other sprite, then `prep-sprites.mjs`. The whole-hole golf sprites are retired
   in golf mode (the holes are painted).
 

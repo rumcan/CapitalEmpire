@@ -1,10 +1,34 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
-import { BORDER_TEXES, BORDER_W, DEFAULT_STYLE, MAX_PTS, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { BORDER_TEXES, BORDER_W, BRUSH_LAYER, BRUSH_PRESETS, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
+import { MAP } from './iso';
+import { holePreset, placeHole, type HolePreset, type PresetProp } from './golf/holepreset';
 
-export type PaintMode = 'draw' | 'pick' | 'erase';
-/** what the tool needs from the engine: the lot ground, redraws, saves, toasts, and the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])) */
-export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void }
+export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush';
+/** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
+type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> };
+/** the localStorage key of the edited brush presets */
+const BRUSH_KEY = 'capitalempire.brushPresets';
+/** the brush radius range in tiles */
+const BR_MIN = 0.5, BR_MAX = 20;
+/** the brush presets: BRUSH_PRESETS, each replaced by its saved edit (a missing or bad save keeps the defaults; no storage keeps them too) */
+function loadBrush(): Record<BrushKind, BrushSet> {
+  const out = {} as Record<BrushKind, BrushSet>;
+  for (const p of BRUSH_PRESETS) out[p.kind] = { r: p.r, style: { ...p.style } };
+  try {
+    const saved = JSON.parse(localStorage.getItem(BRUSH_KEY) ?? 'null') as Partial<Record<BrushKind, { r?: number; style?: Partial<BrushSet['style']> }>> | null;
+    if (saved && typeof saved === 'object') for (const p of BRUSH_PRESETS) {
+      const s = saved[p.kind]; if (!s || typeof s !== 'object') continue;
+      out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }) };
+    }
+  } catch { /* no storage or a bad save: the defaults */ }
+  return out;
+}
+/** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
+export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number }
+/** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
+const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
 export interface PaintView { ctx: CanvasRenderingContext2D; setIso(ctx: CanvasRenderingContext2D): void; screen(x: number, y: number): { x: number; y: number }; dpr: number; hint(mx: number, my: number, text: string, bad: boolean): void }
 /** a handle of the selected area: a corner (i), the "+" of edge i (edge i runs from corner i to i+1), a box corner (i: 0 low x low y, 1 high x low y, 2 high x high y, 3 low x high y: a scale), the rotate handle, or the inside (move) */
@@ -65,12 +89,26 @@ export class PaintTool {
   private A: number[] = [0, 0, 0, 0, 0, 0];
   /** each area's rounded outline, kept until its radius or corners change (the overlay draws the picked and hovered areas every frame) */
   private rounded = new WeakMap<PaintArea, { r: number; src: number[]; out: number[] }>();
+  /** hole mode: the quarter turns of the next hole (r turns it), and its seed (each placed hole takes the next one) */
+  holeDir: 0 | 1 | 2 | 3 = 0;
+  holeSeed = 1;
+  /** the preset for holeSeed (recomputed only when the seed changes) */
+  private holeC: { seed: number; p: HolePreset } | null = null;
+  /** the ghost of the hole at the cursor: placed areas, their rounded outlines; kept until the cell, turn or seed changes */
+  private ghost: { x: number; y: number; dir: number; seed: number; p: HolePreset; outs: number[][] } | null = null;
+  /** brush mode: the kind painted, the hole it is painted for, Rub out (strokes erase), and each kind's brush (radius, style: the presets, edited and remembered) */
+  brushKind: BrushKind = 'fairway';
+  brushHole = 1;
+  rubOut = false;
+  brush: Record<BrushKind, BrushSet> = loadBrush();
+  /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
+  private stroke: { m: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[] } | null = null;
   private host: PaintHost;
 
   constructor(host: PaintHost) { this.host = host; }
 
-  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on) */
-  static patch(a: PaintArea): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: a.tex, paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: a.id, ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}) } }; }
+  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
+  static patch(a: PaintArea): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: a.tex, paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id, ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {
@@ -88,7 +126,7 @@ export class PaintTool {
   /** removes every area from the ground and resets the drawing and selection (the style and mode stay) */
   clear() {
     for (const a of this.areas) this.host.setLotGround('paint:' + a.id, null);
-    this.areas = []; this.pts = []; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null; this.nextId = 1; this.lasso = false; this.down = null;
+    this.areas = []; this.pts = []; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null; this.nextId = 1; this.lasso = false; this.down = null; this.stroke = null;
   }
 
   /** the areas as save tuples */
@@ -104,11 +142,28 @@ export class PaintTool {
       const a = this.areas.find(q => q.id === this.selected);
       if (a) { Object.assign(a, this.style); this.send(a); this.host.save(); }
     }
+    if (this.mode === 'brush') {
+      // the brush preset takes the change, and the areas of this hole and kind re-style at once
+      const k = this.brushKind;
+      this.brush[k] = { r: this.brush[k].r, style: { ...this.style } }; this.saveBrush();
+      let changed = false;
+      for (const a of this.areas) if (a.hole === this.brushHole && a.kind === k) { Object.assign(a, this.brush[k].style); this.send(a); changed = true; }
+      if (changed) this.host.save();
+    }
     this.host.emit();
   }
 
-  /** drops the outline being drawn (its corners, the lasso and the press); a handle drag in progress ends (its shape is kept, or reverted when it cannot be placed) */
-  cancel() { if (this.drag) this.dragEnd(); this.pts = []; this.lasso = false; this.down = null; }
+  /** brush mode: sets a kind's radius (tiles, 0.5 to 20) and remembers it */
+  setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)), style: this.brush[k].style }; this.saveBrush(); this.host.emit(); }
+
+  /** writes the brush presets to localStorage (a storage that is missing or full is skipped) */
+  private saveBrush() { try { localStorage.setItem(BRUSH_KEY, JSON.stringify(this.brush)); } catch { /* storage may be unavailable */ } }
+
+  /** the golf brush: paints the kind (its preset's style, the panel shows it) for the brush hole; the outline and the selection are dropped */
+  setBrush(kind: BrushKind) { this.mode = 'brush'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
+
+  /** drops the outline being drawn (its corners, the lasso and the press) and a stroke in progress (not applied); a handle drag in progress ends (its shape is kept, or reverted when it cannot be placed) */
+  cancel() { if (this.drag) this.dragEnd(); this.pts = []; this.lasso = false; this.down = null; this.stroke = null; }
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
@@ -127,9 +182,11 @@ export class PaintTool {
   private selectedArea(): PaintArea | undefined { return this.selected ? this.areas.find(q => q.id === this.selected) : undefined; }
 
   /** a press on tile t (css px mx, my): a handle of the selected area starts a drag; else draw waits for the release (a click or a lasso) and deselects; pick selects the area under it; erase removes it */
-  pointerDown(t: { x: number; y: number }, mx: number, my: number) {
+  pointerDown(t: { x: number; y: number }, mx: number, my: number, alt = false) {
     const sel = this.selectedArea();
     if (sel) { const g = this.grabAt(sel, t, mx, my); if (g) { this.startDrag(sel, g, t); this.host.emit(); return; } }
+    if (this.mode === 'hole') { this.placeHoleAt(t); return; }
+    if (this.mode === 'brush') { this.strokeStart(t, alt); return; }
     if (this.mode === 'draw') {
       if (this.selected) { this.selected = 0; this.hoverH = null; this.host.emit(); }
       this.down = { mx, my }; this.cursor = t; return;
@@ -156,6 +213,7 @@ export class PaintTool {
   pointerMove(t: { x: number; y: number } | null, mx: number, my: number, shift = false) {
     this.cursor = t; this.mouse = { mx, my };
     if (this.drag) { this.dragTo(t, shift); return; }
+    if (this.mode === 'brush') { const s = this.stroke; if (s && t) { brushStroke(s.m, s.last.x, s.last.y, t.x, t.y, s.r, s.erase); s.last.x = t.x; s.last.y = t.y; s.dabs.push(t.x, t.y); } return; }
     const sel = this.selectedArea();
     this.setHover(sel && t ? this.grabAt(sel, t, mx, my) : null);
     if (this.mode !== 'draw') { this.hover = t ? (areaAt(this.areas, t.x, t.y)?.id ?? 0) : 0; return; }
@@ -170,6 +228,7 @@ export class PaintTool {
   /** the release: a handle drag ends; in draw, a lasso is simplified and closed, and a press without a drag is a click that adds a corner (tol: the close distance in tiles) */
   pointerUp(tol: number) {
     if (this.drag) { this.dragEnd(); return; }
+    if (this.mode === 'brush') { this.strokeEnd(); return; }
     if (this.mode !== 'draw') return;
     if (this.lasso) {
       let p = simplify(this.pts); const n = p.length;
@@ -208,15 +267,93 @@ export class PaintTool {
     this.host.save(); this.host.emit();
   }
 
+  /** the preset for the current seed, in the local frame (cached until the seed changes) */
+  private hole(): HolePreset { if (this.holeC?.seed !== this.holeSeed) this.holeC = { seed: this.holeSeed, p: holePreset(this.holeSeed) }; return this.holeC.p; }
+
+  /** lays the hole with its tee at tile t (rounded), turned by holeDir: its areas are added and sent in order, its props go to the host; a hole with a corner off 1..MAP-1 is refused */
+  private placeHoleAt(t: { x: number; y: number }) {
+    const p = placeHole(this.hole(), Math.round(t.x), Math.round(t.y), this.holeDir);
+    for (const a of p.areas) for (const v of a.pts) if (!(v >= 1 && v <= MAP - 1)) { this.host.toast('The hole does not fit here', 'warn'); return; }
+    for (const a of p.areas) { const b: PaintArea = { id: this.nextId++, ...a }; this.areas.push(b); this.send(b); }
+    this.host.save();
+    const n = this.host.placeProps(p.props, this.holeSeed);
+    this.host.toast(`Golf hole placed: ${p.areas.length} painted areas, ${n} props`);
+    this.holeSeed++; this.selected = 0; this.hoverH = null; this.host.emit();
+  }
+
+  /** brush mode: a press starts a stroke (Alt or Rub out erases): the mask holds this hole's cells of the kind (their outlines filled), and one dab lays at the press */
+  private strokeStart(t: { x: number; y: number }, alt: boolean) {
+    const k = this.brushKind, h = this.brushHole, r = this.brush[k].r, m: Mask = new Set(), erase = this.rubOut || alt;
+    for (const a of this.areas) if (a.hole === h && a.kind === k) fillPoly(m, this.outlineOf(a));
+    dab(m, t.x, t.y, r, erase);
+    this.stroke = { m, r, erase, last: { x: t.x, y: t.y }, dabs: [t.x, t.y] };
+    this.host.emit();
+  }
+
+  /** brush mode: a release ends the stroke: this hole's areas of the kind are replaced by one area per outline of the mask (in the preset's style; a stroke that erased everything leaves none); an outline wider than MAX_SIDE is skipped, with one toast */
+  private strokeEnd() {
+    const s = this.stroke; if (!s) return;
+    this.stroke = null;
+    const k = this.brushKind, h = this.brushHole, style = this.brush[k].style;
+    for (let i = this.areas.length - 1; i >= 0; i--) { const a = this.areas[i]!; if (a.hole === h && a.kind === k) { this.areas.splice(i, 1); this.host.setLotGround('paint:' + a.id, null); } }
+    let big = false;
+    for (const o of traceMask(s.m)) {
+      const b = polyBox(o);
+      if (b[2] - b[0] > MAX_SIDE || b[3] - b[1] > MAX_SIDE) { big = true; continue; }
+      const a: PaintArea = { id: this.nextId++, pts: o, ...style, hole: h, kind: k };
+      this.areas.push(a); this.send(a);
+    }
+    if (big) this.host.toast('Part of the stroke is too big for one area: paint it in two parts', 'warn');
+    this.host.save(); this.host.emit();
+  }
+
+  /** brush mode: the brush's circle under the cursor (white, red when rubbing out), and during a stroke every dab's circle filled translucent in the kind's colour (red when erasing) */
+  private drawBrush(v: PaintView) {
+    const ctx = v.ctx, d = v.dpr, c = this.cursor, s = this.stroke, r = this.brush[this.brushKind].r, erase = s ? s.erase : this.rubOut;
+    if (s && s.dabs.length) {
+      v.setIso(ctx); ctx.beginPath();
+      for (let i = 0; i < s.dabs.length; i += 2) { const x = s.dabs[i]!, y = s.dabs[i + 1]!; ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2); }
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = erase ? 'rgba(240,80,60,0.35)' : rgba(TEX_COL.get(this.brush[this.brushKind].style.tex) ?? '#888888', 0.35); ctx.fill();
+    }
+    if (!c) return;
+    v.setIso(ctx); ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.strokeStyle = erase ? '#f87171' : '#ffffff'; ctx.lineWidth = 1.5 * d; ctx.stroke();
+  }
+
+  /** the ghost of the hole at the cursor (hole mode): every area's outline dashed white, the green, fairway, water and sand filled, and a dot at the flag; no props */
+  private drawHolePreview(v: PaintView) {
+    const c = this.cursor; if (!c) return;
+    const ctx = v.ctx, d = v.dpr, x = Math.round(c.x), y = Math.round(c.y);
+    let g = this.ghost;
+    if (!g || g.x !== x || g.y !== y || g.dir !== this.holeDir || g.seed !== this.holeSeed) {
+      const p = placeHole(this.hole(), x, y, this.holeDir);
+      this.ghost = g = { x, y, dir: this.holeDir, seed: this.holeSeed, p, outs: p.areas.map(a => roundCorners(a.pts, a.radius)) };
+    }
+    for (let i = 0; i < g.outs.length; i++) {
+      const P = g.outs[i]!, f = GHOST_FILL[g.p.areas[i]!.tex];
+      v.setIso(ctx); ctx.beginPath(); trace(ctx, P, true); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (f) { ctx.fillStyle = f; ctx.fill(); }
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.5 * d; ctx.setLineDash([6 * d, 4 * d]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    for (const q of g.p.props) {
+      if (q.kind !== 'flag') continue;
+      const s = v.screen(q.x, q.y);
+      ctx.beginPath(); ctx.arc(s.x, s.y, 3 * d, 0, Math.PI * 2); ctx.fillStyle = '#ffd866'; ctx.fill();
+    }
+  }
+
   /** a double click closes the outline being drawn (draw, 3 or more corners) */
   doubleClick() { if (this.mode === 'draw' && this.pts.length >= 6) this.finish(false); }
 
-  /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc cancels or deselects, Delete removes the hovered corner of the selected area, else the selected area) */
+  /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc cancels or deselects (hole mode: back to Draw), R turns the hole (hole mode), [ and ] size the brush (brush mode), Delete removes the hovered corner of the selected area, else the selected area) */
   key(e: KeyboardEvent): boolean {
     switch (e.key) {
       case 'Enter': if (!this.pts.length) return false; this.finish(false); break;
       case 'Backspace': if (this.mode !== 'draw' || !this.pts.length) return false; this.pts.length -= 2; break;
-      case 'Escape': if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else return false; break;
+      case 'Escape': if (this.mode === 'hole' || this.mode === 'brush') { this.setMode('draw'); return true; } if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else return false; break;
+      case 'r': case 'R': if (this.mode !== 'hole') return false; this.holeDir = ((this.holeDir + 1) % 4) as 0 | 1 | 2 | 3; break;
+      case '[': case ']': if (this.mode !== 'brush') return false; this.setBrushR(this.brush[this.brushKind].r + (e.key === ']' ? 1 : -1)); break;
       case 'Delete': {
         if (!this.selected) return false;
         const a = this.selectedArea(), g = this.hoverH;
@@ -240,6 +377,8 @@ export class PaintTool {
   /** the overlay preview: the outline being drawn (draw); the selected area, shaded, with its handles (draw and pick); a drag's candidate that cannot be applied, in red; the hovered area (pick and erase) */
   drawPreview(v: PaintView) {
     if (this.mode === 'draw') this.drawOutline(v);
+    if (this.mode === 'hole') { this.drawHolePreview(v); return; }
+    if (this.mode === 'brush') { this.drawBrush(v); return; }
     const a = this.selectedArea();
     if (a) { this.shade(v, a, '', '#fbbf24', 2); this.drawHandles(v, this.drag ? this.drag.cand : a.pts); }
     if (this.drag?.bad) this.drawBad(v, this.drag.cand, this.drag.bad);

@@ -2057,3 +2057,79 @@ recommendations are the defaults); the art list is docs/GOLF-SPRITES.md. main li
 parallel in their own worktrees as the handover describes, review and merge their work, and after each verified step merge to main and
 rebuild so my 5174 server shows it. Carry on through the queue without asking between steps; ask before pushing to GitHub. The worker
 PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks locally, at most two or three at a time (RAM)."
+
+## The art chat, 2026-10-21 night (main, built to 5174)
+- **Houses facing their street: browser-checked** (a staged 2 x 2 block, port 5191): the rear views (decks, porches, sheds,
+  swingsets) face their own yard and the front faces the street on both street directions (`REAR_X` houses on streets to the -X
+  side, plain rear views on the -Y side); the facing data agrees for all 23 houses of the block.
+- **"Merge everything" (the owner):** the main checkout's uncommitted work was T014 Paranormal nights (an earlier session's,
+  2026-10-20; `agents/tasks/T014-paranormal-nights.md`), now committed on `feature/paranormal-nights` (the checkout is clean) and
+  merged into main: recurring paranormal nights (roads closed, kids against monsters, lighting), a disasters toggle in Settings
+  (**on by default now**), the capital-v1 business masters (main's `prep-business-art.mjs` already packed them, so `capital-art.mjs`
+  no longer packs them a second time), generated trees v2 and grass materials in the atlas, two new base grasses. The grass-v1 PNG
+  masters are committed; their pixel-identical lossless webps (96 MB) are git-ignored. prep-sprites now builds in
+  `output/atlas-next/` and publishes at the end.
+- The owner's studio curation committed; the atlas re-packed (938 sprites, 16 pages, 0 stretched); compose digests re-pinned (the
+  curation moved four, the new trees in the lot tree pool three more).
+- **A1, the golf art pilot:** grandstand S, main leaderboard (blank), food tent, toilet block; generated on magenta and keyed locally
+  (ART-PIPELINE.md "The golf sprites"); packed by `prep-golf.mjs` on their own page (`appendGolf`). RUN's daily image cap ran out:
+  the toilet block is a white-background take with its edges cleaned; regenerate it on magenta after the cap resets.
+- Checks: npm test 670/672 (the ext-terrain2 timing flake, passes alone; a stale bundle of mine, removed); typecheck clean; 5174
+  loads with no console errors. The worker refused SSH again.
+- Next (art): the owner's review of the four pilot sprites (sizes in the studio: Smaller/Bigger), then the rest of the P1 list in
+  GOLF-SPRITES.md sections 3–5 in batches within RUN's daily cap; A2–A4.
+- **Buildings square to neither street (the owner's screenshot on 5174, a three-dormer house):** straight-on art the hand-picked
+  `lots/frontal.ts` list had missed. Measured every house and building sprite's edges (straight-on art: mostly horizontal edges;
+  isometric: mostly +-27 degrees); the score matches the list, and 8 more went into it (the dormer house, a cottage, an L-ranch, two
+  garages, the gas shop, the snack bar, the drive-in marquee). Checked on 5 staged 3 x 3 blocks: 337 buildings, none straight on.
+  For new art: rerun that measure (a short numpy script over the atlas; anything scoring above about 1.1 is straight on) before it
+  reaches the lot pools.
+- The owner's studio sizes for the golf pilot (food tent x0.68, grandstand x1.08, leaderboard x1.17) are in the scale table;
+  `prep-golf.mjs` packs at the owner's size when bigger, so nothing is stretched.
+- **Golf hole preset (the owner's request):** Paint → **Golf hole**: one click lays a simple hole with its tee at the click (R turns it,
+  a ghost follows the cursor): rough, a striped fairway with a 2 m First cut band, a tee box, a green with a Fringe band, three bunkers
+  with Rough edges, a small pond with a dirt bank, the flag (`business:golf-pin-red` until `golf:flagstick` is made) and about 150
+  trees, bushes and flowers around it. Every piece is an ordinary painted area (Pick to edit, Erase to remove); the plants are props.
+  `src/game/golf/holepreset.ts` (pure, tested), the 'hole' mode in `paint-tool.ts`, `placePresetProps` in engine.ts. Browser-checked
+  on an empty map (8 areas, 157 props). Holes placed this way are not yet holes to `holes.ts` (no tee or pin markers): that comes
+  with the brush below.
+- **Next (the owner, 2026-10-21 night):** an easy **round isometric brush** for fairways, greens and cart paths, with presets the owner
+  can edit: click the Fairway preset button and paint at once, the strokes belonging to a hole. Design and build next (art chat;
+  the coder told in SECOND-AGENT.md). The owner's new art list is in GOLF-SPRITES.md "The owner's additions".
+- **Golf brush (the owner's request), on main:** Paint → **Golf brush** row: Fairway, Green, Tee, Rough, Bunker, Water, Cart path. One
+  click and you paint with a round brush (an iso ellipse; size slider, [ and ]); every stroke belongs to the chosen hole (1-18); strokes of
+  one kind on a hole join into one area (one border, no seams: `src/game/brush.ts` masks the strokes at half-tile cells and traces them
+  back to outlines); Rub out or Alt-drag erases (a fairway cut in two keeps both halves' borders). Draw order by kind (rough, water,
+  fairway, tee, bunker, green, cart path) above hand-drawn areas. Each preset's texture, border and size are editable and remembered
+  (localStorage). Paint areas carry optional `hole` / `kind` tags (save tuple elements 10, 11; plain areas unchanged). Browser-checked
+  on 5194. holes.ts does not read the tags yet (the coder's G2).
+- **Studio Rebuild fixed:** prep-sprites read `art/golf/items.json` (the golf prompts) as a local sprite set; it now takes only entries
+  marked `local`.
+
+
+## The coder track on the second PC, and Argon (2026-10-21 evening)
+
+- **Where:** the second agent (code) runs on the owner's second PC (RTMS-PierroS, 12 GB RAM): main is the plain checkout `C:\CapitalEmpire`,
+  coder worktrees `.claude/worktrees/agent2-*` (node_modules junction to the main checkout's). The art agent works on the dev PC; the two
+  sync only through GitHub. **The owner's standing go: push main after each verified step** (fetch and merge origin/main first).
+- **G1 so far (pushed):** `golf/place.ts` (the course beside the town: course, clubhouse venue 40 x 24, car park, gravel drive continuing
+  the main avenue; the town's one asphalt avenue and gravel branches), `golf/paintcourse.ts` (the old nine as Paint areas, cut into 200-tile
+  cells), the worker (`clubhouse` business placed by the game, its site the crowd's doors; `City.setGolf`; the tournament starts itself at
+  the day's end on the existing surge, tier 1 about 390 spectators at reputation 30), the golf HUD (App.tsx), and the season calendar
+  (one game day = one season, September to August; the tournament at the day's end: GOLF-PLAN question 1 on its recommended default).
+- **G1 engine wiring: GitHub branch `agent2/g1-engine` (35fadd5), tests and typecheck pass, NOT browser-checked or merged.** A new game is a
+  golf game (`golf/start.ts` planGolfGame, up to 8 terrain seeds; courses may roll over hills: ~20 of 30 valleys fit); SaveV5.golf (no
+  version bump; a save without it loads as classic); golfView, skipToTournament; the Business tool off in golf mode.
+- **Town districts** (the owner asked twice): a coder worked in the local worktree `agent2-g1-districts` (lots/districts.ts, useFor in
+  town.ts: the main asphalt street near the centre all shops, a 2 x 2 block works quarter toward the highway, IND nowhere else, COM x0.35
+  elsewhere). Check whether it landed; if not, redo it.
+- **Argon (Gemini "4 Argon", Task mode)** is the second engineer, reviewer and writer of Codex task packages (`docs/ARGON-HANDOFF.md`).
+  Chat: https://gemini.google.com/app/3efbd031d9eb187d (the built-in browser, the owner's Google account). Drive folder "Capital Empire -
+  Argon", id `11pAG2rlxViL4bby-cUapecWmP43gv7hC` (anyone with the link: viewer; download `https://drive.usercontent.google.com/download?id=<id>&export=download&confirm=t`;
+  upload .ts files with a .txt suffix). His usage limit reset at 18:13 on 2026-10-21. First job sent 18:15: a review of the G1 code
+  (review-G1-argon.md) and the first Codex package, T-G2c-course-costs.md. Never run his unpack command: unpack bundles with a
+  path-checked script and review before installing.
+
+## Handover, 2026-10-21 night (the art chat; the owner moves to a new PC)
+**Read [HANDOVER-ART.md](HANDOVER-ART.md) first:** where the art chat stopped, the unmerged branch `claude/brush-round`, and the next steps
+in order (brush-round, the studio Ground tab for the base grass, plant brushes, Course builder C1, hole presets in the game, golf art).

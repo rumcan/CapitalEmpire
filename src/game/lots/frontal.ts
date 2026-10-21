@@ -58,4 +58,13 @@ export const FRONTAL = new Set<string>([
   'variation:world-house_5-north-bffd2c68-plain:1',
   'variation:world-video-bf85dfb9-plain:1',
   'variation:world-video_rental-cc8c504f-plain:1',
+  // found 2026-10-21 by measuring each sprite's edges (straight-on art: mostly horizontal edges; isometric: mostly +-27 degrees)
+  'variation:ref-building-garage-0f7895a1-plain:1',
+  'variation:ref-building-house-dormer-b4413f08-plain:1',
+  'variation:ref-building-house-garage-a1d986d3-plain:1',
+  'variation:ref-building-house-cottage-fc52ce66-plain:1',
+  'variation:gen-house-l-ranch-18552ce5-plain:1',
+  'variation:ref-building-gas-shop-3326e70f-plain:1',
+  'variation:world-snack_bar-04875b6f-plain:1',
+  'world:drivein_marquee',
 ]);

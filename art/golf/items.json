@@ -1,0 +1,173 @@
+{
+  "style": "Isometric game sprite for a cosy, painterly small-town builder game, in exactly the drawing style, camera angle, scale of detail and warm lighting of the reference images: a 2:1 isometric view from above, the object's lower-left and lower-right sides visible, as on the references. Detailed painterly rendering like the references: soft shading, textured materials (wood grain, fabric folds, metal sheen), warm late-afternoon autumn light from the upper right and glowing warm lamps; not a flat cartoon, no thick outlines. The whole object fits in the frame with a small margin. Only the object itself: no ground, no grass, no terrain, no people, no scenery.",
+  "negative": "text, letters, words, numbers, logo, watermark, signature, grass, lawn, ground plane, terrain, scenery, people, crowd, cast shadow on the background, white background, transparent checkerboard, magenta or pink on the object, photo, 3d render, front view, side view, flat cartoon, thick outlines, cel shading",
+  "refs": [
+    "src/assets/businesses/capital-v1/png/golf-halfway-pavilion.png",
+    "src/assets/businesses/capital-v1/png/golf-pro-shop.png"
+  ],
+  "items": [
+    {
+      "id": "grandstand-s",
+      "name": "Grandstand S (about 200 seats)",
+      "size": "16 x 8 m, 5 m tall",
+      "aspect": "4:3",
+      "prompt": "A small temporary golf tournament grandstand for about 200 spectators: a bleacher of eight tiered rows of empty dark green plastic seats on a galvanised aluminium scaffold frame, about 16 m long, 8 m deep and 5 m high at the back. Steel stairs with handrails at both ends, a railing along the top row and the sides, a dark green fabric skirt along the front base with no lettering. The seats face the lower-left of the image.",
+      "hx": 8,
+      "hy": 4,
+      "kind": "building"
+    },
+    {
+      "id": "leaderboard",
+      "name": "Main leaderboard (blank)",
+      "size": "8 x 3 m, 7 m tall",
+      "aspect": "1:1",
+      "prompt": "The main leaderboard of a golf tournament: a tall freestanding manual scoreboard about 8 m wide and 7 m high, a dark green board in a white frame with a grid of blank white name strips and empty score boxes (completely blank: no letters, no numbers), a small slate-coloured canopy roof on top with a flagpole at each end flying a plain green flag, standing on a scaffold base with a narrow operator walkway and a ladder at the back. The board faces the lower-left of the image.",
+      "hx": 4,
+      "hy": 1.5,
+      "kind": "building"
+    },
+    {
+      "id": "food-tent",
+      "name": "Food tent (burger)",
+      "size": "8 x 8 m, 4 m tall",
+      "aspect": "1:1",
+      "prompt": "A food tent at a golf tournament: a white pagoda marquee tent about 8 m square with a high peaked roof and a scalloped valance, open at the front with a wooden service counter, warm lights inside, a grill and glowing drinks fridges behind the counter, a hanging sign with a picture of a burger (a picture only, no lettering), a few bar stools and potted autumn flowers at the counter. The open front faces the lower-left of the image.",
+      "hx": 4,
+      "hy": 4,
+      "kind": "building"
+    },
+    {
+      "id": "toilet-block",
+      "name": "Toilet block (portable toilets)",
+      "size": "8 x 2 m, 2.4 m tall",
+      "aspect": "4:3",
+      "prompt": "A row of six portable toilet cabins for a golf tournament crowd: dark green moulded plastic cabins with white roofs and small vent pipes, standing side by side on a low wooden deck with a ramp at one end and a hand-wash station at the other, about 8 m long, 2 m deep and 2.4 m tall. The cabin doors face the lower-left of the image.",
+      "hx": 5.3,
+      "hy": 2,
+      "kind": "building",
+      "fit": "the chosen take has a 10.5 x 4 m deck (cabins measured at 2.4 m tall)"
+    },
+    {
+      "id": "entrance-gate",
+      "name": "Entrance gate complex",
+      "size": "12 x 6 m, 5 m tall",
+      "aspect": "4:3",
+      "prompt": "The spectator entrance of a golf tournament: a wide admission arch of white truss with a long plain dark green banner across the top (the banner completely blank, no lettering), under it four ticket-scanner podiums with small screens, two bag-check tables with grey plastic trays, a walk-through metal detector frame, and chrome queue-lane barriers with dark green belts leading up to the scanners. The front faces the lower-left of the image.",
+      "hx": 6,
+      "hy": 3,
+      "kind": "building"
+    },
+    {
+      "id": "drinks-tent",
+      "name": "Drinks tent (beer garden)",
+      "size": "10 x 8 m, 4 m tall",
+      "aspect": "4:3",
+      "prompt": "A drinks tent and beer garden at a golf tournament: a white peaked marquee with a bar counter at the front, beer taps and a glowing drinks fridge behind it, warm string lights, and in front of it three wooden picnic benches with dark green parasols, a few potted autumn flowers. The front faces the lower-left of the image.",
+      "hx": 5,
+      "hy": 4,
+      "kind": "building"
+    },
+    {
+      "id": "merch-tent",
+      "name": "Merchandise tent",
+      "size": "12 x 10 m, 5 m tall",
+      "aspect": "4:3",
+      "prompt": "The merchandise tent of a golf tournament: a large white marquee with its front open, inside and at the front racks of polo shirts and jackets, shelves of caps in many colours, golf umbrellas in a stand, a checkout counter with a till, warm lights, a dark green carpet floor. The front faces the lower-left of the image.",
+      "hx": 6,
+      "hy": 5,
+      "kind": "building"
+    },
+    {
+      "id": "concession-kiosk",
+      "name": "Concession kiosk (hot dogs)",
+      "size": "4 x 3 m, 3 m tall",
+      "aspect": "1:1",
+      "prompt": "A small wooden concession kiosk at a golf tournament: a hut painted dark green with cream trim, a serving hatch with a striped green and white awning, a hot-dog roller and a coffee machine inside, a hanging sign with a picture of a hot dog (a picture only, no lettering), a small menu chalkboard with only doodles, a bin beside it. The front faces the lower-left of the image.",
+      "hx": 2,
+      "hy": 1.5,
+      "kind": "building"
+    },
+    {
+      "id": "first-aid-tent",
+      "name": "First aid tent",
+      "size": "6 x 6 m, 3.5 m tall",
+      "aspect": "1:1",
+      "prompt": "The first aid tent of a golf tournament: a white square pop-up tent with its front open, a large white cross on a green square on the roof and the front valance (the first-aid symbol, no lettering), a stretcher bed, a medical cabinet, an oxygen bottle and a folding chair inside, a small water cooler at the door. The front faces the lower-left of the image.",
+      "hx": 3,
+      "hy": 3,
+      "kind": "building"
+    },
+    {
+      "id": "shuttle-stop",
+      "name": "Shuttle stop shelter",
+      "size": "8 x 3 m, 3 m tall",
+      "aspect": "4:3",
+      "prompt": "A spectator shuttle stop at a golf tournament: a long glass bus shelter with a dark green steel frame and roof, a bench inside, a blank timetable board, a bin, and chrome queue-lane barriers with dark green belts in front of it marking the queue. The front faces the lower-left of the image.",
+      "hx": 4,
+      "hy": 1.5,
+      "kind": "building"
+    },
+    {
+      "id": "hole-scoreboard",
+      "name": "Hole scoreboard",
+      "size": "2 x 1 m, 2.5 m tall",
+      "aspect": "1:1",
+      "prompt": "A small hole scoreboard at a golf tournament: a dark green board in a white frame on two posts, with a grid of blank white strips for players' names and empty score boxes (completely blank: no letters, no numbers), a little green roof on top. The front faces the lower-left of the image.",
+      "hx": 1,
+      "hy": 0.5,
+      "kind": "decor"
+    },
+    {
+      "id": "picnic-set",
+      "name": "Picnic tables and parasols",
+      "size": "3 x 3 m",
+      "aspect": "1:1",
+      "prompt": "A spectator rest area at a golf tournament: two wooden picnic tables with benches side by side, each with an open dark green parasol, a cup or two on the tables. The front faces the lower-left of the image.",
+      "hx": 1.5,
+      "hy": 1.5,
+      "kind": "building"
+    },
+    {
+      "id": "flagstick",
+      "name": "Flagstick and cup (red)",
+      "size": "2.1 m tall, the cup 11 cm wide",
+      "aspect": "3:4",
+      "prompt": "A golf flagstick standing in the hole on a putting green: a thin white fibreglass pole 2.1 m tall with a red flag waving at the top, the white cup liner rim visible at its foot, nothing else (no green, no grass). A thin object: keep the pole crisp.",
+      "hx": 0.3,
+      "hy": 0.3,
+      "kind": "decor"
+    },
+    {
+      "id": "bins",
+      "name": "Trash and recycling bins",
+      "size": "1.5 x 1 m, 1 m tall",
+      "aspect": "1:1",
+      "prompt": "A pair of bins at a golf tournament: a dark green trash bin and a blue recycling bin with lids and white symbol pictograms (pictures only, no lettering), side by side. The front faces the lower-left of the image.",
+      "hx": 0.75,
+      "hy": 0.5,
+      "kind": "decor"
+    },
+    {
+      "id": "comfort-station",
+      "name": "On-course comfort station",
+      "size": "4 x 3 m, 3 m tall",
+      "aspect": "1:1",
+      "prompt": "A small on-course restroom hut on a golf course: a cedar-shingled wooden cabin with a slate roof, two doors with small pictogram signs for men and women (pictures only, no lettering), a wall lamp, a drinking fountain at the side and a potted shrub. The front faces the lower-left of the image.",
+      "hx": 2,
+      "hy": 1.5,
+      "kind": "building"
+    },
+    {
+      "id": "ball-washer-bench",
+      "name": "Ball washer and bench set",
+      "size": "1.8 x 1 m",
+      "aspect": "1:1",
+      "prompt": "Golf tee furniture: a wooden bench, a dark green ball washer on a post with a towel hanging from it, and a small trash can, set together. The front faces the lower-left of the image.",
+      "hx": 0.9,
+      "hy": 0.5,
+      "kind": "decor"
+    }
+  ],
+  "note": "hx / hy: half extents of the footprint in metres (X runs down-right on screen, Y down-left); the front faces +Y (lower-left), so flipped it faces +X. prep-golf.mjs sizes each sprite from its footprint: native width 64 * (hx + hy) px.",
+  "deliverable": "Deliverable: a PNG on ONE flat, uniform, pure magenta #FF00FF background covering the whole canvas and every gap inside or around the object (between parts, under overhangs, through railings, scaffolding, windows and holes). The magenta is a chroma key: no gradient, shading, noise, texture, vignette, floor, cast shadow or checkerboard on it. Never use magenta, hot pink or purple anywhere on the object itself. Crisp clean silhouette edges against the magenta, no glow or halo."
+}

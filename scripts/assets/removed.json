@@ -1,4 +1,278 @@
 {
+ "business:golf-bunker-organic": {
+  "at": "2026-10-21T16:49:29.181Z",
+  "name": "golf bunker organic",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 564,
+  "h": 445,
+  "quad": [
+   0,
+   0,
+   564,
+   445
+  ],
+  "ax": 282,
+  "ay": 304
+ },
+ "business:golf-fairway-curved": {
+  "at": "2026-10-21T16:49:32.137Z",
+  "name": "golf fairway curved",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 582,
+  "h": 538,
+  "quad": [
+   0,
+   0,
+   582,
+   538
+  ],
+  "ax": 291,
+  "ay": 392.5
+ },
+ "business:golf-fairway-dogleg": {
+  "at": "2026-10-21T16:49:45.532Z",
+  "name": "golf fairway dogleg",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 585,
+  "h": 584,
+  "quad": [
+   0,
+   0,
+   585,
+   584
+  ],
+  "ax": 292.5,
+  "ay": 437.75
+ },
+ "business:golf-green-kidney-flagged": {
+  "at": "2026-10-21T16:49:27.823Z",
+  "name": "golf green kidney flagged",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 599,
+  "h": 392,
+  "quad": [
+   0,
+   0,
+   599,
+   392
+  ],
+  "ax": 299.5,
+  "ay": 242.25
+ },
+ "business:golf-green-unflagged": {
+  "at": "2026-10-21T16:49:43.136Z",
+  "name": "golf green unflagged",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 615,
+  "h": 400,
+  "quad": [
+   0,
+   0,
+   615,
+   400
+  ],
+  "ax": 307.5,
+  "ay": 246.25
+ },
+ "business:golf-tee-box": {
+  "at": "2026-10-21T16:49:30.825Z",
+  "name": "golf tee box",
+  "cat": "Business artwork",
+  "kind": "business",
+  "w": 581,
+  "h": 343,
+  "quad": [
+   0,
+   0,
+   581,
+   343
+  ],
+  "ax": 290.5,
+  "ay": 197.75
+ },
+ "capital:grass-backyard-clover-flowers": {
+  "at": "2026-10-21T17:35:05.862Z",
+  "name": "Backyard — clover and daisies",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-backyard-lush": {
+  "at": "2026-10-21T17:35:03.732Z",
+  "name": "Backyard — lush lawn",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-backyard-worn": {
+  "at": "2026-10-21T17:35:04.862Z",
+  "name": "Backyard — worn patches",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-golf-putting-green": {
+  "at": "2026-10-21T17:35:06.586Z",
+  "name": "Golf — putting green",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-golf-rough": {
+  "at": "2026-10-21T17:35:08.276Z",
+  "name": "Golf — rough",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-golf-worn-fairway": {
+  "at": "2026-10-21T17:35:07.337Z",
+  "name": "Golf — worn fairway",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-meadow-flowers-patches": {
+  "at": "2026-10-21T17:35:11.271Z",
+  "name": "Meadow — flowers and thin patches",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-meadow-lush": {
+  "at": "2026-10-21T17:35:09.054Z",
+  "name": "Meadow — mixed grasses",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "decal:decal-01-lush-grass": {
+  "at": "2026-10-21T16:42:27.920Z",
+  "name": "decal:decal-01-lush-grass",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 227
+ },
+ "decal:decal-04-low-weeds": {
+  "at": "2026-10-21T16:42:35.080Z",
+  "name": "decal:decal-04-low-weeds",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 223
+ },
+ "decal:decal-05-thin-grass": {
+  "at": "2026-10-21T16:42:36.537Z",
+  "name": "decal:decal-05-thin-grass",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 223
+ },
+ "expansion:abandoned-workshop": {
+  "at": "2026-10-21T16:24:46.723Z",
+  "name": "Derelict brick repair workshop",
+  "cat": "Industry",
+  "kind": "building",
+  "w": 544,
+  "h": 410.80296784831,
+  "quad": [
+   0,
+   0,
+   543.33,
+   410
+  ]
+ },
+ "expansion:cottage-rear": {
+  "at": "2026-10-21T16:27:44.996Z",
+  "name": "Cottage — rear and side",
+  "cat": "More houses",
+  "kind": "building",
+  "w": 448,
+  "h": 340.2264150943396,
+  "quad": [
+   0,
+   0,
+   448.11,
+   340.66
+  ]
+ },
+ "expansion:cottage-side-east": {
+  "at": "2026-10-21T16:28:10.586Z",
+  "name": "Cottage — opposite side view",
+  "cat": "More houses",
+  "kind": "building",
+  "w": 448,
+  "h": 343.7303370786517,
+  "quad": [
+   0,
+   0,
+   448.11,
+   344.32
+  ]
+ },
  "expansion:garage-rear": {
   "at": "2026-10-20T16:12:32.838Z",
   "name": "Timber garage — rear view",
@@ -11,6 +285,20 @@
    0,
    288.12,
    233.12
+  ]
+ },
+ "expansion:hot-tub": {
+  "at": "2026-10-21T16:46:04.368Z",
+  "name": "Old redwood backyard hot tub",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 134.4,
+  "h": 122.27261146496815,
+  "quad": [
+   0,
+   0,
+   134.46,
+   121.92
   ]
  },
  "expansion:kennel": {
@@ -27,6 +315,20 @@
    119.26
   ]
  },
+ "expansion:kiddie-pool": {
+  "at": "2026-10-21T17:36:45.270Z",
+  "name": "Empty blue plastic kiddie pool",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 90.50966799187809,
+  "h": 63.18900916290871,
+  "quad": [
+   0,
+   0,
+   90.02,
+   62.67
+  ]
+ },
  "expansion:ranch-rear": {
   "at": "2026-10-20T16:12:30.350Z",
   "name": "Low ranch house — rear view",
@@ -39,6 +341,48 @@
    0,
    543.82,
    339.31
+  ]
+ },
+ "expansion:victorian-rear": {
+  "at": "2026-10-21T16:28:49.893Z",
+  "name": "Victorian home — rear veranda",
+  "cat": "More houses",
+  "kind": "building",
+  "w": 512,
+  "h": 442.50171821305844,
+  "quad": [
+   0,
+   0,
+   511.75,
+   440.63
+  ]
+ },
+ "gen:birdbath-gnome": {
+  "at": "2026-10-21T16:47:19.469Z",
+  "name": "Birdbath & gnome",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 107.8,
+  "h": 164.7,
+  "quad": [
+   0,
+   0,
+   107.32,
+   164.29
+  ]
+ },
+ "gen:cooler-lawnchairs": {
+  "at": "2026-10-21T16:47:12.747Z",
+  "name": "Cooler & lawn chairs",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 111,
+  "h": 103.2,
+  "quad": [
+   0,
+   0,
+   111.67,
+   103.33
   ]
  },
  "gen:fence-chainlink": {
@@ -83,6 +427,14 @@
    219.07
   ]
  },
+ "gen:gravel-spill": {
+  "at": "2026-10-21T16:42:03.382Z",
+  "name": "gen:gravel-spill",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 170,
+  "h": 95
+ },
  "gen:house-l-ranch": {
   "at": "2026-10-20T16:41:20.256Z",
   "name": "Ranch — L-shape, corner porch",
@@ -111,6 +463,76 @@
    121.67
   ]
  },
+ "gen:kiddie-pool": {
+  "at": "2026-10-21T16:47:17.637Z",
+  "name": "Kiddie pool",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 107.3,
+  "h": 76.8,
+  "quad": [
+   0,
+   0,
+   107.32,
+   76.85
+  ]
+ },
+ "gen:litter-candy": {
+  "at": "2026-10-21T16:43:14.237Z",
+  "name": "gen:litter-candy",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 150,
+  "h": 90
+ },
+ "gen:litter-fastfood": {
+  "at": "2026-10-21T16:43:10.914Z",
+  "name": "gen:litter-fastfood",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 150,
+  "h": 95
+ },
+ "gen:litter-newspaper": {
+  "at": "2026-10-21T16:41:01.471Z",
+  "name": "gen:litter-newspaper",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 160,
+  "h": 93
+ },
+ "gen:pinecones-needles": {
+  "at": "2026-10-21T16:42:43.284Z",
+  "name": "gen:pinecones-needles",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 190,
+  "h": 101
+ },
+ "gen:rubbish-bags": {
+  "at": "2026-10-21T16:41:21.314Z",
+  "name": "gen:rubbish-bags",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 170,
+  "h": 102
+ },
+ "gen:rubbish-cardboard": {
+  "at": "2026-10-21T16:41:17.399Z",
+  "name": "gen:rubbish-cardboard",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 170,
+  "h": 103
+ },
+ "gen:twigs-branches": {
+  "at": "2026-10-21T16:42:40.933Z",
+  "name": "gen:twigs-branches",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 190,
+  "h": 102
+ },
  "gen:wall-brick-low": {
   "at": "2026-10-20T16:33:20.188Z",
   "name": "Low brick wall (8 m)",
@@ -137,6 +559,48 @@
    0,
    413.15,
    341.76
+  ]
+ },
+ "gen:yard-tombstones": {
+  "at": "2026-10-21T16:47:21.306Z",
+  "name": "Yard tombstones",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 92.6,
+  "h": 80.1,
+  "quad": [
+   0,
+   0,
+   93.28,
+   80.17
+  ]
+ },
+ "lot:8x15-front-6": {
+  "at": "2026-10-21T16:29:40.498Z",
+  "name": "House lot 8x15 front 7 (family)",
+  "cat": "Lots",
+  "kind": "lot",
+  "w": 1476,
+  "h": 847,
+  "quad": [
+   116.67,
+   3.33,
+   1426.67,
+   845
+  ]
+ },
+ "lot:8x15-rear-1": {
+  "at": "2026-10-21T16:29:51.496Z",
+  "name": "House lot 8x15 rear 2 (party)",
+  "cat": "Lots",
+  "kind": "lot",
+  "w": 1521,
+  "h": 1027,
+  "quad": [
+   66.67,
+   3.33,
+   1453.33,
+   996.67
   ]
  },
  "ref:building-barn": {
@@ -447,6 +911,14 @@
    193.36
   ]
  },
+ "town:bag_litter": {
+  "at": "2026-10-21T16:44:13.556Z",
+  "name": "town:bag_litter",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 91,
+  "h": 44
+ },
  "town:hardware": {
   "at": "2026-10-20T16:16:41.170Z",
   "name": "Bellamy Hardware",
@@ -460,6 +932,278 @@
    457.65,
    449.51
   ]
+ },
+ "town:oil_stain": {
+  "at": "2026-10-21T16:42:00.938Z",
+  "name": "town:oil_stain",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 100,
+  "h": 45
+ },
+ "variation:decal-decal-01-lush-grass-68a230a9:1": {
+  "at": "2026-10-21T16:42:19.844Z",
+  "name": "variation:decal-decal-01-lush-grass-68a230a9:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 127,
+  "h": 123
+ },
+ "variation:decal-decal-01-lush-grass-68a230a9:2": {
+  "at": "2026-10-21T16:42:22.848Z",
+  "name": "variation:decal-decal-01-lush-grass-68a230a9:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 127,
+  "h": 215
+ },
+ "variation:decal-decal-01-lush-grass-68a230a9:3": {
+  "at": "2026-10-21T16:42:24.390Z",
+  "name": "variation:decal-decal-01-lush-grass-68a230a9:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 139
+ },
+ "variation:decal-decal-01-lush-grass-68a230a9:4": {
+  "at": "2026-10-21T16:44:52.112Z",
+  "name": "variation:decal-decal-01-lush-grass-68a230a9:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 225,
+  "h": 224
+ },
+ "variation:decal-decal-02-dry-golden-grass-f4ef952e:1": {
+  "at": "2026-10-21T16:42:32.010Z",
+  "name": "variation:decal-decal-02-dry-golden-grass-f4ef952e:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 109,
+  "h": 99
+ },
+ "variation:decal-decal-02-dry-golden-grass-f4ef952e:2": {
+  "at": "2026-10-21T16:45:24.623Z",
+  "name": "variation:decal-decal-02-dry-golden-grass-f4ef952e:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 219,
+  "h": 164
+ },
+ "variation:decal-decal-02-dry-golden-grass-f4ef952e:3": {
+  "at": "2026-10-21T16:45:40.500Z",
+  "name": "variation:decal-decal-02-dry-golden-grass-f4ef952e:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 224,
+  "h": 155
+ },
+ "variation:decal-decal-02-dry-golden-grass-f4ef952e:4": {
+  "at": "2026-10-21T16:45:10.393Z",
+  "name": "variation:decal-decal-02-dry-golden-grass-f4ef952e:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 155
+ },
+ "variation:decal-decal-03-moss-groundcover-65c97d13:1": {
+  "at": "2026-10-21T16:45:27.712Z",
+  "name": "variation:decal-decal-03-moss-groundcover-65c97d13:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 171,
+  "h": 134
+ },
+ "variation:decal-decal-03-moss-groundcover-65c97d13:2": {
+  "at": "2026-10-21T16:45:29.127Z",
+  "name": "variation:decal-decal-03-moss-groundcover-65c97d13:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 219,
+  "h": 171
+ },
+ "variation:decal-decal-03-moss-groundcover-65c97d13:3": {
+  "at": "2026-10-21T16:45:36.012Z",
+  "name": "variation:decal-decal-03-moss-groundcover-65c97d13:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 172
+ },
+ "variation:decal-decal-03-moss-groundcover-65c97d13:4": {
+  "at": "2026-10-21T16:41:53.376Z",
+  "name": "variation:decal-decal-03-moss-groundcover-65c97d13:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 208,
+  "h": 194
+ },
+ "variation:decal-decal-04-low-weeds-4a1879ac:1": {
+  "at": "2026-10-21T16:42:13.817Z",
+  "name": "variation:decal-decal-04-low-weeds-4a1879ac:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 143,
+  "h": 130
+ },
+ "variation:decal-decal-04-low-weeds-4a1879ac:2": {
+  "at": "2026-10-21T16:41:31.468Z",
+  "name": "variation:decal-decal-04-low-weeds-4a1879ac:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 113,
+  "h": 211
+ },
+ "variation:decal-decal-04-low-weeds-4a1879ac:3": {
+  "at": "2026-10-21T16:41:36.234Z",
+  "name": "variation:decal-decal-04-low-weeds-4a1879ac:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 198
+ },
+ "variation:decal-decal-05-thin-grass-4ad3e474:1": {
+  "at": "2026-10-21T16:45:43.515Z",
+  "name": "variation:decal-decal-05-thin-grass-4ad3e474:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 163,
+  "h": 117
+ },
+ "variation:decal-decal-05-thin-grass-4ad3e474:2": {
+  "at": "2026-10-21T16:42:09.358Z",
+  "name": "variation:decal-decal-05-thin-grass-4ad3e474:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 153
+ },
+ "variation:decal-decal-05-thin-grass-4ad3e474:3": {
+  "at": "2026-10-21T16:42:10.978Z",
+  "name": "variation:decal-decal-05-thin-grass-4ad3e474:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 229,
+  "h": 160
+ },
+ "variation:decal-decal-05-thin-grass-4ad3e474:4": {
+  "at": "2026-10-21T16:41:48.137Z",
+  "name": "variation:decal-decal-05-thin-grass-4ad3e474:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 216,
+  "h": 172
+ },
+ "variation:decal-decal-06-orange-leaf-scatter-ce1e2c2d:1": {
+  "at": "2026-10-21T16:37:10.601Z",
+  "name": "variation:decal-decal-06-orange-leaf-scatter-ce1e2c2d:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 160,
+  "h": 98
+ },
+ "variation:decal-decal-06-orange-leaf-scatter-ce1e2c2d:2": {
+  "at": "2026-10-21T16:43:49.768Z",
+  "name": "variation:decal-decal-06-orange-leaf-scatter-ce1e2c2d:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 152
+ },
+ "variation:decal-decal-06-orange-leaf-scatter-ce1e2c2d:3": {
+  "at": "2026-10-21T16:43:47.840Z",
+  "name": "variation:decal-decal-06-orange-leaf-scatter-ce1e2c2d:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 216,
+  "h": 137
+ },
+ "variation:decal-decal-07-red-leaf-cluster-3eac86a3:1": {
+  "at": "2026-10-21T16:43:44.039Z",
+  "name": "variation:decal-decal-07-red-leaf-cluster-3eac86a3:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 158,
+  "h": 113
+ },
+ "variation:decal-decal-07-red-leaf-cluster-3eac86a3:2": {
+  "at": "2026-10-21T16:43:41.611Z",
+  "name": "variation:decal-decal-07-red-leaf-cluster-3eac86a3:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 199
+ },
+ "variation:decal-decal-07-red-leaf-cluster-3eac86a3:3": {
+  "at": "2026-10-21T16:36:55.503Z",
+  "name": "variation:decal-decal-07-red-leaf-cluster-3eac86a3:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 227,
+  "h": 175
+ },
+ "variation:decal-decal-07-red-leaf-cluster-3eac86a3:4": {
+  "at": "2026-10-21T16:36:58.768Z",
+  "name": "variation:decal-decal-07-red-leaf-cluster-3eac86a3:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 173,
+  "h": 136
+ },
+ "variation:decal-decal-08-yellow-leaf-scatter-35ae9207:4": {
+  "at": "2026-10-21T16:43:41.577Z",
+  "name": "variation:decal-decal-08-yellow-leaf-scatter-35ae9207:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 189,
+  "h": 132
+ },
+ "variation:decal-scatter-grass-tufts-25e37c11:2": {
+  "at": "2026-10-21T16:41:42.368Z",
+  "name": "variation:decal-scatter-grass-tufts-25e37c11:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 206,
+  "h": 160
+ },
+ "variation:decal-scatter-grass-tufts-25e37c11:3": {
+  "at": "2026-10-21T16:41:57.576Z",
+  "name": "variation:decal-scatter-grass-tufts-25e37c11:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 140
+ },
+ "variation:decal-scatter-grass-tufts-25e37c11:4": {
+  "at": "2026-10-21T16:41:55.317Z",
+  "name": "variation:decal-scatter-grass-tufts-25e37c11:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 169,
+  "h": 139
+ },
+ "variation:decal-scatter-tiny-leaves-50196436:2": {
+  "at": "2026-10-21T16:43:29.028Z",
+  "name": "variation:decal-scatter-tiny-leaves-50196436:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 231,
+  "h": 212
+ },
+ "variation:decal-scatter-tiny-leaves-50196436:3": {
+  "at": "2026-10-21T16:43:28.109Z",
+  "name": "variation:decal-scatter-tiny-leaves-50196436:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 225,
+  "h": 165
+ },
+ "variation:decal-scatter-tiny-leaves-50196436:4": {
+  "at": "2026-10-21T16:37:00.843Z",
+  "name": "variation:decal-scatter-tiny-leaves-50196436:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 224,
+  "h": 170
  },
  "variation:expansion-aboveground-pool-ad890f8a-ns:1": {
   "at": "2026-10-20T16:36:00.955Z",
@@ -515,6 +1259,76 @@
    0,
    185,
    168.33
+  ]
+ },
+ "variation:expansion-backyard-telescope-c50a5ce8-ns:1": {
+  "at": "2026-10-21T16:46:42.574Z",
+  "name": "Hobby telescope on tripod — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 68.23693379790942,
+  "h": 100.61602787456448,
+  "quad": [
+   0,
+   0,
+   68.33,
+   100
+  ]
+ },
+ "variation:expansion-backyard-telescope-c50a5ce8-ns:2": {
+  "at": "2026-10-21T16:46:41.808Z",
+  "name": "Hobby telescope on tripod — A north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 67.70174216027876,
+  "h": 111.85505226480838,
+  "quad": [
+   0,
+   0,
+   68.33,
+   111.67
+  ]
+ },
+ "variation:expansion-backyard-telescope-c50a5ce8-ns:3": {
+  "at": "2026-10-21T16:46:39.551Z",
+  "name": "Hobby telescope on tripod — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 76.80000000000001,
+  "h": 112.12264808362372,
+  "quad": [
+   0,
+   0,
+   76.67,
+   111.67
+  ]
+ },
+ "variation:expansion-backyard-telescope-c50a5ce8-ns:4": {
+  "at": "2026-10-21T16:46:38.409Z",
+  "name": "Hobby telescope on tripod — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 73.32125435540071,
+  "h": 114.79860627177703,
+  "quad": [
+   0,
+   0,
+   73.33,
+   115
+  ]
+ },
+ "variation:expansion-backyard-telescope-c50a5ce8:1": {
+  "at": "2026-10-21T16:46:44.888Z",
+  "name": "Hobby telescope on tripod — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 48.84705882352942,
+  "h": 72.56470588235295,
+  "quad": [
+   0,
+   0,
+   48.33,
+   73.33
   ]
  },
  "variation:expansion-barbecue-f2dcc56d-ns:1": {
@@ -727,6 +1541,20 @@
    138.33
   ]
  },
+ "variation:expansion-blowmold-ghost-072aef17:4": {
+  "at": "2026-10-21T16:49:04.382Z",
+  "name": "Vintage light-up yard ghost — variation 4",
+  "cat": "Odds & ends",
+  "kind": "decor",
+  "w": 33.85507246376812,
+  "h": 49.04347826086956,
+  "quad": [
+   0,
+   0,
+   33.33,
+   48.33
+  ]
+ },
  "variation:expansion-brick-barbecue-68999099-ns:2": {
   "at": "2026-10-21T14:34:53.813Z",
   "name": "Built-in brick backyard barbecue — A north view",
@@ -881,6 +1709,76 @@
    41.67
   ]
  },
+ "variation:expansion-canoe-dc28e317-ns:1": {
+  "at": "2026-10-21T16:46:08.332Z",
+  "name": "Weathered canoe on sawhorses — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 138.14525139664804,
+  "h": 149.94413407821227,
+  "quad": [
+   0,
+   1.67,
+   138.33,
+   150
+  ]
+ },
+ "variation:expansion-canoe-dc28e317-ns:3": {
+  "at": "2026-10-21T16:46:14.103Z",
+  "name": "Weathered canoe on sawhorses — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 176,
+  "h": 175.50837988826814,
+  "quad": [
+   1.67,
+   0,
+   176.67,
+   173.33
+  ]
+ },
+ "variation:expansion-canoe-dc28e317:2": {
+  "at": "2026-10-21T16:46:18.211Z",
+  "name": "Weathered canoe on sawhorses — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 176,
+  "h": 144,
+  "quad": [
+   0,
+   0,
+   176.67,
+   143.33
+  ]
+ },
+ "variation:expansion-canoe-dc28e317:4": {
+  "at": "2026-10-21T16:46:09.738Z",
+  "name": "Weathered canoe on sawhorses — variation 4",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 167.3846153846154,
+  "h": 149.33333333333331,
+  "quad": [
+   0,
+   0,
+   166.67,
+   150
+  ]
+ },
+ "variation:expansion-carseat-bench-3ce0ee8b:2": {
+  "at": "2026-10-21T17:37:05.295Z",
+  "name": "Salvaged car-seat backyard bench — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 84.8,
+  "h": 75.72165450121655,
+  "quad": [
+   0,
+   0,
+   85,
+   75
+  ]
+ },
  "variation:expansion-chainlink-x-4a0ed35b-ns:4": {
   "at": "2026-10-20T16:31:19.038Z",
   "name": "Chain-link fence — X axis — B north view",
@@ -909,6 +1807,34 @@
    131.67
   ]
  },
+ "variation:expansion-compost-bin-01ec56ad-ns:4": {
+  "at": "2026-10-21T16:46:02.652Z",
+  "name": "Old timber compost bin — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 77.11051212938006,
+  "h": 100.14016172506739,
+  "quad": [
+   0,
+   0,
+   76.67,
+   100
+  ]
+ },
+ "variation:expansion-cottage-side-east-6224e733-plain:1": {
+  "at": "2026-10-21T16:28:22.584Z",
+  "name": "Cottage — opposite side view — variation 1",
+  "cat": "More houses",
+  "kind": "building",
+  "w": 448,
+  "h": 455.5630585898709,
+  "quad": [
+   0,
+   0,
+   448.33,
+   455
+  ]
+ },
  "variation:expansion-fence-privacy-x-dd8abdb9-ns:2": {
   "at": "2026-10-20T16:32:14.401Z",
   "name": "Privacy fence — X — A north view",
@@ -923,6 +1849,62 @@
    86.67
   ]
  },
+ "variation:expansion-firepit-a5cde3a0-ns:1": {
+  "at": "2026-10-21T17:36:51.367Z",
+  "name": "Brick backyard fire pit — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 59.885163890516594,
+  "h": 40.35739305665249,
+  "quad": [
+   0,
+   0,
+   60,
+   40
+  ]
+ },
+ "variation:expansion-firepit-a5cde3a0-ns:3": {
+  "at": "2026-10-21T17:36:49.446Z",
+  "name": "Brick backyard fire pit — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 63.21211743998974,
+  "h": 48.89175216182273,
+  "quad": [
+   0,
+   0,
+   63.33,
+   48.33
+  ]
+ },
+ "variation:expansion-firepit-a5cde3a0:1": {
+  "at": "2026-10-21T17:36:58.072Z",
+  "name": "Brick backyard fire pit — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 33.31569352150479,
+  "h": 32.03432069375461,
+  "quad": [
+   0,
+   0,
+   33.33,
+   31.67
+  ]
+ },
+ "variation:expansion-firepit-a5cde3a0:2": {
+  "at": "2026-10-21T17:36:57.091Z",
+  "name": "Brick backyard fire pit — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 50.97016359272955,
+  "h": 40.861555729366984,
+  "quad": [
+   0,
+   0,
+   51.67,
+   41.67
+  ]
+ },
  "variation:expansion-garden-hose-819a84b2:1": {
   "at": "2026-10-21T09:56:44.805Z",
   "name": "Coiled garden hose and tap — variation 1",
@@ -935,6 +1917,62 @@
    0,
    26.67,
    43.33
+  ]
+ },
+ "variation:expansion-garden-pump-4fda9a6d-ns:1": {
+  "at": "2026-10-21T16:45:54.005Z",
+  "name": "Old cast-iron garden pump — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 33.17124183006536,
+  "h": 52.74771241830066,
+  "quad": [
+   0,
+   0,
+   33.33,
+   53.33
+  ]
+ },
+ "variation:expansion-garden-pump-4fda9a6d:1": {
+  "at": "2026-10-21T16:46:00.030Z",
+  "name": "Old cast-iron garden pump — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 27.626254826254826,
+  "h": 43.206177606177604,
+  "quad": [
+   0,
+   0,
+   28.33,
+   43.33
+  ]
+ },
+ "variation:expansion-garden-pump-4fda9a6d:2": {
+  "at": "2026-10-21T16:45:59.455Z",
+  "name": "Old cast-iron garden pump — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 24.574517374517374,
+  "h": 66.4957528957529,
+  "quad": [
+   0,
+   0,
+   25,
+   66.67
+  ]
+ },
+ "variation:expansion-garden-pump-4fda9a6d:4": {
+  "at": "2026-10-21T16:45:58.028Z",
+  "name": "Old cast-iron garden pump — variation 4",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 41.6,
+  "h": 62.48030888030888,
+  "quad": [
+   0,
+   0,
+   41.67,
+   61.67
   ]
  },
  "variation:expansion-glasshouse-df2aec71:1": {
@@ -1021,6 +2059,34 @@
    90
   ]
  },
+ "variation:expansion-ranch-rear-bde86a42-plain-corner:1": {
+  "at": "2026-10-21T16:28:59.663Z",
+  "name": "Low ranch house — rear view — variation 1",
+  "cat": "More houses",
+  "kind": "building",
+  "w": 544,
+  "h": 453.4237288135593,
+  "quad": [
+   1.67,
+   1.67,
+   543.33,
+   453.33
+  ]
+ },
+ "variation:expansion-ranch-rear-bde86a42-plain:1": {
+  "at": "2026-10-21T16:29:03.020Z",
+  "name": "Low ranch house — rear view — variation 1",
+  "cat": "More houses",
+  "kind": "building",
+  "w": 544,
+  "h": 458.7462686567164,
+  "quad": [
+   1.67,
+   1.67,
+   543.33,
+   458.33
+  ]
+ },
  "variation:expansion-treehouse-2128dfc1-plain-corner:1": {
   "at": "2026-10-20T16:34:58.965Z",
   "name": "1980s backyard treehouse — variation 1",
@@ -1090,6 +2156,106 @@
    700,
    571.67
   ]
+ },
+ "variation:gen-litter-candy-49c33eec:3": {
+  "at": "2026-10-21T16:43:03.688Z",
+  "name": "variation:gen-litter-candy-49c33eec:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 150,
+  "h": 92
+ },
+ "variation:gen-litter-candy-49c33eec:4": {
+  "at": "2026-10-21T16:43:02.367Z",
+  "name": "variation:gen-litter-candy-49c33eec:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 142,
+  "h": 100
+ },
+ "variation:gen-litter-newspaper-5a896ded:1": {
+  "at": "2026-10-21T16:42:57.368Z",
+  "name": "variation:gen-litter-newspaper-5a896ded:1",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 98,
+  "h": 66
+ },
+ "variation:gen-litter-newspaper-5a896ded:2": {
+  "at": "2026-10-21T16:42:53.757Z",
+  "name": "variation:gen-litter-newspaper-5a896ded:2",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 160,
+  "h": 100
+ },
+ "variation:gen-litter-newspaper-5a896ded:3": {
+  "at": "2026-10-21T16:42:52.689Z",
+  "name": "variation:gen-litter-newspaper-5a896ded:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 153,
+  "h": 92
+ },
+ "variation:gen-litter-newspaper-5a896ded:4": {
+  "at": "2026-10-21T16:42:55.410Z",
+  "name": "variation:gen-litter-newspaper-5a896ded:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 128,
+  "h": 102
+ },
+ "variation:gen-rubbish-cardboard-0094c349:3": {
+  "at": "2026-10-21T16:42:46.809Z",
+  "name": "variation:gen-rubbish-cardboard-0094c349:3",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 143,
+  "h": 77
+ },
+ "variation:gen-rubbish-cardboard-0094c349:4": {
+  "at": "2026-10-21T16:42:44.865Z",
+  "name": "variation:gen-rubbish-cardboard-0094c349:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 170,
+  "h": 108
+ },
+ "variation:gen-trash-cans-row-39937171-ns:2": {
+  "at": "2026-10-21T16:47:26.555Z",
+  "name": "Trash cans — A north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 90,
+  "h": 135.33834586466165,
+  "quad": [
+   0,
+   0,
+   90,
+   135
+  ]
+ },
+ "variation:gen-trash-cans-row-39937171-ns:4": {
+  "at": "2026-10-21T16:47:31.019Z",
+  "name": "Trash cans — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 80.52631578947368,
+  "h": 133.64661654135338,
+  "quad": [
+   0,
+   0,
+   80,
+   133.33
+  ]
+ },
+ "variation:poi-candy-soda-litter-13db15a7:4": {
+  "at": "2026-10-21T16:44:30.175Z",
+  "name": "variation:poi-candy-soda-litter-13db15a7:4",
+  "cat": "Decals",
+  "kind": "decal",
+  "w": 29,
+  "h": 20
  },
  "variation:ref-building-school-ce21bf67-plain:1": {
   "at": "2026-10-21T05:01:20.651Z",

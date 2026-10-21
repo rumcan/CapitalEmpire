@@ -22,7 +22,7 @@ test('rocky dirt saves keep both paintings and border styles when reloaded into 
     ['dirt', 1, 0, 0, 'kerb', SQUARE],
   ];
   const sent = new Map<string, unknown>();
-  const host = { setLotGround: (key: string, patches: unknown) => { sent.set(key, patches); }, emit() {}, save() {}, toast() {}, affine() {} };
+  const host = { setLotGround: (key: string, patches: unknown) => { sent.set(key, patches); }, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0 };
   const first = new PaintTool(host);
   first.load(tuples);
   const saved = JSON.parse(JSON.stringify(first.save())) as PaintTuple[];
@@ -253,6 +253,7 @@ function toolHost() {
   const host = {
     setLotGround: (k: string, p: unknown) => { sent.push([k, p]); }, emit() {}, save() {}, toast: (t: string) => { toasts.push(t); },
     affine(o: number[]) { o[0] = 0; o[1] = 0; o[2] = 10; o[3] = 0; o[4] = 0; o[5] = 10; },
+    placeProps: () => 0,
   };
   return { host, sent, toasts };
 }
@@ -307,4 +308,19 @@ test('photoPeriod: a mixed photo repeats over the mixed period; a plain tile ove
   assert.equal(photoPeriod({ mix: 0 }, 12), 12);
   assert.equal(photoPeriod(PHOTO_TEX.find(p => p.tex === 'field')!, 12), 4);
   assert.equal(photoPeriod(PHOTO_TEX.find(p => p.tex === 'golfFairway')!, 12), 12);
+});
+
+test('brush tags: a plain area keeps a 10-element tuple; hole and kind round-trip; bad tags are dropped', () => {
+  const plain: PaintArea = { id: 1, pts: SQUARE, ...DEFAULT_STYLE };
+  assert.equal(toTuple(plain).length, 10);
+  const green: PaintArea = { id: 1, pts: SQUARE, ...DEFAULT_STYLE, hole: 3, kind: 'green' };
+  const t = toTuple(green);
+  assert.equal(t.length, 12);
+  assert.deepEqual([t[10], t[11]], [3, 'green']);
+  assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([t])) as PaintTuple[]), [green]);
+  const bad: PaintTuple[] = [
+    ['paving', 1, 0, 0, 'kerb', SQUARE, 0, 0, 0.35, '#000000', 0, 'green'],
+    ['paving', 1, 0, 0, 'kerb', SQUARE, 0, 0, 0.35, '#000000', 2.5, 'lava'],
+  ];
+  assert.deepEqual(fromTuples(bad), [{ id: 1, pts: SQUARE, ...DEFAULT_STYLE, kind: 'green' }, { id: 2, pts: SQUARE, ...DEFAULT_STYLE }]);
 });

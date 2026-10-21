@@ -60,6 +60,9 @@ await sharp({ create: { width: 144 * slabNames.length, height: 100, channels: 4,
 // ---------------------------------------------------------------- grass bases at the approved 256 px screen repeat
 for (const name of ['grass-base.png', 'grass-v2-base.png']) await sharp(await get('terrain/' + name)).resize(256, 256, { fit: 'fill', kernel: 'lanczos3' }).webp({ quality: 92 }).toFile(path.join(OUT, name.replace('.png', '.webp')));
 
+// New generated materials at the existing 256 px repeat (masters stay untouched).
+for (const [name, source] of [['backyard', 'backyard-lush'], ['meadow', 'meadow-lush']]) await sharp(path.join(OUT, 'grass-v1/png/grass-' + source + '.png')).resize(256, 256).webp({ quality: 92 }).toFile(path.join(OUT, 'grass-capital-' + name + '.webp'));
+
 // ---------------------------------------------------------------- the builder's grass dressing (town-scene.mjs loadSources): the bare-soil
 // base at the same 256 px repeat, and the grass/leaf decals and tufts at their base widths in world px, packed in one strip
 await sharp(await get('terrain/soil-mud-v2-base.png')).resize(256, 256, { fit: 'fill', kernel: 'lanczos3' }).webp({ quality: 92 }).toFile(path.join(OUT, 'soil.webp'));
@@ -110,8 +113,8 @@ import curbVisible from '../assets/ground/curb-visible.png';
 import curbHidden from '../assets/ground/curb-hidden.png';
 import pool from '../assets/ground/pool-straight-intensity.png';
 import slabs from '../assets/ground/slabs.webp';
-import grassA from '../assets/ground/grass-base.webp';
-import grassB from '../assets/ground/grass-v2-base.webp';
+import grassA from '../assets/ground/grass-capital-backyard.webp';
+import grassB from '../assets/ground/grass-capital-meadow.webp';
 import leaves from '../assets/ground/leaves.webp';
 import soil from '../assets/ground/soil.webp';
 import rockyDirt from '../assets/ground/rocky-dirt.webp';

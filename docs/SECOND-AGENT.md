@@ -101,3 +101,16 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
 - 2026-10-21: this file written. Done today on the art side (see PROGRESS.md): the owner's photo textures in Paint, ground photos
   for dirt, gravel, fields, water and banks, gravel roads in the asphalt photo (3x), Paint areas sharp at every scale, decal
   variations, every isometric library building in the lot pools.
+- 2026-10-21 night (the art chat): **merged the main checkout's uncommitted T014 work** (the owner: "merge everything"; it was an
+  earlier session's, last touched 2026-10-20): paranormal nights in `ext/disasters` + `ext/paranormal(-render)`, the disasters toggle in
+  Settings, generated trees v2 (`capital:tree-*`, now in the lot tree pool) and grass materials in the atlas, new base grasses in
+  `ground-art.ts`. **For the coder:** it touched your `engine.ts`, `App.tsx`, `city.ts` (merged cleanly, typecheck and tests pass); note
+  `disastersEnabled` **defaults to on** (it was off): the owner has not decided; GOLF-PLAN 13 q8 recommends parking paranormal.
+- 2026-10-21 night: **A1 golf art pilot** on main: `golf:grandstand-s`, `golf:leaderboard` (blank board: names drawn by code),
+  `golf:food-tent`, `golf:toilet-block` (cat 'Golf tournament', fronts face +Y, flip for +X; footprints in `art/golf/items.json`).
+  Waiting for the owner's review before the rest of P1. **For the coder:** nothing to place yet (G3/G4 use them).
+- 2026-10-21 night: **the golf hole preset** (the owner asked the art chat): Paint mode 'hole' (`paint-tool.ts`), `golf/holepreset.ts`,
+  `placePresetProps` and a `placeProps` host member in engine.ts (a few lines beside addProp; your g1-engine branch touches engine.ts:
+  expect a trivial merge). Next the art chat builds the owner's **round paint brush with hole presets** (Paint tool, holes.ts link):
+  **For the coder:** say in your log if you would rather own that (it overlaps G2's hole tools).
+

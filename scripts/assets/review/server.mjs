@@ -4,12 +4,15 @@
 //   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
+//   Holes:   the golf hole presets (src/game/golf/hole-presets.json, 18 slots): areas and props edited on a canvas, or a generated hole from a seed (holes.js)
 //   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { buildSync } from 'esbuild';
 import sharp from 'sharp';
 // no file cache: sharp keeps the atlas pages it read open, and on Windows the Rebuild then cannot delete them (EPERM)
 sharp.cache(false);
@@ -33,7 +36,7 @@ function library() {
   // the lot decals (src/game/lot-decals.ts): packed at their scale (prep-decals.mjs), so their rect is the game size; w/h here are the native size
   const decals = fs.readFileSync(path.join(ROOT, 'src/game/lot-decals.ts'), 'utf8'), seen = new Set(out.map(s => s.id));
   for (const m of decals.matchAll(/^ {2}(\{"id".*\}),$/gm)) { const e = JSON.parse(m[1]), it = LIB.get(e.id); if (!seen.has(e.id)) out.push({ id: e.id, name: e.id, cat: 'Decals', kind: 'decal', w: Math.round(it?.w ?? e.w), h: Math.round(it?.h ?? e.h), rect: [e.x, e.y, e.w, e.h] }); }
-  // the three libraries the game appends at runtime (appendCars, appendEast, appendBusinesses): each file's items, with the mip-0 page of the item's tex[0]
+  // the libraries the game appends at runtime: each file's items, with the mip-0 page of the item's tex[0]
   // as the game does (REMOVED_IDS in src/game/lots/scales.ts): a removed sprite is left out, and an east view goes with its front (no 'east:')
   const have = new Set(out.map(s => s.id)), gone = readRemoved();
   for (const a of APPENDED) {
@@ -51,6 +54,8 @@ const APPENDED = [
   { file: 'src/game/cars-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/cars/cars-${p}.webp` },
   { file: 'src/game/east-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/east/east-${p}-0.webp` },
   { file: 'src/game/business-library.ts', re: /items: LibItem\[\] = (\[[^\n]*\]);\n/, page: p => `src/assets/businesses/integrated/business-${p}-0.webp` },
+  { file: 'src/game/construction-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/construction/construction-${p}.webp` },
+  { file: 'src/game/golf-library.ts', re: /ITEMS: LibItem\[\] = (\[[\s\S]*?\]);\n/, page: p => `src/assets/golf/golf-${p}.webp` },
 ];
 const safe = id => id.replace(/[^a-z0-9_.-]/gi, '_');
 const DECAL_PAGE = path.join(ROOT, 'src/assets/ground/lot-decals.webp');
@@ -121,7 +126,7 @@ async function frame(pid, d, k, asDrawn) {
 let job = null;
 function rebuild() {
   if (job && !job.done) return job;
-  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/audit-sprites.mjs'];
+  const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/prep-construction.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
     if (i >= steps.length) return build();
@@ -140,6 +145,79 @@ function rebuild() {
   run(0); return job;
 }
 
+
+// ---------------------------------------------------------------- golf hole presets (the Holes tab; src/game/golf/hole-presets.json)
+const OUT = path.join(ROOT, 'output/studio'), HOLES = path.join(ROOT, 'src/game/golf/hole-presets.json'), GRASS_ART = path.join(ROOT, 'src/game/grass-art.ts');
+const HL_ENTRY = path.join(ROOT, 'scripts/assets/review/hole-lib.ts'), HL_LOADERS = { '.webp': 'empty', '.png': 'empty', '.jpg': 'empty' };
+const LOCAL = 1024; // a hole's local frame (src/game/golf/holepreset.ts: the tee at 0) is offset this far when its outline is checked (the map's centre)
+const HOLE_N = 18, FLOWERS = ['town:hydrangea', 'town:fern', 'town:ornamental_grass'], FLAG = 'golf:flagstick', FLAG_FALLBACK = 'business:golf-pin-red';
+fs.mkdirSync(OUT, { recursive: true });
+buildSync({ entryPoints: [HL_ENTRY], bundle: true, platform: 'node', format: 'esm', outfile: path.join(OUT, 'hole-lib.mjs'), loader: HL_LOADERS, logLevel: 'silent' });
+buildSync({ entryPoints: [HL_ENTRY], bundle: true, platform: 'browser', format: 'esm', outfile: path.join(OUT, 'hole-lib.js'), loader: HL_LOADERS, logLevel: 'silent' });
+const HL = await import(pathToFileURL(path.join(OUT, 'hole-lib.mjs')).href);
+/** the stored holes: 18 slots, null where empty (no file yet: all empty) */
+function readHoles() {
+  let d = null; try { d = JSON.parse(fs.readFileSync(HOLES, 'utf8')); } catch { /* no file yet */ }
+  return { v: 1, holes: Array.from({ length: HOLE_N }, (_, i) => d?.holes?.[i] ?? null) };
+}
+const r3 = v => Math.round(v * 1000) / 1000;
+/** a seeded random (mulberry32) */
+function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+/** a hole preset for the seed, its props given sprite ids (a seeded pick, flip and scale; the flag keeps its map scale): the stored format */
+function generateHole(seed) {
+  const rm = readRemoved(), list = library().filter(s => !rm[s.id]), ids = new Set(list.map(s => s.id));
+  const trees = list.filter(s => s.kind === 'tree' && !/dead/.test(s.id)).map(s => s.id), bushes = list.filter(s => s.kind === 'bush').map(s => s.id), flowers = FLOWERS.filter(id => ids.has(id));
+  const flag = ids.has(FLAG) ? FLAG : FLAG_FALLBACK, rnd = rng(seed * 7919), hole = HL.holePreset(seed), props = [];
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  for (const p of hole.props) {
+    if (p.kind === 'flag') { props.push({ id: flag, x: r3(p.x), y: r3(p.y), flip: false, scale: r3(mapScale(flag)) }); continue; }
+    const pool = p.kind === 'tree' ? trees : p.kind === 'bush' ? bushes : flowers;
+    if (!pool.length) continue;
+    const id = pick(pool), flip = rnd() < 0.5, scale = r3(mapScale(id) * (0.9 + 0.2 * rnd()));
+    props.push({ id, x: r3(p.x), y: r3(p.y), flip, scale });
+  }
+  return { name: 'Hole', areas: hole.areas.map(a => ({ tex: a.tex, border: a.border, btex: a.btex, radius: a.radius, pts: a.pts.map(r3) })), props };
+}
+/** a hole as it is stored (the Save body), or the message why it is not valid (a bad area is named by its number) */
+function checkHole(h) {
+  if (!h || typeof h !== 'object' || Array.isArray(h)) return 'not a hole';
+  if (typeof h.name !== 'string') return 'name must be text';
+  const TEX = new Set(HL.PAINT_TEXES.map(t => t.id)), BTEX = new Set(HL.BORDER_TEXES.map(t => t.id));
+  if (!Array.isArray(h.areas) || !Array.isArray(h.props)) return 'areas and props must be lists';
+  const areas = [], props = [], gone = readRemoved(), known = new Set(library().map(s => s.id));
+  for (const [i, a] of h.areas.entries()) {
+    const at = `area ${i + 1}`;
+    if (typeof a?.tex !== 'string' || !TEX.has(a.tex)) return `${at}: unknown texture`;
+    if (!Number.isInteger(a.border) || a.border < 0 || a.border > 3) return `${at}: border must be 0-3`;
+    if (typeof a.btex !== 'string' || !BTEX.has(a.btex)) return `${at}: unknown border texture`;
+    if (typeof a.radius !== 'number' || !(a.radius >= 0 && a.radius <= HL.RADIUS_MAX)) return `${at}: corner radius must be 0-${HL.RADIUS_MAX}`;
+    if (a.kind !== undefined && typeof a.kind !== 'string') return `${at}: kind must be text`;
+    if (!Array.isArray(a.pts) || a.pts.length < 6 || a.pts.length % 2 || !a.pts.every(Number.isFinite)) return `${at}: corners must be x, y pairs (at least 3)`;
+    const bad = HL.checkArea(a.pts.map(v => v + LOCAL)); if (bad) return `${at}: ${bad}`; // the local frame (tee at 0) is checked at the map centre
+    areas.push({ tex: a.tex, border: a.border, btex: a.btex, radius: a.radius, ...(a.kind !== undefined ? { kind: a.kind } : {}), pts: a.pts.map(r3) });
+  }
+  for (const [i, p] of h.props.entries()) {
+    const at = `prop ${i + 1}`;
+    if (typeof p?.id !== 'string' || !known.has(p.id)) return `${at}: unknown sprite`;
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return `${at}: position must be a number`;
+    if (typeof p.flip !== 'boolean') return `${at}: flip must be true or false`;
+    if (!(p.scale >= 0.1 && p.scale <= 5)) return `${at}: scale must be 0.1 to 5`;
+    if (gone[p.id]) continue; // a sprite removed from the game leaves its props out
+    props.push({ id: p.id, x: r3(p.x), y: r3(p.y), flip: p.flip, scale: r3(p.scale) });
+  }
+  return { name: h.name.trim().slice(0, 40) || 'Hole', areas, props };
+}
+const TYPES = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg' };
+let PHOTOS = null;
+/** the Paint photo textures: texture id → its file in src/assets/ground (read once from the imports and PHOTO_TEX of grass-art.ts) */
+function photos() {
+  if (PHOTOS) return PHOTOS;
+  const src = fs.readFileSync(GRASS_ART, 'utf8'), file = new Map();
+  for (const m of src.matchAll(/^import (\w+) from '\.\.\/assets\/ground\/([^']+)';/gm)) file.set(m[1], m[2]);
+  PHOTOS = new Map();
+  for (const m of src.matchAll(/\{ tex: '(\w+)', src: (\w+)/g)) if (file.has(m[2])) PHOTOS.set(m[1], file.get(m[2]));
+  return PHOTOS;
+}
 
 const body = req => new Promise(res => { let s = ''; req.on('data', d => { s += d; }); req.on('end', () => { try { res(JSON.parse(s || '{}')); } catch { res({}); } }); });
 http.createServer(async (req, res) => {
@@ -224,6 +302,24 @@ http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && P === '/api/rebuild') return json(rebuild());
     if (P === '/api/status') return json(job && { ...job, log: job.log.slice(-600) });
+    // golf hole presets
+    if (req.method === 'GET' && P === '/api/holes') return json(readHoles());
+    if (req.method === 'POST' && P === '/api/holes') {
+      const { n, hole } = await body(req);
+      if (!(Number.isInteger(n) && n >= 1 && n <= HOLE_N)) { res.writeHead(400); return res.end('bad slot'); }
+      let clean = null;
+      if (hole !== null) { clean = checkHole(hole); if (typeof clean === 'string') { res.writeHead(400); return res.end(clean); } }
+      const data = readHoles(); data.holes[n - 1] = clean;
+      fs.writeFileSync(HOLES, JSON.stringify(data, null, 1) + '\n'); return json(data);
+    }
+    if (P === '/api/hole-generate') return json(generateHole(Math.trunc(+url.searchParams.get('seed')) || 0));
+    if (P.startsWith('/tex/')) {
+      const f = photos().get(decodeURIComponent(P.slice(5))), abs = f && path.join(ROOT, 'src/assets/ground', f);
+      if (!abs || !fs.existsSync(abs)) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { 'content-type': TYPES[path.extname(abs)] ?? 'application/octet-stream', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(abs));
+    }
+    if (P === '/hole-lib.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(path.join(OUT, 'hole-lib.js'))); }
+    if (P === '/holes.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/holes.js'))); }
     res.writeHead(404); res.end();
   } catch (e) { res.writeHead(500); res.end(String(e.stack || e)); }
 }).listen(PORT, '127.0.0.1', () => console.log(`sprite studio: http://127.0.0.1:${PORT}/`));

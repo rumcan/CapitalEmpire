@@ -1,0 +1,473 @@
+{
+  "pack": "Capital Empire grass ground textures v1",
+  "created": "2026-10-20",
+  "generationMethod": "Built-in image_gen, one generated image for each grass material",
+  "generationPrompts": "output/grass-art-2026-10-20/generation-plan.json",
+  "assembly": {
+    "method": "2x2 reflected source assembly",
+    "layout": [
+      [
+        "original",
+        "horizontal reflection"
+      ],
+      [
+        "vertical reflection",
+        "horizontal and vertical reflection"
+      ]
+    ],
+    "note": "Generated source pixels were copied and reflected, without upscaling, paint, retouching, colour changes or synthesized surface detail. Both pairs of opposite edges are exactly identical; use ordinary texture repeat.",
+    "tradeoff": "Reflection provides guaranteed seam continuity and preserves native detail, but produces mirrored motifs. Use the original generated base with the existing hex mixer when maximum irregularity matters; originals do not have exactly matching borders."
+  },
+  "integration": {
+    "status": "Assets only; no renderer or game code changed",
+    "projection": "Orthographic top-down ground plane",
+    "opacity": "Opaque RGB PNG",
+    "sampler": "repeat",
+    "textureScale": "Choose scene scale to preserve fine grass detail. The 2508px macro-tile contains four native 1254px reflected quadrants; it is not a 2508px unique generation.",
+    "variants": "Variants share a broad palette, not mutually matching borders. Transition between varieties using soft masks, existing hex mixer or separate polygon boundaries.",
+    "currentRenderer": "src/game/textures.ts grass() already mixes paintings, and src/game/renderer.ts uses Canvas createPattern(image, repeat). Import individual PNGs using Vite asset imports and wire them in separately.",
+    "optimizedRuntimeFormat": "Optional full-resolution lossless WebP files are provided beside PNG masters. Decoded pixels and opposite borders exactly match each PNG."
+  },
+  "items": [
+    {
+      "id": "backyard-lush",
+      "name": "Backyard — lush lawn",
+      "file": "png/grass-backyard-lush.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Healthy suburban gardens, parks and residential lawns",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/backyard-lush.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 195,
+          "mean": 34.4288
+        },
+        "topBottom": {
+          "max": 191,
+          "mean": 29.9365
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "24e5e46d77234a61744ec4bbd62036a17f57d81c58860f06bef85250d356b3bb",
+      "webp": "webp/grass-backyard-lush.webp",
+      "bytes": 15214893,
+      "webpBytes": 12342620,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "e83f32a34e60a81454b92d4f9cd159776a22186de6a64fa795ecb21ff3b8794c",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    },
+    {
+      "id": "backyard-worn",
+      "name": "Backyard — worn patches",
+      "file": "png/grass-backyard-worn.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Lived-in gardens, foot traffic and worn residential lawn",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/backyard-worn.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 175,
+          "mean": 32.5821
+        },
+        "topBottom": {
+          "max": 184,
+          "mean": 30.3543
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "806c9560892a9df289d7b6f305923665a5d3055a1b83bbf57a56ed6aa5f1b97d",
+      "webp": "webp/grass-backyard-worn.webp",
+      "bytes": 15404466,
+      "webpBytes": 12658994,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "26db9280a25c7629c0924b2a751a39bb2446627d3eb4231ff4dced37c6696fbf",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    },
+    {
+      "id": "backyard-clover-flowers",
+      "name": "Backyard — clover and daisies",
+      "file": "png/grass-backyard-clover-flowers.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Leafy informal yards, flowering garden lawns and park edges",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/backyard-clover-flowers.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 152,
+          "mean": 28.7161
+        },
+        "topBottom": {
+          "max": 158,
+          "mean": 26.8312
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "7b68b62fe4f8f5f6d7399df0970ecf95ce5f1f926ecd026ff44e711c8acc6bcd",
+      "webp": "webp/grass-backyard-clover-flowers.webp",
+      "bytes": 15297253,
+      "webpBytes": 12531646,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "d9bfd8c0217075d0cca83fb19414d2238170305de3a86380c6626383be9a4bbb",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    },
+    {
+      "id": "golf-putting-green",
+      "name": "Golf — putting green",
+      "file": "png/grass-golf-putting-green.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Putting greens and polished sports turf",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/golf-putting-green.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 193,
+          "mean": 28.6457
+        },
+        "topBottom": {
+          "max": 166,
+          "mean": 31.1409
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "aac38d523b7f20f292563e545bae2deb68a68d8ed0f7354490b063ad7a4adc02",
+      "webp": "webp/grass-golf-putting-green.webp",
+      "bytes": 15137116,
+      "webpBytes": 12545898,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "c78852bf8f6c15beb65e5e20331672b073c212adc168f5c272d48758d5587ba5",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    },
+    {
+      "id": "golf-worn-fairway",
+      "name": "Golf — worn fairway",
+      "file": "png/grass-golf-worn-fairway.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Golf fairways, tee zones and lightly divoted playing turf",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/golf-worn-fairway.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 146,
+          "mean": 26.827
+        },
+        "topBottom": {
+          "max": 142,
+          "mean": 28.096
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "ac0630c2a6354a8aabb5addb9d7faec27c228f62d0f90e292888e4ee8b5dfd3d",
+      "webp": "webp/grass-golf-worn-fairway.webp",
+      "bytes": 15254294,
+      "webpBytes": 12616610,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "82f4dc421da87260b3ee8adee7db732f261933e3e5d88b5f8e4d6b50a96b984d",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    },
+    {
+      "id": "golf-rough",
+      "name": "Golf — rough",
+      "file": "png/grass-golf-rough.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Golf rough, course fringes and longer maintained grass",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/golf-rough.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 191,
+          "mean": 29.8974
+        },
+        "topBottom": {
+          "max": 139,
+          "mean": 25.9987
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "170746956b2c7edfac7820f494c4c0be68295976d9c972a688694d878304ff00",
+      "webp": "webp/grass-golf-rough.webp",
+      "bytes": 15242892,
+      "webpBytes": 12036130,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "1efcdfb93caf48bd09ffd0eea2e4679b1db25074c32d0d73aae70d0ed3f4beab",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    },
+    {
+      "id": "meadow-lush",
+      "name": "Meadow — mixed grasses",
+      "file": "png/grass-meadow-lush.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Natural open ground, uncut parks and meadow base",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/meadow-lush.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 162,
+          "mean": 27.5997
+        },
+        "topBottom": {
+          "max": 123,
+          "mean": 25.2929
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "e21c9f326c677c9e20c4bc4f99f072aba4a2c258b527bb60f31b986334d4427d",
+      "webp": "webp/grass-meadow-lush.webp",
+      "bytes": 15368590,
+      "webpBytes": 12535352,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "a0ea3e635e712b6ec9a0685330d2f0afe516b413f0bbbe2aa4acc561fe1e6875",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    },
+    {
+      "id": "meadow-flowers-patches",
+      "name": "Meadow — flowers and thin patches",
+      "file": "png/grass-meadow-flowers-patches.png",
+      "width": 2508,
+      "height": 2508,
+      "channels": 3,
+      "opaque": true,
+      "suggestedUsage": "Wild grass, field margins and flowered open ground",
+      "repeatMode": "repeat",
+      "nativeSourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceFile": "output/grass-art-2026-10-20/raw/meadow-flowers-patches.png",
+      "nativeSourceEdgeDifferences": {
+        "leftRight": {
+          "max": 152,
+          "mean": 30.3514
+        },
+        "topBottom": {
+          "max": 160,
+          "mean": 27.1382
+        }
+      },
+      "finalEdgeDifferences": {
+        "leftRight": {
+          "max": 0,
+          "mean": 0
+        },
+        "topBottom": {
+          "max": 0,
+          "mean": 0
+        }
+      },
+      "sha256": "a9c021c43783e1530b05290503dedaa27b703922cfc0f2f6a715dd7a970ca9d0",
+      "webp": "webp/grass-meadow-flowers-patches.webp",
+      "bytes": 15380742,
+      "webpBytes": 12699596,
+      "webpEncoding": {
+        "lossless": true,
+        "effort": 4
+      },
+      "webpSha256": "512b18098de8cc3bf32d4b24cf6a2506c4319351a3e4d10bd1aa84424dd8ca38",
+      "webpValidation": {
+        "decodedPixelIdenticalToPNG": true,
+        "width": 2508,
+        "height": 2508,
+        "opaque": true,
+        "oppositeEdgeMaximumDifference": {
+          "leftRight": 0,
+          "topBottom": 0
+        }
+      }
+    }
+  ]
+}

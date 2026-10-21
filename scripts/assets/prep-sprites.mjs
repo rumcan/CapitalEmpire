@@ -12,27 +12,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { ROOT, fromBranch, fromExport, libraryItems } from './source.mjs';
+import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
+import { capitalItems } from './capital-art.mjs';
 import { bakeVariant, lotVariants } from './lot-variants.mjs';
 import { REMOVED } from './removed.mjs';
 import { SCALE_OVERRIDES } from './overrides.mjs';
 import { describe, newFramePath, parseFix } from './walker-fix.mjs';
 
 export const MIP0 = 0.6, MIPS = 5, PAGE = 2048, GUT = 16, ALIGN = 16;
-const OUT = path.join(ROOT, 'src/assets/atlas');
-// empty the atlas folder file by file (retrying a file held for a moment by the indexer or a scanner) and keep the folder itself: on Windows
-// removing the folder fails while anything has it open (an Explorer window, a dev server's watcher), and left the atlas half deleted
-fs.mkdirSync(OUT, { recursive: true });
-for (const f of fs.readdirSync(OUT)) fs.rmSync(path.join(OUT, f), { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+const ATLAS_OUT = path.join(ROOT, 'src/assets/atlas'), OUT = path.join(ROOT, 'output/atlas-next');
+// the pages are written to output/atlas-next and published to src/assets/atlas at the end, so a failed rebuild keeps the old atlas
+fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });
 
 const town = JSON.parse((await fromExport('town.json')).toString());
-const items = town.items, fromLib = await libraryItems(new Set(Object.keys(items)));
+const items = { ...town.items, ...capitalItems() }, fromLib = await libraryItems(new Set(Object.keys(items)));
 for (const [id, it] of Object.entries(fromLib)) items[id] = it;
 // CapitalEmpire's own sprites (art/<set>/items.json, the export's item format plus local: true; e.g. the car park gates, art/parking)
 const LOCAL = {};
 for (const set of fs.readdirSync(path.join(ROOT, 'art'), { withFileTypes: true })) {
   const f = path.join(ROOT, 'art', set.name, 'items.json');
-  if (set.isDirectory() && fs.existsSync(f)) for (const [id, it] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) { items[id] = it; (LOCAL[it.cat] ??= []).push(id); }
+  // only entries marked local (art/golf/items.json is the golf prompts, packed by prep-golf.mjs, not a sprite set)
+  if (set.isDirectory() && fs.existsSync(f)) for (const [id, it] of Object.entries(JSON.parse(fs.readFileSync(f, 'utf8')))) { if (!it?.local) continue; items[id] = it; (LOCAL[it.cat] ??= []).push(id); }
 }
 
 // the largest scale the game draws each id at: the owner's lot table (+5% composer jitter) and the forest (up to 1.5). The table is
@@ -46,6 +46,8 @@ const maxScale = id => Math.max(1, (OWNER[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5
 const all = c => Object.keys(items).filter(id => items[id].cat === c);
 // an id may sit in several lists: the first list that names it wins (see `seen` in step 1)
 const SEL = {
+  'Capital vegetation': all('Capital vegetation'),
+  'Grass materials': all('Grass materials'),
   'Houses': ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick', ...all('Houses'), 'expansion:ranch-rear', 'expansion:garage-rear', ...all('House backs')],
   'Shops & services': ['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:postoffice', 'town:firestation', 'town:fish_tackle', 'world:diner', 'world:arcade', 'world:video_rental', 'ref:building-gas-canopy', ...all('Shops & services')],
   'Landmarks': ['world:church', 'world:gazebo', 'world:watertower', 'ref:landmark-windmill', 'world:barn', 'world:primary_school', ...all('Landmarks & venues'), ...all('Park & sports')],
@@ -63,7 +65,7 @@ const SEL = {
   'Odds & ends': [...all('Town odds & ends'), ...all('Halloween yard details')],
   ...LOCAL,
 };
-const COST = { 'More houses': 9000, 'Road signs': 150, 'Arcade': 600, 'Odds & ends': 200, 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300, 'Parking': 300 };
+const COST = { 'Capital vegetation': 250, 'Grass materials': 0, 'More houses': 9000, 'Road signs': 150, 'Arcade': 600, 'Odds & ends': 200, 'Houses': 9000, 'Shops & services': 24000, 'Landmarks': 40000, 'Trees & plants': 250, 'Vehicles': 3500, 'Street furniture': 300, 'Halloween': 120, 'Fences': 90, 'Yard': 400, 'Industry': 300, 'Parking': 300 };
 // export categories whose kind the engine needs to see differently (derelict houses are not occupied houses)
 const KIND_OF_CAT = { 'Derelict town': 'building', 'Scrapyard clutter': 'decor' };
 
@@ -195,6 +197,13 @@ for (let p = 0; p < pages.length; p++) {
   files.push(row);
 }
 
+// Publish completed pages together; a failed rebuild keeps the previous atlas available.
+// empty the atlas folder file by file (retrying a file held for a moment by the indexer or a scanner) and keep the folder itself: on Windows
+// removing the folder fails while anything has it open (an Explorer window, a dev server's watcher)
+fs.mkdirSync(ATLAS_OUT, { recursive: true });
+for (const f of fs.readdirSync(ATLAS_OUT)) fs.rmSync(path.join(ATLAS_OUT, f), { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+fs.cpSync(OUT, ATLAS_OUT, { recursive: true });
+
 // ---- 4. library.ts
 const imports = [], pageRows = [];
 files.forEach((row, p) => { const vars = row.map((f, m) => { const v = `p${p}m${m}`; imports.push(`import ${v} from '../assets/atlas/${f}';`); return v; }); pageRows.push(`[${vars.join(', ')}]`); });
@@ -213,6 +222,8 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   "import { appendCars } from './cars-library';",
   "import { appendEast } from './east-library';",
   "import { appendBusinesses } from './business-library';",
+  "import { appendConstruction } from './construction-library';",
+  "import { appendGolf } from './golf-library';",
   ...imports, '',
   `/** atlas pages: one row per page, one url per mip (scale ${MIP0} x 2^-mip of native) */`,
   `export const ATLAS_PAGES: string[][] = [${pageRows.join(', ')}];`,
@@ -235,7 +246,9 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   '}',
   'appendCars(LIBRARY, ATLAS_PAGES);',
   'appendEast(LIBRARY, ATLAS_PAGES);',
-  'appendBusinesses(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
+  'appendBusinesses(LIBRARY, ATLAS_PAGES);',
+  'appendConstruction(LIBRARY, ATLAS_PAGES);',
+  'appendGolf(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);

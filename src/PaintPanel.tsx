@@ -1,10 +1,10 @@
 import rockyDirt from './assets/ground/rocky-dirt.webp';
 import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
-import { BORDER_TEXES, BORDER_W, PAINT_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
+import { BORDER_TEXES, BORDER_W, BRUSH_PRESETS, PAINT_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
 import type { PaintMode } from './game/paint-tool';
 
-const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }];
+const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }, { id: 'hole', label: 'Golf hole' }, { id: 'brush', label: 'Brush' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
 const swatch = (t: { id: string; col: string }) => ({ backgroundColor: t.col, backgroundImage: DIRT_SWATCHES[t.id] ? `url(${DIRT_SWATCHES[t.id]})` : undefined, backgroundSize: 'cover' });
 const BORDERS = ['None', 'Small', 'Medium', 'Large'];
@@ -17,7 +17,12 @@ export function PaintPanel({ game }: { game: Game }) {
   const p = game.paint, s = p.style;
   const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
-  const help = p.selected
+  const br = p.brush[p.brushKind], brushName = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
+  const help = p.mode === 'brush'
+    ? `Drag to paint ${brushName} for hole ${p.brushHole}; strokes of the same kind on a hole join into one area. Alt-drag or Rub out erases. [ and ] change the size. The texture and border settings below edit this preset (remembered).`
+    : p.mode === 'hole'
+    ? 'Click to place a golf hole, its tee at the click. R turns it. Every piece is an ordinary painted area (Pick to edit, Erase to remove); the flag and plants are props (Bulldoze).'
+    : p.selected
     ? `Area #${p.selected}: drag its handles to reshape or move it; the settings below change it. Delete removes it (a corner under the pointer goes first).`
     : p.mode === 'draw'
       ? 'Click corners; click the first one (or double-click / Enter) to close. Or press and drag to paint an outline freehand.'
@@ -27,11 +32,33 @@ export function PaintPanel({ game }: { game: Game }) {
   return (
     <div>
       <div className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Paint</div>
+      <div className="mt-2 text-[11px] text-slate-400">Golf brush</div>
+      <div className="flex flex-wrap gap-1">
+        {BRUSH_PRESETS.map(b => <button key={b.kind} className={`chip ${p.mode === 'brush' && p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
+      </div>
       <div className="mt-2 text-[11px] text-slate-400">Mode</div>
       <div className="flex flex-wrap gap-1">
-        {MODES.map(m => <button key={m.id} className={`chip ${p.mode === m.id ? 'chip-on' : ''}`} onClick={() => p.setMode(m.id)}>{m.label}</button>)}
+        {MODES.map(m => <button key={m.id} className={`chip ${p.mode === m.id ? 'chip-on' : ''}`} onClick={() => m.id === 'brush' ? p.setBrush(p.brushKind) : p.setMode(m.id)}>{m.label}</button>)}
       </div>
       <div className="mt-1 text-xs text-slate-300">{help}</div>
+      {p.mode === 'brush' && (
+        <>
+          <div className="mt-2 text-[11px] text-slate-400">Hole</div>
+          <div className="flex items-center gap-1">
+            <button className="btn" onClick={() => { p.brushHole = Math.max(1, p.brushHole - 1); game.emit(); }}>−</button>
+            <span className="w-12 text-center text-xs text-slate-200">{p.brushHole}</span>
+            <button className="btn" onClick={() => { p.brushHole = Math.min(18, p.brushHole + 1); game.emit(); }}>+</button>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">Brush size</div>
+          <div className="flex items-center gap-2">
+            <input type="range" min={0.5} max={20} step={0.5} value={br.r} onChange={e => p.setBrushR(+e.target.value)} className="flex-1" />
+            <span className="w-16 text-right text-xs text-slate-200">{`${br.r} tiles`}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
+          </div>
+        </>
+      )}
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
         {PAINT_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
