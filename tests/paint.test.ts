@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaintTool } from '../src/game/paint-tool';
 import {
-  DEFAULT_STYLE, areaAt, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insidePoly, polyArea, simplify, snapPt, toTuple,
+  DEFAULT_STYLE, RADIUS_MAX, areaAt, checkArea, clampStyle, crossings, edgeAngle, fromTuples, insidePoly, polyArea, roundCorners, simplify, snapPt, toTuple,
   type BorderSize, type BorderTex, type PaintArea, type PaintTex, type PaintTuple,
 } from '../src/game/paint';
 
@@ -27,7 +27,7 @@ test('rocky dirt saves keep both paintings and border styles when reloaded into 
   const saved = JSON.parse(JSON.stringify(first.save())) as PaintTuple[];
   const reloaded = new PaintTool(host);
   reloaded.load(saved);
-  assert.deepEqual(reloaded.save(), tuples);
+  assert.deepEqual(reloaded.save(), tuples.map(t => [...t, 0])); // the save now carries a radius (0: sharp)
   assert.deepEqual(sent.get('paint:1'), [{ pts: SQUARE, tex: 'rockyDirt', paint: { s: 1.5, a: 30, b: 0.5, bt: 'rockyDirtAlt', z: 1 } }]);
   assert.deepEqual(sent.get('paint:2'), [{ pts: L_SHAPE, tex: 'rockyDirtAlt', paint: { s: 0.5, a: -45, b: 0.25, bt: 'rockyDirt', z: 2 } }]);
 });
@@ -111,8 +111,8 @@ test('clampStyle: scale, border and textures are clamped or defaulted', () => {
 
 test('save round trip: areas → tuples → JSON → areas gives the same areas; a bow-tie tuple is dropped', () => {
   const areas: PaintArea[] = [
-    { id: 1, pts: [0, 0, 8, 0, 8, 6, 0, 6], tex: 'slabs', scale: 1.5, angle: -30, border: 2, btex: 'kerb' },
-    { id: 2, pts: L_SHAPE, tex: 'grass', scale: 0.25, angle: 45, border: 0, btex: 'dirt' },
+    { id: 1, pts: [0, 0, 8, 0, 8, 6, 0, 6], tex: 'slabs', scale: 1.5, angle: -30, border: 2, btex: 'kerb', radius: 0 },
+    { id: 2, pts: L_SHAPE, tex: 'grass', scale: 0.25, angle: 45, border: 0, btex: 'dirt', radius: 0 },
   ];
   const tuples = areas.map(toTuple);
   const back = fromTuples(JSON.parse(JSON.stringify(tuples)) as PaintTuple[]);
@@ -124,7 +124,7 @@ test('save round trip: areas → tuples → JSON → areas gives the same areas;
 });
 
 test('save round trip: a grass-v1 texture (golfGreen) keeps its name through toTuple → JSON → fromTuples', () => {
-  const area: PaintArea = { id: 1, pts: [0, 0, 6, 0, 6, 6, 0, 6], tex: 'golfGreen', scale: 2, angle: 15, border: 1, btex: 'lawnWorn' };
+  const area: PaintArea = { id: 1, pts: [0, 0, 6, 0, 6, 6, 0, 6], tex: 'golfGreen', scale: 2, angle: 15, border: 1, btex: 'lawnWorn', radius: 0 };
   const back = fromTuples(JSON.parse(JSON.stringify([toTuple(area)])) as PaintTuple[]);
   assert.deepEqual(back, [area]);
 });
@@ -134,4 +134,36 @@ test('edgeAngle: a first edge along +y is 90, along -y is -90, along +x is 0 (as
   assert.equal(edgeAngle([0, 3, 0, 0, 3, 0, 3, 3]), -90);
   assert.equal(edgeAngle([0, 0, 3, 0, 3, 3, 0, 3]), 0);
   assert.equal(clampStyle({ ...DEFAULT_STYLE, angle: edgeAngle([0, 0, 0, 3, 3, 3, 3, 0]) }).angle, 90);
+});
+
+test('roundCorners: a 10x10 square at r 2 stays in its box with the rounded area; r 0 returns the same corners', () => {
+  const sq = [0, 0, 10, 0, 10, 10, 0, 10];
+  const out = roundCorners(sq, 2);
+  for (let k = 0; k < out.length; k += 2) {
+    assert.ok(Number.isFinite(out[k]) && out[k]! >= -1e-9 && out[k]! <= 10 + 1e-9, `x ${out[k]}`);
+    assert.ok(Number.isFinite(out[k + 1]) && out[k + 1]! >= -1e-9 && out[k + 1]! <= 10 + 1e-9, `y ${out[k + 1]}`);
+  }
+  assert.ok(Math.abs(polyArea(out) - (100 - (4 - Math.PI) * 4)) < 0.5, `area ${polyArea(out)}`);
+  assert.deepEqual(roundCorners(sq, 0), sq);
+});
+
+test('roundCorners: a radius bigger than half an edge is clamped; the points stay finite and in the box', () => {
+  const sq = [0, 0, 10, 0, 10, 10, 0, 10];
+  const out = roundCorners(sq, 50);
+  assert.ok(out.length >= 8);
+  for (let k = 0; k < out.length; k += 2) {
+    assert.ok(Number.isFinite(out[k]) && out[k]! >= -1e-9 && out[k]! <= 10 + 1e-9);
+    assert.ok(Number.isFinite(out[k + 1]) && out[k + 1]! >= -1e-9 && out[k + 1]! <= 10 + 1e-9);
+  }
+});
+
+test('radius: old 6-element tuples load sharp; toTuple/fromTuples round-trip a radius; clampStyle keeps it in [0, RADIUS_MAX]', () => {
+  const old = fromTuples([['paving', 1, 0, 0, 'kerb', SQUARE]]);
+  assert.equal(old[0]?.radius, 0);
+  const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 3), tex: 'pad', scale: 1, angle: 0, border: 1, btex: 'kerb', radius: 3.5 };
+  const tuple = toTuple(area);
+  assert.equal(tuple[6], 3.5);
+  assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([tuple])) as PaintTuple[]), [area]);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, radius: 99 }).radius, RADIUS_MAX);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, radius: -3 }).radius, 0);
 });
