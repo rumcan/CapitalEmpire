@@ -154,6 +154,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'townState': postTown(city.restore(m.lots, m.simT, m.budget, m.money, m.career, m.shift), true); city.loadRound(m.round); city.restoreBiz(m.biz); postBudget(null); postBiz(); break;
       case 'parks': city.setParks(m.defs); forcePost = true; break;
       case 'businesses': city.setBusinesses(m.defs); post({ t: 'site', site: city.site }); postBiz(); break;
+      case 'golf': city.setGolf(m.on ? { tier: m.tier, rep: m.rep } : null); break;
       case 'parkTest': city.parkTest(m.id, m.n); forcePost = true; break;
       case 'tolls': city.setTolls(m.defs); forcePost = true; break;
       case 'parking': city.setParking(m.rows, m.curbs, m.fee); forcePost = true; break;

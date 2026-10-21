@@ -33,6 +33,7 @@ import { lotPark, rowLots, rowQuad, type BayRowDef } from './event/rows';
 import { resolveCurb, type Curb, type CurbDef } from './event/curb';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
+import { spectatorDemand } from './golf/tour';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -161,6 +162,8 @@ export class City {
   centres: Pt[] = [];
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
+  /** golf mode (null: off): the tournament's tier and its reputation; the season (one game day) ends with the tournament (see startTournament) */
+  golf: { tier: number; rep: number } | null = null;
   /** the player's businesses (setBusinesses: the full list, with each one's stats; the stadium's level is its own, from its fan cars (XP), not the round's) */
   businesses: BizView[] = [];
   /** each placed business's stats by id (kept across setBusinesses while it stands; restoreBiz fills them from a save) */
@@ -307,17 +310,17 @@ export class City {
   }
 
   /** the businesses as the player placed them (defs, the full list, each time): each keeps its stats by id (a new id gets fresh ones; a removed one's go),
-   *  and the stadium's site is siteAt of the stadium entry (null: none). While a round is under way the stadium does not change: the current one stays in
-   *  place of whatever defs say about it */
+   *  and the site is siteAt of the stadium entry, else of the clubhouse (null: neither). While a round is under way the stadium and the clubhouse do not
+   *  change: the current ones stay in place of whatever defs say about them */
   setBusinesses(defs: BizDef[]): void {
-    const cur = this.businesses.find(b => b.type === 'stadium'), locked = this.round.stage !== 'free';
-    const others = defs.filter(d => d.type !== 'stadium'), keep: BizDef[] = cur ? [{ id: cur.id, type: 'stadium', x: cur.x, y: cur.y, w: cur.w, h: cur.h }] : [];
+    const cur = this.businesses.find(b => b.type === 'stadium'), club = this.businesses.find(b => b.type === 'clubhouse'), locked = this.round.stage !== 'free';
+    const others = defs.filter(d => d.type !== 'stadium' && d.type !== 'clubhouse'), keep: BizDef[] = [cur, club].filter((b): b is BizView => !!b).map(b => ({ id: b.id, type: b.type, x: b.x, y: b.y, w: b.w, h: b.h }));
     const next: BizDef[] = locked ? [...keep, ...others] : defs;
     const stats = new Map<number, BizStats>(), old = new Set(this.businesses.map(b => b.id));
     this.businesses = next.map(d => { const s = this.bizStats.get(d.id) ?? freshStats(d.id); stats.set(d.id, s); return { ...d, ...s }; });
     this.bizStats = stats;
-    const st = this.businesses.find(b => b.type === 'stadium');
-    this.site = st ? siteAt(st.x, st.y, st.w, st.h) : null;
+    const st = this.businesses.find(b => b.type === 'stadium'), cl = this.businesses.find(b => b.type === 'clubhouse');
+    this.site = st ? siteAt(st.x, st.y, st.w, st.h) : cl ? siteAt(cl.x, cl.y, cl.w, cl.h) : null;
     // a business taken away loses its pending cars; the doors follow the new list, and the day's plan takes the new one in (the rest of its hours)
     for (const id of old) if (!stats.has(id)) this.visits.drop(id);
     this.visits.onGraph(this.visitDoors());
@@ -351,6 +354,20 @@ export class City {
     // the clock jumps to the event evening: the town skips the hours between (no catch-up burst of growth or land sales)
     this.town.skipTo(to);
     this.freeze(to);
+    return true;
+  }
+  /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
+  setGolf(g: { tier: number; rep: number } | null): void { this.golf = g; }
+  /** starts the season's tournament at the day's boundary `at` (see step), in golf mode with a site and a free round: the round takes one tournament day's
+   *  crowd (spectatorDemand of the tier and reputation, a car per PARTY fans, over the towns by population), the clock is frozen at `at` as startRound
+   *  freezes it, and the surge begins at once (the season was the build). False, and nothing changes, otherwise */
+  private startTournament(at: number): boolean {
+    const g = this.golf;
+    if (!g || !this.site || this.round.stage !== 'free') return false;
+    if (!this.round.start(crowdFor(this.round.level, this.town.popK, Math.round(spectatorDemand(g.tier, g.rep) / PARTY)))) return false;
+    this.town.skipTo(at);
+    this.freeze(at);
+    this.round.startNow(); this.beginSurge();
     return true;
   }
   /** ends the build now: the surge begins; false unless in build */
@@ -581,6 +598,8 @@ export class City {
     else if (d > this.dayIdx) {
       this.closeVisits();
       ledger = this.budget.endDay(this.dayIdx, this.dayIn()); this.tradeAt = { ...this.sim.trade }; this.dayIdx = d;
+      // golf mode: the season ends at this boundary, the start of game day d (base + (d - 1) * GAME_DAY), and the tournament starts there
+      this.startTournament(this.budget.base + (d - 1) * GAME_DAY);
       // the new day's visits are planned now, or when the round is free again (step)
       this.visitDay = -1; if (this.round.stage === 'free') this.planVisits();
     }
