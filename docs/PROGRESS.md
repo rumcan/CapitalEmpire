@@ -2078,3 +2078,12 @@ PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks l
   loads with no console errors. The worker refused SSH again.
 - Next (art): the owner's review of the four pilot sprites (sizes in the studio: Smaller/Bigger), then the rest of the P1 list in
   GOLF-SPRITES.md sections 3–5 in batches within RUN's daily cap; A2–A4.
+- **Buildings square to neither street (the owner's screenshot on 5174, a three-dormer house):** straight-on art the hand-picked
+  `lots/frontal.ts` list had missed. Measured every house and building sprite's edges (straight-on art: mostly horizontal edges;
+  isometric: mostly +-27 degrees); the score matches the list, and 8 more went into it (the dormer house, a cottage, an L-ranch, two
+  garages, the gas shop, the snack bar, the drive-in marquee). Checked on 5 staged 3 x 3 blocks: 337 buildings, none straight on.
+  For new art: rerun that measure (a short numpy script over the atlas; anything scoring above about 1.1 is straight on) before it
+  reaches the lot pools.
+- The owner's studio sizes for the golf pilot (food tent x0.68, grandstand x1.08, leaderboard x1.17) are in the scale table;
+  `prep-golf.mjs` packs at the owner's size when bigger, so nothing is stretched.
+
