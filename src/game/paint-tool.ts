@@ -241,7 +241,7 @@ export class PaintTool {
   drawPreview(v: PaintView) {
     if (this.mode === 'draw') this.drawOutline(v);
     const a = this.selectedArea();
-    if (a) { this.shade(v, a, 'rgba(251,191,36,0.18)', '#fbbf24', 2); this.drawHandles(v, this.drag ? this.drag.cand : a.pts); }
+    if (a) { this.shade(v, a, '', '#fbbf24', 2); this.drawHandles(v, this.drag ? this.drag.cand : a.pts); }
     if (this.drag?.bad) this.drawBad(v, this.drag.cand, this.drag.bad);
     if (this.mode === 'draw') return;
     const h = this.areas.find(q => q.id === this.hover);
