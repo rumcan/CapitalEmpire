@@ -353,6 +353,6 @@ test('border style: clampStyle clamps bscale, bangle and btoneAmt, and fixes a b
 test('border style: the ground patch carries the border scale and tone only when they differ from the default', () => {
   const base: PaintArea = { id: 4, pts: SQUARE, tex: 'paving', scale: 1, angle: 0, border: 1, btex: 'kerb', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000', bscale: 1, bangle: 0, btone: 0, btoneAmt: 0.35, btint: '#000000' };
   assert.deepEqual(PaintTool.patch(base).paint, { s: 1, a: 0, b: 0.25, bt: 'kerb', z: 4 });
-  assert.deepEqual(PaintTool.patch({ ...base, bscale: 2 }).paint, { s: 1, a: 0, b: 0.25, bt: 'kerb', z: 4, bs: 2 });
+  assert.deepEqual(PaintTool.patch({ ...base, bscale: 2 }).paint, { s: 1, a: 0, b: 0.25, bt: 'kerb', z: 4, bs: 2, ba: 0 });
   assert.deepEqual(PaintTool.patch({ ...base, btone: 2, btoneAmt: 0.5, btint: '#ffffff' }).paint, { s: 1, a: 0, b: 0.25, bt: 'kerb', z: 4, bto: 2, bta: 0.5, btc: '#ffffff' });
 });
