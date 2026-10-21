@@ -13,6 +13,7 @@ export type LotGeom = Pick<Lot, 'o' | 'u' | 'n' | 'w' | 'd'>;
 import { LU, LV } from './town';
 import { OWNER_SCALE } from './scales';
 import { FRONTAL } from './frontal';
+import { hasLettering, EAST_FACING } from './lettering';
 import { LOT_DECALS } from '../lot-decals';
 import { parkedCar } from '../traffic';
 import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
@@ -69,6 +70,11 @@ function boxOf(id: string, s: number, flip: boolean): Box4 {
 /** a seeded pick; '' from an empty list (put() ignores unknown ids) */
 const pick = (r: () => number, a: string[]): string => a[Math.floor(r() * a.length)] ?? '';
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+/** a pool for a sprite drawn flipped: lettering reads backwards when mirrored, so a flipped lot keeps only the plain sprites, and a lettering
+ *  sprite with east-facing art (EAST_FACING) stays (it is drawn as that art, unflipped). Unflipped keeps the whole pool. */
+const plain = (list: string[], flip: boolean | undefined) => (flip ? list.filter(id => EAST_FACING[id] !== undefined || !hasLettering(id, BY.get(id)?.name)) : list);
+/** the sprite a front is drawn as, and its flip: a flipped front with east-facing art is that art, drawn unflipped; otherwise itself, as flipped */
+const faced = (id: string, flip: boolean): [string, boolean] => { const e = flip ? EAST_FACING[id] : undefined; return e ? [e, false] : [id, flip]; };
 
 const HOUSE_FRONT = cat(i => i.cat === 'Houses' && i.kind === 'house');
 const HOUSE_REAR = names(['expansion:ranch-rear', 'expansion:cottage-rear', 'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear']);
@@ -167,17 +173,19 @@ class Build {
   P(a: number, b: number): Pt { return { x: this.o.x + this.u.x * a + this.n.x * b, y: this.o.y + this.u.y * a + this.n.y * b }; }
   /** a sprite at a seeded size (owner scale times mul, varied by 5%) with its footprint: the union of its boxes, as the engine draws it */
   spec(id: string, o: Opt = {}): Spec | null {
-    if (!BY.has(id)) return null;
+    // a flipped front with east-facing art is that art, unflipped (faced)
+    const [sid, flip] = faced(id, !!o.flip);
+    if (!BY.has(sid)) return null;
     // cars at 1: the engine draws a parked car at CAR_SCALE (its footprint too), the size of the cars on the road
-    const flip = !!o.flip, car = BY.get(id)!.cat === 'Vehicles', s = car ? 1 : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
-    return { id, s, flip, h: boxOf(id, car ? CAR_SCALE : s, flip) };
+    const car = BY.get(sid)!.cat === 'Vehicles', s = car ? 1 : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
+    return { id: sid, s, flip, h: boxOf(sid, car ? CAR_SCALE : s, flip) };
   }
   /** the half extent of a spec along the lot's u (ea) and n (eb) */
   ea(g: Spec): number { return (Math.abs(this.u.x) * (g.h[2] - g.h[0]) + Math.abs(this.u.y) * (g.h[3] - g.h[1])) / 2; }
   eb(g: Spec): number { return (Math.abs(this.n.x) * (g.h[2] - g.h[0]) + Math.abs(this.n.y) * (g.h[3] - g.h[1])) / 2; }
   /** the full footprint extents of a sprite along the lot's u and n at the owner's scale (no draw), to choose what fits */
   fit(id: string, flip: boolean): [number, number] {
-    const h = boxOf(id, OWNER_SCALE[id] ?? 1, flip), w = h[2] - h[0], d = h[3] - h[1];
+    const [sid, f] = faced(id, flip), h = boxOf(sid, OWNER_SCALE[id] ?? 1, f), w = h[2] - h[0], d = h[3] - h[1];
     return [Math.abs(this.u.x) * w + Math.abs(this.u.y) * d, Math.abs(this.n.x) * w + Math.abs(this.n.y) * d];
   }
   /** a car's footprint centre, moved along the lot frame so its footprint keeps CAR_INSET from each of the lot's lines (a car inside them is
@@ -193,7 +201,8 @@ class Build {
   }
   /** a spec with its footprint centre at a world point (a car's centre is fitted inside its lot first, see fitCar) */
   atW(g: Spec | null, c: Pt, o: Opt = {}): Item | null {
-    if (!g) return null;
+    // the last check: a lettering sprite is never drawn flipped (the pools leave them out; this holds for any sprite chosen)
+    if (!g || (g.flip && hasLettering(g.id, BY.get(g.id)?.name))) return null;
     const it = BY.get(g.id)!, car = it.cat === 'Vehicles', cc = car ? this.fitCar(g, c) : c;
     if (!cc) return null;
     const h = g.h, x = cc.x - (h[0] + h[2]) / 2, y = cc.y - (h[1] + h[3]) / 2;
@@ -370,7 +379,7 @@ class Build {
 /** a seeded sprite from a pool that fits a lot (full width along u up to maxW, depth up to maxD); the smallest when none does,
  *  shrunk to fit (the owner scale only ever goes down). null for an empty pool. */
 function specFit(B: Build, list: string[], maxW: number, maxD: number, o: Opt = {}): Spec | null {
-  const pool = list.filter(id => BY.has(id)), area = (id: string) => { const [w, d] = B.fit(id, B.flip); return w * d; };
+  const pool = plain(list.filter(id => BY.has(id)), o.flip), area = (id: string) => { const [w, d] = B.fit(id, B.flip); return w * d; };
   const ok = pool.filter(id => { const [w, d] = B.fit(id, B.flip); return w <= maxW && d <= maxD; });
   const cand = ok.length ? ok : pool.length ? [pool.reduce((a, b) => (area(a) <= area(b) ? a : b))] : [];
   const id = pick(B.r, cand);
@@ -485,7 +494,7 @@ for (const it of LIBRARY) {
  *  lot's slot along its street (neighbours differ), the neglected ones from decline 2; null when none fits */
 function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
   const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`); if (!e) return null;
-  const pool = st.decline >= 2 && e[1].length ? e[1] : e[0]; if (!pool.length) return null;
+  const pool = plain(st.decline >= 2 && e[1].length ? e[1] : e[0], B.flip); if (!pool.length) return null;
   const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
   const id = pool[(((slot + mix(street) % 7) % pool.length) + pool.length) % pool.length];
   const c = B.P(lot.w / 2, lot.d / 2);
@@ -617,7 +626,8 @@ const SHOP_FRONT_B = 1.4;
  *  own shuffled deck by the lot's slot along it, so neighbouring shops differ; the car park, bins and deliveries behind it */
 function com(B: Build, st: ComposeState, tour: boolean) {
   const { W, D, r, rear, flip } = B;
-  const pool = st.decline >= 2 ? BOARDED : rear ? SHOP_REAR : tour ? VENUE : SHOP_FRONT;
+  // a flipped shop is a plain one: when none is (the shop art is mostly lettering), the lot is a car park, as when no shop fits
+  const pool = plain(st.decline >= 2 ? BOARDED : rear ? SHOP_REAR : tour ? VENUE : SHOP_FRONT, flip);
   const ok = pool.filter(id => { const [w, d] = B.fit(id, flip); return w <= W - 0.3 && d <= D - SHOP_FRONT_B - 1.2; });
   if (!ok.length) { park(B, st); return; }
   // the street's deck (seeded by the street line and its side), dealt by the slot along it

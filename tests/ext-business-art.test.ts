@@ -4,6 +4,7 @@ import { businessArt, BUSINESS_IMAGE } from '../src/game/business/art';
 import { BUSINESSES } from '../src/game/business/catalogue';
 import { LIBRARY, ATLAS_PAGES } from '../src/game/library';
 import { BUSINESS_THUMBS } from '../src/game/business-library';
+import { hasLettering } from '../src/game/lots/lettering';
 const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
 
 test('every catalogue business has delivered thumbnails and world sprites inside its parcel', () => {
@@ -29,7 +30,7 @@ test('R mirrors the same composition and exchanges world axes without changing s
   for (let i = 0; i < normal.length; i++) {
     assert.equal(turned[i].item, normal[i].item);
     assert.equal(turned[i].scale, normal[i].scale);
-    assert.equal(turned[i].flip, true);
+    assert.equal(turned[i].flip, !hasLettering(LIBRARY[turned[i].item]!.id, LIBRARY[turned[i].item]!.name));
     assert.ok(Math.abs((turned[i].x - 20) - (normal[i].y - 30)) < 1e-8);
     assert.ok(Math.abs((turned[i].y - 30) - (normal[i].x - 20)) < 1e-8);
   }
