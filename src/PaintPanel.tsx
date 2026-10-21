@@ -4,7 +4,7 @@ import type { Game } from './game/engine';
 import { BORDER_TEXES, BORDER_W, PAINT_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
 import type { PaintMode } from './game/paint-tool';
 
-const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }];
+const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }, { id: 'hole', label: 'Golf hole' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
 const swatch = (t: { id: string; col: string }) => ({ backgroundColor: t.col, backgroundImage: DIRT_SWATCHES[t.id] ? `url(${DIRT_SWATCHES[t.id]})` : undefined, backgroundSize: 'cover' });
 const BORDERS = ['None', 'Small', 'Medium', 'Large'];
@@ -17,7 +17,9 @@ export function PaintPanel({ game }: { game: Game }) {
   const p = game.paint, s = p.style;
   const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
-  const help = p.selected
+  const help = p.mode === 'hole'
+    ? 'Click to place a golf hole, its tee at the click. R turns it. Every piece is an ordinary painted area (Pick to edit, Erase to remove); the flag and plants are props (Bulldoze).'
+    : p.selected
     ? `Area #${p.selected}: drag its handles to reshape or move it; the settings below change it. Delete removes it (a corner under the pointer goes first).`
     : p.mode === 'draw'
       ? 'Click corners; click the first one (or double-click / Enter) to close. Or press and drag to paint an outline freehand.'
