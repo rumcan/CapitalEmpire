@@ -34,14 +34,19 @@ function footprint(p: Placed): number[] {
 
 test('construction artwork is appended once after existing business art and honors studio removals', () => {
   const lastBusiness = LIBRARY.reduce((last, it, i) => it.id.startsWith('business:') ? i : last, -1);
+  // Construction art has its own appended page, after every business page (later sets such as golf may follow it).
+  const lastBusinessPage = Math.max(...LIBRARY.filter(it => it.id.startsWith('business:')).map(it => it.tex[0]));
+  const pages = new Set<number>();
   for (const id of IDS) {
     const entries = LIBRARY.filter(it => it.id === id);
     assert.equal(entries.length, removed.has(id) ? 0 : 1, id);
     if (!entries.length) continue;
     assert.ok(LIBRARY.indexOf(entries[0]) > lastBusiness, `${id}: existing save indices must stay ahead of construction`);
-    assert.equal(entries[0].tex[0], ATLAS_PAGES.length - 1, `${id}: missing appended atlas page`);
+    assert.ok(entries[0].tex[0] > lastBusinessPage, `${id}: missing appended atlas page`);
+    pages.add(entries[0].tex[0]);
     assert.equal(ATLAS_PAGES[entries[0].tex[0]].length, 5, `${id}: missing mip levels`);
   }
+  assert.equal(pages.size, 1, 'construction art shares one appended page');
 });
 
 test('studio scale generation includes supplemental sprites and ignores unknown override IDs', () => {
