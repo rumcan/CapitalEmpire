@@ -1,6 +1,7 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, SOIL_H, SOIL_R, SOIL_STAMPS, SOIL_W, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
+import { isPhotoGrass } from './grass-art';
 import { DECALS, POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { LOT_DECALS } from './lot-decals';
 import { NATURE, NATURE_RES } from './nature-patches';
@@ -86,7 +87,7 @@ export class GroundPainter {
   private planColour(name: TexName): string {
     let c = this.planCols.get(name);
     if (!c) {
-      const img = this.tex.image(name, 0.035), d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
+      const img = isPhotoGrass(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.image(name, 0.035), d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
       const y = (0.3 * r + 0.59 * g + 0.11 * b) / n, lift = (s: number) => Math.round(Math.min(255, (s / n * 0.8 + y * 0.2) * 1.05));
       c = `rgb(${lift(r)},${lift(g)},${lift(b)})`; this.planCols.set(name, c);
@@ -476,6 +477,7 @@ export class GroundPainter {
           if (t === 'asphaltWorn') { tone('rgb(150,150,150)', 'multiply', 0.5); tone('rgb(190,180,160)', 'screen', 0.22); }
           return;
         }
+        if (isPhotoGrass(t)) { put(this.groundPattern(ctx, this.tex.mosaicFor(t, L), G)); return; }
         put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, G));
       };
       ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';

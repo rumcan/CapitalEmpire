@@ -1,5 +1,5 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
-import { GRASS_PAINT, type GrassTex } from './grass-art';
+import { GRASS_PAINT, GRASS_PHOTO, type GrassTex } from './grass-art';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -232,7 +232,7 @@ export class Textures {
 
   async build(art: GroundArt, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
-    const steps = PAINTED.length + 12 + GRASS_PAINT.length; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
+    const steps = PAINTED.length + 12 + GRASS_PAINT.length + GRASS_PHOTO.length; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
     this.slabs = toCanvas(slabs); this.leaves = toCanvas(leafImg); this.decals = toCanvas(decalImg); this.soil = soilStamps(toCanvas(soilImg)); this.lotDecals = toCanvas(lotDecalImg); this.nature = toCanvas(natureImg);
     await tick();
@@ -260,6 +260,13 @@ export class Textures {
     this.store('grass', grass);
     // ---- the Paint tool's grass textures: the grass-v1 paintings, hex-mixed like the base grass so they never repeat
     for (const g of GRASS_PAINT) { const img = await loadImage(g.src), l = toCanvas(img, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)); this.store(g.tex, this.grass(l, l)); await tick(); }
+    // ---- the Paint tool's photo grasses: tile-space mosaics at native size (the seamless photo is the period), hex-mixed only if asked
+    for (const p of GRASS_PHOTO) {
+      const c = toCanvas(await loadImage(p.src));
+      // mixed: the ground under the patches' feathered edges is the photo's own mean colour, not the asphalt's
+      const mean = () => { const d = ctx2d(c).getImageData(0, 0, c.width, c.height).data, s = [0, 0, 0]; for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; } return `rgb(${s.map(v => Math.round(v / (d.length / 4))).join(',')})`; };
+      this.mosaics.set(p.tex, this.mipChain(p.mix ? this.mosaic(seeds, c, c, mean()) : c)); await tick();
+    }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#8c8c86'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('outside', c); }
     await tick();
@@ -293,13 +300,13 @@ export class Textures {
     return out;
   }
   /** soft-edged, overlapping patches of the painting stamped in a staggered hex grid so neighbouring patches blend into each other rather than meeting at hard seams. All patches share the builder's flattened mean tone so overlaps never drift in brightness. */
-  private mosaic(seeds: ReturnType<Textures['mosaicSeeds']>, a: Cnv, b: Cnv) {
+  private mosaic(seeds: ReturnType<Textures['mosaicSeeds']>, a: Cnv, b: Cnv, fill?: string) {
     const S = MOSAIC_TILES * MOSAIC_PX, c = canvas(S, S), g = ctx2d(c);
     // one patch covers ~1.6 tiles so neighbours overlap; feather spans most of the overlap band
     const R = 0.82 * MOSAIC_PX, feather = 0.5 * MOSAIC_PX, P = Math.ceil(R * 2) + 2;
     const patch = canvas(P, P), pg = ctx2d(patch), scale = MOSAIC_PX / 2 / PPM;
     const soft = canvas(P, P); { const sg = ctx2d(soft), gr = sg.createRadialGradient(P / 2, P / 2, 0, P / 2, P / 2, R); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.35, 'rgba(0,0,0,1)'); gr.addColorStop(0.35 + feather / R, 'rgba(0,0,0,0)'); sg.fillStyle = gr; sg.fillRect(0, 0, P, P); }
-    g.fillStyle = `rgb(${ASPHALT_MEAN.map(Math.round).join(',')})`; g.fillRect(0, 0, S, S);
+    g.fillStyle = fill ?? `rgb(${ASPHALT_MEAN.map(Math.round).join(',')})`; g.fillRect(0, 0, S, S);
     for (const s of seeds) {
       const img = s.b ? b : a, W = img.width * scale, H = img.height * scale, m = R + 2;
       const ox = m + s.u * Math.max(1, W - 2 * m), oy = m + s.v * Math.max(1, H - 2 * m);
@@ -317,7 +324,7 @@ export class Textures {
   }
   private mipChain(c: Cnv) { const out = [c]; while (out[out.length - 1].width > 96) out.push(downscale(out[out.length - 1], 0.5)); return out; }
   /** the asphalt mosaic mip for a cache level (screen px per world px): never upsampled */
-  mosaicFor(variant: 'base' | 'lit1' | 'lit2' | 'lot', L: number) {
+  mosaicFor(variant: string, L: number) {
     const chain = this.mosaics.get(variant)!, want = 128 * L; let pick = chain[0];
     for (const m of chain) { if (m.width / MOSAIC_TILES >= want) pick = m; else break; }
     return pick;

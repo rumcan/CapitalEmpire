@@ -32,8 +32,8 @@ const GROUPS: { id: string; label: string; icon: IconName; tools: { id: Tool; la
     { id: 'road', label: 'Build', key: 'R', icon: 'road' },
     { id: 'lane', label: 'Upgrade', key: 'N', icon: 'up' },
     { id: 'downgrade', label: 'Downgrade', key: 'Y', icon: 'down' },
-    { id: 'paint', label: 'Paint', key: 'C', icon: 'road-edge' },
   ] },
+  { id: 'paint', label: 'Paint', icon: 'terrain', tools: [{ id: 'paint', label: 'Paint', key: 'C', icon: 'terrain' }] },
   { id: 'junction', label: 'Junctions', icon: 'junction', tools: [{ id: 'junction', label: 'Junctions', key: 'J', icon: 'junction' }] },
   { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
   { id: 'transport', label: 'Transport', icon: 'bus', tools: [
