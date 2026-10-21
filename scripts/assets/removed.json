@@ -95,6 +95,118 @@
   "ax": 290.5,
   "ay": 197.75
  },
+ "capital:grass-backyard-clover-flowers": {
+  "at": "2026-10-21T17:35:05.862Z",
+  "name": "Backyard — clover and daisies",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-backyard-lush": {
+  "at": "2026-10-21T17:35:03.732Z",
+  "name": "Backyard — lush lawn",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-backyard-worn": {
+  "at": "2026-10-21T17:35:04.862Z",
+  "name": "Backyard — worn patches",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-golf-putting-green": {
+  "at": "2026-10-21T17:35:06.586Z",
+  "name": "Golf — putting green",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-golf-rough": {
+  "at": "2026-10-21T17:35:08.276Z",
+  "name": "Golf — rough",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-golf-worn-fairway": {
+  "at": "2026-10-21T17:35:07.337Z",
+  "name": "Golf — worn fairway",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-meadow-flowers-patches": {
+  "at": "2026-10-21T17:35:11.271Z",
+  "name": "Meadow — flowers and thin patches",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
+ "capital:grass-meadow-lush": {
+  "at": "2026-10-21T17:35:09.054Z",
+  "name": "Meadow — mixed grasses",
+  "cat": "Grass materials",
+  "kind": "decor",
+  "w": 512,
+  "h": 512,
+  "quad": [
+   0,
+   0,
+   511.67,
+   511.67
+  ]
+ },
  "decal:decal-01-lush-grass": {
   "at": "2026-10-21T16:42:27.920Z",
   "name": "decal:decal-01-lush-grass",
@@ -201,6 +313,20 @@
    0,
    159.8,
    119.26
+  ]
+ },
+ "expansion:kiddie-pool": {
+  "at": "2026-10-21T17:36:45.270Z",
+  "name": "Empty blue plastic kiddie pool",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 90.50966799187809,
+  "h": 63.18900916290871,
+  "quad": [
+   0,
+   0,
+   90.02,
+   62.67
   ]
  },
  "expansion:ranch-rear": {
@@ -1639,6 +1765,20 @@
    150
   ]
  },
+ "variation:expansion-carseat-bench-3ce0ee8b:2": {
+  "at": "2026-10-21T17:37:05.295Z",
+  "name": "Salvaged car-seat backyard bench — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 84.8,
+  "h": 75.72165450121655,
+  "quad": [
+   0,
+   0,
+   85,
+   75
+  ]
+ },
  "variation:expansion-chainlink-x-4a0ed35b-ns:4": {
   "at": "2026-10-20T16:31:19.038Z",
   "name": "Chain-link fence — X axis — B north view",
@@ -1707,6 +1847,62 @@
    0,
    118.33,
    86.67
+  ]
+ },
+ "variation:expansion-firepit-a5cde3a0-ns:1": {
+  "at": "2026-10-21T17:36:51.367Z",
+  "name": "Brick backyard fire pit — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 59.885163890516594,
+  "h": 40.35739305665249,
+  "quad": [
+   0,
+   0,
+   60,
+   40
+  ]
+ },
+ "variation:expansion-firepit-a5cde3a0-ns:3": {
+  "at": "2026-10-21T17:36:49.446Z",
+  "name": "Brick backyard fire pit — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 63.21211743998974,
+  "h": 48.89175216182273,
+  "quad": [
+   0,
+   0,
+   63.33,
+   48.33
+  ]
+ },
+ "variation:expansion-firepit-a5cde3a0:1": {
+  "at": "2026-10-21T17:36:58.072Z",
+  "name": "Brick backyard fire pit — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 33.31569352150479,
+  "h": 32.03432069375461,
+  "quad": [
+   0,
+   0,
+   33.33,
+   31.67
+  ]
+ },
+ "variation:expansion-firepit-a5cde3a0:2": {
+  "at": "2026-10-21T17:36:57.091Z",
+  "name": "Brick backyard fire pit — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 50.97016359272955,
+  "h": 40.861555729366984,
+  "quad": [
+   0,
+   0,
+   51.67,
+   41.67
   ]
  },
  "variation:expansion-garden-hose-819a84b2:1": {
