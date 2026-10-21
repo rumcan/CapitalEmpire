@@ -20,7 +20,7 @@ for (const [modelIndex, model] of models.entries()) {
     const ratio = w / view.width, h = view.height * ratio;
     const width = Math.round(w * 0.6), height = Math.round(h * 0.6);
     const cell = modelIndex * 8 + heading, left = (cell % 4) * 512 + 16, top = Math.floor(cell / 4) * 512 + 16;
-    composite.push({ input: await sharp(path.join(dir, view.file)).resize(width, height).png().toBuffer(), left, top });
+    composite.push({ input: await sharp(path.join(dir, view.file)).resize(width, height, { kernel: 'lanczos3' }).sharpen({ sigma: 0.6 }).png().toBuffer(), left, top });
     const hx = 2.25 * Math.abs(c) + 0.9 * Math.abs(s), hy = 2.25 * Math.abs(s) + 0.9 * Math.abs(c);
     items.push({ id: `cars:${model}:${key}`, name: `${model.replaceAll('-', ' ')} ${key}`, cat: 'Vehicles', kind: 'car', w, h, ax: w / 2, ay: h - groundH / 2, boxes: [{ hx, hy, dx: 0, dy: 0 }], solid: 2, big: true, door: false, cost: 6300, tex: [0, left / 2048, top / 2048, (left + width) / 2048, (top + height) / 2048], quad: [0, 0, w, h] });
   }

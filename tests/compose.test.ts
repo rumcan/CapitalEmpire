@@ -325,15 +325,15 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '8f7b1874'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '24db9c24'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'd2837fbf'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '2c4b0ca0'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '10468f2a'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'e1495467'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'e3044647'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'aae6d5c8'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'bff40625'],
     [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'bc30f6ea'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '014361e4'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '5ea65aa6'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
   assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));
