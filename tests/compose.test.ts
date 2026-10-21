@@ -169,7 +169,7 @@ test('residential fence boundaries meet exactly in every orientation, with one o
   };
   for (const frame of frames) {
     const lot: Lot = { ...LOTS[0], ...frame, o: { x: 100, y: 100 }, w: 8, d: 15 };
-    const ownSide = lot.u.x + lot.u.y > 0 ? 0 : lot.w;
+    const ownSide = lot.u.x + lot.u.y > 0 ? lot.w : 0;
     for (const decline of [0, 1, 2, 3]) {
       const panels = fences(lot, decline), side = panels.filter(p => onLine(centre(lot, p).a, ownSide)), back = panels.filter(p => onLine(centre(lot, p).b, lot.d));
       offLine(lot, side, 'a', ownSide); offLine(lot, back, 'b', lot.d);
@@ -179,7 +179,7 @@ test('residential fence boundaries meet exactly in every orientation, with one o
       if (lot.n.x + lot.n.y > 0) covers(lot, back, 'a', 0, lot.w); else assert.equal(back.length, 0);
     }
     // An unbaked lot has drive/walk patches; those must not clip the shared boundary panels away.
-    const fallback: Lot = { ...lot, w: 9 }, fallbackSide = lot.u.x + lot.u.y > 0 ? 0 : fallback.w;
+    const fallback: Lot = { ...lot, w: 9 }, fallbackSide = lot.u.x + lot.u.y > 0 ? fallback.w : 0;
     const fallbackPanels = fences(fallback);
     covers(fallback, fallbackPanels.filter(p => onLine(centre(fallback, p).a, fallbackSide)), 'b', 3.65, fallback.d);
     if (fallback.n.x + fallback.n.y > 0) covers(fallback, fallbackPanels.filter(p => onLine(centre(fallback, p).b, fallback.d)), 'a', 0, fallback.w);
@@ -298,9 +298,9 @@ test('every use but industry draws its own boundary fence: a shared line gets on
     { use: LU.NONE, level: LV.EMPTY, decline: 0, seed: 44 }, { use: LU.RES, level: LV.BUILDING, decline: 0, seed: 45 },
   ];
   for (const st of states) {
-    // the own side line (u runs +X: the lot's side at a = 0): its panels, sorted along the line
+    // the own side line (u runs +X: the lot's side at a = w, the higher world-coordinate end): its panels, sorted along the line
     const spans = compose(lot, st).props.filter(p => /fence-privacy/.test(p.id)).map(p => fpCorners(lot, fpOf(p)))
-      .filter(q => q.every(v => v.a < 0.3)).map(q => [Math.min(...q.map(v => v.b)), Math.max(...q.map(v => v.b))]).sort((x, y) => x[0] - y[0]);
+      .filter(q => q.every(v => v.a > lot.w - 0.3)).map(q => [Math.min(...q.map(v => v.b)), Math.max(...q.map(v => v.b))]).sort((x, y) => x[0] - y[0]);
     const k = JSON.stringify(st);
     assert.equal(spans.length, Math.ceil((lot.d - 3.65) / 2 - 1e-9), `${k}: ${spans.length} panels on the own side`);
     assert.ok(Math.abs(spans[0]![0] - 3.65) < 1e-6 && Math.abs(spans[spans.length - 1]![1] - lot.d) < 1e-6, `${k}: the own side runs ${spans[0]![0]}..${spans[spans.length - 1]![1]}`);
