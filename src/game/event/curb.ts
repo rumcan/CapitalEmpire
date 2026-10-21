@@ -137,6 +137,17 @@ export function curbLines(c: Curb): number[] {
   }
   return out;
 }
+/** is (x, y) inside the convex quad q (x0 y0 ... x3 y3, either winding) grown by pad tiles: no edge's line is more than pad outside it */
+export function inQuad(q: number[], x: number, y: number, pad: number): boolean {
+  let area = 0;
+  for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; area += q[2 * i]! * q[2 * j + 1]! - q[2 * j]! * q[2 * i + 1]!; }
+  const s = area < 0 ? -1 : 1;
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) % 4, ax = q[2 * i]!, ay = q[2 * i + 1]!, ex = q[2 * j]! - ax, ey = q[2 * j + 1]! - ay, len = Math.hypot(ex, ey);
+    if (s * (ex * (y - ay) - ey * (x - ax)) / len < -pad) return false;
+  }
+  return true;
+}
 /** the strip of a curb as a quad (x0 y0 ... x3 y3; the lot ground patch that carries its marks) */
 export function curbQuad(c: Curb): number[] {
   if (!c.bays.length) return [];

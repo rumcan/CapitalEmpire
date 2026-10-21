@@ -15,7 +15,7 @@ import { ParkingTool } from './parking-tool';
 import { gateSpots } from './parking-props';
 import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
-import type { CurbDef } from './event/curb';
+import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, SAVE_VERSION, segRec, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
@@ -39,7 +39,7 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
-import { compose, isCarPark, type ComposeState, type LotGeom } from './lots/compose';
+import { compose, isCarPark, type ComposeState, type LotGeom, type Placed } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -156,6 +156,8 @@ const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, ar
 const LOT_NAME = ['lot', 'residential lot', 'commercial lot', 'industrial lot', 'tourist lot', 'civic lot'];
 /** the planner's building refresh for the town's lots: at most one per this many ms; the contact sheet's block size, tiles */
 const LOT_BLOCKS_MS = 5000, BLOCK = 40;
+/** a street prop whose footprint centre lies inside a lay-by grown by this many tiles is not placed (its bay stands there) */
+const LAYBY_PAD = 0.3;
 /** the library index by id, and the props the town's lots add (auto 'lot:' + key) */
 const LIB_INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const isLotProp = (p: Prop) => !!p.auto && (p.auto.startsWith('lot:') || p.auto.startsWith('farm:'));
@@ -321,6 +323,8 @@ export class Game {
   private saveTimer = 0; private blocksTimer = 0;
   /** the town's lots: their props by key, the keys queued to apply, the lots staged by the contact sheet (stageLots; they win until a reset) */
   private lotProps = new Map<string, Prop[]>(); private lotQueue = new Set<string>(); private staged = new Map<string, { g: LotGeom; st: ComposeState }>();
+  /** the lay-bys' quads by their 'curb:' key (their pts), and the boxes (grown by a tile) of the lay-bys that went or changed since the lots last heard */
+  private laybys = new Map<string, number[]>(); private laybyDirty: number[][] = [];
   /** the farms (ext/farms): the accepted parcels follow the network; their props by key (auto 'farm:' + key, never saved), the keys queued to compose, the dev switch */
   private farmMap = new FarmMap(); private farmProps = new Map<string, Prop[]>(); private farmQueue = new Set<string>(); private farmsEnabled = true; private farmTick = 0;
   /** scratch for the starter check (the lot's box, the props found); the planner's last building refresh (ms) and the timer of the town's lot refresh */
@@ -589,7 +593,29 @@ export class Game {
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
   setLotGround(key: string, patches: LotPatch[] | null) {
     if (key.startsWith('paint:')) this.paintChanged(key, patches);
+    if (key.startsWith('curb:')) this.laybyChanged(key, patches);
     this.lotPending.set(key, patches);
+  }
+  /** a curb's lay-by quad went, came or changed: it is kept for placeLot, and its old and new outline (grown by a tile) marks the lots to compose again */
+  private laybyChanged(key: string, patches: LotPatch[] | null) {
+    const old = this.laybys.get(key), q = patches?.find(p => p.layby)?.pts;
+    if (old) this.laybyDirty.push(this.grownBox(ptsBox(old)));
+    if (q) { this.laybys.set(key, q); this.laybyDirty.push(this.grownBox(ptsBox(q))); } else this.laybys.delete(key);
+  }
+  /** a box grown by a tile on each side (a new array: the dirty list keeps it) */
+  private grownBox(b: number[]): number[] { return [b[0]! - 1, b[1]! - 1, b[2]! + 1, b[3]! + 1]; }
+  /** the lots whose box touches a changed lay-by are queued to compose again (one pass a frame that a lay-by changed; applyLotQueue does the rest) */
+  private laybyLots() {
+    const d = this.laybyDirty; if (!d.length) return;
+    for (const [key, b] of this.lotBoxes) for (const e of d) if (b[0]! <= e[2]! && b[2]! >= e[0]! && b[1]! <= e[3]! && b[3]! >= e[1]!) { this.lotQueue.add(key); break; }
+    d.length = 0;
+  }
+  /** a street prop stands in a lay-by's bays: its footprint centre (as addProp's footprint) lies inside a lay-by grown by LAYBY_PAD */
+  private inLayby(item: number, q: Placed): boolean {
+    if (!this.laybys.size) return false;
+    const f = this.footprint(LIBRARY[item]!, q.x, q.y, q.flip, q.scale), cx = (f.x0 + f.x1) / 2, cy = (f.y0 + f.y1) / 2;
+    for (const p of this.laybys.values()) if (inQuad(p, cx, cy, LAYBY_PAD)) return true;
+    return false;
   }
   /** a painted area went or came: the town trees around its old and new outline are dropped */
   private paintChanged(key: string, patches: LotPatch[] | null) {
@@ -633,7 +659,7 @@ export class Game {
   private placeLot(key: string, g: LotGeom, st: ComposeState) {
     this.dropLot(key);
     const c = compose(g, st), ps: Prop[] = [];
-    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
+    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !(q.street && this.inLayby(i, q))) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
     this.setLotGround(key, c.ground);
   }
@@ -2393,7 +2419,7 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
-    this.applyLotQueue(); this.applyFarmQueue(); this.flushLotGround();
+    this.applyLotQueue(); this.applyFarmQueue(); this.flushLotGround(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.parkDefs.length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();

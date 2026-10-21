@@ -18,7 +18,8 @@ import { LOT_DECALS } from '../lot-decals';
 import { parkedCar } from '../traffic';
 import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
 
-export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number }
+/** a placed prop; street is set (true) only for an item on the sidewalk in front of the lot (a lay-by's bays take none: see engine placeLot) */
+export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true }
 export interface Composition { props: Placed[]; ground: LotPatch[] }
 /** the lot state a composition depends on (the seed is the lot's own) */
 export interface ComposeState { use: number; level: number; decline: number; seed: number }
@@ -368,7 +369,7 @@ class Build {
         if (acc.some(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP)) continue;
         ups++;
       }
-      acc.push(it); props.push({ id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s });
+      acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; props.push(p);
     }
     const ground: LotPatch[] = this.patches.map(p => (p.lines ? { pts: p.quad, tex: p.tex, lines: p.lines } : { pts: p.quad, tex: p.tex }));
     // the decals last, bounded by the lot grown 2 tiles (a decal is up to 4 m across)
