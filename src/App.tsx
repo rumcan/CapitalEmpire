@@ -108,6 +108,8 @@ export default function App() {
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
   const gid = game ? groupOf(game.tool) : '', grp = GROUPS.find(g => g.id === gid);
   if (game) last.current[gid] = game.tool;
+  /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
+  const gv = game?.golfMode ? game.golfView() : null;
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
@@ -148,7 +150,13 @@ export default function App() {
                 </div>
               </div>
               <div className="h-9 w-px bg-white/10" />
-              {game.eventMode
+              {gv ? (
+                <>
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
+                  <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
+                  <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
+                </>
+              ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
                 : <Stat icon="trophy" label="Career" {...careerStat(game)} tone="text-amber-200" />}
               <Stat icon="bank" label="Treasury" value={game.unlimited ? '∞' : money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
@@ -194,7 +202,7 @@ export default function App() {
 
           <div className="absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2">
             <div className="glass flex flex-col gap-1 p-1.5">
-              {GROUPS.map(g => (
+              {(game.golfMode ? GROUPS.filter(g => g.id !== 'business') : GROUPS).map(g => (
                 <button key={g.id} onClick={() => game.setTool(last.current[g.id] ?? g.tools[0]!.id)} title={g.label} className={`rail-tab ${gid === g.id ? 'rail-tab-on' : ''}`}>
                   <Icon name={g.icon} size={30} />
                   <span>{g.label}</span>
@@ -260,7 +268,7 @@ export default function App() {
           {game.panel === 'budget' && <BudgetPanel game={game} />}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
-          {game.eventMode && !game.site && (
+          {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />
               <span>Place your stadium to start the events</span>
@@ -390,17 +398,17 @@ function BudgetPanel({ game }: { game: Game }) {
 }
 /** the surge's per-town lines and its total (the live counts, or the result's at kick-off): the town's letter, parked of sent, the fans, and a note
  *  when no car park is reachable (the rest on a second line); the total line is the fans arrived of the fans sent (PARTY per car), and the rate */
-function SurgeTowns({ rows, total }: { rows: TownRow[]; total?: { fans: number; sent: number } }) {
-  const F = total?.fans ?? 0, S = total?.sent ?? 0;
+function SurgeTowns({ rows, total, golf }: { rows: TownRow[]; total?: { fans: number; sent: number }; golf?: boolean }) {
+  const F = total?.fans ?? 0, S = total?.sent ?? 0, who = golf ? 'spectators' : 'fans';
   return (
     <div className="space-y-0.5">
       {rows.map((w, k) => (
         <div key={k}>
-          <p className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} cars · at the stop {w.atStop} · on buses {w.onBus} · arrived {w.fans} fans{w.stranded > 0 ? ' · no car park reachable' : ''}{w.byBus > 0 ? ` · by bus ${w.byBus}` : ''}</p>
+          <p className="text-xs tabular-nums text-slate-300">{String.fromCharCode(65 + k)}  parked {w.parked}/{w.sent} cars · at the stop {w.atStop} · on buses {w.onBus} · arrived {w.fans} {who}{w.stranded > 0 ? ' · no car park reachable' : ''}{w.byBus > 0 ? ` · by bus ${w.byBus}` : ''}</p>
           {w.rest && <p className="text-[10px] tabular-nums text-slate-400">{w.rest}</p>}
         </div>
       ))}
-      {total && <p className="text-xs font-semibold tabular-nums text-slate-100">Arrived {F}/{S * PARTY} fans ({S ? Math.round(100 * F / (S * PARTY)) : 0}%)</p>}
+      {total && <p className="text-xs font-semibold tabular-nums text-slate-100">Arrived {F}/{S * PARTY} {who} ({S ? Math.round(100 * F / (S * PARTY)) : 0}%)</p>}
     </div>
   );
 }
@@ -414,27 +422,29 @@ function liveRows(v: SurgeView): TownRow[] {
 /** the event round (Phase 5 step 2c): the stadium's round by stage (free: start it; build: the clock, the crowd and the upkeep; surge: kick-off's clock).
  *  Docked top right (left of a right-hand panel when one is open); the eval stage has its own screen (EvalScreen) */
 function RoundPanel({ game }: { game: Game }) {
-  const r = game.traffic.round, last = r.last;
+  const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
   const crowd = r.crowd.map((c, i) => `Town ${String.fromCharCode(65 + i)} ${c}`).join(' · ') + (r.crowd.length ? ' cars' : '');
-  const sentence = r.stage === 'free' ? 'Host a major stadium event to boost happiness, income and the local economy.'
+  // golf mode (with its view): the season's note, then the tournament day; the stadium's wording otherwise
+  const sentence = gv ? (r.stage === 'free' ? `Season ${gv.year}: get the course and the roads ready. The tournament is at the end of August.` : 'Tournament day: the spectators are driving to the course.')
+    : r.stage === 'free' ? 'Host a major stadium event to boost happiness, income and the local economy.'
     : r.stage === 'build' ? 'Fans are on their way: finish the roads before kick-off.' : 'Kick-off: the crowd is driving to the stadium.';
   return (
     // on the right, out of the way of building; left of the budget or bottleneck panel when one of those is open there
     <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 w-[440px] max-w-[calc(100vw-1.5rem)] glass overflow-hidden`}>
-      <img src={stadiumArt} alt="" className="pointer-events-none absolute right-0 top-0 h-[128px] w-[192px] object-cover" style={{ maskImage: 'linear-gradient(to right, transparent, black 45%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 45%)' }} />
+      {!golf && <img src={stadiumArt} alt="" className="pointer-events-none absolute right-0 top-0 h-[128px] w-[192px] object-cover" style={{ maskImage: 'linear-gradient(to right, transparent, black 45%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 45%)' }} />}
       <div className="relative p-3">
         <div className="flex items-start gap-2">
           <Icon name="trophy" size={34} />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-display text-base font-bold tracking-wide text-[var(--gold-hi)] uppercase">Event: Stadium</span>
+              <span className="font-display text-base font-bold tracking-wide text-[var(--gold-hi)] uppercase">{gv ? gv.tierName : 'Event: Stadium'}</span>
               <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[10px] font-bold uppercase text-[var(--gold-hi)]">Level {r.level}</span>
             </div>
             <span className="text-sm">{r.year} – Run {r.runs + 1}</span>
           </div>
         </div>
         <p className="mt-2 max-w-[15rem] text-xs text-slate-300">{sentence}</p>
-        {r.stage === 'free' && last && <p className="text-[11px] text-slate-400">Last run: {last.arrived}/{last.sent * PARTY} fans arrived ({Math.round(last.rate * 100)}%)</p>}
+        {r.stage === 'free' && last && <p className="text-[11px] text-slate-400">Last run: {last.arrived}/{last.sent * PARTY} {golf ? 'spectators' : 'fans'} arrived ({Math.round(last.rate * 100)}%)</p>}
         {r.stage === 'build' && (
           <div className="mt-2 space-y-2">
             <span className="block text-xl font-bold tabular-nums text-[var(--gold-hi)]">Build · {mmss(Math.ceil(r.buildLeft))}</span>
@@ -444,15 +454,15 @@ function RoundPanel({ game }: { game: Game }) {
         )}
         {r.stage === 'surge' && (
           <div className="mt-2 space-y-2">
-            <span className="block text-xl font-bold tabular-nums text-[var(--gold-hi)]">Kick-off in {mmss(Math.ceil(r.surgeLeft))}</span>
-            {r.surge && <SurgeTowns rows={liveRows(r.surge)} total={{ fans: r.surge.fans.reduce((a, b) => a + b, 0), sent: r.surge.sent.reduce((a, b) => a + b, 0) }} />}
+            <span className="block text-xl font-bold tabular-nums text-[var(--gold-hi)]">{golf ? 'Tee-off' : 'Kick-off'} in {mmss(Math.ceil(r.surgeLeft))}</span>
+            {r.surge && <SurgeTowns rows={liveRows(r.surge)} total={{ fans: r.surge.fans.reduce((a, b) => a + b, 0), sent: r.surge.sent.reduce((a, b) => a + b, 0) }} golf={golf} />}
             <p className="text-xs text-slate-300">{crowd}</p>
             <p className="text-xs text-slate-400">upkeep {money(r.upkeep)} · toll {money(r.toll)}</p>
           </div>
         )}
         <div className="mt-3 flex gap-2">
           <button className="btn flex-1 py-2 text-sm" onClick={() => game.goToSite()}><Icon name="calendar" size={18} />View Event</button>
-          {r.stage === 'free' && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startRound()}><Icon name="start" size={18} />Start Event</button>}
+          {r.stage === 'free' && !golf && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startRound()}><Icon name="start" size={18} />Start Event</button>}
           {r.stage === 'build' && <button className="btn-gold flex-1 py-2 text-sm" onClick={() => game.startNow()}><Icon name="start" size={18} />Start now</button>}
         </div>
       </div>
@@ -463,15 +473,15 @@ function RoundPanel({ game }: { game: Game }) {
 /** the evaluation screen (Phase 5 step 7b): a centred card over the map, shown in eval only. The arrival rate and its change, the towns, the money, the
  *  bottlenecks at kick-off (Go jumps there), and the draft of cards: picking one opens the way back to the valley (closeRound). No close button */
 function EvalScreen({ game }: { game: Game }) {
-  const r = game.traffic.round, last = r.last;
+  const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
   if (!last) return null;
   const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
       <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
-        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{`Stadium · Level ${last.level} · Run ${last.run}`}</div>
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
         <div>
-          <p><span className="text-4xl font-bold tabular-nums text-amber-200">{pct}%</span> <span className="text-sm text-slate-200">of fans in before kick-off</span></p>
+          <p><span className="text-4xl font-bold tabular-nums text-amber-200">{pct}%</span> <span className="text-sm text-slate-200">{golf ? 'of spectators in before tee-off' : 'of fans in before kick-off'}</span></p>
           <p className="text-xs text-slate-400">
             {delta === null ? 'First run at this level'
               : delta > 0 ? <span className="tabular-nums text-emerald-300">▲ +{delta} points since the last run</span>
@@ -479,10 +489,10 @@ function EvalScreen({ game }: { game: Game }) {
               : 'No change since the last run'}
           </p>
         </div>
-        {last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">Perfect! The towns grow {Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level {last.level + 1}</div>}
+        {last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{golf ? `Perfect! The town grows ${Math.round(TOWN_GROWTH * 100)}%` : `Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>}
         <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
           {last.byTown.map((t, k) => (
-            <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} fans · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}{t.byBus > 0 ? ` · by bus ${t.byBus}` : ''}</p>
+            <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} {golf ? 'spectators' : 'fans'} · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}{t.byBus > 0 ? ` · by bus ${t.byBus}` : ''}</p>
           ))}
         </div>
         <p className="text-sm text-slate-200">
@@ -842,7 +852,7 @@ function BusinessPanel({ game }: { game: Game }) {
         {FAMILIES.map(f => (
           <div key={f}>
             <div className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">{f}</div>
-            {BUSINESSES.filter(b => b.family === f).map(b => <BizCard key={b.id} game={game} b={b} free={free} />)}
+            {BUSINESSES.filter(b => b.family === f && (b.id as string) !== 'clubhouse').map(b => <BizCard key={b.id} game={game} b={b} free={free} />)}
           </div>
         ))}
       </div>
