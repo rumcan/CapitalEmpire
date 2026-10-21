@@ -1,5 +1,13 @@
 # Phase B, the businesses: design (2026-10-19)
 
+> **Superseded by the golf pivot (2026-10-21, [GOLF-PLAN.md](GOLF-PLAN.md) section 6).** The businesses become **tents and event
+> structures** for the tournament (food, drinks, merchandise, hospitality, grandstands...), placed with the Event tool (key M).
+> What carries over: `business/visits.ts` (now the course's daily golfers and green fees), the bus and taxi companies (the
+> shuttle and ride-share operators), road ownership and connection fees (B.7), and the panel's locked-card pattern (now the
+> tour's tier checklist). The stadium leaves golf mode; the bar, diner, hotels and motels become the town's own growth; the
+> fishing resort, tackle shop and casino are dropped from golf mode; the golf estate comes back later (G9). Everything below is
+> the record of what was built (B.1–B.7 done) and stays in the code for legacy saves.
+
 The owner's direction is GAME-PLAN 1.0.00: **you are both the entrepreneur and the town planner.** The player places and
 pays for businesses (the stadium first); each one unlocks its spin-offs when it does well; revenue comes **per visitor who
 arrives**, so traffic still decides the income; the cards become upgrades. Phase B replaces Phase 6's game-placed events

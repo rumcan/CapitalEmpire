@@ -81,6 +81,17 @@ jamming. **Parking demand** (a toggle in the Car park panel): per 16-tile cell, 
 park there (trips ending at a shop, office, factory, tourist or civic lot, and every car reaching a car park
 entrance, parked or turned away), the same 6-hour EMA, shaded blue to red, with the number written at street zoom.
 
+## 6. The golf pivot (planned 2026-10-21, [GOLF-PLAN.md](GOLF-PLAN.md) sections 5.2 and 9)
+
+Everything above stays: tournament spectators park in these car parks, bay-row lots and on-street runs. Planned additions:
+- **Lot tags**: spectator, park and ride (a shuttle route from the lot to the gates), staff (filled before the gates open),
+  VIP and hospitality, players and officials (on site, a closed route).
+- **Field parking** on farmland (`ext/farms` fields): grass, no lines, one entrance, slow to fill, muddy in rain (G8).
+- **The parking pay plaza** (open question 3): the toll gate's booths re-skinned at a big lot's entrance, charging the fee on
+  entry with a service time per car.
+- **Message signs** send drivers to car parks that still have space; a full car park turns cars away to the next one (the
+  missed spectators when none is left).
+
 ## Saving
 
 New optional fields `rows: [ax, ay, bx, by, side, bay, col][]`, `curbs: [ax, ay, bx, by][]` (ids 1..n in order) and `parkFee`. No version bump.
