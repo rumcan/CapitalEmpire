@@ -6,7 +6,8 @@ the owner asks **you** for the next task package, gives it to a Codex agent on a
 you the pull request to review. On creative calls you decide together with Claude; the owner provides resources and reviews results.
 
 _Written 2026-10-21 by Claude (the code agent). This file lives in the repo as `docs/ARGON-HANDOFF.md` and is copied to the shared
-Drive folder; the repo copy is the current one._
+Drive folder "Capital Empire - Argon" (id `11pAG2rlxViL4bby-cUapecWmP43gv7hC`, anyone with the link can view); the repo copy is the
+current one. Save everything you write for this game into that folder._
 
 ## 1. The game and the repo
 - **Repo:** https://github.com/rumcan/CapitalEmpire (public). Base branch and PR target: **`main`**. Your sandbox cannot reach
@@ -51,9 +52,10 @@ Drive folder; the repo copy is the current one._
   wiring (a new game is a golf game; save and load; legacy saves load as classic).
 
 ## 4. The next jobs, in order (keep this list current)
-1. **G1 finish** (Claude is on it): engine wiring, build, browser check.
-2. **G1b, the 6R.7 town:** the golf town grows its gravel branches and keeps a fixed commercial and an industrial district
-   (GOLF-PLAN section 3; the town's zoning is in the city worker's Town class).
+1. **G1 finish** (Claude is on it): engine wiring (a new game is a golf game; save and load), build, browser check.
+2. **Town districts** (Claude is on it; the owner asked twice): every town has a clear commercial district (the lots on its main
+   asphalt street near the centre: shops only) and a clear industrial district (a 2 x 2 block corner of its grid toward the highway:
+   works only); the rest residential with a few shops (`src/game/lots/districts.ts`, `useFor` in `src/game/lots/town.ts`).
 3. **G1c, course dressing:** tee markers and flagsticks at the layout's tees and pins, trees lining the holes, a cart path loop, benches.
 4. **G2a, land:** the owned parcel and buying adjacent farm or town blocks (houses bought out at the land price).
 5. **G2b, hole tools:** tee and pin placement, `holes.ts` derivation shown in a course stats panel (par, lengths, warnings).
