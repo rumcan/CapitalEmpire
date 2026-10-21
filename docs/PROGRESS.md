@@ -2133,3 +2133,19 @@ PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks l
 ## Handover, 2026-10-21 night (the art chat; the owner moves to a new PC)
 **Read [HANDOVER-ART.md](HANDOVER-ART.md) first:** where the art chat stopped, the unmerged branch `claude/brush-round`, and the next steps
 in order (brush-round, the studio Ground tab for the base grass, plant brushes, Course builder C1, hole presets in the game, golf art).
+
+### G1 landed and browser-checked (2026-10-22 early hours; main 9092048)
+- **A new game is a golf game** (`golf/start.ts`, engine `newGolfGame`): one town, the old nine painted on a parcel to one side (47 Paint areas), the Clubhouse (game-placed
+  business, 40 x 24), a car park and a gravel drive from the town's main avenue; SaveV5.golf (no version bump: a save without it is a classic game).
+  Browser-checked on a dev server (5191): new game, HUD (T1, "Sep 1984", months to go, Skip to tournament), skip ran the months, the tournament started itself
+  (130 cars = about 390 spectators), the round panel and results screen in golf wording ("43% of spectators in before tee-off"), the card draft, the next season
+  (Sep 1985, tournament 1986), save and reload. **Not browser-checked:** loading an old classic save (three towns, a stadium): only reasoned about; check it.
+  Only 43% arrived on the first tournament with no road work: expected until G3 and the car park are tuned.
+- **Argon's modules on main** (pure, tested, **not yet wired**): `golf/costs.ts` (G2c), `parcels.ts` (G2a), `coursestats.ts` (G2b), `tournamentday.ts` (G3),
+  `eventtool.ts` (G4), `dressing.ts` (G1c), the coursegen fixes (G1d), `lots/districts.ts` (6R.7 districts in `Town.useFor`; town and business gates pass), and the
+  `src/ui/CourseStatsPanel.tsx` and `TournamentResults.tsx` components. His 'all tests pass' claims were wrong twice (type errors; a crashing test): always run
+  `tsc --noEmit` and the tests yourself, and scan for risky calls first (the auto-mode classifier refuses to run unreviewed code).
+- **Argon edit-bundle format** (for changes to existing files): `{ticket, description, files:{new files only}, edits:[{path, old, new}]}`, applied with a script that
+  refuses paths outside the repo and any `old` not occurring exactly once (scratchpad `apply-edits.mjs`; re-create it from this description). Bundles unpack with
+  `unpack.mjs` (path-checked) into a holding folder first.
+- **Argon's queue now:** wiring bundles for dressing (props at a new game), the Course stats panel button, and Paint costs. See `docs/ARGON-HANDOFF.md`.
