@@ -17,6 +17,9 @@ export function PaintPanel({ game }: { game: Game }) {
   const p = game.paint, s = p.style;
   const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
+  // the border follows the fill's scale and angle until either is set (the renderer draws it that way), so show the fill's values then
+  const bFollow = s.bscale === 1 && s.bangle === 0, bScale = bFollow ? s.scale : s.bscale, bAngle = bFollow ? s.angle : s.bangle;
+  const bOwn = (c: { bscale?: number; bangle?: number }) => p.setStyle({ bscale: bScale, bangle: bAngle, ...c });
   const br = p.brush[p.brushKind], brushName = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   const help = p.mode === 'brush'
     ? `Drag to paint ${brushName} for hole ${p.brushHole}; strokes of the same kind on a hole join into one area. Alt-drag or Rub out erases. [ and ] change the size. The texture and border settings below edit this preset (remembered).`
@@ -112,6 +115,42 @@ export function PaintPanel({ game }: { game: Game }) {
           <div className="flex flex-wrap gap-1">
             {BORDER_TEXES.map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
           </div>
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
+            Border scale and angle
+            <button className={`chip ${bFollow ? 'chip-on' : ''}`} title="The border uses the fill's scale and angle" onClick={() => p.setStyle({ bscale: 1, bangle: 0 })}>Follow the fill</button>
+          </div>
+          <div className="flex items-center gap-1">
+            <button className="btn" onClick={() => bOwn({ bscale: bScale / 1.25 })}>−</button>
+            <span className="w-12 text-center text-xs text-slate-200">{`${Math.round(bScale * 100)}%`}</span>
+            <button className="btn" onClick={() => bOwn({ bscale: bScale * 1.25 })}>+</button>
+            <button className="btn" onClick={() => bOwn({ bscale: 1 })}>Reset</button>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="range" min={-90} max={90} step={5} value={bAngle} onChange={e => bOwn({ bangle: +e.target.value })} className="flex-1" />
+            <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(bAngle)}°`}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <button className={`chip ${!bFollow && s.bangle === 0 ? 'chip-on' : ''}`} onClick={() => bOwn({ bangle: 0 })}>Grid 0°</button>
+            <button className={`chip ${!bFollow && s.bangle === 45 ? 'chip-on' : ''}`} onClick={() => bOwn({ bangle: 45 })}>45°</button>
+            <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => bOwn({ bangle: edgeAngle(pts) })}>Along first edge</button>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">Border tone</div>
+          <div className="flex flex-wrap gap-1">
+            {TONES.map(t => <button key={t.id} className={`chip ${s.btone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btone: t.id, btint: toneStyle(t.id, s.btint).tint })}>{t.label}</button>)}
+          </div>
+          {s.btone > 0 && (
+            <>
+              <div className="mt-2 text-[11px] text-slate-400">Border strength</div>
+              <div className="flex items-center gap-2">
+                <input type="range" min={0} max={100} step={5} value={Math.round(s.btoneAmt * 100)} onChange={e => p.setStyle({ btoneAmt: +e.target.value / 100 })} className="flex-1" />
+                <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(s.btoneAmt * 100)}%`}</span>
+              </div>
+              <div className="mt-1 flex items-center gap-2 text-xs text-slate-200">
+                Border tint
+                <input type="color" value={s.btint} onChange={e => p.setStyle({ btint: e.target.value })} className="h-6 w-10 cursor-pointer bg-transparent" />
+              </div>
+            </>
+          )}
         </>
       )}
       <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">

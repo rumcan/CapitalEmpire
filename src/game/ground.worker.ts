@@ -42,9 +42,9 @@ const handle = async (m: ToWorker) => {
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
       case 'blocks': painter.blocks = m.data; break;
       case 'lotground': {
-        // the lazy photo textures the edit's paint areas use are built first, so the chunks baked after it see them
+        // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
         const need = new Set<string>();
-        for (const [, ps] of m.set) for (const p of ps) if (p.paint && isPhotoTex(p.tex) && !EAGER_PHOTO.has(p.tex) && !tex.has(p.tex)) need.add(p.tex);
+        for (const [, ps] of m.set) for (const p of ps) if (p.paint) for (const t of p.paint.b > 0 ? [p.tex, p.paint.bt] : [p.tex]) if (isPhotoTex(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
         await Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
         painter.setLotGround(m.set, m.drop);
         break;
