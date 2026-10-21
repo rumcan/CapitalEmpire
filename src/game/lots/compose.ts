@@ -604,7 +604,9 @@ function parkingArea(B: Build, a0: number, b0: number, a1: number, b1: number, d
     for (const [s0, s1] of segs) for (let a = s0 + 0.6; a <= s1 - 0.6; a += 1.4) B.put(pick(B.r, BUSHES), a, c, { plant: true });
   } else B.patches.push({ kind: 'lot', tex: 'asphalt', quad: Q(b0, b1), lines: ln(low.concat(high)) });
   // the entrance: its mouth at the street, its end at the street-side aisle
-  if (drive) { B.pave('drive', drive.a0, 0, drive.a1, (g0 + (island ? c - ISLAND / 2 - BP : g1)) / 2, 'asphalt'); B.put('town:street_sign', (drive.a0 + drive.a1) / 2, -0.4, { street: true }); }
+  if (drive) { B.pave('drive', drive.a0, 0, drive.a1, (g0 + (island ? c - ISLAND / 2 - BP : g1)) / 2, 'asphalt');
+    // a pay boom across the drive just inside the lot line (looks only: the lots take no fees); the gate art's arm runs along X
+    B.put('ce:parking-entry', (drive.a0 + drive.a1) / 2, 0.8, { flip: Math.abs(B.u.y) > Math.abs(B.u.x) }); }
   return bays;
 }
 /** a small green, for a lot whose frontage runs off the map axes (no building there faces the street): two trees, a bench by the front, bushes */
