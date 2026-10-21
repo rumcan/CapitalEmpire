@@ -10,6 +10,8 @@ painted with the Paint tool (textures, section 6). Sprites are the objects that 
 - **Facings:** unflipped art faces +Y, flipped art faces +X. **Buildings and stands need a front view and a rear view**, so they
   can face a hole or a road from any side. **Anything with lettering** (scoreboards, signs, banners, the tournament logo) needs
   its own art per side, because lettering is never mirrored.
+- **No lettering in the generated art (the owner, 2026-10-21):** signs are pictograms, banners and boards are blank; lettering
+  may be added by hand later, not now. So every golf sprite can be mirrored to face either way.
 - **Readability at 30% zoom:** anything under about 0.5 m becomes a ground decal or is drawn slightly over-size (tee markers,
   ball washers, rakes: marked "decal or 1.5x" below).
 - **No baked ground:** sprites come on transparent backgrounds with no grass under them. Shadows are soft and short, as on the
