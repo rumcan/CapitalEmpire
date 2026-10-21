@@ -201,13 +201,18 @@ export class GroundPainter {
     /** the chunk transform shifted dy world px straight down the screen */
     const shiftM = (dy: number) => new DOMMatrix([1, 0, 0, 1, 0, dy * L]).multiply(M);
     // ---- 1a. lot ground (driveways, walks, car parks, yards) before the verges and roads: each patch in its surface,
-    //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines
-    const all = this.lotsIn(box).filter(p => !p.top), tops = this.lotsIn(box).filter(p => p.top && p.lines?.length), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
-    if (lots.length) {
-      const lotAsph = lots.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('lot', L)) : null;
+    //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines.
+    //      The car parks (asphalt with bay lines) are drawn again over the Paint tool's areas (1a'), so a painted area cannot hide their bays
+    const all = this.lotsIn(box).filter(p => !p.top && !p.layby), tops = this.lotsIn(box).filter(p => p.top && p.lines?.length && !p.layby), laybys = this.lotsIn(box).filter(p => p.layby);
+    const marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    const isPark = (p: LotPatch) => !!p.lines?.length && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
+    /** the lot ground patches of a list: each in its surface and rim, then its lines (furrows, white and yellow bays) */
+    const drawLots = (list: LotPatch[]) => {
+      if (!list.length) return;
+      const lotAsph = list.some(p => p.tex === 'asphalt') ? this.groundPattern(ctx, tex.mosaicFor('lot', L)) : null;
       // the commercial yards' concrete: the Paint tool's photo under 'pad' (the road islands keep the painted concrete)
-      const lotConc = lots.some(p => p.tex === 'concrete') ? this.groundPattern(ctx, tex.mosaicFor('pad', L), undefined) : null;
-      for (const p of lots) {
+      const lotConc = list.some(p => p.tex === 'concrete') ? this.groundPattern(ctx, tex.mosaicFor('pad', L), undefined) : null;
+      for (const p of list) {
         const path = polyPath(p.pts);
         if (p.tex === 'slabs') { ctx.save(); ctx.clip(path); ctx.fillStyle = tex.curb.top; ctx.fill(path); if (!lite) this.slabGrid(ctx, new DOMMatrix(), quadBox(p.pts), M); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = pat('grime'); ctx.fill(path); ctx.restore(); ctx.setTransform(M); }
         else { ctx.fillStyle = p.tex === 'asphalt' ? lotAsph! : p.tex === 'concrete' ? lotConc! : pat(p.tex as TexName); ctx.fill(path); }
@@ -218,7 +223,7 @@ export class GroundPainter {
       // lines: parking bays in worn off-white; furrows (field and dirt patches, the farms' crop rows) in dark brown
       // (and yellow parking lines, the bay rows that ask for them)
       for (const kind of ['furrow', 'white', 'yellow'] as const) {
-        const set = lots.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') ? 'furrow' : p.lineCol === 'yellow' ? 'yellow' : 'white') === kind);
+        const set = list.filter(p => p.lines && p.lines.length && ((p.tex === 'field' || p.tex === 'dirt') ? 'furrow' : p.lineCol === 'yellow' ? 'yellow' : 'white') === kind);
         if (!set.length) continue;
         const lb = this.buffer('lotLines', W, H), lg = ctx2d(lb); lg.setTransform(M); lg.lineCap = 'butt'; lg.lineJoin = 'round';
         lg.strokeStyle = kind === 'furrow' ? 'rgba(74,58,36,0.5)' : kind === 'yellow' ? 'rgba(238,192,46,0.9)' : 'rgba(229,225,207,0.85)'; lg.lineWidth = Math.max(kind === 'yellow' ? 0.1 : 0.08, minW); lg.beginPath();
@@ -227,11 +232,14 @@ export class GroundPainter {
         composite(lb);
       }
       ctx.setTransform(M);
-    }
+    };
+    drawLots(rest);
     // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) over their ground
     if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
+    // ---- 1a''. the car parks over the painted areas: their surface, rim and bay lines
+    drawLots(parks);
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
     for (const b of brs) {
       const path = linePath(b.pts, false);
@@ -313,6 +321,21 @@ export class GroundPainter {
         ctx.strokeStyle = tex.curb.joint; ctx.lineWidth = Math.max(0.02, minW * 0.9); ctx.beginPath();
         for (const j of net.joints) if (j.a.x >= tx0 && j.a.x <= tx1 && j.a.y >= ty0 && j.a.y <= ty1) { ctx.moveTo(j.a.x, j.a.y); ctx.lineTo(j.b.x, j.b.y); }
         ctx.save(); ctx.setTransform(new DOMMatrix([1, 0, 0, 1, 0, -shift]).multiply(M)); ctx.stroke(); ctx.restore(); ctx.setTransform(M);
+      }
+      // ---- 6b. on-street lay-bys (parking cut into a sidewalk): the road's asphalt, a kerb on the outer long edge and both ends (not the road side),
+      // then their white bay lines chipped by the wear (not through the road's mask: they lie outside the asphalt)
+      if (laybys.length) {
+        ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
+        for (const p of laybys) {
+          const q = p.pts; ctx.fillStyle = base; ctx.fill(polyPath(q));
+          ctx.beginPath(); ctx.moveTo(q[2], q[3]); ctx.lineTo(q[4], q[5]); ctx.lineTo(q[6], q[7]); ctx.lineTo(q[0], q[1]);
+          ctx.strokeStyle = tex.curb.joint; ctx.lineWidth = 2 * (CURB_TOP + CURB_JOINT); ctx.stroke(); ctx.strokeStyle = tex.curb.top; ctx.lineWidth = 2 * CURB_TOP; ctx.stroke();
+        }
+        const lbb = this.buffer('laybyLines', W, H), lbg = ctx2d(lbb); lbg.setTransform(M); lbg.lineCap = 'butt';
+        lbg.strokeStyle = WHITE; lbg.lineWidth = Math.max(0.08, minW); lbg.beginPath();
+        for (const p of laybys) for (let k = 0; k + 3 < p.lines!.length; k += 4) { lbg.moveTo(p.lines![k], p.lines![k + 1]); lbg.lineTo(p.lines![k + 2], p.lines![k + 3]); }
+        lbg.stroke(); lbg.setTransform(M); lbg.globalCompositeOperation = 'destination-in'; lbg.fillStyle = this.screenPattern(lbg, 'wear', L, X0, Y0, Minv); lbg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0);
+        composite(lbb); ctx.setTransform(M);
       }
       // ---- 7. medians, islands, roundabout centres
       const curbRing = (feats: Feature[]) => { ctx.strokeStyle = tex.curb.joint; for (const f of feats) ring(ctx, f, 2 * (CURB_TOP + CURB_JOINT)); ctx.strokeStyle = tex.curb.top; for (const f of feats) ring(ctx, f, 2 * CURB_TOP); };

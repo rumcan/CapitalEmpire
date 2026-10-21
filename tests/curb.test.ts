@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, keyOf, type Leg, type RoadClass, type Seg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LaneGraph, checkGraph, type DSeg } from '../src/game/sim/lanes';
-import { curbCheck, curbFrom, resolveCurb, type CurbDef } from '../src/game/event/curb';
+import { curbCheck, curbFrom, curbLines, curbQuad, resolveCurb, type CurbDef } from '../src/game/event/curb';
 import { CURB_BAY, CURB_END, CURB_MIN_BAYS } from '../src/game/event/config';
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
@@ -60,7 +60,7 @@ test('curb: on the right of a to b the traffic runs a to b, on the left b to a; 
 
 test('curbCheck: a two-lane arterial run is valid; a street (one lane each way) needs 2 lanes; a short run is too short', () => {
   assert.equal(curbCheck(roadNet(), RUN), '', 'a valid run on the arterial');
-  assert.equal(curbCheck(roadNet(CLASS.street), RUN), 'too narrow: needs 2 lanes this way or a wide shoulder', 'a street has one lane each way');
+  assert.equal(curbCheck(roadNet(CLASS.lane), RUN), 'too narrow: needs 2 lanes this way or a wide shoulder', 'a lane has no sidewalk to give, nor a shoulder');
   // a road (one lane each way, a 2.4 m shoulder) parks on its shoulder and keeps its lane
   assert.equal(curbCheck(roadNet(CLASS.road), RUN), '', 'a road parks on its shoulder');
   const c = resolveCurb(roadNet(CLASS.road), RUN)!;
@@ -68,6 +68,23 @@ test('curbCheck: a two-lane arterial run is valid; a street (one lane each way) 
   assert.equal(resolveCurb(roadNet(), RUN)!.drop, true, 'the arterial drops its kerb lane');
   // 16 tiles between the streets at 300 and 316: (16 - 2 * CURB_END - CURB_BAY) / CURB_BAY + 1 = 2 bays
   assert.equal(curbCheck(roadNet(CLASS.arterial, [300, 316]), { id: 1, ax: 300, ay: ROAD_Y, bx: 316, by: ROAD_Y }), `too short for ${CURB_MIN_BAYS} bays`);
+});
+
+test('curbCheck: a street (one lane each way, a slab sidewalk) takes a lay-by: its bays stand on the sidewalk, h + walk / 2 out, and the strip is walk wide', () => {
+  const n = roadNet(CLASS.street);
+  assert.equal(curbCheck(n, RUN), '', 'a street takes parking');
+  const c = resolveCurb(n, RUN)!, S = CLASS.street;
+  assert.equal(c.layby, true, 'a lay-by');
+  assert.equal(c.drop, false, 'the lane stays');
+  assert.ok(c.bays.length >= CURB_MIN_BAYS, `${c.bays.length} bays`);
+  assert.ok(c.bays.every(b => Math.abs(Math.abs(b.y - ROAD_Y) - (S.h + S.walk / 2)) < 1e-6), 'the bays stand h + walk / 2 from the centre line');
+  assert.ok(c.bays.every(b => b.y > ROAD_Y), 'on the pv (kerb) side');
+  const q = curbQuad(c);
+  assert.ok(Math.abs(Math.hypot(q[6]! - q[0]!, q[7]! - q[1]!) - S.walk) < 1e-6, 'the strip is walk wide across');
+  const l = curbLines(c);
+  assert.ok(Math.abs(l[1]! - (ROAD_Y + S.h)) < 1e-6 && Math.abs(l[3]! - (ROAD_Y + S.h)) < 1e-6, 'the edge line sits on the road edge');
+  assert.equal(resolveCurb(roadNet(CLASS.arterial), RUN)!.layby, false, 'a kerb lane is not a lay-by');
+  assert.equal(resolveCurb(roadNet(CLASS.road), RUN)!.layby, false, 'a shoulder is not a lay-by');
 });
 
 test('curbCheck: a run that is not straight between two junctions is bogus; an overlapping run has parking already; the other way and the same def do not', () => {

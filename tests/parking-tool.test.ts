@@ -175,6 +175,21 @@ test('curb mode on an arterial: hover and click add a curb (curb:1, top); clicki
   assert.equal(rec.sent[rec.sent.length - 1]!.curbs.length, 0);
 });
 
+test('curb mode on a street: the curb is a lay-by (curb:1 with layby, no top), its bays on the sidewalk', () => {
+  const net = street(), seg = segAt(net, 500);
+  const { host, rec } = fake(net);
+  const t = new ParkingTool(host);
+  t.mode = 'curb';
+  t.hover(seg, { x: 500, y: ROAD_Y + 1 }, 500, 300);
+  assert.equal(t.why, '', 'a street takes a lay-by');
+  t.click();
+  assert.equal(t.curbs.length, 1);
+  const c = resolveCurb(net, t.curbs[0]!)!;
+  assert.equal(c.layby, true);
+  assert.deepEqual(lastGround(rec, 'curb:1'), [{ pts: curbQuad(c), tex: 'asphalt', layby: true, lines: curbLines(c) }]);
+  assert.equal(lastGround(rec, 'curb:1')![0]!.top, undefined, 'no top: the lay-by is drawn over the sidewalk, not the road');
+});
+
 test('setFee clamps to 0..50, rounds to whole dollars, and syncs the fee to the worker', () => {
   const { host, rec } = fake(street());
   const t = new ParkingTool(host);
