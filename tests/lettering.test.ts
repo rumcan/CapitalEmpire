@@ -6,6 +6,7 @@ import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
 import { compose, type ComposeState } from '../src/game/lots/compose';
 import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lettering';
+import { EAST_PAIRS } from '../src/game/east-library';
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { BUSINESSES } from '../src/game/business/catalogue';
@@ -69,8 +70,55 @@ test('a lettering sprite is never drawn flipped: commercial and tour lots facing
   assert.ok(flipped > 0, 'the composer drew some flipped sprites');
 });
 
+test('east-facing art: each pair is a library sprite of its front\'s kind and category, the front mirrored (ax, boxes, quad), with lettering', () => {
+  assert.equal(EAST_PAIRS.length, 14, `${EAST_PAIRS.length} east-facing shops`);
+  assert.equal(new Set(EAST_PAIRS.map(p => p[1])).size, EAST_PAIRS.length, 'each east sprite once');
+  const near = (a: number, b: number) => Math.abs(a - b) < 0.011;
+  for (const [front, east] of EAST_PAIRS) {
+    const f = byId.get(front), e = byId.get(east);
+    assert.ok(f, `${front} is in the library`);
+    assert.ok(e, `${east} is in the library`);
+    assert.equal(EAST_FACING[front], east, `${front} maps to ${east}`);
+    assert.equal(east, `east:${front}`, `${east} is named for its front`);
+    assert.equal(e.kind, f.kind, `${east} kind`);
+    assert.equal(e.cat, f.cat, `${east} category`);
+    assert.equal(e.name, `${f.name} (east)`, `${east} name`);
+    assert.equal(e.w, f.w, `${east} width`);
+    assert.equal(e.h, f.h, `${east} height`);
+    assert.ok(near(e.ax, f.w - f.ax), `${east} anchor ${e.ax} is the front's ${f.ax} mirrored`);
+    assert.equal(e.ay, f.ay, `${east} anchor height`);
+    assert.deepEqual(e.boxes, f.boxes.map(b => ({ hx: b.hy, hy: b.hx, dx: b.dy, dy: b.dx })), `${east} boxes swapped`);
+    assert.ok(near(e.quad[0], f.w - f.quad[2]) && near(e.quad[2], f.w - f.quad[0]) && e.quad[1] === f.quad[1] && e.quad[3] === f.quad[3], `${east} quad mirrored`);
+    assert.ok(near(e.tex[3] - e.tex[1], f.tex[3] - f.tex[1]) && near(e.tex[4] - e.tex[2], f.tex[4] - f.tex[2]), `${east} is drawn at the front's mip-0 size`);
+    assert.ok(hasLettering(east, e.name) && lettered(east), `${east} carries lettering: never flipped`);
+  }
+});
+
+test('east-facing art is drawn only in place of a flipped front, unflipped; no pool and no unflipped lot draws it', () => {
+  const plusX = LOTS.filter(l => Math.abs(l.n.x) > Math.abs(l.n.y)), plusY = LOTS.filter(l => Math.abs(l.n.y) > Math.abs(l.n.x));
+  assert.ok(plusY.length >= 10, `${plusY.length} lots face +Y`);
+  const rnd = mulberry(20261023);
+  let drawn = 0;
+  const used = new Set<string>();
+  for (const lot of plusX) for (let k = 0; k < 40; k++) {
+    const st: ComposeState = { use: k % 3 === 2 ? LU.TOUR : LU.COM, level: k % 2 ? LV.BUILT : LV.UPGRADED, decline: k % 4, seed: Math.floor(rnd() * 4294967296) >>> 0 };
+    for (const p of compose(lot, st).props) {
+      if (!p.id.startsWith('east:')) continue;
+      drawn++; used.add(p.id);
+      assert.equal(p.flip, false, `${lot.key} ${JSON.stringify(st)}: ${p.id} is drawn flipped`);
+    }
+  }
+  assert.ok(drawn > 0, 'the east-facing art is drawn on +X lots');
+  assert.ok(used.size >= 5, `${used.size} east-facing shops drawn on +X lots`);
+  for (const lot of plusY) for (let k = 0; k < 20; k++) {
+    const st: ComposeState = { use: k % 2 ? LU.COM : LU.TOUR, level: LV.BUILT, decline: k % 4, seed: Math.floor(rnd() * 4294967296) >>> 0 };
+    for (const p of compose(lot, st).props) assert.ok(!p.id.startsWith('east:'), `${lot.key} (facing +Y): ${p.id} drawn from a pool`);
+  }
+});
+
 test('the east-facing hook: a flipped front with east-facing art draws that art unflipped, never the front flipped', () => {
   // a stand-in: the grocery's east art is the diner sprite (any library sprite will do; the hook is what is tested)
+  const real = EAST_FACING['town:grocery'];
   EAST_FACING['town:grocery'] = 'world:diner';
   try {
     const east = LOTS.filter(l => Math.abs(l.n.x) > Math.abs(l.n.y));
@@ -85,7 +133,7 @@ test('the east-facing hook: a flipped front with east-facing art draws that art 
     }
     assert.ok(stand > 0, 'the east art was placed on a flipped lot');
   } finally {
-    delete EAST_FACING['town:grocery'];
+    EAST_FACING['town:grocery'] = real;
   }
 });
 
