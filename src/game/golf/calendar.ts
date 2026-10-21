@@ -15,6 +15,24 @@ export function monthName(clock: number): string { return MONTH_NAMES[monthOf(cl
 /** the calendar year of a run: START_YEAR plus the runs so far */
 export function yearOf(runs: number): number { return START_YEAR + runs; }
 
+// The golf season (G1; GOLF-PLAN 2.1, open question 1 on its recommended default): one game day is one season. Clock 0 of a day is
+// 1 September; the tournament closes the season at the day's end (the end of August), so the round's runs++ at its close starts the next
+// season. Season 0 runs Sep 1984 - Aug 1985 and ends with the 1985 tournament (yearOf(0)).
+/** the calendar month (0 = Jan) that a game day's clock 0 falls in */
+export const SEASON_START = 8;
+/** the clock units of a game day (one season) */
+export const SEASON_LEN = 12 * MONTH_LEN;
+/** a clock value's place in its day, 0..SEASON_LEN */
+const inDay = (clock: number): number => ((clock % SEASON_LEN) + SEASON_LEN) % SEASON_LEN;
+/** the calendar month (0 = Jan) of a clock value in the golf season */
+export function seasonMonth(clock: number): number { return (monthOf(inDay(clock)) + SEASON_START) % 12; }
+/** the calendar year of a clock value in season `runs` (the tournament's year, less one from September to December) */
+export function seasonYear(clock: number, runs: number): number { return yearOf(runs) - (seasonMonth(clock) >= SEASON_START ? 1 : 0); }
+/** "Mar 1985": the month and the calendar year of a clock value in season `runs` */
+export function seasonLabel(clock: number, runs: number): string { return `${MONTH_NAMES[seasonMonth(clock)]} ${seasonYear(clock, runs)}`; }
+/** the months left until the tournament (the end of the day), 0..12, fractional */
+export function monthsLeft(clock: number): number { return (SEASON_LEN - inDay(clock)) / MONTH_LEN; }
+
 /** the staff and volunteers arrive (05:30, tier 3+) */
 export const STAFF_IN = 330;
 /** the shuttles start (06:30, 30 minutes before the gates) */
