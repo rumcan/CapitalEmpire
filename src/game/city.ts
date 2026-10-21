@@ -151,7 +151,7 @@ export class City {
   centres: Pt[] = [];
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
-  /** the player's businesses (setBusinesses: the full list, with each one's stats; the stadium's level is the round's, see bizView) */
+  /** the player's businesses (setBusinesses: the full list, with each one's stats; the stadium's level is its own, from its fan cars (XP), not the round's) */
   businesses: BizView[] = [];
   /** each placed business's stats by id (kept across setBusinesses while it stands; restoreBiz fills them from a save) */
   private bizStats = new Map<number, BizStats>();
@@ -316,9 +316,9 @@ export class City {
     for (const s of stats) this.bizStats.set(s.id, { ...s, today: { ...s.today } });
     this.businesses = this.businesses.map(b => ({ ...b, ...(this.bizStats.get(b.id) ?? freshStats(b.id)) }));
   }
-  /** the businesses as the UI and the frame see them: copies, the stadium's level being the round's */
+  /** the businesses as the UI and the frame see them: copies (the stadium's level is its business level; the round's own level is RoundView.level) */
   bizView(): BizView[] {
-    return this.businesses.map(b => ({ ...b, ...this.bizStats.get(b.id)!, today: { ...this.bizStats.get(b.id)!.today }, ...(b.type === 'stadium' ? { level: this.round.level } : {}) }));
+    return this.businesses.map(b => ({ ...b, ...this.bizStats.get(b.id)!, today: { ...this.bizStats.get(b.id)!.today } }));
   }
   /** places the stadium with its footprint at [x, y, w, h] tiles (siteAt), or takes it away (null); refused (false, nothing changes) while a round is under way.
    *  Its id is the stadium's own, else the next after the highest */
@@ -912,7 +912,7 @@ export class City {
     L.net = (L.toll ?? 0) + (L.tickets ?? 0) + L.payout - L.upkeep;
     const st = this.businesses.find(b => b.type === 'stadium'), s = st ? this.bizStats.get(st.id) : undefined;
     if (s) {
-      s.revenue += tk; s.visitors += arrived; s.xp += arrived; s.today.visitors += arrived; s.today.revenue += tk;
+      s.revenue += tk; s.visitors += arrived; s.xp += Math.round(arrived / PARTY); s.level = levelFromXp(s.xp); s.today.visitors += arrived; s.today.revenue += tk;
       s.sat = Math.min(1, Math.max(0, s.sat + 0.3 * (L.rate - s.sat))); if (L.perfect) s.goodDays++;
     }
     // the bus company: a round whose shuttles carried BUS_GOOD_RIDERS or more is a good day
@@ -1199,12 +1199,12 @@ export class City {
       from[k] = dr ? this.g.lanes[dr.lane]!.dseg : -1;
     }
     // the tourists come in from the highway entry: its kerb (within ENTRY_REACH) starts them, and their residents are the levels of the tourism
-    // businesses, the casino and the stadium (the stadium's level is the round's), TOURIST_PER_LEVEL each; a catchment after the towns
+    // businesses, the casino and the stadium, TOURIST_PER_LEVEL each; a catchment after the towns
     const ent = this.kerbAt(this.ctx.entry, ENTRY_REACH);
     let touristPop = 0;
     if (ent) for (const b of this.businesses) {
       const t = BUSINESS[b.type];
-      if (t.family === 'tourism' || b.type === 'casino' || b.type === 'stadium') touristPop += TOURIST_PER_LEVEL * (b.type === 'stadium' ? this.round.level : this.bizStats.get(b.id)!.level);
+      if (t.family === 'tourism' || b.type === 'casino' || b.type === 'stadium') touristPop += TOURIST_PER_LEVEL * this.bizStats.get(b.id)!.level;
     }
     const tourist = ent && touristPop > 0 ? ent : null, ec = tourist ? this.compOf(this.g.dsegs[tourist.dseg]!.seg) : -2;
     if (tourist) { homes.push([{ lot: null, town: K, pop: touristPop, drive: { lane: tourist.lane, s: tourist.s } }]); pops.push(touristPop); }

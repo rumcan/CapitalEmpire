@@ -1703,10 +1703,32 @@ unlocks; budgets met).
     road (a temporary log of the plan: the other towns' components differ, so Infinity) and got 5-7 a night ($56 each), a good day;
     the estate and tourist panel lines. A golf course with players beside an estate was not reached in the browser (the placement
     search found no spot joined to a town in those valleys); the estate rules are in tests/business-estate.test.ts.
-  - Checks: typecheck clean; `npm test` 467/467 on the worker (before the last two fixes: the players rule and the test data;
-    the business tests pass after them).
-- **Next: B.7, the Phase B gate and the balance** (headless: a scripted player with the stadium and three spin-offs, solvent 30 days,
-  4+ unlocks; the numbers: taxi wages vs the game hour, the bus company, visit demand), then 6R.5-6R.8.
+  - Checks: typecheck clean; `npm test` 473/473 on the worker (2026-10-20 night, all B.6 fixes in).
+- **B.7 The Phase B gate and the balance (2026-10-20/21): IN PROGRESS** (branch `claude/b7-gate`, worktree `.claude/worktrees/b7-gate`).
+  - *The gate:* `npm run biz:gate -- [seed = 1] [days = 30]` (`scripts/sim/biz-gate.ts`; the generous build and the round runner moved to
+    `scripts/sim/builds.ts`, shared with event-gate.ts). A scripted player: the stadium on the suggested spot (paid), the generous roads
+    without the spine widening (the start fund cannot pay for the arterials too), the car parks it can afford (loans when short), a round a
+    day at 17:00 (a card by preference, round closed), one spin-off a day when open and affordable (keeps $60k), beside a road joined to the
+    stadium; with the bus company a shuttle route per town. Checks: (a) solvent at every day's close, (b) 3+ spin-offs, (c) 4+ types open,
+    (d) sim budget over the surges. Prints a line a day with the treasury, population, round, the day's books and every business.
+  - *Owner's decisions (2026-10-21):* (1) **the stadium levels up for the tree from its fans** like any business (XP = arrived fan cars:
+    level 2 at 400, about round 2; level 3 at 1,200, about round 5); the round's own level (the crowd) still rises only on a perfect run.
+    Done in city.ts (kickOff sets the stadium's level from its XP; bizView no longer shows the round's level). (2) **Spin-offs pay back
+    their cost in about 10 game days**; the rounds stay the main income. (3) **The player pays upkeep only for the roads they built**
+    (not the towns' own streets and gravel); **a town pays a small one-time fee the first time it builds a lot beside a player's road**,
+    once per lot for the game ($250 a home, $500 a shop or works), far below the compensation for clearing a house, so demolishing and
+    rebuilding never pays. (4) For 6R.7 (towns as seeds): **a town starts with one asphalt main avenue and some gravel branches** (no big
+    street grid); **each town has a fixed commercial district and a fixed industrial district** (only shops in one, only works in the
+    other), the rest residential with a few shops scattered; **the player upgrades towns and a town grows by the player's success with
+    traffic** (its growth driven by how well the traffic runs).
+  - Numbers so far (local, the worker was unreachable 2026-10-21): 30 days, seed 1: 5 types open, 3 spin-offs (sports bar day 2, bus
+    company day 3, diner day 4); round 1 perfect, then L2 rounds 70% falling to 26% as the towns grow (3,134 -> 5,392 residents);
+    upkeep $44-47k a day (nearly all roads, the towns' included; no tax in a towns valley) against $10-36k business takings, so the
+    treasury goes from $170k to -$49k by day 30. Sports bar and diner earn about $2.3k a day by level 3 (payback ~9-14 days). The bus
+    company earned nothing (no shuttles in that run; routes added since). Taxi wages and fares still run on real hours and minutes.
+  - **Next in B.7:** road ownership (a town flag on segs, kept through splits, upgrades, the net ops and saves; upkeep skips town segs)
+    and the connection fee; rerun the gate; then taxi time units and the spin-off numbers (payback ~10 days); the gate passing; then
+    6R.5-6R.8 with the owner's town rules above.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road

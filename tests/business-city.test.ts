@@ -96,13 +96,13 @@ test('setStadium still places the stadium (its own id, else the next after the h
   assert.deepEqual(city.site, siteAt(STAD.x, STAD.y, STAD.w, STAD.h), 'the site stays');
 });
 
-test('bizView: the stadium\'s level is the round\'s, the others\' level is their stored one', () => {
+test('bizView: every business shows its own stored level; the stadium\'s is not the round\'s (the tree reads it, B.7)', () => {
   const city = fresh();
   city.setBusinesses([STAD, BAR]);
-  city.restoreBiz([{ ...freshStats(2), level: 2 }]);
+  city.restoreBiz([{ ...freshStats(STAD.id), level: 2 }, { ...freshStats(2), level: 2 }]);
   city.round.level = 3;
   const views = city.bizView();
-  assert.equal(views.find(b => b.type === 'stadium')!.level, 3);
+  assert.equal(views.find(b => b.type === 'stadium')!.level, 2);
   assert.equal(views.find(b => b.type === 'sportsbar')!.level, 2);
 });
 
