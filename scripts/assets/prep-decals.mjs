@@ -12,19 +12,21 @@ import { readScales } from './overrides.mjs';
 
 /** the decals the composer uses, by group (the group names are what compose.ts asks for) */
 const GROUPS = {
-  leaves: ['gen:drift-1', 'gen:drift-2', 'gen:drift-3', 'gen:drift-4', 'gen:drift-5', 'gen:drift-6', 'gen:drift-7', 'gen:drift-8', 'town:leaf_drift'],
+  leaves: ['decal:decal-06-orange-leaf-scatter', 'decal:decal-07-red-leaf-cluster', 'decal:decal-08-yellow-leaf-scatter', 'decal:scatter-tiny-leaves', 'gen:drift-1', 'gen:drift-2', 'gen:drift-3', 'gen:drift-4', 'gen:drift-5', 'gen:drift-6', 'gen:drift-7', 'gen:drift-8', 'town:leaf_drift'],
   worn: ['town:bare_grass', 'town:mud_grass'],
   litter: ['town:paper_litter', 'town:bag_litter', 'gen:litter-candy', 'gen:litter-fastfood', 'gen:litter-newspaper', 'poi:newspaper-cup-litter', 'poi:candy-soda-litter', 'expansion:can-litter'],
   rubbish: ['gen:rubbish-bags', 'gen:rubbish-cardboard'],
   woods: ['gen:pinecones-needles', 'gen:twigs-branches'],
-  tufts: ['decal:scatter-grass-tufts'],
+  tufts: ['decal:scatter-grass-tufts', 'decal:decal-01-lush-grass', 'decal:decal-02-dry-golden-grass', 'decal:decal-03-moss-groundcover', 'decal:decal-04-low-weeds', 'decal:decal-05-thin-grass'],
   stain: ['town:oil_stain', 'town:paving_wear', 'town:wheel_wear', 'expansion:paint-spill'],
   gravel: ['town:gravel_spill', 'gen:gravel-spill'],
   mud: ['expansion:mud-tracks-x', 'expansion:mud-tracks-y', 'expansion:mud-footprints', 'expansion:mud-arc'],
 };
 const dir = path.join(TOT, 'output/town-builder/library'), file = path.join(dir, 'library.json');
 if (!fs.existsSync(file)) { console.error(`no TrickOrTreat library at ${file}: the lot decals stay as they are`); process.exit(1); }
-const byId = new Map(JSON.parse(fs.readFileSync(file, 'utf8')).items.map(i => [i.id, i]));
+const items = JSON.parse(fs.readFileSync(file, 'utf8')).items, byId = new Map(items.map(i => [i.id, i]));
+// every recoloured variation of a group's decal joins its group (the 2026-10-17 run: litter, grass and leaf variants), so the lots get more variety
+for (const ids of Object.values(GROUPS)) for (const it of items) { const of = (it.tags || []).find(t => t.startsWith('variation-of:'))?.slice(13); if (of && ids.includes(of) && !ids.includes(it.id)) ids.push(it.id); }
 const scales = readScales();
 
 const PAGE_W = 2048, GAP = 2, tiles = [], meta = [];
