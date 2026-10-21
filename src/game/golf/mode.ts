@@ -1,0 +1,20 @@
+// Golf mode (G1; docs/GOLF-PLAN.md sections 2-3 and 11): what a golf game saves and what the HUD reads. A save with a `golf` field is a golf
+// game; a save without one is a legacy (classic) game and loads as before. Pure TS, no DOM.
+import type { Pt } from '../network';
+import type { AimPoint, Pin, TeeMark } from './types';
+
+/** a rectangle in tiles: top-left x, y and the size w, h */
+export type Rect = [number, number, number, number];
+
+/** a golf game's own state, saved as SaveV5.golf: the tournament tier (1..5) and the reputation (0..100), the town's centre (golf mode has one
+ *  town), the course's rectangle (the painted course; its areas are ordinary Paint areas, saved with the paints) and the owned parcel (the course
+ *  plus its clubhouse and car park), the side of the town the course lies on (0 north, 1 east, 2 south, 3 west), and the hole objects (tee
+ *  markers, pins, aim points) and the clubhouse door, tiles */
+export interface GolfSave {
+  v: 1; tier: number; rep: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
+  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
+}
+
+/** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament
+ *  (0..12, fractional), the tournament's year, and whether the tournament day is under way (the round's surge or its results) */
+export interface GolfView { tier: number; tierName: string; month: string; monthsLeft: number; year: number; live: boolean }

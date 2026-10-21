@@ -49,6 +49,7 @@ import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
+import type { GolfSave, GolfView } from './golf/mode';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -2129,6 +2130,14 @@ export class Game {
   get won() { return this.traffic.career.won; }
   /** event mode: the valley has town centres (the stadium is then the player's to place: see site), and the event's rules replace the Career's unlocks (see classOpen, junctionOpen, tunnelsOpen) */
   get eventMode(): boolean { return this.townPts.length > 0; }
+  /** the golf game's state (golf/mode.ts; null: a legacy classic game, which loads and plays as before) */
+  golf: GolfSave | null = null;
+  /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
+  get golfMode(): boolean { return this.golf !== null; }
+  /** the golf HUD's view (null outside golf mode) */
+  golfView(): GolfView | null { return null; }
+  /** fast-forwards the season to the tournament (the end of the game day); golf mode only, not while the clock is frozen */
+  skipToTournament(): void { }
   /** a road class is open to build: every class in event mode, else as the Career unlocks it */
   classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
   /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
