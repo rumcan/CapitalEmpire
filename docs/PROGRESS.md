@@ -1796,6 +1796,19 @@ clear block lots too), claude/lot-fixes, claude/studio-decals and the owner's st
   the Paint grasses redone as fairway/rough photos): waiting on the owner's choice of how to generate them; the variation
   houses into the house pool after the owner's door-size pass.
 
+### main, 2026-10-21 (later): photo grasses in Paint, Paint on its own rail button (bb445e4)
+- **Photo grasses** (the owner's three seamless photos, masters in `art/grass-photo/`, `scripts/assets/prep-photo-grass.mjs`):
+  Fairway and the new **New sod** are 24 m (12-tile) photo tiles laid in TILE space (`GRASS_PHOTO` in grass-art.ts, stored
+  as mip chains in `Textures.mosaics`, drawn with `groundPattern` in `drawPaints`), so the mowing stripes follow the map axes
+  and the area's angle; Rough is a 6 m photo hex-mixed in tile space by `mosaic()` over its own mean colour. The painted
+  fairway and rough are gone (saves keep their ids). TEX_VERSION tex-13. Browser-checked on a fresh valley; typecheck clean,
+  npm test 545/545, build OK.
+- **Paint** left the Roads group: its own rail button (terrain icon, key C).
+- The owner's test server: `npx vite preview --port 5174` from .claude/worktrees/main-merge (the only CapitalEmpire server).
+- The dev PC was swapping (1.5 of 15.4 GB free): the Claude app (~4.6 GB, up since 10-19), VS Code, Defender scanning the
+  15 worktrees. Keep at most one game tab open; close previews when done. ~12 worktrees are merged and could be removed
+  (ask the owner first).
+
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire). Read CLAUDE.md and docs/PROGRESS.md first. Done lately (2026-10-20): the road
 Upgrade/Downgrade ladder with fair costs, houses following a widened road, and the Maple Falls HUD (UI steps 1-2). Next in the owner's
