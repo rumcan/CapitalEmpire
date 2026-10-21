@@ -5,6 +5,7 @@ import type { Pt } from '../network';
 import { zoneOf } from '../sim/routing';
 import type { Built } from '../sim/trips';
 import { PAVED_RATE, TOWN_RATE_BASE, TOWN_RATE_PER_BUILT } from '../event/config';
+import { inCommercial, inIndustrial, industrialRect } from './districts';
 
 export const LU = { NONE: 0, RES: 1, COM: 2, IND: 3, TOUR: 4, GOV: 5 } as const;
 /** shops gather in rows: a lot's shop neighbours (within COM_ROW tiles, on the same side of the street) raise its shop score by COM_PULL each
@@ -266,6 +267,13 @@ export class Town {
   /** the land use of a chosen lot: the scores times the share balance, the option and seeded noise; the highest wins */
   private useFor(l: Lot, ctx: TownCtx): number {
     const cid = l.seg.cls.id, w = this.option.w, sc = this.sc, mul = this.mul;
+    const k = this.townOf(l.key);
+    const tc = k >= 0 && k < this.centres.length ? this.centres[k]! : (this.centres.length > 0 ? this.centres[0]! : null);
+    if (tc !== null) {
+      const indR = industrialRect(tc, ctx.entry);
+      if (inIndustrial(l.c, indR)) return LU.IND;
+      if (inCommercial(l.c, cid, tc)) return LU.COM;
+    }
     // the targets: the base shares times the option, renormalised over RES, COM, IND, TOUR
     let tot = 0; for (let u = 0; u < 4; u++) tot += TARGET[u + 1] * w[u];
     // the share balance: a use below its target share scores up to 3x, above it down to 0.3x (raw until MIN_OCC lots)
@@ -273,8 +281,7 @@ export class Town {
       const t = TARGET[u + 1] * w[u] / tot;
       mul[u] = this.occ < MIN_OCC ? 1 : Math.min(3, Math.max(0.3, 1 + 2 * (t - this.cnt[u + 1] / this.occ) / t));
     }
-    // the residents near (industry keeps away from them), and the shops beside it on the same side of the same street: shops gather in a row
-    // (a strip of shops, a main street), so a lot with shop neighbours is likely a shop too, and less likely a house
+    // the residents near (industry keeps away from them), and the shops beside it on the same side of the same street
     let nr = 0, nc = 0;
     for (const s of this.states.values()) {
       if (s.level === LV.EMPTY) continue;
@@ -283,11 +290,21 @@ export class Town {
       if (s.use === LU.COM && d <= COM_ROW && g.n.x * l.n.x + g.n.y * l.n.y > 0.9) nc++;
     }
     const de = dist(l.c, ctx.entry), wat = ctx.water(l.c.x, l.c.y);
-    sc[0] = (1 + (cid === 'gravel' || cid === 'lane' || cid === 'street' ? 0.5 : 0)) * mul[0];
-    sc[1] = (0.5 + (cid === 'road' || cid === 'avenue' || cid === 'arterial' ? 0.6 : 0) + (cid === 'boulevard' ? 1 : 0) + (l.corner ? 0.4 : 0)) * mul[1] * (1 + COM_PULL * Math.min(2, nc));
-    if (nc) sc[0] *= COM_PUSH;
-    sc[2] = (0.2 + (de <= 120 ? 1.2 : 0)) * (nr > 4 ? 0.3 : 1) * mul[2];
-    sc[3] = (0.1 + (wat <= 40 ? 1 : 0) + (cid === 'boulevard' ? 0.6 : 0)) * mul[3];
+    if (tc !== null) {
+      // In a town outside commercial/industrial districts: IND scores 0, COM score * 0.35, mul[1] clamped <= 1, no COM_PULL
+      sc[0] = (1 + (cid === 'gravel' || cid === 'lane' || cid === 'street' ? 0.5 : 0)) * mul[0];
+      const comMul = Math.min(1, mul[1]);
+      sc[1] = (0.5 + (cid === 'road' || cid === 'avenue' || cid === 'arterial' ? 0.6 : 0) + (cid === 'boulevard' ? 1 : 0) + (l.corner ? 0.4 : 0)) * comMul * 0.35;
+      sc[2] = 0;
+      sc[3] = (0.1 + (wat <= 40 ? 1 : 0) + (cid === 'boulevard' ? 0.6 : 0)) * mul[3];
+    } else {
+      // Legacy uncentred grid: original allocation
+      sc[0] = (1 + (cid === 'gravel' || cid === 'lane' || cid === 'street' ? 0.5 : 0)) * mul[0];
+      sc[1] = (0.5 + (cid === 'road' || cid === 'avenue' || cid === 'arterial' ? 0.6 : 0) + (cid === 'boulevard' ? 1 : 0) + (l.corner ? 0.4 : 0)) * mul[1] * (1 + COM_PULL * Math.min(2, nc));
+      if (nc) sc[0] *= COM_PUSH;
+      sc[2] = (0.2 + (de <= 120 ? 1.2 : 0)) * (nr > 4 ? 0.3 : 1) * mul[2];
+      sc[3] = (0.1 + (wat <= 40 ? 1 : 0) + (cid === 'boulevard' ? 0.6 : 0)) * mul[3];
+    }
     let best = LU.RES, bv = -1;
     for (let u = 0; u < 4; u++) { const v = sc[u] * (1 + NOISE * (2 * this.rnd() - 1)); if (v > bv) { bv = v; best = u + 1; } }
     return best;
