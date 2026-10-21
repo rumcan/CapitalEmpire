@@ -2206,7 +2206,7 @@ export class Game {
   golfView(): GolfView | null {
     if (!this.golf) return null;
     const c = this.traffic.clockTime(performance.now()), r = this.traffic.round, tier = this.golf.tier;
-    return { tier, tierName: tierInfo(tier).name, month: seasonLabel(c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
+    return { tier, tierName: tierInfo(tier).name, month: seasonLabel(r.stage !== 'free' ? c - 1 : c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
