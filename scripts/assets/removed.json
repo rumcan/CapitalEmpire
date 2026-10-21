@@ -223,6 +223,20 @@
    500.64
   ]
  },
+ "ref:building-farm-shed": {
+  "at": "2026-10-21T14:34:18.473Z",
+  "name": "Farm Shed",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 277,
+  "h": 240.1,
+  "quad": [
+   0,
+   0,
+   277.06,
+   240.42
+  ]
+ },
  "ref:building-grocery": {
   "at": "2026-10-21T09:50:17.900Z",
   "name": "Grocery",
@@ -711,6 +725,76 @@
    0,
    70,
    138.33
+  ]
+ },
+ "variation:expansion-brick-barbecue-68999099-ns:2": {
+  "at": "2026-10-21T14:34:53.813Z",
+  "name": "Built-in brick backyard barbecue — A north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 69.8654462242563,
+  "h": 82.18215102974828,
+  "quad": [
+   0,
+   0,
+   70,
+   81.67
+  ]
+ },
+ "variation:expansion-brick-barbecue-68999099-ns:3": {
+  "at": "2026-10-21T14:34:53.000Z",
+  "name": "Built-in brick backyard barbecue — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 92.80000000000001,
+  "h": 82.18215102974828,
+  "quad": [
+   0,
+   0,
+   93.33,
+   81.67
+  ]
+ },
+ "variation:expansion-brick-barbecue-68999099-ns:4": {
+  "at": "2026-10-21T14:34:56.879Z",
+  "name": "Built-in brick backyard barbecue — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 86.42929061784898,
+  "h": 78.35972540045768,
+  "quad": [
+   0,
+   0,
+   86.67,
+   78.33
+  ]
+ },
+ "variation:expansion-brick-barbecue-68999099:3": {
+  "at": "2026-10-21T14:35:02.842Z",
+  "name": "Built-in brick backyard barbecue — variation 3",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 89.59209876543211,
+  "h": 85.69679012345681,
+  "quad": [
+   0,
+   0,
+   90,
+   85
+  ]
+ },
+ "variation:expansion-brick-barbecue-68999099:4": {
+  "at": "2026-10-21T14:35:01.728Z",
+  "name": "Built-in brick backyard barbecue — variation 4",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 92.80000000000001,
+  "h": 98.29925925925927,
+  "quad": [
+   0,
+   0,
+   93.33,
+   98.33
   ]
  },
  "variation:expansion-camping-cooler-13355475-ns:1": {
