@@ -153,6 +153,20 @@
    342.02
   ]
  },
+ "ref:building-barn-v2": {
+  "at": "2026-10-21T09:53:31.057Z",
+  "name": "Barn V2",
+  "cat": "Landmarks",
+  "kind": "venue",
+  "w": 469.4,
+  "h": 343.9,
+  "quad": [
+   0,
+   0,
+   469.43,
+   343.7
+  ]
+ },
  "ref:building-church": {
   "at": "2026-10-20T16:23:30.341Z",
   "name": "Church",
@@ -167,6 +181,34 @@
    792.77
   ]
  },
+ "ref:building-corner-shop": {
+  "at": "2026-10-21T09:51:24.438Z",
+  "name": "Corner Shop",
+  "cat": "Shops & services",
+  "kind": "venue",
+  "w": 469.6,
+  "h": 443.5,
+  "quad": [
+   0,
+   0,
+   469.84,
+   443.47
+  ]
+ },
+ "ref:building-corner-store": {
+  "at": "2026-10-21T09:51:38.443Z",
+  "name": "Corner Store",
+  "cat": "Shops & services",
+  "kind": "venue",
+  "w": 405.5,
+  "h": 359.7,
+  "quad": [
+   0,
+   0,
+   405,
+   359.65
+  ]
+ },
  "ref:building-drive-in-screen": {
   "at": "2026-10-20T16:23:34.790Z",
   "name": "Drive In Screen",
@@ -179,6 +221,20 @@
    0.97,
    651.03,
    500.64
+  ]
+ },
+ "ref:building-grocery": {
+  "at": "2026-10-21T09:50:17.900Z",
+  "name": "Grocery",
+  "cat": "Shops & services",
+  "kind": "venue",
+  "w": 534.5,
+  "h": 647.7,
+  "quad": [
+   0,
+   0,
+   534.52,
+   648.24
   ]
  },
  "ref:building-mausoleum": {
@@ -307,6 +363,20 @@
    250.49
   ]
  },
+ "static:compact_s": {
+  "at": "2026-10-21T09:54:44.311Z",
+  "name": "Compact S",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 193.1,
+  "h": 134.7,
+  "quad": [
+   0,
+   0,
+   192.67,
+   134.65
+  ]
+ },
  "static:garage_timber-v2": {
   "at": "2026-10-20T16:08:57.309Z",
   "name": "Garage Timber V2",
@@ -319,6 +389,48 @@
    0,
    277.55,
    223.13
+  ]
+ },
+ "static:pickup_n-v2": {
+  "at": "2026-10-21T09:54:34.035Z",
+  "name": "Pickup N V2",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 259.3,
+  "h": 166.3,
+  "quad": [
+   0,
+   0,
+   259.26,
+   166.67
+  ]
+ },
+ "static:van_e": {
+  "at": "2026-10-21T09:54:37.158Z",
+  "name": "Van E",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 242.1,
+  "h": 188.1,
+  "quad": [
+   0,
+   0,
+   242.69,
+   187.59
+  ]
+ },
+ "static:van_e-v2": {
+  "at": "2026-10-21T09:54:37.713Z",
+  "name": "Van E V2",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 246.4,
+  "h": 193.6,
+  "quad": [
+   0,
+   0,
+   246.75,
+   193.36
   ]
  },
  "town:hardware": {
@@ -601,6 +713,90 @@
    138.33
   ]
  },
+ "variation:expansion-camping-cooler-13355475-ns:1": {
+  "at": "2026-10-21T09:56:35.929Z",
+  "name": "Blue camping ice chest — A south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 35.2538860103627,
+  "h": 26.74818652849741,
+  "quad": [
+   0,
+   0,
+   35,
+   26.67
+  ]
+ },
+ "variation:expansion-camping-cooler-13355475-ns:2": {
+  "at": "2026-10-21T09:56:34.902Z",
+  "name": "Blue camping ice chest — A north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 35.2538860103627,
+  "h": 26.74818652849741,
+  "quad": [
+   0,
+   0,
+   35,
+   26.67
+  ]
+ },
+ "variation:expansion-camping-cooler-13355475-ns:3": {
+  "at": "2026-10-21T09:56:34.212Z",
+  "name": "Blue camping ice chest — B south view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 43.2,
+  "h": 32.567875647668394,
+  "quad": [
+   0,
+   0,
+   43.33,
+   33.33
+  ]
+ },
+ "variation:expansion-camping-cooler-13355475-ns:4": {
+  "at": "2026-10-21T09:56:42.894Z",
+  "name": "Blue camping ice chest — B north view",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 42.41658031088083,
+  "h": 32.67979274611399,
+  "quad": [
+   0,
+   0,
+   41.67,
+   33.33
+  ]
+ },
+ "variation:expansion-camping-cooler-13355475:2": {
+  "at": "2026-10-21T09:56:41.221Z",
+  "name": "Blue camping ice chest — variation 2",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 41.56540540540541,
+  "h": 44.25081081081081,
+  "quad": [
+   0,
+   0,
+   41.67,
+   45
+  ]
+ },
+ "variation:expansion-camping-cooler-13355475:3": {
+  "at": "2026-10-21T09:56:40.434Z",
+  "name": "Blue camping ice chest — variation 3",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 43.083243243243246,
+  "h": 42.49945945945946,
+  "quad": [
+   0,
+   0,
+   43.33,
+   41.67
+  ]
+ },
  "variation:expansion-chainlink-x-4a0ed35b-ns:4": {
   "at": "2026-10-20T16:31:19.038Z",
   "name": "Chain-link fence — X axis — B north view",
@@ -641,6 +837,20 @@
    0,
    118.33,
    86.67
+  ]
+ },
+ "variation:expansion-garden-hose-819a84b2:1": {
+  "at": "2026-10-21T09:56:44.805Z",
+  "name": "Coiled garden hose and tap — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 27.366740576496678,
+  "h": 43.00487804878049,
+  "quad": [
+   0,
+   0,
+   26.67,
+   43.33
   ]
  },
  "variation:expansion-glasshouse-df2aec71:1": {
@@ -713,6 +923,20 @@
    110
   ]
  },
+ "variation:expansion-outhouse-north-bee867a0-plain:1": {
+  "at": "2026-10-21T09:55:54.959Z",
+  "name": "Weathered timber outhouse — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 89.6,
+  "h": 89.6,
+  "quad": [
+   0,
+   0,
+   90,
+   90
+  ]
+ },
  "variation:expansion-treehouse-2128dfc1-plain-corner:1": {
   "at": "2026-10-20T16:34:58.965Z",
   "name": "1980s backyard treehouse — variation 1",
@@ -725,6 +949,20 @@
    0,
    256.67,
    261.67
+  ]
+ },
+ "variation:expansion-wooden-well-21f19c18-plain:1": {
+  "at": "2026-10-21T09:56:04.554Z",
+  "name": "Old covered garden well — variation 1",
+  "cat": "Yard",
+  "kind": "decor",
+  "w": 108.80000000000001,
+  "h": 138.60051679586564,
+  "quad": [
+   0,
+   0,
+   108.33,
+   138.33
   ]
  },
  "variation:gen-back-patio-pool-3b943d52-plain:1": {
@@ -753,6 +991,20 @@
    1.67,
    600,
    570
+  ]
+ },
+ "variation:gen-house-ranch-long-north-3fbd61ce-plain:1": {
+  "at": "2026-10-21T09:47:34.950Z",
+  "name": "Ranch house — long, carport — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 699.7,
+  "h": 573.1355601233299,
+  "quad": [
+   1.67,
+   1.67,
+   700,
+   571.67
   ]
  },
  "variation:ref-building-school-ce21bf67-plain:1": {
@@ -797,6 +1049,62 @@
    240
   ]
  },
+ "variation:static-pickup_n-v2-1b5bf1b2:1": {
+  "at": "2026-10-21T09:55:00.318Z",
+  "name": "Pickup N V2 — side view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 250.88116883116882,
+  "h": 132.45627705627706,
+  "quad": [
+   1.67,
+   0,
+   251.67,
+   131.67
+  ]
+ },
+ "variation:static-pickup_n-v2-1b5bf1b2:2": {
+  "at": "2026-10-21T09:55:01.225Z",
+  "name": "Pickup N V2 — front view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 122.91493506493507,
+  "h": 222.25714285714284,
+  "quad": [
+   1.67,
+   1.67,
+   123.33,
+   221.67
+  ]
+ },
+ "variation:static-pickup_n-v2-1b5bf1b2:3": {
+  "at": "2026-10-21T09:55:02.149Z",
+  "name": "Pickup N V2 — rear view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 128.52748917748917,
+  "h": 218.32835497835498,
+  "quad": [
+   0,
+   0,
+   128.33,
+   218.33
+  ]
+ },
+ "variation:static-pickup_n-v2-1b5bf1b2:4": {
+  "at": "2026-10-21T09:55:02.737Z",
+  "name": "Pickup N V2 — corner view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 259.3,
+  "h": 191.94935064935063,
+  "quad": [
+   0,
+   0,
+   260,
+   191.67
+  ]
+ },
  "variation:static-shop_brick_rear-v2-580e269d-plain:1": {
   "at": "2026-10-20T16:18:19.701Z",
   "name": "Shop Brick Rear V2 — variation 1",
@@ -823,6 +1131,76 @@
    0,
    460,
    416.67
+  ]
+ },
+ "variation:static-van_e-v2-27cf6311:1": {
+  "at": "2026-10-21T09:55:06.309Z",
+  "name": "Van E V2 — side view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 244.35093555093556,
+  "h": 141.385446985447,
+  "quad": [
+   0,
+   0,
+   245,
+   141.67
+  ]
+ },
+ "variation:static-van_e-v2-27cf6311:2": {
+  "at": "2026-10-21T09:55:08.132Z",
+  "name": "Van E V2 — front view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 131.65239085239085,
+  "h": 210.02910602910603,
+  "quad": [
+   1.67,
+   1.67,
+   131.67,
+   210
+  ]
+ },
+ "variation:static-van_e-v2-27cf6311:3": {
+  "at": "2026-10-21T09:55:08.725Z",
+  "name": "Van E V2 — rear view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 129.6033264033264,
+  "h": 198.75925155925157,
+  "quad": [
+   0,
+   1.67,
+   130,
+   198.33
+  ]
+ },
+ "variation:static-van_e-v2-27cf6311:4": {
+  "at": "2026-10-21T09:55:09.199Z",
+  "name": "Van E V2 — corner view",
+  "cat": "Vehicles",
+  "kind": "car",
+  "w": 246.4,
+  "h": 202.85738045738046,
+  "quad": [
+   0,
+   1.67,
+   246.67,
+   203.33
+  ]
+ },
+ "variation:town-firestation-0dd5cdae-plain:1": {
+  "at": "2026-10-21T09:51:01.260Z",
+  "name": "Maple Falls Fire House — variation 1",
+  "cat": "Shops & services",
+  "kind": "building",
+  "w": 583.3,
+  "h": 547.8116150442478,
+  "quad": [
+   1.67,
+   1.67,
+   581.67,
+   548.33
   ]
  },
  "variation:world-house_3-577a8e37-plain:1": {
@@ -991,6 +1369,34 @@
    0,
    265.26,
    259.61
+  ]
+ },
+ "world:church": {
+  "at": "2026-10-21T09:53:07.371Z",
+  "name": "Church",
+  "cat": "Landmarks",
+  "kind": "venue",
+  "w": 633.3,
+  "h": 657,
+  "quad": [
+   0,
+   0,
+   632.93,
+   656.81
+  ]
+ },
+ "world:drivein_screen": {
+  "at": "2026-10-21T09:54:01.503Z",
+  "name": "Drivein Screen",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 713.8,
+  "h": 613.5,
+  "quad": [
+   0,
+   0,
+   713.17,
+   613.72
   ]
  },
  "world:pumpkin_0": {
