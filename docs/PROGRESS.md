@@ -1703,10 +1703,53 @@ unlocks; budgets met).
     road (a temporary log of the plan: the other towns' components differ, so Infinity) and got 5-7 a night ($56 each), a good day;
     the estate and tourist panel lines. A golf course with players beside an estate was not reached in the browser (the placement
     search found no spot joined to a town in those valleys); the estate rules are in tests/business-estate.test.ts.
-  - Checks: typecheck clean; `npm test` 467/467 on the worker (before the last two fixes: the players rule and the test data;
-    the business tests pass after them).
-- **Next: B.7, the Phase B gate and the balance** (headless: a scripted player with the stadium and three spin-offs, solvent 30 days,
-  4+ unlocks; the numbers: taxi wages vs the game hour, the bus company, visit demand), then 6R.5-6R.8.
+  - Checks: typecheck clean; `npm test` 473/473 on the worker (2026-10-20 night, all B.6 fixes in).
+- **B.7 The Phase B gate and the balance (2026-10-20/21): IN PROGRESS** (branch `claude/b7-gate`, worktree `.claude/worktrees/b7-gate`).
+  - *The gate:* `npm run biz:gate -- [seed = 1] [days = 30]` (`scripts/sim/biz-gate.ts`; the generous build and the round runner moved to
+    `scripts/sim/builds.ts`, shared with event-gate.ts). A scripted player: the stadium on the suggested spot (paid), the generous roads
+    without the spine widening (the start fund cannot pay for the arterials too), the car parks it can afford (loans when short), a round a
+    day at 17:00 (a card by preference, round closed), one spin-off a day when open and affordable (keeps $60k), beside a road joined to the
+    stadium; with the bus company a shuttle route per town. Checks: (a) solvent at every day's close, (b) 3+ spin-offs, (c) 4+ types open,
+    (d) sim budget over the surges. Prints a line a day with the treasury, population, round, the day's books and every business.
+  - *Owner's decisions (2026-10-21):* (1) **the stadium levels up for the tree from its fans** like any business (XP = arrived fan cars:
+    level 2 at 400, about round 2; level 3 at 1,200, about round 5); the round's own level (the crowd) still rises only on a perfect run.
+    Done in city.ts (kickOff sets the stadium's level from its XP; bizView no longer shows the round's level). (2) **Spin-offs pay back
+    their cost in about 10 game days**; the rounds stay the main income. (3) **The player pays upkeep only for the roads they built**
+    (not the towns' own streets and gravel); **a town pays a small one-time fee the first time it builds a lot beside a player's road**,
+    once per lot for the game ($250 a home, $500 a shop or works), far below the compensation for clearing a house, so demolishing and
+    rebuilding never pays. (4) For 6R.7 (towns as seeds): **a town starts with one asphalt main avenue and some gravel branches** (no big
+    street grid); **each town has a fixed commercial district and a fixed industrial district** (only shops in one, only works in the
+    other), the rest residential with a few shops scattered; **the player upgrades towns and a town grows by the player's success with
+    traffic** (its growth driven by how well the traffic runs).
+  - Numbers so far (local, the worker was unreachable 2026-10-21): 30 days, seed 1: 5 types open, 3 spin-offs (sports bar day 2, bus
+    company day 3, diner day 4); round 1 perfect, then L2 rounds 70% falling to 26% as the towns grow (3,134 -> 5,392 residents);
+    upkeep $44-47k a day (nearly all roads, the towns' included; no tax in a towns valley) against $10-36k business takings, so the
+    treasury goes from $170k to -$49k by day 30. Sports bar and diner earn about $2.3k a day by level 3 (payback ~9-14 days). The bus
+    company earned nothing (no shuttles in that run; routes added since). Taxi wages and fares still run on real hours and minutes.
+  - *Road ownership and the connection fee (done):* `Seg.town` (network.ts) marks the towns' segs (the seed grids, their grown gravel,
+    the valley highway: engine townGrow/seedTowns/buildHighway, harness setup/setupTowns/growLegs); kept by splits and pieces, cleared
+    when the player rebuilds a seg with another class, style or kind; carried by the `legs` NetOp and netToOps, saved as an optional 8th
+    element of a seg record (old saves: all the player's). `upkeepRate`/`dayIn` skip town segs. `CONNECT_FEE` (budget.ts, by use) is
+    booked once per lot key (`feeKeys`, saved with the books) when a lot first completes beside a player's seg, in a towns valley;
+    the Ledger's `fees` line ("Connection fees" in the books panel). tests/road-owner.test.ts (6).
+  - *Taxis in game time (done):* ext/taxi takes a `TaxiEcon` (sim seconds per wage hour and per fare minute, wage, flag, per km, per
+    minute, fuel; defaults real time, so T011's tests stand); City passes `TAXI_ECON` (game hour 60 s, minute 1 s, $1 an hour a driver,
+    $2 + $1.50/km + $0.10 a game minute: about $14 a ride); `TAXI_RATE` 10 -> 20 requests per 1000 residents a day.
+  - *The numbers (the owner: payback ~10 days):* sports bar $9 -> $11; bus company $50,000 -> $30,000, shuttle fare $2 -> $8; taxi
+    company $25,000 -> $10,000, upkeep $100 -> $50. The gate's player draws 8 buses a route.
+  - **Gate result (local, 2026-10-21; the worker was unreachable): PASS.** 30 days, seed 1: (a) lowest treasury $225,714 (ends
+    $506k); (b) 4 spin-offs (sports bar day 2, bus company day 3 with 3 shuttle routes, diner day 4, taxi company day 6); (c) 6 types
+    open; (d) sim 1.81 ms mean, 20.1 ms max per step over the surges (8.2 ms max on a quieter run). Upkeep $7.6k a day (was $45k);
+    connection fees $53k (days 1-2, the towns building along the new link roads). Payback: sports bar ~12 days, diner ~8, taxi
+    company ~8, bus company ~13.5 (its routes extra). `npm test` 478/479 local (the one failure: the terrain2/accACC timing tests on
+    the loaded dev PC).
+  - **Open:** the rounds fall from 100% (L1) to 30-50% at L2 as the towns grow (3,100 -> 5,400 residents in 30 days), so the payout
+    turns into a penalty most days and the businesses carry the treasury; the owner's 6R.7 rule (towns grow by the player's success with
+    traffic) is the fix. The gate (d) needs a run on the worker when it is back. Not yet browser-checked: the connection fee line, the
+    taxi fares in the panel.
+- **Next:** browser-check B.7 (the books' Connection fees line, a taxi company's day), merge `claude/b7-gate` into the preview/main;
+  then 6R.5-6R.8 with the owner's town rules above (6R.7: one asphalt avenue and gravel branches, fixed commercial and industrial
+  districts, growth by traffic success).
 
 ### The owner's requests, 2026-10-20 evening (branch `claude/preview`, the integration build on port 5183; not yet merged into main)
 `claude/preview` = main + `claude/sprites-and-people` (the owner's studio edits; the car, business and rocky dirt art, commit 4bb8017) +

@@ -37,21 +37,22 @@ export const LEVEL_XP = [0, 400, 1200, 3000, 7000];
 
 /** the catalogue. Numbers: the stadium's $200,000 is B.1's (the start fund grew by it); a 1985 NFL ticket averaged about $20 and MLB about $6, so
  *  the stadium's ticket is $12; a 1985 public green fee was about $15-30 ($22); an average US room night about $50 (the hotel $55, the motel $28);
- *  a 1985 bus fare about $0.75 (the fare $1). Visit rates are tuned so a town of 5,000 sends a few hundred cars a day to a bar or a diner. */
+ *  a 1985 bus fare about $0.75. B.7 tuning (the owner: a spin-off pays back its cost in about 10 game days, the rounds the main income): the bar
+ *  $11, the bus company $30,000 with an $8 shuttle fare, the taxi company $10,000 and $50 a day (its fares in game time, see City TAXI_ECON). */
 export const BUSINESSES: BusinessType[] = [
   { id: 'stadium', name: 'Stadium', family: 'sports', kind: 'event', footprint: { w: 100, h: 80 }, buildCost: 200000, upkeepPerDay: 1500, pricePerVisitor: 12, party: 3,
     hours: [18, 21], rate: 0, tau: 0, max: 1, townMin: 200, water: false, unlock: { parent: null }, spinOffs: ['sportsbar', 'buscompany', 'golf', 'fishing'],
     blurb: 'Runs the event rounds; the crowd drives to it from the towns, so the spot sets how hard the traffic is.' },
-  { id: 'sportsbar', name: 'Sports bar', family: 'leisure', kind: 'visit', footprint: { w: 14, h: 10 }, buildCost: 30000, upkeepPerDay: 200, pricePerVisitor: 9, party: 2,
+  { id: 'sportsbar', name: 'Sports bar', family: 'leisure', kind: 'visit', footprint: { w: 14, h: 10 }, buildCost: 30000, upkeepPerDay: 200, pricePerVisitor: 11, party: 2,
     hours: [16, 24], rate: 60, tau: 4, max: 3, townMin: 0, water: false, unlock: { parent: 'stadium', level: 2 }, spinOffs: ['diner'],
     blurb: 'Fans come in the evenings; close to the homes it fills up, far away it stays empty.' },
-  { id: 'buscompany', name: 'Bus company', family: 'transport', kind: 'fleet', footprint: { w: 30, h: 20 }, buildCost: 50000, upkeepPerDay: 150, pricePerVisitor: 2, party: 1,
+  { id: 'buscompany', name: 'Bus company', family: 'transport', kind: 'fleet', footprint: { w: 30, h: 20 }, buildCost: 30000, upkeepPerDay: 150, pricePerVisitor: 8, party: 1,
     hours: [0, 24], rate: 0, tau: 0, max: 1, townMin: 0, water: false, unlock: { parent: 'stadium', level: 2 }, spinOffs: ['taxi'],
     blurb: 'The depot of your shuttles: every fan who boards pays a fare; a round of 100 riders is a good day.' },
   { id: 'diner', name: 'Diner', family: 'leisure', kind: 'visit', footprint: { w: 12, h: 10 }, buildCost: 20000, upkeepPerDay: 120, pricePerVisitor: 6, party: 2,
     hours: [7, 22], rate: 80, tau: 3, max: 3, townMin: 0, water: false, unlock: { parent: 'sportsbar', goodDays: 2 }, spinOffs: [],
     blurb: 'Breakfast to supper; people only drive a few minutes for a meal.' },
-  { id: 'taxi', name: 'Taxi company', family: 'transport', kind: 'fleet', footprint: { w: 16, h: 12 }, buildCost: 25000, upkeepPerDay: 100, pricePerVisitor: 0, party: 1,
+  { id: 'taxi', name: 'Taxi company', family: 'transport', kind: 'fleet', footprint: { w: 16, h: 12 }, buildCost: 10000, upkeepPerDay: 50, pricePerVisitor: 0, party: 1,
     hours: [0, 24], rate: 0, tau: 0, max: 1, townMin: 0, water: false, unlock: { parent: 'buscompany', goodDays: 3 }, spinOffs: [],
     blurb: 'Six taxis wait at its door (and the stadium\'s) and carry the towns\' parties to your businesses and the other towns, on the roads it can reach.' },
   { id: 'golf', name: 'Golf course', family: 'leisure', kind: 'visit', footprint: { w: 150, h: 110 }, buildCost: 180000, upkeepPerDay: 900, pricePerVisitor: 22, party: 4,

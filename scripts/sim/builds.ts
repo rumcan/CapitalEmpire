@@ -25,9 +25,9 @@ export function lay(H: Harness, pts: Pt[], cls: ClassId) {
   H.editor.addLegs(legs, c, 0, kinds);
 }
 /** the generous build: each town (in turn) gets its feeder road 44 tiles out from the stadium on the side facing it (the next free side when taken),
- *  running along that side with 50 tiles past each end; its spine (the grid's middle lines within 200 tiles of the centre) widened to arterials; an
+ *  running along that side with 50 tiles past each end; its spine (the grid's middle lines within 200 tiles of the centre) widened to arterials (spines false: left as they are); an
  *  L of LINK from the spine's end nearest the feeder to the feeder; and its own car park between the feeder and the stadium */
-export function buildGenerous(H: Towns): CarParkDef[] {
+export function buildGenerous(H: Towns, spines = true): CarParkDef[] {
   const city = H.city, site = city.site!, sc = site.c, cl = CLASS[LINK], hwc = Math.ceil(cl.h + cl.walk) + 1;
   const used = new Set<number>(), parks: CarParkDef[] = [];
   H.centres.forEach((c, k) => {
@@ -46,8 +46,8 @@ export function buildGenerous(H: Towns): CarParkDef[] {
     const xs = [...city.net.nodes.values()].filter(n => n.y === cn!.y && Math.abs(n.x - c.x) <= 200).map(n => n.x);
     const ys = [...city.net.nodes.values()].filter(n => n.x === cn!.x && Math.abs(n.y - c.y) <= 200).map(n => n.y);
     const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    lay(H, [{ x: x0, y: cn!.y }, { x: x1, y: cn!.y }], 'arterial');
-    lay(H, [{ x: cn!.x, y: y0 }, { x: cn!.x, y: y1 }], 'arterial');
+    if (spines) lay(H, [{ x: x0, y: cn!.y }, { x: x1, y: cn!.y }], 'arterial');
+    if (spines) lay(H, [{ x: cn!.x, y: y0 }, { x: cn!.x, y: y1 }], 'arterial');
     // the spine end nearest the feeder's nearer end, and an L to it
     const end = Math.hypot(A.x - c.x, A.y - c.y) < Math.hypot(B.x - c.x, B.y - c.y) ? A : B;
     const cands: Pt[] = [{ x: x0, y: cn!.y }, { x: x1, y: cn!.y }, { x: cn!.x, y: y0 }, { x: cn!.x, y: y1 }];

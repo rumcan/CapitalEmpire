@@ -7,6 +7,9 @@
 // (stepMs / 10) has a mean of at most 2.5 ms and a max of at most 25 ms. Prints one line per day and a line per check; writes output/sim/biz-gate.json.
 // Exit code 1 when a check fails.
 //   npm run biz:gate -- [seed = 1] [days = 30]
+import type { Ledger } from '../../src/game/budget';
+import type { BusRouteDef } from '../../src/game/event/bus';
+import { BUS_ROUTE_COST, BUS_SEATS } from '../../src/game/event/config';
 import fs from 'node:fs';
 import path from 'node:path';
 import { type CarParkDef, parkCost } from '../../src/game/event/carpark';
@@ -38,13 +41,14 @@ interface BizRec { id: number; type: BusinessId; level: number; sat: number; goo
 /** a build made that day: its type, the spot's top-left tile and its cost ($) */
 interface BuildRec { type: BusinessId; x: number; y: number; cost: number }
 /** one game day's record: the treasury at the day's close, the round (null: none), the card taken, the build (null: none), the businesses, the open types */
-interface DayRec { day: number; money: number; round: RoundRec | null; card: CardId | null; build: BuildRec | null; businesses: BizRec[]; open: BusinessId[] }
+interface DayRec { day: number; money: number; round: RoundRec | null; card: CardId | null; build: BuildRec | null; businesses: BizRec[]; open: BusinessId[]; ledger: Ledger | null; pop: number }
 
 /** a day's line: the treasury, the round (level, rate, net, PERFECT, card), each business (type, level, sat, good days, revenue), the open types */
 function dayLine(r: DayRec): string {
   const rd = r.round ? `round L${r.round.level} ${(100 * r.round.rate).toFixed(2)}% net $${Math.round(r.round.net)}${r.round.perfect ? ' PERFECT' : ''} card ${r.card ?? '-'}` : 'no round';
   const bz = r.businesses.map(b => `${b.type} L${b.level} sat ${b.sat.toFixed(2).replace(/^0/, '')} good ${b.goodDays} rev $${b.revenue}`).join(' | ');
-  return `[day ${r.day}] $${r.money} | ${rd} | ${bz} | open: ${r.open.join(',')}`;
+  const L = r.ledger, lg = L ? `books: tax $${Math.round(L.property)} biz $${Math.round(L.business)} toll $${Math.round(L.toll ?? 0)} payout $${Math.round(L.payout ?? 0)} upkeep $${Math.round(L.upkeep)} interest $${Math.round(L.interest)} build $${Math.round(L.construction)} net $${Math.round(L.net)}` : 'no books';
+  return `[day ${r.day}] $${r.money} pop ${r.pop} | ${rd} | ${lg} | ${bz} | open: ${r.open.join(',')}`;
 }
 
 /** whether a seg of net runs within pad tiles of the rect (x, y, w, h): each seg's centre line sampled every 0.5 tiles (engine's roadNearRect) */
@@ -122,16 +126,55 @@ city.setStadium([site.x, site.y, site.w, site.h]);
 const stadiumCost = BUSINESS.stadium.buildCost;
 city.spend('construction', stadiumCost);
 // the roads (the generous build's network value, as the add-lane tool prices it) and the car parks
-const v0 = netValue(city.net), parks = buildGenerous(H), roadCost = Math.round(netValue(city.net) - v0);
+/** the buses on each shuttle route the player draws with its bus company */
+const BUS_PER_ROUTE = 8;
+/** the money the player keeps in hand after the opening build ($) */
+const OPEN_RESERVE = 20000;
+const v0 = netValue(city.net), parks = buildGenerous(H, false), roadCost = Math.round(netValue(city.net) - v0);
 city.spend('construction', roadCost);
-const parksCost = parks.reduce((a, p) => a + parkCost(p), 0);
+// the car parks the player can afford, in the build's order, keeping OPEN_RESERVE in hand: it takes loans when short (as the game lets it), and leaves
+// out a park it still cannot pay for. The generous build without its spine widening: the start fund cannot pay for the arterials as well
+const kept: CarParkDef[] = [];
+let parksCost = 0, loans = 0;
+for (const p of parks) {
+  const c = parkCost(p);
+  while (city.budget.money - parksCost - c < OPEN_RESERVE && city.loan(true)) loans++;
+  if (city.budget.money - parksCost - c >= OPEN_RESERVE) { kept.push(p); parksCost += c; }
+}
+if (kept.length < parks.length) city.setParks(kept);
 city.spend('construction', parksCost);
-console.log(`[biz] spend: stadium $${stadiumCost}, roads $${roadCost}, car parks $${parksCost} (${parks.length} parks)`);
+console.log(`[biz] spend: stadium $${stadiumCost}, roads $${roadCost}, car parks $${parksCost} (${kept.length} of ${parks.length} parks), loans ${loans}; the town spines are not widened`);
 const defs: BizDef[] = city.bizView().map(b => ({ id: b.id, type: b.type, x: b.x, y: b.y, w: b.w, h: b.h }));
 const everyday = newMeter(), surge = newMeter(), days: DayRec[] = [];
 let s = 1;
 /** steps the everyday traffic (each second metered into everyday) until the clock reaches t (at most MAX_STEPS seconds) */
-const stepTo = (t: number) => { for (let i = 0; city.sim.clock < t && i < MAX_STEPS; i++, s++) { stepSecond(H, s); meter(everyday, H); } };
+/** the last day close's books (City.step's ledger) */
+let ledger: Ledger | null = null;
+const stepTo = (t: number) => { for (let i = 0; city.sim.clock < t && i < MAX_STEPS; i++, s++) { const r = stepSecond(H, s); if (r.ledger) ledger = { ...r.ledger }; meter(everyday, H); } };
+
+/** the point on the ground road nearest p (the projection on its nearest seg's centre line), or null within r tiles */
+function roadPt(p: Pt, r: number): Pt | null {
+  let best: Pt | null = null, bd = Infinity;
+  for (const g of city.net.segsNear(p, r)) {
+    if (g.kind !== SK.GROUND) continue;
+    const dx = g.b.x - g.a.x, dy = g.b.y - g.a.y, L2 = dx * dx + dy * dy; if (L2 < 1e-9) continue;
+    const k = Math.max(0.2, Math.min(0.8, ((p.x - g.a.x) * dx + (p.y - g.a.y) * dy) / L2)), q = { x: g.a.x + dx * k, y: g.a.y + dy * k }, dd = Math.hypot(q.x - p.x, q.y - p.y);
+    if (dd < bd) { bd = dd; best = q; }
+  }
+  return best;
+}
+/** with the bus company: a shuttle route per town (BUS_PER_ROUTE buses of BUS_SEATS), from the road nearest the town centre to the feeder road by that town's
+ *  car park (buildGenerous makes park k + 1 for town k), paid at BUS_ROUTE_COST each; a town without both stops gets none */
+function busRoutes() {
+  const routes: BusRouteDef[] = [];
+  H.centres.forEach((c, k) => {
+    const pk = parks.find(q => q.id === k + 1); if (!pk) return;
+    const a = roadPt(c, 30), b = roadPt({ x: pk.x + pk.w / 2, y: pk.y + pk.h / 2 }, 60);
+    if (a && b) routes.push({ id: routes.length + 1, park: 0, town: k, sx: a.x, sy: a.y, dx: b.x, dy: b.y, buses: BUS_PER_ROUTE, seats: BUS_SEATS });
+  });
+  city.setBusRoutes(routes); city.spend('construction', routes.length * BUS_ROUTE_COST);
+  console.log(`[biz] ${routes.length} shuttle routes (${BUS_PER_ROUTE} buses each) -$${routes.length * BUS_ROUTE_COST}`);
+}
 
 for (let d = 0; d < D; d++) {
   // the everyday traffic to 17:00, then the round: the card, the round closed
@@ -157,12 +200,13 @@ for (let d = 0; d < D; d++) {
     city.spend('construction', cost);
     build = { type: t, x: spot.x, y: spot.y, cost };
     console.log(`day ${d + 1}: built ${t} at (${spot.x},${spot.y}) -$${cost}`);
+    if (t === 'buscompany') busRoutes();
     break;
   }
   // the day's record
   const views = city.bizView(), openNow = unlockedBy(ownedOf(views));
   const businesses: BizRec[] = views.map(b => ({ id: b.id, type: b.type, level: b.level, sat: Math.round(b.sat * 100) / 100, goodDays: b.goodDays, revenue: Math.round(b.revenue), today: b.today }));
-  const rec: DayRec = { day: d + 1, money: Math.round(city.budget.money), round, card, build, businesses, open: openNow };
+  const rec: DayRec = { day: d + 1, money: Math.round(city.budget.money), round, card, build, businesses, open: openNow, ledger, pop: Math.round(city.town.pop) };
   days.push(rec);
   console.log(dayLine(rec));
 }

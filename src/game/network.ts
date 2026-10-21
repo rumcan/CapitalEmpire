@@ -271,7 +271,8 @@ function offsetLine(pts: Pt[], closed: boolean, d: number): Pt[] {
 export interface Node { x: number; y: number; segs: Seg[]; type: NodeType; arms: Arm[]; rb: number; wide?: boolean; tl?: boolean; rl?: 1 | 2 | 3; slipOff?: number[]; sig?: 0 | 1 | 2; split?: number[] }
 /** how a segment is built: on the ground, on a bridge, or in a tunnel */
 export const SK = { GROUND: 0, BRIDGE: 1, TUNNEL: 2 } as const; export type SegKind = 0 | 1 | 2;
-export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind }
+/** town: the seg is the towns' (their seed streets, gravel and the valley's highway): no upkeep for the player and no fee from a lot beside it; absent = the player's */
+export interface Seg { a: Node; b: Node; cls: RoadClass; style: LineStyle; kind: SegKind; town?: true }
 export interface Arm { seg: Seg; other: Node; dir: Pt; nrm: Pt; ang: number; len: number; cls: RoadClass; h: number; walk: number; reachEdge: number; reachCentre: number; lineInset: number; medianInset: number; xw: number; stop: number; hasOpp: boolean }
 export interface Feature { kind: 'stroke' | 'poly' | 'disc'; path: Path2D; w: number; tex: string; order: number; bbox: BBox; cap: 'butt' | 'round'; kerb: boolean }
 /** a run of sidewalk slabs: straight (along a segment side) or radial (around a corner fillet, a bulb or a roundabout) */
@@ -477,7 +478,7 @@ export class RoadNetwork {
 
   nodeAt(p: Pt) { return this.nodes.get(keyOf(snap(p))); }
   private node(p: Pt): Node { const s = snap(p), k = keyOf(s); let n = this.nodes.get(k); if (!n) { n = { x: s.x, y: s.y, segs: [], type: 'plain', arms: [], rb: 0 }; this.nodes.set(k, n); } return n; }
-  private link(a: Node, b: Node, cls: RoadClass, style: LineStyle, kind: SegKind) { const s: Seg = { a, b, cls, style, kind }; a.segs.push(s); b.segs.push(s); this.segs.add(s); this.segGrid.add(s, segBox(s)); this.touched.add(a); this.touched.add(b); return s; }
+  private link(a: Node, b: Node, cls: RoadClass, style: LineStyle, kind: SegKind, town?: true) { const s: Seg = { a, b, cls, style, kind }; if (town) s.town = true; a.segs.push(s); b.segs.push(s); this.segs.add(s); this.segGrid.add(s, segBox(s)); this.touched.add(a); this.touched.add(b); return s; }
   private unlink(s: Seg) {
     this.segs.delete(s); this.segGrid.remove(s); this.removed.add(s);
     for (const n of [s.a, s.b]) { const i = n.segs.indexOf(s); if (i >= 0) n.segs.splice(i, 1); if (!n.segs.length) this.nodes.delete(keyOf(n)); this.touched.add(n); }
@@ -489,10 +490,10 @@ export class RoadNetwork {
     const ordered = pts.map(p => ({ p, t: dot(sub(p, s.a), d) / L2 })).filter(q => q.t > 1e-6 && q.t < 1 - 1e-6).sort((p, q) => p.t - q.t);
     if (!ordered.length) return;
     const chain = [s.a, ...ordered.map(q => this.node(q.p)), s.b];
-    const cls = s.cls, style = s.style, kind = s.kind; this.unlink(s);
-    for (let i = 0; i + 1 < chain.length; i++) if (chain[i] !== chain[i + 1]) this.link(this.keep(chain[i]), this.keep(chain[i + 1]), cls, style, kind);
+    const cls = s.cls, style = s.style, kind = s.kind, town = s.town; this.unlink(s);
+    for (let i = 0; i + 1 < chain.length; i++) if (chain[i] !== chain[i + 1]) this.link(this.keep(chain[i]), this.keep(chain[i + 1]), cls, style, kind, town);
   }
-  private addSegment(P: Pt, Q: Pt, cls: RoadClass, style: LineStyle, kind: SegKind = 0) {
+  private addSegment(P: Pt, Q: Pt, cls: RoadClass, style: LineStyle, kind: SegKind = 0, town?: true) {
     const d = sub(Q, P); if (vlen(d) < 1e-6) return;
     const cutsOld = new Map<Seg, Pt[]>(), cutsNew: { t: number; pt: Pt }[] = [];
     const near = this.segGrid.query([Math.min(P.x, Q.x) - 0.01, Math.min(P.y, Q.y) - 0.01, Math.max(P.x, Q.x) + 0.01, Math.max(P.y, Q.y) + 0.01]);
@@ -506,13 +507,14 @@ export class RoadNetwork {
     for (let i = 0; i + 1 < pts.length; i++) {
       const a = this.node(pts[i]), b = this.node(pts[i + 1]); if (a === b) continue;
       const ex = a.segs.find(s => s.a === b || s.b === b);
-      if (ex && cls.oneway && ex.a === b) { this.unlink(ex); this.link(this.keep(a), this.keep(b), cls, style, kind); }
-      else if (ex) { if (ex.cls !== cls || ex.style !== style || ex.kind !== kind) { ex.cls = cls; ex.style = style; ex.kind = kind; this.touched.add(a); this.touched.add(b); } }
-      else this.link(a, b, cls, style, kind);
+      if (ex && cls.oneway && ex.a === b) { this.unlink(ex); this.link(this.keep(a), this.keep(b), cls, style, kind, town); }
+      // a changed class, style or kind is a rebuild: the player's unless the op is the towns' (a re-laid road with the same look keeps its owner)
+      else if (ex) { if (ex.cls !== cls || ex.style !== style || ex.kind !== kind) { ex.cls = cls; ex.style = style; ex.kind = kind; if (town) ex.town = true; else delete ex.town; this.touched.add(a); this.touched.add(b); } }
+      else this.link(a, b, cls, style, kind, town);
     }
   }
-  /** add legs (kinds[i] is leg i's structure kind, ground by default); pass rebuild=false to batch several calls before one rebuild() */
-  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, rebuild = true, kinds?: SegKind[]) { legs.forEach((l, i) => this.addSegment(l.a, l.b, cls, style, kinds?.[i] ?? 0)); if (rebuild) this.rebuild(); }
+  /** add legs (kinds[i] is leg i's structure kind, ground by default; town: the towns' legs, see Seg.town); pass rebuild=false to batch several calls before one rebuild() */
+  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, rebuild = true, kinds?: SegKind[], town?: true) { legs.forEach((l, i) => this.addSegment(l.a, l.b, cls, style, kinds?.[i] ?? 0, town)); if (rebuild) this.rebuild(); }
   legsLength(legs: Leg[]) { return legs.reduce((s, l) => s + vlen(sub(l.b, l.a)), 0); }
   segsNear(p: Pt, r: number) { return this.segGrid.query([p.x - r, p.y - r, p.x + r, p.y + r]); }
   /** the route a segment belongs to (the current build; undefined for a segment not in a route yet) */
@@ -561,11 +563,11 @@ export class RoadNetwork {
   }
   removePiece(sel: PieceSel, rebuild = true) {
     const s = sel.seg, d = sub(s.b, s.a), L2 = dot(d, d);
-    const cls = s.cls, style = s.style, kind = s.kind, inner = (p: Pt) => { const t = dot(sub(p, s.a), d) / L2; return t > 1e-6 && t < 1 - 1e-6; };
+    const cls = s.cls, style = s.style, kind = s.kind, town = s.town, inner = (p: Pt) => { const t = dot(sub(p, s.a), d) / L2; return t > 1e-6 && t < 1 - 1e-6; };
     const a = s.a, b = s.b; this.unlink(s);
     const p0 = snap(sel.p0), p1 = snap(sel.p1);
-    if (inner(p0)) this.link(this.keep(a), this.node(p0), cls, style, kind);
-    if (inner(p1)) this.link(this.node(p1), this.keep(b), cls, style, kind);
+    if (inner(p0)) this.link(this.keep(a), this.node(p0), cls, style, kind, town);
+    if (inner(p1)) this.link(this.node(p1), this.keep(b), cls, style, kind, town);
     if (rebuild) this.rebuild();
   }
   /** a node's type; a type other than a slip drops the node's slipways (slipOff), and a type other than a signal or a slip drops its signal tier and split */

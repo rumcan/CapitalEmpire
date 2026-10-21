@@ -4,14 +4,14 @@ import type { LineStyle } from './types';
 
 /** the ops that rebuild net from nothing: a worker that replays them holds the same network (the sim worker, a new ground worker) */
 export function netToOps(net: RoadNetwork): NetOp[] {
-  const ops: NetOp[] = [{ k: 'clear' }], groups = new Map<string, { cls: ClassId; style: LineStyle; legs: number[]; kinds: number[] }>();
+  const ops: NetOp[] = [{ k: 'clear' }], groups = new Map<string, { cls: ClassId; style: LineStyle; legs: number[]; kinds: number[]; town?: true }>();
   for (const s of net.segs) {
-    const key = s.cls.id + '|' + s.style;
+    const key = s.cls.id + '|' + s.style + (s.town ? '|town' : ''); // the towns' legs are their own group (their own op)
     let g = groups.get(key);
-    if (!g) groups.set(key, (g = { cls: s.cls.id, style: s.style, legs: [], kinds: [] }));
+    if (!g) groups.set(key, (g = { cls: s.cls.id, style: s.style, legs: [], kinds: [], ...(s.town ? { town: true as const } : {}) }));
     g.legs.push(s.a.x, s.a.y, s.b.x, s.b.y); g.kinds.push(s.kind);
   }
-  for (const g of groups.values()) ops.push({ k: 'legs', legs: g.legs, cls: g.cls, style: g.style, kinds: g.kinds });
+  for (const g of groups.values()) ops.push({ k: 'legs', legs: g.legs, cls: g.cls, style: g.style, kinds: g.kinds, ...(g.town ? { town: true as const } : {}) });
   for (const n of net.nodes.values()) if (n.type !== 'plain') ops.push({ k: 'type', x: n.x, y: n.y, type: n.type });
   for (const n of net.nodes.values()) if (n.wide || n.tl || (n.rl ?? 1) > 1) ops.push({ k: 'flags', x: n.x, y: n.y, wide: !!n.wide, tl: !!n.tl, rl: n.rl ?? 1 });
   for (const n of net.nodes.values()) if (n.slipOff?.length) ops.push({ k: 'slips', x: n.x, y: n.y, off: n.slipOff });
@@ -28,7 +28,7 @@ export function applyOps(n: RoadNetwork, ops: NetOp[]) {
       case 'legs': {
         const legs: Leg[] = [];
         for (let i = 0; i + 3 < op.legs.length; i += 4) legs.push({ a: { x: op.legs[i], y: op.legs[i + 1] }, b: { x: op.legs[i + 2], y: op.legs[i + 3] } });
-        n.addLegs(legs, classOf(op.cls), op.style, false, op.kinds as SegKind[] | undefined); break;
+        n.addLegs(legs, classOf(op.cls), op.style, false, op.kinds as SegKind[] | undefined, op.town); break;
       }
       case 'piece': {
         const a = n.nodeAt({ x: op.seg[0], y: op.seg[1] });
@@ -101,9 +101,10 @@ export function applyNodeEntry(e: NetEditor, [x, y, type, f, off, sg]: NodeEntry
 export class NetEditor {
   ops: NetOp[] = [];
   constructor(public net: RoadNetwork) {}
-  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, kinds?: SegKind[]) {
-    this.net.addLegs(legs, cls, style, false, kinds);
-    this.ops.push({ k: 'legs', legs: legs.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]), cls: cls.id, style, ...(kinds ? { kinds } : {}) });
+  /** add legs as the player's, or as the towns' (town: true, see Seg.town) */
+  addLegs(legs: Leg[], cls: RoadClass, style: LineStyle, kinds?: SegKind[], town?: true) {
+    this.net.addLegs(legs, cls, style, false, kinds, town);
+    this.ops.push({ k: 'legs', legs: legs.flatMap(l => [l.a.x, l.a.y, l.b.x, l.b.y]), cls: cls.id, style, ...(kinds ? { kinds } : {}), ...(town ? { town: true as const } : {}) });
   }
   removePiece(sel: PieceSel) {
     const s = sel.seg;

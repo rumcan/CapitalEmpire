@@ -9,6 +9,7 @@ import type { CareerSave } from './career';
 import type { RoundSave } from './event/round';
 import type { BusinessId } from './business/catalogue';
 import type { BizStats } from './business/state';
+import type { Seg } from './network';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -23,6 +24,9 @@ async function idbDo<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDB
 async function gzip(text: string) { return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer(); }
 async function gunzip(buf: ArrayBuffer) { return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
 
+/** a seg as saved (see SaveV5.segs): its ends, class, style and kind, and 1 for the towns' (Seg.town; absent for the player's) */
+export function segRec(s: Seg): SaveV5['segs'][number] { const r: SaveV5['segs'][number] = [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style, s.kind]; if (s.town) r.push(1); return r; }
+
 /** terrain as runs [value, count, value, count, ...] */
 export function rle(a: Uint8Array) { const out: number[] = []; for (let i = 0; i < a.length;) { const v = a[i]; let j = i + 1; while (j < a.length && a[j] === v) j++; out.push(v, j - i); i = j; } return out; }
 export function unrle(runs: number[], out: Uint8Array) { let o = 0; for (let k = 0; k + 1 < runs.length; k += 2) { out.fill(runs[k], o, o + runs[k + 1]); o += runs[k + 1]; } return out; }
@@ -31,8 +35,8 @@ export interface SaveV5 {
   version: number; map: number;
   /** the map seed: generateTerrain(seed) rebuilds the valley */
   seed: number;
-  /** ax, ay, bx, by, class, line style, structure kind (0 ground, 1 bridge, 2 tunnel; missing = ground) */
-  segs: [number, number, number, number, string, number, number?][];
+  /** ax, ay, bx, by, class, line style, structure kind (0 ground, 1 bridge, 2 tunnel; missing = ground), and 1 when the towns' (Seg.town; optional 8th, missing = the player's) */
+  segs: [number, number, number, number, string, number, number?, 1?][];
   /** x, y, junction type, flags (optional: 1 widened turns, 2 turn lanes; missing = none; no version bump), and a slip node's corners without a
    *  slipway as their in-arm degrees (optional 5th, written only when non-empty; missing = every corner has one), and a lights' [tier, ...split]
    *  (optional 6th: tier 0 fixed-time, 1 actuated, 2 adaptive; the green seconds per phase, none = 18 each; missing = actuated, 18 each) */

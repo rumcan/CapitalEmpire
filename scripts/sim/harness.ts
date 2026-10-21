@@ -46,7 +46,7 @@ export function setup(seed: number): Harness {
     const pts = highwayRoute(hy, startC, hw, cls), legs0: Leg[] = [];
     for (let i = 1; i < pts.length; i++) legs0.push({ a: pts[i - 1]!, b: pts[i]! });
     const { legs, kinds } = splitByTerrain(legs0, hw, cls);
-    editor.addLegs(legs, CLASS.road, 0, kinds);
+    editor.addLegs(legs, CLASS.road, 0, kinds, true);
   } else console.log('[town] no highway on this valley: nothing can reach the lots');
   city.terrain(t.cls, entry, seed);
   city.netOps(editor.commit(true));
@@ -54,7 +54,7 @@ export function setup(seed: number): Harness {
 }
 
 /** the town's grow legs (gravel), applied with the editor and fed to the city as net ops */
-export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2); h.city.netOps(h.editor.commit()); }
+export function growLegs(h: Harness, legs: Leg[]) { h.editor.addLegs(legs, CLASS.gravel, 2, undefined, true); h.city.netOps(h.editor.commit()); }
 
 /** one sim second s (from 1): City.step(10) (its time in h.stepMs), the caller's `before`, the grow legs, the caller's `after`, and at each game
  *  hour's end the land-locked bridge rule (at most once per 2 game days); returns the step result (its events array is reused) */
@@ -90,7 +90,7 @@ export function setupTowns(seed: number, perTown = TOWN_POP): Harness & { centre
     const g = townGrid(c, TOWN_BLOCKS, cls);
     g.legs.forEach((l, i) => { const id = g.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
   }
-  for (const [id, legs] of byClass) editor.addLegs(legs, CLASS[id], 0);
+  for (const [id, legs] of byClass) editor.addLegs(legs, CLASS[id], 0, undefined, true);
   const hy = t.highway, entry: Pt = hy.x >= 0 ? { x: hy.x, y: hy.y } : centres[0]!;
   city.terrain(t.cls, entry, seed, centres);
   city.netOps(editor.commit(true));
