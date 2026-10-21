@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-21: **the golf events pivot (v6)**: the plan, the review of all development and the golf sprite list
+_Last updated: 2026-10-21 evening: **handover** (section "Handover, 2026-10-21" at the end). Earlier 2026-10-21: **the golf events pivot (v6)**: the plan, the review of all development and the golf sprite list
 ([GOLF-PLAN.md](GOLF-PLAN.md), [GOLF-SPRITES.md](GOLF-SPRITES.md)); every plan doc updated; in-flight work parked (section "The golf
 pivot" near the end). Before that 2026-10-20 evening: the art branch claude/sprites-and-people merged (TrickOrTreat sprites, baked lots with a separate fence layer, townspeople, sprite studio with walk-frame fixes; docs/ART-PIPELINE.md); before that 2026-10-20 afternoon (B.3 daily visit businesses, B.4 tickets and cards, B.5 bus and taxi companies); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
@@ -1884,17 +1884,92 @@ recommended defaults until the owner answers):**
 - Checks: npm test 600/602 (the two timing flakes; the worker refused SSH, run locally); typecheck clean; browser-checked on 5186
   (fences, signs, cars in bays); built to the owner's 5174.
 
-**Next:** east-facing shop art into the atlas (EAST_FACING); the building alignment bug; the golf textures packed as photo textures
-with lazy builds; Paint shape editing; then **G1** (golf mode foundation).
+**Also landed later on 2026-10-21 (main `6087b3a`, built to 5174):**
+- **Paint shape editing** (`claude/paint-handles`): a closed shape is selected at once; corner handles (snapped), edge "+" inserts a
+  corner, right-click or Delete on a corner removes it (min 3), drag inside moves, box corners scale (Shift uniform), a rotate handle
+  (Shift 15°); live re-bake (120 ms throttle); an invalid drag turns red and reverts on release. Pure helpers in paint.ts (tested).
+  Not yet exercised by hand in a browser: check it first thing. No undo in Paint yet; Esc does not cancel a drag.
+- **Every generated ground photo in Paint** (`claude/g-textures`): 25 `PHOTO_TEX` entries (grass-art.ts); new ids golfFringe, golfTee,
+  golfFirstCut, golfFescue, bunkerSand, wasteSand, pineStraw, barkMulch, spectatorPath, woodChips; the lawns, meadow, putting green,
+  dirt, road gravel, field (plain 4-tile period), grass and worn asphalt redone as photos (Paint only: roads, farms and the base grass
+  keep their painted textures). **Lazy builds**: only Fairway, New sod, Rough and Concrete are built at start; any other photo is
+  built in each ground worker the first time a painted area uses it (the worker queues its messages so a bake never overtakes the
+  edit). TEX_VERSION tex-16. Masters in `art/grass-photo/`. Asphalt, Dark asphalt and Gravel stay painted (RUN's safety filter blocked
+  them). **The single-file build grew to 60 MB** (21 photo webps): lower the webp quality of the minor ones if that matters.
+- **East-facing shop art** (`claude/east-art`): 14 lettered shop fronts (`art/east-facing/`, packed by `scripts/assets/prep-east.mjs`
+  into `src/assets/east/`, `src/game/east-library.ts`, appended after the cars) used unflipped on +X lots through `EAST_FACING`; the
+  compose thresholds are back up (TOUR 13.7, COM 11.7). Still missing: world:video_rental (its generated sign came out mirrored:
+  regenerate), the business-atlas golf pro shop and cart garage, and the recoloured variations (they fall back).
+- Checks on main 6087b3a: compose 16, lettering 6, paint 31, cars-park 2, golf-tour 11, golf-holes 10, golf-coursegen 9, golf-event
+  13, all pass; typecheck clean; build OK. The full suite last ran on ddc35b1: 600/602 (the two timing flakes).
+- Experiments, **abandoned for now (the owner)**: pixel art via `claude-pxl` (a converted 8-angle wagon, a pixel town). 16 car headings
+  need a 3D model (Hunyuan3D on the worker), not the image generator: noted for later.
+
+## Handover, 2026-10-21 (the owner moves to a new chat on another account)
+
+### Where everything is
+- **main** = `.claude/worktrees/main-merge` (that worktree holds the `main` branch; the main checkout itself is on
+  `feature/paranormal-nights` with **another session's uncommitted paranormal work: do not touch it**). Nothing is pushed to GitHub.
+- **The owner's test server: 5174** (`vite preview` of main-merge's `dist/`; Desktop folder "CapitalEmpire Servers": `1 Game - latest main
+  (5174).bat` builds and serves, `2 ... (5173)` dev, `3 Sprite studio (5179)`, `What is running on localhost`, `Stop all CapitalEmpire
+  servers`). After every verified change: merge into main, `npm run build` in main-merge, and 5174 serves it on reload.
+- **Plan docs**: `docs/GOLF-PLAN.md` (the design, the review, phases G0–G9, open questions in section 13), `docs/GOLF-SPRITES.md` (the
+  art list), `docs/PAINT-TOOL.md`, `docs/PARKING.md`, `docs/ART-PIPELINE.md`; GAME-PLAN.md carries the systems sections.
+- **Golf code (pure, tested, not wired in yet)**: `src/game/golf/` (types, calendar, tour, holes, coursegen, tents, venue).
+- **Generated art (RUN CLI, `rundot`, signed in; the TrickOrTreat game id `AFjPSjQH9kbcCl57sgO3`; about 89,800 credits left)**:
+  textures: `scripts/assets/gen-grass-photos.mjs` (output in the git-ignored `output/grass-gen/` of the photo-grass and g-textures
+  worktrees; masters committed in `art/grass-photo/`); east-facing shops: `output/dbg/east-gen.sh` + `east-refs.cjs` in main-merge
+  (git-ignored output; masters committed in `art/east-facing/`). Always remove each generation from RUN after download
+  (`rundot assets rm <id> --service imagegen --game-id ...`). The model on this plan makes 1024 px images; the 2K/4K model is not on
+  the plan. Wording false positives: avoid "shot", "road", "crushed".
+- **Worktrees**: every `claude/*` worktree except main-merge is merged into main and can be removed (`git worktree remove`) when the
+  owner agrees; the coder worktrees use a `node_modules` junction to main-merge's (`cmd /c mklink /J <wt>\node_modules
+  <main-merge>\node_modules`), so remove the junction before deleting a worktree folder by hand.
+- **The worker PC** (`cworker`, 192.168.0.8) refused SSH all of 2026-10-21; checks ran locally (the dev PC is short of RAM: do not run
+  more than two or three test/build commands at once).
+
+### The queue (in order)
+1. Browser-check the Paint shape handles and a lazy photo texture (paint a Bunker sand area: flat colour first, then the photo).
+2. Bug: **buildings not aligned to the road** (a corner shop square to neither street; screenshot 2026-10-21): check corner lots'
+   frontage choice and commercial facing in `src/game/lots/compose.ts` / `blocklots.ts`.
+3. Regenerate world:video_rental's east view; pack the golf pro shop and cart garage (business atlas) later with the golf art.
+4. **G1 golf mode foundation** (GOLF-PLAN section 11): one town (6R.7 seed rules), the old nine from `coursegen.ts` painted as Paint
+   areas on an owned parcel outside town with farms around it, the 12-month year (`calendar.ts`), the round as off-season →
+   tournament day → results → draft, the HUD (month, year, countdown, tier), legacy saves still load. Use the owner's answers to
+   GOLF-PLAN section 13 (ask for any still open; until then the plan's recommendations are the defaults).
+5. Then G2 (land buying, hole tools, course stats panel, costs and grow-in), G3 (tournament days with `tour.ts`/`venue.ts`), G4 (the
+   Event tool with `tents.ts`), G5, G6; G7 (golf art from GOLF-SPRITES.md) alongside.
+
+### Starting the agents again (the owner: "an army of Haiku coders")
+The lead designs, briefs and reviews; `haiku-coder` writes code; `haiku-runner` runs long checks (CLAUDE.md). What worked today:
+1. One worktree per coder, cut from main, with the node_modules junction:
+   `git -C .claude/worktrees/main-merge worktree add -b claude/<name> .claude/worktrees/<name> main` then
+   `cmd /c mklink /J .claude\worktrees\<name>\node_modules .claude\worktrees\main-merge\node_modules`.
+2. Launch each `haiku-coder` in the background (Agent tool, `run_in_background: true`) with a brief that names: the worktree and branch
+   (work only there, never npm install), the files to read first, the exact change, the tests to add, and the checks: its own test
+   file via `npx esbuild tests/<f>.test.ts --bundle --platform=node --format=esm --loader:.webp=empty
+   --outfile=output/tests/<f>.test.mjs --log-level=warning && node --test output/tests/<f>.test.mjs`, then `npx tsc --noEmit -p .`, then
+   (if it touches the app) `npm run build`; **not** the full `npm test` (RAM); commit on its branch; never push or merge; never rewrite
+   files with PowerShell Get-Content/Set-Content (it corrupts UTF-8).
+3. Give parallel coders disjoint files (new modules under `src/game/golf/` are ideal); when two must touch the same file (compose.ts,
+   paint.ts, tests/compose.test.ts), keep each edit local and expect to resolve a small merge conflict.
+4. Shared types first: put any type several coders need on main before launching them (as `src/game/golf/types.ts` was).
+5. When a coder reports, review its diff, decide its open questions (it stops and asks when the brief conflicts with reality), merge
+   into main-merge, run the affected tests and typecheck, re-pin compose digests if lot output legitimately changed, browser-check on a
+   port of your own (5186 worked; `npx vite --host 127.0.0.1 --port 5186 --strictPort` in a terminal tab from main-merge, then
+   preview_start {url}), then build for 5174.
+6. Good next coder jobs (one each, in parallel): (a) G1's calendar HUD and round stages (App.tsx, round.ts: after the lead's design),
+   (b) the course generator's output as Paint areas on a parcel (coursegen + paint.ts mapping GolfSurface -> PaintTex), (c) the hole tools
+   (tee and pin placement, holes.ts derivation shown in a course stats panel), (d) land parcels (buy farm or town blocks), (e) the building
+   alignment bug once the lead has found its cause.
 
 ### Start prompt for a fresh chat
 "We're building Capital Empire (repo: CapitalEmpire), now a **golf events manager** (the owner's pivot, 2026-10-21). Read CLAUDE.md,
-docs/PROGRESS.md (the section 'The golf pivot' near the end) and docs/GOLF-PLAN.md first; the art list is docs/GOLF-SPRITES.md.
-G0 (the plan) is done. First fix the two bugs listed there (mirrored buildings with lettering; buildings not aligned to the road),
-then start **G1 golf mode foundation** with the owner's answers to GOLF-PLAN section 13 (ask for any still open). Parked work:
-branch `claude/paint-wip` (corner radius + the RUN texture script) and the generated textures in the photo-grass worktree's
-`output/grass-gen/`. Check `git status` and `git worktree list` first: another session may have uncommitted work in the main
-checkout (paranormal nights) or a worktree (ask the owner before touching it). Carry on through the queue without asking between
-steps; still ask before pushing to GitHub. After each verified step merge to local main and rebuild so the owner's 5174 shows it
-(Desktop launcher 'CapitalEmpire Servers'). Delegate coding to haiku-coder and checks to haiku-runner (the worker PC `cworker`,
-192.168.0.8, via scripts/worker/run.sh); update docs/PROGRESS.md as you go; test in the browser on your own port (5174 is the owner's)."
+then docs/PROGRESS.md: its last sections 'The golf pivot' and 'Handover, 2026-10-21' say where everything is, the queue, and how to
+start the Haiku coders again. The design is docs/GOLF-PLAN.md (open questions in section 13: ask me for answers, the plan's
+recommendations are the defaults); the art list is docs/GOLF-SPRITES.md. main lives in the worktree `.claude/worktrees/main-merge`
+(the main checkout has another session's uncommitted paranormal work: don't touch it). Start with the handover queue: browser-check the
+Paint shape handles and lazy textures, fix the building alignment bug, then G1 (golf mode foundation). Run several haiku-coders in
+parallel in their own worktrees as the handover describes, review and merge their work, and after each verified step merge to main and
+rebuild so my 5174 server shows it. Carry on through the queue without asking between steps; ask before pushing to GitHub. The worker
+PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks locally, at most two or three at a time (RAM)."
