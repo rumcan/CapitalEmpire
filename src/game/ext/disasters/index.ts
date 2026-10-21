@@ -4,7 +4,7 @@ import { TC } from '../../terrain/types';
 import type { Pt } from '../../network';
 
 /** Disaster types; times are game seconds (one game day = 1440 seconds). */
-export type DisasterKind = 'flood' | 'storm' | 'landslide' | 'wildfire' | 'quake';
+export type DisasterKind = 'flood' | 'storm' | 'landslide' | 'wildfire' | 'quake' | 'paranormal';
 /** Current road geometry in tiles (2 m); nearWater is distance to water in tiles, slope is rise/run. */
 export interface RoadInfo { key: string; a: Pt; b: Pt; kind: 'ground' | 'bridge' | 'tunnel'; nearWater: number; slope: number }
 /** One event. Area is a tile-space polygon; burned, when present, is the exact PATCH/HILL fuel-cell footprint (cell centres). */
@@ -45,8 +45,8 @@ function hull(points: Pt[]): Pt[] {
 }
 
 /** Seeded disaster scheduler. step expects a nondecreasing game clock and current (not cached) roads.
- *  Risk is sampled once per game day, even when a caller skips days. At most one event, including warnings,
- *  can be outstanding. A quake holds the slot until all damaged segments are repaired. */
+ *  Risk is sampled once per game day, even when a caller skips days. At most one displayed event, including warnings,
+ *  can be outstanding. Quake damage persists until repaired; recurring nights may temporarily take its display slot. */
 export class Disasters {
   private readonly random: () => number;
   private readonly cls: Uint8Array;
@@ -54,6 +54,10 @@ export class Disasters {
   private readonly riverLength: number;
   private readonly fuelCells: number;
   private nextDay = DAY;
+  private readonly nightRandom: () => number;
+  private nextNight: number;
+  // Quake damage persists, but cannot permanently prevent the next paranormal night.
+  private damagedQuake: Disaster | null = null;
   private now = 0;
   private nextId = 1;
   private pending: Disaster | null = null;
@@ -63,7 +67,8 @@ export class Disasters {
   /** The terrain buffer is MAP*MAP classes, row-major; heights gives metres at tile coordinates. */
   constructor(seed: number, terrainCls: Uint8Array, heights: (x: number, y: number) => number) {
     if (terrainCls.length !== MAP * MAP) throw new RangeError('terrainCls must be MAP*MAP');
-    this.random = mulberry(seed); this.cls = terrainCls; this.heights = heights;
+    this.random = mulberry(seed); this.nightRandom = mulberry(seed ^ 0x50415241);
+    this.nextNight = (3 + Math.floor(this.nightRandom() * 3)) * DAY; this.cls = terrainCls; this.heights = heights;
     let bankEdges = 0, fuel = 0;
     for (let i = 0; i < terrainCls.length; i++) {
       const c = terrainCls[i];
@@ -83,20 +88,31 @@ export class Disasters {
    *  Treat the arrays as read-only: uneventful ticks share one frozen empty result. */
   step(t: number, roads: RoadInfo[]): Changes {
     if (!Number.isFinite(t) || t < this.now) throw new RangeError('disaster clock must be finite and nondecreasing');
-    if (t < this.nextDay && t < (this.pending?.start ?? Infinity) && t < (this.current?.end ?? Infinity)) {
+    if (t < this.nextDay && t < (this.pending?.start ?? Infinity) && t < (this.current?.end ?? Infinity) && t < (this.damagedQuake?.end ?? Infinity)) {
       this.now = t; return QUIET;
     }
     const out: Changes = { warned: [], started: [], ended: [] };
     for (;;) {
-      const at = Math.min(this.nextDay, this.pending?.start ?? Infinity, this.current?.end ?? Infinity);
+      const at = Math.min(this.nextDay, this.pending?.start ?? Infinity, this.current?.end ?? Infinity, this.damagedQuake?.end ?? Infinity);
       if (at > t) break;
       this.now = at;
-      if (this.current && this.current.end === at) { out.ended.push(this.current); this.current = null; }
+      if (this.damagedQuake && this.damagedQuake.end === at) { out.ended.push(this.damagedQuake); this.damagedQuake = null; }
+      if (this.current && this.current.end === at) {
+        out.ended.push(this.current); this.current = this.damagedQuake; this.damagedQuake = null;
+      }
       if (this.pending && this.pending.start === at) { this.current = this.pending; this.pending = null; out.started.push(this.current); }
       if (this.nextDay === at) {
         this.nextDay += DAY;
+        const nightDue = at >= this.nextNight;
+        // Permanent quake repairs remain payable while the recurring night takes the visual slot.
+        if (nightDue && !this.pending && this.current?.kind === 'quake' && roads.some(r => r.kind !== 'tunnel')) {
+          this.damagedQuake = this.current; this.current = null;
+        }
         if (!this.current && !this.pending) {
-          const event = this.roll(at, roads);
+          // A queued natural force waits for quake repair; it must not starve recurring nights.
+          const forceReady = this.forced && !(nightDue && this.damagedQuake && this.forced !== 'paranormal');
+          const event = forceReady ? this.roll(at, roads) : nightDue ? this.make('paranormal', at, roads) : this.roll(at, roads);
+          if (nightDue || event?.kind === 'paranormal') this.nextNight = at + (3 + Math.floor(this.nightRandom() * 3)) * DAY;
           if (event) {
             if (event.warnAt < event.start) { this.pending = event; out.warned.push(event); }
             else { this.current = event; out.started.push(event); }
@@ -113,7 +129,7 @@ export class Disasters {
 
   /** Repair one quake closure by segment key. A quake ends after its last closure is repaired; the next step reports ended. */
   repair(disaster: number, key: string): void {
-    const d = this.current;
+    const d = this.current?.id === disaster ? this.current : this.damagedQuake;
     if (!d || d.id !== disaster || d.kind !== 'quake') return;
     const index = d.closures.findIndex(c => c.key === key && c.until === 'repair');
     if (index < 0) return;
@@ -124,7 +140,7 @@ export class Disasters {
   /** Currently started, not ended disasters; warnings are delivered by step's warned list. */
   active(): Disaster[] { return this.current && this.current.end > this.now ? [this.current] : []; }
 
-  /** Approximate seeded Bernoulli probability per game day for each kind at the current map/roads. */
+  /** Approximate daily frequency; paranormal is scheduled every 3-5 days, never randomly rolled. */
   riskPerDay(roads: RoadInfo[]): Record<DisasterKind, number> {
     let roadLen = 0, steepLen = 0, structures = 0, near = 0;
     for (const r of roads) {
@@ -140,6 +156,7 @@ export class Disasters {
       storm: roads.length ? 0.012 + Math.min(0.02, roadLen / 20000 * 0.012) : 0,
       landslide: steepLen ? 0.004 + Math.min(0.05, steepLen / 4000 * 0.04) : 0,
       wildfire: this.fuelCells && roads.length ? 0.008 + Math.min(0.025, this.fuelCells / 200000 * 0.012) : 0,
+      paranormal: roads.some(r => r.kind !== 'tunnel') ? 0.25 : 0,
       quake: structures ? 0.006 + Math.min(0.025, structures / 20 * 0.014) : 0,
     };
   }
@@ -155,9 +172,20 @@ export class Disasters {
   private make(kind: DisasterKind, at: number, roads: RoadInfo[]): Disaster | null {
     const eligible = roads.filter(r => kind === 'flood' ? r.kind !== 'tunnel' && r.nearWater <= WATER_RANGE && this.low(r)
       : kind === 'landslide' ? r.kind === 'ground' && r.slope >= STEEP
-        : kind === 'quake' ? r.kind !== 'ground' : kind === 'storm' ? true : r.kind === 'ground');
+        : kind === 'quake' ? r.kind !== 'ground' : kind === 'paranormal' ? r.kind !== 'tunnel' : kind === 'storm' ? true : r.kind === 'ground');
     if (!eligible.length) return null;
     let anchor = eligible[(this.random() * eligible.length) | 0];
+    // Prefer a connected neighbourhood instead of a lonely intercity road.
+    if (kind === 'paranormal') {
+      const density = new Map<string, number>();
+      for (const r of eligible) { const p = mid(r), key = `${Math.floor(p.x / 60)},${Math.floor(p.y / 60)}`; density.set(key, (density.get(key) ?? 0) + 1); }
+      let best = -1;
+      for (const candidate of eligible) {
+        const p = mid(candidate), x = Math.floor(p.x / 60), y = Math.floor(p.y / 60); let neighbours = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) neighbours += density.get(`${x + dx},${y + dy}`) ?? 0;
+        if (neighbours > best) { best = neighbours; anchor = candidate; }
+      }
+    }
     let ignition: Pt | null = null;
     if (kind === 'wildfire') {
       const from = (this.random() * eligible.length) | 0;
@@ -169,13 +197,14 @@ export class Disasters {
       if (!ignition) return null;
     }
     const centre = kind === 'wildfire' ? ignition! : mid(anchor);
-    const radius = kind === 'flood' ? 45 : kind === 'storm' ? 70 : kind === 'landslide' ? 35 : 90;
-    const start = at + (kind === 'flood' ? 90 : kind === 'storm' ? 45 : 0);
-    const end = kind === 'quake' ? Infinity : start + (kind === 'flood' ? 360 : kind === 'storm' ? 180 : kind === 'landslide' ? 300 : 120);
+    const radius = kind === 'flood' ? 45 : kind === 'storm' ? 70 : kind === 'landslide' ? 35 : kind === 'paranormal' ? 60 : 90;
+    const start = at + (kind === 'flood' ? 90 : kind === 'storm' || kind === 'paranormal' ? 45 : 0);
+    const end = kind === 'quake' ? Infinity : start + (kind === 'flood' ? 360 : kind === 'storm' ? 180 : kind === 'landslide' ? 300 : kind === 'paranormal' ? 240 : 120);
     const burned = kind === 'wildfire' ? this.spread(ignition!) : undefined;
     const affected = roads.filter(r => kind === 'flood' ? r.kind !== 'tunnel' && r.nearWater <= WATER_RANGE && this.low(r) && distance(centre, r) <= radius
       : kind === 'storm' ? distance(centre, r) <= radius && (r === anchor || this.random() < 0.65)
         : kind === 'landslide' ? r.kind === 'ground' && r.slope >= STEEP && distance(centre, r) <= radius
+          : kind === 'paranormal' ? r.kind !== 'tunnel' && distance(centre, r) <= radius
           : kind === 'quake' ? r.kind !== 'ground' && distance(centre, r) <= radius
             : r.kind === 'ground' && burned!.some(p => distance(p, r) <= 3));
     if (!affected.length) return null;

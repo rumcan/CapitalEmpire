@@ -54,7 +54,7 @@ test('same seed, roads and clock yield the same transitions, including after ski
       ended: results.flatMap(r => r.ended.map(d => [d.id, d.kind, d.end])),
     };
   };
-  // Without repairs, both clocks eventually stop on the same quake.
+  // Both clocks preserve the same quake damage and recurring paranormal nights.
   assert.deepEqual(trace(a.sim, a.roads, Array.from({ length: 200 }, (_, i) => i + 1)), trace(b.sim, b.roads, [200]));
   assert.throws(() => a.sim.step(0, a.roads), RangeError);
   assert.throws(() => a.sim.step(Infinity, a.roads), RangeError);
@@ -157,7 +157,7 @@ test('hill forest cells are also burnable fuel, but fire cannot spread through g
 
 test('1000 simulated days: risk produces each kind, never overlaps, and reports mean days between events', () => {
   const { sim, roads } = setup(77);
-  const counts: Record<DisasterKind, number> = { flood: 0, storm: 0, landslide: 0, wildfire: 0, quake: 0 };
+  const counts: Record<DisasterKind, number> = { flood: 0, storm: 0, landslide: 0, wildfire: 0, quake: 0, paranormal: 0 };
   let lastId = 0;
   for (let day = 1; day <= 1000; day++) {
     const { warned, started } = sim.step(day * DAY, roads);

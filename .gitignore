@@ -5,3 +5,6 @@ dist/
 # screenshots and benchmark output
 ref/
 output/
+
+# lossless webp copies of the grass-v1 PNG masters (pixel-identical; the scripts read the PNGs)
+src/assets/ground/grass-v1/webp/
