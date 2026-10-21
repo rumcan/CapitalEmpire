@@ -31,8 +31,9 @@ const LOT_CELL = 32;
 const PLAN_ASPHALT = '#3c4150';
 /** a Paint texture's swatch colour (its mean), the flat fill of a photo texture this worker has not built yet */
 const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [string, string]));
-/** the painted ground textures the photo of the same ground (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads, water */
-const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'roadgravel'], ['field', 'field'], ['water', 'waterDark']]);
+/** the painted ground textures a photo (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads (the dark grey
+ *  Asphalt photo, the owner's call 2026-10-21), water */
+const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'asphalt'], ['field', 'field'], ['water', 'waterDark']]);
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
@@ -133,7 +134,7 @@ export class GroundPainter {
     for (const p of [...lotAll.filter(p => !p.paint && p.tex !== 'marks'), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
-    fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), this.planColour('roadgravel')); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
+    fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), '#404040'); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
     ctx.fillStyle = '#557a35'; for (const r of v.rbIslands) { ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill(); }
     // tunnel routes have no road fills, so the planner marks them with a dashed line
     ctx.strokeStyle = 'rgba(60,65,80,0.85)'; ctx.lineCap = 'butt'; ctx.setLineDash([3, 2]);
