@@ -60,7 +60,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 // ---------------- library
 let all=[],removed={},walkers=[],me=null,cat='',q='',K=0.35,pointer=null;   // K: display px per native game px, the same for every sprite and the man
 async function loadLib(){const r=await (await fetch('/api/sprites')).json();all=r.sprites;removed=r.removed;walkers=r.walkers;
- const w=$('#who'),previous=me?.id;w.innerHTML='';for(const p of walkers)w.append(el('option',{value:p.id,textContent:p.name}));me=walkers.find(p=>p.id===previous)||walkers[0]||null;if(me)w.value=me.id;man();cats();draw();}
+ const w=$('#who'),previous=me?.id;w.innerHTML='';for(const p of walkers)w.append(el('option',{value:p.id,textContent:p.name}));me=walkers.find(p=>p.id===previous)||walkers.find(p=>/(^|[:_])man$/.test(p.id))||walkers.find(p=>!/kid/.test(p.id))||walkers[0]||null;if(me)w.value=me.id;man();cats();draw();}
 /** the man: his trimmed picture at K, his feet (the anchor) on the pointer */
 function man(){const m=$('#man');$('#v-lib').classList.toggle('person-cursor',!!me);if(!me){m.style.display='none';return;}m.src='/thumb/'+encodeURIComponent(me.id);const q=me.quad;m.style.width=(q[2]-q[0])*K+'px';m.style.height=(q[3]-q[1])*K+'px';placeMan();}
 function placeMan(){const m=$('#man'),target=pointer&&document.elementFromPoint(pointer.x,pointer.y);if(!me||!$('#v-lib').classList.contains('on')||!target?.closest('#v-lib')||target.closest('button,input,select,.chip,.bar')){m.style.display='none';return;}
