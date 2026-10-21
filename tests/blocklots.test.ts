@@ -73,7 +73,7 @@ test('subdivide(31, 60): the spine runs along y (rows face sides 1 and 3), and t
   }
 });
 
-test('blockLots on the middle block of a 3 x 3 street grid: 4-12 lots, each on the street of its front, unit and orthogonal axes, inside the block', () => {
+test('blockLots on the middle block of a 3 x 3 street grid: 6-12 lots (10-14 tile widths), each on the street of its front, unit and orthogonal axes, inside the block', () => {
   const net = build(GRID);
   const blocks = enclosedBlocks(net);
   const mid = blocks.find((b: Block) => Math.min(...b.pts.filter((_, i) => i % 2 === 0)) === 40 && Math.min(...b.pts.filter((_, i) => i % 2 === 1)) === 40)!;
@@ -81,7 +81,7 @@ test('blockLots on the middle block of a 3 x 3 street grid: 4-12 lots, each on t
   const lots = blockLots(net, mid, null);
   assert.ok(lots, 'middle block is subdivided');
   console.log(`middle block: ${lots.length} lots`);
-  assert.ok(lots.length >= 4 && lots.length <= 12, `lots ${lots.length}`);
+  assert.ok(lots.length >= 6 && lots.length <= 12, `lots ${lots.length}`);
   for (const l of lots) {
     // the front sits at the street's inset (h + walk + 0.5) from the street's line, and the seg is ground
     assert.equal(l.seg.kind, SK.GROUND);

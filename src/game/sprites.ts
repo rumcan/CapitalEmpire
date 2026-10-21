@@ -5,6 +5,7 @@
  *  frame, after the last prop that is behind them. */
 import { SPR_H as CHUNK_H, SPR_W as CHUNK_W, HH, HW, worldX, worldY } from './iso';
 import { LIBRARY } from './library';
+import { CAR_SCALE } from './ext/car-art';
 import { SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import type { Prop } from './types';
 
@@ -12,7 +13,7 @@ import type { Prop } from './types';
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean }
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
-export const CAR_SCALE = 0.8;
+export { CAR_SCALE };
 interface DTile { i: number; j: number; props: Set<Prop>; order: Prop[] | null; packed: Float32Array; shadows: Float32Array; rects: Float32Array; buckets: Map<number, number[]> }
 export interface TileDraw { i: number; j: number; shadows: number; sprites: number }
 

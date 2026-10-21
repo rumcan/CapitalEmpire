@@ -1,6 +1,6 @@
 // Block lots: a city block is cut by an irregular fence grid into cells, and the cells are the lots (the fences come first, the
 // lots are the spaces left). A block is a right-angled 4-corner face (blocks.ts) whose sides are 16-70 tiles after the street
-// insets. subdivide() cuts the inner rectangle: end columns on the two short sides, a spine that may jog once, and 8-12 tile
+// insets. subdivide() cuts the inner rectangle: end columns on the two short sides, a spine that may jog once, and 10-14 tile
 // partitions. The cut is cached per block (its outline and insets); each edit only picks the streets of the lots. Pure TS, no DOM.
 import { mulberry } from '../iso';
 import { SK, dot, mul, perp, sub, vlen, type Pt, type RoadNetwork, type Seg } from '../network';
@@ -24,12 +24,12 @@ const jit = (rnd: () => number, a: number) => (rnd() * 2 - 1) * a;
 /** 32-bit FNV-1a hash of a string (the seed of a block's cut) */
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
 
-/** a length cut into 8-12 tile widths: the boundaries from 0 to L (0.5-rounded); no boundaries under 6 tiles (none at all) */
+/** a length cut into 10-14 tile widths (a length of 14-20 stays one piece): the boundaries from 0 to L (0.5-rounded); no boundaries under 6 tiles (none at all) */
 function partition(L: number, rnd: () => number): number[] {
   if (L < MIN_SIDE) return [];
-  let n = Math.max(1, Math.round(L / 10));
-  while (L / n > 12) n++;
-  while (n > 1 && L / n < 8) n--;
+  let n = Math.max(1, Math.round(L / 12));
+  while (L / n > 14) n++;
+  while (n > 1 && L / n < 10) n--;
   const wt: number[] = []; let sum = 0;
   for (let i = 0; i < n; i++) { const w = (L / n) * (1 + jit(rnd, 0.2)); wt.push(w); sum += w; }
   const b = [0]; let acc = 0;
@@ -44,7 +44,7 @@ function spineCells(L: number, D: number, rnd: () => number): Cell[] {
   const push = (front: 0 | 1 | 2 | 3, x0: number, y0: number, x1: number, y1: number) => { if (x1 - x0 >= MIN_SIDE && y1 - y0 >= MIN_SIDE) out.push({ front, x0, y0, x1, y1 }); };
   // the spine: y clamped so both depths are at least SPINE_MIN (a short block sits at its middle)
   const spine = (v: number) => (D - SPINE_MIN >= SPINE_MIN ? h5(Math.min(D - SPINE_MIN, Math.max(SPINE_MIN, v))) : h5(D / 2));
-  let eL = h5(8 + rnd() * 3), eR = h5(8 + rnd() * 3);
+  let eL = h5(9 + rnd() * 3), eR = h5(9 + rnd() * 3);
   if (L - eL - eR < SPINE_MIN) eL = eR = 0;
   if (eL > 0) { const b = partition(D, rnd); for (let i = 0; i + 1 < b.length; i++) push(3, 0, b[i]!, eL, b[i + 1]!); }
   if (eR > 0) { const b = partition(D, rnd); for (let i = 0; i + 1 < b.length; i++) push(1, L - eR, b[i]!, L, b[i + 1]!); }

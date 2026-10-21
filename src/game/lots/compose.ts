@@ -12,7 +12,10 @@ import type { Lot } from './lots';
 export type LotGeom = Pick<Lot, 'o' | 'u' | 'n' | 'w' | 'd'>;
 import { LU, LV } from './town';
 import { OWNER_SCALE } from './scales';
+import { FRONTAL } from './frontal';
 import { LOT_DECALS } from '../lot-decals';
+import { parkedCar } from '../traffic';
+import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
 
 export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number }
 export interface Composition { props: Placed[]; ground: LotPatch[] }
@@ -39,8 +42,13 @@ const DRIFT_K = 0.35;
 const REACH = 0.3, VERGE = 1.2, EPS = 0.02;
 /** the largest share of the smaller footprint two uprights may share */
 const OVERLAP = 0.35;
-/** the car park's bay pitch and depth, tiles; the wheel stop id */
-const BAY = 2, BAY_DEPTH = 2.5, WHEEL = 'expansion:wheel-stop';
+/** the car park's bay pitch and depth, tiles (the depth is 5.5 m); the wheel stop id */
+const BAY = 2, BAY_DEPTH = 2.75, WHEEL = 'expansion:wheel-stop';
+/** the two-way aisle between the bay rows, the entrance drive's width (two lanes), a wheel stop's inset from a bay's outer edge, a nosed-in car's gap to its stop */
+/** NOSE: a parked car's centre this far short of its wheel stop: half the car (1.8 tiles: 4.5 m at CAR_SCALE) and a 0.15-tile gap, so its nose stops just short of the stop */
+const AISLE = 2.6, DRIVE_W = 2.6, STOP_IN = 0.35, NOSE = 1.05;
+/** the house band: the gap between the drive and the house (or its garage), and the side yard on the far side from the drive (tiles) */
+const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
 
 const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
 const names = (ids: string[]) => ids.filter(id => BY.has(id));
@@ -67,7 +75,7 @@ const GARAGE_REAR = names(['expansion:garage-rear']);
 const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id));
 const BUSHES = cat(i => i.kind === 'bush');
 /** ids with their plain variations in the library ('town:bakery' -> 'variation:town-bakery-<hash>-plain:1'), the ones the game has */
-const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
+const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => !FRONTAL.has(k) && base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
 /** every front-facing shop the game has, with its variations (the street fronts deal from it, see com) */
 const SHOP_FRONT = withVariations(['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:fish_tackle', 'town:barber', 'town:hardware', 'world:video_rental', 'world:video',
   'ref:building-grocery', 'ref:building-corner-shop', 'ref:building-corner-store']);
@@ -81,6 +89,8 @@ const BARN = names(['world:barn']);
 const CARS = cat(i => i.cat === 'Vehicles' && /_[news](-v2)?$/.test(i.id));
 const PICKUPS = CARS.filter(id => /pickup|van/.test(id));
 const FACE: Record<string, Pt> = { n: { x: 0, y: -1 }, s: { x: 0, y: 1 }, e: { x: 1, y: 0 }, w: { x: -1, y: 0 } };
+/** the car art's direction (0 +x, 1 +y, 2 -x, 3 -y) of the axis a lot-frame vector points along */
+const dirOf = (v: Pt) => (Math.abs(v.x) > Math.abs(v.y) ? (v.x > 0 ? 0 : 2) : (v.y > 0 ? 1 : 3));
 const JUNK = names(['expansion:junk-car', 'expansion:appliance-pile', 'expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:oil-drums', 'expansion:concrete-rubble']);
 const SCRAP = names(['expansion:scrap-engine', 'expansion:tyre-stack', 'expansion:yard-workbench', 'expansion:air-compressor']);
 const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle', 'expansion:appliance-pile']);
@@ -155,9 +165,9 @@ class Build {
   /** a sprite at a seeded size (owner scale times mul, varied by 5%) with its footprint: the union of its boxes, as the engine draws it */
   spec(id: string, o: Opt = {}): Spec | null {
     if (!BY.has(id)) return null;
-    // cars at 1: the engine draws a parked car at CAR_SCALE, the size of the cars on the road
-    const flip = !!o.flip, s = BY.get(id)!.cat === 'Vehicles' ? 1 : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
-    return { id, s, flip, h: boxOf(id, s, flip) };
+    // cars at 1: the engine draws a parked car at CAR_SCALE (its footprint too), the size of the cars on the road
+    const flip = !!o.flip, car = BY.get(id)!.cat === 'Vehicles', s = car ? 1 : (OWNER_SCALE[id] ?? 1) * (o.mul ?? 1) * (1 + 0.05 * (2 * this.r() - 1));
+    return { id, s, flip, h: boxOf(id, car ? CAR_SCALE : s, flip) };
   }
   /** the half extent of a spec along the lot's u (ea) and n (eb) */
   ea(g: Spec): number { return (Math.abs(this.u.x) * (g.h[2] - g.h[0]) + Math.abs(this.u.y) * (g.h[3] - g.h[1])) / 2; }
@@ -259,10 +269,10 @@ class Build {
     for (let k = 0; k < n; k++) {
       const a = a0 + k * BAY + BAY / 2;
       this.put(WHEEL, a, b0 + BAY_DEPTH - 0.4, { flip });
-      if (this.r() < 0.5) this.vehicle(CARS, a, b0 + 0.3);
+      if (this.r() < 0.5) this.parked(a, b0 + 0.3 + this.carLen(false) / 2, false, k % 2);
     }
   }
-  /** a car (or pickup) facing the road best, from a pool, with its near edge at b0 along the lot's n */
+  /** a car (or pickup) facing the road best, from a pool, with its near edge at b0 along the lot's n (the old static art: the pickups) */
   vehicle(pool: string[], a: number, b0: number): { it: Item; span: number } | null {
     if (this.noCars || !pool.length) return null;
     let best = -2; const ties: string[] = [];
@@ -276,12 +286,30 @@ class Build {
     const span = 2 * this.eb(g), it = this.at(g, a, b0 + span / 2, { plant: false });
     return it ? { it, span } : null;
   }
+  /** the length of a parked car along the lot's n: its eight-way art's footprint at CAR_SCALE, nosed away from the road (away) or towards it */
+  carLen(away: boolean): number {
+    const q = carFootprint(carHeading(dirOf(away ? this.n : this.F) * Math.PI / 2));
+    return 2 * (Math.abs(this.n.x) * q.hx + Math.abs(this.n.y) * q.hy) * CAR_SCALE / 2;
+  }
+  /** a parked car from the eight-way art (the car parks' cars, as the engine draws them): model 0 or 1, its footprint centre at lot-frame (a, c),
+   *  nosed away from the road (away: its heading is +n) or towards it. Props of kind car are drawn at CAR_SCALE by the engine, so the prop is at scale 1. */
+  parked(a: number, c: number, away: boolean, type: number): Item | null {
+    if (this.noCars) return null;
+    const dir = dirOf(away ? this.n : this.F), f = parkedCar(type, dir), id = LIBRARY[f.item]!.id;
+    // the art's anchor offsets are zero (its boxes are centred), so the anchor is the footprint centre, as client.ts visible() places a moving car
+    const q = carFootprint(carHeading(dir * Math.PI / 2)), k = CAR_SCALE / 2, h: Box4 = [-q.hx * k, -q.hy * k, q.hx * k, q.hy * k];
+    return this.atW({ id, s: 1, flip: false, h }, this.P(a, c), { plant: false });
+  }
   /** n sprites from a pool at seeded points of a lot-frame rectangle */
   scatter(pool: string[], a0: number, b0: number, a1: number, b1: number, n: number, o: Opt = {}) {
     for (let i = 0; i < n && pool.length; i++) this.put(pick(this.r, pool), a0 + (a1 - a0) * this.r(), b0 + (b1 - b0) * this.r(), o);
   }
   /** decline 1+: a third of the plants go */
   thin(f: number) { for (let i = this.items.length - 1; i >= 0; i--) if (this.items[i].plant && this.r() < f) this.items.splice(i, 1); }
+  /** drops the boundary panels that stand on a drive (a drive's mouth and the run beside it stay open) */
+  clearDrives() {
+    for (let i = this.items.length - 1; i >= 0; i--) { const it = this.items[i]!; if (it.boundary && this.patches.some(p => p.kind === 'drive' && hit(it.fp, p.quad))) this.items.splice(i, 1); }
+  }
   /** is the footprint inside the lot (REACH past the sides and the back, VERGE into the front for street items) */
   inside(it: Item): boolean {
     const [x0, y0, x1, y1] = it.fp, minB = it.street ? -VERGE : -REACH;
@@ -307,6 +335,8 @@ class Build {
     for (const it of this.items) {
       // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
       if (!this.inside(it) || (!it.boundary && this.onPatch(it))) continue;
+      // two cars never share ground (a car is kept only if it shares none with an earlier car)
+      if (it.car && acc.some(a => a.car && share(a.fp, it.fp) > 0)) continue;
       if (!it.fence && !it.wheel) {
         if (it.plant && ups >= this.cap) continue;
         if (acc.some(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP)) continue;
@@ -337,17 +367,18 @@ function specFit(B: Build, list: string[], maxW: number, maxD: number, o: Opt = 
  *  bushes against the house, a story for the yard, fences and the bins at the kerb */
 function res(B: Build, st: ComposeState) {
   const { W, D, r, rear, flip } = B, up = st.level === LV.UPGRADED, DW = 1.6;   // DW: the drive's width
-  const hs = specFit(B, rear ? HOUSE_REAR : st.decline >= 2 ? HOUSE_RUNDOWN : HOUSE_FRONT, W - DW - 0.5, D - 3.5, { flip });
+  const hs = specFit(B, rear ? HOUSE_REAR : st.decline >= 2 ? HOUSE_RUNDOWN : HOUSE_FRONT, W - DW - DRIVE_GAP - SIDE_YARD, D - 3.5, { flip });
   if (!hs) return;
   const hw = 2 * B.ea(hs), hd = 2 * B.eb(hs);
   const sb = Math.min(3 + 1.5 * r(), Math.max(1.5, D - hd - 2.5));
   const L = r() < 0.5;
   const gs = B.spec(rear ? pick(r, GARAGE_REAR) : pick(r, GARAGE_FRONT), { flip });
   const gw = gs ? 2 * B.ea(gs) : 0, gd = gs ? 2 * B.eb(gs) : 0;
-  const garage = !!gs && W - DW - gw >= hw + 0.2 && r() < 0.8;
-  // the house band: beside the drive (L: the drive is at a = 0), with the garage between them when it fits
-  let hA0 = L ? DW : 0, hA1 = L ? W : W - DW, gA0 = 0, gA1 = 0;
-  if (garage) { if (L) { gA0 = DW; gA1 = DW + gw; hA0 = gA1; } else { gA1 = W - DW; gA0 = gA1 - gw; hA1 = gA0; } }
+  // the house band: beside the drive (L: the drive is at a = 0), a gap from the drive and the side yard on the far side; the garage between them when it fits
+  const bA0 = L ? DW + DRIVE_GAP : SIDE_YARD, bA1 = L ? W - SIDE_YARD : W - DW - DRIVE_GAP;
+  const garage = !!gs && bA1 - bA0 - gw >= hw + 0.2 && r() < 0.8;
+  let hA0 = bA0, hA1 = bA1, gA0 = 0, gA1 = 0;
+  if (garage) { if (L) { gA0 = bA0; gA1 = bA0 + gw; hA0 = gA1; } else { gA1 = bA1; gA0 = gA1 - gw; hA1 = gA0; } }
   const ca = (hA0 + hA1) / 2;
   B.at(hs, ca, sb + B.eb(hs));
   if (garage && gs) B.at(gs, (gA0 + gA1) / 2, sb + 1 + B.eb(gs));
@@ -355,11 +386,19 @@ function res(B: Build, st: ComposeState) {
   B.pave('drive', dA0, 0, dA1, dB, 'paving');
   B.pave('walk', ca - 0.3, 0, ca + 0.3, sb, 'paving');
   const story = ['family', 'retired', 'worker', 'party', 'mechanic', 'neglected'][Math.floor(r() * 6)];
-  // the cars in the drive (none for neglected: a junk car in the yard instead)
-  let slot = 0.4;
-  const car = (pool: string[]) => { const v = B.vehicle(pool, dA0 + DW / 2, slot); if (v) slot += v.span + 0.2; };
-  if (story === 'worker') { car(PICKUPS); car(CARS); } else if (story !== 'neglected') car(CARS);
-  if (up && story !== 'neglected') car(CARS);
+  // the cars in the drive (none for neglected: a junk car in the yard instead): one, and a second of the other model for a worker's story or an
+  // upgraded lot, only if it fits fully on the drive. A worker's first car is the old pickup (the eight-way pack has none). model: 0 or 1 of the pack, 2 the pickup
+  let slot = 0.4, model = -1;
+  const put = (type: number, end: number): boolean => {
+    const len = B.carLen(false);
+    if (slot + len > end || !B.parked(dA0 + DW / 2, slot + len / 2, false, type)) return false;
+    slot += len + 1.2; return true;
+  };
+  if (story !== 'neglected') {
+    if (story === 'worker') { const v = B.vehicle(PICKUPS, dA0 + DW / 2, slot); if (v) { model = 2; slot += v.span + 1.2; } }
+    else { const t = Math.floor(r() * 2); if (put(t, Infinity)) model = t; }
+    if ((story === 'worker' || up) && model >= 0) put(model === 2 ? Math.floor(r() * 2) : 1 - model, dB - 0.3);
+  }
   const bk = sb + hd + 1, neg = story === 'neglected';   // the back yard starts behind the house
   // the porch: pumpkins either side of the walk (most houses: it is October), and for some a Halloween display in the front yard
   if (story !== 'neglected' && r() < 0.8) for (const sx of [-1, 1]) if (r() < 0.8) B.put(pick(r, PUMPKINS), ca + sx * (0.75 + 0.3 * r()), sb - 0.45);
@@ -451,13 +490,21 @@ const FENCE_TREES = (() => {
   return deck;
 })();
 const FENCE_FRONT = 3.65;
+/** the boundary fence of a lot: wooden privacy panels on its own side lines (the lower world-coordinate end along u, from the back line to
+ *  FENCE_FRONT from the front edge, the same on every lot so neighbours' fences meet, and the back line when n points to +X/+Y: of two lots back
+ *  to back exactly one owns it). Every use but industry draws these, so a shared line gets one fence whatever the two uses are. */
+function boundaryFence(B: Build, lot: LotGeom) {
+  const { W, D } = B, side = lot.u.x + lot.u.y > 0 ? 0 : W;
+  B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
+  if (lot.n.x + lot.n.y > 0) B.boundaryRun(PRIVACY, 0, D, W, D);
+}
+/** a house lot's fence layer (its baked picture has no fences): the boundary fence, and the planting along the inside of its lines */
 function fenceLayer(B: Build, lot: LotGeom) {
-  const { W, D, r } = B, side = lot.u.x + lot.u.y > 0 ? 0 : W;
+  const { W, D, r } = B;
   const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / W), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
   const treeStart = mix(street, lot.n.x + 1, lot.n.y + 1) + slot * 3;
   let trees = 0;
-  B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
-  if (lot.n.x + lot.n.y > 0) B.boundaryRun(PRIVACY, 0, D, W, D);
+  boundaryFence(B, lot);
   const plant = (a: number, b: number) => {
     const u = r();
     if (u >= 0.78) return;
@@ -479,6 +526,68 @@ function fenceLayer(B: Build, lot: LotGeom) {
   for (let a = 1; a < W - 1; a += 2) base(a, D - 0.5);
 }
 
+/** the planted island of a car park with a middle double row: one tile between the two middle rows (bushes on it, no wheel stops) */
+const ISLAND = 1;
+/** a natural car park in the lot-frame rectangle [a0,a1] x [b0,b1] (b0 the street side, b1 the back). The far row of bays is flush against b1 and,
+ *  when the rectangle is 2 * BAY_DEPTH + AISLE deep or more, the near row is flush against b0; the aisle is all the space between the two rows.
+ *  When that gap is at least 2 * AISLE + 2 * BAY_DEPTH + ISLAND, two middle rows back to back (the island between them, bushes, no wheel stops)
+ *  are centred in it, leaving two aisles. Bays are BAY wide, with lines from each row's outer edge (a middle row: its aisle edge) to the aisle
+ *  (the island); a wheel stop 0.35 in from each outer edge; a car in fill of the bays (seeded), its nose 0.15 short of its stop (centre NOSE short) along its heading
+ *  (the middle rows stop at the island). drive: an entrance (no bay on its columns), paved from the street to the street-side aisle, with a street
+ *  sign at its mouth. Returns the bay count. */
+function parkingArea(B: Build, a0: number, b0: number, a1: number, b1: number, drive: { a0: number; a1: number } | null, fill: number): number {
+  const BP = BAY_DEPTH, H = b1 - b0;
+  if (H < BP + AISLE) return 0;
+  const two = H >= 2 * BP + AISLE, g0 = two ? b0 + BP : b0, g1 = b1 - BP, c = (g0 + g1) / 2;
+  const island = two && g1 - g0 >= 2 * AISLE + 2 * BP + ISLAND;
+  // a row: the edge its lines start at, the edge they end at (the aisle), its stop, and its heading (away from the road: +n)
+  type Row = { e0: number; e1: number; stop: number; away: boolean; wheel: boolean };
+  const rows: Row[] = [{ e0: b1, e1: g1, stop: b1 - STOP_IN, away: true, wheel: true }];
+  if (two) rows.push({ e0: b0, e1: g0, stop: b0 + STOP_IN, away: false, wheel: true });
+  if (island) {
+    rows.push({ e0: c - ISLAND / 2 - BP, e1: c - ISLAND / 2, stop: c - ISLAND / 2, away: true, wheel: false });
+    rows.push({ e0: c + ISLAND / 2 + BP, e1: c + ISLAND / 2, stop: c + ISLAND / 2, away: false, wheel: false });
+  }
+  const segs: [number, number][] = drive ? [[a0, drive.a0], [drive.a1, a1]] : [[a0, a1]], wflip = Math.abs(B.u.x) < Math.abs(B.u.y);
+  const low: number[] = [], high: number[] = [];
+  let bays = 0;
+  for (const row of rows) {
+    const into = (row.e0 + row.e1) / 2 < c ? low : high, cen = row.stop + (row.away ? -NOSE : NOSE);
+    for (const [s0, s1] of segs) {
+      const n = Math.floor((s1 - s0) / BAY + 1e-9);
+      if (n < 1) continue;
+      const t0 = Math.floor(B.r() * 2);   // seeded: neighbouring bays take different models
+      for (let k = 0; k <= n; k++) { const p = B.P(s0 + k * BAY, row.e0), q = B.P(s0 + k * BAY, row.e1); into.push(p.x, p.y, q.x, q.y); }
+      for (let k = 0; k < n; k++) {
+        const a = s0 + (k + 0.5) * BAY;
+        if (row.wheel) B.put(WHEEL, a, row.stop, { flip: wflip });
+        bays++;
+        if (B.r() < fill) B.parked(a, cen, row.away, (t0 + k) % 2);
+      }
+    }
+  }
+  // the asphalt: split around the island (a yard, so its bushes stand on it), each part with its own lines
+  const Q = (lo: number, hi: number) => B.quad(clamp(a0, 0, B.W), clamp(lo, 0, B.D), clamp(a1, 0, B.W), clamp(hi, 0, B.D)), ln = (l: number[]) => (l.length ? l : undefined);
+  if (island) {
+    B.patches.push({ kind: 'lot', tex: 'asphalt', quad: Q(b0, c - ISLAND / 2), lines: ln(low) });
+    B.patches.push({ kind: 'yard', tex: 'grass', quad: Q(c - ISLAND / 2, c + ISLAND / 2) });
+    B.patches.push({ kind: 'lot', tex: 'asphalt', quad: Q(c + ISLAND / 2, b1), lines: ln(high) });
+    for (const [s0, s1] of segs) for (let a = s0 + 0.6; a <= s1 - 0.6; a += 1.4) B.put(pick(B.r, BUSHES), a, c, { plant: true });
+  } else B.patches.push({ kind: 'lot', tex: 'asphalt', quad: Q(b0, b1), lines: ln(low.concat(high)) });
+  // the entrance: its mouth at the street, its end at the street-side aisle
+  if (drive) { B.pave('drive', drive.a0, 0, drive.a1, (g0 + (island ? c - ISLAND / 2 - BP : g1)) / 2, 'asphalt'); B.put('town:street_sign', (drive.a0 + drive.a1) / 2, -0.4, { street: true }); }
+  return bays;
+}
+/** a small green, for a lot whose frontage runs off the map axes (no building there faces the street): two trees, a bench by the front, bushes */
+function green(B: Build) {
+  const { W, D, r } = B;
+  B.put(pick(r, TREES), W * 0.3, D * 0.45, { plant: true });
+  B.put(pick(r, TREES), W * 0.7, D * 0.7, { plant: true });
+  B.put('world:bench', W / 2, 1.4);
+  B.scatter(BUSHES, 0.8, 0.8, W - 0.8, D - 0.8, 4 + Math.floor(r() * 3), { plant: true });
+  B.marksIn('leaves', 0.8, 0.8, W - 0.8, D - 0.8, 2);
+}
+
 /** a shop or venue with a car park beside it (two bays when the lot allows), a lamp at its corner, a front row by the door
  *  (bike rack, bin, bench, bushes along the shop front), a hvac unit at the side, a tree row along the side lot line and the
  *  bins at the back; a tour venue adds a second bench, a picnic table, a phone booth and a sign */
@@ -497,15 +606,21 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   const slot = Math.round((B.o.x * B.u.x + B.o.y * B.u.y) / W), street = Math.round(B.o.x * B.n.x + B.o.y * B.n.y);
   const deck = [...ok].sort(), dr = mulberry(mix(street, B.n.x + 2, B.n.y + 2, rear ? 1 : 0));
   for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(dr() * (i + 1)); [deck[i], deck[j]] = [deck[j]!, deck[i]!]; }
-  const ss = B.spec(deck[((slot % deck.length) + deck.length) % deck.length]!, { flip });
+  // the shops that leave room for the drive beside them (its width and 0.3 clear of the shop), when any do
+  const room = deck.filter(id => W - B.fit(id, flip)[0] - 0.3 >= DRIVE_W), dk = room.length ? room : deck;
+  const ss = B.spec(dk[((slot % dk.length) + dk.length) % dk.length]!, { flip });
   if (!ss) return;
   const sw = 2 * B.ea(ss), sd = 2 * B.eb(ss), low = B.u.x + B.u.y > 0, ca = low ? 0.15 + sw / 2 : W - 0.15 - sw / 2, back = SHOP_FRONT_B + sd;
+  // the car park behind the shop, its entrance drive in the alley on the far side (flush with the far lot line): only when the shop leaves
+  // the drive's width and the bays' depth (two rows, or one)
+  const lotPark = W - sw - 0.3 >= DRIVE_W && D - 0.3 - (back + 0.8) >= BAY_DEPTH + AISLE, dA0 = low ? W - DRIVE_W : 0, dA1 = dA0 + DRIVE_W;
   B.at(ss, ca, SHOP_FRONT_B + sd / 2);
   // asphalt all over, the sidewalk's slabs on to the shop front (both patches carry uprights)
   B.pave('yard', 0, 0, W, D, 'asphalt');
   B.pave('yard', 0, 0, W, SHOP_FRONT_B, 'slabs');
-  // the alley: the strip beside the building on the other side line (the neighbour's building stands across it)
-  const al0 = low ? ca + sw / 2 : 0, al1 = low ? W : ca - sw / 2, alley = al1 - al0, am = (al0 + al1) / 2;
+  // the alley: the strip beside the building on the other side line (the neighbour's building stands across it), less the drive's side when there is one
+  const al0 = low ? ca + sw / 2 : 0, al1 = low ? W : ca - sw / 2;
+  const f0 = lotPark && !low ? dA1 : al0, f1 = lotPark && low ? dA0 : al1, alley = f1 - f0, am = (f0 + f1) / 2;
   if (!rear) {
     B.put('world:bench', ca - sw / 4, 0.5);
     B.put('world:trashcan', ca + sw / 4, 0.45);
@@ -516,7 +631,8 @@ function com(B: Build, st: ComposeState, tour: boolean) {
     if (alley >= 1.2) B.put(r() < 0.5 ? 'expansion:ice-freezer' : 'expansion:milk-crates', am, SHOP_FRONT_B + 0.4);
     if (r() < 0.3) B.put(pick(r, SPOOKY), am, 0.3);
   }
-  B.put('world:streetlamp', low ? W - 0.4 : 0.4, -0.4, { street: true });
+  // the lamp at the corner away from the drive's mouth
+  B.put('world:streetlamp', lotPark ? (low ? 0.4 : W - 0.4) : low ? W - 0.4 : 0.4, -0.4, { street: true });
   if (r() < 0.4) B.put('world:hydrant', low ? 0.5 : W - 0.5, -0.4, { street: true });
   // the alley: bins, the hvac unit and the utility cabinet against the wall, litter
   if (alley >= 1.2) {
@@ -525,9 +641,10 @@ function com(B: Build, st: ComposeState, tour: boolean) {
     B.put('expansion:utility-cabinet', am, SHOP_FRONT_B + 1.2);
     B.mark('litter', am, back - 1.6); if (r() < 0.5) B.mark('rubbish', am, back - 2.4, 0.8);
   }
-  // behind: the car park along the back (its bays from the back wall), the deliveries at the wall, trees and bushes on the back line
-  const pb = back + 1.2;
-  if (D - pb >= BAY_DEPTH + 0.3) { B.carPark(0.3, W - 0.3, pb); B.marksIn('stain', 0.3, pb, W - 0.3, pb + BAY_DEPTH, 1 + Math.floor(W / 4), 0.9); }
+  // behind: the car park from 0.8 behind the back wall to the back line (across the full width), or a paved loading pad when the shop leaves
+  // no room; the deliveries at the wall, trees and bushes on the back line
+  const pb = back + 0.8;
+  if (lotPark) { parkingArea(B, 0.3, pb, W - 0.3, D - 0.3, { a0: dA0, a1: dA1 }, 0.5); B.marksIn('stain', 0.3, pb, W - 0.3, D - 0.3, 1 + Math.floor(W / 4), 0.9); }
   else { B.pave('yard', 0.3, back + 0.2, W - 0.3, D - 0.3, 'pad'); if (alley < 1.2) B.put('town:dumpster', ca, back + 0.8); }
   B.put('town:delivery_crates', ca - sw / 4, back + 0.6);
   B.put('expansion:bread-delivery-rack', ca + sw / 4, back + 0.6);
@@ -542,33 +659,22 @@ function com(B: Build, st: ComposeState, tour: boolean) {
   }
 }
 
-/** a public car park: no building. A verge strip (1 tile) along the frontage with a row of bushes (a hedge's 1.6-tile footprint does not fit), a 1.5-tile drive from
- *  the frontage to the back on one side, the rest asphalt with a row of bays facing the frontage (bay lines, wheel stops) and an
- *  aisle behind. Cars in the bays: 40-80% seeded, 70-100% upgraded, 30% at decline 1, 10% at decline 2, none at decline 3.
- *  A sign at the drive mouth. */
+/** a public car park: no building. A verge strip (1 tile) along the frontage with a row of bushes (a hedge's 1.6-tile footprint does not fit), an
+ *  entrance drive (DRIVE_W) on one side from the street to the aisle, and the rest of the lot laid out by parkingArea. Cars in the bays: 40-80%
+ *  seeded, 70-100% upgraded, 30% at decline 1, 10% at decline 2, none at decline 3. A sign at the drive mouth. */
 function park(B: Build, st: ComposeState) {
-  const { W, D, r } = B, DRIVE = 1.5, STRIP = 1;
-  const L = r() < 0.5, dA0 = L ? 0 : W - DRIVE, dA1 = dA0 + DRIVE;
+  const { W, D, r } = B, STRIP = 1;
+  const L = r() < 0.5, dA0 = L ? 0 : W - DRIVE_W, dA1 = dA0 + DRIVE_W;
   const pA0 = L ? dA1 : 0, pA1 = L ? W : dA0;
-  B.pave('drive', dA0, 0, dA1, D, 'asphalt');
   if (pA1 - pA0 < BAY) return;
   for (let a = pA0 + 0.8; a <= pA1 - 0.6; a += 1.4) B.put(pick(r, BUSHES), a, STRIP / 2, { plant: true });
-  const n = Math.floor((pA1 - pA0) / BAY + 1e-9), lines: number[] = [];
-  for (let k = 0; k <= n; k++) { const p = B.P(pA0 + k * BAY, STRIP), q = B.P(pA0 + k * BAY, STRIP + BAY_DEPTH); lines.push(p.x, p.y, q.x, q.y); }
-  B.patches.push({ kind: 'lot', tex: 'asphalt', quad: B.quad(pA0, STRIP, pA1, D), lines });
   const share = st.level === LV.UPGRADED ? 0.7 + 0.3 * r() : 0.4 + 0.4 * r();
   const fill = st.decline >= 3 ? 0 : st.decline === 2 ? 0.1 : st.decline === 1 ? 0.3 : share;
-  const wflip = Math.abs(B.u.x) < Math.abs(B.u.y);
-  for (let k = 0; k < n; k++) {
-    const a = pA0 + k * BAY + BAY / 2;
-    B.put(WHEEL, a, STRIP + BAY_DEPTH - 0.4, { flip: wflip });
-    if (r() < fill) B.vehicle(CARS, a, STRIP + 0.3);
-  }
-  B.put('town:street_sign', dA0 + DRIVE / 2, -0.4, { street: true });
+  const bays = parkingArea(B, pA0, STRIP, pA1, D, { a0: dA0, a1: dA1 }, fill);
   B.put('expansion:parking-meter', pA0 + 0.6, -0.35, { street: true });
   // oil stains in the bays, wheel wear on the drive, the odd bit of litter
-  B.marksIn('stain', pA0, STRIP, pA1, STRIP + BAY_DEPTH, Math.max(1, Math.floor(n / 2)), 0.9);
-  B.mark('town:wheel_wear', dA0 + DRIVE / 2, 1.2 + r() * Math.max(0, D - 3)); B.mark('litter', pA0 + r() * (pA1 - pA0), D - 1.2);
+  B.marksIn('stain', pA0, STRIP, pA1, D, Math.max(1, Math.floor(bays / 2)), 0.9);
+  B.mark('town:wheel_wear', dA0 + DRIVE_W / 2, 1.2 + r() * Math.max(0, D - 3)); B.mark('litter', pA0 + r() * (pA1 - pA0), D - 1.2);
 }
 
 /** a civic building (or a back view) on the left of a paved forecourt: a tree row, benches and planters, a lamp pair and a bus stop
@@ -669,13 +775,19 @@ export function isCarPark(st: ComposeState): boolean { return st.use === LU.COM 
 export function compose(lot: LotGeom, st: ComposeState): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
   B.noCars = st.decline >= 3;
-  if (st.use === LU.NONE || st.level === LV.EMPTY) vacant(B);
-  else if (st.level === LV.BUILDING) site(B);
+  // building sprites face the map axes only: a lot whose frontage runs more than 20 degrees off both axes is a green, not its use
+  const angled = Math.max(Math.abs(lot.u.x), Math.abs(lot.u.y)) < Math.cos(Math.PI / 9);
+  // every lot but a house's and an industrial yard's draws the boundary fence on its own side lines (a shared line gets one fence); the drive's
+  // mouth is left open
+  const edge = () => { boundaryFence(B, lot); B.clearDrives(); };
+  if (st.use === LU.NONE || st.level === LV.EMPTY) { vacant(B); edge(); }
+  else if (angled) { green(B); edge(); }
+  else if (st.level === LV.BUILDING) { site(B); edge(); }
   else if (st.use === LU.RES) { const b = baked(B, lot, st); if (b) { fenceLayer(B, lot); const f = B.done(); return { props: [...b.props, ...f.props], ground: f.ground }; } res(B, st); fenceLayer(B, lot); }
-  else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); }
-  else if (st.use === LU.TOUR) com(B, st, true);
+  else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); edge(); }
+  else if (st.use === LU.TOUR) { com(B, st, true); edge(); }
   else if (st.use === LU.IND) ind(B, st);
-  else civic(B, st);
+  else { civic(B, st); edge(); }
   if (st.decline >= 1) {
     B.thin(1 / 3);
     B.scatter(JUNK, 0.5, B.D * 0.5, B.W - 0.5, B.D - 0.5, st.decline >= 3 ? 2 : 1);
