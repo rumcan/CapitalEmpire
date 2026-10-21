@@ -442,7 +442,7 @@ export class GroundPainter {
   }
 
   /** the painted areas of a chunk (the Paint tool), in id order: each polygon filled with its texture through G (turned and
-   *  scaled in tile space about the origin), an optional border band inside its edge, and a thin rim for the paved textures */
+   *  scaled in tile space about the origin), an optional tone filter over the fill, an optional border band inside its edge, and a thin rim for the paved textures */
   private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     for (const p of paints) {
       const st = p.paint!, path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(st.s, st.s), pb = quadBox(p.pts);
@@ -482,6 +482,8 @@ export class GroundPainter {
       };
       ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
       lay(p.tex, 0);
+      // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
+      if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
       if (st.b > 0) { ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); lay(st.bt, 2 * st.b); }
       else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
       ctx.restore();

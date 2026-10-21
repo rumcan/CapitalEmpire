@@ -51,8 +51,8 @@ export class PaintTool {
 
   constructor(host: PaintHost) { this.host = host; }
 
-  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order) */
-  static patch(a: PaintArea): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: a.tex, paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: a.id } }; }
+  /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on) */
+  static patch(a: PaintArea): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: a.tex, paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: a.id, ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {
@@ -240,5 +240,5 @@ export class PaintTool {
   }
 
   /** copies a picked area's look into the panel's style */
-  private take(a: PaintArea) { this.style = { tex: a.tex, scale: a.scale, angle: a.angle, border: a.border, btex: a.btex, radius: a.radius }; }
+  private take(a: PaintArea) { this.style = { tex: a.tex, scale: a.scale, angle: a.angle, border: a.border, btex: a.btex, radius: a.radius, tone: a.tone, toneAmt: a.toneAmt, tint: a.tint }; }
 }

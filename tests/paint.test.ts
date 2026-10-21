@@ -27,7 +27,7 @@ test('rocky dirt saves keep both paintings and border styles when reloaded into 
   const saved = JSON.parse(JSON.stringify(first.save())) as PaintTuple[];
   const reloaded = new PaintTool(host);
   reloaded.load(saved);
-  assert.deepEqual(reloaded.save(), tuples.map(t => [...t, 0])); // the save now carries a radius (0: sharp)
+  assert.deepEqual(reloaded.save(), tuples.map(t => [...t, 0, 0, 0.35, '#000000'])); // the save carries a radius (0: sharp) and an untoned tone
   assert.deepEqual(sent.get('paint:1'), [{ pts: SQUARE, tex: 'rockyDirt', paint: { s: 1.5, a: 30, b: 0.5, bt: 'rockyDirtAlt', z: 1 } }]);
   assert.deepEqual(sent.get('paint:2'), [{ pts: L_SHAPE, tex: 'rockyDirtAlt', paint: { s: 0.5, a: -45, b: 0.25, bt: 'rockyDirt', z: 2 } }]);
 });
@@ -111,8 +111,8 @@ test('clampStyle: scale, border and textures are clamped or defaulted', () => {
 
 test('save round trip: areas → tuples → JSON → areas gives the same areas; a bow-tie tuple is dropped', () => {
   const areas: PaintArea[] = [
-    { id: 1, pts: [0, 0, 8, 0, 8, 6, 0, 6], tex: 'slabs', scale: 1.5, angle: -30, border: 2, btex: 'kerb', radius: 0 },
-    { id: 2, pts: L_SHAPE, tex: 'grass', scale: 0.25, angle: 45, border: 0, btex: 'dirt', radius: 0 },
+    { id: 1, pts: [0, 0, 8, 0, 8, 6, 0, 6], tex: 'slabs', scale: 1.5, angle: -30, border: 2, btex: 'kerb', radius: 0, tone: 1, toneAmt: 0.6, tint: '#402010' },
+    { id: 2, pts: L_SHAPE, tex: 'grass', scale: 0.25, angle: 45, border: 0, btex: 'dirt', radius: 0, tone: 2, toneAmt: 0.2, tint: '#fff8e0' },
   ];
   const tuples = areas.map(toTuple);
   const back = fromTuples(JSON.parse(JSON.stringify(tuples)) as PaintTuple[]);
@@ -124,7 +124,7 @@ test('save round trip: areas → tuples → JSON → areas gives the same areas;
 });
 
 test('save round trip: a grass-v1 texture (golfGreen) keeps its name through toTuple → JSON → fromTuples', () => {
-  const area: PaintArea = { id: 1, pts: [0, 0, 6, 0, 6, 6, 0, 6], tex: 'golfGreen', scale: 2, angle: 15, border: 1, btex: 'lawnWorn', radius: 0 };
+  const area: PaintArea = { id: 1, pts: [0, 0, 6, 0, 6, 6, 0, 6], tex: 'golfGreen', scale: 2, angle: 15, border: 1, btex: 'lawnWorn', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
   const back = fromTuples(JSON.parse(JSON.stringify([toTuple(area)])) as PaintTuple[]);
   assert.deepEqual(back, [area]);
 });
@@ -160,10 +160,38 @@ test('roundCorners: a radius bigger than half an edge is clamped; the points sta
 test('radius: old 6-element tuples load sharp; toTuple/fromTuples round-trip a radius; clampStyle keeps it in [0, RADIUS_MAX]', () => {
   const old = fromTuples([['paving', 1, 0, 0, 'kerb', SQUARE]]);
   assert.equal(old[0]?.radius, 0);
-  const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 3), tex: 'pad', scale: 1, angle: 0, border: 1, btex: 'kerb', radius: 3.5 };
+  const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 3), tex: 'pad', scale: 1, angle: 0, border: 1, btex: 'kerb', radius: 3.5, tone: 0, toneAmt: 0.35, tint: '#000000' };
   const tuple = toTuple(area);
   assert.equal(tuple[6], 3.5);
   assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([tuple])) as PaintTuple[]), [area]);
   assert.equal(clampStyle({ ...DEFAULT_STYLE, radius: 99 }).radius, RADIUS_MAX);
   assert.equal(clampStyle({ ...DEFAULT_STYLE, radius: -3 }).radius, 0);
+});
+
+test('tone: clampStyle clamps the tone to 0..2, the strength to 0..1; a valid tint is kept (lower case), a bad one is the default for the mode', () => {
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, tone: junk<0 | 1 | 2>(7) }).tone, 2);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, tone: junk<0 | 1 | 2>(-1) }).tone, 0);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, tone: junk<0 | 1 | 2>(1.4) }).tone, 1);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, toneAmt: 3 }).toneAmt, 1);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, toneAmt: -0.5 }).toneAmt, 0);
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, tint: '#AABBCC' }).tint, '#aabbcc');
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, tint: 'red' }).tint, '#000000');
+  assert.equal(clampStyle({ ...DEFAULT_STYLE, tone: 2, tint: 'red' }).tint, '#ffffff');
+});
+
+test('tone: toTuple/fromTuples round-trip the tone, strength and tint; a 6- or 7-element tuple loads untoned', () => {
+  const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 3), tex: 'grass', scale: 1, angle: 0, border: 0, btex: 'kerb', radius: 0, tone: 2, toneAmt: 0.6, tint: '#f0e0c0' };
+  const tuple = toTuple(area);
+  assert.deepEqual([tuple[7], tuple[8], tuple[9]], [2, 0.6, '#f0e0c0']);
+  assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([tuple])) as PaintTuple[]), [area]);
+  const old6 = fromTuples([['paving', 1, 0, 0, 'kerb', SQUARE]]);
+  assert.deepEqual([old6[0]?.tone, old6[0]?.toneAmt, old6[0]?.tint], [0, 0.35, '#000000']);
+  const old7 = fromTuples([['paving', 1, 0, 0, 'kerb', SQUARE, 2]]);
+  assert.deepEqual([old7[0]?.tone, old7[0]?.radius], [0, 2]);
+});
+
+test('tone: the ground patch carries the tone only when it is on', () => {
+  const base: PaintArea = { id: 4, pts: SQUARE, tex: 'paving', scale: 1, angle: 0, border: 0, btex: 'kerb', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
+  assert.equal(PaintTool.patch(base).paint?.t, undefined);
+  assert.deepEqual(PaintTool.patch({ ...base, tone: 1, toneAmt: 0.5, tint: '#101010' }).paint, { s: 1, a: 0, b: 0, bt: 'kerb', z: 4, t: 1, ta: 0.5, tc: '#101010' });
 });

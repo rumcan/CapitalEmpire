@@ -8,10 +8,12 @@ export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 
 export type BorderTex = PaintTex | 'kerb';
 /** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
 export type BorderSize = 0 | 1 | 2 | 3;
-/** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge and corners rounded by radius (tiles, 0 sharp) */
-export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number }
-/** the save tuple: [tex, scale, angle, border, btex, pts, radius]; the radius is optional (older saves have none and load sharp) */
-export type PaintTuple = [string, number, number, number, string, number[], number?];
+/** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge, corners rounded by radius (tiles, 0 sharp),
+ *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb') */
+export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string }
+/** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint]; elements 6 to 9 are optional on load (older saves have no radius, and none
+ *  has no tone: they load sharp and untoned); toTuple always writes all ten */
+export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?];
 /** a tile box [x0, y0, x1, y1] */
 export type PaintBox = [number, number, number, number];
 
@@ -55,10 +57,12 @@ export const SCALE_MIN = 0.25, SCALE_MAX = 4;
 /** the largest corner radius in tiles (15 tiles = 30 m); 0 keeps the corners sharp */
 export const RADIUS_MAX = 15;
 /** the style a new area starts with */
-export const DEFAULT_STYLE: Omit<PaintArea, 'id' | 'pts'> = { tex: 'paving', scale: 1, angle: 0, border: 0, btex: 'kerb', radius: 0 };
+export const DEFAULT_STYLE: Omit<PaintArea, 'id' | 'pts'> = { tex: 'paving', scale: 1, angle: 0, border: 0, btex: 'kerb', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000' };
 
 const TEX_IDS = new Set<string>(PAINT_TEXES.map(t => t.id));
 const BTEX_IDS = new Set<string>(BORDER_TEXES.map(t => t.id));
+/** a '#rrggbb' colour */
+const TINT_RE = /^#[0-9a-fA-F]{6}$/;
 
 /** the signed shoelace area in tiles² (positive when the outline runs counter-clockwise on the map's axes) */
 export function polyArea(pts: number[]): number {
@@ -201,8 +205,9 @@ function wrapAngle(a: number): number { return a >= -90 && a <= 90 ? a : ((((a +
 
 const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 
-/** a copy of a style (or a whole area) with the scale, angle and border clamped and the textures checked (unknown → paving, kerb) */
+/** a copy of a style (or a whole area) with the scale, angle, border, radius and tone clamped and the textures and tint checked (unknown → paving, kerb; a bad tint → black, or white when lightening) */
 export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(s: T): T {
+  const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
     tex: TEX_IDS.has(s.tex) ? s.tex : 'paving',
@@ -211,20 +216,23 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(s: T): T {
     border: Math.min(3, Math.max(0, Math.round(fin(s.border, 0)))) as BorderSize,
     btex: BTEX_IDS.has(s.btex) ? s.btex : 'kerb',
     radius: Math.min(RADIUS_MAX, Math.max(0, fin(s.radius, 0))),
+    tone,
+    toneAmt: Math.min(1, Math.max(0, fin(s.toneAmt, 0.35))),
+    tint: TINT_RE.test(s.tint) ? s.tint.toLowerCase() : tone === 2 ? '#ffffff' : '#000000',
   };
 }
 
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
 
-/** a painted area as its save tuple (scale, angle and radius to 3 decimals) */
-export function toTuple(a: PaintArea): PaintTuple { return [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius)]; }
+/** a painted area as its save tuple (scale, angle, radius and strength to 3 decimals) */
+export function toTuple(a: PaintArea): PaintTuple { return [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint]; }
 
-/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped */
+/** the areas from save tuples: a tuple whose outline fails checkArea is skipped; ids 1..n over the kept ones, styles clamped (a missing radius is sharp, a missing tone is none) */
 export function fromTuples(ts: PaintTuple[]): PaintArea[] {
   const out: PaintArea[] = [];
   for (const t of ts) {
     if (checkArea(t[5]) !== '') continue;
-    const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex, radius: t[6] ?? 0 });
+    const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex, radius: t[6] ?? 0, tone: (t[7] ?? 0) as 0 | 1 | 2, toneAmt: t[8] ?? DEFAULT_STYLE.toneAmt, tint: t[9] ?? DEFAULT_STYLE.tint });
     out.push({ id: out.length + 1, pts: t[5].slice(), ...s });
   }
   return out;
