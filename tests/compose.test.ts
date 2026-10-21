@@ -248,13 +248,12 @@ test('the average uprights per archetype (log)', () => {
   console.log(`uprights per lot (decline 0, ${LOTS.length} lots x 2 seeds)\n  ${lines.join('\n  ')}`);
   const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
   assert.ok(avg('RES BUILT') >= 6, 'a house lot is one baked picture plus its fence layer (panels and planting)');
-  // TOUR 12.2 (was 13): on lots facing +/-X the venues are lettering, so they are flipped nowhere and those lots fall back to car parks
-  // (lettering.ts). The east-facing venue art (EAST_FACING, GOLF-SPRITES / PROGRESS) restores the old density: re-pin TOUR 13 and COM 11.5 then.
-  for (const [u, min] of [['IND', 14], ['TOUR', 12.2], ['GOV', 14]] as const) assert.ok(avg(`${u} BUILT`) >= min, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want ${min}+`);
+  // TOUR 13.7 (measured 13.705 with the east-facing venue art, prep-east.mjs; 12.3 without it, when the venues on lots facing +X were car parks)
+  for (const [u, min] of [['IND', 14], ['TOUR', 13.7], ['GOV', 14]] as const) assert.ok(avg(`${u} BUILT`) >= min, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want ${min}+`);
   // a shop's car park now runs from its back wall to the back line (the bush row there goes): 12+ instead of 14+
   // 11.5: the car park takes the back bush row (2026-10-21), and the straight-on shop variations left the pool (frontal.ts).
-  // 10.7 (was 11.5): the flipped shops on lots facing +/-X are car parks until the east-facing shop art arrives (see TOUR above)
-  assert.ok(avg('COM BUILT') >= 10.7, `COM BUILT averages ${avg('COM BUILT').toFixed(1)} uprights, want 10.7+`);
+  // 11.7 (measured 11.780 with the east-facing shop art; 10.8 without it, when the flipped shops on lots facing +X were car parks)
+  assert.ok(avg('COM BUILT') >= 11.7, `COM BUILT averages ${avg('COM BUILT').toFixed(1)} uprights, want 11.7+`);
 });
 
 test('RES houses keep a side yard of 1.3 tiles or more from the side line away from the drive (unbaked widths 10.5 and 12.5, 30 seeds each)', () => {

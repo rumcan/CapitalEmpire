@@ -56,7 +56,8 @@ const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
 
 const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
 const names = (ids: string[]) => ids.filter(id => BY.has(id));
-const cat = (f: (i: LibItem) => boolean) => LIBRARY.filter(f).map(i => i.id);
+/** the library ids of a filter, without the east-facing art (east:*: drawn only in place of a flipped front, EAST_FACING) */
+const cat = (f: (i: LibItem) => boolean) => LIBRARY.filter(i => !i.id.startsWith('east:') && f(i)).map(i => i.id);
 /** the footprint of a sprite at scale s, relative to its anchor (the union of its boxes, as the engine draws it) */
 function boxOf(id: string, s: number, flip: boolean): Box4 {
   const it = BY.get(id)!;
