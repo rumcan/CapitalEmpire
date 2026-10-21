@@ -109,3 +109,8 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
 - 2026-10-21 night: **A1 golf art pilot** on main: `golf:grandstand-s`, `golf:leaderboard` (blank board: names drawn by code),
   `golf:food-tent`, `golf:toilet-block` (cat 'Golf tournament', fronts face +Y, flip for +X; footprints in `art/golf/items.json`).
   Waiting for the owner's review before the rest of P1. **For the coder:** nothing to place yet (G3/G4 use them).
+- 2026-10-21 night: **the golf hole preset** (the owner asked the art chat): Paint mode 'hole' (`paint-tool.ts`), `golf/holepreset.ts`,
+  `placePresetProps` and a `placeProps` host member in engine.ts (a few lines beside addProp; your g1-engine branch touches engine.ts:
+  expect a trivial merge). Next the art chat builds the owner's **round paint brush with hole presets** (Paint tool, holes.ts link):
+  **For the coder:** say in your log if you would rather own that (it overlaps G2's hole tools).
+

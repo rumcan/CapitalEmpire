@@ -2086,4 +2086,14 @@ PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks l
   reaches the lot pools.
 - The owner's studio sizes for the golf pilot (food tent x0.68, grandstand x1.08, leaderboard x1.17) are in the scale table;
   `prep-golf.mjs` packs at the owner's size when bigger, so nothing is stretched.
+- **Golf hole preset (the owner's request):** Paint → **Golf hole**: one click lays a simple hole with its tee at the click (R turns it,
+  a ghost follows the cursor): rough, a striped fairway with a 2 m First cut band, a tee box, a green with a Fringe band, three bunkers
+  with Rough edges, a small pond with a dirt bank, the flag (`business:golf-pin-red` until `golf:flagstick` is made) and about 150
+  trees, bushes and flowers around it. Every piece is an ordinary painted area (Pick to edit, Erase to remove); the plants are props.
+  `src/game/golf/holepreset.ts` (pure, tested), the 'hole' mode in `paint-tool.ts`, `placePresetProps` in engine.ts. Browser-checked
+  on an empty map (8 areas, 157 props). Holes placed this way are not yet holes to `holes.ts` (no tee or pin markers): that comes
+  with the brush below.
+- **Next (the owner, 2026-10-21 night):** an easy **round isometric brush** for fairways, greens and cart paths, with presets the owner
+  can edit: click the Fairway preset button and paint at once, the strokes belonging to a hole. Design and build next (art chat;
+  the coder told in SECOND-AGENT.md). The owner's new art list is in GOLF-SPRITES.md "The owner's additions".
 
