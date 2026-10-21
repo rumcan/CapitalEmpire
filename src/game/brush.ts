@@ -124,14 +124,17 @@ function outline(lp: number[]): number[] | null {
     if (cr !== 0) c.push(lp[2 * i]! * CELL, lp[2 * i + 1]! * CELL);
   }
   const k = c.length >> 1; if (k < 3) return null;
-  const sm = smooth(resample(c, 0.5));
-  let tol = 0.12;
-  for (let tries = 0; tries < 4; tries++, tol *= 2) {
-    let t = tol, s = closed(sm, t);
-    while ((s.length >> 1) > MAX_PTS && t < 1e3) s = closed(sm, t *= 1.5);
-    if ((s.length >> 1) < 3 || (s.length >> 1) > MAX_PTS) continue;
-    const e = checkArea(s);
-    if (e === '' || (e.startsWith('Too big') && !crossings(s).length && Math.abs(polyArea(s)) >= MIN_AREA)) return s;
+  // the smoothed loop first; one too small to survive smoothing (a radius-1 dab) falls back to the resampled loop unsmoothed
+  const rs = resample(c, 0.5);
+  for (const src of [smooth(rs), rs]) {
+    let tol = 0.12;
+    for (let tries = 0; tries < 4; tries++, tol *= 2) {
+      let t = tol, s = closed(src, t);
+      while ((s.length >> 1) > MAX_PTS && t < 1e3) s = closed(src, t *= 1.5);
+      if ((s.length >> 1) < 3 || (s.length >> 1) > MAX_PTS) continue;
+      const e = checkArea(s);
+      if (e === '' || (e.startsWith('Too big') && !crossings(s).length && Math.abs(polyArea(s)) >= MIN_AREA)) return s;
+    }
   }
   return null;
 }
