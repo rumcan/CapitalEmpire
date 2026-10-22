@@ -359,7 +359,7 @@ export class City {
     return true;
   }
   /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
-  setGolf(g: { tier: number; rep: number } | null): void { this.golf = g; }
+  setGolf(g: { tier: number; rep: number } | null): void { this.golf = g; this.round.golf = !!g; }
   /** starts the season's tournament at the day's boundary `at` (see step), in golf mode with a site and a free round: the round takes one tournament day's
    *  crowd (spectatorDemand of the tier and reputation, a car per PARTY fans, over the towns by population), the clock is frozen at `at` as startRound
    *  freezes it, and the surge begins at once (the season was the build). False, and nothing changes, otherwise */
@@ -971,7 +971,7 @@ export class City {
     // the money: the payout (signed) is paid now in classic mode (golf mode replaces it with purse and sponsors), the net is the toll and payout less the upkeep
     L.perfect = L.rate >= PERFECT_RATE; L.payout = this.golf ? 0 : payout(L.rate, L.level);
     // the tickets: a ticket per fan at the doors (golf tier ticket price in golf mode, stadium ticket price in classic mode; booked as business takings)
-    const tk = arrived * (this.golf ? golfTicketPrice(this.golf.tier) : ticketPrice(this.round.cards));
+    const tk = Math.round(arrived * (this.golf ? golfTicketPrice(this.golf.tier, this.round.cards) : ticketPrice(this.round.cards)));
     if (tk > 0) { L.tickets = tk; this.budget.bizIncome(tk); } else if (this.golf) { L.tickets = 0; }
     L.net = (L.toll ?? 0) + (L.tickets ?? 0) + L.payout - L.upkeep;
     const st = this.businesses.find(b => b.type === 'stadium'), s = st ? this.bizStats.get(st.id) : undefined;
@@ -1133,7 +1133,7 @@ export class City {
     return out;
   }
   /** the round from a save (see Round.from): any surge under way is dropped with its party cars */
-  loadRound(s?: RoundSave): void { this.round = Round.from(s); this.grown = null; this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); this.applyCards(); }
+  loadRound(s?: RoundSave): void { const g = !!this.golf; this.round = Round.from(s); this.round.golf = g; this.grown = null; this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); this.applyCards(); }
   /** the round as the UI and the frame see it: with the surge's counts by town while the surge runs or its result is in (null otherwise) */
   roundView(): RoundView {
     const v = this.round.view();

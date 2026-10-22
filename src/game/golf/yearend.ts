@@ -48,6 +48,17 @@ export function annualMembershipIncome(qualityScore: number, reputation: number,
   return monthlyMembershipIncome(qualityScore, reputation, holes) * 12;
 }
 import { computeSponsorBreakdown } from './sponsors';
+import {
+  applyCourseConsultantQuality,
+  applyEarlyBirdTicketPrice,
+  applyMediaPartnerReputation,
+  applyRainInsuranceToDayFacts,
+  applyRainInsuranceToSatisfaction,
+  applyVolunteerCorpsCost,
+  earlyBirdArrivalShare,
+  hasExpressGates,
+  hasFirstAidCoverage,
+} from './golfcards';
 import { resolveMultiDayTournament, type MultiDaySummary } from './multiday';
 import {
   WEATHER_INFO,
@@ -98,8 +109,8 @@ weather?: WeatherInfo;
  * (35m exit P95, 5m average queue, 0.85 viewing satisfaction) until dedicated structures are placed.  
  */  
 /** ticket price ($) per arrived spectator for a golf tournament at the given tier (0 at tier 1) */
-export function golfTicketPrice(tier: number): number {
-  return tierInfo(tier).ticket;
+export function golfTicketPrice(tier: number, cards: readonly string[] = []): number {
+  return applyEarlyBirdTicketPrice(tierInfo(tier).ticket, cards);
 }
 
 /** financial booking lines when closing a golf tournament round (income to business, costs to upkeep) */
@@ -114,6 +125,15 @@ export interface TournamentCloseBook {
   annualTentUpkeep: number;
   annualCourseUpkeep: number;
   upkeepCost: number;
+  liveTickets: number;
+  tickets: number;
+  tents: number;
+  sponsors: number;
+  tv: number;
+  toll: number;
+  liveUpkeep: number;
+  closeDelta: number;
+  net: number;
 }
 
 /**
@@ -126,6 +146,8 @@ export function computeTournamentCloseBook(
   ye: YearEndResult,
   liveDayTicketsBooked = 0,
   courseAreas: Parameters<typeof courseMonthlyUpkeep>[0] = [],
+  liveDayUpkeep = 0,
+  liveDayToll = 0,
 ): TournamentCloseBook {
   const extraTickets = (ye.multiDay && ye.multiDay.resolvedDays > 0)
     ? Math.max(0, ye.multiDay.totalTickets - liveDayTicketsBooked)
@@ -141,6 +163,15 @@ export function computeTournamentCloseBook(
   const annualTentUpkeep = Math.max(0, Math.round((ye.tentUpkeep ?? 0) * 12));
   const annualCourseUpkeep = Math.max(0, Math.round(courseMonthlyUpkeep(courseAreas) * 12 * COURSE_UPKEEP_YEAR_SHARE));
   const upkeepCost = purse + rent + annualTentUpkeep + annualCourseUpkeep;
+  const liveTickets = Math.max(0, Math.round(liveDayTicketsBooked));
+  const tickets = liveTickets + extraTickets;
+  const tents = Math.max(0, Math.round((ye.tentRevenue ?? 0) + extraTents));
+  const sponsors = Math.max(0, Math.round(ye.sponsorIncome ?? 0));
+  const tv = Math.max(0, Math.round(ye.tvIncome ?? 0));
+  const toll = Math.max(0, Math.round(liveDayToll));
+  const liveUpkeep = Math.max(0, Math.round(liveDayUpkeep));
+  const closeDelta = bizIncome - upkeepCost;
+  const net = toll + liveTickets - liveUpkeep + closeDelta;
   return {
     extraTickets,
     extraTents,
@@ -152,6 +183,15 @@ export function computeTournamentCloseBook(
     annualTentUpkeep,
     annualCourseUpkeep,
     upkeepCost,
+    liveTickets,
+    tickets,
+    tents,
+    sponsors,
+    tv,
+    toll,
+    liveUpkeep,
+    closeDelta,
+    net,
   };
 }
 
@@ -169,18 +209,23 @@ export function gateLanesFor(structures: readonly PlacedEventStructure[], tier: 
 export function measureGateFlows(
   spectators: number,
   lanes: number,
+  cardsOrExpress: boolean | readonly string[] = false,
 ): { avgQueueMin: number; onTime: number; late: number; exitP95Min: number } {
   if (spectators <= 0) return { avgQueueMin: 0, onTime: 0, late: 0, exitP95Min: 0 };
   if (lanes <= 0) return { avgQueueMin: 120, onTime: 0, late: spectators, exitP95Min: 120 };
 
-  const rate = gateRate(lanes, false);
+  const cardsList = Array.isArray(cardsOrExpress) ? cardsOrExpress : [];
+  const express = typeof cardsOrExpress === 'boolean' ? cardsOrExpress : hasExpressGates(cardsList);
+  const rate = gateRate(lanes, express);
 
   // 1. Arrival flow: GATES_OPEN (420) to 780
   const arrivalsPerMinute: number[] = [];
   for (let t = GATES_OPEN; t < 780; t++) {
-    arrivalsPerMinute.push(spectators * (arrivalShare(t + 1) - arrivalShare(t)));
+    const shareNext = cardsList.length > 0 ? earlyBirdArrivalShare(t + 1, cardsList) : arrivalShare(t + 1);
+    const shareCur = cardsList.length > 0 ? earlyBirdArrivalShare(t, cardsList) : arrivalShare(t);
+    arrivalsPerMinute.push(spectators * (shareNext - shareCur));
   }
-  const gq = gateQueue(arrivalsPerMinute, lanes, false);
+  const gq = gateQueue(arrivalsPerMinute, lanes, express);
   let runningQ = 0, onTime = 0, late = 0;
   for (const a of arrivalsPerMinute) {
     if (a > 0) {
@@ -236,6 +281,7 @@ structures: readonly PlacedEventStructure[] = [],
 holes: readonly Hole[] = [],
 seedOrWeather?: number | WeatherCondition,
 qualityScore?: number,
+cards: readonly string[] = [],
 ): YearEndResult {
 const weather: WeatherInfo = typeof seedOrWeather === 'string'
   ? WEATHER_INFO[seedOrWeather]
@@ -246,7 +292,8 @@ const totalArrived = roundResult.arrived;
 const missed = Math.max(0, roundResult.sent * PARTY - totalArrived); // sent counts cars, arrived counts spectators (PARTY a car)
 
 const lanes = gateLanesFor(structures, prevTier);
-const gateFlow = measureGateFlows(totalArrived, lanes);
+const gateFlow = measureGateFlows(totalArrived, lanes, cards);
+const rawFacts: DayFacts = { onTime: gateFlow.onTime, late: gateFlow.late, missed, exitP95Min: gateFlow.exitP95Min, avgQueueMin: gateFlow.avgQueueMin, viewing: DEFAULT_VIEWING };
 const dayFacts: DayFacts = applyWeatherToDayFacts({
   onTime: gateFlow.onTime,
   late: gateFlow.late,
@@ -255,6 +302,8 @@ const dayFacts: DayFacts = applyWeatherToDayFacts({
   avgQueueMin: gateFlow.avgQueueMin,
   viewing: DEFAULT_VIEWING,
 }, weather.condition);
+const insuredFacts = applyRainInsuranceToDayFacts(rawFacts, dayFacts, weather.condition, cards);
+Object.assign(dayFacts, insuredFacts);
 const effectiveArrived = dayFacts.onTime + dayFacts.late;
 
 let tentRevenue = 0;
@@ -270,19 +319,20 @@ if (structures.length > 0) {
  spectators: effectiveArrived,
  });
  tentRevenue = applyWeatherToTentRevenue(tentEval.totalRevenue, weather.condition, tentEval.byStructure);
- tentRentCost = tentEval.rentCost;
- tentUpkeep = tentEval.monthlyUpkeep;
+ tentRentCost = applyVolunteerCorpsCost(tentEval.rentCost, cards);
+ tentUpkeep = applyVolunteerCorpsCost(tentEval.monthlyUpkeep, cards);
 }
   
- const satisfaction = applyWeatherToSatisfaction(
+ let satisfaction = applyWeatherToSatisfaction(
    Math.round(daySatisfaction(dayFacts)),
    weather.condition,
-   hasFirstAidStructure(structures),
+   hasFirstAidStructure(structures) || hasFirstAidCoverage(structures, cards),
  );  
- const rep = Math.round(reputationAfter(prevRep, satisfaction));  
- const commercial = computeSponsorBreakdown(prevTier, rep, courseFacts.have);
+ satisfaction = applyRainInsuranceToSatisfaction(Math.round(daySatisfaction(dayFacts)), satisfaction, cards);
+ const rep = applyMediaPartnerReputation(Math.round(reputationAfter(prevRep, satisfaction)), cards);  
+ const commercial = computeSponsorBreakdown(prevTier, rep, courseFacts.have, cards);
  const hasOffSeasonCourse = qualityScore !== undefined || holes.length > 0;
- const effQuality = qualityScore ?? (holes.length > 0 ? 85 : 0);
+ const effQuality = applyCourseConsultantQuality(qualityScore ?? (holes.length > 0 ? 85 : 0), cards);
  const offSeasonHoles = hasOffSeasonCourse ? courseFacts.holes : 0;
  const golfersPerDay = dailyGolfers(effQuality, prevRep, offSeasonHoles);
  const greenFees = greenFeeIncome(effQuality, prevRep, offSeasonHoles);
@@ -317,7 +367,7 @@ if (structures.length > 0) {
    tier: prevTier,
    liveArrived: effectiveArrived,
    liveTents: tentRevenue,
-   ticketPrice: tierInfo(prevTier).ticket,
+   ticketPrice: golfTicketPrice(prevTier, cards),
    sponsorIncome: commercial.sponsorIncome,
    tvIncome: commercial.tvIncome,
    purse: commercial.purse,

@@ -58,6 +58,7 @@ import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { parkRideNeeds } from './golf/parkride';
+import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
 import { adjacentBlockPrice, buyAdjacentBlock, isAdjacentBlock, polyInParcels, type ParcelLandClass } from './golf/parcels';
@@ -2173,7 +2174,7 @@ export class Game {
   this.golf.rep = ye.rep;
   this.golf.poorYears = ye.poorYears;
   this.traffic.setGolf(true, this.golf.tier, this.golf.rep);
-  const book = computeTournamentCloseBook(ye, this.traffic.round.last.tickets ?? 0, this.paint.areas);
+  const book = computeTournamentCloseBook(ye, this.traffic.round.last.tickets ?? 0, this.paint.areas, this.traffic.round.last.upkeep, this.traffic.round.last.toll ?? 0);
   if (book.bizIncome > 0) {
   this.traffic.spend('business', -book.bizIncome);
   }
@@ -2712,7 +2713,8 @@ export class Game {
   const curM = this.golfMonthIndex();
   if (curM !== this.lastGolfMonth) {
   this.lastGolfMonth = curM;
-  for (const a of this.paint.areas) if (a.plantKind === 'seed' && a.plantedMonth !== undefined) this.paint.send(a, curM); // only areas still growing in change with the month
+  const effM = effectiveGrowInClockMonth(curM, this.golf.cards ?? this.traffic.round.cards);
+  for (const a of this.paint.areas) if (a.plantKind === 'seed' && a.plantedMonth !== undefined) this.paint.send(a, effM); // only areas still growing in change with the month
   }
   return { tier, tierName: tierInfo(tier).name, month: seasonLabel(r.stage !== 'free' ? c - 1 : c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
   }
@@ -2738,7 +2740,10 @@ export class Game {
   const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
   for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
-  return buildCourseStatsPanel(layout, this.golf.tier, have, curM);
+  const gCards = this.golf.cards ?? this.traffic.round.cards;
+  for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
+  const panel = buildCourseStatsPanel(layout, this.golf.tier, have, effectiveGrowInClockMonth(curM, gCards));
+  return { ...panel, qualityScore: applyCourseConsultantQuality(panel.qualityScore, gCards) };
   }
   /** evaluates tournament day outcome and tour progression (null outside golf mode or without a finished round) */
   golfYearEnd(last = this.traffic.round.last): YearEndResult | null {
@@ -2749,7 +2754,10 @@ export class Game {
   if (this.parkDefs.length > 0) have.add('carpark');
   for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
-  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, stats?.qualityScore ?? 85);
+  const gCards = this.golf.cards ?? this.traffic.round.cards;
+  for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
+  const baseQ = stats ? buildCourseStatsPanel({ areas: this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts, plantKind: a.plantKind, plantedMonth: a.plantedMonth })), tees: this.golf.tees, pins: this.golf.pins, aims: this.golf.aims, clubhouse: this.golf.clubhouse }, this.golf.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards)).qualityScore : 85;
+  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
@@ -2764,7 +2772,7 @@ export class Game {
   /** a road class is open to build: every class in event mode, else as the Career unlocks it */
   classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
   /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
-  junctionOpen(t: NodeType): boolean { return this.sandboxUnlock ? true : this.eventMode ? t !== 'roundabout' || this.traffic.round.cards.includes('roundabout') : junctionUnlocked(t, this.reached); }
+  junctionOpen(t: NodeType): boolean { if (this.golf?.cards?.includes('roundabout') && t === 'roundabout') return true; return this.sandboxUnlock ? true : this.eventMode ? t !== 'roundabout' || this.traffic.round.cards.includes('roundabout') : junctionUnlocked(t, this.reached); }
   /** the highest speed-limit tier open: the year's (see speedTierOpen), all of them with the dev sandbox's unlock-all */
   speedTierMax(): 0 | 1 | 2 | 3 { return this.sandboxUnlock ? 3 : speedTierOpen(this.traffic.round.year); }
   /** every road's speed limit raised by the tier's km/h (0 the roads' own limits): free, once its year has come; the lanes rebuild at the new limits */
@@ -2779,7 +2787,7 @@ export class Game {
   /** tunnels are open: always in event mode, else as the Career unlocks them */
   tunnelsOpen(): boolean { return this.sandboxUnlock || this.eventMode || tunnelsUnlocked(this.reached); }
   /** takes a card of the eval's draft (the worker refuses what is not on it); its effects follow with the next frame (see applyCards) */
-  pickCard(id: CardId) { this.traffic.pickCard(id); this.emit(); }
+  pickCard(id: CardId) { if (this.golf && isGolfCardId(id) && this.traffic.round.stage === 'eval' && this.traffic.round.draft?.includes(id)) { this.golf.cards = [...(this.golf.cards ?? []), id]; this.scheduleSave(); } this.traffic.pickCard(id); this.emit(); }
   /** the new toll gates' booths, the new bus routes' buses and the seats of a bus, as the cards given set them (see applyCards; on load, the cards applied) */
   private setCardFields(cards: CardId[]) {
     this.tollBooths = START_BOOTHS + 2 * cards.filter(c => c === 'booths').length;
@@ -2795,7 +2803,9 @@ export class Game {
       if (id === 'booths') { this.tollBooths += 2; for (const d of this.tollDefs) { d.booths += 2; const b = tollBox(d); this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!); } this.syncTolls(true); }
       else if (id === 'buses') { this.busFleet += 4; for (const d of this.busDefs) d.buses += 4; this.traffic.setBusRoutes(this.busDefs); }
       else if (id === 'doubledecker') { this.busSeats = DECK_SEATS; for (const d of this.busDefs) d.seats = Math.max(d.seats, DECK_SEATS); this.traffic.setBusRoutes(this.busDefs); }
-      this.toast(`Card: ${CARDS.find(c => c.id === id)!.name}`, 'good');
+      if (this.golf) this.golf.cards = cards.filter(isGolfCardId);
+      const cardName = findGolfCard(id)?.name ?? CARDS.find(c => c.id === id)?.name ?? id;
+      this.toast(`Card: ${cardName}`, 'good');
     }
     this.cardsApplied = cards.length; this.scheduleSave(); this.emit();
   }
@@ -2836,6 +2846,7 @@ export class Game {
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = d.golf ?? null;
+      if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
       if (d.golf) { this.townPts = [d.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
       if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
