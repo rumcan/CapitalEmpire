@@ -16,6 +16,7 @@ export interface GolfSave {
  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
  parcels?: Rect[];
  structures?: PlacedEventStructure[];
+ cards?: string[];
 }
 
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament

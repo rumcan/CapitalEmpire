@@ -150,7 +150,7 @@ export const CARDS = [
   { id: 'season', name: 'Season tickets', desc: 'The stadium ticket costs $3 more', kind: 'upgrade' },
 ] as const;
 /** a card's id (see CARDS) */
-export type CardId = (typeof CARDS)[number]['id'];
+export type CardId = (typeof CARDS)[number]['id'] | import('../golf/golfcards').GolfCardId;
 /** the cards offered at each kick-off (fewer when the pool has fewer left) */
 export const DRAFT = 3;
 /** the demand multiplier each Promotion card gives every visit business (compounding) */

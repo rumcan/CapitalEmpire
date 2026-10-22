@@ -8,11 +8,12 @@ export function hasTvRequirements(haveNeeds: ReadonlySet<Need> | readonly Need[]
 }
 
 /** sponsor money ($) for a tournament: 0 at tier 1; for tier 2+, scales linearly by reputation / 100 (full at 100) */
-export function computeSponsorIncome(tier: number, reputation: number): number {
+import { applySponsorDealIncome } from './golfcards';
+export function computeSponsorIncome(tier: number, reputation: number, cards: readonly string[] = []): number {
   if (tier < 2) return 0;
   const tInfo = tierInfo(tier);
   const repFactor = Math.max(0, Math.min(100, reputation)) / 100;
-  return Math.round(tInfo.sponsor * repFactor);
+  return applySponsorDealIncome(Math.round(tInfo.sponsor * repFactor), cards);
 }
 
 /** TV broadcast rights money ($): tier 4 and above, requiring tvTowers and broadcast structures from structuresNeeds */
@@ -40,8 +41,8 @@ export interface SponsorBreakdown {
 }
 
 /** compute full sponsor, TV rights, and purse breakdown for a tournament */
-export function computeSponsorBreakdown(tier: number, reputation: number, haveNeeds: ReadonlySet<Need> | readonly Need[]): SponsorBreakdown {
-  const sponsorIncome = computeSponsorIncome(tier, reputation);
+export function computeSponsorBreakdown(tier: number, reputation: number, haveNeeds: ReadonlySet<Need> | readonly Need[], cards: readonly string[] = []): SponsorBreakdown {
+  const sponsorIncome = computeSponsorIncome(tier, reputation, cards);
   const tvIncome = computeTvIncome(tier, haveNeeds);
   const purse = computePurseCost(tier);
   const hasTvRights = tier >= 4 && hasTvRequirements(haveNeeds);

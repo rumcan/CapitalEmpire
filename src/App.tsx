@@ -22,7 +22,9 @@ import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { STRUCTURES } from './game/golf/tents';
+import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
+import { computeTournamentCloseBook } from './game/golf/yearend';
 import { Icon, type IconName } from './ui/Icon';
 import { NightPanel } from './ui/NightPanel';
 import { RoadThumb } from './ui/RoadThumb';
@@ -530,6 +532,7 @@ function EvalScreen({ game }: { game: Game }) {
  if (!last) return null;
  const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
  const ye = golf ? game.golfYearEnd(last) : null;
+ const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.paint.areas, last.upkeep, last.toll ?? 0) : null;
  return (
  <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
  <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
@@ -586,7 +589,7 @@ function EvalScreen({ game }: { game: Game }) {
           ))}
         </div>
         <p className="text-sm text-slate-200">
-        Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{ye?.greenFeeIncome !== undefined && ye.greenFeeIncome > 0 && <> · Green fees <span className="tabular-nums text-emerald-300">{sgn(ye.greenFeeIncome)}</span></>}{ye?.membershipIncome !== undefined && ye.membershipIncome > 0 && <> · Memberships <span className="tabular-nums text-emerald-300">{sgn(ye.membershipIncome)}</span></>}{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ye.multiDay.totalTickets : last.tickets)}</span></>}{ye?.tentRevenue !== undefined && ye.tentRevenue > 0 && <> · Tents <span className="tabular-nums text-emerald-300">{sgn((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ye.multiDay.totalTents : ye.tentRevenue)}</span></>}{ye?.sponsorIncome !== undefined && ye.sponsorIncome > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(ye.sponsorIncome)}</span></>}{ye?.tvIncome !== undefined && ye.tvIncome > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(ye.tvIncome)}</span></>}{ye?.purse !== undefined && ye.purse > 0 && <> · Purse <span className="tabular-nums text-red-300">−{money(ye.purse)}</span></>}{!golf && <> · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span></>} · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${(last.net + (ye?.greenFeeIncome ?? 0) + (ye?.membershipIncome ?? 0) + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0) + ((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? (Math.max(0, ye.multiDay.totalTickets - (last.tickets ?? 0)) + Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))) : 0)) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net + (ye?.greenFeeIncome ?? 0) + (ye?.membershipIncome ?? 0) + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0) + ((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? (Math.max(0, ye.multiDay.totalTickets - (last.tickets ?? 0)) + Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))) : 0))}</span>
+        {book ? (<>{book.toll > 0 && <>Toll <span className="tabular-nums text-emerald-300">{sgn(book.toll)}</span> · </>}Green fees <span className="tabular-nums text-emerald-300">{sgn(book.greenFeeIncome)}</span> · Memberships <span className="tabular-nums text-emerald-300">{sgn(book.membershipIncome)}</span> · Tickets <span className="tabular-nums text-emerald-300">{sgn(book.tickets)}</span> · Tents <span className="tabular-nums text-emerald-300">{sgn(book.tents)}</span>{book.sponsors > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(book.sponsors)}</span></>}{book.tv > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(book.tv)}</span></>} · Purse <span className="tabular-nums text-red-300">−{money(book.purse)}</span> · Tent rent <span className="tabular-nums text-red-300">−{money(book.rent)}</span> · Tent upkeep <span className="tabular-nums text-red-300">−{money(book.annualTentUpkeep)}</span> · Course upkeep <span className="tabular-nums text-red-300">−{money(book.annualCourseUpkeep)}</span>{book.liveUpkeep > 0 && <> · Upkeep <span className="tabular-nums text-red-300">−{money(book.liveUpkeep)}</span></>} · Net <span className={`tabular-nums ${book.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(book.net)}</span></>) : (<>Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span></>)}
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">
@@ -603,7 +606,7 @@ function EvalScreen({ game }: { game: Game }) {
           <div className="space-y-2">
             <p className="text-sm font-semibold text-slate-100">Pick a card</p>
             <div className="grid grid-cols-3 gap-2">
-              {r.draft.map(id => { const c = CARDS.find(q => q.id === id)!; return (
+              {r.draft.map(id => { const c = (golf ? findGolfCard(id) : undefined) ?? CARDS.find(q => q.id === id); if (!c) return null; return (
                 <button key={id} className="flex flex-col rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-amber-400/50 hover:bg-white/10" onClick={() => game.pickCard(id)}>
                   <span className="flex items-start justify-between gap-1">
                     <span className="text-sm font-semibold text-slate-100">{c.name}</span>
@@ -613,6 +616,12 @@ function EvalScreen({ game }: { game: Game }) {
                 </button>
               ); })}
             </div>
+          </div>
+        )}
+        {golf && (game.golf?.cards ?? r.cards).length > 0 && (
+          <div className="space-y-1 rounded-lg bg-white/5 p-2 text-xs">
+            <p className="font-semibold text-amber-200">Club cards</p>
+            {(game.golf?.cards ?? r.cards).map((id, idx) => { const c: GolfCardDef | undefined = findGolfCard(id); return c ? <p key={`${id}-${idx}`} className="text-slate-300"><span className="font-semibold text-white">{c.name}</span> · <span className="text-slate-400">{c.desc}</span></p> : null; })}
           </div>
         )}
         <div className="flex items-center justify-end gap-3 pt-1">

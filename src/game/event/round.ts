@@ -34,7 +34,9 @@ export type RoundSave = Omit<RoundView, 'surge' | 'year'>;
 
 /** the draft offered at kick-off: DRAFT distinct cards (fewer when the pool has fewer), drawn by a seeded stream (SURGE_SEED + 1000 * xp + runs)
  *  from the pool: every upgrade, and each unlock not yet taken; null when the pool is empty */
-export function draftFor(xp: number, runs: number, taken: CardId[]): CardId[] | null {
+import { golfDraftFor } from '../golf/golfcards';
+export function draftFor(xp: number, runs: number, taken: CardId[], golf = false): CardId[] | null {
+  if (golf) return golfDraftFor(xp, runs, taken);
   const pool: CardId[] = CARDS.filter(c => c.kind === 'upgrade' || !taken.includes(c.id)).map(c => c.id);
   const rnd = mulberry(SURGE_SEED + 1000 * xp + runs), out: CardId[] = [];
   while (out.length < DRAFT && pool.length) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0]!);
@@ -61,7 +63,7 @@ export class Round {
   last: RoundResult | null = null;
   /** the player level (starts at 1: each card taken raises it by one), the cards taken (in order: an unlock once, an upgrade again), and the draft
    *  open at kick-off (null: none; close needs it picked) */
-  xp = 1; cards: CardId[] = []; draft: CardId[] | null = null;
+  xp = 1; cards: CardId[] = []; draft: CardId[] | null = null; golf = false;
 
   /** starts a round with the crowd (free to build): the build lasts BUILD_S; false if a round is not free */
   start(crowd: number[]): boolean {
@@ -95,7 +97,7 @@ export class Round {
     const prev = this.last;
     this.last = { level: this.level, run: this.runs + 1, sent, arrived: 0, rate: 0, upkeep: this.upkeep, ...(this.toll ? { toll: this.toll } : {}), payout: 0, net: 0,
       prevRate: prev && prev.level === this.level ? prev.rate : null, stuck: [], perfect: false, byTown: [] };
-    this.draft = draftFor(this.xp, this.runs, this.cards);
+    this.draft = draftFor(this.xp, this.runs, this.cards, this.golf);
     return true;
   }
   /** the player takes a card of the open draft (eval only): it joins cards, xp goes up by one and the draft closes; false otherwise */
