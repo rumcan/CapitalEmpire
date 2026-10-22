@@ -378,6 +378,12 @@ http.createServer(async (req, res) => {
       if (old !== p.id) fs.rmSync(PRESET_PIC(old), { force: true });
       fs.writeFileSync(PRESET_PIC(p.id), pic); writePresets(f); return json({ ...f, saved: p.id });
     }
+    if (req.method === 'POST' && P === '/api/preset-lawn') {
+      // { id, lawn }: the Town lawns picker switches one preset on or off for the lawns (its picture stays as baked)
+      const { id, lawn } = await body(req), f = readPresets(), p = f.presets.find(q => q.id === id);
+      if (!p || typeof lawn !== 'boolean') { res.writeHead(400); return res.end('no such preset'); }
+      p.lawn = lawn; writePresets(f); return json(f);
+    }
     if (req.method === 'POST' && P === '/api/preset-delete') {
       const { id } = await body(req), f = readPresets();
       f.presets = f.presets.filter(q => q.id !== id); fs.rmSync(PRESET_PIC(String(id)), { force: true }); writePresets(f); return json(f);

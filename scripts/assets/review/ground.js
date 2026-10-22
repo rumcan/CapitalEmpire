@@ -182,7 +182,7 @@ function setMode(m) {
 function editPreset(p) {
   const base = grassF ?? saved;
   F = p ? { a: clone(p.a), b: clone(p.b), mix: clone(p.mix) } : { a: clone(base.a), b: clone(base.b), mix: clone(base.mix) };
-  PM = p ? { id: p.id, name: p.name, surface: p.surface, size: p.size, stripes: clampStripes(p.stripes), lawn: p.lawn !== false } : { id: null, name: '', surface: null, size: 8, stripes: clone(DEFAULT_STRIPES), lawn: true };
+  PM = p ? { id: p.id, name: p.name, surface: p.surface, size: p.size, stripes: clampStripes(p.stripes) } : { id: null, name: '', surface: null, size: 8, stripes: clone(DEFAULT_STRIPES) };
   pSaved = p ? JSON.stringify([F, PM]) : ''; build(); rebuild();
 }
 function buildPreset() {
@@ -197,13 +197,10 @@ function buildPreset() {
     modeChips(),
     hint('Make a texture for the game\'s Paint tool from any two pictures, the way the map grass is made. Give it a name, the golf surface it stands for (its costs, grow-in and course quality; the Course tool uses the first preset of each surface) and the tiles one repeat covers. Save preset, then Rebuild game sprites to see it in Paint. Paint offers only these presets.'),
     el('h3', { textContent: 'Presets' }), list,
+    lawnPicker(),
     el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Name' }), name),
     el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Golf surface' }), surf),
     slider('Size', () => PM.size, v => { PM.size = v; }, PRE.size, 0.5, v => `${v.toFixed(1)} tiles`),
-    el('div', { className: 'prow', title: "The town's lawns pick from the presets switched on here: each house lot's yard, and the grass of every road block (in soft patches). Save, then Rebuild game sprites." },
-      el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Town lawns' }),
-      el('button', { className: 'chip' + (PM.lawn ? ' on' : ''), textContent: 'Use on lawns', onclick: () => { PM.lawn = true; build(); msg(dirty() ? 'not saved' : 'saved'); } }),
-      el('button', { className: 'chip' + (!PM.lawn ? ' on' : ''), textContent: 'Not on lawns', onclick: () => { PM.lawn = false; build(); msg(dirty() ? 'not saved' : 'saved'); } })),
     el('div', { className: 'row', style: 'padding:0;margin:8px 0 12px;gap:6px' }, btn(PM.id ? 'Save preset' : 'Save as new preset', savePreset, 'gold'), PM.id ? btn('Delete preset', deletePreset, 'red') : null),
     sideBlock('a'), sideBlock('b'),
     el('div', { className: 'row', style: 'padding:0;margin-bottom:10px' }, btn('Swap A and B', () => { [F.a, F.b] = [F.b, F.a]; build(); rebuild(); })),
@@ -241,12 +238,25 @@ function stripeBlock() {
     slider('Colour', () => st.tint, v => { st.tint = v; }, R.tint, 0.01, pct),
     slider('Edge softness', () => st.soft, v => { st.soft = v; }, R.soft, 0.01, pct)];
 }
+/** the Town lawns picker: every preset, ticked when the town's lawns may use it (each house lot's yard, the road blocks' grass); a click saves
+ *  at once (no re-bake); Rebuild game sprites to see it in the game */
+function lawnPicker() {
+  const row = el('div', { style: 'display:flex;flex-wrap:wrap;gap:4px;margin:0 0 10px;align-items:center' },
+    el('span', { style: 'font-size:12px;color:var(--dim);margin-right:4px', textContent: 'Town lawns use:' }));
+  for (const p of PRE.presets) row.append(el('button', { className: 'chip' + (p.lawn !== false ? ' on' : ''), title: p.lawn !== false ? 'On: lots and road blocks may use it. Click to leave it out.' : 'Off: the lawns never use it. Click to use it.', textContent: (p.lawn !== false ? '✓ ' : '') + p.name, onclick: async () => {
+    const r = await fetch('/api/preset-lawn', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: p.id, lawn: p.lawn === false }) });
+    if (!r.ok) { msg(await r.text()); return; }
+    const d = await r.json(); PRE = { ...PRE, presets: d.presets }; build(); msg('town lawns saved: Rebuild game sprites to see it in the game');
+  } }));
+  if (!PRE.presets.some(p => p.lawn !== false)) row.append(hint('None ticked: the town keeps the map grass.'));
+  return row;
+}
 async function savePreset() {
   if (!mixed || !PM.name.trim()) { msg('give the preset a name'); return; }
   const id = presetSlug(PM.name); if (!id) { msg('the name needs a letter or a digit'); return; }
   msg('saving preset…');
   const blob = await mixed.convertToBlob({ type: 'image/png' }), b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
-  const r = await fetch('/api/preset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ preset: { id, name: PM.name, surface: PM.surface, size: PM.size, a: F.a, b: F.b, mix: F.mix, stripes: PM.stripes, lawn: PM.lawn }, png: b64, replaces: PM.id ?? undefined }) });
+  const r = await fetch('/api/preset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ preset: { id, name: PM.name, surface: PM.surface, size: PM.size, a: F.a, b: F.b, mix: F.mix, stripes: PM.stripes, lawn: PRE.presets.find(q => q.id === PM.id)?.lawn !== false }, png: b64, replaces: PM.id ?? undefined }) });
   if (!r.ok) { msg(await r.text()); return; }
   const d = await r.json(); PRE = { ...PRE, presets: d.presets }; editPreset(PRE.presets.find(p => p.id === d.saved) ?? null);
   msg('preset saved: Rebuild game sprites to see it in Paint');
