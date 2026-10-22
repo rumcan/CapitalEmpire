@@ -2199,4 +2199,5 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   strongest opacity, random mirroring and which pictures; each layer has its own seeded stream. **The nature patches (the massive 16 m
   clumps) are off** (the owner asked); the others are as before. Studio → Ground → **Map decals** edits them on the preview (the game's own
   placement and drawing), Save decals writes the json, Rebuild game sprites puts it in the game. Tests: `tests/map-decals.test.ts` (4).
+- **docs/GRASS-SYSTEM.md** for the agent building grass management (the owner asked): the ground layers, golf grow-in, where wear could hook in, owners, how to run.
 - **Studio button** in the game's top-right HUD, only on localhost: opens the studio (5179); its Rebuild rebuilds what 5174 serves.
