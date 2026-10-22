@@ -5,7 +5,8 @@ import { EAGER_PHOTO, isPhotoTex } from './grass-art';
 import { PAINT_TEXES } from './paint';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { LOT_DECALS } from './lot-decals';
-import { clampDecals, drawDecals, placeDecals } from './map-decals';
+import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
+import { layOnGround } from './base-grass';
 import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
@@ -60,6 +61,8 @@ export class GroundPainter {
   lotPatches = new Map<string, LotPatch[]>();
   private lotGrid = new Map<number, LotPatch[]>();
   constructor(public terrain: Uint8Array, public net: RoadNetwork, public tex: Textures) {}
+  /** the screen textures laid on the ground (isoImage), per source picture */
+  private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
   setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
   /** apply lot ground edits: each key in `set` replaces its patches, each key in `drop` loses them */
@@ -150,11 +153,27 @@ export class GroundPainter {
     return cv;
   }
 
-  /** a screen-space texture aligned to the world origin, for a context whose transform is the chunk's iso matrix */
+  /** a top-down texture as it lies on the ground in the 2:1 view: the picture at half its height (exactly half, so each pixel is the mean of
+   *  two rows), two periods tall so it still tiles; cached per picture */
+  private isoImage(img: Cnv) {
+    let c = this.isoPics.get(img);
+    if (!c) { c = canvas(img.width, img.height); const g = ctx2d(c), p = g.createPattern(img, 'repeat')!; p.setTransform(new DOMMatrix([1, 0, 0, 0.5, 0, 0])); g.fillStyle = p; g.fillRect(0, 0, c.width, c.height); this.isoPics.set(img, c); }
+    return c;
+  }
+  /** a screen-space texture aligned to the world origin, for a context whose transform is the chunk's iso matrix; laid on the ground (isoImage),
+   *  so its grass, soil and water read in the 2:1 view like the roads' tile-space photos. The base grass and the textures made from it lie at
+   *  the owner's angle and tilt (Textures.grassLay): then the pattern itself is turned and squashed (it still tiles at any angle). */
   private screenPattern(g: C2D, name: TexName, L: number, X0: number, Y0: number, Minv: DOMMatrix, G?: DOMMatrix) {
-    const img = this.tex.image(name, L), p = g.createPattern(img, 'repeat')!;
-    const ox = ((X0 * L) % img.width + img.width) % img.width, oy = ((Y0 * L) % img.height + img.height) % img.height;
-    const T0 = Minv.multiply(new DOMMatrix([1, 0, 0, 1, -ox, -oy])); p.setTransform(G ? G.multiply(T0) : T0); return p;
+    const lay = name === 'grass' || name === 'meadow' || name === 'outside' ? this.tex.grassLay : null;
+    if (!lay || (lay.angle === 0 && lay.tilt === 0.5)) {
+      const img = this.isoImage(this.tex.image(name, L)), p = g.createPattern(img, 'repeat')!;
+      const ox = ((X0 * L) % img.width + img.width) % img.width, oy = ((Y0 * L) % img.height + img.height) % img.height;
+      const T0 = Minv.multiply(new DOMMatrix([1, 0, 0, 1, -ox, -oy])); p.setTransform(G ? G.multiply(T0) : T0); return p;
+    }
+    // the world origin (canvas -X0 L, -Y0 L) in the pattern's own px, brought within one period so the numbers stay small
+    const img = this.tex.image(name, L), p = g.createPattern(img, 'repeat')!, A = layOnGround(lay.angle, lay.tilt), o = A.inverse().transformPoint(new DOMPoint(-X0 * L, -Y0 * L));
+    const T0 = Minv.multiply(new DOMMatrix([1, 0, 0, 1, 0, 0]).multiply(A).translate(((o.x % img.width) + img.width) % img.width, ((o.y % img.height) + img.height) % img.height));
+    p.setTransform(G ? G.multiply(T0) : T0); return p;
   }
   /** the asphalt mosaic, which lives in ground (tile) space: one period = period tiles (MOSAIC_TILES by default); G turns it about the origin */
   private groundPattern(g: C2D, img: Cnv, G?: DOMMatrix, period = MOSAIC_TILES) {
@@ -573,15 +592,15 @@ export class GroundPainter {
     drawDecals(ctx, placeDecals(box, MAP_DECALS, ground), this.tex, L, M);
   }
 
-  /** the lots' flat decals: each centred on its ground point, screen-aligned like the builder's, scaled and mirrored */
+  /** the lots' flat decals: each centred on its ground point, scaled and mirrored; the top-down ones (flatSquash) at half height, lying on the ground */
   private drawMarks(ctx: C2D, patches: LotPatch[], L: number, M: DOMMatrix, box: BBox) {
     const [tx0, ty0, tx1, ty1] = box, img = this.tex.lotDecals;
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     for (const p of patches) for (let k = 0, m = p.marks ?? []; k + 4 < m.length; k += 5) {
       const d = LOT_DECALS[m[k]], x = m[k + 1], y = m[k + 2], s = m[k + 3];
       if (!d || x < tx0 - 4 || x > tx1 + 4 || y < ty0 - 4 || y > ty1 + 4) continue;
-      const S = M.transformPoint(new DOMPoint(x, y));
-      ctx.globalAlpha = m[k + 4]; ctx.setTransform(L * s, 0, 0, L * Math.abs(s), S.x, S.y);
+      const S = M.transformPoint(new DOMPoint(x, y)), q = flatSquash(d.id, d.w, d.h);
+      ctx.globalAlpha = m[k + 4]; ctx.setTransform(L * s, 0, 0, L * Math.abs(s) * q, S.x, S.y);
       ctx.drawImage(img, d.x, d.y, d.w, d.h, -d.w / 2, -d.h / 2, d.w, d.h);
     }
     ctx.globalAlpha = 1;

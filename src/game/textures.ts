@@ -201,6 +201,8 @@ export class Textures {
   slabs!: Cnv; leaves!: Cnv; pool1!: Cnv; pool2!: Cnv;
   /** the builder's grass decals (ground-art DECALS rects) and SOIL_STAMPS ragged bare-soil stamps in a row (SOIL_W x SOIL_H each) */
   decals!: Cnv; soil!: Cnv;
+  /** how the base grass (and the meadow and map edge made from it) lies on the ground: the owner's angle and tilt (base-grass.ts GrassMix) */
+  grassLay = { angle: DEFAULT_MIX.angle, tilt: DEFAULT_MIX.tilt };
   /** the builder's flat ground decals (lot-decals.ts LOT_DECALS rects) the Lot Composer lays in lots */
   lotDecals!: Cnv;
   /** the nature patches (nature-patches.ts NATURE rects) scattered over open grass */
@@ -240,7 +242,7 @@ export class Textures {
     // the base grass: the owner's mix and picture sizes when the studio's Ground tab saved them (art.grassMix), else the game's original
     const gm = art.grassMix, pa = Math.round((gm?.px[0] ?? 256) * AUTHOR), pb = Math.round((gm?.px[1] ?? 256) * AUTHOR);
     const grass = mixGrass(toCanvas(grassA, pa, pa), toCanvas(grassB, pb, pb), gm?.mix ?? DEFAULT_MIX, BASE_W, BASE_H, AUTHOR);
-    this.store('grass', grass);
+    this.store('grass', grass); this.grassLay = { angle: gm?.mix.angle ?? DEFAULT_MIX.angle, tilt: gm?.mix.tilt ?? DEFAULT_MIX.tilt };
     // ---- the Paint tool's photo textures that every worker needs (grasses, concrete): built here; the others are built by ensure() on first use
     for (const p of PHOTO_TEX) if (EAGER_PHOTO.has(p.tex)) { await this.buildPhoto(p); await tick(); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }

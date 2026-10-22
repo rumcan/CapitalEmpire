@@ -68,6 +68,12 @@ export function clampDecals(f: Partial<MapDecalsFile> | null | undefined): MapDe
   return { v: 1, ...(typeof f?.stamp === 'string' ? { stamp: f.stamp } : {}), layers };
 }
 
+/** How tall a flat decal is drawn: 0.5 for a top-down picture (a near-round grass patch, leaf scatter or tuft: height over 0.7 of its width), so
+ *  it lies on the ground in the 2:1 view; 1 for art already drawn in the 2:1 view (litter, rubbish, tracks, mud, paint, gutters, piles, about
+ *  half as tall as wide). The same rule squashes the flats of the baked lots and nature patches (scripts/assets/lot-render.mjs flatSquash). */
+export const ISO_FLAT = /litter|rubbish|trash|bag|can-|cardboard|paint|wear|spill|track|footprint|mud|gravel|stain|crack|manhole|pile|heap|road|curb|line|marking|path|paving|slab|drain|grate|tyre|tire|skid|oil|sign|arrow|crosswalk|zebra|gutter|arcade/i;
+export const flatSquash = (id: string, w: number, h: number) => (!ISO_FLAT.test(id) && h > w * 0.7 ? 0.5 : 1);
+
 /** the decal pictures: the nature patches (nature.webp), the soil stamps (textures.ts soilStamps) and the grass decals (decals.webp) */
 export interface DecalArt { nature: Cnv; soil: Cnv; decals: Cnv }
 const SALT: Record<DecalLayerId, number> = { nature: 0x7a7e, soil: 0x5011, grass: 0x6a55, leaves: 0x1eaf, tufts: 0x7f75 };
@@ -105,7 +111,8 @@ export function drawDecals(ctx: C2D, placed: Record<DecalLayerId, number[]>, art
         const f = (Math.abs(s) * 45) / SOIL_R; ctx.setTransform(L * f * Math.sign(s), 0, 0, L * f, S.x, S.y);
         ctx.drawImage(art.soil, p[i + 2] * SOIL_W, 0, SOIL_W, SOIL_H, -SOIL_W / 2, -SOIL_H / 2, SOIL_W, SOIL_H);
       } else {
-        const d = DECALS[p[i + 2]]; ctx.setTransform(L * s, 0, 0, L * Math.abs(s), S.x, S.y);
+        // the builder's grass decals are top-down pictures: at half height they lie on the ground
+        const d = DECALS[p[i + 2]]; ctx.setTransform(L * s, 0, 0, L * Math.abs(s) * 0.5, S.x, S.y);
         ctx.drawImage(art.decals, d.x, d.y, d.w, d.h, -d.w / 2, -d.h / 2, d.w, d.h);
       }
     }

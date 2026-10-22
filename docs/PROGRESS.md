@@ -2206,3 +2206,9 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   dark spot, plants round, props their base) and the GPU draws `render()`'s feathered shape under every sprite but baked lots (they bake
   their own) at street and district zoom, in the builder's colour. Gear menu → **Shadows** 0–200% (100% = the builder's). Browser-checked
   at 0 / 100 / 200%. Tests: `tests/shadow-shape.test.ts` (3); 831 pass. Not yet benchmarked (`npm run worker:bench`).
+- **Ground in iso perspective** (the owner: "all ground textures and decals patterns isometric"): the painted ground textures (base grass,
+  meadow, forest, soil, water, wear, grime) lie on the ground at half height like the roads' tile-space photos; the top-down decals (the map's
+  grass patches, leaf scatters, tufts; the near-round leaf scatters, tufts and worn grass among the lot decals; the same flats inside the
+  baked lots and nature patches, re-rendered) are drawn at half height; art already drawn in the 2:1 view (litter, rubbish, tracks, mud,
+  paint, gutters, piles) is left as it is (`flatSquash`, the same rule in `lot-render.mjs`). Studio → Ground → **On the ground**: the base
+  grass's Angle (-180 to 180°) and Tilt (0.25 to 1; 0.5 = the 2:1 ground, 1 = flat top-down), saved with the grass.

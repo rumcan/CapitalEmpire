@@ -30,18 +30,22 @@ export interface GrassMix {
   tone: number;
   /** the warm / cool drift (0.08 = the game's) */
   warm: number;
+  /** how the texture lies on the ground (not part of the mix): turned by angle (degrees), then its height times tilt on screen (0.5 = the 2:1
+   *  view's ground, 1 = flat to the screen, top-down) */
+  angle: number;
+  tilt: number;
 }
 /** the file the studio writes (src/game/base-grass.json); saved false (or no pictures) keeps the game's grass */
 export interface BaseGrassFile { v: 1; saved: boolean; stamp?: string; a: GrassSide; b: GrassSide; mix: GrassMix }
 /** what the ground workers get with the art: the mix and the two pictures' size in native px (256 x scale); stamp changes the texture cache key */
 export interface BaseGrassArt { mix: GrassMix; px: [number, number]; stamp?: string }
 
-export const DEFAULT_MIX: GrassMix = { share: 0.5, soft: 0.12, patch: 1, tone: 0.1, warm: 0.08 };
+export const DEFAULT_MIX: GrassMix = { share: 0.5, soft: 0.12, patch: 1, tone: 0.1, warm: 0.08, angle: 0, tilt: 0.5 };
 export const DEFAULT_SIDE: Omit<GrassSide, 'src'> = { scale: 1, tint: '#808080', tintAmt: 0, bright: 1, contrast: 1, sat: 1, hue: 0 };
 /** the slider ranges the studio offers (and clampMix / clampSide hold values to) */
 export const RANGES = {
   scale: [0.25, 8], tintAmt: [0, 1], bright: [0.4, 1.8], contrast: [0.4, 1.8], sat: [0, 2], hue: [-180, 180],
-  share: [0, 1], soft: [0.01, 0.5], patch: [0.25, 4], tone: [0, 0.4], warm: [0, 0.3],
+  share: [0, 1], soft: [0.01, 0.5], patch: [0.25, 4], tone: [0, 0.4], warm: [0, 0.3], angle: [-180, 180], tilt: [0.25, 1],
 } as const;
 const fin = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
 const rng = (k: keyof typeof RANGES, v: unknown, d: number) => clamp(fin(v, d), RANGES[k][0], RANGES[k][1]);
@@ -52,7 +56,7 @@ export function clampSide(s: Partial<GrassSide> & { src: string }): GrassSide {
 }
 export function clampMix(m: Partial<GrassMix>): GrassMix {
   const D = DEFAULT_MIX;
-  return { share: rng('share', m.share, D.share), soft: rng('soft', m.soft, D.soft), patch: rng('patch', m.patch, D.patch), tone: rng('tone', m.tone, D.tone), warm: rng('warm', m.warm, D.warm) };
+  return { share: rng('share', m.share, D.share), soft: rng('soft', m.soft, D.soft), patch: rng('patch', m.patch, D.patch), tone: rng('tone', m.tone, D.tone), warm: rng('warm', m.warm, D.warm), angle: rng('angle', m.angle, D.angle), tilt: rng('tilt', m.tilt, D.tilt) };
 }
 
 /** the colour adjustments of one side, in place on RGBA pixels: brightness, contrast (about mid grey), saturation and hue (about the pixel's luma), then the tint */
@@ -76,6 +80,9 @@ export function adjustPixels(D: Uint8ClampedArray, s: Omit<GrassSide, 'src' | 's
     D[o] = r; D[o + 1] = g; D[o + 2] = b;
   }
 }
+
+/** the screen transform that lays a texture on the ground: turned by angle, then its height times tilt (the default is the 2:1 view's ground) */
+export const layOnGround = (angle: number, tilt: number) => new DOMMatrix().scale(1, tilt).rotate(angle);
 
 /** the base grass texture (W x H, tileable): gA and gB are the two pictures at their game size; mix as above (DEFAULT_MIX = the game's original) */
 export function mixGrass(gA: Cnv, gB: Cnv, mix: GrassMix, W: number, H: number, author: number): Cnv {

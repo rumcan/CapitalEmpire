@@ -156,3 +156,7 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   core, feather, round, spare, clip) and the new `FS_SHADOW` / `drawShadows(at, n, strength)`; `sprites.ts` `packShadow` uses
   `shadowShape` and every sprite but baked lots casts one (big ones and fences too); `engine.ts` draws them at street and district zoom
   with `shadowStrength` / `setShadowStrength` (localStorage `capitalempire.shadows`); `App.tsx` a Shadows slider in the gear menu (0–200%).
+- 2026-10-22 (the art chat): **ground textures and decals lie on the ground in the 2:1 view** (the owner asked). **For the coder:** your
+  `renderer.ts` `screenPattern` now lays its texture on the ground (`isoImage`: the picture at exactly half height, two periods tall; the
+  base grass, meadow and map edge at the owner's angle and tilt from `Textures.grassLay`, as a turned and squashed pattern); `drawMarks`
+  draws the top-down lot decals at half height (`map-decals.ts` `flatSquash`); `textures.ts` keeps `grassLay` from the base-grass mix.

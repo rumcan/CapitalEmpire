@@ -20,6 +20,10 @@ async function img(file, w, h, flip) {
   let im = sharp(file).resize(Math.max(1, w), Math.max(1, h), { fit: 'fill', kernel: 'lanczos3' }); if (flip) im = im.flop();
   const b = await im.png().toBuffer(); if (cache.size > 400) cache.clear(); cache.set(k, b); return b;
 }
+/** How tall a flat is drawn: 0.5 for a top-down picture (a near-round grass patch, leaf scatter or tuft: height over 0.7 of its width), so it
+ *  lies on the ground in the 2:1 view; 1 for art already drawn in the 2:1 view. The game's copy of the rule: src/game/map-decals.ts flatSquash. */
+const ISO_FLAT = /litter|rubbish|trash|bag|can-|cardboard|paint|wear|spill|track|footprint|mud|gravel|stain|crack|manhole|pile|heap|road|curb|line|marking|path|paving|slab|drain|grate|tyre|tire|skid|oil|sign|arrow|crosswalk|zebra|gutter|arcade/i;
+export const flatSquash = it => (it.flat && !ISO_FLAT.test(it.id) && it.h > it.w * 0.7 ? 0.5 : 1);
 /** the back-to-front key of an upright: the screen y of its footprint's front corner (its anchor plus half its footprint) */
 const depth = (s, it) => { const k = s.scale ?? 1, hx = (s.flip ? it.fh : it.fw) * k / 2, hy = (s.flip ? it.fw : it.fh) * k / 2; return s.x + s.y + hx + hy + (s.z ?? 0) * 0.001; };
 
@@ -32,7 +36,7 @@ export function drawOrder(placements) {
   return [...flats, ...ups];
 }
 /** a placement's picture rectangle in native screen px: [left, top, width, height] */
-export function rectOf(s, it) { const k = s.scale ?? 1, [mx, my] = toScreen(s.x, s.y); return [s.flip ? mx - (it.w - it.ax) * k : mx - it.ax * k, my - it.ay * k, it.w * k, it.h * k]; }
+export function rectOf(s, it) { const k = s.scale ?? 1, q = flatSquash(it), [mx, my] = toScreen(s.x, s.y); return [s.flip ? mx - (it.w - it.ax) * k : mx - it.ax * k, my - it.ay * k * q, it.w * k, it.h * k * q]; }
 
 /**
  * Render placements { id, x, y, flip, scale, z? } (metres) at `res` px per native px.
@@ -51,9 +55,9 @@ export async function render(placements, box, res = 1, { background = { r: 0, g:
   ups.sort((a, b) => depth(a.s, a.it) - depth(b.s, b.it));
   const comp = [...under];
   const put = async ({ s, it, dy = 0 }) => {
-    const k = s.scale ?? 1, [mx, my0] = toScreen(s.x, s.y), my = my0 + dy * k;
-    const left = (s.flip ? mx - (it.w - it.ax) * k : mx - it.ax * k) - box[0], top = my - it.ay * k - box[1];
-    const w = Math.round(it.w * k * res), h = Math.round(it.h * k * res), l = Math.round(left * res), t = Math.round(top * res);
+    const k = s.scale ?? 1, q = flatSquash(it), [mx, my0] = toScreen(s.x, s.y), my = my0 + dy * k;
+    const left = (s.flip ? mx - (it.w - it.ax) * k : mx - it.ax * k) - box[0], top = my - it.ay * k * q - box[1];
+    const w = Math.round(it.w * k * res), h = Math.round(it.h * k * q * res), l = Math.round(left * res), t = Math.round(top * res);
     if (l >= W || t >= H || l + w <= 0 || t + h <= 0 || w < 1 || h < 1) return;
     let b = await img(path.join(LIB_DIR, it.file), w, h, !!s.flip);
     const cl = Math.max(0, -l), ct = Math.max(0, -t), cw = Math.min(w - cl, W - Math.max(l, 0)), ch = Math.min(h - ct, H - Math.max(t, 0));

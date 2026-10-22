@@ -26,6 +26,8 @@
   "soft": 0.12,
   "patch": 1,
   "tone": 0.1,
-  "warm": 0.08
+  "warm": 0.08,
+  "angle": 0,
+  "tilt": 0.5
  }
 }

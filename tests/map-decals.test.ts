@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DECAL_LAYERS, DEFAULT_DECALS, clampDecals, decalPics, placeDecals, type MapDecalsFile } from '../src/game/map-decals';
+import { DECAL_LAYERS, DEFAULT_DECALS, clampDecals, decalPics, flatSquash, placeDecals, type MapDecalsFile } from '../src/game/map-decals';
 
 const BOX = [100, 100, 164, 164] as const, all = () => true;
 const withLayer = (id: keyof MapDecalsFile['layers'], o: object) => { const f = clampDecals(null); f.layers[id] = { ...f.layers[id], ...o }; return f; };
@@ -41,4 +41,13 @@ test('map decals: the saved file reads cleanly and has the nature patches off (t
   const c = clampDecals(f);
   assert.equal(c.layers.nature.on, false);
   for (const L of DECAL_LAYERS) assert.ok(L.id in f.layers, `map-decals.json has ${L.id}`);
+});
+
+test('flat decals: top-down patches lie on the ground at half height, art already in the 2:1 view keeps its height', () => {
+  assert.equal(flatSquash('decal:decal-06-orange-leaf-scatter', 231, 221), 0.5);
+  assert.equal(flatSquash('scatter-grass-tufts', 231, 231), 0.5);
+  assert.equal(flatSquash('gen:drift-2', 200, 111), 1);
+  assert.equal(flatSquash('variation:expansion-can-litter-a379ec6f:1', 51, 42), 1);
+  assert.equal(flatSquash('expansion:mud-tracks-x', 448, 219), 1);
+  assert.equal(flatSquash('variation:expansion-gutter-leaves-sparse:1', 100, 84), 1);
 });

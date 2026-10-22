@@ -4,7 +4,7 @@
 // reads them after Rebuild (or npm run build). Below the grass, the map decals laid over it (src/game/map-decals.ts: nature patches, bare soil,
 // grass patches, leaf scatters, tufts), placed and drawn in the preview exactly as the game does; Save decals writes src/game/map-decals.json.
 // Served by server.mjs.
-import { adjustPixels, mixGrass, canvas, ctx2d, soilStamps, AUTHOR, DEFAULT_MIX, DEFAULT_SIDE, DECAL_LAYERS, DEFAULT_DECALS, DECALS, NATURE, decalPics, drawDecals, placeDecals } from '/ground-lib.js';
+import { adjustPixels, mixGrass, layOnGround, canvas, ctx2d, soilStamps, AUTHOR, DEFAULT_MIX, DEFAULT_SIDE, DECAL_LAYERS, DEFAULT_DECALS, DECALS, NATURE, decalPics, drawDecals, placeDecals } from '/ground-lib.js';
 
 const el = (t, a = {}, ...k) => { const e = document.createElement(t); Object.assign(e, a); for (const c of k) if (c != null) e.append(c); return e; };
 const btn = (t, fn, c = '') => el('button', { className: 'btn ' + c, textContent: t, onclick: fn });
@@ -87,11 +87,11 @@ function sourcePicker(k) {
   }
   return wrap;
 }
-/** a labelled slider: value shown as fmt(v) */
-function slider(label, get, set, [lo, hi], step, fmt = v => v.toFixed(2)) {
+/** a labelled slider: value shown as fmt(v); then remixes (or `then`, e.g. a redraw for what does not change the mix) */
+function slider(label, get, set, [lo, hi], step, fmt = v => v.toFixed(2), then = rebuild) {
   const out = el('span', { className: 'scale', style: 'min-width:54px', textContent: fmt(get()) });
   const inp = el('input', { type: 'range', min: lo, max: hi, step, value: get(), style: 'min-width:0;flex:1;padding:0' });
-  inp.oninput = () => { set(+inp.value); out.textContent = fmt(+inp.value); rebuild(); };
+  inp.oninput = () => { set(+inp.value); out.textContent = fmt(+inp.value); then(); };
   return el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: label }), inp, out);
 }
 /** the Tint slider row with the colour picker after its label */
@@ -125,7 +125,12 @@ function build() {
     slider('Patch size', () => m.patch, v => { m.patch = v; }, R.patch, 0.05, v => `${v.toFixed(2)}x`),
     slider('Light swing', () => m.tone, v => { m.tone = v; }, R.tone, 0.01, v => `±${Math.round(v * 100)}%`),
     slider('Warm / cool', () => m.warm, v => { m.warm = v; }, R.warm, 0.01, v => `±${Math.round(v * 100)}%`),
-    el('div', { className: 'row', style: 'padding:0' }, btn("The game's mix", () => { F.mix = clone(DEFAULT_MIX); build(); rebuild(); })),
+    el('div', { className: 'row', style: 'padding:0' }, btn("The game's mix", () => { F.mix = { ...clone(DEFAULT_MIX), angle: m.angle, tilt: m.tilt }; build(); rebuild(); })),
+    el('h3', { textContent: 'On the ground' }),
+    hint('How the grass lies on the map: turned by the angle, and how flat it lies (tilt 0.5 = the 2:1 view\'s ground, like the roads; 1 = flat to the screen, top-down).'),
+    slider('Angle', () => m.angle, v => { m.angle = v; }, R.angle, 1, v => `${Math.round(v)}°`, laid),
+    slider('Tilt', () => m.tilt, v => { m.tilt = v; }, R.tilt, 0.01, v => v.toFixed(2), laid),
+    el('div', { className: 'row', style: 'padding:0' }, btn('Straight, 2:1 ground', () => { m.angle = DEFAULT_MIX.angle; m.tilt = DEFAULT_MIX.tilt; build(); laid(); })),
     el('h3', { textContent: 'The whole texture' }), hint('The 2048 x 1024 mixed texture the game tiles over the map.'),
     el('canvas', { id: 'g-flat', width: 320, height: 160, style: 'border:1px solid var(--line);border-radius:4px' }),
     decalsBlock());
@@ -191,6 +196,9 @@ async function saveDecals() {
   const d = await r.json(); dSaved = clone(d.file); DF = clone(d.file); build(); msg('decals saved: Rebuild game sprites to see them in the game');
 }
 
+/** angle and tilt only change how the texture is laid: redraw, no remix */
+function laid() { draw(); msg(dirty() ? 'not saved' : 'saved'); }
+
 function swatches() {
   for (const k of ['a', 'b']) { const c = left.querySelector(`canvas[data-side="${k}"]`), s = sideCv[k]; if (c && s) { const g = c.getContext('2d'); g.clearRect(0, 0, 64, 64); g.drawImage(s, 0, 0, 64, 64); } }
   const f = left.querySelector('#g-flat'); if (f && mixed) f.getContext('2d').drawImage(mixed, 0, 0, 320, 160);
@@ -207,8 +215,8 @@ function draw() {
   const ox = W / 2 - (cx - cy) * 32 * z, oy = H / 2 - (cx + cy) * 16 * z;
   g.setTransform(D, 0, 0, D, 0, 0); g.fillStyle = '#0d0f08'; g.fillRect(0, 0, W, H);
   if (!mixed) return;
-  // the grass: a screen-space texture, one texture px = 1 / AUTHOR native px
-  const gp = g.createPattern(mixed, 'repeat'); gp.setTransform(new DOMMatrix([z / AUTHOR, 0, 0, z / AUTHOR, 0, 0])); g.fillStyle = gp; g.fillRect(0, 0, W, H);
+  // the grass: a screen-space texture, one texture px = 1 / AUTHOR native px, laid on the ground at the angle and tilt (the game's screenPattern)
+  const gp = g.createPattern(mixed, 'repeat'); gp.setTransform(new DOMMatrix([z / AUTHOR, 0, 0, z / AUTHOR, 0, 0]).multiply(layOnGround(F.mix.angle, F.mix.tilt))); g.fillStyle = gp; g.fillRect(0, 0, W, H);
   // the map decals, as the game places and draws them (tile -> canvas px; half a canvas px per world px at z = 1)
   if (DF && decalArt) {
     const M = new DOMMatrix([32 * z * D, 16 * z * D, -32 * z * D, 16 * z * D, ox * D, oy * D]), Mi = M.inverse();
