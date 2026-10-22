@@ -61,7 +61,7 @@ exactly where the art chat stopped and what to do next, in order.
    Save writes `src/game/base-grass.json` and encodes the two chosen pictures as `src/assets/ground/base-grass-a.webp` / `-b.webp`; the game
    reads them (through `ground-cache.ts`, where `withBaseGrass` sits today) instead of the dev picker; until the owner saves, the game keeps
    today's grass. Then delete the gear-menu picker.
-3. **Plant brushes** (the owner: "painter should let you add trees as well"): Trees, Bushes, Flowers in the Golf brush row: drag scatters
+3. **IN PROGRESS 2026-10-22: branch `claude/plant-brush`** (on the PC, not merged; tests 690+ pass, no new type errors, browser-checked: planting, Alt rub-out and save/reload keep the plant flag; still to look at: the panel's layout and how dense the default spacings feel, then merge to main). Plant brushes (the owner: "painter should let you add trees as well"): Trees, Bushes, Flowers in the Golf brush row: drag scatters
    props inside the brush circle (density slider, tree mix), spaced and skipping blocked spots; Rub out / Alt removes only props placed this
    way (never lot or town props). Engine side like `placePresetProps`.
 4. **Course builder C1** (`docs/COURSE-BUILDER.md`): the Course rail tool; the Build tab (the golf brush moves out of Paint), the Presets tab
@@ -82,3 +82,11 @@ course-building tools, and a second agent writes the game code. Read docs/HANDOV
 CLAUDE.md, docs/SECOND-AGENT.md, the end of docs/PROGRESS.md, docs/ART-PIPELINE.md and docs/COURSE-BUILDER.md. Land each verified step on
 main, rebuild my 5174 server and push main to GitHub (fetch and merge origin/main first). Give me every option and the controls to tweak
 them; never pre-pick for me."
+
+## 5. How the 2026-10-22 cloud session worked (if the next chat is also a cloud session linked to the PC)
+- The PC folder is E:\AI\CapitalEmpire (main). The cloud container cannot reach npm or push to GitHub: it clones the repo, uses the
+  preinstalled esbuild for `npm test`, TypeScript 6 against a baseline of vite-type errors, an esbuild + tailwind-standalone dev build
+  browser-checked with Playwright, then moves commits to the PC as a git bundle (copied to `output/`, then `git fetch` + `git merge
+  --ff-only` in the PC's shell). **Push main from the PC.** No git identity on the PC shell: commit in the cloud.
+- The studio runs in the cloud with `TOT_REPO` pointing at a partial clone of TrickOrTreat (branch town/builder-in-repo fetched) plus a stub
+  `output/town-builder/library/library.json`.
