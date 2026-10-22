@@ -1,34 +1,34 @@
 {
  "v": 1,
  "saved": true,
- "stamp": "2026-10-22T09:52:51.121Z",
+ "stamp": "2026-10-22T11:04:55.885Z",
  "a": {
-  "src": "src/assets/ground/paint-photo-golf-fescue.webp",
-  "scale": 1.1,
+  "src": "src/assets/ground/paint-photo-rough.webp",
+  "scale": 2.8,
   "tint": "#808080",
   "tintAmt": 0,
-  "bright": 1,
-  "contrast": 1,
+  "bright": 1.15,
+  "contrast": 1.43,
   "sat": 1,
   "hue": 0
  },
  "b": {
   "src": "src/assets/ground/paint-photo-fairway.webp",
-  "scale": 3.35,
+  "scale": 6.7,
   "tint": "#808080",
   "tintAmt": 0,
-  "bright": 1.04,
-  "contrast": 1.06,
-  "sat": 0.83,
-  "hue": 0
+  "bright": 1.32,
+  "contrast": 1.09,
+  "sat": 0.96,
+  "hue": 25
  },
  "mix": {
-  "share": 0.5,
-  "soft": 0.12,
-  "patch": 1,
-  "tone": 0.35,
-  "warm": 0.3,
-  "angle": 51,
-  "tilt": 0.5
+  "share": 0.77,
+  "soft": 0.44,
+  "patch": 2.2,
+  "tone": 0.4,
+  "warm": 0.05,
+  "angle": 91,
+  "tilt": 0.25
  }
 }
