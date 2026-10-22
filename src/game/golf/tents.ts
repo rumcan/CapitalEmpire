@@ -35,7 +35,7 @@ export const STRUCTURES: StructureType[] = [
   { id: 'info', name: 'Info and will-call booth', kind: 'info', footprint: { w: 2, h: 2 }, rent: 300, buy: 3000, capacity: 0, unit: '', tier: 2, blurb: 'a small satisfaction bonus by the gates' },
   { id: 'rideshare', name: 'Ride-share drop-off zone', kind: 'transport', footprint: { w: 4, h: 8 }, rent: 2000, buy: 10000, capacity: 0, unit: '', tier: 3, blurb: 'taxi and ride-share arrivals; road-side (footprint is a nominal lay-by)' },
   { id: 'coach', name: 'Coach terminal', kind: 'transport', footprint: { w: 20, h: 10 }, rent: 10000, buy: 120000, capacity: 20, unit: 'lanes', tier: 4, blurb: 'coach arrivals in 20 bays; tier 5 needs one' },
-  { id: 'rangeStand', name: 'Practice range grandstand', kind: 'grandstand', footprint: { w: 12, h: 4 }, rent: 5000, buy: 30000, capacity: 600, unit: 'seats', tier: 4, blurb: 'viewing; the players practice here' },
+  { id: 'rangeStand', name: 'Practice range grandstand', kind: 'grandstand', footprint: { w: 12, h: 4 }, rent: 5000, buy: 30000, capacity: 600, unit: 'seats', tier: 3, blurb: 'viewing; the players practice here' },
   { id: 'sponsorDisplay', name: 'Sponsor display', kind: 'display', footprint: { w: 3, h: 3 }, rent: 0, buy: 0, capacity: 0, unit: '', tier: 3, blurb: 'a car on a plinth and banners; earns a sponsor bonus' },
   { id: 'helipad', name: 'Helipad', kind: 'helipad', footprint: { w: 10, h: 10 }, rent: 0, buy: 60000, capacity: 0, unit: '', tier: 5, blurb: 'VIP satisfaction (tier 5 hospitality)' },
 ];

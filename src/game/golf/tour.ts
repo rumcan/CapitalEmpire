@@ -28,13 +28,13 @@ export interface Tier {
   reputation: number;
 }
 
-/** the needs each tier adds (GOLF-PLAN 5.1); TIERS takes them cumulatively */
+/** the needs each tier adds (GOLF-PLAN 5.1); TIERS takes them cumulatively (hotelRooms at tier 4 and interchange at tier 5 are not yet required until town hotel growth and highway interchanges are wired) */
 const OWN_NEEDS: Need[][] = [
   ['carpark'],
   ['gate', 'foodTent', 'toilets'],
   ['grandstand18', 'leaderboard', 'merchTent', 'parkRide', 'range'],
-  ['tvTowers', 'broadcast', 'hospitality', 'media', 'parkRide2', 'hotelRooms'],
-  ['grandstands', 'merchPavilion', 'hospitalityVillage', 'interchange', 'coachTerminal'],
+  ['tvTowers', 'broadcast', 'hospitality', 'media', 'parkRide2'], // hotelRooms not yet required (no town hotel provider wired yet)
+  ['grandstands', 'merchPavilion', 'hospitalityVillage', 'coachTerminal'], // interchange not yet required (6R.5 highway interchanges not wired yet)
 ];
 
 /** the five tiers (GOLF-PLAN 5.1 and 8.2): TIERS[t - 1] is tier t. Names are fictional on purpose */

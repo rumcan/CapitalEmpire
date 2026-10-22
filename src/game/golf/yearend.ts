@@ -8,6 +8,10 @@ import { STRUCTURE } from './tents';
 import { gateQueue, gateRate } from './venue';
 import { arrivalShare, exitShare, EXIT_END, GATES_OPEN } from './calendar';
 import { ON_TIME_GRACE_MIN } from './tournamentday';
+import { courseMonthlyUpkeep } from './costs';
+
+/** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 25%, about 36,000 dollars for the old nine, which is what the campaign simulator assumes (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
+export const COURSE_UPKEEP_YEAR_SHARE = 0.25;
 import { computeSponsorBreakdown } from './sponsors';
 import { resolveMultiDayTournament, type MultiDaySummary } from './multiday';
 import {
@@ -54,6 +58,58 @@ weather?: WeatherInfo;
  * Arrival rate determines on-time arrivals; exit time, gate queue, and viewing use sensible defaults  
  * (35m exit P95, 5m average queue, 0.85 viewing satisfaction) until dedicated structures are placed.  
  */  
+/** ticket price ($) per arrived spectator for a golf tournament at the given tier (0 at tier 1) */
+export function golfTicketPrice(tier: number): number {
+  return tierInfo(tier).ticket;
+}
+
+/** financial booking lines when closing a golf tournament round (income to business, costs to upkeep) */
+export interface TournamentCloseBook {
+  extraTickets: number;
+  extraTents: number;
+  bizIncome: number;
+  purse: number;
+  rent: number;
+  annualTentUpkeep: number;
+  annualCourseUpkeep: number;
+  upkeepCost: number;
+}
+
+/**
+ * Compute the end-of-tournament budget entries to book on closeRound:
+ * - bizIncome: Day 1 tent takings + resolved multi-day ticket and tent deltas (clamped >= 0) + sponsor + TV income
+ * - upkeepCost: tournament purse + rented structure rent (charged once per tournament here, not at placement) +
+ *   12 months of bought structure upkeep + 12 months of course surface maintenance (courseMonthlyUpkeep * 12)
+ */
+export function computeTournamentCloseBook(
+  ye: YearEndResult,
+  liveDayTicketsBooked = 0,
+  courseAreas: Parameters<typeof courseMonthlyUpkeep>[0] = [],
+): TournamentCloseBook {
+  const extraTickets = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+    ? Math.max(0, ye.multiDay.totalTickets - liveDayTicketsBooked)
+    : 0;
+  const extraTents = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+    ? Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))
+    : 0;
+  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents));
+  const purse = Math.max(0, Math.round(ye.purse ?? 0));
+  const rent = Math.max(0, Math.round(ye.tentRentCost ?? 0));
+  const annualTentUpkeep = Math.max(0, Math.round((ye.tentUpkeep ?? 0) * 12));
+  const annualCourseUpkeep = Math.max(0, Math.round(courseMonthlyUpkeep(courseAreas) * 12 * COURSE_UPKEEP_YEAR_SHARE));
+  const upkeepCost = purse + rent + annualTentUpkeep + annualCourseUpkeep;
+  return {
+    extraTickets,
+    extraTents,
+    bizIncome,
+    purse,
+    rent,
+    annualTentUpkeep,
+    annualCourseUpkeep,
+    upkeepCost,
+  };
+}
+
 /** total open entrance gate lanes from placed structures, defaulting to 1 lane at tier 1 when none placed */
 export function gateLanesFor(structures: readonly PlacedEventStructure[], tier: number): number {
   let lanes = 0;

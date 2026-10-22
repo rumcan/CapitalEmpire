@@ -56,7 +56,7 @@ import type { GolfSave, GolfView } from './golf/mode';
 import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
-import { computeYearEnd, type YearEndResult } from './golf/yearend';
+import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { parkRideNeeds } from './golf/parkride';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
@@ -66,7 +66,7 @@ import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
-import { checkStructurePlacement, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
+import { checkStructurePlacement, findStructureIndexAt, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { tierInfo, type Need } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
@@ -981,7 +981,9 @@ export class Game {
     this.toast(`Not enough money ($${check.cost.toLocaleString()} required)`, 'warn');
     return false;
     }
+    if (candidate.mode === 'buy' && check.cost > 0) {
     this.traffic.spend('construction', check.cost);
+    }
     const id = Math.max(0, ...(this.golf.structures ?? []).map(s => s.id)) + 1;
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
@@ -993,7 +995,7 @@ export class Game {
     this.golfStructureProps.set(id, prop);
     }
     const def = STRUCTURE[candidate.typeId];
-    this.toast(`Placed ${def ? def.name : candidate.typeId} ($${check.cost.toLocaleString()})`);
+    this.toast(candidate.mode === 'rent' ? `Placed ${def ? def.name : candidate.typeId} (rent $${check.cost.toLocaleString()}/yr at tournament)` : `Placed ${def ? def.name : candidate.typeId} ($${check.cost.toLocaleString()})`);
     this.eventStructurePending = null;
     this.scheduleSave();
     this.emit();
@@ -1032,8 +1034,9 @@ export class Game {
     }
     }
     private syncGolfProps() {
-    if (!this.golf) return;
     this.golfProps.clear();
+    this.golfStructureProps.clear();
+    if (!this.golf) return;
     for (const pin of this.golf.pins) {
     const key = 'pin:' + pin.hole;
     const id = pin.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID;
@@ -1049,6 +1052,19 @@ export class Game {
     for (const p of this.props) {
     if (p.item === item && Math.hypot(p.x - tee.x, p.y - tee.y) < 2) { this.golfProps.set(key, p); break; }
     }
+    }
+    const claimed = new Set<Prop>();
+    for (const s of this.golf.structures ?? []) {
+    const sprId = STRUCTURE_SPRITE[s.typeId] ?? 'expansion:backyard-tent';
+    const item = LIB_INDEX.get(sprId);
+    if (item === undefined) continue;
+    let found: Prop | undefined;
+    for (const p of this.props) {
+    if (!claimed.has(p) && p.item === item && Math.hypot(p.x - s.x, p.y - s.y) < 2) { found = p; break; }
+    }
+    if (!found) found = this.addProp(item, s.x, s.y, Boolean(s.rotated), 1);
+    claimed.add(found);
+    this.golfStructureProps.set(s.id, found);
     }
     }
     moveGolfMarker(hole: number, kind: 'pin' | 'back' | 'middle' | 'forward', x: number, y: number): boolean {
@@ -1626,17 +1642,14 @@ export class Game {
     const t = this.tileAt(mx, my);
     if (first) {
       const p = this.propAt(mx, my);
+      if (this.golf?.structures?.length) {
+        let hitId: number | null = null;
+        if (p) for (const [sid, sp] of this.golfStructureProps) if (sp === p) { hitId = sid; break; }
+        const idx = findStructureIndexAt(this.golf.structures, t.x, t.y, hitId);
+        if (idx >= 0) { this.removeStructure(idx); return; }
+      }
       if (p && !p.auto) { const it = LIBRARY[p.item], back = p.plant ? 0 : Math.round(it.cost * 0.5); this.removeProp(p); this.traffic.spend('construction', -back); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(back ? `Removed ${it.name} (+$${back.toLocaleString()})` : `Removed ${it.name}`); return; }
-      if (this.golf && this.golf.structures) {  
- for (let i = 0; i < this.golf.structures.length; i++) {  
- const s = this.golf.structures[i]!;  
- const rect = structureRect(s);  
- if (t.x >= rect[0] && t.x <= rect[0] + rect[2] && t.y >= rect[1] && t.y <= rect[1] + rect[3]) {  
- this.removeStructure(i);  
- return;  
- }  
- }  
- }  
+  
  const k = this.parkIndexAt(t);
       if (k >= 0) { const id = this.parkDefs[k]!.id; this.removePark(k); this.scheduleSave(); this.toast(`Removed car park #${id} (no refund)`); this.emit(); return; }
       const g = this.tollIndexAt(t);
@@ -1715,7 +1728,15 @@ export class Game {
     }
     return null;
   }
-  deleteSelected() { if (!this.selected) return; const p = this.selected, it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto && !p.plant) this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit(); }
+  deleteSelected() {
+    if (!this.selected) return;
+    const p = this.selected;
+    if (this.golf?.structures?.length) {
+      const idx = this.golf.structures.findIndex(s => this.golfStructureProps.get(s.id) === p);
+      if (idx >= 0) { this.selected = null; this.removeStructure(idx); return; }
+    }
+    const it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto && !p.plant) this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit();
+  }
   scaleSelected(f: number) {
     const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, 1.6);
     const err = this.canPlace(it, p.x, p.y, p.flip, k, p); if (err) { this.toast(err, 'warn'); return; }
@@ -2080,25 +2101,12 @@ export class Game {
   this.golf.rep = ye.rep;
   this.golf.poorYears = ye.poorYears;
   this.traffic.setGolf(true, this.golf.tier, this.golf.rep);
-  const extraTickets = (ye.multiDay && ye.multiDay.resolvedDays > 0)
-    ? Math.max(0, ye.multiDay.totalTickets - (this.traffic.round.last.tickets ?? 0))
-    : 0;
-  const extraTents = (ye.multiDay && ye.multiDay.resolvedDays > 0)
-    ? Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))
-    : 0;
-  const bizIncome = (ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents;
-  if (bizIncome > 0) {
-  this.traffic.spend('business', -bizIncome);
+  const book = computeTournamentCloseBook(ye, this.traffic.round.last.tickets ?? 0, this.paint.areas);
+  if (book.bizIncome > 0) {
+  this.traffic.spend('business', -book.bizIncome);
   }
-  const purse = ye.purse ?? 0;
-  if (purse > 0) {
-  this.traffic.spend('business', purse);
-  }
-  const rent = ye.tentRentCost ?? 0;
-  const annualUpkeep = (ye.tentUpkeep ?? 0) * 12;
-  const costs = rent + annualUpkeep;
-  if (costs > 0) {
-  this.traffic.spend('upkeep', costs);
+  if (book.upkeepCost > 0) {
+  this.traffic.spend('upkeep', book.upkeepCost);
   }
   this.scheduleSave();
   }
@@ -2786,13 +2794,17 @@ export class Game {
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.parking.clear(); this.extraParks = []; this.extraCarIds.clear(); this.gateProps.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
-    this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.golf = null;
+    this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear();
+    this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear();
+    this.landMode = false; this.landHover = null; this.holesTool = false; this.selectedGolfMarker = null;
+    this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
     this.setBizDefs([]); this.bizHover = null; this.bizOpenSeen = null;
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.dropAllFarms();
+    this.traffic.setGolf(false, 1, 0);
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
@@ -2804,7 +2816,7 @@ export class Game {
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
   }
-  clearTown() { this.reset(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
+  clearTown() { this.reset(); this.sendTerrain(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
   /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed
    *  directly (no town) with a use from uses (cycled), the level, decline and seed + i. The states hold until the next reset. */
   stageLots(o: { cols: number; rows: number; uses: number[]; level: number; decline: number; seed: number }) {

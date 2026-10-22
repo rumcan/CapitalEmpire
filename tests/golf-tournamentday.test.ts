@@ -39,16 +39,16 @@ test('scoreTournamentDay computes DayFacts, daySatisfaction, reputationAfter, an
   assert.equal(res.admitted, 1500);
   assert.equal(res.facts.onTime, 1500);
   assert.equal(res.facts.late, 0);
-  assert.equal(res.facts.missed, 50); // 25 traffic + 10 * 2.5 carpark turned away
+  assert.equal(res.facts.missed, 55); // 25 traffic + 10 * PARTY (3) carpark turned away
   assert.equal(res.facts.exitP95Min, 32);
   assert.equal(res.satisfaction, daySatisfaction(res.facts));
   assert.equal(res.reputationAfter, reputationAfter(50, res.satisfaction));
   assert.ok(res.reputationAfter > 50);
-  // Tier 2 ticket is $5 -> 1500 * 5 = $7500; parking = 600 * 5 = $3000; refunds = 50 * 5 = $250; purse = $10000
+  // Tier 2 ticket is $5 -> 1500 * 5 = $7500; parking = 600 * 5 = $3000; refunds = 55 * 5 = $275; purse = $10000
   assert.equal(res.money.tickets, 7500);
   assert.equal(res.money.parking, 3000);
   assert.equal(res.money.tents, 8500);
-  assert.equal(res.money.refunds, 250);
+  assert.equal(res.money.refunds, 275);
   assert.equal(res.money.purse, 10000);
-  assert.equal(res.money.net, 7500 + 3000 + 8500 - 250 - 10000 - 2000 - res.money.staff - 500);
+  assert.equal(res.money.net, 7500 + 3000 + 8500 - 275 - 10000 - 2000 - res.money.staff - 500);
 });

@@ -30,7 +30,7 @@ test('every GOLF-PLAN 6.1 row is present with its tier, rent, buy and capacity; 
     ['standS', 2, 3000, 0, 200], ['standM', 3, 12000, 0, 1000], ['standL', 4, 40000, 0, 4000], ['leaderboard', 3, 3000, 25000, 0],
     ['holeBoard', 3, 300, 2000, 0], ['screen', 5, 8000, 0, 0], ['tvTower', 4, 1500, 10000, 0], ['broadcast', 4, 10000, 0, 0],
     ['media', 4, 8000, 80000, 0], ['gate', 2, 2000, 20000, 4], ['toilets', 2, 400, 6000, 12], ['firstAid', 3, 500, 0, 0],
-    ['info', 2, 300, 3000, 0], ['rideshare', 3, 2000, 10000, 0], ['coach', 4, 10000, 120000, 20], ['rangeStand', 4, 5000, 30000, 600],
+    ['info', 2, 300, 3000, 0], ['rideshare', 3, 2000, 10000, 0], ['coach', 4, 10000, 120000, 20], ['rangeStand', 3, 5000, 30000, 600],
     ['sponsorDisplay', 3, 0, 0, 0], ['helipad', 5, 0, 60000, 0],
   ];
   for (const [id, tier, rent, buy, capacity] of rows) {
