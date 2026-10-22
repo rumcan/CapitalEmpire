@@ -36,6 +36,7 @@ import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 import { golfTicketPrice } from './golf/yearend';
 import { dayShare, spectatorDemand, tierInfo } from './golf/tour';
 import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
+import { applyParkingFeeDemand } from './golf/parkingfee';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -395,7 +396,7 @@ export class City {
   private startTournament(at: number): boolean {
     const g = this.golf;
     if (!g || !this.site || this.round.stage !== 'free') return false;
-    const day1Spectators = Math.round(spectatorDemand(g.tier, g.rep) * dayShare(0, tierInfo(g.tier).days));
+    const day1Spectators = applyParkingFeeDemand(Math.round(spectatorDemand(g.tier, g.rep) * dayShare(0, tierInfo(g.tier).days)), this.parkFee);
     if (!this.round.start(crowdFor(this.round.level, this.town.popK, Math.round(day1Spectators / PARTY)))) return false;
     this.town.skipTo(at);
     this.freeze(at);
@@ -581,7 +582,7 @@ export class City {
     this.calls++;
     // the parking fees of the cars parked since the last step (sim.parkedNow holds a pair per car, read before it is cleared): the books take them
     const pk = this.sim.parkedNow.length >> 1;
-    if (pk && this.parkFee > 0) this.budget.parking(pk * this.parkFee);
+    if (pk && this.parkFee > 0 && !this.golf) this.budget.parking(pk * this.parkFee);
     this.sim.parkedNow.length = 0;
     const hr = Math.floor(this.sim.clock / GAME_HOUR);
     let milestones = NO_MILESTONES, won = false;

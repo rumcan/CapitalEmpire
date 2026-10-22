@@ -61,6 +61,7 @@ import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
+import { countParkedCars } from './golf/parkingfee';
 import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
@@ -2847,7 +2848,8 @@ export class Game {
   const gCards = this.golf.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
   const baseQ = stats ? buildCourseStatsPanel({ areas: this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts, plantKind: a.plantKind, plantedMonth: a.plantedMonth })), tees: this.golf.tees, pins: this.golf.pins, aims: this.golf.aims, clubhouse: this.golf.clubhouse }, this.golf.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards)).qualityScore : 85;
-  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards);
+  const parked = countParkedCars(this.traffic.parks, this.traffic.round.surge, last.byTown);
+  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards, parked, this.parking.fee);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
