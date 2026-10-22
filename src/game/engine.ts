@@ -71,6 +71,7 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
+import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
@@ -500,6 +501,13 @@ export class Game {
     this.nightRenderer.apply(ctx, this.canvas, this.night, amount, lights);
   }
 
+  /** the cast shadows (cast-shadow.ts): cast-shadow.json, as the baked lots have them, or the owner's tweak in the gear menu (survives reloads) */
+  cast: CastShadow = CAST;
+  setCast(c: Partial<CastShadow>) {
+    this.cast = clampCast({ ...this.cast, ...c });
+    try { localStorage.setItem('capitalempire.cast', JSON.stringify(this.cast)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
   /** the contact shadows' darkness (shadow-shape.ts; 1 = TrickOrTreat's builder, 0 = none); the settings preference survives reloads */
   shadowStrength = 1;
   setShadowStrength(v: number) {
@@ -517,6 +525,7 @@ export class Game {
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1 */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
+    try { const c = localStorage.getItem('capitalempire.cast'); if (c) this.cast = clampCast(JSON.parse(c)); } catch { /* cast-shadow.json */ }
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
@@ -3309,6 +3318,8 @@ export class Game {
       if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
       const lt = tr && lightOn ? tr.lights(bx0, by0, bx1, by1, ze, Math.floor(now / 350) % 2 === 0, this.lightBuf) : null;
       const [sAt, pAt, lAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0]]);
+      // the cast shadows (cast-shadow.ts), faded out by night, then the contact shadows, then the sprites
+      if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
       if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength);
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }

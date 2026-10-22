@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 import sharp from 'sharp';
 import { LIB, LIB_DIR, render, toScreen } from './lot-render.mjs';
 import { findGlows, shines } from './find-glows.mjs';
-import { CARS, HOUSES, REARS, RUNDOWN, fitsLot, half, layoutLot, ownerScale } from './lot-layout.mjs';
+import { CARS, HOUSES, REARS, RUNDOWN, fitsLot, half, keepInBakedLot, layoutLot, ownerScale } from './lot-layout.mjs';
 import { ROOT } from './source.mjs';
 import { applyLotEdits, readLotEdits } from './overrides.mjs';
 
@@ -73,7 +73,7 @@ export function lotVariants() {
         const own = { ...e }; delete own[houseIdx]; edits = { ...all, [id]: own };
       }
     }
-    const items = applyLotEdits(id, raw, edits), h = raw[houseIdx] ?? l.house;
+    const items = applyLotEdits(id, raw, edits).filter(q => keepInBakedLot(q.id)), h = raw[houseIdx] ?? l.house;
     out.push({ id, name: `House lot ${sz.w}x${sz.d} ${rear ? 'rear' : 'front'} ${i + 1} (${story})`, W, D, rear, story, items, raw, houseIdx, swapped,
       house: items.find(q => q.id === h.id && Math.abs(q.x - h.x) < 3) ?? h });
   }
@@ -114,7 +114,7 @@ async function nightOf(v, box) {
 }
 
 export async function bakeVariant(v, res) {
-  const box = boundsOf(v.items, v.W, v.D), png = await render(v.items, box, res);
+  const box = boundsOf(v.items, v.W, v.D), png = await render(v.items, box, res, { lot: { W: v.W, D: v.D } });
   const [cx, cy] = toScreen(v.W / 2, v.D / 2), h = v.house, it = LIB.get(h.id), s = h.scale;
   // boxes in the game's convention: metres around the anchor, hx and hy the half extents (fw and fh are the footprint in
   // tiles, so the house's half extents in metres are fw and fh times its scale)

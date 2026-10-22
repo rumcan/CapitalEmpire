@@ -61,6 +61,14 @@ export const SCENARIOS = {
   bushShade: ['shadow:round-dark', 'shadow:round-soft'],                  // under bushes and the plants against the house
   longShade: ['shadow:long-soft', 'shadow:wide-faint'],                   // along the house's shady side and under the hedge
 };
+/** the scenarios a baked lot keeps (the owner, 2026-10-22: no yard decals but the leaves): its paving (walk, patio, drive, blacktop,
+ *  stepping stones), the leaves, and the soft shade under trees, bushes and along the house. The others (wear, mud, bare patches, lawn
+ *  patches, tufts, pine needles, twigs, litter, puddles, gravel, tracks, spills) are dropped after the owner's lot edits are applied (the
+ *  edits are keyed by placement, so the layout itself stays as it was) */
+export const BAKED_FLATS = new Set(['walk', 'patio', 'drive', 'blacktop', 'stepping', 'fenceLeaves', 'treeLeaves', 'houseLeaves', 'canopy', 'bushShade', 'longShade']);
+const SCENARIO_OF = new Map(Object.entries(SCENARIOS).flatMap(([sc, ids]) => ids.map(id => [id, sc])));
+/** is a placement kept in a baked lot: every upright, and the flats of the kept scenarios (a flat of no scenario stays) */
+export const keepInBakedLot = id => { const it = LIB.get(id); if (!it?.flat) return true; const sc = SCENARIO_OF.get(id); return !sc || BAKED_FLATS.has(sc); };
 /** flat decals that never belong on a house lot, and why */
 export const EXCLUDED = {
   arcade: [/^arcade:/, 'arcade floor decals: the arcade interior only'],

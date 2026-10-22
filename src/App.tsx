@@ -211,7 +211,7 @@ export default function App() {
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Recurring dark nights bring kids, monsters and traffic diversions every few game days">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
                     </label>
@@ -220,6 +220,17 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" title="Every tree, building, prop and car throws its silhouette onto the ground away from the sun (the baked house lots have theirs baked in, from cast-shadow.json)">
+                      <input type="checkbox" checked={game.cast.on} onChange={e => { game.setCast({ on: e.target.checked }); bump(); }} />
+                      Cast shadows
+                    </label>
+                    {game.cast.on && ([['Sun side', 'angle', 0, 360, 5, `${Math.round(game.cast.angle)}°`], ['Length', 'length', 0.1, 1.5, 0.05, `${Math.round(game.cast.length * 100)}%`], ['Darkness', 'strength', 0, 1, 0.02, `${Math.round(game.cast.strength * 100)}%`]] as const).map(([label, k, lo, hi, step, show]) => (
+                      <label key={k} className="flex items-center gap-2 px-2 py-1 text-xs" title={k === 'angle' ? 'The way the shadows fall on screen: 0 right, 90 down, 180 left, 270 up' : undefined}>
+                        <span className="w-16 shrink-0">{label}</span>
+                        <input type="range" className="min-w-0 flex-1" min={lo} max={hi} step={step} value={game.cast[k]} onChange={e => { game.setCast({ [k]: +e.target.value }); bump(); }} />
+                        <span className="w-10 text-right tabular-nums">{show}</span>
+                      </label>
+                    ))}
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
@@ -1335,7 +1346,7 @@ function hintFor(g: Game) {
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
     case 'course': { const q = g.paint; return q.mode === 'brush' ? `COURSE (hole ${q.brushHole}, ${q.brushKind}): drag to paint · Alt-drag erases · [ ] size · 1–7 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
-    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
+    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand · Tab: Draw, Pick, Erase') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it · Esc: back to Draw · Tab: the next mode' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return g.parking.mode === 'rows' ? 'ROWS: drag along the ground to lay bays · Tab flips the side · Shift snaps 15° · click a row to remove it' : g.parking.mode === 'curb' ? 'ON-STREET: hover a road and click the kerb to park along it · click again to remove' : 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
