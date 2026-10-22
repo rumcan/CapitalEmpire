@@ -25,12 +25,14 @@ import { STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
 import { computeTournamentCloseBook } from './game/golf/yearend';
+import { formatMultiDayStatus } from './game/golf/multiday';
 import { Icon, type IconName } from './ui/Icon';
 import { NightPanel } from './ui/NightPanel';
 import { RoadThumb } from './ui/RoadThumb';
 import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
 import { CourseStatsPanel } from './ui/CourseStatsPanel';
+import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
@@ -204,6 +206,7 @@ export default function App() {
               ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
               <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)"><Icon name="fullscreen" size={22} /></button>
+              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => { game.grassPanel = !game.grassPanel; game.grassAction = null; game.emit(); }} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
@@ -296,6 +299,7 @@ export default function App() {
           </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
+          {game.grassPanel && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
           <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
@@ -583,7 +587,7 @@ function EvalScreen({ game }: { game: Game }) {
  </div>
           {ye.multiDay && ye.multiDay.resolvedDays > 0 && (
             <div className="mt-2 border-t border-white/10 pt-2 text-center text-[11px] text-slate-300">
-              <span className="font-semibold text-amber-300">{ye.multiDay.statusLine}</span> · Total {ye.multiDay.totalSpectators.toLocaleString()} spectators · {money(ye.multiDay.totalRevenue)} gross
+              <span className="font-semibold text-amber-300">{formatMultiDayStatus(ye.multiDay.liveDays, ye.multiDay.resolvedDays, ye.multiDay.practiceDays ?? 0)}</span> · Total {ye.multiDay.totalSpectators.toLocaleString()} spectators · {money(ye.multiDay.totalRevenue)} gross
             </div>
           )}
  </div>
@@ -597,14 +601,14 @@ function EvalScreen({ game }: { game: Game }) {
               : 'No change since the last run'}
           </p>
         </div>
-        {last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{golf ? `Perfect! The town grows ${Math.round(TOWN_GROWTH * 100)}%` : `Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>}
+        {golf ? (ye?.townGrowthText && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{ye.townGrowthText}</div>) : (last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{`Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>)}
         <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
           {last.byTown.map((t, k) => (
             <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} {golf ? 'spectators' : 'fans'} · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}{t.byBus > 0 ? ` · by bus ${t.byBus}` : ''}</p>
           ))}
         </div>
         <p className="text-sm text-slate-200">
-        {book ? (<>{book.toll > 0 && <>Toll <span className="tabular-nums text-emerald-300">{sgn(book.toll)}</span> · </>}Green fees <span className="tabular-nums text-emerald-300">{sgn(book.greenFeeIncome)}</span> · Memberships <span className="tabular-nums text-emerald-300">{sgn(book.membershipIncome)}</span> · Tickets <span className="tabular-nums text-emerald-300">{sgn(book.tickets)}</span> · Tents <span className="tabular-nums text-emerald-300">{sgn(book.tents)}</span>{book.sponsors > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(book.sponsors)}</span></>}{book.tv > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(book.tv)}</span></>} · Purse <span className="tabular-nums text-red-300">−{money(book.purse)}</span> · Tent rent <span className="tabular-nums text-red-300">−{money(book.rent)}</span> · Tent upkeep <span className="tabular-nums text-red-300">−{money(book.annualTentUpkeep)}</span> · Course upkeep <span className="tabular-nums text-red-300">−{money(book.annualCourseUpkeep)}</span>{book.liveUpkeep > 0 && <> · Upkeep <span className="tabular-nums text-red-300">−{money(book.liveUpkeep)}</span></>} · Net <span className={`tabular-nums ${book.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(book.net)}</span></>) : (<>Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span></>)}
+        {book ? (<>{book.toll > 0 && <>Toll <span className="tabular-nums text-emerald-300">{sgn(book.toll)}</span> · </>}Green fees <span className="tabular-nums text-emerald-300">{sgn(book.greenFeeIncome)}</span> · Memberships <span className="tabular-nums text-emerald-300">{sgn(book.membershipIncome)}</span> · Tickets <span className="tabular-nums text-emerald-300">{sgn(book.tickets)}</span> · Parking <span className="tabular-nums text-emerald-300">{sgn(book.parking)}</span> · Tents <span className="tabular-nums text-emerald-300">{sgn(book.tents)}</span>{book.sponsors > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(book.sponsors)}</span></>}{book.tv > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(book.tv)}</span></>} · Purse <span className="tabular-nums text-red-300">−{money(book.purse)}</span> · Tent rent <span className="tabular-nums text-red-300">−{money(book.rent)}</span> · Tent upkeep <span className="tabular-nums text-red-300">−{money(book.annualTentUpkeep)}</span> · Course upkeep <span className="tabular-nums text-red-300">−{money(book.annualCourseUpkeep)}</span>{book.liveUpkeep > 0 && <> · Upkeep <span className="tabular-nums text-red-300">−{money(book.liveUpkeep)}</span></>} · Net <span className={`tabular-nums ${book.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(book.net)}</span></>) : (<>Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span></>)}
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">

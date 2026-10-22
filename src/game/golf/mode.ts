@@ -22,3 +22,23 @@ export interface GolfSave {
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament
  *  (0..12, fractional), the tournament's year, and whether the tournament day is under way (the round's surge or its results) */
 export interface GolfView { tier: number; tierName: string; month: string; monthsLeft: number; year: number; live: boolean }
+
+/** normalizes a loaded GolfSave so missing array or optional fields from older/partial saves default safely without mutating valid fields */
+export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): GolfSave | null {
+  if (!g || !g.town || !g.course || !g.clubhouse) return null;
+  const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
+  return {
+    ...g,
+    v: 1,
+    tier: g.tier ?? 1,
+    rep: g.rep ?? 0,
+    town: g.town,
+    course: g.course,
+    parcel,
+    dir: g.dir ?? 0,
+    tees: g.tees ?? [],
+    pins: g.pins ?? [],
+    aims: g.aims ?? [],
+    clubhouse: g.clubhouse,
+  };
+}

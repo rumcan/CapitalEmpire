@@ -10,6 +10,8 @@ import { gateQueue, gateRate } from './venue';
 import { arrivalShare, exitShare, EXIT_END, GATES_OPEN } from './calendar';
 import { ON_TIME_GRACE_MIN } from './tournamentday';
 import { courseMonthlyUpkeep } from './costs';
+import { townGrowthLine, townGrowthRate } from './towngrowth';
+import { computeParkingIncome } from './parkingfee';
 
 /** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 25%, about 36,000 dollars for the old nine, which is what the campaign simulator assumes (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
 export const COURSE_UPKEEP_YEAR_SHARE = 0.25;
@@ -59,7 +61,7 @@ import {
   hasExpressGates,
   hasFirstAidCoverage,
 } from './golfcards';
-import { resolveMultiDayTournament, type MultiDaySummary } from './multiday';
+import { resolveMultiDayWithPractice, type MultiDaySummary } from './multiday';
 import {
   WEATHER_INFO,
   applyWeatherToDayFacts,
@@ -100,6 +102,11 @@ tvIncome?: number;
 purse?: number;
 multiDay?: MultiDaySummary;
 weather?: WeatherInfo;
+townGrowth?: number;
+townGrowthText?: string;
+carsParked?: number;
+parkingFee?: number;
+parkingIncome?: number;
 }
   
 /**  
@@ -127,6 +134,7 @@ export interface TournamentCloseBook {
   upkeepCost: number;
   liveTickets: number;
   tickets: number;
+  parking: number;
   tents: number;
   sponsors: number;
   tv: number;
@@ -148,16 +156,18 @@ export function computeTournamentCloseBook(
   courseAreas: Parameters<typeof courseMonthlyUpkeep>[0] = [],
   liveDayUpkeep = 0,
   liveDayToll = 0,
+  parkingIncomeOverride?: number,
 ): TournamentCloseBook {
-  const extraTickets = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+  const extraTickets = (ye.multiDay && (ye.multiDay.resolvedDays > 0 || (ye.multiDay.practiceDays ?? 0) > 0))
     ? Math.max(0, ye.multiDay.totalTickets - liveDayTicketsBooked)
     : 0;
-  const extraTents = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+  const extraTents = (ye.multiDay && (ye.multiDay.resolvedDays > 0 || (ye.multiDay.practiceDays ?? 0) > 0))
     ? Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))
     : 0;
   const greenFees = Math.max(0, Math.round(ye.greenFeeIncome ?? 0));
   const memberships = Math.max(0, Math.round(ye.membershipIncome ?? 0));
-  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + greenFees + memberships));
+  const parking = Math.max(0, Math.round(parkingIncomeOverride ?? ye.parkingIncome ?? 0));
+  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + greenFees + memberships + parking));
   const purse = Math.max(0, Math.round(ye.purse ?? 0));
   const rent = Math.max(0, Math.round(ye.tentRentCost ?? 0));
   const annualTentUpkeep = Math.max(0, Math.round((ye.tentUpkeep ?? 0) * 12));
@@ -185,6 +195,7 @@ export function computeTournamentCloseBook(
     upkeepCost,
     liveTickets,
     tickets,
+    parking,
     tents,
     sponsors,
     tv,
@@ -282,6 +293,8 @@ holes: readonly Hole[] = [],
 seedOrWeather?: number | WeatherCondition,
 qualityScore?: number,
 cards: readonly string[] = [],
+carsParked = 0,
+parkingFee = 0,
 ): YearEndResult {
 const weather: WeatherInfo = typeof seedOrWeather === 'string'
   ? WEATHER_INFO[seedOrWeather]
@@ -363,7 +376,10 @@ if (structures.length > 0) {
  verdictText = `Demoted to ${tierInfo(tier).name} next year`;  
  }  
   
- const multiDay = resolveMultiDayTournament({
+ const multiDay = resolveMultiDayWithPractice({
+   seed: typeof seedOrWeather === 'number' ? seedOrWeather : undefined,
+   run: roundResult.run || 1,
+   practiceWeather: typeof seedOrWeather === 'string' ? [seedOrWeather, seedOrWeather, seedOrWeather] : undefined,
    tier: prevTier,
    liveArrived: effectiveArrived,
    liveTents: tentRevenue,
@@ -396,5 +412,10 @@ if (structures.length > 0) {
  purse: commercial.purse,
  multiDay,
  weather,
+ townGrowth: townGrowthRate({ satisfaction, attendanceShare: roundResult.rate, tier: prevTier, reputation: rep }),
+ townGrowthText: townGrowthLine(townGrowthRate({ satisfaction, attendanceShare: roundResult.rate, tier: prevTier, reputation: rep })),
+ carsParked: Math.max(0, Math.round(carsParked)),
+ parkingFee: Math.max(0, Math.round(parkingFee)),
+ parkingIncome: computeParkingIncome(carsParked, parkingFee),
  };
 }  

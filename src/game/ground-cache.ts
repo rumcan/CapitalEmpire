@@ -10,6 +10,7 @@ import type { GLRenderer } from './gl';
 import { unionBox, type BBox } from './network';
 import type { Waterway } from './terrain/types';
 import GroundWorker from './ground.worker?worker&inline';
+import type { GrassCellView } from './ext/grass-management';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -45,6 +46,13 @@ export class GroundCache {
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }
   terrain(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.broadcast({ t: 'terrain', cls: t.cls, height: t.height, waters: t.waters }); }
   blocks(data: Float32Array) { this.broadcast({ t: 'blocks', data }); }
+  /** Changed turf cells invalidate only the chunks that touch them, retaining the old bake until replacement. */
+  grass(cells: GrassCellView[], strength: number, heat: boolean, mowing = false) {
+    this.broadcast({ t: 'grass', cells, strength, heat, mowing });
+    const local = new Map<string, BBox>();
+    for (const c of cells) { const x = Math.floor(c.x / 32) * 32, y = Math.floor(c.y / 32) * 32; local.set(`${x},${y}`, [x, y, x + 32, y + 32]); }
+    for (const box of local.values()) this.invalidate(box, false, 0, 'gm');
+  }
   /** the lot patches of the keys in `set` replace their old ones, `drop` removes keys; the chunks under the old and new patches go stale */
   lotGround(set: [string, LotPatch[]][], drop: string[]) {
     if (!set.length && !drop.length) return;

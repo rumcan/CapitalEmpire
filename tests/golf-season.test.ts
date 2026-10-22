@@ -9,7 +9,8 @@ import type { BizDef } from '../src/game/business/state';
 import { BUSINESS, BUSINESSES } from '../src/game/business/catalogue';
 import { crowdFor, siteAt } from '../src/game/event/site';
 import { L1_CARS, LEVEL_MUL, PARTY, STADIUM_H, STADIUM_W } from '../src/game/event/config';
-import { spectatorDemand } from '../src/game/golf/tour';
+import { dayShare, spectatorDemand, tierInfo } from '../src/game/golf/tour';
+import { applyParkingFeeDemand } from '../src/game/golf/parkingfee';
 import { GAME_DAY } from '../src/game/budget';
 import { MAP } from '../src/game/iso';
 
@@ -78,7 +79,7 @@ test('golf on, a clubhouse, the clock across the day\'s boundary: the tournament
   assert.ok(city.surge, 'the surge is planned');
   assert.ok(city.sim.frozen, 'the clock is frozen');
   assert.ok(Math.abs(city.sim.clock - GAME_DAY) < 1e-6, `the clock is frozen at the boundary (${city.sim.clock})`);
-  assert.equal(city.round.crowd.reduce((a, b) => a + b, 0), Math.round(spectatorDemand(1, 40) / PARTY), 'the crowd is one tournament day\'s cars');
+  assert.equal(city.round.crowd.reduce((a, b) => a + b, 0), Math.round(applyParkingFeeDemand(Math.round(spectatorDemand(1, 40) * dayShare(0, tierInfo(1).days)), city.parkFee) / PARTY), 'the crowd is one tournament day\'s cars, trimmed by the parking fee');
   for (let k = 0; k < 5; k++) city.step(10);
   assert.equal(city.round.stage, 'surge', 'still in the surge a few seconds on');
   assert.ok(Math.abs(city.sim.clock - GAME_DAY) < 1e-6, 'the clock stands still through the surge');
