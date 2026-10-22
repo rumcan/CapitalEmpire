@@ -216,8 +216,14 @@ export class Textures {
   roundSprites: LeafSprite[] = LEAVES.filter(l => l.round).sort((a, b) => a.dim - b.dim);
   private store(name: TexName, base: Cnv) { for (const L of [...LEVELS, ...MID_LEVELS]) if (!this.mips.has(name + '@' + L)) this.mips.set(name + '@' + L, downscale(base, L / AUTHOR)); }
 
-  async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void) {
+  /** what every worker takes from the art, whether it builds the textures or restores them from a snapshot or the browser cache: the
+   *  owner's texture presets and how the base grass lies (its angle and tilt) */
+  configure(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }) {
     if (art.presets?.length) { this.photos = [...PHOTO_TEX, ...art.presets]; for (const p of art.presets) this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES)); }
+    this.grassLay = { angle: art.grassMix?.mix.angle ?? DEFAULT_MIX.angle, tilt: art.grassMix?.mix.tilt ?? DEFAULT_MIX.tilt };
+  }
+  async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void) {
+    this.configure(art);
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
     const steps = PAINTED.length + 12 + EAGER_PHOTO.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
@@ -245,7 +251,7 @@ export class Textures {
     // the base grass: the owner's mix and picture sizes when the studio's Ground tab saved them (art.grassMix), else the game's original
     const gm = art.grassMix, pa = Math.round((gm?.px[0] ?? 256) * AUTHOR), pb = Math.round((gm?.px[1] ?? 256) * AUTHOR);
     const grass = mixGrass(toCanvas(grassA, pa, pa), toCanvas(grassB, pb, pb), gm?.mix ?? DEFAULT_MIX, BASE_W, BASE_H, AUTHOR);
-    this.store('grass', grass); this.grassLay = { angle: gm?.mix.angle ?? DEFAULT_MIX.angle, tilt: gm?.mix.tilt ?? DEFAULT_MIX.tilt };
+    this.store('grass', grass);
     // ---- the Paint tool's photo textures that every worker needs (grasses, concrete): built here; the others are built by ensure() on first use
     for (const p of PHOTO_TEX) if (EAGER_PHOTO.has(p.tex)) { await this.buildPhoto(p); await tick(); }
     { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = '#b9a98a'; g.fillRect(0, 0, BASE_W, BASE_H); this.store('meadow', c); }

@@ -25,6 +25,8 @@ const handle = async (m: ToWorker) => {
     switch (m.t) {
       case 'init': {
         painter.setTerrain(m.terrain, m.height, m.waters);
+        // every worker (the builder, and the peers that restore its snapshot) takes the presets and the grass's angle and tilt from the art
+        tex.configure(m.art);
         const t0 = performance.now();
         if (!m.build) { ready = new Promise<void>(res => { gotTextures = res; }); await ready; post({ t: 'ready', ms: performance.now() - t0 }); break; }
         // the builder: textures from the cache if this browser has them, else built (and cached for next time)
