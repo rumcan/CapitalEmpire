@@ -13,6 +13,7 @@ export type Rect = [number, number, number, number];
 export interface GolfSave {
  v: 1; tier: number; rep: number; poorYears?: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
+ parcels?: Rect[];
 }
 
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament

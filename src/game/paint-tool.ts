@@ -27,7 +27,7 @@ function loadBrush(): Record<BrushKind, BrushSet> {
   return out;
 }
 /** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
-export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void }
+export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void; ownedLand?: (pts: number[]) => boolean }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -253,6 +253,12 @@ export class PaintTool {
   const why = checkArea(this.pts);
   if (why) { this.host.toast(why, 'warn'); if (fromLasso) this.cancel(); this.host.emit(); return; }
   if (this.host.golfMode?.()) {
+  if (this.host.ownedLand && !this.host.ownedLand(this.pts)) {
+  this.host.toast('Cannot paint outside owned course land: area must be fully inside owned parcels', 'warn');
+  if (fromLasso) this.cancel();
+  this.host.emit();
+  return;
+  }
   const cost = Math.round(areaBuildCost(this.pts, this.style.tex, 'seed'));
   if (cost > 0) {
   const treasury = this.host.money?.() ?? 0;

@@ -159,7 +159,9 @@ export default function App() {
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
                   <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>
-                  <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
+                  <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>
+                  <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>  
+ <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -283,7 +285,7 @@ export default function App() {
           {game.panel === 'budget' && <BudgetPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
-          <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); }} />
+          <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
           </div>
           )}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}

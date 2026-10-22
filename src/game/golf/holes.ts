@@ -26,6 +26,25 @@ export function surfaceAt(areas: CourseArea[], x: number, y: number): GolfSurfac
   return null;
 }
 
+/** validation result for moving a tee marker or pin */
+export interface MarkerValidation { ok: boolean; reason?: string }
+
+/** validates that a pin lies on a green and a tee marker lies on a tee area */
+export function validateMarkerPlacement(
+ areas: CourseArea[],
+ kind: 'pin' | 'back' | 'middle' | 'forward',
+ x: number,
+ y: number,
+): MarkerValidation {
+ const surface = surfaceAt(areas, x, y);
+ if (kind === 'pin') {
+ if (surface !== 'green') return { ok: false, reason: 'A pin must be placed on a green' };
+ } else {
+ if (surface !== 'tee') return { ok: false, reason: `A ${kind} tee marker must be placed on a tee` };
+ }
+ return { ok: true };
+ }
+
 /** even-odd point in polygon; pts is x0 y0 x1 y1 ... */
 function inPoly(p: number[], x: number, y: number): boolean {
   let c = false;

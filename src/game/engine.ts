@@ -58,8 +58,11 @@ import { monthsLeft, seasonLabel, yearOf } from './golf/calendar';
 import { computeYearEnd, type YearEndResult } from './golf/yearend';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
+import { adjacentBlockPrice, buyAdjacentBlock, isAdjacentBlock, polyInParcels, type ParcelLandClass } from './golf/parcels';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout } from './golf/types';
+import { validateMarkerPlacement } from './golf/holes';
+import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { tierInfo, type Need } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
 
@@ -282,7 +285,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n) });
+  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts) });
   /** the Paint tool's projection into css px (its handles' hit tests): tile (x, y) is at (o[0] + x*o[2] + y*o[4], o[1] + x*o[3] + y*o[5]) */
   private paintAffine(o: number[]) { const s = this.screen(0, 0), ex = this.screen(1, 0), ey = this.screen(0, 1), d = this.dpr; o[0] = s.x / d; o[1] = s.y / d; o[2] = (ex.x - s.x) / d; o[3] = (ex.y - s.y) / d; o[4] = (ey.x - s.x) / d; o[5] = (ey.y - s.y) / d; }
   /** the Paint tool's snap distance: 10 css px in tiles */
@@ -461,7 +464,16 @@ export class Game {
       this.golf = s.save;
       for (const p of dressCourse(s.layout, seed)) {
       const i = LIB_INDEX.get(p.id);
-      if (i !== undefined) this.addProp(i, p.x, p.y, p.flip, p.scale);
+      if (i !== undefined) {
+      const prop = this.addProp(i, p.x, p.y, p.flip, p.scale);
+      const pin = s.layout.pins.find(q => Math.abs(q.x - p.x) < 1 && Math.abs(q.y - p.y) < 1);
+      if (pin && (p.id === PIN_RED_ID || p.id === PIN_YELLOW_ID)) {
+      this.golfProps.set('pin:' + pin.hole, prop);
+      } else {
+      const tee = s.layout.tees.find(q => Math.abs(q.x - p.x) < 1 && Math.abs(q.y - p.y) < 1);
+      if (tee) this.golfProps.set(`tee:${tee.hole}:${tee.kind}`, prop);
+      }
+      }
       }
       return true;
       }
@@ -824,7 +836,77 @@ export class Game {
     this.farmsUpdate(true);
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
     this.traffic.setGolf(!!this.golf, this.golf?.tier ?? 1, this.golf?.rep ?? 0);
-  }
+    this.syncGolfProps();
+    }
+    golfProps = new Map<string, Prop>();
+    holesTool = false;
+    selectedGolfMarker: { hole: number; kind: 'pin' | 'back' | 'middle' | 'forward'; x: number; y: number } | null = null;
+    toggleHolesTool() {
+    if (!this.golfMode) return;
+    this.holesTool = !this.holesTool;
+    if (!this.holesTool) this.selectedGolfMarker = null;
+    this.emit();
+    }
+    selectGolfMarker(hole: number, kind: 'pin' | 'back' | 'middle' | 'forward') {
+    if (!this.golf) return;
+    const pt = kind === 'pin' ? this.golf.pins.find(p => p.hole === hole) : this.golf.tees.find(t => t.hole === hole && t.kind === kind);
+    if (pt) {
+    this.selectedGolfMarker = { hole, kind, x: pt.x, y: pt.y };
+    this.jumpTo(pt.x, pt.y);
+    this.toast(`Selected Hole ${hole} ${kind === 'pin' ? 'pin' : kind + ' tee'}. Click a new position on the course to move it.`);
+    this.emit();
+    }
+    }
+    private syncGolfProps() {
+    if (!this.golf) return;
+    this.golfProps.clear();
+    for (const pin of this.golf.pins) {
+    const key = 'pin:' + pin.hole;
+    const id = pin.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID;
+    const item = LIB_INDEX.get(id);
+    for (const p of this.props) {
+    if (p.item === item && Math.hypot(p.x - pin.x, p.y - pin.y) < 2) { this.golfProps.set(key, p); break; }
+    }
+    }
+    for (const tee of this.golf.tees) {
+    const key = `tee:${tee.hole}:${tee.kind}`;
+    const id = tee.kind === 'back' ? TEE_BACK_ID : tee.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
+    const item = LIB_INDEX.get(id);
+    for (const p of this.props) {
+    if (p.item === item && Math.hypot(p.x - tee.x, p.y - tee.y) < 2) { this.golfProps.set(key, p); break; }
+    }
+    }
+    }
+    moveGolfMarker(hole: number, kind: 'pin' | 'back' | 'middle' | 'forward', x: number, y: number): boolean {
+    if (!this.golf) return false;
+    const areas: CourseArea[] = this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts }));
+    const v = validateMarkerPlacement(areas, kind, x, y);
+    if (!v.ok) {
+    this.toast(v.reason ?? 'Invalid placement', 'warn');
+    return false;
+    }
+    const key = kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`;
+    const oldProp = this.golfProps.get(key);
+    if (oldProp) this.removeProp(oldProp);
+    const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : (kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID);
+    const item = LIB_INDEX.get(sprId);
+    if (item !== undefined) {
+    const newProp = this.addProp(item, x, y, false, 1);
+    this.golfProps.set(key, newProp);
+    }
+    if (kind === 'pin') {
+    const p = this.golf.pins.find(q => q.hole === hole);
+    if (p) { p.x = x; p.y = y; } else this.golf.pins.push({ hole, x, y });
+    } else {
+    const t = this.golf.tees.find(q => q.hole === hole && q.kind === kind);
+    if (t) { t.x = x; t.y = y; } else this.golf.tees.push({ hole, kind, x, y });
+    }
+    this.selectedGolfMarker = null;
+    this.scheduleSave();
+    this.emit();
+    this.toast(`Moved Hole ${hole} ${kind === 'pin' ? 'pin' : kind + ' tee'} to (${Math.round(x)}, ${Math.round(y)})`);
+    return true;
+    }
 
   // ---------- road routing ----------
   setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.tool !== t) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
@@ -1458,8 +1540,28 @@ export class Game {
 
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
-    const mx = e.offsetX, my = e.offsetY;
-    this.overlay.setPointerCapture(e.pointerId);
+  const mx = e.offsetX, my = e.offsetY;
+  if (this.landMode && this.landHover && e.button === 0) {
+  this.buyLandBlock(this.landHover.rect);
+  return;
+  }
+  this.overlay.setPointerCapture(e.pointerId);
+    if (this.holesTool && this.golf && this.hover && e.button === 0) {
+    if (this.selectedGolfMarker) {
+    this.moveGolfMarker(this.selectedGolfMarker.hole, this.selectedGolfMarker.kind, this.hover.x, this.hover.y);
+    return;
+    }
+    for (const pin of this.golf.pins) {
+    if (Math.hypot(this.hover.x - pin.x, this.hover.y - pin.y) <= 3) {
+    this.selectGolfMarker(pin.hole, 'pin'); return;
+    }
+    }
+    for (const tee of this.golf.tees) {
+    if (Math.hypot(this.hover.x - tee.x, this.hover.y - tee.y) <= 2) {
+    this.selectGolfMarker(tee.hole, tee.kind); return;
+    }
+    }
+    }
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
     if (this.keys.has(' ')) this.spacePanned = true;
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
@@ -1495,9 +1597,23 @@ export class Game {
     }
   }
   pointerMove(e: PointerEvent) {
-    const mx = e.offsetX, my = e.offsetY;
-    this.hover = this.tileAt(mx, my);
-    const d = this.dragging;
+  const mx = e.offsetX, my = e.offsetY;
+  this.hover = this.tileAt(mx, my);
+  if (this.landMode && this.golf && this.hover) {
+  const bx = Math.floor(this.hover.x / 40) * 40, by = Math.floor(this.hover.y / 40) * 40;
+  const cand: [number, number, number, number] = [bx, by, 40, 40];
+  const parcels = this.golf.parcels ?? [this.golf.parcel];
+  if (isAdjacentBlock(parcels, cand)) {
+  const info = this.blockLandClass(cand);
+  const price = adjacentBlockPrice({ rect: cand, ...info, townPop: this.traffic.pop });
+  this.landHover = { rect: cand, price, landClass: info.landClass };
+  } else {
+  this.landHover = null;
+  }
+  } else if (this.landMode) {
+  this.landHover = null;
+  }
+  const d = this.dragging;
     if (d) {
       if (Math.abs(mx - d.sx) + Math.abs(my - d.sy) > 3) d.moved = true;
       if (d.kind === 'pan') { this.cam.X = d.camX - (mx - d.sx) / this.cam.z; this.cam.Y = d.camY - (my - d.sy) / this.cam.z; this.clampCam(); }
@@ -1931,8 +2047,29 @@ export class Game {
     }
     // the bay rows' lots and on-street runs: their entrances and labels, and a lot with no road in reach
     this.parkView.ctx = ctx; this.parkView.dpr = dpr; drawParkingOverlay(this.parkView, this.extraParks, this.traffic.parks, this.parking.rows);
+    if (this.golf) {
+    const parcels = this.golf.parcels ?? [this.golf.parcel];
+    const rect = (x: number, y: number, w: number, h: number) => { this.setIso(ctx); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.setTransform(1, 0, 0, 1, 0, 0); };
+    for (const r of parcels) {
+    rect(r[0], r[1], r[2], r[3]);
+    ctx.strokeStyle = 'rgba(234, 179, 8, 0.7)'; ctx.lineWidth = 1.5 * dpr; ctx.setLineDash([4 * dpr, 4 * dpr]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (this.landMode && this.landHover) {
+    const h = this.landHover, hr = h.rect;
+    rect(hr[0], hr[1], hr[2], hr[3]);
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.2)'; ctx.fill();
+    ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2 * dpr; ctx.stroke();
+    const c = this.screen(hr[0] + hr[2] / 2, hr[1] + hr[3] / 2);
+    const label = `$${h.price.toLocaleString()} (${h.landClass})`;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(2, 6, 23, 0.9)'; ctx.lineWidth = 3 * dpr; ctx.strokeText(label, c.x, c.y);
+    ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+    }
+    }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
-  }
+    }
   /** the car park drag: the rect green where parkValid allows it, else red; its bays and entrances when it can be built; and the verdict at the cursor
    *  (the reason, or the cost short of the money, or the bays and the cost) */
   private drawParkPreview(ctx: CanvasRenderingContext2D) {
@@ -2224,6 +2361,55 @@ export class Game {
   golf: GolfSave | null = null;
   /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
   get golfMode(): boolean { return this.golf !== null; }
+  landMode = false;
+  landHover: { rect: [number, number, number, number]; price: number; landClass: ParcelLandClass } | null = null;
+  toggleLandMode() {
+  if (!this.golfMode) return;
+  this.landMode = !this.landMode;
+  if (!this.landMode) this.landHover = null;
+  this.emit();
+  }
+  private blockLandClass(r: [number, number, number, number]): { landClass: ParcelLandClass; houses: number; buildings: number } {
+  const [bx, by, bw, bh] = r;
+  for (let y = by; y < by + bh; y += 4) {
+  for (let x = bx; x < bx + bw; x += 4) {
+  if (x >= 0 && x < MAP && y >= 0 && y < MAP && this.terrain.cls[y * MAP + x] === TC.WATER) return { landClass: 'unbuildable', houses: 0, buildings: 0 };
+  }
+  }
+  let houses = 0, buildings = 0, com = false, ind = false;
+  for (const l of this.traffic.lots.values()) {
+  if (l.level >= 1 && l.o[0] >= bx && l.o[0] < bx + bw && l.o[1] >= by && l.o[1] < by + bh) {
+  if (l.use === 1) houses++;
+  else if (l.use === 2) { buildings++; com = true; }
+  else if (l.use === 3) { buildings++; ind = true; }
+  else if (l.use > 1) buildings++;
+  }
+  }
+  if (com) return { landClass: 'commercial', houses, buildings };
+  if (ind) return { landClass: 'industrial', houses, buildings };
+  if (houses > 0 || buildings > 0) return { landClass: 'town', houses, buildings };
+  for (const f of this.farmMap.farms.values()) {
+  if (f.p.o.x >= bx && f.p.o.x < bx + bw && f.p.o.y >= by && f.p.o.y < by + bh) return { landClass: 'farm', houses: 0, buildings: 0 };
+  }
+  return { landClass: 'open', houses: 0, buildings: 0 };
+  }
+  buyLandBlock(r: [number, number, number, number]) {
+  if (!this.golf) return;
+  const parcels = this.golf.parcels ?? [this.golf.parcel];
+  const info = this.blockLandClass(r);
+  const res = buyAdjacentBlock(parcels, { rect: r, ...info, townPop: this.traffic.pop }, this.money);
+  if (!res.ok) {
+  this.toast(res.reason ?? 'Cannot buy this block', 'warn');
+  return;
+  }
+  this.golf.parcels = res.parcels;
+  this.golf.parcel = res.bounds;
+  this.traffic.spend('construction', res.price);
+  this.scheduleSave();
+  this.toast(`Purchased ${info.landClass} block ($${res.price.toLocaleString()})`);
+  this.landHover = null;
+  this.emit();
+  }
   /** the golf HUD's view (null outside golf mode) */
   golfView(): GolfView | null {
   if (!this.golf) return null;
