@@ -33,7 +33,8 @@ import { lotPark, rowLots, rowQuad, type BayRowDef } from './event/rows';
 import { resolveCurb, type Curb, type CurbDef } from './event/curb';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
-import { spectatorDemand } from './golf/tour';
+import { golfTicketPrice } from './golf/yearend';
+import { dayShare, spectatorDemand, tierInfo } from './golf/tour';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -295,6 +296,7 @@ export class City {
     this.resetDisasters(seed);
     // a new valley has no toll gates until the player places them again (their booths are the old roads')
     this.setTolls([]);
+    if (!golf) this.golf = null;
     this.setBudget(null, null, golf);
     }
 
@@ -364,7 +366,8 @@ export class City {
   private startTournament(at: number): boolean {
     const g = this.golf;
     if (!g || !this.site || this.round.stage !== 'free') return false;
-    if (!this.round.start(crowdFor(this.round.level, this.town.popK, Math.round(spectatorDemand(g.tier, g.rep) / PARTY)))) return false;
+    const day1Spectators = Math.round(spectatorDemand(g.tier, g.rep) * dayShare(0, tierInfo(g.tier).days));
+    if (!this.round.start(crowdFor(this.round.level, this.town.popK, Math.round(day1Spectators / PARTY)))) return false;
     this.town.skipTo(at);
     this.freeze(at);
     this.round.startNow(); this.beginSurge();
@@ -965,11 +968,11 @@ export class City {
     const c = this.fanCounts(), by = this.surge ? this.surge.result(c) : [];
     let arrived = 0; for (const f of c.fans) arrived += f;
     L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / (L.sent * PARTY) : 0;
-    // the money: the payout (signed) is paid now, the net is the toll and payout less the upkeep; the bottlenecks as the crowd meets them
-    L.perfect = L.rate >= PERFECT_RATE; L.payout = payout(L.rate, L.level);
-    // the tickets: a ticket per fan at the doors (booked as business takings); the stadium's stats take the round's arrivals and its rate
-    const tk = arrived * ticketPrice(this.round.cards);
-    if (tk > 0) { L.tickets = tk; this.budget.bizIncome(tk); }
+    // the money: the payout (signed) is paid now in classic mode (golf mode replaces it with purse and sponsors), the net is the toll and payout less the upkeep
+    L.perfect = L.rate >= PERFECT_RATE; L.payout = this.golf ? 0 : payout(L.rate, L.level);
+    // the tickets: a ticket per fan at the doors (golf tier ticket price in golf mode, stadium ticket price in classic mode; booked as business takings)
+    const tk = arrived * (this.golf ? golfTicketPrice(this.golf.tier) : ticketPrice(this.round.cards));
+    if (tk > 0) { L.tickets = tk; this.budget.bizIncome(tk); } else if (this.golf) { L.tickets = 0; }
     L.net = (L.toll ?? 0) + (L.tickets ?? 0) + L.payout - L.upkeep;
     const st = this.businesses.find(b => b.type === 'stadium'), s = st ? this.bizStats.get(st.id) : undefined;
     if (s) {
@@ -980,7 +983,7 @@ export class City {
     const bc = this.businesses.find(b => b.type === 'buscompany'), bs = bc ? this.bizStats.get(bc.id) : undefined;
     if (bs && this.busRiders >= BUS_GOOD_RIDERS) bs.goodDays++;
     L.stuck = this.report(5).top.map(i => ({ label: i.label, x: i.x, y: i.y, loss: i.loss }));
-    this.budget.payout(L.payout);
+    if (!this.golf) this.budget.payout(L.payout);
   }
   /** the party cars' exits since the last step go to the surge (the sim's partyOut, cleared; discarded with no surge) */
   private drainParty(): void {

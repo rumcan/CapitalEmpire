@@ -1,12 +1,13 @@
 // Pure tournament-day scorer (docs/GOLF-PLAN.md sections 2.2, 2.3, 5.1-5.5, 7 and 8.1): from gate and car park arrival/exit counts to DayFacts, daySatisfaction, money lines, and reputationAfter. Pure TS, no DOM.
+import { PARTY } from '../event/config';
 import { daySatisfaction, reputationAfter, tierInfo, type DayFacts } from './tour';
 import { gateQueue, gateRate, viewingScore, type GateQueue } from './venue';
 
 /** grace period after planned arrival before a spectator is counted as late (minutes, GOLF-PLAN 5.4) */
 export const ON_TIME_GRACE_MIN = 45;
 
-/** average spectators per parked car (GOLF-PLAN 5.6) */
-export const SPECTATORS_PER_CAR = 2.5;
+/** spectators per parked car (aligned with PARTY from event/config.ts) */
+export const SPECTATORS_PER_CAR = PARTY;
 
 /** staff and volunteer cost per admitted spectator by tier 1..5 ($, GOLF-PLAN 7) */
 export const STAFF_COST_PER_SPECTATOR = [1, 1.5, 2, 2.5, 3] as const;

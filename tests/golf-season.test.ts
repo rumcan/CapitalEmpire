@@ -106,7 +106,7 @@ test('golf on with no site: the boundary passes and nothing starts (the season r
 test('golf is kept by a new valley (terrain does not reset it) and set off with null', () => {
   const city = fresh();
   city.setGolf({ tier: 2, rep: 60 });
-  city.terrain(new Uint8Array(MAP * MAP), { x: 40, y: 40 }, 8, CENTRES);
+  city.terrain(new Uint8Array(MAP * MAP), { x: 40, y: 40 }, 8, CENTRES, undefined, true); // a valley generated in golf mode keeps it (a classic one clears it: see City.terrain)
   assert.deepEqual(city.golf, { tier: 2, rep: 60 }, 'the new valley keeps the golf mode');
   city.setGolf(null);
   assert.equal(city.golf, null, 'off');

@@ -2,7 +2,7 @@
 import { PARTY } from '../event/config';
 import type { RoundResult } from '../event/round';
 import type { PlacedEventStructure } from './eventtool';
-import { spectatorDemand, tierInfo, verdict, type CourseFacts, type Need } from './tour';
+import { dayShare, spectatorDemand, tierInfo, verdict, type CourseFacts, type Need } from './tour';
 import { computeYearEnd } from './yearend';
 
 /** configuration options for running a multi-year campaign simulation */
@@ -121,9 +121,9 @@ export function simulateCampaign(opts: CampaignOptions = {}): CampaignResult {
       yearsToTier3 = yr;
     }
 
-    // Tournament simulation
+    // Tournament simulation (Day 1 live crowd scaled by dayShare(0, tDays); subsequent days resolved in computeYearEnd.multiDay)
     const tDays = tierInfo(tier).days;
-    const demand = spectatorDemand(tier, reputation);
+    const demand = Math.round(spectatorDemand(tier, reputation) * dayShare(0, tDays));
     const arrived = Math.round(demand * arrivalFraction);
     const sent = Math.ceil(demand / PARTY);
 
@@ -157,9 +157,9 @@ export function simulateCampaign(opts: CampaignOptions = {}): CampaignResult {
     const facts: CourseFacts = { holes: courseHoles, lengthM: courseLength, have };
     const ye = computeYearEnd(tier, reputation, roundResult, facts, poorYears, placed, []);
 
-    // Daily and multi-day financial flows
-    const ticketIncome = arrived * tierInfo(tier).ticket * tDays;
-    const tentRevenue = (ye.tentRevenue ?? 0) * tDays;
+    // Daily and multi-day financial flows (from multiDay resolution when available)
+    const ticketIncome = ye.multiDay ? ye.multiDay.totalTickets : arrived * tierInfo(tier).ticket * tDays;
+    const tentRevenue = ye.multiDay ? ye.multiDay.totalTents : (ye.tentRevenue ?? 0) * tDays;
     const sponsorIncome = ye.sponsorIncome ?? 0;
     const totalIncome = ticketIncome + tentRevenue + sponsorIncome;
 

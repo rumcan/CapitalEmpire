@@ -82,6 +82,24 @@ export function structureRect(s: { typeId: string; x: number; y: number; rotated
   return [s.x, s.y, w, h];
 }
 
+/** find the index of the placed structure matched by a hit structure id (from its prop) or containing tile (x, y) in its footprint, or -1 */
+export function findStructureIndexAt(
+  structures: readonly PlacedEventStructure[],
+  x: number,
+  y: number,
+  hitStructureId?: number | null,
+): number {
+  if (hitStructureId !== undefined && hitStructureId !== null) {
+    const byId = structures.findIndex(s => s.id === hitStructureId);
+    if (byId >= 0) return byId;
+  }
+  for (let i = 0; i < structures.length; i++) {
+    const rect = structureRect(structures[i]!);
+    if (x >= rect[0] && x <= rect[0] + rect[2] && y >= rect[1] && y <= rect[1] + rect[3]) return i;
+  }
+  return -1;
+}
+
 /** whether two Rects have a positive-area interior overlap */
 function rectsOverlap(a: Rect, b: Rect): boolean {
   return Math.min(a[0] + a[2], b[0] + b[2]) > Math.max(a[0], b[0]) && Math.min(a[1] + a[3], b[1] + b[3]) > Math.max(a[1], b[1]);
