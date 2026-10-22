@@ -1,8 +1,10 @@
 // The Ground tab of the sprite studio: the map's base grass. Two pictures (A and B, any ground picture or grass photo) with size and colour
 // controls, mixed exactly as the game mixes them (src/game/base-grass.ts mixGrass), previewed on a block of 4 houses inside 4 streets with
 // sidewalks. Save writes src/game/base-grass.json and the two adjusted pictures (src/assets/ground/base-grass-a.webp / -b.webp); the game
-// reads them after Rebuild (or npm run build). Served by server.mjs.
-import { adjustPixels, mixGrass, canvas, ctx2d, AUTHOR, DEFAULT_MIX, DEFAULT_SIDE } from '/ground-lib.js';
+// reads them after Rebuild (or npm run build). Below the grass, the map decals laid over it (src/game/map-decals.ts: nature patches, bare soil,
+// grass patches, leaf scatters, tufts), placed and drawn in the preview exactly as the game does; Save decals writes src/game/map-decals.json.
+// Served by server.mjs.
+import { adjustPixels, mixGrass, canvas, ctx2d, soilStamps, AUTHOR, DEFAULT_MIX, DEFAULT_SIDE, DECAL_LAYERS, DEFAULT_DECALS, DECALS, NATURE, decalPics, drawDecals, placeDecals } from '/ground-lib.js';
 
 const el = (t, a = {}, ...k) => { const e = document.createElement(t); Object.assign(e, a); for (const c of k) if (c != null) e.append(c); return e; };
 const btn = (t, fn, c = '') => el('button', { className: 'btn ' + c, textContent: t, onclick: fn });
@@ -13,6 +15,8 @@ const BASE_W = 2048, BASE_H = 1024;
 // state: the settings being edited (F), the last saved (saved), the sources, the houses, the loaded pictures
 let F = null, saved = null, SOURCES = [], HOUSES = [], RANGES = null, mixed = null, sideCv = { a: null, b: null }, busy = 0, timer = 0;
 const IMGS = new Map();
+// the map decals being edited (DF), the last saved (dSaved), and their pictures (decalArt: nature patches, soil stamps, decals)
+let DF = null, dSaved = null, decalArt = null;
 const V = { z: 0.5, night: false };
 
 // ---------------- the page
@@ -31,6 +35,7 @@ root.append(el('div', { style: 'display:flex;flex-direction:column;height:calc(1
 const zoomChips = () => bar.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', +c.dataset.z === V.z));
 const msg = t => { msgEl.textContent = t; };
 const dirty = () => JSON.stringify(F) !== JSON.stringify(saved) || !saved.saved;
+const dDirty = () => JSON.stringify(DF.layers) !== JSON.stringify(dSaved.layers);
 
 // ---------------- pictures
 function img(src) {
@@ -122,9 +127,70 @@ function build() {
     slider('Warm / cool', () => m.warm, v => { m.warm = v; }, R.warm, 0.01, v => `±${Math.round(v * 100)}%`),
     el('div', { className: 'row', style: 'padding:0' }, btn("The game's mix", () => { F.mix = clone(DEFAULT_MIX); build(); rebuild(); })),
     el('h3', { textContent: 'The whole texture' }), hint('The 2048 x 1024 mixed texture the game tiles over the map.'),
-    el('canvas', { id: 'g-flat', width: 320, height: 160, style: 'border:1px solid var(--line);border-radius:4px' }));
+    el('canvas', { id: 'g-flat', width: 320, height: 160, style: 'border:1px solid var(--line);border-radius:4px' }),
+    decalsBlock());
   swatches(); saveB.disabled = false;
 }
+// ---------------- the map decals
+const pct = v => `${Math.round(v * 100)}%`;
+/** a slider for the decals: redraws the preview (no re-mix) */
+function dSlider(label, get, set, [lo, hi], step, fmt = v => v.toFixed(2)) {
+  const out = el('span', { className: 'scale', style: 'min-width:54px', textContent: fmt(get()) });
+  const inp = el('input', { type: 'range', min: lo, max: hi, step, value: get(), style: 'min-width:0;flex:1;padding:0' });
+  inp.oninput = () => { set(+inp.value); out.textContent = fmt(get()); decalsChanged(); };
+  return el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: label }), inp, out);
+}
+const check = (label, get, set, size = 12) => { const c = el('input', { type: 'checkbox', checked: get(), style: 'flex:0 0 auto;min-width:0;width:auto;padding:0;margin:0' }); c.onchange = () => { set(c.checked); decalsChanged(); }; return el('label', { style: `display:flex;gap:6px;align-items:center;font-size:${size}px;cursor:pointer` }, c, label); };
+/** one layer picture as a 48 px tile (its crop of the atlas) */
+function picTile(id, k) {
+  const c = el('canvas', { width: 48, height: 48, style: 'background:#4a6a2a;border-radius:4px' }), g = c.getContext('2d');
+  if (!decalArt) return c;
+  const sw4 = decalArt.soil.width / 4;
+  const [im, sx, sy, sw, sh] = id === 'nature' ? [decalArt.nature, NATURE[k].x, NATURE[k].y, NATURE[k].w, NATURE[k].h] : id === 'soil' ? [decalArt.soil, k * sw4, 0, sw4, decalArt.soil.height] : [decalArt.decals, DECALS[k].x, DECALS[k].y, DECALS[k].w, DECALS[k].h];
+  const f = Math.min(48 / sw, 48 / sh); g.drawImage(im, sx, sy, sw, sh, (48 - sw * f) / 2, (48 - sh * f) / 2, sw * f, sh * f);
+  return c;
+}
+function layerBlock(L) {
+  const s = DF.layers[L.id], pics = decalPics(L.id);
+  const grid = el('div', { style: 'display:flex;flex-wrap:wrap;gap:4px;margin:4px 0' });
+  pics.forEach((k, i) => {
+    const on = !s.off.includes(i), t = picTile(L.id, k); t.title = on ? 'used: click to leave it out' : 'left out: click to use it';
+    t.style.cursor = 'pointer'; t.style.border = `2px solid ${on ? 'var(--gold)' : 'transparent'}`; t.style.opacity = on ? 1 : 0.35;
+    t.onclick = () => { s.off = on ? [...s.off, i].sort((a, b) => a - b) : s.off.filter(x => x !== i); build(); decalsChanged(); };
+    grid.append(t);
+  });
+  const sizeFmt = v => `${v.toFixed(2)}x`;
+  return el('div', { style: `margin-bottom:12px;${s.on ? '' : 'opacity:0.6'}` },
+    el('h3', { style: 'display:flex;gap:6px;align-items:center;margin-bottom:2px' }, check(L.name, () => s.on, v => { s.on = v; build(); }, 14)), hint(L.note),
+    dSlider('How many', () => s.count, v => { s.count = v; }, L.count, L.count[1] > 5 ? 0.05 : 0.01, v => `${v.toFixed(2)} / 8x8 tiles`),
+    dSlider('Smallest', () => s.min, v => { s.min = v; if (s.max < v) s.max = v; }, L.size, 0.01, sizeFmt),
+    dSlider('Largest', () => s.max, v => { s.max = v; if (s.min > v) s.min = v; }, L.size, 0.01, sizeFmt),
+    dSlider('Faintest', () => s.aMin, v => { s.aMin = v; if (s.aMax < v) s.aMax = v; }, [0, 1], 0.01, pct),
+    dSlider('Strongest', () => s.aMax, v => { s.aMax = v; if (s.aMin > v) s.aMin = v; }, [0, 1], 0.01, pct),
+    check('Mirror at random', () => s.flip, v => { s.flip = v; }),
+    hint('Pictures (click to use or leave out):'), grid,
+    el('div', { className: 'row', style: 'padding:0' }, btn(`The game's ${L.name.toLowerCase()}`, () => { DF.layers[L.id] = clone(DEFAULT_DECALS[L.id]); build(); decalsChanged(); })));
+}
+function decalsBlock() {
+  if (!DF) return null;
+  return el('div', { style: 'border-top:1px solid var(--line);margin-top:14px;padding-top:8px' },
+    el('h3', { textContent: 'Map decals' }),
+    hint('Laid over the grass everywhere on the map, under roads, lots and terrain (which cover them). Each layer: on or off, how many, the size and opacity ranges and which pictures. The preview shows them on the grass. Save decals, then Rebuild game sprites to see them in the game.'),
+    el('div', { className: 'row', style: 'padding:0;margin:6px 0 4px' },
+      btn('Save decals', saveDecals, 'gold'), btn('Undo decal changes', () => { DF = clone(dSaved); build(); decalsChanged(); })),
+    el('div', { className: 'row', style: 'padding:0;margin:0 0 10px' },
+      btn("The game's decals", () => { DF.layers = clone(DEFAULT_DECALS); build(); decalsChanged(); }),
+      btn('All off', () => { for (const L of DECAL_LAYERS) DF.layers[L.id].on = false; build(); decalsChanged(); }, 'red')),
+    ...DECAL_LAYERS.map(layerBlock));
+}
+function decalsChanged() { draw(); msg(dDirty() ? 'decals not saved' : 'decals saved'); }
+async function saveDecals() {
+  msg('saving decals…');
+  const r = await fetch('/api/decals', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ file: DF }) });
+  if (!r.ok) { msg(await r.text()); return; }
+  const d = await r.json(); dSaved = clone(d.file); DF = clone(d.file); build(); msg('decals saved: Rebuild game sprites to see them in the game');
+}
+
 function swatches() {
   for (const k of ['a', 'b']) { const c = left.querySelector(`canvas[data-side="${k}"]`), s = sideCv[k]; if (c && s) { const g = c.getContext('2d'); g.clearRect(0, 0, 64, 64); g.drawImage(s, 0, 0, 64, 64); } }
   const f = left.querySelector('#g-flat'); if (f && mixed) f.getContext('2d').drawImage(mixed, 0, 0, 320, 160);
@@ -143,6 +209,14 @@ function draw() {
   if (!mixed) return;
   // the grass: a screen-space texture, one texture px = 1 / AUTHOR native px
   const gp = g.createPattern(mixed, 'repeat'); gp.setTransform(new DOMMatrix([z / AUTHOR, 0, 0, z / AUTHOR, 0, 0])); g.fillStyle = gp; g.fillRect(0, 0, W, H);
+  // the map decals, as the game places and draws them (tile -> canvas px; half a canvas px per world px at z = 1)
+  if (DF && decalArt) {
+    const M = new DOMMatrix([32 * z * D, 16 * z * D, -32 * z * D, 16 * z * D, ox * D, oy * D]), Mi = M.inverse();
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [px, py] of [[0, 0], [cv.width, 0], [0, cv.height], [cv.width, cv.height]]) { const q = Mi.transformPoint(new DOMPoint(px, py)); x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+    drawDecals(g, placeDecals([x0, y0, x1, y1], DF, () => true), decalArt, z / 2 * D, M);
+    g.globalAlpha = 1; g.setTransform(D, 0, 0, D, 0, 0);
+  }
   // tile space: (x, y) -> ((x - y) 32 z + ox, (x + y) 16 z + oy); the street bands are squares rings about the block
   g.save(); g.setTransform(32 * z * D, 16 * z * D, -32 * z * D, 16 * z * D, ox * D, oy * D);
   /** fills the square ring between `inner` and `outer` tiles out from the block with a tile-space photo (period tiles a repeat) or a colour */
@@ -192,7 +266,12 @@ let started = false;
 async function start() {
   if (started) return; started = true;
   const d = await fetch('/api/ground').then(r => r.json());
-  SOURCES = d.sources; RANGES = d.ranges; HOUSES = d.houses; saved = clone(d.file); F = clone(d.file);
+  SOURCES = d.sources; RANGES = d.ranges; HOUSES = d.houses; saved = clone(d.file); F = clone(d.file); dSaved = clone(d.decals); DF = clone(d.decals);
+  // the decal pictures: the nature patches and decals atlases, and the soil stamps the game makes from soil.webp
+  Promise.all(['nature', 'decals', 'soil'].map(k => img('/decal-art/' + k))).then(([n, dc, so]) => {
+    const toCv = im => { const c = canvas(im.naturalWidth, im.naturalHeight); ctx2d(c).drawImage(im, 0, 0); return c; };
+    decalArt = { nature: toCv(n), decals: toCv(dc), soil: soilStamps(toCv(so)) }; build(); draw();
+  }, e => msg(String(e.message || e)));
   // four different houses (the first four the game has)
   housePics = HOUSES.slice(0, 4).map(s => { const im = new Image(); im.onload = draw; im.src = '/thumb/' + encodeURIComponent(s.id); return { s, im }; });
   zoomChips(); build(); rebuild();

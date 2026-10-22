@@ -1,0 +1,56 @@
+{
+ "v": 1,
+ "layers": {
+  "nature": {
+   "on": false,
+   "count": 0.45,
+   "min": 0.85,
+   "max": 1.4,
+   "aMin": 0.92,
+   "aMax": 0.92,
+   "flip": true,
+   "off": []
+  },
+  "soil": {
+   "on": true,
+   "count": 0.3,
+   "min": 1.5,
+   "max": 4.3,
+   "aMin": 1,
+   "aMax": 1,
+   "flip": false,
+   "off": []
+  },
+  "grass": {
+   "on": true,
+   "count": 9.84,
+   "min": 0.7,
+   "max": 1.3,
+   "aMin": 0.55,
+   "aMax": 0.95,
+   "flip": true,
+   "off": []
+  },
+  "leaves": {
+   "on": true,
+   "count": 1.51,
+   "min": 0.7,
+   "max": 1.3,
+   "aMin": 0.55,
+   "aMax": 0.95,
+   "flip": true,
+   "off": []
+  },
+  "tufts": {
+   "on": true,
+   "count": 0.65,
+   "min": 0.7,
+   "max": 1.3,
+   "aMin": 0.55,
+   "aMax": 0.95,
+   "flip": true,
+   "off": []
+  }
+ },
+ "stamp": "2026-10-22T07:48:37.279Z"
+}

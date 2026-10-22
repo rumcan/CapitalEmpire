@@ -144,3 +144,9 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   got: `Pin` / `TeeMark` `auto?`; engine `courseHoleViews`, `syncCourseMarkers`, `setGolfMarker` / `removeGolfMarker` (beside your
   `moveGolfMarker`, same `golfProps` keys and sprites), `tagCourseHoles` (called in `afterLoad` after `syncGolfProps`); your markers on the
   starting nine are left alone (checked: no op on a new game). The paint files are free again.
+- 2026-10-22 (the art chat, the owner's PC at `E:\Repos\CapitalEmpire`): **map decals and the Studio button** (the owner asked: "remove
+  the massive decals on the main map", editable in the sprite studio). **For the coder:** your files got small hooks only:
+  `renderer.ts` `drawDressing` now calls `placeDecals` / `drawDecals` from the new art file `src/game/map-decals.ts` with the owner's
+  `src/game/map-decals.json` (the old `DRESS`, `SOIL_*`, `DECALS`, `NATURE` uses moved there); `App.tsx` shows a **Studio** link in the
+  top-right HUD only on localhost (opens 5179); `textures.ts` exports `soilStamps`; `package.json` `test` also stubs `.png` (tests that
+  import `ground-art.ts` need it). The nature patches (16 m clumps) are off in `map-decals.json`; every layer is a studio setting.

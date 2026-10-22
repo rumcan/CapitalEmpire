@@ -214,6 +214,7 @@ export default function App() {
                   </div>
                 )}
               </div>
+              {ON_PC && <a className="btn" href={STUDIO_URL} target="studio" rel="noopener" title="The sprite studio (5179): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
               <button className="btn-icon" onClick={() => setHelp(true)} title="How it works"><Icon name="help" size={22} /></button>
             </div>
           </div>
@@ -1042,6 +1043,9 @@ function BusPanel({ game }: { game: Game }) {
   );
 }
 
+/** the game runs on the owner's PC (localhost): the HUD shows the Studio button, which opens the sprite studio on port 5179 of the same PC */
+const ON_PC = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
+const STUDIO_URL = `${location.protocol}//${location.hostname}:5179/`;
 /** the junction types the tool offers as brushes and in the Type control */
 type JunctionKind = 'plain' | 'stop' | 'mini' | 'signal' | 'roundabout';
 /** the segment and card names of the junction tool's types */

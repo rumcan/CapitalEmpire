@@ -2188,3 +2188,15 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   open for C2 in COURSE-BUILDER.md section 6. Tests: `tests/course.test.ts` (8); 805 pass.
 - **Course builder C2 landed** (browser-checked on a new golf game: the starting nine tagged, par and length per hole, no marker moved;
   a tee then a green on hole 10 placed its markers and pin, undo removed the pin and flag). COURSE-BUILDER.md section 6. 812 tests pass.
+
+## The art chat, 2026-10-22 afternoon (the owner's PC: the working copy is now `E:\Repos\CapitalEmpire`)
+- **The working copy moved** to `E:\Repos\CapitalEmpire` (fast-forwarded to GitHub main 5655f6d; `E:\AI\CapitalEmpire` is an older
+  spare). TrickOrTreat sits beside it (`E:\Repos\TrickOrTreat`). The copied repos belong to the old PC's Windows user, so git needs
+  `safe.directory` (the servers start with `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*`). The uncommitted
+  golf-tournament art (`art/golf-tournament/`, `agents/tasks/T015-...`) is in this checkout, untracked.
+- **Map decals** (`src/game/map-decals.ts`, settings `src/game/map-decals.json`): the dressing over the base grass in five layers (nature
+  patches, bare soil, grass patches, leaf scatters, tufts), each with on / off, how many per 8 x 8 tiles, smallest / largest size, faintest /
+  strongest opacity, random mirroring and which pictures; each layer has its own seeded stream. **The nature patches (the massive 16 m
+  clumps) are off** (the owner asked); the others are as before. Studio → Ground → **Map decals** edits them on the preview (the game's own
+  placement and drawing), Save decals writes the json, Rebuild game sprites puts it in the game. Tests: `tests/map-decals.test.ts` (4).
+- **Studio button** in the game's top-right HUD, only on localhost: opens the studio (5179); its Rebuild rebuilds what 5174 serves.

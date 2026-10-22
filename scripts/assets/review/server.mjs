@@ -6,7 +6,8 @@
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
 //   Holes:   the golf hole presets (src/game/golf/hole-presets.json, 18 slots): areas and props edited on a canvas, or a generated hole from a seed (holes.js)
 //   Ground:  the map's base grass: two pictures (any ground picture or grass photo) with size and colour controls, mixed as the game mixes them,
-//            previewed on a block of 4 houses inside 4 streets; Save writes src/game/base-grass.json and src/assets/ground/base-grass-a/-b.webp (ground.js)
+//            previewed on a block of 4 houses inside 4 streets; Save writes src/game/base-grass.json and src/assets/ground/base-grass-a/-b.webp (ground.js);
+//            and the map decals over it (nature patches, bare soil, grass patches, leaf scatters, tufts): Save decals writes src/game/map-decals.json
 //   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { spawn } from 'node:child_process';
@@ -212,6 +213,7 @@ function checkHole(h) {
 
 // ---------------------------------------------------------------- the base grass (the Ground tab; src/game/base-grass.ts)
 const GL_ENTRY = path.join(ROOT, 'scripts/assets/review/ground-lib.ts'), BG_FILE = path.join(ROOT, 'src/game/base-grass.json');
+const MD_FILE = path.join(ROOT, 'src/game/map-decals.json'), DECAL_ART = { nature: 'nature.webp', decals: 'decals.webp', soil: 'soil.webp' };
 const BG_PIC = k => path.join(ROOT, `src/assets/ground/base-grass-${k}.webp`), BG_THUMBS = path.join(OUT, 'ground-thumbs');
 buildSync({ entryPoints: [GL_ENTRY], bundle: true, platform: 'node', format: 'esm', outfile: path.join(OUT, 'ground-lib.mjs'), loader: HL_LOADERS, logLevel: 'silent' });
 buildSync({ entryPoints: [GL_ENTRY], bundle: true, platform: 'browser', format: 'esm', outfile: path.join(OUT, 'ground-lib.js'), loader: HL_LOADERS, logLevel: 'silent' });
@@ -238,6 +240,7 @@ function readGround() {
   const def = { src: 'src/assets/ground/grass-capital-backyard.webp' }, defB = { src: 'src/assets/ground/grass-capital-meadow.webp' };
   return { v: 1, saved: !!f?.saved, ...(f?.stamp ? { stamp: f.stamp } : {}), a: GL.clampSide(f?.a ?? def), b: GL.clampSide(f?.b ?? defB), mix: GL.clampMix(f?.mix ?? {}) };
 }
+function readDecals() { let f = null; try { f = JSON.parse(fs.readFileSync(MD_FILE, 'utf8')); } catch { /* none yet */ } return GL.clampDecals(f); }
 const TYPES = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg' };
 let PHOTOS = null;
 /** the Paint photo textures: texture id → its file in src/assets/ground (read once from the imports and PHOTO_TEX of grass-art.ts) */
@@ -352,7 +355,17 @@ http.createServer(async (req, res) => {
     // the base grass
     if (req.method === 'GET' && P === '/api/ground') {
       const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
-      return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX } });
+      return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX }, decals: readDecals() });
+    }
+    if (req.method === 'POST' && P === '/api/decals') {
+      const { file } = await body(req);
+      if (!file || typeof file !== 'object') { res.writeHead(400); return res.end('no settings'); }
+      const out = { ...GL.clampDecals(file), stamp: new Date().toISOString() };
+      fs.writeFileSync(MD_FILE, JSON.stringify(out, null, 1) + '\n'); return json({ file: out });
+    }
+    if (P.startsWith('/decal-art/')) {
+      const f = DECAL_ART[P.slice(11)]; if (!f) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(path.join(ROOT, 'src/assets/ground', f)));
     }
     if (P === '/ground-src') {
       const abs = groundAbs(url.searchParams.get('p')); if (!abs) { res.writeHead(404); return res.end(); }

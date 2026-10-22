@@ -150,7 +150,7 @@ function gen(name: TexName): Cnv {
 /** bare-soil stamps (town-scene.mjs soil patches): an ellipse of radius SOIL_R world px across and half that down, ragged by
  *  noise and feathered, the soil painting at 80% inside; SOIL_W x SOIL_H each, at the authoring scale 1 world px per px */
 export const SOIL_STAMPS = 4, SOIL_R = 100, SOIL_W = 3.2 * SOIL_R, SOIL_H = 1.6 * SOIL_R;
-function soilStamps(soil: Cnv) {
+export function soilStamps(soil: Cnv) {
   const c = canvas(SOIL_W * SOIL_STAMPS, SOIL_H), g = ctx2d(c);
   g.fillStyle = g.createPattern(soil, 'repeat')!; g.fillRect(0, 0, c.width, c.height);
   const d = g.getImageData(0, 0, c.width, c.height), D = d.data;
