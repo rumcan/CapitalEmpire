@@ -556,6 +556,11 @@ function EvalScreen({ game }: { game: Game }) {
  <div className="text-xs font-semibold text-emerald-300">{ye.verdictText}</div>
  </div>
  </div>
+          {ye.multiDay && ye.multiDay.resolvedDays > 0 && (
+            <div className="mt-2 border-t border-white/10 pt-2 text-center text-[11px] text-slate-300">
+              <span className="font-semibold text-amber-300">{ye.multiDay.statusLine}</span> · Total {ye.multiDay.totalSpectators.toLocaleString()} spectators · {money(ye.multiDay.totalRevenue)} gross
+            </div>
+          )}
  </div>
  )}
  <div>
@@ -574,7 +579,7 @@ function EvalScreen({ game }: { game: Game }) {
           ))}
         </div>
         <p className="text-sm text-slate-200">
-        Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>}{ye?.tentRevenue !== undefined && ye.tentRevenue > 0 && <> · Tents <span className="tabular-nums text-emerald-300">{sgn(ye.tentRevenue)}</span></>}{ye?.sponsorIncome !== undefined && ye.sponsorIncome > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(ye.sponsorIncome)}</span></>}{ye?.tvIncome !== undefined && ye.tvIncome > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(ye.tvIncome)}</span></>}{ye?.purse !== undefined && ye.purse > 0 && <> · Purse <span className="tabular-nums text-red-300">−{money(ye.purse)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0)) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0))}</span>
+        Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ye.multiDay.totalTickets : last.tickets)}</span></>}{ye?.tentRevenue !== undefined && ye.tentRevenue > 0 && <> · Tents <span className="tabular-nums text-emerald-300">{sgn((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ye.multiDay.totalTents : ye.tentRevenue)}</span></>}{ye?.sponsorIncome !== undefined && ye.sponsorIncome > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(ye.sponsorIncome)}</span></>}{ye?.tvIncome !== undefined && ye.tvIncome > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(ye.tvIncome)}</span></>}{ye?.purse !== undefined && ye.purse > 0 && <> · Purse <span className="tabular-nums text-red-300">−{money(ye.purse)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0) + ((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ((ye.multiDay.totalTickets - (last.tickets ?? 0)) + (ye.multiDay.totalTents - (ye.tentRevenue ?? 0))) : 0)) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0) + ((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ((ye.multiDay.totalTickets - (last.tickets ?? 0)) + (ye.multiDay.totalTents - (ye.tentRevenue ?? 0))) : 0))}</span>
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">

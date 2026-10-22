@@ -1979,7 +1979,13 @@ export class Game {
   this.golf.rep = ye.rep;
   this.golf.poorYears = ye.poorYears;
   this.traffic.setGolf(true, this.golf.tier, this.golf.rep);
-  const bizIncome = (ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0);
+  const extraTickets = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+    ? Math.max(0, ye.multiDay.totalTickets - (this.traffic.round.last.tickets ?? 0))
+    : 0;
+  const extraTents = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+    ? Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))
+    : 0;
+  const bizIncome = (ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents;
   if (bizIncome > 0) {
   this.traffic.spend('business', -bizIncome);
   }

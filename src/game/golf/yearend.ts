@@ -9,6 +9,7 @@ import { gateQueue, gateRate } from './venue';
 import { arrivalShare, exitShare, EXIT_END, GATES_OPEN } from './calendar';
 import { ON_TIME_GRACE_MIN } from './tournamentday';
 import { computeSponsorBreakdown } from './sponsors';
+import { resolveMultiDayTournament, type MultiDaySummary } from './multiday';
   
 /** unmeasured default exit 95th percentile (minutes) used until physical parking exit flow is simulated */  
 export const DEFAULT_EXIT_P95_MIN = 35;  
@@ -33,6 +34,7 @@ tentUpkeep?: number;
 sponsorIncome?: number;
 tvIncome?: number;
 purse?: number;
+multiDay?: MultiDaySummary;
 }
   
 /**  
@@ -182,6 +184,18 @@ viewing,
  verdictText = `Demoted to ${tierInfo(tier).name} next year`;  
  }  
   
+ const multiDay = resolveMultiDayTournament({
+   tier: prevTier,
+   liveArrived: totalArrived,
+   liveTents: tentRevenue,
+   ticketPrice: tierInfo(prevTier).ticket,
+   sponsorIncome: commercial.sponsorIncome,
+   tvIncome: commercial.tvIncome,
+   purse: commercial.purse,
+   structures,
+   holes,
+ });
+
  return {
  satisfaction,
  prevRep,
@@ -197,5 +211,6 @@ viewing,
  sponsorIncome: commercial.sponsorIncome,
  tvIncome: commercial.tvIncome,
  purse: commercial.purse,
+ multiDay,
  };
 }  
