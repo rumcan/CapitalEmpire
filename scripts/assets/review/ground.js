@@ -262,7 +262,7 @@ async function savePreset() {
   msg('preset saved: Rebuild game sprites to see it in Paint');
 }
 async function deletePreset() {
-  if (!PM.id || !confirm(`Delete the preset ${PM.name}? Painted areas that use it fall back to the first texture.`)) return;
+  if (!PM.id || !await window.studioAsk(`Delete the preset ${PM.name}? Painted areas that use it fall back to the first texture.`, 'Delete')) return;
   const d = await fetch('/api/preset-delete', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: PM.id }) }).then(r => r.json());
   PRE = { ...PRE, presets: d.presets }; editPreset(PRE.presets[0] ?? null); msg('preset deleted: Rebuild game sprites to take it out of Paint');
 }
@@ -399,7 +399,7 @@ async function save() {
   } finally { saveB.disabled = false; }
 }
 async function unsave() {
-  if (!confirm("Go back to the game's grass (the generated backyard + meadow, the original mix)? Your saved grass pictures are removed.")) return;
+  if (!await window.studioAsk("Go back to the game's grass (the generated backyard + meadow, the original mix)? Your saved grass pictures are removed.", "Back to the game's grass")) return;
   const d = await fetch('/api/ground-unsave', { method: 'POST' }).then(r => r.json());
   saved = clone(d.file); F = clone(d.file); build(); rebuild(); msg("back to the game's grass: Rebuild game sprites to see it in the game");
 }

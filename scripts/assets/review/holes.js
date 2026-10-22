@@ -55,9 +55,9 @@ function renderList() {
       `Hole ${i + 1}${d ? ' ●' : ''}`, el('br'), el('small', { textContent: h ? h.name : 'empty' })));
   }
 }
-function openSlot(i) {
+async function openSlot(i) {
   if (i === S.slot) return;
-  if (dirty() && !confirm(`Discard the unsaved changes to Hole ${S.slot + 1}?`)) return;
+  if (dirty() && !await window.studioAsk(`Discard the unsaved changes to Hole ${S.slot + 1}?`, 'Discard')) return;
   S.slot = i; S.draft = stored[i] ? clone(stored[i]) : empty(); S.undo = []; S.sel = null; S.prop = null; S.pend = null;
   fit(); refresh();
 }
@@ -90,7 +90,7 @@ async function save() {
 }
 function revert() { pushUndo(); S.draft = stored[S.slot] ? clone(stored[S.slot]) : empty(); S.sel = null; S.prop = null; msg('Reverted'); refresh(); }
 async function clearSlot() {
-  if (!confirm(`Clear Hole ${S.slot + 1}?`)) return;
+  if (!await window.studioAsk(`Clear Hole ${S.slot + 1}?`, 'Clear')) return;
   const r = await fetch('/api/holes', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ n: S.slot + 1, hole: null }) });
   if (!r.ok) return msg(await r.text(), true);
   stored = (await r.json()).holes; S.draft = empty(); S.undo = []; S.sel = null; S.prop = null; msg(`Cleared Hole ${S.slot + 1}`); refresh();

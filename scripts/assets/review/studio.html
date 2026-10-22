@@ -165,7 +165,14 @@ async function loadPeople(){peopleLoaded=true;peopleAll=await (await fetch('/api
   box.append(card);}}
 
 // ---------------- rebuild
-$('#rb').onclick=async()=>{const u=window.studioUnsaved?.();if(u&&!confirm(`The Ground tab has unsaved changes to ${u}. Rebuild only puts what is saved in the game: Cancel, then Save first. Rebuild anyway?`))return;await post('/api/rebuild');poll();};
+// a question in the page (the browser's confirm() is not shown in some embedded browsers, which made the buttons do nothing): resolves true for yes
+window.studioAsk=(text,yes='Yes',no='Cancel')=>new Promise(res=>{document.getElementById('ask')?.remove();
+ const done=v=>{box.remove();res(v)},b=(t,v,c)=>{const x=document.createElement('button');x.className='btn '+c;x.textContent=t;x.onclick=()=>done(v);return x};
+ const box=document.createElement('div');box.id='ask';box.className='pop';box.style.cssText='top:56px;right:16px';
+ const p=document.createElement('div');p.style.cssText='margin-bottom:10px;line-height:1.4';p.textContent=text;
+ const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;justify-content:flex-end';row.append(b(no,false,''),b(yes,true,'gold'));
+ box.append(p,row);document.body.append(box);row.lastChild.focus();});
+$('#rb').onclick=async()=>{const u=window.studioUnsaved?.();if(u&&!await studioAsk(`The Ground tab has unsaved changes to ${u}. Rebuild only puts what is saved into the game: Cancel, then Save first, or rebuild without them.`,'Rebuild anyway'))return;await post('/api/rebuild');poll();};
 async function poll(){const j=await (await fetch('/api/status')).json(),s=$('#status'),b=$('#rb');if(!j){s.textContent='';b.disabled=false;return;}
  b.disabled=!j.done;s.textContent=j.done?(j.code?'Rebuild failed: '+j.log.trim().split('\n').pop():'Rebuilt: reload the game'):`Rebuilding (${Math.round((Date.now()-j.started)/60000)} min): ${j.step.split('/').pop()}`;if(!j.done)setTimeout(poll,3000);}
 loadLib();poll();
