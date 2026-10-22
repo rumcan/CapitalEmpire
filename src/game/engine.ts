@@ -199,6 +199,9 @@ const LOT_FILL = Array.from({ length: 24 }, (_, i) => { const k = [1, 0.75, 0.5,
 /** whether node n's arms are small enough for a mini-roundabout: 2 lanes each way at most (a one-way road: 4 lanes) */
 const miniFits = (n: Node): boolean => n.arms.every(a => a.cls.laneCentres.length <= (a.cls.oneway ? 4 : 2));
 
+/** the props an undoable Paint or Course action added and removed */
+type PropLog = { added: Prop[]; removed: Prop[] };
+
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
   dpr = 1; cw = 1; ch = 1; cssW = 1; cssH = 1;
@@ -297,7 +300,22 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k) });
+  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k),
+    journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) } });
+  /** the Paint and Course tools drive the same PaintTool */
+  get paintOn() { return this.tool === 'paint' || this.tool === 'course'; }
+  /** the Course tool's hole strip: makes hole n current and moves the camera to its areas (when it has any) */
+  goToHole(n: number) { this.paint.setHole(n); const b = this.paint.holeBox(n); if (b) this.lookAt((b[0] + b[2]) / 2, (b[1] + b[3]) / 2); }
+  /** the props added and removed while the Paint tool's action is open (undo), or null */
+  private propLog: PropLog | null = null;
+  /** undo (back) or redo of a prop journal: the props it added go, the props it removed come back (new objects); returns the journal for the opposite step */
+  private swapProps(j: PropLog, back: boolean): PropLog {
+    const kill = back ? j.added : j.removed, revive = back ? j.removed : j.added;
+    for (const p of kill) this.removeProp(p);
+    const out = revive.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale); if (p.plant) q.plant = p.plant; return q; });
+    this.scheduleSave();
+    return back ? { added: kill, removed: out } : { added: out, removed: kill };
+  }
   /** the Paint tool's projection into css px (its handles' hit tests): tile (x, y) is at (o[0] + x*o[2] + y*o[4], o[1] + x*o[3] + y*o[5]) */
   private paintAffine(o: number[]) { const s = this.screen(0, 0), ex = this.screen(1, 0), ey = this.screen(0, 1), d = this.dpr; o[0] = s.x / d; o[1] = s.y / d; o[2] = (ex.x - s.x) / d; o[3] = (ex.y - s.y) / d; o[4] = (ey.x - s.x) / d; o[5] = (ey.y - s.y) / d; }
   /** the Paint tool's snap distance: 10 css px in tiles */
@@ -548,6 +566,12 @@ export class Game {
     const flag = LIB_INDEX.get('golf:flagstick') ?? LIB_INDEX.get('business:golf-pin-red');
     const rnd = mulberry(seed * 7919); let n = 0;
     for (const q of ps) {
+      if (q.id !== undefined) {
+        const i = LIB_INDEX.get(q.id); if (i === undefined) continue;
+        const flip = q.flip ?? false, scale = q.scale ?? (OWNER_SCALE[q.id] ?? 1);
+        if (this.canPlace(LIBRARY[i]!, q.x, q.y, flip, scale)) continue;
+        this.addProp(i, q.x, q.y, flip, scale); n++; continue;
+      }
       const pool = q.kind === 'tree' ? trees : q.kind === 'bush' ? bushes : q.kind === 'flower' ? flowers : flag === undefined ? [] : [flag];
       if (!pool.length) continue;
       const i = pool[Math.floor(rnd() * pool.length)]!, flip = q.kind === 'flag' ? false : rnd() < 0.5;
@@ -588,12 +612,14 @@ export class Game {
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p);
+    if (this.propLog) this.propLog.added.push(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
     if (LIBRARY[item].big && LIBRARY[item].kind !== 'car') this.scheduleBlocks(isLotProp(p)); // cars are not building blocks (sendBlocks skips them)
     return p;
   }
   removeProp(p: Prop) {
     if (!this.props.delete(p)) return;
+    if (this.propLog) { const k = this.propLog.added.indexOf(p); if (k >= 0) this.propLog.added.splice(k, 1); else this.propLog.removed.push(p); }
     this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p);
     if (p.auto) this.autoByKey.delete(p.auto);
     if (this.selected === p) this.selected = null;
@@ -1011,7 +1037,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.tool !== t) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.tool !== t) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -1681,7 +1707,7 @@ export class Game {
     const pan = e.button === 1 || e.button === 2 || this.keys.has(' ');
     if (this.keys.has(' ')) this.spacePanned = true;
     if (this.tool === 'junction' && e.button === 2 && this.junctionRight(mx, my)) return;
-    if (this.tool === 'paint' && e.button === 2 && this.paint.secondary(this.tileAt(mx, my), mx, my)) return;
+    if (this.paintOn && e.button === 2 && this.paint.secondary(this.tileAt(mx, my), mx, my)) return;
     if ((this.tool === 'lane' || this.tool === 'downgrade') && e.button === 2) { this.laneReverse(mx, my); return; }
     if (pan || this.tool === 'select') {
       if (!pan && this.tool === 'select') {
@@ -1705,7 +1731,7 @@ export class Game {
       case 'bus': this.busUpdate(mx, my); this.busClick(); break;
       case 'lane': case 'downgrade': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
-      case 'paint': this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); break;
+      case 'paint': case 'course': this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); break;
       case 'park': {
         // the bay rows drag and the on-street click are the Parking tool's (docs/PARKING.md); the rectangle is the car park drag below
         if (this.parking.mode !== 'rect') { if (this.parking.mode === 'rows') this.parking.down(this.tileAt(mx, my)); else this.parking.click(); break; }
@@ -1743,7 +1769,7 @@ export class Game {
     if (this.tool === 'toll') this.tollUpdate(mx, my);
     if (this.tool === 'business') this.bizUpdate(mx, my);
     if (this.tool === 'bus') this.busUpdate(mx, my);
-    if (this.tool === 'paint') this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift'));
+    if (this.paintOn) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift'));
     if (this.tool === 'park') {
       if (this.parking.mode === 'rows') { if (this.hover) { this.parking.snap15 = this.keys.has('Shift'); this.parking.move(this.hover, mx, my); } }
       else if (this.parking.mode === 'curb') this.parking.hover(this.hover ? this.net.pieceNear(this.hover)?.seg ?? null : null, this.hover ?? { x: 0, y: 0 }, mx, my);
@@ -1754,7 +1780,7 @@ export class Game {
     if (d?.kind === 'park') this.parkRelease();
     // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
     if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
-    if (this.tool === 'paint') this.paint.pointerUp(this.paintTol);
+    if (this.paintOn) this.paint.pointerUp(this.paintTol);
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     this.dragging = null;
   }
@@ -1770,7 +1796,7 @@ export class Game {
   junctionName(n: Node): string { const names: string[] = []; for (const a of n.arms) { const s = this.roadNameOfSeg(a.seg); if (s) names.push(s); } return this.names.junction(names); }
   /** the name of the junction at tile position (x, y) (a node's position), or '' when there is no junction there */
   junctionNameAt(x: number, y: number): string { const n = this.net.nodeAt({ x, y }); return n ? this.junctionName(n) : ''; }
-  doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); if (this.tool === 'paint') this.paint.doubleClick(); }
+  doubleClick() { if (this.tool === 'road' && this.route.length > 1) this.finishRoute(); if (this.paintOn) this.paint.doubleClick(); }
   wheel(e: WheelEvent) {
     e.preventDefault();
     const f = Math.exp(-e.deltaY * 0.0014);
@@ -1800,7 +1826,7 @@ export class Game {
   keyDown(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     this.keys.add(e.key);
-    if (this.tool === 'paint' && this.paint.key(e)) return;
+    if (this.paintOn && this.paint.key(e)) return;
     if (this.tool === 'park' && this.parking.key(e)) return;
     switch (e.key) {
       case 'Escape':
@@ -1824,7 +1850,8 @@ export class Game {
         else this.setTool('road'); break;
       case 'j': case 'J': this.setTool('junction'); break;
       case 'x': case 'X': this.setTool('bulldoze'); break;
-      case 'c': case 'C': this.setTool('paint'); break;
+      case 'c': case 'C': this.setTool('course'); break;
+      case 'a': case 'A': this.setTool('paint'); break;
       case 'p': case 'P': this.setTool('park'); break;
       case 't': case 'T': this.setTool('toll'); break;
       case 'u': case 'U': this.setTool('bus'); break;
@@ -3524,7 +3551,7 @@ export class Game {
       const pc = this.hoverPiece, cls = pc.seg.cls;
       this.setIso(ctx); ctx.beginPath(); strip([{ a: pc.p0, b: pc.p1 }], cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke();
-    } else if (this.tool === 'paint') this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
+    } else if (this.paintOn) this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
     else if (this.tool === 'park' && this.parking.mode !== 'rect') this.parking.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
   }
 }
