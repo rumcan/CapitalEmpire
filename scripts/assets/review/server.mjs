@@ -5,6 +5,8 @@
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
 //   Holes:   the golf hole presets (src/game/golf/hole-presets.json, 18 slots): areas and props edited on a canvas, or a generated hole from a seed (holes.js)
+//   Ground:  the map's base grass: two pictures (any ground picture or grass photo) with size and colour controls, mixed as the game mixes them,
+//            previewed on a block of 4 houses inside 4 streets; Save writes src/game/base-grass.json and src/assets/ground/base-grass-a/-b.webp (ground.js)
 //   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { spawn } from 'node:child_process';
@@ -207,6 +209,35 @@ function checkHole(h) {
   }
   return { name: h.name.trim().slice(0, 40) || 'Hole', areas, props };
 }
+
+// ---------------------------------------------------------------- the base grass (the Ground tab; src/game/base-grass.ts)
+const GL_ENTRY = path.join(ROOT, 'scripts/assets/review/ground-lib.ts'), BG_FILE = path.join(ROOT, 'src/game/base-grass.json');
+const BG_PIC = k => path.join(ROOT, `src/assets/ground/base-grass-${k}.webp`), BG_THUMBS = path.join(OUT, 'ground-thumbs');
+buildSync({ entryPoints: [GL_ENTRY], bundle: true, platform: 'node', format: 'esm', outfile: path.join(OUT, 'ground-lib.mjs'), loader: HL_LOADERS, logLevel: 'silent' });
+buildSync({ entryPoints: [GL_ENTRY], bundle: true, platform: 'browser', format: 'esm', outfile: path.join(OUT, 'ground-lib.js'), loader: HL_LOADERS, logLevel: 'silent' });
+const GL = await import(pathToFileURL(path.join(OUT, 'ground-lib.mjs')).href);
+fs.mkdirSync(BG_THUMBS, { recursive: true });
+/** the pictures the base grass can be made from, by group: every ground picture of the game, the grass-v1 set and the grass photos */
+const GROUND_SRC = [
+  { group: 'Game ground', dir: 'src/assets/ground', re: /\.(webp|png|jpg)$/i, skip: /^base-grass-[ab]\.webp$/ },
+  { group: 'Grass v1', dir: 'src/assets/ground/grass-v1/png', re: /\.(webp|png|jpg)$/i },
+  { group: 'Grass photos', dir: 'art/grass-photo', re: /\.(webp|png|jpg)$/i },
+];
+function groundSources() {
+  const out = [];
+  for (const g of GROUND_SRC) {
+    const dir = path.join(ROOT, g.dir); if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir).sort()) if (g.re.test(f) && !g.skip?.test(f) && fs.statSync(path.join(dir, f)).isFile()) out.push({ group: g.group, src: `${g.dir}/${f}`, name: f.replace(/\.[a-z]+$/i, '') });
+  }
+  return out;
+}
+/** a repo path the Ground tab may read (one of the sources), as an absolute path, else null */
+function groundAbs(src) { return typeof src === 'string' && groundSources().some(s => s.src === src) ? path.join(ROOT, src) : null; }
+function readGround() {
+  let f = null; try { f = JSON.parse(fs.readFileSync(BG_FILE, 'utf8')); } catch { /* none yet */ }
+  const def = { src: 'src/assets/ground/grass-capital-backyard.webp' }, defB = { src: 'src/assets/ground/grass-capital-meadow.webp' };
+  return { v: 1, saved: !!f?.saved, ...(f?.stamp ? { stamp: f.stamp } : {}), a: GL.clampSide(f?.a ?? def), b: GL.clampSide(f?.b ?? defB), mix: GL.clampMix(f?.mix ?? {}) };
+}
 const TYPES = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg' };
 let PHOTOS = null;
 /** the Paint photo textures: texture id → its file in src/assets/ground (read once from the imports and PHOTO_TEX of grass-art.ts) */
@@ -318,6 +349,35 @@ http.createServer(async (req, res) => {
       if (!abs || !fs.existsSync(abs)) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'content-type': TYPES[path.extname(abs)] ?? 'application/octet-stream', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(abs));
     }
+    // the base grass
+    if (req.method === 'GET' && P === '/api/ground') {
+      const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
+      return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX } });
+    }
+    if (P === '/ground-src') {
+      const abs = groundAbs(url.searchParams.get('p')); if (!abs) { res.writeHead(404); return res.end(); }
+      if (url.searchParams.get('thumb') !== '1') { res.writeHead(200, { 'content-type': TYPES[path.extname(abs).toLowerCase()] ?? 'application/octet-stream', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(abs)); }
+      const st = fs.statSync(abs), f = path.join(BG_THUMBS, safe(url.searchParams.get('p')) + `-${st.size}-${Math.round(st.mtimeMs)}.png`);
+      if (!fs.existsSync(f)) fs.writeFileSync(f, await sharp(abs).resize(96, 96, { fit: 'cover' }).png().toBuffer());
+      return png(fs.readFileSync(f));
+    }
+    if (req.method === 'POST' && P === '/api/ground') {
+      const { file, a, b } = await body(req);
+      if (!file || typeof file !== 'object' || !groundAbs(file.a?.src) || !groundAbs(file.b?.src)) { res.writeHead(400); return res.end('pick a picture for A and for B'); }
+      const pics = [];
+      for (const b64 of [a, b]) { try { pics.push(await sharp(Buffer.from(b64 ?? '', 'base64')).webp({ quality: 92 }).toBuffer()); } catch { res.writeHead(400); return res.end('not a picture'); } }
+      for (const [k, buf] of [['a', pics[0]], ['b', pics[1]]]) { const m = await sharp(buf).metadata(); if (!(m.width >= 16 && m.width <= 4096 && m.width === m.height)) { res.writeHead(400); return res.end(`picture ${k.toUpperCase()} must be square, 16-4096 px`); } }
+      const out = { v: 1, saved: true, stamp: new Date().toISOString(), a: GL.clampSide(file.a), b: GL.clampSide(file.b), mix: GL.clampMix(file.mix ?? {}) };
+      fs.writeFileSync(BG_PIC('a'), pics[0]); fs.writeFileSync(BG_PIC('b'), pics[1]);
+      fs.writeFileSync(BG_FILE, JSON.stringify(out, null, 1) + '\n'); return json({ file: out });
+    }
+    if (req.method === 'POST' && P === '/api/ground-unsave') {
+      // back to the game's grass: the settings go back to the game's (the backyard + meadow pair, the original mix), not saved, and the two pictures go
+      fs.rmSync(BG_FILE, { force: true }); for (const k of ['a', 'b']) fs.rmSync(BG_PIC(k), { force: true });
+      const f = readGround();
+      fs.writeFileSync(BG_FILE, JSON.stringify(f, null, 1) + '\n'); return json({ file: f });
+    }
+    if (P === '/ground-lib.js' || P === '/ground.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(P === '/ground.js' ? path.join(ROOT, 'scripts/assets/review/ground.js') : path.join(OUT, 'ground-lib.js'))); }
     if (P === '/hole-lib.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(path.join(OUT, 'hole-lib.js'))); }
     if (P === '/holes.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/holes.js'))); }
     res.writeHead(404); res.end();

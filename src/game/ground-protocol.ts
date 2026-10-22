@@ -1,4 +1,5 @@
 import type { GroundArt } from './ground-art';
+import type { BaseGrassArt } from './base-grass';
 import type { GrassTex } from './grass-art';
 import type { TexSnapshot } from './texture-share';
 import type { ClassId, NodeType } from './network';
@@ -55,7 +56,7 @@ export type NetOp =
 /** g = ground chunk, m = district chunk (MID_K x MID_K, lite), p = planner chunk */
 export type TileKind = 'g' | 'm' | 'p';
 export type ToWorker =
-  | { t: 'init'; art: GroundArt; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
+  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
   | { t: 'textures'; snap: TexSnapshot }
   | { t: 'net'; ops: NetOp[] }
   | { t: 'lamps'; pts: Float32Array }

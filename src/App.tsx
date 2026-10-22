@@ -20,7 +20,6 @@ import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
-import { BASE_GRASSES, baseGrassId, setBaseGrass } from './game/dev-grass';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
 import { Minimap } from './ui/Minimap';
@@ -194,12 +193,6 @@ export default function App() {
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Recurring dark nights bring kids, monsters and traffic diversions every few game days">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural &amp; paranormal disasters
-                    </label>
-                    <label className="flex items-center gap-2 px-2 py-1 text-xs" title="Developer setting: the map's base grass (reloads the game)">
-                      Dev: base grass
-                      <select className="ml-auto min-w-0 flex-1 rounded bg-black/40 px-1 py-0.5" value={baseGrassId()} onChange={e => setBaseGrass(e.target.value)}>
-                        {BASE_GRASSES.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                      </select>
                     </label>
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>

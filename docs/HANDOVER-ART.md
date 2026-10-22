@@ -46,13 +46,13 @@ exactly where the art chat stopped and what to do next, in order.
   sign, pro shops, tables with umbrellas, estate gates, plants, flag poles, cart bridges).
 
 ## 3. What to do next, in order
-1. **Land `claude/brush-round`** (tests pass: brush 11, paint 36, paint-brush 8, golf-holepreset 6, compose 16; tsc clean; NOT
+1. **DONE 2026-10-22 (see PROGRESS "The art chat, 2026-10-22").** Land `claude/brush-round` (tests pass: brush 11, paint 36, paint-brush 8, golf-holepreset 6, compose 16; tsc clean; NOT
    browser-checked): (a) rounder golf-brush outlines (resample 0.5 tile, 4 x 9-point smoothing, simplify 0.12; a radius-1 dab falls back to
    the resampled loop); (b) **the border band gets its own scale, angle and tone** (Darker / Lighter, strength, tint), like the fill (the
    owner asked for "as much as you can the normal texture"). **Fix first:** when the border angle `ba` is absent the renderer falls back to
    the fill's angle, so the panel's 0° can disagree with what is drawn: send `ba` (and `bs`) whenever any border field is non-default, or add
    an explicit "follow the fill" default. Then browser-check (paint a fairway, change its border scale / angle / tone), merge, build, push.
-2. **Studio "Ground" tab: the base-grass tweaker** (the owner, exactly: "pick from everything and tweak the tint and scale etc. … in the
+2. **DONE 2026-10-22.** Studio "Ground" tab: the base-grass tweaker (the owner, exactly: "pick from everything and tweak the tint and scale etc. … in the
    studio on a small patch of land with 4 houses and 4 streets"). Plan: move the game's grass mix (`textures.ts` `grass(gA, gB)`: two
    pictures hex-mixed in soft patches, an fbm mix mask at 0.38–0.62, a tone 0.9–1.1 and a warm drift ±0.08) into a module the studio can
    bundle (as `hole-lib.ts` does), driven by settings: per grass A / B the source (any image in `src/assets/ground/`, `ground/grass-v1/png/`,

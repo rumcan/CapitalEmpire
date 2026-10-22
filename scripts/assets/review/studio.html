@@ -35,7 +35,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 @media (max-width:800px){.lots{grid-template-columns:1fr}.list{max-height:200px}}
 </style></head><body>
 <header><h1>Sprite studio</h1>
-<button class="tab on" data-v="lib">Library</button><button class="tab" data-v="lots">Lots</button><button class="tab" data-v="people">People</button><button class="tab" data-v="holes">Holes</button>
+<button class="tab on" data-v="lib">Library</button><button class="tab" data-v="lots">Lots</button><button class="tab" data-v="people">People</button><button class="tab" data-v="holes">Holes</button><button class="tab" data-v="ground">Ground</button>
 <span style="flex:1"></span><span id="status"></span><button class="btn gold" id="rb">Rebuild game sprites</button></header>
 
 <img id="man" alt=""><div class="view on" id="v-lib">
@@ -53,6 +53,7 @@ select{background:#11130b;border:1px solid var(--line);color:var(--ink);border-r
 <div class="view" id="v-people"><div class="hint" style="padding:12px 16px 0">Click a frame to fix it: mirror it, use another frame (of any facing) in its place, or mark it as needing a new frame and drop the new picture in. Rebuild game sprites to put the fixes in the game. The strip on the right plays the walk as the game does (frames 1-8).</div><div id="needed" class="chips"></div><div id="people"></div></div>
 
 <div class="view" id="v-holes"></div>
+<div class="view" id="v-ground"></div>
 
 <script>
 const $=s=>document.querySelector(s), el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);for(const c of k)if(c!=null)e.append(c);return e};
@@ -169,4 +170,4 @@ async function poll(){const j=await (await fetch('/api/status')).json(),s=$('#st
  b.disabled=!j.done;s.textContent=j.done?(j.code?'Rebuild failed: '+j.log.trim().split('\n').pop():'Rebuilt: reload the game'):`Rebuilding (${Math.round((Date.now()-j.started)/60000)} min): ${j.step.split('/').pop()}`;if(!j.done)setTimeout(poll,3000);}
 loadLib();poll();
 </script>
-<script type="module" src="/holes.js"></script></body></html>
+<script type="module" src="/holes.js"></script><script type="module" src="/ground.js"></script></body></html>

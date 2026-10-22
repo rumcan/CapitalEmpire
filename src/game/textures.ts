@@ -1,4 +1,6 @@
 import { LEVELS, MID_LEVELS, mulberry } from './iso';
+import { canvas, clamp, ctx2d, fbm, smooth, type C2D, type Cnv } from './canvas2d';
+import { DEFAULT_MIX, mixGrass, type BaseGrassArt } from './base-grass';
 import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
@@ -31,8 +33,6 @@ const DSG = [
   [0, 0.95, 0.86, 0.55, 1.29, 4.02, 9.32, 16.99, 27.67, 31.84, 34.4, 34.4]];
 for (let b = 1; b < IB.length; b++) DSG[0][b] = Math.max(DSG[0][b], Math.min(30, DSG[0][b - 1]));
 const LUMA0 = 0.3 * ASPHALT_MEAN[0] + 0.59 * ASPHALT_MEAN[1] + 0.11 * ASPHALT_MEAN[2];
-const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
-const smooth = (a: number, b: number, v: number) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 function tbl(t: number[], I: number) { if (I <= 0) return 0; if (I >= 1) return t[t.length - 1]; let i = 1; while (IB[i] < I) i++; const f = (I - IB[i - 1]) / (IB[i] - IB[i - 1]); return t[i - 1] + (t[i] - t[i - 1]) * f; }
 /** town-scene.mjs litAsphalt: the painting's response to lamp light at intensity I, applied to one pixel */
 function litPixel(c: number[], I: number) {
@@ -44,11 +44,7 @@ function litPixel(c: number[], I: number) {
   for (let i = 0; i < 3; i++) c[i] = clamp(c[i], 0, 255);
 }
 
-export type Cnv = OffscreenCanvas;
-export type C2D = OffscreenCanvasRenderingContext2D;
-/** every texture is built on OffscreenCanvas, so the same code runs in the ground workers and on the main thread */
-export function canvas(w: number, h: number): Cnv { return new OffscreenCanvas(Math.max(1, w), Math.max(1, h)); }
-export function ctx2d(c: Cnv, opts?: CanvasRenderingContext2DSettings): C2D { return c.getContext('2d', opts) as C2D; }
+export { canvas, ctx2d, type Cnv, type C2D };
 async function loadImage(src: string) { const r = await fetch(src); if (!r.ok) throw new Error('image ' + src.slice(0, 40)); return createImageBitmap(await r.blob()); }
 function toCanvas(img: ImageBitmap, w = img.width, h = img.height) { const c = canvas(w, h), g = ctx2d(c); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, w, h); return c; }
 function downscale(src: Cnv, factor: number) {
@@ -62,28 +58,6 @@ function downscale(src: Cnv, factor: number) {
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(cur, 0, 0, tw, th);
   return out;
 }
-/** tileable value noise over a (W, H) period */
-function valueNoise(seed: number, cols: number, rows: number, W: number, H: number) {
-  const r = mulberry(seed), g = new Float32Array(cols * rows); for (let i = 0; i < g.length; i++) g[i] = r();
-  const cw = W / cols, ch = H / rows;
-  return (x: number, y: number) => {
-    const u = x / cw, v = y / ch, i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0;
-    const su = fu * fu * (3 - 2 * fu), sv = fv * fv * (3 - 2 * fv), ii = ((i0 % cols) + cols) % cols, jj = ((j0 % rows) + rows) % rows, i1 = (ii + 1) % cols, j1 = (jj + 1) % rows;
-    const a = g[jj * cols + ii], b = g[jj * cols + i1], c = g[j1 * cols + ii], d = g[j1 * cols + i1];
-    return (a + (b - a) * su) * (1 - sv) + (c + (d - c) * su) * sv;
-  };
-}
-function fbm(seed: number, W: number, H: number, cells: number, oct = 3) {
-  const layers = Array.from({ length: oct }, (_, i) => valueNoise(seed + i * 17, cells << i, Math.max(1, Math.round(cells * H / W)) << i, W, H));
-  return (x: number, y: number) => { let s = 0, a = 0.5, n = 0; for (let i = 0; i < oct; i++) { s += a * layers[i](x, y); n += a; a *= 0.5; } return s / n; };
-}
-/** a grey+alpha mask canvas from a scalar field */
-function maskFrom(W: number, H: number, f: (x: number, y: number) => number) {
-  const c = canvas(W, H), g = ctx2d(c), d = g.createImageData(W, H), D = d.data;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const o = (y * W + x) * 4, a = clamp(f(x, y), 0, 1) * 255; D[o] = D[o + 1] = D[o + 2] = 255; D[o + 3] = a; }
-  g.putImageData(d, 0, 0); return c;
-}
-
 /* ---------------- painted screen-space terrain (dirt, gravel, field, paving, pads) ---------------- */
 type Draw = (x: number, y: number) => void;
 function wrap(x: number, y: number, m: number, draw: Draw) {
@@ -238,7 +212,7 @@ export class Textures {
   roundSprites: LeafSprite[] = LEAVES.filter(l => l.round).sort((a, b) => a.dim - b.dim);
   private store(name: TexName, base: Cnv) { for (const L of [...LEVELS, ...MID_LEVELS]) if (!this.mips.has(name + '@' + L)) this.mips.set(name + '@' + L, downscale(base, L / AUTHOR)); }
 
-  async build(art: GroundArt, progress?: (p: number) => void) {
+  async build(art: GroundArt & { grassMix?: BaseGrassArt }, progress?: (p: number) => void) {
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
     const steps = PAINTED.length + 12 + EAGER_PHOTO.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
@@ -263,8 +237,9 @@ export class Textures {
     this.mosaics.set('lit2', this.mipChain(this.mosaic(seeds, lit(srcA, 0.9), lit(srcB, 0.9)))); await tick();
     this.mosaics.set('lot', this.mipChain(lotMosaic(toCanvas(lotImg)))); await tick();
     // ---- grass: hex-mixed paintings with low-frequency tone, in screen space
-    const gA = toCanvas(grassA, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR)), gB = toCanvas(grassB, Math.round(256 * AUTHOR), Math.round(256 * AUTHOR));
-    const grass = this.grass(gA, gB);
+    // the base grass: the owner's mix and picture sizes when the studio's Ground tab saved them (art.grassMix), else the game's original
+    const gm = art.grassMix, pa = Math.round((gm?.px[0] ?? 256) * AUTHOR), pb = Math.round((gm?.px[1] ?? 256) * AUTHOR);
+    const grass = mixGrass(toCanvas(grassA, pa, pa), toCanvas(grassB, pb, pb), gm?.mix ?? DEFAULT_MIX, BASE_W, BASE_H, AUTHOR);
     this.store('grass', grass);
     // ---- the Paint tool's photo textures that every worker needs (grasses, concrete): built here; the others are built by ensure() on first use
     for (const p of PHOTO_TEX) if (EAGER_PHOTO.has(p.tex)) { await this.buildPhoto(p); await tick(); }
@@ -364,34 +339,6 @@ export class Textures {
     // mixed: p.px pixels per tile (160 by default: 80 px/m over the 24 m period), the photo's p.mix metres (PHOTO_SIZE bigger) scaled to that; plain: the photo is the period
     this.photoSrc.set(p.tex, c);
     this.mosaics.set(p.tex, this.mipChain(p.mix > 0 ? this.mosaic(this.mosaicSeeds(), c, c, mean(), p.px ?? 160, c.width / (p.mix * PHOTO_SIZE)) : c));
-  }
-  private grass(gA: Cnv, gB: Cnv) {
-    const c = canvas(BASE_W, BASE_H), g = ctx2d(c), HG = 192 * AUTHOR, cols = Math.round(BASE_W / HG), rows = Math.round(BASE_H / (HG * 0.866)), dx = BASE_W / cols, dy = BASE_H / rows;
-    const R = HG * 0.72, feather = HG * 0.42, P = Math.ceil(R * 2) + 2, patch = canvas(P, P), pg = ctx2d(patch);
-    const soft = canvas(P, P); { const sg = ctx2d(soft), gr = sg.createRadialGradient(P / 2, P / 2, 0, P / 2, P / 2, R); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(feather / R, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); sg.fillStyle = gr; sg.fillRect(0, 0, P, P); }
-    const layer = (img: Cnv, seed: number) => {
-      const l = canvas(BASE_W, BASE_H), lg = ctx2d(l), rr = mulberry(seed), pat = lg.createPattern(img, 'repeat')!;
-      lg.fillStyle = pat; lg.fillRect(0, 0, BASE_W, BASE_H);
-      const order: [number, number][] = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) order.push([i, j]);
-      for (let i = order.length - 1; i > 0; i--) { const j = (rr() * (i + 1)) | 0; [order[i], order[j]] = [order[j], order[i]]; }
-      for (const [i, j] of order) {
-        const ox = rr() * img.width, oy = rr() * img.height;
-        pg.globalCompositeOperation = 'source-over'; pg.clearRect(0, 0, P, P); pg.fillStyle = pat; pg.save(); pg.translate(-ox, -oy); pg.fillRect(ox, oy, P, P); pg.restore();
-        pg.globalCompositeOperation = 'destination-in'; pg.drawImage(soft, 0, 0);
-        const X = (i + 0.5 + (j & 1 ? 0.5 : 0)) * dx - P / 2, Y = (j + 0.5) * dy - P / 2;
-        for (const wx of [-BASE_W, 0, BASE_W]) for (const wy of [-BASE_H, 0, BASE_H]) { const x = X + wx, y = Y + wy; if (x > -P && x < BASE_W && y > -P && y < BASE_H) lg.drawImage(patch, x, y); }
-      }
-      return l;
-    };
-    g.drawImage(layer(gA, 21), 0, 0);
-    const mixF = fbm(31, BASE_W, BASE_H, 3, 3), B = layer(gB, 23), bg = ctx2d(B);
-    bg.globalCompositeOperation = 'destination-in'; bg.drawImage(maskFrom(BASE_W, BASE_H, (x, y) => smooth(0.38, 0.62, mixF(x, y))), 0, 0);
-    g.drawImage(B, 0, 0);
-    // tone (.9-1.1) and a warm/cool drift, like the builder's fbm tone/warm terms
-    const tone = fbm(37, BASE_W, BASE_H, 5, 3), warm = fbm(41, BASE_W, BASE_H, 2, 2), d = g.getImageData(0, 0, BASE_W, BASE_H), D = d.data;
-    for (let y = 0; y < BASE_H; y++) for (let x = 0; x < BASE_W; x++) { const o = (y * BASE_W + x) * 4, tb = 0.9 + 0.2 * tone(x, y), tw = (warm(x, y) - 0.5) * 0.16; D[o] = clamp(D[o] * tb * (1 + tw), 0, 255); D[o + 1] = clamp(D[o + 1] * tb * (1 + tw * 0.4), 0, 255); D[o + 2] = clamp(D[o + 2] * tb * (1 - tw * 0.6), 0, 255); }
-    g.putImageData(d, 0, 0);
-    return c;
   }
   image(name: TexName, L: number) { return this.mips.get(name + '@' + L)!; }
   /** town-scene.mjs pickLeaf: the smallest sprite that is at least 1.15x the wanted size, then one of the next few */

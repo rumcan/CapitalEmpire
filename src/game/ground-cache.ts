@@ -3,7 +3,7 @@
  *  keeps showing its old picture until the new one arrives, and every visible chunk falls back to the planner map. */
 import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
 import { GROUND_ART } from './ground-art';
-import { withBaseGrass } from './dev-grass';
+import { withBaseGrass } from './base-grass-saved';
 import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker } from './ground-protocol';
 import type { GLRenderer } from './gl';
 import { unionBox, type BBox } from './network';

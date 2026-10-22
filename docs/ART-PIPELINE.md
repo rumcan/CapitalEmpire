@@ -83,6 +83,13 @@ on every lot so they meet), with planting along both faces and leaf drifts at th
   (a frame of another facing); `new` (a new frame is needed: drop its picture in the popover, saved to
   `walker-frames/<person>/<DIR>-<k>.png`, contain-fitted to the frame cell at the pack; with no picture the pack keeps the old frame
   and logs it). The "Walk frames needing new art" line lists every `new` frame.
+- **Ground** (2026-10-22): the map's base grass. Pick any two pictures (every picture in `src/assets/ground/`, the grass-v1 set,
+  `art/grass-photo/`), give each a size (256 px x scale), brightness, contrast, saturation, hue and a tint, and set the mix (B share,
+  softness, patch size, light swing, warm / cool). The preview is the game's own mix (`src/game/base-grass.ts` mixGrass, bundled as
+  `ground-lib.js`) on a block of 4 houses inside 4 streets with sidewalks. **Save** writes `src/game/base-grass.json` (saved: true, a stamp
+  that renews the ground texture cache) and the two adjusted pictures `src/assets/ground/base-grass-a.webp` / `-b.webp`; the game reads
+  them (`base-grass-saved.ts`, in `ground-cache.ts`) after Rebuild. **Back to the game's grass** removes them (the backyard + meadow pair,
+  the original mix). The gear menu's "Dev: base grass" picker is gone.
 - **Rebuild**: runs the asset steps. Every step reads these files (`overrides.mjs`, `removed.mjs`).
 
 ## Townspeople (`src/game/ext/pedestrians/`)

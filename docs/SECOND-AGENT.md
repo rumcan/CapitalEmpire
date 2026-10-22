@@ -113,4 +113,7 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   `placePresetProps` and a `placeProps` host member in engine.ts (a few lines beside addProp; your g1-engine branch touches engine.ts:
   expect a trivial merge). Next the art chat builds the owner's **round paint brush with hole presets** (Paint tool, holes.ts link):
   **For the coder:** say in your log if you would rather own that (it overlaps G2's hole tools).
-
+- 2026-10-22 (the art chat, new PC): landed `claude/brush-round` (+ fixes in `PaintPanel.tsx`, `paint-tool.ts` patch, `ground.worker.ts`
+  lazy border photos) and the studio Ground tab. **For the coder:** the base grass mix moved from `textures.ts` into `base-grass.ts`
+  (+ `canvas2d.ts` for the canvas and noise helpers; textures.ts re-exports canvas / ctx2d); `ground-cache.ts` takes the grass from
+  `base-grass-saved.ts`; I removed the "Dev: base grass" select from the gear menu in your `App.tsx` (the owner rejected it).

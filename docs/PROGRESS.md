@@ -2133,3 +2133,19 @@ PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks l
 ## Handover, 2026-10-21 night (the art chat; the owner moves to a new PC)
 **Read [HANDOVER-ART.md](HANDOVER-ART.md) first:** where the art chat stopped, the unmerged branch `claude/brush-round`, and the next steps
 in order (brush-round, the studio Ground tab for the base grass, plant brushes, Course builder C1, hole presets in the game, golf art).
+
+## The art chat, 2026-10-22 (the new PC; a cloud session working on the owner's checkout)
+- **How this session works:** no npm registry in the cloud container, so checks run with the preinstalled esbuild (npm test as written),
+  TypeScript 6 against a baseline of the vite-type errors (no new errors is the bar; run the real `npm run typecheck` on the PC), and a
+  dev build made with esbuild + the tailwind standalone CLI, browser-checked with Playwright (swiftshader). Work lands on the PC's
+  `main` (E:\AI\CapitalEmpire) as commits; **push from the PC** (the cloud session has no GitHub write access).
+- **Landed `claude/brush-round`** (browser-checked): rounder golf-brush outlines; the border's own scale, angle and tone. Fixed on the
+  way: the panel now shows "Follow the fill" (with the fill's values) while the border follows the fill, and setting either control seeds
+  both from the fill (patches send `bs` and `ba` together), so the panel always matches what is drawn; **the ground worker now builds
+  lazy photo textures for borders too** (a First cut border was drawn as its flat swatch).
+- **Test fix:** `construction.test.ts` asked for construction art on the last atlas page; golf pages now follow it (any page after the
+  business pages, one page for all).
+- **Studio Ground tab** (HANDOVER-ART 3.2; ART-PIPELINE.md "The sprite studio"): `src/game/base-grass.ts` (the mix moved out of
+  textures.ts, same output at the defaults), `canvas2d.ts` (the canvas and noise helpers), `base-grass.json` (saved: false = today's grass),
+  `base-grass-saved.ts` replaces `dev-grass.ts`; the gear-menu picker is removed. Browser-checked: the tab previews and saves; the game
+  rebuilt its textures with a saved photo grass.

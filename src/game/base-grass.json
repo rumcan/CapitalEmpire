@@ -1,0 +1,31 @@
+{
+ "v": 1,
+ "saved": false,
+ "a": {
+  "src": "src/assets/ground/grass-capital-backyard.webp",
+  "scale": 1,
+  "tint": "#808080",
+  "tintAmt": 0,
+  "bright": 1,
+  "contrast": 1,
+  "sat": 1,
+  "hue": 0
+ },
+ "b": {
+  "src": "src/assets/ground/grass-capital-meadow.webp",
+  "scale": 1,
+  "tint": "#808080",
+  "tintAmt": 0,
+  "bright": 1,
+  "contrast": 1,
+  "sat": 1,
+  "hue": 0
+ },
+ "mix": {
+  "share": 0.5,
+  "soft": 0.12,
+  "patch": 1,
+  "tone": 0.1,
+  "warm": 0.08
+ }
+}
