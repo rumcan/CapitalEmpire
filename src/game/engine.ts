@@ -1,6 +1,8 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
+import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
+import { getTournamentWeather } from './golf/weather';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
@@ -14,7 +16,7 @@ import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
-import { areaAt, toTuple, type PaintTuple } from './paint';
+import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
 import { ParkingTool } from './parking-tool';
 import { gateSpots } from './parking-props';
@@ -309,6 +311,12 @@ export class Game {
    *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
   private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX, WALK_FRAMES - 1); private pedNet = -1; private pedTick = 0; private pedLots = -1;
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
+  /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
+  grass = new GrassManagement(); grassPanel = false; grassHeat = false; grassRadius = 12; grassArea = false; grassDose = 1; grassAngle = 0;
+  grassAction: GrassAction | null = null; grassTarget: Pt | null = null;
+  private grassZones = new Map<string, string[]>(); private grassDelta: GrassCellView[] = []; private grassSim = -1; private grassElapsed = 0; private grassTrafficT = -1;
+  private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
+  private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
   perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
   // input
@@ -859,6 +867,10 @@ export class Game {
   }
   /** a lot's ground patches (driveways, walks, car parks, yards); null drops them. Batched: the ground hears of them once per frame */
   setLotGround(key: string, patches: LotPatch[] | null) {
+    const keep: string[] = [];
+    for (let i = 0; i < (patches?.length ?? 0); i++) { const p = patches![i], surface = (p.paint || p.lawn) && grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)); if (!surface) continue; const id = `${key}/${i}`; keep.push(id); this.grass.register(id, p.pts, surface); }
+    for (const id of this.grassZones.get(key) ?? []) if (!keep.includes(id)) this.grass.remove(id);
+    if (keep.length) this.grassZones.set(key, keep); else this.grassZones.delete(key);
     if (key.startsWith('paint:')) this.paintChanged(key, patches);
     if (key.startsWith('curb:')) this.laybyChanged(key, patches);
     this.lotPending.set(key, patches);
@@ -1894,6 +1906,7 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
+  if (this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
   if (this.landMode && this.landHover && e.button === 0) {
   this.buyLandBlock(this.landHover.rect);
   return;
@@ -2908,6 +2921,7 @@ export class Game {
       biz: this.bizDefs.map((d): [BusinessId, number, number, number, number] => [d.type, d.x, d.y, d.w, d.h]),
       bizStats: this.bizDefs.map((d, k): BizStats => { const v = this.traffic.biz.find(q => q.id === d.id) ?? freshStats(d.id); return { id: k + 1, level: v.level, xp: v.xp, sat: v.sat, goodDays: v.goodDays, revenue: v.revenue, visitors: v.visitors, today: { ...v.today } }; }),
       paints: this.paint.save(),
+      grass: this.grass.serialize(),
       rows: this.parking.rows.map((r): [number, number, number, number, number, number, string] => [r.ax, r.ay, r.bx, r.by, r.side, r.bay, r.col]),
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
@@ -2937,6 +2951,7 @@ export class Game {
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));
       if (d.buses) this.busDefs = d.buses.map(([park, sx, sy, dx, dy, buses, seats, town], k) => ({ id: k + 1, park, sx, sy, dx, dy, buses, seats, ...(town !== undefined && town >= 0 ? { town } : {}) }));
       this.paint.load(d.paints as PaintTuple[] | undefined);
+      this.grass.load(d.grass); this.grassSim = -1;
       // the bay rows and on-street runs (their ground and lists go to the City now: the network is built above; afterLoad syncs their gates)
       this.parking.load(d.rows?.map(([ax, ay, bx, by, side, bay, col], k): BayRowDef => ({ id: k + 1, ax, ay, bx, by, side: side < 0 ? -1 : 1, bay: bay === 60 || bay === 45 ? bay : 90, col: col === 'white' ? 'white' : 'yellow' })), d.curbs?.map(([ax, ay, bx, by], k): CurbDef => ({ id: k + 1, ax, ay, bx, by })), d.parkFee);
       // the cards the save had applied are in its tolls and routes already: only the fields new gates and routes take are set from them
@@ -2947,6 +2962,7 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
+    this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassTarget = null; this.grassAction = null;
     this.edit.clear(); this.snapshot = null;
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0; this.townTrees.clear(); this.perf.townTrees = 0; this.lotBoxes.clear(); this.paintBoxes.clear();
@@ -3116,6 +3132,51 @@ export class Game {
   }
 
   /** the townspeople: new sidewalks when the network changed (looked at twice a second), the head count from the built lots */
+  /** Current maintenance selection: a radius in tiles or the clicked registered grass polygon. */
+  grassScope(): GrassScope | null { const p = this.grassTarget; if (!p) return null; const zone = this.grassArea ? this.grass.zoneAt(p.x, p.y) : undefined; return this.grassArea && !zone ? null : { ...p, radius: this.grassRadius, zone }; }
+  /** Pay for care through the existing treasury and update only the selected cells. */
+  careGrass(action: GrassAction) {
+    const scope = this.grassScope(); if (!scope) return;
+    const cost = this.grass.quote(action, scope, this.grassDose); if (!cost) { this.toast('Select a grass area first', 'warn'); return; }
+    if (cost > this.money) { this.toast(`Grass care needs $${cost}`, 'warn'); return; }
+    const n = this.grass.apply(action, scope, this.grassDose, this.grassAngle); if (!n) return;
+    this.traffic.spend('upkeep', cost); this.flushGrass(); this.scheduleSave(); this.toast(`${action}: ${n} turf cells ($${cost})`); this.emit();
+  }
+  /** Persist owner tuning without changing lawn/base-grass/mowing presets. */
+  tuneGrass(settings: Partial<GrassSettings>) { this.grass.configure(settings); this.flushGrass(); this.scheduleSave(); this.emit(); }
+  /** Record a player-marked turf strike, rendered as a small separate divot; never a full damaged turf tile. */
+  markGrassDivot() { const p = this.grassTarget; if (!p) return; this.grass.traffic(p.x, p.y, p.x, p.y, 1, 'divot', 0); this.flushGrass(); this.scheduleSave(); this.emit(); }
+  private flushGrass() { if (this.grass.drain(this.grassDelta)) this.ground.grass(this.grassDelta, this.grass.settings.enabled ? this.grass.settings.strength : 0, this.grassHeat, this.grass.settings.mowing); }
+  private updateGrass() {
+    const t = this.traffic.stats.simT;
+    if (this.grassSim < 0 || t < this.grassSim) this.grassSim = t;
+    this.grassElapsed += Math.max(0, t - this.grassSim) / GAME_DAY * (this.golfMode && this.traffic.round.stage === 'free' ? 365 : 1); this.grassSim = t;
+    if (this.grassElapsed >= 0.25) {
+      const days = Math.floor(this.grassElapsed * 4) / 4, s = this.grass.settings;
+      const r = this.traffic.round, weather = this.golf ? getTournamentWeather(this.seed, r.stage === 'eval' && r.last ? r.last.run : r.runs + 1).condition : 'clear';
+      this.grass.step(days, { rain: weather === 'rain' ? Math.max(s.rain, 0.2) : weather === 'storm' ? Math.max(s.rain, 0.4) : s.rain, evaporation: weather === 'heat' ? Math.max(s.evaporation, 0.12) : s.evaporation, temperature: weather === 'heat' ? Math.max(32, s.temperature) : s.temperature }); this.grassElapsed -= days;
+    }
+    // Use real movement/occupancy only. No artificial customers, cart routes or random divots are invented.
+    if (this.grass.settings.enabled && this.speed && t - this.grassTrafficT >= 1) {
+      this.grassTrafficT = t;
+      for (let i = 0; i < this.peds.n; i++) {
+        const out = this.peds.isOut(i), x = this.peds.x[i], y = this.peds.y[i];
+        if (out && this.grassPedOut[i]) { const distance = Math.hypot(x - this.grassPedX[i], y - this.grassPedY[i]); if (distance > 0.05 && distance < 32) this.grass.traffic(this.grassPedX[i], this.grassPedY[i], x, y, distance, 'foot'); }
+        this.grassPedOut[i] = out ? 1 : 0; this.grassPedX[i] = x; this.grassPedY[i] = y;
+      }
+      // Event frame groups have no stable visitor id: local occupancy is usable without inventing trajectories between groups.
+      const fans = this.traffic.walkers;
+      for (let k = 0; k + 3 < fans.length; k += 4) this.grass.traffic(fans[k], fans[k + 1], fans[k], fans[k + 1], Math.max(0, fans[k + 2]) * 0.05, 'foot');
+      const tr = this.traffic;
+      if (this.grassCarAlive.length < tr.n) { this.grassCarX = new Float32Array(tr.n); this.grassCarY = new Float32Array(tr.n); this.grassCarAlive = new Uint8Array(tr.n); }
+      for (let i = 0; i < tr.n; i++) {
+        const x = tr.px[i], y = tr.py[i];
+        if (tr.alive[i] && this.grassCarAlive[i]) { const d = Math.hypot(x - this.grassCarX[i], y - this.grassCarY[i]); if (d > 0.05 && d < 32 && (this.grass.zoneAt(x, y) || this.grass.zoneAt(this.grassCarX[i], this.grassCarY[i]))) this.grass.traffic(this.grassCarX[i], this.grassCarY[i], x, y, d / 4, 'cart'); }
+        this.grassCarAlive[i] = tr.alive[i]; this.grassCarX[i] = x; this.grassCarY[i] = y;
+      }
+    }
+    this.flushGrass();
+  }
   private updatePeds(dt: number) {
     if (!WALKER_PEOPLE.length) return;
     if (this.pedTick++ % 30 === 0) {
@@ -3176,6 +3237,7 @@ export class Game {
     this.particles = this.particles.filter(p => p.age < p.life);
     this.traffic?.update(now);
     this.updatePeds(dt);
+    this.updateGrass();
     // the followed car: the camera centres on its interpolated place (the info itself comes at 10 Hz)
     if (this.followCar && this.traffic.car) {
       const tr = this.traffic, i = this.inspecting, live = tr.alive[i] === 1, x = live ? tr.px[i]! : tr.car!.x, y = live ? tr.py[i]! : tr.car!.y;
@@ -3547,6 +3609,15 @@ export class Game {
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
     this.drawWalkers(ctx, now);
+    if (this.grassPanel) {
+      const s = this.grassScope();
+      if (s) {
+        const polygon = s.zone && this.grass.polygon(s.zone); ctx.beginPath();
+        if (polygon) { for (let k = 0; k < polygon.length; k += 2) { const p = this.screen(polygon[k], polygon[k + 1]); if (!k) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); } }
+        else for (let k = 0; k < 48; k++) { const angle = k * Math.PI / 24, p = this.screen(s.x + Math.cos(angle) * s.radius, s.y + Math.sin(angle) * s.radius); if (!k) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
+        ctx.closePath(); ctx.strokeStyle = '#86efac'; ctx.lineWidth = 2 * this.dpr; ctx.stroke();
+      }
+    }
     this.drawTolls(ctx);
     this.drawTollPreview(ctx);
     this.drawBizPreview(ctx);
