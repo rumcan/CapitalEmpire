@@ -7,6 +7,7 @@ import type { ClassId, NodeType } from './network';
 import type { LineStyle } from './types';
 import type { Waterway } from './terrain/types';
 import type { BBox } from './network';
+import type { GrassCellView } from './ext/grass-management';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone filter over the fill: t 1 Multiply (darker) or 2 Lighten (screen),
@@ -58,6 +59,7 @@ export type NetOp =
 /** g = ground chunk, m = district chunk (MID_K x MID_K, lite), p = planner chunk */
 export type TileKind = 'g' | 'm' | 'p';
 export type ToWorker =
+  | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
   | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
   | { t: 'textures'; snap: TexSnapshot }
   | { t: 'net'; ops: NetOp[] }
