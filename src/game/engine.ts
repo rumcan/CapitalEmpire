@@ -55,10 +55,12 @@ import type { GolfSave, GolfView } from './golf/mode';
 import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
 import { monthsLeft, seasonLabel, yearOf } from './golf/calendar';
+import { computeYearEnd, type YearEndResult } from './golf/yearend';
+import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout } from './golf/types';
-import { tierInfo } from './golf/tour';
+import { tierInfo, type Need } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -1660,9 +1662,9 @@ export class Game {
   }
   /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
   private sendTerrain() {
-    const t = this.terrain, h = t.highway;
-    this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height);
-    this.traffic.disastersOn(this.disastersEnabled);
+  const t = this.terrain, h = t.highway;
+  this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height, this.golfMode);
+  this.traffic.disastersOn(this.disastersEnabled);
   }
   /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
   private townGrow(legs: Leg[]) {
@@ -1765,7 +1767,19 @@ export class Game {
   /** ends the build now: the crowd's run to kick-off begins */
   startNow() { this.traffic.startNow(); this.emit(); }
   /** closes the eval: the round is free again and the clock runs on */
-  closeRound() { this.traffic.closeRound(); this.emit(); }
+  closeRound() {
+  if (this.golf && this.traffic.round.last) {
+  const ye = this.golfYearEnd(this.traffic.round.last);
+  if (ye) {
+  this.golf.tier = ye.tier;
+  this.golf.rep = ye.rep;
+  this.golf.poorYears = ye.poorYears;
+  this.traffic.setGolf(true, this.golf.tier, this.golf.rep);
+  this.scheduleSave();
+  }
+  }
+  this.traffic.closeRound(); this.emit();
+  }
   /** moves the camera to the stadium's centre, keeping the zoom */
   goToSite() { const s = this.site; if (!s) return; this.cam.X = worldX(s.c.x, s.c.y); this.cam.Y = worldY(s.c.x, s.c.y); this.clampCam(); this.emit(); }
   /** moves the camera to a business's centre, keeping the zoom */
@@ -2231,12 +2245,23 @@ export class Game {
   aims: this.golf.aims,
   clubhouse: this.golf.clubhouse,
   };
-  return buildCourseStatsPanel(layout, this.golf.tier);
+  const have = new Set<Need>();
+  if (this.parkDefs.length > 0) have.add('carpark');
+  return buildCourseStatsPanel(layout, this.golf.tier, have);
+  }
+  /** evaluates tournament day outcome and tour progression (null outside golf mode or without a finished round) */
+  golfYearEnd(last = this.traffic.round.last): YearEndResult | null {
+  if (!this.golf || !last) return null;
+  const stats = this.courseStatsView();
+  const have = new Set<Need>();
+  if (this.parkDefs.length > 0) have.add('carpark');
+  const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
+  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
-    if (!this.golf || this.traffic.skipping) return;
-    if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
+  if (!this.golf || this.traffic.skipping) return;
+  if (this.traffic.stats.frozen) { this.toast('The clock is frozen during an event'); return; }
     const now = performance.now(), c = this.traffic.clockTime(now), target = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
     const until = this.traffic.simTime(now) + (target - c) + 1; // one sim second past the target, so the worker's step crosses it
     if (!this.speed) this.setSpeed(this.lastSpeed);

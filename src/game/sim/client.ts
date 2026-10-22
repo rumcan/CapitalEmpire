@@ -135,11 +135,11 @@ export class SimClient {
   netOps(ops: NetOp[]) { if (ops.length) this.post({ t: 'net', ops }); }
   /** a new valley: its terrain classes (copied), the highway entry (tiles), the seed and the town centres (flat x, y pairs in tiles; none: the single town),
    *  and the heights (HS*HS metres, copied; the disasters read them: none gives flat ground); the town starts again. Send before the net ops. */
-  terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = [], height?: Float32Array) {
-    this.post({ t: 'terrain', cls, entry, seed, towns, height });
-    // the worker resets the books and the career with a new valley (City.terrain): the mirror shows the fresh treasury at once
-    this.budget = { ...new Budget().toJSON(), money: startMoney(towns.length > 0), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY };
-    this.career = { reached: 0, won: false };
+  terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = [], height?: Float32Array, golf = false) {
+  this.post({ t: 'terrain', cls, entry, seed, towns, height, golf });
+  // the worker resets the books and the career with a new valley (City.terrain): the mirror shows the fresh treasury at once
+  this.budget = { ...new Budget().toJSON(), money: golf ? START_MONEY : startMoney(towns.length > 0), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY };
+  this.career = { reached: 0, won: false };
   }
   /** the towns built at once (after a new valley's net ops): each grows to pop residents; the town's lots and totals come back as a town message */
   stamp(pop: number) { this.post({ t: 'stamp', pop }); }

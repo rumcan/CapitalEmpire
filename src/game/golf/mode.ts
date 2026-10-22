@@ -11,8 +11,8 @@ export type Rect = [number, number, number, number];
  *  plus its clubhouse and car park), the side of the town the course lies on (0 north, 1 east, 2 south, 3 west), and the hole objects (tee
  *  markers, pins, aim points) and the clubhouse door, tiles */
 export interface GolfSave {
-  v: 1; tier: number; rep: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
-  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
+ v: 1; tier: number; rep: number; poorYears?: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
+ tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
 }
 
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament

@@ -25,6 +25,7 @@ import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
 import { Minimap } from './ui/Minimap';
 import { CourseStatsPanel } from './ui/CourseStatsPanel';
+import { formatPercent } from './ui/TournamentResults';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
@@ -492,14 +493,35 @@ function RoundPanel({ game }: { game: Game }) {
 /** the evaluation screen (Phase 5 step 7b): a centred card over the map, shown in eval only. The arrival rate and its change, the towns, the money, the
  *  bottlenecks at kick-off (Go jumps there), and the draft of cards: picking one opens the way back to the valley (closeRound). No close button */
 function EvalScreen({ game }: { game: Game }) {
-  const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
-  if (!last) return null;
-  const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
-  return (
-    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
-      <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
-        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
-        <div>
+ const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
+ if (!last) return null;
+ const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
+ const ye = golf ? game.golfYearEnd(last) : null;
+ return (
+ <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
+ <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
+ <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
+ {ye && (
+ <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+ <div className="grid grid-cols-3 gap-2 text-center">
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Satisfaction</div>
+ <div className="text-base font-bold text-amber-200">{formatPercent(ye.satisfaction)}</div>
+ </div>
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Reputation</div>
+ <div className="text-base font-bold text-white">
+ {ye.prevRep} → <span className={ye.rep >= ye.prevRep ? 'text-emerald-400' : 'text-rose-400'}>{ye.rep}</span>
+ </div>
+ </div>
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Next Year</div>
+ <div className="text-xs font-semibold text-emerald-300">{ye.verdictText}</div>
+ </div>
+ </div>
+ </div>
+ )}
+ <div>
           <p><span className="text-4xl font-bold tabular-nums text-amber-200">{pct}%</span> <span className="text-sm text-slate-200">{golf ? 'of spectators in before tee-off' : 'of fans in before kick-off'}</span></p>
           <p className="text-xs text-slate-400">
             {delta === null ? (golf ? 'First tournament' : 'First run at this level')

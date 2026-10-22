@@ -73,11 +73,11 @@ function postWatch() {
 
 /** a new valley: the city takes its terrain and the town centres (flat x, y pairs); the town starts again (no lots yet) and posts its totals and books */
 function terrainOps(m: Extract<ToSim, { t: 'terrain' }>) {
-  const towns: Pt[] = [];
-  for (let i = 0; i + 1 < m.towns.length; i += 2) towns.push({ x: m.towns[i]!, y: m.towns[i + 1]! });
-  city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed, towns, m.height);
-  post({ t: 'site', site: city.site });
-  postTown([], true); postBudget(null);
+ const towns: Pt[] = [];
+ for (let i = 0; i + 1 < m.towns.length; i += 2) towns.push({ x: m.towns[i]!, y: m.towns[i + 1]! });
+ city.terrain(m.cls, { x: m.entry[0], y: m.entry[1] }, m.seed, towns, m.height, m.golf);
+ post({ t: 'site', site: city.site });
+ postTown([], true); postBudget(null);
 }
 
 /** replays the ops; the city logs the timings that are slow (over 50 ms) */
