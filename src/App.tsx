@@ -21,7 +21,6 @@ import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
-import { HoleStrip } from './ui/course/HoleStrip';
 import { STRUCTURES } from './game/golf/tents';
 import { getTournamentWeather } from './game/golf/weather';
 import { Icon, type IconName } from './ui/Icon';
@@ -272,8 +271,6 @@ export default function App() {
           </div>
           {(game.showAccess || game.cam.z < PLANNER_Z) && <AccessLegend game={game} />}
           {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} time={game.flowMode === 'time'} />}
-
-          {game.tool === 'course' && <HoleStrip game={game} />}
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (

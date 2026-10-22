@@ -2,6 +2,7 @@ import type { Game } from '../../game/engine';
 import { BRUSH_PRESETS, PAINT_TEXES } from '../../game/paint';
 import { PLANT_KINDS } from '../../game/plant';
 import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
+import { HoleStrip } from './HoleStrip';
 
 type CourseTab = 'build' | 'presets' | 'plants';
 
@@ -20,6 +21,7 @@ export function CoursePanel({ game }: { game: Game }) {
         <button className={`chip ${p.canUndo ? '' : 'opacity-40'}`} disabled={!p.canUndo} title="Ctrl+Z" onClick={() => p.undo()}>Undo</button>
         <button className={`chip ${p.canRedo ? '' : 'opacity-40'}`} disabled={!p.canRedo} title="Ctrl+Y" onClick={() => p.redo()}>Redo</button>
       </div>
+      <HoleStrip game={game} />
       <div className="mt-2 flex flex-wrap gap-1">
         <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => p.setBrush(p.brushKind)}>Build</button>
         <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => p.setMode('hole')}>Presets</button>
@@ -66,10 +68,7 @@ export function CoursePanel({ game }: { game: Game }) {
         <>
           <div className="mt-2 text-xs text-slate-300">{`Click the map to place the hole, its tee at the click; R turns it. It becomes hole ${n} (the current hole), or the next free number if hole ${n} already has areas.`}</div>
           <div className="mt-2 grid grid-cols-3 gap-1">
-            <button className={`chip ${p.holeSlot === 0 ? 'chip-on' : ''}`} onClick={() => p.setHoleSlot(0)}>
-              <span className="block">Generated</span>
-              <span className="block text-[10px] text-slate-400">a new layout each time</span>
-            </button>
+            <button className={`chip col-span-3 ${p.holeSlot === 0 ? 'chip-on' : ''}`} onClick={() => p.setHoleSlot(0)}>Generated: a new layout each time</button>
             {p.presetSlots().map((slot, i) => slot
               ? <button key={i} className={`chip ${p.holeSlot === i + 1 ? 'chip-on' : ''}`} title={`${i + 1}. ${slot}`} onClick={() => p.setHoleSlot(i + 1)}>{`${i + 1}. ${slot}`}</button>
               : <button key={i} className="chip opacity-40" disabled title="Empty: make it in the studio's Holes tab">{`${i + 1}. empty`}</button>)}
