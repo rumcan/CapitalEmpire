@@ -66,7 +66,7 @@ import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
-import { checkStructurePlacement, findStructureIndexAt, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
+import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { tierInfo, type Need } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
@@ -160,13 +160,22 @@ export interface Toast { id: number; text: string; t: number; kind: 'info' | 'wa
 export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];  
 const STRUCTURE_SPRITE: Record<string, string> = {  
- foodTent: 'expansion:backyard-tent', drinksTent: 'expansion:backyard-tent', kiosk: 'business:fishing-rental-kiosk', foodTruck: 'town:produce_stand',  
+ foodTent: 'golf:food-tent', drinksTent: 'expansion:backyard-tent', kiosk: 'business:fishing-rental-kiosk', foodTruck: 'town:produce_stand',  
  merchTent: 'expansion:backyard-tent', merchPavilion: 'business:golf-halfway-pavilion', chalet: 'business:golf-halfway-pavilion', village: 'business:golf-halfway-pavilion',  
- standS: 'business:golf-bench-course-map', standM: 'business:golf-bench-course-map', standL: 'business:golf-bench-course-map', leaderboard: 'world:scoreboard',  
+ standS: 'golf:grandstand-s', standM: 'business:golf-bench-course-map', standL: 'business:golf-bench-course-map', leaderboard: 'golf:leaderboard',  
  holeBoard: 'poi:fishing-board', screen: 'poi:movie-display', tvTower: 'world:watertower', broadcast: 'business:golf-cart-garage', media: 'business:golf-clubhouse',  
- gate: 'ce:parking-entry', toilets: 'gen:back-shed-garden', firstAid: 'expansion:backyard-tent', info: 'ce:parking-kiosk', rideshare: 'town:produce_stand',  
+ gate: 'ce:parking-entry', toilets: 'golf:toilet-block', firstAid: 'expansion:backyard-tent', info: 'ce:parking-kiosk', rideshare: 'town:produce_stand',  
  coach: 'business:golf-cart-garage', hotel: 'business:golf-clubhouse', interchange: 'ce:parking-entry', rangeStand: 'business:golf-bench-course-map', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',  
 };
+/** a golf structure's sprite scale: its picture fitted to the structure's footprint (tiles, turned when rotated), then the owner's size for
+ *  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for. */
+function structureScale(typeId: string, it: LibItem, rotated: boolean) {
+  const def = STRUCTURE[typeId], own = OWNER_SCALE[it.id] ?? 1; if (!def) return own;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const b of it.boxes) { const hx = (rotated ? b.hy : b.hx) / 2, hy = (rotated ? b.hx : b.hy) / 2, dx = (rotated ? b.dy : b.dx) / 2, dy = (rotated ? b.dx : b.dy) / 2; x0 = Math.min(x0, dx - hx); x1 = Math.max(x1, dx + hx); y0 = Math.min(y0, dy - hy); y1 = Math.max(y1, dy + hy); }
+  const w = rotated ? def.footprint.h : def.footprint.w, h = rotated ? def.footprint.w : def.footprint.h, fw = x1 - x0, fh = y1 - y0;
+  return (fw > 0 && fh > 0 ? Math.min(w / fw, h / fh) : 1) * own;
+}
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 /** a natural disaster's area colour and name (see Game.drawDisasters, disasterText) */
 const DISASTER_COL: Record<DisasterKind, string> = { flood: '#3b82f6', storm: '#9ca3af', landslide: '#92400e', wildfire: '#f97316', quake: '#a855f7', paranormal: '#b08aff' };
@@ -1036,7 +1045,9 @@ export class Game {
     const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? 'expansion:backyard-tent';
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
-    const prop = this.addProp(item, candidate.x, candidate.y, false, 1);
+    // the sprite sits on the middle of the structure's rectangle (x, y is its corner)
+    const [rx, ry, rw, rh] = structureRect(placed);
+    const prop = this.addProp(item, rx + rw / 2, ry + rh / 2, Boolean(candidate.rotated), structureScale(candidate.typeId, LIBRARY[item]!, Boolean(candidate.rotated)));
     this.golfStructureProps.set(id, prop);
     }
     const def = STRUCTURE[candidate.typeId];
@@ -1104,10 +1115,11 @@ export class Game {
     const item = LIB_INDEX.get(sprId);
     if (item === undefined) continue;
     let found: Prop | undefined;
+    const [rx, ry, rw, rh] = structureRect(s), cx = rx + rw / 2, cy = ry + rh / 2;
     for (const p of this.props) {
-    if (!claimed.has(p) && p.item === item && Math.hypot(p.x - s.x, p.y - s.y) < 2) { found = p; break; }
+    if (!claimed.has(p) && p.item === item && (Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2)) { found = p; break; }
     }
-    if (!found) found = this.addProp(item, s.x, s.y, Boolean(s.rotated), 1);
+    if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated)));
     claimed.add(found);
     this.golfStructureProps.set(s.id, found);
     }

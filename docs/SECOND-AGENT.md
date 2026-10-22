@@ -167,3 +167,8 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   `draw(..., nightDone)` draws only the actors when the night pass already lit the frame, and `actorLights()` gives the torches and monster
   glows to it (a paranormal night is still dark by day: the darker of the two wins); `types.ts` `LibItem.lights` (a baked lot's lights,
   metres from its anchor); `App.tsx` the gear menu is wider (w-80) and scrolls, with `<NightPanel>`.
+- 2026-10-22 (the art chat): **golf structures were drawn far too big** (the owner). **For the coder:** in `engine.ts` a placed event
+  structure's sprite is now fitted to the structure's footprint (`structureScale`: the sprite's box fitted into STRUCTURE[type].footprint,
+  then OWNER_SCALE, the studio's size) instead of scale 1, sits on the middle of its rectangle (x, y is the corner; it was drawn half a
+  footprint off), turns with `rotated`, and four structures use the golf art: foodTent `golf:food-tent`, standS `golf:grandstand-s`,
+  leaderboard `golf:leaderboard`, toilets `golf:toilet-block`. Saves from before keep their old props at the old size until re-placed.

@@ -264,6 +264,8 @@ http.createServer(async (req, res) => {
     if (P === '/api/sprites') {
       const list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
       for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
+      // every golf sprite under one heading: the tournament art (golf:) and the business art's course pieces and buildings (business:golf-)
+      for (const s of list) if (/^(golf:|business:golf-)/.test(s.id)) s.cat = 'Golf';
       for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
