@@ -140,3 +140,7 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   hole strip sees the starting nine; (3) per-hole views (par, back and member length, checks) from your `deriveHoles` for the Course
   panel's strip and a hole inspector (new `src/game/golf/holeview.ts`); (4) `toTuple` saves a `hole` tag without a `kind`. I won't change
   `deriveHoles`, the Holes tool or the course stats panel.
+- 2026-10-22 (the art chat): **Course C2 landed on main** (COURSE-BUILDER.md section 6 says what it does). **For the coder:** your files
+  got: `Pin` / `TeeMark` `auto?`; engine `courseHoleViews`, `syncCourseMarkers`, `setGolfMarker` / `removeGolfMarker` (beside your
+  `moveGolfMarker`, same `golfProps` keys and sprites), `tagCourseHoles` (called in `afterLoad` after `syncGolfProps`); your markers on the
+  starting nine are left alone (checked: no op on a new game). The paint files are free again.

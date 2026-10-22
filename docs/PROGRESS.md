@@ -2186,3 +2186,5 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
 - **Course builder C1 landed** (browser-checked on the PC: brush, undo / redo by key and button, a generated hole placed as hole 2 and
   undone with its 118 props, a Shape with key 5, Paint on key A; in the golf game a $192 bunker shape refunded by undo). Details and what is
   open for C2 in COURSE-BUILDER.md section 6. Tests: `tests/course.test.ts` (8); 805 pass.
+- **Course builder C2 landed** (browser-checked on a new golf game: the starting nine tagged, par and length per hole, no marker moved;
+  a tee then a green on hole 10 placed its markers and pin, undo removed the pin and flag). COURSE-BUILDER.md section 6. 812 tests pass.

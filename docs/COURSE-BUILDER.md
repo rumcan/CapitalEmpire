@@ -67,7 +67,16 @@ one and click.
   Not undoable: style edits. **Open for C2:** the coder's generated course (`golf/paintcourse.ts`) paints surfaces per course, not per
   hole, so a new golf game's strip shows 0 holes started and the brush does not join the generated fairways; C2's hole derivation
   should tag them (or the strip should read `holes.ts`).
-- **C2:** auto pin and tee markers; `holes.ts` reads the tagged areas: par, length, checks in the hole strip and the inspector.
+- **C2 (DONE 2026-10-22, on main, browser-checked):** auto pin and tee markers; `holes.ts` reads the tagged areas: par, length, checks in the hole strip and the inspector.
+  As built (`src/game/golf/holeview.ts`, pure): after every Course change, undo and redo the engine fits each hole's markers
+  (`markerPlan`): a hole with a painted green gets a pin on it (a placed preset's flag spot when that is on the green), a hole with a
+  painted tee gets back / middle / forward markers along it toward the pin; markers already on them stay (so the Holes tool's moves
+  stay), and markers placed this way (`auto`) go when their green or tee does. A golf game's painted course is tagged by hole on load
+  (`tagByHole`: green by its pin, tee by its markers, other course surfaces by the nearest playing line within 160 m; a hole tag only).
+  The strip has green / amber dots, tooltips and par and length totals; the inspector (`HoleInspector.tsx`) shows par, back and member
+  length (m, yd) and the checklist (green, tee, fairway unless par 3, pin on the green, tee markers on the tee) plus `deriveHoles`'
+  warnings. A classic game works the markers out for the view only. **Not yet:** aim points for doglegs (a bent fairway can read
+  "off the course"), re-aiming tee markers when the green moves.
 - **C3:** Plan and Hole focus views; the overlays.
 - **C4:** Plants tab (scatter brush, furniture), "Save hole as preset N" in the game.
 - **C5:** costs, grow-in, land buying (GOLF-PLAN G2 / G5 numbers).
