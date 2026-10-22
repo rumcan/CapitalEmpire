@@ -6,7 +6,8 @@ import type { FromWorker, ToWorker } from './ground-protocol';
 import { applyOps } from './netops';
 import { GroundPainter } from './renderer';
 import { Textures } from './textures';
-import { EAGER_PHOTO, isPhotoTex } from './grass-art';
+import { EAGER_PHOTO } from './grass-art';
+import { isPaintPhoto } from './paint';
 import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -44,7 +45,7 @@ const handle = async (m: ToWorker) => {
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
         const need = new Set<string>();
-        for (const [, ps] of m.set) for (const p of ps) if (p.paint) for (const t of p.paint.b > 0 ? [p.tex, p.paint.bt] : [p.tex]) if (isPhotoTex(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
+        for (const [, ps] of m.set) for (const p of ps) if (p.paint) for (const t of [p.tex, ...(p.paint.b > 0 ? [p.paint.bt] : []), ...(p.paint.m ? [p.paint.m.t] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
         await Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
         painter.setLotGround(m.set, m.drop);
         break;

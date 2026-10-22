@@ -1,5 +1,6 @@
 // The golf course's painted areas (docs/GOLF-PLAN.md section 4): each course surface becomes an ordinary Paint area, and big areas are cut into CELL-tile cells. Pure TS, no DOM.
 import { checkArea, clampStyle, DEFAULT_STYLE, MIN_AREA, polyArea, polyBox, type PaintArea, type PaintTex } from '../paint';
+import { surfacePreset } from '../paint-presets';
 import type { CourseLayout, GolfSurface } from './types';
 
 /** each course surface's Paint texture and its corner radius (tiles) */
@@ -49,7 +50,8 @@ export function clipToBox(pts: number[], x0: number, y0: number, x1: number, y1:
 export function courseAreas(l: CourseLayout, stats?: { dropped: number }): Omit<PaintArea, 'id'>[] {
   const out: Omit<PaintArea, 'id'>[] = [];
   for (const a of l.areas) {
-    const { tex, radius } = SURFACE_TEX[a.surface], style = clampStyle({ ...DEFAULT_STYLE, tex, radius });
+    // the owner's first preset standing for the surface (the studio's Texture presets), else the game's texture
+    const { tex: old, radius } = SURFACE_TEX[a.surface], tex = surfacePreset(a.surface) ?? old, style = clampStyle({ ...DEFAULT_STYLE, tex, radius });
     const [x0, y0, x1, y1] = polyBox(a.pts);
     // the pieces: the outline itself when it fits a cell, else its clip to every cell it touches
     const pieces: number[][] = [];

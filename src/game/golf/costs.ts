@@ -1,6 +1,7 @@
 // Course surface build costs, seed/sod grow-in and monthly maintenance (docs/GOLF-PLAN.md sections 2.1, 4.1 and 7). Pure TS, no DOM.
 import { polyArea, type PaintTex } from '../paint';
 import { SURFACE_TEX } from './paintcourse';
+import { PRESETS, presetTex } from '../paint-presets';
 import { TILE_M, type GolfSurface } from './types';
 
 /** planting mode when painting a course surface: seed (needs grow-in) or sod (ready at once, 3-5x turf price) */
@@ -26,9 +27,11 @@ export const SURFACE_COST: Record<GolfSurface, SurfaceCost> = {
 };
 
 /** reverse lookup from SURFACE_TEX PaintTex ids to their GolfSurface */
-export const TEX_SURFACE: Partial<Record<PaintTex, GolfSurface>> = Object.fromEntries(
-  (Object.entries(SURFACE_TEX) as [GolfSurface, { tex: PaintTex; radius: number }][]).map(([s, { tex }]) => [tex, s]),
-);
+export const TEX_SURFACE: Partial<Record<PaintTex, GolfSurface>> = Object.fromEntries([
+  ...(Object.entries(SURFACE_TEX) as [GolfSurface, { tex: PaintTex; radius: number }][]).map(([s, { tex }]) => [tex, s]),
+  // the owner's texture presets stand for the golf surface they are tagged with (the studio's Texture presets)
+  ...PRESETS.filter(p => p.surface).map(p => [presetTex(p.id), p.surface]),
+]);
 
 /** the GolfSurface for a PaintTex id in SURFACE_TEX, or null for non-course textures */
 export function surfaceOfTex(tex: PaintTex): GolfSurface | null {

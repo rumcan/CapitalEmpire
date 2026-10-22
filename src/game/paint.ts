@@ -1,9 +1,10 @@
 // The Paint tool's data model (docs/PAINT-TOOL.md): pure helpers, no DOM, no canvas, importable from node tests.
 import { MAP } from './iso';
-import type { GrassTex } from './grass-art';
+import { isPhotoTex, type GrassTex } from './grass-art';
+import { PRESETS, presetTex, surfacePreset } from './paint-presets';
 
 /** the fill textures a painted area can take (the ground textures the roads and sidewalks already use, and the photo textures of grass-art.ts PHOTO_TEX) */
-export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex;
+export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
 /** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
@@ -12,15 +13,20 @@ export type BorderSize = 0 | 1 | 2 | 3;
  *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb');
  *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
  *  plantKind / plantedMonth: a golf area sown from seed (grows in) or laid as sod, and the month it was planted */
-export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number }
+export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number;
+  /** a second texture blended over the fill in soft patches (the map grass's mix): mtex the texture, mshare how much of the area it covers (0..1),
+   *  msoft how soft its edge is, mpatch the patches' size (1 = about 5 tiles); absent = no blend */
+  mtex?: PaintTex; mshare?: number; msoft?: number; mpatch?: number;
+}
 /** the golf brush's kinds: the areas a stroke paints (BRUSH_PRESETS) */
 export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path';
 /** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint, hole, kind, plantKind, plantedMonth, bscale, bangle, btone, btoneAmt, btint];
  *  elements 6 to 9 are optional on load (older saves have no radius, and none has no tone: they load sharp and untoned); 10 and 11 (the hole and the brush kind) are
  *  written when anything after them is (as 0 and '' when absent, no tag on load); 12 and 13 (seed or sod, the month) when the area has a plantKind or a border style
  *  (as '' and 0 when absent); 14 to 18 (the border's scale, angle, tone, strength and tint) only when one differs from its default, and optional on load;
- *  toTuple writes ten, twelve, fourteen or nineteen */
-export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?];
+ *  19 to 22 (the blend: its texture, share, softness and patch size) only when the area blends a second texture (then 10 to 18 are written too);
+ *  toTuple writes ten, twelve, fourteen, nineteen or twenty-three */
+export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?, string?, number?, number?, number?];
 /** the draw order layer of each brush kind (a patch's z is layer * 1e6 + id, so a later kind paints over an earlier one) */
 export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7 };
 const BRUSH_KIND_IDS = new Set<string>(Object.keys(BRUSH_LAYER));
@@ -73,8 +79,15 @@ export const PAINT_TEXES: { id: PaintTex; name: string; col: string }[] = [
   { id: 'waterDeep', name: 'Deep water', col: '#0d2330' },
   { id: 'waterClear', name: 'Clear water', col: '#164959' },
 ];
+// the owner's texture presets (paint-presets.ts) are fill textures too
+PAINT_TEXES.push(...PRESETS.map(p => ({ id: presetTex(p.id), name: p.name, col: p.col })));
 /** the border textures: the kerb first, then every fill texture */
 export const BORDER_TEXES: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...PAINT_TEXES];
+/** what the Paint tool offers: only the owner's presets (the textures above stay, so saved areas still draw); the border menu adds the kerb */
+export const MENU_TEXES = PAINT_TEXES.filter(t => t.id.startsWith('preset:'));
+export const BORDER_MENU: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...MENU_TEXES];
+/** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX or an owner's preset), not a screen-space painting */
+export const isPaintPhoto = (t: string) => t.startsWith('preset:') || isPhotoTex(t);
 /** the border width in tiles, by BorderSize */
 export const BORDER_W = [0, 0.25, 0.5, 1];
 /** the most corners an area may have */
@@ -237,7 +250,9 @@ function wrapAngle(a: number): number { return a >= -90 && a <= 90 ? a : ((((a +
 const fin = (v: number, d: number) => Number.isFinite(v) ? v : d;
 
 /** a copy of a style (or a whole area) with the scale, angle, border, radius and tone clamped and the textures and tint checked (unknown → paving, kerb; a bad tint → black, or white when lightening) */
-export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(s: T): T {
+export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
+  // the blend's fields are kept only with a known texture (they are left out, not undefined, without one)
+  const { mtex, mshare, msoft, mpatch, ...rest } = st, s = rest as T;
   const tone = Math.min(2, Math.max(0, Math.round(fin(s.tone, 0)))) as 0 | 1 | 2, btone = Math.min(2, Math.max(0, Math.round(fin(s.btone, 0)))) as 0 | 1 | 2;
   return {
     ...s,
@@ -255,18 +270,23 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(s: T): T {
     btone,
     btoneAmt: Math.min(1, Math.max(0, fin(s.btoneAmt, 0.35))),
     btint: TINT_RE.test(s.btint) ? s.btint.toLowerCase() : btone === 2 ? '#ffffff' : '#000000',
+    ...(mtex && TEX_IDS.has(mtex)
+      ? { mtex, mshare: Math.min(1, Math.max(0, fin(mshare ?? 0.5, 0.5))), msoft: Math.min(0.5, Math.max(0.01, fin(msoft ?? 0.12, 0.12))), mpatch: Math.min(4, Math.max(0.25, fin(mpatch ?? 1, 1))) }
+      : {}),
   };
 }
 
 /** the golf brush presets, in the panel's order: each kind's texture style and its brush radius r (tiles); the Paint panel's edits replace these (remembered) */
+/** a golf surface's texture: the owner's first preset standing for it, else the game's old one */
+const S = (surface: string, old: PaintTex): PaintTex => surfacePreset(surface) ?? old;
 export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> }[] = [
-  { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfFairway', border: 3, btex: 'golfFirstCut', radius: 0 }) },
-  { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfGreen', border: 2, btex: 'golfFringe' }) },
-  { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfTee', border: 1, btex: 'golfFirstCut' }) },
-  { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: 'golfRough', border: 0 }) },
-  { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: 'bunkerSand', border: 2, btex: 'golfRough' }) },
-  { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: 'waterDark', border: 2, btex: 'dirt' }) },
-  { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: 'asphalt', border: 0 }) },
+  { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: S('fairway', 'golfFairway'), border: 3, btex: S('firstCut', 'golfFirstCut'), radius: 0 }) },
+  { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe') }) },
+  { kind: 'tee', name: 'Tee', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('tee', 'golfTee'), border: 1, btex: S('firstCut', 'golfFirstCut') }) },
+  { kind: 'rough', name: 'Rough', r: 8, style: clampStyle({ ...DEFAULT_STYLE, tex: S('rough', 'golfRough'), border: 0 }) },
+  { kind: 'bunker', name: 'Bunker', r: 2, style: clampStyle({ ...DEFAULT_STYLE, tex: S('bunker', 'bunkerSand'), border: 2, btex: S('rough', 'golfRough') }) },
+  { kind: 'water', name: 'Water', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('water', 'waterDark'), border: 2, btex: 'dirt' }) },
+  { kind: 'path', name: 'Cart path', r: 1, style: clampStyle({ ...DEFAULT_STYLE, tex: S('path', 'asphalt'), border: 0 }) },
 ];
 
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
@@ -274,10 +294,11 @@ const r3 = (v: number) => Math.round(v * 1000) / 1000;
 /** a painted area as its save tuple (scale, angle, radius and strength to 3 decimals) */
 export function toTuple(a: PaintArea): PaintTuple {
   const t: PaintTuple = [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint];
-  const bd = a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
+  const mx = !!a.mtex, bd = mx || a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
   if (a.kind || a.hole || a.plantKind || bd) t.push(a.hole ?? 0, a.kind ?? '');
   if (a.plantKind || bd) t.push(a.plantKind ?? '', a.plantKind ? a.plantedMonth ?? 0 : 0);
   if (bd) t.push(r3(a.bscale), r3(a.bangle), a.btone, r3(a.btoneAmt), a.btint);
+  if (mx) t.push(a.mtex!, r3(a.mshare ?? 0.5), r3(a.msoft ?? 0.12), r3(a.mpatch ?? 1));
   return t;
 }
 
@@ -287,7 +308,8 @@ export function fromTuples(ts: PaintTuple[]): PaintArea[] {
   for (const t of ts) {
     if (checkArea(t[5]) !== '') continue;
     const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex, radius: t[6] ?? 0, tone: (t[7] ?? 0) as 0 | 1 | 2, toneAmt: t[8] ?? DEFAULT_STYLE.toneAmt, tint: t[9] ?? DEFAULT_STYLE.tint,
-      bscale: t[14] ?? DEFAULT_STYLE.bscale, bangle: t[15] ?? DEFAULT_STYLE.bangle, btone: (t[16] ?? 0) as 0 | 1 | 2, btoneAmt: t[17] ?? DEFAULT_STYLE.btoneAmt, btint: t[18] ?? DEFAULT_STYLE.btint });
+      bscale: t[14] ?? DEFAULT_STYLE.bscale, bangle: t[15] ?? DEFAULT_STYLE.bangle, btone: (t[16] ?? 0) as 0 | 1 | 2, btoneAmt: t[17] ?? DEFAULT_STYLE.btoneAmt, btint: t[18] ?? DEFAULT_STYLE.btint,
+      ...(typeof t[19] === 'string' && t[19] ? { mtex: t[19] as PaintTex, mshare: t[20], msoft: t[21], mpatch: t[22] } : {}) });
     const tags: { hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number } = {};
     if (Number.isInteger(t[10]) && t[10]! > 0) tags.hole = t[10];
     if (typeof t[11] === 'string' && BRUSH_KIND_IDS.has(t[11])) tags.kind = t[11] as BrushKind;

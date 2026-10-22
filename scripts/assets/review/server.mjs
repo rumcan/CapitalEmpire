@@ -240,6 +240,10 @@ function readGround() {
   const def = { src: 'src/assets/ground/grass-capital-backyard.webp' }, defB = { src: 'src/assets/ground/grass-capital-meadow.webp' };
   return { v: 1, saved: !!f?.saved, ...(f?.stamp ? { stamp: f.stamp } : {}), a: GL.clampSide(f?.a ?? def), b: GL.clampSide(f?.b ?? defB), mix: GL.clampMix(f?.mix ?? {}) };
 }
+// the texture presets (the Ground tab's Texture presets; src/game/paint-presets.ts): the list, and each one's baked picture
+const PRESETS_FILE = path.join(ROOT, 'src/game/paint-presets.json'), PRESET_PIC = id => path.join(ROOT, `src/assets/ground/preset-${id}.webp`);
+function readPresets() { let f = null; try { f = JSON.parse(fs.readFileSync(PRESETS_FILE, 'utf8')); } catch { /* none yet */ } return GL.clampPresets(f); }
+function writePresets(f) { fs.writeFileSync(PRESETS_FILE, JSON.stringify(f, null, 1) + '\n'); }
 function readDecals() { let f = null; try { f = JSON.parse(fs.readFileSync(MD_FILE, 'utf8')); } catch { /* none yet */ } return GL.clampDecals(f); }
 const TYPES = { '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg' };
 let PHOTOS = null;
@@ -358,6 +362,25 @@ http.createServer(async (req, res) => {
     if (req.method === 'GET' && P === '/api/ground') {
       const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
       return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX }, decals: readDecals() });
+    }
+    if (req.method === 'GET' && P === '/api/presets') return json({ ...readPresets(), surfaces: GL.PRESET_SURFACES, size: GL.PRESET_SIZE });
+    if (req.method === 'POST' && P === '/api/preset') {
+      // { preset, png: the baked seamless picture (base64), replaces: the id it was saved under before (a rename) }
+      const { preset, png, replaces } = await body(req), p = GL.clampPreset(preset);
+      if (!p || !groundAbs(p.a.src) || !groundAbs(p.b.src)) { res.writeHead(400); return res.end('give it a name and pick a picture for A and for B'); }
+      let pic; try { pic = await sharp(Buffer.from(png ?? '', 'base64')).webp({ quality: 90 }).toBuffer(); } catch { res.writeHead(400); return res.end('not a picture'); }
+      const m = await sharp(pic).metadata(); if (!(m.width >= 64 && m.width <= 4096 && m.width === m.height)) { res.writeHead(400); return res.end('the picture must be square, 64-4096 px'); }
+      const { channels } = await sharp(pic).stats(); p.col = '#' + channels.slice(0, 3).map(c => Math.round(c.mean).toString(16).padStart(2, '0')).join('');
+      const f = readPresets(), old = typeof replaces === 'string' ? replaces : p.id;
+      if (old !== p.id && f.presets.some(q => q.id === p.id)) { res.writeHead(400); return res.end(`a preset called ${p.name} is there already`); }
+      const at = f.presets.findIndex(q => q.id === old);
+      if (at >= 0) f.presets[at] = p; else f.presets.push(p);
+      if (old !== p.id) fs.rmSync(PRESET_PIC(old), { force: true });
+      fs.writeFileSync(PRESET_PIC(p.id), pic); writePresets(f); return json({ ...f, saved: p.id });
+    }
+    if (req.method === 'POST' && P === '/api/preset-delete') {
+      const { id } = await body(req), f = readPresets();
+      f.presets = f.presets.filter(q => q.id !== id); fs.rmSync(PRESET_PIC(String(id)), { force: true }); writePresets(f); return json(f);
     }
     if (req.method === 'POST' && P === '/api/decals') {
       const { file } = await body(req);

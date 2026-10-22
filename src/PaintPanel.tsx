@@ -1,7 +1,7 @@
 import rockyDirt from './assets/ground/rocky-dirt.webp';
 import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
-import { BORDER_TEXES, BORDER_W, PAINT_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
+import { BORDER_MENU, BORDER_W, MENU_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
 import type { PaintMode } from './game/paint-tool';
 import { areaBuildCost } from './game/golf/costs';
 import { LIBRARY } from './game/library';
@@ -117,8 +117,25 @@ export function StyleEditor({ game }: { game: Game }) {
     <>
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
-        {PAINT_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
+        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
+        {!MENU_TEXES.length && <div className="text-[11px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
       </div>
+      <div className="mt-2 text-[11px] text-slate-400">Blend with</div>
+      <div className="flex flex-wrap gap-1">
+        <button className={`chip ${!s.mtex ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: undefined })}>None</button>
+        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.mtex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
+      </div>
+      {s.mtex && (
+        <>
+          {([['Share', 'mshare', 0, 1, 0.01, (v: number) => `${Math.round(v * 100)}%`, 0.5], ['Softness', 'msoft', 0.01, 0.5, 0.01, (v: number) => v.toFixed(2), 0.12], ['Patch size', 'mpatch', 0.25, 4, 0.05, (v: number) => `${v.toFixed(2)}x`, 1]] as const).map(([label, key, lo, hi, step, fmt, def]) => (
+            <div key={key} className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+              <span className="w-16 shrink-0">{label}</span>
+              <input type="range" min={lo} max={hi} step={step} value={s[key] ?? def} onChange={e => p.setStyle({ [key]: +e.target.value })} className="min-w-0 flex-1" />
+              <span className="w-12 text-right text-xs text-slate-200">{fmt(s[key] ?? def)}</span>
+            </div>
+          ))}
+        </>
+      )}
       <div className="mt-2 text-[11px] text-slate-400">Scale</div>
       <div className="flex items-center gap-1">
         <button className="btn" onClick={() => p.setStyle({ scale: s.scale / 1.25 })}>−</button>
@@ -166,7 +183,7 @@ export function StyleEditor({ game }: { game: Game }) {
         <>
           <div className="mt-2 text-[11px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">
-            {BORDER_TEXES.map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
+            {BORDER_MENU.map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
           </div>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
             Border scale and angle

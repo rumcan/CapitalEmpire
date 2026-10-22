@@ -4,6 +4,7 @@
 import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
 import { GROUND_ART } from './ground-art';
 import { withBaseGrass } from './base-grass-saved';
+import { withPresets } from './paint-presets-saved';
 import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker } from './ground-protocol';
 import type { GLRenderer } from './gl';
 import { unionBox, type BBox } from './network';
@@ -38,7 +39,7 @@ export class GroundCache {
     }
   }
   terminate() { for (const w of this.workers) w.terminate(); this.workers = []; }
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = withBaseGrass(GROUND_ART); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); }
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = withPresets(withBaseGrass(GROUND_ART)); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); }
   broadcast(m: ToWorker, transfer?: (w: number) => Transferable[]) { this.workers.forEach((wk, i) => wk.postMessage(m, transfer ? transfer(i) : [])); }
   netOps(ops: NetOp[]) { if (ops.length) this.broadcast({ t: 'net', ops }); }
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }

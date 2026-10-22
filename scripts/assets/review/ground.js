@@ -3,8 +3,11 @@
 // sidewalks. Save writes src/game/base-grass.json and the two adjusted pictures (src/assets/ground/base-grass-a.webp / -b.webp); the game
 // reads them after Rebuild (or npm run build). Below the grass, the map decals laid over it (src/game/map-decals.ts: nature patches, bare soil,
 // grass patches, leaf scatters, tufts), placed and drawn in the preview exactly as the game does; Save decals writes src/game/map-decals.json.
+// Texture presets mode: the same two pictures and mix made into a named Paint texture (src/game/paint-presets.ts): a name, the golf surface it
+// stands for and the tiles one repeat covers; the preview lays it in tile space as Paint does; Save preset bakes the seamless picture
+// (src/assets/ground/preset-<id>.webp) and writes src/game/paint-presets.json. The game's Paint tool offers only these.
 // Served by server.mjs.
-import { adjustPixels, mixGrass, layOnGround, canvas, ctx2d, soilStamps, AUTHOR, DEFAULT_MIX, DEFAULT_SIDE, DECAL_LAYERS, DEFAULT_DECALS, DECALS, NATURE, decalPics, drawDecals, placeDecals } from '/ground-lib.js';
+import { adjustPixels, mixGrass, layOnGround, presetSlug, canvas, ctx2d, soilStamps, AUTHOR, DEFAULT_MIX, DEFAULT_SIDE, DECAL_LAYERS, DEFAULT_DECALS, DECALS, NATURE, decalPics, drawDecals, placeDecals } from '/ground-lib.js';
 
 const el = (t, a = {}, ...k) => { const e = document.createElement(t); Object.assign(e, a); for (const c of k) if (c != null) e.append(c); return e; };
 const btn = (t, fn, c = '') => el('button', { className: 'btn ' + c, textContent: t, onclick: fn });
@@ -18,6 +21,11 @@ const IMGS = new Map();
 // the map decals being edited (DF), the last saved (dSaved), and their pictures (decalArt: nature patches, soil stamps, decals)
 let DF = null, dSaved = null, decalArt = null;
 const V = { z: 0.5, night: false };
+// the mode: 'grass' (the map's base grass, F) or 'preset' (a texture preset: F holds its pictures and mix, PM its name, surface and size and
+// the id it was saved under, null when new); the grass edit is kept aside while presets are edited (grassF)
+let mode = 'grass', grassF = null, PM = null, pSaved = '', PRE = { presets: [], surfaces: [], size: [1, 64] };
+/** a preset's baked picture: 128 px a tile, 256 to 2048 px square */
+const presetPx = () => Math.max(256, Math.min(2048, Math.round(PM.size * 128)));
 
 // ---------------- the page
 const root = document.getElementById('v-ground');
@@ -25,16 +33,16 @@ const left = el('div', { className: 'side', style: 'width:360px;overflow:auto;bo
 const cv = el('canvas', { style: 'display:block;width:100%;height:100%' });
 const stage = el('div', { style: 'flex:1;position:relative;min-width:0;background:#0d0f08' }, cv);
 const msgEl = el('span', { className: 'hint' });
-const saveB = btn('Save', save, 'gold');
+const saveB = btn('Save', save, 'gold'), undoB = btn('Undo changes', () => { F = clone(saved); build(); rebuild(); }), unsaveB = btn("Back to the game's grass", unsave, 'red');
 const bar = el('div', { className: 'bar' },
-  saveB, btn('Undo changes', () => { F = clone(saved); build(); rebuild(); }), btn("Back to the game's grass", unsave, 'red'),
+  saveB, undoB, unsaveB,
   el('span', { className: 'hint', textContent: 'Zoom' }),
   ...[['Close', 0.5], ['Mid', 0.3], ['Far', 0.15]].map(([t, z]) => { const b = el('button', { className: 'chip', textContent: t, onclick: () => { V.z = z; zoomChips(); draw(); } }); b.dataset.z = z; return b; }),
   el('span', { style: 'flex:1' }), msgEl);
 root.append(el('div', { style: 'display:flex;flex-direction:column;height:calc(100vh - 70px)' }, bar, el('div', { style: 'display:flex;flex:1;min-height:0' }, left, stage)));
 const zoomChips = () => bar.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', +c.dataset.z === V.z));
 const msg = t => { msgEl.textContent = t; };
-const dirty = () => JSON.stringify(F) !== JSON.stringify(saved) || !saved.saved;
+const dirty = () => mode === 'preset' ? JSON.stringify([F, PM]) !== pSaved : JSON.stringify(F) !== JSON.stringify(saved) || !saved.saved;
 const dDirty = () => JSON.stringify(DF.layers) !== JSON.stringify(dSaved.layers);
 
 // ---------------- pictures
@@ -63,7 +71,7 @@ function rebuild() {
       if (my !== busy) return;
       sideCv = { a, b };
       await new Promise(r => setTimeout(r, 0));
-      mixed = mixGrass(gameSize(a), gameSize(b), F.mix, BASE_W, BASE_H, AUTHOR);
+      mixed = mode === 'preset' ? mixGrass(gameSize(a), gameSize(b), F.mix, presetPx(), presetPx(), AUTHOR) : mixGrass(gameSize(a), gameSize(b), F.mix, BASE_W, BASE_H, AUTHOR);
       if (my !== busy) return;
       swatches(); draw(); msg(dirty() ? 'not saved' : 'saved');
     } catch (e) { msg(String(e.message || e)); }
@@ -115,7 +123,10 @@ function sideBlock(k) {
 }
 function build() {
   const R = RANGES, m = F.mix;
+  for (const b of [saveB, undoB, unsaveB]) b.style.display = mode === 'grass' ? '' : 'none';
+  if (mode === 'preset') return buildPreset();
   left.replaceChildren(
+    modeChips(),
     hint('Pick any two pictures, size and colour them, and set how they mix. The preview is the game\'s own mix on a block of 4 houses inside 4 streets. Save, then Rebuild game sprites (top right) to see it in the game.'),
     sideBlock('a'), sideBlock('b'),
     el('div', { className: 'row', style: 'padding:0;margin-bottom:10px' }, btn('Swap A and B', () => { [F.a, F.b] = [F.b, F.a]; build(); rebuild(); })),
@@ -136,6 +147,67 @@ function build() {
     decalsBlock());
   swatches(); saveB.disabled = false;
 }
+// ---------------- texture presets
+function modeChips() {
+  const chip = (t, m) => el('button', { className: 'chip' + (mode === m ? ' on' : ''), textContent: t, onclick: () => setMode(m) });
+  return el('div', { className: 'row', style: 'padding:0;margin-bottom:8px;gap:6px' }, chip('Map grass', 'grass'), chip('Texture presets', 'preset'));
+}
+function setMode(m) {
+  if (m === mode) return;
+  if (m === 'preset') { grassF = F; mode = 'preset'; editPreset(PRE.presets[0] ?? null); }
+  else { mode = 'grass'; F = grassF ?? clone(saved); build(); rebuild(); }
+}
+/** start editing a preset (null: a new one, from the grass being edited) */
+function editPreset(p) {
+  const base = grassF ?? saved;
+  F = p ? { a: clone(p.a), b: clone(p.b), mix: clone(p.mix) } : { a: clone(base.a), b: clone(base.b), mix: clone(base.mix) };
+  PM = p ? { id: p.id, name: p.name, surface: p.surface, size: p.size } : { id: null, name: '', surface: null, size: 8 };
+  pSaved = p ? JSON.stringify([F, PM]) : ''; build(); rebuild();
+}
+function buildPreset() {
+  const R = RANGES, m = F.mix;
+  const list = el('div', { style: 'display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 10px' },
+    ...PRE.presets.map(p => { const b = el('button', { className: 'chip' + (PM.id === p.id ? ' on' : ''), onclick: () => editPreset(p) }, el('span', { style: `display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;background:${p.col}` }), p.name); return b; }),
+    el('button', { className: 'chip' + (PM.id === null ? ' on' : ''), textContent: '+ New preset', onclick: () => editPreset(null) }));
+  const name = el('input', { value: PM.name, placeholder: 'Name (e.g. Fairway summer)', style: 'flex:1;min-width:0' }); name.oninput = () => { PM.name = name.value; msg(dirty() ? 'not saved' : 'saved'); };
+  const surf = el('select', { style: 'flex:1;min-width:0' }, el('option', { value: '', textContent: 'None (any ground)' }), ...PRE.surfaces.map(s => el('option', { value: s, textContent: s, selected: PM.surface === s })));
+  surf.onchange = () => { PM.surface = surf.value || null; msg(dirty() ? 'not saved' : 'saved'); };
+  left.replaceChildren(
+    modeChips(),
+    hint('Make a texture for the game\'s Paint tool from any two pictures, the way the map grass is made. Give it a name, the golf surface it stands for (its costs, grow-in and course quality; the Course tool uses the first preset of each surface) and the tiles one repeat covers. Save preset, then Rebuild game sprites to see it in Paint. Paint offers only these presets.'),
+    el('h3', { textContent: 'Presets' }), list,
+    el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Name' }), name),
+    el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Golf surface' }), surf),
+    slider('Size', () => PM.size, v => { PM.size = v; }, PRE.size, 0.5, v => `${v.toFixed(1)} tiles`),
+    el('div', { className: 'row', style: 'padding:0;margin:8px 0 12px;gap:6px' }, btn(PM.id ? 'Save preset' : 'Save as new preset', savePreset, 'gold'), PM.id ? btn('Delete preset', deletePreset, 'red') : null),
+    sideBlock('a'), sideBlock('b'),
+    el('div', { className: 'row', style: 'padding:0;margin-bottom:10px' }, btn('Swap A and B', () => { [F.a, F.b] = [F.b, F.a]; build(); rebuild(); })),
+    el('h3', { textContent: 'The mix' }),
+    slider('B share', () => m.share, v => { m.share = v; }, R.share, 0.01, v => `${Math.round(v * 100)}%`),
+    slider('Softness', () => m.soft, v => { m.soft = v; }, R.soft, 0.01),
+    slider('Patch size', () => m.patch, v => { m.patch = v; }, R.patch, 0.05, v => `${v.toFixed(2)}x`),
+    slider('Light swing', () => m.tone, v => { m.tone = v; }, R.tone, 0.01, v => `±${Math.round(v * 100)}%`),
+    slider('Warm / cool', () => m.warm, v => { m.warm = v; }, R.warm, 0.01, v => `±${Math.round(v * 100)}%`),
+    el('h3', { textContent: 'The baked texture' }), hint('The seamless picture Paint lays (one repeat).'),
+    el('canvas', { id: 'g-flat', width: 200, height: 200, style: 'border:1px solid var(--line);border-radius:4px' }));
+  swatches();
+}
+async function savePreset() {
+  if (!mixed || !PM.name.trim()) { msg('give the preset a name'); return; }
+  const id = presetSlug(PM.name); if (!id) { msg('the name needs a letter or a digit'); return; }
+  msg('saving preset…');
+  const blob = await mixed.convertToBlob({ type: 'image/png' }), b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
+  const r = await fetch('/api/preset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ preset: { id, name: PM.name, surface: PM.surface, size: PM.size, a: F.a, b: F.b, mix: F.mix }, png: b64, replaces: PM.id ?? undefined }) });
+  if (!r.ok) { msg(await r.text()); return; }
+  const d = await r.json(); PRE = { ...PRE, presets: d.presets }; editPreset(PRE.presets.find(p => p.id === d.saved) ?? null);
+  msg('preset saved: Rebuild game sprites to see it in Paint');
+}
+async function deletePreset() {
+  if (!PM.id || !confirm(`Delete the preset ${PM.name}? Painted areas that use it fall back to the first texture.`)) return;
+  const d = await fetch('/api/preset-delete', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: PM.id }) }).then(r => r.json());
+  PRE = { ...PRE, presets: d.presets }; editPreset(PRE.presets[0] ?? null); msg('preset deleted: Rebuild game sprites to take it out of Paint');
+}
+
 // ---------------- the map decals
 const pct = v => `${Math.round(v * 100)}%`;
 /** a slider for the decals: redraws the preview (no re-mix) */
@@ -201,7 +273,7 @@ function laid() { draw(); msg(dirty() ? 'not saved' : 'saved'); }
 
 function swatches() {
   for (const k of ['a', 'b']) { const c = left.querySelector(`canvas[data-side="${k}"]`), s = sideCv[k]; if (c && s) { const g = c.getContext('2d'); g.clearRect(0, 0, 64, 64); g.drawImage(s, 0, 0, 64, 64); } }
-  const f = left.querySelector('#g-flat'); if (f && mixed) f.getContext('2d').drawImage(mixed, 0, 0, 320, 160);
+  const f = left.querySelector('#g-flat'); if (f && mixed) { const c = f.getContext('2d'); c.clearRect(0, 0, f.width, f.height); c.drawImage(mixed, 0, 0, f.width, f.height); }
 }
 
 // ---------------- the preview: a block of 4 houses (lots 12 tiles square) inside sidewalks, 4 streets and the far sidewalks
@@ -216,9 +288,13 @@ function draw() {
   g.setTransform(D, 0, 0, D, 0, 0); g.fillStyle = '#0d0f08'; g.fillRect(0, 0, W, H);
   if (!mixed) return;
   // the grass: a screen-space texture, one texture px = 1 / AUTHOR native px, laid on the ground at the angle and tilt (the game's screenPattern)
-  const gp = g.createPattern(mixed, 'repeat'); gp.setTransform(new DOMMatrix([z / AUTHOR, 0, 0, z / AUTHOR, 0, 0]).multiply(layOnGround(F.mix.angle, F.mix.tilt))); g.fillStyle = gp; g.fillRect(0, 0, W, H);
+  if (mode === 'preset') {
+    // a preset as Paint lays it: in tile space, one repeat over its size in tiles
+    g.save(); g.setTransform(32 * z * D, 16 * z * D, -32 * z * D, 16 * z * D, ox * D, oy * D);
+    const pp = g.createPattern(mixed, 'repeat'); pp.setTransform(new DOMMatrix().scale(PM.size / mixed.width)); g.fillStyle = pp; g.fillRect(-200, -200, BLOCK + 400, BLOCK + 400); g.restore();
+  } else { const gp = g.createPattern(mixed, 'repeat'); gp.setTransform(new DOMMatrix([z / AUTHOR, 0, 0, z / AUTHOR, 0, 0]).multiply(layOnGround(F.mix.angle, F.mix.tilt))); g.fillStyle = gp; g.fillRect(0, 0, W, H); }
   // the map decals, as the game places and draws them (tile -> canvas px; half a canvas px per world px at z = 1)
-  if (DF && decalArt) {
+  if (DF && decalArt && mode === 'grass') {
     const M = new DOMMatrix([32 * z * D, 16 * z * D, -32 * z * D, 16 * z * D, ox * D, oy * D]), Mi = M.inverse();
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const [px, py] of [[0, 0], [cv.width, 0], [0, cv.height], [cv.width, cv.height]]) { const q = Mi.transformPoint(new DOMPoint(px, py)); x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
@@ -274,6 +350,7 @@ let started = false;
 async function start() {
   if (started) return; started = true;
   const d = await fetch('/api/ground').then(r => r.json());
+  fetch('/api/presets').then(r => r.json()).then(p => { PRE = p; if (mode === 'preset') build(); }, () => {});
   SOURCES = d.sources; RANGES = d.ranges; HOUSES = d.houses; saved = clone(d.file); F = clone(d.file); dSaved = clone(d.decals); DF = clone(d.decals);
   // the decal pictures: the nature patches and decals atlases, and the soil stamps the game makes from soil.webp
   Promise.all(['nature', 'decals', 'soil'].map(k => img('/decal-art/' + k))).then(([n, dc, so]) => {

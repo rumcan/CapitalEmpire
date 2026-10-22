@@ -187,7 +187,7 @@ export interface CurbColours { joint: string; top: string; face: string[]; gutte
 export interface LeafSprite { i: number; dim: number; round: boolean }
 
 /** a photo's source period in tiles (its full-resolution canvas repeats over it): a mixed photo covers its p.mix metres (PHOTO_SIZE bigger, 2 m tiles), a plain one its own period */
-const photoSrcPeriod = (id: string) => { const p = PHOTO_TEX.find(q => q.tex === id)!; return p.mix > 0 ? p.mix * PHOTO_SIZE / 2 : photoPeriod(p, MOSAIC_TILES); };
+const photoSrcPeriod = (p: PhotoTexEntry) => (p.mix > 0 ? p.mix * PHOTO_SIZE / 2 : photoPeriod(p, MOSAIC_TILES));
 
 export class Textures {
   mips = new Map<string, Cnv>();
@@ -195,6 +195,8 @@ export class Textures {
   mosaics = new Map<string, Cnv[]>();
   /** the period in tiles of each photo texture (photoPeriod: MOSAIC_TILES unless it is a plain tile with its own), and the lazy builds in progress */
   periods = new Map<string, number>(PHOTO_TEX.map(p => [p.tex, photoPeriod(p, MOSAIC_TILES)]));
+  /** the photo textures this worker can build: grass-art.ts PHOTO_TEX and the owner's texture presets (paint-presets-saved.ts, sent with the art) */
+  photos: PhotoTexEntry[] = PHOTO_TEX;
   /** each built photo's full-resolution source canvas (sourceFor: a large Paint scale shows it, not the mosaic) */
   photoSrc = new Map<string, Cnv>();
   private photoBuilds = new Map<string, Promise<void>>();
@@ -214,7 +216,8 @@ export class Textures {
   roundSprites: LeafSprite[] = LEAVES.filter(l => l.round).sort((a, b) => a.dim - b.dim);
   private store(name: TexName, base: Cnv) { for (const L of [...LEVELS, ...MID_LEVELS]) if (!this.mips.has(name + '@' + L)) this.mips.set(name + '@' + L, downscale(base, L / AUTHOR)); }
 
-  async build(art: GroundArt & { grassMix?: BaseGrassArt }, progress?: (p: number) => void) {
+  async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void) {
+    if (art.presets?.length) { this.photos = [...PHOTO_TEX, ...art.presets]; for (const p of art.presets) this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES)); }
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
     const steps = PAINTED.length + 12 + EAGER_PHOTO.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
     const [asA, asB, curbV, curbH, pool, slabs, grassA, grassB, leafImg, soilImg, decalImg, lotImg, lotDecalImg, natureImg, rockyDirtImg, rockyDirtAltImg] = await Promise.all([art.asphaltA, art.asphaltB, art.curbVisible, art.curbHidden, art.pool, art.slabs, art.grassA, art.grassB, art.leaves, art.soil, art.decals, art.lotAsphalt, art.lotDecals, art.nature, art.rockyDirt, art.rockyDirtAlt].map(loadImage));
@@ -317,7 +320,7 @@ export class Textures {
   sourceFor(variant: string, L: number): { img: Cnv; period: number } | null {
     const src = this.photoSrc.get(variant); if (!src) return null;
     let chain = this.photoMips.get(variant); if (!chain) this.photoMips.set(variant, chain = this.mipChain(src));
-    const period = photoSrcPeriod(variant), want = 128 * L; let img = chain[0];
+    const period = photoSrcPeriod(this.photos.find(q => q.tex === variant)!), want = 128 * L; let img = chain[0];
     for (const m of chain) { if (m.width / period >= want) img = m; else break; }
     return { img, period };
   }
@@ -327,7 +330,7 @@ export class Textures {
    *  a name that is not a photo, or is built already, resolves at once */
   ensure(variant: string): Promise<void> {
     if (this.has(variant)) return Promise.resolve();
-    const p = PHOTO_TEX.find(q => q.tex === variant);
+    const p = this.photos.find(q => q.tex === variant);
     if (!p) return Promise.resolve();
     let b = this.photoBuilds.get(variant);
     if (!b) this.photoBuilds.set(variant, b = this.buildPhoto(p).finally(() => this.photoBuilds.delete(variant)));

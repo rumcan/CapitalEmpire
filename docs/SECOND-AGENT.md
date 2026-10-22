@@ -177,3 +177,11 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   24 m on lanes); `engine.ts` syncAutoProps places them as `world:streetlamp` 0.9 where nothing stands (canPlace), a town road's only within
   12 tiles of a lot or house (else `lampWait`, retried in sendBlocks when the lots change), and re-syncs the lamp reflection pools; the
   night's lights are gathered in world px over three screens and placed on screen every frame (they lagged and streaked when panning).
+- 2026-10-22 (the art chat): **texture presets and the Paint blend** (the owner: Paint offers only the textures the owner makes; a painted
+  shape can blend a second texture). New: `src/game/paint-presets.ts` (+ `.json`, the studio writes it), `paint-presets-saved.ts` (the baked
+  pictures `src/assets/ground/preset-<id>.webp`, sent to the ground workers with the art). **For the coder:** `paint.ts` `PaintTex` takes
+  `preset:<id>`, `PAINT_TEXES` gains the presets (saved areas with the old textures still load and draw), `MENU_TEXES` / `BORDER_MENU` are
+  what the Paint panel offers (presets only), `isPaintPhoto`, `PaintArea` blend fields `mtex mshare msoft mpatch` (tuple slots 19–22, only
+  when set), BRUSH_PRESETS use the owner's first preset per golf surface; `golf/costs.ts` TEX_SURFACE adds the presets' surface tags;
+  `golf/paintcourse.ts` the generated course uses them too; `ground-protocol.ts` LotPatch tex `preset:` and PatchPaint `m`; `renderer.ts`
+  `drawBlend` (the second texture through a tileable noise mask in tile space); `textures.ts` `photos` (PHOTO_TEX + the presets).

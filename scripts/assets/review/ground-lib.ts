@@ -6,3 +6,4 @@ export { PHOTO_TEX, PHOTO_SIZE } from '../../../src/game/grass-art';
 export { DECAL_LAYERS, DEFAULT_DECALS, clampDecals, decalPics, drawDecals, placeDecals } from '../../../src/game/map-decals';
 export { DECALS } from '../../../src/game/ground-art';
 export { NATURE, NATURE_RES } from '../../../src/game/nature-patches';
+export { PRESET_SIZE, PRESET_SURFACES, clampPreset, clampPresets, presetSlug } from '../../../src/game/paint-presets';

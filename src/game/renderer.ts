@@ -1,8 +1,9 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
 import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
-import { EAGER_PHOTO, isPhotoTex } from './grass-art';
-import { PAINT_TEXES } from './paint';
+import { fbm, maskFrom, smooth } from './canvas2d';
+import { EAGER_PHOTO } from './grass-art';
+import { PAINT_TEXES, isPaintPhoto } from './paint';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
@@ -507,6 +508,30 @@ export class GroundPainter {
     }
   }
 
+  /** the blend masks (blendMask), by share and softness */
+  private blendMasks = new Map<string, Cnv>();
+  /** a tileable mask of soft patches (the map grass's mix: B where the low-frequency noise is past 1 - share, blended over +-soft) */
+  private blendMask(share: number, soft: number) {
+    const key = `${share.toFixed(2)},${soft.toFixed(2)}`; let m = this.blendMasks.get(key);
+    if (!m) { const N = 256, f = fbm(31, N, N, 3, 3), c0 = 1 - share; m = maskFrom(N, N, (x, y) => (share >= 1 ? 1 : share <= 0 ? 0 : smooth(c0 - soft, c0 + soft, f(x, y)))); this.blendMasks.set(key, m); }
+    return m;
+  }
+  /** a painted area's blend (PatchPaint m): the second texture through the patch mask (24 tiles a period at patch size 1, in tile space, turned
+   *  with the fill), laid over the fill inside the area's clip */
+  private drawBlend(ctx: C2D, st: NonNullable<LotPatch['paint']>, G: DOMMatrix, path: Path2D, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix) {
+    const m = st.m!, b = this.buffer('blend', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b), t = m.t;
+    // the scratch layer's context is reused chunk after chunk: its clip is saved and restored, or the clips would add up
+    g.save(); g.setTransform(M); g.clip(path);
+    let style: CanvasPattern | string = PAINT_COL.get(t) ?? '#808080';
+    if (isPaintPhoto(t)) { if (this.tex.has(t)) { const src = this.tex.sourceFor(t, L * st.s); style = src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t)); } }
+    else if (t === 'asphaltDark' || t === 'lotAsphalt') style = this.groundPattern(g, this.tex.mosaicFor(t === 'lotAsphalt' ? 'lot' : 'base', L * st.s), G);
+    else if (this.tex.image(t as TexName, L)) style = this.screenPattern(g, t as TexName, L, X0, Y0, Minv, G);
+    g.fillStyle = style; g.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]);
+    const mask = this.blendMask(m.s, m.f), period = 24 * m.p, mp = g.createPattern(mask, 'repeat')!;
+    mp.setTransform(new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(period / mask.width, period / mask.width));
+    g.globalCompositeOperation = 'destination-in'; g.fillStyle = mp; g.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); g.globalCompositeOperation = 'source-over'; g.restore();
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(b, 0, 0); ctx.restore();
+  }
   /** the painted areas of a chunk (the Paint tool), in id order: each polygon filled with its texture through G (turned and
    *  scaled in tile space about the origin), an optional tone filter over the fill, an optional border band inside its edge, and a thin rim for the paved textures */
   private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
@@ -545,7 +570,7 @@ export class GroundPainter {
           return;
         }
         if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * sx), Gx)); return; }
-        if (isPhotoTex(t)) {
+        if (isPaintPhoto(t)) {
           // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
           if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
           // the photo itself at the mip this zoom and scale ask for (sharp at every scale); the mosaic only when the source is missing
@@ -556,6 +581,7 @@ export class GroundPainter {
       };
       ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
       lay(p.tex, 0, G, st.s);
+      if (st.m && !lite) this.drawBlend(ctx, st, G, path, r, L, X0, Y0, M, Minv);
       // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
       if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
       if (st.b > 0) {

@@ -2228,3 +2228,9 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
 - **Street lamps** (the owner: the night had none): the road network places `world:streetlamp` along every kerbed street and lane and along
   the towns' gravel roads where houses stand (902 on the golf map, 63 before), regenerated with the roads; the night lights them. The
   night's light pools now move with the map when panning (they were placed in screen px a quarter second late, leaving streaks).
+- **Texture presets** (the owner): studio → Ground → **Texture presets** makes a Paint texture the way the map grass is made (two
+  pictures, size and colour each, the mix) with a name, the golf surface it stands for (costs, grow-in, quality; the Course tool and the
+  generated course use the first preset of each surface) and the tiles one repeat covers; Save preset bakes a seamless picture. The Paint
+  tool offers only these presets (fill and border; the old textures stay in the code so saved areas still draw). **Paint blend**: a shape
+  can blend a second preset over its fill in soft patches (share, softness, patch size). Browser-checked: a preset saved, offered in Paint,
+  painted; the blend drawn (sand under dark water patches). Tests: `tests/paint-presets.test.ts` (3).
