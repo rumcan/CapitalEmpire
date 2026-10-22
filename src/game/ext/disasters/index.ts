@@ -4,6 +4,7 @@ import { TC } from '../../terrain/types';
 import type { Pt } from '../../network';
 
 /** Disaster types; times are game seconds (one game day = 1440 seconds). */
+/** 'paranormal' is retired (never happens; kept so an old save's event still reads) */
 export type DisasterKind = 'flood' | 'storm' | 'landslide' | 'wildfire' | 'quake' | 'paranormal';
 /** Current road geometry in tiles (2 m); nearWater is distance to water in tiles, slope is rise/run. */
 export interface RoadInfo { key: string; a: Pt; b: Pt; kind: 'ground' | 'bridge' | 'tunnel'; nearWater: number; slope: number }
@@ -54,9 +55,7 @@ export class Disasters {
   private readonly riverLength: number;
   private readonly fuelCells: number;
   private nextDay = DAY;
-  private readonly nightRandom: () => number;
-  private nextNight: number;
-  // Quake damage persists, but cannot permanently prevent the next paranormal night.
+  // Quake damage persists (its repair stays payable) after its visual slot ends.
   private damagedQuake: Disaster | null = null;
   private now = 0;
   private nextId = 1;
@@ -67,8 +66,7 @@ export class Disasters {
   /** The terrain buffer is MAP*MAP classes, row-major; heights gives metres at tile coordinates. */
   constructor(seed: number, terrainCls: Uint8Array, heights: (x: number, y: number) => number) {
     if (terrainCls.length !== MAP * MAP) throw new RangeError('terrainCls must be MAP*MAP');
-    this.random = mulberry(seed); this.nightRandom = mulberry(seed ^ 0x50415241);
-    this.nextNight = (3 + Math.floor(this.nightRandom() * 3)) * DAY; this.cls = terrainCls; this.heights = heights;
+    this.random = mulberry(seed); this.cls = terrainCls; this.heights = heights;
     let bankEdges = 0, fuel = 0;
     for (let i = 0; i < terrainCls.length; i++) {
       const c = terrainCls[i];
@@ -103,16 +101,9 @@ export class Disasters {
       if (this.pending && this.pending.start === at) { this.current = this.pending; this.pending = null; out.started.push(this.current); }
       if (this.nextDay === at) {
         this.nextDay += DAY;
-        const nightDue = at >= this.nextNight;
-        // Permanent quake repairs remain payable while the recurring night takes the visual slot.
-        if (nightDue && !this.pending && this.current?.kind === 'quake' && roads.some(r => r.kind !== 'tunnel')) {
-          this.damagedQuake = this.current; this.current = null;
-        }
+        // the paranormal nights are retired (the owner, 2026-10-22: they no longer make sense in the golf game): only natural disasters roll
         if (!this.current && !this.pending) {
-          // A queued natural force waits for quake repair; it must not starve recurring nights.
-          const forceReady = this.forced && !(nightDue && this.damagedQuake && this.forced !== 'paranormal');
-          const event = forceReady ? this.roll(at, roads) : nightDue ? this.make('paranormal', at, roads) : this.roll(at, roads);
-          if (nightDue || event?.kind === 'paranormal') this.nextNight = at + (3 + Math.floor(this.nightRandom() * 3)) * DAY;
+          const event = this.roll(at, roads);
           if (event) {
             if (event.warnAt < event.start) { this.pending = event; out.warned.push(event); }
             else { this.current = event; out.started.push(event); }
@@ -140,7 +131,7 @@ export class Disasters {
   /** Currently started, not ended disasters; warnings are delivered by step's warned list. */
   active(): Disaster[] { return this.current && this.current.end > this.now ? [this.current] : []; }
 
-  /** Approximate daily frequency; paranormal is scheduled every 3-5 days, never randomly rolled. */
+  /** Approximate daily frequency; paranormal is retired (always 0: kept in the kinds so old saves load). */
   riskPerDay(roads: RoadInfo[]): Record<DisasterKind, number> {
     let roadLen = 0, steepLen = 0, structures = 0, near = 0;
     for (const r of roads) {
@@ -156,7 +147,7 @@ export class Disasters {
       storm: roads.length ? 0.012 + Math.min(0.02, roadLen / 20000 * 0.012) : 0,
       landslide: steepLen ? 0.004 + Math.min(0.05, steepLen / 4000 * 0.04) : 0,
       wildfire: this.fuelCells && roads.length ? 0.008 + Math.min(0.025, this.fuelCells / 200000 * 0.012) : 0,
-      paranormal: roads.some(r => r.kind !== 'tunnel') ? 0.25 : 0,
+      paranormal: 0,
       quake: structures ? 0.006 + Math.min(0.025, structures / 20 * 0.014) : 0,
     };
   }

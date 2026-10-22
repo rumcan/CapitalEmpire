@@ -54,7 +54,7 @@ test('same seed, roads and clock yield the same transitions, including after ski
       ended: results.flatMap(r => r.ended.map(d => [d.id, d.kind, d.end])),
     };
   };
-  // Both clocks preserve the same quake damage and recurring paranormal nights.
+  // Both clocks preserve the same quake damage.
   assert.deepEqual(trace(a.sim, a.roads, Array.from({ length: 200 }, (_, i) => i + 1)), trace(b.sim, b.roads, [200]));
   assert.throws(() => a.sim.step(0, a.roads), RangeError);
   assert.throws(() => a.sim.step(Infinity, a.roads), RangeError);
@@ -132,7 +132,9 @@ test('daily exposure grows with river length and steep road length; empty maps h
   const { cls, roads, height } = world();
   const sim = new Disasters(4, cls, height);
   const risk = sim.riskPerDay(roads);
-  assert.ok(Object.values(risk).every(v => v > 0 && v < 1));
+  // the paranormal nights are retired: no risk; every natural kind has some
+  assert.equal(risk.paranormal, 0);
+  assert.ok(Object.entries(risk).every(([k, v]) => k === 'paranormal' || (v > 0 && v < 1)));
   const longerRiver = cls.slice();
   for (let y = 271; y < 480; y++) for (let x = 100; x <= 104; x++) longerRiver[y * MAP + x] = TC.WATER;
   assert.ok(new Disasters(4, longerRiver, height).riskPerDay(roads).flood > risk.flood);
@@ -174,7 +176,8 @@ test('1000 simulated days: risk produces each kind, never overlaps, and reports 
       sim.step(day * DAY, roads);
     }
   }
-  for (const kind of Object.keys(counts) as DisasterKind[]) {
+  assert.equal(counts.paranormal, 0, 'the paranormal nights are retired');
+  for (const kind of (Object.keys(counts) as DisasterKind[]).filter(k => k !== 'paranormal')) {
     assert.ok(counts[kind] > 0, `${kind} never fired`);
     console.log(`${kind}: ${counts[kind]} in 1000 days, mean ${Math.round(1000 / counts[kind])} days between`);
   }

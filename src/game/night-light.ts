@@ -4,7 +4,7 @@ import type { LibItem, Prop } from './types';
  *  The town is washed in blue moonlight (desaturated, tinted, darkened); every light a sprite gives off is a round, feathered pool on the
  *  ground that puts the painted colour back, with a little warmth; a sprite's lit windows (its library glows) glow the same way. The art is
  *  painted at early evening, so by day nothing changes. Here the night follows the game clock (dusk, night, dawn) or is always on or off,
- *  every number is the owner's (the gear menu), and a paranormal night's torches and monsters add their own lights. */
+ *  every number is the owner's (the gear menu). */
 
 export type LightKey = 'lamp' | 'porch' | 'window' | 'neon' | 'pumpkin' | 'lantern' | 'stand' | 'fire';
 export interface LightType { /** radius in metres */ r: number; /** strength 0..1 */ i: number }

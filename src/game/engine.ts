@@ -75,8 +75,6 @@ import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID }
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { tierInfo, type Need } from './golf/tour';
-import { ParanormalRenderer } from './ext/paranormal-render';
-import { paranormalNightStrength } from './ext/paranormal-render/frames';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -447,7 +445,6 @@ export class Game {
   private lotBox: BBox = [0, 0, 0, 0]; private lotHits = new Set<Prop>(); private blocksAt = -Infinity; private lotBlocksTimer = 0;
   private raf = 0; private last = 0;
   private mask: OffscreenCanvas | null = null;
-  private paranormalRenderer = new ParanormalRenderer();
   /** Natural hazards and recurring monster nights; the settings preference survives reloads. */
   disastersEnabled = true;
   setDisasters(on: boolean) {
@@ -477,15 +474,14 @@ export class Game {
   skipNight() {
     const c = this.clock(); this.skippedNight = nightDay(this.night, c.hour + c.minute / 60, c.day); this.nightKey = ''; this.emit();
   }
-  /** how dark it is now (0 day .. 1 night): the clock's night, or a paranormal night's, whichever is darker */
-  nightAmount(now = performance.now()) {
-    const clock = this.clockNight();
-    return this.traffic ? Math.max(clock, paranormalNightStrength(this.traffic.disasters, this.traffic.simTime(now))) : clock;
+  /** how dark it is now (0 day .. 1 night): the clock's night */
+  nightAmount() {
+    return this.clockNight();
   }
   /** the night pass over the finished frame: the lights of the props in view (gathered again when the camera, the props or the settings
-   *  change, at most every quarter second), the paranormal night's torches and monsters, then the moonlight */
+   *  change, at most every quarter second), then the moonlight */
   private drawNight(ctx: CanvasRenderingContext2D, now: number) {
-    const amount = this.nightAmount(now); if (!(amount > 0)) return;
+    const amount = this.nightAmount(); if (!(amount > 0)) return;
     const ze = this.cam.z * this.dpr, W = ctx.canvas.width, H = ctx.canvas.height;
     // gathered over three screens round the view, again once the view has moved a screen, zoomed, or the props or settings changed
     const hw = W / ze, hh = H / ze, key = `${Math.round(this.cam.X / hw)},${Math.round(this.cam.Y / hh)},${Math.round(Math.log2(ze) * 4)},${W},${H},${this.props.size}`;
@@ -500,9 +496,7 @@ export class Game {
     }
     const ox = this.cw / 2 - this.cam.X * ze, oy = this.ch / 2 - this.cam.Y * ze;
     const placed = this.nightLights.map(l => ({ ...l, sx: l.sx * ze + ox, sy: l.sy * ze + oy, rx: l.rx * ze, ry: l.ry * ze }));
-    const lights = this.traffic ? placed.concat(this.paranormalRenderer.actorLights(this.traffic.disasters, this.traffic.simTime(now)).map(l => {
-      const q = this.screen(l.x, l.y), rx = l.radius * HW * ze; return { sx: q.x, sy: q.y, rx, ry: rx * 0.65, i: l.intensity, tint: l.color };
-    })) : placed;
+    const lights = placed;
     this.nightRenderer.apply(ctx, this.canvas, this.night, amount, lights);
   }
 
@@ -3652,8 +3646,6 @@ export class Game {
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
     this.drawNight(ctx, now);
-    if (this.traffic) this.paranormalRenderer.draw(ctx, this.canvas, this.traffic.disasters, this.traffic.simTime(now), now,
-      (x, y) => this.screen(x, y), HW * ze, this.dpr, this.props, LIBRARY, true);
   }
 
   /** the map's three town names at the district and planner tiers: white with a dark outline, centred on each town site (screen px) */

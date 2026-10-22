@@ -213,7 +213,7 @@ export default function App() {
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Recurring dark nights bring kids, monsters and traffic diversions every few game days">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
-                      Natural &amp; paranormal disasters
+                      Natural disasters
                     </label>
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" title="The contact shadows under every building, car, tree and prop (TrickOrTreat's town-builder shadows). 100% = the builder's, 0 = off">
                       <span className="w-16 shrink-0">Shadows</span>
