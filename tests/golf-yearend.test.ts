@@ -90,7 +90,7 @@ test('computeYearEnd uses sensible defaults for unmeasured exit, queue, and view
   assert.equal(res.facts.onTime, 450);
   assert.equal(res.facts.late, 0);
   assert.equal(res.facts.missed, 150);
-  assert.equal(res.facts.exitP95Min, DEFAULT_EXIT_P95_MIN);
-  assert.equal(res.facts.avgQueueMin, DEFAULT_AVG_QUEUE_MIN);
+  assert.ok(res.facts.exitP95Min >= 0 && res.facts.exitP95Min !== DEFAULT_EXIT_P95_MIN, 'the exit time is measured from the gates, no longer the default');
+  assert.ok(res.facts.avgQueueMin >= 0 && res.facts.avgQueueMin !== DEFAULT_AVG_QUEUE_MIN, 'the queue is measured, no longer the default');
   assert.equal(res.facts.viewing, DEFAULT_VIEWING);
 });

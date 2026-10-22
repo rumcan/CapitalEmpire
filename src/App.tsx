@@ -539,6 +539,7 @@ function EvalScreen({ game }: { game: Game }) {
  <div>
  <div className="text-[10px] uppercase text-slate-400">Satisfaction</div>
  <div className="text-base font-bold text-amber-200">{formatPercent(ye.satisfaction)}</div>
+ <div className="text-[10px] text-slate-400">Q {Math.round(ye.facts.avgQueueMin)}m · Exit {Math.round(ye.facts.exitP95Min)}m</div>
  </div>
  <div>
  <div className="text-[10px] uppercase text-slate-400">Reputation</div>
@@ -573,7 +574,7 @@ function EvalScreen({ game }: { game: Game }) {
           ))}
         </div>
         <p className="text-sm text-slate-200">
-        Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>}{ye?.tentRevenue !== undefined && ye.tentRevenue > 0 && <> · Tents <span className="tabular-nums text-emerald-300">{sgn(ye.tentRevenue)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${(last.net + (ye?.tentRevenue ?? 0)) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net + (ye?.tentRevenue ?? 0))}</span>
+        Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>}{ye?.tentRevenue !== undefined && ye.tentRevenue > 0 && <> · Tents <span className="tabular-nums text-emerald-300">{sgn(ye.tentRevenue)}</span></>}{ye?.sponsorIncome !== undefined && ye.sponsorIncome > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(ye.sponsorIncome)}</span></>}{ye?.tvIncome !== undefined && ye.tvIncome > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(ye.tvIncome)}</span></>}{ye?.purse !== undefined && ye.purse > 0 && <> · Purse <span className="tabular-nums text-red-300">−{money(ye.purse)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0)) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0))}</span>
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">
