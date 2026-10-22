@@ -163,7 +163,7 @@ export class PaintTool {
   private planting: { erase: boolean; last: { x: number; y: number }; n: number } | null = null;
   private plantSeed = (Date.now() % 100000) | 0;
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
-  private stroke: { m: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[] } | null = null;
+  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[] } | null = null;
   private host: PaintHost;
 
   constructor(host: PaintHost) { this.host = host; }
@@ -255,7 +255,7 @@ export class PaintTool {
     const t = this.tx; if (!t || --t.depth > 0) return;
     this.tx = null;
     const props = this.host.journal?.end() ?? null, after = this.snapshot();
-    const same = after.ids.length === t.before.ids.length && after.ids.every((id, i) => id === t.before.ids[i] && after.keys[i] === t.before.keys[i]);
+    const same = after.keys.length === t.before.keys.length && after.keys.every((k, i) => k === t.before.keys[i]); // a stroke that changed nothing re-made the same areas under new ids
     if (!props && !t.spent && same) return;
     this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.redos = [];
@@ -484,9 +484,10 @@ export class PaintTool {
   private strokeStart(t: { x: number; y: number }, alt: boolean) {
     const k = this.brushKind, h = this.brushHole, r = this.brush[k].r, m: Mask = new Set(), erase = this.rubOut || alt;
     for (const a of this.areas) if (a.hole === h && a.kind === k) fillPoly(m, this.outlineOf(a));
+    const m0: Mask = new Set(m);
     dab(m, t.x, t.y, r, erase);
     this.begin((erase ? 'rub out ' : 'brush ') + k);
-    this.stroke = { m, r, erase, last: { x: t.x, y: t.y }, dabs: [t.x, t.y] };
+    this.stroke = { m, m0, r, erase, last: { x: t.x, y: t.y }, dabs: [t.x, t.y] };
     this.host.emit();
   }
 
@@ -494,6 +495,8 @@ export class PaintTool {
   private strokeEnd() {
     const s = this.stroke; if (!s) return;
     this.stroke = null;
+    // a stroke that changed no cell (rubbing out where nothing is) keeps the areas as they are (re-tracing would re-smooth them)
+    if (s.m.size === s.m0.size) { let same = true; for (const c of s.m) if (!s.m0.has(c)) { same = false; break; } if (same) { this.commit(); this.host.emit(); return; } }
     const k = this.brushKind, h = this.brushHole, style = this.brush[k].style;
     for (let i = this.areas.length - 1; i >= 0; i--) { const a = this.areas[i]!; if (a.hole === h && a.kind === k) { this.areas.splice(i, 1); this.host.setLotGround('paint:' + a.id, null); } }
     let big = false;
