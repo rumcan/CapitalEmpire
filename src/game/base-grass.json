@@ -1,10 +1,10 @@
 {
  "v": 1,
  "saved": true,
- "stamp": "2026-10-22T11:44:40.469Z",
+ "stamp": "2026-10-22T11:47:03.576Z",
  "a": {
   "src": "art/grass-photo/meadow-lush.png",
-  "scale": 0.95,
+  "scale": 1.35,
   "tint": "#808080",
   "tintAmt": 0,
   "bright": 0.8,
@@ -23,12 +23,12 @@
   "hue": 25
  },
  "mix": {
-  "share": 0.46,
-  "soft": 0.14,
+  "share": 0.66,
+  "soft": 0.5,
   "patch": 1.9,
   "tone": 0.29,
   "warm": 0.05,
-  "angle": 91,
-  "tilt": 0.5
+  "angle": -56,
+  "tilt": 0.49
  }
 }
