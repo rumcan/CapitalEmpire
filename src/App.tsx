@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { FLOW_COLS, Game, HEAT_COLS, HIST_RAMP, LOS_COL, SPEEDS, UPGRADE_COST } from './game/engine';
 import { ROW_BAY_COST, rowLots } from './game/event/rows';
-import { ATLAS_PAGES, ATLAS_SIZE, LIBRARY } from './game/library';
-import { type LibItem, type Tool } from './game/types';
+import { LIBRARY } from './game/library';
+import { type Tool } from './game/types';
 import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, SPEED_BONUS_KMH, TYPES, VARIANTS, speedOf, type Family, type Node } from './game/network';
 import { SIGNAL_TIER_YEAR, SPEED_TIER_YEAR } from './game/event/round';
 import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
@@ -22,6 +22,7 @@ import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
+import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
@@ -311,12 +312,6 @@ export default function App() {
       )}
         </div>
   );
-}
-
-/** a library sprite cut out of its atlas page (mip 1) with CSS */
-function Thumb({ it, size }: { it: LibItem; size: number }) {
-  const [page, u0, v0, u1, v1] = it.tex, P = ATLAS_SIZE / 2, w = (u1 - u0) * P, h = (v1 - v0) * P, k = Math.min(size / w, size / h);
-  return <div style={{ width: w * k, height: h * k, backgroundImage: `url(${ATLAS_PAGES[page][1]})`, backgroundSize: `${P * k}px ${P * k}px`, backgroundPosition: `${-u0 * P * k}px ${-v0 * P * k}px` }} />;
 }
 
 /** frame time, what was drawn, and the traffic */
@@ -1217,7 +1212,7 @@ function hintFor(g: Game) {
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
-    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
+    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantKind}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return g.parking.mode === 'rows' ? 'ROWS: drag along the ground to lay bays · Tab flips the side · Shift snaps 15° · click a row to remove it' : g.parking.mode === 'curb' ? 'ON-STREET: hover a road and click the kerb to park along it · click again to remove' : 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';

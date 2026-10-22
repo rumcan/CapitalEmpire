@@ -3,11 +3,14 @@ import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
 import { BORDER_TEXES, BORDER_W, BRUSH_PRESETS, PAINT_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
 import type { PaintMode } from './game/paint-tool';
+import { LIBRARY } from './game/library';
 import { PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
+import { Thumb } from './ui/Thumb';
 
 const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }, { id: 'hole', label: 'Golf hole' }, { id: 'brush', label: 'Brush' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
 const swatch = (t: { id: string; col: string }) => ({ backgroundColor: t.col, backgroundImage: DIRT_SWATCHES[t.id] ? `url(${DIRT_SWATCHES[t.id]})` : undefined, backgroundSize: 'cover' });
+const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
 const BORDERS = ['None', 'Small', 'Medium', 'Large'];
 const TONES: { id: 0 | 1 | 2; label: string }[] = [{ id: 0, label: 'None' }, { id: 1, label: 'Darker' }, { id: 2, label: 'Lighter' }];
 /** the style change for a tone chip: switching to Lighter turns a black tint white, to Darker a white tint black (other tints are kept) */
@@ -80,11 +83,15 @@ export function PaintPanel({ game }: { game: Game }) {
             <input type="range" min={PLANT_SPACING[0]} max={PLANT_SPACING[1]} step={0.5} value={ps.spacing} onChange={e => p.setPlantSet({ spacing: +e.target.value })} className="flex-1" />
             <span className="w-16 text-right text-xs text-slate-200">{`${ps.spacing * 2} m`}</span>
           </div>
-          <div className="mt-2 text-[11px] text-slate-400">Size range</div>
+          <div className="mt-2 text-[11px] text-slate-400">Smallest plant (of its normal size)</div>
           <div className="flex items-center gap-2">
             <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.lo} onChange={e => p.setPlantSet({ lo: Math.min(+e.target.value, ps.hi) })} className="flex-1" />
+            <span className="w-16 text-right text-xs text-slate-200">{`${Math.round(ps.lo * 100)}%`}</span>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">Largest plant</div>
+          <div className="flex items-center gap-2">
             <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.hi} onChange={e => p.setPlantSet({ hi: Math.max(+e.target.value, ps.lo) })} className="flex-1" />
-            <span className="w-20 text-right text-xs text-slate-200">{`${Math.round(ps.lo * 100)}–${Math.round(ps.hi * 100)}%`}</span>
+            <span className="w-16 text-right text-xs text-slate-200">{`${Math.round(ps.hi * 100)}%`}</span>
           </div>
           <div className="mt-1 flex flex-wrap gap-1">
             <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
@@ -94,8 +101,13 @@ export function PaintPanel({ game }: { game: Game }) {
             <button className="chip" onClick={() => p.setPlantSet({ ids: null })}>All</button>
             <button className="chip" onClick={() => p.setPlantSet({ ids: [] })}>None</button>
           </div>
-          <div className="flex max-h-48 flex-wrap gap-1 overflow-auto">
-            {pool.map(x => <button key={x.id} className={`chip ${plantPicked.has(x.id) ? 'chip-on' : ''}`} title={x.id} onClick={() => togglePick(x.id)}>{x.name}</button>)}
+          <div className="grid max-h-72 grid-cols-4 gap-1 overflow-y-auto">
+            {pool.map(x => (
+              <button key={x.id} title={`${x.name} (${x.id})`} onClick={() => togglePick(x.id)}
+                className={`flex h-14 items-end justify-center rounded border p-0.5 ${plantPicked.has(x.id) ? 'border-amber-400 bg-amber-400/15' : 'border-slate-700 bg-slate-900/40 opacity-50'}`}>
+                {LIB_BY_ID.has(x.id) ? <Thumb it={LIB_BY_ID.get(x.id)!} size={48} /> : <span className="text-[10px]">{x.name}</span>}
+              </button>
+            ))}
           </div>
           <div className="mt-2 text-[11px] text-slate-400">{`${game.plantedCount()} planted by these brushes · free (decoration)`}</div>
         </>
