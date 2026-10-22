@@ -185,3 +185,11 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   when set), BRUSH_PRESETS use the owner's first preset per golf surface; `golf/costs.ts` TEX_SURFACE adds the presets' surface tags;
   `golf/paintcourse.ts` the generated course uses them too; `ground-protocol.ts` LotPatch tex `preset:` and PatchPaint `m`; `renderer.ts`
   `drawBlend` (the second texture through a tileable noise mask in tile space); `textures.ts` `photos` (PHOTO_TEX + the presets).
+- 2026-10-22 afternoon (the art chat, in E:\Repos\CapitalEmpire on the owner's asks). **For the coder, in your files:** (1) **the town keeps off
+  the golf land**: `setGolf` (client, protocol, worker, `City.setGolf`) now carries `land` (the course first, then the parcels); `City.reserved`
+  refuses lots on any of it, and the town's lots inside the course are cleared (free buy-out, `Town.clear`) when it arrives and every game
+  hour; houses on the other parcels stay; buying land re-sends it (`Engine.golfLand`); tests/golf-land.test.ts. (2) **the night**: by the
+  clock only one game day in `every` (default 3; `nightDay`), and a **Skip night** chip in the top bar (`Engine.skipNight`, `clockNight`).
+  (3) **paint draw order**: `PaintArea.order`, tuple slot 23, `drawZ` (patch z); Page Up / Down and Ctrl+] / [ move the selected area;
+  `toTuple` writes slots 19-22 as defaults when only the order is set. (4) **texture presets** carry `stripes` (mowing stripes baked into the
+  picture; the game needs nothing). (5) `kindOfTex` maps through `surfaceOfTex`; the golf-paintcourse test reads the owner's surface presets.
