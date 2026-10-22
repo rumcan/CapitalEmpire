@@ -1,6 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
-import { BORDER_TEXES, BORDER_W, BRUSH_LAYER, BRUSH_PRESETS, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { BORDER_TEXES, BORDER_W, BRUSH_PRESETS, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
@@ -174,7 +174,7 @@ export class PaintTool {
   constructor(host: PaintHost) { this.host = host; }
 
   /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
-  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id, ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}) } }; }
+  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {
@@ -302,6 +302,23 @@ export class PaintTool {
     if (u.spent) this.host.spend?.(u.spent);
     this.host.changed?.();
     this.undos.push(u); this.host.save(); this.host.toast(`Redone: ${u.label}`); this.host.emit();
+  }
+
+  /** moves the selected area in the draw order (an undo step): 1 forward past the next area above it that it overlaps, -1 back past the next one
+   *  below, 'front' / 'back' over / under every area it overlaps; a toast when there is nothing to pass */
+  moveLayer(step: 1 | -1 | 'front' | 'back') {
+    const a = this.selectedArea(); if (!a) { this.host.toast('Pick an area first (Pick, or a shape you just drew)', 'warn'); return; }
+    const b = polyBox(a.pts), z = drawZ(a);
+    const zs = this.areas.filter(q => { if (q === a) return false; const c = polyBox(q.pts); return c[0] < b[2] && c[2] > b[0] && c[1] < b[3] && c[3] > b[1]; }).map(drawZ).sort((p, q) => p - q);
+    const up = zs.filter(v => v > z), down = zs.filter(v => v < z);
+    let to: number | null = null;
+    if (step === 1 && up.length) to = up.length > 1 ? (up[0]! + up[1]!) / 2 : up[0]! + 1;
+    else if (step === -1 && down.length) { const k = down.length; to = k > 1 ? (down[k - 1]! + down[k - 2]!) / 2 : down[k - 1]! - 1; }
+    else if (step === 'front' && up.length) to = up[up.length - 1]! + 1;
+    else if (step === 'back' && down.length) to = down[0]! - 1;
+    if (to === null) { this.host.toast(step === 1 || step === 'front' ? 'Already over every area it overlaps' : 'Already under every area it overlaps'); return; }
+    this.begin('layer order'); a.order = to; this.send(a, this.host.currentMonth?.()); this.commit();
+    this.host.save(); this.host.emit();
   }
 
   /** the plant brush: Trees, Bushes or Flowers scattered by dragging (Rub out / Alt removes them) */
@@ -509,12 +526,13 @@ export class PaintTool {
     // a stroke that changed no cell (rubbing out where nothing is) keeps the areas as they are (re-tracing would re-smooth them)
     if (s.m.size === s.m0.size) { let same = true; for (const c of s.m) if (!s.m0.has(c)) { same = false; break; } if (same) { this.commit(); this.host.emit(); return; } }
     const k = this.brushKind, h = this.brushHole, style = this.brush[k].style;
-    for (let i = this.areas.length - 1; i >= 0; i--) { const a = this.areas[i]!; if (a.hole === h && a.kind === k) { this.areas.splice(i, 1); this.host.setLotGround('paint:' + a.id, null); } }
+    let order: number | undefined; // the draw order the player gave the areas this stroke replaces (the highest), kept by the new ones
+    for (let i = this.areas.length - 1; i >= 0; i--) { const a = this.areas[i]!; if (a.hole === h && a.kind === k) { if (a.order !== undefined) order = Math.max(order ?? -Infinity, a.order); this.areas.splice(i, 1); this.host.setLotGround('paint:' + a.id, null); } }
     let big = false;
     for (const o of traceMask(s.m)) {
       const b = polyBox(o);
       if (b[2] - b[0] > MAX_SIDE || b[3] - b[1] > MAX_SIDE) { big = true; continue; }
-      const a: PaintArea = { id: this.nextId++, pts: o, ...style, hole: h, kind: k };
+      const a: PaintArea = { id: this.nextId++, pts: o, ...style, hole: h, kind: k, ...(order !== undefined ? { order } : {}) };
       this.areas.push(a); this.send(a);
     }
     if (big) this.host.toast('Part of the stroke is too big for one area: paint it in two parts', 'warn');
@@ -577,7 +595,11 @@ export class PaintTool {
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.undo(); return true; }
       if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.redo(); return true; }
+      if (this.selected && (e.code === 'BracketRight' || e.code === 'BracketLeft')) { e.preventDefault(); const f = e.code === 'BracketRight'; this.moveLayer(e.shiftKey ? (f ? 'front' : 'back') : f ? 1 : -1); return true; }
       return false;
+    }
+    if (this.selected && (e.key === 'PageUp' || e.key === 'PageDown')) {
+      e.preventDefault(); const f = e.key === 'PageUp'; this.moveLayer(e.shiftKey ? (f ? 'front' : 'back') : f ? 1 : -1); return true;
     }
     if (this.course && e.key >= '1' && e.key <= '9') {
       const b = BRUSH_PRESETS[+e.key - 1]; if (!b) return false;

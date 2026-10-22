@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaintTool, type PropJournal } from '../src/game/paint-tool';
 import { kindOfTex, placeHole, storedHolePreset } from '../src/game/golf/holepreset';
+import { drawZ, fromTuples, type PaintTuple } from '../src/game/paint';
 
 /** a host with a fake prop list and journal (props are plain objects), the money spent and the toasts */
 function host() {
@@ -123,4 +124,19 @@ test('a golf game: a placed preset hands its flag to the engine as the pin spot 
   assert.ok(placed.length > 0 && placed.every(q => q.kind !== 'flag'));
   assert.equal(calls.length, 1); assert.ok(calls[0]!.has(1));
   tool.undo(); tool.redo(); assert.equal(calls.length, 3); assert.equal(calls[2], undefined);
+});
+
+test('layers: the selected area moves over or under the areas it overlaps (one step, or to the front / back), saved, undoable', () => {
+  const tool = new PaintTool(host());
+  const sq = (x: number) => { tool.setMode('draw'); for (const [a, b] of [[x, 0], [x + 20, 0], [x + 20, 20], [x, 20]]) { tool.pointerDown({ x: a!, y: b! }, 0, 0); tool.pointerUp(0.5); } tool.doubleClick(); return tool.selected; };
+  const a = sq(0), b = sq(5), c = sq(10), far = sq(500);
+  const z = (id: number) => drawZ(tool.areas.find(q => q.id === id)!), sel = (id: number) => { tool.selected = id; };
+  sel(a); tool.moveLayer(1); assert.ok(z(a) > z(b) && z(a) < z(c), 'a one step forward: over b, under c');
+  key(tool, 'PageUp'); assert.ok(z(a) > z(c), 'Page Up: over c too');
+  key(tool, 'PageDown', { shiftKey: true }); assert.ok(z(a) < z(b) && z(a) < z(c), 'Shift+Page Down: to the back');
+  key(tool, ']', { ctrlKey: true, shiftKey: true, code: 'BracketRight' } as Partial<KeyboardEvent>); assert.ok(z(a) > z(c), 'Ctrl+Shift+]: to the front');
+  sel(far); const before = z(far); tool.moveLayer('front'); assert.equal(z(far), before, 'nothing overlaps: unchanged');
+  sel(a); const front = z(a); tool.undo(); assert.ok(z(a) < z(b), 'undo puts it back under'); tool.redo(); assert.equal(z(a), front);
+  const saved = fromTuples(JSON.parse(JSON.stringify(tool.save())) as PaintTuple[]);
+  assert.deepEqual(saved.map(drawZ), tool.areas.map(drawZ), 'the order survives a save');
 });

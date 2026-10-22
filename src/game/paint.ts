@@ -17,7 +17,11 @@ export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: nu
   /** a second texture blended over the fill in soft patches (the map grass's mix): mtex the texture, mshare how much of the area it covers (0..1),
    *  msoft how soft its edge is, mpatch the patches' size (1 = about 5 tiles); absent = no blend */
   mtex?: PaintTex; mshare?: number; msoft?: number; mpatch?: number;
+  /** the draw order the player set (the layer buttons and keys): replaces the default (drawZ); absent = the default */
+  order?: number;
 }
+/** an area's draw order on the ground (higher draws over lower): the player's order, else its brush layer's band and then its id (the order made) */
+export const drawZ = (a: { order?: number; kind?: BrushKind; id: number }) => a.order ?? (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id;
 /** the golf brush's kinds: the areas a stroke paints (BRUSH_PRESETS) */
 export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path';
 /** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint, hole, kind, plantKind, plantedMonth, bscale, bangle, btone, btoneAmt, btint];
@@ -26,7 +30,7 @@ export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'gree
  *  (as '' and 0 when absent); 14 to 18 (the border's scale, angle, tone, strength and tint) only when one differs from its default, and optional on load;
  *  19 to 22 (the blend: its texture, share, softness and patch size) only when the area blends a second texture (then 10 to 18 are written too);
  *  toTuple writes ten, twelve, fourteen, nineteen or twenty-three */
-export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?, string?, number?, number?, number?];
+export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?, string?, number?, number?, number?, number?];
 /** the draw order layer of each brush kind (a patch's z is layer * 1e6 + id, so a later kind paints over an earlier one) */
 export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7 };
 const BRUSH_KIND_IDS = new Set<string>(Object.keys(BRUSH_LAYER));
@@ -294,11 +298,13 @@ const r3 = (v: number) => Math.round(v * 1000) / 1000;
 /** a painted area as its save tuple (scale, angle, radius and strength to 3 decimals) */
 export function toTuple(a: PaintArea): PaintTuple {
   const t: PaintTuple = [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint];
-  const mx = !!a.mtex, bd = mx || a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
+  // a slot is written when it or any later one is set (od: the player's draw order, slot 23, needs every slot before it)
+  const od = a.order !== undefined, mx = !!a.mtex || od, bd = mx || a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
   if (a.kind || a.hole || a.plantKind || bd) t.push(a.hole ?? 0, a.kind ?? '');
   if (a.plantKind || bd) t.push(a.plantKind ?? '', a.plantKind ? a.plantedMonth ?? 0 : 0);
   if (bd) t.push(r3(a.bscale), r3(a.bangle), a.btone, r3(a.btoneAmt), a.btint);
-  if (mx) t.push(a.mtex!, r3(a.mshare ?? 0.5), r3(a.msoft ?? 0.12), r3(a.mpatch ?? 1));
+  if (mx) t.push(a.mtex ?? '', r3(a.mshare ?? 0.5), r3(a.msoft ?? 0.12), r3(a.mpatch ?? 1));
+  if (od) t.push(Math.round(a.order! * 1e6) / 1e6);
   return t;
 }
 
@@ -315,7 +321,8 @@ export function fromTuples(ts: PaintTuple[]): PaintArea[] {
     if (typeof t[11] === 'string' && BRUSH_KIND_IDS.has(t[11])) tags.kind = t[11] as BrushKind;
     if (typeof t[12] === 'string' && (t[12] === 'seed' || t[12] === 'sod')) tags.plantKind = t[12];
     if (tags.plantKind && Number.isInteger(t[13])) tags.plantedMonth = t[13];
-    out.push({ id: out.length + 1, pts: t[5].slice(), ...s, ...tags });
+    const order = typeof t[23] === 'number' && Number.isFinite(t[23]) ? { order: t[23] } : {};
+    out.push({ id: out.length + 1, pts: t[5].slice(), ...s, ...tags, ...order });
   }
   return out;
 }

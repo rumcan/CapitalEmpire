@@ -115,6 +115,16 @@ export function StyleEditor({ game }: { game: Game }) {
   const bOwn = (c: { bscale?: number; bangle?: number }) => p.setStyle({ bscale: bScale, bangle: bAngle, ...c });
   return (
     <>
+      {picked && (<>
+        <div className="mt-2 text-[11px] text-slate-400">Layer (over or under the areas it overlaps)</div>
+        <div className="flex flex-wrap gap-1">
+          <button className="chip" title="To the back: under every area it overlaps (Shift+Page Down, Ctrl+Shift+[)" onClick={() => p.moveLayer('back')}>To back</button>
+          <button className="chip" title="Back one: under the next area below it (Page Down, Ctrl+[)" onClick={() => p.moveLayer(-1)}>Back</button>
+          <button className="chip" title="Forward one: over the next area above it (Page Up, Ctrl+])" onClick={() => p.moveLayer(1)}>Forward</button>
+          <button className="chip" title="To the front: over every area it overlaps (Shift+Page Up, Ctrl+Shift+])" onClick={() => p.moveLayer('front')}>To front</button>
+        </div>
+        <div className="text-[10px] text-slate-500">Page Up / Down, Shift for front / back (or Ctrl+] / Ctrl+[)</div>
+      </>)}
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
         {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
