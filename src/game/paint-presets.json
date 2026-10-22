@@ -95,7 +95,7 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": true
+   "lawn": false
   },
   {
    "id": "fairway",
