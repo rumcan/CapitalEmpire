@@ -249,7 +249,22 @@ function lawnPicker() {
     const d = await r.json(); PRE = { ...PRE, presets: d.presets }; build(); msg('town lawns saved: Rebuild game sprites to see it in the game');
   } }));
   if (!PRE.presets.some(p => p.lawn !== false)) row.append(hint('None ticked: the town keeps the map grass.'));
-  return row;
+  // the road blocks: which preset the empty ground inside a block takes (and its empty lots), and how much of the block it covers
+  const send = async (patch) => {
+    const r = await fetch('/api/preset-blocks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ blocks: PRE.blocks ?? null, blockShare: PRE.blockShare ?? 0.55, ...patch }) });
+    if (!r.ok) { msg(await r.text()); return; }
+    const d = await r.json(); PRE = { ...PRE, presets: d.presets, blocks: d.blocks, blockShare: d.blockShare }; build(); msg('road blocks saved: Rebuild game sprites to see it in the game');
+  };
+  const blocks = el('div', { style: 'display:flex;flex-wrap:wrap;gap:4px;margin:0 0 6px;align-items:center' },
+    el('span', { style: 'font-size:12px;color:var(--dim);margin-right:4px', title: 'The grass on the empty ground inside every road block (and on its lots with no building)', textContent: 'Road blocks use:' }),
+    el('button', { className: 'chip' + (!PRE.blocks ? ' on' : ''), title: 'Each block picks one of the ticked lawn presets', textContent: 'Any lawn preset', onclick: () => send({ blocks: null }) }),
+    ...PRE.presets.map(p => el('button', { className: 'chip' + (PRE.blocks === p.id ? ' on' : ''), textContent: p.name, onclick: () => send({ blocks: p.id }) })));
+  const share = PRE.blockShare ?? 0.55, out = el('span', { className: 'scale', style: 'min-width:54px', textContent: `${Math.round(share * 100)}%` });
+  const inp = el('input', { type: 'range', min: 0.2, max: 1, step: 0.05, value: share, style: 'min-width:0;flex:1;padding:0' });
+  inp.oninput = () => { out.textContent = `${Math.round(+inp.value * 100)}%`; }; inp.onchange = () => send({ blockShare: +inp.value });
+  const cover = el('div', { className: 'prow', title: 'How much of each block the block grass covers, in soft patches over the map grass (100%: all of it)' },
+    el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Block cover' }), inp, out);
+  return el('div', {}, row, blocks, cover);
 }
 async function savePreset() {
   if (!mixed || !PM.name.trim()) { msg('give the preset a name'); return; }

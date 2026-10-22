@@ -58,7 +58,11 @@ export function stripePixels(D: Uint8ClampedArray, W: number, H: number, s: Stri
     for (let c = 0; c < 3; c++) D[o + c] = clamp(D[o + c]! * k * (1 - t) + C[c]! * t, 0, 255);
   }
 }
-export interface PresetsFile { v: 1; presets: PaintPreset[] }
+/** the presets file: the presets, and the road blocks' grass (lawns.ts): blocks, the preset the empty ground inside a road block takes (null: any
+ *  lawn preset, picked per block), and blockShare, how much of the block it covers in soft patches (1: all of it) */
+export interface PresetsFile { v: 1; presets: PaintPreset[]; blocks: string | null; blockShare: number }
+/** the block coverage slider's range, and its default */
+export const BLOCK_SHARE: [number, number] = [0.2, 1]; const BLOCK_SHARE_DEFAULT = 0.55;
 /** the size slider's range (tiles) */
 export const PRESET_SIZE: [number, number] = [1, 64];
 
@@ -78,9 +82,14 @@ export function clampPreset(p: Partial<PaintPreset> | null | undefined): PaintPr
 export function clampPresets(f: Partial<PresetsFile> | null | undefined): PresetsFile {
   const out: PaintPreset[] = [], seen = new Set<string>();
   for (const p of Array.isArray(f?.presets) ? f!.presets : []) { const c = clampPreset(p); if (c && !seen.has(c.id)) { seen.add(c.id); out.push(c); } }
-  return { v: 1, presets: out };
+  const blocks = typeof f?.blocks === 'string' && seen.has(f.blocks) ? f.blocks : null;
+  const blockShare = clamp(typeof f?.blockShare === 'number' && Number.isFinite(f.blockShare) ? f.blockShare : BLOCK_SHARE_DEFAULT, BLOCK_SHARE[0], BLOCK_SHARE[1]);
+  return { v: 1, presets: out, blocks, blockShare };
 }
 /** the presets the game was built with */
-export const PRESETS: PaintPreset[] = clampPresets(file as Partial<PresetsFile>).presets;
+const FILE = clampPresets(file as Partial<PresetsFile>);
+export const PRESETS: PaintPreset[] = FILE.presets;
+/** the road blocks' grass the game was built with (PresetsFile blocks, blockShare) */
+export const BLOCK_GRASS = { id: FILE.blocks, share: FILE.blockShare };
 /** the first preset standing for a golf surface, as a Paint texture id, or null */
 export function surfacePreset(surface: string): `preset:${string}` | null { const p = PRESETS.find(q => q.surface === surface); return p ? presetTex(p.id) : null; }

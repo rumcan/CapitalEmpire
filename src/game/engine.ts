@@ -941,7 +941,9 @@ export class Game {
     const c = compose(g, st), ps: Prop[] = [];
     for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !(q.street && this.inLayby(i, q))) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
-    const lawn = lotLawn(key, g); this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
+    // a yard of its own only where a building stands (a house, shop, venue, barn or a baked house lot); an empty lot shows its block's grass
+    const built = ps.some(p => { const it = LIBRARY[p.item]!; return !!it.block || it.kind in BUILDING_KINDS; });
+    const lawn = built ? lotLawn(key, g) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
   }
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
