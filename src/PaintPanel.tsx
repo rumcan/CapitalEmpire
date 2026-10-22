@@ -3,6 +3,7 @@ import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
 import { BORDER_TEXES, BORDER_W, BRUSH_PRESETS, PAINT_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
 import type { PaintMode } from './game/paint-tool';
+import { PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
 
 const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }, { id: 'hole', label: 'Golf hole' }, { id: 'brush', label: 'Brush' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
@@ -21,7 +22,11 @@ export function PaintPanel({ game }: { game: Game }) {
   const bFollow = s.bscale === 1 && s.bangle === 0, bScale = bFollow ? s.scale : s.bscale, bAngle = bFollow ? s.angle : s.bangle;
   const bOwn = (c: { bscale?: number; bangle?: number }) => p.setStyle({ bscale: bScale, bangle: bAngle, ...c });
   const br = p.brush[p.brushKind], brushName = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
-  const help = p.mode === 'brush'
+  const pk = PLANT_KINDS.find(k => k.kind === p.plantKind)!, ps = p.plant[p.plantKind], pool = p.mode === 'plant' ? game.plantPool(p.plantKind) : [], plantPicked = new Set(ps.ids ?? pool.map(x => x.id));
+  const togglePick = (id: string) => { const next = new Set(plantPicked); if (next.has(id)) next.delete(id); else next.add(id); p.setPlantSet({ ids: pool.map(x => x.id).filter(x => next.has(x)) }); };
+  const help = p.mode === 'plant'
+    ? `Drag to plant ${pk.name.toLowerCase()} inside the circle, spaced apart, skipping roads, buildings and other props; going over a spot again fills it in. Alt-drag or Rub out removes only what these brushes planted. [ and ] change the size.`
+    : p.mode === 'brush'
     ? `Drag to paint ${brushName} for hole ${p.brushHole}; strokes of the same kind on a hole join into one area. Alt-drag or Rub out erases. [ and ] change the size. The texture and border settings below edit this preset (remembered).`
     : p.mode === 'hole'
     ? 'Click to place a golf hole, its tee at the click. R turns it. Every piece is an ordinary painted area (Pick to edit, Erase to remove); the flag and plants are props (Bulldoze).'
@@ -38,6 +43,7 @@ export function PaintPanel({ game }: { game: Game }) {
       <div className="mt-2 text-[11px] text-slate-400">Golf brush</div>
       <div className="flex flex-wrap gap-1">
         {BRUSH_PRESETS.map(b => <button key={b.kind} className={`chip ${p.mode === 'brush' && p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
+        {PLANT_KINDS.map(k => <button key={k.kind} className={`chip ${p.mode === 'plant' && p.plantKind === k.kind ? 'chip-on' : ''}`} onClick={() => p.setPlant(k.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ backgroundColor: k.col }} />{k.name}</button>)}
       </div>
       <div className="mt-2 text-[11px] text-slate-400">Mode</div>
       <div className="flex flex-wrap gap-1">
@@ -62,6 +68,39 @@ export function PaintPanel({ game }: { game: Game }) {
           </div>
         </>
       )}
+      {p.mode === 'plant' && (
+        <>
+          <div className="mt-2 text-[11px] text-slate-400">Brush size</div>
+          <div className="flex items-center gap-2">
+            <input type="range" min={PLANT_R[0]} max={PLANT_R[1]} step={0.5} value={ps.r} onChange={e => p.setPlantSet({ r: +e.target.value })} className="flex-1" />
+            <span className="w-16 text-right text-xs text-slate-200">{`${ps.r} tiles`}</span>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">Spacing (the gap between plants)</div>
+          <div className="flex items-center gap-2">
+            <input type="range" min={PLANT_SPACING[0]} max={PLANT_SPACING[1]} step={0.5} value={ps.spacing} onChange={e => p.setPlantSet({ spacing: +e.target.value })} className="flex-1" />
+            <span className="w-16 text-right text-xs text-slate-200">{`${ps.spacing * 2} m`}</span>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">Size range</div>
+          <div className="flex items-center gap-2">
+            <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.lo} onChange={e => p.setPlantSet({ lo: Math.min(+e.target.value, ps.hi) })} className="flex-1" />
+            <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.hi} onChange={e => p.setPlantSet({ hi: Math.max(+e.target.value, ps.lo) })} className="flex-1" />
+            <span className="w-20 text-right text-xs text-slate-200">{`${Math.round(ps.lo * 100)}–${Math.round(ps.hi * 100)}%`}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
+          </div>
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
+            {`${pk.name}: ${plantPicked.size} of ${pool.length} picked`}
+            <button className="chip" onClick={() => p.setPlantSet({ ids: null })}>All</button>
+            <button className="chip" onClick={() => p.setPlantSet({ ids: [] })}>None</button>
+          </div>
+          <div className="flex max-h-48 flex-wrap gap-1 overflow-auto">
+            {pool.map(x => <button key={x.id} className={`chip ${plantPicked.has(x.id) ? 'chip-on' : ''}`} title={x.id} onClick={() => togglePick(x.id)}>{x.name}</button>)}
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400">{`${game.plantedCount()} planted by these brushes · free (decoration)`}</div>
+        </>
+      )}
+      {p.mode !== 'plant' && (<>
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
         {PAINT_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
@@ -158,6 +197,7 @@ export function PaintPanel({ game }: { game: Game }) {
         Snap corners to the grid
       </label>
       <div className="mt-2 text-[11px] text-slate-400">{`${p.areas.length} painted area(s) · free (decoration)`}</div>
+      </>)}
     </div>
   );
 }

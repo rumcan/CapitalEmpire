@@ -6,7 +6,7 @@ import { polyArea } from '../src/game/paint';
 
 /** a host that records the ground patches it is sent and the toasts */
 function host(toasts: string[] = []) {
-  return { setLotGround() {}, emit() {}, save() {}, toast: (t: string) => { toasts.push(t); }, affine() {}, placeProps: () => 0 };
+  return { setLotGround() {}, emit() {}, save() {}, toast: (t: string) => { toasts.push(t); }, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [] };
 }
 
 /** a press at (x0, y0), moves to (x1, y1) in steps, a release (tiles) */
@@ -90,4 +90,26 @@ test('the brush radius clamps to 0.5..20 tiles and setBrushR works without local
   assert.equal(tool.brush.fairway.r, 20);
   tool.setBrushR(0);
   assert.equal(tool.brush.fairway.r, 0.5);
+});
+
+/** a host that records the plant brush's calls (dab centres, the ids, rub-outs) and plants nothing on the map */
+function plantHost(calls: { erase: boolean; x: number; y: number; ids?: string[]; r: number }[]) {
+  return { ...host(), plant: (ids: string[], x: number, y: number, r: number) => { calls.push({ erase: false, x, y, ids, r }); return 1; }, unplant: (x: number, y: number, r: number) => { calls.push({ erase: true, x, y, r }); return 1; }, plantPool: () => [{ id: 'tree:a', name: 'A' }, { id: 'tree:b', name: 'B' }] };
+}
+
+test('a plant brush drag dabs every half radius along the drag, with every sprite of the kind unless some are picked; Alt rubs out', () => {
+  const calls: { erase: boolean; x: number; y: number; ids?: string[]; r: number }[] = [];
+  const tool = new PaintTool(plantHost(calls));
+  tool.setPlant('trees'); tool.setPlantSet({ r: 4, ids: null });
+  drag(tool, 50, 50, 70, 50);
+  assert.ok(calls.length >= 10 && calls.length <= 12, `${calls.length} dabs over 20 tiles at 2-tile steps`);
+  assert.ok(calls.every(c => !c.erase && c.r === 4 && c.ids?.join() === 'tree:a,tree:b'));
+  assert.equal(tool.areas.length, 0, 'no painted area');
+  tool.setPlantSet({ ids: ['tree:b', 'gone:x'] }); calls.length = 0;
+  drag(tool, 50, 50, 50, 51);
+  assert.deepEqual(calls[0]!.ids, ['tree:b'], 'only the picked sprites the pool still has');
+  calls.length = 0; drag(tool, 50, 50, 52, 50, true);
+  assert.ok(calls.length > 0 && calls.every(c => c.erase), 'Alt rubs out');
+  tool.key({ key: 'Escape' } as KeyboardEvent);
+  assert.equal(tool.mode, 'draw');
 });
