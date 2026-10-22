@@ -2149,3 +2149,13 @@ in order (brush-round, the studio Ground tab for the base grass, plant brushes, 
   refuses paths outside the repo and any `old` not occurring exactly once (scratchpad `apply-edits.mjs`; re-create it from this description). Bundles unpack with
   `unpack.mjs` (path-checked) into a holding folder first.
 - **Argon's queue now:** wiring bundles for dressing (props at a new game), the Course stats panel button, and Paint costs. See `docs/ARGON-HANDOFF.md`.
+
+### The golf game as of main c07271b (2026-10-22 small hours): what is wired, browser-checked
+All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, tested and browser-checked by Claude (each fix listed in its commit message).
+- **New game = golf game** (G1): town, old nine painted (+ cart path loop), clubhouse, car park, drive; props (flagsticks, tee markers, benches, trees); $600,000 start.
+- **Year loop:** skip to tournament; tournament on the surge; results (satisfaction, reputation before and after, the tier verdict, tent takings); card draft; next season. Reputation, tier and poorYears persist (`GolfSave`, `golf/yearend.ts`).
+- **Course builder:** Paint charges by surface and area (`golf/costs.ts`), seed or sod with grow-in (absolute month index `Engine.golfMonthIndex`; PaintTuple has optional trailing `plantKind`, `plantedMonth` after the art agent's `hole`, `kind`), land ownership (Land mode, owned outline, Paint refused outside owned land), hole tools (move pins and tee markers, validated), Course stats panel (`Course` button).
+- **Event tool:** place, rent or buy and bulldoze structures on owned land; placeholder sprites; structures may be built one tier ahead (tier 2 needs gate and toilets); tent takings, rent and upkeep booked in the budget.
+- **Town districts (6R.7):** shops on the main asphalt street near the centre, works in the grid corner nearest the highway (`lots/districts.ts`).
+- **Known gaps / next:** the economy is unbalanced (tent takings $115 against a $41,000 outlay); only 37-43% of spectators arrive with no road work (is the car park wired to the clubhouse doors well?); no gate queues or exit wave yet (G3), no sponsors, TV, weather or highways (G5, G6, G8); real tent art is the art agent's (GOLF-SPRITES.md); the old classic-save load has NOT been browser-checked; PaintPanel and Course UI were not looked at by eye on a full-size screen (the Browser pane was tiny); some edited blocks are under-indented (Gemini flattens indentation).
+- **Argon workflow:** see `docs/ARGON-HANDOFF.md`; edit-bundle format and the applier script are described in the 2026-10-22 PROGRESS notes above and the memory file; Argon's usage resets roughly every 5 hours, he delivers a batch of two bundles in about 20-30 minutes.
