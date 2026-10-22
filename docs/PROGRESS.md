@@ -2201,3 +2201,8 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   placement and drawing), Save decals writes the json, Rebuild game sprites puts it in the game. Tests: `tests/map-decals.test.ts` (4).
 - **docs/GRASS-SYSTEM.md** for the agent building grass management (the owner asked): the ground layers, golf grow-in, where wear could hook in, owners, how to run.
 - **Studio button** in the game's top-right HUD, only on localhost: opens the studio (5179); its Rebuild rebuilds what 5174 serves.
+- **Contact shadows** (the owner: bring TrickOrTreat's shadows over): `src/game/shadow-shape.ts` ports the town builder's `shadows.mjs`
+  shapes (buildings and venues their footprint, cars a pool past the body, fences a thin strip, trees round from the canopy, poles a small
+  dark spot, plants round, props their base) and the GPU draws `render()`'s feathered shape under every sprite but baked lots (they bake
+  their own) at street and district zoom, in the builder's colour. Gear menu → **Shadows** 0–200% (100% = the builder's). Browser-checked
+  at 0 / 100 / 200%. Tests: `tests/shadow-shape.test.ts` (3); 831 pass. Not yet benchmarked (`npm run worker:bench`).

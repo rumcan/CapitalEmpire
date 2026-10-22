@@ -150,3 +150,9 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   `src/game/map-decals.json` (the old `DRESS`, `SOIL_*`, `DECALS`, `NATURE` uses moved there); `App.tsx` shows a **Studio** link in the
   top-right HUD only on localhost (opens 5179); `textures.ts` exports `soilStamps`; `package.json` `test` also stubs `.png` (tests that
   import `ground-art.ts` need it). The nature patches (16 m clumps) are off in `map-decals.json`; every layer is a studio setting.
+- 2026-10-22 (the art chat): **contact shadows from TrickOrTreat** (the owner: "add shadows to the game ... just bring that over"). The
+  builder's base shadows (`shadows.mjs` shapeFor + render) are ported as `src/game/shadow-shape.ts` (the shape per item from its kind, name
+  and footprint) and the GPU shader. **For the coder:** your files got: `gl.ts` `SHADOW_STRIDE` 8 → 12 (centre, half extents in metres,
+  core, feather, round, spare, clip) and the new `FS_SHADOW` / `drawShadows(at, n, strength)`; `sprites.ts` `packShadow` uses
+  `shadowShape` and every sprite but baked lots casts one (big ones and fences too); `engine.ts` draws them at street and district zoom
+  with `shadowStrength` / `setShadowStrength` (localStorage `capitalempire.shadows`); `App.tsx` a Shadows slider in the gear menu (0–200%).

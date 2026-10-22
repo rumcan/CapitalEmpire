@@ -3,11 +3,12 @@
  *  clips to it, so a prop spanning tiles is drawn once per tile without double blending, each tile's order only has to
  *  be right for the props inside it, and a whole frame is one instanced draw. Edits re-sort only the tiles they touch. Moving vehicles are merged into a tile's order every
  *  frame, after the last prop that is behind them. */
-import { SPR_H as CHUNK_H, SPR_W as CHUNK_W, HH, HW, worldX, worldY } from './iso';
+import { SPR_H as CHUNK_H, SPR_W as CHUNK_W, worldX, worldY } from './iso';
 import { LIBRARY } from './library';
 import { CAR_SCALE } from './ext/car-art';
 import { SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import type { Prop } from './types';
+import { shadowShape } from './shadow-shape';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean }
@@ -19,7 +20,7 @@ export interface TileDraw { i: number; j: number; shadows: number; sprites: numb
 
 const BUCKET = 256;
 const tkey = (i: number, j: number) => (j + 512) * 4096 + (i + 2048);
-const SHADOWED = (it: (typeof LIBRARY)[number]) => !it.big && it.kind !== 'fencex' && it.kind !== 'fencey';
+const SHADOWED = (it: (typeof LIBRARY)[number]) => it.kind !== 'lot';
 
 /** the trimmed picture's rectangle in world px */
 export function spriteRect<T extends number[] | Float32Array>(d: Drawable, out: T = [0, 0, 0, 0] as T, o = 0): T {
@@ -46,10 +47,14 @@ function packSprite(d: Drawable, out: Float32Array, o: number, i: number, j: num
   out[o + 8] = t[0]; out[o + 9] = alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = 0;
   clip(out, o + 12, i, j);
 }
+/** the sprite's contact shadow (shadow-shape.ts): its shape from the footprint (2 m tiles, so the half extents in metres are the tile
+ *  spans), a parked car's shrunk like its picture; none packs as a zero-size shape */
 function packShadow(d: Drawable, out: Float32Array, o: number, i: number, j: number) {
-  const fw = d.x1 - d.x0, fh = d.y1 - d.y0, cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2, r = (fw + fh) / 2 * 0.75;
-  out[o] = worldX(cx, cy); out[o + 1] = worldY(cx, cy); out[o + 2] = Math.max(2, r * HW); out[o + 3] = Math.max(1, r * HH);
-  clip(out, o + 4, i, j);
+  const it = LIBRARY[d.item], f = it.kind === 'car' && !d.moving ? CAR_SCALE : 1, sh = shadowShape(it, (d.x1 - d.x0) * f, (d.y1 - d.y0) * f, d.scale);
+  const cx = sh?.atAnchor ? d.x : (d.x0 + d.x1) / 2, cy = sh?.atAnchor ? d.y : (d.y0 + d.y1) / 2;
+  out[o] = worldX(cx, cy); out[o + 1] = worldY(cx, cy); out[o + 2] = sh?.hx ?? 0; out[o + 3] = sh?.hy ?? 0;
+  out[o + 4] = sh?.core ?? 0; out[o + 5] = sh?.feather ?? 0; out[o + 6] = sh?.round ? 1 : 0; out[o + 7] = 0;
+  clip(out, o + 8, i, j);
 }
 /** topological painter's order over the props of one tile (their pictures overlap) */
 function topoOrder(props: Prop[], rects: Float32Array) {

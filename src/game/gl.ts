@@ -1,11 +1,13 @@
 /** WebGL2 drawing: baked ground chunks as textured quads, sprites as instanced quads from one texture-array atlas,
- *  soft shadows as instanced ellipses, and vehicles as points for the planner view. Coordinates are world px. */
+ *  contact shadows as instanced ground shapes (TrickOrTreat's base shadows, shadow-shape.ts), and vehicles as points for the planner view.
+ *  Coordinates are world px. */
 import { ATLAS_PAGES, ATLAS_SIZE } from './library';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, spare, clip x0 y0 x1 y1 (world px) */
 export const SPRITE_STRIDE = 16;
-/** floats per shadow instance: centre x y, radii rx ry (world px), clip x0 y0 x1 y1 */
-export const SHADOW_STRIDE = 8;
+/** floats per shadow instance: centre x y (world px), half extents hx hy (metres along the map's axes), core, feather (metres), round (0 / 1),
+ *  spare, clip x0 y0 x1 y1 (world px) */
+export const SHADOW_STRIDE = 12;
 /** floats per point: x y (world px), rgba */
 export const POINT_STRIDE = 6;
 
@@ -51,21 +53,34 @@ void main() {
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
   vec4 c = texture(uAtlas, vUV); if (c.a < 0.004) discard; o = c * vAlpha;
 }`;
+// the shape's 2:1 diamond bound: 32 world px per metre across, 16 down (x = (X - Y) * 32, y = (X + Y) * 16, X and Y in metres)
 const VS_SHADOW = `#version 300 es
-layout(location=0) in vec4 aEll; layout(location=1) in vec4 aClip;
+layout(location=0) in vec4 aShape; layout(location=1) in vec4 aLook; layout(location=2) in vec4 aClip;
 uniform vec4 uCam; uniform vec2 uScreen;
-out vec2 vP; out vec2 vW; flat out vec4 vClip;
+out vec2 vOff; out vec2 vW; flat out vec4 vShape; flat out vec4 vLook; flat out vec4 vClip;
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1) * 2.0 - 1.0;
-  vec2 w = aEll.xy + c * aEll.zw;
+  float e = aShape.z + aShape.w + aLook.y * 3.2;
+  vec2 off = c * vec2(e * 32.0 + 2.0, e * 16.0 + 2.0), w = aShape.xy + off;
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vP = c; vW = w; vClip = aClip;
+  vOff = off; vW = w; vShape = aShape; vLook = aLook; vClip = aClip;
 }`;
+// TrickOrTreat's shadows.mjs render(): a rounded box or an ellipse in ground metres, darkest at the base and feathered both inside and
+// outside the edge, in the builder's shadow colour (6, 8, 13); premultiplied, times the owner's strength
 const FS_SHADOW = `#version 300 es
 precision highp float;
-in vec2 vP; in vec2 vW; flat in vec4 vClip; out vec4 o;
-void main() { if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard; float d = dot(vP, vP); float a = 0.24 * (1.0 - smoothstep(0.55, 1.0, d)); o = vec4(0.0, 0.0, 0.0, a); }`;
+in vec2 vOff; in vec2 vW; flat in vec4 vShape; flat in vec4 vLook; flat in vec4 vClip; out vec4 o;
+uniform float uStrength;
+void main() {
+  if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
+  float A = vOff.x / 32.0, B = vOff.y / 16.0, X = (A + B) * 0.5, Y = (B - A) * 0.5, hx = vShape.z, hy = vShape.w, f = vLook.y, d;
+  if (vLook.z > 0.5) d = (length(vec2(X / hx, Y / hy)) - 1.0) * min(hx, hy);
+  else { float r = min(0.18, min(hx, hy) * 0.5); vec2 q = abs(vec2(X, Y)) - vec2(hx, hy) + r; d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+  float a = vLook.x * (1.0 - smoothstep(-f, f * 1.2, d)) * (0.82 + 0.18 * smoothstep(0.0, -min(hx, hy), d));
+  a = clamp(a * uStrength, 0.0, 1.0); if (a < 0.002) discard;
+  o = vec4(vec3(6.0, 8.0, 13.0) / 255.0 * a, a);
+}`;
 const VS_POINT = `#version 300 es
 layout(location=0) in vec2 aPos; layout(location=1) in vec4 aCol;
 uniform vec4 uCam; uniform vec2 uScreen; uniform float uSize;
@@ -102,7 +117,7 @@ export class GLRenderer {
     this.gl = gl;
     this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
     this.sprite = this.program(VS_SPRITE, FS_SPRITE, ['uCam', 'uScreen', 'uMinPx', 'uAtlas']);
-    this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen']);
+    this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
@@ -197,13 +212,13 @@ export class GLRenderer {
     for (let i = 0; i < 4; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++; this.stats.instances += count;
   }
-  /** instances at float offset `firstFloat` of the uploaded stream, as soft ground shadows */
-  drawShadows(firstFloat: number, count: number) {
-    if (!count) return; const gl = this.gl, pr = this.shadow;
-    gl.useProgram(pr.p); this.camUniforms(pr); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
-    for (let i = 0; i < 2; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, SHADOW_STRIDE * 4, firstFloat * 4 + i * 16); gl.vertexAttribDivisor(i, 1); }
+  /** instances at float offset `firstFloat` of the uploaded stream, as contact shadows; strength scales their darkness (1 = the builder's) */
+  drawShadows(firstFloat: number, count: number, strength = 1) {
+    if (!count || strength <= 0) return; const gl = this.gl, pr = this.shadow;
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uStrength, strength); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
+    for (let i = 0; i < 3; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, SHADOW_STRIDE * 4, firstFloat * 4 + i * 16); gl.vertexAttribDivisor(i, 1); }
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
-    for (let i = 0; i < 2; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
+    for (let i = 0; i < 3; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++; this.stats.instances += count;
   }
   /** points at float offset `firstFloat` of the uploaded stream; soft: additive glows instead of hard discs */
