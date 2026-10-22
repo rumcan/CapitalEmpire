@@ -160,3 +160,10 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   `renderer.ts` `screenPattern` now lays its texture on the ground (`isoImage`: the picture at exactly half height, two periods tall; the
   base grass, meadow and map edge at the owner's angle and tilt from `Textures.grassLay`, as a turned and squashed pattern); `drawMarks`
   draws the top-down lot decals at half height (`map-decals.ts` `flatSquash`); `textures.ts` keeps `grassLay` from the base-grass mix.
+- 2026-10-22 (the art chat): **the night, from TrickOrTreat** (the owner: "port lighting"). New `src/game/night-light.ts` (the builder's
+  night-light.js: moonlight, light pools by type, lit windows, warmth; the night follows the game clock or is always on / off) and
+  `src/ui/NightPanel.tsx` (gear menu → Night). **For the coder:** your files got: `engine.ts` `night` / `setNight` / `nightAmount` /
+  `drawNight` (called at the end of drawOverlay, before the paranormal actors; localStorage `capitalempire.night`); `ext/paranormal-render`
+  `draw(..., nightDone)` draws only the actors when the night pass already lit the frame, and `actorLights()` gives the torches and monster
+  glows to it (a paranormal night is still dark by day: the darker of the two wins); `types.ts` `LibItem.lights` (a baked lot's lights,
+  metres from its anchor); `App.tsx` the gear menu is wider (w-80) and scrolls, with `<NightPanel>`.

@@ -2212,3 +2212,13 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   baked lots and nature patches, re-rendered) are drawn at half height; art already drawn in the 2:1 view (litter, rubbish, tracks, mud,
   paint, gutters, piles) is left as it is (`flatSquash`, the same rule in `lot-render.mjs`). Studio → Ground → **On the ground**: the base
   grass's Angle (-180 to 180°) and Tilt (0.25 to 1; 0.5 = the 2:1 ground, 1 = flat top-down), saved with the grass.
+- **The night** (the owner: port TrickOrTreat's lighting): `src/game/night-light.ts` ports the town builder's night (blue moonlight:
+  desaturate, tint, darken; the painted colour back in feathered pools round every lamp, porch, shop window, neon, pumpkin, lantern, stand
+  and fire pit, sized in metres per type; each sprite's lit windows glow; warmth in the pools). The baked lots now carry their lights (the
+  house's porch in front of it, by the builder's spriteLights) and their houses' window glows (`lot-variants.mjs` nightOf). By the clock it
+  darkens from 18:00, full night 20:00–05:00, light again by 07:00; a paranormal night adds its torches and monsters. Gear menu → **Night**:
+  By the clock / Always night / Never, the four hours, and (Moonlight and lights) the moon colour, moonlight, grey, dark, soft edge, warmth,
+  window glow size and strength, and every light type's size and strength. Tests: `tests/night-light.test.ts` (3).
+  The lit windows: the builder's `find-glows.mjs` is ported as `scripts/assets/find-glows.mjs` (read-only on TrickOrTreat): any house,
+  shop, venue or vehicle without the builder's glows (its recoloured and regenerated variations) has them found in its picture by
+  prep-sprites and the lot baker: 177 sprites glow now (64 before). Houses the builder's list does not name get a porch light by kind.

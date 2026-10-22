@@ -61,18 +61,34 @@ export class ParanormalRenderer {
     candidates.sort((a, b) => a.dist - b.dist); this.lights = candidates.slice(0, MAX_LIGHTS);
   }
 
-  /** Draw only while paranormal events are active; all sizes are device pixels, tilePx is HW * camera zoom * dpr. */
-  draw(ctx: CanvasRenderingContext2D, world: HTMLCanvasElement, disasters: readonly DisasterView[], simTime: number, now: number,
-    screen: Screen, tilePx: number, dpr: number, props: Set<Prop>, library: readonly LibItem[]) {
-    const strength = paranormalNightStrength(disasters, simTime);
-    if (!(strength > 0)) return;
-    const w = ctx.canvas.width, h = ctx.canvas.height, actors: ParanormalActor[] = [];
+  private actorsAt(disasters: readonly DisasterView[], simTime: number) {
+    const actors: ParanormalActor[] = [];
     for (const d of disasters) {
       if (d.kind !== 'paranormal' || simTime < d.start || simTime >= d.end) continue;
       const area = []; for (let i = 0; i + 1 < d.area.length; i += 2) area.push({ x: d.area[i], y: d.area[i + 1] });
       actors.push(...sampleParanormalBattle({ ...d, area }, simTime)); if (actors.length >= MAX_ACTORS) break;
     }
     actors.length = Math.min(actors.length, MAX_ACTORS);
+    return actors;
+  }
+  /** the torches and monster glows of the paranormal nights in progress (tiles; radius in tiles), for the game's night pass (night-light.ts) */
+  actorLights(disasters: readonly DisasterView[], simTime: number): Light[] {
+    if (!(paranormalNightStrength(disasters, simTime) > 0)) return [];
+    return this.actorsAt(disasters, simTime).map(a => ({ x: a.x, y: a.y, radius: a.light.radius, intensity: a.light.intensity, color: a.light.color }));
+  }
+
+  /** Draw only while paranormal events are active; all sizes are device pixels, tilePx is HW * camera zoom * dpr. nightDone: the game's night
+   *  pass (night-light.ts) has already lit the frame, actors' lights included, so only the actors are drawn. */
+  draw(ctx: CanvasRenderingContext2D, world: HTMLCanvasElement, disasters: readonly DisasterView[], simTime: number, now: number,
+    screen: Screen, tilePx: number, dpr: number, props: Set<Prop>, library: readonly LibItem[], nightDone = false) {
+    const strength = paranormalNightStrength(disasters, simTime);
+    if (!(strength > 0)) return;
+    const w = ctx.canvas.width, h = ctx.canvas.height, actors = this.actorsAt(disasters, simTime);
+    if (nightDone) {
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); actors.sort((a, b) => a.x + a.y - b.x - b.y);
+      for (const a of actors) this.actor(ctx, a, actors, simTime, screen, tilePx, dpr, w, h);
+      ctx.restore(); return;
+    }
     this.collectLights(props, library, screen, w, h, now);
     const lights = this.lights.slice();
     for (const a of actors) lights.push({ x: a.x, y: a.y, radius: a.light.radius, intensity: a.light.intensity, color: a.light.color });

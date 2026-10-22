@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import sharp from 'sharp';
-import { LIB, render, toScreen } from './lot-render.mjs';
+import { LIB, LIB_DIR, render, toScreen } from './lot-render.mjs';
+import { findGlows, shines } from './find-glows.mjs';
 import { CARS, HOUSES, REARS, RUNDOWN, fitsLot, half, layoutLot, ownerScale } from './lot-layout.mjs';
 import { ROOT } from './source.mjs';
 import { applyLotEdits, readLotEdits } from './overrides.mjs';
@@ -81,13 +82,44 @@ export function lotVariants() {
 
 /** a variant as a library-style item: its picture (PNG at `res` px per native px) and its size, anchor (the lot centre) and
  *  footprint (the whole lot; `block` = the house, for the planner map) */
+/** the night lights of the builder's sprites (its night-light.js LIGHT_TYPES; the game's copy is src/game/night-light.ts), houses by category */
+const LIGHT_TYPES = [
+  ['lamp', /^world:streetlamp$/], ['neon', /^world:(arcade|diner)$/],
+  ['window', /^(town:(bakery|barber|fish_tackle|grocery|hardware|laundromat|pharmacy|postoffice|firestation)|ref:building-(corner-shop|corner-store|grocery|church|school)|world:(video_rental|video|church|school|primary_school|diner_v2))/],
+  ['porch', /^(world:house_\d|gen:house-|gen:back-|expansion:(cottage|dormer|duplex|victorian|ranch)-)/], ['pumpkin', /(pumpkin|ref:halloween-pumpkin-cluster)/],
+  ['lantern', /^ref:halloween-lantern$/], ['stand', /^(world:(candy_stand|vending)|town:(phone_booth|bus_stop))$/], ['fire', /^expansion:firepit$/],
+];
+const lightOf = it => LIGHT_TYPES.find(([, re]) => re.test(it.id))?.[0] ?? (it.category === 'Houses' || it.category === 'House backs' ? 'porch' : null);
+/** a lot's night lights (the builder's spriteLights: buildings shine out of their front, +y or +x when mirrored; everything else lights the
+ *  ground it stands on), in metres from the lot's anchor (its centre), and its sprites' lit windows in the lot picture's native px */
+async function nightOf(v, box) {
+  const lights = [], glows = [];
+  for (const s of v.items) {
+    const it = LIB.get(s.id); if (!it || it.flat) continue;
+    const type = lightOf(it), k = s.scale ?? 1;
+    if (type) {
+      const b = it.base ?? { hx: it.fw || 1, hy: it.fh || 1, dx: 0, dy: 0 }; let hx = b.hx * k, hy = b.hy * k, dx = (b.dx || 0) * k, dy = (b.dy || 0) * k;
+      if (s.flip) { [hx, hy] = [hy, hx]; [dx, dy] = [dy, dx]; }
+      const out = type === 'porch' ? 1 : 1.6, front = type === 'porch' || type === 'window' || type === 'neon';
+      const [x, y] = !front ? [s.x + dx, s.y + dy] : s.flip ? [s.x + dx + hx + out, s.y + dy] : [s.x + dx, s.y + dy + hy + out];
+      lights.push({ dx: +(x - v.W / 2).toFixed(2), dy: +(y - v.D / 2).toFixed(2), type });
+    }
+    const own = it.glows?.length ? it.glows : shines(it.id, it.category) ? await findGlows(path.join(LIB_DIR, it.file), { id: it.id, w: it.w, cat: it.category }) : [];
+    if (own.length) {
+      const [mx, my] = toScreen(s.x, s.y), left = (s.flip ? mx - (it.w - it.ax) * k : mx - it.ax * k) - box[0], top = my - it.ay * k - box[1];
+      for (const g of own) glows.push({ x: +(left + (s.flip ? it.w - g.x : g.x) * k).toFixed(1), y: +(top + g.y * k).toFixed(1), r: +(g.r * k).toFixed(1) });
+    }
+  }
+  return { lights, glows };
+}
+
 export async function bakeVariant(v, res) {
   const box = boundsOf(v.items, v.W, v.D), png = await render(v.items, box, res);
   const [cx, cy] = toScreen(v.W / 2, v.D / 2), h = v.house, it = LIB.get(h.id), s = h.scale;
   // boxes in the game's convention: metres around the anchor, hx and hy the half extents (fw and fh are the footprint in
   // tiles, so the house's half extents in metres are fw and fh times its scale)
   return {
-    png, w: box[2] - box[0], h: box[3] - box[1], ax: cx - box[0], ay: cy - box[1],
+    png, w: box[2] - box[0], h: box[3] - box[1], ax: cx - box[0], ay: cy - box[1], ...(await nightOf(v, box)),
     boxes: [{ hx: v.W / 2, hy: v.D / 2, dx: 0, dy: 0 }],
     block: { hx: +(it.fw * s).toFixed(2), hy: +(it.fh * s).toFixed(2), dx: +(h.x - v.W / 2).toFixed(2), dy: +(h.y - v.D / 2).toFixed(2) },
   };

@@ -70,6 +70,8 @@ import { checkStructurePlacement, findStructureIndexAt, structuresNeeds, type Pl
 import { STRUCTURE } from './golf/tents';
 import { tierInfo, type Need } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
+import { paranormalNightStrength } from './ext/paranormal-render/frames';
+import { NightRenderer, clampNight, nightAt, propLights, type NightLight, type NightSettings } from './night-light';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -431,6 +433,39 @@ export class Game {
     this.emit();
   }
 
+  /** the night (night-light.ts: TrickOrTreat's moonlight and light pools): the owner's settings, which survive reloads */
+  night: NightSettings = clampNight(null);
+  private nightRenderer = new NightRenderer();
+  private nightLights: NightLight[] = []; private nightKey = ''; private nightAt = -Infinity;
+  setNight(n: Partial<NightSettings>) {
+    this.night = clampNight({ ...this.night, ...n, types: { ...this.night.types, ...n.types } }); this.nightKey = '';
+    try { localStorage.setItem('capitalempire.night', JSON.stringify(this.night)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
+  /** how dark it is now (0 day .. 1 night): the clock's night, or a paranormal night's, whichever is darker */
+  nightAmount(now = performance.now()) {
+    const c = this.clock(), clock = nightAt(this.night, c.hour + c.minute / 60);
+    return this.traffic ? Math.max(clock, paranormalNightStrength(this.traffic.disasters, this.traffic.simTime(now))) : clock;
+  }
+  /** the night pass over the finished frame: the lights of the props in view (gathered again when the camera, the props or the settings
+   *  change, at most every quarter second), the paranormal night's torches and monsters, then the moonlight */
+  private drawNight(ctx: CanvasRenderingContext2D, now: number) {
+    const amount = this.nightAmount(now); if (!(amount > 0)) return;
+    const ze = this.cam.z * this.dpr, W = ctx.canvas.width, H = ctx.canvas.height, key = `${Math.round(this.cam.X)},${Math.round(this.cam.Y)},${ze.toFixed(4)},${W},${H},${this.props.size}`;
+    if (key !== this.nightKey && now - this.nightAt > 250) {
+      this.nightKey = key; this.nightAt = now; const out: NightLight[] = [], scr = (x: number, y: number) => this.screen(x, y), m = 0.6 * Math.max(W, H);
+      for (const p of this.props) {
+        const c = this.screen((p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2); if (c.x < -m || c.y < -m || c.x > W + m || c.y > H + m) continue;
+        const it = LIBRARY[p.item]; if (it) propLights(p, it, this.night, scr, ze, out);
+      }
+      this.nightLights = out;
+    }
+    const lights = this.traffic ? this.nightLights.concat(this.paranormalRenderer.actorLights(this.traffic.disasters, this.traffic.simTime(now)).map(l => {
+      const q = this.screen(l.x, l.y), rx = l.radius * HW * ze; return { sx: q.x, sy: q.y, rx, ry: rx * 0.65, i: l.intensity, tint: l.color };
+    })) : this.nightLights;
+    this.nightRenderer.apply(ctx, this.canvas, this.night, amount, lights);
+  }
+
   /** the contact shadows' darkness (shadow-shape.ts; 1 = TrickOrTreat's builder, 0 = none); the settings preference survives reloads */
   shadowStrength = 1;
   setShadowStrength(v: number) {
@@ -447,6 +482,7 @@ export class Game {
     this.traffic = new SimClient();
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1 */ }
+    try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
@@ -3426,8 +3462,9 @@ export class Game {
       const s = this.screen(p.x, p.y), a = (1 - p.age / p.life) * 0.5, r = p.r * HW * ze;
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
+    this.drawNight(ctx, now);
     if (this.traffic) this.paranormalRenderer.draw(ctx, this.canvas, this.traffic.disasters, this.traffic.simTime(now), now,
-      (x, y) => this.screen(x, y), HW * ze, this.dpr, this.props, LIBRARY);
+      (x, y) => this.screen(x, y), HW * ze, this.dpr, this.props, LIBRARY, true);
   }
 
   /** the map's three town names at the district and planner tiers: white with a dark outline, centred on each town site (screen px) */

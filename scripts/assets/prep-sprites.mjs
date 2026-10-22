@@ -15,6 +15,7 @@ import sharp from 'sharp';
 import { ROOT, TOT, fromBranch, fromExport, libraryItems } from './source.mjs';
 import { capitalItems } from './capital-art.mjs';
 import { bakeVariant, lotVariants } from './lot-variants.mjs';
+import { findGlows, shines } from './find-glows.mjs';
 import { REMOVED } from './removed.mjs';
 import { SCALE_OVERRIDES } from './overrides.mjs';
 import { describe, newFramePath, parseFix } from './walker-fix.mjs';
@@ -89,7 +90,9 @@ for (const [cat, ids] of Object.entries(SEL)) for (const id of ids) {
   for (let y = 0; y < chh; y++) data.copy(crop, y * cw * 4, ((y0 + y) * W + x0) * 4, ((y0 + y) * W + x1 + 1) * 4);
   const area = it.boxes.reduce((s, b) => s + b.hx * b.hy * 4, 0) || 1, base = COST[cat];
   const cost = Math.round(base * (0.6 + 0.4 * Math.min(3, area / (base > 5000 ? 30 : 1))) / 10) * 10;
-  sprites.push({ id, cat, it, cost, crop, cw, ch: chh, qx0: x0 / res, qy0: y0 / res, qx1: (x1 + 1) / res, qy1: (y1 + 1) / res });
+  // the night's lit windows: the builder's glows, else found in the picture (find-glows.mjs) for a sprite that shines
+  const glows = it.glows?.length ? it.glows : shines(id, it.cat ?? it.category ?? cat) ? await findGlows(buf, { id, w: it.w, cat: it.cat ?? it.category ?? cat }) : [];
+  sprites.push({ id, cat, it: glows.length && !it.glows?.length ? { ...it, glows } : it, cost, crop, cw, ch: chh, qx0: x0 / res, qy0: y0 / res, qx1: (x1 + 1) / res, qy1: (y1 + 1) / res });
 }
 
 // ---- 1b. the townspeople: the 3D renders (scripts/assets/people3d/render-person-3d.mjs -> art/people3d/<id>/sheet.webp + sheet.json).
@@ -154,7 +157,7 @@ if (!WALK_FRAMES) { console.warn('no 3D people in art/people3d (run render-perso
 for (const v of lotVariants().filter(v => !REMOVED.has(v.id))) {
   const b = await bakeVariant(v, MIP0), { data, info } = await sharp(b.png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const t = trim(data, info.width, info.height);
-  const it = { name: v.name, cat: 'Lots', kind: 'lot', w: b.w, h: b.h, ax: b.ax, ay: b.ay, boxes: b.boxes, block: b.block, solid: 0, big: true, door: false };
+  const it = { name: v.name, cat: 'Lots', kind: 'lot', w: b.w, h: b.h, ax: b.ax, ay: b.ay, boxes: b.boxes, block: b.block, solid: 0, big: true, door: false, ...(b.glows.length ? { glows: b.glows } : {}), ...(b.lights.length ? { lights: b.lights } : {}) };
   sprites.push({ id: v.id, cat: 'Lots', it, cost: 0, crop: t.crop, cw: t.cw, ch: t.ch, qx0: t.x0 / MIP0, qy0: t.y0 / MIP0, qx1: (t.x1 + 1) / MIP0, qy1: (t.y1 + 1) / MIP0 });
 }
 
@@ -209,7 +212,7 @@ const imports = [], pageRows = [];
 files.forEach((row, p) => { const vars = row.map((f, m) => { const v = `p${p}m${m}`; imports.push(`import ${v} from '../assets/atlas/${f}';`); return v; }); pageRows.push(`[${vars.join(', ')}]`); });
 const lib = sprites.map(s => {
   const it = s.it, e = { id: s.id, name: it.name, cat: s.cat, kind: KIND_OF_CAT[it.cat] ?? it.kind, w: it.w, h: it.h, ax: it.ax, ay: it.ay, boxes: it.boxes, solid: it.solid, big: it.big, door: !!it.door, cost: s.cost };
-  if (it.glows) e.glows = it.glows; if (it.doorAt) e.doorAt = it.doorAt; if (it.block) e.block = it.block;
+  if (it.glows) e.glows = it.glows; if (it.lights) e.lights = it.lights; if (it.doorAt) e.doorAt = it.doorAt; if (it.block) e.block = it.block;
   e.tex = [s.page, +(s.px / PAGE).toFixed(6), +(s.py / PAGE).toFixed(6), +((s.px + s.cw) / PAGE).toFixed(6), +((s.py + s.ch) / PAGE).toFixed(6)];
   e.quad = [+s.qx0.toFixed(2), +s.qy0.toFixed(2), +s.qx1.toFixed(2), +s.qy1.toFixed(2)];
   return e;
