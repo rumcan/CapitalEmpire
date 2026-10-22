@@ -507,6 +507,12 @@ function res(B: Build, st: ComposeState) {
 
 /** the baked house lots (scripts/assets/lot-variants.mjs) by size and facing: 'w x d front|rear' -> [normal ids, neglected ids] */
 const BAKED = new Map<string, [string[], string[]]>();
+/** the pictures for a lot no picture was made for: the widest one at most as wide as the lot, of its depth */
+function bakedFor(lot: LotGeom, rear: boolean): [string[], string[]] | undefined {
+  let best: [string[], string[]] | undefined, bw = 0;
+  for (const [k, e] of BAKED) { const m = /^([\d.]+)x([\d.]+) (front|rear)$/.exec(k); if (!m || +m[2]! !== lot.d || (m[3] === 'rear') !== rear) continue; const w = +m[1]!; if (w <= lot.w && w > bw) { bw = w; best = e; } }
+  return best;
+}
 for (const it of LIBRARY) {
   const m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(it.id); if (!m) continue;
   const k = `${m[1]}x${m[2]} ${m[3]}`; let e = BAKED.get(k); if (!e) BAKED.set(k, (e = [[], []]));
@@ -515,7 +521,9 @@ for (const it of LIBRARY) {
 /** a house lot as one baked picture (house, yard and decals), when its size has variants: the variant by the
  *  lot's slot along its street (neighbours differ), the neglected ones from decline 2; null when none fits */
 function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
-  const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`); if (!e) return null;
+  // a lot wider than the pictures (the house lots are 25% wider since 2026-10-22) takes the widest picture that fits its depth, centred: the
+  // same houses, with more yard either side
+  const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`) ?? bakedFor(lot, B.rear); if (!e) return null;
   const pool = plain(st.decline >= 2 && e[1].length ? e[1] : e[0], B.flip); if (!pool.length) return null;
   const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
   const id = pool[(((slot + mix(street) % 7) % pool.length) + pool.length) % pool.length];

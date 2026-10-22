@@ -57,7 +57,7 @@ function fingerprint(lm: LotMap): string[] {
   }).sort();
 }
 
-test('a 3x3 grid of streets: lots lie along the roads, never overlap, every block has 6+ lots and two opposite sides with 3+, corner lots exist', () => {
+test('a 3x3 grid of streets: lots lie along the roads, never overlap, every block has 4+ lots and two opposite sides with 2+ (the lots 25% wider since 2026-10-22), corner lots exist', () => {
   const e = new NetEditor(new RoadNetwork()); gridStreets(e);
   const lm = new LotMap(); const r = lm.update(e.net, null);
   const lots = [...lm.lots.values()];
@@ -77,8 +77,8 @@ test('a 3x3 grid of streets: lots lie along the roads, never overlap, every bloc
       edge[near]++;
     }
     const block = `block ${bi},${bj}`;
-    assert.ok(inside.length >= 6, `${block} has ${inside.length} lots`);
-    assert.ok((edge.top >= 3 && edge.bottom >= 3) || (edge.left >= 3 && edge.right >= 3), `${block} edges ${JSON.stringify(edge)}`);
+    assert.ok(inside.length >= 4, `${block} has ${inside.length} lots`);
+    assert.ok((edge.top >= 2 && edge.bottom >= 2) || (edge.left >= 2 && edge.right >= 2), `${block} edges ${JSON.stringify(edge)}`);
   }
   assert.ok(lots.some(l => l.corner), 'corner lots');
 });

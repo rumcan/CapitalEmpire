@@ -78,7 +78,8 @@ function lotsOfGrid(): Lot[] {
 
 const LOTS = lotsOfGrid();
 /** does the library have a baked picture for the lot's size (exactly w x d tiles, e.g. 8 x 15) */
-const bakedSize = (l: Lot) => LIBRARY.some(it => it.id.startsWith(`lot:${l.w}x${l.d}-`));
+/** a lot that takes a baked picture: one of its depth at most as wide as the lot (a wider lot gets the widest one, centred) */
+const bakedSize = (l: Lot) => LIBRARY.some(it => { const m = /^lot:([\d.]+)x([\d.]+)-/.exec(it.id); return !!m && +m[2]! === l.d && +m[1]! <= l.w; });
 /** the 300 (lot, use, level, decline, seed) combos, deterministic */
 const COMBOS: { lot: Lot; st: ComposeState }[] = (() => {
   const rnd = mulberry(20261018), out: { lot: Lot; st: ComposeState }[] = [];
@@ -118,14 +119,14 @@ test('RES at BUILT: one baked lot of the lot size, facing the road (front varian
     assert.ok(c.props.some(p => /fence-privacy/.test(p.id)), `${lot.key}: no privacy panels`);
     const p = lots[0], m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(p.id);
     assert.ok(m, `${lot.key}: ${p.id} is not a baked lot`);
-    assert.deepEqual([+m![1], +m![2], m![3]], [lot.w, lot.d, rear ? 'rear' : 'front'], `${lot.key}: ${p.id}`);
+    assert.ok(+m![1] <= lot.w && +m![2] === lot.d && m![3] === (rear ? 'rear' : 'front'), `${lot.key} (${lot.w} x ${lot.d}): ${p.id}`);
     assert.equal(p.flip, flip, `${lot.key}: flip`);
     const cx = lot.o.x + (lot.u.x * lot.w + lot.n.x * lot.d) / 2, cy = lot.o.y + (lot.u.y * lot.w + lot.n.y * lot.d) / 2;
     assert.ok(Math.hypot(p.x - cx, p.y - cy) < 1e-6, `${lot.key}: not centred`);
     assert.ok(!/neglected/.test(byId.get(p.id)!.name), `${lot.key}: a neglected lot at decline 0`);
     n++;
   }
-  assert.ok(n > 100);
+  assert.ok(n > 60, `${n} baked lots`); // fewer, wider lots in the grid since the house lots grew 25% (2026-10-22)
   // neighbours along a street never share a variant; decline 2 takes the neglected ones
   const rows = new Map<string, { a: number; id: string }[]>();
   for (const lot of LOTS) { if (!bakedSize(lot)) continue; const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props.find(p => p.id.startsWith('lot:'))!.id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
@@ -258,13 +259,13 @@ test('the average uprights per archetype (log)', () => {
   assert.ok(avg('COM BUILT') >= 11.7, `COM BUILT averages ${avg('COM BUILT').toFixed(1)} uprights, want 11.7+`);
 });
 
-test('RES houses keep a side yard of 1.3 tiles or more from the side line away from the drive (unbaked widths 10.5 and 12.5, 30 seeds each)', () => {
+test('RES houses keep a side yard of 1.3 tiles or more from the side line away from the drive (unbaked lots: widths 10.5 and 12.5, 16 deep, 30 seeds each)', () => {
   // every house the pools deal (the variations are kind 'building'), garages aside
   const HOUSE = new Set([...LIBRARY.filter(i => i.cat === 'Houses' && (i.kind === 'house' || i.kind === 'building') && !/garage/.test(i.id)).map(i => i.id), 'expansion:ranch-rear', 'expansion:cottage-rear',
     'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear', 'expansion:rundown-house']);
   let houses = 0;
   for (const w of [10.5, 12.5]) for (let seed = 1; seed <= 30; seed++) {
-    const lot: Lot = { ...LOTS[0], w, d: 15, o: { x: 100, y: 100 }, u: { x: 1, y: 0 }, n: { x: 0, y: 1 } };
+    const lot: Lot = { ...LOTS[0], w, d: 16, o: { x: 100, y: 100 }, u: { x: 1, y: 0 }, n: { x: 0, y: 1 } };
     const c = compose(lot, { use: LU.RES, level: LV.BUILT, decline: 0, seed });
     // the drive is the paving patch one drive wide (the front walk is 0.6 wide)
     const paving: number[][] = [];
@@ -329,15 +330,15 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-22 for the yards keeping only their leaves; 2026-10-21 for the owner evening curation, the generated trees (capital:tree-*) in the tree pool, the digger on building sites, every library building in the pools, the building site recolours, the decal variations, the pay boom at car park drives, the second studio curation, the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-22 for the yards keeping only their leaves and the house lots 25% wider; 2026-10-21 for the owner evening curation, the generated trees (capital:tree-*) in the tree pool, the digger on building sites, every library building in the pools, the building site recolours, the decal variations, the pay boom at car park drives, the second studio curation, the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '11f344e6'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '4d18dcf5'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'a1dd7ff7'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '25e447ea'],
-    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e92cb9e0'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '03690743'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '54ea1854'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '6fd8c94e'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '373be40f'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '5bfdcecf'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'e9ad396c'],
+    [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e9201342'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'be3f2ff3'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '13073c2a'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
   assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));

@@ -75,7 +75,8 @@ test('10x10 street grid, 10 game days: built lots form a blob around the entry, 
   console.log(`[town] 10 days: lots ${all.length}, finished day 7 ${day7}, day 10 ${day10} (ratio ${ratio.toFixed(3)}), mean dist built at day 5 ${day5.toFixed(1)} vs all ${dAll.toFixed(1)} tiles (ratio ${(day5 / dAll).toFixed(3)})`);
   console.log(`[town] COM share of built+building ${comShare.toFixed(3)}`);
   console.log(`[town] uses (not EMPTY): RES ${uses.get(LU.RES) ?? 0}, COM ${uses.get(LU.COM) ?? 0}, IND ${uses.get(LU.IND) ?? 0}, TOUR ${uses.get(LU.TOUR) ?? 0}, GOV ${uses.get(LU.GOV) ?? 0}; pop ${town.pop}, jobs ${town.jobs}, jobs/pop ${(town.jobs / town.pop).toFixed(3)}`);
-  assert.ok(day5 < 0.85 * dAll, `day 5: built lots ${day5} vs all ${dAll} tiles from the entry`);
+  // 0.9 since the house lots grew 25% (2026-10-22): as many lots a day cover more ground (it was 0.85)
+  assert.ok(day5 < 0.9 * dAll, `day 5: built lots ${day5} vs all ${dAll} tiles from the entry`);
   assert.ok(ratio >= 1.4 && ratio <= 2.0, `day 10 / day 7 = ${ratio}`);
   for (const u of [LU.RES, LU.COM, LU.IND, LU.GOV]) assert.ok((uses.get(u) ?? 0) > 0, `use ${u} appears`);
   assert.ok(comShare >= 0.1 && comShare <= 0.3, `COM share ${comShare}`);
@@ -113,9 +114,10 @@ test('determinism: the same seed and calls give the same events; another seed di
 
 test('growth options: industry gives more IND lots than balanced on the same grid', () => {
   const { lm, lots } = gridLots();
-  const ind = (opt: string) => occupied(run(lm, lots, 5, 8, { option: opt }).town).filter(s => s.use === LU.IND).length;
+  // summed over five seeds: one town of the 25% wider lots (2026-10-22) has too few IND lots for one run to say
+  const ind = (opt: string) => { let n = 0; for (let seed = 5; seed <= 9; seed++) n += occupied(run(lm, lots, seed, 8, { option: opt }).town).filter(s => s.use === LU.IND).length; return n; };
   const balanced = ind('balanced'), industry = ind('industry');
-  console.log(`[town] IND lots after 8 days: balanced ${balanced}, industry ${industry}`);
+  console.log(`[town] IND lots after 8 days, seeds 5-9: balanced ${balanced}, industry ${industry}`);
   assert.ok(industry > balanced, `industry ${industry} vs balanced ${balanced}`);
 });
 

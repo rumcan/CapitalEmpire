@@ -24,12 +24,13 @@ const jit = (rnd: () => number, a: number) => (rnd() * 2 - 1) * a;
 /** 32-bit FNV-1a hash of a string (the seed of a block's cut) */
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
 
-/** a length cut into 10-14 tile widths (a length of 14-20 stays one piece): the boundaries from 0 to L (0.5-rounded); no boundaries under 6 tiles (none at all) */
+/** a length cut into 12.5-17.5 tile widths (25% over the first 10-14, the owner 2026-10-22; a length of 17.5-25 stays one piece): the
+ *  boundaries from 0 to L (0.5-rounded); no boundaries under 6 tiles (none at all) */
 function partition(L: number, rnd: () => number): number[] {
   if (L < MIN_SIDE) return [];
-  let n = Math.max(1, Math.round(L / 12));
-  while (L / n > 14) n++;
-  while (n > 1 && L / n < 10) n--;
+  let n = Math.max(1, Math.round(L / 15));
+  while (L / n > 17.5) n++;
+  while (n > 1 && L / n < 12.5) n--;
   const wt: number[] = []; let sum = 0;
   for (let i = 0; i < n; i++) { const w = (L / n) * (1 + jit(rnd, 0.2)); wt.push(w); sum += w; }
   const b = [0]; let acc = 0;
