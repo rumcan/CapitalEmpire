@@ -36,6 +36,42 @@
     "angle": 0,
     "tilt": 0.5
    }
+  },
+  {
+   "id": "fescue",
+   "name": "Fescue",
+   "surface": null,
+   "size": 43,
+   "col": "#716927",
+   "a": {
+    "src": "src/assets/ground/paint-photo-golf-fescue.webp",
+    "scale": 1.1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.09,
+    "contrast": 1.22,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/grass-v1/png/grass-backyard-worn.png",
+    "scale": 4.3,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.01,
+    "contrast": 1.08,
+    "sat": 0.93,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.42,
+    "soft": 0.12,
+    "patch": 1.55,
+    "tone": 0.15,
+    "warm": 0.18,
+    "angle": 51,
+    "tilt": 0.5
+   }
   }
  ]
 }

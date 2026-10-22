@@ -1,9 +1,10 @@
 {
  "v": 1,
- "saved": false,
+ "saved": true,
+ "stamp": "2026-10-22T09:52:51.121Z",
  "a": {
-  "src": "src/assets/ground/grass-capital-backyard.webp",
-  "scale": 1,
+  "src": "src/assets/ground/paint-photo-golf-fescue.webp",
+  "scale": 1.1,
   "tint": "#808080",
   "tintAmt": 0,
   "bright": 1,
@@ -12,22 +13,22 @@
   "hue": 0
  },
  "b": {
-  "src": "src/assets/ground/grass-capital-meadow.webp",
-  "scale": 1,
+  "src": "src/assets/ground/paint-photo-fairway.webp",
+  "scale": 3.35,
   "tint": "#808080",
   "tintAmt": 0,
-  "bright": 1,
-  "contrast": 1,
-  "sat": 1,
+  "bright": 1.04,
+  "contrast": 1.06,
+  "sat": 0.83,
   "hue": 0
  },
  "mix": {
   "share": 0.5,
   "soft": 0.12,
   "patch": 1,
-  "tone": 0.1,
-  "warm": 0.08,
-  "angle": 0,
+  "tone": 0.35,
+  "warm": 0.3,
+  "angle": 51,
   "tilt": 0.5
  }
 }

@@ -33,7 +33,7 @@ const left = el('div', { className: 'side', style: 'width:360px;overflow:auto;bo
 const cv = el('canvas', { style: 'display:block;width:100%;height:100%' });
 const stage = el('div', { style: 'flex:1;position:relative;min-width:0;background:#0d0f08' }, cv);
 const msgEl = el('span', { className: 'hint' });
-const saveB = btn('Save map grass', save, 'gold'), undoB = btn('Undo changes', () => { F = clone(saved); build(); rebuild(); }), unsaveB = btn("Back to the game's grass", unsave, 'red');
+const saveB = btn('Save map grass', save, 'gold'), panelSaveB = btn('Save map grass', save, 'gold'), undoB = btn('Undo changes', () => { F = clone(saved); build(); rebuild(); }), unsaveB = btn("Back to the game's grass", unsave, 'red');
 const bar = el('div', { className: 'bar' },
   saveB, undoB, unsaveB,
   el('span', { className: 'hint', textContent: 'Zoom' }),
@@ -41,7 +41,7 @@ const bar = el('div', { className: 'bar' },
   el('span', { style: 'flex:1' }), msgEl);
 root.append(el('div', { style: 'display:flex;flex-direction:column;height:calc(100vh - 70px)' }, bar, el('div', { style: 'display:flex;flex:1;min-height:0' }, left, stage)));
 const zoomChips = () => bar.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', +c.dataset.z === V.z));
-const msg = t => { msgEl.textContent = t; keepDraft(); };
+const msg = t => { msgEl.textContent = t; keepDraft(); const u = unsaved() || (saved && !saved.saved); panelSaveB.style.outline = u ? '2px solid #fff6' : ''; panelSaveB.textContent = u ? 'Save map grass (not saved)' : 'Save map grass (saved)'; };
 // ---------------- unsaved changes: kept in this browser (a refresh brings them back), a warning before leaving, Rebuild asks first
 const DRAFT = 'studio.ground.draft';
 /** the note that unsaved changes came back after a refresh (shown until the next change) */
@@ -143,6 +143,8 @@ function build() {
   if (mode === 'preset') return buildPreset();
   left.replaceChildren(
     modeChips(),
+    // the save button in the panel itself (the top bar's was easy to miss), bright while there is something to save
+    el('div', { className: 'row', style: 'padding:0;margin:0 0 10px;gap:6px' }, panelSaveB, btn('Undo changes', () => { F = clone(saved); build(); rebuild(); })),
     hint('Pick any two pictures, size and colour them, and set how they mix. The preview is the game\'s own mix on a block of 4 houses inside 4 streets. Save, then Rebuild game sprites (top right) to see it in the game.'),
     sideBlock('a'), sideBlock('b'),
     el('div', { className: 'row', style: 'padding:0;margin-bottom:10px' }, btn('Swap A and B', () => { [F.a, F.b] = [F.b, F.a]; build(); rebuild(); })),
