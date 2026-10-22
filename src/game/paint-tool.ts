@@ -4,7 +4,18 @@ import { BORDER_TEXES, BORDER_W, BRUSH_LAYER, BRUSH_PRESETS, DEFAULT_STYLE, MAX_
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, placeHole, type HolePreset, type PresetProp } from './golf/holepreset';
-import { areaBuildCost } from './golf/costs';
+import { areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
+/** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
+export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
+ if (!a.plantKind || a.plantKind === 'sod') return true;  
+ const s = surfaceOfTex(a.tex);  
+ if (!s) return true;  
+ const needed = growInMonths(s, a.plantKind);  
+ if (needed <= 0) return true;  
+ const planted = a.plantedMonth ?? 0;  
+ const elapsed = Math.max(0, currentMonth - planted);  
+ return elapsed >= needed;  
+}
 
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush';
 /** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
@@ -27,7 +38,7 @@ function loadBrush(): Record<BrushKind, BrushSet> {
   return out;
 }
 /** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
-export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void; ownedLand?: (pts: number[]) => boolean }
+export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void; ownedLand?: (pts: number[]) => boolean; currentMonth?: () => number }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -101,7 +112,8 @@ export class PaintTool {
   brushKind: BrushKind = 'fairway';
   brushHole = 1;
   rubOut = false;
-  brush: Record<BrushKind, BrushSet> = loadBrush();
+  plantKind: PlantKind = 'seed';  
+ brush: Record<BrushKind, BrushSet> = loadBrush();
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
   private stroke: { m: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[] } | null = null;
   private host: PaintHost;
@@ -109,7 +121,7 @@ export class PaintTool {
   constructor(host: PaintHost) { this.host = host; }
 
   /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
-  static patch(a: PaintArea): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: a.tex, paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id, ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}) } }; }
+  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: (a.kind ? BRUSH_LAYER[a.kind] * 1e6 : 0) + a.id, ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {
@@ -119,10 +131,10 @@ export class PaintTool {
   }
 
   /** sends an area's patch to the lot ground (key paint:<id>) */
-  private send(a: PaintArea) { this.host.setLotGround('paint:' + a.id, [PaintTool.patch(a)]); }
+  send(a: PaintArea, currentMonth?: number) { const m = currentMonth === undefined || isAreaMature(a, currentMonth); this.host.setLotGround('paint:' + a.id, [PaintTool.patch(a, m)]); }
 
   /** replaces the areas with the save tuples (none: clears) and sends their patches */
-  load(ts?: PaintTuple[]) { this.clear(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a); }
+  load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
 
   /** removes every area from the ground and resets the drawing and selection (the style and mode stay) */
   clear() {
@@ -259,7 +271,7 @@ export class PaintTool {
   this.host.emit();
   return;
   }
-  const cost = Math.round(areaBuildCost(this.pts, this.style.tex, 'seed'));
+  const cost = Math.round(areaBuildCost(this.pts, this.style.tex, this.plantKind));
   if (cost > 0) {
   const treasury = this.host.money?.() ?? 0;
   if (treasury < cost) {
@@ -271,8 +283,9 @@ export class PaintTool {
   this.host.spend?.(cost);
   }
   }
-  const a: PaintArea = { id: this.nextId++, pts: this.pts.slice(), ...this.style };
-  this.areas.push(a); this.send(a); this.cancel();
+  const m = this.host.currentMonth?.() ?? 0;
+  const a: PaintArea = { id: this.nextId++, pts: this.pts.slice(), ...this.style, plantKind: this.plantKind, plantedMonth: m };
+  this.areas.push(a); this.send(a, m); this.cancel();
   this.selected = a.id; this.hoverH = null; this.take(a);
   this.host.save(); this.host.emit();
   }

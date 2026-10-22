@@ -37,7 +37,16 @@ export function PaintPanel({ game }: { game: Game }) {
       <div className="flex flex-wrap gap-1">
         {BRUSH_PRESETS.map(b => <button key={b.kind} className={`chip ${p.mode === 'brush' && p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
       </div>
-      <div className="mt-2 text-[11px] text-slate-400">Mode</div>
+      {game.golfMode && (  
+ <>  
+ <div className="mt-2 text-[11px] text-slate-400">Planting method</div>  
+ <div className="flex flex-wrap gap-1">  
+ <button className={`chip ${p.plantKind === 'seed' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Seed (grows in)</button>  
+ <button className={`chip ${p.plantKind === 'sod' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'sod'; game.emit(); }}>Sod (instant, 3–5× cost)</button>  
+ </div>  
+ </>  
+ )}  
+ <div className="mt-2 text-[11px] text-slate-400">Mode</div>
       <div className="flex flex-wrap gap-1">
         {MODES.map(m => <button key={m.id} className={`chip ${p.mode === m.id ? 'chip-on' : ''}`} onClick={() => m.id === 'brush' ? p.setBrush(p.brushKind) : p.setMode(m.id)}>{m.label}</button>)}
       </div>
@@ -119,7 +128,7 @@ export function PaintPanel({ game }: { game: Game }) {
       <input type="checkbox" checked={p.snap} onChange={e => { p.snap = e.target.checked; game.emit(); }} />
       Snap corners to the grid
       </label>
-      <div className="mt-2 text-[11px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, 'seed')).toLocaleString()} · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>
+      <div className="mt-2 text-[11px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, p.plantKind)).toLocaleString()} (${p.plantKind}) · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>
       </div>
       );
      }

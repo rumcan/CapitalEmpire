@@ -170,7 +170,12 @@ export class SimClient {
   /** takes a card of the eval's draft: its effects apply at once (see City.pickCard) */
   pickCard(card: CardId) { this.post({ t: 'round', op: 'pick', card }); }
   /** spends n $ on kind (negative construction gives it back): the treasury drops now, the worker books it into today's ledger */
-  spend(kind: 'construction' | 'compensation', n: number) { this.budget.money -= n; this.post({ t: 'spend', kind, n }); }
+  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number) {  
+ if (kind === 'business') { this.budget.money -= n; }  
+ else if (kind === 'upkeep') { this.budget.money -= n; }  
+ else { this.budget.money -= n; }  
+ this.post({ t: 'spend', kind, n });  
+ }
   /** takes (true) or repays (false) one loan unit; the worker refuses what the books do not allow */
   loan(take: boolean) { this.post({ t: 'loan', take }); }
   /** replaces the books with a saved budget, or a fresh one for null (based at the sim day's midnight), and the career saved with them (a fresh one if none); the mirrors take it at once, so a save right after sees it */

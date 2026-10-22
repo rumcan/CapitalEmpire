@@ -1,5 +1,5 @@
 // Course stats panel model (docs/GOLF-PLAN.md sections 4.2, 4.3, 5.1 and 8.2): turns holes.ts derivation, costs.ts maintenance, and tour.ts missingFor into panel rows and quality hints. Pure TS, no DOM.
-import { courseMonthlyUpkeep } from './costs';
+import { courseMonthlyUpkeep, growInShare } from './costs';
 import { courseStats, deriveHoles, type CourseStats, type Hole } from './holes';
 import { missingFor, tierInfo, type CourseFacts, type Need } from './tour';
 import type { CourseLayout } from './types';
@@ -78,9 +78,25 @@ export function toHoleRow(h: Hole): HolePanelRow {
 }
 
 /** evaluate course quality (0..100) and actionable design/conditioning hints (GOLF-PLAN 4.2 and 4.3) */
-export function courseQuality(layout: CourseLayout, holes: readonly Hole[], stats: CourseStats): { score: number; hints: string[] } {
-  const hints: string[] = [];
-  let score = 100;
+export function courseQuality(layout: CourseLayout, holes: readonly Hole[], stats: CourseStats, currentMonth = 7): { score: number; hints: string[] } {
+ const hints: string[] = [];
+ let score = 100;
+ let growPenalty = 0;
+ const growingSurfaces = new Set<string>();
+ for (const a of layout.areas) {
+ if (a.plantKind === 'seed' && a.plantedMonth !== undefined) {
+ const elapsed = Math.max(0, currentMonth - a.plantedMonth);
+ const share = growInShare(a.surface, 'seed', elapsed);
+ if (share < 1) {
+ growPenalty += (1 - share) * 6;
+ growingSurfaces.add(a.surface);
+ }
+ }
+ }
+ if (growPenalty > 0) {
+ score -= Math.min(25, Math.round(growPenalty));
+ hints.push(`Allow seeded surfaces to grow in (${Array.from(growingSurfaces).join(', ')})`);
+ }
   if (stats.holes < 9) {
     score -= (9 - stats.holes) * 8;
     hints.push(`Complete at least 9 playable holes (currently ${stats.holes})`);
@@ -115,18 +131,18 @@ export function courseQuality(layout: CourseLayout, holes: readonly Hole[], stat
 }
 
 /** build the complete CourseStatsPanel from a CourseLayout, current tournament tier (1..5), and present venue Needs */
-export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: ReadonlySet<Need> = new Set()): CourseStatsPanel {
-  const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
-  const rows = holes.map(toHoleRow);
-  const baseTotals = courseStats(holes);
-  const totals = {
-    ...baseTotals,
-    lengthYards: metresToYards(baseTotals.lengthM),
-    memberLengthYards: metresToYards(baseTotals.memberLengthM),
-  };
-  const warningCount = rows.reduce((s, r) => s + r.warnings.length, 0);
-  const monthlyUpkeep = Math.round(courseMonthlyUpkeep(layout.areas));
-  const { score: qualityScore, hints: qualityHints } = courseQuality(layout, holes, baseTotals);
+export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: ReadonlySet<Need> = new Set(), currentMonth = 7): CourseStatsPanel {
+ const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
+ const rows = holes.map(toHoleRow);
+ const baseTotals = courseStats(holes);
+ const totals = {
+ ...baseTotals,
+ lengthYards: metresToYards(baseTotals.lengthM),
+ memberLengthYards: metresToYards(baseTotals.memberLengthM),
+ };
+ const warningCount = rows.reduce((s, r) => s + r.warnings.length, 0);
+ const monthlyUpkeep = Math.round(courseMonthlyUpkeep(layout.areas));
+ const { score: qualityScore, hints: qualityHints } = courseQuality(layout, holes, baseTotals, currentMonth);
   const clampedTier = tierInfo(tier).tier;
   const nextTier = clampedTier < 5 ? clampedTier + 1 : null;
   const facts: CourseFacts = { holes: totals.holes, lengthM: totals.lengthM, have };

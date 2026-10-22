@@ -5,7 +5,7 @@ export const TILE_M = 2;
 /** a course surface (GOLF-PLAN 4.1); each maps to a Paint texture when golf mode is wired in */
 export type GolfSurface = 'green' | 'fringe' | 'tee' | 'fairway' | 'firstCut' | 'rough' | 'fescue' | 'bunker' | 'waste' | 'water' | 'path' | 'other';
 /** a painted course area: its surface and its closed outline x0 y0 x1 y1 ... (tiles); a later area paints over an earlier one */
-export interface CourseArea { id: number; surface: GolfSurface; pts: number[] }
+export interface CourseArea { id: number; surface: GolfSurface; pts: number[]; plantKind?: 'seed' | 'sod'; plantedMonth?: number }
 /** a hole's tee markers: the back (championship), middle (member) or forward tee */
 export interface TeeMark { hole: number; x: number; y: number; kind: 'back' | 'middle' | 'forward' }
 /** a hole's pin (the flagstick), standing on its green */

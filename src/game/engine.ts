@@ -54,7 +54,7 @@ import type { DisasterKind } from './ext/disasters';
 import type { GolfSave, GolfView } from './golf/mode';
 import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
-import { monthsLeft, seasonLabel, yearOf } from './golf/calendar';
+import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeYearEnd, type YearEndResult } from './golf/yearend';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
@@ -295,7 +295,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts) });
+  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex() });
   /** the Paint tool's projection into css px (its handles' hit tests): tile (x, y) is at (o[0] + x*o[2] + y*o[4], o[1] + x*o[3] + y*o[5]) */
   private paintAffine(o: number[]) { const s = this.screen(0, 0), ex = this.screen(1, 0), ey = this.screen(0, 1), d = this.dpr; o[0] = s.x / d; o[1] = s.y / d; o[2] = (ex.x - s.x) / d; o[3] = (ex.y - s.y) / d; o[4] = (ey.x - s.x) / d; o[5] = (ey.y - s.y) / d; }
   /** the Paint tool's snap distance: 10 css px in tiles */
@@ -1980,7 +1980,13 @@ export class Game {
   this.golf.poorYears = ye.poorYears;
   this.traffic.setGolf(true, this.golf.tier, this.golf.rep);
   if (ye.tentRevenue && ye.tentRevenue > 0) {
-  this.traffic.spend('construction', -ye.tentRevenue);
+  this.traffic.spend('business', -ye.tentRevenue);
+  }
+  const rent = ye.tentRentCost ?? 0;
+  const annualUpkeep = (ye.tentUpkeep ?? 0) * 12;
+  const costs = rent + annualUpkeep;
+  if (costs > 0) {
+  this.traffic.spend('upkeep', costs);
   }
   this.scheduleSave();
   }
@@ -2502,18 +2508,32 @@ export class Game {
   this.emit();
   }
   /** the golf HUD's view (null outside golf mode) */
+  lastGolfMonth = -1;
+  /** the game month as an absolute count (seasons so far x 12 + months since September), for planting and grow-in; on tournament day the clock sits on the next season's first instant, so it is read a unit earlier */
+  golfMonthIndex(): number {
+    const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0);
+    return r.runs * 12 + ((seasonMonth(c) - SEASON_START + 12) % 12);
+  }
   golfView(): GolfView | null {
   if (!this.golf) return null;
   const c = this.traffic.clockTime(performance.now()), r = this.traffic.round, tier = this.golf.tier;
+  const curM = this.golfMonthIndex();
+  if (curM !== this.lastGolfMonth) {
+  this.lastGolfMonth = curM;
+  for (const a of this.paint.areas) if (a.plantKind === 'seed' && a.plantedMonth !== undefined) this.paint.send(a, curM); // only areas still growing in change with the month
+  }
   return { tier, tierName: tierInfo(tier).name, month: seasonLabel(r.stage !== 'free' ? c - 1 : c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
   }
   /** course stats panel view data (null outside golf mode), derived from painted areas and hole objects */
   courseStatsView(): CourseStatsPanel | null {
   if (!this.golf) return null;
+  const curM = this.golfMonthIndex();
   const areas: CourseArea[] = this.paint.areas.map(a => ({
   id: a.id,
   surface: surfaceOfTex(a.tex) ?? 'other',
   pts: a.pts,
+  plantKind: a.plantKind,
+  plantedMonth: a.plantedMonth,
   }));
   const layout: CourseLayout = {
   areas,
@@ -2525,7 +2545,7 @@ export class Game {
   const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
   const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
-  return buildCourseStatsPanel(layout, this.golf.tier, have);
+  return buildCourseStatsPanel(layout, this.golf.tier, have, curM);
   }
   /** evaluates tournament day outcome and tour progression (null outside golf mode or without a finished round) */
   golfYearEnd(last = this.traffic.round.last): YearEndResult | null {
