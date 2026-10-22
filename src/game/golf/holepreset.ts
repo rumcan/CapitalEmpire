@@ -1,5 +1,6 @@
 // The golf hole preset (Paint tool, 'hole' mode): one simple hole made only of ordinary painted areas plus props (flag, trees, bushes, flowers). Pure, no DOM. Local frame: the tee at the origin, the hole along +X.
 import { mulberry } from '../iso';
+import { surfaceOfTex } from './costs';
 import { BRUSH_PRESETS, DEFAULT_STYLE, clampStyle, type BorderSize, type BorderTex, type BrushKind, type PaintArea, type PaintTex } from '../paint';
 
 /** a prop of the preset: its kind and its tile position; a stored preset's prop names its sprite (id), flip and map scale exactly */
@@ -89,10 +90,12 @@ export interface StoredHole {
   areas: { tex: string; border: number; btex: string; radius: number; kind?: string; pts: number[] }[];
   props: { id: string; x: number; y: number; flip: boolean; scale: number }[];
 }
-/** the brush kind a texture belongs to (the golf brush presets' fill textures; any water is water), or undefined */
+/** the brush kind a texture belongs to (the golf brush presets' fill textures, else its golf surface's kind; any water is water), or undefined */
 export function kindOfTex(tex: string): BrushKind | undefined {
-  return BRUSH_PRESETS.find(b => b.style.tex === tex)?.kind ?? (tex.startsWith('water') ? 'water' : undefined);
+  return BRUSH_PRESETS.find(b => b.style.tex === tex)?.kind ?? SURFACE_KIND[surfaceOfTex(tex as PaintTex) ?? ''] ?? (tex.startsWith('water') ? 'water' : undefined);
 }
+/** the brush kind of a golf surface (costs.ts surfaceOfTex: the plain textures and the owner's presets tagged with a surface) */
+const SURFACE_KIND: Record<string, BrushKind> = { green: 'green', tee: 'tee', fairway: 'fairway', rough: 'rough', bunker: 'bunker', water: 'water', path: 'path' };
 /** a stored hole as a preset: its areas in the default style with the stored texture, border and corners (a stored kind is kept when it is
  *  a brush kind), its props with their exact sprites (the flag is the prop whose id names a flag or pin) */
 export function storedHolePreset(h: StoredHole): HolePreset {

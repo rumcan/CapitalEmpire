@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaintTool } from '../src/game/paint-tool';
 import { polyArea } from '../src/game/paint';
+import { surfacePreset } from '../src/game/paint-presets';
 
 /** a host that records the ground patches it is sent and the toasts */
 function host(toasts: string[] = []) {
@@ -22,7 +23,7 @@ test('a golf brush stroke paints one fairway area for hole 1, in the preset styl
   drag(tool, 50, 50, 90, 50);
   assert.equal(tool.areas.length, 1);
   const a = tool.areas[0]!;
-  assert.equal(a.kind, 'fairway'); assert.equal(a.hole, 1); assert.equal(a.tex, 'golfFairway'); assert.equal(a.border, 3);
+  assert.equal(a.kind, 'fairway'); assert.equal(a.hole, 1); assert.equal(a.tex, surfacePreset('fairway') ?? 'golfFairway'); assert.equal(a.border, 3);
 });
 
 test('a second overlapping stroke of the same kind and hole joins the first into one, larger area', () => {

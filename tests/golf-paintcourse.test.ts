@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { CELL, clipToBox, courseAreas, SURFACE_TEX } from '../src/game/golf/paintcourse';
 import { generateOldNine } from '../src/game/golf/coursegen';
 import { checkArea, polyArea, polyBox } from '../src/game/paint';
+import { surfacePreset } from '../src/game/paint-presets';
 
 /** a 300 x 450 tile site (600 x 900 m), away from the origin */
 const SITE = { x0: 1000, y0: 1000, x1: 1300, y1: 1450 };
@@ -55,7 +56,8 @@ test('courseAreas on the old nine: all valid and at most CELL, the rough tiles t
   // all rough pieces come first
   assert.ok(areas.slice(0, rough.length).every(a => a.tex === SURFACE_TEX.rough.tex));
   // the same surfaces, in the same order, with the same textures and radii as the layout
-  assert.deepEqual(runs(areas), runs(lay.areas.map(a => SURFACE_TEX[a.surface])));
+  // a surface the owner has a texture preset for is painted with it (paint-presets surfacePreset), the others with their own texture
+  assert.deepEqual(runs(areas), runs(lay.areas.map(a => ({ ...SURFACE_TEX[a.surface], tex: surfacePreset(a.surface) ?? SURFACE_TEX[a.surface].tex }))));
   // each green comes after its fringe
   let fr = 0, gr = 0;
   for (const a of areas) {
