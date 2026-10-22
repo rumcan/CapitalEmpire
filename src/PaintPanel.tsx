@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from 'react';
 import rockyDirt from './assets/ground/rocky-dirt.webp';
 import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
@@ -105,6 +106,18 @@ export function PlantControls({ game }: { game: Game }) {
   );
 }
 
+/** a collapsible settings section; its open state is remembered per id in localStorage */
+function Section({ id, title, children, open: dflt = true }: { id: string; title: string; children: ReactNode; open?: boolean }) {
+  const key = `capitalempire.paintSection.${id}`;
+  const [open, setOpen] = useState<boolean>(() => { try { const v = localStorage.getItem(key); return v === null ? dflt : v === '1'; } catch { return dflt; } });
+  return (
+    <details open={open} onToggle={e => { const o = e.currentTarget.open; setOpen(o); try { localStorage.setItem(key, o ? '1' : '0'); } catch { /* storage unavailable */ } }}>
+      <summary className="mt-2 cursor-pointer select-none text-[11px] font-semibold uppercase tracking-wide text-slate-300">{title}</summary>
+      {children}
+    </details>
+  );
+}
+
 /** the style editor: the fill's texture, scale, angle, corners, tone and border (and the border's own), the snap setting, and the area count and cost */
 export function StyleEditor({ game }: { game: Game }) {
   const p = game.paint, s = p.style;
@@ -115,7 +128,7 @@ export function StyleEditor({ game }: { game: Game }) {
   const bOwn = (c: { bscale?: number; bangle?: number }) => p.setStyle({ bscale: bScale, bangle: bAngle, ...c });
   return (
     <>
-      {picked && (<>
+      {picked && (<Section id="layer" title="Layer">
         <div className="mt-2 text-[11px] text-slate-400">Layer (over or under the areas it overlaps)</div>
         <div className="flex flex-wrap gap-1">
           <button className="chip" title="To the back: under every area it overlaps (Shift+Page Down, Ctrl+Shift+[)" onClick={() => p.moveLayer('back')}>To back</button>
@@ -124,7 +137,8 @@ export function StyleEditor({ game }: { game: Game }) {
           <button className="chip" title="To the front: over every area it overlaps (Shift+Page Up, Ctrl+Shift+])" onClick={() => p.moveLayer('front')}>To front</button>
         </div>
         <div className="text-[10px] text-slate-500">Page Up / Down, Shift for front / back (or Ctrl+] / Ctrl+[)</div>
-      </>)}
+      </Section>)}
+      <Section id="texture" title="Texture and blend">
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
         {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
@@ -146,6 +160,8 @@ export function StyleEditor({ game }: { game: Game }) {
           ))}
         </>
       )}
+      </Section>
+      <Section id="look" title="Size, angle and colour">
       <div className="mt-2 text-[11px] text-slate-400">Scale</div>
       <div className="flex items-center gap-1">
         <button className="btn" onClick={() => p.setStyle({ scale: s.scale / 1.25 })}>−</button>
@@ -162,11 +178,6 @@ export function StyleEditor({ game }: { game: Game }) {
         <button className={`chip ${s.angle === 0 ? 'chip-on' : ''}`} onClick={() => p.setStyle({ angle: 0 })}>Grid 0°</button>
         <button className={`chip ${s.angle === 45 ? 'chip-on' : ''}`} onClick={() => p.setStyle({ angle: 45 })}>45°</button>
         <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => p.setStyle({ angle: edgeAngle(pts) })}>Along first edge</button>
-      </div>
-      <div className="mt-2 text-[11px] text-slate-400">Corners</div>
-      <div className="flex items-center gap-2">
-        <input type="range" min={0} max={RADIUS_MAX} step={0.25} value={s.radius} onChange={e => p.setStyle({ radius: +e.target.value })} className="flex-1" />
-        <span className="w-14 text-right text-xs text-slate-200">{s.radius === 0 ? 'Sharp' : `${s.radius * 2} m`}</span>
       </div>
       <div className="mt-2 text-[11px] text-slate-400">Tone</div>
       <div className="flex flex-wrap gap-1">
@@ -185,7 +196,8 @@ export function StyleEditor({ game }: { game: Game }) {
           </div>
         </>
       )}
-      <div className="mt-2 text-[11px] text-slate-400">Border</div>
+      </Section>
+      <Section id="border" title="Border">
       <div className="flex flex-wrap gap-1">
         {BORDERS.map((n, i) => <button key={n} className={`chip ${s.border === i ? 'chip-on' : ''}`} title={`${BORDER_W[i]! * 2} m`} onClick={() => p.setStyle({ border: i as BorderSize })}>{n}</button>)}
       </div>
@@ -233,10 +245,18 @@ export function StyleEditor({ game }: { game: Game }) {
           )}
         </>
       )}
+      </Section>
+      <Section id="shape" title="Corners and grid" open={false}>
+      <div className="mt-2 text-[11px] text-slate-400">Corners</div>
+      <div className="flex items-center gap-2">
+        <input type="range" min={0} max={RADIUS_MAX} step={0.25} value={s.radius} onChange={e => p.setStyle({ radius: +e.target.value })} className="flex-1" />
+        <span className="w-14 text-right text-xs text-slate-200">{s.radius === 0 ? 'Sharp' : `${s.radius * 2} m`}</span>
+      </div>
       <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
       <input type="checkbox" checked={p.snap} onChange={e => { p.snap = e.target.checked; game.emit(); }} />
       Snap corners to the grid
       </label>
+      </Section>
       <div className="mt-2 text-[11px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, p.plantKind)).toLocaleString()} (${p.plantKind}) · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>
     </>
   );

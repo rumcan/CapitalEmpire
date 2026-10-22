@@ -610,7 +610,10 @@ export class PaintTool {
     switch (e.key) {
       case 'Enter': if (!this.pts.length) return false; this.finish(false); break;
       case 'Backspace': if (this.mode !== 'draw' || !this.pts.length) return false; this.pts.length -= 2; break;
-      case 'Escape': if (this.mode === 'hole' || this.mode === 'brush' || this.mode === 'plant') { this.setMode('draw'); return true; } if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else return false; break;
+      // Esc: out of a mode back to Draw; in Draw, the outline, then the selection (Pick and Erase with nothing picked go back to Draw too)
+      case 'Escape': if (this.mode === 'hole' || this.mode === 'brush' || this.mode === 'plant') { this.setMode('draw'); return true; } if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else if (!this.course && (this.mode === 'pick' || this.mode === 'erase')) { this.setMode('draw'); return true; } else return false; break;
+      // Tab (Paint): Draw, Pick and Erase in turn
+      case 'Tab': if (this.course || !(this.mode === 'draw' || this.mode === 'pick' || this.mode === 'erase')) return false; e.preventDefault(); this.setMode(this.mode === 'draw' ? 'pick' : this.mode === 'pick' ? 'erase' : 'draw'); return true;
       case 'r': case 'R': if (this.mode !== 'hole') return false; this.holeDir = ((this.holeDir + 1) % 4) as 0 | 1 | 2 | 3; break;
       case '[': case ']':
         if (this.mode === 'plant') { this.setPlantSet({ r: this.plant[this.plantBrush].r + (e.key === ']' ? 1 : -1) }); return true; }

@@ -193,3 +193,16 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   (3) **paint draw order**: `PaintArea.order`, tuple slot 23, `drawZ` (patch z); Page Up / Down and Ctrl+] / [ move the selected area;
   `toTuple` writes slots 19-22 as defaults when only the order is set. (4) **texture presets** carry `stripes` (mowing stripes baked into the
   picture; the game needs nothing). (5) `kindOfTex` maps through `surfaceOfTex`; the golf-paintcourse test reads the owner's surface presets.
+- 2026-10-22 evening (the art chat, on the owner's asks). **For Argon / the coder, in your files:** (1) **the house lots are 25% wider**
+  (`lots.ts` SIZE widths x1.25: gravel / lane / street 10 x 15, road 12.5 x 16...; `blocklots.ts` partition cuts 12.5-17.5 instead of 10-14);
+  the baked 8 x 15 pictures are placed centred on any lot at least that wide of their depth (`compose.ts` bakedFor), so the same houses get
+  more yard; your tests moved with it: `lots.test` (4+ lots a block, 2+ a side), `town.test` (spread at day 5 < 0.9 of the town, it was
+  0.85; industry vs balanced summed over seeds 5-9), `town-districts.test` (COM outside the district <= 30%, it was 25%: the district's
+  blocks hold fewer, wider lots; tune the district's size if you want 25% back), `bus.test` (two more cross streets keep its town in land).
+  The growth rates are unchanged (lots a day), so a town covers more ground for the same population: your call if that needs retuning.
+  (2) **the paranormal nights are retired** (`ext/disasters` never schedules them, `ext/paranormal*` deleted). (3) **yards keep only their
+  leaves** (compose `mark`; building sites keep theirs; digests re-pinned). (4) **car shadows**: a diagonal car (nearly square map-axis box)
+  gets a round pool the size of its body (`shadow-shape.ts`). (5) the clubhouse plot shows only a starter building (`business/art.ts`
+  LAYOUT clubhouse; a piece of size 0 is drawn at its own map size): the grand clubhouse, pro shop and cart garage are for later; **they need
+  a way to be built** (the Event tool's structures?): yours.
+
