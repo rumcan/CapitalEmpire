@@ -113,3 +113,14 @@ test('a stored studio hole: kinds from the textures, exact sprites for the props
   const q = placeHole(p, 100, 100, 1).props[1]!;
   assert.deepEqual([q.x, q.y, q.id, q.flip, q.scale], [92, 102, 'town:fern', true, 0.7]);
 });
+
+test('a golf game: a placed preset hands its flag to the engine as the pin spot (no flag prop); every change, undo and redo tells the engine', () => {
+  const h = host(), calls: (Map<number, { x: number; y: number }> | undefined)[] = [];
+  let placed: { kind: string }[] = [];
+  const tool = new PaintTool({ ...h, golfMode: () => true, money: () => 1e9, ownedLand: () => true, placeProps: (ps: { kind: string }[]) => { placed = ps; return ps.length; }, changed: (m?: Map<number, { x: number; y: number }>) => { calls.push(m); } });
+  tool.enterCourse(); tool.setMode('hole');
+  tool.pointerDown({ x: 500, y: 500 }, 0, 0); tool.pointerUp(0.5);
+  assert.ok(placed.length > 0 && placed.every(q => q.kind !== 'flag'));
+  assert.equal(calls.length, 1); assert.ok(calls[0]!.has(1));
+  tool.undo(); tool.redo(); assert.equal(calls.length, 3); assert.equal(calls[2], undefined);
+});

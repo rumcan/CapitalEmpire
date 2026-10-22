@@ -3,6 +3,7 @@ import { BRUSH_PRESETS, PAINT_TEXES } from '../../game/paint';
 import { PLANT_KINDS } from '../../game/plant';
 import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
 import { HoleStrip } from './HoleStrip';
+import { HoleInspector } from './HoleInspector';
 
 type CourseTab = 'build' | 'presets' | 'plants';
 
@@ -22,6 +23,7 @@ export function CoursePanel({ game }: { game: Game }) {
         <button className={`chip ${p.canRedo ? '' : 'opacity-40'}`} disabled={!p.canRedo} title="Ctrl+Y" onClick={() => p.redo()}>Redo</button>
       </div>
       <HoleStrip game={game} />
+      <HoleInspector game={game} />
       <div className="mt-2 flex flex-wrap gap-1">
         <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => p.setBrush(p.brushKind)}>Build</button>
         <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => p.setMode('hole')}>Presets</button>

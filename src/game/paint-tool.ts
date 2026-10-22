@@ -71,7 +71,10 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   plantPool(kind: PlantBrushKind): { id: string; name: string }[];
   /** the prop journal (undo): begin records every prop added or removed until end, which returns them (null: none); undo and redo
    *  reverse or replay a journal and return the journal to keep for the opposite step */
-  journal?: { begin(): void; end(): PropJournal | null; undo(j: PropJournal): PropJournal; redo(j: PropJournal): PropJournal } }
+  journal?: { begin(): void; end(): PropJournal | null; undo(j: PropJournal): PropJournal; redo(j: PropJournal): PropJournal };
+  /** the areas changed (an undo step was made, undone or redone): the engine re-fits the holes' pins and tee markers; pins: where a placed
+   *  preset's flag stands, by hole (the pin goes there when it is on the green) */
+  changed?(pins?: Map<number, { x: number; y: number }>): void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -150,6 +153,8 @@ export class PaintTool {
   private undos: UndoStep[] = [];
   private redos: UndoStep[] = [];
   private tx: { before: AreaSnap; spent: number; depth: number; label: string } | null = null;
+  /** the flag of the preset being placed (golf mode): the pin's spot for its hole, handed to the engine when the step commits */
+  private pinHint: Map<number, { x: number; y: number }> | undefined;
   /** brush mode: the kind painted, the hole it is painted for, Rub out (strokes erase), and each kind's brush (radius, style: the presets, edited and remembered) */
   brushKind: BrushKind = 'fairway';
   brushHole = 1;
@@ -259,6 +264,7 @@ export class PaintTool {
     if (!props && !t.spent && same) return;
     this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.redos = [];
+    const hint = this.pinHint; this.pinHint = undefined; this.host.changed?.(hint);
   }
   /** puts the areas back as a snapshot has them: an area whose id and tuple did not change is kept, the others re-bake */
   private restore(s: AreaSnap) {
@@ -284,6 +290,7 @@ export class PaintTool {
     this.restore(u.before);
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
     if (u.spent) this.host.spend?.(-u.spent);
+    this.host.changed?.();
     this.redos.push(u); this.host.save(); this.host.toast(`Undone: ${u.label}`); this.host.emit();
   }
   /** redoes the last undone action */
@@ -293,6 +300,7 @@ export class PaintTool {
     this.restore(u.after);
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
     if (u.spent) this.host.spend?.(u.spent);
+    this.host.changed?.();
     this.undos.push(u); this.host.save(); this.host.toast(`Redone: ${u.label}`); this.host.emit();
   }
 
@@ -472,7 +480,10 @@ export class PaintTool {
     this.begin(this.holeSlot ? `preset ${this.holeSlot}` : 'golf hole');
     for (const a of p.areas) { const k = a.kind ?? kindOfTex(a.tex); const b: PaintArea = { id: this.nextId++, ...a, ...(hole ? { hole, ...(k ? { kind: k } : {}) } : {}) }; this.areas.push(b); this.send(b); }
     this.host.save();
-    const n = this.host.placeProps(p.props, this.holeSeed);
+    // a golf game's holes have their own pin: the preset's flag only says where it goes
+    const flag = hole && this.host.golfMode?.() ? p.props.find(q => q.kind === 'flag') : undefined;
+    if (flag) this.pinHint = new Map([[hole, { x: flag.x, y: flag.y }]]);
+    const n = this.host.placeProps(flag ? p.props.filter(q => q.kind !== 'flag') : p.props, this.holeSeed);
     this.commit();
     this.host.toast(`${hole ? `Hole ${hole}` : 'Golf hole'} placed: ${p.areas.length} painted areas, ${n} props`);
     if (hole) this.brushHole = hole;
