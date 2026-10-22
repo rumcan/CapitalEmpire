@@ -2234,3 +2234,6 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   tool offers only these presets (fill and border; the old textures stay in the code so saved areas still draw). **Paint blend**: a shape
   can blend a second preset over its fill in soft patches (share, softness, patch size). Browser-checked: a preset saved, offered in Paint,
   painted; the blend drawn (sand under dark water patches). Tests: `tests/paint-presets.test.ts` (3).
+- **Studio: unsaved Ground edits are kept** (the owner lost a map-grass setup: it was never saved, and Rebuild only builds what is saved):
+  the Ground tab keeps unsaved grass and decal changes in the browser and brings them back after a refresh, warns before leaving with
+  unsaved changes, and Rebuild game sprites asks first when the Ground tab has unsaved changes; the grass button is **Save map grass**.

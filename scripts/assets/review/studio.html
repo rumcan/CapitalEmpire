@@ -165,7 +165,7 @@ async function loadPeople(){peopleLoaded=true;peopleAll=await (await fetch('/api
   box.append(card);}}
 
 // ---------------- rebuild
-$('#rb').onclick=async()=>{await post('/api/rebuild');poll();};
+$('#rb').onclick=async()=>{const u=window.studioUnsaved?.();if(u&&!confirm(`The Ground tab has unsaved changes to ${u}. Rebuild only puts what is saved in the game: Cancel, then Save first. Rebuild anyway?`))return;await post('/api/rebuild');poll();};
 async function poll(){const j=await (await fetch('/api/status')).json(),s=$('#status'),b=$('#rb');if(!j){s.textContent='';b.disabled=false;return;}
  b.disabled=!j.done;s.textContent=j.done?(j.code?'Rebuild failed: '+j.log.trim().split('\n').pop():'Rebuilt: reload the game'):`Rebuilding (${Math.round((Date.now()-j.started)/60000)} min): ${j.step.split('/').pop()}`;if(!j.done)setTimeout(poll,3000);}
 loadLib();poll();

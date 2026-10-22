@@ -33,7 +33,7 @@ const left = el('div', { className: 'side', style: 'width:360px;overflow:auto;bo
 const cv = el('canvas', { style: 'display:block;width:100%;height:100%' });
 const stage = el('div', { style: 'flex:1;position:relative;min-width:0;background:#0d0f08' }, cv);
 const msgEl = el('span', { className: 'hint' });
-const saveB = btn('Save', save, 'gold'), undoB = btn('Undo changes', () => { F = clone(saved); build(); rebuild(); }), unsaveB = btn("Back to the game's grass", unsave, 'red');
+const saveB = btn('Save map grass', save, 'gold'), undoB = btn('Undo changes', () => { F = clone(saved); build(); rebuild(); }), unsaveB = btn("Back to the game's grass", unsave, 'red');
 const bar = el('div', { className: 'bar' },
   saveB, undoB, unsaveB,
   el('span', { className: 'hint', textContent: 'Zoom' }),
@@ -41,7 +41,23 @@ const bar = el('div', { className: 'bar' },
   el('span', { style: 'flex:1' }), msgEl);
 root.append(el('div', { style: 'display:flex;flex-direction:column;height:calc(100vh - 70px)' }, bar, el('div', { style: 'display:flex;flex:1;min-height:0' }, left, stage)));
 const zoomChips = () => bar.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', +c.dataset.z === V.z));
-const msg = t => { msgEl.textContent = t; };
+const msg = t => { msgEl.textContent = t; keepDraft(); };
+// ---------------- unsaved changes: kept in this browser (a refresh brings them back), a warning before leaving, Rebuild asks first
+const DRAFT = 'studio.ground.draft';
+/** the note that unsaved changes came back after a refresh (shown until the next change) */
+let restored = '';
+/** the grass being edited (in presets mode it waits aside) and whether it or the decals differ from what is saved */
+const grassNow = () => (mode === 'grass' ? F : grassF);
+const unsaved = () => !!saved && ((grassNow() && JSON.stringify(grassNow()) !== JSON.stringify(saved)) || (DF && dDirty()));
+function keepDraft() {
+  if (!saved || !DF) return;
+  try { if (unsaved()) localStorage.setItem(DRAFT, JSON.stringify({ base: JSON.stringify(saved), F: grassNow(), dBase: JSON.stringify(dSaved), DF })); else localStorage.removeItem(DRAFT); } catch { /* storage may be off */ }
+}
+/** the draft of the same saved state, if this browser has one */
+function readDraft() { try { const d = JSON.parse(localStorage.getItem(DRAFT) ?? 'null'); return d && typeof d === 'object' ? d : null; } catch { return null; } }
+window.addEventListener('beforeunload', e => { if (unsaved()) { e.preventDefault(); e.returnValue = ''; } });
+/** for the studio's Rebuild button: what is not saved on this tab (empty when everything is) */
+window.studioUnsaved = () => !unsaved() ? '' : [grassNow() && JSON.stringify(grassNow()) !== JSON.stringify(saved) ? 'the map grass' : '', DF && dDirty() ? 'the map decals' : ''].filter(Boolean).join(' and ');
 const dirty = () => mode === 'preset' ? JSON.stringify([F, PM]) !== pSaved : JSON.stringify(F) !== JSON.stringify(saved) || !saved.saved;
 const dDirty = () => JSON.stringify(DF.layers) !== JSON.stringify(dSaved.layers);
 
@@ -73,7 +89,7 @@ function rebuild() {
       await new Promise(r => setTimeout(r, 0));
       mixed = mode === 'preset' ? mixGrass(gameSize(a), gameSize(b), F.mix, presetPx(), presetPx(), AUTHOR) : mixGrass(gameSize(a), gameSize(b), F.mix, BASE_W, BASE_H, AUTHOR);
       if (my !== busy) return;
-      swatches(); draw(); msg(dirty() ? 'not saved' : 'saved');
+      swatches(); draw(); msg(dirty() ? (restored || 'not saved') : 'saved');
     } catch (e) { msg(String(e.message || e)); }
   }, 250);
 }
@@ -99,7 +115,7 @@ function sourcePicker(k) {
 function slider(label, get, set, [lo, hi], step, fmt = v => v.toFixed(2), then = rebuild) {
   const out = el('span', { className: 'scale', style: 'min-width:54px', textContent: fmt(get()) });
   const inp = el('input', { type: 'range', min: lo, max: hi, step, value: get(), style: 'min-width:0;flex:1;padding:0' });
-  inp.oninput = () => { set(+inp.value); out.textContent = fmt(+inp.value); then(); };
+  inp.oninput = () => { restored = ''; set(+inp.value); out.textContent = fmt(+inp.value); then(); };
   return el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: label }), inp, out);
 }
 /** the Tint slider row with the colour picker after its label */
@@ -352,6 +368,10 @@ async function start() {
   const d = await fetch('/api/ground').then(r => r.json());
   fetch('/api/presets').then(r => r.json()).then(p => { PRE = p; if (mode === 'preset') build(); }, () => {});
   SOURCES = d.sources; RANGES = d.ranges; HOUSES = d.houses; saved = clone(d.file); F = clone(d.file); dSaved = clone(d.decals); DF = clone(d.decals);
+  // unsaved changes from before a refresh, made on top of what is still saved: back as they were
+  const dr = readDraft(); let back = [];
+  if (dr?.base === JSON.stringify(saved) && dr.F) { F = dr.F; back.push('map grass'); }
+  if (dr?.dBase === JSON.stringify(dSaved) && dr.DF) { DF = dr.DF; if (dDirty()) back.push('map decals'); }
   // the decal pictures: the nature patches and decals atlases, and the soil stamps the game makes from soil.webp
   Promise.all(['nature', 'decals', 'soil'].map(k => img('/decal-art/' + k))).then(([n, dc, so]) => {
     const toCv = im => { const c = canvas(im.naturalWidth, im.naturalHeight); ctx2d(c).drawImage(im, 0, 0); return c; };
@@ -360,6 +380,7 @@ async function start() {
   // four different houses (the first four the game has)
   housePics = HOUSES.slice(0, 4).map(s => { const im = new Image(); im.onload = draw; im.src = '/thumb/' + encodeURIComponent(s.id); return { s, im }; });
   zoomChips(); build(); rebuild();
+  if (back.length) { restored = `your unsaved ${back.join(' and ')} changes are back: Save to keep them`; msg(restored); }
 }
 document.querySelector('.tab[data-v="ground"]').addEventListener('click', start);
 if (location.hash === '#ground') document.querySelector('.tab[data-v="ground"]').click();
