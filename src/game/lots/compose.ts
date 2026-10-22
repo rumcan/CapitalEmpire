@@ -839,6 +839,14 @@ function vacant(B: Build) {
  *  Decided from the seed alone, so no other lot's draws change. */
 export function isCarPark(st: ComposeState): boolean { return st.use === LU.COM && st.level >= LV.BUILT && st.seed % 100 < 15; }
 
+/** an empty lot's or a starter house's lot's part of the fence grid (the owner: every lot is fenced, an empty one too): only the boundary fence
+ *  it owns (boundaryFence), so its neighbours' lines meet it; nothing else stands on it (the block's grass shows) */
+export function fenceOnly(lot: LotGeom, seed: number): Composition {
+  const B = new Build(lot, mulberry(mix(seed, 0x0fe7)));
+  boundaryFence(B, lot);
+  return B.done();
+}
+
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed. */
 export function compose(lot: LotGeom, st: ComposeState): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));

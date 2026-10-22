@@ -254,7 +254,9 @@ export class SimClient {
     for (const r of added) keep.add(r.key);
     for (const k of removed) if (!keep.has(k)) this.lots.delete(k);
     const moved: string[] = [];
-    for (const r of added) { const old = this.lots.get(r.key); if (old) moved.push(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
+    // every lot that came, moved or went is handed on (an empty lot is composed too: its share of the fence grid)
+    for (const k of removed) if (!keep.has(k)) moved.push(k);
+    for (const r of added) { const old = this.lots.get(r.key); moved.push(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
     if (moved.length) this.onLotsMoved?.(moved);
   }
   private resize(cap: number) {
