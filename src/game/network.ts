@@ -291,7 +291,8 @@ export interface Tuft { x: number; y: number; ang: number; v: number }
 export interface Wear { pts: Pt[]; closed: boolean; r: number; h: number; offsets: number[]; bbox: BBox }
 export interface Tyre { x: number; y: number; ang: number; start: number; lat: number[]; len: number }
 export interface Route { nodes: Node[]; segs: Seg[]; pts: Pt[]; cls: RoadClass; style: LineStyle; kind: SegKind; closed: boolean; a0?: Arm; a1?: Arm }
-export interface AutoProp { kind: 'tree' | 'light' | 'rbtree'; x: number; y: number; i: number }
+/** town: a street lamp of a gravel road, placed only where the town has houses near it (engine.syncAutoProps) */
+export interface AutoProp { kind: 'tree' | 'light' | 'rbtree' | 'lamp'; x: number; y: number; i: number; town?: boolean }
 export interface PieceSel { seg: Seg; p0: Pt; p1: Pt }
 /** a bridge deck: the route centreline and the deck half width (tiles) */
 export interface BridgeRec { pts: Pt[]; hw: number; bbox: BBox }
@@ -771,6 +772,13 @@ export class RoadNetwork {
     if (cls.streetTrees && r.kind !== SK.BRIDGE) {
       const n = r.pts.length, a0 = r.pts[0]!, a1 = r.pts[n - 1]!;
       for (const s of [1, -1]) walkAlong(offsetLine(r.pts, r.closed, s * (cls.h + cls.walk * 0.55)), r.closed, 2.2, 4, (p, i) => { if (!r.closed && (vlen(sub(p, a0)) < 3 || vlen(sub(p, a1)) < 3)) return; fx.autoProps.push({ kind: 'tree', x: p.x, y: p.y, i }); });
+    }
+    // street lamps on the sidewalks' outer half along every kerbed street and lane, and along the gravel roads the towns are built on (those
+    // only where houses stand near: town), both sides, staggered (every 16 m, 24 m on lanes, as lampsAlongRoads placed them); the night
+    // (night-light.ts) lights them
+    if ((cls.walkTex === 'slabs' || cls.id === 'gravel') && r.kind !== SK.BRIDGE) {
+      const n = r.pts.length, a0 = r.pts[0]!, a1 = r.pts[n - 1]!, step = cls.id === 'lane' ? 12 : 8, town = cls.id === 'gravel';
+      for (const s of [1, -1]) walkAlong(offsetLine(r.pts, r.closed, s * (cls.h + cls.walk * 0.62)), r.closed, s > 0 ? 4 : 4 + step / 2, step, (p, i) => { if (!r.closed && (vlen(sub(p, a0)) < 3 || vlen(sub(p, a1)) < 3)) return; fx.autoProps.push({ kind: 'lamp', x: p.x, y: p.y, i, ...(town ? { town } : {}) }); });
     }
     const base = r.closed ? r.pts : trimPolyline(r.pts, r.a0!.lineInset, r.a1!.lineInset);
     if (base && base.length >= 2) {

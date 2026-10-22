@@ -2225,3 +2225,6 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
 - **Golf structures sized**: placed event structures are fitted to their footprint and then the studio's size (they used the stand-in
   sprites at full size, half a footprint off), and the food tent, grandstand S, main leaderboard and toilet block use the golf art. The
   studio lists every golf sprite (the tournament art and the business art's golf buildings and course pieces) under **Golf**.
+- **Street lamps** (the owner: the night had none): the road network places `world:streetlamp` along every kerbed street and lane and along
+  the towns' gravel roads where houses stand (902 on the golf map, 63 before), regenerated with the roads; the night lights them. The
+  night's light pools now move with the map when panning (they were placed in screen px a quarter second late, leaving streaks).

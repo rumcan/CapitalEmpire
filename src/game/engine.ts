@@ -445,6 +445,7 @@ export class Game {
   /** the night (night-light.ts: TrickOrTreat's moonlight and light pools): the owner's settings, which survive reloads */
   night: NightSettings = clampNight(null);
   private nightRenderer = new NightRenderer();
+  /** the lights of the props round the view, in world px (placed on screen every frame), and what they were gathered for */
   private nightLights: NightLight[] = []; private nightKey = ''; private nightAt = -Infinity;
   setNight(n: Partial<NightSettings>) {
     this.night = clampNight({ ...this.night, ...n, types: { ...this.night.types, ...n.types } }); this.nightKey = '';
@@ -460,18 +461,23 @@ export class Game {
    *  change, at most every quarter second), the paranormal night's torches and monsters, then the moonlight */
   private drawNight(ctx: CanvasRenderingContext2D, now: number) {
     const amount = this.nightAmount(now); if (!(amount > 0)) return;
-    const ze = this.cam.z * this.dpr, W = ctx.canvas.width, H = ctx.canvas.height, key = `${Math.round(this.cam.X)},${Math.round(this.cam.Y)},${ze.toFixed(4)},${W},${H},${this.props.size}`;
-    if (key !== this.nightKey && now - this.nightAt > 250) {
-      this.nightKey = key; this.nightAt = now; const out: NightLight[] = [], scr = (x: number, y: number) => this.screen(x, y), m = 0.6 * Math.max(W, H);
+    const ze = this.cam.z * this.dpr, W = ctx.canvas.width, H = ctx.canvas.height;
+    // gathered over three screens round the view, again once the view has moved a screen, zoomed, or the props or settings changed
+    const hw = W / ze, hh = H / ze, key = `${Math.round(this.cam.X / hw)},${Math.round(this.cam.Y / hh)},${Math.round(Math.log2(ze) * 4)},${W},${H},${this.props.size}`;
+    if (key !== this.nightKey && (now - this.nightAt > 150 || !this.nightLights.length)) {
+      this.nightKey = key; this.nightAt = now; const out: NightLight[] = [], world = (x: number, y: number) => ({ x: worldX(x, y), y: worldY(x, y) });
       for (const p of this.props) {
-        const c = this.screen((p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2); if (c.x < -m || c.y < -m || c.x > W + m || c.y > H + m) continue;
-        const it = LIBRARY[p.item]; if (it) propLights(p, it, this.night, scr, ze, out);
+        const cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2, X = worldX(cx, cy), Y = worldY(cx, cy);
+        if (Math.abs(X - this.cam.X) > 1.5 * hw || Math.abs(Y - this.cam.Y) > 1.5 * hh) continue;
+        const it = LIBRARY[p.item]; if (it) propLights(p, it, this.night, world, 1, out);
       }
       this.nightLights = out;
     }
-    const lights = this.traffic ? this.nightLights.concat(this.paranormalRenderer.actorLights(this.traffic.disasters, this.traffic.simTime(now)).map(l => {
+    const ox = this.cw / 2 - this.cam.X * ze, oy = this.ch / 2 - this.cam.Y * ze;
+    const placed = this.nightLights.map(l => ({ ...l, sx: l.sx * ze + ox, sy: l.sy * ze + oy, rx: l.rx * ze, ry: l.ry * ze }));
+    const lights = this.traffic ? placed.concat(this.paranormalRenderer.actorLights(this.traffic.disasters, this.traffic.simTime(now)).map(l => {
       const q = this.screen(l.x, l.y), rx = l.radius * HW * ze; return { sx: q.x, sy: q.y, rx, ry: rx * 0.65, i: l.intensity, tint: l.color };
-    })) : this.nightLights;
+    })) : placed;
     this.nightRenderer.apply(ctx, this.canvas, this.night, amount, lights);
   }
 
@@ -950,15 +956,23 @@ export class Game {
   /** the dev switch (window.__game.farmsOn(false)): farms on (the default) or off; off removes every farm's props and ground */
   farmsOn(on: boolean) { this.farmsEnabled = on; if (on) this.farmsUpdate(true); else this.dropAllFarms(); }
   /** median trees, roundabout trees and traffic lights follow the road network (only what the last rebuild changed) */
+  /** the town street lamps waiting for houses near them (AutoProp.town), by key: tried again when the lots change (sendBlocks) */
+  private lampWait = new Map<string, AutoProp>();
   private syncAutoProps(added: AutoProp[], removed: AutoProp[]) {
-    for (const a of removed) { const p = this.autoByKey.get(autoKey(a)); if (p) this.removeProp(p); }
+    let lamps = false;
+    for (const a of removed) { const k = autoKey(a); this.lampWait.delete(k); const p = this.autoByKey.get(k); if (p) { this.removeProp(p); this.autoByKey.delete(k); lamps ||= a.kind === 'lamp'; } }
     for (const a of added) {
       const k = autoKey(a); if (this.autoByKey.has(k)) continue;
-      const id = a.kind === 'tree' ? AUTO_TREES[a.i % AUTO_TREES.length] : a.kind === 'rbtree' ? 'world:tree_oak_0' : 'town:traffic_light';
+      // a town road's lamp stands only where the town has houses within 12 tiles
+      if (a.town) { let near = false; for (const p of this.propGrid.query([a.x - 12, a.y - 12, a.x + 12, a.y + 12])) { const kind = LIBRARY[p.item]?.kind; if (kind === 'lot' || kind === 'house') { near = true; break; } } if (!near) { this.lampWait.set(k, a); continue; } this.lampWait.delete(k); }
+      const id = a.kind === 'tree' ? AUTO_TREES[a.i % AUTO_TREES.length] : a.kind === 'rbtree' ? 'world:tree_oak_0' : a.kind === 'lamp' ? 'world:streetlamp' : 'town:traffic_light';
       const item = LIBRARY.findIndex(i => i.id === id); if (item < 0) continue;
-      const it = LIBRARY[item], b = it.boxes[0], scale = a.kind === 'tree' ? 0.85 : a.kind === 'rbtree' ? 1.2 : 1;
-      const p = this.addProp(item, a.x - b.dx * scale / 2, a.y - b.dy * scale / 2, false, scale); p.auto = k; this.autoByKey.set(k, p);
+      const it = LIBRARY[item], b = it.boxes[0], scale = a.kind === 'tree' ? 0.85 : a.kind === 'rbtree' ? 1.2 : a.kind === 'lamp' ? 0.9 : 1, x = a.x - b.dx * scale / 2, y = a.y - b.dy * scale / 2;
+      // a street lamp gives way to whatever already stands there (a lot's own lamps, a tree, a building)
+      if (a.kind === 'lamp' && this.canPlace(it, x, y, false, scale)) continue;
+      const p = this.addProp(item, x, y, false, scale); p.auto = k; this.autoByKey.set(k, p); lamps ||= a.kind === 'lamp';
     }
+    if (lamps) this.syncLamps();
   }
   /** building footprints for the planner map (debounced: many edits, one message); the town's lots wait, at most one refresh per LOT_BLOCKS_MS */
   private scheduleBlocks(lot = false) {
@@ -967,6 +981,7 @@ export class Game {
     clearTimeout(this.blocksTimer); this.blocksTimer = window.setTimeout(() => this.sendBlocks(true), 400);
   }
   private sendBlocks(invalidate: boolean) {
+    if (this.lampWait.size) this.syncAutoProps([...this.lampWait.values()], []);
     const out: number[] = [];
     for (const p of this.props) {
       const it = LIBRARY[p.item]; if (!it.big || it.kind === 'car') continue;

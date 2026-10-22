@@ -172,3 +172,8 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   then OWNER_SCALE, the studio's size) instead of scale 1, sits on the middle of its rectangle (x, y is the corner; it was drawn half a
   footprint off), turns with `rotated`, and four structures use the golf art: foodTent `golf:food-tent`, standS `golf:grandstand-s`,
   leaderboard `golf:leaderboard`, toilets `golf:toilet-block`. Saves from before keep their old props at the old size until re-placed.
+- 2026-10-22 (the art chat): **street lamps and the night when panning** (the owner). **For the coder:** `network.ts` routeFeatures makes
+  `AutoProp` kind `'lamp'` along every kerbed street and lane and along the towns' gravel roads (`town: true`), both sides, staggered (16 m,
+  24 m on lanes); `engine.ts` syncAutoProps places them as `world:streetlamp` 0.9 where nothing stands (canPlace), a town road's only within
+  12 tiles of a lot or house (else `lampWait`, retried in sendBlocks when the lots change), and re-syncs the lamp reflection pools; the
+  night's lights are gathered in world px over three screens and placed on screen every frame (they lagged and streaked when panning).
