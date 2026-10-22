@@ -35,6 +35,17 @@
     "warm": 0.08,
     "angle": 0,
     "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
    }
   },
   {
@@ -71,6 +82,17 @@
     "warm": 0.18,
     "angle": 51,
     "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
    }
   },
   {
@@ -78,7 +100,7 @@
    "name": "Fairway",
    "surface": "fairway",
    "size": 32.5,
-   "col": "#4e6f18",
+   "col": "#53741f",
    "a": {
     "src": "src/assets/ground/paint-photo-golf-fringe.webp",
     "scale": 1.1,
@@ -107,6 +129,17 @@
     "warm": 0.3,
     "angle": 51,
     "tilt": 0.5
+   },
+   "stripes": {
+    "on": true,
+    "dir": "y",
+    "width": 2,
+    "light": 0.02,
+    "dark": 0.05,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.18,
+    "soft": 0.2
    }
   },
   {
@@ -143,6 +176,17 @@
     "warm": 0.3,
     "angle": 51,
     "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
    }
   }
  ]
