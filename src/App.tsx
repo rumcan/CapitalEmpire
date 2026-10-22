@@ -600,7 +600,7 @@ function EvalScreen({ game }: { game: Game }) {
               : 'No change since the last run'}
           </p>
         </div>
-        {last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{golf ? `Perfect! The town grows ${Math.round(TOWN_GROWTH * 100)}%` : `Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>}
+        {golf ? (ye?.townGrowthText && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{ye.townGrowthText}</div>) : (last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{`Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>)}
         <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
           {last.byTown.map((t, k) => (
             <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} {golf ? 'spectators' : 'fans'} · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}{t.byBus > 0 ? ` · by bus ${t.byBus}` : ''}</p>

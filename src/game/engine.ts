@@ -56,7 +56,7 @@ import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
-import type { GolfSave, GolfView } from './golf/mode';
+import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
 import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
@@ -370,8 +370,8 @@ export class Game {
   /** a golf game's painted course by hole (golf/holeview.ts tagByHole): untagged course areas take the hole they belong to (a hole tag, no
    *  brush kind), so the Course tool's strip and checks see the holes */
   private tagCourseHoles() {
-    const g = this.golf; if (!g || !g.pins.length) return;
-    const tags = tagByHole(this.paint.areas, g.pins, g.tees, g.aims); let n = 0;
+    const g = this.golf; if (!g?.pins?.length) return;
+    const tags = tagByHole(this.paint.areas, g.pins, g.tees ?? [], g.aims ?? []); let n = 0;
     this.paint.areas.forEach((a, i) => { if (tags[i]) { a.hole = tags[i]; n++; } });
     if (n) { this.paintRev++; this.scheduleSave(); }
   }
@@ -1013,6 +1013,7 @@ export class Game {
   /** what the farms keep clear of besides the town and the site: the car parks, and in golf mode the course's rect too (the farm map's update and stale checks read the same list) */
   private farmParks(): { x: number; y: number; w: number; h: number }[] {
     if (!this.golf) return this.parkDefs;
+    if (!this.golf.course) return this.parkDefs;
     const [x, y, w, h] = this.golf.course;
     return [...this.parkDefs, { x, y, w, h }];
   }
@@ -1196,7 +1197,7 @@ export class Game {
     this.golfProps.clear();
     this.golfStructureProps.clear();
     if (!this.golf) return;
-    for (const pin of this.golf.pins) {
+    for (const pin of this.golf.pins ?? []) {
     const key = 'pin:' + pin.hole;
     const id = pin.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID;
     const item = LIB_INDEX.get(id);
@@ -1204,7 +1205,7 @@ export class Game {
     if (p.item === item && Math.hypot(p.x - pin.x, p.y - pin.y) < 2) { this.golfProps.set(key, p); break; }
     }
     }
-    for (const tee of this.golf.tees) {
+    for (const tee of this.golf.tees ?? []) {
     const key = `tee:${tee.hole}:${tee.kind}`;
     const id = tee.kind === 'back' ? TEE_BACK_ID : tee.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
     const item = LIB_INDEX.get(id);
@@ -2935,9 +2936,9 @@ export class Game {
       this.bizOpenSeen = null;
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
-      this.golf = d.golf ?? null;
+      this.golf = normalizeGolfSave(d.golf);
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
-      if (d.golf) { this.townPts = [d.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
+      if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
       if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
       else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }

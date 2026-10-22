@@ -35,6 +35,7 @@ import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from
 import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 import { golfTicketPrice } from './golf/yearend';
 import { dayShare, spectatorDemand, tierInfo } from './golf/tour';
+import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
 
 /** the vehicle slots of the sim, and the ring of step times (calls) kept for the frame stats */
 const CAP = 12000, TICKS = 100;
@@ -416,7 +417,7 @@ export class City {
   /** closes the eval: the round is free again and the clock runs on from where it was frozen. A perfect run's towns grow (growTowns; see grown).
    *  False unless in eval, and while the draft is open (see Round.close) */
   closeRound(): boolean {
-    const perfect = !!this.round.last?.perfect;
+    const last = this.round.last, perfect = !!last?.perfect;
     this.grown = null;
     if (!this.round.close()) return false;
     this.sim.dropParty(); this.surge = null; this.crowd = null; this.sim.dropBuses();
@@ -424,13 +425,13 @@ export class City {
     // (the everyday trips start again on their own)
     for (let i = 0; i < this.sim.cap; i++) if (this.sim.alive[i]) this.sim.despawn(i);
     this.unfreeze(); this.emptyParks();
-    if (perfect && this.centres.length) this.grown = this.growTowns();
+    if (this.golf) { const rate = last ? roundTownGrowthRate(last, this.golf.tier, this.golf.rep) : 0; if (rate > 0 && this.centres.length) this.grown = this.growTowns(rate); } else if (perfect && this.centres.length) this.grown = this.growTowns();
     return true;
   }
   /** a perfect run's growth: each town is stamped to its residents times 1 + TOWN_GROWTH (the land may run out short of that); returns the new lots'
    *  events and the residents each town reached */
-  private growTowns(): { events: TownEvent[]; pops: number[] } {
-    const events = this.stamp(0, this.town.popK.map(p => p * (1 + TOWN_GROWTH)));
+  private growTowns(rate = TOWN_GROWTH): { events: TownEvent[]; pops: number[] } {
+    const events = this.stamp(0, townGrowthTargets(this.town.popK, rate));
     return { events, pops: this.town.popK.slice() };
   }
   /** the player takes a card of the eval's draft (see Round.pick); its effects apply at once (applyCards); false if refused */

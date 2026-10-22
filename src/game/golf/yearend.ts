@@ -10,6 +10,7 @@ import { gateQueue, gateRate } from './venue';
 import { arrivalShare, exitShare, EXIT_END, GATES_OPEN } from './calendar';
 import { ON_TIME_GRACE_MIN } from './tournamentday';
 import { courseMonthlyUpkeep } from './costs';
+import { townGrowthLine, townGrowthRate } from './towngrowth';
 
 /** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 25%, about 36,000 dollars for the old nine, which is what the campaign simulator assumes (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
 export const COURSE_UPKEEP_YEAR_SHARE = 0.25;
@@ -100,6 +101,8 @@ tvIncome?: number;
 purse?: number;
 multiDay?: MultiDaySummary;
 weather?: WeatherInfo;
+townGrowth?: number;
+townGrowthText?: string;
 }
   
 /**  
@@ -396,5 +399,7 @@ if (structures.length > 0) {
  purse: commercial.purse,
  multiDay,
  weather,
+ townGrowth: townGrowthRate({ satisfaction, attendanceShare: roundResult.rate, tier: prevTier, reputation: rep }),
+ townGrowthText: townGrowthLine(townGrowthRate({ satisfaction, attendanceShare: roundResult.rate, tier: prevTier, reputation: rep })),
  };
 }  
