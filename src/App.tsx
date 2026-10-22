@@ -484,11 +484,25 @@ function RoundPanel({ game }: { game: Game }) {
   const sentence = gv ? (r.stage === 'free' ? `Season ${gv.year}: get the course and the roads ready. The tournament is at the end of August.` : 'Tournament day: the spectators are driving to the course.')
     : r.stage === 'free' ? 'Host a major stadium event to boost happiness, income and the local economy.'
     : r.stage === 'build' ? 'Fans are on their way: finish the roads before kick-off.' : 'Kick-off: the crowd is driving to the stadium.';
+  // minimized (the owner: "always open in my face"): a small pill with the event, the month and the clock; remembered
+  const [min, setMin] = useState(() => { try { return localStorage.getItem('capitalempire.eventMin') === '1'; } catch { return false; } });
+  const minimize = (v: boolean) => { setMin(v); try { localStorage.setItem('capitalempire.eventMin', v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
+  const clock = r.stage === 'build' ? `Build ${mmss(Math.ceil(r.buildLeft))}` : r.stage === 'surge' ? `${golf ? 'Tee-off' : 'Kick-off'} ${mmss(Math.ceil(r.surgeLeft))}` : '';
+  if (min) return (
+    <button className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 glass flex items-center gap-2 px-3 py-1.5 text-sm`} title="Show the event" onClick={() => minimize(false)}>
+      <Icon name="trophy" size={18} />
+      <span className="font-semibold text-[var(--gold-hi)]">{gv ? `T${gv.tier}` : `Level ${r.level}`}</span>
+      <span>{gv ? gv.month : `Run ${r.runs + 1}`}</span>
+      {clock && <span className="font-bold tabular-nums text-[var(--gold-hi)]">{clock}</span>}
+      <Icon name="down" size={14} />
+    </button>
+  );
   return (
     // on the right, out of the way of building; left of the budget or bottleneck panel when one of those is open there
     <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 w-[440px] max-w-[calc(100vw-1.5rem)] glass overflow-hidden`}>
       {!golf && <img src={stadiumArt} alt="" className="pointer-events-none absolute right-0 top-0 h-[128px] w-[192px] object-cover" style={{ maskImage: 'linear-gradient(to right, transparent, black 45%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 45%)' }} />}
       <div className="relative p-3">
+        <button className="btn-icon absolute right-2 top-2 z-10" title="Minimize the event (click the pill to show it again)" onClick={() => minimize(true)}><Icon name="up" size={16} /></button>
         <div className="flex items-start gap-2">
           <Icon name="trophy" size={34} />
           <div className="min-w-0">
