@@ -72,7 +72,7 @@ import { STRUCTURE } from './golf/tents';
 import { tierInfo, type Need } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
 import { paranormalNightStrength } from './ext/paranormal-render/frames';
-import { NightRenderer, clampNight, nightAt, propLights, type NightLight, type NightSettings } from './night-light';
+import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -453,9 +453,20 @@ export class Game {
     try { localStorage.setItem('capitalempire.night', JSON.stringify(this.night)); } catch { /* storage may be unavailable */ }
     this.emit();
   }
+  /** the night the player skipped (Skip night: its day, nightDay), which stays light */
+  private skippedNight = NaN;
+  /** how dark the clock's night is now (0 day .. 1 night; 0 on the days between nights and on a skipped night) */
+  clockNight(): number {
+    const c = this.clock(), h = c.hour + c.minute / 60, n = nightAt(this.night, h, c.day);
+    return n > 0 && this.night.mode === 'clock' && nightDay(this.night, h, c.day) === this.skippedNight ? 0 : n;
+  }
+  /** Skip night (the HUD button while it is dark by the clock): daylight until the next night; the sim's clock runs on as it was */
+  skipNight() {
+    const c = this.clock(); this.skippedNight = nightDay(this.night, c.hour + c.minute / 60, c.day); this.nightKey = ''; this.emit();
+  }
   /** how dark it is now (0 day .. 1 night): the clock's night, or a paranormal night's, whichever is darker */
   nightAmount(now = performance.now()) {
-    const c = this.clock(), clock = nightAt(this.night, c.hour + c.minute / 60);
+    const clock = this.clockNight();
     return this.traffic ? Math.max(clock, paranormalNightStrength(this.traffic.disasters, this.traffic.simTime(now))) : clock;
   }
   /** the night pass over the finished frame: the lights of the props in view (gathered again when the camera, the props or the settings

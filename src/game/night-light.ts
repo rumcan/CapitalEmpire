@@ -13,6 +13,8 @@ export interface NightSettings {
   mode: 'clock' | 'on' | 'off';
   /** the hours (0..24): darkening from dusk, full night from night, lightening from dawn, day from day */
   dusk: number; night: number; dawn: number; day: number;
+  /** by the clock, the night falls on one game day in every `every` (1: every night; the days between stay light) */
+  every: number;
   /** the moonlight: its colour and how much of it, how grey and how dark the town gets */
   tint: string; strength: number; desat: number; dark: number;
   /** the pools' soft edge (share of the radius) and their warmth */
@@ -22,7 +24,7 @@ export interface NightSettings {
   types: Record<LightKey, LightType>;
 }
 export const NIGHT_DEFAULT: NightSettings = {
-  mode: 'clock', dusk: 18, night: 20, dawn: 5, day: 7,
+  mode: 'clock', dusk: 18, night: 20, dawn: 5, day: 7, every: 3,
   tint: '#4656c8', strength: 0.7, desat: 0.6, dark: 0.3, feather: 0.65, warmth: 0.35, glowSize: 2.2, glowStrength: 0.95,
   types: { lamp: { r: 8, i: 1 }, porch: { r: 5, i: 0.9 }, window: { r: 7, i: 0.85 }, neon: { r: 9, i: 1 }, pumpkin: { r: 2.6, i: 0.9 }, lantern: { r: 3.2, i: 0.95 }, stand: { r: 3.6, i: 0.85 }, fire: { r: 4.5, i: 1 } },
 };
@@ -57,17 +59,25 @@ export function clampNight(n: Partial<NightSettings> | null | undefined): NightS
   for (const k of Object.keys(D.types) as LightKey[]) types[k] = { r: num(s.types?.[k]?.r, D.types[k].r, 0, 30), i: num(s.types?.[k]?.i, D.types[k].i, 0, 1) };
   return {
     mode: s.mode === 'on' || s.mode === 'off' || s.mode === 'clock' ? s.mode : D.mode,
-    dusk: num(s.dusk, D.dusk, 0, 24), night: num(s.night, D.night, 0, 24), dawn: num(s.dawn, D.dawn, 0, 24), day: num(s.day, D.day, 0, 24),
+    dusk: num(s.dusk, D.dusk, 0, 24), night: num(s.night, D.night, 0, 24), dawn: num(s.dawn, D.dawn, 0, 24), day: num(s.day, D.day, 0, 24), every: Math.round(num(s.every, D.every, 1, 14)),
     tint: typeof s.tint === 'string' && /^#[0-9a-f]{6}$/i.test(s.tint) ? s.tint : D.tint,
     strength: num(s.strength, D.strength, 0, 1), desat: num(s.desat, D.desat, 0, 1), dark: num(s.dark, D.dark, 0, 1),
     feather: num(s.feather, D.feather, 0.02, 0.98), warmth: num(s.warmth, D.warmth, 0, 1), glowSize: num(s.glowSize, D.glowSize, 0, 6), glowStrength: num(s.glowStrength, D.glowStrength, 0, 1), types,
   };
 }
 
-/** how far into the night the hour h (0..24, fractional) is: 0 by day, 1 at night, smooth from dusk to night and from dawn to day */
-export function nightAt(s: NightSettings, h: number): number {
+/** the game day a night belongs to (the day its dusk fell on): hour h of day `day` before that day's dusk belongs to the night before */
+export function nightDay(s: NightSettings, h: number, day: number): number {
+  const t = (((h - s.dusk) % 24) + 24) % 24;
+  return day + Math.floor((h - t) / 24);
+}
+
+/** how far into the night the hour h (0..24, fractional) of game day `day` is: 0 by day, 1 at night, smooth from dusk to night and from dawn
+ *  to day; by the clock only on the nights whose day is a multiple of `every` (no day given: every night) */
+export function nightAt(s: NightSettings, h: number, day?: number): number {
   if (s.mode === 'off') return 0;
   if (s.mode === 'on') return 1;
+  if (day !== undefined && s.every > 1 && ((nightDay(s, h, day) % s.every) + s.every) % s.every !== 0) return 0;
   const smooth = (t: number) => { const u = clamp(t, 0, 1); return u * u * (3 - 2 * u); };
   const since = (a: number) => (((h - a) % 24) + 24) % 24, span = (a: number, b: number) => (((b - a) % 24) + 24) % 24 || 24;
   const evening = span(s.dusk, s.night), dark = span(s.night, s.dawn), morning = span(s.dawn, s.day);

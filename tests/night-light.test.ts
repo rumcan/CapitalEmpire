@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
-import { NIGHT_DEFAULT, clampNight, lightType, nightAt } from '../src/game/night-light';
+import { NIGHT_DEFAULT, clampNight, lightType, nightAt, nightDay } from '../src/game/night-light';
 
 test('night: dark from dusk to dawn by the clock, day between, smooth at the edges', () => {
   const s = clampNight(null);
@@ -25,4 +25,13 @@ test('night: the street lamp is a lamp, houses have porches, venues windows, and
   assert.equal(lightType(LIBRARY.find(i => i.kind === 'house')!), 'porch');
   assert.equal(lightType(LIBRARY.find(i => i.kind === 'venue')!), 'window');
   for (const lot of LIBRARY.filter(i => i.kind === 'lot')) for (const l of lot.lights ?? []) assert.ok(l.type in NIGHT_DEFAULT.types, `${lot.id} ${l.type}`);
+});
+
+test('by the clock the night falls on one day in `every`: a night belongs to the day of its dusk, the days between stay light', () => {
+  const s = clampNight({ every: 3 });
+  assert.equal(s.every, 3); assert.equal(clampNight({ every: 0 }).every, 1); assert.equal(clampNight({ every: 99 }).every, 14);
+  assert.equal(nightDay(s, 23, 6), 6); assert.equal(nightDay(s, 2, 7), 6); assert.equal(nightDay(s, 12, 7), 6);
+  assert.equal(nightAt(s, 23, 6), 1); assert.equal(nightAt(s, 2, 7), 1);
+  assert.equal(nightAt(s, 23, 7), 0); assert.equal(nightAt(s, 2, 8), 0); assert.equal(nightAt(s, 23, 8), 0);
+  assert.equal(nightAt(s, 23, 9), 1); assert.equal(nightAt(clampNight({ every: 1 }), 23, 7), 1); assert.equal(nightAt(s, 23), 1);
 });

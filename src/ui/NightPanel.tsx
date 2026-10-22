@@ -29,6 +29,7 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
         </select>
       </label>
       {n.mode === 'clock' && (<>
+        <Row label="Night every" value={n.every} min={1} max={14} step={1} show={n.every === 1 ? 'day' : `${n.every} days`} set={v => set({ every: v })} title="How often the night comes: on one game day in this many (the days between stay light). Skip night in the top bar skips one." />
         <Row label="Dusk from" value={n.dusk} min={0} max={24} step={0.5} show={hour(n.dusk)} set={v => set({ dusk: v })} title="It starts to get dark" />
         <Row label="Night from" value={n.night} min={0} max={24} step={0.5} show={hour(n.night)} set={v => set({ night: v })} title="Full night" />
         <Row label="Dawn from" value={n.dawn} min={0} max={24} step={0.5} show={hour(n.dawn)} set={v => set({ dawn: v })} title="It starts to get light" />
