@@ -72,6 +72,78 @@
     "angle": 51,
     "tilt": 0.5
    }
+  },
+  {
+   "id": "fairway",
+   "name": "Fairway",
+   "surface": "fairway",
+   "size": 32.5,
+   "col": "#4e6f18",
+   "a": {
+    "src": "src/assets/ground/paint-photo-golf-fringe.webp",
+    "scale": 1.1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.14,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-fairway.webp",
+    "scale": 4.4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.13,
+    "contrast": 1.06,
+    "sat": 0.83,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.5,
+    "soft": 0.24,
+    "patch": 0.25,
+    "tone": 0.35,
+    "warm": 0.3,
+    "angle": 51,
+    "tilt": 0.5
+   }
+  },
+  {
+   "id": "rough",
+   "name": "Rough",
+   "surface": "rough",
+   "size": 38,
+   "col": "#1c3106",
+   "a": {
+    "src": "src/assets/ground/grass-v1/png/grass-golf-putting-green.png",
+    "scale": 7.4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.59,
+    "contrast": 1.29,
+    "sat": 1.06,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/grass-v1/png/grass-golf-putting-green.png",
+    "scale": 6.75,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.75,
+    "contrast": 1.68,
+    "sat": 0.62,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.5,
+    "soft": 0.12,
+    "patch": 1,
+    "tone": 0.35,
+    "warm": 0.3,
+    "angle": 51,
+    "tilt": 0.5
+   }
   }
  ]
 }
