@@ -4,8 +4,19 @@ import { BORDER_TEXES, BORDER_W, BRUSH_LAYER, BRUSH_PRESETS, DEFAULT_STYLE, MAX_
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, placeHole, type HolePreset, type PresetProp } from './golf/holepreset';
+import { PLANT_KINDS, clampPlant, type PlantKind, type PlantSet } from './plant';
+/** the localStorage key of the edited plant brushes */
+const PLANT_KEY = 'capitalempire.plantBrushes';
+/** the plant brushes: the defaults, each replaced by its saved edit (clamped) */
+function loadPlant(): Record<PlantKind, PlantSet> {
+  let saved: Partial<Record<PlantKind, Partial<PlantSet>>> | null = null;
+  try { saved = JSON.parse(localStorage.getItem(PLANT_KEY) ?? 'null'); } catch { /* no storage or a bad save */ }
+  const out = {} as Record<PlantKind, PlantSet>;
+  for (const k of PLANT_KINDS) out[k.kind] = clampPlant(saved && typeof saved === 'object' ? saved[k.kind] : undefined, k.kind);
+  return out;
+}
 
-export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush';
+export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant';
 /** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
 type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> };
 /** the localStorage key of the edited brush presets */
@@ -26,7 +37,13 @@ function loadBrush(): Record<BrushKind, BrushSet> {
   return out;
 }
 /** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
-export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number }
+export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number;
+  /** a plant brush dab: props from ids scattered in the circle (spaced, sized size[0]..size[1]); returns how many were placed */
+  plant(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number): number;
+  /** removes the plant-brush props in the circle; returns how many */
+  unplant(x: number, y: number, r: number): number;
+  /** the sprites a plant brush can use */
+  plantPool(kind: PlantKind): { id: string; name: string }[] }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -101,6 +118,11 @@ export class PaintTool {
   brushHole = 1;
   rubOut = false;
   brush: Record<BrushKind, BrushSet> = loadBrush();
+  /** plant mode: the kind planted and each kind's brush (remembered); the drag in progress (erasing or not, the last dab) */
+  plantKind: PlantKind = 'trees';
+  plant: Record<PlantKind, PlantSet> = loadPlant();
+  private planting: { erase: boolean; last: { x: number; y: number }; n: number } | null = null;
+  private plantSeed = (Date.now() % 100000) | 0;
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
   private stroke: { m: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[] } | null = null;
   private host: PaintHost;
@@ -162,6 +184,22 @@ export class PaintTool {
   /** the golf brush: paints the kind (its preset's style, the panel shows it) for the brush hole; the outline and the selection are dropped */
   setBrush(kind: BrushKind) { this.mode = 'brush'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
 
+  /** the plant brush: Trees, Bushes or Flowers scattered by dragging (Rub out / Alt removes them) */
+  setPlant(kind: PlantKind) { this.mode = 'plant'; this.plantKind = kind; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
+  /** edits the current plant brush (radius, spacing, size range, sprites) and remembers it */
+  setPlantSet(p: Partial<PlantSet>) {
+    const k = this.plantKind; this.plant[k] = clampPlant({ ...this.plant[k], ...p }, k);
+    try { localStorage.setItem(PLANT_KEY, JSON.stringify(this.plant)); } catch { /* storage may be unavailable */ }
+    this.host.emit();
+  }
+  /** the sprites the current plant brush picks from (its ids, or every sprite of the kind) */
+  plantIds(): string[] { const s = this.plant[this.plantKind], all = this.host.plantPool(this.plantKind).map(x => x.id); return s.ids ? s.ids.filter(id => all.includes(id)) : all; }
+  /** one plant dab at t: plant (or rub out) in the circle */
+  private plantDab(t: { x: number; y: number }, erase: boolean) {
+    const s = this.plant[this.plantKind];
+    const n = erase ? this.host.unplant(t.x, t.y, s.r) : this.host.plant(this.plantIds(), t.x, t.y, s.r, s.spacing, [s.lo, s.hi], this.plantSeed++);
+    if (this.planting) this.planting.n += n;
+  }
   /** drops the outline being drawn (its corners, the lasso and the press) and a stroke in progress (not applied); a handle drag in progress ends (its shape is kept, or reverted when it cannot be placed) */
   cancel() { if (this.drag) this.dragEnd(); this.pts = []; this.lasso = false; this.down = null; this.stroke = null; }
 
@@ -187,6 +225,7 @@ export class PaintTool {
     if (sel) { const g = this.grabAt(sel, t, mx, my); if (g) { this.startDrag(sel, g, t); this.host.emit(); return; } }
     if (this.mode === 'hole') { this.placeHoleAt(t); return; }
     if (this.mode === 'brush') { this.strokeStart(t, alt); return; }
+    if (this.mode === 'plant') { const erase = this.rubOut || alt; this.planting = { erase, last: { x: t.x, y: t.y }, n: 0 }; this.plantDab(t, erase); this.host.emit(); return; }
     if (this.mode === 'draw') {
       if (this.selected) { this.selected = 0; this.hoverH = null; this.host.emit(); }
       this.down = { mx, my }; this.cursor = t; return;
@@ -214,6 +253,16 @@ export class PaintTool {
     this.cursor = t; this.mouse = { mx, my };
     if (this.drag) { this.dragTo(t, shift); return; }
     if (this.mode === 'brush') { const s = this.stroke; if (s && t) { brushStroke(s.m, s.last.x, s.last.y, t.x, t.y, s.r, s.erase); s.last.x = t.x; s.last.y = t.y; s.dabs.push(t.x, t.y); } return; }
+    if (this.mode === 'plant') {
+      // a dab every half radius along the drag (each dab only adds where the spacing allows, so going over a spot again fills it in)
+      const pl = this.planting; if (!pl || !t) return;
+      const step = Math.max(0.5, this.plant[this.plantKind].r / 2), d = Math.hypot(t.x - pl.last.x, t.y - pl.last.y);
+      if (d < step) return;
+      const k = Math.floor(d / step);
+      for (let i = 1; i <= k; i++) this.plantDab({ x: pl.last.x + (t.x - pl.last.x) * i * step / d, y: pl.last.y + (t.y - pl.last.y) * i * step / d }, pl.erase);
+      pl.last = { x: pl.last.x + (t.x - pl.last.x) * k * step / d, y: pl.last.y + (t.y - pl.last.y) * k * step / d };
+      return;
+    }
     const sel = this.selectedArea();
     this.setHover(sel && t ? this.grabAt(sel, t, mx, my) : null);
     if (this.mode !== 'draw') { this.hover = t ? (areaAt(this.areas, t.x, t.y)?.id ?? 0) : 0; return; }
@@ -229,6 +278,7 @@ export class PaintTool {
   pointerUp(tol: number) {
     if (this.drag) { this.dragEnd(); return; }
     if (this.mode === 'brush') { this.strokeEnd(); return; }
+    if (this.mode === 'plant') { const pl = this.planting; this.planting = null; if (pl && !pl.n && !pl.erase && !this.plantIds().length) this.host.toast('Pick at least one sprite for this brush', 'warn'); this.host.emit(); return; }
     if (this.mode !== 'draw') return;
     if (this.lasso) {
       let p = simplify(this.pts); const n = p.length;
@@ -321,6 +371,16 @@ export class PaintTool {
     ctx.strokeStyle = erase ? '#f87171' : '#ffffff'; ctx.lineWidth = 1.5 * d; ctx.stroke();
   }
 
+  /** plant mode: the brush circle under the cursor in the kind's colour (red when rubbing out), its spacing shown as a dot ring */
+  private drawPlant(v: PaintView) {
+    const c = this.cursor; if (!c) return;
+    const ctx = v.ctx, d = v.dpr, s = this.plant[this.plantKind], erase = this.planting ? this.planting.erase : this.rubOut;
+    const col = erase ? '#f87171' : PLANT_KINDS.find(k => k.kind === this.plantKind)!.col;
+    v.setIso(ctx); ctx.beginPath(); ctx.arc(c.x, c.y, s.r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = rgba(col, 0.18); ctx.fill(); ctx.strokeStyle = col; ctx.lineWidth = 1.5 * d; ctx.stroke();
+    if (!erase) { v.setIso(ctx); ctx.beginPath(); ctx.arc(c.x, c.y, Math.min(s.r, s.spacing / 2), 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.setLineDash([3 * d, 3 * d]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = d; ctx.stroke(); ctx.setLineDash([]); }
+  }
+
   /** the ghost of the hole at the cursor (hole mode): every area's outline dashed white, the green, fairway, water and sand filled, and a dot at the flag; no props */
   private drawHolePreview(v: PaintView) {
     const c = this.cursor; if (!c) return;
@@ -351,9 +411,11 @@ export class PaintTool {
     switch (e.key) {
       case 'Enter': if (!this.pts.length) return false; this.finish(false); break;
       case 'Backspace': if (this.mode !== 'draw' || !this.pts.length) return false; this.pts.length -= 2; break;
-      case 'Escape': if (this.mode === 'hole' || this.mode === 'brush') { this.setMode('draw'); return true; } if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else return false; break;
+      case 'Escape': if (this.mode === 'hole' || this.mode === 'brush' || this.mode === 'plant') { this.setMode('draw'); return true; } if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else return false; break;
       case 'r': case 'R': if (this.mode !== 'hole') return false; this.holeDir = ((this.holeDir + 1) % 4) as 0 | 1 | 2 | 3; break;
-      case '[': case ']': if (this.mode !== 'brush') return false; this.setBrushR(this.brush[this.brushKind].r + (e.key === ']' ? 1 : -1)); break;
+      case '[': case ']':
+        if (this.mode === 'plant') { this.setPlantSet({ r: this.plant[this.plantKind].r + (e.key === ']' ? 1 : -1) }); return true; }
+        if (this.mode !== 'brush') return false; this.setBrushR(this.brush[this.brushKind].r + (e.key === ']' ? 1 : -1)); break;
       case 'Delete': {
         if (!this.selected) return false;
         const a = this.selectedArea(), g = this.hoverH;
@@ -379,6 +441,7 @@ export class PaintTool {
     if (this.mode === 'draw') this.drawOutline(v);
     if (this.mode === 'hole') { this.drawHolePreview(v); return; }
     if (this.mode === 'brush') { this.drawBrush(v); return; }
+    if (this.mode === 'plant') { this.drawPlant(v); return; }
     const a = this.selectedArea();
     if (a) { this.shade(v, a, '', '#fbbf24', 2); this.drawHandles(v, this.drag ? this.drag.cand : a.pts); }
     if (this.drag?.bad) this.drawBad(v, this.drag.cand, this.drag.bad);

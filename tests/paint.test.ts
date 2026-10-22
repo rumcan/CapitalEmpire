@@ -22,7 +22,7 @@ test('rocky dirt saves keep both paintings and border styles when reloaded into 
     ['dirt', 1, 0, 0, 'kerb', SQUARE],
   ];
   const sent = new Map<string, unknown>();
-  const host = { setLotGround: (key: string, patches: unknown) => { sent.set(key, patches); }, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0 };
+  const host = { setLotGround: (key: string, patches: unknown) => { sent.set(key, patches); }, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [] };
   const first = new PaintTool(host);
   first.load(tuples);
   const saved = JSON.parse(JSON.stringify(first.save())) as PaintTuple[];
@@ -253,7 +253,7 @@ function toolHost() {
   const host = {
     setLotGround: (k: string, p: unknown) => { sent.push([k, p]); }, emit() {}, save() {}, toast: (t: string) => { toasts.push(t); },
     affine(o: number[]) { o[0] = 0; o[1] = 0; o[2] = 10; o[3] = 0; o[4] = 0; o[5] = 10; },
-    placeProps: () => 0,
+    placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [],
   };
   return { host, sent, toasts };
 }

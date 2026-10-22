@@ -42,8 +42,8 @@ export interface SaveV5 {
    *  slipway as their in-arm degrees (optional 5th, written only when non-empty; missing = every corner has one), and a lights' [tier, ...split]
    *  (optional 6th: tier 0 fixed-time, 1 actuated, 2 adaptive; the green seconds per phase, none = 18 each; missing = actuated, 18 each) */
   nodes: [number, number, string, number?, number[]?, number[]?][];
-  /** library id, x, y, flip, scale */
-  props: [string, number, number, number, number][];
+  /** library id, x, y, flip, scale, and 1 for a prop placed by a plant brush (optional) */
+  props: [string, number, number, number, number, 1?][];
   /** the treasury and the game day, as before the books (kept so older readers still work; the books hold the truth) */
   money: number; day: number; cam?: { X: number; Y: number; z: number };
   /** the town's lots that are not EMPTY: key, use, level, decline, seed, since (v5; missing = none) */
