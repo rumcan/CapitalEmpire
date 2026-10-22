@@ -2222,3 +2222,6 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   The lit windows: the builder's `find-glows.mjs` is ported as `scripts/assets/find-glows.mjs` (read-only on TrickOrTreat): any house,
   shop, venue or vehicle without the builder's glows (its recoloured and regenerated variations) has them found in its picture by
   prep-sprites and the lot baker: 177 sprites glow now (64 before). Houses the builder's list does not name get a porch light by kind.
+- **Golf structures sized**: placed event structures are fitted to their footprint and then the studio's size (they used the stand-in
+  sprites at full size, half a footprint off), and the food tent, grandstand S, main leaderboard and toilet block use the golf art. The
+  studio lists every golf sprite (the tournament art and the business art's golf buildings and course pieces) under **Golf**.
