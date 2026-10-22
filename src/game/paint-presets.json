@@ -193,5 +193,7 @@
    },
    "lawn": true
   }
- ]
+ ],
+ "blocks": "fescue",
+ "blockShare": 1
 }
