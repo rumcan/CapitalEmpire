@@ -132,3 +132,11 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   in it; (4) `placePresetProps` places a prop that names an `id` with its exact flip and scale; (5) **your generated course areas have no
   `hole` / `kind` tags** (paintcourse.ts is per surface), so the Course hole strip shows a new golf game's holes as empty: C2's hole
   derivation (yours if you take C2) should tag them; (6) a brush stroke that changes no cell now leaves the areas untouched.
+- 2026-10-22 (the art chat): **starting Course builder C2** (the owner asked), branch `claude/course-c2`. **For the coder, please leave these to
+  me until I say it landed:** (1) auto pin and tee markers from the Course tool's painted greens and tees (golf mode): a helper beside your
+  `moveGolfMarker` places / moves / removes markers and their props through your `golfProps` keys, run after each Course action and undo
+  (never inside the undo journal); `Pin` / `TeeMark` get an optional `auto` flag; (2) a one-time tagging of a golf game's painted course
+  by hole (`hole` tag only, no `kind`, from your pins, tees and playing lines), called from `afterLoad` beside `syncGolfProps`, so the
+  hole strip sees the starting nine; (3) per-hole views (par, back and member length, checks) from your `deriveHoles` for the Course
+  panel's strip and a hole inspector (new `src/game/golf/holeview.ts`); (4) `toTuple` saves a `hole` tag without a `kind`. I won't change
+  `deriveHoles`, the Holes tool or the course stats panel.
