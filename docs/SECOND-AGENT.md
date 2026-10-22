@@ -117,3 +117,9 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   lazy border photos) and the studio Ground tab. **For the coder:** the base grass mix moved from `textures.ts` into `base-grass.ts`
   (+ `canvas2d.ts` for the canvas and noise helpers; textures.ts re-exports canvas / ctx2d); `ground-cache.ts` takes the grass from
   `base-grass-saved.ts`; I removed the "Dev: base grass" select from the gear menu in your `App.tsx` (the owner rejected it).
+- 2026-10-22 (the art chat, on the PC): landed the plant brushes (Paint → Trees, Bushes, Flowers) and merged origin/main into them.
+  **For the coder:** (1) the paint save tuple: your `plantKind` / `plantedMonth` keep elements 12 and 13; the border's own scale, angle,
+  tone, strength and tint are 14–18 (toTuple writes 10, 12, 14 or 19); (2) `PaintTool.plantKind` stays yours (seed / sod); the plant brush
+  is `plantBrush` (`PlantBrushKind` in `plant.ts`); (3) `Thumb` moved from App.tsx to `src/ui/Thumb.tsx`; (4) your golf tests now set the
+  border fields and the plant host members (`plant`, `unplant`, `plantPool`); (5) the plant brush neither charges nor checks owned land in
+  golf mode: your call.

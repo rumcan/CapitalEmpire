@@ -61,9 +61,10 @@ exactly where the art chat stopped and what to do next, in order.
    Save writes `src/game/base-grass.json` and encodes the two chosen pictures as `src/assets/ground/base-grass-a.webp` / `-b.webp`; the game
    reads them (through `ground-cache.ts`, where `withBaseGrass` sits today) instead of the dev picker; until the owner saves, the game keeps
    today's grass. Then delete the gear-menu picker.
-3. **IN PROGRESS 2026-10-22: branch `claude/plant-brush`** (on the PC, not merged; tests 690+ pass, no new type errors, browser-checked: planting, Alt rub-out and save/reload keep the plant flag; still to look at: the panel's layout and how dense the default spacings feel, then merge to main). Plant brushes (the owner: "painter should let you add trees as well"): Trees, Bushes, Flowers in the Golf brush row: drag scatters
-   props inside the brush circle (density slider, tree mix), spaced and skipping blocked spots; Rub out / Alt removes only props placed this
-   way (never lot or town props). Engine side like `placePresetProps`.
+3. **DONE 2026-10-22 (on main, browser-checked on the PC).** Plant brushes: Paint → Trees, Bushes, Flowers (size, spacing, smallest and largest
+   size, a picture grid to pick the sprites; Rub out / Alt removes only planted props; free, no refund). In code the brush is
+   `PaintTool.plantBrush` / `PlantBrushKind`: `plantKind` is the coder's seed / sod. Paint save tuple: 12–13 seed / sod and month, **14–18 the
+   border's own style**.
 4. **Course builder C1** (`docs/COURSE-BUILDER.md`): the Course rail tool; the Build tab (the golf brush moves out of Paint), the Presets tab
    (the Golf hole mode moves out of Paint), the hole strip, undo. Tell the coder (SECOND-AGENT.md log): these are the coder's files.
 5. **The game's Golf hole mode reads `hole-presets.json`** (a 1–18 picker; an empty slot falls back to the generator); later "Save hole as
