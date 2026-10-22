@@ -56,6 +56,7 @@ import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeYearEnd, type YearEndResult } from './golf/yearend';
+import { parkRideNeeds } from './golf/parkride';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
 import { adjacentBlockPrice, buyAdjacentBlock, isAdjacentBlock, polyInParcels, type ParcelLandClass } from './golf/parcels';
@@ -2556,6 +2557,7 @@ export class Game {
   const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
   const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
+  for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   return buildCourseStatsPanel(layout, this.golf.tier, have, curM);
   }
   /** evaluates tournament day outcome and tour progression (null outside golf mode or without a finished round) */
@@ -2565,8 +2567,9 @@ export class Game {
   const holes = stats ? deriveHoles(this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })), this.golf.tees, this.golf.pins, this.golf.aims) : [];
   const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
+  for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
-  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes);
+  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {

@@ -22,6 +22,7 @@ import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { BASE_GRASSES, baseGrassId, setBaseGrass } from './game/dev-grass';
 import { STRUCTURES } from './game/golf/tents';
+import { getTournamentWeather } from './game/golf/weather';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
 import { Minimap } from './ui/Minimap';
@@ -160,6 +161,7 @@ export default function App() {
                 <>
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
+                  {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
                   <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>
                   <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>
                   <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>  
@@ -535,6 +537,12 @@ function EvalScreen({ game }: { game: Game }) {
  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
  {ye && (
  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+ {ye.weather && (
+ <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2 text-[11px] text-slate-300">
+ <span className="font-semibold text-amber-200">Weather: {ye.weather.icon} {ye.weather.label}</span>
+ <span className="text-slate-400">{ye.weather.summary}</span>
+ </div>
+ )}
  <div className="grid grid-cols-4 gap-2 text-center">
  <div>
  <div className="text-[10px] uppercase text-slate-400">Satisfaction</div>

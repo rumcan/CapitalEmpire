@@ -10,6 +10,16 @@ import { arrivalShare, exitShare, EXIT_END, GATES_OPEN } from './calendar';
 import { ON_TIME_GRACE_MIN } from './tournamentday';
 import { computeSponsorBreakdown } from './sponsors';
 import { resolveMultiDayTournament, type MultiDaySummary } from './multiday';
+import {
+  WEATHER_INFO,
+  applyWeatherToDayFacts,
+  applyWeatherToSatisfaction,
+  applyWeatherToTentRevenue,
+  getTournamentWeather,
+  hasFirstAidStructure,
+  type WeatherCondition,
+  type WeatherInfo,
+} from './weather';
   
 /** unmeasured default exit 95th percentile (minutes) used until physical parking exit flow is simulated */  
 export const DEFAULT_EXIT_P95_MIN = 35;  
@@ -35,6 +45,7 @@ sponsorIncome?: number;
 tvIncome?: number;
 purse?: number;
 multiDay?: MultiDaySummary;
+weather?: WeatherInfo;
 }
   
 /**  
@@ -122,17 +133,31 @@ courseFacts: CourseFacts,
 prevPoorYears = 0,
 structures: readonly PlacedEventStructure[] = [],
 holes: readonly Hole[] = [],
+seedOrWeather?: number | WeatherCondition,
 ): YearEndResult {
+const weather: WeatherInfo = typeof seedOrWeather === 'string'
+  ? WEATHER_INFO[seedOrWeather]
+  : seedOrWeather !== undefined
+    ? getTournamentWeather(seedOrWeather, roundResult.run || 1, 0)
+    : WEATHER_INFO.clear;
 const totalArrived = roundResult.arrived;
 const missed = Math.max(0, roundResult.sent * PARTY - totalArrived); // sent counts cars, arrived counts spectators (PARTY a car)
 
 const lanes = gateLanesFor(structures, prevTier);
 const gateFlow = measureGateFlows(totalArrived, lanes);
+const dayFacts: DayFacts = applyWeatherToDayFacts({
+  onTime: gateFlow.onTime,
+  late: gateFlow.late,
+  missed,
+  exitP95Min: gateFlow.exitP95Min,
+  avgQueueMin: gateFlow.avgQueueMin,
+  viewing: DEFAULT_VIEWING,
+}, weather.condition);
+const effectiveArrived = dayFacts.onTime + dayFacts.late;
 
 let tentRevenue = 0;
 let tentRentCost = 0;
 let tentUpkeep = 0;
-let viewing = DEFAULT_VIEWING;
 
 if (structures.length > 0) {
  const tentEval = evaluateEventToolDay({
@@ -140,23 +165,18 @@ if (structures.length > 0) {
  holes,
  gates: [],
  tier: prevTier,
- spectators: totalArrived,
+ spectators: effectiveArrived,
  });
- tentRevenue = tentEval.totalRevenue;
+ tentRevenue = applyWeatherToTentRevenue(tentEval.totalRevenue, weather.condition, tentEval.byStructure);
  tentRentCost = tentEval.rentCost;
  tentUpkeep = tentEval.monthlyUpkeep;
 }
-
-const dayFacts: DayFacts = {
-onTime: gateFlow.onTime,
-late: gateFlow.late,
-missed,
-exitP95Min: gateFlow.exitP95Min,
-avgQueueMin: gateFlow.avgQueueMin,
-viewing,
-};
   
- const satisfaction = Math.round(daySatisfaction(dayFacts));  
+ const satisfaction = applyWeatherToSatisfaction(
+   Math.round(daySatisfaction(dayFacts)),
+   weather.condition,
+   hasFirstAidStructure(structures),
+ );  
  const rep = Math.round(reputationAfter(prevRep, satisfaction));  
  const commercial = computeSponsorBreakdown(prevTier, rep, courseFacts.have);
  const v = verdict(prevTier, rep, courseFacts, prevPoorYears);  
@@ -186,7 +206,7 @@ viewing,
   
  const multiDay = resolveMultiDayTournament({
    tier: prevTier,
-   liveArrived: totalArrived,
+   liveArrived: effectiveArrived,
    liveTents: tentRevenue,
    ticketPrice: tierInfo(prevTier).ticket,
    sponsorIncome: commercial.sponsorIncome,
@@ -212,5 +232,6 @@ viewing,
  tvIncome: commercial.tvIncome,
  purse: commercial.purse,
  multiDay,
+ weather,
  };
 }  
