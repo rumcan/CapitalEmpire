@@ -5,6 +5,8 @@ import { CELL, clipToBox, courseAreas, SURFACE_TEX } from '../src/game/golf/pain
 import { generateOldNine } from '../src/game/golf/coursegen';
 import { checkArea, polyArea, polyBox } from '../src/game/paint';
 import { surfacePreset } from '../src/game/paint-presets';
+/** the texture the course paints a surface with: the owner's preset for it when there is one (paint-presets surfacePreset), else its own */
+const texOf = (s: keyof typeof SURFACE_TEX) => surfacePreset(s) ?? SURFACE_TEX[s].tex;
 
 /** a 300 x 450 tile site (600 x 900 m), away from the origin */
 const SITE = { x0: 1000, y0: 1000, x1: 1300, y1: 1450 };
@@ -48,21 +50,21 @@ test('courseAreas on the old nine: all valid and at most CELL, the rough tiles t
   assertValid(areas);
   assert.equal(stats.dropped, 0);
   // the rough is the whole site: 2 x 3 cells, row by row, and its area is the site's
-  const rough = areas.filter(a => a.tex === SURFACE_TEX.rough.tex);
+  const rough = areas.filter(a => a.tex === texOf('rough'));
   assert.equal(rough.length, 6);
   assert.ok(Math.abs(areaSum(rough) - 300 * 450) <= 0.01 * 300 * 450, `rough ${areaSum(rough)}`);
   assert.deepEqual(polyBox(rough[0].pts), [1000, 1000, 1200, 1200]);
   assert.deepEqual(polyBox(rough[1].pts), [1200, 1000, 1300, 1200]);
   // all rough pieces come first
-  assert.ok(areas.slice(0, rough.length).every(a => a.tex === SURFACE_TEX.rough.tex));
+  assert.ok(areas.slice(0, rough.length).every(a => a.tex === texOf('rough')));
   // the same surfaces, in the same order, with the same textures and radii as the layout
   // a surface the owner has a texture preset for is painted with it (paint-presets surfacePreset), the others with their own texture
   assert.deepEqual(runs(areas), runs(lay.areas.map(a => ({ ...SURFACE_TEX[a.surface], tex: surfacePreset(a.surface) ?? SURFACE_TEX[a.surface].tex }))));
   // each green comes after its fringe
   let fr = 0, gr = 0;
   for (const a of areas) {
-    if (a.tex === SURFACE_TEX.fringe.tex) fr++;
-    else if (a.tex === SURFACE_TEX.green.tex) { gr++; assert.ok(fr >= gr, `green ${gr} before its fringe`); }
+    if (a.tex === texOf('fringe')) fr++;
+    else if (a.tex === texOf('green')) { gr++; assert.ok(fr >= gr, `green ${gr} before its fringe`); }
   }
   assert.equal(gr, 9);
 });
@@ -74,7 +76,7 @@ test('seeds 1 to 5 on the old nine and on a 240 x 360 site: all areas valid, non
       const areas = courseAreas(generateOldNine(site, seed), stats);
       assertValid(areas);
       assert.equal(stats.dropped, 0, `seed ${seed}`);
-      const rough = areas.filter(a => a.tex === SURFACE_TEX.rough.tex);
+      const rough = areas.filter(a => a.tex === texOf('rough'));
       const want = (site.x1 - site.x0) * (site.y1 - site.y0);
       assert.ok(Math.abs(areaSum(rough) - want) <= 0.01 * want, `seed ${seed} rough ${areaSum(rough)}`);
     }
