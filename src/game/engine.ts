@@ -320,6 +320,8 @@ export class Game {
   get paintOn() { return this.tool === 'paint' || this.tool === 'course'; }
   /** the Course tool's hole strip: makes hole n current and moves the camera to its areas (when it has any) */
   goToHole(n: number) { this.paint.setHole(n); const b = this.paint.holeBox(n); if (b) this.lookAt((b[0] + b[2]) / 2, (b[1] + b[3]) / 2); }
+  /** the golf land the town never builds on: the course and every parcel the player owns (tiles, [x, y, w, h]) */
+  private golfLand(): [number, number, number, number][] { const g = this.golf; return g ? [g.course, ...(g.parcels ?? [g.parcel])] : []; }
   /** bumped whenever a painted area's ground is sent or removed (the hole views' cache key) */
   private paintRev = 0;
   private holeCache: { key: string; v: HoleView[] } | null = null;
@@ -1025,7 +1027,7 @@ export class Game {
     this.ground.invalidateAll(); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
-    this.traffic.setGolf(!!this.golf, this.golf?.tier ?? 1, this.golf?.rep ?? 0);
+    this.traffic.setGolf(!!this.golf, this.golf?.tier ?? 1, this.golf?.rep ?? 0, this.golfLand());
     this.syncGolfProps();
     this.tagCourseHoles();
     }
@@ -2184,7 +2186,7 @@ export class Game {
   this.golf.tier = ye.tier;
   this.golf.rep = ye.rep;
   this.golf.poorYears = ye.poorYears;
-  this.traffic.setGolf(true, this.golf.tier, this.golf.rep);
+  this.traffic.setGolf(true, this.golf.tier, this.golf.rep, this.golfLand());
   const book = computeTournamentCloseBook(ye, this.traffic.round.last.tickets ?? 0, this.paint.areas, this.traffic.round.last.upkeep, this.traffic.round.last.toll ?? 0);
   if (book.bizIncome > 0) {
   this.traffic.spend('business', -book.bizIncome);
@@ -2705,6 +2707,7 @@ export class Game {
   }
   this.golf.parcels = res.parcels;
   this.golf.parcel = res.bounds;
+  this.traffic.setGolf(true, this.golf.tier, this.golf.rep, this.golfLand()); // the town keeps off the new land too
   this.traffic.spend('construction', res.price);
   this.scheduleSave();
   this.toast(`Purchased ${info.landClass} block ($${res.price.toLocaleString()})`);

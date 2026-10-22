@@ -156,7 +156,7 @@ export class SimClient {
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
-  setGolf(on: boolean, tier: number, rep: number) { this.post({ t: 'golf', on, tier, rep }); }
+  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][]) { this.post({ t: 'golf', on, tier, rep, land }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */

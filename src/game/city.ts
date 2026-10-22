@@ -138,6 +138,12 @@ export interface DisasterView { id: number; kind: DisasterKind; warnAt: number; 
 /** a disaster's transition or repair, for the toasts: warned (secs: seconds to its start), started or ended (n: its closures), repaired or unpaid (cost, $) */
 export interface DisasterNote { k: 'warned' | 'started' | 'ended' | 'repaired' | 'unpaid'; kind: DisasterKind; id: number; secs: number; n: number; cost: number }
 
+/** a lot's box in tiles [x0, y0, x1, y1] (its corners: o, o + u * w, o + n * d and the fourth) */
+function lotBox(l: Lot): [number, number, number, number] {
+  const ax = l.o.x + l.u.x * l.w, ay = l.o.y + l.u.y * l.w, bx = l.o.x + l.n.x * l.d, by = l.o.y + l.n.y * l.d, cx = ax + l.n.x * l.d, cy = ay + l.n.y * l.d;
+  return [Math.min(l.o.x, ax, bx, cx), Math.min(l.o.y, ay, by, cy), Math.max(l.o.x, ax, bx, cx), Math.max(l.o.y, ay, by, cy)];
+}
+
 export class City {
   /** the road network replica (no paint, no occupancy raster: the lanes and the parcels need the geometry only) */
   readonly net = new RoadNetwork();
@@ -259,13 +265,30 @@ export class City {
     this.sim.lotTrips.joined = (a, b) => this.joinedLots(a, b);
   }
 
-  /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), or another business (padded by 2 tiles), so the town never builds there */
+  /** a lot on land the event uses: its box overlaps the stadium site or a car park (padded by a tile), or another business (padded by 2 tiles), or
+   *  the golf land (the course and the player's parcels), so the town never builds there */
   private reserved(l: Lot): boolean {
-    if (!this.site && !this.parkDefs.length && !this.rowDefs.length && !this.businesses.length) return false;
-    const ax = l.o.x + l.u.x * l.w, ay = l.o.y + l.u.y * l.w, bx = l.o.x + l.n.x * l.d, by = l.o.y + l.n.y * l.d, cx = ax + l.n.x * l.d, cy = ay + l.n.y * l.d;
-    const x0 = Math.min(l.o.x, ax, bx, cx), x1 = Math.max(l.o.x, ax, bx, cx), y0 = Math.min(l.o.y, ay, by, cy), y1 = Math.max(l.o.y, ay, by, cy);
+    if (!this.site && !this.parkDefs.length && !this.rowDefs.length && !this.businesses.length && !this.golfLand.length) return false;
+    const [x0, y0, x1, y1] = lotBox(l);
     const hit = (r: { x: number; y: number; w: number; h: number }) => x1 > r.x - 1 && x0 < r.x + r.w + 1 && y1 > r.y - 1 && y0 < r.y + r.h + 1;
-    return (!!this.site && hit(this.site)) || this.parkDefs.some(p => hit(parkBox(p))) || this.rowDefs.some(r => hit(rowBox(r))) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 }));
+    return (!!this.site && hit(this.site)) || this.parkDefs.some(p => hit(parkBox(p))) || this.rowDefs.some(r => hit(rowBox(r))) || this.businesses.some(b => b.type !== 'stadium' && hit({ x: b.x - 1, y: b.y - 1, w: b.w + 2, h: b.h + 2 })) || this.onGolfLand(l);
+  }
+  /** the golf land: the course first, then the parcels the player owns (tiles, [x, y, w, h]; empty in a classic game); the game hour the
+   *  course was last cleared of town lots */
+  private golfLand: [number, number, number, number][] = []; private courseHour = -1;
+  /** a lot whose box overlaps one of the rectangles by more than half a tile (a lot across the road from it is not on it) */
+  private onLand(l: Lot, rs: [number, number, number, number][]): boolean {
+    const [x0, y0, x1, y1] = lotBox(l);
+    return rs.some(([x, y, w, h]) => Math.min(x1, x + w) - Math.max(x0, x) > 0.5 && Math.min(y1, y + h) - Math.max(y0, y) > 0.5);
+  }
+  /** no new lot starts anywhere on the golf land */
+  private onGolfLand(l: Lot): boolean { return this.onLand(l, this.golfLand); }
+  /** the town's lots inside the course (a building site or a house) go, as a bought-out lot does (no compensation); their 'clear' events go
+   *  into out. Houses on the player's other land stay (the bulldozer buys them out) */
+  private clearCourse(out: TownEvent[]) {
+    const course = this.golfLand.slice(0, 1); if (!course.length) return;
+    for (const key of [...this.town.states.keys()]) { const l = this.lots.lots.get(key); if (l && this.onLand(l, course)) { const e = this.town.clear(key); if (e) out.push(e); } }
+    if (out.length) this.syncHour = -1;
   }
   /** the access per zone (256): the sim's live copy (the town reads its own copy, taken each game hour) */
   get access(): Float32Array { return this.sim.access; }
@@ -359,7 +382,12 @@ export class City {
     return true;
   }
   /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
-  setGolf(g: { tier: number; rep: number } | null): void { this.golf = g; this.round.golf = !!g; }
+  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][] } | null): TownEvent[] {
+    this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
+    // the town's lots inside the course go now (and every game hour: a loaded town's lots may come after this): the events to post
+    const ev: TownEvent[] = []; this.clearCourse(ev);
+    return ev;
+  }
   /** starts the season's tournament at the day's boundary `at` (see step), in golf mode with a site and a free round: the round takes one tournament day's
    *  crowd (spectatorDemand of the tier and reputation, a car per PARTY fans, over the towns by population), the clock is frozen at `at` as startRound
    *  freezes it, and the surge begins at once (the season was the build). False, and nothing changes, otherwise */
@@ -594,6 +622,7 @@ export class City {
     if (this.crowd) { this.crowd.step(WALK_V * n * DT / MPT); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
+    const ch = Math.floor(this.sim.clock / GAME_HOUR); if (this.golfLand.length && ch !== this.courseHour) { this.courseHour = ch; this.clearCourse(events); }
     const towns = this.centres.length > 0;
     for (const e of events) { if (e.kind === 'build') { this.builds++; if (towns) this.sell(e.key); } else if (e.kind === 'complete' && towns) this.connect(e); }
     const d = this.budget.dayOf(this.sim.clock); let ledger: Ledger | null = null;
