@@ -20,6 +20,7 @@ import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
+import { CoursePanel } from './ui/course/CoursePanel';
 import { STRUCTURES } from './game/golf/tents';
 import { getTournamentWeather } from './game/golf/weather';
 import { Icon, type IconName } from './ui/Icon';
@@ -38,7 +39,8 @@ const GROUPS: { id: string; label: string; icon: IconName; tools: { id: Tool; la
     { id: 'lane', label: 'Upgrade', key: 'N', icon: 'up' },
     { id: 'downgrade', label: 'Downgrade', key: 'Y', icon: 'down' },
   ] },
-  { id: 'paint', label: 'Paint', icon: 'terrain', tools: [{ id: 'paint', label: 'Paint', key: 'C', icon: 'terrain' }] },
+  { id: 'paint', label: 'Paint', icon: 'terrain', tools: [{ id: 'paint', label: 'Paint', key: 'A', icon: 'terrain' }] },
+  { id: 'course', label: 'Course', icon: 'trophy', tools: [{ id: 'course', label: 'Course', key: 'C', icon: 'trophy' }] },
   { id: 'junction', label: 'Junctions', icon: 'junction', tools: [{ id: 'junction', label: 'Junctions', key: 'J', icon: 'junction' }] },
   { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
   { id: 'transport', label: 'Transport', icon: 'bus', tools: [
@@ -124,7 +126,7 @@ export default function App() {
       <canvas
         ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
-        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.tool === 'paint' ? game.paint.cursorStyle : 'crosshair' }}
+        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : (game?.tool === 'paint' || game?.tool === 'course') ? game.paint.cursorStyle : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
         onPointerMove={e => game?.pointerMove(e.nativeEvent)}
         onPointerUp={() => game?.pointerUp()}
@@ -251,6 +253,7 @@ export default function App() {
                 </Panel>
               )}
               {game.tool === 'paint' && <PaintPanel game={game} />}
+              {game.tool === 'course' && <CoursePanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
@@ -1291,6 +1294,7 @@ function hintFor(g: Game) {
       const h = g.laneHover, up = g.tool === 'lane', head = up ? 'UPGRADE' : 'DOWNGRADE', rev = ' · Right-click a one-way road to reverse it';
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
+    case 'course': { const q = g.paint; return q.mode === 'brush' ? `COURSE (hole ${q.brushHole}, ${q.brushKind}): drag to paint · Alt-drag erases · [ ] size · 1–7 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
     case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';

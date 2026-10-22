@@ -1,9 +1,9 @@
 // The golf hole preset (Paint tool, 'hole' mode): one simple hole made only of ordinary painted areas plus props (flag, trees, bushes, flowers). Pure, no DOM. Local frame: the tee at the origin, the hole along +X.
 import { mulberry } from '../iso';
-import { DEFAULT_STYLE, clampStyle, type BorderSize, type BorderTex, type PaintArea, type PaintTex } from '../paint';
+import { BRUSH_PRESETS, DEFAULT_STYLE, clampStyle, type BorderSize, type BorderTex, type BrushKind, type PaintArea, type PaintTex } from '../paint';
 
-/** a prop of the preset: its kind and its tile position */
-export interface PresetProp { kind: 'flag' | 'tree' | 'bush' | 'flower'; x: number; y: number }
+/** a prop of the preset: its kind and its tile position; a stored preset's prop names its sprite (id), flip and map scale exactly */
+export interface PresetProp { kind: 'flag' | 'tree' | 'bush' | 'flower'; x: number; y: number; id?: string; flip?: boolean; scale?: number }
 /** a hole: its painted areas (paint order, no ids yet) and its props */
 export interface HolePreset { areas: Omit<PaintArea, 'id'>[]; props: PresetProp[] }
 
@@ -79,6 +79,25 @@ export function placeHole(p: HolePreset, x: number, y: number, dir: 0 | 1 | 2 | 
     for (let i = 0; i < ar.pts.length; i += 2) { const [a, b] = at(ar.pts[i]!, ar.pts[i + 1]!, true); pts.push(a, b); }
     return { ...ar, pts };
   });
-  const props = p.props.map(q => { const [a, b] = at(q.x, q.y, false); return { kind: q.kind, x: a, y: b }; });
+  const props = p.props.map(q => { const [a, b] = at(q.x, q.y, false); return { ...q, x: a, y: b }; });
+  return { areas, props };
+}
+
+/** a hole as the studio's Holes tab stores it (src/game/golf/hole-presets.json): areas and props in the local frame (the tee at 0) */
+export interface StoredHole {
+  name: string;
+  areas: { tex: string; border: number; btex: string; radius: number; kind?: string; pts: number[] }[];
+  props: { id: string; x: number; y: number; flip: boolean; scale: number }[];
+}
+/** the brush kind a texture belongs to (the golf brush presets' fill textures; any water is water), or undefined */
+export function kindOfTex(tex: string): BrushKind | undefined {
+  return BRUSH_PRESETS.find(b => b.style.tex === tex)?.kind ?? (tex.startsWith('water') ? 'water' : undefined);
+}
+/** a stored hole as a preset: its areas in the default style with the stored texture, border and corners (a stored kind is kept when it is
+ *  a brush kind), its props with their exact sprites (the flag is the prop whose id names a flag or pin) */
+export function storedHolePreset(h: StoredHole): HolePreset {
+  const kinds = new Set<string>(BRUSH_PRESETS.map(b => b.kind));
+  const areas = h.areas.map(a => ({ pts: a.pts.slice(), ...clampStyle({ ...DEFAULT_STYLE, tex: a.tex as PaintTex, border: a.border as BorderSize, btex: a.btex as BorderTex, radius: a.radius }), ...(a.kind && kinds.has(a.kind) ? { kind: a.kind as BrushKind } : {}) }));
+  const props: PresetProp[] = h.props.map(q => ({ kind: /flag|pin/.test(q.id) ? 'flag' : 'tree', x: q.x, y: q.y, id: q.id, flip: q.flip, scale: q.scale }));
   return { areas, props };
 }

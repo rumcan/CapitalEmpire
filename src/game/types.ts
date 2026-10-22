@@ -48,7 +48,7 @@ export interface Prop {
   plant?: 1;
 }
 
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint';
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
 
