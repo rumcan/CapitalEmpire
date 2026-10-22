@@ -55,10 +55,10 @@ current one. Save everything you write for this game into that folder._
 DONE and on main (see docs/PROGRESS.md "The golf game as of main c07271b"): G1 golf mode, coursegen fixes, costs, parcels and land, hole tools, course stats panel, tournament results and year-end progression, Event tool and tent books, seed or sod grow-in, town districts, course dressing.
 NEXT, one package each (and see the known gaps in PROGRESS.md):
 1. **Balance:** the economy of tents, tickets, green fees and upkeep so a careful player reaches tier 2 in about 3 years (headless scripted campaign test).
-2. **G3 venue flow:** gate queues, the exit wave and exit time, parking fees, shuttles (use  and ; the surge is in  and ).
+2. **G3 venue flow:** gate queues, the exit wave and exit time, parking fees, shuttles (use src/game/golf/venue.ts and src/game/golf/tournamentday.ts; the surge is in src/game/event/surge.ts and src/game/city.ts).
 3. **G5:** sponsors, TV and hospitality (tier 4+), the new card pool, the town growing with success.
 4. **G6:** highway interchanges, park and ride, coaches, the event traffic plan.
-5. **G8:** weather (rain delays) from .
+5. **G8:** weather (rain delays) from src/game/ext/disasters.
 6. **Tidy:** indentation of Argon-edited blocks, upkeep and rent shown in the budget panel rows.
 Rules learned: always check units (RoundResult.sent is cars, arrived is spectators, PARTY 3), icon names (IconName in src/ui/Icon.tsx), existing file names before creating a test, strict tsc (noUnusedLocals), and never weaken existing tests.
 
