@@ -275,7 +275,7 @@ const r3 = (v: number) => Math.round(v * 1000) / 1000;
 export function toTuple(a: PaintArea): PaintTuple {
   const t: PaintTuple = [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint];
   const bd = a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
-  if (a.kind || a.plantKind || bd) t.push(a.hole ?? 0, a.kind ?? '');
+  if (a.kind || a.hole || a.plantKind || bd) t.push(a.hole ?? 0, a.kind ?? '');
   if (a.plantKind || bd) t.push(a.plantKind ?? '', a.plantKind ? a.plantedMonth ?? 0 : 0);
   if (bd) t.push(r3(a.bscale), r3(a.bangle), a.btone, r3(a.btoneAmt), a.btint);
   return t;

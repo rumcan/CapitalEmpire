@@ -64,6 +64,7 @@ import { adjacentBlockPrice, buyAdjacentBlock, isAdjacentBlock, polyInParcels, t
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
+import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { checkStructurePlacement, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
@@ -300,12 +301,56 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => this.setLotGround(k, p), emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k),
-    journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) } });
+  paint = new PaintTool({ setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k),
+    journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
+    changed: pins => this.syncCourseMarkers(pins) });
   /** the Paint and Course tools drive the same PaintTool */
   get paintOn() { return this.tool === 'paint' || this.tool === 'course'; }
   /** the Course tool's hole strip: makes hole n current and moves the camera to its areas (when it has any) */
   goToHole(n: number) { this.paint.setHole(n); const b = this.paint.holeBox(n); if (b) this.lookAt((b[0] + b[2]) / 2, (b[1] + b[3]) / 2); }
+  /** bumped whenever a painted area's ground is sent or removed (the hole views' cache key) */
+  private paintRev = 0;
+  private holeCache: { key: string; v: HoleView[] } | null = null;
+  /** holes 1..18 as the Course panel shows them (par, lengths, checks; golf/holeview.ts), worked out again only when the areas or the markers change */
+  courseHoleViews(): HoleView[] {
+    const g = this.golf, key = `${this.paintRev}:${this.paint.areas.length}:${g ? JSON.stringify([g.pins, g.tees, g.aims]) : ''}`;
+    if (this.holeCache?.key !== key) this.holeCache = { key, v: holeViews(this.paint.areas, g ? { pins: g.pins, tees: g.tees, aims: g.aims } : null) };
+    return this.holeCache.v;
+  }
+  /** fits every hole's pin and tee markers to its painted green and tee (a golf game; golf/holeview.ts markerPlan): runs after each Course change,
+   *  undo and redo, outside the undo journal (pins: a placed preset's flag spot by hole) */
+  private syncCourseMarkers(pins?: Map<number, { x: number; y: number }>) {
+    const g = this.golf; if (!g) return;
+    const ops = markerPlan(this.paint.areas, g.pins, g.tees, pins);
+    if (!ops.length) return;
+    const placed = new Set<number>();
+    for (const o of ops) if (o.op === 'set') { this.setGolfMarker(o.hole, o.kind, o.x, o.y); placed.add(o.hole); } else this.removeGolfMarker(o.hole, o.kind);
+    if (placed.size) this.toast(`Hole ${[...placed].sort((a, b) => a - b).join(', ')}: pin and tee markers fitted to the green and tee`);
+    this.scheduleSave(); this.emit();
+  }
+  /** places or moves a pin or tee marker with its prop, marked auto (it goes when its green or tee is gone) */
+  private setGolfMarker(hole: number, kind: MarkerKind, x: number, y: number) {
+    const g = this.golf!; this.removeGolfMarker(hole, kind);
+    const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
+    const item = LIB_INDEX.get(sprId);
+    if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, 1));
+    if (kind === 'pin') g.pins.push({ hole, x, y, auto: true }); else g.tees.push({ hole, kind, x, y, auto: true });
+  }
+  /** removes a pin or tee marker and its prop (if there is one) */
+  private removeGolfMarker(hole: number, kind: MarkerKind) {
+    const g = this.golf!, key = kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, prop = this.golfProps.get(key);
+    if (prop) { this.removeProp(prop); this.golfProps.delete(key); }
+    const L: { hole: number; kind?: string }[] = kind === 'pin' ? g.pins : g.tees;
+    for (let i = L.length - 1; i >= 0; i--) if (L[i]!.hole === hole && (kind === 'pin' || L[i]!.kind === kind)) L.splice(i, 1);
+  }
+  /** a golf game's painted course by hole (golf/holeview.ts tagByHole): untagged course areas take the hole they belong to (a hole tag, no
+   *  brush kind), so the Course tool's strip and checks see the holes */
+  private tagCourseHoles() {
+    const g = this.golf; if (!g || !g.pins.length) return;
+    const tags = tagByHole(this.paint.areas, g.pins, g.tees, g.aims); let n = 0;
+    this.paint.areas.forEach((a, i) => { if (tags[i]) { a.hole = tags[i]; n++; } });
+    if (n) { this.paintRev++; this.scheduleSave(); }
+  }
   /** the props added and removed while the Paint tool's action is open (undo), or null */
   private propLog: PropLog | null = null;
   /** undo (back) or redo of a prop journal: the props it added go, the props it removed come back (new objects); returns the journal for the opposite step */
@@ -901,6 +946,7 @@ export class Game {
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
     this.traffic.setGolf(!!this.golf, this.golf?.tier ?? 1, this.golf?.rep ?? 0);
     this.syncGolfProps();
+    this.tagCourseHoles();
     }
     golfProps = new Map<string, Prop>();
     golfStructureProps = new Map<number, Prop>();
