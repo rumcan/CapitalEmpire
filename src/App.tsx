@@ -24,6 +24,7 @@ import { CoursePanel } from './ui/course/CoursePanel';
 import { STRUCTURES } from './game/golf/tents';
 import { getTournamentWeather } from './game/golf/weather';
 import { Icon, type IconName } from './ui/Icon';
+import { NightPanel } from './ui/NightPanel';
 import { RoadThumb } from './ui/RoadThumb';
 import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
@@ -203,7 +204,7 @@ export default function App() {
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
-                  <div className="glass absolute right-0 top-full z-30 mt-2 flex w-64 flex-col gap-1 p-2">
+                  <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Recurring dark nights bring kids, monsters and traffic diversions every few game days">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural &amp; paranormal disasters
@@ -213,6 +214,7 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
+                    <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>
