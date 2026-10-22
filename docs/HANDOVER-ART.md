@@ -65,7 +65,7 @@ exactly where the art chat stopped and what to do next, in order.
    size, a picture grid to pick the sprites; Rub out / Alt removes only planted props; free, no refund). In code the brush is
    `PaintTool.plantBrush` / `PlantBrushKind`: `plantKind` is the coder's seed / sod. Paint save tuple: 12–13 seed / sod and month, **14–18 the
    border's own style**.
-4. **Course builder C1** (`docs/COURSE-BUILDER.md`): the Course rail tool; the Build tab (the golf brush moves out of Paint), the Presets tab
+4. **DONE 2026-10-22 (on main, browser-checked; COURSE-BUILDER.md section 6 says what was built).** **Course builder C1** (`docs/COURSE-BUILDER.md`): the Course rail tool; the Build tab (the golf brush moves out of Paint), the Presets tab
    (the Golf hole mode moves out of Paint), the hole strip, undo. Tell the coder (SECOND-AGENT.md log): these are the coder's files.
 5. **The game's Golf hole mode reads `hole-presets.json`** (a 1–18 picker; an empty slot falls back to the generator); later "Save hole as
    preset N" in the game.

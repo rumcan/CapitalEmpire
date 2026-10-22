@@ -2183,3 +2183,6 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
   (no saves with the old art layout existed); (2) **`PaintTool.plantKind`** stays the coder's seed / sod; the art side's plant brush is now
   `PaintTool.plantBrush` and the type `PlantBrushKind` (`plant.ts`). The seed / sod row hides while a plant brush is active.
   **For the coder:** the plant brush does not charge or check owned land in golf mode (planted props are free decoration): your call.
+- **Course builder C1 landed** (browser-checked on the PC: brush, undo / redo by key and button, a generated hole placed as hole 2 and
+  undone with its 118 props, a Shape with key 5, Paint on key A; in the golf game a $192 bunker shape refunded by undo). Details and what is
+  open for C2 in COURSE-BUILDER.md section 6. Tests: `tests/course.test.ts` (8); 805 pass.

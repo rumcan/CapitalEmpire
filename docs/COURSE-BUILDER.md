@@ -55,8 +55,18 @@ undo / redo · Esc back to the surface brush, then out of the tool.
 one and click.
 
 ## 6. Build order (each step browser-checked and landed on main)
-- **C1 (now):** the Course rail button and tool; the palette's Build tab (the golf brush moves out of Paint) and Presets tab (the Golf
+- **C1 (DONE 2026-10-22, on main, browser-checked):** the Course rail button and tool; the palette's Build tab (the golf brush moves out of Paint) and Presets tab (the Golf
   hole mode moves out of Paint, with the 1–18 picker from the studio's `hole-presets.json`); the hole strip (numbers only); undo.
+  As built: the Course tool (key C; Paint moved to A) drives the same `PaintTool` (`course` flag; `enterCourse` / `enterPaint`); the panel is
+  `src/ui/course/CoursePanel.tsx` with the hole strip inside it (`HoleStrip.tsx`, two rows of 9: over the map it hid under the event card);
+  Build = the surfaces as **Brush** or **Shape** (Shape = Draw in the surface's preset style, tagged with the hole and kind), keys 1–7;
+  Presets = Generated or studio slots 1–18 (a slot's props keep their sprite, flip and scale), placed as the current hole or the next free
+  number, areas tagged by kind (`kindOfTex`); Plants = the plant brushes (they stay in Paint too). **Undo / redo** (Ctrl+Z, Ctrl+Y or
+  Ctrl+Shift+Z, and panel buttons) in `PaintTool` for every stroke, shape, preset, erase, handle drag and planting: area snapshots by
+  save tuple, the engine's prop journal (only the props the action itself added or removed), and refunds of what a shape cost.
+  Not undoable: style edits. **Open for C2:** the coder's generated course (`golf/paintcourse.ts`) paints surfaces per course, not per
+  hole, so a new golf game's strip shows 0 holes started and the brush does not join the generated fairways; C2's hole derivation
+  should tag them (or the strip should read `holes.ts`).
 - **C2:** auto pin and tee markers; `holes.ts` reads the tagged areas: par, length, checks in the hole strip and the inspector.
 - **C3:** Plan and Hole focus views; the overlays.
 - **C4:** Plants tab (scatter brush, furniture), "Save hole as preset N" in the game.

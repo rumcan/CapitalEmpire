@@ -125,3 +125,10 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   is `plantBrush` (`PlantBrushKind` in `plant.ts`); (3) `Thumb` moved from App.tsx to `src/ui/Thumb.tsx`; (4) your golf tests now set the
   border fields and the plant host members (`plant`, `unplant`, `plantPool`); (5) the plant brush neither charges nor checks owned land in
   golf mode: your call.
+- 2026-10-22 (the art chat): **Course builder C1 is on main** (COURSE-BUILDER.md section 6). **For the coder:** (1) `Tool` has
+  `'course'` (key C; Paint is now key A); engine input goes to the PaintTool while `paintOn` (paint or course); `setTool` calls
+  `paint.enterCourse()` / `enterPaint()`; `goToHole(n)`; (2) the golf brush and the Golf hole mode left the Paint panel (Course only);
+  (3) undo: `addProp` / `removeProp` record into `propLog` only while a Paint / Course action is open, so your pin moves and tents are never
+  in it; (4) `placePresetProps` places a prop that names an `id` with its exact flip and scale; (5) **your generated course areas have no
+  `hole` / `kind` tags** (paintcourse.ts is per surface), so the Course hole strip shows a new golf game's holes as empty: C2's hole
+  derivation (yours if you take C2) should tag them; (6) a brush stroke that changes no cell now leaves the areas untouched.
