@@ -174,7 +174,11 @@ export class Budget {
    *  (1440 calls of DT land on 1439.9999999998), so the midnight is booked on the step that reaches it */
   dayOf(t: number): number { return Math.floor((t - this.base + 1e-6) / GAME_DAY) + 1; }
   /** spends n $ on kind today: out of the treasury now, into the next ledger */
-  spend(kind: 'construction' | 'compensation', n: number) { if (!this.unlimited) this.money -= n; this.today[kind] += n; }
+  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number) {  
+ if (kind === 'business') { this.bizIncome(-n); return; }  
+ if (kind === 'upkeep') { this.upkeepLive(n); return; }  
+ if (!this.unlimited) this.money -= n; this.today[kind] += n;  
+ }
   /** gives back n $ of today's construction */
   refund(n: number) { this.money += n; this.today.construction -= n; }
   /** pays n $ of upkeep as the sim runs (a round's build and surge): out of the treasury now, into the next ledger's upkeep */

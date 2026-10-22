@@ -51,25 +51,16 @@ current one. Save everything you write for this game into that folder._
   the season's end on the existing event-round surge, the golf HUD (tier, month, months left, skip to tournament), then the engine
   wiring (a new game is a golf game; save and load; legacy saves load as classic).
 
-## 4. The next jobs, in order (keep this list current)
-1. **G1 finish:** the engine wiring is on GitHub branch **`agent2/g1-engine`** (commit 35fadd5: a new game is a golf game with one
-   town, the old nine painted, a clubhouse, car park and drive; save and load; the golf HUD's view; skip to tournament; courses may
-   roll over hills). Its tests and typecheck pass; it is **not yet browser-checked or merged**. Next: run it (`npm run dev`), start a
-   new game, check the town, course, clubhouse, car park and drive, skip to the tournament and watch tier 1 run, save and reload,
-   check a legacy save still loads as three towns; then a PR into main with any fixes.
-2. **Town districts** (a Claude coder was on it 2026-10-21 evening; if it is not on main by the time you read this, write it as a
-   package; the owner asked twice): every town has a clear commercial district (the lots on its main
-   asphalt street near the centre: shops only) and a clear industrial district (a 2 x 2 block corner of its grid toward the highway:
-   works only); the rest residential with a few shops (`src/game/lots/districts.ts`, `useFor` in `src/game/lots/town.ts`).
-3. **G1c, course dressing:** tee markers and flagsticks at the layout's tees and pins, trees lining the holes, a cart path loop, benches.
-4. **G2a, land:** the owned parcel and buying adjacent farm or town blocks (houses bought out at the land price).
-5. **G2b, hole tools:** tee and pin placement, `holes.ts` derivation shown in a course stats panel (par, lengths, warnings).
-6. **G2c, course costs:** painting costs money by surface and m²; seed (months of grow-in) or sod (ready now, 3-5x the price);
-   monthly maintenance.
-7. **G3, tournament days:** spectator demand by tier and reputation, the gates and their queues, the exit wave, on time / missed / exit
-   time, tickets and parking, the new results screen (`tour.ts`, `venue.ts`).
-8. **G4, the Event tool:** tents and structures (`tents.ts`): rent or buy, placement rules, takings and queues.
-Each of these is several packages: split them so each fits one PR.
+## 4. The next jobs, in order (updated 2026-10-22; main c07271b)
+DONE and on main (see docs/PROGRESS.md "The golf game as of main c07271b"): G1 golf mode, coursegen fixes, costs, parcels and land, hole tools, course stats panel, tournament results and year-end progression, Event tool and tent books, seed or sod grow-in, town districts, course dressing.
+NEXT, one package each (and see the known gaps in PROGRESS.md):
+1. **Balance:** the economy of tents, tickets, green fees and upkeep so a careful player reaches tier 2 in about 3 years (headless scripted campaign test).
+2. **G3 venue flow:** gate queues, the exit wave and exit time, parking fees, shuttles (use src/game/golf/venue.ts and src/game/golf/tournamentday.ts; the surge is in src/game/event/surge.ts and src/game/city.ts).
+3. **G5:** sponsors, TV and hospitality (tier 4+), the new card pool, the town growing with success.
+4. **G6:** highway interchanges, park and ride, coaches, the event traffic plan.
+5. **G8:** weather (rain delays) from src/game/ext/disasters.
+6. **Tidy:** indentation of Argon-edited blocks, upkeep and rent shown in the budget panel rows.
+Rules learned: always check units (RoundResult.sent is cars, arrived is spectators, PARTY 3), icon names (IconName in src/ui/Icon.tsx), existing file names before creating a test, strict tsc (noUnusedLocals), and never weaken existing tests.
 
 ## 5. The task-package template (for a Codex agent that knows nothing else)
 Write each package as a file in the Drive folder, about 5,000 characters or less, one job, one PR:

@@ -2134,6 +2134,32 @@ PC was unreachable on 2026-10-21; check `ssh cworker` and otherwise run checks l
 **Read [HANDOVER-ART.md](HANDOVER-ART.md) first:** where the art chat stopped, the unmerged branch `claude/brush-round`, and the next steps
 in order (brush-round, the studio Ground tab for the base grass, plant brushes, Course builder C1, hole presets in the game, golf art).
 
+### G1 landed and browser-checked (2026-10-22 early hours; main 9092048)
+- **A new game is a golf game** (`golf/start.ts`, engine `newGolfGame`): one town, the old nine painted on a parcel to one side (47 Paint areas), the Clubhouse (game-placed
+  business, 40 x 24), a car park and a gravel drive from the town's main avenue; SaveV5.golf (no version bump: a save without it is a classic game).
+  Browser-checked on a dev server (5191): new game, HUD (T1, "Sep 1984", months to go, Skip to tournament), skip ran the months, the tournament started itself
+  (130 cars = about 390 spectators), the round panel and results screen in golf wording ("43% of spectators in before tee-off"), the card draft, the next season
+  (Sep 1985, tournament 1986), save and reload. **Not browser-checked:** loading an old classic save (three towns, a stadium): only reasoned about; check it.
+  Only 43% arrived on the first tournament with no road work: expected until G3 and the car park are tuned.
+- **Argon's modules on main** (pure, tested, **not yet wired**): `golf/costs.ts` (G2c), `parcels.ts` (G2a), `coursestats.ts` (G2b), `tournamentday.ts` (G3),
+  `eventtool.ts` (G4), `dressing.ts` (G1c), the coursegen fixes (G1d), `lots/districts.ts` (6R.7 districts in `Town.useFor`; town and business gates pass), and the
+  `src/ui/CourseStatsPanel.tsx` and `TournamentResults.tsx` components. His 'all tests pass' claims were wrong twice (type errors; a crashing test): always run
+  `tsc --noEmit` and the tests yourself, and scan for risky calls first (the auto-mode classifier refuses to run unreviewed code).
+- **Argon edit-bundle format** (for changes to existing files): `{ticket, description, files:{new files only}, edits:[{path, old, new}]}`, applied with a script that
+  refuses paths outside the repo and any `old` not occurring exactly once (scratchpad `apply-edits.mjs`; re-create it from this description). Bundles unpack with
+  `unpack.mjs` (path-checked) into a holding folder first.
+- **Argon's queue now:** wiring bundles for dressing (props at a new game), the Course stats panel button, and Paint costs. See `docs/ARGON-HANDOFF.md`.
+
+### The golf game as of main c07271b (2026-10-22 small hours): what is wired, browser-checked
+All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, tested and browser-checked by Claude (each fix listed in its commit message).
+- **New game = golf game** (G1): town, old nine painted (+ cart path loop), clubhouse, car park, drive; props (flagsticks, tee markers, benches, trees); $600,000 start.
+- **Year loop:** skip to tournament; tournament on the surge; results (satisfaction, reputation before and after, the tier verdict, tent takings); card draft; next season. Reputation, tier and poorYears persist (`GolfSave`, `golf/yearend.ts`).
+- **Course builder:** Paint charges by surface and area (`golf/costs.ts`), seed or sod with grow-in (absolute month index `Engine.golfMonthIndex`; PaintTuple has optional trailing `plantKind`, `plantedMonth` after the art agent's `hole`, `kind`), land ownership (Land mode, owned outline, Paint refused outside owned land), hole tools (move pins and tee markers, validated), Course stats panel (`Course` button).
+- **Event tool:** place, rent or buy and bulldoze structures on owned land; placeholder sprites; structures may be built one tier ahead (tier 2 needs gate and toilets); tent takings, rent and upkeep booked in the budget.
+- **Town districts (6R.7):** shops on the main asphalt street near the centre, works in the grid corner nearest the highway (`lots/districts.ts`).
+- **Known gaps / next:** the economy is unbalanced (tent takings $115 against a $41,000 outlay); only 37-43% of spectators arrive with no road work (is the car park wired to the clubhouse doors well?); no gate queues or exit wave yet (G3), no sponsors, TV, weather or highways (G5, G6, G8); real tent art is the art agent's (GOLF-SPRITES.md); the old classic-save load has NOT been browser-checked; PaintPanel and Course UI were not looked at by eye on a full-size screen (the Browser pane was tiny); some edited blocks are under-indented (Gemini flattens indentation).
+- **Argon workflow:** see `docs/ARGON-HANDOFF.md`; edit-bundle format and the applier script are described in the 2026-10-22 PROGRESS notes above and the memory file; Argon's usage resets roughly every 5 hours, he delivers a batch of two bundles in about 20-30 minutes.
+
 ## The art chat, 2026-10-22 (the new PC; a cloud session working on the owner's checkout)
 - **How this session works:** no npm registry in the cloud container, so checks run with the preinstalled esbuild (npm test as written),
   TypeScript 6 against a baseline of the vite-type errors (no new errors is the bar; run the real `npm run typecheck` on the PC), and a
@@ -2149,3 +2175,11 @@ in order (brush-round, the studio Ground tab for the base grass, plant brushes, 
   textures.ts, same output at the defaults), `canvas2d.ts` (the canvas and noise helpers), `base-grass.json` (saved: false = today's grass),
   `base-grass-saved.ts` replaces `dev-grass.ts`; the gear-menu picker is removed. Browser-checked: the tab previews and saves; the game
   rebuilt its textures with a saved photo grass.
+- **Plant brushes landed** (HANDOVER-ART 3.3, browser-checked on the PC): Paint → Trees, Bushes, Flowers. Panel fixes before the merge: the sprite pick
+  shows pictures (`src/ui/Thumb.tsx`, moved out of App.tsx), the size range is two labelled sliders (Smallest / Largest), the hint bar names the
+  plant brush. Default spacings kept (trees 8 m, bushes 4 m, flowers 2 m; every value is a slider). Planted props are free, no bulldoze refund.
+- **Merged origin/main (the coder's G1–G8) into the art work.** Two clashes resolved: (1) **the paint save tuple**: the coder's `plantKind`
+  (seed / sod) and `plantedMonth` keep elements 12 and 13; the border's own scale, angle, tone, strength and tint moved from 12–16 to **14–18**
+  (no saves with the old art layout existed); (2) **`PaintTool.plantKind`** stays the coder's seed / sod; the art side's plant brush is now
+  `PaintTool.plantBrush` and the type `PlantBrushKind` (`plant.ts`). The seed / sod row hides while a plant brush is active.
+  **For the coder:** the plant brush does not charge or check owned land in golf mode (planted props are free decoration): your call.

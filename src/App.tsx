@@ -20,10 +20,14 @@ import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
+import { STRUCTURES } from './game/golf/tents';
+import { getTournamentWeather } from './game/golf/weather';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
 import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
+import { CourseStatsPanel } from './ui/CourseStatsPanel';
+import { formatPercent } from './ui/TournamentResults';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
@@ -67,6 +71,8 @@ export default function App() {
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New town, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
+  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
+ const [eventTool, setEventTool] = useState(false);
   /** the last tool picked in each rail group, so a group's tab returns to it */
   const last = useRef<Record<string, Tool>>({});
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
@@ -155,7 +161,12 @@ export default function App() {
                 <>
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
-                  <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
+                  {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
+                  <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>
+                  <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>
+                  <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>  
+ <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>  
+ <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -265,12 +276,44 @@ export default function App() {
           </div>
 
           {(game.traffic.car || game.traffic.watch?.node) && (
-            <div className="absolute left-[444px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
-              {game.traffic.car && <CarPanel game={game} />}
-              {game.traffic.watch?.node && <RoutesPanel game={game} />}
-            </div>
+          <div className="absolute left-[444px] top-[var(--hud-top,6rem)] z-20 flex w-64 flex-col gap-2">
+          {game.traffic.car && <CarPanel game={game} />}
+          {game.traffic.watch?.node && <RoutesPanel game={game} />}
+          </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
+          {courseStats && (
+          <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
+          <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
+          </div>
+          )}
+          {eventTool && gv && (
+          <div className={`pointer-events-auto absolute ${game?.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 max-h-[75vh] w-80 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`}>
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <div className="flex items-center gap-2 font-semibold text-amber-200"><Icon name="buildings" size={18} />Event Structures</div>
+          <button className="btn-icon" onClick={() => { setEventTool(false); if (game) game.eventTool = false; bump(); }}>✕</button>
+          </div>
+          <div className="space-y-1.5 text-xs">
+          {STRUCTURES.filter(s => s.tier <= gv.tier + 1).map(s => (
+          <div key={s.id} className="space-y-1 rounded-lg border border-white/5 bg-white/5 p-2">
+          <div className="flex justify-between font-medium text-white">
+          <span>{s.name}</span>
+          <span className="text-[10px] text-slate-400">{s.footprint.w}×{s.footprint.h}{s.unit ? ` · ${s.capacity} ${s.unit}` : ''}</span>
+          </div>
+          <p className="text-[11px] text-slate-400">{s.blurb}</p>
+          <div className="flex gap-1.5 pt-1">
+          {s.rent > 0 && (
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'rent' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'rent'); bump(); } }}>Rent ${s.rent.toLocaleString()}</button>
+          )}
+          {s.buy > 0 && (
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'buy' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'buy'); bump(); } }}>Buy ${s.buy.toLocaleString()}</button>
+          )}
+          </div>
+          </div>
+          ))}
+          </div>
+          </div>
+          )}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.eventMode && !game.site && !game.golfMode && (
@@ -437,9 +480,9 @@ function RoundPanel({ game }: { game: Game }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-display text-base font-bold tracking-wide text-[var(--gold-hi)] uppercase">{gv ? gv.tierName : 'Event: Stadium'}</span>
-              <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[10px] font-bold uppercase text-[var(--gold-hi)]">Level {r.level}</span>
+              <span className="rounded-md border border-[var(--gold-line)] px-1.5 text-[10px] font-bold uppercase text-[var(--gold-hi)]">{gv ? `T${gv.tier}` : `Level ${r.level}`}</span>
             </div>
-            <span className="text-sm">{r.year} – Run {r.runs + 1}</span>
+            <span className="text-sm">{gv ? gv.month : `${r.year} – Run ${r.runs + 1}`}</span>
           </div>
         </div>
         <p className="mt-2 max-w-[15rem] text-xs text-slate-300">{sentence}</p>
@@ -472,17 +515,54 @@ function RoundPanel({ game }: { game: Game }) {
 /** the evaluation screen (Phase 5 step 7b): a centred card over the map, shown in eval only. The arrival rate and its change, the towns, the money, the
  *  bottlenecks at kick-off (Go jumps there), and the draft of cards: picking one opens the way back to the valley (closeRound). No close button */
 function EvalScreen({ game }: { game: Game }) {
-  const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
-  if (!last) return null;
-  const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
-  return (
-    <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
-      <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
-        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
-        <div>
+ const r = game.traffic.round, last = r.last, golf = game.golfMode, gv = golf ? game.golfView() : null;
+ if (!last) return null;
+ const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
+ const ye = golf ? game.golfYearEnd(last) : null;
+ return (
+ <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
+ <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
+ <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
+ {ye && (
+ <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+ {ye.weather && (
+ <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-2 text-[11px] text-slate-300">
+ <span className="font-semibold text-amber-200">Weather: {ye.weather.icon} {ye.weather.label}</span>
+ <span className="text-slate-400">{ye.weather.summary}</span>
+ </div>
+ )}
+ <div className="grid grid-cols-4 gap-2 text-center">
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Satisfaction</div>
+ <div className="text-base font-bold text-amber-200">{formatPercent(ye.satisfaction)}</div>
+ <div className="text-[10px] text-slate-400">Q {Math.round(ye.facts.avgQueueMin)}m · Exit {Math.round(ye.facts.exitP95Min)}m</div>
+ </div>
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Reputation</div>
+ <div className="text-base font-bold text-white">
+ {ye.prevRep} → <span className={ye.rep >= ye.prevRep ? 'text-emerald-400' : 'text-rose-400'}>{ye.rep}</span>
+ </div>
+ </div>
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Tent Takings</div>
+ <div className="text-base font-bold text-emerald-300">{money(ye.tentRevenue ?? 0)}</div>
+ </div>
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Next Year</div>
+ <div className="text-xs font-semibold text-emerald-300">{ye.verdictText}</div>
+ </div>
+ </div>
+          {ye.multiDay && ye.multiDay.resolvedDays > 0 && (
+            <div className="mt-2 border-t border-white/10 pt-2 text-center text-[11px] text-slate-300">
+              <span className="font-semibold text-amber-300">{ye.multiDay.statusLine}</span> · Total {ye.multiDay.totalSpectators.toLocaleString()} spectators · {money(ye.multiDay.totalRevenue)} gross
+            </div>
+          )}
+ </div>
+ )}
+ <div>
           <p><span className="text-4xl font-bold tabular-nums text-amber-200">{pct}%</span> <span className="text-sm text-slate-200">{golf ? 'of spectators in before tee-off' : 'of fans in before kick-off'}</span></p>
           <p className="text-xs text-slate-400">
-            {delta === null ? 'First run at this level'
+            {delta === null ? (golf ? 'First tournament' : 'First run at this level')
               : delta > 0 ? <span className="tabular-nums text-emerald-300">▲ +{delta} points since the last run</span>
               : delta < 0 ? <span className="tabular-nums text-red-300">▼ −{-delta} points since the last run</span>
               : 'No change since the last run'}
@@ -495,7 +575,7 @@ function EvalScreen({ game }: { game: Game }) {
           ))}
         </div>
         <p className="text-sm text-slate-200">
-          Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span>
+        Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ye.multiDay.totalTickets : last.tickets)}</span></>}{ye?.tentRevenue !== undefined && ye.tentRevenue > 0 && <> · Tents <span className="tabular-nums text-emerald-300">{sgn((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ye.multiDay.totalTents : ye.tentRevenue)}</span></>}{ye?.sponsorIncome !== undefined && ye.sponsorIncome > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(ye.sponsorIncome)}</span></>}{ye?.tvIncome !== undefined && ye.tvIncome > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(ye.tvIncome)}</span></>}{ye?.purse !== undefined && ye.purse > 0 && <> · Purse <span className="tabular-nums text-red-300">−{money(ye.purse)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0) + ((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ((ye.multiDay.totalTickets - (last.tickets ?? 0)) + (ye.multiDay.totalTents - (ye.tentRevenue ?? 0))) : 0)) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net + (ye?.tentRevenue ?? 0) + (ye?.sponsorIncome ?? 0) + (ye?.tvIncome ?? 0) - (ye?.purse ?? 0) + ((ye?.multiDay && ye.multiDay.resolvedDays > 0) ? ((ye.multiDay.totalTickets - (last.tickets ?? 0)) + (ye.multiDay.totalTents - (ye.tentRevenue ?? 0))) : 0))}</span>
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">
@@ -1212,7 +1292,7 @@ function hintFor(g: Game) {
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
-    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantKind}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
+    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return g.parking.mode === 'rows' ? 'ROWS: drag along the ground to lay bays · Tab flips the side · Shift snaps 15° · click a row to remove it' : g.parking.mode === 'curb' ? 'ON-STREET: hover a road and click the kerb to park along it · click again to remove' : 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';

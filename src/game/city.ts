@@ -281,8 +281,8 @@ export class City {
 
   /** a new valley: its terrain classes, the water field, the highway entry (tiles), the seed, the town centres (tiles; none: the single town) and the
    *  heights (HS*HS metres, the terrain's height field: the disasters' flood and slope tests; none: flat); the town starts again, at the sim time (no lots yet) */
-  terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = [], height?: Float32Array): void {
-    this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
+  terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = [], height?: Float32Array, golf = false): void {
+  this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
     this.heightOf = height ? (x, y) => sampleField(height, x, y) : () => 0; this.segs = new WeakMap();
     this.centres = towns;
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
@@ -295,8 +295,8 @@ export class City {
     this.resetDisasters(seed);
     // a new valley has no toll gates until the player places them again (their booths are the old roads')
     this.setTolls([]);
-    this.setBudget(null, null);
-  }
+    this.setBudget(null, null, golf);
+    }
 
   /** the road upkeep per game day, $: the sum of the road stretches' upkeep (segUpkeep, as dayIn builds them), the junctions' signal upkeep,
    *  and the loans' interest; cached until a net batch, a loan change or new books */
@@ -417,8 +417,8 @@ export class City {
 
   /** the books replaced: a saved budget, or null for a fresh one (its day 1 starts at the midnight of the current sim day); the career
    *  saved with them, or a fresh one (at the hamlet) if none is given */
-  setBudget(s: BudgetSave | null, career?: CareerSave | null): void {
-    this.budget = s ? Budget.from(s) : Budget.from(undefined, startMoney(this.centres.length > 0));
+  setBudget(s: BudgetSave | null, career?: CareerSave | null, golf = false): void {
+  this.budget = s ? Budget.from(s) : Budget.from(undefined, (golf || this.golf) ? 600000 : startMoney(this.centres.length > 0));
     this.feeKeys = new Set(s?.feeKeys ?? []);
     this.budget.unlimited = this.unlimited;
     if (!s) this.budget.base = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
@@ -436,7 +436,7 @@ export class City {
   setUnlimited(on: boolean): void { this.unlimited = on; this.budget.unlimited = on; }
 
   /** spends n $ on kind (see Budget.spend); a negative construction n gives it back */
-  spend(kind: 'construction' | 'compensation', n: number): void { this.budget.spend(kind, n); }
+  spend(kind: 'construction' | 'compensation' | 'business' | 'upkeep', n: number): void { this.budget.spend(kind, n); }
   /** takes a loan unit (true: borrow, if the town can hold one) or repays one (false); false if the books refuse */
   loan(take: boolean): boolean { this.upkeepC = null; return take ? this.budget.borrow(this.town.pop) : this.budget.repay(); }
 

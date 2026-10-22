@@ -2,16 +2,16 @@ import { mulberry } from './iso';
 
 /** The plant brushes (Paint → Golf brush row: Trees, Bushes, Flowers): a drag scatters props inside the brush circle, spaced apart and
  *  skipping blocked spots; Rub out / Alt removes only props placed this way (Prop.plant), never lot, town or forest props. */
-export type PlantKind = 'trees' | 'bushes' | 'flowers';
+export type PlantBrushKind = 'trees' | 'bushes' | 'flowers';
 /** a plant brush: radius r and spacing (tiles; one tile is 2 m), the size range (lo..hi times the sprite's map scale), and the sprites it
  *  picks from (null = every sprite of the kind) */
 export interface PlantSet { r: number; spacing: number; lo: number; hi: number; ids: string[] | null }
-export const PLANT_KINDS: { kind: PlantKind; name: string; col: string }[] = [
+export const PLANT_KINDS: { kind: PlantBrushKind; name: string; col: string }[] = [
   { kind: 'trees', name: 'Trees', col: '#4f8a3a' },
   { kind: 'bushes', name: 'Bushes', col: '#6fae4a' },
   { kind: 'flowers', name: 'Flowers', col: '#d98ab5' },
 ];
-export const PLANT_DEFAULTS: Record<PlantKind, PlantSet> = {
+export const PLANT_DEFAULTS: Record<PlantBrushKind, PlantSet> = {
   trees: { r: 6, spacing: 4, lo: 0.85, hi: 1.15, ids: null },
   bushes: { r: 4, spacing: 2, lo: 0.85, hi: 1.15, ids: null },
   flowers: { r: 3, spacing: 1, lo: 0.85, hi: 1.15, ids: null },
@@ -23,13 +23,13 @@ export const FLOWER_IDS = ['town:hydrangea', 'town:fern', 'town:ornamental_grass
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 const fin = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
 /** a plant brush from storage (or a partial edit), every value held to its range; ids keeps only strings (an empty list stays empty) */
-export function clampPlant(s: Partial<PlantSet> | undefined, kind: PlantKind): PlantSet {
+export function clampPlant(s: Partial<PlantSet> | undefined, kind: PlantBrushKind): PlantSet {
   const D = PLANT_DEFAULTS[kind], lo = clamp(fin(s?.lo, D.lo), PLANT_SIZE[0], PLANT_SIZE[1]), hi = clamp(fin(s?.hi, D.hi), PLANT_SIZE[0], PLANT_SIZE[1]);
   return { r: clamp(fin(s?.r, D.r), PLANT_R[0], PLANT_R[1]), spacing: clamp(fin(s?.spacing, D.spacing), PLANT_SPACING[0], PLANT_SPACING[1]), lo: Math.min(lo, hi), hi: Math.max(lo, hi), ids: Array.isArray(s?.ids) ? s.ids.filter((x): x is string => typeof x === 'string') : null };
 }
 
 /** the sprites a kind can plant, from the library items (in library order): trees = kind tree, bushes = kind bush but the flowers, flowers = FLOWER_IDS */
-export function plantPool(items: readonly { id: string; name: string; kind: string }[], kind: PlantKind): { id: string; name: string }[] {
+export function plantPool(items: readonly { id: string; name: string; kind: string }[], kind: PlantBrushKind): { id: string; name: string }[] {
   const flowers = new Set(FLOWER_IDS);
   return items.filter(it => kind === 'trees' ? it.kind === 'tree' : kind === 'bushes' ? it.kind === 'bush' && !flowers.has(it.id) : flowers.has(it.id)).map(it => ({ id: it.id, name: it.name }));
 }

@@ -11,6 +11,7 @@ import type { RoundSave } from './event/round';
 import type { BusinessId } from './business/catalogue';
 import type { BizStats } from './business/state';
 import type { Seg } from './network';
+import type { GolfSave } from './golf/mode';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
@@ -85,6 +86,8 @@ export interface SaveV5 {
   bizStats?: BizStats[];
   /** the roads' speed-limit tier (0 to 3; absent: 0) */
   speed?: number;
+  /** the golf game's state (golf/mode.ts; optional, no version bump; missing = a legacy classic game, which loads as before) */
+  golf?: GolfSave;
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',

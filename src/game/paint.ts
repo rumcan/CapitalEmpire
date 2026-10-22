@@ -10,14 +10,17 @@ export type BorderTex = PaintTex | 'kerb';
 export type BorderSize = 0 | 1 | 2 | 3;
 /** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge, corners rounded by radius (tiles, 0 sharp),
  *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb');
- *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone */
-export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind }
+ *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
+ *  plantKind / plantedMonth: a golf area sown from seed (grows in) or laid as sod, and the month it was planted */
+export interface PaintArea { id: number; pts: number[]; tex: PaintTex; scale: number; angle: number; border: BorderSize; btex: BorderTex; radius: number; tone: 0 | 1 | 2; toneAmt: number; tint: string; bscale: number; bangle: number; btone: 0 | 1 | 2; btoneAmt: number; btint: string; hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number }
 /** the golf brush's kinds: the areas a stroke paints (BRUSH_PRESETS) */
 export type BrushKind = 'rough' | 'water' | 'fairway' | 'tee' | 'bunker' | 'green' | 'path';
-/** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint, hole, kind, bscale, bangle, btone, btoneAmt, btint]; elements 6 to 9 are optional on load (older saves have no radius, and none
- *  has no tone: they load sharp and untoned); 10 and 11 (the hole and the brush kind) are written for a brush area or one with a border style (as 0 and '' when absent, no tag on load);
- *  12 to 16 (the border's scale, angle, tone, strength and tint) are written only when one differs from its default, and optional on load; toTuple writes ten, twelve or seventeen */
-export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, number?, number?, number?, number?, string?];
+/** the save tuple: [tex, scale, angle, border, btex, pts, radius, tone, toneAmt, tint, hole, kind, plantKind, plantedMonth, bscale, bangle, btone, btoneAmt, btint];
+ *  elements 6 to 9 are optional on load (older saves have no radius, and none has no tone: they load sharp and untoned); 10 and 11 (the hole and the brush kind) are
+ *  written when anything after them is (as 0 and '' when absent, no tag on load); 12 and 13 (seed or sod, the month) when the area has a plantKind or a border style
+ *  (as '' and 0 when absent); 14 to 18 (the border's scale, angle, tone, strength and tint) only when one differs from its default, and optional on load;
+ *  toTuple writes ten, twelve, fourteen or nineteen */
+export type PaintTuple = [string, number, number, number, string, number[], number?, number?, number?, string?, number?, string?, string?, number?, number?, number?, number?, number?, string?];
 /** the draw order layer of each brush kind (a patch's z is layer * 1e6 + id, so a later kind paints over an earlier one) */
 export const BRUSH_LAYER: Record<BrushKind, number> = { rough: 1, water: 2, fairway: 3, tee: 4, bunker: 5, green: 6, path: 7 };
 const BRUSH_KIND_IDS = new Set<string>(Object.keys(BRUSH_LAYER));
@@ -272,7 +275,8 @@ const r3 = (v: number) => Math.round(v * 1000) / 1000;
 export function toTuple(a: PaintArea): PaintTuple {
   const t: PaintTuple = [a.tex, r3(a.scale), r3(a.angle), a.border, a.btex, a.pts.slice(), r3(a.radius), a.tone, r3(a.toneAmt), a.tint];
   const bd = a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle || a.btone !== DEFAULT_STYLE.btone || a.btoneAmt !== DEFAULT_STYLE.btoneAmt || a.btint !== DEFAULT_STYLE.btint;
-  if (a.kind || bd) t.push(a.hole ?? 0, a.kind ?? '');
+  if (a.kind || a.plantKind || bd) t.push(a.hole ?? 0, a.kind ?? '');
+  if (a.plantKind || bd) t.push(a.plantKind ?? '', a.plantKind ? a.plantedMonth ?? 0 : 0);
   if (bd) t.push(r3(a.bscale), r3(a.bangle), a.btone, r3(a.btoneAmt), a.btint);
   return t;
 }
@@ -283,10 +287,12 @@ export function fromTuples(ts: PaintTuple[]): PaintArea[] {
   for (const t of ts) {
     if (checkArea(t[5]) !== '') continue;
     const s = clampStyle({ tex: t[0] as PaintTex, scale: t[1], angle: t[2], border: t[3] as BorderSize, btex: t[4] as BorderTex, radius: t[6] ?? 0, tone: (t[7] ?? 0) as 0 | 1 | 2, toneAmt: t[8] ?? DEFAULT_STYLE.toneAmt, tint: t[9] ?? DEFAULT_STYLE.tint,
-      bscale: t[12] ?? DEFAULT_STYLE.bscale, bangle: t[13] ?? DEFAULT_STYLE.bangle, btone: (t[14] ?? 0) as 0 | 1 | 2, btoneAmt: t[15] ?? DEFAULT_STYLE.btoneAmt, btint: t[16] ?? DEFAULT_STYLE.btint });
-    const tags: { hole?: number; kind?: BrushKind } = {};
+      bscale: t[14] ?? DEFAULT_STYLE.bscale, bangle: t[15] ?? DEFAULT_STYLE.bangle, btone: (t[16] ?? 0) as 0 | 1 | 2, btoneAmt: t[17] ?? DEFAULT_STYLE.btoneAmt, btint: t[18] ?? DEFAULT_STYLE.btint });
+    const tags: { hole?: number; kind?: BrushKind; plantKind?: 'seed' | 'sod'; plantedMonth?: number } = {};
     if (Number.isInteger(t[10]) && t[10]! > 0) tags.hole = t[10];
     if (typeof t[11] === 'string' && BRUSH_KIND_IDS.has(t[11])) tags.kind = t[11] as BrushKind;
+    if (typeof t[12] === 'string' && (t[12] === 'seed' || t[12] === 'sod')) tags.plantKind = t[12];
+    if (tags.plantKind && Number.isInteger(t[13])) tags.plantedMonth = t[13];
     out.push({ id: out.length + 1, pts: t[5].slice(), ...s, ...tags });
   }
   return out;

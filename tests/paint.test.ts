@@ -325,12 +325,15 @@ test('brush tags: a plain area keeps a 10-element tuple; hole and kind round-tri
   assert.deepEqual(fromTuples(bad), [{ id: 1, pts: SQUARE, ...DEFAULT_STYLE, kind: 'green' }, { id: 2, pts: SQUARE, ...DEFAULT_STYLE }]);
 });
 
-test('border style: a non-default border keeps its scale, angle, tone, strength and tint through a tuple (17 elements)', () => {
+test('border style: a non-default border keeps its scale, angle, tone, strength and tint through a tuple (19 elements, after seed / sod at 12 and 13)', () => {
   const area: PaintArea = { id: 1, pts: SQUARE.map(v => v * 3), tex: 'pad', scale: 1, angle: 0, border: 2, btex: 'kerb', radius: 0, tone: 0, toneAmt: 0.35, tint: '#000000', bscale: 2, bangle: -30, btone: 1, btoneAmt: 0.6, btint: '#402010' };
   const tuple = toTuple(area);
-  assert.equal(tuple.length, 17);
-  assert.deepEqual(tuple.slice(12), [2, -30, 1, 0.6, '#402010']);
+  assert.equal(tuple.length, 19);
+  assert.deepEqual(tuple.slice(10), [0, '', '', 0, 2, -30, 1, 0.6, '#402010']);
   assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([tuple])) as PaintTuple[]), [area]);
+  const sown: PaintArea = { ...area, kind: 'green', hole: 2, plantKind: 'seed', plantedMonth: 7 };
+  assert.deepEqual(toTuple(sown).slice(10, 14), [2, 'green', 'seed', 7]);
+  assert.deepEqual(fromTuples(JSON.parse(JSON.stringify([toTuple(sown)])) as PaintTuple[]), [sown]);
 });
 
 test('border style: a default-border area keeps its tuple length (10, or 12 for a brush area) and loads the defaults', () => {
