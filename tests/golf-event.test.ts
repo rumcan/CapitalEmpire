@@ -13,7 +13,7 @@ const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 const tent = (o: Partial<Parameters<typeof tentDay>[0]> = {}) => tentDay({ kind: 'food', tier: 1, capacityPerHour: 300, hoursOpen: 8, spectators: 1000, price: PRICE.normal, ...o });
 
 test('STRUCTURES: unique ids, positive footprints, and STRUCTURE indexes every row', () => {
-  assert.equal(STRUCTURES.length, 26);
+  assert.equal(STRUCTURES.length, 28);
   assert.equal(new Set(STRUCTURES.map(s => s.id)).size, STRUCTURES.length);
   for (const s of STRUCTURES) {
     assert.ok(s.footprint.w > 0 && s.footprint.h > 0, `${s.id} has a positive footprint`);

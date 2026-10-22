@@ -38,6 +38,8 @@ export const STRUCTURES: StructureType[] = [
   { id: 'rangeStand', name: 'Practice range grandstand', kind: 'grandstand', footprint: { w: 12, h: 4 }, rent: 5000, buy: 30000, capacity: 600, unit: 'seats', tier: 3, blurb: 'viewing; the players practice here' },
   { id: 'sponsorDisplay', name: 'Sponsor display', kind: 'display', footprint: { w: 3, h: 3 }, rent: 0, buy: 0, capacity: 0, unit: '', tier: 3, blurb: 'a car on a plinth and banners; earns a sponsor bonus' },
   { id: 'helipad', name: 'Helipad', kind: 'helipad', footprint: { w: 10, h: 10 }, rent: 0, buy: 60000, capacity: 0, unit: '', tier: 5, blurb: 'VIP satisfaction (tier 5 hospitality)' },
+  { id: 'hotel', name: 'Resort hotel', kind: 'info', footprint: { w: 16, h: 10 }, rent: 15000, buy: 120000, capacity: 120, unit: 'rooms', tier: 3, blurb: 'rooms for players, officials and travelling fans; tier 4 needs one' },
+  { id: 'interchange', name: 'Highway interchange', kind: 'transport', footprint: { w: 24, h: 14 }, rent: 0, buy: 250000, capacity: 4, unit: 'lanes', tier: 4, blurb: 'grade-separated slip roads at the parcel edge nearest the town road; tier 5 needs one' },
 ];
 
 /** every structure type by id */

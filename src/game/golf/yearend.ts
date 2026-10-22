@@ -1,5 +1,6 @@
 // Year-end tournament evaluation, satisfaction, reputation shift, and tier progression (docs/GOLF-PLAN.md sections 5.4 and 8.1-8.2). Pure TS, no DOM.  
 import type { RoundResult } from '../event/round';
+import { BUSINESS } from '../business/catalogue';
 import { PARTY } from '../event/config';
 import { evaluateEventToolDay, type PlacedEventStructure } from './eventtool';
 import type { Hole } from './holes';
@@ -12,6 +13,40 @@ import { courseMonthlyUpkeep } from './costs';
 
 /** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 25%, about 36,000 dollars for the old nine, which is what the campaign simulator assumes (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
 export const COURSE_UPKEEP_YEAR_SHARE = 0.25;
+
+/** Green fee ($) per round from the placed Clubhouse business ($22/visitor, GOLF-PLAN 2.1). */
+export const GREEN_FEE_PER_ROUND = BUSINESS.clubhouse.pricePerVisitor;
+
+/** Representative off-season billing days per 12-month season (2 sample billing days/month, GOLF-PLAN 2.1). */
+export const OFF_SEASON_PLAY_DAYS = 24;
+
+/** Daily off-season golfers scaling with course quality from coursestats (0..100), reputation (0..100), and holes. */
+export function dailyGolfers(qualityScore: number, reputation: number, holes = 9): number {
+  if (holes <= 0) return 0;
+  const q = Math.min(100, Math.max(0, qualityScore)) / 100;
+  const r = Math.min(100, Math.max(0, reputation)) / 100;
+  const holeFactor = holes >= 18 ? 1.25 : Math.max(0.5, holes / 9);
+  return Math.round((12 + 56 * r) * (0.4 + 0.6 * q) * holeFactor);
+}
+
+/** Annual off-season green-fee revenue ($) booked through the Clubhouse business line. */
+export function greenFeeIncome(qualityScore: number, reputation: number, holes = 9): number {
+  return dailyGolfers(qualityScore, reputation, holes) * GREEN_FEE_PER_ROUND * OFF_SEASON_PLAY_DAYS;
+}
+
+/** Monthly club membership dues ($) scaling with course quality (0..100), reputation (0..100), and holes (GOLF-PLAN 2.1). */
+export function monthlyMembershipIncome(qualityScore: number, reputation: number, holes = 9): number {
+  if (holes <= 0) return 0;
+  const q = Math.min(100, Math.max(0, qualityScore)) / 100;
+  const r = Math.min(100, Math.max(0, reputation)) / 100;
+  const holeFactor = holes >= 18 ? 1.22 : Math.max(0.5, holes / 9);
+  return Math.round((200 + 1800 * r) * (0.4 + 0.6 * q) * holeFactor);
+}
+
+/** Annual club membership income ($ over 12 months) booked through the Clubhouse business line. */
+export function annualMembershipIncome(qualityScore: number, reputation: number, holes = 9): number {
+  return monthlyMembershipIncome(qualityScore, reputation, holes) * 12;
+}
 import { computeSponsorBreakdown } from './sponsors';
 import { resolveMultiDayTournament, type MultiDaySummary } from './multiday';
 import {
@@ -42,6 +77,10 @@ prevTier: number;
 poorYears: number;
 verdictText: string;
 facts: DayFacts;
+dailyGolfers?: number;
+greenFeeIncome?: number;
+monthlyMembership?: number;
+membershipIncome?: number;
 tentRevenue?: number;
 tentRentCost?: number;
 tentUpkeep?: number;
@@ -67,6 +106,8 @@ export function golfTicketPrice(tier: number): number {
 export interface TournamentCloseBook {
   extraTickets: number;
   extraTents: number;
+  greenFeeIncome: number;
+  membershipIncome: number;
   bizIncome: number;
   purse: number;
   rent: number;
@@ -92,7 +133,9 @@ export function computeTournamentCloseBook(
   const extraTents = (ye.multiDay && ye.multiDay.resolvedDays > 0)
     ? Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))
     : 0;
-  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents));
+  const greenFees = Math.max(0, Math.round(ye.greenFeeIncome ?? 0));
+  const memberships = Math.max(0, Math.round(ye.membershipIncome ?? 0));
+  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + greenFees + memberships));
   const purse = Math.max(0, Math.round(ye.purse ?? 0));
   const rent = Math.max(0, Math.round(ye.tentRentCost ?? 0));
   const annualTentUpkeep = Math.max(0, Math.round((ye.tentUpkeep ?? 0) * 12));
@@ -101,6 +144,8 @@ export function computeTournamentCloseBook(
   return {
     extraTickets,
     extraTents,
+    greenFeeIncome: greenFees,
+    membershipIncome: memberships,
     bizIncome,
     purse,
     rent,
@@ -190,6 +235,7 @@ prevPoorYears = 0,
 structures: readonly PlacedEventStructure[] = [],
 holes: readonly Hole[] = [],
 seedOrWeather?: number | WeatherCondition,
+qualityScore?: number,
 ): YearEndResult {
 const weather: WeatherInfo = typeof seedOrWeather === 'string'
   ? WEATHER_INFO[seedOrWeather]
@@ -235,6 +281,13 @@ if (structures.length > 0) {
  );  
  const rep = Math.round(reputationAfter(prevRep, satisfaction));  
  const commercial = computeSponsorBreakdown(prevTier, rep, courseFacts.have);
+ const hasOffSeasonCourse = qualityScore !== undefined || holes.length > 0;
+ const effQuality = qualityScore ?? (holes.length > 0 ? 85 : 0);
+ const offSeasonHoles = hasOffSeasonCourse ? courseFacts.holes : 0;
+ const golfersPerDay = dailyGolfers(effQuality, prevRep, offSeasonHoles);
+ const greenFees = greenFeeIncome(effQuality, prevRep, offSeasonHoles);
+ const monthlyMembers = monthlyMembershipIncome(effQuality, prevRep, offSeasonHoles);
+ const memberships = annualMembershipIncome(effQuality, prevRep, offSeasonHoles);
  const v = verdict(prevTier, rep, courseFacts, prevPoorYears);  
   
  let tier = prevTier;  
@@ -281,6 +334,10 @@ if (structures.length > 0) {
  poorYears,
  verdictText,
  facts: dayFacts,
+ dailyGolfers: golfersPerDay,
+ greenFeeIncome: greenFees,
+ monthlyMembership: monthlyMembers,
+ membershipIncome: memberships,
  tentRevenue,
  tentRentCost,
  tentUpkeep,

@@ -14,6 +14,9 @@ export const HOLE_CORRIDOR_HALF = 15;
 /** closer limit for grandstands and TV camera towers, which may border a hole corridor as TIOs (tiles, GOLF-PLAN 6.3) */
 export const TIO_CORRIDOR_HALF = 8;
 
+/** maximum distance (tiles) from the outer owned-land boundary for placing a highway interchange */  
+export const INTERCHANGE_EDGE_MAX_DIST = 10;
+
 /** default tournament day operating hours for tents (07:00 gates open to 18:30 play end = 11.5 hours, GOLF-PLAN 5.5) */
 export const DEFAULT_HOURS_OPEN = 11.5;
 
@@ -148,7 +151,7 @@ export function structurePlaceCost(typeId: string, mode: PlaceMode): number {
 }
 
 /** options for validating structure placement */
-export interface StructureCheckOpts { tier: number; holes: readonly Hole[]; existing: readonly PlacedEventStructure[]; parcels?: readonly Rect[]; roads?: readonly Rect[] }
+export interface StructureCheckOpts { tier: number; holes: readonly Hole[]; existing: readonly PlacedEventStructure[]; parcels?: readonly Rect[]; roads?: readonly Rect[]; townPt?: Pt }
 
 /** options for evaluating all placed structures on a tournament day */
 export interface EvaluateEventDayOpts { placed: readonly PlacedEventStructure[]; holes: readonly Hole[]; gates: readonly Pt[]; tier: number; spectators: number; hoursOpen?: number; mobileOrdering?: boolean }
@@ -168,6 +171,28 @@ export function checkStructurePlacement(candidate: { typeId: string; x: number; 
     ];
     if (!corners.every(([x, y]) => inParcels(opts.parcels!, x, y))) {
       return { ok: false, rect, cost, reason: 'Outside owned venue land' };
+    }
+  }
+  if (def.id === 'interchange' && opts.parcels && opts.parcels.length > 0) {
+    const minX = Math.min(...opts.parcels.map(r => r[0])), minY = Math.min(...opts.parcels.map(r => r[1]));
+    const maxX = Math.max(...opts.parcels.map(r => r[0] + r[2])), maxY = Math.max(...opts.parcels.map(r => r[1] + r[3]));
+    const dLeft = rect[0] - minX, dRight = maxX - (rect[0] + rect[2]), dTop = rect[1] - minY, dBottom = maxY - (rect[1] + rect[3]);
+    if (Math.min(dLeft, dRight, dTop, dBottom) > INTERCHANGE_EDGE_MAX_DIST) {
+      return { ok: false, rect, cost, reason: 'Interchange must sit at the edge of owned venue land' };
+    }
+    const refPt = opts.townPt ?? (opts.roads && opts.roads.length > 0 ? rectCentre(opts.roads[0]!) : null);
+    if (refPt) {
+      const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+      const edges = [
+        { dEdge: dLeft, dTown: Math.hypot(minX - refPt.x, cy - refPt.y) },
+        { dEdge: dRight, dTown: Math.hypot(maxX - refPt.x, cy - refPt.y) },
+        { dEdge: dTop, dTown: Math.hypot(cx - refPt.x, minY - refPt.y) },
+        { dEdge: dBottom, dTown: Math.hypot(cx - refPt.x, maxY - refPt.y) },
+      ];
+      const nearest = edges.reduce((a, b) => (b.dTown < a.dTown ? b : a));
+      if (nearest.dEdge > INTERCHANGE_EDGE_MAX_DIST) {
+        return { ok: false, rect, cost, reason: 'Interchange must sit at the parcel edge nearest the town road' };
+      }
     }
   }
   if (opts.roads && opts.roads.some(r => rectsOverlap(rect, r))) {
@@ -207,7 +232,9 @@ export function structuresNeeds(placed: readonly PlacedEventStructure[], holes: 
     if (def.id === 'chalet' || def.id === 'village') out.add('hospitality');
     if (def.id === 'village') out.add('hospitalityVillage');
     if (def.id === 'media') out.add('media');
+    if (def.id === 'hotel') out.add('hotelRooms');
     if (def.id === 'coach') out.add('coachTerminal');
+    if (def.id === 'interchange') out.add('interchange');
     if (def.kind === 'grandstand') {
       standSeats += def.capacity;
       if (pin18) {

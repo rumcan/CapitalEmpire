@@ -1229,7 +1229,8 @@ export class City {
       const near = new Set(this.net.segsNear(p, 6));
       for (const d of this.g.dsegs) {
         if (!d || !d.lanes.length || !near.has(d.seg)) continue;
-        if (!d.seg.cls.oneway && dot(perp(norm(sub(d.to, d.from))), sub(c, p)) <= 0) continue;
+        const h = norm(sub(d.to, d.from)), toC = sub(c, p), side = dot(perp(h), toC);
+        if (!d.seg.cls.oneway && (Math.abs(side) > 1e-6 ? side <= 0 : dot(h, toC) <= 0)) continue;
         const ln = this.g.lanes[d.lanes[d.lanes.length - 1]!]!;
         if (ln.len < 6) continue;
         const p0 = { x: ln.pts[0]!, y: ln.pts[1]! }, u = norm({ x: ln.pts[2]! - p0.x, y: ln.pts[3]! - p0.y });
@@ -1274,7 +1275,7 @@ export class City {
     let touristPop = 0;
     if (ent) for (const b of this.businesses) {
       const t = BUSINESS[b.type];
-      if (t.family === 'tourism' || b.type === 'casino' || b.type === 'stadium') touristPop += TOURIST_PER_LEVEL * this.bizStats.get(b.id)!.level;
+      if (t.family === 'tourism' || b.type === 'casino' || b.type === 'stadium' || b.type === 'clubhouse') touristPop += TOURIST_PER_LEVEL * this.bizStats.get(b.id)!.level;
     }
     const tourist = ent && touristPop > 0 ? ent : null, ec = tourist ? this.compOf(this.g.dsegs[tourist.dseg]!.seg) : -2;
     if (tourist) { homes.push([{ lot: null, town: K, pop: touristPop, drive: { lane: tourist.lane, s: tourist.s } }]); pops.push(touristPop); }
@@ -1292,12 +1293,12 @@ export class City {
       }
       // the tourist catchment: only the tourism businesses and the casino draw tourists, and only from the entry's road when it is on the door's component
       if (tourist) {
-        const draws = BUSINESS[b.type].family === 'tourism' || b.type === 'casino';
+        const draws = BUSINESS[b.type].family === 'tourism' || b.type === 'casino' || b.type === 'clubhouse';
         tripMin.push(draws && door && ec === dc ? this.sim.router.timeTo(tourist.dseg, zoneOf(q.x, q.y)) / 60 : Infinity);
       }
       vb.push({ id: b.id, type: BUSINESS[b.type], level: st.level, sat: st.sat, door, tripMin });
     }
-    this.visits.plan(dayStart, this.sim.clock, vb, homes, pops, this.visitRnd, promoMul(this.round.cards));    this.visitDay = this.budget.dayOf(this.sim.clock);
+    this.visits.plan(dayStart, this.sim.clock, vb, homes, pops, this.visitRnd, promoMul(this.round.cards));    this.visitDay = pops.some(p => p > 0) ? this.budget.dayOf(this.sim.clock) : -1;
   }
   /** the visit cars that left the sim (Sim.visitOut, cleared): each is counted by the visits; an arrival is a sale (the business's price times its party,
    *  booked as business takings) and a visitor; a lost car is a miss */

@@ -61,9 +61,9 @@ test('monthOf: the year is 12 months of 120 clock units, clamped; names and the 
 
 test('the tiers are 1..5, the needs are cumulative, and the course rules rise with the tier', () => {
   assert.deepEqual(TIERS.map(t => t.tier), [1, 2, 3, 4, 5]);
-  assert.deepEqual(TIERS.map(t => t.needs.length), [1, 4, 9, 14, 18]);
+  assert.deepEqual(TIERS.map(t => t.needs.length), [1, 4, 9, 15, 20]);
   for (let i = 1; i < TIERS.length; i++) assert.deepEqual(TIERS[i].needs.slice(0, TIERS[i - 1].needs.length), TIERS[i - 1].needs, `tier ${i + 1} has tier ${i}'s needs first`);
-  assert.equal(new Set(TIERS[4].needs).size, 18, 'all 18 needs, each once (hotelRooms and interchange are out until they have providers: see tour.ts)');
+  assert.equal(new Set(TIERS[4].needs).size, 20, 'all 20 needs, each once');
   assert.deepEqual(TIERS.map(t => t.holes), [9, 9, 18, 18, 18]);
   assert.deepEqual(TIERS.map(t => t.minLengthM), [0, 0, 5800, 6400, 6700]);
   assert.deepEqual(TIERS.map(t => t.reputation), [0, 55, 65, 75, 85]);
@@ -102,8 +102,8 @@ test('missingFor lists the needs the course lacks, then holes and length when it
   assert.deepEqual(missingFor(2, course(9, 0, ['gate', 'foodTent', 'toilets'])), ['carpark']);
   assert.deepEqual(missingFor(3, course(9, 5000, TIERS[1].needs)), ['holes', 'length', 'grandstand18', 'leaderboard', 'merchTent', 'parkRide', 'range']);
   assert.deepEqual(missingFor(3, fullFor(3)), []);
-  assert.deepEqual(missingFor(5, fullFor(4)), ['length', 'grandstands', 'merchPavilion', 'hospitalityVillage', 'coachTerminal'], 'the 6,400 m course is 300 m short of 6,700');
-  assert.deepEqual(missingFor(5, { ...fullFor(4), lengthM: 6700 }), ['grandstands', 'merchPavilion', 'hospitalityVillage', 'coachTerminal']);
+  assert.deepEqual(missingFor(5, fullFor(4)), ['length', 'grandstands', 'merchPavilion', 'hospitalityVillage', 'interchange', 'coachTerminal'], 'the 6,400 m course is 300 m short of 6,700');
+  assert.deepEqual(missingFor(5, { ...fullFor(4), lengthM: 6700 }), ['grandstands', 'merchPavilion', 'hospitalityVillage', 'interchange', 'coachTerminal']);
 });
 
 test('verdict offers the next tier only with its needs and reputation', () => {

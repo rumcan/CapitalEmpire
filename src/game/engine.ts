@@ -163,7 +163,7 @@ const STRUCTURE_SPRITE: Record<string, string> = {
  standS: 'business:golf-bench-course-map', standM: 'business:golf-bench-course-map', standL: 'business:golf-bench-course-map', leaderboard: 'world:scoreboard',  
  holeBoard: 'poi:fishing-board', screen: 'poi:movie-display', tvTower: 'world:watertower', broadcast: 'business:golf-cart-garage', media: 'business:golf-clubhouse',  
  gate: 'ce:parking-entry', toilets: 'gen:back-shed-garden', firstAid: 'expansion:backyard-tent', info: 'ce:parking-kiosk', rideshare: 'town:produce_stand',  
- coach: 'business:golf-cart-garage', rangeStand: 'business:golf-bench-course-map', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',  
+ coach: 'business:golf-cart-garage', hotel: 'business:golf-clubhouse', interchange: 'ce:parking-entry', rangeStand: 'business:golf-bench-course-map', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',  
 };
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 /** a natural disaster's area colour and name (see Game.drawDisasters, disasterText) */
@@ -2686,7 +2686,7 @@ export class Game {
   if (this.parkDefs.length > 0) have.add('carpark');
   for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
-  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed);
+  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, stats?.qualityScore ?? 85);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {

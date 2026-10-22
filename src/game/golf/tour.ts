@@ -33,8 +33,8 @@ const OWN_NEEDS: Need[][] = [
   ['carpark'],
   ['gate', 'foodTent', 'toilets'],
   ['grandstand18', 'leaderboard', 'merchTent', 'parkRide', 'range'],
-  ['tvTowers', 'broadcast', 'hospitality', 'media', 'parkRide2'], // hotelRooms not yet required (no town hotel provider wired yet)
-  ['grandstands', 'merchPavilion', 'hospitalityVillage', 'coachTerminal'], // interchange not yet required (6R.5 highway interchanges not wired yet)
+  ['tvTowers', 'broadcast', 'hospitality', 'media', 'parkRide2', 'hotelRooms'],
+  ['grandstands', 'merchPavilion', 'hospitalityVillage', 'interchange', 'coachTerminal'],
 ];
 
 /** the five tiers (GOLF-PLAN 5.1 and 8.2): TIERS[t - 1] is tier t. Names are fictional on purpose */

@@ -3,7 +3,7 @@ import { PARTY } from '../event/config';
 import type { RoundResult } from '../event/round';
 import type { PlacedEventStructure } from './eventtool';
 import { dayShare, spectatorDemand, tierInfo, verdict, type CourseFacts, type Need } from './tour';
-import { computeYearEnd } from './yearend';
+import { annualMembershipIncome, computeYearEnd, dailyGolfers, greenFeeIncome, monthlyMembershipIncome } from './yearend';
 
 /** configuration options for running a multi-year campaign simulation */
 export interface CampaignOptions {
@@ -26,6 +26,10 @@ export interface YearReport {
   treasury: number;
   offered: number | null;
   admitted: number;
+  dailyGolfers: number;
+  greenFeeIncome: number;
+  monthlyMembership: number;
+  membershipIncome: number;
   ticketIncome: number;
   tentRevenue: number;
   sponsorIncome: number;
@@ -155,13 +159,18 @@ export function simulateCampaign(opts: CampaignOptions = {}): CampaignResult {
     }
 
     const facts: CourseFacts = { holes: courseHoles, lengthM: courseLength, have };
-    const ye = computeYearEnd(tier, reputation, roundResult, facts, poorYears, placed, []);
+    const courseQualityScore = strategy === 'careful' ? 100 : 75;
+    const ye = computeYearEnd(tier, reputation, roundResult, facts, poorYears, placed, [], undefined, courseQualityScore);
 
     // Daily and multi-day financial flows (from multiDay resolution when available)
     const ticketIncome = ye.multiDay ? ye.multiDay.totalTickets : arrived * tierInfo(tier).ticket * tDays;
     const tentRevenue = ye.multiDay ? ye.multiDay.totalTents : (ye.tentRevenue ?? 0) * tDays;
     const sponsorIncome = ye.sponsorIncome ?? 0;
-    const totalIncome = ticketIncome + tentRevenue + sponsorIncome;
+    const yrDailyGolfers = ye.dailyGolfers ?? dailyGolfers(courseQualityScore, reputation, courseHoles);
+    const yrGreenFees = ye.greenFeeIncome ?? greenFeeIncome(courseQualityScore, reputation, courseHoles);
+    const yrMonthlyMembership = ye.monthlyMembership ?? monthlyMembershipIncome(courseQualityScore, reputation, courseHoles);
+    const yrMemberships = ye.membershipIncome ?? annualMembershipIncome(courseQualityScore, reputation, courseHoles);
+    const totalIncome = yrGreenFees + yrMemberships + ticketIncome + tentRevenue + sponsorIncome;
 
     const purseCost = ye.purse ?? tierInfo(tier).purse;
     const tentRent = ye.tentRentCost ?? 0;
@@ -196,6 +205,10 @@ export function simulateCampaign(opts: CampaignOptions = {}): CampaignResult {
       treasury: Math.round(treasury),
       offered: v.offer,
       admitted: arrived,
+      dailyGolfers: yrDailyGolfers,
+      greenFeeIncome: yrGreenFees,
+      monthlyMembership: yrMonthlyMembership,
+      membershipIncome: yrMemberships,
       ticketIncome,
       tentRevenue,
       sponsorIncome,

@@ -74,6 +74,7 @@ test('every tier 2..5 requirement in OWN_NEEDS can be built one tier ahead', () 
   addAtTier(3, 'broadcast', 180, 0);
   addAtTier(3, 'chalet', 210, 0);
   addAtTier(3, 'media', 230, 0);
+  addAtTier(3, 'hotel', 260, 0);
   const have4 = structuresNeeds(placed);
   have4.add('carpark');
   have4.add('parkRide');
@@ -85,6 +86,7 @@ test('every tier 2..5 requirement in OWN_NEEDS can be built one tier ahead', () 
   addAtTier(4, 'merchPavilion', 60, 40);
   addAtTier(4, 'village', 100, 40);
   addAtTier(4, 'coach', 140, 40);
+  addAtTier(4, 'interchange', 180, 40);
   const have5 = structuresNeeds(placed);
   have5.add('carpark');
   have5.add('parkRide');
