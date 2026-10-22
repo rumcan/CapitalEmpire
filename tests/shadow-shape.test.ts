@@ -24,6 +24,8 @@ test('shadows: buildings follow their footprint, fences run thin, trees are roun
   const t = shadowShape(first('tree'), 0.8, 0.6)!;
   assert.equal(t.round, true); assert.equal(t.hx, t.hy); assert.ok(t.hx >= 0.45 && t.hx <= 1.6); assert.equal(t.atAnchor, true);
   const c = shadowShape(first('car'), 2.2, 1)!;
+  // a car heading diagonally (a nearly square map-axis box): a round pool the size of its body, not of the box
+  const d = shadowShape(first('car'), 1.6, 1.5)!; assert.ok(d.round && d.hx < 1.6 && d.hx === d.hy, JSON.stringify(d));
   assert.ok(c.hx > 2.2 && c.hy > 1);
 });
 

@@ -41,8 +41,13 @@ export function shadowShape(it: LibItem, hx: number, hy: number, scale = 1): Sha
     // fences: a thin strip along the run
     case 'fencex': return { hx: hx * 0.95, hy: 0.16, core: 0.62, feather: 0.14, round: false, atAnchor: false };
     case 'fencey': return { hx: 0.16, hy: hy * 0.95, core: 0.62, feather: 0.14, round: false, atAnchor: false };
-    // vehicles: a dark pool that reaches past the body (bumpers, wheels): 1.12 along the length, 1.35 across
-    case 'vehicle': { const [kx, ky] = hx >= hy ? [1.12, 1.35] : [1.35, 1.12]; return { hx: hx * kx, hy: hy * ky, core: 0.95, feather: 0.34, round: false, atAnchor: false }; }
+    // vehicles: a dark pool that reaches past the body (bumpers, wheels): 1.12 along the length, 1.35 across. A car heading diagonally (its
+    // map-axis footprint nearly square, a box round the turned body) gets a round pool the size of the body instead (the owner, 2026-10-22: the
+    // box made the diagonal cars' shadows far bigger than the cars)
+    case 'vehicle': {
+      if (Math.max(hx, hy) < 1.4 * Math.min(hx, hy)) { const r = 0.65 * (hx + hy) / 2; return { hx: r, hy: r, core: 0.95, feather: 0.34, round: true, atAnchor: false }; }
+      const [kx, ky] = hx >= hy ? [1.12, 1.35] : [1.35, 1.12]; return { hx: hx * kx, hy: hy * ky, core: 0.95, feather: 0.34, round: false, atAnchor: false };
+    }
     // round structures (a gazebo, a fountain, a merry-go-round)
     case 'roundhouse': { const r = clamp(Math.max(hx, hy) * 0.95, 0.5, 4); return { hx: r, hy: r, core: 0.6, feather: 0.3, round: true, atAnchor: false }; }
     // buildings and venues: their footprint
