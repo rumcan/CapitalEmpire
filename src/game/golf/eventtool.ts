@@ -140,7 +140,7 @@ export function checkStructurePlacement(candidate: { typeId: string; x: number; 
   const def = STRUCTURE[candidate.typeId];
   const rect = structureRect(candidate);
   if (!def) return { ok: false, rect, cost: Infinity, reason: 'Unknown structure type' };
-  if (def.tier > opts.tier) return { ok: false, rect, cost: Infinity, reason: `Unlocks at tier ${def.tier}` };
+  if (def.tier > opts.tier + 1) return { ok: false, rect, cost: Infinity, reason: `Available from tier ${def.tier - 1}` };
   const cost = structurePlaceCost(candidate.typeId, candidate.mode);
   if (!Number.isFinite(cost)) return { ok: false, rect, cost, reason: `Cannot ${candidate.mode} ${def.name}` };
   if (opts.parcels && opts.parcels.length > 0) {

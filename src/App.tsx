@@ -21,6 +21,7 @@ import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { BASE_GRASSES, baseGrassId, setBaseGrass } from './game/dev-grass';
+import { STRUCTURES } from './game/golf/tents';
 import { Icon, type IconName } from './ui/Icon';
 import { RoadThumb } from './ui/RoadThumb';
 import { Minimap } from './ui/Minimap';
@@ -69,7 +70,8 @@ export default function App() {
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New town, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
-  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);
+  const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
+ const [eventTool, setEventTool] = useState(false);
   /** the last tool picked in each rail group, so a group's tab returns to it */
   const last = useRef<Record<string, Tool>>({});
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
@@ -161,6 +163,7 @@ export default function App() {
                   <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>
                   <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>
                   <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>  
+ <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>  
  <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
                 </>
               ) : game.eventMode
@@ -286,6 +289,33 @@ export default function App() {
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
           <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
+          </div>
+          )}
+          {eventTool && gv && (
+          <div className={`pointer-events-auto absolute ${game?.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 max-h-[75vh] w-80 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`}>
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <div className="flex items-center gap-2 font-semibold text-amber-200"><Icon name="buildings" size={18} />Event Structures</div>
+          <button className="btn-icon" onClick={() => { setEventTool(false); if (game) game.eventTool = false; bump(); }}>✕</button>
+          </div>
+          <div className="space-y-1.5 text-xs">
+          {STRUCTURES.filter(s => s.tier <= gv.tier + 1).map(s => (
+          <div key={s.id} className="space-y-1 rounded-lg border border-white/5 bg-white/5 p-2">
+          <div className="flex justify-between font-medium text-white">
+          <span>{s.name}</span>
+          <span className="text-[10px] text-slate-400">{s.footprint.w}×{s.footprint.h}{s.unit ? ` · ${s.capacity} ${s.unit}` : ''}</span>
+          </div>
+          <p className="text-[11px] text-slate-400">{s.blurb}</p>
+          <div className="flex gap-1.5 pt-1">
+          {s.rent > 0 && (
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'rent' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'rent'); bump(); } }}>Rent ${s.rent.toLocaleString()}</button>
+          )}
+          {s.buy > 0 && (
+          <button className={`chip flex-1 justify-center text-center ${game?.eventStructurePending?.typeId === s.id && game.eventStructurePending?.mode === 'buy' ? 'chip-on' : ''}`} onClick={() => { if (game) { game.setPendingStructure(s.id, 'buy'); bump(); } }}>Buy ${s.buy.toLocaleString()}</button>
+          )}
+          </div>
+          </div>
+          ))}
+          </div>
           </div>
           )}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
@@ -505,7 +535,7 @@ function EvalScreen({ game }: { game: Game }) {
  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">{gv ? `${gv.tierName} · ${last.run === 1 ? 'First' : 'Year ' + last.run} tournament` : `Stadium · Level ${last.level} · Run ${last.run}`}</div>
  {ye && (
  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
- <div className="grid grid-cols-3 gap-2 text-center">
+ <div className="grid grid-cols-4 gap-2 text-center">
  <div>
  <div className="text-[10px] uppercase text-slate-400">Satisfaction</div>
  <div className="text-base font-bold text-amber-200">{formatPercent(ye.satisfaction)}</div>
@@ -515,6 +545,10 @@ function EvalScreen({ game }: { game: Game }) {
  <div className="text-base font-bold text-white">
  {ye.prevRep} → <span className={ye.rep >= ye.prevRep ? 'text-emerald-400' : 'text-rose-400'}>{ye.rep}</span>
  </div>
+ </div>
+ <div>
+ <div className="text-[10px] uppercase text-slate-400">Tent Takings</div>
+ <div className="text-base font-bold text-emerald-300">{money(ye.tentRevenue ?? 0)}</div>
  </div>
  <div>
  <div className="text-[10px] uppercase text-slate-400">Next Year</div>
@@ -539,7 +573,7 @@ function EvalScreen({ game }: { game: Game }) {
           ))}
         </div>
         <p className="text-sm text-slate-200">
-          Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span>
+        Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>}{ye?.tentRevenue !== undefined && ye.tentRevenue > 0 && <> · Tents <span className="tabular-nums text-emerald-300">{sgn(ye.tentRevenue)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${(last.net + (ye?.tentRevenue ?? 0)) < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net + (ye?.tentRevenue ?? 0))}</span>
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">

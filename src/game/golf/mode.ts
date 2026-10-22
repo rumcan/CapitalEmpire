@@ -2,6 +2,7 @@
 // game; a save without one is a legacy (classic) game and loads as before. Pure TS, no DOM.
 import type { Pt } from '../network';
 import type { AimPoint, Pin, TeeMark } from './types';
+import type { PlacedEventStructure } from './eventtool';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -14,6 +15,7 @@ export interface GolfSave {
  v: 1; tier: number; rep: number; poorYears?: number; town: Pt; course: Rect; parcel: Rect; dir: 0 | 1 | 2 | 3;
  tees: TeeMark[]; pins: Pin[]; aims: AimPoint[]; clubhouse: Pt;
  parcels?: Rect[];
+ structures?: PlacedEventStructure[];
 }
 
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament

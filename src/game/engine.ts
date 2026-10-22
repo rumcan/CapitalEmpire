@@ -61,8 +61,10 @@ import { surfaceOfTex } from './golf/costs';
 import { adjacentBlockPrice, buyAdjacentBlock, isAdjacentBlock, polyInParcels, type ParcelLandClass } from './golf/parcels';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout } from './golf/types';
-import { validateMarkerPlacement } from './golf/holes';
+import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
+import { checkStructurePlacement, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
+import { STRUCTURE } from './golf/tents';
 import { tierInfo, type Need } from './golf/tour';
 import { ParanormalRenderer } from './ext/paranormal-render';
 
@@ -151,7 +153,15 @@ interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: n
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
 export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good' }
 export interface Camera { X: number; Y: number; z: number }
-const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
+const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];  
+const STRUCTURE_SPRITE: Record<string, string> = {  
+ foodTent: 'expansion:backyard-tent', drinksTent: 'expansion:backyard-tent', kiosk: 'business:fishing-rental-kiosk', foodTruck: 'town:produce_stand',  
+ merchTent: 'expansion:backyard-tent', merchPavilion: 'business:golf-halfway-pavilion', chalet: 'business:golf-halfway-pavilion', village: 'business:golf-halfway-pavilion',  
+ standS: 'business:golf-bench-course-map', standM: 'business:golf-bench-course-map', standL: 'business:golf-bench-course-map', leaderboard: 'world:scoreboard',  
+ holeBoard: 'poi:fishing-board', screen: 'poi:movie-display', tvTower: 'world:watertower', broadcast: 'business:golf-cart-garage', media: 'business:golf-clubhouse',  
+ gate: 'ce:parking-entry', toilets: 'gen:back-shed-garden', firstAid: 'expansion:backyard-tent', info: 'ce:parking-kiosk', rideshare: 'town:produce_stand',  
+ coach: 'business:golf-cart-garage', rangeStand: 'business:golf-bench-course-map', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',  
+};
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 /** a natural disaster's area colour and name (see Game.drawDisasters, disasterText) */
 const DISASTER_COL: Record<DisasterKind, string> = { flood: '#3b82f6', storm: '#9ca3af', landslide: '#92400e', wildfire: '#f97316', quake: '#a855f7', paranormal: '#b08aff' };
@@ -839,6 +849,70 @@ export class Game {
     this.syncGolfProps();
     }
     golfProps = new Map<string, Prop>();
+    golfStructureProps = new Map<number, Prop>();
+    eventTool = false;
+    eventStructurePending: { typeId: string; mode: 'rent' | 'buy' } | null = null;
+    toggleEventTool() {
+    if (!this.golfMode) return;
+    this.eventTool = !this.eventTool;
+    if (!this.eventTool) this.eventStructurePending = null;
+    this.emit();
+    }
+    setPendingStructure(typeId: string, mode: 'rent' | 'buy') {
+    this.eventStructurePending = { typeId, mode };
+    const def = STRUCTURE[typeId];
+    this.toast(`Selected ${def ? def.name : typeId} (${mode}). Click open owned land to place it.`);
+    this.emit();
+    }
+    placeEventStructure(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean }): boolean {
+    if (!this.golf) return false;
+    const holes = this.courseStatsView() ? deriveHoles(this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })), this.golf.tees, this.golf.pins, this.golf.aims) : [];
+    const check = checkStructurePlacement(candidate, {
+    tier: this.golf.tier,
+    holes,
+    existing: this.golf.structures ?? [],
+    parcels: this.golf.parcels ?? [this.golf.parcel],
+    });
+    if (!check.ok) {
+    this.toast(check.reason ?? 'Cannot place structure here', 'warn');
+    return false;
+    }
+    if (this.money < check.cost) {
+    this.toast(`Not enough money ($${check.cost.toLocaleString()} required)`, 'warn');
+    return false;
+    }
+    this.traffic.spend('construction', check.cost);
+    const id = Math.max(0, ...(this.golf.structures ?? []).map(s => s.id)) + 1;
+    const placed: PlacedEventStructure = { id, ...candidate };
+    if (!this.golf.structures) this.golf.structures = [];
+    this.golf.structures.push(placed);
+    const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? 'expansion:backyard-tent';
+    const item = LIB_INDEX.get(sprId);
+    if (item !== undefined) {
+    const prop = this.addProp(item, candidate.x, candidate.y, false, 1);
+    this.golfStructureProps.set(id, prop);
+    }
+    const def = STRUCTURE[candidate.typeId];
+    this.toast(`Placed ${def ? def.name : candidate.typeId} ($${check.cost.toLocaleString()})`);
+    this.eventStructurePending = null;
+    this.scheduleSave();
+    this.emit();
+    return true;
+    }
+    removeStructure(i: number) {
+    if (!this.golf?.structures) return;
+    const s = this.golf.structures[i]!;
+    const def = STRUCTURE[s.typeId];
+    const refund = s.mode === 'buy' && def?.buy ? Math.round(def.buy * 0.5) : 0;
+    const prop = this.golfStructureProps.get(s.id);
+    if (prop) this.removeProp(prop);
+    this.golfStructureProps.delete(s.id);
+    this.golf.structures.splice(i, 1);
+    if (refund > 0) this.traffic.spend('construction', -refund);
+    this.scheduleSave();
+    this.toast(`Removed ${def ? def.name : s.typeId}${refund > 0 ? ` (+$${refund.toLocaleString()})` : ''}`);
+    this.emit();
+    }
     holesTool = false;
     selectedGolfMarker: { hole: number; kind: 'pin' | 'back' | 'middle' | 'forward'; x: number; y: number } | null = null;
     toggleHolesTool() {
@@ -1453,7 +1527,17 @@ export class Game {
     if (first) {
       const p = this.propAt(mx, my);
       if (p && !p.auto) { const it = LIBRARY[p.item]; this.removeProp(p); this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name} (+$${Math.round(it.cost * 0.5).toLocaleString()})`); return; }
-      const k = this.parkIndexAt(t);
+      if (this.golf && this.golf.structures) {  
+ for (let i = 0; i < this.golf.structures.length; i++) {  
+ const s = this.golf.structures[i]!;  
+ const rect = structureRect(s);  
+ if (t.x >= rect[0] && t.x <= rect[0] + rect[2] && t.y >= rect[1] && t.y <= rect[1] + rect[3]) {  
+ this.removeStructure(i);  
+ return;  
+ }  
+ }  
+ }  
+ const k = this.parkIndexAt(t);
       if (k >= 0) { const id = this.parkDefs[k]!.id; this.removePark(k); this.scheduleSave(); this.toast(`Removed car park #${id} (no refund)`); this.emit(); return; }
       const g = this.tollIndexAt(t);
       if (g >= 0) { const id = this.tollDefs[g]!.id; this.removeToll(g); this.scheduleSave(); this.toast(`Removed toll gate #${id} (the road stays; no refund)`); this.emit(); return; }
@@ -1546,7 +1630,11 @@ export class Game {
   return;
   }
   this.overlay.setPointerCapture(e.pointerId);
-    if (this.holesTool && this.golf && this.hover && e.button === 0) {
+    if (this.eventTool && this.eventStructurePending && this.golf && this.hover && e.button === 0) {  
+ this.placeEventStructure({ typeId: this.eventStructurePending.typeId, mode: this.eventStructurePending.mode, x: Math.round(this.hover.x), y: Math.round(this.hover.y) });  
+ return;  
+ }  
+ if (this.holesTool && this.golf && this.hover && e.button === 0) {
     if (this.selectedGolfMarker) {
     this.moveGolfMarker(this.selectedGolfMarker.hole, this.selectedGolfMarker.kind, this.hover.x, this.hover.y);
     return;
@@ -1891,6 +1979,9 @@ export class Game {
   this.golf.rep = ye.rep;
   this.golf.poorYears = ye.poorYears;
   this.traffic.setGolf(true, this.golf.tier, this.golf.rep);
+  if (ye.tentRevenue && ye.tentRevenue > 0) {
+  this.traffic.spend('construction', -ye.tentRevenue);
+  }
   this.scheduleSave();
   }
   }
@@ -2431,7 +2522,8 @@ export class Game {
   aims: this.golf.aims,
   clubhouse: this.golf.clubhouse,
   };
-  const have = new Set<Need>();
+  const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
+  const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
   return buildCourseStatsPanel(layout, this.golf.tier, have);
   }
@@ -2439,10 +2531,11 @@ export class Game {
   golfYearEnd(last = this.traffic.round.last): YearEndResult | null {
   if (!this.golf || !last) return null;
   const stats = this.courseStatsView();
-  const have = new Set<Need>();
+  const holes = stats ? deriveHoles(this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })), this.golf.tees, this.golf.pins, this.golf.aims) : [];
+  const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
   const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
-  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0);
+  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
