@@ -7,6 +7,7 @@
 // stands for and the tiles one repeat covers; the preview lays it in tile space as Paint does; Save preset bakes the seamless picture
 // (src/assets/ground/preset-<id>.webp) and writes src/game/paint-presets.json. The game's Paint tool offers only these.
 // Served by server.mjs.
+import { DEFAULT_STRIPES, STRIPE_RANGES, clampStripes, stripePairs, stripePixels } from '/ground-lib.js';
 import { adjustPixels, mixGrass, layOnGround, presetSlug, canvas, ctx2d, soilStamps, AUTHOR, DEFAULT_MIX, DEFAULT_SIDE, DECAL_LAYERS, DEFAULT_DECALS, DECALS, NATURE, decalPics, drawDecals, placeDecals } from '/ground-lib.js';
 
 const el = (t, a = {}, ...k) => { const e = document.createElement(t); Object.assign(e, a); for (const c of k) if (c != null) e.append(c); return e; };
@@ -88,6 +89,8 @@ function rebuild() {
       sideCv = { a, b };
       await new Promise(r => setTimeout(r, 0));
       mixed = mode === 'preset' ? mixGrass(gameSize(a), gameSize(b), F.mix, presetPx(), presetPx(), AUTHOR) : mixGrass(gameSize(a), gameSize(b), F.mix, BASE_W, BASE_H, AUTHOR);
+      // a preset's mowing stripes, baked over its mix (paint-presets.ts stripePixels)
+      if (mode === 'preset' && PM.stripes?.on) { const c = ctx2d(mixed), d = c.getImageData(0, 0, mixed.width, mixed.height); stripePixels(d.data, mixed.width, mixed.height, PM.stripes, PM.size); c.putImageData(d, 0, 0); }
       if (my !== busy) return;
       swatches(); draw(); msg(dirty() ? (restored || 'not saved') : 'saved');
     } catch (e) { msg(String(e.message || e)); }
@@ -179,7 +182,7 @@ function setMode(m) {
 function editPreset(p) {
   const base = grassF ?? saved;
   F = p ? { a: clone(p.a), b: clone(p.b), mix: clone(p.mix) } : { a: clone(base.a), b: clone(base.b), mix: clone(base.mix) };
-  PM = p ? { id: p.id, name: p.name, surface: p.surface, size: p.size } : { id: null, name: '', surface: null, size: 8 };
+  PM = p ? { id: p.id, name: p.name, surface: p.surface, size: p.size, stripes: clampStripes(p.stripes) } : { id: null, name: '', surface: null, size: 8, stripes: clone(DEFAULT_STRIPES) };
   pSaved = p ? JSON.stringify([F, PM]) : ''; build(); rebuild();
 }
 function buildPreset() {
@@ -206,16 +209,40 @@ function buildPreset() {
     slider('Patch size', () => m.patch, v => { m.patch = v; }, R.patch, 0.05, v => `${v.toFixed(2)}x`),
     slider('Light swing', () => m.tone, v => { m.tone = v; }, R.tone, 0.01, v => `±${Math.round(v * 100)}%`),
     slider('Warm / cool', () => m.warm, v => { m.warm = v; }, R.warm, 0.01, v => `±${Math.round(v * 100)}%`),
+    ...stripeBlock(),
     el('h3', { textContent: 'The baked texture' }), hint('The seamless picture Paint lays (one repeat).'),
     el('canvas', { id: 'g-flat', width: 200, height: 200, style: 'border:1px solid var(--line);border-radius:4px' }));
   swatches();
+}
+/** the preset's mowing stripes: on or off, which way, the band width, how light and dark, their colours, the edges */
+function stripeBlock() {
+  const st = PM.stripes, R = STRIPE_RANGES, pct = v => `${Math.round(v * 100)}%`, re = () => { build(); rebuild(); };
+  const chip = (t, on, fn, title) => el('button', { className: 'chip' + (on ? ' on' : ''), textContent: t, title, onclick: () => { fn(); re(); } });
+  const colour = (k) => { const c = el('input', { type: 'color', value: st[k], style: 'min-width:0;width:44px;flex:0 0 44px;padding:0;height:24px' }); c.oninput = () => { st[k] = c.value; rebuild(); }; return c; };
+  const head = [el('h3', { textContent: 'Mowing stripes' }),
+    hint('Light and dark bands baked over the mix, the way a mown fairway looks. They lie on the tile grid, so they run along the iso diagonals; a painted area\'s own angle turns them.'),
+    el('div', { className: 'row', style: 'padding:0;margin:0 0 6px;gap:4px;flex-wrap:wrap' },
+      chip('Off', !st.on, () => { st.on = false; }), chip('On', st.on, () => { st.on = true; }))];
+  if (!st.on) return head;
+  return [...head,
+    el('div', { className: 'row', style: 'padding:0;margin:0 0 6px;gap:4px;flex-wrap:wrap' },
+      chip('Along ↘', st.dir === 'x', () => { st.dir = 'x'; }, 'Bands along the tile x axis (down to the right on screen)'),
+      chip('Along ↙', st.dir === 'y', () => { st.dir = 'y'; }, 'Bands along the tile y axis (down to the left on screen)'),
+      chip('Checkerboard', st.dir === 'check', () => { st.dir = 'check'; }, 'Both ways: a criss-cross cut')),
+    slider('Band width', () => st.width, v => { st.width = v; }, R.width, 0.5, () => `${(stripePairs(PM.size, st.width).width * 2).toFixed(1)} m`),
+    hint('One band, in metres: fitted so whole light and dark pairs fill one repeat of the preset (its Size).'),
+    slider('Light bands', () => st.light, v => { st.light = v; }, R.light, 0.01, v => `+${pct(v)}`),
+    slider('Dark bands', () => st.dark, v => { st.dark = v; }, R.dark, 0.01, v => `-${pct(v)}`),
+    el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Light green' }), colour('lightCol'), el('span', { style: 'width:86px;font-size:12px;color:var(--dim);margin-left:10px', textContent: 'Dark green' }), colour('darkCol')),
+    slider('Colour', () => st.tint, v => { st.tint = v; }, R.tint, 0.01, pct),
+    slider('Edge softness', () => st.soft, v => { st.soft = v; }, R.soft, 0.01, pct)];
 }
 async function savePreset() {
   if (!mixed || !PM.name.trim()) { msg('give the preset a name'); return; }
   const id = presetSlug(PM.name); if (!id) { msg('the name needs a letter or a digit'); return; }
   msg('saving preset…');
   const blob = await mixed.convertToBlob({ type: 'image/png' }), b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
-  const r = await fetch('/api/preset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ preset: { id, name: PM.name, surface: PM.surface, size: PM.size, a: F.a, b: F.b, mix: F.mix }, png: b64, replaces: PM.id ?? undefined }) });
+  const r = await fetch('/api/preset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ preset: { id, name: PM.name, surface: PM.surface, size: PM.size, a: F.a, b: F.b, mix: F.mix, stripes: PM.stripes }, png: b64, replaces: PM.id ?? undefined }) });
   if (!r.ok) { msg(await r.text()); return; }
   const d = await r.json(); PRE = { ...PRE, presets: d.presets }; editPreset(PRE.presets.find(p => p.id === d.saved) ?? null);
   msg('preset saved: Rebuild game sprites to see it in Paint');
