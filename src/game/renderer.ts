@@ -139,7 +139,7 @@ export class GroundPainter {
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
     const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : t === 'concrete' ? '#48443f' : this.planColour(t);
     const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
-    for (const p of [...lotAll.filter(p => !p.paint && p.tex !== 'marks'), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
+    for (const p of [...lotAll.filter(p => !p.paint && p.tex !== 'marks' && !(p.lawn && p.lawn.share < 1)), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), '#404040'); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
@@ -240,7 +240,7 @@ export class GroundPainter {
     //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines.
     //      The car parks (asphalt with bay lines) are drawn again over the Paint tool's areas (1a'), so a painted area cannot hide their bays
     const all = this.lotsIn(box).filter(p => !p.top && !p.layby), tops = this.lotsIn(box).filter(p => p.top && p.lines?.length && !p.layby), laybys = this.lotsIn(box).filter(p => p.layby);
-    const marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
     const isPark = (p: LotPatch) => !!p.lines?.length && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
     /** the lot ground patches of a list: each in its surface and rim, then its lines (furrows, white and yellow bays) */
     const drawLots = (list: LotPatch[]) => {
@@ -269,6 +269,8 @@ export class GroundPainter {
       }
       ctx.setTransform(M);
     };
+    // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground
+    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); }
     drawLots(rest);
     // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) over their ground
     if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
@@ -518,6 +520,20 @@ export class GroundPainter {
   }
   /** a painted area's blend (PatchPaint m): the second texture through the patch mask (24 tiles a period at patch size 1, in tile space, turned
    *  with the fill), laid over the fill inside the area's clip */
+  /** the lawns of a chunk (lawns.ts): each in its texture (a preset, turned by its angle), all of the patch or through the soft-patch mask (drawBlend) */
+  private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox) {
+    for (const p of lawns) {
+      const lw = p.lawn!, pb = quadBox(p.pts), r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
+      if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(p.tex)) continue;
+      const path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, lw.a);
+      if (lw.share >= 1) {
+        const src = this.tex.sourceFor(p.tex, L);
+        ctx.save(); ctx.setTransform(M); ctx.clip(path);
+        ctx.fillStyle = src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(p.tex, L), G, this.tex.periodOf(p.tex));
+        ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.restore();
+      } else this.drawBlend(ctx, { s: 1, a: lw.a, b: 0, bt: 'kerb', z: 0, m: { t: p.tex, s: lw.share, f: lw.soft, p: lw.patch } } as NonNullable<LotPatch['paint']>, G, path, r, L, X0, Y0, M, Minv);
+    }
+  }
   private drawBlend(ctx: C2D, st: NonNullable<LotPatch['paint']>, G: DOMMatrix, path: Path2D, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix) {
     const m = st.m!, b = this.buffer('blend', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b), t = m.t;
     // the scratch layer's context is reused chunk after chunk: its clip is saved and restored, or the clips would add up

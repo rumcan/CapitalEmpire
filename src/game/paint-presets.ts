@@ -22,7 +22,11 @@ export interface PaintPreset {
   a: GrassSide; b: GrassSide; mix: GrassMix;
   /** mowing stripes baked over the mix (off unless the owner turns them on) */
   stripes: Stripes;
+  /** the town's lawns may use it (lawns.ts: each lot's yard, the road blocks' grass); the owner's switch in the studio */
+  lawn: boolean;
 }
+/** the surfaces that are not grass: a preset for one of them is never a lawn unless the owner says so */
+const NOT_GRASS = new Set(['bunker', 'waste', 'water', 'path']);
 /** mowing stripes: light and dark bands over the mixed grass, baked into the picture. Laid in tile space, so they run along the iso
  *  diagonals: dir 'x' bands run along the tile x axis (↘ on screen), 'y' along y (↙), 'check' both (a checkerboard). width: one band in
  *  tiles (snapped so a whole number of light + dark pairs fills one repeat); light / dark: how much lighter / darker the bands get;
@@ -68,7 +72,7 @@ export function clampPreset(p: Partial<PaintPreset> | null | undefined): PaintPr
   const name = p.name.trim().slice(0, 40), id = presetSlug(typeof p.id === 'string' && p.id ? p.id : name); if (!id) return null;
   const surface = (PRESET_SURFACES as readonly string[]).includes(p.surface as string) ? (p.surface as PresetSurface) : null;
   const size = clamp(typeof p.size === 'number' && Number.isFinite(p.size) ? p.size : 8, PRESET_SIZE[0], PRESET_SIZE[1]);
-  return { id, name, surface, size, col: typeof p.col === 'string' && /^#[0-9a-f]{6}$/i.test(p.col) ? p.col : '#55602a', a: clampSide(p.a), b: clampSide(p.b), mix: clampMix(p.mix ?? {}), stripes: clampStripes(p.stripes) };
+  return { id, name, surface, size, col: typeof p.col === 'string' && /^#[0-9a-f]{6}$/i.test(p.col) ? p.col : '#55602a', a: clampSide(p.a), b: clampSide(p.b), mix: clampMix(p.mix ?? {}), stripes: clampStripes(p.stripes), lawn: typeof p.lawn === 'boolean' ? p.lawn : !NOT_GRASS.has(surface ?? '') };
 }
 /** the file with its presets checked: bad ones dropped, a repeated id kept once (the first) */
 export function clampPresets(f: Partial<PresetsFile> | null | undefined): PresetsFile {

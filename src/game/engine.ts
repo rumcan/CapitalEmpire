@@ -9,6 +9,8 @@ import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, stru
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { lotBatch, type LotPatch } from './ground-protocol';
+import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
+import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
@@ -914,6 +916,19 @@ export class Game {
     for (const p of this.lotHits) { const it = LIBRARY[p.item]; if (!p.auto && it.big && it.kind !== 'car') return true; }
     return false;
   }
+  /** the road blocks' lawns on the ground (lawns.ts), by ground key ('lawn:' + block key), and the timer of the next sync after an edit */
+  private blockLawns = new Set<string>(); private blockLawnTimer = 0;
+  /** every road block gets its lawn (lawns.ts blockLawn): blocks that went lose theirs, new ones get one; a block whose corners stayed keeps it */
+  private syncBlockLawns() {
+    const keep = new Set<string>();
+    for (const b of enclosedBlocks(this.net, BLOCK_MAX_AREA)) {
+      const k = 'lawn:' + b.key; keep.add(k); if (this.blockLawns.has(k)) continue;
+      const p = blockLawn(b); if (p) { this.setLotGround(k, [p]); this.blockLawns.add(k); }
+    }
+    for (const k of [...this.blockLawns]) if (!keep.has(k)) { this.setLotGround(k, null); this.blockLawns.delete(k); }
+  }
+  /** after a road edit: the blocks' lawns again in a moment (a drag of edits makes one sync) */
+  private scheduleBlockLawns() { clearTimeout(this.blockLawnTimer); this.blockLawnTimer = window.setTimeout(() => this.syncBlockLawns(), 400); }
   /** the lot's props and ground go */
   private dropLot(key: string) {
     const old = this.lotProps.get(key);
@@ -926,7 +941,7 @@ export class Game {
     const c = compose(g, st), ps: Prop[] = [];
     for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !(q.street && this.inLayby(i, q))) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
-    this.setLotGround(key, c.ground);
+    const lawn = lotLawn(key, g); this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
   }
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
@@ -1014,7 +1029,7 @@ export class Game {
     const ops = this.edit.commit(); this.lanes.update(this.net);
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); this.dropTownTrees(d[0], d[1], d[2], d[3]); }
-    this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate();
+    this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate(); this.scheduleBlockLawns();
     this.syncLamps(); if (this.parkDefs.length) this.syncParks(); this.parking.sync(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
     this.scheduleSave(); this.emit();
   }
@@ -1023,7 +1038,7 @@ export class Game {
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
-    this.syncLamps(); this.sendBlocks(false);
+    this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
     this.ground.invalidateAll(); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
@@ -2899,6 +2914,7 @@ export class Game {
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
     for (const k of this.lotProps.keys()) this.setLotGround(k, null);
+    for (const k of this.blockLawns) this.setLotGround(k, null); this.blockLawns.clear();
     this.lotProps.clear(); this.lotQueue.clear(); this.staged.clear(); this.perf.lotProps = 0;
     this.dropAllFarms();
     this.traffic.setGolf(false, 1, 0);

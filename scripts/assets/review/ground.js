@@ -182,7 +182,7 @@ function setMode(m) {
 function editPreset(p) {
   const base = grassF ?? saved;
   F = p ? { a: clone(p.a), b: clone(p.b), mix: clone(p.mix) } : { a: clone(base.a), b: clone(base.b), mix: clone(base.mix) };
-  PM = p ? { id: p.id, name: p.name, surface: p.surface, size: p.size, stripes: clampStripes(p.stripes) } : { id: null, name: '', surface: null, size: 8, stripes: clone(DEFAULT_STRIPES) };
+  PM = p ? { id: p.id, name: p.name, surface: p.surface, size: p.size, stripes: clampStripes(p.stripes), lawn: p.lawn !== false } : { id: null, name: '', surface: null, size: 8, stripes: clone(DEFAULT_STRIPES), lawn: true };
   pSaved = p ? JSON.stringify([F, PM]) : ''; build(); rebuild();
 }
 function buildPreset() {
@@ -200,6 +200,10 @@ function buildPreset() {
     el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Name' }), name),
     el('div', { className: 'prow' }, el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Golf surface' }), surf),
     slider('Size', () => PM.size, v => { PM.size = v; }, PRE.size, 0.5, v => `${v.toFixed(1)} tiles`),
+    el('div', { className: 'prow', title: "The town's lawns pick from the presets switched on here: each house lot's yard, and the grass of every road block (in soft patches). Save, then Rebuild game sprites." },
+      el('span', { style: 'width:86px;font-size:12px;color:var(--dim)', textContent: 'Town lawns' }),
+      el('button', { className: 'chip' + (PM.lawn ? ' on' : ''), textContent: 'Use on lawns', onclick: () => { PM.lawn = true; build(); msg(dirty() ? 'not saved' : 'saved'); } }),
+      el('button', { className: 'chip' + (!PM.lawn ? ' on' : ''), textContent: 'Not on lawns', onclick: () => { PM.lawn = false; build(); msg(dirty() ? 'not saved' : 'saved'); } })),
     el('div', { className: 'row', style: 'padding:0;margin:8px 0 12px;gap:6px' }, btn(PM.id ? 'Save preset' : 'Save as new preset', savePreset, 'gold'), PM.id ? btn('Delete preset', deletePreset, 'red') : null),
     sideBlock('a'), sideBlock('b'),
     el('div', { className: 'row', style: 'padding:0;margin-bottom:10px' }, btn('Swap A and B', () => { [F.a, F.b] = [F.b, F.a]; build(); rebuild(); })),
@@ -242,7 +246,7 @@ async function savePreset() {
   const id = presetSlug(PM.name); if (!id) { msg('the name needs a letter or a digit'); return; }
   msg('saving preset…');
   const blob = await mixed.convertToBlob({ type: 'image/png' }), b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
-  const r = await fetch('/api/preset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ preset: { id, name: PM.name, surface: PM.surface, size: PM.size, a: F.a, b: F.b, mix: F.mix, stripes: PM.stripes }, png: b64, replaces: PM.id ?? undefined }) });
+  const r = await fetch('/api/preset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ preset: { id, name: PM.name, surface: PM.surface, size: PM.size, a: F.a, b: F.b, mix: F.mix, stripes: PM.stripes, lawn: PM.lawn }, png: b64, replaces: PM.id ?? undefined }) });
   if (!r.ok) { msg(await r.text()); return; }
   const d = await r.json(); PRE = { ...PRE, presets: d.presets }; editPreset(PRE.presets.find(p => p.id === d.saved) ?? null);
   msg('preset saved: Rebuild game sprites to see it in Paint');
