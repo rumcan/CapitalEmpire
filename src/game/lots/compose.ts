@@ -178,6 +178,8 @@ class Build {
   readonly marks: number[] = [];
   /** no cars at all (derelict); the upright cap for plants (the rest are kept) */
   noCars = false; cap = 28;
+  /** a building site keeps all its ground decals (mud, footprints, gravel); every other lot keeps only its leaves (the owner, 2026-10-22) */
+  allMarks = false;
   readonly r: () => number;
 
   constructor(lot: LotGeom, r: () => number) {
@@ -287,7 +289,9 @@ class Build {
     const list = MARKS[group] ?? (MARK_ID.has(group) ? [MARK_ID.get(group)!] : []);
     if (!list.length) return;
     const i = list[Math.floor(this.r() * list.length)], p = this.P(clamp(a, 0.4, this.W - 0.4), clamp(b, 0.4, this.D - 0.4)), s = size * (0.8 + 0.4 * this.r()) * (LOT_DECALS[i]!.id.startsWith('gen:drift-') ? DRIFT_K : 1);
-    this.marks.push(i, +p.x.toFixed(3), +p.y.toFixed(3), +(this.r() < 0.5 ? -s : s).toFixed(3), +(0.7 + 0.3 * this.r()).toFixed(2));
+    const flipped = this.r() < 0.5, alpha = 0.7 + 0.3 * this.r(); // drawn even when the decal is left out, so the lot's other draws stay the same
+    if (!this.allMarks && LOT_DECALS[i]!.group !== 'leaves') return;
+    this.marks.push(i, +p.x.toFixed(3), +p.y.toFixed(3), +(flipped ? -s : s).toFixed(3), +alpha.toFixed(2));
   }
   /** n decals from a group at seeded points of a lot-frame rectangle */
   marksIn(group: string, a0: number, b0: number, a1: number, b1: number, n: number, size = 1) { for (let i = 0; i < n; i++) this.mark(group, a0 + (a1 - a0) * this.r(), b0 + (b1 - b0) * this.r(), size); }
@@ -815,6 +819,7 @@ const SITE_KIT = {
 };
 /** a dirt construction site: a digger, varied supplies, rubble, a cable spool and a pickup; no building */
 function site(B: Build) {
+  B.allMarks = true;
   const { W, D, r, flip } = B;
   B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
   // The digger's source faces +X, so mirror it for streets along the other axis (+Y).

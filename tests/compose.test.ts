@@ -195,7 +195,9 @@ test('residential fence boundaries meet exactly in every orientation, with one o
     assert.equal(new Set(trees).size, trees.length, 'a fence tree repeats within one lot');
     assert.ok(nextTrees.every(id => !trees.includes(id)), 'adjacent lots must receive different young trees');
     assert.ok(marks.length > 0, 'fence layer needs its own ground marks');
-    for (const group of ['leaves', 'tufts']) for (const side of [0.5, lot.w - 0.5]) {
+    // the yards keep only their leaves (the owner, 2026-10-22): leaves on both sides, and no other decal
+    for (let i = 0; i < marks.length; i += 5) assert.equal(LOT_DECALS[marks[i]].group, 'leaves', 'only leaves in a yard');
+    for (const group of ['leaves']) for (const side of [0.5, lot.w - 0.5]) {
       let found = false;
       for (let i = 0; i < marks.length; i += 5) if (LOT_DECALS[marks[i]].group === group && Math.abs(toLot(lot, marks[i + 1], marks[i + 2]).a - side) < 0.01) found = true;
       assert.ok(found, `${group} missing on side ${side}`);
@@ -327,15 +329,15 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-21 for the owner evening curation, the generated trees (capital:tree-*) in the tree pool, the digger on building sites, every library building in the pools, the building site recolours, the decal variations, the pay boom at car park drives, the second studio curation, the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-22 for the yards keeping only their leaves; 2026-10-21 for the owner evening curation, the generated trees (capital:tree-*) in the tree pool, the digger on building sites, every library building in the pools, the building site recolours, the decal variations, the pay boom at car park drives, the second studio curation, the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '4b8ae3ab'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '11f344e6'],
     [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '4d18dcf5'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '03afafa2'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, 'd0c92f75'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, 'a1dd7ff7'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '25e447ea'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e92cb9e0'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '15a72eeb'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'c4db8d90'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, '03690743'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '54ea1854'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
   assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));
