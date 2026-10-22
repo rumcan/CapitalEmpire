@@ -44,7 +44,7 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
-import { compose, fenceOnly, isCarPark, type ComposeState, type LotGeom, type Placed } from './lots/compose';
+import { acrossLines, compose, fenceOnly, isCarPark, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -906,16 +906,46 @@ export class Game {
     if (st) { this.placeLot(key, st.g, st.st); return; }
     if (!v) { this.dropLot(key); return; }
     const g: LotGeom = { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d };
-    // an empty lot, or one a starter house stands on, keeps only its share of the fence grid (none on the golf land)
-    if (v.level === LV.EMPTY || this.starterIn(v)) { if (this.onGolfLand(lotBoxOf(v.o, v.u, v.n, v.w, v.d))) this.dropLot(key); else this.placeFence(key, g, v.seed); return; }
+    // an empty lot, or one a starter house stands on, keeps only its share of the fence grid (none on the golf land): a starter house's lot all
+    // the lines it owns, an empty lot only those it shares with a lot that has a house
+    const starter = v.level !== LV.EMPTY && this.starterIn(v);
+    this.houseChanged(key, v, v.level >= LV.BUILT || starter);
+    if (v.level === LV.EMPTY || starter) {
+      if (this.onGolfLand(lotBoxOf(v.o, v.u, v.n, v.w, v.d))) { this.dropLot(key); return; }
+      const across = acrossLines(g), lines: FenceLines = starter ? { side: true, back: true } : { side: this.houseAt(across.side, key), back: !!across.back && this.houseAt(across.back, key) };
+      if (lines.side || lines.back) this.placeFence(key, g, v.seed, lines); else this.dropLot(key);
+      return;
+    }
     this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed });
   }
   /** a lot's share of the fence grid alone (compose fenceOnly): panels that would stand in a building or another prop are left out */
-  private placeFence(key: string, g: LotGeom, seed: number) {
+  private placeFence(key: string, g: LotGeom, seed: number, lines: FenceLines) {
     this.dropLot(key);
     const ps: Prop[] = [];
-    for (const q of fenceOnly(g, seed).props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !this.canPlace(LIBRARY[i]!, q.x, q.y, q.flip, q.scale)) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
+    for (const q of fenceOnly(g, seed, lines).props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !this.canPlace(LIBRARY[i]!, q.x, q.y, q.flip, q.scale)) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
+  }
+  /** the lots with a house on them (built, or a starter house): an empty neighbour fences the line it shares with one */
+  private houseLots = new Set<string>();
+  /** is the point inside a lot (not `self`) that has a house on it (built, or a starter house) */
+  private houseAt(p: { x: number; y: number }, self: string): boolean {
+    for (const v of this.traffic.lots.values()) {
+      if (v.key === self) continue;
+      const rx = p.x - v.o[0], ry = p.y - v.o[1], a = rx * v.u[0] + ry * v.u[1], b = rx * v.n[0] + ry * v.n[1];
+      if (a >= 0 && a <= v.w && b >= 0 && b <= v.d) return v.level >= LV.BUILT || (v.level !== LV.EMPTY && this.starterIn(v));
+    }
+    return false;
+  }
+  /** a lot got or lost its house: its empty neighbours (lots whose boxes touch its own) compose again, so their shared lines follow */
+  private houseChanged(key: string, v: LotView, house: boolean) {
+    if (house === this.houseLots.has(key)) return;
+    if (house) this.houseLots.add(key); else this.houseLots.delete(key);
+    const b = lotBoxOf(v.o, v.u, v.n, v.w, v.d);
+    for (const w of this.traffic.lots.values()) {
+      if (w.key === key || w.level !== LV.EMPTY) continue;
+      const c = lotBoxOf(w.o, w.u, w.n, w.w, w.d);
+      if (c[0]! <= b[2]! + 1 && c[2]! >= b[0]! - 1 && c[1]! <= b[3]! + 1 && c[3]! >= b[1]! - 1) this.lotQueue.add(w.key);
+    }
   }
   /** a box (tiles [x0, y0, x1, y1]) that overlaps the golf land by more than half a tile */
   private onGolfLand(b: ArrayLike<number>): boolean {

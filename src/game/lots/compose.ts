@@ -538,10 +538,23 @@ const FENCE_FRONT = 3.65;
  *  One rule for sides and backs, so every line between two lots is owned by exactly one of them (the lot on its lower side), whichever way the
  *  two face: a block's end column meets its rows' sides with its back. Every use but industry draws these, so a shared line gets one fence
  *  whatever the two uses are. */
-function boundaryFence(B: Build, lot: LotGeom) {
-  const { W, D } = B, side = lot.u.x + lot.u.y > 0 ? W : 0;
-  B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
-  if (lot.n.x + lot.n.y > 0) B.boundaryRun(PRIVACY, 0, D, W, D);
+function boundaryFence(B: Build, lot: LotGeom, lines: FenceLines = ALL_LINES) {
+  const { W, D } = B, side = fenceSide(lot, W);
+  if (lines.side) B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
+  if (lines.back && ownsBack(lot)) B.boundaryRun(PRIVACY, 0, D, W, D);
+}
+/** which of the lines a lot owns get their fence (fenceOnly: an empty lot fences only the lines it shares with a lot that has a house) */
+export interface FenceLines { side: boolean; back: boolean }
+const ALL_LINES: FenceLines = { side: true, back: true };
+/** the local x (0 or W) of the side line a lot owns: the one at the higher world-coordinate end */
+export const fenceSide = (lot: LotGeom, W: number) => (lot.u.x + lot.u.y > 0 ? W : 0);
+/** does a lot own its back line (n points to +X / +Y) */
+export const ownsBack = (lot: LotGeom) => lot.n.x + lot.n.y > 0;
+/** the points just across the lines a lot owns (tiles): side, back (null when it does not own the back): the lot found there is the neighbour */
+export function acrossLines(lot: LotGeom): { side: { x: number; y: number }; back: { x: number; y: number } | null } {
+  const { o, u, n, w, d } = lot, at = (a: number, b: number) => ({ x: o.x + u.x * a + n.x * b, y: o.y + u.y * a + n.y * b });
+  const s = fenceSide(lot, w);
+  return { side: at(s + (s ? 0.5 : -0.5), (Math.min(d, FENCE_FRONT) + d) / 2), back: ownsBack(lot) ? at(w / 2, d + 0.5) : null };
 }
 /** a house lot's fence layer (its baked picture has no fences): the boundary fence, and the planting along the inside of its lines */
 function fenceLayer(B: Build, lot: LotGeom) {
@@ -839,11 +852,11 @@ function vacant(B: Build) {
  *  Decided from the seed alone, so no other lot's draws change. */
 export function isCarPark(st: ComposeState): boolean { return st.use === LU.COM && st.level >= LV.BUILT && st.seed % 100 < 15; }
 
-/** an empty lot's or a starter house's lot's part of the fence grid (the owner: every lot is fenced, an empty one too): only the boundary fence
- *  it owns (boundaryFence), so its neighbours' lines meet it; nothing else stands on it (the block's grass shows) */
-export function fenceOnly(lot: LotGeom, seed: number): Composition {
+/** an empty lot's or a starter house's lot's part of the fence grid: only the boundary fence it owns (boundaryFence), the lines given (the
+ *  owner: an empty lot fences only a line it shares with a lot that has a house); nothing else stands on it (the block's grass shows) */
+export function fenceOnly(lot: LotGeom, seed: number, lines: FenceLines = ALL_LINES): Composition {
   const B = new Build(lot, mulberry(mix(seed, 0x0fe7)));
-  boundaryFence(B, lot);
+  boundaryFence(B, lot, lines);
   return B.done();
 }
 
