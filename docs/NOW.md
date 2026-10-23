@@ -18,7 +18,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [x] 5. `src/game/engine.ts`: the owner's settings `townDay = { minutes, traffic }` (localStorage `capitalempire.townday`), sent on
   start and on change (golf mode: dayLen = minutes * 60 sim s at 1x... see note); `clock()` reads the hour from the town day in golf mode.
 - [x] 6. Gear menu (`src/ui/NightPanel.tsx` or a new `TownDayPanel.tsx`): "Town day" length (real minutes at 1x) and "Town traffic".
-- [ ] 7. Tests (`tests/town-day.test.ts`): demandAt with a short day has its peaks at 08:00 / 17:00 of the town day; LotTrips makes about
+- [x] 7. Tests (`tests/town-day.test.ts`): demandAt with a short day has its peaks at 08:00 / 17:00 of the town day; LotTrips makes about
   `PER_RES * pop * traffic` trips per town day; dayLen = DAY keeps the old numbers.
 - [ ] 8. typecheck, tests, build, browser check (rush hour visible: count cars at 08:00 vs 03:00 of the town day; the night falls with it).
 - [ ] 9. Land on main, PROGRESS.md paragraph, tick M1 in LEAD.md.
@@ -27,7 +27,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 is a 4-minute town day at 1x; the season's month is 120 sim s, so about half a town day... the owner picks the length.
 
 ## Next action
-Step 7: write `tests/town-day.test.ts` (demandAt peaks with a short day; LotTrips trip counts per town day; DAY keeps the classic numbers). Steps 3-6 are in: the message `townDay` (protocol, worker), `SimClient.setTownDay/sendTownDay` (sent with every setGolf), `Game.townDay/setTownDay/clock()`, the gear rows in `NightPanel.tsx` (golf games only).
+Step 8: `npm run build`, then the browser check on 5174 in a golf game: read `window.__game.traffic` car counts over a town day (08:00 / 17:00 vs 03:00 of `game.clock()`), the HUD time cycling every `townDay.minutes`, the night falling with it. The tests are in `tests/trips.test.ts` (the two 'town day' tests).
 
 ## Done (newest first)
 - 2026-10-23: docs/LEAD.md and this file written; stock taken (see PROGRESS.md "2026-10-23: Claude leads the code").
