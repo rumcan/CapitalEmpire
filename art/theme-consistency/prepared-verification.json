@@ -1,98 +1,592 @@
 {
-  "task": "T017",
-  "scope": "File and crop checks only; flagged boundary intersections require independent visual review",
-  "activeSheets": [
-    {
-      "id": "world:house_0",
-      "sheet": "art/theme-consistency/generated/buildings/world-house_0-4views-v1.png",
-      "fileValidation": "passed",
-      "alphaReview": "flags-require-review",
-      "rowBothSidesVisible": 0,
-      "columnBothSidesVisible": 0,
-      "warnings": [
-        "SE: insufficient clear margin for four-pixel padding"
-      ]
-    },
-    {
-      "id": "world:house_1",
-      "sheet": "art/theme-consistency/generated/buildings/world-house_1-4views-v1.png",
-      "fileValidation": "passed",
-      "alphaReview": "flags-require-review",
-      "rowBothSidesVisible": 0,
-      "columnBothSidesVisible": 0,
-      "warnings": [
-        "NW: insufficient clear margin for four-pixel padding"
-      ]
-    },
-    {
-      "id": "world:house_2",
-      "sheet": "art/theme-consistency/generated/buildings/world-house_2-4views-v2.png",
-      "fileValidation": "passed",
-      "alphaReview": "flags-require-review",
-      "rowBothSidesVisible": 14,
-      "columnBothSidesVisible": 0,
-      "warnings": [
-        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "NE: insufficient clear margin for four-pixel padding",
-        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "SE: insufficient clear margin for four-pixel padding",
-        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "NW: insufficient clear margin for four-pixel padding",
-        "visible alpha on both sides of row split: inspect for cross-row artwork"
-      ]
-    },
-    {
-      "id": "world:house_3",
-      "sheet": "art/theme-consistency/generated/buildings/world-house_3-4views-v1.png",
-      "fileValidation": "passed",
-      "alphaReview": "flags-require-review",
-      "rowBothSidesVisible": 284,
-      "columnBothSidesVisible": 0,
-      "warnings": [
-        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "NE: insufficient clear margin for four-pixel padding",
-        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "SE: insufficient clear margin for four-pixel padding",
-        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "SW: insufficient clear margin for four-pixel padding",
-        "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "NW: insufficient clear margin for four-pixel padding",
-        "visible alpha on both sides of row split: inspect for cross-row artwork"
-      ]
-    },
-    {
-      "id": "world:house_4",
-      "sheet": "art/theme-consistency/generated/buildings/world-house_4-4views-v1.png",
-      "fileValidation": "passed",
-      "alphaReview": "flags-require-review",
-      "rowBothSidesVisible": 33,
-      "columnBothSidesVisible": 0,
-      "warnings": [
-        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "NE: insufficient clear margin for four-pixel padding",
-        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
-        "SW: insufficient clear margin for four-pixel padding",
-        "visible alpha on both sides of row split: inspect for cross-row artwork"
-      ]
-    }
-  ],
-  "themeReferencePreserved": {
-    "file": "art/theme-consistency/references/theme-authoritative.png",
-    "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
-    "selectedByOwner": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-4349c2c3-2faf-41db-a1fd-1957638da4cd.png",
-    "timeOfDay": "dusk; warm low side sunlight, windows and lamps already on; not moonlit night",
-    "light": "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
-    "season": "autumn foliage permitted, Halloween decorations prohibited"
-  },
-  "checkedNativeViews": 20,
-  "checkedScaledVariants": 80,
-  "sourceSheetsConserved": true,
-  "exactOddDimensionQuadrantsVerified": true,
-  "cropCellBoundariesVerified": true,
-  "pixelConservationVerified": true,
-  "aspectPreservingResizeVerified": true,
-  "visualApproval": false,
-  "gameScaleRegistered": false,
-  "failures": []
+    "task":  "T017",
+    "checkedAt":  "2026-10-23T15:27:20.7975443Z",
+    "sourceManifest":  "art/theme-consistency/generated-manifest.json",
+    "scope":  "Current selected sheets: file validation, alpha bounds and pixel-conserving native crops only. Geometry, padding flags and game registration remain pending review.",
+    "counts":  {
+                   "requested":  305,
+                   "generated":  23,
+                   "fileValidated":  23,
+                   "fileValidationFailed":  0,
+                   "alphaFlagged":  12,
+                   "visuallyReviewed":  0,
+                   "nativeViewsExported":  92,
+                   "pendingGeneration":  282
+               },
+    "activeSheets":  [
+                         {
+                             "id":  "world:house_0",
+                             "sheet":  "art/theme-consistency/generated/buildings/world-house_0-4views-v1.png",
+                             "sheetSha256":  "c238f37e178e1be53a4eac4fb67a90ea1c5faee2202616c60ad212389b7bddfb",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "SE: insufficient clear margin for four-pixel padding"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  768,
+                                                   "rowSplit":  512,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "world:house_1",
+                             "sheet":  "art/theme-consistency/generated/buildings/world-house_1-4views-v1.png",
+                             "sheetSha256":  "387931f349b26783970735d4020310b85c3dfecc610b2f60d00884a93c4e1f8a",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NW: insufficient clear margin for four-pixel padding"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  768,
+                                                   "rowSplit":  512,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "world:house_2",
+                             "sheet":  "art/theme-consistency/generated/buildings/world-house_2-4views-v3.png",
+                             "sheetSha256":  "eea27f3eff81ce754cb49aecc6eaae93176eb152e010d443d505b9a3c6b29e23",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "NW: insufficient clear margin for four-pixel padding"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "world:house_3",
+                             "sheet":  "art/theme-consistency/generated/buildings/world-house_3-4views-v2.png",
+                             "sheetSha256":  "20110a7ef5005c8e115b4e4f05f5aaf75e76be484e6aa897e941c5da4fbd5e4d",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "world:house_4",
+                             "sheet":  "art/theme-consistency/generated/buildings/world-house_4-4views-v2.png",
+                             "sheetSha256":  "1ef500ec1d95afddb44efc6db1a06148fe311ca6e76f6e19a15eedda1da17ea6",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "town:bakery",
+                             "sheet":  "art/theme-consistency/generated/buildings/town-bakery-4views-v1.png",
+                             "sheetSha256":  "d63a53204ce69ad87803092e0eefb6379906d2b58e3cc1a37760d08f42268a5c",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "town:barber",
+                             "sheet":  "art/theme-consistency/generated/buildings/town-barber-4views-v1.png",
+                             "sheetSha256":  "662f2a1cb2b29c7edbf09ac99f78ff3b0c3fced7289f797c064f50cae471f078",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "town:grocery",
+                             "sheet":  "art/theme-consistency/generated/buildings/town-grocery-4views-v1.png",
+                             "sheetSha256":  "7673a291ce422deb46c9120a7851ab7d7cab548b8138c142583c23e09195ba7a",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "town:pharmacy",
+                             "sheet":  "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1.png",
+                             "sheetSha256":  "2ab96f0f89791d022d6bcd189bdc8d0cbd15c13384f4581d1b73a751fb5486aa",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "town:postoffice",
+                             "sheet":  "art/theme-consistency/generated/buildings/town-postoffice-4views-v2.png",
+                             "sheetSha256":  "b9f4d72c9861d9e89ae89b457da6f6d2a5fa147292de6168917e257e42fb3b79",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "world:house_5",
+                             "sheet":  "art/theme-consistency/generated/buildings/world-house_5-4views-v1.png",
+                             "sheetSha256":  "9f5b2462c52020b452090de3a58aafa9b242c11f52b050c39bee60bddd60fddc",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "business:buscompany",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-buscompany-4views-v1.png",
+                             "sheetSha256":  "f12513ed05204c2d95d0dfdd78e56e96fe3bb45a68a4d2c4b4a1e5aa70d48928",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  167,
+                                                   "columnRightVisible":  156,
+                                                   "columnBothSidesVisible":  155
+                                               }
+                         },
+                         {
+                             "id":  "business:casino",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-casino-4views-v1.png",
+                             "sheetSha256":  "801c36ae98d80ead5c5e91b77b1d4cd6e3ef6440461b366a699ce254964cfc4a",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "business:diner",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-diner-4views-v1.png",
+                             "sheetSha256":  "174956498a44e5a1d497e61ac13027d03a1830e58c4911085de1852ce1f3d261",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SW: insufficient clear margin for four-pixel padding"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "business:estate-villa",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-estate-villa-4views-v1.png",
+                             "sheetSha256":  "26016c96332dff392acf4ff14981b6ac48d5beab3e21a154ffa8c40954dea318",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SW: insufficient clear margin for four-pixel padding",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  51,
+                                                   "columnRightVisible":  36,
+                                                   "columnBothSidesVisible":  36
+                                               }
+                         },
+                         {
+                             "id":  "business:fishing-boathouse",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-fishing-boathouse-4views-v1.png",
+                             "sheetSha256":  "04ab147ffafc1a3951aa9aa25196753e96199b2105476abafee1e920067542a8",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SW: insufficient clear margin for four-pixel padding",
+                                              "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NW: insufficient clear margin for four-pixel padding",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  200,
+                                                   "columnRightVisible":  195,
+                                                   "columnBothSidesVisible":  195
+                                               }
+                         },
+                         {
+                             "id":  "business:fishing-cabin",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-fishing-cabin-4views-v1.png",
+                             "sheetSha256":  "125b10ff4ed51473ee40b99fd93e10d00dffd9b31fe0de6239410b541704c811",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  67,
+                                                   "columnRightVisible":  48,
+                                                   "columnBothSidesVisible":  48
+                                               }
+                         },
+                         {
+                             "id":  "business:fishing-lodge",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v1.png",
+                             "sheetSha256":  "d4c09eef0705d770e273937b66d4b37c37fbcf1e36fb310a66b0976f80777969",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SW: insufficient clear margin for four-pixel padding",
+                                              "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NW: insufficient clear margin for four-pixel padding",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  383,
+                                                   "columnRightVisible":  354,
+                                                   "columnBothSidesVisible":  354
+                                               }
+                         },
+                         {
+                             "id":  "business:fishing-rental-kiosk",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-fishing-rental-kiosk-4views-v1.png",
+                             "sheetSha256":  "e1a59b8b6315e17b4a35ea135ac29a2ed5288784c0d1b16f63860204d8beddf1",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "business:golf-cart-garage",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-golf-cart-garage-4views-v2.png",
+                             "sheetSha256":  "340b82f34a987ba49bea9803307652c92281a26921fb43baeb0b23d2719fa297",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SW: insufficient clear margin for four-pixel padding",
+                                              "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NW: insufficient clear margin for four-pixel padding",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  92,
+                                                   "columnRightVisible":  80,
+                                                   "columnBothSidesVisible":  80
+                                               }
+                         },
+                         {
+                             "id":  "business:golf-clubhouse",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-golf-clubhouse-4views-v1.png",
+                             "sheetSha256":  "17b6366e9f41c873b49fdc8e61077a0455e07a4702154205fe26ef186ba69466",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SW: insufficient clear margin for four-pixel padding",
+                                              "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NW: insufficient clear margin for four-pixel padding",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  78,
+                                                   "columnRightVisible":  73,
+                                                   "columnBothSidesVisible":  73
+                                               }
+                         },
+                         {
+                             "id":  "business:golf-driving-range",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-golf-driving-range-4views-v2.png",
+                             "sheetSha256":  "6d258c77d94b15d4b69c1b7133ac37c72bb5fdb87de81a1da95c59724102c9ac",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "bounds-checked-visual-review-pending",
+                             "warnings":  [
+
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  0,
+                                                   "columnRightVisible":  0,
+                                                   "columnBothSidesVisible":  0
+                                               }
+                         },
+                         {
+                             "id":  "business:golf-halfway-pavilion",
+                             "sheet":  "art/theme-consistency/generated/buildings/business-golf-halfway-pavilion-4views-v2.png",
+                             "sheetSha256":  "3943160342a5fc852d0c2553d48ea64700c1249e414b624fb54d446095b134e5",
+                             "fileValidation":  "passed",
+                             "alphaReview":  "flags-require-review",
+                             "warnings":  [
+                                              "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "NE: insufficient clear margin for four-pixel padding",
+                                              "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SE: insufficient clear margin for four-pixel padding",
+                                              "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "SW: insufficient clear margin for four-pixel padding",
+                                              "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+                                              "visible alpha on both sides of column split: inspect for cross-column artwork"
+                                          ],
+                             "packingReview":  {
+                                                   "columnSplit":  627,
+                                                   "rowSplit":  627,
+                                                   "oddDimensionsHandled":  false,
+                                                   "alphaThreshold":  8,
+                                                   "rowAboveVisible":  0,
+                                                   "rowBelowVisible":  0,
+                                                   "rowBothSidesVisible":  0,
+                                                   "columnLeftVisible":  90,
+                                                   "columnRightVisible":  63,
+                                                   "columnBothSidesVisible":  63
+                                               }
+                         }
+                     ],
+    "themeReferencePreserved":  {
+                                    "file":  "art/theme-consistency/references/theme-authoritative.png",
+                                    "sha256":  "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
+                                    "selectedByOwner":  "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-4349c2c3-2faf-41db-a1fd-1957638da4cd.png",
+                                    "timeOfDay":  "dusk; warm low side sunlight, windows and lamps already on; not moonlit night",
+                                    "light":  "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
+                                    "season":  "autumn foliage permitted, Halloween decorations prohibited"
+                                },
+    "checkedNativeViews":  92,
+    "checkedScaledVariants":  368,
+    "sourceSheetsConserved":  true,
+    "visualApproval":  false,
+    "gameScaleRegistered":  false,
+    "failures":  [
+
+                 ]
 }

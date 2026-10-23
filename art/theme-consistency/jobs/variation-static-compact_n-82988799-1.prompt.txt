@@ -1,4 +1,4 @@
-Subject ID: variation:static-compact_n-82988799:1. Category: cars. Existing name: Compact N â€” side view.
+Subject ID: variation:static-compact_n-82988799:1. Category: cars. Existing name: Compact N Ã¢â‚¬â€ side view.
 
 VEHICLE SUBJECT ONLY. Ignore building-specific instructions in the source brief: no buildings, porches, architectural windows or vegetation. Preserve the SAME empty vehicle's model, body type, paint, wheelbase, wheels, glass, roof, trim and proportions in all four nose headings NE, SE, SW, NW. A golf cart remains a golf cart, a bus remains a bus, a pickup retains its bed; never convert one vehicle type into another. Reconstruct true rear and side faces, do not mirror. No driver or passengers. Headlights may glow warm white at dusk and visible rear lights red in physically correct locations; these lamps rotate with the vehicle while the SUN remains fixed screen upper-right. No road, parking bay, ground platform or other vehicle.
 

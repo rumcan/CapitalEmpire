@@ -1,0 +1,15 @@
+{
+  "id": "business:golf-cart-garage",
+  "generator": "built-in image_gen",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-cc302653-a286-4a23-ad77-17e3a07e0e7c.png",
+  "sheet": "art/theme-consistency/generated/buildings/business-golf-cart-garage-4views-v2.png",
+  "prompt": "Use case: illustration. Correct a four-angle isometric game sprite sheet.\nREFERENCE ROLES: Image 1 is the authoritative autumn dusk THEME scene. Image 2 is the previous generated sheet: preserve its building's identity/materials, but FIX repeated camera angles and crowded layout. Image 3 is the original game's identity reference. Only ONE building model, no new designs.\nFOUR SIDES OF THIS SAME MODEL: A = long FRONT with exactly four arched open service bays, tool cabinets and yellow bollards. B = short RIGHT gable end with one wooden service door. C = long BACK with three lit windows and an exterior AC unit; NO open bays. D = short LEFT gable end with two small lit windows; NO wooden door. One rectangular structure with the same pitched slate roof, three dormer vents and rooftop vents.\nThe camera NEVER MOVES. Rotate the OBJECT exactly 90 degrees between cells clockwise. CRITICAL VISIBLE FACE PAIRS in row-major order: TOP LEFT shows A + B; TOP RIGHT shows B + C; BOTTOM LEFT shows C + D; BOTTOM RIGHT shows D + A. Thus the main FRONT A must appear ONLY in top-left and bottom-right. BACK C appears ONLY in top-right and bottom-left. Every view has a distinct corner nearest the viewer. This is an orbit around ONE rigid model, NOT a mirror flip, NOT four slightly different versions of the same camera angle. Track the asymmetric door/window features across rotations. Never show the same pair of walls twice.\nSQUARE 2x2 transparent PNG. Each complete sprite must fit inside the central 65% of its quadrant, with huge transparent gutters and 17.5% clear margin on all four sides. Uniform physical scale for four views. Nothing touches center seams or canvas edges; shrink rather than crop. No labels or borders.\nMatch Image 1's precise 2:1 isometric camera, rich miniature material detail and EARLY DUSK treatment. Keep warm low sunlight FIXED from SCREEN UPPER RIGHT, shade on screen left; lighting must not turn with the model. Warm windows and architectural lamps on. NOT night, no moonlight. No decorative string lights or garlands, NO Halloween or pumpkins or cobwebs or wreaths, no people. Only this building and integral steps/attached architecture, no broad terrain tile.",
+  "referencedImagePaths": [
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/business-golf-cart-garage-4views-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/business-golf-cart-garage.configured@2x.png"
+  ],
+  "generatedAt": "2026-10-23T15:17:38.842Z",
+  "status": "generated-awaiting-visual-review",
+  "correction": "Four unique face pairs and consistent asymmetric features; no duplicated rear angles"
+}
