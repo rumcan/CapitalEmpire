@@ -17,7 +17,8 @@ test('gates: a walker group bound for a gate queues there; admit lets fans in in
   C.now = 20;
   assert.equal(C.admit(1, 4), 4);
   c = C.counts();
-  assert.deepEqual(c.fans, [3, 1], 'the head party first, then part of the next'); assert.deepEqual(c.atGate, [0, 2]);
+  // the near group (town 1) reached the gate first, so it is at the head of the queue
+  assert.deepEqual(c.fans, [1, 3], 'the head party first, then part of the next'); assert.deepEqual(c.atGate, [2, 0]);
   assert.equal(C.admit(1, 10), 2); assert.equal(C.admit(0, 10), 0);
   assert.equal(C.gate.admitted, 6);
   assert.ok(C.gate.waitMax === 10 && C.gate.waitSum === 60, `waits: ${JSON.stringify(C.gate)}`);
