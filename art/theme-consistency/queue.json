@@ -1520,7 +1520,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2.png",
+      "sheetSha256": "03ed5bfdaeaaa3f218834ea072db4c498a35cc09f5a48b8d2652c61038c40d57",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "golf:food-tent",
@@ -2092,7 +2103,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/town-firestation-4views-v1.png",
+      "sheetSha256": "93368b00a5bb6aa34618c923983455659ff81ef2a6e60c05bcb5b3a2724ad1df",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "town:fish_tackle",
@@ -8668,11 +8690,11 @@
     "total": 305,
     "exportedRuntimeViews": 319,
     "sourceOnly": 26,
-    "generated": 51,
+    "generated": 53,
     "reviewed": 0,
-    "pending": 254,
-    "fileValidated": 51,
-    "alphaFlagged": 25,
-    "nativeViewsExported": 204
+    "pending": 252,
+    "fileValidated": 53,
+    "alphaFlagged": 26,
+    "nativeViewsExported": 212
   }
 }

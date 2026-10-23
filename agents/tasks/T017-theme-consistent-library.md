@@ -1,6 +1,6 @@
 # T017 - Theme-consistent four-view buildings, trees and cars
 
-Status: in review (#17; draft, generation stopped by owner at 51 subjects; handover in art/theme-consistency/HANDOVER.md)
+Status: in review (#17; draft, resumed with town houses/buildings prioritized; 53 generated drafts, no visual approvals; handover in art/theme-consistency/HANDOVER.md)
 Owner request: 2026-10-23. Branch: `arena/T017-theme-consistent-library`.
 
 Process ALL existing buildings (not just houses), then all existing trees, then cars. Save each existing sprite at its current configured size at maximum game camera zoom, including the largest currently supported normal placement/brush scale; record exact floating CSS bounds, integer raster dimensions and DPR policy. There is no finite global maximum for arbitrary Studio scales: state this precisely rather than inventing a ceiling. Preserve original art.
