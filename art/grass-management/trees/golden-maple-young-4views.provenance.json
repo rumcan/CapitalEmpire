@@ -1,0 +1,17 @@
+{
+  "id": "golden-maple-young-4views",
+  "source": "trees/golden-maple-young-4views.png",
+  "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+  "locator": "smaller golden maple beside left cart path near 458,616",
+  "estimatedHeightMetres": 4.5,
+  "footprintMetres": [
+    2.5,
+    2.5
+  ],
+  "status": "generated",
+  "gameReview": "pending",
+  "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A young golden maple from beside the left cart path, slim brown trunk, smaller open asymmetrical crown with fewer branches and distinct yellow-gold leaf clusters. Clearly an affordable young sapling/tree with a narrower canopy and visible space between branches, not a mature tree shrunk as a whole. No stake or tie.",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-ffe2eac7-0d07-40a4-9ec7-226277e9d723.png",
+  "generated": "2026-10-23"
+}

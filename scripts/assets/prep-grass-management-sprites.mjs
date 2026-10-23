@@ -5,16 +5,18 @@ import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const art = path.join(root, 'art/grass-management');
-const queuePath = path.join(art, 'scene-sprite-queue.json');
+const argv = process.argv.slice(2), option = (name, fallback) => { const i = argv.indexOf(name); return i < 0 ? fallback : argv[i + 1]; };
+const outputFolder = option('--out', 'budget-props');
+const queuePath = path.join(art, option('--queue', 'scene-sprite-queue.json'));
 const queue = JSON.parse(await fs.readFile(queuePath, 'utf8'));
 const angles = ['NE', 'SE', 'SW', 'NW'];
-const ids = ['white-popup-gazebo-4views', ...queue.assets.map(a => a.id)];
-const out = path.join(art, 'budget-props/individual');
+const ids = [...(outputFolder === 'budget-props' ? ['white-popup-gazebo-4views'] : []), ...queue.assets.map(a => a.id)];
+const out = path.join(art, outputFolder, 'individual');
 await fs.mkdir(out, { recursive: true });
 const manifest = { version: 1, reference: queue.reference, angles, policy: 'Source PNGs unchanged. Native crops around alpha >= 8 with four pixel padding; faint alpha noise is excluded only from crop bounds. No pixel alpha alteration, resampling, recolouring or generated content. Ground anchors are estimates pending game placement.', assets: [] };
 for (const id of ids) {
   const selected = queue.assets.find(a => a.id === id);
-  const sourceRel = selected?.source ?? 'budget-props/' + id + '.png';
+  const sourceRel = selected?.source ?? outputFolder + '/' + id + '.png';
   const source = path.join(art, sourceRel);
   try { await fs.access(source); } catch { continue; }
   const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -33,13 +35,13 @@ for (const id of ids) {
     const crop = { left: ox + left, top: oy + top, width: right - left + 1, height: bottom - top + 1 };
     const file = id.replace('-4views', '') + '-' + angles[n] + '.png';
     await sharp(source).extract(crop).png().toFile(path.join(out, file));
-    asset.views.push({ direction: angles[n], file: 'budget-props/individual/' + file, sourceRect: crop, alpha: { clear, partial }, estimatedAnchor: { x: crop.width / 2, y: crop.height - 1 }, touchesCellEdge: minX === 0 || minY === 0 || maxX === cw - 1 || maxY === ch - 1 });
+    asset.views.push({ direction: angles[n], file: outputFolder + '/individual/' + file, sourceRect: crop, alpha: { clear, partial }, estimatedAnchor: { x: crop.width / 2, y: crop.height - 1 }, touchesCellEdge: minX === 0 || minY === 0 || maxX === cw - 1 || maxY === ch - 1 });
   }
   manifest.assets.push(asset);
   const item = queue.assets.find(a => a.id === id);
   if (item) { item.status = 'generated'; item.alphaReview = asset.alphaReview; item.gameReview = 'pending'; }
 }
-await fs.writeFile(path.join(art, 'budget-props/manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+await fs.writeFile(path.join(art, outputFolder, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 await fs.writeFile(queuePath, JSON.stringify(queue, null, 2) + '\n');
 // Review contact sheet only; these thumbnails are not runtime sprites or placement-scale references.
 const overlays = [], cell = 192, rowHeight = 190;
@@ -49,5 +51,5 @@ for (let row = 0; row < manifest.assets.length; row++) for (let n = 0; n < 4; n+
   const label = `<svg width="192" height="32"><text x="4" y="12" fill="#e2f1dd" font-family="sans-serif" font-size="9">${asset.id.replace('-4views', '')}</text><text x="4" y="26" fill="#b9cbb0" font-family="sans-serif" font-size="10">${view.direction} / placement review pending</text></svg>`;
   overlays.push({ input: thumbnail, left: left + 6, top: top + 2 }, { input: Buffer.from(label), left, top: top + 157 });
 }
-await sharp({ create: { width: cell * 4, height: rowHeight * manifest.assets.length, channels: 3, background: '#354336' } }).composite(overlays).png().toFile(path.join(art, 'budget-props/contact.png'));
+await sharp({ create: { width: cell * 4, height: rowHeight * manifest.assets.length, channels: 3, background: '#354336' } }).composite(overlays).png().toFile(path.join(art, outputFolder, 'contact.png'));
 console.log(JSON.stringify({ sheets: manifest.assets.length, individualViews: manifest.assets.length * 4, clippedCells: manifest.assets.flatMap(a => a.views).filter(v => v.touchesCellEdge).length }));
