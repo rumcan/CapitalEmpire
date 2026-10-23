@@ -1,6 +1,14 @@
 # T017 image generation handover
 
-Updated 2026-10-23. **Generation stopped at the owner's request. No image-generation batch is running.** The remaining jobs are saved instructions, not scheduled API calls. Resume only when the owner asks the new chat to continue.
+## Continuation update, 2026-10-23
+
+The owner resumed generation and set **town houses and buildings as the priority**. The original queue order is retained as inventory; choose pending town houses/buildings before other golf or reference buildings, then return to the remaining building queue. Existing `world:house_*` and many `town:*` subjects are already generated drafts; the next pending substantial town building is `town:fish_tackle` (the smaller `town:bus_stop` remains pending). Trees and vehicles remain after buildings.
+
+The selected count is now **53 generated drafts of 305 subjects**, with 252 pending, 53 PNG/alpha file validations, 26 alpha/packing flags, and zero visual approvals or game registrations. New drafts: `golf:clubhouse-shanty` v2 (alpha correction of an opaque v1; visible edge halo and cross-cell warnings, **do not approve or register**) and `town:firestation` v1 (four independently generated transparent cutouts assembled into one sheet; source NE/SE/NW touch their source canvas edges, so possible clipping still needs visual review). The latter's original cutouts and exact prompts are in `generated/buildings/town-firestation-singles/` and its sheet provenance. Neither is a finished in-game asset.
+
+**Alpha lesson:** telling built-in imagegen to make a transparent four-view sheet repeatedly produced opaque checkerboard or backdrop pixels, even with explicit "NO BACKGROUND" wording. Retrying one isolated view per call with "NO BACKGROUND; transparent alpha, RGBA PNG" produced four real-alpha cutouts for the firestation. Verify `sharp(...).metadata().hasAlpha` and transparent corner pixels after **every** call; reject opaque outputs. `scripts/assets/assemble-theme-consistency.mjs <category> <slug> [vN]` composes four actual cutouts into a 2x2 sheet using only pixel crops and aspect-preserving resizing. It does not repair clipped source views or prove correct rotations. Preserve raw cutouts and provenance, run `prep --id`, then `plan`. Keep the user's priority and these review warnings in the next checkpoint.
+
+Earlier stop state, 2026-10-23: generation was stopped at the owner's request. The owner has since resumed it and prioritized town houses and buildings, as recorded above.
 
 ## Prompt for the new chat
 
@@ -20,7 +28,7 @@ Updated 2026-10-23. **Generation stopped at the owner's request. No image-genera
 - At the initial stop audit the last confirmed remote checkpoint was `a639649` (35 subjects); the final handover push must include `cf63f13` plus this document. Verify local/remote heads rather than assuming a cancelled tool finished.
 - PR metadata reported `mergeable: false` against newer main `064a8fe` at the stop audit. No conflict resolution/rebase was attempted during the generation task. Refresh state before integration; do not assume this draft is ready to merge.
 
-## Exact progress at stop
+## Exact progress at the earlier stop (superseded by the continuation update)
 
 | Item | Count |
 | --- | ---: |
@@ -100,7 +108,7 @@ Always trust `queue.sheet` / the manifest, not a blanket v1 glob. Current import
 - Check readable signs and no inherited festive details. Correct the specific failed cell/detail with imagegen, preserve the prior revision, then update the selected queue sheet and rerun preparation.
 - No automatic visual approval is recorded. Another AI is responsible for runtime integration and registration, but generated-image defects should not be hidden from it.
 
-## Next pending subjects
+## Pending subjects at the earlier stop (historical list)
 
 The next batch was only loaded into chat memory; **none of these were generated**:
 

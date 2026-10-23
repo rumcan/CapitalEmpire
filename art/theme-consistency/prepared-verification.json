@@ -4,13 +4,13 @@
   "scope": "Current selected sheets: PNG/alpha checks and pixel-conserving crops only. Boundary warnings, rigid rotation geometry and game registration require review.",
   "counts": {
     "requested": 305,
-    "generated": 51,
-    "fileValidated": 51,
+    "generated": 53,
+    "fileValidated": 53,
     "fileValidationFailed": 0,
-    "alphaFlagged": 25,
+    "alphaFlagged": 26,
     "visuallyReviewed": 0,
-    "nativeViewsExported": 204,
-    "pendingGeneration": 254
+    "nativeViewsExported": 212,
+    "pendingGeneration": 252
   },
   "activeSheets": [
     {
@@ -1184,6 +1184,53 @@
         "columnRightVisible": 0,
         "columnBothSidesVisible": 0
       }
+    },
+    {
+      "id": "golf:clubhouse-shanty",
+      "sheet": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2.png",
+      "sheetSha256": "03ed5bfdaeaaa3f218834ea072db4c498a35cc09f5a48b8d2652c61038c40d57",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NE: insufficient clear margin for four-pixel padding",
+        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SE: insufficient clear margin for four-pixel padding",
+        "SW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of column split: inspect for cross-column artwork"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 59,
+        "columnRightVisible": 53,
+        "columnBothSidesVisible": 53
+      }
+    },
+    {
+      "id": "town:firestation",
+      "sheet": "art/theme-consistency/generated/buildings/town-firestation-4views-v1.png",
+      "sheetSha256": "93368b00a5bb6aa34618c923983455659ff81ef2a6e60c05bcb5b3a2724ad1df",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 1024,
+        "rowSplit": 1024,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
     }
   ],
   "themeReferencePreserved": {
@@ -1194,8 +1241,8 @@
     "light": "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
     "season": "autumn foliage permitted, Halloween decorations prohibited"
   },
-  "checkedNativeViews": 204,
-  "checkedScaledVariants": 816,
+  "checkedNativeViews": 212,
+  "checkedScaledVariants": 848,
   "sourceSheetsConserved": true,
   "visualApproval": false,
   "gameScaleRegistered": false,

@@ -3,13 +3,13 @@
   "task": "T017",
   "counts": {
     "requested": 305,
-    "generated": 51,
-    "fileValidated": 51,
+    "generated": 53,
+    "fileValidated": 53,
     "fileValidationFailed": 0,
-    "alphaFlagged": 25,
+    "alphaFlagged": 26,
     "visuallyReviewed": 0,
-    "nativeViewsExported": 204,
-    "pendingGeneration": 254
+    "nativeViewsExported": 212,
+    "pendingGeneration": 252
   },
   "themeReference": {
     "file": "art/theme-consistency/references/theme-authoritative.png",
@@ -24854,6 +24854,979 @@
               "width": 462,
               "height": 453,
               "sha256": "dc360e88cf385a51adaa6f4aa28b83f8d234c8e61b81cb2a5720ff8892b1a277",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "golf:clubhouse-shanty",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2.png",
+      "sheetSha256": "03ed5bfdaeaaa3f218834ea072db4c498a35cc09f5a48b8d2652c61038c40d57",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NE: insufficient clear margin for four-pixel padding",
+        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SE: insufficient clear margin for four-pixel padding",
+        "SW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of column split: inspect for cross-column artwork"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 59,
+        "columnRightVisible": 53,
+        "columnBothSidesVisible": 53
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "golf:clubhouse-shanty",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -81.6,
+          "top": -63.564840764331215,
+          "right": 81.6,
+          "bottom": 40.8,
+          "width": 163.2,
+          "height": 104.36484076433122
+        },
+        "originalNormalMaxCSS": {
+          "left": -130.56,
+          "top": -101.70374522292994,
+          "right": 130.56,
+          "bottom": 65.28,
+          "width": 261.12,
+          "height": 166.98374522292994
+        },
+        "originalFacingSizes": [
+          {
+            "id": "golf:clubhouse-shanty",
+            "direction": null,
+            "configuredCSS": {
+              "left": -81.6,
+              "top": -63.564840764331215,
+              "right": 81.6,
+              "bottom": 40.8,
+              "width": 163.2,
+              "height": 104.36484076433122
+            },
+            "normalMaxCSS": {
+              "left": -130.56,
+              "top": -101.70374522292994,
+              "right": 130.56,
+              "bottom": 65.28,
+              "width": 261.12,
+              "height": 166.98374522292994
+            }
+          }
+        ],
+        "firstNativeWidth": 595,
+        "configuredCSSPerNativePixel": 0.27428571428571424,
+        "normalMaxCSSPerNativePixel": 0.4388571428571429,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 32,
+            "top": 100,
+            "width": 595,
+            "height": 471
+          },
+          "alpha": {
+            "clear": 202591,
+            "partial": 190270,
+            "opaque": 268,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 180645,
+            "edgePixelsAtThreshold": 59
+          },
+          "components": {
+            "total": 42,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 52
+          },
+          "clearMargin": 0,
+          "touchesCellEdge": true,
+          "warnings": [
+            "visible alpha reaches cell boundary: possible clipping or backdrop",
+            "insufficient clear margin for four-pixel padding"
+          ],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NE.native.png",
+            "width": 595,
+            "height": 471,
+            "sha256": "4460f370923815d9bf220a3237cffc4dc51db0aba970bcd16476ed4d191a3d21",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 163.2,
+                "height": 129.1885714285714
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NE.configured.png",
+              "width": 163,
+              "height": 129,
+              "sha256": "7e5aa5299202cd259d16fc11ed9f2d571a6a99a341d0d75b005bd85c1b204ef5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 163.2,
+                "height": 129.1885714285714
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NE.configured@2x.png",
+              "width": 326,
+              "height": 258,
+              "sha256": "ccb90ebcd0e70259ee0ab520dafd6565b4ce521d04e0fd3cb19b2ff91fb2a86e",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 261.12,
+                "height": 206.7017142857143
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NE.max.png",
+              "width": 261,
+              "height": 207,
+              "sha256": "238b13dbdaeb2080cae8f9fbc782b621006c5d7b03e962978a152bf072608306",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 261.12,
+                "height": 206.7017142857143
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NE.max@2x.png",
+              "width": 522,
+              "height": 413,
+              "sha256": "a00db6b1ae0616a8ffa790b8ef73772bc9e8e6047f63e1f04252e2f8220585fc",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 627,
+            "top": 129,
+            "width": 588,
+            "height": 430
+          },
+          "alpha": {
+            "clear": 225183,
+            "partial": 167605,
+            "opaque": 341,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 155991,
+            "edgePixelsAtThreshold": 53
+          },
+          "components": {
+            "total": 34,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 40
+          },
+          "clearMargin": 0,
+          "touchesCellEdge": true,
+          "warnings": [
+            "visible alpha reaches cell boundary: possible clipping or backdrop",
+            "insufficient clear margin for four-pixel padding"
+          ],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SE.native.png",
+            "width": 588,
+            "height": 430,
+            "sha256": "267903369a034fd04c61abb1e6488d3393929e0f967d32c554b32bebc98d5a8a",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 161.27999999999997,
+                "height": 117.94285714285712
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SE.configured.png",
+              "width": 161,
+              "height": 118,
+              "sha256": "3b6aef8bb78c57b17ca29a9d4ee253793aa04f83acfa164e94089061fba1ccbe",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 161.27999999999997,
+                "height": 117.94285714285712
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SE.configured@2x.png",
+              "width": 323,
+              "height": 236,
+              "sha256": "3eafa0c2a172dd69080690b5ebc83a4b4145766049baf490699dc20d7d55ab96",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 258.048,
+                "height": 188.70857142857145
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SE.max.png",
+              "width": 258,
+              "height": 189,
+              "sha256": "6f9e612c7ecdda86ea23a7116465ff5e52f491394813b0a86743b12e13a281ed",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 258.048,
+                "height": 188.70857142857145
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SE.max@2x.png",
+              "width": 516,
+              "height": 377,
+              "sha256": "9446bfa0ba10dc5b63404bb1b1fc5d16ad99646f7f74ed42c9d6275e7ae80f7a",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 48,
+            "top": 713,
+            "width": 579,
+            "height": 441
+          },
+          "alpha": {
+            "clear": 212730,
+            "partial": 180221,
+            "opaque": 178,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 167351,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 34,
+            "retained": 3,
+            "discardedIsolatedPixelsForBoundsOnly": 46
+          },
+          "clearMargin": 2,
+          "touchesCellEdge": false,
+          "warnings": [
+            "insufficient clear margin for four-pixel padding"
+          ],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SW.native.png",
+            "width": 579,
+            "height": 441,
+            "sha256": "bc6159838fcf57b8f6af3380f39d5d96b968320e22497ba78767514fe2e1103e",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 158.81142857142854,
+                "height": 120.95999999999998
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SW.configured.png",
+              "width": 159,
+              "height": 121,
+              "sha256": "bb3d25bc30c01eb3846917273dcaf2e144fccb910c59b7efc4ef1097362d3558",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 158.81142857142854,
+                "height": 120.95999999999998
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SW.configured@2x.png",
+              "width": 318,
+              "height": 242,
+              "sha256": "b0ba96eeb613116cb718a23809829b13bfb73970174fbe7ccac5955a7be6718a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 254.09828571428574,
+                "height": 193.536
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SW.max.png",
+              "width": 254,
+              "height": 193,
+              "sha256": "d91f1ee3b955e588350142b19b646d7b7a783a6035d1a2c30beeccd21549634a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 254.09828571428574,
+                "height": 193.536
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/SW.max@2x.png",
+              "width": 508,
+              "height": 387,
+              "sha256": "a8b37ab5d1793b9f30a0fa7120307a5e303722ef04ea4135f2189dc1e24e76f5",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 639,
+            "top": 698,
+            "width": 579,
+            "height": 471
+          },
+          "alpha": {
+            "clear": 202562,
+            "partial": 190320,
+            "opaque": 247,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 174943,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 32,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 32
+          },
+          "clearMargin": 16,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NW.native.png",
+            "width": 579,
+            "height": 471,
+            "sha256": "286d9080a8aba5a3b6081924d8be8f8498075ea52ebe62b1b9230ba4a5cd2155",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 158.81142857142854,
+                "height": 129.1885714285714
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NW.configured.png",
+              "width": 159,
+              "height": 129,
+              "sha256": "41bfbb0b57cfbd2af0cf969284f0f9f6728ae85fe70d460c6178375c7e6f4487",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 158.81142857142854,
+                "height": 129.1885714285714
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NW.configured@2x.png",
+              "width": 318,
+              "height": 259,
+              "sha256": "fbaae6544501317bda3c8a3b02d1e3de72fc3a95e57fda456c95d678632f0647",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 254.09828571428574,
+                "height": 206.7017142857143
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NW.max.png",
+              "width": 254,
+              "height": 207,
+              "sha256": "3ac2907196384dfaa23518a3d362ac428ace0461c6306f5f524a83977d6be8df",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 254.09828571428574,
+                "height": 206.7017142857143
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v2/NW.max@2x.png",
+              "width": 508,
+              "height": 413,
+              "sha256": "01ade5cd2773aff3e960a859029db2f021197904fb8d751f8a51edce51249677",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "town:firestation",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/town-firestation-4views-v1.png",
+      "sheetSha256": "93368b00a5bb6aa34618c923983455659ff81ef2a6e60c05bcb5b3a2724ad1df",
+      "width": 2048,
+      "height": 2048,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 1024,
+        "rowSplit": 1024,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "town:firestation",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -141.91848,
+          "top": -149.75234099999997,
+          "right": 143.321049,
+          "bottom": 94.060089,
+          "width": 285.23952899999995,
+          "height": 243.81242999999998
+        },
+        "originalNormalMaxCSS": {
+          "left": -149.01440399999998,
+          "top": -157.23995804999998,
+          "right": 150.48710144999998,
+          "bottom": 98.76309345000001,
+          "width": 299.50150544999997,
+          "height": 256.00305149999997
+        },
+        "originalFacingSizes": [
+          {
+            "id": "town:firestation",
+            "direction": null,
+            "configuredCSS": {
+              "left": -141.91848,
+              "top": -149.75234099999997,
+              "right": 143.321049,
+              "bottom": 94.060089,
+              "width": 285.23952899999995,
+              "height": 243.81242999999998
+            },
+            "normalMaxCSS": {
+              "left": -149.01440399999998,
+              "top": -157.23995804999998,
+              "right": 150.48710144999998,
+              "bottom": 98.76309345000001,
+              "width": 299.50150544999997,
+              "height": 256.00305149999997
+            }
+          }
+        ],
+        "firstNativeWidth": 728,
+        "configuredCSSPerNativePixel": 0.3918125398351648,
+        "normalMaxCSSPerNativePixel": 0.411403166826923,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 148,
+            "top": 219,
+            "width": 728,
+            "height": 586
+          },
+          "alpha": {
+            "clear": 734576,
+            "partial": 313216,
+            "opaque": 784,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 310946,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 3,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 2
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NE.native.png",
+            "width": 728,
+            "height": 586,
+            "sha256": "c5ca00da7cef781f399e9474c73e1bd14b0f04c9f58fe6dd596355260986cda6",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 229.60214834340655
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NE.configured.png",
+              "width": 285,
+              "height": 229,
+              "sha256": "c879d2b26536e74eb33c84a257f3e7e10db27c0077decb47887cbd5370ffaeeb",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 229.60214834340655
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NE.configured@2x.png",
+              "width": 570,
+              "height": 459,
+              "sha256": "02e53c484e708f03190e5f0d94e6265e04600d47422aa74a56d957a36aec4640",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 241.08225576057688
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NE.max.png",
+              "width": 300,
+              "height": 241,
+              "sha256": "54243d5ae1a192426b04aeb8d144a089482947fb77db38c9b6a383e1e275946f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 241.08225576057688
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NE.max@2x.png",
+              "width": 599,
+              "height": 482,
+              "sha256": "ac84dec99458a3afb403e3a2cbb5833c152a119391f9bf1bf5b79e6df9406061",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 1024,
+            "top": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 1172,
+            "top": 206,
+            "width": 728,
+            "height": 612
+          },
+          "alpha": {
+            "clear": 735906,
+            "partial": 312138,
+            "opaque": 532,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 309272,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 2,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 1
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SE.native.png",
+            "width": 728,
+            "height": 612,
+            "sha256": "f8eacbf651c5c9e005075b4d7d619ffa313567e1abcb4a5c673752877fc7c726",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 239.78927437912085
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SE.configured.png",
+              "width": 285,
+              "height": 240,
+              "sha256": "ca97664624e97b51a642184f35b29600a899a96cb774384d72a89315770d3cdb",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 239.78927437912085
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SE.configured@2x.png",
+              "width": 570,
+              "height": 479,
+              "sha256": "bad9ed8395185275834dbdf71273878b27757f3740c3f4aeec4fac5dbc71dee5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 251.7787380980769
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SE.max.png",
+              "width": 300,
+              "height": 252,
+              "sha256": "b141f8a21a77b1acb73e9875c9d79afe7204885dd83450e459a30d2ab0b874dc",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 251.7787380980769
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SE.max@2x.png",
+              "width": 599,
+              "height": 504,
+              "sha256": "da8bff765eaad99a3dcdf95c23f1dc39e9b7ff94cfd885032594360f976f6bc9",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 148,
+            "top": 1219,
+            "width": 728,
+            "height": 634
+          },
+          "alpha": {
+            "clear": 715737,
+            "partial": 331878,
+            "opaque": 961,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 329007,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 1,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 0
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SW.native.png",
+            "width": 728,
+            "height": 634,
+            "sha256": "01d01488a782c34c6fabe910ede5d1d0c8325556a0c2a0549dab5551d753bbaf",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 248.40915025549447
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SW.configured.png",
+              "width": 285,
+              "height": 248,
+              "sha256": "0b5ba0c1947a073881574d144c51c56619f551bb8fbcddc8fb35f66856495617",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 248.40915025549447
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SW.configured@2x.png",
+              "width": 570,
+              "height": 496,
+              "sha256": "e7fc1d3a05b3c0b18372ea2bcee6e0a44d33bef0a3161eb055b425191ff598a7",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 260.82960776826917
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SW.max.png",
+              "width": 300,
+              "height": 261,
+              "sha256": "a503fef6d46d648159821507769a3b6f5a6f51cf5bd2002562389b73b333867e",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 260.82960776826917
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/SW.max@2x.png",
+              "width": 599,
+              "height": 522,
+              "sha256": "6c8c524533f4f5eeba3fa6a1d3666e9c8b914b4d656bf9f282f93a5d2ce7cda5",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 1024,
+            "top": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 1172,
+            "top": 1204,
+            "width": 728,
+            "height": 664
+          },
+          "alpha": {
+            "clear": 698699,
+            "partial": 348817,
+            "opaque": 1060,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 346587,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 6,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 6
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NW.native.png",
+            "width": 728,
+            "height": 664,
+            "sha256": "6c10fe8039a8c2c5620bfa5e30ec8e255a1abea18cf4051762eb17813b1ab5c0",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 260.1635264505494
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NW.configured.png",
+              "width": 285,
+              "height": 260,
+              "sha256": "569cdb932f843cee6841158fb2f55c09251077c3cf475e6821298834602662ee",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 285.23952899999995,
+                "height": 260.1635264505494
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NW.configured@2x.png",
+              "width": 570,
+              "height": 520,
+              "sha256": "0a8a095b9c60f8f5e1bc6d786c990e81c5a53af5bad3f241143ae74f398430a5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 273.1717027730769
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NW.max.png",
+              "width": 300,
+              "height": 274,
+              "sha256": "333eece4ec69029f68b5a440e865408c6553bed95d95862e9e3717a146eef82c",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 299.50150544999997,
+                "height": 273.1717027730769
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-firestation-4views-v1/NW.max@2x.png",
+              "width": 599,
+              "height": 546,
+              "sha256": "1938a2f2901e5db8b78ffb9d591b32235b786f980ce59eb31fcce16bb0cd2688",
               "hasAlpha": true
             }
           ]
