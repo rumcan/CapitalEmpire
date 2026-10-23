@@ -2,6 +2,13 @@
 
 Update this file **before** each edit and after each sub-step. If you are picking up from someone else: follow LEAD.md section 7.
 
+## Owner-requested integration (2026-10-23)
+- Branch: `lead/merge-outstanding-20261023`, isolated checkout `worktrees/outstanding-merge-20261023`, from main `72317a9`.
+- Request: merge every outstanding product branch/PR into main and document the image-creation workflow in the handover and main repository.
+- Next action: integrate PRs #13 (historical sprite sources), #12 (completed grass catalogue), #17 (dusk sprite library), #16 (ghost preview module), plus local shadow commit `b941683`; preserve current runtime integrations and resolve conflicts explicitly. Document the scene-first generation/rotation/alpha/review process and link the handovers. Run fresh typecheck, full tests, production build and built-game shadow checks before landing.
+- Other worktrees remain untouched. The dirty frosty parking files are already landed through `99840d6`; local launcher changes are machine settings. Do not copy those old files onto main.
+- This integration does not start M2.5 or generate new images. The existing milestone plan below remains unchanged.
+
 ## Current step
 - **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-results` (from `origin/main` f62c7da).
 - **Sub-step now:** M2.5 The tournament on the town day (M2.1 gates, M2.2 galleries, M2.3 going home, M2.4 results landed on main).
