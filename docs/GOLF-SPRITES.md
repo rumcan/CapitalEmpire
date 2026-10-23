@@ -127,6 +127,9 @@ All P1, no lettering (pictograms or blank boards):
 | **Golf cart bridges** | both axes (X and Y facings; flipping gives the other two), wood and stone |
 
 ## 5. People and vehicles (movers)
+**The spectators' brief is [SPECTATOR-ART.md](SPECTATOR-ART.md)** (2026-10-23: 3D people through the RUN CLI, the cast, every clip,
+the wayward-ball scene); it replaces the spectator rows below.
+
 | Sprite | Frames | Variants | Notes | P |
 | --- | --- | --- | --- | --- |
 | **Spectators** walking | 5 facings x 5 walk frames (the townspeople format) | 12+ people (caps, visors, umbrellas, kids) | crowds on walkways | P1 |

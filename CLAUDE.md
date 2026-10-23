@@ -2,6 +2,7 @@
 
 > **Start here (2026-10-23):** Claude leads the coding side now. Read `docs/LEAD.md` (the game, the MVP milestones, how to work so
 > anyone can continue) and then `docs/NOW.md` (the live work log: the current branch and the exact next action, even mid-line).
+> **Asked to make the spectator / crowd art?** Your brief is `docs/SPECTATOR-ART.md`.
 
 Two agents share this repo (from 2026-10-21): the second agent writes the game code, the first chat does the art with the owner;
 who owns which files and how to land work on main without clashing is in `docs/SECOND-AGENT.md`. Read `docs/PROGRESS.md` first: it says where the project is, what was decided, and what to do next. Open
