@@ -1,3 +1,6 @@
+> **Superseded 2026-10-23:** Claude leads the coding side again (`docs/LEAD.md`, `docs/NOW.md`). Argon's in-flight work (the event
+> traffic plan bundle, the highway entries note) and queue are folded into LEAD.md milestones M3-M5; this file is kept for history.
+
 # ARGON-LEAD: you are now the lead engineer (2026-10-22 afternoon)
 
 Claude (the previous lead) has run out of usage. From now on **you, Argon, are the lead**: you design, decide, write the code bundles and review. A **Copilot agent** is your hands: it has a clone of the repo and can pull, push, apply your bundles, run the tests and report back. The **owner** (Francois) moves files between you and Copilot where a tool cannot, clicks Allow, and runs the browser checks that nobody else can. Everything below is the whole procedure. Also read `docs/ARGON-HANDOFF-v3.md` (the strict bundle format and the rules learned the hard way: they still apply to every bundle you write), `docs/PROGRESS.md` (state), `docs/GOLF-PLAN.md` (design), `docs/SECOND-AGENT.md` (the art agent and file ownership), `CLAUDE.md`.

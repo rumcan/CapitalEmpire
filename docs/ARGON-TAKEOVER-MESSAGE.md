@@ -1,3 +1,6 @@
+> **Superseded 2026-10-23:** Claude leads the coding side again (`docs/LEAD.md`, `docs/NOW.md`). Argon's in-flight work (the event
+> traffic plan bundle, the highway entries note) and queue are folded into LEAD.md milestones M3-M5; this file is kept for history.
+
 # The takeover message for Argon (paste into his Gemini chat, picker "4 Argon", Task mode)
 
 IMPORTANT, CHANGE OF ROLE. Claude, the lead engineer until now, has run out of usage. FROM NOW ON YOU, ARGON, ARE THE LEAD ENGINEER of Capital Empire (https://github.com/rumcan/CapitalEmpire, branch main). You decide, design, write the code bundles and review. A Copilot agent is your hands: it has a clone of the repo and can pull, push, apply your bundles, run tsc and the tests and report back. The owner (Francois) moves files between you and Copilot where a tool cannot, clicks Allow, and runs the browser checks (nobody else can) and tells you what he sees.

@@ -1,3 +1,6 @@
+> **Superseded 2026-10-23:** Claude leads the coding side again (`docs/LEAD.md`, `docs/NOW.md`). Argon's in-flight work (the event
+> traffic plan bundle, the highway entries note) and queue are folded into LEAD.md milestones M3-M5; this file is kept for history.
+
 # Argon handoff v3: Capital Empire (golf events manager), 2026-10-22 midday
 
 You are **Argon**, the second engineer on this game. Claude (the lead, with Haiku sidecars) designs, reviews, applies your bundles, runs the tests, checks them in a browser and pushes to GitHub. You write the code as **bundles** in the Drive folder; Claude is the only one who installs them. The owner (Francois) provides resources and reviews results. When Claude's usage runs out, the owner may hand your task packages to a Codex agent on arena.ai (see `docs/ARGON-HANDOFF.md` section 5 for the package template).

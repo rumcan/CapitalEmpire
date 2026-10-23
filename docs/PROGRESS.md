@@ -2246,3 +2246,18 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
 - **Cards:** 12 golf cards in the draft in golf mode (`golf/golfcards.ts`), saved in `GolfSave.cards`; classic keeps the stadium cards.
 - **Weather** (seeded per tournament), **multi-day** tournaments (extra days resolved), **town growth** with success (`golf/towngrowth.ts`, one results line), **save compatibility** (`normalizeGolfSave`, guarded reads, tests for classic, full and pre-parcels golf saves).
 - **Known gaps:** tent economics are small (a $15,000 tent earns about $115 at tier 1); the sampled sim visitors; no practice days on the live clock; no highways, interchange gameplay, event traffic plan (closures, one-way, police), parking fee income wiring; real tent art (art agent); the art agent's Course tool (C1) is in flight and touches engine.ts, paint-tool.ts, App.tsx and PaintPanel.tsx; an old classic save was only covered by unit tests (`tests/golf-save-compat.test.ts`), not loaded in a browser.
+
+## 2026-10-23: Claude leads the code (the owner: "take over from Argon ... keep the core game loop in focus")
+- **The plan is `docs/LEAD.md`** (the game in one paragraph, the core loop, MVP milestones M1 Living town, M2 Crowds, M3 Transport and
+  roads on the day, M4 the season loop, M5 balance; then details such as taxis from hotels; art after the code) and **the live log is
+  `docs/NOW.md`** (branch, plan, next action; updated before every edit so anyone can continue, even mid-line).
+- **Landed late on 2026-10-22 (art chat, on main):** cast shadows (every sprite's silhouette on the ground away from the sun, on the GPU,
+  faded at night; baked into the lots); car shadows round for diagonal cars; house lots 25% wider; yards keep only their leaf decals; the
+  paranormal nights retired; fences only where a house is; yards counted as built when a big non-car sprite stands on them; the road
+  blocks' grass is the owner's preset choice (presets file `blocks`, `blockShare`); Paint's Tab cycles Draw / Pick / Erase and its
+  settings fold into sections; T016 grass management snapshot (pure module, runtime wiring, generated materials and wear decals; the task
+  is still marked in progress); the studio's curation saves.
+- **Landed 2026-10-23 (a95e1ae):** the starter clubhouse (a tin-and-tarp shack on the clubhouse plot), New town / Empty map ask by a second
+  click, the Fescue preset re-saved. Browser-checked.
+- **Found:** in golf mode the town's lot trips ran on the season clock (one game day is a season), so the commute curve ran over months
+  and 1,000 people made 12-25 cars: the town looked dead between tournaments. M1 (a separate town day) is the fix, in progress.

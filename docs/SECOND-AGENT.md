@@ -206,3 +206,7 @@ the owner the GOLF-PLAN section 13 questions that block you; ask before pushing 
   LAYOUT clubhouse; a piece of size 0 is drawn at its own map size): the grand clubhouse, pro shop and cart garage are for later; **they need
   a way to be built** (the Event tool's structures?): yours.
 
+- 2026-10-23 (Claude): **Claude leads the coding side** (the owner: "take over from Argon with the coding side but keep the core game
+  loop in focus"). The game code and the art are both this chat's now; the plan and the working rules are `docs/LEAD.md`, the live log is
+  `docs/NOW.md`. Another agent continuing the work follows LEAD.md section 6 (a `lead/*` branch, WIP commits pushed, NOW.md updated before
+  each edit). The ownership table above is history.
