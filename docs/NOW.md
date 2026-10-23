@@ -55,19 +55,23 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [x] c. Send the spots to the sim (a message like `gates`), draw the standing crowds at street zoom (dense walker groups, the count).
 - [x] d. Tests, browser check, land.
 
-## Plan for M2.3 Going home (write the details here before you start)
-- [ ] a. When the fans leave: today the round's kick-off ends the surge and `closeRound` despawns every car. Decide the leaving: at kick-off
-  (or a set time after it, M2.5 ties it to the town day) the galleries empty: each party walks from its spot back to its car's bay
-  (the crowd must remember each party's car park and bay, and its home lot: `Surge` knows the car's home and park; check `event/surge.ts`
-  `result`, `partyOut`, and how a parked car is recorded).
-- [ ] b. At the bay the party's car is spawned in the sim bound for its home lot (`sim.spawnAt` from the car park's exit lane to the home
-  lot's driveway); the egress traffic jams like the arrival.
-- [ ] c. The eval waits for the exit (or a cap), and measures the exit times (M2.4 reads them); `closeRound` stops despawning the cars.
-- [ ] d. Tests, browser check, land.
+## Plan for M2.3 Going home (branch `lead/m2-going-home`)
+**Found:** a party car records only its town (`Sim.party[slot]`) and, once parked, `[town, park, bay]` (`Sim.partyBays`, read by
+`City.drainParty` → `partyWalk`); its home lot is not kept. `closeRound` despawns every car and `emptyParks` zeroes the car parks.
+**Design:** `City.parkedCars` records each parked party car `{ town, park, bay }`. In golf mode the leaving starts `LEAVE_AFTER` sim s after
+kick-off and releases the parked cars' parties over `LEAVE_S` sim s (in a seeded random order): each party walks from a gallery spot that
+has fans (taking PARTY fans off it; with no spots, from the nearest gate or the site's middle) to its car's bay (a `Crowd` walker stage 4,
+route = the index in `parkedCars`); when it lands (`Crowd.onBack`) its car waits to leave (`City.leavePending`); each step a waiting car
+is spawned at its car park's entrance (the park's sink: lane by `sinkLane`, s = the sink's s) bound for a home of its town (the homes of the
+surge's plan, by population; `driveway(lot, g)`), and the park's `parked` count drops. Measured (for M2.4): `leave = { start, cars,
+gone, last }` (sim s), into `RoundResult.leave` when the round closes.
+- [ ] a. `event/crowd.ts`: stage 4, `onBack(town, route)`; test.
+- [ ] b. `city.ts`: `parkedCars` (in `drainParty`), the homes by town kept from `planSurge`, `LEAVE_AFTER` / `LEAVE_S`, `stepLeaving(dt)`
+  (release, walk, spawn), the measurement; `closeRound` keeps despawning (anything left is cut off).
+- [ ] c. Tests (a City-level test if feasible, else crowd-level), browser check (the evening traffic out of the car parks), land.
 
 ## Next action
-M2.3 a: cut `lead/m2-going-home` from `origin/main`; read `event/surge.ts` (what it records per party car: home, park, bay) and
-`City.kickOff` / `closeRound` / `partyWalk`; write the design here.
+M2.3 a: `event/crowd.ts` stage 4 and `onBack`.
 
 ## Done (newest first)
 - 2026-10-23: **M2.2 Galleries landed** on main. Browser-checked on a test copy (5181, fresh golf game, Skip to tournament at 8x): 18 spots (9 greens, 9 tees), 102 of the 168 fans in standing at them while the rest still walked, drawn as rings of standing fans with `n watching` (15 by a green, 12 by a tee).
