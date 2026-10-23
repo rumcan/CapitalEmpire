@@ -44,7 +44,8 @@ ${spec.deliverable}`;
       } catch (e) { res = String(e.stdout ?? '') + String(e.stderr ?? ''); }
       const gid = /"generationId":"([^"]+)"/.exec(res)?.[1];
       if (gid && fs.existsSync(raw)) {
-        fs.writeFileSync(out, await keyMagenta(raw));
+        // the keyer's settings (key-magenta.mjs KEY_DEFAULTS): items.json's "key", then the item's own "key"
+        fs.writeFileSync(out, await keyMagenta(raw, { ...(spec.key ?? {}), ...(it.key ?? {}) }));
         console.log(`${it.id} take ${t}: ok`);
         try { execFileSync(RUN, ['assets', 'rm', gid, '--service', 'imagegen', '--game-id', GAME], { stdio: 'ignore' }); } catch { console.log(`  (could not remove ${gid} from RUN)`); }
         break;

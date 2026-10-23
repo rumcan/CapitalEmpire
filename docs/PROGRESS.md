@@ -2286,3 +2286,10 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
   from a gallery spot with fans back to its car's bay (`Crowd` stage 4, `onBack`), and the car leaves its car park at the entrance bound
   for a home of its town (`City.driveHome`, the surge's homes by population; the park's count drops); `RoundResult.leave` (cars, gone,
   start, last). Browser-checked on a test copy: 53 of 56 cars left, the roads' traffic rose from ~41 to ~100 cars. 892 tests pass.
+- **Magenta keyer clean-up** (branch `lead/key-magenta`; ideas from Corridor Crew's CorridorKey `color_utils.py`, nothing installed):
+  `scripts/assets/key-magenta.mjs` gains settings (`KEY_DEFAULTS`): `despill` 'keep' (the leftover magenta tint moved into the other
+  channels, brightness kept; 'cut' is the old way) with `despillStrength` 0..1, `despeckle` (solid islands under that many px go, 400),
+  `haze` (see-through pixels further than that many px from the solid object fade out over `hazeSoft`; 40 / 6) and `linear` (un-mix in
+  linear light; off: on the golf sprites it tints thin rails pink). `gen-golf.mjs` reads `art/golf/items.json` "key" and each item's
+  "key". `scripts/assets/key-compare.mjs <folder> [--set k=v]` writes old / new / new-linear sheets to `output/key-compare/`.
+  Tests: `tests/key-magenta.test.ts` (loads the keyer at run time, sharp is native). 896 tests pass.
