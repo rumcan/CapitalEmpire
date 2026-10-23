@@ -93,3 +93,30 @@ test('new valley clears previous condition, damage and settings', () => {
   const g = grass(); g.traffic(2, 2, 2, 2, 100, 'cart'); g.configure({ wear: 3 }); g.clear(); assert.equal(g.activeCells, 0); g.register('new', square(), 'meadow'); assert.equal(g.at(2, 2)!.carts, 0); assert.equal(g.settings.wear, 1);
   console.log('grass grid: 4 tile / 8 m cells; catalogue 100 materials + 12 four-variant decal sheets; localized state, versioned saves');
 });
+
+test('owner preset baseline and explicit worn starter condition are preserved without enabling a visual override', () => {
+  const g = new GrassManagement(64); g.register('preset', square(), 'golf-green', 'maintained'); g.register('worn', square(32, 32), 'residential-lawn', 'stressed');
+  assert.equal(g.settings.strength, 0); assert.equal(g.at(2, 2)!.condition, 'maintained'); assert.ok(g.at(34, 34)!.health < g.at(2, 2)!.health);
+  g.apply('water', scope); const before = snap(g); g.register('preset', square(), 'golf-green', 'neglected'); assert.deepEqual(snap(g), before);
+});
+
+test('radius selection includes every intersected cell even when the centre is across a grid boundary', () => {
+  const g = grass(); assert.equal(g.apply('water', { x: 3.9, y: 2, radius: 0.2 }), 2);
+  assert.ok(g.at(2, 2)!.moisture > 0.42); assert.ok(g.at(6, 2)!.moisture > 0.42); assert.ok(g.at(10, 2)!.moisture < 0.43);
+});
+
+test('disabled maintenance blocks care, weather and actual traffic, and rejects long respawn strokes', () => {
+  const g = grass(); g.configure({ enabled: false }); const before = g.serialize();
+  g.apply('sod', scope); g.traffic(1, 2, 14, 2, 1000); g.step(30); assert.equal(g.quote('water', scope), 0); assert.deepEqual(g.serialize(), before);
+  g.configure({ enabled: true }); const initial = g.serialize(); g.traffic(-1000, 2, 2000, 2, 1000); assert.deepEqual(g.serialize(), initial);
+});
+
+test('single divots retain their precise position and affect one cell only at a cell boundary', () => {
+  const g = grass(); g.traffic(3.95, 3.95, 3.95, 3.95, 1, 'divot', 0);
+  const v = g.at(3.95, 3.95)!; assert.ok(v.divots > 0); assert.ok(Math.abs(v.divotX - 3.95) < 1e-5); assert.ok(Math.abs(v.divotY - 3.95) < 1e-5); assert.equal(g.at(4.1, 4.1)!.divots, 0);
+});
+
+test('thin diagonal turf polygons retain local cells without treating their whole bounding box as grass', () => {
+  const g = new GrassManagement(64); g.register('strip', [0, 0, 32, 28, 32, 28.1, 0, 0.1], 'road-verge');
+  assert.ok(g.zoneAt(16, 14.05)); assert.ok(g.at(16, 14.05)); assert.equal(g.at(2, 26), null); assert.equal(g.zoneAt(16, 16), undefined);
+});
