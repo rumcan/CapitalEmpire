@@ -20,7 +20,7 @@ tents, stands, car parks) and above all **manage the transport and roads around 
 4. **Next season**: bigger tier, bigger crowd, new requirements (exists: tour tiers, cards, town growth).
 
 ## 3. The MVP milestones (in order; tick them here and in NOW.md)
-- [ ] **M1 Living town.** A town day that cycles on its own (separate from the season's months): the lot trips follow it (commute out
+- [x] **M1 Living town** (landed 2026-10-23). A town day that cycles on its own (separate from the season's months): the lot trips follow it (commute out
   in the morning, home in the evening, shopping between), the night follows it, the HUD shows the time of day; the owner sets the day's
   length and the town's traffic density (gear menu). Traffic never goes dead between tournaments.
 - [ ] **M2 Crowds.** Tournament spectators are real movers, not sampled counts: they arrive as party cars (and bus riders), park, walk

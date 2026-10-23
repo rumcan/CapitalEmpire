@@ -2261,3 +2261,11 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
   click, the Fescue preset re-saved. Browser-checked.
 - **Found:** in golf mode the town's lot trips ran on the season clock (one game day is a season), so the commute curve ran over months
   and 1,000 people made 12-25 cars: the town looked dead between tournaments. M1 (a separate town day) is the fix, in progress.
+- **M1 Living town landed** (branch `lead/m1-town-day`): a golf game's town lives a day of its own, separate from the season
+  (`Sim.dayLen`, default 600 sim s = 10 real minutes at 1x; `Sim.townTraffic`; the `townDay` message; `SimClient.setTownDay`;
+  `Game.townDay` / `setTownDay`, localStorage `capitalempire.townday`; gear menu Town day and Town traffic, golf games only). The lot trips
+  (`sim/trips.ts`: `demandAt(t, dayLen)`, a town hour every dayLen / 24 s) commute out in the morning and home in the evening; the night and
+  the HUD time follow the town day, which runs on the sim's own time `t` (`Sim.townFree`, `townTime`) so it keeps going while the season
+  clock is frozen (the season's end, a round waiting). Browser-checked on a golf game: about 285 cars in the small hours and about 690 at
+  the 09:00 rush (from 12-25 cars before); the night falls at 20:00 of the town day. Tests: two 'town day' tests in `tests/trips.test.ts`;
+  885 pass. Note: the HUD's DAY still shows the season's day count (`game.day`), not the town day.
