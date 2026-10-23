@@ -617,6 +617,180 @@
           "touchesCellEdge": false
         }
       ]
+    },
+    {
+      "id": "single-red-timber-tee-marker-4views",
+      "source": "budget-props/single-red-timber-tee-marker-4views.png",
+      "width": 1536,
+      "height": 1024,
+      "alphaReview": "four nonempty cells checked",
+      "rotationReview": "visual review only; not a geometric 3D guarantee",
+      "gameReview": "pending",
+      "views": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/single-red-timber-tee-marker-NE.png",
+          "sourceRect": {
+            "left": 208,
+            "top": 108,
+            "width": 443,
+            "height": 355
+          },
+          "alpha": {
+            "clear": 304327,
+            "partial": 88889
+          },
+          "estimatedAnchor": {
+            "x": 221.5,
+            "y": 354
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/single-red-timber-tee-marker-SE.png",
+          "sourceRect": {
+            "left": 883,
+            "top": 110,
+            "width": 443,
+            "height": 357
+          },
+          "alpha": {
+            "clear": 303802,
+            "partial": 89414
+          },
+          "estimatedAnchor": {
+            "x": 221.5,
+            "y": 356
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/single-red-timber-tee-marker-SW.png",
+          "sourceRect": {
+            "left": 216,
+            "top": 579,
+            "width": 437,
+            "height": 359
+          },
+          "alpha": {
+            "clear": 305231,
+            "partial": 87985
+          },
+          "estimatedAnchor": {
+            "x": 218.5,
+            "y": 358
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/single-red-timber-tee-marker-NW.png",
+          "sourceRect": {
+            "left": 890,
+            "top": 581,
+            "width": 436,
+            "height": 357
+          },
+          "alpha": {
+            "clear": 305697,
+            "partial": 87519
+          },
+          "estimatedAnchor": {
+            "x": 218,
+            "y": 356
+          },
+          "touchesCellEdge": false
+        }
+      ]
+    },
+    {
+      "id": "single-white-distance-stake-4views",
+      "source": "budget-props/single-white-distance-stake-4views.png",
+      "width": 1448,
+      "height": 1086,
+      "alphaReview": "four nonempty cells checked",
+      "rotationReview": "visual review only; not a geometric 3D guarantee",
+      "gameReview": "pending",
+      "views": [
+        {
+          "direction": "NE",
+          "file": "budget-props/individual/single-white-distance-stake-NE.png",
+          "sourceRect": {
+            "left": 349,
+            "top": 86,
+            "width": 97,
+            "height": 399
+          },
+          "alpha": {
+            "clear": 356643,
+            "partial": 36129
+          },
+          "estimatedAnchor": {
+            "x": 48.5,
+            "y": 398
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "budget-props/individual/single-white-distance-stake-SE.png",
+          "sourceRect": {
+            "left": 1002,
+            "top": 86,
+            "width": 97,
+            "height": 399
+          },
+          "alpha": {
+            "clear": 357518,
+            "partial": 35313
+          },
+          "estimatedAnchor": {
+            "x": 48.5,
+            "y": 398
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "budget-props/individual/single-white-distance-stake-SW.png",
+          "sourceRect": {
+            "left": 348,
+            "top": 615,
+            "width": 102,
+            "height": 402
+          },
+          "alpha": {
+            "clear": 355157,
+            "partial": 37884
+          },
+          "estimatedAnchor": {
+            "x": 51,
+            "y": 401
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "budget-props/individual/single-white-distance-stake-NW.png",
+          "sourceRect": {
+            "left": 999,
+            "top": 615,
+            "width": 101,
+            "height": 402
+          },
+          "alpha": {
+            "clear": 354807,
+            "partial": 38297
+          },
+          "estimatedAnchor": {
+            "x": 50.5,
+            "y": 401
+          },
+          "touchesCellEdge": false
+        }
+      ]
     }
   ]
 }

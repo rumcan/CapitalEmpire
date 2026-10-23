@@ -41,4 +41,13 @@ for (const id of ids) {
 }
 await fs.writeFile(path.join(art, 'budget-props/manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 await fs.writeFile(queuePath, JSON.stringify(queue, null, 2) + '\n');
+// Review contact sheet only; these thumbnails are not runtime sprites or placement-scale references.
+const overlays = [], cell = 192, rowHeight = 190;
+for (let row = 0; row < manifest.assets.length; row++) for (let n = 0; n < 4; n++) {
+  const asset = manifest.assets[row], view = asset.views[n], left = n * cell, top = row * rowHeight;
+  const thumbnail = await sharp(path.join(art, view.file)).resize(180, 155, { fit: 'contain', background: '#354336' }).flatten({ background: '#354336' }).png().toBuffer();
+  const label = `<svg width="192" height="32"><text x="4" y="12" fill="#e2f1dd" font-family="sans-serif" font-size="9">${asset.id.replace('-4views', '')}</text><text x="4" y="26" fill="#b9cbb0" font-family="sans-serif" font-size="10">${view.direction} / placement review pending</text></svg>`;
+  overlays.push({ input: thumbnail, left: left + 6, top: top + 2 }, { input: Buffer.from(label), left, top: top + 157 });
+}
+await sharp({ create: { width: cell * 4, height: rowHeight * manifest.assets.length, channels: 3, background: '#354336' } }).composite(overlays).png().toFile(path.join(art, 'budget-props/contact.png'));
 console.log(JSON.stringify({ sheets: manifest.assets.length, individualViews: manifest.assets.length * 4, clippedCells: manifest.assets.flatMap(a => a.views).filter(v => v.touchesCellEdge).length }));

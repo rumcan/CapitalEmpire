@@ -1,6 +1,6 @@
 # T016 - Grass management, detailed ground materials and wear decals
 
-Status: in progress
+Status: in review (#12; runtime checkpoint merged in #11)
 Owner request: 2026-10-22. Branch: `arena/T016-grass-management`.
 
 Build grass management shared by golf courses and town grass. Inspect `docs/GRASS-SYSTEM.md`, `docs/SECOND-AGENT.md`, the existing base-grass mixing, map decal and seed/sod grow-in systems first. Preserve them and the owner's settings. The owner explicitly requests 100 distinct large, zoomed-out detailed ground textures matching the scale of `src/assets/ground/lot-asphalt.webp` and `src/assets/ground/paint-photo-fairway-sod.webp`, plus separate transparent decals for mowing, divots, crowd paths, tyre wear and local damage. The starting grass needs attention; maintained grass becomes immaculate, with small player divots rendered separately.
