@@ -1,0 +1,10 @@
+{
+ "id": "expansion:duplex-rear",
+ "version": "expansion-duplex-rear-4views-v1",
+ "files": {
+  "NE": "cb6fb4158f5630234f749138a369373106c39d0c2ce139ced9c7409cfe18e4be",
+  "SE": "52b11f41409ee0f0b6c8fe8cffe8f0d7177ba6e84663efeab6f82bc4614db79b",
+  "SW": "fdffaec51ae84127a56da66634e414009cccde8b49c54f4226260c5123aa07a0",
+  "NW": "7cd24e6023485f17994f69a26c0d949170432c95ec0562b2fe0ee8c1bf5cc781"
+ }
+}

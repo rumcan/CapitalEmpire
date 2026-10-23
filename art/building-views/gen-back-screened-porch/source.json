@@ -1,0 +1,10 @@
+{
+ "id": "gen:back-screened-porch",
+ "version": "gen-back-screened-porch-4views-v1",
+ "files": {
+  "NE": "cfbf39d57283f5de148553ebcbba9eb2dc9d58d05deab8da6fedcb804663c7d6",
+  "SE": "0e5709079772950fbf223a38621de1a4ccd14d8c990c5ebe5d24f77b63523713",
+  "SW": "7e3b08e873f41f827d32888b079601cad90f9c8d57fb3e4d76e4cd9027924ebb",
+  "NW": "014fb83af8cdee29560e10a72a4aedaaaab5e12c52b49277488e40e80cbac880"
+ }
+}

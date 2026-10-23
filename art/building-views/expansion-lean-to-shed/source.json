@@ -1,0 +1,10 @@
+{
+ "id": "expansion:lean-to-shed",
+ "version": "expansion-lean-to-shed-4views-v1",
+ "files": {
+  "NE": "9b2a30037ae24e81d4af8ecd5f025badd1e8dddc2f5ce7fabcb7ced379c98475",
+  "SE": "46511012ae9d4597c33501784e5d93a9fa9a5695a64328a4773b0215546bb5e0",
+  "SW": "8e535d64d22fee21f82289998af6bfa3eaaf09999e836ae2b6e732abc96c11f0",
+  "NW": "bd561b5a42caca5bf30b5883813e9f7f845452e6d7c3fab83dd2a8ef0a88a794"
+ }
+}

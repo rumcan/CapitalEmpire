@@ -1,0 +1,10 @@
+{
+ "id": "gen:back-shed-garden",
+ "version": "gen-back-shed-garden-4views-v1",
+ "files": {
+  "NE": "6aa93bc46b2c467e04f1594e98f5ff54c01f3633a9118ff28f74ece7de1a6dc4",
+  "SE": "fba4d71076082b4c9ac820c82359ee96bcd4a7707572255bd3738fb904450e0a",
+  "SW": "bcccd94f94400c63c6b83ed2ce4f7c5bf83f2b60c807494f283d90a35664498b",
+  "NW": "ce88dcafc74545c221c5a784fbdfeb5cdffd811304d4ed9b9f04727d9a667a04"
+ }
+}

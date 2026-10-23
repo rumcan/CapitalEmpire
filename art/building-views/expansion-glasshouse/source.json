@@ -1,0 +1,10 @@
+{
+ "id": "expansion:glasshouse",
+ "version": "expansion-glasshouse-4views-v2",
+ "files": {
+  "NE": "272e2336959365643371aa985bd04cf2e1a8a4a5fb93a9a48847fb4dc83a55bc",
+  "SE": "ac5057151a0ba298b6fd67e83d03519fae41ad61e2677b2317fe2551ba635a1f",
+  "SW": "760358b432915a98967f938ef35b69c4334de30d49632a41f883361f07855731",
+  "NW": "c053bd3e60e5a0387cf9b2400abcb3dc8af07e4cd4be717e4d0f43d0ed2eb1e7"
+ }
+}

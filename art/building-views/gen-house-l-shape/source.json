@@ -1,0 +1,10 @@
+{
+ "id": "gen:house-l-shape",
+ "version": "gen-house-l-shape-4views-v1",
+ "files": {
+  "NE": "253966a487894e331e3ce9ea53550b730583ad0a7ca41cd42cd2cb65f8bbb272",
+  "SE": "e30d7bac5ec2b47884b4dc3e48800da8b0cb4d5d23263e7a37c911c2c4144c8d",
+  "SW": "6b728d0e8ff3d76a552d51bd25617ab67099533783d1c4be37df68b34266a17b",
+  "NW": "65c58a7e84a9ed93f3590f4d040aac06e13dd40c9373e0a1becf70540d01103c"
+ }
+}

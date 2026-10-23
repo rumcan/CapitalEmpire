@@ -1,0 +1,10 @@
+{
+ "id": "gen:house-ranch-long",
+ "version": "gen-house-ranch-long-4views-v1",
+ "files": {
+  "NE": "012d2b2c9c2a3529c0f87887fc297a9a81eb006d157af321cda6e8a72dc94112",
+  "SE": "f46a6e7caf6b70041a5efc831823eb0fb47529fad2385c316d33fb25b0375cfe",
+  "SW": "d1c1f4fc11254e5f9cbb276e29bd49e6247737518a95dd20b215f9c2118b93a9",
+  "NW": "58c40f880b4c2de7c3b617780cadc1895c4c35e65a29d037cd0ca81f109af389"
+ }
+}

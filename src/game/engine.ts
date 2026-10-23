@@ -80,6 +80,7 @@ import { tierInfo, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { unmirror } from './views-library';
 import { TREE_MIRROR } from './tree-sun';
+import { NEW_ART_ONLY, lookOf } from './newart';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -496,7 +497,8 @@ export class Game {
       for (const p of this.props) {
         const cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2, X = worldX(cx, cy), Y = worldY(cx, cy);
         if (Math.abs(X - this.cam.X) > 1.5 * hw || Math.abs(Y - this.cam.Y) > 1.5 * hh) continue;
-        const it = LIBRARY[p.item]; if (it) propLights(p, it, this.night, world, 1, out);
+        // the new-art preview lights the picture it draws (newart.ts)
+        const q = NEW_ART_ONLY ? { ...p, ...lookOf(p) } : p, it = LIBRARY[q.item]; if (it) propLights(q, it, this.night, world, 1, out);
       }
       this.nightLights = out;
     }
@@ -551,6 +553,7 @@ export class Game {
       else this.toast(`Day ${l.day}: ${l.net >= 0 ? '+' : '−'}$${Math.abs(l.net).toLocaleString()}`, l.net >= 0 ? 'good' : 'info');
       this.scheduleSave(); this.emit();
     };
+    if (NEW_ART_ONLY) setTimeout(() => this.toast('New-art preview: only the new four-view buildings and generated trees are drawn (?newart)', 'info'), 4000);
     this.traffic.onDisasters = (notes) => { for (const n of notes) this.toast(disasterText(n), n.k === 'repaired' ? 'good' : n.k === 'ended' ? 'info' : 'warn'); };
     this.traffic.onMilestone = (newly, won) => {
       for (const m of newly) {

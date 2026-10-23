@@ -305,6 +305,225 @@
      "sha256": "b6ff07c5fefff6e45f0c05d2d05d2619b84da00ae0daff938e936fe0f5c244e6"
     }
    }
+  },
+  "gen:house-duplex": {
+   "version": "gen-house-duplex-4views-v2",
+   "views": {
+    "NE": {
+     "sha256": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+     "door": 69
+    },
+    "SE": {
+     "sha256": "25f2b6b5b59680d421dc30388c31e31d82431cd704b16c5ae644d8432bf5d0e2"
+    },
+    "SW": {
+     "sha256": "9abde949302b294e7f75dc7019d6ba7b7a905b6e59bce3105dee97f64a5f3abd"
+    },
+    "NW": {
+     "sha256": "8d5ea4b97997a5262351c2579609021368223bedc2de8f3994ca351dbd4ec815",
+     "door": 68
+    }
+   }
+  },
+  "gen:house-farmhouse-wrap": {
+   "version": "gen-house-farmhouse-wrap-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a"
+    },
+    "SE": {
+     "sha256": "fd9c3293d31e188fbe54dfb7eab7cc2aae303b04ba33d9494bb7e1cc5629199a"
+    },
+    "SW": {
+     "sha256": "4bb78489a71479f6bd2fa44f0a5fa9812793f88826e4cd22dcf4fcc41e2c25dc",
+     "door": 52
+    },
+    "NW": {
+     "sha256": "764764a6251d504212a4088cc139106c2c7dfa547ef67402fe336064a4e7ca40"
+    }
+   }
+  },
+  "gen:house-l-shape": {
+   "version": "gen-house-l-shape-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "253966a487894e331e3ce9ea53550b730583ad0a7ca41cd42cd2cb65f8bbb272",
+     "door": 70
+    },
+    "SE": {
+     "sha256": "e30d7bac5ec2b47884b4dc3e48800da8b0cb4d5d23263e7a37c911c2c4144c8d",
+     "door": 70
+    },
+    "SW": {
+     "sha256": "6b728d0e8ff3d76a552d51bd25617ab67099533783d1c4be37df68b34266a17b"
+    },
+    "NW": {
+     "sha256": "65c58a7e84a9ed93f3590f4d040aac06e13dd40c9373e0a1becf70540d01103c",
+     "door": 70
+    }
+   }
+  },
+  "gen:house-ranch-long": {
+   "version": "gen-house-ranch-long-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "012d2b2c9c2a3529c0f87887fc297a9a81eb006d157af321cda6e8a72dc94112"
+    },
+    "SE": {
+     "sha256": "f46a6e7caf6b70041a5efc831823eb0fb47529fad2385c316d33fb25b0375cfe"
+    },
+    "SW": {
+     "sha256": "d1c1f4fc11254e5f9cbb276e29bd49e6247737518a95dd20b215f9c2118b93a9",
+     "door": 63
+    },
+    "NW": {
+     "sha256": "58c40f880b4c2de7c3b617780cadc1895c4c35e65a29d037cd0ca81f109af389"
+    }
+   }
+  },
+  "gen:house-splitlevel": {
+   "version": "gen-house-splitlevel-4views-v2",
+   "views": {
+    "NE": {
+     "sha256": "368876cb67bf0522804c7dbfdc84232d94f2bf4bcfd0346cf4c84d9ef4d17f48"
+    },
+    "SE": {
+     "sha256": "e2aa5471f68255b8c0301ff9e6a102f862e964aa2b2fdf1723170a160c3a76d8"
+    },
+    "SW": {
+     "sha256": "bb35b7dd968a68e796f7cab93923374aa1c54a8e82ee3fc18ba73d8e8fb5afad"
+    },
+    "NW": {
+     "sha256": "f0c8a81f9ed5ec53d6ade73b105fd8ae5a8a749634acf0017060bf5bee9ea1be",
+     "door": 67
+    }
+   }
+  },
+  "expansion:rundown-house": {
+   "version": "expansion-rundown-house-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "05ad9ccfcd179ce5ac7df14adc93ce90894299e6cb250b553be59b7ba81a9b85"
+    },
+    "SE": {
+     "sha256": "67efaac04e1c7f639c6823cfd41c205587e1dfd93dbc97579f12c611aed8f550"
+    },
+    "SW": {
+     "sha256": "ec32071337ceb17da2831cbee2ac9ce0e62154bfe7fbe985fa6ec6532bae030e"
+    },
+    "NW": {
+     "sha256": "2822a9a3cc80a47929d79a6971ffb1afa818df41cdf399d635f5768b0cf90911",
+     "door": 52
+    }
+   }
+  },
+  "expansion:duplex-rear": {
+   "version": "expansion-duplex-rear-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "cb6fb4158f5630234f749138a369373106c39d0c2ce139ced9c7409cfe18e4be",
+     "door": 67
+    },
+    "SE": {
+     "sha256": "52b11f41409ee0f0b6c8fe8cffe8f0d7177ba6e84663efeab6f82bc4614db79b"
+    },
+    "SW": {
+     "sha256": "fdffaec51ae84127a56da66634e414009cccde8b49c54f4226260c5123aa07a0"
+    },
+    "NW": {
+     "sha256": "7cd24e6023485f17994f69a26c0d949170432c95ec0562b2fe0ee8c1bf5cc781"
+    }
+   }
+  },
+  "gen:back-patio-pool": {
+   "version": "gen-back-patio-pool-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "6a1e9bbb40e15ac0dba0f026c60b844cfec894a29a0f04baec4e8f36915b5d5e"
+    },
+    "SE": {
+     "sha256": "baa5d8a2db30a6eaa53df8315894b2fca9b36463c413c7da6e0d0972b4d4fc33"
+    },
+    "SW": {
+     "sha256": "b9f8a02412274b737b902c34d0057cdff5b5de398b7ea87d01b02ae54739a707"
+    },
+    "NW": {
+     "sha256": "d4e7a3aba70a6dbdf40a534b5bbd8258b846bb8d9beb805b91437229f9559607",
+     "door": 70
+    }
+   }
+  },
+  "gen:back-shed-garden": {
+   "version": "gen-back-shed-garden-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "6aa93bc46b2c467e04f1594e98f5ff54c01f3633a9118ff28f74ece7de1a6dc4",
+     "door": 73
+    },
+    "SE": {
+     "sha256": "fba4d71076082b4c9ac820c82359ee96bcd4a7707572255bd3738fb904450e0a"
+    },
+    "SW": {
+     "sha256": "bcccd94f94400c63c6b83ed2ce4f7c5bf83f2b60c807494f283d90a35664498b"
+    },
+    "NW": {
+     "sha256": "ce88dcafc74545c221c5a784fbdfeb5cdffd811304d4ed9b9f04727d9a667a04"
+    }
+   }
+  },
+  "expansion:outhouse": {
+   "version": "expansion-outhouse-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "7c76ffa1fd5e73dad63393474a60ae71ac0c32da401b63e831f2c7212a1753de",
+     "door": 255
+    },
+    "SE": {
+     "sha256": "9ea6d31a50cc6e48adb78f23cc60fc36b57769619ce8f1e97ebf781f4705fbdb"
+    },
+    "SW": {
+     "sha256": "32c7a22b161e3a667802e7cd4f7fbb886804e5b0b36929e178721912a72a72b7"
+    },
+    "NW": {
+     "sha256": "2183df38de772d6afac215daaa6a8e59ce4ba460327df1058021829a236090ed"
+    }
+   }
+  },
+  "expansion:glasshouse": {
+   "version": "expansion-glasshouse-4views-v2",
+   "noGauge": "glass door only: keeps the original width",
+   "views": {
+    "NE": {
+     "sha256": "272e2336959365643371aa985bd04cf2e1a8a4a5fb93a9a48847fb4dc83a55bc"
+    },
+    "SE": {
+     "sha256": "ac5057151a0ba298b6fd67e83d03519fae41ad61e2677b2317fe2551ba635a1f"
+    },
+    "SW": {
+     "sha256": "760358b432915a98967f938ef35b69c4334de30d49632a41f883361f07855731"
+    },
+    "NW": {
+     "sha256": "c053bd3e60e5a0387cf9b2400abcb3dc8af07e4cd4be717e4d0f43d0ed2eb1e7"
+    }
+   }
+  },
+  "expansion:treehouse": {
+   "version": "expansion-treehouse-4views-v1",
+   "noGauge": "child-size cabin door: keeps the original width",
+   "views": {
+    "NE": {
+     "sha256": "953f7bbccb6e86666e23928b33a4fd3ebad8659c34c7b2dc6d4c914a5c33a5bd"
+    },
+    "SE": {
+     "sha256": "ffbd5c4ab6d823ed09900b3eef31de1aae8257d6dc74d69ff4d2df5ef9b81d47"
+    },
+    "SW": {
+     "sha256": "ab456ced5af1e9c0a67086e54e4075ea32e6ee48c61cb0d76a610d57decfe69d"
+    },
+    "NW": {
+     "sha256": "a9c63e3699950a370c1dc7f7a119a417c2ad483e9778dcf8a86ff9328f373130"
+    }
+   }
   }
  }
 }

@@ -1,0 +1,10 @@
+{
+ "id": "gen:back-swingset",
+ "version": "gen-back-swingset-4views-v1",
+ "files": {
+  "NE": "cc36cc49cef4318dabd5b8eb87f646b4119607145ce24699d7326aa77675eda4",
+  "SE": "f56b320aa92ef3d0e58bb79d572e7d58d86f6787a1aaf76ee57d49b48079ab37",
+  "SW": "a4f88190248caba3f3d02c54e410794365bd735b59c64c307961bd2cf17035e0",
+  "NW": "35f09b6563d1f392485339114c19cbe8982e498c629540cc38effaddaa768df2"
+ }
+}

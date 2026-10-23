@@ -1,0 +1,10 @@
+{
+ "id": "gen:house-duplex",
+ "version": "gen-house-duplex-4views-v2",
+ "files": {
+  "NE": "3a26467971eefdb541488318ec100967e29ae2cf916ec2572036985dc4ca9c85",
+  "SE": "25f2b6b5b59680d421dc30388c31e31d82431cd704b16c5ae644d8432bf5d0e2",
+  "SW": "9abde949302b294e7f75dc7019d6ba7b7a905b6e59bce3105dee97f64a5f3abd",
+  "NW": "8d5ea4b97997a5262351c2579609021368223bedc2de8f3994ca351dbd4ec815"
+ }
+}

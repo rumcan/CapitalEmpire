@@ -1,0 +1,10 @@
+{
+ "id": "expansion:rundown-house",
+ "version": "expansion-rundown-house-4views-v1",
+ "files": {
+  "NE": "05ad9ccfcd179ce5ac7df14adc93ce90894299e6cb250b553be59b7ba81a9b85",
+  "SE": "67efaac04e1c7f639c6823cfd41c205587e1dfd93dbc97579f12c611aed8f550",
+  "SW": "ec32071337ceb17da2831cbee2ac9ce0e62154bfe7fbe985fa6ec6532bae030e",
+  "NW": "2822a9a3cc80a47929d79a6971ffb1afa818df41cdf399d635f5768b0cf90911"
+ }
+}

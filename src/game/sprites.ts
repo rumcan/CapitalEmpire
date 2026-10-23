@@ -9,6 +9,7 @@ import { CAR_SCALE } from './ext/car-art';
 import { SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import type { Prop } from './types';
 import { shadowShape } from './shadow-shape';
+import { NEW_ART_ONLY, lookOf } from './newart';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
 export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean }
@@ -23,8 +24,8 @@ const tkey = (i: number, j: number) => (j + 512) * 4096 + (i + 2048);
 const SHADOWED = (it: (typeof LIBRARY)[number]) => it.kind !== 'lot';
 
 /** the trimmed picture's rectangle in world px */
-export function spriteRect<T extends number[] | Float32Array>(d: Drawable, out: T = [0, 0, 0, 0] as T, o = 0): T {
-  const it = LIBRARY[d.item], parked = it.kind === 'car' && !d.moving, f = parked ? CAR_SCALE : 1, k = d.scale * f, ax = d.flip ? it.w - it.ax : it.ax;
+export function spriteRect<T extends number[] | Float32Array>(d0: Drawable, out: T = [0, 0, 0, 0] as T, o = 0): T {
+  const d = NEW_ART_ONLY ? { ...d0, ...lookOf(d0) } : d0, it = LIBRARY[d.item], parked = it.kind === 'car' && !d.moving, f = parked ? CAR_SCALE : 1, k = d.scale * f, ax = d.flip ? it.w - it.ax : it.ax;
   // a parked car shrinks about the middle of its footprint, so it stays in its bay
   const cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2, px = parked ? cx + (d.x - cx) * f : d.x, py = parked ? cy + (d.y - cy) * f : d.y, X = worldX(px, py), Y = worldY(px, py);
   const left = X - ax * k, top = Y - it.ay * k, q = it.quad;
@@ -40,9 +41,10 @@ export function isBehind(a: Drawable, b: Drawable) {
   return a.x1 + a.y1 < b.x1 + b.y1;
 }
 function clip(out: Float32Array, o: number, i: number, j: number) { out[o] = i * CHUNK_W; out[o + 1] = j * CHUNK_H; out[o + 2] = (i + 1) * CHUNK_W; out[o + 3] = (j + 1) * CHUNK_H; }
-function packSprite(d: Drawable, out: Float32Array, o: number, i: number, j: number, alpha = 1) {
-  const it = LIBRARY[d.item], t = it.tex;
-  spriteRect(d, out, o);
+function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: number, alpha = 1) {
+  // the new-art preview draws another picture on the same footprint (newart.ts); off, the look is the drawable itself
+  const d = NEW_ART_ONLY ? { ...d0, ...lookOf(d0) } : d0, it = LIBRARY[d.item], t = it.tex;
+  spriteRect(d0, out, o);
   out[o + 4] = d.flip ? t[3] : t[1]; out[o + 5] = t[2]; out[o + 6] = d.flip ? t[1] : t[3]; out[o + 7] = t[4];
   // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked)
   out[o + 8] = t[0]; out[o + 9] = alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' ? -1 : worldY(d.x, d.y);

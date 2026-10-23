@@ -1,0 +1,10 @@
+{
+ "id": "expansion:outhouse",
+ "version": "expansion-outhouse-4views-v1",
+ "files": {
+  "NE": "7c76ffa1fd5e73dad63393474a60ae71ac0c32da401b63e831f2c7212a1753de",
+  "SE": "9ea6d31a50cc6e48adb78f23cc60fc36b57769619ce8f1e97ebf781f4705fbdb",
+  "SW": "32c7a22b161e3a667802e7cd4f7fbb886804e5b0b36929e178721912a72a72b7",
+  "NW": "2183df38de772d6afac215daaa6a8e59ce4ba460327df1058021829a236090ed"
+ }
+}

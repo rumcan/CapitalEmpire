@@ -1,0 +1,10 @@
+{
+ "id": "gen:back-patio-pool",
+ "version": "gen-back-patio-pool-4views-v1",
+ "files": {
+  "NE": "6a1e9bbb40e15ac0dba0f026c60b844cfec894a29a0f04baec4e8f36915b5d5e",
+  "SE": "baa5d8a2db30a6eaa53df8315894b2fca9b36463c413c7da6e0d0972b4d4fc33",
+  "SW": "b9f8a02412274b737b902c34d0057cdff5b5de398b7ea87d01b02ae54739a707",
+  "NW": "d4e7a3aba70a6dbdf40a534b5bbd8258b846bb8d9beb805b91437229f9559607"
+ }
+}
