@@ -78,6 +78,9 @@ export default function App() {
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New town, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
+  /** the menu button waiting for its second click (New town, Empty map), or null */
+  const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
+  useEffect(() => { if (!menu) setArmed(null); }, [menu]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
  const [eventTool, setEventTool] = useState(false);
   /** the last tool picked in each rail group, so a group's tab returns to it */
@@ -233,8 +236,9 @@ export default function App() {
                     ))}
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
-                    <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
-                    <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>
+                    {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
+                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New town'}</button>
+                    <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
                   </div>
                 )}
               </div>
