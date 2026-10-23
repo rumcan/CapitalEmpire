@@ -228,6 +228,7 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   "import { appendConstruction } from './construction-library';",
   "import { appendGolf } from './golf-library';",
   "import { appendViews } from './views-library';",
+  "import { appendTrees } from './trees-library';",
   ...imports, '',
   `/** atlas pages: one row per page, one url per mip (scale ${MIP0} x 2^-mip of native) */`,
   `export const ATLAS_PAGES: string[][] = [${pageRows.join(', ')}];`,
@@ -253,7 +254,8 @@ fs.writeFileSync(path.join(ROOT, 'src/game/library.ts'), [
   'appendBusinesses(LIBRARY, ATLAS_PAGES);',
   'appendConstruction(LIBRARY, ATLAS_PAGES);',
   'appendGolf(LIBRARY, ATLAS_PAGES);',
-  'appendViews(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
+  'appendViews(LIBRARY, ATLAS_PAGES);',
+  'appendTrees(LIBRARY, ATLAS_PAGES);', ''].join('\n'));
 console.log(`walkers: ${people.length} people, ${walkers.length} frames; frame fixes: ${flipped.length ? flipped.join(', ') : 'none'}`);
 console.log(`walk frames still needed: ${needed.length}${needed.length ? ` (${needed.join(', ')})` : ''}`);
 const used = sprites.reduce((s, x) => s + (x.cw + 2 * GUT) * (x.ch + 2 * GUT), 0);

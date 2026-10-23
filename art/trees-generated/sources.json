@@ -1,0 +1,30 @@
+{
+ "maple-scarlet": {
+  "from": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-ced18307-f387-4ee3-8abb-47abb64e24fc.png",
+  "sha256": "a77d16020537e14fae7a40b2a90fcfefed1179ec12824845e3ec1135bd4a434d"
+ },
+ "oak-amber": {
+  "from": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-15b8299a-76fe-44c4-8e4a-3b8c7f3b66f2.png",
+  "sha256": "53e4bae812154cc93a4c8000ec5cfdf04fb328c6fb8fc06482a9ae5a9003dd0c"
+ },
+ "spruce-young": {
+  "from": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-5224e8f5-7bcf-4adf-a62f-9c8f39d90e38.png",
+  "sha256": "b85b0c109cb0e17e3517708a83ef3f0f5b1af8e865489b0bcd529b11bc971eaa"
+ },
+ "aspen-young": {
+  "from": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-ffe2eac7-0d07-40a4-9ec7-226277e9d723.png",
+  "sha256": "68d90dff94995cfe4508564f8188faf8a762247b2b269903737ac5c3e75d9179"
+ },
+ "fir-tall": {
+  "from": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-bad650c5-cbd6-41db-84a0-02ccae46ff10.png",
+  "sha256": "7e3de3720712c2944f050349c6c20b7e891a4e2c6180f1f41dacd03b0326918d"
+ },
+ "oak-crimson": {
+  "from": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-91f7e757-6f58-4457-bf90-760913281bf1.png",
+  "sha256": "9291158d0b87a97fe2e030aba2b28c9d2a0f759922c6de5b5ff58fa85e04929b"
+ },
+ "maple-ember": {
+  "from": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-8e86e0b3-58cc-468e-966b-13b460825991.png",
+  "sha256": "f7fb544d9c72c775a12c4cf5aa036d02b89edf9ee00cd987990b70ce694e5173"
+ }
+}
