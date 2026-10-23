@@ -31,6 +31,7 @@ import { RoadThumb } from './ui/RoadThumb';
 import { Thumb } from './ui/Thumb';
 import { Minimap } from './ui/Minimap';
 import { CourseStatsPanel } from './ui/CourseStatsPanel';
+import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
@@ -204,6 +205,7 @@ export default function App() {
               ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
               <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)"><Icon name="fullscreen" size={22} /></button>
+              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => { game.grassPanel = !game.grassPanel; game.grassAction = null; game.emit(); }} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
@@ -296,6 +298,7 @@ export default function App() {
           </div>
           )}
           {game.panel === 'budget' && <BudgetPanel game={game} />}
+          {game.grassPanel && <GrassManagementPanel game={game} />}
           {courseStats && (
           <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20`}>
           <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />

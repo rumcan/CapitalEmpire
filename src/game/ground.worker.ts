@@ -13,6 +13,17 @@ import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-s
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
 const painter = new GroundPainter(terrain, net, tex);
+// URL discovery is cheap; image bytes are decoded only when a changed cell needs that generated asset.
+const grassAssets = import.meta.glob('../assets/ground/grass-management/**/*.{webp,png}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
+const grassLoads = new Set<string>();
+const loadGrass = async (id: string) => {
+  if (grassLoads.has(id)) return;
+  const path = Object.keys(grassAssets).find(p => p.endsWith('/' + id + '.webp') || p.endsWith('/' + id + '.png'));
+  if (!path) return;
+  grassLoads.add(id);
+  try { const response = await fetch(grassAssets[path]); if (!response.ok) throw new Error('grass asset fetch'); const image = await createImageBitmap(await response.blob()); const cv = new OffscreenCanvas(image.width, image.height); cv.getContext('2d')!.drawImage(image, 0, 0); image.close(); painter.grassImages.set(id, cv); if (painter.grassImages.size > 16) { const oldest = painter.grassImages.keys().next().value!; painter.grassImages.delete(oldest); grassLoads.delete(oldest); } }
+  catch { grassLoads.delete(id); } // Current grass stays usable when an optional generated image is unavailable.
+};
 let ready: Promise<void> | null = null, gotTextures: (() => void) | null = null;
 /** resolved once this worker has its textures (built, cached or sent): a paint that arrives before init waits for it */
 let texReady!: () => void;
@@ -23,6 +34,12 @@ const post = (m: FromWorker, transfer: Transferable[] = []) => scope.postMessage
 const handle = async (m: ToWorker) => {
   try {
     switch (m.t) {
+      case 'grass': {
+        painter.grassStrength = Math.min(1, Math.max(0, m.strength)); painter.grassHeat = m.heat; painter.grassMowing = m.mowing;
+        const ids = new Set<string>();
+        for (const c of m.cells) { if (c.active) { painter.grassCells.set(c.id, c); ids.add(c.material); if (c.foot > 0.005) ids.add(c.foot > 0.45 ? 'crowd-heavy' : c.moisture > 0.8 ? 'mud-footprints' : 'crowd-light'); if (c.carts > 0.005) ids.add('cart-tracks'); if (c.divots > 0.005) ids.add(c.repair > 0 ? 'divots-repair' : 'divots-fresh'); else if (c.repair > 0) ids.add('maintenance'); } else painter.grassCells.delete(c.id); }
+        if (m.mowing) ids.add('mowing-stripes'); await Promise.all([...ids].map(loadGrass)); break;
+      }
       case 'init': {
         painter.setTerrain(m.terrain, m.height, m.waters);
         // every worker (the builder, and the peers that restore its snapshot) takes the presets and the grass's angle and tilt from the art

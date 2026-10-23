@@ -3,7 +3,7 @@ import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub
 import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
 import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
-import { PAINT_TEXES, isPaintPhoto } from './paint';
+import { PAINT_TEXES, isPaintPhoto, type PaintTex } from './paint';
 import { POOL_ANCHOR, PPM, SLAB_CELL } from './ground-art';
 import { LOT_DECALS } from './lot-decals';
 import { clampDecals, drawDecals, flatSquash, placeDecals } from './map-decals';
@@ -13,6 +13,8 @@ import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { quadBox, type LotPatch, type PatchTex } from './ground-protocol';
+import { grassSurface, type GrassCellView } from './ext/grass-management';
+import { surfaceOfTex } from './golf/costs';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -47,6 +49,8 @@ const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for
 
 /** Paints ground chunks (the full-quality bake) and planner chunks (the far-zoom map). Runs in the ground workers. */
 export class GroundPainter {
+  /** State-driven turf overlays, separate from the owner's base grass and lawn/mowing presets. */
+  grassCells = new Map<number, GrassCellView>(); grassImages = new Map<string, Cnv>(); grassStrength = 0.45; grassHeat = false; grassMowing = false;
   private scratch = new Map<string, Cnv>();
   /** the noise that wobbles the class edges (fixed seed) */
   private edgeNoise = makeNoise(7);
@@ -270,7 +274,7 @@ export class GroundPainter {
       ctx.setTransform(M);
     };
     // ---- 1a. the lawns (lawns.ts): the road blocks' grass in soft patches, then each lot's own lawn, under the lots' own ground
-    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); }
+    if (lawns.length) { this.drawLawns(ctx, lawns, L, X0, Y0, M, Minv, box); ctx.setTransform(M); this.drawManagedGrass(ctx, lawns, box, L); }
     drawLots(rest);
     // ---- 1a". the lots' flat decals (leaf drifts, worn grass, oil stains, litter, mud) over their ground
     if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
@@ -600,6 +604,7 @@ export class GroundPainter {
       if (st.m && !lite) this.drawBlend(ctx, st, G, path, r, L, X0, Y0, M, Minv);
       // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
       if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+      this.drawManagedGrass(ctx, [p], box, L);
       if (st.b > 0) {
         ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); lay(st.bt, 2 * st.b, Gb, bsx);
         // the border's tone: the same path stroked over the band (Multiply or Screen of its tint at its strength), inside the clip
@@ -626,6 +631,46 @@ export class GroundPainter {
     g.setTransform(M);
   }
 
+  /** Conditions and tiny damage over existing turf, clipped to the actual polygon and terrain; roads/props still draw later. */
+  private drawManagedGrass(ctx: C2D, patches: LotPatch[], box: BBox, _L: number) {
+    if ((!this.grassStrength && !this.grassHeat) || !this.grassCells.size) return;
+    for (const p of patches) {
+      // Fresh seed/sod keeps its original grow-in texture and timing.
+      if (!grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)) || p.tex === 'golfSod') continue;
+      const b = quadBox(p.pts); ctx.save(); ctx.clip(polyPath(p.pts));
+      for (let y = Math.max(0, Math.floor(Math.max(b[1], box[1]) / 4) * 4); y < Math.min(MAP, b[3], box[3]); y += 4) for (let x = Math.max(0, Math.floor(Math.max(b[0], box[0]) / 4) * 4); x < Math.min(MAP, b[2], box[2]); x += 4) {
+        const v = this.grassCells.get(y / 4 * (MAP / 4) + x / 4); if (!v) continue;
+        ctx.save(); ctx.beginPath();
+        for (let j = y; j < y + 4; j++) for (let i = x; i < x + 4; i++) if (this.terrain[j * MAP + i] <= TC.PATCH) ctx.rect(i, j, 1, 1);
+        ctx.clip();
+        if (this.grassHeat) { ctx.globalAlpha = 0.5; ctx.fillStyle = `hsl(${Math.round(v.health * v.coverage * 120)},75%,45%)`; ctx.fillRect(x, y, 4, 4); }
+        else {
+          const picture = this.grassImages.get(v.material);
+          ctx.globalAlpha = this.grassStrength;
+          if (picture) { ctx.fillStyle = this.groundPattern(ctx, picture, undefined, 8); ctx.fillRect(x, y, 4, 4); }
+          else { // Graceful condition tint until this exact generated material is installed.
+            const stress = Math.max(1 - v.health, 1 - v.coverage); ctx.globalAlpha *= stress;
+            ctx.fillStyle = '#9b8150'; ctx.beginPath(); ctx.ellipse(x + 2, y + 2, 2.8, 2.8, 0, 0, Math.PI * 2); ctx.fill();
+          }
+          const stamp = (id: string, amount: number, size: number, tiny = false, sx = x + 2, sy = y + 2) => {
+            if (amount < 0.005) return;
+            const sheet = this.grassImages.get(id), variant = Math.abs(Math.imul(v.id + 7, 1103515245) >>> 8) % 4;
+            ctx.save(); ctx.translate(sx, sy); ctx.rotate(v.angle * Math.PI / 180); ctx.globalAlpha = Math.min(1, amount * 2) * this.grassStrength;
+            if (sheet) ctx.drawImage(sheet, (variant % 2) * sheet.width / 2, Math.floor(variant / 2) * sheet.height / 2, sheet.width / 2, sheet.height / 2, -size / 2, -size / 2, size, size);
+            else { ctx.fillStyle = '#695038'; ctx.beginPath(); ctx.ellipse(0, 0, tiny ? 0.12 : size / 2, tiny ? 0.055 : size / 5, 0, 0, Math.PI * 2); ctx.fill(); }
+            ctx.restore();
+          };
+          stamp(v.foot > 0.45 ? 'crowd-heavy' : v.moisture > 0.8 ? 'mud-footprints' : 'crowd-light', v.foot, 4);
+          stamp('cart-tracks', v.carts, 4); stamp(v.repair > 0 ? 'divots-repair' : 'divots-fresh', v.divots, 0.45, true, v.divotX, v.divotY);
+          if (!v.divots) stamp('maintenance', v.repair * 0.2, 1);
+          // Optional temporary cut sheen uses generated art; existing preset stripe generation stays untouched.
+          if (this.grassMowing && this.grassImages.has('mowing-stripes')) stamp('mowing-stripes', Math.max(0, 0.25 - v.growth), 4);
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+  }
   /** the map decals over the grass (map-decals.ts: nature patches, bare soil, grass patches, leaf scatters, tufts, as the owner set them in the
    *  studio), seeded per region so chunks agree. Drawn over the grass before everything else, so the terrain layers, lots and roads cover
    *  them; skipped on hills, water and banks. */
