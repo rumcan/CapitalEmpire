@@ -1,6 +1,6 @@
 # T015 - Golf tournament isometric sprite sheets
 
-Status: in progress
+Status: in review (#13; historical source art, starter direction superseded)
 Owner request: 2026-10-21. Branch: `arena/T015-golf-tournament-sprites`.
 
 Generate an extensive researched collection of golf course and major tournament artwork for Capital Empire. The owner explicitly requests transparent PNG sprite sheets containing four isometric sprites per page. This art-only task authorizes new source artwork and its inventory under `art/golf-tournament/`, plus this task file. Do not replace existing assets, modify runtime code, or edit `docs/`.
