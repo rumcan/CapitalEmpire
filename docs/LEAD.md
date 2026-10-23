@@ -52,8 +52,9 @@ tents, stands, car parks) and above all **manage the transport and roads around 
 
 ## 5. Decisions (keep adding; the newest last)
 - 2026-10-23: **The town day is separate from the season.** The season keeps its time model (one game day = one season, GOLF-PLAN open
-  question 1); the town gets its own day of `dayLen` sim seconds (default 240 = 4 real minutes at 1x, the owner's setting), which drives
-  the lot trips, the night and the HUD clock. In classic (non-golf) games `dayLen` stays 1440 (the old behaviour).
+  question 1); the town gets its own day of `dayLen` sim seconds (default 600 = 10 real minutes at 1x, the owner's setting; 4 minutes
+  smeared the rush hours, as a 2 km trip takes ~140 sim s), which drives the lot trips, the night and the HUD clock. It runs on the sim's
+  own time `t` (never stops), not the season clock (frozen at the season's end), so the town never goes dead. In classic (non-golf) games `dayLen` stays 1440 (the old behaviour).
 
 ## 6. How to work (so anyone can continue)
 - **The live log is `docs/NOW.md`.** Before you edit, write there: the step, the branch, the files and the exact change you are about to

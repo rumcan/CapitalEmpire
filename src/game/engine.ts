@@ -525,7 +525,7 @@ export class Game {
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1 */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
-    try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 4)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
+    try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
     try { const c = localStorage.getItem('capitalempire.cast'); if (c) this.cast = clampCast(JSON.parse(c)); } catch { /* cast-shadow.json */ }
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
@@ -2121,11 +2121,12 @@ export class Game {
   /** the time of day: in a golf game the town day's (LEAD.md M1: its own length, separate from the season; day counts town days from 1),
    *  else the classic game day (hours of GAME_HOUR) */
   clock(): { day: number; hour: number; minute: number } {
-    const t = this.traffic.clockTime(performance.now()), L = this.golfMode ? this.traffic.dayLen : 24 * GAME_HOUR, hl = L / 24;
+    // a golf game's town day runs on the sim's own time (it never stops; the season clock freezes at the season's end)
+    const now = performance.now(), t = this.golfMode ? this.traffic.simTime(now) : this.traffic.clockTime(now), L = this.golfMode ? this.traffic.dayLen : 24 * GAME_HOUR, hl = L / 24;
     return { day: this.golfMode ? Math.floor(t / L) + 1 : this.day, hour: Math.floor(t / hl) % 24, minute: Math.floor((t % hl) / hl * 60) };
   }
   /** the owner's town day (LEAD.md M1): its length in real minutes at 1x and the town's traffic (times the lot trips); remembered */
-  townDay = { minutes: 4, traffic: 1 };
+  townDay = { minutes: 10, traffic: 1 };
   setTownDay(v: Partial<{ minutes: number; traffic: number }>) {
     this.townDay = { minutes: Math.min(30, Math.max(0.5, v.minutes ?? this.townDay.minutes)), traffic: Math.min(4, Math.max(0, v.traffic ?? this.townDay.traffic)) };
     try { localStorage.setItem('capitalempire.townday', JSON.stringify(this.townDay)); } catch { /* storage may be unavailable */ }

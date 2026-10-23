@@ -115,6 +115,11 @@ export class Sim {
    *  commute peaks morning and evening) and the trips per resident a day times townTraffic (lot trips); see LEAD.md M1 */
   dayLen = DAY;
   townTraffic = 1;
+  /** true (golf games): the town day runs on the sim's own time t, which never stops, not on the season clock, which freezes at the
+   *  season's end and while a round waits; so the town keeps living (LEAD.md M1) */
+  townFree = false;
+  /** the time the town day reads (see townFree) */
+  get townTime(): number { return this.townFree ? this.t : this.clock; }
   rnd: () => number;
   /** per slot driver parameters (ext/drivers): desired speed factor, headway, acceleration, braking, jam gap, MOBIL politeness and threshold;
    *  drawn from their own seeded stream at spawn (spawnAt, buses) */
@@ -1409,7 +1414,7 @@ export class Sim {
 
   /** up to FILL_TRIES spawn attempts per step while below the aim (the target, or the daily profile's share of it) */
   private fill() {
-    const aim = this.profile ? Math.round(this.target * demandAt(this.clock, this.dayLen)) : this.target;
+    const aim = this.profile ? Math.round(this.target * demandAt(this.townTime, this.dayLen)) : this.target;
     for (let n = 0; n < FILL_TRIES && this.active - this.busN < aim; n++) this.spawn();
   }
 }

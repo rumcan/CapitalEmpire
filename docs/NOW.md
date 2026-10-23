@@ -27,7 +27,11 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 is a 4-minute town day at 1x; the season's month is 120 sim s, so about half a town day... the owner picks the length.
 
 ## Next action
-Step 8: `npm run build`, then the browser check on 5174 in a golf game: read `window.__game.traffic` car counts over a town day (08:00 / 17:00 vs 03:00 of `game.clock()`), the HUD time cycling every `townDay.minutes`, the night falling with it. The tests are in `tests/trips.test.ts` (the two 'town day' tests).
+Step 8b (found in the browser check): the town day read the season clock (`sim.clock`), which freezes at the season's end (round 'eval',
+clock 1440) and between, so the town froze too. Change: `Sim.townFree` (set true by the `townDay` message in golf games) and a getter
+`Sim.townTime` = `townFree ? t : clock`; `LotTrips.generate` and `fill()` read `townTime`; `Game.clock()` in golf mode reads
+`traffic.simTime(now)` (not `clockTime`). Also: the default town day becomes 10 minutes (4 smeared the peaks: a 2 km trip takes ~140 sim s;
+at 10 min the browser showed ~285 cars at 04:00 and ~690 at 09:00).
 
 ## Done (newest first)
 - 2026-10-23: docs/LEAD.md and this file written; stock taken (see PROGRESS.md "2026-10-23: Claude leads the code").
