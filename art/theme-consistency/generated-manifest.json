@@ -1,0 +1,5409 @@
+{
+  "schemaVersion": 1,
+  "task": "T017",
+  "counts": {
+    "requested": 305,
+    "generated": 11,
+    "fileValidated": 11,
+    "fileValidationFailed": 0,
+    "alphaFlagged": 3,
+    "visuallyReviewed": 0,
+    "nativeViewsExported": 44,
+    "pendingGeneration": 294
+  },
+  "themeReference": {
+    "file": "art/theme-consistency/references/theme-authoritative.png",
+    "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
+    "selectedByOwner": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-4349c2c3-2faf-41db-a1fd-1957638da4cd.png",
+    "timeOfDay": "dusk; warm low side sunlight, windows and lamps already on; not moonlit night",
+    "light": "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
+    "season": "autumn foliage permitted, Halloween decorations prohibited"
+  },
+  "policy": "File validation and crop exports do not establish visual consistency, true geometric rotation, correct sunlight, or registered game scale. Original sheets and source exports remain unchanged.",
+  "assets": [
+    {
+      "id": "world:house_0",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_0-4views-v1.png",
+      "sheetSha256": "c238f37e178e1be53a4eac4fb67a90ea1c5faee2202616c60ad212389b7bddfb",
+      "width": 1536,
+      "height": 1024,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "SE: insufficient clear margin for four-pixel padding"
+      ],
+      "packingReview": {
+        "columnSplit": 768,
+        "rowSplit": 512,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "world:house_0",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -116.94375,
+          "top": -114.01425,
+          "right": 119.24482499999999,
+          "bottom": 56.936249999999994,
+          "width": 236.188575,
+          "height": 170.9505
+        },
+        "originalNormalMaxCSS": {
+          "left": -122.7909375,
+          "top": -119.7149625,
+          "right": 125.20706625,
+          "bottom": 59.7830625,
+          "width": 247.99800374999998,
+          "height": 179.498025
+        },
+        "originalFacingSizes": [
+          {
+            "id": "world:house_0",
+            "direction": null,
+            "configuredCSS": {
+              "left": -116.94375,
+              "top": -114.01425,
+              "right": 119.24482499999999,
+              "bottom": 56.936249999999994,
+              "width": 236.188575,
+              "height": 170.9505
+            },
+            "normalMaxCSS": {
+              "left": -122.7909375,
+              "top": -119.7149625,
+              "right": 125.20706625,
+              "bottom": 59.7830625,
+              "width": 247.99800374999998,
+              "height": 179.498025
+            }
+          }
+        ],
+        "firstNativeWidth": 673,
+        "configuredCSSPerNativePixel": 0.35094884843982166,
+        "normalMaxCSSPerNativePixel": 0.36849629086181274,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 72,
+            "top": 30,
+            "width": 673,
+            "height": 476
+          },
+          "alpha": {
+            "clear": 168425,
+            "partial": 224791,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 214457,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 9,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 8
+          },
+          "clearMargin": 10,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NE.native.png",
+            "width": 673,
+            "height": 476,
+            "sha256": "f877eeeba0204786429c2f86a837125652626a845497983a47893adb095d9f9f",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 236.188575,
+                "height": 167.0516518573551
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NE.configured.png",
+              "width": 236,
+              "height": 167,
+              "sha256": "e137237f3b1fb48784be3243b6eec208987121e2d85197c6275cb1e5541fa3d0",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 236.188575,
+                "height": 167.0516518573551
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NE.configured@2x.png",
+              "width": 472,
+              "height": 334,
+              "sha256": "2f31a11c3fe28e73bee769675a8e9bbaa21a25acd233548ba4e163a38e19afde",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 247.99800374999998,
+                "height": 175.40423445022287
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NE.max.png",
+              "width": 248,
+              "height": 175,
+              "sha256": "c895a520ad0ce67fe4f8400537e8b079dfff5f01a89d13390e0d9af1ac71f267",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 247.99800374999998,
+                "height": 175.40423445022287
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NE.max@2x.png",
+              "width": 496,
+              "height": 351,
+              "sha256": "4f72b868c7569d508a9e0a63562158905a57f3772756ef2ddc98de3d3e2daf98",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 768,
+            "top": 0,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 803,
+            "top": 30,
+            "width": 666,
+            "height": 482
+          },
+          "alpha": {
+            "clear": 169815,
+            "partial": 223401,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 213310,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 7,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 6
+          },
+          "clearMargin": 3,
+          "touchesCellEdge": false,
+          "warnings": [
+            "insufficient clear margin for four-pixel padding"
+          ],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SE.native.png",
+            "width": 666,
+            "height": 482,
+            "sha256": "9e61ce4cc65f5622a1247c96827eb74c3e883f83237a4f60c3954ad2f40e0f10",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 233.73193306092122,
+                "height": 169.15734494799403
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SE.configured.png",
+              "width": 234,
+              "height": 169,
+              "sha256": "20bdef0ee097e0ee65d44f893c9b4d872cdd187c092b886e175d0bff63d79f73",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 233.73193306092122,
+                "height": 169.15734494799403
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SE.configured@2x.png",
+              "width": 467,
+              "height": 338,
+              "sha256": "8f67bbf0ab61b2810b34d04426f36327554b80d35c8677a3717d815a46e78569",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 245.41852971396727,
+                "height": 177.61521219539375
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SE.max.png",
+              "width": 245,
+              "height": 177,
+              "sha256": "91a7f0bab678b6b89659ecb95574aab14b7e58b5412cf3c7ea1340930d391c0c",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 245.41852971396727,
+                "height": 177.61521219539375
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SE.max@2x.png",
+              "width": 491,
+              "height": 355,
+              "sha256": "dfa69961679766957d064062a92c4d7e69b29ad38ccef3870f8c4ebf81c9165a",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 512,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 61,
+            "top": 520,
+            "width": 669,
+            "height": 475
+          },
+          "alpha": {
+            "clear": 174850,
+            "partial": 218366,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 208356,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 15,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 17
+          },
+          "clearMargin": 12,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SW.native.png",
+            "width": 669,
+            "height": 475,
+            "sha256": "8e388245aeec93c4771425ecaf8877a96556f5a023134af2afdeee92eeb9b102",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 234.78477960624068,
+                "height": 166.7007030089153
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SW.configured.png",
+              "width": 235,
+              "height": 167,
+              "sha256": "0728553fde3815688a2c0a9f099580f787ea95faef26462e1344626771e13fc4",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 234.78477960624068,
+                "height": 166.7007030089153
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SW.configured@2x.png",
+              "width": 470,
+              "height": 334,
+              "sha256": "ac84b0885624d59f8ce049ee49ce5c5dceaaa9b0b9e84d12b67571e0fb1c9c34",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 246.52401858655273,
+                "height": 175.03573815936105
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SW.max.png",
+              "width": 247,
+              "height": 175,
+              "sha256": "4d0c8930a6cba21789e1d187e90ef26a68b0615c7db189de845d6724efa2dd05",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 246.52401858655273,
+                "height": 175.03573815936105
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/SW.max@2x.png",
+              "width": 493,
+              "height": 350,
+              "sha256": "f0e7e163b00c7d825b3ae3cbb85043675f9d66c3b76509eee0e8cd6b60939bff",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 768,
+            "top": 512,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 814,
+            "top": 527,
+            "width": 669,
+            "height": 473
+          },
+          "alpha": {
+            "clear": 175792,
+            "partial": 217424,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 207903,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 8,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 7
+          },
+          "clearMargin": 19,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NW.native.png",
+            "width": 669,
+            "height": 473,
+            "sha256": "6df587233459bb440a0ba3c37291ad9b28ffd5784e0ce5e13f05bd7a8db15cb0",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 234.78477960624068,
+                "height": 165.99880531203564
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NW.configured.png",
+              "width": 235,
+              "height": 166,
+              "sha256": "ec27893a32da128bc3d19e5ad1871abfa0228aef184598a80b756c704915ceaf",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 234.78477960624068,
+                "height": 165.99880531203564
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NW.configured@2x.png",
+              "width": 470,
+              "height": 332,
+              "sha256": "307d82f0499c8962e70c44135ac09fcb31bbe93e1592193ac7118c9acea3370f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 246.52401858655273,
+                "height": 174.29874557763742
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NW.max.png",
+              "width": 247,
+              "height": 175,
+              "sha256": "7a1cf53f42ad358259712fff0b8498f154f194ddf78a88e2e58a3c885d540df8",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 246.52401858655273,
+                "height": 174.29874557763742
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_0-4views-v1/NW.max@2x.png",
+              "width": 493,
+              "height": 349,
+              "sha256": "d891c1ff2badc0a94f1044544aa4ab04c6a8066f5ea6a03664226769680bd540",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "world:house_1",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_1-4views-v1.png",
+      "sheetSha256": "387931f349b26783970735d4020310b85c3dfecc610b2f60d00884a93c4e1f8a",
+      "width": 1536,
+      "height": 1024,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "NW: insufficient clear margin for four-pixel padding"
+      ],
+      "packingReview": {
+        "columnSplit": 768,
+        "rowSplit": 512,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "world:house_1",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -130.7436,
+          "top": -160.97639999999998,
+          "right": 131.639976,
+          "bottom": 58.073496000000006,
+          "width": 262.383576,
+          "height": 219.049896
+        },
+        "originalNormalMaxCSS": {
+          "left": -137.28078,
+          "top": -169.02522,
+          "right": 138.2219748,
+          "bottom": 60.9771708,
+          "width": 275.5027548,
+          "height": 230.0023908
+        },
+        "originalFacingSizes": [
+          {
+            "id": "world:house_1",
+            "direction": null,
+            "configuredCSS": {
+              "left": -130.7436,
+              "top": -160.97639999999998,
+              "right": 131.639976,
+              "bottom": 58.073496000000006,
+              "width": 262.383576,
+              "height": 219.049896
+            },
+            "normalMaxCSS": {
+              "left": -137.28078,
+              "top": -169.02522,
+              "right": 138.2219748,
+              "bottom": 60.9771708,
+              "width": 275.5027548,
+              "height": 230.0023908
+            }
+          }
+        ],
+        "firstNativeWidth": 533,
+        "configuredCSSPerNativePixel": 0.4922768780487805,
+        "normalMaxCSSPerNativePixel": 0.5168907219512195,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 192,
+            "top": 27,
+            "width": 533,
+            "height": 469
+          },
+          "alpha": {
+            "clear": 212260,
+            "partial": 180956,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 172892,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 7,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 6
+          },
+          "clearMargin": 20,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NE.native.png",
+            "width": 533,
+            "height": 469,
+            "sha256": "c735558cce077de207f19c34a24ce9b17cf8223319f7f8ffc1c2381f41c5f9c1",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 262.383576,
+                "height": 230.87785580487807
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NE.configured.png",
+              "width": 262,
+              "height": 231,
+              "sha256": "d8062356af00c6d675427faa8ce31fb279c935f6b4ab07221d5c4ebf72a361c3",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 262.383576,
+                "height": 230.87785580487807
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NE.configured@2x.png",
+              "width": 525,
+              "height": 462,
+              "sha256": "26a90070d07682a2802264cc0e01ce1b1d8ad20024e419dec5ab55d92a72543c",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 275.5027548,
+                "height": 242.42174859512195
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NE.max.png",
+              "width": 276,
+              "height": 243,
+              "sha256": "8bbe2640b9ac9baabd47463d4d57c3b2557bf37d8988129fcc8a5329a9857244",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 275.5027548,
+                "height": 242.42174859512195
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NE.max@2x.png",
+              "width": 551,
+              "height": 485,
+              "sha256": "b62d1fce5083d8f97811b74717e62d6bbb1d5e5fe3edf60beb7d41e3b8f56e9b",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 768,
+            "top": 0,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 846,
+            "top": 32,
+            "width": 526,
+            "height": 461
+          },
+          "alpha": {
+            "clear": 221892,
+            "partial": 171324,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 163863,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 6,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 5
+          },
+          "clearMargin": 23,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SE.native.png",
+            "width": 526,
+            "height": 461,
+            "sha256": "231ea76efc8a3707a3bfb4d10227057c97326bc4c60c35921f6e46332e1ae3d1",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 258.93763785365854,
+                "height": 226.93964078048782
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SE.configured.png",
+              "width": 259,
+              "height": 227,
+              "sha256": "f91094eb0d9d6cf99ac5f3d266797fe01142b799cfec61f83bfa0207de523c01",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 258.93763785365854,
+                "height": 226.93964078048782
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SE.configured@2x.png",
+              "width": 518,
+              "height": 454,
+              "sha256": "246edd6399bd0a365c2954bcd69b6ab776b2768ade20a5b4c1d6d077e61fa357",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 271.8845197463415,
+                "height": 238.28662281951222
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SE.max.png",
+              "width": 272,
+              "height": 238,
+              "sha256": "218042624bac6a49ee71ebe3bd227d5007667bdbb95b6c1be72a51951546bfa2",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 271.8845197463415,
+                "height": 238.28662281951222
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SE.max@2x.png",
+              "width": 544,
+              "height": 477,
+              "sha256": "74246f5d770bdb7dd17091bdf5c9046b19d6b66355e9961a004348dc337680b4",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 512,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 192,
+            "top": 514,
+            "width": 533,
+            "height": 471
+          },
+          "alpha": {
+            "clear": 221882,
+            "partial": 171334,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 165059,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 2,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 1
+          },
+          "clearMargin": 6,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SW.native.png",
+            "width": 533,
+            "height": 471,
+            "sha256": "b3ba5a95c7c1806a487796528093babddc6f4fffa9a0cf1fcbdb4a09bd784659",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 262.383576,
+                "height": 231.8624095609756
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SW.configured.png",
+              "width": 262,
+              "height": 232,
+              "sha256": "c4c45518b500d57dc8a0cfa75a82699688c8bfe4faed554252df9af617febf09",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 262.383576,
+                "height": 231.8624095609756
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SW.configured@2x.png",
+              "width": 525,
+              "height": 464,
+              "sha256": "415ed0709123dbdd6ef548165bda75e7345d5c7ff4b8b9f4feecacccfd7e8159",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 275.5027548,
+                "height": 243.4555300390244
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SW.max.png",
+              "width": 276,
+              "height": 244,
+              "sha256": "168079cd70a1c4ba962f165ccd3ecf7a5647f925c07dc8b7f271ccb181bdbac5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 275.5027548,
+                "height": 243.4555300390244
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/SW.max@2x.png",
+              "width": 551,
+              "height": 487,
+              "sha256": "b0cd1185acebb77ecc216295823f03365834d534c1ed961f381a96d75e7d2129",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 768,
+            "top": 512,
+            "width": 768,
+            "height": 512
+          },
+          "sourceRect": {
+            "left": 867,
+            "top": 512,
+            "width": 539,
+            "height": 470
+          },
+          "alpha": {
+            "clear": 212744,
+            "partial": 180472,
+            "opaque": 0,
+            "maxAlpha": 254,
+            "visibleAtThreshold": 173668,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 6,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 5
+          },
+          "clearMargin": 3,
+          "touchesCellEdge": false,
+          "warnings": [
+            "insufficient clear margin for four-pixel padding"
+          ],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NW.native.png",
+            "width": 539,
+            "height": 470,
+            "sha256": "3f977820d47f828fa38faf610566667698304a91ff50aea1c0c848110a5ea247",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 265.3372372682927,
+                "height": 231.37013268292685
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NW.configured.png",
+              "width": 265,
+              "height": 231,
+              "sha256": "1eab58a48182e8f3b28358cee7f23af5ff8f04de0146bbee8cc606ce26b9e4b1",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 265.3372372682927,
+                "height": 231.37013268292685
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NW.configured@2x.png",
+              "width": 531,
+              "height": 463,
+              "sha256": "aa97060ff35b0cdd70356feadbce1d793ad389526da73f9c1e4f5e29c3f1c6a5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 278.60409913170736,
+                "height": 242.93863931707318
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NW.max.png",
+              "width": 279,
+              "height": 243,
+              "sha256": "b36c6fd0464fde99a7d8460ec9cc1bd8100b59d52be98278afb0fbbfc859aff7",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 278.60409913170736,
+                "height": 242.93863931707318
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_1-4views-v1/NW.max@2x.png",
+              "width": 557,
+              "height": 486,
+              "sha256": "93e023fdb948ac51939b6dd827a3d547924b6e2a73badc191fabd023157c737c",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "world:house_2",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_2-4views-v3.png",
+      "sheetSha256": "eea27f3eff81ce754cb49aecc6eaae93176eb152e010d443d505b9a3c6b29e23",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "SE: insufficient clear margin for four-pixel padding",
+        "NW: insufficient clear margin for four-pixel padding"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "world:house_2",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -103.61385,
+          "top": -150.8892,
+          "right": 104.48097299999999,
+          "bottom": 52.91899799999999,
+          "width": 208.094823,
+          "height": 203.808198
+        },
+        "originalNormalMaxCSS": {
+          "left": -108.79454249999999,
+          "top": -158.43365999999997,
+          "right": 109.70502164999998,
+          "bottom": 55.564947899999986,
+          "width": 218.49956414999997,
+          "height": 213.99860789999997
+        },
+        "originalFacingSizes": [
+          {
+            "id": "world:house_2",
+            "direction": null,
+            "configuredCSS": {
+              "left": -103.61385,
+              "top": -150.8892,
+              "right": 104.48097299999999,
+              "bottom": 52.91899799999999,
+              "width": 208.094823,
+              "height": 203.808198
+            },
+            "normalMaxCSS": {
+              "left": -108.79454249999999,
+              "top": -158.43365999999997,
+              "right": 109.70502164999998,
+              "bottom": 55.564947899999986,
+              "width": 218.49956414999997,
+              "height": 213.99860789999997
+            }
+          }
+        ],
+        "firstNativeWidth": 559,
+        "configuredCSSPerNativePixel": 0.37226265295169947,
+        "normalMaxCSSPerNativePixel": 0.3908757855992844,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 36,
+            "top": 86,
+            "width": 559,
+            "height": 495
+          },
+          "alpha": {
+            "clear": 187301,
+            "partial": 205658,
+            "opaque": 170,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 189359,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 22,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 34
+          },
+          "clearMargin": 36,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NE.native.png",
+            "width": 559,
+            "height": 495,
+            "sha256": "349e3fe3e9e657e6d912811c48b7c7f4e97d652d99f52d7e7612445df15a5149",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 208.094823,
+                "height": 184.27001321109123
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NE.configured.png",
+              "width": 208,
+              "height": 184,
+              "sha256": "8d953ddf371788fe01ff162c53036e7015213038bc9d9115e205dc5dd99d527d",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 208.094823,
+                "height": 184.27001321109123
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NE.configured@2x.png",
+              "width": 416,
+              "height": 368,
+              "sha256": "6eb9bd82ce40affbeef07947a1ffa3c928b02d019a1e1b962825bb342037dd1f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 218.49956414999997,
+                "height": 193.48351387164575
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NE.max.png",
+              "width": 218,
+              "height": 193,
+              "sha256": "8780b67f9fa1599ef5f4a219bf1a8deda8a9f01b381367ce486a6ca3bd2db8bb",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 218.49956414999997,
+                "height": 193.48351387164575
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NE.max@2x.png",
+              "width": 437,
+              "height": 387,
+              "sha256": "41b46d8e6aca22f7f5b664dc258902dccd876c898f9e96655817ca5bf221c560",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 627,
+            "top": 90,
+            "width": 550,
+            "height": 506
+          },
+          "alpha": {
+            "clear": 191834,
+            "partial": 201010,
+            "opaque": 285,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 189434,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 22,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 23
+          },
+          "clearMargin": 3,
+          "touchesCellEdge": false,
+          "warnings": [
+            "insufficient clear margin for four-pixel padding"
+          ],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SE.native.png",
+            "width": 550,
+            "height": 506,
+            "sha256": "43838ffb3fe0dae54a62c75a40304dcde127a17edb6d3a4e576ec5bfcfa9c6b1",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 204.7444591234347,
+                "height": 188.36490239355993
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SE.configured.png",
+              "width": 205,
+              "height": 189,
+              "sha256": "024033c7daf2ccff61984aa238f4dc978f52f61a78abe8ccc85efe59807f6b9b",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 204.7444591234347,
+                "height": 188.36490239355993
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SE.configured@2x.png",
+              "width": 409,
+              "height": 376,
+              "sha256": "ec0bfe2e06fbafebaa787ceed050470fbea61fa8f6bbba559e5f25712ae1ec5c",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 214.9816820796064,
+                "height": 197.7831475132379
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SE.max.png",
+              "width": 215,
+              "height": 198,
+              "sha256": "4ec13077a0f9468896665d28fd9d1de6e168a9a7aea92bac261c93369e19e9b7",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 214.9816820796064,
+                "height": 197.7831475132379
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SE.max@2x.png",
+              "width": 430,
+              "height": 396,
+              "sha256": "9df4d8d79b59c169cdebcd0f165b2ed5f5bae9b0849643a54ca2919db42503a3",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 47,
+            "top": 665,
+            "width": 551,
+            "height": 502
+          },
+          "alpha": {
+            "clear": 196007,
+            "partial": 196919,
+            "opaque": 203,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 181319,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 26,
+            "retained": 3,
+            "discardedIsolatedPixelsForBoundsOnly": 28
+          },
+          "clearMargin": 33,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SW.native.png",
+            "width": 551,
+            "height": 502,
+            "sha256": "f548a2615101130b0c43b9f0df96ef01db38d96d80a18941fd83d973f22a2732",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 205.1167217763864,
+                "height": 186.87585178175314
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SW.configured.png",
+              "width": 205,
+              "height": 187,
+              "sha256": "270cc0f96b71024c3ee0c3bee5bffcbe84e909ce7c9555b48c4b99bdb288928e",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 205.1167217763864,
+                "height": 186.87585178175314
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SW.configured@2x.png",
+              "width": 410,
+              "height": 374,
+              "sha256": "07f2decacbca2ee85d75f9b0bf6039c6280c795cc27435780d0ddd9f6ebcd886",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 215.3725578652057,
+                "height": 196.21964437084077
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SW.max.png",
+              "width": 215,
+              "height": 196,
+              "sha256": "6a0c46124539ad5290e8b6930e0e59aa19e74e33bb74caa340aaf2e1e0c75f7f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 215.3725578652057,
+                "height": 196.21964437084077
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/SW.max@2x.png",
+              "width": 431,
+              "height": 393,
+              "sha256": "b8bf868ae5594d3ad2512931fcf6c775c0db29a8ee381532431f2cbf05ade904",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 627,
+            "top": 665,
+            "width": 540,
+            "height": 504
+          },
+          "alpha": {
+            "clear": 201357,
+            "partial": 191606,
+            "opaque": 166,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 181049,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 14,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 15
+          },
+          "clearMargin": 3,
+          "touchesCellEdge": false,
+          "warnings": [
+            "insufficient clear margin for four-pixel padding"
+          ],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NW.native.png",
+            "width": 540,
+            "height": 504,
+            "sha256": "a2a721ebcd578cf8e2262518ce754a48be17925912f49a2329021931d0be8033",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 201.0218325939177,
+                "height": 187.62037708765652
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NW.configured.png",
+              "width": 201,
+              "height": 188,
+              "sha256": "d229e0148791b1e1d57f5234c2f583e39b9ceb4b74fc7aaac3dd51749d7b6a1f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 201.0218325939177,
+                "height": 187.62037708765652
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NW.configured@2x.png",
+              "width": 402,
+              "height": 375,
+              "sha256": "36e356751115fe4774b15ddf76865636e5253a6a9068fef0b56fa5620082a39a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 211.07292422361357,
+                "height": 197.00139594203932
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NW.max.png",
+              "width": 211,
+              "height": 197,
+              "sha256": "a595d96d1f0300cb12210a580c9572173fd600ea56c1720d24f5bdd1f5832a4a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 211.07292422361357,
+                "height": 197.00139594203932
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_2-4views-v3/NW.max@2x.png",
+              "width": 422,
+              "height": 394,
+              "sha256": "cb1cdde32ad2af9d9bf61a754d1f77b2771bfc6af7aaf8fdee90f90c7e204f76",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "world:house_3",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_3-4views-v2.png",
+      "sheetSha256": "20110a7ef5005c8e115b4e4f05f5aaf75e76be484e6aa897e941c5da4fbd5e4d",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "world:house_3",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -102.4986,
+          "top": -100.2051,
+          "right": 103.21583999999999,
+          "bottom": 51.69965999999998,
+          "width": 205.71444,
+          "height": 151.90475999999998
+        },
+        "originalNormalMaxCSS": {
+          "left": -117.984,
+          "top": -115.344,
+          "right": 118.80959999999999,
+          "bottom": 59.510399999999976,
+          "width": 236.7936,
+          "height": 174.85439999999997
+        },
+        "originalFacingSizes": [
+          {
+            "id": "world:house_3",
+            "direction": null,
+            "configuredCSS": {
+              "left": -102.4986,
+              "top": -100.2051,
+              "right": 103.21583999999999,
+              "bottom": 51.69965999999998,
+              "width": 205.71444,
+              "height": 151.90475999999998
+            },
+            "normalMaxCSS": {
+              "left": -117.984,
+              "top": -115.344,
+              "right": 118.80959999999999,
+              "bottom": 59.510399999999976,
+              "width": 236.7936,
+              "height": 174.85439999999997
+            }
+          }
+        ],
+        "firstNativeWidth": 561,
+        "configuredCSSPerNativePixel": 0.3666924064171123,
+        "normalMaxCSSPerNativePixel": 0.42209197860962566,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 53,
+            "top": 139,
+            "width": 561,
+            "height": 411
+          },
+          "alpha": {
+            "clear": 230700,
+            "partial": 162268,
+            "opaque": 161,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 153618,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 19,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 18
+          },
+          "clearMargin": 17,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NE.native.png",
+            "width": 561,
+            "height": 411,
+            "sha256": "d9cea894433a5f88ce7d0ead3e0bcf4835db587077c05e19562648bb97e3dae4",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 205.71444,
+                "height": 150.71057903743315
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NE.configured.png",
+              "width": 206,
+              "height": 151,
+              "sha256": "958878e06f299459af0c621aec6c6d647ecb58eb37010f6fc3e0e1f5d8e9d327",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 205.71444,
+                "height": 150.71057903743315
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NE.configured@2x.png",
+              "width": 411,
+              "height": 301,
+              "sha256": "9a1f537f44dece0d1860ba9a2ea28034003da963a4fa8d1afd802ba33d650b51",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 236.7936,
+                "height": 173.47980320855615
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NE.max.png",
+              "width": 237,
+              "height": 174,
+              "sha256": "cc62538a0094bda6d6fcc9df18d54179f8948cce2b753ee11ae6346723b3f484",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 236.7936,
+                "height": 173.47980320855615
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NE.max@2x.png",
+              "width": 474,
+              "height": 347,
+              "sha256": "aec3ad0a47d273cc4f6be0b213a66d07c1e93db6fbf1a12bd0da715acc757d70",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 655,
+            "top": 144,
+            "width": 558,
+            "height": 414
+          },
+          "alpha": {
+            "clear": 233667,
+            "partial": 159221,
+            "opaque": 241,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 150282,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 15,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 14
+          },
+          "clearMargin": 32,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SE.native.png",
+            "width": 558,
+            "height": 414,
+            "sha256": "268bb87e84b5987d3c0dd47c24ca5a7c9b099fcb2d9c107e672b981c0d856b2a",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 204.61436278074868,
+                "height": 151.8106562566845
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SE.configured.png",
+              "width": 205,
+              "height": 152,
+              "sha256": "56aeb06059b702f33059ac5171b87cf76e627e2003178526cae046fd18d978e6",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 204.61436278074868,
+                "height": 151.8106562566845
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SE.configured@2x.png",
+              "width": 409,
+              "height": 303,
+              "sha256": "614caab8d75f32292bb6e2001dd93e3c6093bfddbe3b3c5411ab691caa6c13e5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 235.52732406417113,
+                "height": 174.74607914438502
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SE.max.png",
+              "width": 236,
+              "height": 175,
+              "sha256": "00d62c619f03b2e1d5c03bb9d02684462673c2187ca79dcc6c543aa6bfa3fa29",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 235.52732406417113,
+                "height": 174.74607914438502
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SE.max@2x.png",
+              "width": 471,
+              "height": 349,
+              "sha256": "1a8ee981c578ada474bc67e98e5866ddf5e716f36fa52883aea2970988f8a094",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 45,
+            "top": 744,
+            "width": 570,
+            "height": 395
+          },
+          "alpha": {
+            "clear": 240786,
+            "partial": 152161,
+            "opaque": 182,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 144705,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 13,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 15
+          },
+          "clearMargin": 16,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SW.native.png",
+            "width": 570,
+            "height": 395,
+            "sha256": "6bc7ff21db864a1ed8bf7aabfd67eb1da247225398b987f57b5245a394a8da09",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 209.014671657754,
+                "height": 144.84350053475936
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SW.configured.png",
+              "width": 209,
+              "height": 145,
+              "sha256": "406946dc7a370cd245ed9864025dde09d984c3e378066bbdcc0165da25806737",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 209.014671657754,
+                "height": 144.84350053475936
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SW.configured@2x.png",
+              "width": 418,
+              "height": 290,
+              "sha256": "c12181dec6fbe10bd35dfaf88e5e1028faa502ab1bb791a8f5caa069e683c137",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 240.59242780748662,
+                "height": 166.72633155080214
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SW.max.png",
+              "width": 241,
+              "height": 167,
+              "sha256": "b73fd319d5f33bb69510c93c8c3f3f1b0cab099976742af4a62678cd10cb6ff6",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 240.59242780748662,
+                "height": 166.72633155080214
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/SW.max@2x.png",
+              "width": 481,
+              "height": 333,
+              "sha256": "53cf96568b3b4d757e6cf3d07707bd7699052f7f9aff76b283ce62ad3a220bc5",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 667,
+            "top": 723,
+            "width": 544,
+            "height": 428
+          },
+          "alpha": {
+            "clear": 234337,
+            "partial": 158655,
+            "opaque": 137,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 150466,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 13,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 13
+          },
+          "clearMargin": 44,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NW.native.png",
+            "width": 544,
+            "height": 428,
+            "sha256": "f3684c37820d4b5228b67b254db102728e20b40ee674ca2831def805a24b6624",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 199.4806690909091,
+                "height": 156.94434994652408
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NW.configured.png",
+              "width": 199,
+              "height": 157,
+              "sha256": "40c954e4a3ff0c5036368f5fca520f00170ad1905961f97f95473b277afc2055",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 199.4806690909091,
+                "height": 156.94434994652408
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NW.configured@2x.png",
+              "width": 399,
+              "height": 314,
+              "sha256": "6abdfb13d25e4625f38f68d89229cc785d5389ded2f36f1d60200a21bafb5f19",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 229.61803636363635,
+                "height": 180.6553668449198
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NW.max.png",
+              "width": 230,
+              "height": 181,
+              "sha256": "00631991dc9566960912d8974a132df919104a6a8f2d1c2adffa8f9443777b75",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 229.61803636363635,
+                "height": 180.6553668449198
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_3-4views-v2/NW.max@2x.png",
+              "width": 459,
+              "height": 361,
+              "sha256": "cb56eecda63f6e63973450a0c0f2efe78cf5af37aa6431e52cb15544744c8441",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "world:house_4",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_4-4views-v2.png",
+      "sheetSha256": "1ef500ec1d95afddb44efc6db1a06148fe311ca6e76f6e19a15eedda1da17ea6",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "world:house_4",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -106.93884,
+          "top": -113.6352,
+          "right": 107.82154199999998,
+          "bottom": 48.26959499999999,
+          "width": 214.76038199999996,
+          "height": 161.90479499999998
+        },
+        "originalNormalMaxCSS": {
+          "left": -112.28578200000001,
+          "top": -119.31696000000001,
+          "right": 113.2126191,
+          "bottom": 50.683074749999996,
+          "width": 225.49840110000002,
+          "height": 170.00003475
+        },
+        "originalFacingSizes": [
+          {
+            "id": "world:house_4",
+            "direction": null,
+            "configuredCSS": {
+              "left": -106.93884,
+              "top": -113.6352,
+              "right": 107.82154199999998,
+              "bottom": 48.26959499999999,
+              "width": 214.76038199999996,
+              "height": 161.90479499999998
+            },
+            "normalMaxCSS": {
+              "left": -112.28578200000001,
+              "top": -119.31696000000001,
+              "right": 113.2126191,
+              "bottom": 50.683074749999996,
+              "width": 225.49840110000002,
+              "height": 170.00003475
+            }
+          }
+        ],
+        "firstNativeWidth": 588,
+        "configuredCSSPerNativePixel": 0.3652387448979591,
+        "normalMaxCSSPerNativePixel": 0.3835006821428572,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 22,
+            "top": 115,
+            "width": 588,
+            "height": 453
+          },
+          "alpha": {
+            "clear": 193164,
+            "partial": 199743,
+            "opaque": 222,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 183690,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 32,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 39
+          },
+          "clearMargin": 21,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NE.native.png",
+            "width": 588,
+            "height": 453,
+            "sha256": "5b8ca226c89e905de055f8a7feeafac95032aea4c1d3d2ed38c7bee0ececd218",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 214.76038199999996,
+                "height": 165.45315143877548
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NE.configured.png",
+              "width": 215,
+              "height": 166,
+              "sha256": "871f0f2eaf820f9b7fe26219e0c6aeaea889667756b9c747d9c507942ef36b5a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 214.76038199999996,
+                "height": 165.45315143877548
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NE.configured@2x.png",
+              "width": 430,
+              "height": 331,
+              "sha256": "68f6a0e2e9d1b22616197fe4be1ce7c5126a2891e4eb407f6c270d5052bb4d95",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 225.49840110000005,
+                "height": 173.72580901071433
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NE.max.png",
+              "width": 225,
+              "height": 173,
+              "sha256": "d26d1667e14c3509cf616797a2aaa073aee716fdf8074a0fcac0be0bd0d25227",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 225.49840110000005,
+                "height": 173.72580901071433
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NE.max@2x.png",
+              "width": 451,
+              "height": 347,
+              "sha256": "f3b2c05100e4f18b4113ee835625ab07eef1ba299ba3ee172c96a0736daed5b4",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 640,
+            "top": 129,
+            "width": 584,
+            "height": 445
+          },
+          "alpha": {
+            "clear": 196932,
+            "partial": 195929,
+            "opaque": 268,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 175456,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 48,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 57
+          },
+          "clearMargin": 17,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SE.native.png",
+            "width": 584,
+            "height": 445,
+            "sha256": "5de7a0f580fa9c49e3cf30bcb456db13cc52b47f9c21d4bcedf655408354e7ff",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 213.2994270204081,
+                "height": 162.5312414795918
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SE.configured.png",
+              "width": 213,
+              "height": 162,
+              "sha256": "2d72dca43ee0d4d5fe53f3053ff48b302e34144d813de538ab850c6035c8b4f2",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 213.2994270204081,
+                "height": 162.5312414795918
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SE.configured@2x.png",
+              "width": 427,
+              "height": 325,
+              "sha256": "16ea4eff56522344df7c0c6a324eabc3d735c9fddae38f562ed3d082aa05e0f3",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 223.96439837142862,
+                "height": 170.65780355357145
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SE.max.png",
+              "width": 224,
+              "height": 171,
+              "sha256": "eb2395f6568ceffbf3b3d37c23b6d975c080760a6c5e17f19a6b9fdc0380c98f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 223.96439837142862,
+                "height": 170.65780355357145
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SE.max@2x.png",
+              "width": 448,
+              "height": 341,
+              "sha256": "a49ef44c505cde03fbd5d1e9c040822e7050334f1d5f858ec4773446823f07c3",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 17,
+            "top": 704,
+            "width": 590,
+            "height": 441
+          },
+          "alpha": {
+            "clear": 197640,
+            "partial": 195262,
+            "opaque": 227,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 174923,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 22,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 35
+          },
+          "clearMargin": 21,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SW.native.png",
+            "width": 590,
+            "height": 441,
+            "sha256": "334353d8af15fd3ad49b65e685ac7c540ae06e9632c501894064c0c4583a4ba5",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 215.49085948979587,
+                "height": 161.07028649999995
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SW.configured.png",
+              "width": 215,
+              "height": 161,
+              "sha256": "8a578c5313fc834f0366fc3c4014ce85d01f5dd7780a9373ee06be68cda2e4e9",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 215.49085948979587,
+                "height": 161.07028649999995
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SW.configured@2x.png",
+              "width": 431,
+              "height": 322,
+              "sha256": "5c5ba56b7c85773d4fb220c631afa96bb1757e86215d1847fc87b8537c4eb6af",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 226.26540246428576,
+                "height": 169.12380082500002
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SW.max.png",
+              "width": 226,
+              "height": 169,
+              "sha256": "8199fdfcee4a63b0238c3040a713ef3df42a79080f813e868ac92a27b7664d81",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 226.26540246428576,
+                "height": 169.12380082500002
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/SW.max@2x.png",
+              "width": 453,
+              "height": 339,
+              "sha256": "f4edf97a5f01fde2c6a442941a75b322cea2fa96050ba402032bba312a6d6bf0",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 631,
+            "top": 707,
+            "width": 599,
+            "height": 458
+          },
+          "alpha": {
+            "clear": 190737,
+            "partial": 202174,
+            "opaque": 218,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 181483,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 29,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 36
+          },
+          "clearMargin": 8,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NW.native.png",
+            "width": 599,
+            "height": 458,
+            "sha256": "89e9108c6bcb1e73744700c320e61e4cdfd9fe7fac458e64cf5508e654f53340",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 218.7780081938775,
+                "height": 167.27934516326528
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NW.configured.png",
+              "width": 219,
+              "height": 167,
+              "sha256": "870e37e7573dc598b4765a354d4e5e2087fe63972e2f70b4e6e7af23fe13142c",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 218.7780081938775,
+                "height": 167.27934516326528
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NW.configured@2x.png",
+              "width": 438,
+              "height": 335,
+              "sha256": "685446e943e748ac7b0e05be20a9e521d52a8ac87ed93dcca0528e09a8d978b5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 229.71690860357145,
+                "height": 175.6433124214286
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NW.max.png",
+              "width": 230,
+              "height": 176,
+              "sha256": "c3ad108b346e1d23fa5dac6a758c71b133281e99db9b34d2d407f030e06630d9",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 229.71690860357145,
+                "height": 175.6433124214286
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_4-4views-v2/NW.max@2x.png",
+              "width": 459,
+              "height": 351,
+              "sha256": "df845f449ad0b0c44ed0feebebe3c8625d386ea1dc957a6d783610a367cb4e46",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "town:bakery",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/town-bakery-4views-v1.png",
+      "sheetSha256": "d63a53204ce69ad87803092e0eefb6379906d2b58e3cc1a37760d08f42268a5c",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "east:town:bakery",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "east",
+        "originalConfiguredCSS": {
+          "left": -86.94042900000001,
+          "top": -100.14945,
+          "right": 90.20142000000001,
+          "bottom": 52.70671499999999,
+          "width": 177.141849,
+          "height": 152.85616499999998
+        },
+        "originalNormalMaxCSS": {
+          "left": -93.5472,
+          "top": -107.75999999999999,
+          "right": 97.05600000000001,
+          "bottom": 56.71199999999999,
+          "width": 190.60320000000002,
+          "height": 164.47199999999998
+        },
+        "originalFacingSizes": [
+          {
+            "id": "east:town:bakery",
+            "direction": "east",
+            "configuredCSS": {
+              "left": -86.94042900000001,
+              "top": -100.14945,
+              "right": 90.20142000000001,
+              "bottom": 52.70671499999999,
+              "width": 177.141849,
+              "height": 152.85616499999998
+            },
+            "normalMaxCSS": {
+              "left": -93.5472,
+              "top": -107.75999999999999,
+              "right": 97.05600000000001,
+              "bottom": 56.71199999999999,
+              "width": 190.60320000000002,
+              "height": 164.47199999999998
+            }
+          },
+          {
+            "id": "town:bakery",
+            "direction": null,
+            "configuredCSS": {
+              "left": -90.20142,
+              "top": -100.14945,
+              "right": 86.940429,
+              "bottom": 52.70671499999999,
+              "width": 177.14184899999998,
+              "height": 152.85616499999998
+            },
+            "normalMaxCSS": {
+              "left": -97.056,
+              "top": -107.75999999999999,
+              "right": 93.54719999999999,
+              "bottom": 56.71199999999999,
+              "width": 190.6032,
+              "height": 164.47199999999998
+            }
+          }
+        ],
+        "firstNativeWidth": 535,
+        "configuredCSSPerNativePixel": 0.3311062598130841,
+        "normalMaxCSSPerNativePixel": 0.3562676635514019,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 69,
+            "top": 88,
+            "width": 535,
+            "height": 472
+          },
+          "alpha": {
+            "clear": 213632,
+            "partial": 179158,
+            "opaque": 339,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 173313,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 15,
+            "retained": 3,
+            "discardedIsolatedPixelsForBoundsOnly": 15
+          },
+          "clearMargin": 27,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.native.png",
+            "width": 535,
+            "height": 472,
+            "sha256": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 177.141849,
+                "height": 156.2821546317757
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.configured.png",
+              "width": 177,
+              "height": 156,
+              "sha256": "bb3674e3855e64d3358662157afac99bd14ab3c1b2a613c8b42f1cd1274040df",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 177.141849,
+                "height": 156.2821546317757
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.configured@2x.png",
+              "width": 354,
+              "height": 312,
+              "sha256": "8b47cc043d2fa1956fd5ef59820bb26049f984455e43ce206a2cb6e83d7258e5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 190.60320000000002,
+                "height": 168.1583371962617
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.max.png",
+              "width": 191,
+              "height": 169,
+              "sha256": "88d8cfbda8aa1c37f9ab3ca1b511b32f67c02b3521bd0dce7cebb0fb7ce5d396",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 190.60320000000002,
+                "height": 168.1583371962617
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.max@2x.png",
+              "width": 381,
+              "height": 336,
+              "sha256": "716fa39b061fdf1fd4984d347766642a965ca78bf45016f63fed508d4077bbef",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 648,
+            "top": 88,
+            "width": 535,
+            "height": 474
+          },
+          "alpha": {
+            "clear": 210187,
+            "partial": 182639,
+            "opaque": 303,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 174292,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 15,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 13
+          },
+          "clearMargin": 25,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.native.png",
+            "width": 535,
+            "height": 474,
+            "sha256": "070344cd20832110b8536aaa4682d6aa46066071c7e4bb5e7984accfc58013f2",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 177.141849,
+                "height": 156.94436715140188
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.configured.png",
+              "width": 177,
+              "height": 157,
+              "sha256": "11dcfb30d23b310371bfbd2ba7a166148644202bf60d205c461f8b114104dcfa",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 177.141849,
+                "height": 156.94436715140188
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.configured@2x.png",
+              "width": 354,
+              "height": 314,
+              "sha256": "3f2fe6934bda41dabd233d1fbffad3cf7b9ea3ba9ea18434bdcb0277dec29e72",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 190.60320000000002,
+                "height": 168.87087252336448
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.max.png",
+              "width": 191,
+              "height": 169,
+              "sha256": "36ed0db1be5a7412ec8f7894a118877e94f02cba5a8b0d80e708d4a279194f25",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 190.60320000000002,
+                "height": 168.87087252336448
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.max@2x.png",
+              "width": 381,
+              "height": 338,
+              "sha256": "cf1aa6a0529dd1fb668a0734a7c2988dc8297f9e2dfd3be8550259e66b85604a",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 75,
+            "top": 681,
+            "width": 507,
+            "height": 486
+          },
+          "alpha": {
+            "clear": 217886,
+            "partial": 174870,
+            "opaque": 373,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 168079,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 26,
+            "retained": 7,
+            "discardedIsolatedPixelsForBoundsOnly": 35
+          },
+          "clearMargin": 49,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.native.png",
+            "width": 507,
+            "height": 486,
+            "sha256": "d0a73d6fb0a1931af4fc168af50a7652efadc0067f4e1c9cbfd6f16776a9ad64",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 167.87087372523365,
+                "height": 160.91764226915888
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.configured.png",
+              "width": 168,
+              "height": 161,
+              "sha256": "0e50d03769fad6c6ccaad1e906101da3cbeffd391771cf2ca13335661a779b34",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 167.87087372523365,
+                "height": 160.91764226915888
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.configured@2x.png",
+              "width": 336,
+              "height": 322,
+              "sha256": "e5581e7473a8297ee311593f9ea8c32e15d334450c90ef9ad8a6bfbff22c9cac",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 180.62770542056074,
+                "height": 173.1460844859813
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.max.png",
+              "width": 181,
+              "height": 174,
+              "sha256": "df1fa959bd5c96e0fdcfbdd5382bdffceb51d7afc6ab6b2999c227845f7a8f1b",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 180.62770542056074,
+                "height": 173.1460844859813
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.max@2x.png",
+              "width": 361,
+              "height": 346,
+              "sha256": "337227781c05dea3b47dd174039f5598c9a1d538df58aa6beef965f39b04e285",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 674,
+            "top": 680,
+            "width": 511,
+            "height": 485
+          },
+          "alpha": {
+            "clear": 221912,
+            "partial": 170950,
+            "opaque": 267,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 162078,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 22,
+            "retained": 3,
+            "discardedIsolatedPixelsForBoundsOnly": 31
+          },
+          "clearMargin": 51,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.native.png",
+            "width": 511,
+            "height": 485,
+            "sha256": "273e69694cbbe4a0d10fbde9853e35d6e6110a4033c1323f05ccb809f3780180",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 169.19529876448598,
+                "height": 160.5865360093458
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.configured.png",
+              "width": 169,
+              "height": 160,
+              "sha256": "eb5dffda6cba6234ecd5716a8ef52618f1d49aeab2d65770e6eaae5224575eeb",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 169.19529876448598,
+                "height": 160.5865360093458
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.configured@2x.png",
+              "width": 338,
+              "height": 321,
+              "sha256": "16b78401a4fa71640283a40a6012af021771b8dabc533cfa3b70554442c17bd5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 182.05277607476637,
+                "height": 172.7898168224299
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.max.png",
+              "width": 182,
+              "height": 173,
+              "sha256": "63b43c613fa8af061f2badbc17518e50b44c935252cdf6be2c9f878a7759aab3",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 182.05277607476637,
+                "height": 172.7898168224299
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.max@2x.png",
+              "width": 364,
+              "height": 345,
+              "sha256": "aaa18d96230f4215b423f33f7da5de24bd710a47bd523897bc889d4ebe259777",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "town:barber",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/town-barber-4views-v1.png",
+      "sheetSha256": "662f2a1cb2b29c7edbf09ac99f78ff3b0c3fced7289f797c064f50cae471f078",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "east:town:barber",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "east",
+        "originalConfiguredCSS": {
+          "left": -82.23543,
+          "top": -91.4949,
+          "right": 82.52730000000001,
+          "bottom": 52.790400000000005,
+          "width": 164.76273,
+          "height": 144.2853
+        },
+        "originalNormalMaxCSS": {
+          "left": -93.3168,
+          "top": -103.824,
+          "right": 93.64800000000001,
+          "bottom": 59.904,
+          "width": 186.9648,
+          "height": 163.728
+        },
+        "originalFacingSizes": [
+          {
+            "id": "east:town:barber",
+            "direction": "east",
+            "configuredCSS": {
+              "left": -82.23543,
+              "top": -91.4949,
+              "right": 82.52730000000001,
+              "bottom": 52.790400000000005,
+              "width": 164.76273,
+              "height": 144.2853
+            },
+            "normalMaxCSS": {
+              "left": -93.3168,
+              "top": -103.824,
+              "right": 93.64800000000001,
+              "bottom": 59.904,
+              "width": 186.9648,
+              "height": 163.728
+            }
+          },
+          {
+            "id": "town:barber",
+            "direction": null,
+            "configuredCSS": {
+              "left": -82.5273,
+              "top": -91.4949,
+              "right": 82.23543,
+              "bottom": 52.790400000000005,
+              "width": 164.76273,
+              "height": 144.2853
+            },
+            "normalMaxCSS": {
+              "left": -93.648,
+              "top": -103.824,
+              "right": 93.3168,
+              "bottom": 59.904,
+              "width": 186.9648,
+              "height": 163.728
+            }
+          }
+        ],
+        "firstNativeWidth": 537,
+        "configuredCSSPerNativePixel": 0.30682072625698326,
+        "normalMaxCSSPerNativePixel": 0.3481653631284916,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 66,
+            "top": 84,
+            "width": 537,
+            "height": 483
+          },
+          "alpha": {
+            "clear": 205765,
+            "partial": 187047,
+            "opaque": 317,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 181427,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 24,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 49
+          },
+          "clearMargin": 28,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NE.native.png",
+            "width": 537,
+            "height": 483,
+            "sha256": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 164.76273,
+                "height": 148.1944107821229
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NE.configured.png",
+              "width": 165,
+              "height": 148,
+              "sha256": "a0d04be71ce0439fd647b7807acd2830a21eca26e54948654e5717b0e8dded0b",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 164.76273,
+                "height": 148.1944107821229
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NE.configured@2x.png",
+              "width": 330,
+              "height": 297,
+              "sha256": "432062e8b69bef09b3648e9b480d5463716a3aa4ecb7cb6ee0845dae3534d996",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 186.9648,
+                "height": 168.16387039106144
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NE.max.png",
+              "width": 187,
+              "height": 168,
+              "sha256": "6ff32c65bf1a2da7d9b2ac15c9099546f47e9dc06aaf1e43ea70b137142352e9",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 186.9648,
+                "height": 168.16387039106144
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NE.max@2x.png",
+              "width": 374,
+              "height": 336,
+              "sha256": "702498dea5376458be72b8414eae998aea199dc185b9f77e9b3160fd2862c658",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 646,
+            "top": 85,
+            "width": 543,
+            "height": 488
+          },
+          "alpha": {
+            "clear": 202572,
+            "partial": 190256,
+            "opaque": 301,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 184181,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 34,
+            "retained": 4,
+            "discardedIsolatedPixelsForBoundsOnly": 76
+          },
+          "clearMargin": 23,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SE.native.png",
+            "width": 543,
+            "height": 488,
+            "sha256": "ddfdb5318b21e7e719788dd080c92de8ff135809b7c43f95854fcff2944e447a",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 166.6036543575419,
+                "height": 149.72851441340782
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SE.configured.png",
+              "width": 167,
+              "height": 150,
+              "sha256": "0f4f71b4899e09d95484a40d89ec9bada71674e8c6020d0d56ba598a3fef2570",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 166.6036543575419,
+                "height": 149.72851441340782
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SE.configured@2x.png",
+              "width": 333,
+              "height": 299,
+              "sha256": "2d3f7ca76c9914f1fab0ab7d50d911eb20893ff6c0ef45df86fb26f322db81a9",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 189.05379217877095,
+                "height": 169.9046972067039
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SE.max.png",
+              "width": 189,
+              "height": 170,
+              "sha256": "b6c699791c1bfacdccbed3f37e0b9cb4ff48f01e8fd460fe53e1ee4d6f7d14c0",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 189.05379217877095,
+                "height": 169.9046972067039
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SE.max@2x.png",
+              "width": 378,
+              "height": 340,
+              "sha256": "6c61cba78e8360ffed40f188eed8d0ad0ae0a8ff9634b184352043ff125fd882",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 69,
+            "top": 662,
+            "width": 525,
+            "height": 501
+          },
+          "alpha": {
+            "clear": 207150,
+            "partial": 185735,
+            "opaque": 244,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 179794,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 43,
+            "retained": 5,
+            "discardedIsolatedPixelsForBoundsOnly": 62
+          },
+          "clearMargin": 37,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SW.native.png",
+            "width": 525,
+            "height": 501,
+            "sha256": "7388ed9c3b5ac5561116b004a916cc144ea9caa897cf845cb34f2b7aa30b2e89",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 161.08088128491622,
+                "height": 153.7171838547486
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SW.configured.png",
+              "width": 161,
+              "height": 154,
+              "sha256": "1b0121056505fe9a555a6340ae97f34b511fecf9f69959b526754bf72375fdc4",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 161.08088128491622,
+                "height": 153.7171838547486
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SW.configured@2x.png",
+              "width": 322,
+              "height": 307,
+              "sha256": "fddd96bb563063ed417748f360f118cdebabbefff1605d0607be9978cccb382f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 182.7868156424581,
+                "height": 174.4308469273743
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SW.max.png",
+              "width": 183,
+              "height": 175,
+              "sha256": "0630e97a3a2cbe40cb63d467a761b745c96205a2a3c137922c33f6788e8bda8a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 182.7868156424581,
+                "height": 174.4308469273743
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/SW.max@2x.png",
+              "width": 366,
+              "height": 349,
+              "sha256": "15aaa6d6aa8f325ff8868e4423db63ad510b53071fbfec311ca45c9685dc89c5",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 658,
+            "top": 664,
+            "width": 530,
+            "height": 506
+          },
+          "alpha": {
+            "clear": 204459,
+            "partial": 188278,
+            "opaque": 392,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 183259,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 26,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 41
+          },
+          "clearMargin": 35,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NW.native.png",
+            "width": 530,
+            "height": 506,
+            "sha256": "21e3275ab735a1dfe25c8658cca6ce0fd25c3292b8884925d102afb52700d3a9",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 162.61498491620114,
+                "height": 155.25128748603353
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NW.configured.png",
+              "width": 163,
+              "height": 156,
+              "sha256": "4f5db146ccb54b6e404168bf50fa81ffd467f6fddcd315cb3f2197d34fe85846",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 162.61498491620114,
+                "height": 155.25128748603353
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NW.configured@2x.png",
+              "width": 325,
+              "height": 310,
+              "sha256": "a50a1ebcc1250147d4d8babd571e2771fcf2025b76bfe2868706f6bfa3a381de",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 184.52764245810056,
+                "height": 176.17167374301675
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NW.max.png",
+              "width": 185,
+              "height": 177,
+              "sha256": "6abe937ee5a3e724484bde3f53697e23f14fc46dd69433018691f18a2397e8f3",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 184.52764245810056,
+                "height": 176.17167374301675
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-barber-4views-v1/NW.max@2x.png",
+              "width": 369,
+              "height": 352,
+              "sha256": "973214bf90e8732107c0a58f04f9156749bbbd1df2faed9c6004d6e9eb76e386",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "town:grocery",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/town-grocery-4views-v1.png",
+      "sheetSha256": "7673a291ce422deb46c9120a7851ab7d7cab548b8138c142583c23e09195ba7a",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "east:town:grocery",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "east",
+        "originalConfiguredCSS": {
+          "left": -134.099823,
+          "top": -149.20243799999997,
+          "right": 135.89762999999996,
+          "bottom": 96.98832000000003,
+          "width": 269.997453,
+          "height": 246.19075800000002
+        },
+        "originalNormalMaxCSS": {
+          "left": -140.80481415,
+          "top": -156.6625599,
+          "right": 142.6925115,
+          "bottom": 101.83773600000004,
+          "width": 283.49732565000005,
+          "height": 258.5002959
+        },
+        "originalFacingSizes": [
+          {
+            "id": "east:town:grocery",
+            "direction": "east",
+            "configuredCSS": {
+              "left": -134.099823,
+              "top": -149.20243799999997,
+              "right": 135.89762999999996,
+              "bottom": 96.98832000000003,
+              "width": 269.997453,
+              "height": 246.19075800000002
+            },
+            "normalMaxCSS": {
+              "left": -140.80481415,
+              "top": -156.6625599,
+              "right": 142.6925115,
+              "bottom": 101.83773600000004,
+              "width": 283.49732565000005,
+              "height": 258.5002959
+            }
+          },
+          {
+            "id": "town:grocery",
+            "direction": null,
+            "configuredCSS": {
+              "left": -135.89763000000002,
+              "top": -149.20243799999997,
+              "right": 134.099823,
+              "bottom": 96.98832000000003,
+              "width": 269.997453,
+              "height": 246.19075800000002
+            },
+            "normalMaxCSS": {
+              "left": -142.69251150000002,
+              "top": -156.6625599,
+              "right": 140.80481415,
+              "bottom": 101.83773600000004,
+              "width": 283.49732565000005,
+              "height": 258.5002959
+            }
+          }
+        ],
+        "firstNativeWidth": 569,
+        "configuredCSSPerNativePixel": 0.47451221968365553,
+        "normalMaxCSSPerNativePixel": 0.4982378306678384,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 48,
+            "top": 54,
+            "width": 569,
+            "height": 551
+          },
+          "alpha": {
+            "clear": 173257,
+            "partial": 219438,
+            "opaque": 434,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 215321,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 16,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 19
+          },
+          "clearMargin": 14,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NE.native.png",
+            "width": 569,
+            "height": 551,
+            "sha256": "f660671f8b3ed4c82715e532db57646940120c311d2a9b262ef862c1ac8775f9",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 269.997453,
+                "height": 261.4562330456942
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NE.configured.png",
+              "width": 270,
+              "height": 261,
+              "sha256": "d66a1db5045d2797c53d546acaee19527126c458bebc5d42cfde42e7c29fb9e6",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 269.997453,
+                "height": 261.4562330456942
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NE.configured@2x.png",
+              "width": 540,
+              "height": 523,
+              "sha256": "dece67448d9f11efdcb3b06cd65c1b8db7788a49d67c4a63f41c3256fc3f4dd6",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 283.49732565000005,
+                "height": 274.529044697979
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NE.max.png",
+              "width": 283,
+              "height": 274,
+              "sha256": "5504645e5d24b4e7ecd34a0dd1534213771705599581f95f1e9e4d5f4c786bef",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 283.49732565000005,
+                "height": 274.529044697979
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NE.max@2x.png",
+              "width": 567,
+              "height": 549,
+              "sha256": "621b9fcb14492d76274c5007fa61985be6333e1aff8f9b6d0ad0896a34d693f2",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 665,
+            "top": 53,
+            "width": 546,
+            "height": 548
+          },
+          "alpha": {
+            "clear": 178245,
+            "partial": 214448,
+            "opaque": 436,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 209832,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 25,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 37
+          },
+          "clearMargin": 30,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SE.native.png",
+            "width": 546,
+            "height": 548,
+            "sha256": "f02ff0bfa147b7e8ecc7ce1be7879307873c01a451214492bc0194f4f58ac8ea",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 259.08367194727595,
+                "height": 260.03269638664324
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SE.configured.png",
+              "width": 259,
+              "height": 260,
+              "sha256": "cad1eade8dbb93af3c999580f4e321cb2f5ea8c8c9364bdc65a17cf7aefd07fb",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 259.08367194727595,
+                "height": 260.03269638664324
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SE.configured@2x.png",
+              "width": 518,
+              "height": 520,
+              "sha256": "4cbccd0772bd2eb605626b7b34e92985d0b944108132144a2557d8128baefbd7",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 272.03785554463974,
+                "height": 273.03433120597543
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SE.max.png",
+              "width": 272,
+              "height": 273,
+              "sha256": "e1e5530cc6df95cef3bedb225078a84d3c44318df892329317c7abd0db1c7267",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 272.03785554463974,
+                "height": 273.03433120597543
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SE.max@2x.png",
+              "width": 544,
+              "height": 546,
+              "sha256": "e65648f7d29a879d510972f6a31678422f48786dfce1006347e57bf1840da818",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 54,
+            "top": 661,
+            "width": 522,
+            "height": 536
+          },
+          "alpha": {
+            "clear": 186000,
+            "partial": 206793,
+            "opaque": 336,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 200113,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 20,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 38
+          },
+          "clearMargin": 38,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SW.native.png",
+            "width": 522,
+            "height": 536,
+            "sha256": "45265b1f4feedfce2de9a07625722a868ff794365ed5bebd9470d149a2117bac",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 247.69537867486818,
+                "height": 254.33854975043937
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SW.configured.png",
+              "width": 248,
+              "height": 255,
+              "sha256": "f3deb6e930a8f5698dd5a53b9f8a98aab51fa0d176ebb42f1df68ea85a7f2631",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 247.69537867486818,
+                "height": 254.33854975043937
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SW.configured@2x.png",
+              "width": 495,
+              "height": 508,
+              "sha256": "f1e93649281308ab2dc400f6cdcca632833d4fd44101c9550ab0032081ace5a1",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 260.08014760861164,
+                "height": 267.0554772379614
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SW.max.png",
+              "width": 260,
+              "height": 267,
+              "sha256": "f2fa8e0793f45f602ee69b0088b92e094074524cdae4807f2ef4395cde95b741",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 260.08014760861164,
+                "height": 267.0554772379614
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/SW.max@2x.png",
+              "width": 520,
+              "height": 534,
+              "sha256": "5bc5c245e45d8eda943e0b3e1d16a12c15db439e3905d56df03de9f82ceb2ee4",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 695,
+            "top": 655,
+            "width": 506,
+            "height": 549
+          },
+          "alpha": {
+            "clear": 187650,
+            "partial": 205092,
+            "opaque": 387,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 196156,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 29,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 37
+          },
+          "clearMargin": 32,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NW.native.png",
+            "width": 506,
+            "height": 549,
+            "sha256": "e6eaa6f9c50a0ecbf1cae48849a0007e99480742d8f7d4b091ca596a7e0625c0",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 240.1031831599297,
+                "height": 260.5072086063269
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NW.configured.png",
+              "width": 240,
+              "height": 260,
+              "sha256": "4586e986cefb57af9d9f1c55114be273bbed49a8e3ea9442cc4c6283d7a94869",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 240.1031831599297,
+                "height": 260.5072086063269
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NW.configured@2x.png",
+              "width": 480,
+              "height": 521,
+              "sha256": "aaa83ddb7566949a2e86c05bf8f948f34e57f09d9d766d0f9b7f7c62730c7d5f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 252.10834231792623,
+                "height": 273.5325690366433
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NW.max.png",
+              "width": 252,
+              "height": 273,
+              "sha256": "318f6923889d2a81536eec6e89eaaa13e73cf917e1e5fe82416c5a22dec953a3",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 252.10834231792623,
+                "height": 273.5325690366433
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-grocery-4views-v1/NW.max@2x.png",
+              "width": 504,
+              "height": 547,
+              "sha256": "6d2997b3320c6c89794ffbf50706037dfe917a28f7b2c019f1569b7d0832d80c",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "town:pharmacy",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1.png",
+      "sheetSha256": "2ab96f0f89791d022d6bcd189bdc8d0cbd15c13384f4581d1b73a751fb5486aa",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "east:town:pharmacy",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "east",
+        "originalConfiguredCSS": {
+          "left": -105.722496,
+          "top": -159.41771999999997,
+          "right": 107.13383999999999,
+          "bottom": 53.43861600000002,
+          "width": 212.856336,
+          "height": 212.856336
+        },
+        "originalNormalMaxCSS": {
+          "left": -111.00862080000002,
+          "top": -167.38860599999998,
+          "right": 112.490532,
+          "bottom": 56.11054680000002,
+          "width": 223.49915280000002,
+          "height": 223.49915280000002
+        },
+        "originalFacingSizes": [
+          {
+            "id": "east:town:pharmacy",
+            "direction": "east",
+            "configuredCSS": {
+              "left": -105.722496,
+              "top": -159.41771999999997,
+              "right": 107.13383999999999,
+              "bottom": 53.43861600000002,
+              "width": 212.856336,
+              "height": 212.856336
+            },
+            "normalMaxCSS": {
+              "left": -111.00862080000002,
+              "top": -167.38860599999998,
+              "right": 112.490532,
+              "bottom": 56.11054680000002,
+              "width": 223.49915280000002,
+              "height": 223.49915280000002
+            }
+          },
+          {
+            "id": "town:pharmacy",
+            "direction": null,
+            "configuredCSS": {
+              "left": -107.13383999999999,
+              "top": -159.41771999999997,
+              "right": 105.722496,
+              "bottom": 53.43861600000002,
+              "width": 212.856336,
+              "height": 212.856336
+            },
+            "normalMaxCSS": {
+              "left": -112.490532,
+              "top": -167.38860599999998,
+              "right": 111.00862080000002,
+              "bottom": 56.11054680000002,
+              "width": 223.49915280000002,
+              "height": 223.49915280000002
+            }
+          }
+        ],
+        "firstNativeWidth": 521,
+        "configuredCSSPerNativePixel": 0.4085534280230326,
+        "normalMaxCSSPerNativePixel": 0.4289810994241843,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 54,
+            "top": 61,
+            "width": 521,
+            "height": 524
+          },
+          "alpha": {
+            "clear": 195380,
+            "partial": 197223,
+            "opaque": 526,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 193771,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 19,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 21
+          },
+          "clearMargin": 46,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NE.native.png",
+            "width": 521,
+            "height": 524,
+            "sha256": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 212.856336,
+                "height": 214.0819962840691
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NE.configured.png",
+              "width": 213,
+              "height": 214,
+              "sha256": "b8dbfb9ae4cf34991d83c7466c3b17c7c63e247af8bc7d7b199e4eb917ea506f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 212.856336,
+                "height": 214.0819962840691
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NE.configured@2x.png",
+              "width": 426,
+              "height": 428,
+              "sha256": "c4178e07550da5109c2bdd381ab709a3260819ee9b7eb2906a70726a88f45a8d",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 223.49915280000002,
+                "height": 224.78609609827257
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NE.max.png",
+              "width": 223,
+              "height": 224,
+              "sha256": "33f9fd8753b09e2606c143c192c1c4424ce57daaa66b2ed98266adc2008da453",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 223.49915280000002,
+                "height": 224.78609609827257
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NE.max@2x.png",
+              "width": 447,
+              "height": 450,
+              "sha256": "07db7438d6209b9fa61fbce0b2d6b0e57b95b91b3dde4534b034d6d2f4e924b3",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 700,
+            "top": 65,
+            "width": 526,
+            "height": 525
+          },
+          "alpha": {
+            "clear": 195198,
+            "partial": 197527,
+            "opaque": 404,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 193718,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 31,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 50
+          },
+          "clearMargin": 32,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SE.native.png",
+            "width": 526,
+            "height": 525,
+            "sha256": "5226bdae4f6f40ef4ccb442f146cc5fa46ac39c845fba3e4df4b8b8ee60d7e33",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 214.89910314011516,
+                "height": 214.49054971209213
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SE.configured.png",
+              "width": 215,
+              "height": 215,
+              "sha256": "f1addb045d1c87ed47204c78772bd4f928e984ea912821a43a8ede299c2f5a8d",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 214.89910314011516,
+                "height": 214.49054971209213
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SE.configured@2x.png",
+              "width": 430,
+              "height": 429,
+              "sha256": "673c986955edfabe84e6646a4fb3691897ad2982587f1c4df17057ed7937b2d1",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 225.64405829712092,
+                "height": 225.21507719769676
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SE.max.png",
+              "width": 226,
+              "height": 226,
+              "sha256": "498eb95058222e7b32fb4355da2976268278ad5245021b80b8a4b1b51f0ab7bc",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 225.64405829712092,
+                "height": 225.21507719769676
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SE.max@2x.png",
+              "width": 451,
+              "height": 450,
+              "sha256": "763363444cfd7707fd6c9a95c8faa999f39cd5e96c9c1acee5de585a6483269f",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 86,
+            "top": 672,
+            "width": 485,
+            "height": 529
+          },
+          "alpha": {
+            "clear": 202372,
+            "partial": 190320,
+            "opaque": 437,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 186103,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 21,
+            "retained": 4,
+            "discardedIsolatedPixelsForBoundsOnly": 27
+          },
+          "clearMargin": 49,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SW.native.png",
+            "width": 485,
+            "height": 529,
+            "sha256": "d7af845c39a93fb82445c4b70865c257412805734edb4e7ea4ac7f0915eee8be",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 198.14841259117082,
+                "height": 216.12476342418427
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SW.configured.png",
+              "width": 198,
+              "height": 216,
+              "sha256": "47610f40c899c94ca772838446696b4a251321053f1a7af043a3379d57c93607",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 198.14841259117082,
+                "height": 216.12476342418427
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SW.configured@2x.png",
+              "width": 396,
+              "height": 432,
+              "sha256": "c75e81bfa46948560feb2007343d0d25a8882f0dee546655e0e084fdb3722d88",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 208.05583322072937,
+                "height": 226.93100159539347
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SW.max.png",
+              "width": 208,
+              "height": 227,
+              "sha256": "9295bb393534b17caeb00bbc89fa7e36fcec3d11bd716d895a4b1fef51926e44",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 208.05583322072937,
+                "height": 226.93100159539347
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/SW.max@2x.png",
+              "width": 416,
+              "height": 454,
+              "sha256": "3d05731c37746814bf5967ce2e4520b05411a65968d6208df6dcacb8932aff10",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 691,
+            "top": 669,
+            "width": 516,
+            "height": 537
+          },
+          "alpha": {
+            "clear": 192488,
+            "partial": 200191,
+            "opaque": 450,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 195429,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 20,
+            "retained": 2,
+            "discardedIsolatedPixelsForBoundsOnly": 31
+          },
+          "clearMargin": 46,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NW.native.png",
+            "width": 516,
+            "height": 537,
+            "sha256": "ae53097c94959f93fd9a3764a391d07971e7533896c8e7521e2f7c73c6bc787e",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 210.81356885988484,
+                "height": 219.39319084836853
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NW.configured.png",
+              "width": 211,
+              "height": 220,
+              "sha256": "57ca9532f86cf291d1d1700385cdeca7ad15d3a1bef5bc76813a3ec2479d2506",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 210.81356885988484,
+                "height": 219.39319084836853
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NW.configured@2x.png",
+              "width": 422,
+              "height": 439,
+              "sha256": "9abe59216aacf75d24e2da8b7e7dd7dc58facf77d7f6882b61467fa08b8c9c3b",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 221.3542473028791,
+                "height": 230.36285039078695
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NW.max.png",
+              "width": 221,
+              "height": 230,
+              "sha256": "0714222f422c79ba0099664e12576753321839edcc282e59ba5dde9324953c2d",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 221.3542473028791,
+                "height": 230.36285039078695
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-pharmacy-4views-v1/NW.max@2x.png",
+              "width": 443,
+              "height": 461,
+              "sha256": "6c2bb215409ecdf69e540cf17bc456625ddfcf0ee2a8e1f73940d5b92956ea50",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "town:postoffice",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2.png",
+      "sheetSha256": "b9f4d72c9861d9e89ae89b457da6f6d2a5fa147292de6168917e257e42fb3b79",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "east:town:postoffice",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "east",
+        "originalConfiguredCSS": {
+          "left": -141.517584,
+          "top": -177.14106,
+          "right": 137.05092,
+          "bottom": 88.094574,
+          "width": 278.56850399999996,
+          "height": 265.235634
+        },
+        "originalNormalMaxCSS": {
+          "left": -148.5934632,
+          "top": -185.99811300000002,
+          "right": 143.903466,
+          "bottom": 92.4993027,
+          "width": 292.4969292,
+          "height": 278.49741570000003
+        },
+        "originalFacingSizes": [
+          {
+            "id": "east:town:postoffice",
+            "direction": "east",
+            "configuredCSS": {
+              "left": -141.517584,
+              "top": -177.14106,
+              "right": 137.05092,
+              "bottom": 88.094574,
+              "width": 278.56850399999996,
+              "height": 265.235634
+            },
+            "normalMaxCSS": {
+              "left": -148.5934632,
+              "top": -185.99811300000002,
+              "right": 143.903466,
+              "bottom": 92.4993027,
+              "width": 292.4969292,
+              "height": 278.49741570000003
+            }
+          },
+          {
+            "id": "town:postoffice",
+            "direction": null,
+            "configuredCSS": {
+              "left": -137.05092,
+              "top": -177.14106,
+              "right": 141.51758399999997,
+              "bottom": 88.094574,
+              "width": 278.56850399999996,
+              "height": 265.235634
+            },
+            "normalMaxCSS": {
+              "left": -143.903466,
+              "top": -185.99811300000002,
+              "right": 148.5934632,
+              "bottom": 92.4993027,
+              "width": 292.4969292,
+              "height": 278.49741570000003
+            }
+          }
+        ],
+        "firstNativeWidth": 547,
+        "configuredCSSPerNativePixel": 0.509266003656307,
+        "normalMaxCSSPerNativePixel": 0.5347293038391225,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 77,
+            "top": 59,
+            "width": 547,
+            "height": 532
+          },
+          "alpha": {
+            "clear": 180095,
+            "partial": 212517,
+            "opaque": 517,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 208450,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 34,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 35
+          },
+          "clearMargin": 7,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NE.native.png",
+            "width": 547,
+            "height": 532,
+            "sha256": "821782bace43224895d9b4b5e405cf199db6c31be97e339a482f0059648097e4",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 278.56850399999996,
+                "height": 270.92951394515535
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NE.configured.png",
+              "width": 279,
+              "height": 271,
+              "sha256": "26fa0b99644bcf52b8152345fd7a080c3c78635c4e6da260549225ab721292e2",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 278.56850399999996,
+                "height": 270.92951394515535
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NE.configured@2x.png",
+              "width": 557,
+              "height": 542,
+              "sha256": "763328aa3182b7108a32ff01ece4510baac68acc053be75c721ed0a2b87345ab",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 292.4969292,
+                "height": 284.4759896424132
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NE.max.png",
+              "width": 292,
+              "height": 284,
+              "sha256": "f5bd83064e9166a7d0fd9ae62701edd83da78063612724f02ed4e7dd2e5441ee",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 292.4969292,
+                "height": 284.4759896424132
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NE.max@2x.png",
+              "width": 585,
+              "height": 569,
+              "sha256": "488ca359e7e368318ef3adcbd91540ce832b8e081b01a7da6f2a23d646ab2703",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 648,
+            "top": 58,
+            "width": 525,
+            "height": 532
+          },
+          "alpha": {
+            "clear": 189546,
+            "partial": 202968,
+            "opaque": 615,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 199384,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 21,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 25
+          },
+          "clearMargin": 25,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SE.native.png",
+            "width": 525,
+            "height": 532,
+            "sha256": "ec51c180a6eb7c3dc3dc8b8509dcddeae0e76a0eb772b7913bcf94c58d34603c",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 267.3646519195612,
+                "height": 270.92951394515535
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SE.configured.png",
+              "width": 267,
+              "height": 271,
+              "sha256": "dead87bf4b44da0c96f665f5f9c6e5603d2b52f417c0a0046bfa0efb124a22a8",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 267.3646519195612,
+                "height": 270.92951394515535
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SE.configured@2x.png",
+              "width": 535,
+              "height": 542,
+              "sha256": "117cdcb50f630bbf98c74e4762d5dfb321b9d0c3a38ad2fb3f6462812e2bce17",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 280.73288451553935,
+                "height": 284.4759896424132
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SE.max.png",
+              "width": 281,
+              "height": 285,
+              "sha256": "69645764f374871e02d8ef453760bba2146910a42d86ef57c6454d7a9db890ae",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 280.73288451553935,
+                "height": 284.4759896424132
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SE.max@2x.png",
+              "width": 561,
+              "height": 568,
+              "sha256": "5b09497bd5395315d213539d1c85192f5e88425e8a531a612736c7a01ca4ca7b",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 71,
+            "top": 655,
+            "width": 531,
+            "height": 535
+          },
+          "alpha": {
+            "clear": 188988,
+            "partial": 203506,
+            "opaque": 635,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 199240,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 28,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 37
+          },
+          "clearMargin": 29,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SW.native.png",
+            "width": 531,
+            "height": 535,
+            "sha256": "1fdcf6180a155bde9bb372128fbb4fb46d564b48fb20b2fe0e45acdefe1547f3",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 270.42024794149904,
+                "height": 272.4573119561243
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SW.configured.png",
+              "width": 270,
+              "height": 272,
+              "sha256": "df34edb104b48fd17e3dc7dc6c62cca49a33dcbcb0de14c5eeb57b839a474400",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 270.42024794149904,
+                "height": 272.4573119561243
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SW.configured@2x.png",
+              "width": 541,
+              "height": 545,
+              "sha256": "5d0d5d13d2aa21b0ecb9aaedc6d34e34c26ec2441b859cd7caf863bbbc34e804",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 283.94126033857407,
+                "height": 286.0801775539306
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SW.max.png",
+              "width": 284,
+              "height": 286,
+              "sha256": "26b9d8628324b3dbddee8079e62a817288ac5a8aefa0955cea5902ca4b5757ce",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 283.94126033857407,
+                "height": 286.0801775539306
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/SW.max@2x.png",
+              "width": 568,
+              "height": 572,
+              "sha256": "939f5996bdf1df5173cd5ea4a8b8f37b73dcdf2fb9b2f45f08ed553af1970106",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 658,
+            "top": 655,
+            "width": 534,
+            "height": 546
+          },
+          "alpha": {
+            "clear": 183207,
+            "partial": 209346,
+            "opaque": 576,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 206268,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 36,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 59
+          },
+          "clearMargin": 32,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NW.native.png",
+            "width": 534,
+            "height": 546,
+            "sha256": "8720c6145b68563196c1c20585d515daf4afb2a1728c141e8c35f22416f1d6d1",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 271.94804595246796,
+                "height": 278.05923799634365
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NW.configured.png",
+              "width": 272,
+              "height": 278,
+              "sha256": "73a92f3bc5addc37205d3d0c6e0f4be5748ed99b9a19e8c1b18613b84319b856",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 271.94804595246796,
+                "height": 278.05923799634365
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NW.configured@2x.png",
+              "width": 544,
+              "height": 556,
+              "sha256": "0e5d8e6b562b532c8ac8ecf314936e1b6ee90476daf755ca4bd881aa46e6a568",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 285.54544825009145,
+                "height": 291.9621998961609
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NW.max.png",
+              "width": 286,
+              "height": 292,
+              "sha256": "8a137150d390e3c121c0767530368e989d1a3c9b3448a503ffc60c4f89798d3f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 285.54544825009145,
+                "height": 291.9621998961609
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-postoffice-4views-v2/NW.max@2x.png",
+              "width": 571,
+              "height": 584,
+              "sha256": "e2338e5f4bf59d0be616b2ad0f21310f67893fe0aa8b91761b1e9474475927bc",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "world:house_5",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_5-4views-v1.png",
+      "sheetSha256": "9f5b2462c52020b452090de3a58aafa9b242c11f52b050c39bee60bddd60fddc",
+      "width": 1254,
+      "height": 1254,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "world:house_5",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "unknown",
+        "originalConfiguredCSS": {
+          "left": -113.54175,
+          "top": -143.30925,
+          "right": 115.50734999999999,
+          "bottom": 55.26359999999999,
+          "width": 229.04909999999998,
+          "height": 198.57285
+        },
+        "originalNormalMaxCSS": {
+          "left": -119.2188375,
+          "top": -150.4747125,
+          "right": 121.28271749999999,
+          "bottom": 58.02677999999999,
+          "width": 240.501555,
+          "height": 208.50149249999998
+        },
+        "originalFacingSizes": [
+          {
+            "id": "world:house_5",
+            "direction": null,
+            "configuredCSS": {
+              "left": -113.54175,
+              "top": -143.30925,
+              "right": 115.50734999999999,
+              "bottom": 55.26359999999999,
+              "width": 229.04909999999998,
+              "height": 198.57285
+            },
+            "normalMaxCSS": {
+              "left": -119.2188375,
+              "top": -150.4747125,
+              "right": 121.28271749999999,
+              "bottom": 58.02677999999999,
+              "width": 240.501555,
+              "height": 208.50149249999998
+            }
+          }
+        ],
+        "firstNativeWidth": 538,
+        "configuredCSSPerNativePixel": 0.4257418215613383,
+        "normalMaxCSSPerNativePixel": 0.4470289126394052,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 66,
+            "top": 56,
+            "width": 538,
+            "height": 502
+          },
+          "alpha": {
+            "clear": 192851,
+            "partial": 199998,
+            "opaque": 280,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 187964,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 5,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 4
+          },
+          "clearMargin": 27,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NE.native.png",
+            "width": 538,
+            "height": 502,
+            "sha256": "5daaae34f393bb4ccae7490d23bd116190b55654a100fd52b244090ccb5e35bd",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 229.04909999999998,
+                "height": 213.72239442379183
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NE.configured.png",
+              "width": 229,
+              "height": 214,
+              "sha256": "de15bcc904377af3f54a8ddf0e74398956a4e8ceb5fa38338044efcacd4d2663",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 229.04909999999998,
+                "height": 213.72239442379183
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NE.configured@2x.png",
+              "width": 458,
+              "height": 427,
+              "sha256": "b64bde123406adeba4a3aaa06effa0469663779719fb6fbf869d7dc80bda110e",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 240.501555,
+                "height": 224.4085141449814
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NE.max.png",
+              "width": 241,
+              "height": 225,
+              "sha256": "f6b7ba5637281dbd854f21ecedc23b6420eda0924ca7ad734f87e84c4b7fb4e7",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 240.501555,
+                "height": 224.4085141449814
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NE.max@2x.png",
+              "width": 481,
+              "height": 449,
+              "sha256": "3e0c9a757657bd8a00bd81bbde28236500414e835f6afb71b14724ec09b85af6",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 627,
+            "top": 0,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 676,
+            "top": 87,
+            "width": 531,
+            "height": 481
+          },
+          "alpha": {
+            "clear": 200736,
+            "partial": 192220,
+            "opaque": 173,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 177584,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 15,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 19
+          },
+          "clearMargin": 51,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SE.native.png",
+            "width": 531,
+            "height": 481,
+            "sha256": "152cd3422708b84e9a90a2142d5561dd510b92c3d6216efc8ff6bed77ec3c42f",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 226.06890724907063,
+                "height": 204.7818161710037
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SE.configured.png",
+              "width": 226,
+              "height": 205,
+              "sha256": "1ef82a5dd4b4d697b7dd8e9759c2e8b74225063dd53d041cfe6b154f4b98714a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 226.06890724907063,
+                "height": 204.7818161710037
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SE.configured@2x.png",
+              "width": 452,
+              "height": 409,
+              "sha256": "6260a78149a16d886af4f696a88507c138076f59422ba693073ca250ee24494a",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 237.37235261152415,
+                "height": 215.0209069795539
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SE.max.png",
+              "width": 237,
+              "height": 215,
+              "sha256": "79bca8d51bd6487189d21f349635e8ae4d468290dfdf4baf0d1a3aa3e7b01b76",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 237.37235261152415,
+                "height": 215.0209069795539
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SE.max@2x.png",
+              "width": 475,
+              "height": 430,
+              "sha256": "7b91b90a839afef1f30657fb5a8e576c242a7681a82c546234907e232d42be6f",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 59,
+            "top": 675,
+            "width": 537,
+            "height": 493
+          },
+          "alpha": {
+            "clear": 191799,
+            "partial": 201156,
+            "opaque": 174,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 179699,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 15,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 16
+          },
+          "clearMargin": 35,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SW.native.png",
+            "width": 537,
+            "height": 493,
+            "sha256": "3f51184f6be3c3f4a7768282f65a8bf260201e1661ec199a1cfee3ccf6f992e7",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 228.62335817843865,
+                "height": 209.89071802973976
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SW.configured.png",
+              "width": 229,
+              "height": 210,
+              "sha256": "88363fd50d851ed2c9dfcd9975abe02a6cb5f349c91a00cfc06ab54a81cd8afd",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 228.62335817843865,
+                "height": 209.89071802973976
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SW.configured@2x.png",
+              "width": 457,
+              "height": 420,
+              "sha256": "34fb36fc5c7322c9e2ffdc46187af2aa4900f624f1504dbc1c879ca35a116e1b",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 240.05452608736059,
+                "height": 220.38525393122677
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SW.max.png",
+              "width": 240,
+              "height": 220,
+              "sha256": "97124b6a1379b88ea11b7a857827563391ed5feb5fc971d647c9c8f5e82ac131",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 240.05452608736059,
+                "height": 220.38525393122677
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/SW.max@2x.png",
+              "width": 480,
+              "height": 441,
+              "sha256": "a3be36c88de5a91f5cac8f8d09e36550c48bd856d693ffe63961576e62da93f6",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 627,
+            "top": 627,
+            "width": 627,
+            "height": 627
+          },
+          "sourceRect": {
+            "left": 668,
+            "top": 665,
+            "width": 534,
+            "height": 509
+          },
+          "alpha": {
+            "clear": 195019,
+            "partial": 197901,
+            "opaque": 209,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 180276,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 16,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 20
+          },
+          "clearMargin": 42,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NW.native.png",
+            "width": 534,
+            "height": 509,
+            "sha256": "bac74e36e55dadc9ea6d28f4d5d6cb2c1d6f9585c407ec5c24023245b8eb8037",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 227.34613271375463,
+                "height": 216.70258717472117
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NW.configured.png",
+              "width": 227,
+              "height": 216,
+              "sha256": "bdcef2babc9c29e24363d8f31694c195f1d0b3be5662c605c7caeefa2d1ebbb8",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 227.34613271375463,
+                "height": 216.70258717472117
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NW.configured@2x.png",
+              "width": 455,
+              "height": 434,
+              "sha256": "10710b4cb3da6c1cfb0ec9ab6426205c59cba224507b8932c3202c827ac013fa",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 238.71343934944238,
+                "height": 227.53771653345726
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NW.max.png",
+              "width": 239,
+              "height": 228,
+              "sha256": "17deb52f46ccb9a3ab9e488270f7896037c741d8a5c61335cdb894eeb6db329f",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 238.71343934944238,
+                "height": 227.53771653345726
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/world-house_5-4views-v1/NW.max@2x.png",
+              "width": 477,
+              "height": 455,
+              "sha256": "b5d19d0b0e5ea23833362d2e06419ec5bfb69a983e428be3df236f9ceddb6035",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    }
+  ]
+}

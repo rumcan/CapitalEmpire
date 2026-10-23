@@ -1,0 +1,12 @@
+{
+  "id": "world:house_2",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-926fd4d2-566a-491c-a618-620cc576ea3e.png",
+  "prompt": "Edit the FIRST reference four-view building sheet. SECOND reference is the owner's authoritative dusk town theme. Preserve the SAME building, the four true front/right/back/left rotations, architecture, roof/chimney details and warm interior lights. Retain the cleaned olive-brown house without any decorative white filigree or cobweb-looking eave corners. FIX PACKING: output a SQUARE transparent canvas with a2x2 grid. Each complete building occupies only60percent of its quadrant width AND60percent of its quadrant height; centered in its quadrant with HUGE CLEAR GUTTERS. All sides of every object must have at least15percent of its cell dimension fully transparent. Nothing may touch/cross the horizontal or vertical middle or outer edges. Keep all roof, steps, chimney and integral details complete. Light fixed from SCREEN UPPER RIGHT on all4 views, shadows down-left; early DUSK, interior/exterior practical lamps on, not night, no moonlight. NO Halloween decorations, cobwebs, ghosts, pumpkins, stringlights or spooky signs. Roofs clear of leafscatter. No people, yard, car, terrainplatform, words other than originalbusinesssign, checkerboard, backdrop or broad shadow. Need independently sliceable fourviews, not giant buildings filling every cell.",
+  "references": [
+    "art/theme-consistency/generated/buildings/world-house_2-4views-v2.png",
+    "references/theme-authoritative.png"
+  ],
+  "generated": "2026-10-23",
+  "correction": "Retain the cleaned olive-brown house without any decorative white filigree or cobweb-looking eave corners. + clear square-cell gutters"
+}

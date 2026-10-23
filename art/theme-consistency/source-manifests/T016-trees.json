@@ -1,0 +1,361 @@
+{
+  "version": 1,
+  "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+  "angles": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "policy": "Source PNGs unchanged. Native crops around alpha >= 8 with four pixel padding; faint alpha noise is excluded only from crop bounds. No pixel alpha alteration, resampling, recolouring or generated content. Ground anchors are estimates pending game placement.",
+  "assets": [
+    {
+      "id": "golden-maple-mature-4views",
+      "source": "trees/golden-maple-mature-4views.png",
+      "width": 1536,
+      "height": 1024,
+      "alphaReview": "four nonempty cells checked",
+      "rotationReview": "visual review only; not a geometric 3D guarantee",
+      "gameReview": "pending",
+      "views": [
+        {
+          "direction": "NE",
+          "file": "trees/individual/golden-maple-mature-NE.png",
+          "sourceRect": {
+            "left": 188,
+            "top": 11,
+            "width": 492,
+            "height": 484
+          },
+          "alpha": {
+            "clear": 215368,
+            "partial": 177848
+          },
+          "estimatedAnchor": {
+            "x": 246,
+            "y": 483
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "trees/individual/golden-maple-mature-SE.png",
+          "sourceRect": {
+            "left": 867,
+            "top": 13,
+            "width": 511,
+            "height": 479
+          },
+          "alpha": {
+            "clear": 217561,
+            "partial": 175655
+          },
+          "estimatedAnchor": {
+            "x": 255.5,
+            "y": 478
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "trees/individual/golden-maple-mature-SW.png",
+          "sourceRect": {
+            "left": 188,
+            "top": 517,
+            "width": 517,
+            "height": 474
+          },
+          "alpha": {
+            "clear": 224699,
+            "partial": 168517
+          },
+          "estimatedAnchor": {
+            "x": 258.5,
+            "y": 473
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "trees/individual/golden-maple-mature-NW.png",
+          "sourceRect": {
+            "left": 855,
+            "top": 515,
+            "width": 527,
+            "height": 478
+          },
+          "alpha": {
+            "clear": 223702,
+            "partial": 169514
+          },
+          "estimatedAnchor": {
+            "x": 263.5,
+            "y": 477
+          },
+          "touchesCellEdge": false
+        }
+      ]
+    },
+    {
+      "id": "golden-maple-young-4views",
+      "source": "trees/golden-maple-young-4views.png",
+      "width": 1536,
+      "height": 1024,
+      "alphaReview": "four nonempty cells checked",
+      "rotationReview": "visual review only; not a geometric 3D guarantee",
+      "gameReview": "pending",
+      "views": [
+        {
+          "direction": "NE",
+          "file": "trees/individual/golden-maple-young-NE.png",
+          "sourceRect": {
+            "left": 243,
+            "top": 32,
+            "width": 356,
+            "height": 444
+          },
+          "alpha": {
+            "clear": 305263,
+            "partial": 87953
+          },
+          "estimatedAnchor": {
+            "x": 178,
+            "y": 443
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "trees/individual/golden-maple-young-SE.png",
+          "sourceRect": {
+            "left": 983,
+            "top": 32,
+            "width": 350,
+            "height": 452
+          },
+          "alpha": {
+            "clear": 303982,
+            "partial": 89234
+          },
+          "estimatedAnchor": {
+            "x": 175,
+            "y": 451
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "trees/individual/golden-maple-young-SW.png",
+          "sourceRect": {
+            "left": 242,
+            "top": 527,
+            "width": 369,
+            "height": 434
+          },
+          "alpha": {
+            "clear": 309688,
+            "partial": 83528
+          },
+          "estimatedAnchor": {
+            "x": 184.5,
+            "y": 433
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "trees/individual/golden-maple-young-NW.png",
+          "sourceRect": {
+            "left": 962,
+            "top": 525,
+            "width": 371,
+            "height": 437
+          },
+          "alpha": {
+            "clear": 308736,
+            "partial": 84480
+          },
+          "estimatedAnchor": {
+            "x": 185.5,
+            "y": 436
+          },
+          "touchesCellEdge": false
+        }
+      ]
+    },
+    {
+      "id": "orange-oak-mature-4views",
+      "source": "trees/orange-oak-mature-4views.png",
+      "width": 1536,
+      "height": 1024,
+      "alphaReview": "four nonempty cells checked",
+      "rotationReview": "visual review only; not a geometric 3D guarantee",
+      "gameReview": "pending",
+      "views": [
+        {
+          "direction": "NE",
+          "file": "trees/individual/orange-oak-mature-NE.png",
+          "sourceRect": {
+            "left": 33,
+            "top": 6,
+            "width": 720,
+            "height": 490
+          },
+          "alpha": {
+            "clear": 181130,
+            "partial": 212086
+          },
+          "estimatedAnchor": {
+            "x": 360,
+            "y": 489
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "trees/individual/orange-oak-mature-SE.png",
+          "sourceRect": {
+            "left": 823,
+            "top": 5,
+            "width": 694,
+            "height": 490
+          },
+          "alpha": {
+            "clear": 182194,
+            "partial": 211022
+          },
+          "estimatedAnchor": {
+            "x": 347,
+            "y": 489
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "trees/individual/orange-oak-mature-SW.png",
+          "sourceRect": {
+            "left": 29,
+            "top": 512,
+            "width": 724,
+            "height": 497
+          },
+          "alpha": {
+            "clear": 183906,
+            "partial": 209310
+          },
+          "estimatedAnchor": {
+            "x": 362,
+            "y": 496
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "trees/individual/orange-oak-mature-NW.png",
+          "sourceRect": {
+            "left": 804,
+            "top": 517,
+            "width": 703,
+            "height": 487
+          },
+          "alpha": {
+            "clear": 188873,
+            "partial": 204343
+          },
+          "estimatedAnchor": {
+            "x": 351.5,
+            "y": 486
+          },
+          "touchesCellEdge": false
+        }
+      ]
+    },
+    {
+      "id": "copper-beech-4views",
+      "source": "trees/copper-beech-4views.png",
+      "width": 1448,
+      "height": 1086,
+      "alphaReview": "four nonempty cells checked",
+      "rotationReview": "visual review only; not a geometric 3D guarantee",
+      "gameReview": "pending",
+      "views": [
+        {
+          "direction": "NE",
+          "file": "trees/individual/copper-beech-NE.png",
+          "sourceRect": {
+            "left": 160,
+            "top": 31,
+            "width": 534,
+            "height": 487
+          },
+          "alpha": {
+            "clear": 234411,
+            "partial": 158569
+          },
+          "estimatedAnchor": {
+            "x": 267,
+            "y": 486
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SE",
+          "file": "trees/individual/copper-beech-SE.png",
+          "sourceRect": {
+            "left": 786,
+            "top": 31,
+            "width": 540,
+            "height": 488
+          },
+          "alpha": {
+            "clear": 234895,
+            "partial": 158111
+          },
+          "estimatedAnchor": {
+            "x": 270,
+            "y": 487
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "SW",
+          "file": "trees/individual/copper-beech-SW.png",
+          "sourceRect": {
+            "left": 155,
+            "top": 555,
+            "width": 544,
+            "height": 484
+          },
+          "alpha": {
+            "clear": 232496,
+            "partial": 160507
+          },
+          "estimatedAnchor": {
+            "x": 272,
+            "y": 483
+          },
+          "touchesCellEdge": false
+        },
+        {
+          "direction": "NW",
+          "file": "trees/individual/copper-beech-NW.png",
+          "sourceRect": {
+            "left": 782,
+            "top": 554,
+            "width": 544,
+            "height": 485
+          },
+          "alpha": {
+            "clear": 235414,
+            "partial": 157592
+          },
+          "estimatedAnchor": {
+            "x": 272,
+            "y": 484
+          },
+          "touchesCellEdge": false
+        }
+      ]
+    }
+  ]
+}

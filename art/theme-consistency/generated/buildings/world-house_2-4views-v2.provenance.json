@@ -1,0 +1,12 @@
+{
+  "id": "world:house_2",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-7743f6a8-9ea5-48b1-a5ce-2b40035ff791.png",
+  "prompt": "Edit target is reference1: the four-view sheet of the olive-brown two-storey house. Reference2 is the owner's authoritative dusk town theme. Keep the same four building views, camera, warm windows, roof/chimney shape, siding, footprint and fixed upper-right side sunlight. REMOVE EVERY spiderweb/cobweb-looking white filigree and triangular fan at the corners under ALL gable eaves in EVERY quadrant. Replace those spots with PLAIN straight clean solid painted timber fascias and simple ordinary support timber, NO decorative lacy brackets. Also remove the scattered orange leaves from all roofs so no roof detail can read as seasonal decoration. This is an ordinary lived-in house at EARLY DUSK with warm windows/porch lamps on, absolutely no Halloween theme, pumpkins, strings, webs, wreaths, spooky props or symbols. Fixed camera and screen-upper-right sun, never turn the light. Strict clean four-view 2x2 sheet with genuine alpha background. Give each building more clear transparent space: scale them uniformly within cells enough for at least40pixels transparent margin at every cell edge. No neighboring objects, people, captions, base platform or broad shadow. Preserve all original house architecture outside the removal areas.",
+  "references": [
+    "world-house_2-4views-v1.png",
+    "references/theme-authoritative.png"
+  ],
+  "generated": "2026-10-23",
+  "correction": "Remove retained cobweb/filigree details and roof leaf decorations; improve spacing"
+}

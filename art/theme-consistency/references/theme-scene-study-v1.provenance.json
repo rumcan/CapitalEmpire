@@ -1,0 +1,9 @@
+{
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-4349c2c3-2faf-41db-a1fd-1957638da4cd.png",
+  "prompt": "Use the USER-ATTACHED LANDSCAPE AUTUMN ISOMETRIC TOWN STREET IMAGE with the MAPLE BEAN cafe as the ONLY theme reference. IMPORTANT: ignore any unrelated tall pink Auri brand-board image appearing in tool context; that is NOT a style reference and must never influence this task. Recreate the attached warm autumn Maple Bean street scene as a coherent full scene reference for future building/tree/car sprites: preserve its 2:1 parallel isometric camera and scale, the slate-blue two-storey corner shop upper left, brown brick MAPLE BEAN cafe centre-right, honey timber gabled cottage lower-left, timber cabin upper-right, rich scarlet/gold autumn maples, blue-green conifers, parked cars, sidewalks and crossing. No people. Preserve architecture, warm restrained cinematic small-town materials, dark shingled roofs, detailed siding/brick, readable game-scale proportions. Sunlight fixed from SCREEN UPPER RIGHT, warming right-facing roof/facade planes; opposing left-facing planes cooler and shaded, cast shadows project toward SCREEN LOWER LEFT. No camera perspective convergence. Exact user image is the authoritative reference; this output is a generated full-scene style study, not a claim of an identical original. Do not add sprites, captions, color swatches or UI. Full scene in landscape composition.",
+  "input": "User-attached Maple Bean autumn street image in conversation; unrelated Auri image explicitly excluded",
+  "role": "Generated full-scene study; NOT the original theme attachment",
+  "generated": "2026-10-23",
+  "light": "screen upper-right to lower-left"
+}

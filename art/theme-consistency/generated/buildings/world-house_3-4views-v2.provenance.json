@@ -1,0 +1,12 @@
+{
+  "id": "world:house_3",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-668efe60-82b8-41d1-87b1-e96393769092.png",
+  "prompt": "Fix ONLY sheet packing of the first input, preserving its same four views of the same orange-brown single-storey cottage and dusk materials. Second input is the authoritative town theme. The current first sheet is WRONG because houses touch/cross the middle horizontal divider. Output FOUR COMPLETE INDEPENDENT SPRITES in a strict 2x2 arrangement on a SQUARE transparent canvas. Shrink each house to only about 60 percent of its cell's width AND 60 percent of cell height; centre within the quadrant. Leave WIDE completely transparent gutters between sprites, roughly 15 percent of every quadrant dimension on all sides. No house, chimney, attached bush or steps may enter the middle cross gutter or touch cell edges. Four views of the SAME building NE SE SW NW with proper back faces, entireroof/chimney/steps visible. Keep fine native detail, no cropping. Preserve fixed light from screen upper-right and dusk warm windows/exterior lamps already on; not midnight, no moonlight. Absolutely NO Halloween decorations, webs, pumpkins, spooky details, string garlands, or scattered roof leaves. Plain clean roof fascias. Alpha fully transparent outside isolated cottage silhouettes. No scenery, ground platforms, labels, borders, checkerboard, people or cars. Do not enlarge houses to fill canvas; the large empty margins are essential for slicing.",
+  "references": [
+    "art/theme-consistency/generated/buildings/world-house_3-4views-v1.png",
+    "references/theme-authoritative.png"
+  ],
+  "generated": "2026-10-23",
+  "correction": "Large margins to avoid cross-row silhouette clipping"
+}

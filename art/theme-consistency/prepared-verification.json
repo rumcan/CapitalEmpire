@@ -1,0 +1,98 @@
+{
+  "task": "T017",
+  "scope": "File and crop checks only; flagged boundary intersections require independent visual review",
+  "activeSheets": [
+    {
+      "id": "world:house_0",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_0-4views-v1.png",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "rowBothSidesVisible": 0,
+      "columnBothSidesVisible": 0,
+      "warnings": [
+        "SE: insufficient clear margin for four-pixel padding"
+      ]
+    },
+    {
+      "id": "world:house_1",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_1-4views-v1.png",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "rowBothSidesVisible": 0,
+      "columnBothSidesVisible": 0,
+      "warnings": [
+        "NW: insufficient clear margin for four-pixel padding"
+      ]
+    },
+    {
+      "id": "world:house_2",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_2-4views-v2.png",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "rowBothSidesVisible": 14,
+      "columnBothSidesVisible": 0,
+      "warnings": [
+        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NE: insufficient clear margin for four-pixel padding",
+        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SE: insufficient clear margin for four-pixel padding",
+        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of row split: inspect for cross-row artwork"
+      ]
+    },
+    {
+      "id": "world:house_3",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_3-4views-v1.png",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "rowBothSidesVisible": 284,
+      "columnBothSidesVisible": 0,
+      "warnings": [
+        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NE: insufficient clear margin for four-pixel padding",
+        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SE: insufficient clear margin for four-pixel padding",
+        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SW: insufficient clear margin for four-pixel padding",
+        "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of row split: inspect for cross-row artwork"
+      ]
+    },
+    {
+      "id": "world:house_4",
+      "sheet": "art/theme-consistency/generated/buildings/world-house_4-4views-v1.png",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "rowBothSidesVisible": 33,
+      "columnBothSidesVisible": 0,
+      "warnings": [
+        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NE: insufficient clear margin for four-pixel padding",
+        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of row split: inspect for cross-row artwork"
+      ]
+    }
+  ],
+  "themeReferencePreserved": {
+    "file": "art/theme-consistency/references/theme-authoritative.png",
+    "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
+    "selectedByOwner": "C:/Users/Francois Smit/.codex/generated_images/01a15fe8-e26f-72b1-94e3-874ef3d8db8b/exec-4349c2c3-2faf-41db-a1fd-1957638da4cd.png",
+    "timeOfDay": "dusk; warm low side sunlight, windows and lamps already on; not moonlit night",
+    "light": "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
+    "season": "autumn foliage permitted, Halloween decorations prohibited"
+  },
+  "checkedNativeViews": 20,
+  "checkedScaledVariants": 80,
+  "sourceSheetsConserved": true,
+  "exactOddDimensionQuadrantsVerified": true,
+  "cropCellBoundariesVerified": true,
+  "pixelConservationVerified": true,
+  "aspectPreservingResizeVerified": true,
+  "visualApproval": false,
+  "gameScaleRegistered": false,
+  "failures": []
+}

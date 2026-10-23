@@ -1,0 +1,18 @@
+T017: IMAGE DELIVERY FOR THE IMPLEMENTING AI
+
+Authoritative owner-selected reference: references/theme-authoritative.png.
+Theme: early dusk with warm windows/exterior lamps on; low side sun from screen upper-right, shadows lower-left. No moonlight/night treatment. Absolutely no Halloween decorations or people. Autumn foliage is allowed.
+
+Original art IS in this repo, mostly in atlases. inventory.json maps every source sprite to its original library/atlas/crop, source hash and exact configured/normal-UI maximum bounds. exports/ contains separate native, configured and largest-normal-UI PNG references at DPR1 and2. These are source references, NOT new generated replacements.
+
+The generation order is ALL buildings, then ALL trees, then ALL vehicles. queue.json and jobs.json record 305 subjects (190 buildings,58 trees,57 vehicles). Existing directional aliases are grouped.14 composite house lots remain source records rather than separate house designs. Source-only foliage has no invented runtime game size.
+
+New source sheets are generated/<category>/<subject>-4views-vN.png. Preserve all original sources and older sheets. Use each subject's queue.sheet or generated-manifest.json selection, not an arbitrary filename. Some v1s retain rejected seasonal details, poor spacing or reversed signs; corrected v2/v3 sheets supersede those drafts.
+
+scripts/assets/prep-theme-consistency.mjs extracts native views and uniformly calibrated configured/max previews, without changing source sheets. Pixel density is shared across a subject's four rotations; hidden-side sizes remain estimated. These are not exact final registered dimensions until placement scales and anchors are checked in game. Scripts do not register replacements in libraries, alter saves, modify scene pools or implement four-direction placement.
+
+generated-manifest.json separates file checks, alpha boundary warnings, visual approval and game placement. Treat padding warnings and actual cross-cell clipping differently. Transparent image previews may show hidden RGB haze even where alpha is0: inspect a grey composite or alpha values before diagnosing a backdrop. Signs must read normally, never mirrored.
+
+One subject goes to imagegen at a time with the exact authoritative reference and that subject's exported game-size identity images. Exact prompts are jobs/*.prompt.txt; generation-specific provenance sits beside every generated sheet. plan-theme-consistency.mjs refreshes the resumable jobs without resetting queue approval. Remaining subjects are pending, not falsely marked generated.
+
+User explicitly assigns implementation to another AI and prioritizes generation here. Do not make runtime changes as part of this image task. All new work is on arena/T017-theme-consistent-library; never push main from this task.

@@ -1,0 +1,18 @@
+{
+  "task": "T017",
+  "jobs": 305,
+  "promptFilesVerified": 305,
+  "categoryOrderVerified": true,
+  "categorySpecificBriefsVerified": true,
+  "sourceOnlyScalePolicyVerified": true,
+  "authoritativeThemeSha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2",
+  "counts": {
+    "requested": 305,
+    "generated": 11,
+    "pendingGeneration": 294,
+    "prepared": 11,
+    "alphaFlagged": 4,
+    "visuallyReviewed": 0
+  },
+  "failures": []
+}
