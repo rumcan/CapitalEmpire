@@ -49,6 +49,8 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked)
   out[o + 8] = t[0]; out[o + 9] = alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' ? -1 : worldY(d.x, d.y);
   clip(out, o + 12, i, j);
+  // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0) corners
+  out[o + 16] = worldX(d0.x1, d0.y1); out[o + 17] = worldY(d0.x1, d0.y1); out[o + 18] = worldX(d0.x0, d0.y1); out[o + 19] = worldX(d0.x1, d0.y0);
 }
 /** the sprite's contact shadow (shadow-shape.ts): its shape from the footprint (2 m tiles, so the half extents in metres are the tile
  *  spans), a parked car's shrunk like its picture; none packs as a zero-size shape */

@@ -3,8 +3,9 @@
  *  Coordinates are world px. */
 import { ATLAS_PAGES, ATLAS_SIZE } from './library';
 
-/** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, spare, clip x0 y0 x1 y1 (world px) */
-export const SPRITE_STRIDE = 16;
+/** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
+ *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
+export const SPRITE_STRIDE = 20;
 /** floats per shadow instance: centre x y (world px), half extents hx hy (metres along the map's axes), core, feather (metres), round (0 / 1),
  *  spare, clip x0 y0 x1 y1 (world px) */
 export const SHADOW_STRIDE = 12;
@@ -53,21 +54,29 @@ void main() {
   if (vW.x < vClip.x || vW.y < vClip.y || vW.x >= vClip.z || vW.y >= vClip.w) discard;
   vec4 c = texture(uAtlas, vUV); if (c.a < 0.004) discard; o = c * vAlpha;
 }`;
-// cast shadows (cast-shadow.ts): each sprite's silhouette sheared onto the ground about its foot line (aMisc.w, world px; negative: casts none):
-// a point h px above the foot moves to (x + h * uCast.x, foot + h * uCast.y); uCast.z is the darkness. Each tile's copy of a sprite casts only
-// the part of the sprite in that tile (clipped in the sprite's own place), so a sprite over several tiles casts once
+// cast shadows (cast-shadow.ts): each sprite's silhouette laid on the ground away from the sun. Every column of the picture stands on its own
+// foot: the front edges of its footprint diamond (aFoot: the near corner x y, the left and right corners' x, world px; past the corners the
+// corner's height), so a long diagonal sprite (a fence) or a building's front corner casts from where it stands, not from one line through its
+// middle. A point h px above its foot moves to (x + h * uCast.x, foot + h * uCast.y); the picture below its foot (steps, shrubs in front) casts
+// nothing. Drawn as five vertical slices (the rect's sides and the three corners), each an exact affine map. aMisc.w < 0: casts none. Each
+// tile's copy of a sprite casts only the part of the sprite in that tile (clipped in the sprite's own place), so a sprite over several tiles
+// casts once
 const VS_CAST = `#version 300 es
 layout(location=0) in vec4 aRect; layout(location=1) in vec4 aUV; layout(location=2) in vec4 aMisc; layout(location=3) in vec4 aClip;
+layout(location=4) in vec4 aFoot;
 uniform vec4 uCam; uniform vec2 uScreen; uniform vec4 uCast;
 out vec3 vUV; out float vAlpha; out vec2 vW; flat out vec4 vClip;
+float foot(float x) { float cx = clamp(x, aFoot.z, aFoot.w); return aFoot.y - 0.5 * abs(cx - aFoot.x); }
 void main() {
-  vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1);
-  vec2 w = mix(aRect.xy, aRect.zw, c);
-  float h = aMisc.w - w.y;
-  vec2 g = vec2(w.x + h * uCast.x, aMisc.w + h * uCast.y);
+  int col = gl_VertexID >> 1; bool top = (gl_VertexID & 1) == 0;
+  float l = clamp(aFoot.z, aRect.x, aRect.z), b = clamp(aFoot.x, aRect.x, aRect.z), r = clamp(aFoot.w, aRect.x, aRect.z);
+  float x = col == 0 ? aRect.x : col == 1 ? l : col == 2 ? b : col == 3 ? r : aRect.z;
+  float f = foot(x), y = top ? aRect.y : clamp(f, aRect.y, aRect.w), h = max(f - y, 0.0);
+  vec2 g = vec2(x + h * uCast.x, f + h * uCast.y);
   vec2 s = (g - uCam.xy) * uCam.z + uScreen * 0.5;
+  vec2 c = vec2((x - aRect.x) / max(aRect.z - aRect.x, 1e-3), (y - aRect.y) / max(aRect.w - aRect.y, 1e-3));
   gl_Position = aMisc.w < 0.0 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
-  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y; vW = w; vClip = aClip;
+  vUV = vec3(mix(aUV.xy, aUV.zw, c), aMisc.x); vAlpha = aMisc.y; vW = vec2(x, y); vClip = aClip;
 }`;
 const FS_CAST = `#version 300 es
 precision highp float; precision mediump sampler2DArray;
@@ -81,12 +90,13 @@ void main() {
 // the shape's 2:1 diamond bound: 32 world px per metre across, 16 down (x = (X - Y) * 32, y = (X + Y) * 16, X and Y in metres)
 const VS_SHADOW = `#version 300 es
 layout(location=0) in vec4 aShape; layout(location=1) in vec4 aLook; layout(location=2) in vec4 aClip;
-uniform vec4 uCam; uniform vec2 uScreen;
+uniform vec4 uCam; uniform vec2 uScreen; uniform vec2 uShift;
 out vec2 vOff; out vec2 vW; flat out vec4 vShape; flat out vec4 vLook; flat out vec4 vClip;
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1) * 2.0 - 1.0;
   float e = aShape.z + aShape.w + aLook.y * 3.2;
-  vec2 off = c * vec2(e * 32.0 + 2.0, e * 16.0 + 2.0), w = aShape.xy + off;
+  // uShift leans the shape toward the cast shadows' side (screen px per metre of its half extents): the sun is on the other side
+  vec2 off = c * vec2(e * 32.0 + 2.0, e * 16.0 + 2.0), w = aShape.xy + uShift * (aShape.z + aShape.w) + off;
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   vOff = off; vW = w; vShape = aShape; vLook = aLook; vClip = aClip;
@@ -143,7 +153,7 @@ export class GLRenderer {
     this.quad = this.program(VS_QUAD, FS_QUAD, ['uRect', 'uCam', 'uScreen', 'uUV', 'uTex', 'uMask', 'uMode', 'uAlpha']);
     this.sprite = this.program(VS_SPRITE, FS_SPRITE, ['uCam', 'uScreen', 'uMinPx', 'uAtlas']);
     this.cast = this.program(VS_CAST, FS_CAST, ['uCam', 'uScreen', 'uCast', 'uAtlas']);
-    this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength']);
+    this.shadow = this.program(VS_SHADOW, FS_SHADOW, ['uCam', 'uScreen', 'uStrength', 'uShift']);
     this.point = this.program(VS_POINT, FS_POINT, ['uCam', 'uScreen', 'uSize', 'uSoft']);
     this.dyn = gl.createBuffer()!;
     this.maskTex = gl.createTexture()!; this.emptyTex = gl.createTexture()!;
@@ -245,15 +255,15 @@ export class GLRenderer {
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.atlas); gl.uniform1i(pr.u.uAtlas, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     const B = SPRITE_STRIDE * 4, o = firstFloat * 4;
-    for (let i = 0; i < 4; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, B, o + i * 16); gl.vertexAttribDivisor(i, 1); }
-    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
-    for (let i = 0; i < 4; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
+    for (let i = 0; i < 5; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, B, o + i * 16); gl.vertexAttribDivisor(i, 1); }
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 10, count);
+    for (let i = 0; i < 5; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++;
   }
   /** instances at float offset `firstFloat` of the uploaded stream, as contact shadows; strength scales their darkness (1 = the builder's) */
-  drawShadows(firstFloat: number, count: number, strength = 1) {
+  drawShadows(firstFloat: number, count: number, strength = 1, shiftX = 0, shiftY = 0) {
     if (!count || strength <= 0) return; const gl = this.gl, pr = this.shadow;
-    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uStrength, strength); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
+    gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uStrength, strength); gl.uniform2f(pr.u.uShift, shiftX, shiftY); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);
     for (let i = 0; i < 3; i++) { gl.enableVertexAttribArray(i); gl.vertexAttribPointer(i, 4, gl.FLOAT, false, SHADOW_STRIDE * 4, firstFloat * 4 + i * 16); gl.vertexAttribDivisor(i, 1); }
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
     for (let i = 0; i < 3; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }

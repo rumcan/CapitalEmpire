@@ -24,7 +24,7 @@ export interface NightSettings {
   types: Record<LightKey, LightType>;
 }
 export const NIGHT_DEFAULT: NightSettings = {
-  mode: 'clock', dusk: 18, night: 20, dawn: 5, day: 7, every: 3,
+  mode: 'off', dusk: 18, night: 20, dawn: 5, day: 7, every: 3,
   tint: '#4656c8', strength: 0.7, desat: 0.6, dark: 0.3, feather: 0.65, warmth: 0.35, glowSize: 2.2, glowStrength: 0.95,
   types: { lamp: { r: 8, i: 1 }, porch: { r: 5, i: 0.9 }, window: { r: 7, i: 0.85 }, neon: { r: 9, i: 1 }, pumpkin: { r: 2.6, i: 0.9 }, lantern: { r: 3.2, i: 0.95 }, stand: { r: 3.6, i: 0.85 }, fire: { r: 4.5, i: 1 } },
 };
