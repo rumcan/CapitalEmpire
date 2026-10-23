@@ -238,6 +238,11 @@ LEAD.md).
 5. The crowd patches (3d), then P2.
 
 ## 7. Progress (update this as you go)
+- 2026-10-23 15:10 UTC: **the stop is RUN's daily 3D cap, not storage.** `rundot game generate-3d ... --json` answers
+  `[AI_POLICY_BUDGET_EXHAUSTED] Daily user credit cap reached for threeDGen` (without `--json` it only says "Too Many Requests").
+  Storage is fine: `rundot assets list` shows 0.0 B against the quota (game: 218 assets, 40 of them 3D; creator: 68 images). So about
+  **13 models a day**; `make-cast-loop.sh` now waits up to 24 h (48 tries, 30 min apart) to get past the reset. To check the cap
+  yourself: the capped request above with `--max-credits 1` (refused at once while capped; it cannot spend more than 1 credit).
 - 2026-10-23 13:30 UTC: **11 people done** (spectators: polo visor, pink polo, bucket hat, sundress, windbreaker; staff: marshal (m),
   volunteer; town: mechanic, nurse, businessman), checked. Remade later (new opening words, the no-ground prompt): the plaid man and the
   security guard (RUN fused a ground / balls to their feet; the bad takes are in `output/people-test/bad/`). **RUN's rate limit** stopped

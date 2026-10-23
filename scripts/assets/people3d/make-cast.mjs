@@ -38,8 +38,9 @@ for (const p of cast.people) {
   if (!renderOnly && !has('model.glb')) {
     const r = run('make-person-3d.mjs', [p.id, p.look, '--root', p.root, '--model-only']);
     if (!r.ok || !has('model.glb')) {
-      // RUN's rate limit (a cap: about 13 models on 2026-10-23): the rest would fail too, so the batch stops (exit 3; make-cast-loop.sh waits and retries)
-      if (/rate limit|too many requests/i.test(r.all)) { log(`${p.id}: RUN rate limit, batch stopped`); process.exit(3); }
+      // RUN's daily 3D cap (AI_POLICY_BUDGET_EXHAUSTED "Daily user credit cap reached for threeDGen", shown without --json as "Too Many
+      // Requests": 13 models on 2026-10-23): the rest would fail too, so the batch stops (exit 3; make-cast-loop.sh waits for the next day)
+      if (/rate limit|too many requests|AI_POLICY_BUDGET_EXHAUSTED|credit cap/i.test(r.all)) { log(`${p.id}: RUN rate limit, batch stopped`); process.exit(3); }
       log(`${p.id}: model FAILED: ${r.out}`); continue;
     }
     log(`${p.id}: model ok`);
