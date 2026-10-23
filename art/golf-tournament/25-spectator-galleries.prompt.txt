@@ -1,0 +1,15 @@
+Use case: stylized-concept
+Asset type: Capital Empire golf tournament game sprite sheet.
+Primary request: Produce one square transparent PNG sprite sheet containing exactly FOUR separate compact spectator-group sprites, arranged in a strict 2-by-2 grid. Each compact group is one sprite.
+Scene/backdrop: True fully transparent background, empty transparent space everywhere outside the figures and their held or supporting objects.
+Subjects by quadrant, exactly:
+TOP LEFT: Three adult golf patrons seated on three green folding spectator chairs, calmly watching play. Show all three complete people and chairs, including feet and chair legs.
+TOP RIGHT: Four adult golf patrons standing together quietly behind one short gallery rope with its two simple posts. Show all four complete people and feet.
+BOTTOM LEFT: A family of exactly two adults and one child walking together, wearing sun hats, one adult carrying a folded golf spectator chair. Show all three complete people and feet.
+BOTTOM RIGHT: Three cheering golf patrons applauding with hands held naturally. No signs. Show all three complete people and feet.
+Style/medium: Detailed hand-painted, 3D-like premium city-builder game illustration matching Capital Empire, crisp material textures and highly readable silhouettes. Realistic charming human proportions, natural anatomically coherent faces, arms, hands and legs.
+Camera: Consistent orthographic isometric camera, 45-degree azimuth and 30-degree elevation, full figures viewed from above. Identical camera and figure scale across all four groups.
+Composition/framing: Square canvas. Each group is compact and centered wholly within its own quadrant. Four clearly separated independently usable group sprites. Generous transparent outer margins and a wide completely transparent cross-shaped gutter between all four quadrants. No clipping; every head, hat, hand, foot, chair and rope post stays inside its own quadrant.
+Lighting/mood: Soft daylight from upper left. Calm golf tournament atmosphere.
+Color palette: Green, cream, navy and khaki golf apparel, natural skin tones, green fabric folding chairs.
+Constraints: True fully transparent PNG background. No ground plane, base tile, grass patch, scenery, backdrop, fog, glow, cast shadows beyond the object silhouettes, white or colored edge halos, checkerboard, captions, labels, text, logos, borders or watermark. No extra people or objects. Exactly four groups, in the specified positions and with the specified counts.
