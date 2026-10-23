@@ -156,7 +156,14 @@ export class SimClient {
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
-  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][]) { this.post({ t: 'golf', on, tier, rep, land }); }
+  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][]) { this.post({ t: 'golf', on, tier, rep, land }); this.golfOn = on; this.sendTownDay(); }
+  /** the town day (LEAD.md M1): in a golf game the town lives a day of townMinutes (real minutes at 1x; one sim second is one game minute)
+   *  with its own commute, separate from the season; townTraffic scales its lot trips. A classic game keeps the classic day (DAY). */
+  golfOn = false; townMinutes = 4; townTraffic = 1;
+  /** the town day's length in sim seconds, as last sent */
+  dayLen = 1440;
+  setTownDay(minutes: number, traffic: number) { this.townMinutes = minutes; this.townTraffic = traffic; this.sendTownDay(); }
+  private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1 }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */

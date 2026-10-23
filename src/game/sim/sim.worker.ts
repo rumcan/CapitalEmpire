@@ -148,6 +148,7 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'net': netOps(m.ops); break;
       case 'terrain': terrainOps(m); break;
       case 'target': city.sim.setTarget(m.n); forcePost = true; break;
+      case 'townDay': city.sim.dayLen = Math.max(24, m.dayLen); city.sim.townTraffic = Math.max(0, m.traffic); forcePost = true; break;
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;
