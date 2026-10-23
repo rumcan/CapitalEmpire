@@ -44,7 +44,59 @@ window.rig = async (base, person, keep) => {
   if (oldMeshes.some(m => m.skeleton.bones.some((b, i) => b !== sourceSkeleton.bones[i]))) throw new Error('Several skeletons in the base');
   // the new geometry is baked to world space (not the base mesh's bind space), so the inverse binds are worked out afresh
   const skeleton = new T.Skeleton(sourceSkeleton.bones); skeleton.calculateInverses();
-  const targetBox = new T.Box3().setFromObject(original.scene), sourceBox = new T.Box3().setFromObject(generated.scene);
+  // the new mesh cleaned first, so the bounds are the person's alone: plain float attributes, in world space, and only the person's own
+  // pieces (connected parts): the body (the tallest part) and parts big enough beside it; a flat wide plate (RUN gave a "golf" prompt a
+  // patch of grass with golf balls under the feet, 2026-10-23) and specks go
+  let dropped = 0, plates = 0;
+  const cleaned = newMeshes.map(mesh => {
+    const geometry = mesh.geometry.clone();
+    // RUN's models come quantized (KHR_mesh_quantization: positions, normals and UVs as normalized integers): writing metres back into those
+    // clamps them to [-1, 1], so every attribute is made plain floats first
+    for (const [name, at] of Object.entries(geometry.attributes)) {
+      if (at.array instanceof Float32Array && !at.normalized && !at.isInterleavedBufferAttribute) continue;
+      const f = new Float32Array(at.count * at.itemSize);
+      for (let i = 0; i < at.count; i++) for (let k = 0; k < at.itemSize; k++) f[i * at.itemSize + k] = at.getComponent(i, k);
+      geometry.setAttribute(name, new T.BufferAttribute(f, at.itemSize));
+    }
+    geometry.applyMatrix4(mesh.matrixWorld);
+    const input = geometry.attributes.position;
+    let tris = geometry.index ? Array.from(geometry.index.array) : Array.from({ length: input.count }, (_, i) => i);
+    // the connected parts (welded only to find what is connected; the UV seams stay)
+    const parents = new Int32Array(input.count), weld = new Map();
+    geometry.computeBoundingBox(); const quantum = Math.max(geometry.boundingBox.max.y - geometry.boundingBox.min.y, 1e-6) * 1e-5;
+    const find = i => { while (parents[i] !== i) { parents[i] = parents[parents[i]]; i = parents[i]; } return i; };
+    for (let i = 0; i < input.count; i++) {
+      parents[i] = i;
+      const key = [input.getX(i), input.getY(i), input.getZ(i)].map(v => Math.round(v / quantum)).join(',');
+      if (weld.has(key)) parents[i] = find(weld.get(key)); else weld.set(key, i);
+    }
+    for (let i = 0; i < tris.length; i += 3) { const r = find(tris[i]); parents[find(tris[i + 1])] = r; parents[find(tris[i + 2])] = r; }
+    const parts = new Map();
+    for (let i = 0; i < tris.length; i++) {
+      const r = find(tris[i]), v = tris[i];
+      let q = parts.get(r); if (!q) parts.set(r, q = { tris: 0, lo: [Infinity, Infinity, Infinity], hi: [-Infinity, -Infinity, -Infinity] });
+      if (i % 3 === 0) q.tris++;
+      const xyz = [input.getX(v), input.getY(v), input.getZ(v)]; for (let k = 0; k < 3; k++) { q.lo[k] = Math.min(q.lo[k], xyz[k]); q.hi[k] = Math.max(q.hi[k], xyz[k]); }
+    }
+    let body = null; for (const q of parts.values()) if (!body || q.hi[1] - q.lo[1] > body.hi[1] - body.lo[1]) body = q;
+    const bodyH = body.hi[1] - body.lo[1], keepPart = new Map();
+    for (const [r, q] of parts) {
+      const h = q.hi[1] - q.lo[1], w = Math.max(q.hi[0] - q.lo[0], q.hi[2] - q.lo[2]);
+      const plate = q !== body && h < 0.05 * bodyH && w > 0.15 * bodyH;
+      if (plate) plates++;
+      keepPart.set(r, q === body || (!plate && q.tris >= Math.max(12, body.tris * keep)));
+    }
+    const kept = [];
+    for (let i = 0; i < tris.length; i += 3) if (keepPart.get(find(tris[i]))) kept.push(tris[i], tris[i + 1], tris[i + 2]); else dropped++;
+    geometry.setIndex(kept);   // kept indexed (TrickOrTreat un-indexed it: three times the vertices and the file size)
+    return { mesh, geometry };
+  });
+  const sourceBox = new T.Box3();
+  for (const { geometry } of cleaned) {
+    const idx = geometry.index.array, pos = geometry.attributes.position, v = new T.Vector3();
+    for (let i = 0; i < idx.length; i++) sourceBox.expandByPoint(v.fromBufferAttribute(pos, idx[i]));
+  }
+  const targetBox = new T.Box3().setFromObject(original.scene);
   const height = targetBox.max.y - targetBox.min.y, ratio = height / (sourceBox.max.y - sourceBox.min.y);
   if (!Number.isFinite(ratio) || ratio <= 0) throw new Error('Bad mesh bounds');
   const targetCenter = targetBox.getCenter(new T.Vector3()), sourceCenter = sourceBox.getCenter(new T.Vector3());
@@ -93,36 +145,10 @@ window.rig = async (base, person, keep) => {
     visit(index); return best;
   };
   const rootInverse = original.scene.matrixWorld.clone().invert();
-  let vertices = 0, dropped = 0, webbed = 0;
-  for (const mesh of newMeshes) {
-    let geometry = mesh.geometry.clone();
-    // RUN's models come quantized (KHR_mesh_quantization: positions, normals and UVs as normalized integers): writing metres back into those
-    // clamps them to [-1, 1], so every attribute is made plain floats first
-    for (const [name, at] of Object.entries(geometry.attributes)) {
-      if (at.array instanceof Float32Array && !at.normalized && !at.isInterleavedBufferAttribute) continue;
-      const f = new Float32Array(at.count * at.itemSize);
-      for (let i = 0; i < at.count; i++) for (let k = 0; k < at.itemSize; k++) f[i * at.itemSize + k] = at.getComponent(i, k);
-      geometry.setAttribute(name, new T.BufferAttribute(f, at.itemSize));
-    }
-    // tiny loose islands of the generated mesh go (welded only to find what is connected; the UV seams stay)
-    const input = geometry.attributes.position, parents = new Int32Array(input.count), weld = new Map();
-    const quantum = Math.max(sourceBox.max.y - sourceBox.min.y, 1e-6) * 1e-5;
-    const find = i => { while (parents[i] !== i) { parents[i] = parents[parents[i]]; i = parents[i]; } return i; };
-    for (let i = 0; i < input.count; i++) {
-      parents[i] = i;
-      const key = [input.getX(i), input.getY(i), input.getZ(i)].map(v => Math.round(v / quantum)).join(',');
-      if (weld.has(key)) parents[i] = find(weld.get(key)); else weld.set(key, i);
-    }
-    const tris = geometry.index ? Array.from(geometry.index.array) : Array.from({ length: input.count }, (_, i) => i);
-    for (let i = 0; i < tris.length; i += 3) { const r = find(tris[i]); parents[find(tris[i + 1])] = r; parents[find(tris[i + 2])] = r; }
-    const counts = new Map();
-    for (let i = 0; i < tris.length; i += 3) { const r = find(tris[i]); counts.set(r, (counts.get(r) || 0) + 1); }
-    const largest = Math.max(...counts.values()), threshold = Math.max(12, largest * keep), kept = [];
-    for (let i = 0; i < tris.length; i += 3) if (counts.get(find(tris[i])) >= threshold) kept.push(tris[i], tris[i + 1], tris[i + 2]); else dropped++;
-    geometry.setIndex(kept);   // kept indexed (TrickOrTreat un-indexed it: three times the vertices and the file size)
+  let vertices = 0, webbed = 0;
+  for (const { mesh, geometry } of cleaned) {
     // matte cloth and skin, like the townspeople (a GLB without metallicFactor reads as metal)
     for (const m of [].concat(mesh.material)) { m.metalness = 0; m.roughness = 0.9; m.needsUpdate = true; }
-    geometry.applyMatrix4(mesh.matrixWorld);
     const positions = geometry.attributes.position, skinIndex = new Uint16Array(positions.count * 4), skinWeight = new Float32Array(positions.count * 4);
     for (let i = 0; i < positions.count; i++) {
       point.fromBufferAttribute(positions, i).sub(sourceCenter).multiplyScalar(ratio).add(targetCenter);
@@ -159,7 +185,7 @@ window.rig = async (base, person, keep) => {
   let bin = ''; const bytes = new Uint8Array(buffer);
   for (let i = 0; i < bytes.length; i += 32768) bin += String.fromCharCode(...bytes.subarray(i, i + 32768));
   const span = s => { const xs = s.map(q => q.p); const lo = [0, 1, 2].map(k => Math.min(...xs.map(p => p[k]))), hi = [0, 1, 2].map(k => Math.max(...xs.map(p => p[k]))); return lo.map((v, k) => +(hi[k] - v).toFixed(2)); };
-  return { boxes: { base: [targetBox.min.toArray(), targetBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))), baseSamples: span(samples), person: [sourceBox.min.toArray(), sourceBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))) }, base64: btoa(bin), vertices, dropped, webbed, bones: skeleton.bones.length, animations: original.animations.map(a => a.name) };
+  return { boxes: { base: [targetBox.min.toArray(), targetBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))), baseSamples: span(samples), person: [sourceBox.min.toArray(), sourceBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))) }, base64: btoa(bin), vertices, dropped, plates, webbed, bones: skeleton.bones.length, animations: original.animations.map(a => a.name) };
 };
 window.ready = true;
 </script></body></html>`;
@@ -179,7 +205,7 @@ try {
     const out = await page.evaluate(([b, m, k]) => window.rig(b, m, k), [(await fs.readFile(s.file)).toString('base64'), model.toString('base64'), keep]);
     await fs.writeFile(path.join(dir, s.name), Buffer.from(out.base64, 'base64'));
     if (s === sources[0]) console.log(JSON.stringify(out.boxes));
-    console.log(`${id}: ${s.name} from ${from} (${out.vertices} vertices, ${out.dropped} loose triangles dropped, ${out.webbed} leg-web triangles cut, ${out.bones} bones, clips ${out.animations.join(', ') || 'none'})`);
+    console.log(`${id}: ${s.name} from ${from} (${out.vertices} vertices, ${out.dropped} loose triangles dropped (${out.plates} ground plates), ${out.webbed} leg-web triangles cut, ${out.bones} bones, clips ${out.animations.join(', ') || 'none'})`);
   }
   const rf = path.join(dir, 'receipt.json'), r = JSON.parse(await fs.readFile(rf, 'utf8').catch(() => '{}'));
   r.rigFrom = `${from} (local rig transfer, rig-local-person.mjs)`; r.clipsFrom = Object.fromEntries(clips.map(c => [c, from]));

@@ -25,7 +25,7 @@ for (const p of cast.people) { const k = p.look.slice(0, 38); if (starts.has(k))
 const run = (script, args) => {
   const r = spawnSync(process.execPath, [path.join(root, 'scripts/assets/people3d', script), ...args], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 });
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
-  return { ok: r.status === 0, out: out.split('\n').slice(-6).join(' | ') };
+  return { ok: r.status === 0, out: out.split('\n').slice(-6).join(' | '), all: out };
 };
 let made = 0;
 for (const p of cast.people) {
@@ -37,7 +37,11 @@ for (const p of cast.people) {
   log(`${p.id}: start (${p.role}, ${p.root})`);
   if (!renderOnly && !has('model.glb')) {
     const r = run('make-person-3d.mjs', [p.id, p.look, '--root', p.root, '--model-only']);
-    if (!r.ok || !has('model.glb')) { log(`${p.id}: model FAILED: ${r.out}`); continue; }
+    if (!r.ok || !has('model.glb')) {
+      // RUN's rate limit (a cap: about 13 models on 2026-10-23): the rest would fail too, so the batch stops (exit 3; make-cast-loop.sh waits and retries)
+      if (/rate limit|too many requests/i.test(r.all)) { log(`${p.id}: RUN rate limit, batch stopped`); process.exit(3); }
+      log(`${p.id}: model FAILED: ${r.out}`); continue;
+    }
     log(`${p.id}: model ok`);
   }
   if (!renderOnly && !has('anim_walk.glb')) {

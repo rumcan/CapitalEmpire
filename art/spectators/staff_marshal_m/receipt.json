@@ -1,0 +1,10 @@
+{
+  "generationId": "428c6131-ef15-4046-8b0c-79dfb8beec02",
+  "look": "Golf course marshal, a man in his 50s, grey moustache, a bright yellow safety vest over a white polo shirt, khaki trousers, a plain navy cap, brown shoes. No logos, no lettering on the vest",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/428c6131-ef15-4046-8b0c-79dfb8beec02/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

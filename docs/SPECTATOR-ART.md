@@ -79,8 +79,14 @@ and three arm angles and chose these; `-70,70` turns the palms the other way, an
   script; the first batch's lookup kept the "." and never matched (a 30 min stall). make-person-3d.mjs strips both now, and checks the
   library **before** generating, so a person whose model is already there costs nothing.
 
+- **A ground under the feet:** RUN once modelled a patch of grass with golf balls fused to the shoes ("golf tournament" in the look):
+  the render said "model 1.87 units tall" and every frame stood on a green plate. A fused plate cannot be cut off cleanly (a slice cut
+  took half the body), so the person is remade: the A-pose prompt now says "Nothing under the feet: no ground, no grass, no base, no
+  stand, no golf balls", and give the look new opening words (the library lookup would otherwise find the bad model again). Loose
+  plates and specks (not fused) are dropped by rig-local-person.mjs.
+
 **How to tell a broken rig fast:** the script logs the two bounding boxes (base_man about 1.10 x 1.70 m, the new person scaled to match),
-and `render-person-3d.mjs` logs "model N units tall": base_man is 1.67; 2.00 meant the quantization trap. A good preview shows the person
+and `render-person-3d.mjs` logs "model N units tall": base_man is 1.67 and good people 1.66 to 1.68; 2.00 meant the quantization trap, 1.87 a ground plate. A good preview shows the person
 whole in every facing with no spikes.
 
 **Clips beyond walk and idle** (run, clap, cheer, sit, the wayward-ball set) still need RUN's animation service, which needs RUN's rig
@@ -232,6 +238,11 @@ LEAD.md).
 5. The crowd patches (3d), then P2.
 
 ## 7. Progress (update this as you go)
+- 2026-10-23 13:30 UTC: **11 people done** (spectators: polo visor, pink polo, bucket hat, sundress, windbreaker; staff: marshal (m),
+  volunteer; town: mechanic, nurse, businessman), checked. Remade later (new opening words, the no-ground prompt): the plaid man and the
+  security guard (RUN fused a ground / balls to their feet; the bad takes are in `output/people-test/bad/`). **RUN's rate limit** stopped
+  the batch after 13 models in about 1.5 h ("Too Many Requests"): `make-cast.mjs` now stops at the first one (exit 3), and
+  `bash scripts/assets/people3d/make-cast-loop.sh` waits 30 min and tries again (up to 8 h). Run that loop to carry on.
 - 2026-10-23 (latest): **the cast batch started**: 35 people in `art/people-cast.json` (12 townspeople, 15 spectators, 8 staff: marshals,
   volunteer, security, caddie, vendor, two pros), one at a time, about 11 min each (RUN's model). Check `output/people-cast.log`; rerun
   `make-cast.mjs` to carry on after a stop (finished people are skipped). Then look at every `preview.png` (section 4), fix bad frames in

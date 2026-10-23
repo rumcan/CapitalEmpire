@@ -1,0 +1,10 @@
+{
+  "generationId": "75ab4e13-08a1-4a90-b6e8-2a0732c0e9e0",
+  "look": "Garage mechanic in his 30s from a 1985 small American town, sturdy build, dark hair, a plain navy work shirt with rolled sleeves, navy work trousers, black work boots, a few grease marks. No logos, no lettering, no name patch",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/75ab4e13-08a1-4a90-b6e8-2a0732c0e9e0/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

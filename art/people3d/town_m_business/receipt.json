@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/7997ee52-d737-4f04-a61a-fa880d5818dd/model.compressed.glb",
+  "look": "Businessman in his 50s from a 1985 small American town, greying hair, a plain charcoal-grey suit, a white shirt, a plain dark red tie, black shoes",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

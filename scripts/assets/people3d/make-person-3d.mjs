@@ -66,7 +66,7 @@ const receipt = JSON.parse(await fs.readFile(path.join(dir, 'receipt.json'), 'ut
 // 1. the model: from the A-pose picture, or from the text alone
 let model = receipt.modelUrl;
 if (!model || !(await have('model.glb'))) {
-  const pose = `${look}. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person's age, stylised hand-painted game look. No props, nothing in the hands, no logos.`;
+  const pose = `${look}. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person's age, stylised hand-painted game look. No props, nothing in the hands, no logos. Nothing under the feet: no ground, no grass, no base, no stand, no golf balls.`;
   let out = '';
   // already in RUN's library (an earlier run that stopped after paying)? then no new generation
   model = await fromLibrary(pose, 1);

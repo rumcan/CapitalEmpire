@@ -1,0 +1,40 @@
+{
+  "id": "person:3d:town_w_nurse",
+  "name": "town_w_nurse (3D template)",
+  "size": "adult",
+  "heightMetres": 1.65,
+  "frameWidth": 160,
+  "frameHeight": 256,
+  "anchor": {
+    "x": 80,
+    "y": 246
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "art/people3d/town_w_nurse",
+  "clips": {
+    "walk": "Armature|Casual_Walk|baselayer 4.20s, stride 1.40s, body turned -2 deg",
+    "idle": "Armature|Idle|baselayer"
+  }
+}

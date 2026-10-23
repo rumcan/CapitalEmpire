@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/6dbbc437-7555-4516-b823-c7240d6e7c42/model.compressed.glb",
+  "look": "Tournament volunteer, a cheerful young woman in her 20s, brown ponytail, a plain kelly-green polo shirt, khaki shorts, a plain white visor, white sneakers. No logos, no lettering",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

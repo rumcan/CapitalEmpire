@@ -1,0 +1,10 @@
+{
+  "generationId": "65f6c1a8-9226-45b9-a221-9ef426baa8d7",
+  "look": "Heavyset man in his 50s watching golf in 1985, a plain navy bucket hat, a light blue short-sleeved polo shirt, tan shorts, white socks, white sneakers. Plain clothes, no logos, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/65f6c1a8-9226-45b9-a221-9ef426baa8d7/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

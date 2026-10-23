@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/94ee5466-2c0e-4219-a164-308947d68a54/model.compressed.glb",
+  "look": "Sundress woman in her 40s at a 1985 golf tournament, a wide-brimmed straw sun hat, a light yellow sleeveless sundress to the knee, tan sandals, auburn hair. Plain clothes, no logos, no lettering",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

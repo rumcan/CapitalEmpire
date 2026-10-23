@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/d93a710f-44ca-4260-a747-a1f39ebb8fdd/model.compressed.glb",
+  "look": "Hospital nurse in her 30s from a 1985 small American town, dark hair in a neat bun, a plain light blue scrub top and matching trousers, white shoes. No logos, no lettering, no badge",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

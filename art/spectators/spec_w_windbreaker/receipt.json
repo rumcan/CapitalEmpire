@@ -1,0 +1,9 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/0808da61-956c-43b7-9e38-cc5a2453c429/model.compressed.glb",
+  "look": "Curly-haired woman in her 50s watching golf in 1985, short curly brown hair, a teal windbreaker jacket, navy slacks, white sneakers. Plain clothes, no logos, no lettering",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}
