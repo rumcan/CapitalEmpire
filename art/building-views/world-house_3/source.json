@@ -1,0 +1,10 @@
+{
+ "id": "world:house_3",
+ "version": "world-house_3-4views-v2",
+ "files": {
+  "NE": "d9cea894433a5f88ce7d0ead3e0bcf4835db587077c05e19562648bb97e3dae4",
+  "SE": "268bb87e84b5987d3c0dd47c24ca5a7c9b099fcb2d9c107e672b981c0d856b2a",
+  "SW": "6bc7ff21db864a1ed8bf7aabfd67eb1da247225398b987f57b5245a394a8da09",
+  "NW": "f3684c37820d4b5228b67b254db102728e20b40ee674ca2831def805a24b6624"
+ }
+}

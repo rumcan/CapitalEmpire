@@ -7,6 +7,7 @@ import { LotMap, type Lot } from '../src/game/lots/lots';
 import { compose, type ComposeState } from '../src/game/lots/compose';
 import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lettering';
 import { EAST_PAIRS } from '../src/game/east-library';
+import { VIEW_ART } from '../src/game/views-library';
 import { REMOVED_IDS } from '../src/game/lots/scales';
 /** the fronts of the 14 east pictures in art/east-facing */
 const EAST_FRONTS = ['ref:building-corner-shop', 'ref:building-corner-store', 'ref:building-gas-canopy', 'ref:building-grocery', 'town:bakery', 'town:barber', 'town:fish_tackle', 'town:grocery', 'town:laundromat', 'town:pharmacy', 'town:postoffice', 'world:diner', 'world:snack_bar', 'world:video'];
@@ -54,7 +55,8 @@ test('shop signs carry lettering; houses, yards and natural sprites do not', () 
   for (const id of ['variation:industrial-auto-body-shop-63875699:1', 'variation:industrial-bottling-plant-13e91e4e:1', 'world:watertower']) assert.ok(hasLettering(id), `${id} carries a painted sign`);
   // whole residential and natural categories are plain
   const plain = new Set(['Houses', 'More houses', 'Trees & plants', 'Fences', 'Townspeople', 'Vehicles', 'Lots', 'Yard']);
-  for (const it of LIBRARY) if (plain.has(it.cat)) assert.ok(!LETTERING_IDS.has(it.id), `${it.id} (${it.cat}) carries no lettering`);
+  // (the turned views, view:*, are kept from mirroring like lettering: a mirrored view puts the sun on the wrong side)
+  for (const it of LIBRARY) if (plain.has(it.cat) && !it.id.startsWith('view:')) assert.ok(!LETTERING_IDS.has(it.id), `${it.id} (${it.cat}) carries no lettering`);
   assert.ok(LETTERING_IDS.size >= 20, `${LETTERING_IDS.size} lettering sprites`);
 });
 
@@ -90,6 +92,8 @@ test('east-facing art: each pair is a library sprite of its front\'s kind and ca
     assert.equal(e.kind, f.kind, `${east} kind`);
     assert.equal(e.cat, f.cat, `${east} category`);
     assert.equal(e.name, `${f.name} (east)`, `${east} name`);
+    // four-view art (views-library.ts): the east sprite is the SE view, the building turned, not mirrored: its footprint is the front's turned
+    if (VIEW_ART.has(east)) { assert.deepEqual(e.boxes, f.boxes.map(b => ({ hx: b.hy, hy: b.hx, dx: 0, dy: 0 })), `${east} boxes turned`); continue; }
     assert.equal(e.w, f.w, `${east} width`);
     assert.equal(e.h, f.h, `${east} height`);
     assert.ok(near(e.ax, f.w - f.ax), `${east} anchor ${e.ax} is the front's ${f.ax} mirrored`);

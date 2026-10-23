@@ -1,0 +1,10 @@
+{
+ "id": "town:grocery",
+ "version": "town-grocery-4views-v1",
+ "files": {
+  "NE": "f660671f8b3ed4c82715e532db57646940120c311d2a9b262ef862c1ac8775f9",
+  "SE": "f02ff0bfa147b7e8ecc7ce1be7879307873c01a451214492bc0194f4f58ac8ea",
+  "SW": "45265b1f4feedfce2de9a07625722a868ff794365ed5bebd9470d149a2117bac",
+  "NW": "e6eaa6f9c50a0ecbf1cae48849a0007e99480742d8f7d4b091ca596a7e0625c0"
+ }
+}

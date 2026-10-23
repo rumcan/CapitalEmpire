@@ -1,0 +1,10 @@
+{
+ "id": "world:house_4",
+ "version": "world-house_4-4views-v2",
+ "files": {
+  "NE": "5b8ca226c89e905de055f8a7feeafac95032aea4c1d3d2ed38c7bee0ececd218",
+  "SE": "5de7a0f580fa9c49e3cf30bcb456db13cc52b47f9c21d4bcedf655408354e7ff",
+  "SW": "334353d8af15fd3ad49b65e685ac7c540ae06e9632c501894064c0c4583a4ba5",
+  "NW": "89e9108c6bcb1e73744700c320e61e4cdfd9fe7fac458e64cf5508e654f53340"
+ }
+}

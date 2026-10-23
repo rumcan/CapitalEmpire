@@ -2,6 +2,7 @@
 // a flipped sign reads backwards, so the composer and the business art never flip these sprites.
 import { LIBRARY } from '../library';
 import { EAST_PAIRS } from '../east-library';
+import { VIEW_EAST } from '../views-library';
 
 /** shop words, matched as whole words (or a word with a plural / a compound) against the sprite id and its library name. 'garage' is not
  *  a word: the house garages say it too often (the commercial one, the golf cart garage, is in INCLUDE) */
@@ -28,16 +29,18 @@ const PAINTED_SIGNS = /^(?:variation:industrial-|world:watertower$|expansion:aba
 const REAR = /[-_]rear(?:[-_]v2)?(?=[-:]|$)/;
 
 /** does a sprite carry readable signs (never mirrored): its id or library name holds a shop word, unless excluded or a rear view; INCLUDE always holds.
- *  The east-facing art (east:*) is lettering too: it is drawn unflipped only, through EAST_FACING */
+ *  The east-facing art (east:*) is lettering too: it is drawn unflipped only, through EAST_FACING; so are the turned views (view:*, from
+ *  views-library.ts): a mirrored view would put the sun on the wrong side */
 export function hasLettering(id: string, name?: string): boolean {
-  if (INCLUDE.has(id) || id.startsWith('east:') || PAINTED_SIGNS.test(id)) return true;
+  if (INCLUDE.has(id) || id.startsWith('east:') || id.startsWith('view:') || PAINTED_SIGNS.test(id)) return true;
   if (EXCLUDE.has(id) || REAR.test(id)) return false;
   return SHOP.test(id) || (name !== undefined && SHOP.test(name));
 }
 
 /** the east-facing (+X) art of a front shop, by the front sprite's id (EAST_PAIRS, from east-library.ts, made by scripts/assets/prep-east.mjs):
- *  a flipped lot draws it unflipped (its signs read right, the art faces +X) in place of the front sprite. */
-export const EAST_FACING: Record<string, string> = Object.fromEntries(EAST_PAIRS);
+ *  a flipped lot draws it unflipped (its signs read right, the art faces +X) in place of the front sprite. The four-view buildings without
+ *  east art add their SE view (VIEW_EAST), so a house turned to +X is drawn turned, not mirrored. */
+export const EAST_FACING: Record<string, string> = Object.fromEntries([...EAST_PAIRS, ...VIEW_EAST]);
 
 /** the library ids (over LIBRARY) that carry lettering: the test and the audit list */
 export const LETTERING_IDS: ReadonlySet<string> = new Set(LIBRARY.filter(i => hasLettering(i.id, i.name)).map(i => i.id));
