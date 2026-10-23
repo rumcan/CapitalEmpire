@@ -56,6 +56,11 @@ tents, stands, car parks) and above all **manage the transport and roads around 
   smeared the rush hours, as a 2 km trip takes ~140 sim s), which drives the lot trips, the night and the HUD clock. It runs on the sim's
   own time `t` (never stops), not the season clock (frozen at the season's end), so the town never goes dead. In classic (non-golf) games `dayLen` stays 1440 (the old behaviour).
 
+- 2026-10-23: **The crowd model (M2)**: spectators stay parties of `PARTY` fans from the surge; they walk from their bay to the course's
+  gates (the placed gate structures, else the clubhouse plot's doors), queue there and are admitted at the gates' lane rate; inside they
+  stand in galleries (tees, greens, stands, tents); at the day's end they walk back and their cars drive home. The results' gate waits,
+  lateness and exit times come from these movers (replacing `measureGateFlows`). Details and the step list: NOW.md "The M2 design".
+
 ## 6. How to work (so anyone can continue)
 - **The live log is `docs/NOW.md`.** Before you edit, write there: the step, the branch, the files and the exact change you are about to
   make ("Next action"). After each sub-step, tick it and write the next action. Keep it short and concrete (function names, file paths).
