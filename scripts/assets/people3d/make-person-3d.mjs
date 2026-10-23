@@ -6,6 +6,7 @@
 //
 //   node scripts/assets/people3d/make-person-3d.mjs <id> "<look>" [--image <A-pose png>] [--max-credits <n>] [--root <art dir>] [--clips <list>]
 //     without --image the model is made from the text (text-to-3d)
+//     --height: the person's height in metres, passed to the rig (RUN: "improves rigging accuracy")
 //     --root: where the person goes (default art/people3d; the spectators: art/spectators, docs/SPECTATOR-ART.md)
 //     --clips: the clips to make (default walk,idle), each saved as anim_<clip>.glb; `clap=<RUN name>` asks RUN for its own animation name
 //       (see `rundot game animate-3d --help`). Each clip is one paid animate-3d call; a clip already there is skipped
@@ -56,7 +57,7 @@ if (!model || !(await have('model.glb'))) {
 // 2. the humanoid rig
 let rig = receipt.rigId;
 if (!rig || !(await have('rigged.glb'))) {
-  const out = await rundot('game', 'rig-3d', '--game-id', game, '--model-url', model, '--out', path.join(dir, 'rigged.glb'), '--force');
+  const out = await rundot('game', 'rig-3d', '--game-id', game, '--model-url', model, ...(arg('--height') ? ['--height', arg('--height')] : []), '--out', path.join(dir, 'rigged.glb'), '--force');
   rig = out.match(/Rig ID:\s*([0-9a-f-]{36})/)?.[1];
   if (!rig) throw new Error(`${id}: rigging failed\n${out.slice(-600)}`);
   await note('rigId', rig);

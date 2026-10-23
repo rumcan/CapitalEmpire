@@ -219,10 +219,13 @@ buildSync({ entryPoints: [GL_ENTRY], bundle: true, platform: 'node', format: 'es
 buildSync({ entryPoints: [GL_ENTRY], bundle: true, platform: 'browser', format: 'esm', outfile: path.join(OUT, 'ground-lib.js'), loader: HL_LOADERS, logLevel: 'silent' });
 const GL = await import(pathToFileURL(path.join(OUT, 'ground-lib.mjs')).href);
 fs.mkdirSync(BG_THUMBS, { recursive: true });
-/** the pictures the base grass can be made from, by group: every ground picture of the game, the grass-v1 set and the grass photos */
+/** the pictures the base grass and the texture presets can be made from, by group: every ground picture of the game, the grass-v1 set, the grass care set and its decals, and the grass photos */
 const GROUND_SRC = [
   { group: 'Game ground', dir: 'src/assets/ground', re: /\.(webp|png|jpg)$/i, skip: /^base-grass-[ab]\.webp$/ },
   { group: 'Grass v1', dir: 'src/assets/ground/grass-v1/png', re: /\.(webp|png|jpg)$/i },
+  // the grass care set (2026-10-23, arena T016): every surface in each condition (lawns, golf grasses, loam, sandy soil, verges), and its decals
+  { group: 'Grass care', dir: 'src/assets/ground/grass-management', re: /\.(webp|png|jpg)$/i },
+  { group: 'Grass care decals', dir: 'src/assets/ground/grass-management/decals', re: /\.(webp|png|jpg)$/i },
   { group: 'Grass photos', dir: 'art/grass-photo', re: /\.(webp|png|jpg)$/i },
 ];
 function groundSources() {

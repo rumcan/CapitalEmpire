@@ -187,5 +187,21 @@ LEAD.md).
   **Next:** once `rundot --help` works, `rundot game animate-3d --help` for the animation names (list them here), then step 6.2:
   `node scripts/assets/people3d/make-person-3d.mjs spec_m_polo_visor "<look from 3a>" --root art/spectators --clips walk,idle`,
   `node scripts/assets/people3d/render-person-3d.mjs spec_m_polo_visor --root art/spectators --height 1.80`.
+- 2026-10-23: the CLI installed (7.18.0, `%LOCALAPPDATA%\Programs\Rundot`, on the user PATH; the owner signed in). **The CLI gives up after
+  600 s** (`TaskCanceledException ... HttpClient.Timeout of 600 seconds`) while RUN keeps working: the first `spec_m_polo_visor` model
+  finished 30 s after the CLI gave up. **Do not pay again:** `rundot assets list --game-id AFjPSjQH9kbcCl57sgO3 --service threedgen` shows
+  it (generation id, prompt); the model is at
+  `https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/<generation id>/model.compressed.glb`.
+  Put that URL in the person's `receipt.json` as `modelUrl`, download it to `model.glb`, and rerun make-person-3d.mjs: it skips to the rig.
+  The first take: `8db4bebc-03a3-4d1d-9ac5-627ee227b626`. Other notes from TrickOrTreat (read only): `AI_POLICY_BUDGET_EXHAUSTED` on 3D or
+  animation jobs is RUN's policy budget, not the account balance; RUN's library holds 1 GB (`rundot assets rm <id>` after download).
+- 2026-10-23: the first take of `spec_m_polo_visor` downloaded to `art/spectators/spec_m_polo_visor/model.glb` (a clean A-pose; a tiny chest
+  emblem on the polo, hardly visible at game size), `receipt.json` holds its `modelUrl`. **Rigging is blocked on RUN's side:** `rig-3d`
+  answers `[THREE_D_GEN_RIG_FAILED] Provider rejected the request due to invalid parameters` for this model (by URL, by local file, with and
+  without `--height`) **and for `base_man`'s model, which rigged fine on 2026-10-20**, so it is the service, not the model. The retry's
+  second take of the man will be in the library too (`rundot assets list`): a spare, or remove it. `make-person-3d.mjs --height <m>` now
+  passes the height to the rig. **Next:** try `rig-3d` again later (a cheap check: base_man's modelUrl); when it works, rerun
+  make-person-3d.mjs for `spec_m_polo_visor` (it skips the model). If it stays broken, a local rig transfer from `base_man` (TrickOrTreat
+  did this: `scripts/art/rig-local-costume.mjs`, read only) gives walk and idle without RUN.
 - Earlier note:  `rundot` was not on the PATH of the lead's shells (bash and PowerShell); the
   townspeople were made from a shell where it was installed and signed in.
