@@ -162,6 +162,8 @@ export class SimClient {
   golfOn = false; townMinutes = 10; townTraffic = 1;
   /** the town day's length in sim seconds, as last sent */
   dayLen = 1440;
+  /** the course's gates (LEAD.md M2.1): sent whenever the placed gate structures change */
+  setGates(gates: { x: number; y: number; lanes: number }[]) { this.post({ t: 'gates', gates }); }
   setTownDay(minutes: number, traffic: number) { this.townMinutes = minutes; this.townTraffic = traffic; this.sendTownDay(); }
   private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1, free: this.golfOn }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */

@@ -38,16 +38,16 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 ## Plan for M2.1 (tick as you go)
 - [x] a. `event/crowd.ts`: a walker stage 2 (to gate `route`), gate queues (`gateQ`: FIFO of parties per gate), `admit(g, n)` (moves up to n
   fans from gate g's queue inside: `arrive`), `atGate` in `counts()`; tests in `tests/crowd.test.ts` (or a new `tests/gates.test.ts`).
-- [ ] b. `sim/protocol.ts` `{ t: 'gates'; gates: { x; y; lanes }[] }`, `sim.worker.ts` case, `City.setGates`; `SimClient.setGates`.
-- [ ] c. `City.walkDoor` in golf mode with gates: walk to the nearest gate (stage 2); `City.step`: each gate admits `lanes * 10` fans a sim
+- [x] b. `sim/protocol.ts` `{ t: 'gates'; gates: { x; y; lanes }[] }`, `sim.worker.ts` case, `City.setGates`; `SimClient.setGates`.
+- [x] c. `City.walkDoor` in golf mode with gates: walk to the nearest gate (stage 2); `City.step`: each gate admits `lanes * 10` fans a sim
   second (fractions carried).
-- [ ] d. The frame: the gate queues appended to `stops` (so the engine draws them), or their own array; the engine draws them.
-- [ ] e. Engine: the gates from `golf.structures` (kind 'gate', `structureRect` middle, `STRUCTURE[type].capacity` lanes) sent on load and
+- [x] d. The frame: the gate queues appended to `stops` (so the engine draws them), or their own array; the engine draws them.
+- [x] e. Engine: the gates from `golf.structures` (kind 'gate', `structureRect` middle, `STRUCTURE[type].capacity` lanes) sent on load and
   whenever the structures change.
 - [ ] f. typecheck, tests, build, browser check (place a gate, skip to the tournament, see the queue and the admitted count), land.
 
 ## Next action
-M2.1 b: the `gates` message: `sim/protocol.ts` ToSim `{ t: 'gates'; gates: { x: number; y: number; lanes: number }[] }`, its case in `sim.worker.ts` calling `City.setGates`, `SimClient.setGates`. (a is done: `Crowd.setGates/atGate/admit`, `Walker.stage` 2, `FanCounts.atGate`, `GateStats`, `Crowd.now`; tests `tests/gates.test.ts`.)
+M2.1 f: `npm run build`, then the browser check: in a golf game place an entrance gate (Event tool, kind 'gate'; or `window.__game.placeEventStructure({ typeId: <a gate type id from golf/tents.ts STRUCTURE>, x, y, mode: 'rent' })` on owned land), press Skip to tournament, watch the fans walk to the gate and queue there (the 'n waiting' label), and read `window.__game.traffic` counts. b-e are in: the `gates` message (protocol, worker, `City.setGates`, `SimClient.setGates`), `City.walkDoor` to the nearest gate in golf mode, `City.admitGates` each step (gateRate per sim s, express card), the gate queues appended to `City.stopBuf` (index -1 - g, drawn like stops), `Game.syncCourseGates` (on load and on place / remove).
 
 ## Done (newest first)
 - 2026-10-23: M2 findings and design written (above). M1 Living town landed on main (4c90e25).

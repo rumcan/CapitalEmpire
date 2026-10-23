@@ -34,6 +34,8 @@ import { resolveCurb, type Curb, type CurbDef } from './event/curb';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 import { golfTicketPrice } from './golf/yearend';
+import { gateRate } from './golf/venue';
+import { hasExpressGates } from './golf/golfcards';
 import { dayShare, spectatorDemand, tierInfo } from './golf/tour';
 import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
 import { applyParkingFeeDemand } from './golf/parkingfee';
@@ -207,6 +209,10 @@ export class City {
   /** the shuttle routes as the player drew them (busDefs, the full list: a route's index is its sim index), their resolved stops' points (tiles; null:
    *  unresolved, the route is inactive), and the crowd of the surge (event/crowd.ts: the walkers, the queues, the fans on the buses; null outside the
    *  surge, its eval included) */
+  /** the course's gates (golf, LEAD.md M2.1): each gate's point (tiles) and lanes; the fans walk to the nearest and queue there; empty: the
+   *  site's doors as before. gateAcc: each gate's admitting carried over between steps (fans) */
+  gates: { x: number; y: number; lanes: number }[] = []; private gateAcc: number[] = [];
+  setGates(list: { x: number; y: number; lanes: number }[]): void { this.gates = list.map(g => ({ x: g.x, y: g.y, lanes: Math.max(1, g.lanes) })); this.gateAcc = this.gates.map(() => 0); this.crowd?.setGates(this.gates.length); }
   busDefs: BusRouteDef[] = []; private busPts: ({ lot: Pt; doors: Pt } | null)[] = []; crowd: Crowd | null = null;
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
@@ -621,7 +627,7 @@ export class City {
       this.visits.step(this.sim, this.g, this.sim.clock);
       this.stepTaxis();
     }
-    if (this.crowd) { this.crowd.step(WALK_V * n * DT / MPT); this.syncWait(); }
+    if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
     const ch = Math.floor(this.sim.clock / GAME_HOUR); if (this.golfLand.length && ch !== this.courseHour) { this.courseHour = ch; this.clearCourse(events); }
@@ -1085,7 +1091,7 @@ export class City {
   private startBuses(): void {
     this.sim.dropBuses();
     const C = new Crowd(this.round.crowd.length, this.busDefs.length);
-    this.crowd = C;
+    this.crowd = C; C.setGates(this.gates.length); this.gateAcc = this.gates.map(() => 0);
     this.busDefs.forEach((d, r) => {
       const R = this.sim.busRoutes[r];
       if (!R) return;
@@ -1135,10 +1141,25 @@ export class City {
     if (r >= 0) { const t = this.busPts[r]!.lot; C.add({ x: b.x, y: b.y, tx: t.x, ty: t.y, n: PARTY, town, stage: 0, route: r }); return; }
     this.walkDoor(town, b, PARTY, -1);
   }
-  /** n fans of town at p walk to the stadium's nearest door (route: the route they came from, -1 none); with no door, they are there already */
+  /** each gate admits its lanes' rate (golf/venue.ts gateRate: a game minute is a sim second) from its queue; capacity a gate does not use
+   *  (its queue ran dry) is carried over for at most a second */
+  private admitGates(dt: number): void {
+    const C = this.crowd; if (!C || !this.gates.length) return;
+    const express = hasExpressGates(this.round.cards);
+    this.gates.forEach((g, i) => {
+      const rate = gateRate(g.lanes, express), acc = (this.gateAcc[i] ?? 0) + rate * dt, done = C.admit(i, Math.floor(acc));
+      this.gateAcc[i] = Math.min(acc - done, rate);
+    });
+  }
+  /** n fans of town at p walk to the stadium's nearest door (route: the route they came from, -1 none); with no door, they are there already.
+   *  Golf with gates (LEAD.md M2.1): to the nearest gate instead, where they queue (stage 2) */
   private walkDoor(town: number, p: Pt | null, n: number, route: number): void {
     const C = this.crowd;
     if (!C) return;
+    if (this.golf && this.gates.length && p) {
+      let gi = 0, bd = Infinity; this.gates.forEach((g, i) => { const d = Math.hypot(g.x - p.x, g.y - p.y); if (d < bd) { bd = d; gi = i; } });
+      const g = this.gates[gi]!; C.add({ x: p.x, y: p.y, tx: g.x, ty: g.y, n, town, stage: 2, route: gi }); return;
+    }
     const d = p && this.site ? nearestDoor(this.site.doors, p) : null;
     if (!p || !d) { C.arrive(town, n); return; }
     C.add({ x: p.x, y: p.y, tx: d.x, ty: d.y, n, town, stage: 1, route });
@@ -1161,7 +1182,11 @@ export class City {
     this.busPts.forEach((p, r) => { if (p) rs.push(r); });
     const out = new Float32Array(4 * rs.length);
     rs.forEach((r, i) => { const p = this.busPts[r]!.lot; out[4 * i] = p.x; out[4 * i + 1] = p.y; out[4 * i + 2] = this.crowd?.waiting(r) ?? 0; out[4 * i + 3] = r; });
-    return out;
+    // the gates' queues (LEAD.md M2.1) follow, drawn as the stops are: index -1 - g
+    if (!this.gates.length) return out;
+    const all = new Float32Array(out.length + 4 * this.gates.length); all.set(out);
+    this.gates.forEach((g, i) => { const o = out.length + 4 * i; all[o] = g.x; all[o + 1] = g.y; all[o + 2] = this.crowd?.atGate(i) ?? 0; all[o + 3] = -1 - i; });
+    return all;
   }
   /** the round from a save (see Round.from): any surge under way is dropped with its party cars */
   loadRound(s?: RoundSave): void { const g = !!this.golf; this.round = Round.from(s); this.round.golf = g; this.grown = null; this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); this.applyCards(); }

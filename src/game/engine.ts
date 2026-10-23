@@ -1151,7 +1151,7 @@ export class Game {
     const id = Math.max(0, ...(this.golf.structures ?? []).map(s => s.id)) + 1;
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
-    this.golf.structures.push(placed);
+    this.golf.structures.push(placed); this.syncCourseGates();
     const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? 'expansion:backyard-tent';
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
@@ -1175,7 +1175,7 @@ export class Game {
     const prop = this.golfStructureProps.get(s.id);
     if (prop) this.removeProp(prop);
     this.golfStructureProps.delete(s.id);
-    this.golf.structures.splice(i, 1);
+    this.golf.structures.splice(i, 1); this.syncCourseGates();
     if (refund > 0) this.traffic.spend('construction', -refund);
     this.scheduleSave();
     this.toast(`Removed ${def ? def.name : s.typeId}${refund > 0 ? ` (+$${refund.toLocaleString()})` : ''}`);
@@ -1199,9 +1199,16 @@ export class Game {
     this.emit();
     }
     }
+    /** the course's gates to the sim (LEAD.md M2.1): every placed structure of kind 'gate', at its rectangle's middle, its capacity as lanes */
+    private syncCourseGates() {
+    const gates: { x: number; y: number; lanes: number }[] = [];
+    for (const s of this.golf?.structures ?? []) { const def = STRUCTURE[s.typeId]; if (def?.kind !== 'gate') continue; const [x, y, w, h] = structureRect(s); gates.push({ x: x + w / 2, y: y + h / 2, lanes: Math.max(1, def.capacity) }); }
+    this.traffic.setGates(gates);
+    }
     private syncGolfProps() {
     this.golfProps.clear();
     this.golfStructureProps.clear();
+    this.syncCourseGates();
     if (!this.golf) return;
     for (const pin of this.golf.pins ?? []) {
     const key = 'pin:' + pin.hole;
@@ -2696,7 +2703,7 @@ export class Game {
       let ux = 0, uy = 1;
       if (park) { const cx = park.x + park.w / 2 - sx, cy = park.y + park.h / 2 - sy, L = Math.hypot(cx, cy); if (L > 0) { ux = cx / L; uy = cy / L; } }
       const bx = sx + ux * 1.5, by = sy + uy * 1.5;
-      for (let g = 0, nq = sprites ? Math.min(24, q) : 0; g < nq; g++) walkerSprite(ctx, sheet, bx + ((g & 3) - 1.5) * 0.7, by + ((g >> 2) - 2.5) * 0.7, r % 3, Math.floor(tick + g) % 4, ze, X0, Y0, cw, ch, h);
+      for (let g = 0, nq = sprites ? Math.min(24, q) : 0; g < nq; g++) walkerSprite(ctx, sheet, bx + ((g & 3) - 1.5) * 0.7, by + ((g >> 2) - 2.5) * 0.7, ((r % 3) + 3) % 3, Math.floor(tick + g) % 4, ze, X0, Y0, cw, ch, h);
       if (q > 0) {
         const px = (worldX(sx, sy) - X0) * ze + cw / 2, py = (worldY(sx, sy) - Y0) * ze + ch / 2, label = `${q} waiting`;
         ctx.strokeText(label, px, py - 16 * dpr); ctx.fillStyle = '#f8fafc'; ctx.fillText(label, px, py - 16 * dpr);
