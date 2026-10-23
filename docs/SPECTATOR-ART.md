@@ -138,10 +138,15 @@ Keep the townspeople's format so the pack and the studio work unchanged. For eac
   `preview-<clip>.png`.
 - 128 px per metre, 8 facings drawn for real (no mirroring).
 
-The scripts write to `art/people3d/` and render only walk and idle today. Your code changes (small, keep them to these two scripts):
-- `make-person-3d.mjs`: a `--root <art dir>` option (default `art/people3d`) and `--clips walk,idle,run,clap,...`.
-- `render-person-3d.mjs`: `--root`, `--clip <name>` (which glb to sample, how many frames, a loop or a one-shot), `--seated` (the hip
-  anchor, no ground plane). A non-walk clip is sampled evenly over its length (no stride search).
+**Done (2026-10-23, the lead):** both scripts take these options now.
+- `make-person-3d.mjs <id> "<look>" --root art/spectators --clips walk,idle,run,clap=<RUN name>,...`: each clip saved as
+  `anim_<clip>.glb` (the file RUN writes is renamed); `clap=<RUN name>` when RUN's library calls it something else.
+- `render-person-3d.mjs <id> --root art/spectators --height <m>`: the idle + walk template (`sheet.webp` / `sheet.json`, as the
+  townspeople); then per clip `--clip <name> --frames <n>` (evenly over a loop), `--once` (a one-shot, first to last frame), `--stride`
+  (over one stride, like the walk: run, sprint, back_up, sidestep), `--seated` (adds `seatHeightMetres` and the `seat` point to the json).
+  Clips are sized by the walk model, so every clip of a person has the same height and floor.
+- Checked on a copy of `base_man` in `output/people-test/`: the template renders byte-identical to the committed sheet; its idle clip
+  rendered as a 4-frame clip sheet with S facing the viewer.
 - Do **not** put spectators in `art/people3d/` (they would walk the town too and change the townspeople's frame count).
 
 ### 3d. Crowd mass for far zoom (P2, painted sprites, not 3D)
@@ -176,5 +181,11 @@ LEAD.md).
 5. The crowd patches (3d), then P2.
 
 ## 7. Progress (update this as you go)
-- 2026-10-23: brief written. Nothing generated yet. `rundot` was not on the PATH of the lead's shells (bash and PowerShell); the
+- 2026-10-23: brief written; the scripts extended (3c). Nothing generated yet: the RUN CLI is not installed on the owner's PC now (not on
+  PATH, not in npm, the worker PC unreachable); installing it is the owner's call (the install script from
+  github.com/series-ai/rundot-cli-releases, then `rundot login` by the owner).
+  **Next:** once `rundot --help` works, `rundot game animate-3d --help` for the animation names (list them here), then step 6.2:
+  `node scripts/assets/people3d/make-person-3d.mjs spec_m_polo_visor "<look from 3a>" --root art/spectators --clips walk,idle`,
+  `node scripts/assets/people3d/render-person-3d.mjs spec_m_polo_visor --root art/spectators --height 1.80`.
+- Earlier note:  `rundot` was not on the PATH of the lead's shells (bash and PowerShell); the
   townspeople were made from a shell where it was installed and signed in.
