@@ -2281,3 +2281,8 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
   stage 3, `onIn`; `City.toGallery`) and stand there (`Crowd.gallery`); the engine sends the spots with the gates (`spots` message; again
   when the Course tool fits the markers) and draws each spot's fans as rings of standing walkers with `n watching` (`Game.drawGalleries`).
   Browser-checked on a test copy. Tests: `tests/galleries.test.ts` (3), one more in `tests/gates.test.ts`; 891 pass.
+- **M2.3 Going home landed** (branch `lead/m2-going-home`): each parked party car is recorded (`City.parkedCars`: town, car park, bay);
+  in golf mode `LEAVE_AFTER` (120 sim s) after kick-off the parties are released over `LEAVE_S` (300 s) in a seeded order, each walking
+  from a gallery spot with fans back to its car's bay (`Crowd` stage 4, `onBack`), and the car leaves its car park at the entrance bound
+  for a home of its town (`City.driveHome`, the surge's homes by population; the park's count drops); `RoundResult.leave` (cars, gone,
+  start, last). Browser-checked on a test copy: 53 of 56 cars left, the roads' traffic rose from ~41 to ~100 cars. 892 tests pass.

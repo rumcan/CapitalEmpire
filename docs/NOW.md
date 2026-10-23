@@ -4,7 +4,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 
 ## Current step
 - **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-crowds` (from `origin/main` 4c90e25).
-- **Sub-step now:** M2.3 Going home (M2.1 gates and M2.2 galleries landed on main).
+- **Sub-step now:** M2.4 Results from the movers (M2.1 gates, M2.2 galleries, M2.3 going home landed on main).
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
 - **Start:** `City.startTournament` (city.ts) at the season's end: the crowd is `spectatorDemand(tier, rep)` (day 1's share, less the
@@ -68,15 +68,21 @@ gone, last }` (sim s), into `RoundResult.leave` when the round closes.
 - [x] a. `event/crowd.ts`: stage 4, `onBack(town, route)`; test.
 - [x] b. `city.ts`: `parkedCars` (in `drainParty`), the homes by town kept from `planSurge`, `LEAVE_AFTER` / `LEAVE_S`, `stepLeaving(dt)`
   (release, walk, spawn), the measurement; `closeRound` keeps despawning (anything left is cut off).
-- [ ] c. Tests (a City-level test if feasible, else crowd-level), browser check (the evening traffic out of the car parks), land.
+- [x] c. Tests (a City-level test if feasible, else crowd-level), browser check (the evening traffic out of the car parks), land.
+
+## Plan for M2.4 Results from the movers (write the details here before you start)
+- [ ] a. Read `golf/yearend.ts` `computeYearEnd` and `measureGateFlows` and where the engine calls them (`engine.ts` ~2870): the DayFacts
+  the formula fills (gate queue minutes, on time / late, exit P95).
+- [ ] b. Feed them from the round instead when measured: `RoundResult.gates` (admitted, avgWait, maxWait, queuing at kick-off: late),
+  `RoundResult.leave` (cars, gone, start, last: the exit time). One sim s is one game minute. Keep the formula as the fallback for old
+  saves and rounds without the measures.
+- [ ] c. Tests (yearend with measured inputs), browser check (the results card's Q and Exit minutes match the measured ones), land.
 
 ## Next action
-M2.3 c: `npm run build`; browser check on a test copy (5181, own storage): Skip to tournament at 8x, after kick-off (eval) watch
-`window.__game.traffic.round.last.leave` (cars, gone, start, last) rise and the car parks empty; look at the car park and its road for the
-evening traffic. a and b are in (crowd stage 4 / onBack; `City.parkedCars`, `surgeHomes`, `leave`, `stepLeaving`, `leaveFrom`, `driveHome`,
-`LEAVE_AFTER` 120 / `LEAVE_S` 300 at the top of city.ts; `RoundResult.leave`).
+M2.4 a (cut `lead/m2-results` from `origin/main` first).
 
 ## Done (newest first)
+- 2026-10-23: **M2.3 Going home landed** on main. Browser-checked on a test copy (5181, Skip to tournament at 8x): 56 cars parked; the leaving started 120 sim s after kick-off; the first car left ~250 s later (the long walk back from the far greens), 53 of 56 had left by ~960 s; cars on the roads rose from ~41 to ~100 (the evening traffic). Note: the walk back from far greens is long; M2.5 (the town day) will set when the leaving starts.
 - 2026-10-23: **M2.2 Galleries landed** on main. Browser-checked on a test copy (5181, fresh golf game, Skip to tournament at 8x): 18 spots (9 greens, 9 tees), 102 of the 168 fans in standing at them while the rest still walked, drawn as rings of standing fans with `n watching` (15 by a green, 12 by a tee).
 - 2026-10-23: **M2.1 Course gates landed** on main. Browser-checked on a test copy (port 5181, a fresh golf game, a gate placed by script between the car park and the clubhouse plot, Skip to tournament at 8x): the fans walked to the gate (stage 2 walkers seen), the gate admitted all 168 who arrived (`last.gates`: admitted 168, wait 0: a 4-lane gate admits 40 a second and they came about one a second, so no queue at tier 1); 168 of 360 fans arrived at all: the round's stuck list blames the town's 4-arm junctions (M3's job).
 - 2026-10-23: M2 findings and design written (above). M1 Living town landed on main (4c90e25).
