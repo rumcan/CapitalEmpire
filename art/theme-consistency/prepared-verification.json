@@ -4,13 +4,13 @@
   "scope": "Current selected sheets: PNG/alpha checks and pixel-conserving crops only. Boundary warnings, rigid rotation geometry and game registration require review.",
   "counts": {
     "requested": 305,
-    "generated": 35,
-    "fileValidated": 35,
+    "generated": 51,
+    "fileValidated": 51,
     "fileValidationFailed": 0,
-    "alphaFlagged": 20,
+    "alphaFlagged": 25,
     "visuallyReviewed": 0,
-    "nativeViewsExported": 140,
-    "pendingGeneration": 270
+    "nativeViewsExported": 204,
+    "pendingGeneration": 254
   },
   "activeSheets": [
     {
@@ -395,8 +395,8 @@
     },
     {
       "id": "business:fishing-lodge",
-      "sheet": "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v1.png",
-      "sheetSha256": "d4c09eef0705d770e273937b66d4b37c37fbcf1e36fb310a66b0976f80777969",
+      "sheet": "art/theme-consistency/generated/buildings/business-fishing-lodge-4views-v2.png",
+      "sheetSha256": "fa85e52b6baddb40f6792af39dadb11135b2f7b02d97567817f117a9abb743ea",
       "fileValidation": "passed",
       "alphaReview": "flags-require-review",
       "warnings": [
@@ -408,6 +408,7 @@
         "SW: insufficient clear margin for four-pixel padding",
         "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
         "NW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of row split: inspect for cross-row artwork",
         "visible alpha on both sides of column split: inspect for cross-column artwork"
       ],
       "packingReview": {
@@ -415,12 +416,12 @@
         "rowSplit": 627,
         "oddDimensionsHandled": false,
         "alphaThreshold": 8,
-        "rowAboveVisible": 0,
-        "rowBelowVisible": 0,
-        "rowBothSidesVisible": 0,
-        "columnLeftVisible": 383,
-        "columnRightVisible": 354,
-        "columnBothSidesVisible": 354
+        "rowAboveVisible": 56,
+        "rowBelowVisible": 50,
+        "rowBothSidesVisible": 50,
+        "columnLeftVisible": 287,
+        "columnRightVisible": 272,
+        "columnBothSidesVisible": 272
       }
     },
     {
@@ -836,6 +837,353 @@
         "columnRightVisible": 16,
         "columnBothSidesVisible": 16
       }
+    },
+    {
+      "id": "expansion:duplex-rear",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-duplex-rear-4views-v1.png",
+      "sheetSha256": "62daabcfa8dea97d43fc9148b65d52c06765ca8bf71dee36d940ed0810482744",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "expansion:glasshouse",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-glasshouse-4views-v2.png",
+      "sheetSha256": "f40a7092c45d80c0b4c60aff7589a3b9a1946fafe54e1e759cd7c6d779bf5f3f",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SE: insufficient clear margin for four-pixel padding",
+        "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of row split: inspect for cross-row artwork"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 25,
+        "rowBelowVisible": 21,
+        "rowBothSidesVisible": 21,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "expansion:lean-to-shed",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1.png",
+      "sheetSha256": "0e6cd6dd59711810da2b158d266bc5b9cbeeb13571d0d446f000918af9e98b07",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "expansion:outhouse",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-outhouse-4views-v1.png",
+      "sheetSha256": "7174cb5c6c4d2335db367eb37f9a029313ed8e72b1891c70e4b0cd99fc48f0eb",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "expansion:rundown-house",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-rundown-house-4views-v1.png",
+      "sheetSha256": "8393237b7ca1709d57cfeee622620f28b196c2ee4633971a6f6d1e037d431f6f",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "expansion:treehouse",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-treehouse-4views-v1.png",
+      "sheetSha256": "9e43849d116070d23c2c1c58b7774b9f3cf30d16d8b22cc0ad16b79dbc05bb92",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:back-bbq-deck",
+      "sheet": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1.png",
+      "sheetSha256": "611040e4935830264c747e4625e15c3ff665a07d15ddcbe845c42970fb7e1dbe",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:back-patio-pool",
+      "sheet": "art/theme-consistency/generated/buildings/gen-back-patio-pool-4views-v1.png",
+      "sheetSha256": "bf9f773c00763dee7f4b184cbef4f5644c2ad8f1e45e0656dd9b9057fd392a20",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:back-screened-porch",
+      "sheet": "art/theme-consistency/generated/buildings/gen-back-screened-porch-4views-v1.png",
+      "sheetSha256": "be6a9b12e7d36b411322669e08909e5727a1bc2f6ba4ef29d2a268dd410268b9",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:back-shed-garden",
+      "sheet": "art/theme-consistency/generated/buildings/gen-back-shed-garden-4views-v1.png",
+      "sheetSha256": "0ae1d5a75c7ea1c3a9959896be92f7231da3667c9396bf58f7844d378ce16ec0",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:back-swingset",
+      "sheet": "art/theme-consistency/generated/buildings/gen-back-swingset-4views-v1.png",
+      "sheetSha256": "f863f3637682ab8913c99e2226db0c93fe72357705cdf851997be2b45bcd2dcf",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NE: insufficient clear margin for four-pixel padding",
+        "SE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SE: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of column split: inspect for cross-column artwork"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 10,
+        "columnRightVisible": 8,
+        "columnBothSidesVisible": 8
+      }
+    },
+    {
+      "id": "gen:house-duplex",
+      "sheet": "art/theme-consistency/generated/buildings/gen-house-duplex-4views-v2.png",
+      "sheetSha256": "0111d2f25bd5a42b2404d9b4d93c860dd9b03419508b71f96f9a00283b149815",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "NE: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NE: insufficient clear margin for four-pixel padding",
+        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of row split: inspect for cross-row artwork"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 24,
+        "rowBelowVisible": 17,
+        "rowBothSidesVisible": 17,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:house-farmhouse-wrap",
+      "sheet": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1.png",
+      "sheetSha256": "0e5c7f908de3d65ec472afc2f5fe9eea867cf866c632c88bf4e1d946b673791a",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:house-l-shape",
+      "sheet": "art/theme-consistency/generated/buildings/gen-house-l-shape-4views-v1.png",
+      "sheetSha256": "752179222c26c99f40c31d757148563e44d951b83fef707700f5fd92451b6f5d",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "NE: insufficient clear margin for four-pixel padding"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "gen:house-ranch-long",
+      "sheet": "art/theme-consistency/generated/buildings/gen-house-ranch-long-4views-v1.png",
+      "sheetSha256": "1824cd525bdaa4b4daf00317ecefad070139f6c8bbf31da67e20cba688752780",
+      "fileValidation": "passed",
+      "alphaReview": "flags-require-review",
+      "warnings": [
+        "NE: insufficient clear margin for four-pixel padding",
+        "SW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "SW: insufficient clear margin for four-pixel padding",
+        "NW: visible alpha reaches cell boundary: possible clipping or backdrop",
+        "NW: insufficient clear margin for four-pixel padding",
+        "visible alpha on both sides of column split: inspect for cross-column artwork"
+      ],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 41,
+        "columnRightVisible": 13,
+        "columnBothSidesVisible": 13
+      }
+    },
+    {
+      "id": "gen:house-splitlevel",
+      "sheet": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2.png",
+      "sheetSha256": "6b094db1c399b1984be7eb4080ba0d80c874d849a0c9d99ffa7e330c0ee8098f",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
     }
   ],
   "themeReferencePreserved": {
@@ -846,8 +1194,8 @@
     "light": "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
     "season": "autumn foliage permitted, Halloween decorations prohibited"
   },
-  "checkedNativeViews": 140,
-  "checkedScaledVariants": 560,
+  "checkedNativeViews": 204,
+  "checkedScaledVariants": 816,
   "sourceSheetsConserved": true,
   "visualApproval": false,
   "gameScaleRegistered": false,
