@@ -45,3 +45,12 @@ test('galleries in the crowd: fans in (through a gate or a door) go on as a stag
   C.step(3);
   assert.deepEqual(C.gallery, [0, 6]); assert.deepEqual(C.counts().fans, [6], 'inside counts them once');
 });
+
+test('going home: a stage 4 group walks back to its car\'s bay and calls onBack with the car', () => {
+  const C = new Crowd(2, 0), back: [number, number][] = [];
+  C.onBack = (town, route) => back.push([town, route]);
+  C.add({ x: 0, y: 0, tx: 4, ty: 0, n: 3, town: 1, stage: 4, route: 7 });
+  C.step(2); assert.deepEqual(back, []);
+  C.step(3); assert.deepEqual(back, [[1, 7]]);
+  assert.deepEqual(C.counts().fans, [0, 0], 'leaving is not arriving');
+});

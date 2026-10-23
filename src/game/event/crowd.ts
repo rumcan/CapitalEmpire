@@ -5,8 +5,9 @@
 
 /** a group of n fans of town walking straight from (x, y) to (tx, ty) (tiles): stage 0 to the lot stop of route (then it queues there), stage 1 to a
  *  door (then the fans are at the doors), stage 2 to gate `route` (then it queues there), stage 3 (already inside) to gallery spot `route`
- *  (then they stand there); route -1 for a stage 1 group from no route */
-export interface Walker { x: number; y: number; tx: number; ty: number; n: number; town: number; stage: 0 | 1 | 2 | 3; route: number }
+ *  (then they stand there), stage 4 (going home, LEAD.md M2.3) back to the bay of parked car `route` (then onBack); route -1 for a stage 1
+ *  group from no route */
+export interface Walker { x: number; y: number; tx: number; ty: number; n: number; town: number; stage: 0 | 1 | 2 | 3 | 4; route: number }
 /** a party waiting at a lot stop or a gate: its town, its fans, and (gates) the time it joined the queue */
 export interface Party { town: number; n: number; since?: number }
 /** per town: the fans at the doors (arrived: inside), at a lot stop's queue, on a bus, and at a gate's queue */
@@ -36,6 +37,8 @@ export class Crowd {
   gallery: number[] = [];
   /** called when fans get in (a gate admits them at (x, y), or a group lands at a door): the City sends them on to a gallery */
   onIn: ((town: number, n: number, x: number, y: number) => void) | null = null;
+  /** called when a party going home reaches its car's bay (stage 4; route: the car): the City drives the car home */
+  onBack: ((town: number, route: number) => void) | null = null;
   /** the number of towns (the length of each per-town list) */
   readonly towns: number;
 
@@ -105,6 +108,7 @@ export class Crowd {
     if (w.stage === 0 && this.queue[w.route]) this.queue[w.route]!.push({ town: w.town, n: w.n });
     else if (w.stage === 2 && this.gateQ[w.route]) this.gateQ[w.route]!.push({ town: w.town, n: w.n, since: this.now });
     else if (w.stage === 3) { if (this.gallery[w.route] !== undefined) this.gallery[w.route]! += w.n; }
+    else if (w.stage === 4) this.onBack?.(w.town, w.route);
     else { this.arrive(w.town, w.n); this.onIn?.(w.town, w.n, w.tx, w.ty); }
   }
   /** moves every walker dist tiles straight at its target; a group that reaches it lands (see land) */

@@ -65,13 +65,16 @@ route = the index in `parkedCars`); when it lands (`Crowd.onBack`) its car waits
 is spawned at its car park's entrance (the park's sink: lane by `sinkLane`, s = the sink's s) bound for a home of its town (the homes of the
 surge's plan, by population; `driveway(lot, g)`), and the park's `parked` count drops. Measured (for M2.4): `leave = { start, cars,
 gone, last }` (sim s), into `RoundResult.leave` when the round closes.
-- [ ] a. `event/crowd.ts`: stage 4, `onBack(town, route)`; test.
-- [ ] b. `city.ts`: `parkedCars` (in `drainParty`), the homes by town kept from `planSurge`, `LEAVE_AFTER` / `LEAVE_S`, `stepLeaving(dt)`
+- [x] a. `event/crowd.ts`: stage 4, `onBack(town, route)`; test.
+- [x] b. `city.ts`: `parkedCars` (in `drainParty`), the homes by town kept from `planSurge`, `LEAVE_AFTER` / `LEAVE_S`, `stepLeaving(dt)`
   (release, walk, spawn), the measurement; `closeRound` keeps despawning (anything left is cut off).
 - [ ] c. Tests (a City-level test if feasible, else crowd-level), browser check (the evening traffic out of the car parks), land.
 
 ## Next action
-M2.3 a: `event/crowd.ts` stage 4 and `onBack`.
+M2.3 c: `npm run build`; browser check on a test copy (5181, own storage): Skip to tournament at 8x, after kick-off (eval) watch
+`window.__game.traffic.round.last.leave` (cars, gone, start, last) rise and the car parks empty; look at the car park and its road for the
+evening traffic. a and b are in (crowd stage 4 / onBack; `City.parkedCars`, `surgeHomes`, `leave`, `stepLeaving`, `leaveFrom`, `driveHome`,
+`LEAVE_AFTER` 120 / `LEAVE_S` 300 at the top of city.ts; `RoundResult.leave`).
 
 ## Done (newest first)
 - 2026-10-23: **M2.2 Galleries landed** on main. Browser-checked on a test copy (5181, fresh golf game, Skip to tournament at 8x): 18 spots (9 greens, 9 tees), 102 of the 168 fans in standing at them while the rest still walked, drawn as rings of standing fans with `n watching` (15 by a green, 12 by a tee).

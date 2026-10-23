@@ -45,6 +45,8 @@ import { applyParkingFeeDemand } from './golf/parkingfee';
 const CAP = 12000, TICKS = 100;
 /** the game hour (sim s): the town's access is copied and the built lots given to the sim at its start; the planner runs once per hour */
 const GAME_HOUR = 60;
+/** going home (golf, LEAD.md M2.3): the leaving starts this long after kick-off and releases the parked cars' parties over LEAVE_S (sim s) */
+const LEAVE_AFTER = 120, LEAVE_S = 300;
 /** the game hours' snapshots kept (four game days of them: see beforeafter.ts) */
 const HOURS_KEPT = 96;
 /** the milestones of a step that reached none (shared: read, never written) */
@@ -223,6 +225,11 @@ export class City {
     const i = pickSpot(this.spots, C.gallery, this.spotRnd()), s = this.spots[i]!;
     C.add({ x, y, tx: s.x + (this.spotRnd() - 0.5) * 3, ty: s.y + (this.spotRnd() - 0.5) * 3, n, town, stage: 3, route: i });
   }
+  /** going home (golf, LEAD.md M2.3): every party car that parked (its town, car park and bay), the surge's homes by town (where the cars
+   *  drive back to), and the leaving: when it starts, the release order, the next to release, the cars waiting to leave their car park, the
+   *  counts and the last car's time */
+  private parkedCars: { town: number; park: number; bay: number }[] = []; private surgeHomes: SurgeHome[][] = []; private leaveRnd = seededRnd(0x1ea7e);
+  leave: { at: number; order: number[]; next: number; pending: number[]; cars: number; gone: number; last: number } | null = null;
   busDefs: BusRouteDef[] = []; private busPts: ({ lot: Pt; doors: Pt } | null)[] = []; crowd: Crowd | null = null;
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
@@ -437,7 +444,7 @@ export class City {
     const last = this.round.last, perfect = !!last?.perfect;
     this.grown = null;
     if (!this.round.close()) return false;
-    this.sim.dropParty(); this.surge = null; this.crowd = null; this.sim.dropBuses();
+    this.sim.dropParty(); this.surge = null; this.crowd = null; this.sim.dropBuses(); this.leave = null; this.parkedCars = [];
     // the roads clear after the event: a surge can leave the towns' junctions gridlocked, and the next round must start on an open network
     // (the everyday trips start again on their own)
     for (let i = 0; i < this.sim.cap; i++) if (this.sim.alive[i]) this.sim.despawn(i);
@@ -637,7 +644,7 @@ export class City {
       this.visits.step(this.sim, this.g, this.sim.clock);
       this.stepTaxis();
     }
-    if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.syncWait(); }
+    if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.stepLeaving(); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
     const events = this.town.tick(this.sim.clock, this.ctx);
     const ch = Math.floor(this.sim.clock / GAME_HOUR); if (this.golfLand.length && ch !== this.courseHour) { this.courseHour = ch; this.clearCourse(events); }
@@ -975,7 +982,7 @@ export class City {
     // the town bus stops: a route with a town (its lot stop beside the town's car park) and a resolved stop
     const stops: SurgeStop[] = [];
     this.busDefs.forEach((d, r) => { const p = this.busPts[r]?.lot; if (d.town !== undefined && p) stops.push({ route: r, town: d.town, x: p.x, y: p.y }); });
-    const s = new Surge();
+    const s = new Surge(); this.surgeHomes = homes; this.parkedCars = []; this.leave = null;
     s.plan(this.round.crowd, homes, this.surgeParks(), seededRnd(SURGE_SEED), this.sim.t, stops);
     return s;
   }
@@ -1033,6 +1040,13 @@ export class City {
     if (bs && this.busRiders >= BUS_GOOD_RIDERS) bs.goodDays++;
     L.stuck = this.report(5).top.map(i => ({ label: i.label, x: i.x, y: i.y, loss: i.loss }));
     if (!this.golf) this.budget.payout(L.payout);
+    // golf: the crowd goes home (LEAD.md M2.3) LEAVE_AFTER sim s from now, the parked cars' parties in a seeded random order
+    if (this.golf) {
+      const order = this.parkedCars.map((_, i) => i);
+      for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(this.leaveRnd() * (i + 1)); [order[i], order[j]] = [order[j]!, order[i]!]; }
+      this.leave = { at: this.sim.t + LEAVE_AFTER, order, next: 0, pending: [], cars: order.length, gone: 0, last: 0 };
+      L.leave = { cars: order.length, gone: 0, start: this.leave.at, last: 0 };
+    }
   }
   /** the party cars' exits since the last step go to the surge (the sim's partyOut, cleared; discarded with no surge) */
   private drainParty(): void {
@@ -1041,7 +1055,7 @@ export class City {
     po.length = 0;
     // the party cars that parked: their fans start walking from their bays
     const pb = this.sim.partyBays;
-    for (let k = 0; k < pb.length; k += 3) this.partyWalk(pb[k]!, pb[k + 1]!, pb[k + 2]!);
+    for (let k = 0; k < pb.length; k += 3) { this.parkedCars.push({ town: pb[k]!, park: pb[k + 1]!, bay: pb[k + 2]! }); this.partyWalk(pb[k]!, pb[k + 1]!, pb[k + 2]!); }
     pb.length = 0;
   }
 
@@ -1105,6 +1119,7 @@ export class City {
     const C = new Crowd(this.round.crowd.length, this.busDefs.length);
     this.crowd = C; C.setGates(this.gates.length); this.gateAcc = this.gates.map(() => 0);
     C.setSpots(this.spots.length); C.onIn = (town, n, x, y) => this.toGallery(town, n, x, y);
+    C.onBack = (_town, route) => { this.leave?.pending.push(route); };
     this.busDefs.forEach((d, r) => {
       const R = this.sim.busRoutes[r];
       if (!R) return;
@@ -1153,6 +1168,46 @@ export class City {
     this.busDefs.forEach((d, q) => { if (d.park === P.id && this.busPts[q] && C.waiting(q) < best) { best = C.waiting(q); r = q; } });
     if (r >= 0) { const t = this.busPts[r]!.lot; C.add({ x: b.x, y: b.y, tx: t.x, ty: t.y, n: PARTY, town, stage: 0, route: r }); return; }
     this.walkDoor(town, b, PARTY, -1);
+  }
+  /** going home (LEAD.md M2.3): from LEAVE_AFTER after kick-off the parked cars' parties are released evenly over LEAVE_S, each walking from
+   *  a gallery spot with fans (taking its fans off the spot) back to its car's bay; the cars whose party is back leave their car park in
+   *  order as the road has room (driveHome). The round's result follows the counts (RoundResult.leave) */
+  private stepLeaving(): void {
+    const Lv = this.leave, C = this.crowd, t = this.sim.t; if (!Lv || !C) return;
+    if (t >= Lv.at && Lv.next < Lv.order.length) {
+      const due = Math.min(Lv.order.length, Math.floor((t - Lv.at) / LEAVE_S * Lv.order.length) + 1);
+      while (Lv.next < due) {
+        const k = Lv.order[Lv.next++]!, car = this.parkedCars[k]!, b = this.parks[car.park]?.bays[car.bay];
+        if (!b) { Lv.gone++; continue; }
+        const from = this.leaveFrom(C, b);
+        C.add({ x: from.x, y: from.y, tx: b.x, ty: b.y, n: PARTY, town: car.town, stage: 4, route: k });
+      }
+    }
+    for (let i = 0; i < Lv.pending.length;) { if (this.driveHome(Lv.pending[i]!)) { Lv.pending.splice(i, 1); Lv.gone++; Lv.last = t; } else i++; }
+    const L = this.round.last; if (L?.leave) { L.leave.gone = Lv.gone; L.leave.last = Lv.last; }
+  }
+  /** where a leaving party starts: a gallery spot with fans (a seeded pick among them; PARTY fans come off it), else the nearest gate, else
+   *  the site's middle, else its car's bay */
+  private leaveFrom(C: Crowd, bay: Pt): Pt {
+    const withFans: number[] = []; C.gallery.forEach((n, i) => { if (n > 0) withFans.push(i); });
+    if (withFans.length && this.spots.length) { const i = withFans[Math.floor(this.leaveRnd() * withFans.length)]!; C.gallery[i] = Math.max(0, C.gallery[i]! - PARTY); return this.spots[i]!; }
+    if (this.gates.length) { let best = this.gates[0]!; for (const g of this.gates) if (Math.hypot(g.x - bay.x, g.y - bay.y) < Math.hypot(best.x - bay.x, best.y - bay.y)) best = g; return best; }
+    return this.site ? this.site.c : bay;
+  }
+  /** parked car k leaves its car park at its entrance, bound for a home of its town (the surge's homes, by population): true when it is on the
+   *  road (or can never be: no entrance or no home), false to try again (no room at the entrance yet) */
+  private driveHome(k: number): boolean {
+    const car = this.parkedCars[k]; if (!car) return true;
+    const j = this.sim.sinks.findIndex(K => K.park === car.park), K = this.sim.sinks[j], d = K ? this.g.dsegs[K.dseg] : undefined, P = this.parks[car.park];
+    const homes = this.surgeHomes[car.town] ?? [];
+    if (!K || !d || !P || !homes.length) return true;
+    let sum = 0; for (const h of homes) sum += h.pop;
+    let x = this.leaveRnd() * sum, home = homes[homes.length - 1]!; for (const h of homes) { x -= h.pop; if (x < 0) { home = h; break; } }
+    const dw = driveway(home.lot, this.g); if (!dw) return true;
+    const dest = this.g.lanes[dw.lane]!.dseg;
+    if (this.sim.spawnAt(sinkLane(d, P.pv), K.s, dest, dw.s) < 0) return false;
+    const sp = this.sim.parks[car.park]; if (sp) sp.parked = Math.max(0, sp.parked - 1);
+    return true;
   }
   /** each gate admits its lanes' rate (golf/venue.ts gateRate: a game minute is a sim second) from its queue; capacity a gate does not use
    *  (its queue ran dry) is carried over for at most a second */
