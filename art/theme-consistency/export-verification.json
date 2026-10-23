@@ -1,0 +1,29 @@
+{
+  "task": "T017",
+  "scope": "Existing artwork exports only; generated theme sheets are tracked separately",
+  "checkedPNGExports": 1621,
+  "libraryFilesConserved": 6,
+  "subjects": 305,
+  "selectedPriorTreeSheets": 6,
+  "idempotencyUnchangedPNGsRewritten": 0,
+  "failures": [],
+  "checks": [
+    "configured and largest-normal-UI PNG dimensions and alpha",
+    "export SHA256 against inventory",
+    "exact CSS bounds times DPR with ceil raster rounding",
+    "native atlas crop conservation",
+    "six selected prior tree PNGs retained byte-for-byte",
+    "runtime library source conservation",
+    "unique subjects",
+    "buildings then all trees then all cars",
+    "all queue reference hashes",
+    "idempotent rerun skipped unchanged PNG writes"
+  ],
+  "limitations": [
+    "Normal UI/configured maximum only; arbitrary Studio scales are unbounded",
+    "Configured business exports use actual canonical parcel fit; owner nominal bounds retained separately",
+    "Ordinary cars use instance scale1 and CAR_SCALE0.88 once",
+    "PNG alpha presence verified; visual edge quality and geometric rotation review remain separate",
+    "Source-only trees have no runtime placement scale"
+  ]
+}

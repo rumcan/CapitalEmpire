@@ -1,0 +1,16 @@
+{
+  "id": "expansion:glasshouse",
+  "sheet": "art/theme-consistency/generated/buildings/expansion-glasshouse-4views-v2.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-bffb2d8b-fa35-4a9b-b104-c4f42086fd1b.png",
+  "prompt": "Use case: precise-object-edit. Image 1 = authoritative full autumn dusk scene for STYLE. Image 2 = this single subject's four-view sheet to edit. Image 3 = camera rotation diagram only, never copy its boxes, colors or labels. Image 4 = original game building identity. Remove the circular green/red WREATH from the greenhouse and all festive ornaments in ALL FOUR views. Keep only ordinary living plants in pots and gardening supplies. Use the rotation diagram for four distinct quarter turns: the long roof ridge alternates its slope down-right, up-right, down-right, up-right, never three views with the same ridge slope. Same rigid greenhouse, same vent positions tracked through rotations, not four different plant houses.\nKeep the SAME single model, palette, architecture, material detail, fixed 2:1 isometric camera and four genuine quarter-turn views. Early dusk, warm low sun FIXED SCREEN UPPER RIGHT, shadows lower-left; architectural windows and lamps on. No night or moonlight, no people, NO Halloween: no pumpkins, cobwebs, wreaths, garlands, decorative string lights or spooky ornaments. Complete four sprites on SQUARE transparent PNG 2x2 sheet with very broad clear quadrant margins and center gutters; uniformly reduce the sprites rather than clipping roofs or contact shadows. Only this subject and its integral architecture, no terrain tile, border, text or diagram. Preserve alpha transparency and the unedited building details.",
+  "referencedImagePaths": [
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/expansion-glasshouse-4views-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/expansion-glasshouse.configured@2x.png"
+  ],
+  "generator": "built-in image_gen",
+  "generatedAt": "2026-10-23T16:36:52.488Z",
+  "status": "generated-awaiting-visual-review",
+  "correction": "Remove the circular green/red WREATH from the greenhouse and all festive ornaments in ALL FOUR views. Keep only ordinary living plants in pots and gardening supplies. Use the rotation diagram for four distinct quarter turns: the long roof ridge alternates its slope down-right, up-right, down-right, up-right, never three views with the same ridge slope. Same rigid greenhouse, same vent positions tracked through rotations, not four different plant houses."
+}

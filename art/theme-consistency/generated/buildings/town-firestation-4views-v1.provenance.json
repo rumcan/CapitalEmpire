@@ -1,0 +1,37 @@
+{
+  "id": "town:firestation",
+  "generator": "image_gen",
+  "generated": "2026-10-23",
+  "assembly": "node scripts/assets/assemble-theme-consistency.mjs buildings town-firestation",
+  "references": [
+    "art/theme-consistency/exports/buildings/town-firestation.configured@2x.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "sourceViews": [
+    {
+      "direction": "NE",
+      "file": "art/theme-consistency/generated/buildings/town-firestation-singles/NE.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-51dc7877-15a3-4f44-ac8a-cb0fc1d5b317.png",
+      "prompt": "Single isolated 2:1 isometric game sprite of this exact red-brick town firestation. Preserve both red garage doors, green entrance, bell, windows, chimney and rooftop vent. Warm early dusk light from screen upper right, warm windows on. NO BACKGROUND: the area surrounding the firestation is empty transparent alpha, RGBA PNG. Do not include ground, sky, scene or any other object."
+    },
+    {
+      "direction": "SE",
+      "file": "art/theme-consistency/generated/buildings/town-firestation-singles/SE.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-1605ba16-b52c-4df5-aef5-3fe192d7cb22.png",
+      "prompt": "Single isolated 2:1 isometric game sprite cutout: the SAME red-brick town firestation as images 1 and 2, rotated 90° in the world from its front+right view. Show the RIGHT wall on the left side of the picture and construct the BACK wall on the right side; the two red garage doors and bell belong only to the hidden front and must not appear on the visible rear. Preserve the exact two-storey flat parapet roof, chimney, vent, warm windows, brick and cream corner blocks, physical size and early dusk style. Fixed camera and warm sunlight from screen upper right. Image 3 supplies only the owner's style and dusk lighting. NO BACKGROUND: all surrounding canvas is transparent alpha, RGBA PNG. No ground, sky, scene, people, vehicles or Halloween decor."
+    },
+    {
+      "direction": "SW",
+      "file": "art/theme-consistency/generated/buildings/town-firestation-singles/SW.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-a6b9bdc4-4e8d-4041-b5d0-249b2079c97d.png",
+      "prompt": "One isolated game sprite cutout of the red-brick firestation in image 1, seen from the REAR-LEFT corner after a half turn from its depicted front-right corner. The two garage doors and bell are on the hidden front, so this view shows only the rear and left walls with warm windows. Preserve the exact flat parapet roof, twin-flue chimney, rooftop vent, cream corner blocks and early-dusk upper-right sunlight. Use image 2 only for the town's visual style. The surrounding canvas has NO BACKGROUND and is fully transparent alpha. Output one RGBA PNG sprite."
+    },
+    {
+      "direction": "NW",
+      "file": "art/theme-consistency/generated/buildings/town-firestation-singles/NW.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-0d1e2ca2-60f4-4598-b4ea-8b4da7ddfb6e.png",
+      "prompt": "One isolated game sprite cutout of the SAME red-brick town firestation in image 1. View from the FRONT-LEFT corner: left wall appears to image-left, front facade with exactly two red garage doors, green central door and bell appears to image-right. Rotate its geometry 90° from source, keeping the fixed 2:1 isometric camera and warm low dusk sun at screen upper right. Same flat roof, two-flue chimney, rooftop vent, cream trim, warm windows. Image 2 provides only the owner's town style. NO BACKGROUND; outside the building is empty transparent alpha in an RGBA PNG. No ground or scene."
+    }
+  ],
+  "review": "Draft only. All four sources have alpha, but NE, SE and NW source silhouettes touch canvas borders and may be clipped. Visual geometry and lighting review still pending."
+}

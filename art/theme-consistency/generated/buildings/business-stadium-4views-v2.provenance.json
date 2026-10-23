@@ -1,0 +1,16 @@
+{
+  "id": "business:stadium",
+  "sheet": "art/theme-consistency/generated/buildings/business-stadium-4views-v2.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-c32bedc2-e875-4a45-8f5a-45e5613f05ca.png",
+  "prompt": "Use case: precise-object-edit. Input roles: image 1 = owner-selected dusk art theme; image 2 = editable existing sprite sheet; image 3 = camera rotation diagram ONLY, never copy diagram artwork or labels; image 4 = original game asset identity. Produce a corrected transparent PNG of the SAME single subject with four sprites in a square 2x2 grid. REMOVE EVERY SPECTATOR from ALL stands in all four stadiums. Replace the speckled crowd texture with clean continuous rows of completely EMPTY BLUE plastic seats, clearly visible individual empty seat backs, pale concrete aisles and steps. Empty pitch and concourses. No tiny heads, no coloured human dots, no players, no staff, no pedestrians. Keep the same architecture, football markings, illuminated floodlights, sun direction and four-view layout.\nMaintain the original building identity, fixed parallel 2:1 isometric camera and warm low SCREEN UPPER-RIGHT sunlight; tiny shadows screen lower-left. Keep early dusk with warm architectural lights already on, enough daylight to see all materials. NO night or moonlight. NO people anywhere. NO Halloween pumpkins, cobwebs, wreaths, spooky signs, decorative string-light garlands. Four COMPLETE sprites with broad clear gutters and margins, shrink uniformly to fit rather than cut off any part. Transparent alpha outside silhouettes; no ground tile, labels, frames, diagram or backdrop.",
+  "referencedImagePaths": [
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/business-stadium-4views-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/business-stadium.configured@2x.png"
+  ],
+  "generator": "built-in image_gen",
+  "generatedAt": "2026-10-23T15:56:08.084Z",
+  "status": "generated-awaiting-visual-review",
+  "correction": "REMOVE EVERY SPECTATOR from ALL stands in all four stadiums. Replace the speckled crowd texture with clean continuous rows of completely EMPTY BLUE plastic seats, clearly visible individual empty seat backs, pale concrete aisles and steps. Empty pitch and concourses. No tiny heads, no coloured human dots, no players, no staff, no pedestrians. Keep the same architecture, football markings, illuminated floodlights, sun direction and four-view layout."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "golf:clubhouse-shanty",
+  "generator": "image_gen",
+  "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-4f4eb17d-9fd6-473f-b7d4-ecc901520f43.png",
+  "prompt": "Use case: background-extraction. Edit the supplied 2x2 four-view starter clubhouse sprite sheet. Preserve every building pixel, the four rotations, placement, scale, dusk lighting and details. Replace ONLY the grey checkerboard backdrop with genuine transparent alpha throughout all empty space and gutters. Do not paint a checkerboard or any solid background into the PNG. Keep all four complete silhouettes and at least the existing cell spacing. No other changes.",
+  "references": [
+    "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v1.png"
+  ],
+  "generated": "2026-10-23",
+  "correction": "V1 opaque checkerboard; V2 alpha correction, edge halos need visual review"
+}
