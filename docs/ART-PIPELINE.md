@@ -1,5 +1,7 @@
 # The art pipeline: TrickOrTreat art into Capital Empire
 
+**Current image creation:** follow [SPRITE-GENERATION-WORKFLOW.md](SPRITE-GENERATION-WORKFLOW.md) and the live [T017 handover](../art/theme-consistency/HANDOVER.md). They document the game-scale references, complete-scene-first approach, authoritative dusk theme, four rotations, native alpha, exact prompts, preparation and separate review stages. T017 uses built-in imagegen; the RUN.world/magenta generation recipes below describe a separate historical pipeline and must not silently replace that workflow.
+
 How the game's sprites, ground art, baked house lots and townspeople are made, the owner's tool for fixing them, and the
 owner's rules for how lots must look. TrickOrTreat (`../TrickOrTreat`, or `TOT_REPO`) is a **read-only** source: never write
 to it, least of all its `output/town-builder/` (the owner's painted town and builder library).

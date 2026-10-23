@@ -1,5 +1,7 @@
 # Screenshot to complete scene to individual sprites
 
+Current operational guide: [docs/SPRITE-GENERATION-WORKFLOW.md](../../docs/SPRITE-GENERATION-WORKFLOW.md), with the exact dusk theme, prompts, scale exports, alpha fallback, commands and review rules. Current execution state and priorities are in the [T017 handover](../theme-consistency/HANDOVER.md). This document preserves the original scene-first brief; later corrections and the canonical guide apply when earlier examples mention crowds or providers.
+
 Owner direction, 2026-10-22. Apply this workflow to all new object, foliage, character and tournament sprites. Do not start by inventing disconnected sprite sheets.
 
 ## Latest owner corrections, 2026-10-23

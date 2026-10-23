@@ -1,5 +1,13 @@
 # T017 image generation handover
 
+## Integration handover, 2026-10-23
+
+The owner requested generation stop, then asked to merge all outstanding work into main and document the workflow. **Generation is stopped; this integration starts no new images or background batch.** The checkpoint through `27eb91e` is included in the owner-requested `lead/merge-outstanding-20261023` integration for main alongside T015/T016/T018 and shadow work. After pulling, verify `origin/main` and PR #17 rather than reusing the historical branch instructions below. For future art work, follow current repository/task branch rules from the merged checkpoint.
+
+**Read [docs/SPRITE-GENERATION-WORKFLOW.md](../../docs/SPRITE-GENERATION-WORKFLOW.md) for the complete operational workflow**, including example prompts and commands. It covers game screenshots and exact scale references, full overview before individual sprites, the sole authoritative theme, four true rotations under fixed sunlight, the four-cutout alpha fallback, provenance, selected revisions, packing warnings and delivery to the implementing AI. Broader atlas history is in [ART-PIPELINE.md](../../docs/ART-PIPELINE.md).
+
+The continuation count below is the last recorded snapshot: 54 generated drafts, 251 pending, zero visual approvals/game registrations by this task. Refresh from `queue.json`, actual selected files and reports before continuing. When generation is requested again, prioritize pending town houses/buildings (currently `town:laundromat` is the next substantial town building; `town:bus_stop` is also pending), then remaining buildings, trees and vehicles. Another AI handles implementation. File/alpha success does not approve clipped or inconsistent art.
+
 ## Continuation update, 2026-10-23
 
 The owner resumed generation and set **town houses and buildings as the priority**. The original queue order is retained as inventory; choose pending town houses/buildings before other golf or reference buildings, then return to the remaining building queue. Existing `world:house_*` and many `town:*` subjects are already generated drafts; the next pending substantial town building is `town:laundromat` (the smaller `town:bus_stop` remains pending). Trees and vehicles remain after buildings.
@@ -8,13 +16,13 @@ The selected count is now **54 generated drafts of 305 subjects**, with 251 pend
 
 **Alpha lesson:** telling built-in imagegen to make a transparent four-view sheet repeatedly produced opaque checkerboard or backdrop pixels, even with explicit "NO BACKGROUND" wording. Retrying one isolated view per call with "NO BACKGROUND; transparent alpha, RGBA PNG" produced four real-alpha cutouts for the firestation. Verify `sharp(...).metadata().hasAlpha` and transparent corner pixels after **every** call; reject opaque outputs. `scripts/assets/assemble-theme-consistency.mjs <category> <slug> [vN]` composes four actual cutouts into a 2x2 sheet using only pixel crops and aspect-preserving resizing. It does not repair clipped source views or prove correct rotations. Preserve raw cutouts and provenance, run `prep --id`, then `plan`. Keep the user's priority and these review warnings in the next checkpoint.
 
-Earlier stop state, 2026-10-23: generation was stopped at the owner's request. The owner has since resumed it and prioritized town houses and buildings, as recorded above.
+This continuation update records the earlier resumed generation session. The later stop/integration checkpoint at the top is the current execution state.
 
 ## Prompt for the new chat
 
-> Read `art/theme-consistency/HANDOVER.md`, `art/theme-consistency/IMPLEMENTATION-NOTES.txt`, and task T017. Continue the existing image-generation task on its current branch when I ask. Prioritize generating the remaining images; another AI handles implementation. Use my exact dusk street reference for every subject, preserve the original asset's identity, produce four genuinely different rotations with fixed screen-upper-right sunlight, and generate no people or Halloween decoration. Continue with the first pending building, `golf:clubhouse-shanty`; finish buildings before trees and vehicles. Preserve existing files, corrected sheet selections and review warnings. Push checkpoints to the existing branch/PR, never main.
+> Read `docs/SPRITE-GENERATION-WORKFLOW.md`, `art/theme-consistency/HANDOVER.md`, `art/theme-consistency/IMPLEMENTATION-NOTES.txt`, and task T017. Generation is stopped until I ask to resume. Start from the merged main checkpoint and follow current task/branch instructions. When asked to generate, refresh local jobs, inspect the exact dusk street reference and choose a pending town house/building from actual selected-file existence, then finish remaining buildings, trees and vehicles. Another AI handles implementation. Generate four true rotations of one subject with fixed screen-upper-right sunlight, early dusk, no people or Halloween. Preserve originals, selected revisions, exact prompts and separate file/visual/packing/game review states. Do not regenerate an existing draft just because it is unapproved. Commit and push scoped checkpoints under the applicable authorization.
 
-## Repository and ownership
+## Historical task branch and ownership (before owner-requested integration)
 
 - Workspace: `C:/Work Admin/PERSONAL/Repos/CapitalEmpire`.
 - Branch: `arena/T017-theme-consistent-library`.

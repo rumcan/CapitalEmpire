@@ -1,5 +1,11 @@
 # Handover: the art chat, 2026-10-21 night (the owner moves to a new chat on a new PC)
 
+## Current entry point, 2026-10-23
+
+For image generation, read [SPRITE-GENERATION-WORKFLOW.md](SPRITE-GENERATION-WORKFLOW.md) and the live [T017 handover](../art/theme-consistency/HANDOVER.md) first. The canonical guide includes concrete commands and prompts, the exact theme reference, screenshot/zoom calibration, scene-first derivation, four rotations, fixed dusk sunlight, no people/Halloween, budget versus wear, alpha checks, provenance and delivery to the implementing AI.
+
+The owner requested a stop followed by integration of outstanding work into main. This checkpoint creates no new images; resume generation only when requested. The T015/T016/T017 art checkpoints, T018 ghost preview and outstanding shadow changes are included in this integration. Generated T017 sheets remain drafts subject to the live handover's review warnings. The remainder of this document is a **historical 2026-10-21 snapshot**: its unmerged-branch list, RUN provider details and immediate next actions are not the current generation queue or merge status.
+
 Read this first, then `CLAUDE.md`, `docs/SECOND-AGENT.md` (who owns which files) and the end of `docs/PROGRESS.md`. This file says
 exactly where the art chat stopped and what to do next, in order.
 

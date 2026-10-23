@@ -1,6 +1,6 @@
 T017: IMAGE DELIVERY FOR THE IMPLEMENTING AI
 
-Continuation handover: HANDOVER.md. Generation stopped at the owner's request on 2026-10-23 with 51 building subjects generated, 254 subjects pending, and no generation batch running. Read the handover for selected revisions, review caveats and the exact next subject.
+Continuation handover: HANDOVER.md. Complete operational guide: ../../docs/SPRITE-GENERATION-WORKFLOW.md. Generation is stopped at the owner's request; the latest recorded checkpoint is 54 generated building drafts, 251 subjects pending, and no generation batch running. Refresh current selected files/reports rather than relying on counts. Read the handover for selected revisions, review caveats and town-building priority.
 
 Authoritative owner-selected reference: references/theme-authoritative.png.
 Theme: early dusk with warm windows/exterior lamps on; low side sun from screen upper-right, shadows lower-left. No moonlight/night treatment. Absolutely no Halloween decorations or people. Autumn foliage is allowed.
@@ -17,7 +17,7 @@ generated-manifest.json separates file checks, alpha boundary warnings, visual a
 
 One subject goes to imagegen at a time with the exact authoritative reference and that subject's exported game-size identity images. Exact prompts are jobs/*.prompt.txt; generation-specific provenance sits beside every generated sheet. plan-theme-consistency.mjs refreshes the resumable jobs without resetting queue approval. Remaining subjects are pending, not falsely marked generated.
 
-User explicitly assigns implementation to another AI and prioritizes generation here. Do not make runtime changes as part of this image task. All new work is on arena/T017-theme-consistent-library; never push main from this task.
+User explicitly assigns implementation to another AI and prioritizes generation here. Do not make runtime changes as part of this image task. The historical arena/T017-theme-consistent-library checkpoint through 27eb91e is included in the owner-requested main integration; start future work from the merged checkpoint and follow current task/branch rules. Do not resume generation as part of a handover or merge request.
 
 Rotation aid: references/rotation-guide-v1.png is a geometry diagram ONLY. It demonstrates four rigid quarter-turn face pairs, with a fixed white corner marker. It is not the theme or an identity source. Building jobs include it as the last reference; never copy its colours, box, labels or marker into game art. The street scene remains the sole style authority. Exact correction prompts are preserved in each selected sheet's provenance file.
 
