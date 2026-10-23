@@ -52,6 +52,17 @@ RUN's rig service (`rig-3d`) rejected every model on 2026-10-23, base_man's too,
    the build, the better the joints line up).
 3. **Render:** `render-person-3d.mjs <id> --root art/spectators --height <m>`, then look at `preview.png` (section 4).
 
+**The batch (2026-10-23):** `art/people-cast.json` lists every person to make (townspeople in `art/people3d`, spectators and staff in
+`art/spectators`; id, role, height, base, look) and the render settings; `node scripts/assets/people3d/make-cast.mjs` makes everyone who
+has no sheet yet, one at a time (model from RUN, local rig, render), logging to `output/people-cast.log`; rerun it to carry on. After a
+change of the render settings: `make-cast.mjs --render-only` (free). Each look must start with its own words (the batch checks): after the
+CLI's timeout, make-person-3d.mjs finds the model in RUN's library by the start of its prompt.
+
+**Hands and arms (the owner's choice, 2026-10-23):** RUN's A-pose models hold their hands open, palms forward, and the clips keep the arms
+out. `render-person-3d.mjs --hand-twist 70,-70 --arms-in 12` (in `people-cast.json` "render") turns the hands (forearm and hand twisted
+about the arm, half each; the rig has no finger bones) and swings the upper arms in toward the body. The owner looked at five hand options
+and three arm angles and chose these; `-70,70` turns the palms the other way, and above about 16 degrees the hands touch the thighs.
+
 **Three traps the transfer hit (all fixed in the script; keep them fixed if you change it):**
 - **RUN's models are quantized** (glTF `KHR_mesh_quantization`: positions, normals and UVs stored as normalized 16-bit integers). Writing
   metre values back into those attributes clamps them to [-1, 1]: the person comes out as stretched columns 2 m tall (the arms, legs and
@@ -213,6 +224,10 @@ LEAD.md).
 5. The crowd patches (3d), then P2.
 
 ## 7. Progress (update this as you go)
+- 2026-10-23 (latest): **the cast batch started**: 35 people in `art/people-cast.json` (12 townspeople, 15 spectators, 8 staff: marshals,
+  volunteer, security, caddie, vendor, two pros), one at a time, about 11 min each (RUN's model). Check `output/people-cast.log`; rerun
+  `make-cast.mjs` to carry on after a stop (finished people are skipped). Then look at every `preview.png` (section 4), fix bad frames in
+  the studio's People tab, and Rebuild game sprites: the townspeople in `art/people3d` walk the town after the rebuild.
 - 2026-10-23 (latest): **spectator 1 done for walk + idle.** `spec_m_polo_visor`: RUN's model, rigged locally from base_man
   (`rig-local-person.mjs`, section 1b), rendered at 1.80 m: `art/spectators/spec_m_polo_visor/sheet.webp`, `preview.png`. Checked: whole
   in all 8 facings, clean shoulders, elbows and hips. Not yet: the other clips (RUN's rig service down), the studio People-tab check for

@@ -8,6 +8,9 @@
 //   --clip: one more clip of the person (its anim_<name>.glb, from make-person-3d.mjs --clips) as its own sheet <name>.webp + <name>.json +
 //     preview-<name>.png: --frames frames per facing sampled evenly over the clip (a loop; --once: first to last frame), or with --stride
 //     over one stride like the walk (run, sprint, back_up, sidestep). Sized by the walk model, so the floor and the height match the walk.
+//     --hand-twist <degrees>: turn the palms in (RUN's A-pose models hold their hands open, palms forward): each forearm and hand twisted
+//     about the arm's own axis, half each (the rig has no finger bones); 0 (the default) renders as before
+//     --arms-in <degrees>: the upper arms swung in toward the body (RUN's clips hold them out, from the A-pose), about the body's forward axis
 //     --seated: the json gets the seat (the hips' height and their point in the frame) for sitting the person on a grandstand seat row
 //
 // in:  art/people3d/<id>/*.glb   the rigged model with its walk clip (and an idle clip when RUN made one)
@@ -25,6 +28,9 @@ const id = process.argv[2], arg = (k, d) => { const i = process.argv.indexOf(k);
 const sarg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; }, flag = k => process.argv.includes(k);
 if (!id) throw new Error('Usage: node scripts/assets/people3d/render-person-3d.mjs <id> [--height m] [--walk n] [--root dir] [--clip name [--frames n] [--stride] [--once] [--seated]]');
 const ROOT_DIR = sarg('--root', 'art/people3d'), CLIP = sarg('--clip', null), FRAMES = arg('--frames', 4), STRIDE = flag('--stride'), ONCE = flag('--once'), SEATED = flag('--seated');
+// --hand-twist a (the left a, the right -a) or l,r (each hand its own)
+const TWIST_ARG = sarg('--hand-twist', '0').split(',').map(Number), TWIST = TWIST_ARG.length > 1 ? TWIST_ARG : [TWIST_ARG[0], -TWIST_ARG[0]];
+const ARMS_IN = arg('--arms-in', 0);
 const PREFIX = path.basename(ROOT_DIR) === 'spectators' ? 'spectator' : 'person:3d';
 /** the art scale of the people sheets (px per metre), the person's height, the walk frames, supersampling; the frame (px) and the feet in it */
 const ART_PPM = 128, HEIGHT = arg('--height', 1.78), WALK = arg('--walk', 8), SS = 3;
@@ -100,6 +106,30 @@ window.render = async (walkB64, idleB64, o) => {
   let lag = N, best = -Infinity;
   for (let L = L0; L < N - 4; L++) { const v = corr(L); if (v > best) { best = v; lag = L; } else if (best > 0 && v < best * 0.5) break; }
   const period = walk.duration * lag / N, start = walk.duration * sig.indexOf(Math.max(...sig.slice(0, lag))) / N;
+  // the palms turned in (--hand-twist): each forearm and hand turned about the arm's axis (the hand's offset from the forearm), half the
+  // angle each, the left and right opposite ways; undone after the frame (a bone the clip does not move would otherwise keep turning)
+  const arms = [[bones.LeftForeArm, bones.LeftHand, o.TWIST[0]], [bones.RightForeArm, bones.RightHand, o.TWIST[1]]].filter(a => a[0] && a[1]);
+  const twist = () => {
+    if (!o.TWIST[0] && !o.TWIST[1] && !o.ARMS_IN) return () => {};
+    const saved = arms.flatMap(([f, h]) => [[f, f.quaternion.clone()], [h, h.quaternion.clone()]]);
+    // the arms in: each upper arm turned about the body's forward axis (world space, through the pivot's turn), left and right opposite ways
+    if (o.ARMS_IN) {
+      const fwd = new THREE.Vector3(Math.sin(yaw0), 0, Math.cos(yaw0)).applyQuaternion(pivot.quaternion);
+      for (const [b, side] of [[bones.LeftArm, -1], [bones.RightArm, 1]]) {
+        if (!b) continue;
+        saved.push([b, b.quaternion.clone()]);
+        const pq = b.parent.getWorldQuaternion(new THREE.Quaternion()), turn = new THREE.Quaternion().setFromAxisAngle(fwd, side * o.ARMS_IN * Math.PI / 180);
+        b.quaternion.premultiply(pq.clone().invert().multiply(turn).multiply(pq));
+      }
+      pivot.updateMatrixWorld(true);
+    }
+    for (const [f, h, deg] of arms) {
+      const half = deg * Math.PI / 360, ax = h.position.clone().normalize();
+      f.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(ax, half));
+      h.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(ax.clone().applyQuaternion(h.quaternion.clone().invert()), half));
+    }
+    return () => { for (const [b, q] of saved) b.quaternion.copy(q); };
+  };
   // the frames of a facing: the template (idle, then WALK frames of a stride), or a clip's FRAMES (over a stride, or evenly over the clip)
   const cols = o.CLIP ? o.FRAMES : o.WALK + 1, dur = walk.duration;
   const timeOf = f => !o.CLIP ? (f === 0 ? start : (start + ((f - 1) / o.WALK) * period) % dur)
@@ -111,8 +141,8 @@ window.render = async (walkB64, idleB64, o) => {
       mixer.stopAllAction();
       if (!o.CLIP && f === 0 && idleAct) { idleAct.play(); mixer.setTime(0); }
       else { walkAct.play(); mixer.setTime(timeOf(f)); }
-      stay(); pivot.rotation.y = yaw; pivot.updateMatrixWorld(true);
-      renderer.render(scene, cam); frames.push(canvas.toDataURL('image/png'));
+      stay(); pivot.rotation.y = yaw; pivot.updateMatrixWorld(true); const undo = twist(); pivot.updateMatrixWorld(true);
+      renderer.render(scene, cam); frames.push(canvas.toDataURL('image/png')); undo();
     }
   }
   // seated: the hips' height over the floor at the clip's start (metres)
@@ -136,7 +166,7 @@ try {
   });
   await page.goto('http://people3d.local/');
   await page.waitForFunction(() => window.ready, null, { timeout: 60000 });
-  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN, CLIP, FRAMES, STRIDE, ONCE, clipB64: clipFile ? await b64(clipFile) : null }]);
+  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN, CLIP, FRAMES, STRIDE, ONCE, TWIST, ARMS_IN, clipB64: clipFile ? await b64(clipFile) : null }]);
   if (problems.length) throw new Error(problems.join('\n'));
   const PER = CLIP ? FRAMES : WALK + 1, names = CLIP ? Array.from({ length: FRAMES }, (_, k) => `${CLIP}${k + 1}`) : ['idle', ...Array.from({ length: WALK }, (_, k) => `walk${k + 1}`)];
   const base = CLIP ?? 'sheet', previewName = CLIP ? `preview-${CLIP}.png` : 'preview.png', clear = { r: 0, g: 0, b: 0, alpha: 0 }, png = url => Buffer.from(url.split(',')[1], 'base64'), cells = [];
