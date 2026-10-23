@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. If you are picking up from someone else: follow LEAD.md section 7.
 
 ## Current step
-- **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-crowds` (from `origin/main` 4c90e25).
+- **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-results` (from `origin/main` f62c7da).
 - **Sub-step now:** M2.4 Results from the movers (M2.1 gates, M2.2 galleries, M2.3 going home landed on main).
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
@@ -70,16 +70,25 @@ gone, last }` (sim s), into `RoundResult.leave` when the round closes.
   (release, walk, spawn), the measurement; `closeRound` keeps despawning (anything left is cut off).
 - [x] c. Tests (a City-level test if feasible, else crowd-level), browser check (the evening traffic out of the car parks), land.
 
-## Plan for M2.4 Results from the movers (write the details here before you start)
-- [ ] a. Read `golf/yearend.ts` `computeYearEnd` and `measureGateFlows` and where the engine calls them (`engine.ts` ~2870): the DayFacts
-  the formula fills (gate queue minutes, on time / late, exit P95).
-- [ ] b. Feed them from the round instead when measured: `RoundResult.gates` (admitted, avgWait, maxWait, queuing at kick-off: late),
-  `RoundResult.leave` (cars, gone, start, last: the exit time). One sim s is one game minute. Keep the formula as the fallback for old
-  saves and rounds without the measures.
-- [ ] c. Tests (yearend with measured inputs), browser check (the results card's Q and Exit minutes match the measured ones), land.
+## Plan for M2.4 Results from the movers (branch `lead/m2-results`)
+Found (a): `computeYearEnd` (`golf/yearend.ts`) builds the DayFacts from `measureGateFlows(arrived, lanes, cards)`, a per-minute formula
+(arrival curve through the gate rate; exit curve through the same rate); missed = sent * PARTY - arrived. The engine calls it from
+`golfYearEnd` (the results card in App.tsx, recomputed every render from `round.last`, which the worker posts every frame, so a measure
+that grows during the eval shows live) and from `closeRound` (books the tier and rep). Sim s = game minutes (the gate rate is per minute).
+Design (b):
+- Gates: `GateStats.late` = fans admitted after waiting over ON_TIME_GRACE_MIN (45); `RoundResult.gates.late`. Measured facts: queue =
+  gates.avgWait; late = gates.late + gates.queuing (still in the queue at kick-off: they get in late, not missed); on time = arrived -
+  gates.late; missed = sent * PARTY - arrived - queuing.
+- Exit: each car's wait from its party being back at the bay to driving out of the car park (the car park's exit onto a busy road is the
+  queue; the walk back is not counted). `City.leave.waits`, `RoundResult.leave.p95` (sim s). Measured exit P95 once 95% of the cars are
+  out; before that the formula's (the card says "est.").
+- `YearEndResult.measured: { gates: boolean; exit: boolean }`; the card marks estimates. No gates placed or old saves: the formula.
+- [x] b1. crowd.ts GateStats.late; city.ts kickOff gates.late; leave waits and p95; round.ts types.
+- [x] b2. yearend.ts measured facts; App.tsx card marks.
+- [ ] c. Tests (gates late counting; yearend with measured inputs; leave p95), browser check on 5181, land.
 
 ## Next action
-M2.4 a (cut `lead/m2-results` from `origin/main` first).
+M2.4 c: tests done (`tests/results-measured.test.ts`, 900 pass); browser check on a test copy (5181): build, Skip to tournament at 8x, read `round.last.gates` / `.leave` and the card's Q / Exit (no est. once 95% of the cars are out).
 
 ## Done (newest first)
 - 2026-10-23: **Magenta keyer clean-up landed** on main (an aside from M2, the owner asked): despill 'keep', speck clean-up, haze limit, linear-light option in `scripts/assets/key-magenta.mjs`, each a setting; before/after sheets by `scripts/assets/key-compare.mjs`. Details in PROGRESS.md. M2.4 is still next.

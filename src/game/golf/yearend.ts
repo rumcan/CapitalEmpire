@@ -107,6 +107,8 @@ townGrowthText?: string;
 carsParked?: number;
 parkingFee?: number;
 parkingIncome?: number;
+/** which day facts the movers measured (LEAD.md M2.4): the gates (queue, on time, late) and the exit; false: the formula's estimate */
+measured?: { gates: boolean; exit: boolean };
 }
   
 /**  
@@ -282,6 +284,19 @@ export function measureGateFlows(
   };
 }
 
+/** the gate and exit facts from what the movers did (LEAD.md M2.4), each falling back to the formula (`est`, measureGateFlows) when the
+ *  round did not measure it: the gates (no gates placed, an old save: not measured) give the queue (the mean wait at a gate; sim s are game
+ *  minutes), the late (admitted after the grace, or still queuing at kick-off) and the on time (the rest of the arrived); the exit is the
+ *  95th percentile of the cars' waits to leave their car park, once 95% of the parked cars are out */
+export function measuredFlows(r: RoundResult, est: { avgQueueMin: number; onTime: number; late: number; exitP95Min: number }): { avgQueueMin: number; onTime: number; late: number; exitP95Min: number; queuing: number; measured: { gates: boolean; exit: boolean } } {
+  const g = r.gates, lv = r.leave;
+  const exit = !!lv && lv.cars > 0 && lv.gone >= 0.95 * lv.cars && lv.p95 !== undefined;
+  const exitP95Min = exit ? lv!.p95! : est.exitP95Min;
+  if (!g) return { avgQueueMin: est.avgQueueMin, onTime: est.onTime, late: est.late, exitP95Min, queuing: 0, measured: { gates: false, exit } };
+  const lateIn = Math.min(r.arrived, g.late ?? 0);
+  return { avgQueueMin: g.avgWait, onTime: r.arrived - lateIn, late: lateIn + g.queuing, exitP95Min, queuing: g.queuing, measured: { gates: true, exit } };
+}
+
 export function computeYearEnd(
 prevTier: number,
 prevRep: number,
@@ -302,10 +317,10 @@ const weather: WeatherInfo = typeof seedOrWeather === 'string'
     ? getTournamentWeather(seedOrWeather, roundResult.run || 1, 0)
     : WEATHER_INFO.clear;
 const totalArrived = roundResult.arrived;
-const missed = Math.max(0, roundResult.sent * PARTY - totalArrived); // sent counts cars, arrived counts spectators (PARTY a car)
-
 const lanes = gateLanesFor(structures, prevTier);
-const gateFlow = measureGateFlows(totalArrived, lanes, cards);
+const gateFlow = measuredFlows(roundResult, measureGateFlows(totalArrived, lanes, cards));
+// sent counts cars, arrived counts spectators (PARTY a car); the fans still queuing at a gate at kick-off get in late, not missed
+const missed = Math.max(0, roundResult.sent * PARTY - totalArrived - gateFlow.queuing);
 const rawFacts: DayFacts = { onTime: gateFlow.onTime, late: gateFlow.late, missed, exitP95Min: gateFlow.exitP95Min, avgQueueMin: gateFlow.avgQueueMin, viewing: DEFAULT_VIEWING };
 const dayFacts: DayFacts = applyWeatherToDayFacts({
   onTime: gateFlow.onTime,
@@ -417,5 +432,6 @@ if (structures.length > 0) {
  carsParked: Math.max(0, Math.round(carsParked)),
  parkingFee: Math.max(0, Math.round(parkingFee)),
  parkingIncome: computeParkingIncome(carsParked, parkingFee),
+ measured: gateFlow.measured,
  };
 }  

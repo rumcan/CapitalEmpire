@@ -12,8 +12,9 @@ export interface Walker { x: number; y: number; tx: number; ty: number; n: numbe
 export interface Party { town: number; n: number; since?: number }
 /** per town: the fans at the doors (arrived: inside), at a lot stop's queue, on a bus, and at a gate's queue */
 export interface FanCounts { fans: number[]; atStop: number[]; onBus: number[]; atGate: number[] }
-/** what the gates measured: fans admitted, their total wait (fan-seconds, sim s), the longest wait */
-export interface GateStats { admitted: number; waitSum: number; waitMax: number }
+/** what the gates measured: fans admitted, their total wait (fan-seconds, sim s), the longest wait, the fans admitted after waiting over the
+ *  grace (Crowd.grace: late for the start, LEAD.md M2.4) */
+export interface GateStats { admitted: number; waitSum: number; waitMax: number; late: number }
 /** the most walker groups at once: over it the oldest group lands at once (see Crowd.add) */
 export const WALK_CAP = 6000;
 
@@ -30,7 +31,9 @@ export class Crowd {
   /** per gate index: the gate's queue (the FIFO of parties, head first; golf, see admit) */
   gateQ: Party[][] = [];
   /** the gates' measurements so far (see GateStats) */
-  gate: GateStats = { admitted: 0, waitSum: 0, waitMax: 0 };
+  gate: GateStats = { admitted: 0, waitSum: 0, waitMax: 0, late: 0 };
+  /** the longest wait at a gate (sim s) a fan may have and still be on time (the City sets ON_TIME_GRACE_MIN in golf) */
+  grace = Infinity;
   /** the time now (sim s), set by the City before step and admit: a gate's queue stamps it on each party that joins */
   now = 0;
   /** per gallery spot (golf, LEAD.md M2.2): the fans standing there */
@@ -63,7 +66,7 @@ export class Crowd {
     while (need > 0 && q && q.length) {
       const h = q[0]!, k = Math.min(need, h.n), w = Math.max(0, this.now - (h.since ?? this.now));
       this.arrive(h.town, k); this.onIn?.(h.town, k, x, y); need -= k; done += k; h.n -= k;
-      this.gate.admitted += k; this.gate.waitSum += k * w; this.gate.waitMax = Math.max(this.gate.waitMax, w);
+      this.gate.admitted += k; this.gate.waitSum += k * w; this.gate.waitMax = Math.max(this.gate.waitMax, w); if (w > this.grace) this.gate.late += k;
       if (h.n <= 0) q.shift();
     }
     return done;

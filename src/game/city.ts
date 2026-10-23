@@ -34,6 +34,7 @@ import { resolveCurb, type Curb, type CurbDef } from './event/curb';
 import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
 import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 import { golfTicketPrice } from './golf/yearend';
+import { ON_TIME_GRACE_MIN } from './golf/tournamentday';
 import { gateRate } from './golf/venue';
 import { hasExpressGates } from './golf/golfcards';
 import { pickSpot, type GallerySpot } from './golf/galleries';
@@ -47,6 +48,8 @@ const CAP = 12000, TICKS = 100;
 const GAME_HOUR = 60;
 /** going home (golf, LEAD.md M2.3): the leaving starts this long after kick-off and releases the parked cars' parties over LEAVE_S (sim s) */
 const LEAVE_AFTER = 120, LEAVE_S = 300;
+/** the 95th percentile of some values (0 with none) */
+export const p95 = (v: readonly number[]): number => { if (!v.length) return 0; const s = [...v].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil(0.95 * s.length) - 1)]!; };
 /** the game hours' snapshots kept (four game days of them: see beforeafter.ts) */
 const HOURS_KEPT = 96;
 /** the milestones of a step that reached none (shared: read, never written) */
@@ -229,7 +232,7 @@ export class City {
    *  drive back to), and the leaving: when it starts, the release order, the next to release, the cars waiting to leave their car park, the
    *  counts and the last car's time */
   private parkedCars: { town: number; park: number; bay: number }[] = []; private surgeHomes: SurgeHome[][] = []; private leaveRnd = seededRnd(0x1ea7e);
-  leave: { at: number; order: number[]; next: number; pending: number[]; cars: number; gone: number; last: number } | null = null;
+  leave: { at: number; order: number[]; next: number; pending: { k: number; at: number }[]; cars: number; gone: number; last: number; waits: number[] } | null = null;
   busDefs: BusRouteDef[] = []; private busPts: ({ lot: Pt; doors: Pt } | null)[] = []; crowd: Crowd | null = null;
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
@@ -1023,7 +1026,7 @@ export class City {
     let arrived = 0; for (const f of c.fans) arrived += f;
     L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / (L.sent * PARTY) : 0;
     // the course's gates (golf, LEAD.md M2.1): what they measured, for the results (M2.4)
-    if (this.golf && this.crowd && this.gates.length) { const G = this.crowd.gate; let q = 0; for (const n of c.atGate) q += n; L.gates = { admitted: G.admitted, avgWait: G.admitted ? G.waitSum / G.admitted : 0, maxWait: G.waitMax, queuing: q }; }
+    if (this.golf && this.crowd && this.gates.length) { const G = this.crowd.gate; let q = 0; for (const n of c.atGate) q += n; L.gates = { admitted: G.admitted, avgWait: G.admitted ? G.waitSum / G.admitted : 0, maxWait: G.waitMax, queuing: q, late: G.late }; }
     // the money: the payout (signed) is paid now in classic mode (golf mode replaces it with purse and sponsors), the net is the toll and payout less the upkeep
     L.perfect = L.rate >= PERFECT_RATE; L.payout = this.golf ? 0 : payout(L.rate, L.level);
     // the tickets: a ticket per fan at the doors (golf tier ticket price in golf mode, stadium ticket price in classic mode; booked as business takings)
@@ -1044,7 +1047,7 @@ export class City {
     if (this.golf) {
       const order = this.parkedCars.map((_, i) => i);
       for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(this.leaveRnd() * (i + 1)); [order[i], order[j]] = [order[j]!, order[i]!]; }
-      this.leave = { at: this.sim.t + LEAVE_AFTER, order, next: 0, pending: [], cars: order.length, gone: 0, last: 0 };
+      this.leave = { at: this.sim.t + LEAVE_AFTER, order, next: 0, pending: [], cars: order.length, gone: 0, last: 0, waits: [] };
       L.leave = { cars: order.length, gone: 0, start: this.leave.at, last: 0 };
     }
   }
@@ -1119,7 +1122,8 @@ export class City {
     const C = new Crowd(this.round.crowd.length, this.busDefs.length);
     this.crowd = C; C.setGates(this.gates.length); this.gateAcc = this.gates.map(() => 0);
     C.setSpots(this.spots.length); C.onIn = (town, n, x, y) => this.toGallery(town, n, x, y);
-    C.onBack = (_town, route) => { this.leave?.pending.push(route); };
+    C.onBack = (_town, route) => { this.leave?.pending.push({ k: route, at: this.sim.t }); };
+    if (this.golf) C.grace = ON_TIME_GRACE_MIN;
     this.busDefs.forEach((d, r) => {
       const R = this.sim.busRoutes[r];
       if (!R) return;
@@ -1183,8 +1187,10 @@ export class City {
         C.add({ x: from.x, y: from.y, tx: b.x, ty: b.y, n: PARTY, town: car.town, stage: 4, route: k });
       }
     }
-    for (let i = 0; i < Lv.pending.length;) { if (this.driveHome(Lv.pending[i]!)) { Lv.pending.splice(i, 1); Lv.gone++; Lv.last = t; } else i++; }
-    const L = this.round.last; if (L?.leave) { L.leave.gone = Lv.gone; L.leave.last = Lv.last; }
+    let out = false;
+    for (let i = 0; i < Lv.pending.length;) { const p = Lv.pending[i]!; if (this.driveHome(p.k)) { Lv.pending.splice(i, 1); Lv.gone++; Lv.last = t; Lv.waits.push(t - p.at); out = true; } else i++; }
+    // the exit measure (M2.4): the 95th percentile of the waits of the cars out so far
+    const L = this.round.last; if (L?.leave) { L.leave.gone = Lv.gone; L.leave.last = Lv.last; if (out) L.leave.p95 = p95(Lv.waits); }
   }
   /** where a leaving party starts: a gallery spot with fans (a seeded pick among them; PARTY fans come off it), else the nearest gate, else
    *  the site's middle, else its car's bay */
