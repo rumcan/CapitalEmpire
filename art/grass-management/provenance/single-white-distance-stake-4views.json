@@ -1,0 +1,16 @@
+{
+  "id": "single-white-distance-stake-4views",
+  "reference": "art/grass-management/scene-reference/budget-course-fixtures-master-v2.png",
+  "locator": "white stake at right fairway edge near 957,585",
+  "footprintMetres": [
+    0.08,
+    0.08
+  ],
+  "prompt": "Use case: game-asset. Required input reference: the attached generated full course scene defines the exact isometric projection, warm autumn lighting, scale and simple small-budget materials. Reconstruct only the named individual prop as a transparent game sprite. One sheet with exactly FOUR sprites in 2x2 layout, each is ONE AND ONLY ONE object, the same object truly rotated NE SE SW NW in reading order. Keep the camera in parallel 2:1 isometric projection, world ground axes at +/-26.565 degrees, verticals vertical; rotate the prop in world space with light direction fixed. No paired objects, no bases shared with another prop, no terrain/grass squares or platforms. Generous transparent margin at least 48 pixels to each quadrant boundary, complete silhouettes. True PNG alpha, no people, text, labels, checkerboard, backdrop, aura or large cast shadows. Clean functional inexpensive small-budget equipment, no damaged condition. Subject: ONE single slender white-painted square timber distance stake from the fairway's right edge in the scene. Around 80 cm tall and 8 cm square, simple flat-cut square top, a single dark green stripe band wrapping around near its top, white below; cheap straight painted timber with subtle grain, intact and clean. Reconstruct the exact individual stake in four isometric world rotations, preserving its height and green band. Entire post including bottom visible. No words, distance digits, signboard, support base, other stakes, turf patch or clusters. ONE stake per cell.",
+  "generator": "image_gen",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-1a6cd83a-cdaa-48a8-9254-547aa75fc06d.png",
+  "generated": "2026-10-23",
+  "status": "generated",
+  "alphaReview": "pending",
+  "gameReview": "pending"
+}

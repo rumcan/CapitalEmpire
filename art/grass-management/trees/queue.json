@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "task": "T016 tree expansion",
+  "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+  "angles": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "rule": "Full-scene-first. No people. Each sheet four views of one tree. Native alpha and source images preserved.",
+  "assets": [
+    {
+      "id": "golden-maple-mature-4views",
+      "source": "trees/golden-maple-mature-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "golden maple beside left cart path near image point 316,556",
+      "estimatedHeightMetres": 9,
+      "footprintMetres": [
+        6,
+        6
+      ],
+      "status": "generated",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A mature golden-yellow maple, broad rounded but irregular crown, many dense small maple-leaf clusters in amber/gold with restrained orange accents, visibly branching medium brown trunk and open gaps. Match the large golden tree beside the left cart path, not the existing scarlet maple.",
+      "alphaReview": "four nonempty cells checked"
+    },
+    {
+      "id": "golden-maple-young-4views",
+      "source": "trees/golden-maple-young-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "smaller golden maple beside left cart path near 458,616",
+      "estimatedHeightMetres": 4.5,
+      "footprintMetres": [
+        2.5,
+        2.5
+      ],
+      "status": "generated",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A young golden maple from beside the left cart path, slim brown trunk, smaller open asymmetrical crown with fewer branches and distinct yellow-gold leaf clusters. Clearly an affordable young sapling/tree with a narrower canopy and visible space between branches, not a mature tree shrunk as a whole. No stake or tie.",
+      "alphaReview": "four nonempty cells checked"
+    },
+    {
+      "id": "orange-oak-mature-4views",
+      "source": "trees/orange-oak-mature-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "broad orange tree above lake near 855,133",
+      "estimatedHeightMetres": 11,
+      "footprintMetres": [
+        7,
+        7
+      ],
+      "status": "generated",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A mature burnt-orange oak above the lake/fairway, broad spreading slightly flattened crown, stout twisting bark-textured brown trunk, irregular hefty branching, dense warm orange/russet lobed leaf clusters. Distinct oak silhouette and sturdy structure, not a recoloured maple.",
+      "alphaReview": "four nonempty cells checked"
+    },
+    {
+      "id": "copper-beech-4views",
+      "source": "trees/copper-beech-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "burgundy tree beside clubhouse approach near 1039,90",
+      "estimatedHeightMetres": 10,
+      "footprintMetres": [
+        6,
+        6
+      ],
+      "status": "generated",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A mature copper/burgundy beech near the clubhouse approach. Dense deep claret and burgundy leaf canopy, broad slightly upright oval crown with irregular rounded tiers, smooth grey-brown trunk forking asymmetrically; small restrained copper highlights. No purple glow. Distinct dark burgundy specimen matching the scene.",
+      "alphaReview": "four nonempty cells checked"
+    },
+    {
+      "id": "silver-birch-gold-4views",
+      "source": "trees/silver-birch-gold-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "tall pale-trunk golden birch at left shore near 265,317",
+      "estimatedHeightMetres": 11,
+      "footprintMetres": [
+        3.5,
+        3.5
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A tall graceful silver birch beside the left lake shore, ONE white papery main trunk with dark broken bark markings, fine outward branching, airy golden-yellow small leaf clusters, narrow tall silhouette with hanging twig tips and visible gaps. One tree only, no birch grove or bundled trunks belonging to multiple trees."
+    },
+    {
+      "id": "white-birch-young-4views",
+      "source": "trees/white-birch-young-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "young pale-trunk birch left shore near 334,379",
+      "estimatedHeightMetres": 5.5,
+      "footprintMetres": [
+        2,
+        2
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A young slender white-barked birch at the left lake edge, one thin pale trunk with dark tiny bark scars, airy sparse pale-gold leaf clusters on fine asymmetrical branches. Narrow graceful young-tree silhouette with a few exposed twigs; physically young structure, not just the adult birch scaled down. No support stake, no multi-tree clump."
+    },
+    {
+      "id": "scots-pine-mature-4views",
+      "source": "trees/scots-pine-mature-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "flat irregular pine crown upper-left woodland near 468,146",
+      "estimatedHeightMetres": 14,
+      "footprintMetres": [
+        7,
+        7
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A mature Scots pine in the upper-left lakeside woodland, high broad irregular umbrella-like crown with separated flat dense deep-olive/dark-green needle pads, long visible orange-brown trunk and angular open branches underneath. Distinct spreading mature pine crown, not a conical spruce; faithful to the flat crowned pines in the scene."
+    },
+    {
+      "id": "scots-pine-young-4views",
+      "source": "trees/scots-pine-young-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "smaller open-crowned pine upper-left near 580,183",
+      "estimatedHeightMetres": 6,
+      "footprintMetres": [
+        3,
+        3
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A young Scots pine from the upper-left woodland, smaller open irregular dark-green needle clusters at a few horizontal branches, visible orange-brown slim trunk and growing leader. Age-specific branching, narrower than mature umbrella pine and not a dense Christmas-tree cone. One small tree, no support stakes."
+    },
+    {
+      "id": "blue-spruce-slender-4views",
+      "source": "trees/blue-spruce-slender-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "narrow blue-green conifer on right course edge near 1353,409",
+      "estimatedHeightMetres": 12,
+      "footprintMetres": [
+        3.5,
+        3.5
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A tall narrow blue-green spruce on the right fairway edge, slender pointed conical crown, irregular layered downcurved needle branches and clear trunk base, cool blue-green foliage with restrained warm light. Make a slim elegant silhouette distinct from the previously generated broad heavy conifer, no snow or ornaments."
+    },
+    {
+      "id": "golden-larch-4views",
+      "source": "trees/golden-larch-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "feathery golden conifer on right lake shore near 1012,284",
+      "estimatedHeightMetres": 10,
+      "footprintMetres": [
+        4,
+        4
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A golden autumn larch from the right lake shore, feathery airy warm yellow/gold fine needles on gently drooping separated branch whorls, slim orange-brown central trunk, pointed irregular conical crown and open gaps between layers. Delicate golden deciduous conifer, not a recoloured dense spruce."
+    },
+    {
+      "id": "weeping-willow-olive-4views",
+      "source": "trees/weeping-willow-olive-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "hanging-frond tree on lower lake shore near 742,467",
+      "estimatedHeightMetres": 9,
+      "footprintMetres": [
+        7,
+        7
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A mature olive/gold-green weeping willow on the lower lake shore, broad softly cascading crown, long fine hanging leafy branch curtains, stout rough brown trunk partially visible between fronds and a clear visible base. Graceful fountain-like silhouette with asymmetrical bent scaffold limbs and true gaps between curtains, no water, island or lake shore attached."
+    },
+    {
+      "id": "green-oak-mature-4views",
+      "source": "trees/green-oak-mature-4views.png",
+      "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+      "locator": "deep-green broadleaf tree street corner near 1305,747",
+      "estimatedHeightMetres": 11,
+      "footprintMetres": [
+        7,
+        7
+      ],
+      "status": "pending",
+      "gameReview": "pending",
+      "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A mature deep-green oak at the street corner at lower right, broad rounded spreading crown with irregular layered leafy clumps, rich natural dark olive-green leaves with muted golden edges, strong asymmetrical rough-barked trunk and sturdy limbs. A healthy green broadleaf tree for town parks and course edges, not a conifer or green recolour of another silhouette."
+    }
+  ]
+}

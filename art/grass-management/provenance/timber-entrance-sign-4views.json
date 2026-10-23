@@ -1,0 +1,10 @@
+{
+  "id": "timber-entrance-sign-4views",
+  "generator": "image_gen",
+  "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE simple timber-framed dark green freestanding rectangular entrance sign from the left end of the tent forecourt, near image point (848,435). Two plain square wooden uprights, modest flat green board with a small crossed-clubs emblem on its front, unpainted plain board backing and rear braces visible in rear views. No letters or text. Clean economical construction.",
+  "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-8dc65146-10b1-45f1-adc5-44543d1de7c5.png",
+  "output": "art/grass-management/budget-props/timber-entrance-sign-4views.png",
+  "generated": "2026-10-23",
+  "review": "pending"
+}

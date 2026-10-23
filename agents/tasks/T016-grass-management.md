@@ -1,6 +1,6 @@
 # T016 - Grass management, detailed ground materials and wear decals
 
-Status: in progress
+Status: in review (#12; runtime checkpoint merged in #11)
 Owner request: 2026-10-22. Branch: `arena/T016-grass-management`.
 
 Build grass management shared by golf courses and town grass. Inspect `docs/GRASS-SYSTEM.md`, `docs/SECOND-AGENT.md`, the existing base-grass mixing, map decal and seed/sod grow-in systems first. Preserve them and the owner's settings. The owner explicitly requests 100 distinct large, zoomed-out detailed ground textures matching the scale of `src/assets/ground/lot-asphalt.webp` and `src/assets/ground/paint-photo-fairway-sod.webp`, plus separate transparent decals for mowing, divots, crowd paths, tyre wear and local damage. The starting grass needs attention; maintained grass becomes immaculate, with small player divots rendered separately.
@@ -18,3 +18,5 @@ Pure module contract: named exports `GrassManagement`, `GrassSurface`, `GrassCon
 Image generation uses built-in imagegen per texture or decal sheet, not recolors of one image or procedural stand-ins. Surface textures are opaque full-frame top-down ground materials; decal sheets alone are transparent with four clean independent overlays. Save source provenance and exact prompts. Generation queue and manifest must distinguish requested/pending/generated/validated assets and report incomplete counts honestly if generation is blocked. Supply all options for owner tuning rather than forcing replacement of their existing grass settings.
 
 Required pre-PR checks: npm ci once, typecheck, full npm test. Never push main or merge the task PR. No animation or visitor-journey changes belong in this task.
+
+Owner continuation, 2026-10-23: more trees. Expand scene-derived foliage with twelve additional tree/age silhouettes, one transparent four-view sheet per tree. Establish the varied planting in a new full course scene before deriving the sheets. Save sources, exact prompts, independent native-alpha view crops, manifest and preview under `art/grass-management/trees/`; retain existing sprites and the no-people rule. The existing task-authorized sprite preparation script may accept a separate queue/output folder for this batch. Final placement/library registration stays with the lead.

@@ -1,0 +1,17 @@
+{
+  "id": "orange-oak-mature-4views",
+  "source": "trees/orange-oak-mature-4views.png",
+  "reference": "art/grass-management/scene-reference/autumn-tree-variety-master-v1.png",
+  "locator": "broad orange tree above lake near 855,133",
+  "estimatedHeightMetres": 11,
+  "footprintMetres": [
+    7,
+    7
+  ],
+  "status": "generated",
+  "gameReview": "pending",
+  "prompt": "Use case: isometric game foliage sprite. The attached generated full course scene is the mandatory design, camera, lighting and foliage style reference. Reconstruct the named visible tree as the SAME ONE TREE in FOUR true world rotations NE, SE, SW, NW, row-major 2x2 sheet. Fixed parallel 2:1 isometric game camera, fixed warm light direction. Preserve the same tree's species, leaf colours, asymmetric branching identity, age and proportions between all rotations; show appropriate different branch overlap and trunk faces. Detailed miniature 3D illustrated city-builder foliage with finely layered leaves/needles, coherent with the scene. Exactly four individual tree sprites, ONE tree per cell. Entire trunk, root flare, crown, branch tips visible. EACH TREE fully inside its own quadrant, ample transparent gutters: at least 64 pixels transparent margin to ALL cell boundaries, size each tree down to fit; canopy must not touch an edge or another tree. True PNG alpha outside leaf and trunk silhouettes and through genuine canopy gaps. NO ground patch, soil mound, grass carpet, platform, broad shadow, halo, background, frame, words, labels or checkerboard. No people or characters. No neighboring trees or shrubs bundled with the subject. A mature burnt-orange oak above the lake/fairway, broad spreading slightly flattened crown, stout twisting bark-textured brown trunk, irregular hefty branching, dense warm orange/russet lobed leaf clusters. Distinct oak silhouette and sturdy structure, not a recoloured maple.",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-262eb927-cf59-415c-aa8e-ec40ba760905.png",
+  "generated": "2026-10-23"
+}

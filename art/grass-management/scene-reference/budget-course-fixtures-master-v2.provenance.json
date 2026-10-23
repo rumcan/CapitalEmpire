@@ -1,0 +1,11 @@
+{
+  "generator": "image_gen",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-db4d4ad0-0d7c-4dba-ad81-5e37c55ae580.png",
+  "prompt": "Correct the CAMERA of reference 2 while preserving its inexpensive red timber wedge tee markers and white green-band distance stake. Reference 1 is the authoritative actual game master for projection/style. Produce a complete course scene using STRICT PARALLEL ORTHOGRAPHIC 2:1 ISOMETRIC projection: world X/Y directions project at plus/minus 26.565 degrees to horizontal, vertical posts stay vertical. NO perspective convergence, NO distant objects getting smaller, NO horizon. Camera high over the scene, looking downward as in reference 1, not eye-level looking along the fairway. We should see a compact square teeing area with DIAMOND-SHAPED ground edges at the bottom-left, two separate tiny red-painted triangular timber tee markers placed well apart on it. A fairway runs diagonally up-right to one putting green with sand bunker, and a single plain white square timber distance stake with ONE dark green band near top stands alone beside the fairway. All trees approximately same scale throughout, dense red/gold autumn maples and blue-green conifers, curving cart path beside turf. A tiny simple white pop-up gazebo and modest clubhouse at upper-right can establish scale, but no grand expensive tournament structures. Small budget, clean usable fixtures. This is a full gameplay scene, not a sprite sheet or floating island; continuous ground fills the frame. NO people or crowds, no captions or UI. Warm detailed 3D illustrated city-builder rendering matching reference 1. Source reference 2 has an incorrect perspective camera; explicitly replace it with reference 1's parallel game projection. The markers and white stake must be readable objects in this complete scene so they can subsequently be derived as individual game sprites.",
+  "references": [
+    "tournament-small-budget-master-v1.png",
+    "budget-course-fixtures-master-v1.png"
+  ],
+  "generated": "2026-10-23",
+  "supersedes": "v1 perspective camera"
+}
