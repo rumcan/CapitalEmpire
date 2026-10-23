@@ -2275,3 +2275,9 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
   gates card); the queues are drawn like the shuttle stops'; kick-off records `RoundResult.gates` (admitted, mean and longest wait, still
   queuing). With no gate placed the fans use the clubhouse plot's doors as before. Browser-checked on a test copy: all 168 arrived fans came
   through the gate; at tier 1 a 4-lane gate never queues. Tests: `tests/gates.test.ts` (2); 887 pass. Findings and the M2 design: NOW.md.
+- **M2.2 Galleries landed** (branch `lead/m2-galleries`): `src/game/golf/galleries.ts` makes the spots (beside each green, off the
+  line of play, the last hole's pulling most; behind and beside each tee; every grandstand by its seats; in front of every tent or kiosk)
+  and `pickSpot` (by weight times the room left). Fans in (through a gate, or at the clubhouse plot's doors) walk on to a spot (`Crowd`
+  stage 3, `onIn`; `City.toGallery`) and stand there (`Crowd.gallery`); the engine sends the spots with the gates (`spots` message; again
+  when the Course tool fits the markers) and draws each spot's fans as rings of standing walkers with `n watching` (`Game.drawGalleries`).
+  Browser-checked on a test copy. Tests: `tests/galleries.test.ts` (3), one more in `tests/gates.test.ts`; 891 pass.

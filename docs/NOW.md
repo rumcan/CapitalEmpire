@@ -4,7 +4,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 
 ## Current step
 - **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-crowds` (from `origin/main` 4c90e25).
-- **Sub-step now:** M2.2 Galleries (M2.1 Course gates landed on main).
+- **Sub-step now:** M2.3 Going home (M2.1 gates and M2.2 galleries landed on main).
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
 - **Start:** `City.startTournament` (city.ts) at the season's end: the crowd is `spectatorDemand(tier, rep)` (day 1's share, less the
@@ -53,15 +53,23 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [x] b. Admitted fans walk from the gate to a spot (a stage 3 walker in event/crowd.ts, or a gallery list in the crowd) and stand there
   (counts per spot); later in the day they move between spots (follow the play: M2.5 ties it to the town day).
 - [x] c. Send the spots to the sim (a message like `gates`), draw the standing crowds at street zoom (dense walker groups, the count).
+- [x] d. Tests, browser check, land.
+
+## Plan for M2.3 Going home (write the details here before you start)
+- [ ] a. When the fans leave: today the round's kick-off ends the surge and `closeRound` despawns every car. Decide the leaving: at kick-off
+  (or a set time after it, M2.5 ties it to the town day) the galleries empty: each party walks from its spot back to its car's bay
+  (the crowd must remember each party's car park and bay, and its home lot: `Surge` knows the car's home and park; check `event/surge.ts`
+  `result`, `partyOut`, and how a parked car is recorded).
+- [ ] b. At the bay the party's car is spawned in the sim bound for its home lot (`sim.spawnAt` from the car park's exit lane to the home
+  lot's driveway); the egress traffic jams like the arrival.
+- [ ] c. The eval waits for the exit (or a cap), and measures the exit times (M2.4 reads them); `closeRound` stops despawning the cars.
 - [ ] d. Tests, browser check, land.
 
 ## Next action
-M2.2 d: `npm run build`; browser check on a test copy (`npx vite preview --host 127.0.0.1 --port 5181 --strictPort`: its own browser
-storage, a fresh golf game, so the owner's saves are untouched): `window.__game.skipToTournament(); setSpeed(8)`, then at street zoom by a
-green: standing crowds (`n watching`), `window.__game.traffic.gallery` (4 floats a spot). b and c are in: `Crowd` stage 3, `gallery`,
-`setSpots`, `onIn`; `City.setSpots`, `toGallery` (pickSpot), `galleryBuf`; the `spots` message; `SimClient.setSpots`, `.gallery`;
-`Game.syncCourseGates` also sends the spots (and runs after `syncCourseMarkers`); `Game.drawGalleries`. Tests: 891 pass.
+M2.3 a: cut `lead/m2-going-home` from `origin/main`; read `event/surge.ts` (what it records per party car: home, park, bay) and
+`City.kickOff` / `closeRound` / `partyWalk`; write the design here.
 
 ## Done (newest first)
+- 2026-10-23: **M2.2 Galleries landed** on main. Browser-checked on a test copy (5181, fresh golf game, Skip to tournament at 8x): 18 spots (9 greens, 9 tees), 102 of the 168 fans in standing at them while the rest still walked, drawn as rings of standing fans with `n watching` (15 by a green, 12 by a tee).
 - 2026-10-23: **M2.1 Course gates landed** on main. Browser-checked on a test copy (port 5181, a fresh golf game, a gate placed by script between the car park and the clubhouse plot, Skip to tournament at 8x): the fans walked to the gate (stage 2 walkers seen), the gate admitted all 168 who arrived (`last.gates`: admitted 168, wait 0: a 4-lane gate admits 40 a second and they came about one a second, so no queue at tier 1); 168 of 360 fans arrived at all: the round's stuck list blames the town's 4-arm junctions (M3's job).
 - 2026-10-23: M2 findings and design written (above). M1 Living town landed on main (4c90e25).
