@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { PaintTool, type PropJournal } from '../src/game/paint-tool';
 import { kindOfTex, placeHole, storedHolePreset } from '../src/game/golf/holepreset';
 import { drawZ, fromTuples, type PaintTuple } from '../src/game/paint';
+import { surfacePreset } from '../src/game/paint-presets';
 
 /** a host with a fake prop list and journal (props are plain objects), the money spent and the toasts */
 function host() {
@@ -61,7 +62,7 @@ test('the Shape method lays the surface in its preset style, tagged with the cur
   tool.doubleClick();
   assert.equal(tool.areas.length, 1);
   const a = tool.areas[0]!;
-  assert.equal(a.hole, 3); assert.equal(a.kind, 'bunker'); assert.equal(a.tex, 'bunkerSand');
+  assert.equal(a.hole, 3); assert.equal(a.kind, 'bunker'); assert.equal(a.tex, surfacePreset('bunker') ?? 'bunkerSand');
   tool.undo(); assert.equal(tool.areas.length, 0);
 });
 

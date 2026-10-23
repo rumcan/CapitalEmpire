@@ -178,6 +178,8 @@ class Build {
   readonly marks: number[] = [];
   /** no cars at all (derelict); the upright cap for plants (the rest are kept) */
   noCars = false; cap = 28;
+  /** a building site keeps all its ground decals (mud, footprints, gravel); every other lot keeps only its leaves (the owner, 2026-10-22) */
+  allMarks = false;
   readonly r: () => number;
 
   constructor(lot: LotGeom, r: () => number) {
@@ -287,7 +289,9 @@ class Build {
     const list = MARKS[group] ?? (MARK_ID.has(group) ? [MARK_ID.get(group)!] : []);
     if (!list.length) return;
     const i = list[Math.floor(this.r() * list.length)], p = this.P(clamp(a, 0.4, this.W - 0.4), clamp(b, 0.4, this.D - 0.4)), s = size * (0.8 + 0.4 * this.r()) * (LOT_DECALS[i]!.id.startsWith('gen:drift-') ? DRIFT_K : 1);
-    this.marks.push(i, +p.x.toFixed(3), +p.y.toFixed(3), +(this.r() < 0.5 ? -s : s).toFixed(3), +(0.7 + 0.3 * this.r()).toFixed(2));
+    const flipped = this.r() < 0.5, alpha = 0.7 + 0.3 * this.r(); // drawn even when the decal is left out, so the lot's other draws stay the same
+    if (!this.allMarks && LOT_DECALS[i]!.group !== 'leaves') return;
+    this.marks.push(i, +p.x.toFixed(3), +p.y.toFixed(3), +(flipped ? -s : s).toFixed(3), +alpha.toFixed(2));
   }
   /** n decals from a group at seeded points of a lot-frame rectangle */
   marksIn(group: string, a0: number, b0: number, a1: number, b1: number, n: number, size = 1) { for (let i = 0; i < n; i++) this.mark(group, a0 + (a1 - a0) * this.r(), b0 + (b1 - b0) * this.r(), size); }
@@ -503,6 +507,12 @@ function res(B: Build, st: ComposeState) {
 
 /** the baked house lots (scripts/assets/lot-variants.mjs) by size and facing: 'w x d front|rear' -> [normal ids, neglected ids] */
 const BAKED = new Map<string, [string[], string[]]>();
+/** the pictures for a lot no picture was made for: the widest one at most as wide as the lot, of its depth */
+function bakedFor(lot: LotGeom, rear: boolean): [string[], string[]] | undefined {
+  let best: [string[], string[]] | undefined, bw = 0;
+  for (const [k, e] of BAKED) { const m = /^([\d.]+)x([\d.]+) (front|rear)$/.exec(k); if (!m || +m[2]! !== lot.d || (m[3] === 'rear') !== rear) continue; const w = +m[1]!; if (w <= lot.w && w > bw) { bw = w; best = e; } }
+  return best;
+}
 for (const it of LIBRARY) {
   const m = /^lot:(\d+)x(\d+)-(front|rear)-\d+$/.exec(it.id); if (!m) continue;
   const k = `${m[1]}x${m[2]} ${m[3]}`; let e = BAKED.get(k); if (!e) BAKED.set(k, (e = [[], []]));
@@ -511,7 +521,9 @@ for (const it of LIBRARY) {
 /** a house lot as one baked picture (house, yard and decals), when its size has variants: the variant by the
  *  lot's slot along its street (neighbours differ), the neglected ones from decline 2; null when none fits */
 function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
-  const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`); if (!e) return null;
+  // a lot wider than the pictures (the house lots are 25% wider since 2026-10-22) takes the widest picture that fits its depth, centred: the
+  // same houses, with more yard either side
+  const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`) ?? bakedFor(lot, B.rear); if (!e) return null;
   const pool = plain(st.decline >= 2 && e[1].length ? e[1] : e[0], B.flip); if (!pool.length) return null;
   const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);
   const id = pool[(((slot + mix(street) % 7) % pool.length) + pool.length) % pool.length];
@@ -538,10 +550,23 @@ const FENCE_FRONT = 3.65;
  *  One rule for sides and backs, so every line between two lots is owned by exactly one of them (the lot on its lower side), whichever way the
  *  two face: a block's end column meets its rows' sides with its back. Every use but industry draws these, so a shared line gets one fence
  *  whatever the two uses are. */
-function boundaryFence(B: Build, lot: LotGeom) {
-  const { W, D } = B, side = lot.u.x + lot.u.y > 0 ? W : 0;
-  B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
-  if (lot.n.x + lot.n.y > 0) B.boundaryRun(PRIVACY, 0, D, W, D);
+function boundaryFence(B: Build, lot: LotGeom, lines: FenceLines = ALL_LINES) {
+  const { W, D } = B, side = fenceSide(lot, W);
+  if (lines.side) B.boundaryRun(PRIVACY, side, D, side, Math.min(D, FENCE_FRONT));
+  if (lines.back && ownsBack(lot)) B.boundaryRun(PRIVACY, 0, D, W, D);
+}
+/** which of the lines a lot owns get their fence (fenceOnly: an empty lot fences only the lines it shares with a lot that has a house) */
+export interface FenceLines { side: boolean; back: boolean }
+const ALL_LINES: FenceLines = { side: true, back: true };
+/** the local x (0 or W) of the side line a lot owns: the one at the higher world-coordinate end */
+export const fenceSide = (lot: LotGeom, W: number) => (lot.u.x + lot.u.y > 0 ? W : 0);
+/** does a lot own its back line (n points to +X / +Y) */
+export const ownsBack = (lot: LotGeom) => lot.n.x + lot.n.y > 0;
+/** the points just across the lines a lot owns (tiles): side, back (null when it does not own the back): the lot found there is the neighbour */
+export function acrossLines(lot: LotGeom): { side: { x: number; y: number }; back: { x: number; y: number } | null } {
+  const { o, u, n, w, d } = lot, at = (a: number, b: number) => ({ x: o.x + u.x * a + n.x * b, y: o.y + u.y * a + n.y * b });
+  const s = fenceSide(lot, w);
+  return { side: at(s + (s ? 0.5 : -0.5), (Math.min(d, FENCE_FRONT) + d) / 2), back: ownsBack(lot) ? at(w / 2, d + 0.5) : null };
 }
 /** a house lot's fence layer (its baked picture has no fences): the boundary fence, and the planting along the inside of its lines */
 function fenceLayer(B: Build, lot: LotGeom) {
@@ -802,6 +827,7 @@ const SITE_KIT = {
 };
 /** a dirt construction site: a digger, varied supplies, rubble, a cable spool and a pickup; no building */
 function site(B: Build) {
+  B.allMarks = true;
   const { W, D, r, flip } = B;
   B.pave('yard', 0.3, 0.3, W - 0.3, D - 0.3, 'dirt');
   // The digger's source faces +X, so mirror it for streets along the other axis (+Y).
@@ -838,6 +864,14 @@ function vacant(B: Build) {
 /** is a built or upgraded commercial lot a public car park: the lot's seed falls in the first 15% (seed % 100 < 15).
  *  Decided from the seed alone, so no other lot's draws change. */
 export function isCarPark(st: ComposeState): boolean { return st.use === LU.COM && st.level >= LV.BUILT && st.seed % 100 < 15; }
+
+/** an empty lot's or a starter house's lot's part of the fence grid: only the boundary fence it owns (boundaryFence), the lines given (the
+ *  owner: an empty lot fences only a line it shares with a lot that has a house); nothing else stands on it (the block's grass shows) */
+export function fenceOnly(lot: LotGeom, seed: number, lines: FenceLines = ALL_LINES): Composition {
+  const B = new Build(lot, mulberry(mix(seed, 0x0fe7)));
+  boundaryFence(B, lot, lines);
+  return B.done();
+}
 
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed. */
 export function compose(lot: LotGeom, st: ComposeState): Composition {

@@ -134,8 +134,9 @@ test('a town bus: the parties whose homes are within BUS_WALK of the town stop w
   city.terrain(new Uint8Array(MAP * MAP), { x: 200, y: ROAD_Y }, 7, [{ x: 300, y: ROAD_Y }]);
   const e = new NetEditor(new RoadNetwork());
   e.addLegs([leg(200, ROAD_Y, 800, ROAD_Y)], CLASS.street, 0);
-  for (const x of [220, 260, 340, 380]) e.addLegs([leg(x, ROAD_Y, x, 120)], CLASS.street, 0);
-  e.addLegs([leg(220, 120, 380, 120)], CLASS.street, 0);
+  // (the house lots are 25% wider since 2026-10-22: two more cross streets east of the car park keep the town in land)
+  for (const x of [220, 260, 340, 380, 460, 500]) e.addLegs([leg(x, ROAD_Y, x, 120)], CLASS.street, 0);
+  e.addLegs([leg(220, 120, 500, 120)], CLASS.street, 0);
   city.netOps(e.commit(true));
   city.stamp(30);
   // the first step switches the sim to the lots' trips (its setTarget trims every vehicle): that runs before the surge places its buses

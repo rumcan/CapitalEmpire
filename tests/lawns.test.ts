@@ -18,9 +18,13 @@ test('a lot\'s lawn: the whole lot, a lawn preset picked by its key (the same ke
 });
 
 test('a block\'s grass: soft patches of one lawn preset over the block, under the lots', () => {
-  const b = blockLawn({ key: 'blk', pts: [0, 0, 40, 0, 40, 30, 0, 30], area: 1200, tex: 0 }, ['x'])!;
-  assert.equal(b.tex, 'preset:x'); assert.ok(b.lawn!.share < 1); assert.equal(b.lawn!.z, 0); assert.deepEqual(b.pts, [0, 0, 40, 0, 40, 30, 0, 30]);
-  assert.equal(blockLawn({ key: 'blk', pts: [0, 0, 1, 0, 1, 1], area: 1, tex: 0 }, []), null);
+  const blk = { key: 'blk', pts: [0, 0, 40, 0, 40, 30, 0, 30], area: 1200, tex: 0 }, any = { id: null, share: 0.55 };
+  const b = blockLawn(blk, ['x'], any)!;
+  assert.equal(b.tex, 'preset:x'); assert.equal(b.lawn!.share, 0.55); assert.equal(b.lawn!.z, 0); assert.deepEqual(b.pts, [0, 0, 40, 0, 40, 30, 0, 30]);
+  assert.equal(blockLawn(blk, [], any), null);
+  // the owner's block preset wins over the lawn presets, at the owner's cover
+  const f = blockLawn(blk, ['x'], { id: 'fescue', share: 1 })!; assert.equal(f.tex, 'preset:fescue'); assert.equal(f.lawn!.share, 1);
+  assert.equal(blockLawn(blk, [], { id: 'fescue', share: 1 })!.tex, 'preset:fescue');
 });
 
 test('Use on lawns: on by default for grass presets, off for sand, water and paths, and the owner\'s switch wins', () => {

@@ -1,5 +1,6 @@
 // Messages between the main thread (SimClient) and the city worker (sim.worker.ts): the traffic sim, the parcels and the town.
 import type { NetOp } from '../ground-protocol';
+import type { GallerySpot } from '../golf/galleries';
 import type { LotTuple, TownEvent } from '../lots/town';
 import type { BudgetSave, Ledger } from '../budget';
 import type { CareerSave, Milestone } from '../career';
@@ -33,7 +34,13 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   | { t: 'sandbox'; grow: number; money: boolean } | { t: 'inspect'; slot: number } | { t: 'watch'; x: number; y: number } | { t: 'round'; op: 'start' | 'now' | 'close' } | { t: 'round'; op: 'pick'; card: CardId }
   | { t: 'parks'; defs: CarParkDef[] } | { t: 'parkTest'; id: number; n: number } | { t: 'tolls'; defs: TollDef[] } | { t: 'parking'; rows: BayRowDef[]; curbs: CurbDef[]; fee: number } | { t: 'heat'; on: boolean } | { t: 'businesses'; defs: BizDef[] }
   | { t: 'buses'; defs: BusRouteDef[] } | { t: 'buyLot'; key: string } | { t: 'incidents'; on: boolean }
-  | { t: 'disastersOn'; on: boolean } | { t: 'repairDisaster'; id: number; key: string } | { t: 'forceDisaster'; kind: DisasterKind } | { t: 'golf'; on: boolean; tier: number; rep: number; /** the course, then the player's parcels */ land?: [number, number, number, number][] };
+  | { t: 'disastersOn'; on: boolean } | { t: 'repairDisaster'; id: number; key: string } | { t: 'forceDisaster'; kind: DisasterKind } | { t: 'golf'; on: boolean; tier: number; rep: number; /** the course, then the player's parcels */ land?: [number, number, number, number][] }
+  /** the town day (LEAD.md M1): its length in sim seconds (Sim.dayLen) and the lot trips' density (Sim.townTraffic) */
+  | { t: 'townDay'; dayLen: number; traffic: number; free: boolean }
+  /** the course's gates (LEAD.md M2.1): each gate's point (tiles) and its lanes (golf: the placed gate structures) */
+  | { t: 'gates'; gates: { x: number; y: number; lanes: number }[] }
+  /** the galleries (LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts) */
+  | { t: 'spots'; spots: GallerySpot[] };
 /** (golf: the golf mode on, with the tournament's tier and its reputation (the season ends with it: see City.setGolf), or off; parking: the bay rows and on-street runs as the player drew them (the full lists) and the fee per parked car ($); disastersOn: the natural disasters on or off (off by default; off lifts their closures); repairDisaster: the player pays the repair of the quake closure key of disaster id) */
 /** (buses: the shuttle routes as the player drew them (the full list, each time: the worker resolves their stops); heat: the congestion heat map on or off (off by default: nothing is posted then); report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;
  *  watch: the junction within 4 tiles of (x, y) is watched for the routes through it, x < 0 stops; businesses: the player's businesses (the full list: see City.setBusinesses); biz (in townState): the businesses' saved stats) */
@@ -41,7 +48,7 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
  *  the books (after a day closes, or after a budget message: the save, the career's save, the game day now, and the ledger of the day that just closed, if any);
  *  the milestones a step newly reached (in order; their grants are paid) and whether the city won, when a game hour's start brought either */
 /** worker to main thread: the disasters, when they changed (active: the one under way; notes: the transitions and repairs since the last such message) */
-export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats; sig: Float32Array; inc: Float32Array; walkers?: Float32Array; stops?: Float32Array } | { t: 'disasters'; active: DisasterView[]; notes: DisasterNote[] } |{ t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
+export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats; sig: Float32Array; inc: Float32Array; walkers?: Float32Array; stops?: Float32Array; /** the galleries' standing crowds: 4 floats a spot (x, y, fans, kind index) */ gallery?: Float32Array } | { t: 'disasters'; active: DisasterView[]; notes: DisasterNote[] } |{ t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
   | { t: 'budget'; save: BudgetSave; career: CareerSave; day: number; ledger: Ledger | null } | { t: 'milestone'; newly: Milestone[]; won: boolean } | { t: 'report'; report: Report; hours: HourStat[] }
   | { t: 'car'; info: CarInfo | null } | { t: 'watch'; node: [number, number] | null; n: number; lines: Float32Array } | { t: 'site'; site: Site | null }
   | { t: 'biz'; list: BizView[] }

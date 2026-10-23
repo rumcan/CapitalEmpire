@@ -28,10 +28,11 @@ const NZ = ZN * ZN, ZONE_TILES = 128;
 /** the demand curve's knots: [hour, share of the peak]; the curve runs from the first knot to the first knot + 24 h */
 const KNOTS: [number, number][] = [[3, 0.35], [8, 1], [12, 0.7], [17, 1], [22, 0.5]];
 
-/** the share of the peak demand at sim time t (seconds), hour = (t / 60) % 24: cosine-eased between the knots (3 h 0.35, 8 h 1,
- *  12 h 0.7, 17 h 1, 22 h 0.5, wrapping), so it is flat at each peak and never leaves [0.35, 1] */
-export function demandAt(t: number): number {
-  let h = (t / 60) % 24; if (h < 0) h += 24; if (h < KNOTS[0]![0]) h += 24;
+/** the share of the peak demand at sim time t (seconds) in a town day of dayLen seconds (hour = t / dayLen * 24, mod 24; DAY: one game
+ *  minute a second, the classic day): cosine-eased between the knots (3 h 0.35, 8 h 1, 12 h 0.7, 17 h 1, 22 h 0.5, wrapping), so it is
+ *  flat at each peak and never leaves [0.35, 1] */
+export function demandAt(t: number, dayLen = DAY): number {
+  let h = (t / dayLen * 24) % 24; if (h < 0) h += 24; if (h < KNOTS[0]![0]) h += 24;
   for (let k = 0; k < KNOTS.length; k++) {
     const last = k + 1 === KNOTS.length, h0 = KNOTS[k]![0], v0 = KNOTS[k]![1];
     const h1 = last ? KNOTS[0]![0] + 24 : KNOTS[k + 1]![0], v1 = KNOTS[last ? 0 : k + 1]![1];
@@ -223,22 +224,24 @@ export class LotTrips {
     return dropped;
   }
 
-  /** once per sim step (lots mode): at the start of each game hour its trips are made; then the waiting trips try to leave */
+  /** once per sim step (lots mode): at the start of each town hour (sim.dayLen / 24 sim seconds) its trips are made; then the waiting
+   *  trips try to leave */
   step(sim: Sim) {
-    const H = Math.floor(sim.t / 60);
+    const H = Math.floor(sim.t / (sim.dayLen / 24));
     if (H !== this.hour) { this.hour = H; this.generate(sim, H); }
     if (this.busy.length) this.retry(sim);
   }
 
-  /** the trips of game hour H: each home's share of the day's trips for the hour, by the hour's kind */
+  /** the trips of town hour H: each home's share of the town day's trips for the hour (PER_RES a resident a day, times the owner's
+   *  sim.townTraffic), by the hour's kind */
   /** the hour H is the sim hour (scheduling); its kind and demand come from the game clock's hour C, so a frozen evening keeps making evening trips */
   private generate(sim: Sim, H: number) {
-    const C = Math.floor(sim.clock / 60), hod = ((C % 24) + 24) % 24, k = PER_RES / 24 * demandAt(C * 60 + 30) / MEAN_DEMAND;
+    const hl = sim.dayLen / 24, C = Math.floor(sim.townTime / hl), hod = ((C % 24) + 24) % 24, k = PER_RES * sim.townTraffic / 24 * demandAt((C + 0.5) * hl, sim.dayLen) / MEAN_DEMAND;
     const morning = hod >= 6 && hod <= 11, evening = hod >= 15 && hod <= 21;
     for (const r of this.homes) {
       r.acc += r.pop * k; const n = Math.floor(r.acc); r.acc -= n;
       for (let j = 0; j < n; j++) {
-        const due = H * 60 + this.rnd() * 60;
+        const due = (H + this.rnd()) * hl;
         if (evening) { const o = this.pick(this.jobsL, this.jobC, r.lot); if (o) this.add(sim, o, r.lot, due, LU.RES); }
         else if (morning) { const d = this.pick(this.jobsL, this.jobC, r.lot); if (d) this.add(sim, r, d.lot, due, d.use); }
         else {

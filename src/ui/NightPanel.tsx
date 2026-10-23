@@ -20,6 +20,11 @@ export function NightPanel({ game, bump }: { game: Game; bump: () => void }) {
   const pct = (v: number) => `${Math.round(v * 100)}%`;
   return (
     <div className="flex flex-col border-t border-white/10 pt-1">
+      {game.golfMode && (<>
+        {/* the town day (LEAD.md M1): the town's own day between and around the tournaments, with its morning and evening rush hours */}
+        <Row label="Town day" value={game.townDay.minutes} min={0.5} max={30} step={0.5} show={`${game.townDay.minutes} min`} set={v => { game.setTownDay({ minutes: v }); bump(); }} title="How long one town day lasts at 1x (real minutes): the commute out in the morning and home in the evening, and the night, follow it; the season's months keep their own pace" />
+        <Row label="Town traffic" value={game.townDay.traffic} min={0} max={4} step={0.05} show={`${Math.round(game.townDay.traffic * 100)}%`} set={v => { game.setTownDay({ traffic: v }); bump(); }} title="How many trips the town's residents make a day (100% = the game's rate)" />
+      </>)}
       <label className="flex items-center gap-2 px-2 py-2 text-sm" title="TrickOrTreat's night: blue moonlight, and the colour back in pools round every lamp, porch, shop window and lit window">
         <span className="w-16 shrink-0">Night</span>
         <select className="min-w-0 flex-1 rounded bg-black/40 px-1 py-0.5" value={n.mode} onChange={e => set({ mode: e.target.value as NightSettings['mode'] })}>

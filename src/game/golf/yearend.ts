@@ -10,6 +10,8 @@ import { gateQueue, gateRate } from './venue';
 import { arrivalShare, exitShare, EXIT_END, GATES_OPEN } from './calendar';
 import { ON_TIME_GRACE_MIN } from './tournamentday';
 import { courseMonthlyUpkeep } from './costs';
+import { townGrowthLine, townGrowthRate } from './towngrowth';
+import { computeParkingIncome } from './parkingfee';
 
 /** the share of a year's surface maintenance (costs.ts courseMonthlyUpkeep x 12) the player is charged at the tournament: 25%, about 36,000 dollars for the old nine, which is what the campaign simulator assumes (the full figure, about 145,000, would bankrupt a tier 1 club that earns almost nothing; BALANCE TODO with green fees) */
 export const COURSE_UPKEEP_YEAR_SHARE = 0.25;
@@ -59,7 +61,7 @@ import {
   hasExpressGates,
   hasFirstAidCoverage,
 } from './golfcards';
-import { resolveMultiDayTournament, type MultiDaySummary } from './multiday';
+import { resolveMultiDayWithPractice, type MultiDaySummary } from './multiday';
 import {
   WEATHER_INFO,
   applyWeatherToDayFacts,
@@ -100,6 +102,13 @@ tvIncome?: number;
 purse?: number;
 multiDay?: MultiDaySummary;
 weather?: WeatherInfo;
+townGrowth?: number;
+townGrowthText?: string;
+carsParked?: number;
+parkingFee?: number;
+parkingIncome?: number;
+/** which day facts the movers measured (LEAD.md M2.4): the gates (queue, on time, late) and the exit; false: the formula's estimate */
+measured?: { gates: boolean; exit: boolean };
 }
   
 /**  
@@ -127,6 +136,7 @@ export interface TournamentCloseBook {
   upkeepCost: number;
   liveTickets: number;
   tickets: number;
+  parking: number;
   tents: number;
   sponsors: number;
   tv: number;
@@ -148,16 +158,18 @@ export function computeTournamentCloseBook(
   courseAreas: Parameters<typeof courseMonthlyUpkeep>[0] = [],
   liveDayUpkeep = 0,
   liveDayToll = 0,
+  parkingIncomeOverride?: number,
 ): TournamentCloseBook {
-  const extraTickets = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+  const extraTickets = (ye.multiDay && (ye.multiDay.resolvedDays > 0 || (ye.multiDay.practiceDays ?? 0) > 0))
     ? Math.max(0, ye.multiDay.totalTickets - liveDayTicketsBooked)
     : 0;
-  const extraTents = (ye.multiDay && ye.multiDay.resolvedDays > 0)
+  const extraTents = (ye.multiDay && (ye.multiDay.resolvedDays > 0 || (ye.multiDay.practiceDays ?? 0) > 0))
     ? Math.max(0, ye.multiDay.totalTents - (ye.tentRevenue ?? 0))
     : 0;
   const greenFees = Math.max(0, Math.round(ye.greenFeeIncome ?? 0));
   const memberships = Math.max(0, Math.round(ye.membershipIncome ?? 0));
-  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + greenFees + memberships));
+  const parking = Math.max(0, Math.round(parkingIncomeOverride ?? ye.parkingIncome ?? 0));
+  const bizIncome = Math.max(0, Math.round((ye.tentRevenue ?? 0) + (ye.sponsorIncome ?? 0) + (ye.tvIncome ?? 0) + extraTickets + extraTents + greenFees + memberships + parking));
   const purse = Math.max(0, Math.round(ye.purse ?? 0));
   const rent = Math.max(0, Math.round(ye.tentRentCost ?? 0));
   const annualTentUpkeep = Math.max(0, Math.round((ye.tentUpkeep ?? 0) * 12));
@@ -185,6 +197,7 @@ export function computeTournamentCloseBook(
     upkeepCost,
     liveTickets,
     tickets,
+    parking,
     tents,
     sponsors,
     tv,
@@ -271,6 +284,19 @@ export function measureGateFlows(
   };
 }
 
+/** the gate and exit facts from what the movers did (LEAD.md M2.4), each falling back to the formula (`est`, measureGateFlows) when the
+ *  round did not measure it: the gates (no gates placed, an old save: not measured) give the queue (the mean wait at a gate; sim s are game
+ *  minutes), the late (admitted after the grace, or still queuing at kick-off) and the on time (the rest of the arrived); the exit is the
+ *  95th percentile of the cars' waits to leave their car park, once 95% of the parked cars are out */
+export function measuredFlows(r: RoundResult, est: { avgQueueMin: number; onTime: number; late: number; exitP95Min: number }): { avgQueueMin: number; onTime: number; late: number; exitP95Min: number; queuing: number; measured: { gates: boolean; exit: boolean } } {
+  const g = r.gates, lv = r.leave;
+  const exit = !!lv && lv.cars > 0 && lv.gone >= 0.95 * lv.cars && lv.p95 !== undefined;
+  const exitP95Min = exit ? lv!.p95! : est.exitP95Min;
+  if (!g) return { avgQueueMin: est.avgQueueMin, onTime: est.onTime, late: est.late, exitP95Min, queuing: 0, measured: { gates: false, exit } };
+  const lateIn = Math.min(r.arrived, g.late ?? 0);
+  return { avgQueueMin: g.avgWait, onTime: r.arrived - lateIn, late: lateIn + g.queuing, exitP95Min, queuing: g.queuing, measured: { gates: true, exit } };
+}
+
 export function computeYearEnd(
 prevTier: number,
 prevRep: number,
@@ -282,6 +308,8 @@ holes: readonly Hole[] = [],
 seedOrWeather?: number | WeatherCondition,
 qualityScore?: number,
 cards: readonly string[] = [],
+carsParked = 0,
+parkingFee = 0,
 ): YearEndResult {
 const weather: WeatherInfo = typeof seedOrWeather === 'string'
   ? WEATHER_INFO[seedOrWeather]
@@ -289,10 +317,10 @@ const weather: WeatherInfo = typeof seedOrWeather === 'string'
     ? getTournamentWeather(seedOrWeather, roundResult.run || 1, 0)
     : WEATHER_INFO.clear;
 const totalArrived = roundResult.arrived;
-const missed = Math.max(0, roundResult.sent * PARTY - totalArrived); // sent counts cars, arrived counts spectators (PARTY a car)
-
 const lanes = gateLanesFor(structures, prevTier);
-const gateFlow = measureGateFlows(totalArrived, lanes, cards);
+const gateFlow = measuredFlows(roundResult, measureGateFlows(totalArrived, lanes, cards));
+// sent counts cars, arrived counts spectators (PARTY a car); the fans still queuing at a gate at kick-off get in late, not missed
+const missed = Math.max(0, roundResult.sent * PARTY - totalArrived - gateFlow.queuing);
 const rawFacts: DayFacts = { onTime: gateFlow.onTime, late: gateFlow.late, missed, exitP95Min: gateFlow.exitP95Min, avgQueueMin: gateFlow.avgQueueMin, viewing: DEFAULT_VIEWING };
 const dayFacts: DayFacts = applyWeatherToDayFacts({
   onTime: gateFlow.onTime,
@@ -363,7 +391,10 @@ if (structures.length > 0) {
  verdictText = `Demoted to ${tierInfo(tier).name} next year`;  
  }  
   
- const multiDay = resolveMultiDayTournament({
+ const multiDay = resolveMultiDayWithPractice({
+   seed: typeof seedOrWeather === 'number' ? seedOrWeather : undefined,
+   run: roundResult.run || 1,
+   practiceWeather: typeof seedOrWeather === 'string' ? [seedOrWeather, seedOrWeather, seedOrWeather] : undefined,
    tier: prevTier,
    liveArrived: effectiveArrived,
    liveTents: tentRevenue,
@@ -396,5 +427,11 @@ if (structures.length > 0) {
  purse: commercial.purse,
  multiDay,
  weather,
+ townGrowth: townGrowthRate({ satisfaction, attendanceShare: roundResult.rate, tier: prevTier, reputation: rep }),
+ townGrowthText: townGrowthLine(townGrowthRate({ satisfaction, attendanceShare: roundResult.rate, tier: prevTier, reputation: rep })),
+ carsParked: Math.max(0, Math.round(carsParked)),
+ parkingFee: Math.max(0, Math.round(parkingFee)),
+ parkingIncome: computeParkingIncome(carsParked, parkingFee),
+ measured: gateFlow.measured,
  };
 }  

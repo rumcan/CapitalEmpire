@@ -39,7 +39,7 @@ test('districts: pure geometry functions inCommercial and industrialRect', () =>
   assert.equal(inCommercial({ x: c.x + 150, y: c.y + 150 }, 'avenue', c), false);
 });
 
-test('districts: after growing a test town, commercial district is COM or GOV, industrial rect is IND, 0 IND outside, and outside COM <= 25% of all COM', () => {
+test('districts: after growing a test town, commercial district is COM or GOV, industrial rect is IND, 0 IND outside, and outside COM <= 30% of all COM', () => {
   const { lm, lots, centre } = buildSeededTown({ x: 1000, y: 1000 });
   const entry = { x: 800, y: 800 };
   const ctx: TownCtx = { lots: lm, entry, reachable: () => true, water: () => 200 };
@@ -82,5 +82,6 @@ test('districts: after growing a test town, commercial district is COM or GOV, i
   assert.ok(comTotal > 0, `expected COM lots, got ${comTotal}`);
   const outsideRatio = comOutside / comTotal;
   console.log(`[districts] occupied: ${occupied.length}, IND total: ${indTotal} (all inside), COM total: ${comTotal}, COM outside: ${comOutside} (${(outsideRatio * 100).toFixed(1)}%)`);
-  assert.ok(outsideRatio <= 0.25, `COM outside district ${outsideRatio.toFixed(3)} exceeds 25%`);
+  // 30% since the house lots grew 25% (2026-10-22; it was 25%): the district's blocks hold fewer, wider lots, so a few more shops land outside
+  assert.ok(outsideRatio <= 0.3, `COM outside district ${outsideRatio.toFixed(3)} exceeds 30%`);
 });

@@ -2237,3 +2237,66 @@ All of this was written by Argon (Gemini) as edit bundles, then applied, fixed, 
 - **Studio: unsaved Ground edits are kept** (the owner lost a map-grass setup: it was never saved, and Rebuild only builds what is saved):
   the Ground tab keeps unsaved grass and decal changes in the browser and brings them back after a refresh, warns before leaving with
   unsaved changes, and Rebuild game sprites asks first when the Ground tab has unsaved changes; the grass button is **Save map grass**.
+
+### The golf game as of main 662b19b (2026-10-22 afternoon)
+Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-checked by Claude; the first Argon chat died after ~25 long turns, the second chat is the one in `docs/ARGON-HANDOFF-v3.md`):
+- **Money model:** no stadium payout or $8 tickets in golf mode (tier ticket price, $0 at tier 1); rent charged once; purse, rent, tent upkeep and course upkeep booked as costs; **course upkeep is charged at `COURSE_UPKEEP_YEAR_SHARE` = 25%** of the painted course's real surface maintenance (about 36,000 of 145,000 a year); tier 1 earns **green fees and memberships** (`yearend.ts`, scaled by course quality and reputation); the results screen lists every line and its **Net equals the real treasury change** (one shared function `computeTournamentCloseBook`). A season at tier 1 costs about -17,000 early and breaks even by year 3 (campaign simulator and real game agree).
+- **Clubhouse visits:** the door lookup failed head-on (`City.bizDoor`) and visit planning locked on an empty town: fixed; sampled visitors in the sim are cosmetic, the books use the formulas.
+- **Progression:** tier 3 reachable (range stand tier 3), hotel and interchange structures provide the tier 4 and 5 needs, park-and-ride counted, structures built one tier ahead, no ghost structures, classic games do not inherit golf state.
+- **Cards:** 12 golf cards in the draft in golf mode (`golf/golfcards.ts`), saved in `GolfSave.cards`; classic keeps the stadium cards.
+- **Weather** (seeded per tournament), **multi-day** tournaments (extra days resolved), **town growth** with success (`golf/towngrowth.ts`, one results line), **save compatibility** (`normalizeGolfSave`, guarded reads, tests for classic, full and pre-parcels golf saves).
+- **Known gaps:** tent economics are small (a $15,000 tent earns about $115 at tier 1); the sampled sim visitors; no practice days on the live clock; no highways, interchange gameplay, event traffic plan (closures, one-way, police), parking fee income wiring; real tent art (art agent); the art agent's Course tool (C1) is in flight and touches engine.ts, paint-tool.ts, App.tsx and PaintPanel.tsx; an old classic save was only covered by unit tests (`tests/golf-save-compat.test.ts`), not loaded in a browser.
+
+## 2026-10-23: Claude leads the code (the owner: "take over from Argon ... keep the core game loop in focus")
+- **The plan is `docs/LEAD.md`** (the game in one paragraph, the core loop, MVP milestones M1 Living town, M2 Crowds, M3 Transport and
+  roads on the day, M4 the season loop, M5 balance; then details such as taxis from hotels; art after the code) and **the live log is
+  `docs/NOW.md`** (branch, plan, next action; updated before every edit so anyone can continue, even mid-line).
+- **Landed late on 2026-10-22 (art chat, on main):** cast shadows (every sprite's silhouette on the ground away from the sun, on the GPU,
+  faded at night; baked into the lots); car shadows round for diagonal cars; house lots 25% wider; yards keep only their leaf decals; the
+  paranormal nights retired; fences only where a house is; yards counted as built when a big non-car sprite stands on them; the road
+  blocks' grass is the owner's preset choice (presets file `blocks`, `blockShare`); Paint's Tab cycles Draw / Pick / Erase and its
+  settings fold into sections; T016 grass management snapshot (pure module, runtime wiring, generated materials and wear decals; the task
+  is still marked in progress); the studio's curation saves.
+- **Landed 2026-10-23 (a95e1ae):** the starter clubhouse (a tin-and-tarp shack on the clubhouse plot), New town / Empty map ask by a second
+  click, the Fescue preset re-saved. Browser-checked.
+- **Found:** in golf mode the town's lot trips ran on the season clock (one game day is a season), so the commute curve ran over months
+  and 1,000 people made 12-25 cars: the town looked dead between tournaments. M1 (a separate town day) is the fix, in progress.
+- **M1 Living town landed** (branch `lead/m1-town-day`): a golf game's town lives a day of its own, separate from the season
+  (`Sim.dayLen`, default 600 sim s = 10 real minutes at 1x; `Sim.townTraffic`; the `townDay` message; `SimClient.setTownDay`;
+  `Game.townDay` / `setTownDay`, localStorage `capitalempire.townday`; gear menu Town day and Town traffic, golf games only). The lot trips
+  (`sim/trips.ts`: `demandAt(t, dayLen)`, a town hour every dayLen / 24 s) commute out in the morning and home in the evening; the night and
+  the HUD time follow the town day, which runs on the sim's own time `t` (`Sim.townFree`, `townTime`) so it keeps going while the season
+  clock is frozen (the season's end, a round waiting). Browser-checked on a golf game: about 285 cars in the small hours and about 690 at
+  the 09:00 rush (from 12-25 cars before); the night falls at 20:00 of the town day. Tests: two 'town day' tests in `tests/trips.test.ts`;
+  885 pass. Note: the HUD's DAY still shows the season's day count (`game.day`), not the town day.
+- **M2.1 Course gates landed** (branch `lead/m2-crowds`): the golf course's entrance gates are the placed gate structures
+  (`Game.syncCourseGates` → the `gates` message → `City.setGates`); parked fans walk to the nearest gate (`Walker.stage` 2), queue there
+  (`Crowd.gateQ`, a FIFO of parties) and are admitted at the gates' lane rate (`City.admitGates`, `golf/venue.ts` gateRate, the Express
+  gates card); the queues are drawn like the shuttle stops'; kick-off records `RoundResult.gates` (admitted, mean and longest wait, still
+  queuing). With no gate placed the fans use the clubhouse plot's doors as before. Browser-checked on a test copy: all 168 arrived fans came
+  through the gate; at tier 1 a 4-lane gate never queues. Tests: `tests/gates.test.ts` (2); 887 pass. Findings and the M2 design: NOW.md.
+- **M2.2 Galleries landed** (branch `lead/m2-galleries`): `src/game/golf/galleries.ts` makes the spots (beside each green, off the
+  line of play, the last hole's pulling most; behind and beside each tee; every grandstand by its seats; in front of every tent or kiosk)
+  and `pickSpot` (by weight times the room left). Fans in (through a gate, or at the clubhouse plot's doors) walk on to a spot (`Crowd`
+  stage 3, `onIn`; `City.toGallery`) and stand there (`Crowd.gallery`); the engine sends the spots with the gates (`spots` message; again
+  when the Course tool fits the markers) and draws each spot's fans as rings of standing walkers with `n watching` (`Game.drawGalleries`).
+  Browser-checked on a test copy. Tests: `tests/galleries.test.ts` (3), one more in `tests/gates.test.ts`; 891 pass.
+- **M2.3 Going home landed** (branch `lead/m2-going-home`): each parked party car is recorded (`City.parkedCars`: town, car park, bay);
+  in golf mode `LEAVE_AFTER` (120 sim s) after kick-off the parties are released over `LEAVE_S` (300 s) in a seeded order, each walking
+  from a gallery spot with fans back to its car's bay (`Crowd` stage 4, `onBack`), and the car leaves its car park at the entrance bound
+  for a home of its town (`City.driveHome`, the surge's homes by population; the park's count drops); `RoundResult.leave` (cars, gone,
+  start, last). Browser-checked on a test copy: 53 of 56 cars left, the roads' traffic rose from ~41 to ~100 cars. 892 tests pass.
+- **Magenta keyer clean-up** (branch `lead/key-magenta`; ideas from Corridor Crew's CorridorKey `color_utils.py`, nothing installed):
+  `scripts/assets/key-magenta.mjs` gains settings (`KEY_DEFAULTS`): `despill` 'keep' (the leftover magenta tint moved into the other
+  channels, brightness kept; 'cut' is the old way) with `despillStrength` 0..1, `despeckle` (solid islands under that many px go, 400),
+  `haze` (see-through pixels further than that many px from the solid object fade out over `hazeSoft`; 40 / 6) and `linear` (un-mix in
+  linear light; off: on the golf sprites it tints thin rails pink). `gen-golf.mjs` reads `art/golf/items.json` "key" and each item's
+  "key". `scripts/assets/key-compare.mjs <folder> [--set k=v]` writes old / new / new-linear sheets to `output/key-compare/`.
+  Tests: `tests/key-magenta.test.ts` (loads the keyer at run time, sharp is native). 896 tests pass.
+- **M2.4 Results from the movers landed** (branch `lead/m2-results`): the year-end's day facts come from what the crowd did, the formula
+  (`measureGateFlows`) only where the round did not measure it (`golf/yearend.ts measuredFlows`). Gates: the queue is the mean gate wait,
+  late = fans admitted after waiting over ON_TIME_GRACE_MIN (`GateStats.late`, `Crowd.grace`) plus those still queuing at kick-off (late,
+  no longer missed), on time = the rest of the arrived. Exit: each car's wait from its party back at the bay to the car out of its car park
+  (`City.leave.waits`), its 95th percentile (`RoundResult.leave.p95`) once 95% of the cars are out. `YearEndResult.measured`; the results
+  card marks estimates (`Q 0m · Exit 0m est.` until the cars are out). Sim s = game minutes. Browser-checked: exit measured 12 min with 56
+  cars. Tests: `tests/results-measured.test.ts`. 900 tests pass.

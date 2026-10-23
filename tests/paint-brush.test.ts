@@ -82,7 +82,7 @@ test('a press with no move dabs once: a round cart path area', () => {
   tool.pointerUp(0.5);
   assert.equal(tool.areas.length, 1);
   assert.equal(tool.areas[0]!.kind, 'path');
-  assert.equal(tool.areas[0]!.tex, 'asphalt');
+  assert.equal(tool.areas[0]!.tex, surfacePreset('path') ?? 'asphalt');
 });
 
 test('the brush radius clamps to 0.5..20 tiles and setBrushR works without localStorage', () => {

@@ -1,6 +1,7 @@
 // The main thread's side of the traffic simulation: it posts edits and settings to the sim worker, keeps the last two
 // frames, and interpolates the cars between them so they move smoothly at 60 fps while the sim runs at 10 Hz.
 import SimWorker from './sim.worker?worker&inline';
+import type { GallerySpot } from '../golf/galleries';
 import type { NetOp } from '../ground-protocol';
 import { CAR_SCALE, type Drawable } from '../sprites';
 import { carHeading, facings } from '../traffic';
@@ -96,6 +97,8 @@ export class SimClient {
   /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
    *  tiles, fans, stage; stage 0 to a lot stop, 1 to a door) and the lot stops (4 floats each: x, y in tiles, the fans waiting, the route index) */
   walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
+  /** the galleries' standing crowds (LEAD.md M2.2): 4 floats a spot (x, y, fans, kind) */
+  gallery: Float32Array = NO_FLOATS;
   /** the active traffic incidents as the worker last sent them (with each frame): 3 floats each, x and y (tiles) and kind (1 crash, 0 breakdown) */
   incidents: Float32Array = NO_FLOATS;
   /** the active natural disaster as the worker last sent it (none: empty); called with the notes (warnings, starts, ends, repairs) of each such message */
@@ -156,7 +159,18 @@ export class SimClient {
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
-  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][]) { this.post({ t: 'golf', on, tier, rep, land }); }
+  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][]) { this.post({ t: 'golf', on, tier, rep, land }); this.golfOn = on; this.sendTownDay(); }
+  /** the town day (LEAD.md M1): in a golf game the town lives a day of townMinutes (real minutes at 1x; one sim second is one game minute)
+   *  with its own commute, separate from the season; townTraffic scales its lot trips. A classic game keeps the classic day (DAY). */
+  golfOn = false; townMinutes = 10; townTraffic = 1;
+  /** the town day's length in sim seconds, as last sent */
+  dayLen = 1440;
+  /** the galleries' spots (LEAD.md M2.2): sent with the gates, and when the holes change */
+  setSpots(spots: GallerySpot[]) { this.post({ t: 'spots', spots }); }
+  /** the course's gates (LEAD.md M2.1): sent whenever the placed gate structures change */
+  setGates(gates: { x: number; y: number; lanes: number }[]) { this.post({ t: 'gates', gates }); }
+  setTownDay(minutes: number, traffic: number) { this.townMinutes = minutes; this.townTraffic = traffic; this.sendTownDay(); }
+  private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1, free: this.golfOn }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
@@ -241,7 +255,7 @@ export class SimClient {
       this.onTown?.(m.events); return;
     }
     this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks;
-    this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS; this.incidents = m.inc;
+    this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS; this.gallery = m.gallery ?? NO_FLOATS; this.incidents = m.inc;
     const S = new Map<string, { idx: number; stage: number }>(), G = m.sig;
     for (let k = 0; k + 3 < G.length; k += 4) S.set(sigKey(G[k]!, G[k + 1]!), { idx: G[k + 2]!, stage: G[k + 3]! });
     this.sigs = S;
@@ -254,7 +268,9 @@ export class SimClient {
     for (const r of added) keep.add(r.key);
     for (const k of removed) if (!keep.has(k)) this.lots.delete(k);
     const moved: string[] = [];
-    for (const r of added) { const old = this.lots.get(r.key); if (old) moved.push(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
+    // every lot that came, moved or went is handed on (an empty lot is composed too: its share of the fence grid)
+    for (const k of removed) if (!keep.has(k)) moved.push(k);
+    for (const r of added) { const old = this.lots.get(r.key); moved.push(r.key); this.lots.set(r.key, { ...r, use: old?.use ?? 0, level: old?.level ?? 0, decline: old?.decline ?? 0, seed: old?.seed ?? 0, since: old?.since ?? 0 }); }
     if (moved.length) this.onLotsMoved?.(moved);
   }
   private resize(cap: number) {

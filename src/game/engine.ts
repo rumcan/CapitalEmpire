@@ -46,7 +46,7 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
-import { compose, isCarPark, type ComposeState, type LotGeom, type Placed } from './lots/compose';
+import { acrossLines, compose, fenceOnly, isCarPark, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -56,11 +56,12 @@ import { Budget, DEBT_DAYS, LOAN, compensation, type Ledger } from './budget';
 import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } from './career';
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
-import type { GolfSave, GolfView } from './golf/mode';
+import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
 import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
+import { countParkedCars } from './golf/parkingfee';
 import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
@@ -70,12 +71,12 @@ import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats
 import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
+import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
+import { gallerySpots } from './golf/galleries';
 import { tierInfo, type Need } from './golf/tour';
-import { ParanormalRenderer } from './ext/paranormal-render';
-import { paranormalNightStrength } from './ext/paranormal-render/frames';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -350,6 +351,7 @@ export class Game {
     const placed = new Set<number>();
     for (const o of ops) if (o.op === 'set') { this.setGolfMarker(o.hole, o.kind, o.x, o.y); placed.add(o.hole); } else this.removeGolfMarker(o.hole, o.kind);
     if (placed.size) this.toast(`Hole ${[...placed].sort((a, b) => a - b).join(', ')}: pin and tee markers fitted to the green and tee`);
+    this.syncCourseGates(); // the galleries follow the greens and tees
     this.scheduleSave(); this.emit();
   }
   /** places or moves a pin or tee marker with its prop, marked auto (it goes when its green or tee is gone) */
@@ -370,8 +372,8 @@ export class Game {
   /** a golf game's painted course by hole (golf/holeview.ts tagByHole): untagged course areas take the hole they belong to (a hole tag, no
    *  brush kind), so the Course tool's strip and checks see the holes */
   private tagCourseHoles() {
-    const g = this.golf; if (!g || !g.pins.length) return;
-    const tags = tagByHole(this.paint.areas, g.pins, g.tees, g.aims); let n = 0;
+    const g = this.golf; if (!g?.pins?.length) return;
+    const tags = tagByHole(this.paint.areas, g.pins, g.tees ?? [], g.aims ?? []); let n = 0;
     this.paint.areas.forEach((a, i) => { if (tags[i]) { a.hole = tags[i]; n++; } });
     if (n) { this.paintRev++; this.scheduleSave(); }
   }
@@ -446,7 +448,6 @@ export class Game {
   private lotBox: BBox = [0, 0, 0, 0]; private lotHits = new Set<Prop>(); private blocksAt = -Infinity; private lotBlocksTimer = 0;
   private raf = 0; private last = 0;
   private mask: OffscreenCanvas | null = null;
-  private paranormalRenderer = new ParanormalRenderer();
   /** Natural hazards and recurring monster nights; the settings preference survives reloads. */
   disastersEnabled = true;
   setDisasters(on: boolean) {
@@ -476,15 +477,14 @@ export class Game {
   skipNight() {
     const c = this.clock(); this.skippedNight = nightDay(this.night, c.hour + c.minute / 60, c.day); this.nightKey = ''; this.emit();
   }
-  /** how dark it is now (0 day .. 1 night): the clock's night, or a paranormal night's, whichever is darker */
-  nightAmount(now = performance.now()) {
-    const clock = this.clockNight();
-    return this.traffic ? Math.max(clock, paranormalNightStrength(this.traffic.disasters, this.traffic.simTime(now))) : clock;
+  /** how dark it is now (0 day .. 1 night): the clock's night */
+  nightAmount() {
+    return this.clockNight();
   }
   /** the night pass over the finished frame: the lights of the props in view (gathered again when the camera, the props or the settings
-   *  change, at most every quarter second), the paranormal night's torches and monsters, then the moonlight */
+   *  change, at most every quarter second), then the moonlight */
   private drawNight(ctx: CanvasRenderingContext2D, now: number) {
-    const amount = this.nightAmount(now); if (!(amount > 0)) return;
+    const amount = this.nightAmount(); if (!(amount > 0)) return;
     const ze = this.cam.z * this.dpr, W = ctx.canvas.width, H = ctx.canvas.height;
     // gathered over three screens round the view, again once the view has moved a screen, zoomed, or the props or settings changed
     const hw = W / ze, hh = H / ze, key = `${Math.round(this.cam.X / hw)},${Math.round(this.cam.Y / hh)},${Math.round(Math.log2(ze) * 4)},${W},${H},${this.props.size}`;
@@ -499,12 +499,17 @@ export class Game {
     }
     const ox = this.cw / 2 - this.cam.X * ze, oy = this.ch / 2 - this.cam.Y * ze;
     const placed = this.nightLights.map(l => ({ ...l, sx: l.sx * ze + ox, sy: l.sy * ze + oy, rx: l.rx * ze, ry: l.ry * ze }));
-    const lights = this.traffic ? placed.concat(this.paranormalRenderer.actorLights(this.traffic.disasters, this.traffic.simTime(now)).map(l => {
-      const q = this.screen(l.x, l.y), rx = l.radius * HW * ze; return { sx: q.x, sy: q.y, rx, ry: rx * 0.65, i: l.intensity, tint: l.color };
-    })) : placed;
+    const lights = placed;
     this.nightRenderer.apply(ctx, this.canvas, this.night, amount, lights);
   }
 
+  /** the cast shadows (cast-shadow.ts): cast-shadow.json, as the baked lots have them, or the owner's tweak in the gear menu (survives reloads) */
+  cast: CastShadow = CAST;
+  setCast(c: Partial<CastShadow>) {
+    this.cast = clampCast({ ...this.cast, ...c });
+    try { localStorage.setItem('capitalempire.cast', JSON.stringify(this.cast)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
   /** the contact shadows' darkness (shadow-shape.ts; 1 = TrickOrTreat's builder, 0 = none); the settings preference survives reloads */
   shadowStrength = 1;
   setShadowStrength(v: number) {
@@ -522,6 +527,9 @@ export class Game {
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1 */ }
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
+    try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
+    this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
+    try { const c = localStorage.getItem('capitalempire.cast'); if (c) this.cast = clampCast(JSON.parse(c)); } catch { /* cast-shadow.json */ }
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
@@ -916,8 +924,52 @@ export class Game {
     const v = st ? undefined : this.traffic.lots.get(key);
     this.townLotChanged(key, st ? lotBoxOf([st.g.o.x, st.g.o.y], [st.g.u.x, st.g.u.y], [st.g.n.x, st.g.n.y], st.g.w, st.g.d) : v ? lotBoxOf(v.o, v.u, v.n, v.w, v.d) : null);
     if (st) { this.placeLot(key, st.g, st.st); return; }
-    if (!v || v.level === LV.EMPTY || this.starterIn(v)) { this.dropLot(key); return; }
-    this.placeLot(key, { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, { use: v.use, level: v.level, decline: v.decline, seed: v.seed });
+    if (!v) { this.dropLot(key); return; }
+    const g: LotGeom = { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d };
+    // an empty lot, or one a starter house stands on, keeps only its share of the fence grid (none on the golf land): a starter house's lot all
+    // the lines it owns, an empty lot only those it shares with a lot that has a house
+    const starter = v.level !== LV.EMPTY && this.starterIn(v);
+    this.houseChanged(key, v, v.level >= LV.BUILT || starter);
+    if (v.level === LV.EMPTY || starter) {
+      if (this.onGolfLand(lotBoxOf(v.o, v.u, v.n, v.w, v.d))) { this.dropLot(key); return; }
+      const across = acrossLines(g), lines: FenceLines = starter ? { side: true, back: true } : { side: this.houseAt(across.side, key), back: !!across.back && this.houseAt(across.back, key) };
+      if (lines.side || lines.back) this.placeFence(key, g, v.seed, lines); else this.dropLot(key);
+      return;
+    }
+    this.placeLot(key, g, { use: v.use, level: v.level, decline: v.decline, seed: v.seed });
+  }
+  /** a lot's share of the fence grid alone (compose fenceOnly): panels that would stand in a building or another prop are left out */
+  private placeFence(key: string, g: LotGeom, seed: number, lines: FenceLines) {
+    this.dropLot(key);
+    const ps: Prop[] = [];
+    for (const q of fenceOnly(g, seed, lines).props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !this.canPlace(LIBRARY[i]!, q.x, q.y, q.flip, q.scale)) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
+    this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
+  }
+  /** the lots with a house on them (built, or a starter house): an empty neighbour fences the line it shares with one */
+  private houseLots = new Set<string>();
+  /** is the point inside a lot (not `self`) that has a house on it (built, or a starter house) */
+  private houseAt(p: { x: number; y: number }, self: string): boolean {
+    for (const v of this.traffic.lots.values()) {
+      if (v.key === self) continue;
+      const rx = p.x - v.o[0], ry = p.y - v.o[1], a = rx * v.u[0] + ry * v.u[1], b = rx * v.n[0] + ry * v.n[1];
+      if (a >= 0 && a <= v.w && b >= 0 && b <= v.d) return v.level >= LV.BUILT || (v.level !== LV.EMPTY && this.starterIn(v));
+    }
+    return false;
+  }
+  /** a lot got or lost its house: its empty neighbours (lots whose boxes touch its own) compose again, so their shared lines follow */
+  private houseChanged(key: string, v: LotView, house: boolean) {
+    if (house === this.houseLots.has(key)) return;
+    if (house) this.houseLots.add(key); else this.houseLots.delete(key);
+    const b = lotBoxOf(v.o, v.u, v.n, v.w, v.d);
+    for (const w of this.traffic.lots.values()) {
+      if (w.key === key || w.level !== LV.EMPTY) continue;
+      const c = lotBoxOf(w.o, w.u, w.n, w.w, w.d);
+      if (c[0]! <= b[2]! + 1 && c[2]! >= b[0]! - 1 && c[1]! <= b[3]! + 1 && c[3]! >= b[1]! - 1) this.lotQueue.add(w.key);
+    }
+  }
+  /** a box (tiles [x0, y0, x1, y1]) that overlaps the golf land by more than half a tile */
+  private onGolfLand(b: ArrayLike<number>): boolean {
+    return this.golfLand().some(([x, y, w, h]) => Math.min(b[2]!, x + w) - Math.max(b[0]!, x) > 0.5 && Math.min(b[3]!, y + h) - Math.max(b[1]!, y) > 0.5);
   }
   /** a non-auto building (not a car) in the lot's box: the starter town's houses win over the lot */
   private starterIn(v: LotView): boolean {
@@ -953,7 +1005,10 @@ export class Game {
     const c = compose(g, st), ps: Prop[] = [];
     for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !(q.street && this.inLayby(i, q))) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
-    const lawn = lotLawn(key, g); this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
+    // a yard of its own only where a building stands (a big sprite that is not a car, as sendBlocks counts buildings, or a baked house lot); an
+    // empty lot shows its block's grass
+    const built = ps.some(p => { const it = LIBRARY[p.item]!; return !!it.block || (it.big && it.kind !== 'car'); });
+    const lawn = built ? lotLawn(key, g) : null; this.setLotGround(key, lawn ? [lawn, ...c.ground] : c.ground);
   }
   /** the farms follow the network (ext/farms): the parcels of the changed country roads are derived again (all after a load or a
    *  new valley); the parcels that went lose their props and ground, the new ones queue to compose */
@@ -966,6 +1021,7 @@ export class Game {
   /** what the farms keep clear of besides the town and the site: the car parks, and in golf mode the course's rect too (the farm map's update and stale checks read the same list) */
   private farmParks(): { x: number; y: number; w: number; h: number }[] {
     if (!this.golf) return this.parkDefs;
+    if (!this.golf.course) return this.parkDefs;
     const [x, y, w, h] = this.golf.course;
     return [...this.parkDefs, { x, y, w, h }];
   }
@@ -1097,7 +1153,7 @@ export class Game {
     const id = Math.max(0, ...(this.golf.structures ?? []).map(s => s.id)) + 1;
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
-    this.golf.structures.push(placed);
+    this.golf.structures.push(placed); this.syncCourseGates();
     const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? 'expansion:backyard-tent';
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
@@ -1121,7 +1177,7 @@ export class Game {
     const prop = this.golfStructureProps.get(s.id);
     if (prop) this.removeProp(prop);
     this.golfStructureProps.delete(s.id);
-    this.golf.structures.splice(i, 1);
+    this.golf.structures.splice(i, 1); this.syncCourseGates();
     if (refund > 0) this.traffic.spend('construction', -refund);
     this.scheduleSave();
     this.toast(`Removed ${def ? def.name : s.typeId}${refund > 0 ? ` (+$${refund.toLocaleString()})` : ''}`);
@@ -1145,11 +1201,20 @@ export class Game {
     this.emit();
     }
     }
+    /** the course's gates to the sim (LEAD.md M2.1): every placed structure of kind 'gate', at its rectangle's middle, its capacity as lanes */
+    private syncCourseGates() {
+    const gates: { x: number; y: number; lanes: number }[] = [];
+    for (const s of this.golf?.structures ?? []) { const def = STRUCTURE[s.typeId]; if (def?.kind !== 'gate') continue; const [x, y, w, h] = structureRect(s); gates.push({ x: x + w / 2, y: y + h / 2, lanes: Math.max(1, def.capacity) }); }
+    this.traffic.setGates(gates);
+    // the galleries (LEAD.md M2.2): the greens and tees of the course and the placed grandstands and tents
+    this.traffic.setSpots(this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? []) : []);
+    }
     private syncGolfProps() {
     this.golfProps.clear();
     this.golfStructureProps.clear();
+    this.syncCourseGates();
     if (!this.golf) return;
-    for (const pin of this.golf.pins) {
+    for (const pin of this.golf.pins ?? []) {
     const key = 'pin:' + pin.hole;
     const id = pin.hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID;
     const item = LIB_INDEX.get(id);
@@ -1157,7 +1222,7 @@ export class Game {
     if (p.item === item && Math.hypot(p.x - pin.x, p.y - pin.y) < 2) { this.golfProps.set(key, p); break; }
     }
     }
-    for (const tee of this.golf.tees) {
+    for (const tee of this.golf.tees ?? []) {
     const key = `tee:${tee.hole}:${tee.kind}`;
     const id = tee.kind === 'back' ? TEE_BACK_ID : tee.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
     const item = LIB_INDEX.get(id);
@@ -2064,7 +2129,20 @@ export class Game {
   /** pauses, or resumes at the last speed */
   togglePause() { this.setSpeed(this.speed ? 0 : this.lastSpeed); }
   /** the game clock: the economy's day, and the time of day from the sim clock (one sim second is one game minute) */
-  clock(): { day: number; hour: number; minute: number } { const t = this.traffic.clockTime(performance.now()); return { day: this.day, hour: Math.floor(t / GAME_HOUR) % 24, minute: Math.floor(t % GAME_HOUR) }; }
+  /** the time of day: in a golf game the town day's (LEAD.md M1: its own length, separate from the season; day counts town days from 1),
+   *  else the classic game day (hours of GAME_HOUR) */
+  clock(): { day: number; hour: number; minute: number } {
+    // a golf game's town day runs on the sim's own time (it never stops; the season clock freezes at the season's end)
+    const now = performance.now(), t = this.golfMode ? this.traffic.simTime(now) : this.traffic.clockTime(now), L = this.golfMode ? this.traffic.dayLen : 24 * GAME_HOUR, hl = L / 24;
+    return { day: this.golfMode ? Math.floor(t / L) + 1 : this.day, hour: Math.floor(t / hl) % 24, minute: Math.floor((t % hl) / hl * 60) };
+  }
+  /** the owner's town day (LEAD.md M1): its length in real minutes at 1x and the town's traffic (times the lot trips); remembered */
+  townDay = { minutes: 10, traffic: 1 };
+  setTownDay(v: Partial<{ minutes: number; traffic: number }>) {
+    this.townDay = { minutes: Math.min(30, Math.max(0.5, v.minutes ?? this.townDay.minutes)), traffic: Math.min(4, Math.max(0, v.traffic ?? this.townDay.traffic)) };
+    try { localStorage.setItem('capitalempire.townday', JSON.stringify(this.townDay)); } catch { /* storage may be unavailable */ }
+    this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic); this.nightKey = ''; this.emit();
+  }
   /** fast-forwards the sim to the next 7:30 or 16:30 (game clock s 450 and 990 of the day); resumes first if paused. Not while the clock is frozen. */
   skipToRush() {
     if (this.traffic.skipping) return;
@@ -2612,6 +2690,26 @@ export class Game {
     }
     for (const d of this.busDefs) { const a = this.screen(d.sx, d.sy), b = this.screen(d.dx, d.dy); busStop(ctx, a.x, a.y, dpr); busStop(ctx, b.x, b.y, dpr); }
   }
+  /** the galleries' standing crowds (LEAD.md M2.2): each spot's fans as up to 48 standing walkers in rings round its point (0.75 tiles
+   *  apart, the rings 0.9 tiles out each), with the count (`n watching`) at a closer zoom; below zoom 0.08 a green dot sized by the crowd */
+  private drawGalleries(ctx: CanvasRenderingContext2D) {
+    const G = this.traffic.gallery; if (!G.length) return;
+    if (!walkSheet) { walkSheet = new Image(); walkSheet.src = walkersUrl; }
+    const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y, sprites = this.cam.z >= 0.08, h = 0.9 * HH * 2 * ze, sheet = walkSheet;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    for (let i = 0; i + 3 < G.length; i += 4) {
+      const x = G[i]!, y = G[i + 1]!, n = Math.round(G[i + 2]!); if (n <= 0) continue;
+      const c = this.screen(x, y); if (c.x < -200 || c.y < -200 || c.x > cw + 200 || c.y > ch + 200) continue;
+      if (!sprites) { ctx.fillStyle = 'rgba(134,239,172,0.85)'; ctx.beginPath(); ctx.arc(c.x, c.y, Math.min(10, 2 + Math.sqrt(n) / 3) * dpr, 0, Math.PI * 2); ctx.fill(); continue; }
+      // rings of standing fans: 6 on the first, 12 on the next, 18 on the third ..., each fan a quarter turn of the walk cycle apart in hero
+      for (let k = 0, ring = 1, onRing = 0, per = 6, m = Math.min(48, Math.ceil(n / 2)); k < m; k++) {
+        const a = (onRing / per) * Math.PI * 2 + ring * 0.37, r = ring * 0.9;
+        walkerSprite(ctx, sheet, x + Math.cos(a) * r, y + Math.sin(a) * r, (k + i) % 3, 0, ze, X0, Y0, cw, ch, h);
+        if (++onRing >= per) { ring++; onRing = 0; per = 6 * ring; }
+      }
+      if (this.cam.z >= 0.2) { const t = `${n} watching`, ty = c.y - h * 1.6; ctx.strokeText(t, c.x, ty); ctx.fillStyle = '#bbf7d0'; ctx.fillText(t, c.x, ty); }
+    }
+  }
   /** the shuttle crowd on the map (during a surge and its eval): each lot stop's queue as up to 24 walkers in a 4 x 6 grid 0.7 tiles apart, 1.5 tiles behind the
    *  kerb (toward the stop's car park), with the count (`n waiting`); each walking group as min(n, 3) walkers 0.4 tiles apart, feet at the tile, the walk cycle
    *  of hero (group % 3), a frame each 180 ms; below zoom 0.08 each group is a 2 px amber dot. Culled to the view */
@@ -2629,7 +2727,7 @@ export class Game {
       let ux = 0, uy = 1;
       if (park) { const cx = park.x + park.w / 2 - sx, cy = park.y + park.h / 2 - sy, L = Math.hypot(cx, cy); if (L > 0) { ux = cx / L; uy = cy / L; } }
       const bx = sx + ux * 1.5, by = sy + uy * 1.5;
-      for (let g = 0, nq = sprites ? Math.min(24, q) : 0; g < nq; g++) walkerSprite(ctx, sheet, bx + ((g & 3) - 1.5) * 0.7, by + ((g >> 2) - 2.5) * 0.7, r % 3, Math.floor(tick + g) % 4, ze, X0, Y0, cw, ch, h);
+      for (let g = 0, nq = sprites ? Math.min(24, q) : 0; g < nq; g++) walkerSprite(ctx, sheet, bx + ((g & 3) - 1.5) * 0.7, by + ((g >> 2) - 2.5) * 0.7, ((r % 3) + 3) % 3, Math.floor(tick + g) % 4, ze, X0, Y0, cw, ch, h);
       if (q > 0) {
         const px = (worldX(sx, sy) - X0) * ze + cw / 2, py = (worldY(sx, sy) - Y0) * ze + ch / 2, label = `${q} waiting`;
         ctx.strokeText(label, px, py - 16 * dpr); ctx.fillStyle = '#f8fafc'; ctx.fillText(label, px, py - 16 * dpr);
@@ -2799,7 +2897,8 @@ export class Game {
   const gCards = this.golf.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
   const baseQ = stats ? buildCourseStatsPanel({ areas: this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts, plantKind: a.plantKind, plantedMonth: a.plantedMonth })), tees: this.golf.tees, pins: this.golf.pins, aims: this.golf.aims, clubhouse: this.golf.clubhouse }, this.golf.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards)).qualityScore : 85;
-  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards);
+  const parked = countParkedCars(this.traffic.parks, this.traffic.round.surge, last.byTown);
+  return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards, parked, this.parking.fee);
   }
   /** fast-forwards the season to the tournament (the end of the game day, one sim second past it); golf mode only, not while the clock is frozen */
   skipToTournament() {
@@ -2888,9 +2987,9 @@ export class Game {
       this.bizOpenSeen = null;
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
-      this.golf = d.golf ?? null;
+      this.golf = normalizeGolfSave(d.golf);
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
-      if (d.golf) { this.townPts = [d.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
+      if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
       if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
       else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }
@@ -3265,6 +3364,8 @@ export class Game {
       if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
       const lt = tr && lightOn ? tr.lights(bx0, by0, bx1, by1, ze, Math.floor(now / 350) % 2 === 0, this.lightBuf) : null;
       const [sAt, pAt, lAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0]]);
+      // the cast shadows (cast-shadow.ts), faded out by night, then the contact shadows, then the sprites
+      if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
       if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength);
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
@@ -3561,6 +3662,7 @@ export class Game {
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
+    this.drawGalleries(ctx);
     this.drawWalkers(ctx, now);
     if (this.grassPanel) {
       const s = this.grassScope();
@@ -3602,8 +3704,6 @@ export class Game {
       ctx.fillStyle = `rgba(214,190,150,${a.toFixed(3)})`; ctx.beginPath(); ctx.ellipse(s.x, s.y - p.z * HH * ze * 1.5, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     }
     this.drawNight(ctx, now);
-    if (this.traffic) this.paranormalRenderer.draw(ctx, this.canvas, this.traffic.disasters, this.traffic.simTime(now), now,
-      (x, y) => this.screen(x, y), HW * ze, this.dpr, this.props, LIBRARY, true);
   }
 
   /** the map's three town names at the district and planner tiers: white with a dark outline, centred on each town site (screen px) */

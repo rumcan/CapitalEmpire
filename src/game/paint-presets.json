@@ -4,35 +4,35 @@
   {
    "id": "golf-green",
    "name": "Golf - Green",
-   "surface": null,
-   "size": 8,
-   "col": "#5d6a1e",
+   "surface": "green",
+   "size": 33.5,
+   "col": "#3a550b",
    "a": {
-    "src": "src/assets/ground/grass-capital-backyard.webp",
-    "scale": 1,
+    "src": "src/assets/ground/paint-photo-fairway.webp",
+    "scale": 6.55,
     "tint": "#808080",
     "tintAmt": 0,
-    "bright": 1,
+    "bright": 0.86,
     "contrast": 1,
     "sat": 1,
     "hue": 0
    },
    "b": {
-    "src": "src/assets/ground/grass-capital-meadow.webp",
-    "scale": 1,
+    "src": "src/assets/ground/grass-capital-backyard.webp",
+    "scale": 1.05,
     "tint": "#808080",
     "tintAmt": 0,
-    "bright": 1,
-    "contrast": 1,
-    "sat": 1,
+    "bright": 0.85,
+    "contrast": 1.09,
+    "sat": 1.15,
     "hue": 0
    },
    "mix": {
-    "share": 0.5,
-    "soft": 0.12,
-    "patch": 1,
-    "tone": 0.1,
-    "warm": 0.08,
+    "share": 0.62,
+    "soft": 0.27,
+    "patch": 1.1,
+    "tone": 0.4,
+    "warm": 0,
     "angle": 0,
     "tilt": 0.5
    },
@@ -95,7 +95,7 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": true
+   "lawn": false
   },
   {
    "id": "fairway",
@@ -143,16 +143,16 @@
     "tint": 0.18,
     "soft": 0.2
    },
-   "lawn": true
+   "lawn": false
   },
   {
    "id": "rough",
    "name": "Rough",
    "surface": "rough",
    "size": 38,
-   "col": "#1c3106",
+   "col": "#132704",
    "a": {
-    "src": "src/assets/ground/grass-v1/png/grass-golf-putting-green.png",
+    "src": "src/assets/ground/paint-photo-golf-tee.webp",
     "scale": 7.4,
     "tint": "#808080",
     "tintAmt": 0,
@@ -163,16 +163,16 @@
    },
    "b": {
     "src": "src/assets/ground/grass-v1/png/grass-golf-putting-green.png",
-    "scale": 6.75,
+    "scale": 6.2,
     "tint": "#808080",
     "tintAmt": 0,
-    "bright": 0.75,
+    "bright": 0.64,
     "contrast": 1.68,
-    "sat": 0.62,
+    "sat": 0.99,
     "hue": 0
    },
    "mix": {
-    "share": 0.5,
+    "share": 0.42,
     "soft": 0.12,
     "patch": 1,
     "tone": 0.35,
@@ -192,6 +192,200 @@
     "soft": 0.3
    },
    "lawn": true
+  },
+  {
+   "id": "fringe",
+   "name": "Fringe",
+   "surface": "fringe",
+   "size": 8,
+   "col": "#3e450b",
+   "a": {
+    "src": "art/grass-photo/meadow-lush.png",
+    "scale": 1.35,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.94,
+    "contrast": 1.8,
+    "sat": 0.9,
+    "hue": 30
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-fairway.webp",
+    "scale": 8,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.88,
+    "contrast": 1.21,
+    "sat": 0.96,
+    "hue": 25
+   },
+   "mix": {
+    "share": 0.46,
+    "soft": 0.5,
+    "patch": 0.25,
+    "tone": 0,
+    "warm": 0.3,
+    "angle": -56,
+    "tilt": 0.49
+   },
+   "stripes": {
+    "on": true,
+    "dir": "x",
+    "width": 3.5,
+    "light": 0.01,
+    "dark": 0.05,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.07,
+    "soft": 0.3
+   },
+   "lawn": true
+  },
+  {
+   "id": "first-cut",
+   "name": "First Cut",
+   "surface": "firstCut",
+   "size": 8,
+   "col": "#404b08",
+   "a": {
+    "src": "art/grass-photo/meadow-lush.png",
+    "scale": 1.35,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.03,
+    "contrast": 1.8,
+    "sat": 0.9,
+    "hue": 30
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-fairway.webp",
+    "scale": 8,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.94,
+    "contrast": 1.21,
+    "sat": 0.96,
+    "hue": 25
+   },
+   "mix": {
+    "share": 0.66,
+    "soft": 0.5,
+    "patch": 1.9,
+    "tone": 0.29,
+    "warm": 0.05,
+    "angle": -56,
+    "tilt": 0.49
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": true
+  },
+  {
+   "id": "path-worn",
+   "name": "Path_worn",
+   "surface": "path",
+   "size": 8,
+   "col": "#75644c",
+   "a": {
+    "src": "src/assets/ground/paint-photo-concrete-cracked.webp",
+    "scale": 6.6,
+    "tint": "#b8a96f",
+    "tintAmt": 0.23,
+    "bright": 0.8,
+    "contrast": 1.01,
+    "sat": 0.9,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-concrete-cracked.webp",
+    "scale": 8,
+    "tint": "#a69c6e",
+    "tintAmt": 0.51,
+    "bright": 1.03,
+    "contrast": 1.21,
+    "sat": 0.96,
+    "hue": 25
+   },
+   "mix": {
+    "share": 0.46,
+    "soft": 0.5,
+    "patch": 2.7,
+    "tone": 0.4,
+    "warm": 0.22,
+    "angle": -56,
+    "tilt": 0.49
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false
+  },
+  {
+   "id": "sand",
+   "name": "sand",
+   "surface": "bunker",
+   "size": 8,
+   "col": "#dbcfba",
+   "a": {
+    "src": "src/assets/ground/paint-photo-bunker-sand.webp",
+    "scale": 8,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.98,
+    "contrast": 1,
+    "sat": 0.76,
+    "hue": -5
+   },
+   "b": {
+    "src": "src/assets/ground/slabs.webp",
+    "scale": 4.4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.05,
+    "contrast": 1.15,
+    "sat": 1.04,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0,
+    "soft": 0.5,
+    "patch": 4,
+    "tone": 0,
+    "warm": 0.14,
+    "angle": -56,
+    "tilt": 0.49
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false
   }
- ]
+ ],
+ "blocks": "rough",
+ "blockShare": 1
 }

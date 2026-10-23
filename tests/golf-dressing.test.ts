@@ -9,6 +9,7 @@ import {
 } from '../src/game/golf/dressing';
 import { deriveHoles, surfaceAt } from '../src/game/golf/holes';
 import { courseAreas } from '../src/game/golf/paintcourse';
+import { surfacePreset } from '../src/game/paint-presets';
 
 const SITE = { x0: 100, y0: 100, x1: 400, y1: 550 };
 
@@ -68,7 +69,7 @@ test('buildCartPathLoop and withCartPathLoop add painted path areas that pass co
   const stats = { dropped: 0 };
   const paints = courseAreas(dressedLayout, stats);
   assert.equal(stats.dropped, 0);
-  assert.ok(paints.some(p => p.tex === 'spectatorPath'));
+  assert.ok(paints.some(p => p.tex === (surfacePreset('path') ?? 'spectatorPath')));
   // Holes on dressedLayout still derive cleanly with 0 warnings
   const holes = deriveHoles(dressedLayout.areas, dressedLayout.tees, dressedLayout.pins, dressedLayout.aims);
   assert.equal(holes.length, 9);

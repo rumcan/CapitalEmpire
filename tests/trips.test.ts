@@ -120,3 +120,34 @@ test('access calibration: 50 cars on a 10x10 street grid read free flow (< 1.2),
   for (const a of free) assert.ok(a < 1.2, `free flow reads ${a.toFixed(2)}`);
   for (const a of jam) assert.ok(a > 1.3, `congestion reads ${a.toFixed(2)}`);
 });
+
+// the town day (LEAD.md M1): a golf game's town lives a short day of its own (Sim.dayLen sim seconds), separate from the season
+test('town day: the demand curve follows the town day: the same shape at the same hour of a short day as of the classic day', () => {
+  const L = 240;
+  for (const h of [3, 8, 12, 17, 22, 0.5, 13.25]) assert.ok(Math.abs(demandAt(h / 24 * L, L) - demandAt(h * 60)) < 1e-9, `hour ${h}`);
+  assert.ok(demandAt(8 / 24 * L, L) > 0.99 && demandAt(17 / 24 * L, L) > 0.99, 'the morning and evening peaks');
+  assert.ok(demandAt(3 / 24 * L, L) < 0.4, 'the small hours are quiet');
+  assert.equal(demandAt(L + 30, L), demandAt(30, L), 'the curve repeats every town day');
+});
+
+test('town day: a short day keeps the commute (morning to jobs, evening home) and a day\'s trips; town traffic scales them', () => {
+  const L = 240, hourOfL = (t: number) => Math.floor(t / (L / 24)) % 24;
+  const run = (traffic: number) => {
+    const { g, lm, lots, town } = gridCity();
+    populate(town, lots);
+    const { sim, trips } = lotSim(g, lm, town);
+    sim.dayLen = L; sim.townTraffic = traffic;
+    const steps = Math.round(2 * L / DT); for (let k = 0; k < steps; k++) sim.step();
+    return trips;
+  };
+  const trips = run(1);
+  assert.ok(trips.length > 60, `${trips.length} trips in 2 town days`);
+  const morning = trips.filter(x => hourOfL(x.t) >= 6 && hourOfL(x.t) <= 11), evening = trips.filter(x => hourOfL(x.t) >= 15 && hourOfL(x.t) <= 21);
+  assert.ok(morning.length > 0 && evening.length > 0, `morning ${morning.length}, evening ${evening.length}`);
+  assert.ok(morning.filter(x => x.from === LU.RES && isJob(x.to)).length / morning.length > 0.8, 'morning: homes to jobs');
+  assert.ok(evening.filter(x => isJob(x.from) && x.to === LU.RES).length / evening.length > 0.8, 'evening: jobs to homes');
+  const quiet = trips.filter(x => hourOfL(x.t) >= 1 && hourOfL(x.t) <= 4).length / 4, rush = morning.length / 6;
+  assert.ok(rush > 1.5 * quiet, `rush hours busier than the small hours: ${rush.toFixed(1)} vs ${quiet.toFixed(1)} an hour`);
+  const double = run(2);
+  assert.ok(double.length > 1.5 * trips.length, `town traffic 2x: ${double.length} vs ${trips.length}`);
+});

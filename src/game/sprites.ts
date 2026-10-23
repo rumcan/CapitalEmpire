@@ -44,7 +44,8 @@ function packSprite(d: Drawable, out: Float32Array, o: number, i: number, j: num
   const it = LIBRARY[d.item], t = it.tex;
   spriteRect(d, out, o);
   out[o + 4] = d.flip ? t[3] : t[1]; out[o + 5] = t[2]; out[o + 6] = d.flip ? t[1] : t[3]; out[o + 7] = t[4];
-  out[o + 8] = t[0]; out[o + 9] = alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = 0;
+  // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked)
+  out[o + 8] = t[0]; out[o + 9] = alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' ? -1 : worldY(d.x, d.y);
   clip(out, o + 12, i, j);
 }
 /** the sprite's contact shadow (shadow-shape.ts): its shape from the footprint (2 m tiles, so the half extents in metres are the tile

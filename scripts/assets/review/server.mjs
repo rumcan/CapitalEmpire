@@ -378,6 +378,12 @@ http.createServer(async (req, res) => {
       if (old !== p.id) fs.rmSync(PRESET_PIC(old), { force: true });
       fs.writeFileSync(PRESET_PIC(p.id), pic); writePresets(f); return json({ ...f, saved: p.id });
     }
+    if (req.method === 'POST' && P === '/api/preset-blocks') {
+      // { blocks: a preset id or null (any lawn preset), blockShare }: the road blocks' grass
+      const { blocks, blockShare } = await body(req), f = readPresets();
+      const out = GL.clampPresets({ ...f, blocks: blocks ?? null, blockShare: typeof blockShare === 'number' ? blockShare : f.blockShare });
+      writePresets(out); return json(out);
+    }
     if (req.method === 'POST' && P === '/api/preset-lawn') {
       // { id, lawn }: the Town lawns picker switches one preset on or off for the lawns (its picture stays as baked)
       const { id, lawn } = await body(req), f = readPresets(), p = f.presets.find(q => q.id === id);

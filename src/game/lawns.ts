@@ -5,17 +5,17 @@
 // under the lots' own ground (drawLawns).
 import type { Block } from './blocks';
 import type { LotPatch } from './ground-protocol';
-import { PRESETS, presetTex } from './paint-presets';
+import { BLOCK_GRASS, PRESETS, presetTex } from './paint-presets';
 
 /** the presets the lawns use (the owner's Use on lawns switch) */
 export const LAWN_IDS: string[] = PRESETS.filter(p => p.lawn).map(p => p.id);
-/** a road block's grass: how much of the block it covers, the patches' soft edge and their size (1 = 24 tiles a period) */
-export const BLOCK_LAWN = { share: 0.55, soft: 0.15, patch: 2.5 };
+/** a road block's grass: the patches' soft edge and their size (1 = 24 tiles a period); how much it covers is the owner's (BLOCK_GRASS share) */
+export const BLOCK_LAWN = { soft: 0.15, patch: 2.5 };
 
 /** 32-bit FNV-1a hash of a string */
 const fnv = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; };
 
-/** a lot's lawn: the whole lot (o + u * w across the front, n * d deep) in a lawn preset picked by its key, its mow lines along the
+/** a lot's lawn (only a lot with a building on it: an empty one shows its block's grass): the whole lot (o + u * w across the front, n * d deep) in a lawn preset picked by its key, its mow lines along the
  *  street or across it; null with no lawn presets */
 export function lotLawn(key: string, g: { o: { x: number; y: number }; u: { x: number; y: number }; n: { x: number; y: number }; w: number; d: number }, ids = LAWN_IDS): LotPatch | null {
   if (!ids.length) return null;
@@ -25,9 +25,10 @@ export function lotLawn(key: string, g: { o: { x: number; y: number }; u: { x: n
   return { pts, tex: presetTex(ids[(h >>> 1) % ids.length]!), lawn: { a, share: 1, soft: 0.1, patch: 1, z: 1 } };
 }
 
-/** a road block's grass: the block in a lawn preset picked by its key, in soft patches over the map grass; null with no lawn presets */
-export function blockLawn(b: Block, ids = LAWN_IDS): LotPatch | null {
-  if (!ids.length) return null;
-  const h = fnv(b.key);
-  return { pts: b.pts.slice(), tex: presetTex(ids[h % ids.length]!), lawn: { a: ((h >>> 8) & 3) * 45, ...BLOCK_LAWN, z: 0 } };
+/** a road block's grass, the ground of its empty lots and corners: the owner's block preset (else a lawn preset picked by the block's key), over
+ *  share of the block in soft patches over the map grass (1: all of it); null with neither */
+export function blockLawn(b: Block, ids = LAWN_IDS, grass: { id: string | null; share: number } = BLOCK_GRASS): LotPatch | null {
+  const h = fnv(b.key), id = grass.id ?? (ids.length ? ids[h % ids.length]! : null);
+  if (!id) return null;
+  return { pts: b.pts.slice(), tex: presetTex(id), lawn: { a: ((h >>> 8) & 3) * 45, share: grass.share, ...BLOCK_LAWN, z: 0 } };
 }

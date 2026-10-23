@@ -25,6 +25,7 @@ import { STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
 import { computeTournamentCloseBook } from './game/golf/yearend';
+import { formatMultiDayStatus } from './game/golf/multiday';
 import { Icon, type IconName } from './ui/Icon';
 import { NightPanel } from './ui/NightPanel';
 import { RoadThumb } from './ui/RoadThumb';
@@ -77,6 +78,9 @@ export default function App() {
   const [help, setHelp] = useState(false);
   /** the settings menu (Save, New town, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
+  /** the menu button waiting for its second click (New town, Empty map), or null */
+  const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
+  useEffect(() => { if (!menu) setArmed(null); }, [menu]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
  const [eventTool, setEventTool] = useState(false);
   /** the last tool picked in each rail group, so a group's tab returns to it */
@@ -210,19 +214,31 @@ export default function App() {
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Recurring dark nights bring kids, monsters and traffic diversions every few game days">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
-                      Natural &amp; paranormal disasters
+                      Natural disasters
                     </label>
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" title="The contact shadows under every building, car, tree and prop (TrickOrTreat's town-builder shadows). 100% = the builder's, 0 = off">
                       <span className="w-16 shrink-0">Shadows</span>
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" title="Every tree, building, prop and car throws its silhouette onto the ground away from the sun (the baked house lots have theirs baked in, from cast-shadow.json)">
+                      <input type="checkbox" checked={game.cast.on} onChange={e => { game.setCast({ on: e.target.checked }); bump(); }} />
+                      Cast shadows
+                    </label>
+                    {game.cast.on && ([['Sun side', 'angle', 0, 360, 5, `${Math.round(game.cast.angle)}°`], ['Length', 'length', 0.1, 1.5, 0.05, `${Math.round(game.cast.length * 100)}%`], ['Darkness', 'strength', 0, 1, 0.02, `${Math.round(game.cast.strength * 100)}%`]] as const).map(([label, k, lo, hi, step, show]) => (
+                      <label key={k} className="flex items-center gap-2 px-2 py-1 text-xs" title={k === 'angle' ? 'The way the shadows fall on screen: 0 right, 90 down, 180 left, 270 up' : undefined}>
+                        <span className="w-16 shrink-0">{label}</span>
+                        <input type="range" className="min-w-0 flex-1" min={lo} max={hi} step={step} value={game.cast[k]} onChange={e => { game.setCast({ [k]: +e.target.value }); bump(); }} />
+                        <span className="w-10 text-right tabular-nums">{show}</span>
+                      </label>
+                    ))}
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
-                    <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Start a new valley with three towns? Your current game will be replaced.')) game.newTown(); }}>New town</button>
-                    <button className="btn w-full" onClick={() => { setMenu(false); if (confirm('Clear everything and start from an empty field?')) game.clearTown(); }}>Empty map</button>
+                    {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
+                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New town'}</button>
+                    <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
                   </div>
                 )}
               </div>
@@ -567,7 +583,7 @@ function EvalScreen({ game }: { game: Game }) {
  <div>
  <div className="text-[10px] uppercase text-slate-400">Satisfaction</div>
  <div className="text-base font-bold text-amber-200">{formatPercent(ye.satisfaction)}</div>
- <div className="text-[10px] text-slate-400">Q {Math.round(ye.facts.avgQueueMin)}m · Exit {Math.round(ye.facts.exitP95Min)}m</div>
+ <div className="text-[10px] text-slate-400" title="Measured from the crowd on the day; est.: estimated (no gates placed, or the cars are still leaving)">Q {Math.round(ye.facts.avgQueueMin)}m{ye.measured?.gates ? '' : ' est.'} · Exit {Math.round(ye.facts.exitP95Min)}m{ye.measured?.exit ? '' : ' est.'}</div>
  </div>
  <div>
  <div className="text-[10px] uppercase text-slate-400">Reputation</div>
@@ -586,7 +602,7 @@ function EvalScreen({ game }: { game: Game }) {
  </div>
           {ye.multiDay && ye.multiDay.resolvedDays > 0 && (
             <div className="mt-2 border-t border-white/10 pt-2 text-center text-[11px] text-slate-300">
-              <span className="font-semibold text-amber-300">{ye.multiDay.statusLine}</span> · Total {ye.multiDay.totalSpectators.toLocaleString()} spectators · {money(ye.multiDay.totalRevenue)} gross
+              <span className="font-semibold text-amber-300">{formatMultiDayStatus(ye.multiDay.liveDays, ye.multiDay.resolvedDays, ye.multiDay.practiceDays ?? 0)}</span> · Total {ye.multiDay.totalSpectators.toLocaleString()} spectators · {money(ye.multiDay.totalRevenue)} gross
             </div>
           )}
  </div>
@@ -600,14 +616,14 @@ function EvalScreen({ game }: { game: Game }) {
               : 'No change since the last run'}
           </p>
         </div>
-        {last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{golf ? `Perfect! The town grows ${Math.round(TOWN_GROWTH * 100)}%` : `Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>}
+        {golf ? (ye?.townGrowthText && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{ye.townGrowthText}</div>) : (last.perfect && <div className="rounded-lg bg-emerald-400/15 px-3 py-2 text-sm font-semibold text-emerald-200">{`Perfect! The towns grow ${Math.round(TOWN_GROWTH * 100)}% and the stadium goes up to Level ${last.level + 1}`}</div>)}
         <div className="space-y-0.5 rounded-lg bg-white/5 p-2">
           {last.byTown.map((t, k) => (
             <p key={k} className="text-xs tabular-nums text-slate-300">Town {String.fromCharCode(65 + k)}  {t.fans}/{t.sent * PARTY} {golf ? 'spectators' : 'fans'} · stuck: on the road {t.late} · at the stop {t.atStop} · lost {t.lost}{t.byBus > 0 ? ` · by bus ${t.byBus}` : ''}</p>
           ))}
         </div>
         <p className="text-sm text-slate-200">
-        {book ? (<>{book.toll > 0 && <>Toll <span className="tabular-nums text-emerald-300">{sgn(book.toll)}</span> · </>}Green fees <span className="tabular-nums text-emerald-300">{sgn(book.greenFeeIncome)}</span> · Memberships <span className="tabular-nums text-emerald-300">{sgn(book.membershipIncome)}</span> · Tickets <span className="tabular-nums text-emerald-300">{sgn(book.tickets)}</span> · Tents <span className="tabular-nums text-emerald-300">{sgn(book.tents)}</span>{book.sponsors > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(book.sponsors)}</span></>}{book.tv > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(book.tv)}</span></>} · Purse <span className="tabular-nums text-red-300">−{money(book.purse)}</span> · Tent rent <span className="tabular-nums text-red-300">−{money(book.rent)}</span> · Tent upkeep <span className="tabular-nums text-red-300">−{money(book.annualTentUpkeep)}</span> · Course upkeep <span className="tabular-nums text-red-300">−{money(book.annualCourseUpkeep)}</span>{book.liveUpkeep > 0 && <> · Upkeep <span className="tabular-nums text-red-300">−{money(book.liveUpkeep)}</span></>} · Net <span className={`tabular-nums ${book.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(book.net)}</span></>) : (<>Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span></>)}
+        {book ? (<>{book.toll > 0 && <>Toll <span className="tabular-nums text-emerald-300">{sgn(book.toll)}</span> · </>}Green fees <span className="tabular-nums text-emerald-300">{sgn(book.greenFeeIncome)}</span> · Memberships <span className="tabular-nums text-emerald-300">{sgn(book.membershipIncome)}</span> · Tickets <span className="tabular-nums text-emerald-300">{sgn(book.tickets)}</span> · Parking <span className="tabular-nums text-emerald-300">{sgn(book.parking)}</span> · Tents <span className="tabular-nums text-emerald-300">{sgn(book.tents)}</span>{book.sponsors > 0 && <> · Sponsors <span className="tabular-nums text-emerald-300">{sgn(book.sponsors)}</span></>}{book.tv > 0 && <> · TV <span className="tabular-nums text-emerald-300">{sgn(book.tv)}</span></>} · Purse <span className="tabular-nums text-red-300">−{money(book.purse)}</span> · Tent rent <span className="tabular-nums text-red-300">−{money(book.rent)}</span> · Tent upkeep <span className="tabular-nums text-red-300">−{money(book.annualTentUpkeep)}</span> · Course upkeep <span className="tabular-nums text-red-300">−{money(book.annualCourseUpkeep)}</span>{book.liveUpkeep > 0 && <> · Upkeep <span className="tabular-nums text-red-300">−{money(book.liveUpkeep)}</span></>} · Net <span className={`tabular-nums ${book.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(book.net)}</span></>) : (<>Toll <span className="tabular-nums text-emerald-300">{sgn(last.toll ?? 0)}</span>{last.tickets !== undefined && <> · Tickets <span className="tabular-nums text-emerald-300">{sgn(last.tickets)}</span></>} · Payout <span className={`tabular-nums ${last.payout < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.payout)}</span> · Upkeep <span className="tabular-nums text-red-300">−{money(last.upkeep)}</span> · Net <span className={`tabular-nums ${last.net < 0 ? 'text-red-300' : 'text-emerald-300'}`}>{sgn(last.net)}</span></>)}
         </p>
         {last.stuck.length > 0 && (
           <div className="space-y-1">
@@ -1334,7 +1350,7 @@ function hintFor(g: Game) {
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
     case 'course': { const q = g.paint; return q.mode === 'brush' ? `COURSE (hole ${q.brushHole}, ${q.brushKind}): drag to paint · Alt-drag erases · [ ] size · 1–7 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
-    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
+    case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand · Tab: Draw, Pick, Erase') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it · Esc: back to Draw · Tab: the next mode' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';
     case 'park': return g.parking.mode === 'rows' ? 'ROWS: drag along the ground to lay bays · Tab flips the side · Shift snaps 15° · click a row to remove it' : g.parking.mode === 'curb' ? 'ON-STREET: hover a road and click the kerb to park along it · click again to remove' : 'PARK: drag a rectangle beside a road · click a car park to remove it (no refund)';
     case 'toll': return 'TOLL GATE: click a straight road to put a plaza across it · R flips the way in · with Bulldoze (X), click a plaza to remove the gate (no refund)';
