@@ -484,7 +484,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/business-golf-pro-shop-4views-v1.png",
+      "sheetSha256": "242bc122525169f0fb04bc4fbf597806ae7d5fb668a7813bce6a590eedd2afa0",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "business:hotel",
@@ -510,7 +521,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/business-hotel-4views-v1.png",
+      "sheetSha256": "ac673941a0578e51830465ed60d76fd86cecae9306672ed07c586b2512171a5c",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "business:motel",
@@ -536,7 +558,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/business-motel-4views-v1.png",
+      "sheetSha256": "537ff76dad71a1e6c8f942122317b990fd6d335456e4b0721dfe056a711ffd5e",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "business:sportsbar",
@@ -562,7 +595,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/business-sportsbar-4views-v1.png",
+      "sheetSha256": "695add2f0ee71622c193496138b3f9cb1cdde9ce5b4a6f0dffb3ad2e6633cd0f",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "business:stadium",
@@ -588,7 +632,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/business-stadium-4views-v3.png",
+      "visualReview": "pending",
+      "sheetSha256": "33e5e18a05f9bf0c3ab1cf52a07ddfd65f35d6b1611c6d8671ab13effe4eefd1",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "business:tackle",
@@ -614,7 +669,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/business-tackle-4views-v1.png",
+      "sheetSha256": "c608f427e29a72074f36bfbf44aba0f7c6ffc2f2b30c7bd062578b327438a72f",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "business:taxi",
@@ -640,7 +706,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/business-taxi-4views-v1.png",
+      "sheetSha256": "87d51a294814c522f980f8f4478896f01184f0dc79ba3437c995b1300cc15aad",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "ce:parking-kiosk",
@@ -666,7 +743,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/ce-parking-kiosk-4views-v2.png",
+      "visualReview": "pending",
+      "sheetSha256": "d3377e006a862b5d19b76b9fd7807ba4da5dac285a5bfd8743198b117d490c0e",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "expansion:backyard-tent",
@@ -692,12 +780,23 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-backyard-tent-4views-v1.png",
+      "sheetSha256": "cd5cbf36a4c7f1c165861b8cd0e3921b46b0021ada93327a5a401dd7658374a5",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "expansion:boarded-store-rear",
       "category": "buildings",
-      "name": "Abandoned brick store Ã¢â‚¬â€ rear",
+      "name": "Abandoned brick store ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear",
       "sourceIds": [
         "expansion:boarded-store-rear"
       ],
@@ -718,7 +817,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-boarded-store-rear-4views-v1.png",
+      "sheetSha256": "93e86e8be2cab3f0c9f3d0b1156b938fa4669957dac0b67dc53e87a16192c7d9",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "expansion:derelict-two-storey",
@@ -744,12 +854,23 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-derelict-two-storey-4views-v2.png",
+      "visualReview": "pending",
+      "sheetSha256": "d4db2a46366b7b8da38fe1c7b88b6f3dd55e4e14e89fbf74f982205fa19a7eab",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "expansion:dormer-rear",
       "category": "buildings",
-      "name": "Dormer home Ã¢â‚¬â€ rear and side",
+      "name": "Dormer home ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear and side",
       "sourceIds": [
         "expansion:dormer-rear"
       ],
@@ -770,12 +891,23 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/expansion-dormer-rear-4views-v2.png",
+      "visualReview": "pending",
+      "sheetSha256": "869b0acc8c4d793cdfd7c7d5ecea1e8377852ecc5f3a2270faa0783c02823691",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "flags-require-review",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "expansion:duplex-rear",
       "category": "buildings",
-      "name": "Brick duplex Ã¢â‚¬â€ rear service doors",
+      "name": "Brick duplex ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear service doors",
       "sourceIds": [
         "expansion:duplex-rear"
       ],
@@ -931,7 +1063,7 @@
     {
       "id": "gen:back-bbq-deck",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ deck & barbecue",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â deck & barbecue",
       "sourceIds": [
         "gen:back-bbq-deck"
       ],
@@ -957,7 +1089,7 @@
     {
       "id": "gen:back-patio-pool",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ patio & pool",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â patio & pool",
       "sourceIds": [
         "gen:back-patio-pool"
       ],
@@ -983,7 +1115,7 @@
     {
       "id": "gen:back-screened-porch",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ screened porch",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â screened porch",
       "sourceIds": [
         "gen:back-screened-porch"
       ],
@@ -1009,7 +1141,7 @@
     {
       "id": "gen:back-shed-garden",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ shed & garden",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â shed & garden",
       "sourceIds": [
         "gen:back-shed-garden"
       ],
@@ -1035,7 +1167,7 @@
     {
       "id": "gen:back-swingset",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ swing set & grill",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â swing set & grill",
       "sourceIds": [
         "gen:back-swingset"
       ],
@@ -1087,7 +1219,7 @@
     {
       "id": "gen:house-farmhouse-wrap",
       "category": "buildings",
-      "name": "Farmhouse Ã¢â‚¬â€ wraparound porch",
+      "name": "Farmhouse ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â wraparound porch",
       "sourceIds": [
         "gen:house-farmhouse-wrap"
       ],
@@ -1113,7 +1245,7 @@
     {
       "id": "gen:house-l-shape",
       "category": "buildings",
-      "name": "Colonial Ã¢â‚¬â€ L-shape, double garage",
+      "name": "Colonial ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L-shape, double garage",
       "sourceIds": [
         "gen:house-l-shape"
       ],
@@ -1139,7 +1271,7 @@
     {
       "id": "gen:house-ranch-long",
       "category": "buildings",
-      "name": "Ranch house Ã¢â‚¬â€ long, carport",
+      "name": "Ranch house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â long, carport",
       "sourceIds": [
         "gen:house-ranch-long"
       ],
@@ -2054,7 +2186,7 @@
     {
       "id": "variation:expansion-abandoned-workshop-26852883:1",
       "category": "buildings",
-      "name": "Derelict brick repair workshop Ã¢â‚¬â€ variation 1",
+      "name": "Derelict brick repair workshop ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-abandoned-workshop-26852883:1"
       ],
@@ -2080,7 +2212,7 @@
     {
       "id": "variation:expansion-backyard-tent-a621b6c8:1",
       "category": "buildings",
-      "name": "Old canvas backyard campout tent Ã¢â‚¬â€ variation 1",
+      "name": "Old canvas backyard campout tent ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-backyard-tent-a621b6c8:1"
       ],
@@ -2106,7 +2238,7 @@
     {
       "id": "variation:expansion-boarded-store-rear-d09a309a:1",
       "category": "buildings",
-      "name": "Abandoned brick store Ã¢â‚¬â€ rear Ã¢â‚¬â€ variation 1",
+      "name": "Abandoned brick store ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-boarded-store-rear-d09a309a:1"
       ],
@@ -2132,7 +2264,7 @@
     {
       "id": "variation:expansion-cottage-rear-e52a10bb-plain:1",
       "category": "buildings",
-      "name": "Cottage Ã¢â‚¬â€ rear and side Ã¢â‚¬â€ variation 1",
+      "name": "Cottage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear and side ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-cottage-rear-e52a10bb-plain:1"
       ],
@@ -2158,7 +2290,7 @@
     {
       "id": "variation:expansion-derelict-two-storey-012bed48:1",
       "category": "buildings",
-      "name": "Dilapidated two-storey house Ã¢â‚¬â€ variation 1",
+      "name": "Dilapidated two-storey house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-derelict-two-storey-012bed48:1"
       ],
@@ -2184,7 +2316,7 @@
     {
       "id": "variation:expansion-dormer-rear-55d3cd77-plain:1",
       "category": "buildings",
-      "name": "Dormer home Ã¢â‚¬â€ rear and side Ã¢â‚¬â€ variation 1",
+      "name": "Dormer home ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear and side ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-dormer-rear-55d3cd77-plain:1"
       ],
@@ -2210,7 +2342,7 @@
     {
       "id": "variation:expansion-duplex-rear-730b425f-plain:1",
       "category": "buildings",
-      "name": "Brick duplex Ã¢â‚¬â€ rear service doors Ã¢â‚¬â€ variation 1",
+      "name": "Brick duplex ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear service doors ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-duplex-rear-730b425f-plain:1"
       ],
@@ -2236,7 +2368,7 @@
     {
       "id": "variation:expansion-garage-rear-91bcbe45:1",
       "category": "buildings",
-      "name": "Timber garage Ã¢â‚¬â€ rear view Ã¢â‚¬â€ variation 1",
+      "name": "Timber garage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-garage-rear-91bcbe45:1"
       ],
@@ -2262,7 +2394,7 @@
     {
       "id": "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1",
       "category": "buildings",
-      "name": "Dilapidated backyard shed Ã¢â‚¬â€ variation 1",
+      "name": "Dilapidated backyard shed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-lean-to-shed-0b83bbf7-plain-corner:1"
       ],
@@ -2288,7 +2420,7 @@
     {
       "id": "variation:expansion-lean-to-shed-0b83bbf7-plain:1",
       "category": "buildings",
-      "name": "Dilapidated backyard shed Ã¢â‚¬â€ variation 1",
+      "name": "Dilapidated backyard shed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-lean-to-shed-0b83bbf7-plain:1"
       ],
@@ -2314,7 +2446,7 @@
     {
       "id": "variation:expansion-rundown-house-a7c17683-plain-corner:1",
       "category": "buildings",
-      "name": "Boarded-up timber house Ã¢â‚¬â€ variation 1",
+      "name": "Boarded-up timber house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-rundown-house-a7c17683-plain-corner:1"
       ],
@@ -2340,7 +2472,7 @@
     {
       "id": "variation:expansion-rundown-house-a7c17683-plain:1",
       "category": "buildings",
-      "name": "Boarded-up timber house Ã¢â‚¬â€ variation 1",
+      "name": "Boarded-up timber house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-rundown-house-a7c17683-plain:1"
       ],
@@ -2366,7 +2498,7 @@
     {
       "id": "variation:expansion-rundown-house-north-24ae3116-plain:1",
       "category": "buildings",
-      "name": "Boarded-up timber house Ã¢â‚¬â€ variation 1",
+      "name": "Boarded-up timber house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:expansion-rundown-house-north-24ae3116-plain:1"
       ],
@@ -2392,7 +2524,7 @@
     {
       "id": "variation:expansion-treehouse-north-1d02f68a-plain:1",
       "category": "buildings",
-      "name": "1980s backyard treehouse â€” variation 1",
+      "name": "1980s backyard treehouse Ã¢â‚¬â€ variation 1",
       "sourceIds": [
         "variation:expansion-treehouse-north-1d02f68a-plain:1"
       ],
@@ -2418,7 +2550,7 @@
     {
       "id": "variation:gen-back-bbq-deck-b546df1a-plain:1",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ deck & barbecue Ã¢â‚¬â€ variation 1",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â deck & barbecue ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-back-bbq-deck-b546df1a-plain:1"
       ],
@@ -2444,7 +2576,7 @@
     {
       "id": "variation:gen-back-patio-pool-3b943d52-plain-corner:1",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ patio & pool Ã¢â‚¬â€ variation 1",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â patio & pool ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-back-patio-pool-3b943d52-plain-corner:1"
       ],
@@ -2470,7 +2602,7 @@
     {
       "id": "variation:gen-back-screened-porch-8c31c391-plain:1",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ screened porch Ã¢â‚¬â€ variation 1",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â screened porch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-back-screened-porch-8c31c391-plain:1"
       ],
@@ -2496,7 +2628,7 @@
     {
       "id": "variation:gen-back-shed-garden-ac94c81e-plain-corner:1",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ shed & garden Ã¢â‚¬â€ variation 1",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â shed & garden ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-back-shed-garden-ac94c81e-plain-corner:1"
       ],
@@ -2522,7 +2654,7 @@
     {
       "id": "variation:gen-back-shed-garden-ac94c81e-plain:1",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ shed & garden Ã¢â‚¬â€ variation 1",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â shed & garden ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-back-shed-garden-ac94c81e-plain:1"
       ],
@@ -2548,7 +2680,7 @@
     {
       "id": "variation:gen-back-swingset-a10c81b7-plain-corner:1",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ swing set & grill Ã¢â‚¬â€ variation 1",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â swing set & grill ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-back-swingset-a10c81b7-plain-corner:1"
       ],
@@ -2574,7 +2706,7 @@
     {
       "id": "variation:gen-back-swingset-a10c81b7-plain:1",
       "category": "buildings",
-      "name": "House back Ã¢â‚¬â€ swing set & grill Ã¢â‚¬â€ variation 1",
+      "name": "House back ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â swing set & grill ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-back-swingset-a10c81b7-plain:1"
       ],
@@ -2600,7 +2732,7 @@
     {
       "id": "variation:gen-house-duplex-c39d1a23-plain-corner:1",
       "category": "buildings",
-      "name": "Duplex Ã¢â‚¬â€ variation 1",
+      "name": "Duplex ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-duplex-c39d1a23-plain-corner:1"
       ],
@@ -2626,7 +2758,7 @@
     {
       "id": "variation:gen-house-duplex-north-521714ac-plain:1",
       "category": "buildings",
-      "name": "Duplex Ã¢â‚¬â€ variation 1",
+      "name": "Duplex ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-duplex-north-521714ac-plain:1"
       ],
@@ -2652,7 +2784,7 @@
     {
       "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
       "category": "buildings",
-      "name": "Farmhouse Ã¢â‚¬â€ wraparound porch Ã¢â‚¬â€ variation 1",
+      "name": "Farmhouse ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â wraparound porch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1"
       ],
@@ -2678,7 +2810,7 @@
     {
       "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1",
       "category": "buildings",
-      "name": "Farmhouse Ã¢â‚¬â€ wraparound porch Ã¢â‚¬â€ variation 1",
+      "name": "Farmhouse ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â wraparound porch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-farmhouse-wrap-2b0eea83-plain:1"
       ],
@@ -2704,7 +2836,7 @@
     {
       "id": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
       "category": "buildings",
-      "name": "Farmhouse Ã¢â‚¬â€ wraparound porch Ã¢â‚¬â€ variation 1",
+      "name": "Farmhouse ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â wraparound porch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1"
       ],
@@ -2730,7 +2862,7 @@
     {
       "id": "variation:gen-house-l-ranch-18552ce5-plain-corner:1",
       "category": "buildings",
-      "name": "Ranch Ã¢â‚¬â€ L-shape, corner porch Ã¢â‚¬â€ variation 1",
+      "name": "Ranch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L-shape, corner porch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-l-ranch-18552ce5-plain-corner:1"
       ],
@@ -2756,7 +2888,7 @@
     {
       "id": "variation:gen-house-l-ranch-18552ce5-plain:1",
       "category": "buildings",
-      "name": "Ranch Ã¢â‚¬â€ L-shape, corner porch Ã¢â‚¬â€ variation 1",
+      "name": "Ranch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L-shape, corner porch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-l-ranch-18552ce5-plain:1"
       ],
@@ -2782,7 +2914,7 @@
     {
       "id": "variation:gen-house-l-ranch-north-2edc5f59-plain:1",
       "category": "buildings",
-      "name": "Ranch Ã¢â‚¬â€ L-shape, corner porch Ã¢â‚¬â€ variation 1",
+      "name": "Ranch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L-shape, corner porch ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-l-ranch-north-2edc5f59-plain:1"
       ],
@@ -2808,7 +2940,7 @@
     {
       "id": "variation:gen-house-l-shape-e0e3b328-plain-corner:1",
       "category": "buildings",
-      "name": "Colonial Ã¢â‚¬â€ L-shape, double garage Ã¢â‚¬â€ variation 1",
+      "name": "Colonial ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L-shape, double garage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-l-shape-e0e3b328-plain-corner:1"
       ],
@@ -2834,7 +2966,7 @@
     {
       "id": "variation:gen-house-l-shape-e0e3b328-plain:1",
       "category": "buildings",
-      "name": "Colonial Ã¢â‚¬â€ L-shape, double garage Ã¢â‚¬â€ variation 1",
+      "name": "Colonial ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L-shape, double garage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-l-shape-e0e3b328-plain:1"
       ],
@@ -2860,7 +2992,7 @@
     {
       "id": "variation:gen-house-l-shape-north-79eba705-plain:1",
       "category": "buildings",
-      "name": "Colonial Ã¢â‚¬â€ L-shape, double garage Ã¢â‚¬â€ variation 1",
+      "name": "Colonial ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â L-shape, double garage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-l-shape-north-79eba705-plain:1"
       ],
@@ -2886,7 +3018,7 @@
     {
       "id": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
       "category": "buildings",
-      "name": "Ranch house Ã¢â‚¬â€ long, carport Ã¢â‚¬â€ variation 1",
+      "name": "Ranch house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â long, carport ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1"
       ],
@@ -2912,7 +3044,7 @@
     {
       "id": "variation:gen-house-ranch-long-a4ddd58c-plain:1",
       "category": "buildings",
-      "name": "Ranch house Ã¢â‚¬â€ long, carport Ã¢â‚¬â€ variation 1",
+      "name": "Ranch house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â long, carport ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-ranch-long-a4ddd58c-plain:1"
       ],
@@ -2938,7 +3070,7 @@
     {
       "id": "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
       "category": "buildings",
-      "name": "Split-level house Ã¢â‚¬â€ variation 1",
+      "name": "Split-level house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-splitlevel-8b6b4aa4-plain:1"
       ],
@@ -2964,7 +3096,7 @@
     {
       "id": "variation:gen-house-splitlevel-north-63bc759e-plain:1",
       "category": "buildings",
-      "name": "Split-level house Ã¢â‚¬â€ variation 1",
+      "name": "Split-level house ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:gen-house-splitlevel-north-63bc759e-plain:1"
       ],
@@ -2990,7 +3122,7 @@
     {
       "id": "variation:industrial-auto-body-shop-63875699:1",
       "category": "buildings",
-      "name": "Auto body workshop Ã¢â‚¬â€ variation 1",
+      "name": "Auto body workshop ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-auto-body-shop-63875699:1"
       ],
@@ -3016,7 +3148,7 @@
     {
       "id": "variation:industrial-bottling-plant-13e91e4e:1",
       "category": "buildings",
-      "name": "Small bottling plant Ã¢â‚¬â€ variation 1",
+      "name": "Small bottling plant ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-bottling-plant-13e91e4e:1"
       ],
@@ -3042,7 +3174,7 @@
     {
       "id": "variation:industrial-brick-machine-shop-34206b23:1",
       "category": "buildings",
-      "name": "Brick machine shop Ã¢â‚¬â€ variation 1",
+      "name": "Brick machine shop ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-brick-machine-shop-34206b23:1"
       ],
@@ -3068,7 +3200,7 @@
     {
       "id": "variation:industrial-cold-storage-378b3489:1",
       "category": "buildings",
-      "name": "Cold storage depot Ã¢â‚¬â€ variation 1",
+      "name": "Cold storage depot ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-cold-storage-378b3489:1"
       ],
@@ -3094,7 +3226,7 @@
     {
       "id": "variation:industrial-corrugated-warehouse-69aeee07:1",
       "category": "buildings",
-      "name": "Corrugated warehouse Ã¢â‚¬â€ variation 1",
+      "name": "Corrugated warehouse ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-corrugated-warehouse-69aeee07:1"
       ],
@@ -3120,7 +3252,7 @@
     {
       "id": "variation:industrial-foundry-606f1084:1",
       "category": "buildings",
-      "name": "Small iron foundry Ã¢â‚¬â€ variation 1",
+      "name": "Small iron foundry ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-foundry-606f1084:1"
       ],
@@ -3146,7 +3278,7 @@
     {
       "id": "variation:industrial-freight-depot-a030c919:1",
       "category": "buildings",
-      "name": "Freight transfer depot Ã¢â‚¬â€ variation 1",
+      "name": "Freight transfer depot ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-freight-depot-a030c919:1"
       ],
@@ -3172,7 +3304,7 @@
     {
       "id": "variation:industrial-lumber-workshop-8a43a691:1",
       "category": "buildings",
-      "name": "Lumber planing workshop Ã¢â‚¬â€ variation 1",
+      "name": "Lumber planing workshop ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-lumber-workshop-8a43a691:1"
       ],
@@ -3198,7 +3330,7 @@
     {
       "id": "variation:industrial-printing-works-2be751ae:1",
       "category": "buildings",
-      "name": "Local printing works Ã¢â‚¬â€ variation 1",
+      "name": "Local printing works ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-printing-works-2be751ae:1"
       ],
@@ -3224,7 +3356,7 @@
     {
       "id": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
       "category": "buildings",
-      "name": "Rail repair shed Ã¢â‚¬â€ variation 1",
+      "name": "Rail repair shed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-rail-repair-shed-fbe2c8d9:1"
       ],
@@ -3250,7 +3382,7 @@
     {
       "id": "variation:industrial-textile-mill-eedf9576:1",
       "category": "buildings",
-      "name": "Old textile mill Ã¢â‚¬â€ variation 1",
+      "name": "Old textile mill ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-textile-mill-eedf9576:1"
       ],
@@ -3276,7 +3408,7 @@
     {
       "id": "variation:industrial-utility-substation-54820c2b:1",
       "category": "buildings",
-      "name": "Utility control building Ã¢â‚¬â€ variation 1",
+      "name": "Utility control building ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:industrial-utility-substation-54820c2b:1"
       ],
@@ -3302,7 +3434,7 @@
     {
       "id": "variation:ref-building-barn-74bee205-plain:1",
       "category": "buildings",
-      "name": "Barn Ã¢â‚¬â€ variation 1",
+      "name": "Barn ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-barn-74bee205-plain:1"
       ],
@@ -3328,7 +3460,7 @@
     {
       "id": "variation:ref-building-barn-v2-b96e34dc-plain:1",
       "category": "buildings",
-      "name": "Barn V2 Ã¢â‚¬â€ variation 1",
+      "name": "Barn V2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-barn-v2-b96e34dc-plain:1"
       ],
@@ -3354,7 +3486,7 @@
     {
       "id": "variation:ref-building-church-1df07e15-plain:1",
       "category": "buildings",
-      "name": "Church Ã¢â‚¬â€ variation 1",
+      "name": "Church ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-church-1df07e15-plain:1"
       ],
@@ -3380,7 +3512,7 @@
     {
       "id": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
       "category": "buildings",
-      "name": "Corner Shop Ã¢â‚¬â€ variation 1",
+      "name": "Corner Shop ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-corner-shop-2ffc6ab7-plain:1"
       ],
@@ -3406,7 +3538,7 @@
     {
       "id": "variation:ref-building-corner-store-a89c59c0-plain:1",
       "category": "buildings",
-      "name": "Corner Store Ã¢â‚¬â€ variation 1",
+      "name": "Corner Store ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-corner-store-a89c59c0-plain:1"
       ],
@@ -3432,7 +3564,7 @@
     {
       "id": "variation:ref-building-diner-1e19ec22-plain:1",
       "category": "buildings",
-      "name": "Diner Ã¢â‚¬â€ variation 1",
+      "name": "Diner ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-diner-1e19ec22-plain:1"
       ],
@@ -3458,7 +3590,7 @@
     {
       "id": "variation:ref-building-drive-in-screen-b0bccc2a-plain:1",
       "category": "buildings",
-      "name": "Drive In Screen Ã¢â‚¬â€ variation 1",
+      "name": "Drive In Screen ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-drive-in-screen-b0bccc2a-plain:1"
       ],
@@ -3484,7 +3616,7 @@
     {
       "id": "variation:ref-building-farm-shed-0280794d-plain:1",
       "category": "buildings",
-      "name": "Farm Shed Ã¢â‚¬â€ variation 1",
+      "name": "Farm Shed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-farm-shed-0280794d-plain:1"
       ],
@@ -3510,7 +3642,7 @@
     {
       "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
       "category": "buildings",
-      "name": "Farmhouse Ã¢â‚¬â€ variation 1",
+      "name": "Farmhouse ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-farmhouse-ef501a21-plain:1"
       ],
@@ -3536,7 +3668,7 @@
     {
       "id": "variation:ref-building-farmhouse-north-408a9ca6-plain:1",
       "category": "buildings",
-      "name": "Farmhouse Ã¢â‚¬â€ variation 1",
+      "name": "Farmhouse ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-farmhouse-north-408a9ca6-plain:1"
       ],
@@ -3562,7 +3694,7 @@
     {
       "id": "variation:ref-building-garage-0f7895a1-plain:1",
       "category": "buildings",
-      "name": "Garage Ã¢â‚¬â€ variation 1",
+      "name": "Garage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-garage-0f7895a1-plain:1"
       ],
@@ -3588,7 +3720,7 @@
     {
       "id": "variation:ref-building-gas-canopy-543306a0-plain:1",
       "category": "buildings",
-      "name": "Gas Canopy Ã¢â‚¬â€ variation 1",
+      "name": "Gas Canopy ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-gas-canopy-543306a0-plain:1"
       ],
@@ -3614,7 +3746,7 @@
     {
       "id": "variation:ref-building-gas-shop-3326e70f-plain:1",
       "category": "buildings",
-      "name": "Gas Shop Ã¢â‚¬â€ variation 1",
+      "name": "Gas Shop ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-gas-shop-3326e70f-plain:1"
       ],
@@ -3640,7 +3772,7 @@
     {
       "id": "variation:ref-building-grocery-79498713-plain:1",
       "category": "buildings",
-      "name": "Grocery Ã¢â‚¬â€ variation 1",
+      "name": "Grocery ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-grocery-79498713-plain:1"
       ],
@@ -3666,7 +3798,7 @@
     {
       "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
       "category": "buildings",
-      "name": "House Cottage Ã¢â‚¬â€ variation 1",
+      "name": "House Cottage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-cottage-fc52ce66-plain:1"
       ],
@@ -3692,7 +3824,7 @@
     {
       "id": "variation:ref-building-house-cottage-north-304e5431-plain:1",
       "category": "buildings",
-      "name": "House Cottage Ã¢â‚¬â€ variation 1",
+      "name": "House Cottage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-cottage-north-304e5431-plain:1"
       ],
@@ -3718,7 +3850,7 @@
     {
       "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
       "category": "buildings",
-      "name": "House Dormer Ã¢â‚¬â€ variation 1",
+      "name": "House Dormer ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-dormer-b4413f08-plain:1"
       ],
@@ -3744,7 +3876,7 @@
     {
       "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
       "category": "buildings",
-      "name": "House Dormer Ã¢â‚¬â€ variation 1",
+      "name": "House Dormer ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-dormer-north-6952cea5-plain:1"
       ],
@@ -3770,7 +3902,7 @@
     {
       "id": "variation:ref-building-house-garage-a1d986d3-plain:1",
       "category": "buildings",
-      "name": "House Garage Ã¢â‚¬â€ variation 1",
+      "name": "House Garage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-garage-a1d986d3-plain:1"
       ],
@@ -3796,7 +3928,7 @@
     {
       "id": "variation:ref-building-house-garage-north-a7184edf-plain:1",
       "category": "buildings",
-      "name": "House Garage Ã¢â‚¬â€ variation 1",
+      "name": "House Garage ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-garage-north-a7184edf-plain:1"
       ],
@@ -3822,7 +3954,7 @@
     {
       "id": "variation:ref-building-house-large-20cb9f9e-plain:1",
       "category": "buildings",
-      "name": "House Large Ã¢â‚¬â€ variation 1",
+      "name": "House Large ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-large-20cb9f9e-plain:1"
       ],
@@ -3848,7 +3980,7 @@
     {
       "id": "variation:ref-building-house-large-north-24d21776-plain:1",
       "category": "buildings",
-      "name": "House Large Ã¢â‚¬â€ variation 1",
+      "name": "House Large ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-house-large-north-24d21776-plain:1"
       ],
@@ -3874,7 +4006,7 @@
     {
       "id": "variation:ref-building-mausoleum-719fd618-plain:1",
       "category": "buildings",
-      "name": "Mausoleum Ã¢â‚¬â€ variation 1",
+      "name": "Mausoleum ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-mausoleum-719fd618-plain:1"
       ],
@@ -3900,7 +4032,7 @@
     {
       "id": "variation:ref-building-shop-blue-941779e4-plain:1",
       "category": "buildings",
-      "name": "Shop Blue Ã¢â‚¬â€ variation 1",
+      "name": "Shop Blue ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-shop-blue-941779e4-plain:1"
       ],
@@ -3926,7 +4058,7 @@
     {
       "id": "variation:ref-building-snack-bar-4e0d11f7-plain:1",
       "category": "buildings",
-      "name": "Snack Bar Ã¢â‚¬â€ variation 1",
+      "name": "Snack Bar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:ref-building-snack-bar-4e0d11f7-plain:1"
       ],
@@ -3952,7 +4084,7 @@
     {
       "id": "variation:static-garage_brick-v2-be1ee461-plain:1",
       "category": "buildings",
-      "name": "Garage Brick V2 Ã¢â‚¬â€ variation 1",
+      "name": "Garage Brick V2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:static-garage_brick-v2-be1ee461-plain:1"
       ],
@@ -3978,7 +4110,7 @@
     {
       "id": "variation:static-garage_timber-v2-22fab891-plain:1",
       "category": "buildings",
-      "name": "Garage Timber V2 Ã¢â‚¬â€ variation 1",
+      "name": "Garage Timber V2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:static-garage_timber-v2-22fab891-plain:1"
       ],
@@ -4004,7 +4136,7 @@
     {
       "id": "variation:static-shop_brick_rear-04db4dfa-plain:1",
       "category": "buildings",
-      "name": "Shop Brick Rear Ã¢â‚¬â€ variation 1",
+      "name": "Shop Brick Rear ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:static-shop_brick_rear-04db4dfa-plain:1"
       ],
@@ -4030,7 +4162,7 @@
     {
       "id": "variation:static-shop_market_rear-f9272004-plain:1",
       "category": "buildings",
-      "name": "Shop Market Rear Ã¢â‚¬â€ variation 1",
+      "name": "Shop Market Rear ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:static-shop_market_rear-f9272004-plain:1"
       ],
@@ -4056,7 +4188,7 @@
     {
       "id": "variation:town-bakery-af15d7f5-plain:1",
       "category": "buildings",
-      "name": "Rose's Bakery Ã¢â‚¬â€ variation 1",
+      "name": "Rose's Bakery ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-bakery-af15d7f5-plain:1"
       ],
@@ -4082,7 +4214,7 @@
     {
       "id": "variation:town-barber-13c5ef06-plain:1",
       "category": "buildings",
-      "name": "Clip Joint Barbers Ã¢â‚¬â€ variation 1",
+      "name": "Clip Joint Barbers ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-barber-13c5ef06-plain:1"
       ],
@@ -4108,7 +4240,7 @@
     {
       "id": "variation:town-firestation-north-0ac85582-plain:1",
       "category": "buildings",
-      "name": "Maple Falls Fire House Ã¢â‚¬â€ variation 1",
+      "name": "Maple Falls Fire House ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-firestation-north-0ac85582-plain:1"
       ],
@@ -4134,7 +4266,7 @@
     {
       "id": "variation:town-fish_tackle-99c1401c-plain:1",
       "category": "buildings",
-      "name": "Pike & Pine Outfitters Ã¢â‚¬â€ variation 1",
+      "name": "Pike & Pine Outfitters ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-fish_tackle-99c1401c-plain:1"
       ],
@@ -4160,7 +4292,7 @@
     {
       "id": "variation:town-grocery-46d5dc39-plain:1",
       "category": "buildings",
-      "name": "Maple Family Market Ã¢â‚¬â€ variation 1",
+      "name": "Maple Family Market ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-grocery-46d5dc39-plain:1"
       ],
@@ -4186,7 +4318,7 @@
     {
       "id": "variation:town-hardware-bf36737f-plain:1",
       "category": "buildings",
-      "name": "Bellamy Hardware Ã¢â‚¬â€ variation 1",
+      "name": "Bellamy Hardware ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-hardware-bf36737f-plain:1"
       ],
@@ -4212,7 +4344,7 @@
     {
       "id": "variation:town-laundromat-43183f9e-plain:1",
       "category": "buildings",
-      "name": "Spin Cycle Laundry Ã¢â‚¬â€ variation 1",
+      "name": "Spin Cycle Laundry ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-laundromat-43183f9e-plain:1"
       ],
@@ -4238,7 +4370,7 @@
     {
       "id": "variation:town-pharmacy-d87b861c-plain:1",
       "category": "buildings",
-      "name": "Maple Pharmacy Ã¢â‚¬â€ variation 1",
+      "name": "Maple Pharmacy ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-pharmacy-d87b861c-plain:1"
       ],
@@ -4264,7 +4396,7 @@
     {
       "id": "variation:town-postoffice-1c7025b8-plain:1",
       "category": "buildings",
-      "name": "Maple Falls Post Office Ã¢â‚¬â€ variation 1",
+      "name": "Maple Falls Post Office ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:town-postoffice-1c7025b8-plain:1"
       ],
@@ -4290,7 +4422,7 @@
     {
       "id": "variation:world-arcade-f5b7f5eb-plain:1",
       "category": "buildings",
-      "name": "Arcade Ã¢â‚¬â€ variation 1",
+      "name": "Arcade ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-arcade-f5b7f5eb-plain:1"
       ],
@@ -4316,7 +4448,7 @@
     {
       "id": "variation:world-barn-ae80f6c9-plain:1",
       "category": "buildings",
-      "name": "Barn Ã¢â‚¬â€ variation 1",
+      "name": "Barn ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-barn-ae80f6c9-plain:1"
       ],
@@ -4342,7 +4474,7 @@
     {
       "id": "variation:world-church-44e76535-plain:1",
       "category": "buildings",
-      "name": "Church Ã¢â‚¬â€ variation 1",
+      "name": "Church ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-church-44e76535-plain:1"
       ],
@@ -4368,7 +4500,7 @@
     {
       "id": "variation:world-diner-c9878d46-plain:1",
       "category": "buildings",
-      "name": "Diner Ã¢â‚¬â€ variation 1",
+      "name": "Diner ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-diner-c9878d46-plain:1"
       ],
@@ -4394,7 +4526,7 @@
     {
       "id": "variation:world-house_0-51fa4b80-plain:1",
       "category": "buildings",
-      "name": "House 0 Ã¢â‚¬â€ variation 1",
+      "name": "House 0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_0-51fa4b80-plain:1"
       ],
@@ -4420,7 +4552,7 @@
     {
       "id": "variation:world-house_0-north-1dde6f56-plain:1",
       "category": "buildings",
-      "name": "House 0 Ã¢â‚¬â€ variation 1",
+      "name": "House 0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_0-north-1dde6f56-plain:1"
       ],
@@ -4446,7 +4578,7 @@
     {
       "id": "variation:world-house_1-ba13ed2e-plain-corner:1",
       "category": "buildings",
-      "name": "House 1 Ã¢â‚¬â€ variation 1",
+      "name": "House 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_1-ba13ed2e-plain-corner:1"
       ],
@@ -4472,7 +4604,7 @@
     {
       "id": "variation:world-house_1-ba13ed2e-plain:1",
       "category": "buildings",
-      "name": "House 1 Ã¢â‚¬â€ variation 1",
+      "name": "House 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_1-ba13ed2e-plain:1"
       ],
@@ -4498,7 +4630,7 @@
     {
       "id": "variation:world-house_1-north-2521eca8-plain:1",
       "category": "buildings",
-      "name": "House 1 Ã¢â‚¬â€ variation 1",
+      "name": "House 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_1-north-2521eca8-plain:1"
       ],
@@ -4524,7 +4656,7 @@
     {
       "id": "variation:world-house_2-e2dddf71-plain:1",
       "category": "buildings",
-      "name": "House 2 Ã¢â‚¬â€ variation 1",
+      "name": "House 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_2-e2dddf71-plain:1"
       ],
@@ -4550,7 +4682,7 @@
     {
       "id": "variation:world-house_2-north-332663ab-plain:1",
       "category": "buildings",
-      "name": "House 2 Ã¢â‚¬â€ variation 1",
+      "name": "House 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_2-north-332663ab-plain:1"
       ],
@@ -4576,7 +4708,7 @@
     {
       "id": "variation:world-house_3-north-2638a034-plain:1",
       "category": "buildings",
-      "name": "House 3 Ã¢â‚¬â€ variation 1",
+      "name": "House 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_3-north-2638a034-plain:1"
       ],
@@ -4602,7 +4734,7 @@
     {
       "id": "variation:world-house_4-north-630f880a-plain:1",
       "category": "buildings",
-      "name": "House 4 Ã¢â‚¬â€ variation 1",
+      "name": "House 4 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_4-north-630f880a-plain:1"
       ],
@@ -4628,7 +4760,7 @@
     {
       "id": "variation:world-house_5-d6198cb0-plain:1",
       "category": "buildings",
-      "name": "House 5 Ã¢â‚¬â€ variation 1",
+      "name": "House 5 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_5-d6198cb0-plain:1"
       ],
@@ -4654,7 +4786,7 @@
     {
       "id": "variation:world-house_5-north-bffd2c68-plain:1",
       "category": "buildings",
-      "name": "House 5 Ã¢â‚¬â€ variation 1",
+      "name": "House 5 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-house_5-north-bffd2c68-plain:1"
       ],
@@ -4680,7 +4812,7 @@
     {
       "id": "variation:world-snack_bar-04875b6f-plain:1",
       "category": "buildings",
-      "name": "Snack Bar Ã¢â‚¬â€ variation 1",
+      "name": "Snack Bar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-snack_bar-04875b6f-plain:1"
       ],
@@ -4706,7 +4838,7 @@
     {
       "id": "variation:world-video_rental-cc8c504f-plain:1",
       "category": "buildings",
-      "name": "Video Rental Ã¢â‚¬â€ variation 1",
+      "name": "Video Rental ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-video_rental-cc8c504f-plain:1"
       ],
@@ -4732,7 +4864,7 @@
     {
       "id": "variation:world-video-bf85dfb9-plain:1",
       "category": "buildings",
-      "name": "Video Ã¢â‚¬â€ variation 1",
+      "name": "Video ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â variation 1",
       "sourceIds": [
         "variation:world-video-bf85dfb9-plain:1"
       ],
@@ -7084,7 +7216,7 @@
     {
       "id": "variation:static-compact_e-c2ad7436:1",
       "category": "cars",
-      "name": "Compact E Ã¢â‚¬â€ side view",
+      "name": "Compact E ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:static-compact_e-c2ad7436:1"
       ],
@@ -7110,7 +7242,7 @@
     {
       "id": "variation:static-compact_e-c2ad7436:2",
       "category": "cars",
-      "name": "Compact E Ã¢â‚¬â€ front view",
+      "name": "Compact E ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:static-compact_e-c2ad7436:2"
       ],
@@ -7136,7 +7268,7 @@
     {
       "id": "variation:static-compact_e-c2ad7436:3",
       "category": "cars",
-      "name": "Compact E Ã¢â‚¬â€ rear view",
+      "name": "Compact E ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:static-compact_e-c2ad7436:3"
       ],
@@ -7162,7 +7294,7 @@
     {
       "id": "variation:static-compact_e-c2ad7436:4",
       "category": "cars",
-      "name": "Compact E Ã¢â‚¬â€ corner view",
+      "name": "Compact E ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:static-compact_e-c2ad7436:4"
       ],
@@ -7188,7 +7320,7 @@
     {
       "id": "variation:static-compact_n-82988799:1",
       "category": "cars",
-      "name": "Compact N Ã¢â‚¬â€ side view",
+      "name": "Compact N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:static-compact_n-82988799:1"
       ],
@@ -7214,7 +7346,7 @@
     {
       "id": "variation:static-compact_n-82988799:2",
       "category": "cars",
-      "name": "Compact N Ã¢â‚¬â€ front view",
+      "name": "Compact N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:static-compact_n-82988799:2"
       ],
@@ -7240,7 +7372,7 @@
     {
       "id": "variation:static-compact_n-82988799:3",
       "category": "cars",
-      "name": "Compact N Ã¢â‚¬â€ rear view",
+      "name": "Compact N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:static-compact_n-82988799:3"
       ],
@@ -7266,7 +7398,7 @@
     {
       "id": "variation:static-compact_n-82988799:4",
       "category": "cars",
-      "name": "Compact N Ã¢â‚¬â€ corner view",
+      "name": "Compact N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:static-compact_n-82988799:4"
       ],
@@ -7292,7 +7424,7 @@
     {
       "id": "variation:static-compact_n-v2-ea89d6fd:1",
       "category": "cars",
-      "name": "Compact N V2 Ã¢â‚¬â€ side view",
+      "name": "Compact N V2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:static-compact_n-v2-ea89d6fd:1"
       ],
@@ -7318,7 +7450,7 @@
     {
       "id": "variation:static-compact_n-v2-ea89d6fd:2",
       "category": "cars",
-      "name": "Compact N V2 Ã¢â‚¬â€ front view",
+      "name": "Compact N V2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:static-compact_n-v2-ea89d6fd:2"
       ],
@@ -7344,7 +7476,7 @@
     {
       "id": "variation:static-compact_n-v2-ea89d6fd:3",
       "category": "cars",
-      "name": "Compact N V2 Ã¢â‚¬â€ rear view",
+      "name": "Compact N V2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:static-compact_n-v2-ea89d6fd:3"
       ],
@@ -7370,7 +7502,7 @@
     {
       "id": "variation:static-compact_n-v2-ea89d6fd:4",
       "category": "cars",
-      "name": "Compact N V2 Ã¢â‚¬â€ corner view",
+      "name": "Compact N V2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:static-compact_n-v2-ea89d6fd:4"
       ],
@@ -7396,7 +7528,7 @@
     {
       "id": "variation:static-compact_s-0c90743f:1",
       "category": "cars",
-      "name": "Compact S Ã¢â‚¬â€ side view",
+      "name": "Compact S ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:static-compact_s-0c90743f:1"
       ],
@@ -7422,7 +7554,7 @@
     {
       "id": "variation:static-compact_s-0c90743f:2",
       "category": "cars",
-      "name": "Compact S Ã¢â‚¬â€ front view",
+      "name": "Compact S ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:static-compact_s-0c90743f:2"
       ],
@@ -7448,7 +7580,7 @@
     {
       "id": "variation:static-compact_s-0c90743f:3",
       "category": "cars",
-      "name": "Compact S Ã¢â‚¬â€ rear view",
+      "name": "Compact S ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:static-compact_s-0c90743f:3"
       ],
@@ -7474,7 +7606,7 @@
     {
       "id": "variation:static-compact_s-0c90743f:4",
       "category": "cars",
-      "name": "Compact S Ã¢â‚¬â€ corner view",
+      "name": "Compact S ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:static-compact_s-0c90743f:4"
       ],
@@ -7500,7 +7632,7 @@
     {
       "id": "variation:static-compact_w-3465d046:1",
       "category": "cars",
-      "name": "Compact W Ã¢â‚¬â€ side view",
+      "name": "Compact W ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:static-compact_w-3465d046:1"
       ],
@@ -7526,7 +7658,7 @@
     {
       "id": "variation:static-compact_w-3465d046:2",
       "category": "cars",
-      "name": "Compact W Ã¢â‚¬â€ front view",
+      "name": "Compact W ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:static-compact_w-3465d046:2"
       ],
@@ -7552,7 +7684,7 @@
     {
       "id": "variation:static-compact_w-3465d046:3",
       "category": "cars",
-      "name": "Compact W Ã¢â‚¬â€ rear view",
+      "name": "Compact W ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:static-compact_w-3465d046:3"
       ],
@@ -7578,7 +7710,7 @@
     {
       "id": "variation:static-compact_w-3465d046:4",
       "category": "cars",
-      "name": "Compact W Ã¢â‚¬â€ corner view",
+      "name": "Compact W ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:static-compact_w-3465d046:4"
       ],
@@ -7604,7 +7736,7 @@
     {
       "id": "variation:static-pickup_n-b8165928:1",
       "category": "cars",
-      "name": "Pickup N Ã¢â‚¬â€ side view",
+      "name": "Pickup N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:static-pickup_n-b8165928:1"
       ],
@@ -7630,7 +7762,7 @@
     {
       "id": "variation:static-pickup_n-b8165928:2",
       "category": "cars",
-      "name": "Pickup N Ã¢â‚¬â€ front view",
+      "name": "Pickup N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:static-pickup_n-b8165928:2"
       ],
@@ -7656,7 +7788,7 @@
     {
       "id": "variation:static-pickup_n-b8165928:3",
       "category": "cars",
-      "name": "Pickup N Ã¢â‚¬â€ rear view",
+      "name": "Pickup N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:static-pickup_n-b8165928:3"
       ],
@@ -7682,7 +7814,7 @@
     {
       "id": "variation:static-pickup_n-b8165928:4",
       "category": "cars",
-      "name": "Pickup N Ã¢â‚¬â€ corner view",
+      "name": "Pickup N ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:static-pickup_n-b8165928:4"
       ],
@@ -7708,7 +7840,7 @@
     {
       "id": "variation:world-car_0-cf8f927b:1",
       "category": "cars",
-      "name": "Car 0 Ã¢â‚¬â€ side view",
+      "name": "Car 0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:world-car_0-cf8f927b:1"
       ],
@@ -7734,7 +7866,7 @@
     {
       "id": "variation:world-car_0-cf8f927b:2",
       "category": "cars",
-      "name": "Car 0 Ã¢â‚¬â€ front view",
+      "name": "Car 0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:world-car_0-cf8f927b:2"
       ],
@@ -7760,7 +7892,7 @@
     {
       "id": "variation:world-car_0-cf8f927b:3",
       "category": "cars",
-      "name": "Car 0 Ã¢â‚¬â€ rear view",
+      "name": "Car 0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:world-car_0-cf8f927b:3"
       ],
@@ -7786,7 +7918,7 @@
     {
       "id": "variation:world-car_0-cf8f927b:4",
       "category": "cars",
-      "name": "Car 0 Ã¢â‚¬â€ corner view",
+      "name": "Car 0 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:world-car_0-cf8f927b:4"
       ],
@@ -7812,7 +7944,7 @@
     {
       "id": "variation:world-car_1-a53c4fd9:1",
       "category": "cars",
-      "name": "Car 1 Ã¢â‚¬â€ side view",
+      "name": "Car 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:world-car_1-a53c4fd9:1"
       ],
@@ -7838,7 +7970,7 @@
     {
       "id": "variation:world-car_1-a53c4fd9:2",
       "category": "cars",
-      "name": "Car 1 Ã¢â‚¬â€ front view",
+      "name": "Car 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:world-car_1-a53c4fd9:2"
       ],
@@ -7864,7 +7996,7 @@
     {
       "id": "variation:world-car_1-a53c4fd9:3",
       "category": "cars",
-      "name": "Car 1 Ã¢â‚¬â€ rear view",
+      "name": "Car 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:world-car_1-a53c4fd9:3"
       ],
@@ -7890,7 +8022,7 @@
     {
       "id": "variation:world-car_1-a53c4fd9:4",
       "category": "cars",
-      "name": "Car 1 Ã¢â‚¬â€ corner view",
+      "name": "Car 1 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:world-car_1-a53c4fd9:4"
       ],
@@ -7916,7 +8048,7 @@
     {
       "id": "variation:world-car_2-3ef8eade:1",
       "category": "cars",
-      "name": "Car 2 Ã¢â‚¬â€ side view",
+      "name": "Car 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:world-car_2-3ef8eade:1"
       ],
@@ -7942,7 +8074,7 @@
     {
       "id": "variation:world-car_2-3ef8eade:2",
       "category": "cars",
-      "name": "Car 2 Ã¢â‚¬â€ front view",
+      "name": "Car 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:world-car_2-3ef8eade:2"
       ],
@@ -7968,7 +8100,7 @@
     {
       "id": "variation:world-car_2-3ef8eade:3",
       "category": "cars",
-      "name": "Car 2 Ã¢â‚¬â€ rear view",
+      "name": "Car 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:world-car_2-3ef8eade:3"
       ],
@@ -7994,7 +8126,7 @@
     {
       "id": "variation:world-car_2-3ef8eade:4",
       "category": "cars",
-      "name": "Car 2 Ã¢â‚¬â€ corner view",
+      "name": "Car 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:world-car_2-3ef8eade:4"
       ],
@@ -8020,7 +8152,7 @@
     {
       "id": "variation:world-car_3-22c3340d:1",
       "category": "cars",
-      "name": "Car 3 Ã¢â‚¬â€ side view",
+      "name": "Car 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:world-car_3-22c3340d:1"
       ],
@@ -8046,7 +8178,7 @@
     {
       "id": "variation:world-car_3-22c3340d:2",
       "category": "cars",
-      "name": "Car 3 Ã¢â‚¬â€ front view",
+      "name": "Car 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:world-car_3-22c3340d:2"
       ],
@@ -8072,7 +8204,7 @@
     {
       "id": "variation:world-car_3-22c3340d:3",
       "category": "cars",
-      "name": "Car 3 Ã¢â‚¬â€ rear view",
+      "name": "Car 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:world-car_3-22c3340d:3"
       ],
@@ -8098,7 +8230,7 @@
     {
       "id": "variation:world-car_3-22c3340d:4",
       "category": "cars",
-      "name": "Car 3 Ã¢â‚¬â€ corner view",
+      "name": "Car 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:world-car_3-22c3340d:4"
       ],
@@ -8124,7 +8256,7 @@
     {
       "id": "variation:world-schoolbus-6df6411d:1",
       "category": "cars",
-      "name": "Schoolbus Ã¢â‚¬â€ side view",
+      "name": "Schoolbus ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â side view",
       "sourceIds": [
         "variation:world-schoolbus-6df6411d:1"
       ],
@@ -8150,7 +8282,7 @@
     {
       "id": "variation:world-schoolbus-6df6411d:2",
       "category": "cars",
-      "name": "Schoolbus Ã¢â‚¬â€ front view",
+      "name": "Schoolbus ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â front view",
       "sourceIds": [
         "variation:world-schoolbus-6df6411d:2"
       ],
@@ -8176,7 +8308,7 @@
     {
       "id": "variation:world-schoolbus-6df6411d:3",
       "category": "cars",
-      "name": "Schoolbus Ã¢â‚¬â€ rear view",
+      "name": "Schoolbus ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â rear view",
       "sourceIds": [
         "variation:world-schoolbus-6df6411d:3"
       ],
@@ -8202,7 +8334,7 @@
     {
       "id": "variation:world-schoolbus-6df6411d:4",
       "category": "cars",
-      "name": "Schoolbus Ã¢â‚¬â€ corner view",
+      "name": "Schoolbus ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â corner view",
       "sourceIds": [
         "variation:world-schoolbus-6df6411d:4"
       ],
@@ -8360,11 +8492,11 @@
     "total": 305,
     "exportedRuntimeViews": 319,
     "sourceOnly": 26,
-    "generated": 23,
+    "generated": 35,
     "reviewed": 0,
-    "pending": 282,
-    "fileValidated": 23,
-    "alphaFlagged": 12,
-    "nativeViewsExported": 92
+    "pending": 270,
+    "fileValidated": 35,
+    "alphaFlagged": 20,
+    "nativeViewsExported": 140
   }
 }
