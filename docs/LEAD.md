@@ -35,7 +35,9 @@ tents, stands, car parks) and above all **manage the transport and roads around 
 - [ ] **M5 Balance and onboarding.** Tent economics (a $15,000 tent earns about $115 at tier 1 today), course upkeep (charged at 25%,
   `COURSE_UPKEEP_YEAR_SHARE`), crowd sizes per tier; first-run hints. The campaign simulator (`golf/campaign.ts`) and the real game agree.
 - **After the MVP (details):** taxis from hotels to the course, rain delays on the live clock (G8), the golf estate and a second venue
-  (G9), courtesy cars, staff and volunteers. **Art comes after the code** (the owner: "if we get all the code done we can focus on art").
+  (G9), courtesy cars, staff and volunteers; **the crowd's wayward-ball scene** (a ball lands outside the ropes: the near spectators
+  run to it and crowd round, marshals wave them back, they part into a corridor for the player, hush for the shot, then react; the art
+  for it is in `docs/SPECTATOR-ART.md` 3b+). **Art comes after the code** (the owner: "if we get all the code done we can focus on art").
 
 ## 4. What already exists (verify before you rely on it)
 - **Town traffic:** `sim/trips.ts` LotTrips: each home's share of `PER_RES` trips a day, by hour: morning home → job, evening job → home,

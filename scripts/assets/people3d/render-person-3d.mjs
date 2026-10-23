@@ -3,6 +3,12 @@
 // Adapted from TrickOrTreat's scripts/art/render-hero-3d.mjs (three.js in headless Edge; the same lighting and dark rim), without the gun.
 //
 //   node scripts/assets/people3d/render-person-3d.mjs <id> [--height <metres, default 1.78>] [--walk <frames, default 8>]
+//     [--root <art dir, default art/people3d>] [--clip <name> [--frames <n, default 4>] [--stride] [--once] [--seated]]
+//   --root art/spectators: the spectators (docs/SPECTATOR-ART.md), kept out of the townspeople
+//   --clip: one more clip of the person (its anim_<name>.glb, from make-person-3d.mjs --clips) as its own sheet <name>.webp + <name>.json +
+//     preview-<name>.png: --frames frames per facing sampled evenly over the clip (a loop; --once: first to last frame), or with --stride
+//     over one stride like the walk (run, sprint, back_up, sidestep). Sized by the walk model, so the floor and the height match the walk.
+//     --seated: the json gets the seat (the hips' height and their point in the frame) for sitting the person on a grandstand seat row
 //
 // in:  art/people3d/<id>/*.glb   the rigged model with its walk clip (and an idle clip when RUN made one)
 // out: art/people3d/<id>/sheet.webp + sheet.json   the people-sheet format TrickOrTreat's art/people uses: rows S SW W NW N NE E SE, columns
@@ -16,15 +22,20 @@ import sharp from 'sharp';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const tot = process.env.TOT_REPO || path.resolve(root, '../TrickOrTreat');
 const id = process.argv[2], arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? +process.argv[i + 1] : d; };
-if (!id) throw new Error('Usage: node scripts/assets/people3d/render-person-3d.mjs <id> [--height m] [--walk n]');
+const sarg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; }, flag = k => process.argv.includes(k);
+if (!id) throw new Error('Usage: node scripts/assets/people3d/render-person-3d.mjs <id> [--height m] [--walk n] [--root dir] [--clip name [--frames n] [--stride] [--once] [--seated]]');
+const ROOT_DIR = sarg('--root', 'art/people3d'), CLIP = sarg('--clip', null), FRAMES = arg('--frames', 4), STRIDE = flag('--stride'), ONCE = flag('--once'), SEATED = flag('--seated');
+const PREFIX = path.basename(ROOT_DIR) === 'spectators' ? 'spectator' : 'person:3d';
 /** the art scale of the people sheets (px per metre), the person's height, the walk frames, supersampling; the frame (px) and the feet in it */
 const ART_PPM = 128, HEIGHT = arg('--height', 1.78), WALK = arg('--walk', 8), SS = 3;
 const FW = 160, FH = Math.ceil(HEIGHT * ART_PPM + 44), AX = FW / 2, AY = FH - 10;
 /** the sheet's rows, and each one's screen direction (degrees, 0 = right, clockwise: S faces the viewer) */
 const ROWS = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE'], SCREEN = { E: 0, SE: 45, S: 90, SW: 135, W: 180, NW: 225, N: 270, NE: 315 };
-const dir = path.join(root, 'art/people3d', id), files = (await fs.readdir(dir)).filter(f => f.endsWith('.glb'));
+const dir = path.join(root, ROOT_DIR, id), files = (await fs.readdir(dir)).filter(f => f.endsWith('.glb'));
 const pickGlb = re => files.find(f => re.test(f.toLowerCase()));
-const walkFile = pickGlb(/walk/) ?? 'rigged.glb', idleFile = pickGlb(/idle/);
+const walkFile = pickGlb(/anim_walk\.glb$/) ?? pickGlb(/walk/) ?? 'rigged.glb', idleFile = pickGlb(/anim_idle\.glb$/) ?? pickGlb(/idle/);
+const clipFile = CLIP ? files.find(f => f.toLowerCase() === `anim_${CLIP}.glb`) : null;
+if (CLIP && !clipFile) throw new Error(`${id}: no anim_${CLIP}.glb in ${path.relative(root, dir)} (make it with make-person-3d.mjs --clips ${CLIP})`);
 const b64 = async f => (await fs.readFile(path.join(dir, f))).toString('base64');
 
 const html = `<!doctype html><html><body style="margin:0;background:transparent">
@@ -38,7 +49,8 @@ const parse = b64 => { const bytes = Uint8Array.from(atob(b64), c => c.charCodeA
   draco.setDecoderPath('/three/examples/jsm/libs/draco/'); loader.setDRACOLoader(draco); loader.setMeshoptDecoder(MeshoptDecoder);
   return new Promise((res, rej) => loader.parse(bytes.buffer, '', res, rej)); };
 window.render = async (walkB64, idleB64, o) => {
-  const gltf = await parse(walkB64), idle = idleB64 ? await parse(idleB64) : null;
+  // the walk model sizes the person (its first frame: feet on the ground); a --clip renders the clip's model at the same size and floor
+  const ref = await parse(walkB64), gltf = o.clipB64 ? await parse(o.clipB64) : ref, idle = idleB64 && !o.CLIP ? await parse(idleB64) : null;
   const canvas = document.createElement('canvas'); canvas.width = o.FW * o.SS; canvas.height = o.FH * o.SS;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.setClearColor(0x000000, 0);
@@ -57,8 +69,10 @@ window.render = async (walkB64, idleB64, o) => {
   const mixer = new THREE.AnimationMixer(gltf.scene), walkAct = mixer.clipAction(walk), idleAct = idleClip ? mixer.clipAction(idleClip) : null;
   const hipsRest = hips.position.clone();
   // the height from the walk's first frame: feet on the ground, scaled to the person's height
-  walkAct.play(); mixer.setTime(0); pivot.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(gltf.scene), h = box.max.y - box.min.y, s = o.HEIGHT / h;
+  const refWalk = ref.animations.filter(c => c.duration > 0.1).sort((a, b) => b.duration - a.duration)[0];
+  if (ref !== gltf) { const m = new THREE.AnimationMixer(ref.scene); if (refWalk) { m.clipAction(refWalk).play(); m.setTime(0); } ref.scene.updateMatrixWorld(true); }
+  else { walkAct.play(); mixer.setTime(0); pivot.updateMatrixWorld(true); }
+  const box = new THREE.Box3().setFromObject(ref.scene), h = box.max.y - box.min.y, s = o.HEIGHT / h;
   gltf.scene.scale.setScalar(s); gltf.scene.position.set(0, -box.min.y * s, 0);
   const ppm = o.ART_PPM * o.SS, halfW = canvas.width / 2 / ppm, halfH = canvas.height / 2 / ppm, pitch = Math.PI / 6;
   const cam = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, 0.01, 100);
@@ -86,18 +100,24 @@ window.render = async (walkB64, idleB64, o) => {
   let lag = N, best = -Infinity;
   for (let L = L0; L < N - 4; L++) { const v = corr(L); if (v > best) { best = v; lag = L; } else if (best > 0 && v < best * 0.5) break; }
   const period = walk.duration * lag / N, start = walk.duration * sig.indexOf(Math.max(...sig.slice(0, lag))) / N;
+  // the frames of a facing: the template (idle, then WALK frames of a stride), or a clip's FRAMES (over a stride, or evenly over the clip)
+  const cols = o.CLIP ? o.FRAMES : o.WALK + 1, dur = walk.duration;
+  const timeOf = f => !o.CLIP ? (f === 0 ? start : (start + ((f - 1) / o.WALK) * period) % dur)
+    : o.STRIDE ? (start + (f / o.FRAMES) * period) % dur : o.ONCE ? dur * f / Math.max(1, o.FRAMES - 1) * 0.999 : dur * f / o.FRAMES;
   for (const d of o.ROWS) {
     // screen direction phi; on the ground a screen step is twice as long along the depth axis (2:1)
     const phi = o.SCREEN[d] * Math.PI / 180, yaw = Math.atan2(Math.cos(phi), 2 * Math.sin(phi)) - yaw0;
-    for (let f = 0; f <= o.WALK; f++) {
+    for (let f = 0; f < cols; f++) {
       mixer.stopAllAction();
-      if (f === 0 && idleAct) { idleAct.play(); mixer.setTime(0); }
-      else { walkAct.play(); mixer.setTime(f === 0 ? start : (start + ((f - 1) / o.WALK) * period) % walk.duration); }
+      if (!o.CLIP && f === 0 && idleAct) { idleAct.play(); mixer.setTime(0); }
+      else { walkAct.play(); mixer.setTime(timeOf(f)); }
       stay(); pivot.rotation.y = yaw; pivot.updateMatrixWorld(true);
       renderer.render(scene, cam); frames.push(canvas.toDataURL('image/png'));
     }
   }
-  return { frames, bones: Object.keys(bones).length, walk: walk.name + ' ' + walk.duration.toFixed(2) + 's, stride ' + period.toFixed(2) + 's, body turned ' + (yaw0 * 180 / Math.PI).toFixed(0) + ' deg', idle: idleClip ? idleClip.name : 'walk frame 0', height: h, period };
+  // seated: the hips' height over the floor at the clip's start (metres)
+  at(0); const hipY = world(hips).y;
+  return { hipY, clipSecs: dur, frames, bones: Object.keys(bones).length, walk: walk.name + ' ' + walk.duration.toFixed(2) + 's, stride ' + period.toFixed(2) + 's, body turned ' + (yaw0 * 180 / Math.PI).toFixed(0) + ' deg', idle: idleClip ? idleClip.name : 'walk frame 0', height: h, period };
 };
 window.ready = true;
 </script></body></html>`;
@@ -116,9 +136,10 @@ try {
   });
   await page.goto('http://people3d.local/');
   await page.waitForFunction(() => window.ready, null, { timeout: 60000 });
-  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN }]);
+  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN, CLIP, FRAMES, STRIDE, ONCE, clipB64: clipFile ? await b64(clipFile) : null }]);
   if (problems.length) throw new Error(problems.join('\n'));
-  const PER = WALK + 1, clear = { r: 0, g: 0, b: 0, alpha: 0 }, png = url => Buffer.from(url.split(',')[1], 'base64'), cells = [];
+  const PER = CLIP ? FRAMES : WALK + 1, names = CLIP ? Array.from({ length: FRAMES }, (_, k) => `${CLIP}${k + 1}`) : ['idle', ...Array.from({ length: WALK }, (_, k) => `walk${k + 1}`)];
+  const base = CLIP ?? 'sheet', previewName = CLIP ? `preview-${CLIP}.png` : 'preview.png', clear = { r: 0, g: 0, b: 0, alpha: 0 }, png = url => Buffer.from(url.split(',')[1], 'base64'), cells = [];
   for (let i = 0; i < out.frames.length; i++) {
     const frame = await sharp(png(out.frames[i])).resize(FW, FH, { kernel: 'lanczos3' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     // a dark 2 px rim around the whole person, like the hand-painted sprites it stands next to
@@ -127,13 +148,18 @@ try {
     const rim = await sharp(ink, { raw: frame.info }).blur(1.2).linear([1, 1, 1, 3.2], [0, 0, 0, 0]).png().toBuffer();
     cells.push({ input: await sharp({ create: { width: FW, height: FH, channels: 4, background: clear } }).composite([{ input: rim }, { input: await sharp(frame.data, { raw: frame.info }).png().toBuffer() }]).png().toBuffer(), left: (i % PER) * FW, top: Math.floor(i / PER) * FH });
   }
-  await sharp({ create: { width: PER * FW, height: ROWS.length * FH, channels: 4, background: clear } }).composite(cells).webp({ quality: 92, alphaQuality: 100, effort: 6 }).toFile(path.join(dir, 'sheet.webp'));
+  await sharp({ create: { width: PER * FW, height: ROWS.length * FH, channels: 4, background: clear } }).composite(cells).webp({ quality: 92, alphaQuality: 100, effort: 6 }).toFile(path.join(dir, base + '.webp'));
   const walkSecs = out.period;
-  await fs.writeFile(path.join(dir, 'sheet.json'), JSON.stringify({ id: `person:3d:${id}`, name: `${id} (3D template)`, size: 'adult', heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY },
-    directions: ROWS, frames: ['idle', ...Array.from({ length: WALK }, (_, k) => `walk${k + 1}`)], walkFps: Math.round(WALK / (walkSecs || 1) * 10) / 10, mirrored: {}, source: `art/people3d/${id}`, clips: { walk: out.walk, idle: out.idle } }, null, 2) + '\n');
+  const meta = CLIP
+    ? { id: `${PREFIX}:${id}:${CLIP}`, name: `${id} ${CLIP}`, clip: CLIP, heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY }, directions: ROWS, frames: names,
+        fps: Math.round(FRAMES / ((STRIDE ? out.period : out.clipSecs) || 1) * 10) / 10, loop: !ONCE, source: `${ROOT_DIR}/${id}`, clips: { [CLIP]: out.walk },
+        ...(SEATED ? { seatHeightMetres: Math.round(out.hipY * 100) / 100, seat: { x: AX, y: Math.round(AY - out.hipY * Math.cos(Math.PI / 6) * ART_PPM) } } : {}) }
+    : { id: `${PREFIX}:${id}`, name: `${id} (3D template)`, size: 'adult', heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY },
+        directions: ROWS, frames: names, walkFps: Math.round(WALK / (walkSecs || 1) * 10) / 10, mirrored: {}, source: `${ROOT_DIR}/${id}`, clips: { walk: out.walk, idle: out.idle } };
+  await fs.writeFile(path.join(dir, base + '.json'), JSON.stringify(meta, null, 2) + '\n');
   // the preview: every frame on a grass-coloured ground with its row and column, for the owner
   const label = (t, w) => Buffer.from(`<svg width="${w}" height="18"><text x="3" y="13" font-size="12" fill="#fff" font-family="monospace">${t}</text></svg>`);
   await sharp({ create: { width: PER * FW, height: ROWS.length * FH, channels: 4, background: { r: 64, g: 76, b: 40, alpha: 1 } } })
-    .composite([...cells, ...ROWS.flatMap((d, r) => Array.from({ length: PER }, (_, f) => ({ input: label(`${d} ${f ? 'walk' + f : 'idle'}`, FW), left: f * FW, top: r * FH })))]).png().toFile(path.join(dir, 'preview.png'));
-  console.log(`${id}: ${out.frames.length} frames (${out.bones} bones; walk ${out.walk}; idle ${out.idle}; model ${out.height.toFixed(2)} units tall) -> art/people3d/${id}/sheet.webp, preview.png`);
+    .composite([...cells, ...ROWS.flatMap((d, r) => Array.from({ length: PER }, (_, f) => ({ input: label(`${d} ${names[f]}`, FW), left: f * FW, top: r * FH })))]).png().toFile(path.join(dir, previewName));
+  console.log(`${id}: ${out.frames.length} frames (${out.bones} bones; ${CLIP ?? 'walk'} ${out.walk}; idle ${out.idle}; model ${out.height.toFixed(2)} units tall) -> ${ROOT_DIR}/${id}/${base}.webp, ${previewName}`);
 } finally { await browser.close(); }

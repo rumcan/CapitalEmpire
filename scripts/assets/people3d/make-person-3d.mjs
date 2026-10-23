@@ -4,8 +4,11 @@
 // Every step spends RUN credits (about 1,800 a person), so each one's result is kept and a rerun skips what is already there.
 // The RUN game is TrickOrTreat's (its game.config.prod.json; TOT_REPO or ../TrickOrTreat), read only.
 //
-//   node scripts/assets/people3d/make-person-3d.mjs <id> "<look>" [--image <A-pose png>] [--max-credits <n>]
+//   node scripts/assets/people3d/make-person-3d.mjs <id> "<look>" [--image <A-pose png>] [--max-credits <n>] [--root <art dir>] [--clips <list>]
 //     without --image the model is made from the text (text-to-3d)
+//     --root: where the person goes (default art/people3d; the spectators: art/spectators, docs/SPECTATOR-ART.md)
+//     --clips: the clips to make (default walk,idle), each saved as anim_<clip>.glb; `clap=<RUN name>` asks RUN for its own animation name
+//       (see `rundot game animate-3d --help`). Each clip is one paid animate-3d call; a clip already there is skipped
 //
 // One person at a time: the service allows only a few jobs at once and answers the rest with "Too Many Requests".
 import fs from 'node:fs/promises';
@@ -20,7 +23,7 @@ const tot = process.env.TOT_REPO || path.resolve(root, '../TrickOrTreat');
 const [id, look] = process.argv.slice(2), arg = k => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : null; };
 if (!id || !look || !/^[a-z][a-z0-9_]*$/.test(id)) throw new Error('Usage: node scripts/assets/people3d/make-person-3d.mjs <id> "<look>" [--image <png>] [--max-credits <n>]');
 const game = JSON.parse(await fs.readFile(path.join(tot, 'game.config.prod.json'), 'utf8')).gameId;
-const dir = path.join(root, 'art/people3d', id), image = arg('--image'), cap = arg('--max-credits') ?? '1500';
+const dir = path.join(root, arg('--root') ?? 'art/people3d', id), image = arg('--image'), cap = arg('--max-credits') ?? '1500';
 await fs.mkdir(dir, { recursive: true });
 const have = f => fs.access(path.join(dir, f)).then(() => true, () => false);
 const rundot = async (...args) => {
@@ -42,7 +45,7 @@ const receipt = JSON.parse(await fs.readFile(path.join(dir, 'receipt.json'), 'ut
 // 1. the model: from the A-pose picture, or from the text alone
 let model = receipt.modelUrl;
 if (!model || !(await have('model.glb'))) {
-  const pose = `${look}. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic adult proportions, stylised hand-painted game look. No props, nothing in the hands, no logos.`;
+  const pose = `${look}. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person's age, stylised hand-painted game look. No props, nothing in the hands, no logos.`;
   const out = await rundot('game', 'generate-3d', '--game-id', game, ...(image ? ['--image-url', image] : ['--mode', 'text-to-3d', '--prompt', pose]), '--quality', 'standard', '--max-credits', cap, '--out', path.join(dir, 'model.glb'), '--force');
   model = out.replace(/\n/g, '').match(/Model URL:\s*(https:\/\/\S+?\.glb)/)?.[1];
   if (!model) throw new Error(`${id}: 3D generation returned no model URL\n${out.slice(-600)}`);
@@ -60,13 +63,20 @@ if (!rig || !(await have('rigged.glb'))) {
   console.log(`${id}: rig ${rig}`);
 } else console.log(`${id}: reusing the rig`);
 
-// 3. the clips: walk (the template's 8 frames are sampled from it) and idle; the service fails now and then, a retry is enough
-for (const clip of ['walk', 'idle']) {
-  const files = (await fs.readdir(dir)).filter(f => f.endsWith('.glb') && f.toLowerCase().includes(clip));
-  if (files.length) { console.log(`${id}: reusing the ${clip} clip (${files.join(', ')})`); continue; }
+// 3. the clips: walk (the template's 8 frames are sampled from it), idle and any --clips; each saved as anim_<clip>.glb (the file RUN wrote is
+// renamed when its name differs); the service fails now and then, a retry is enough
+const clips = (arg('--clips') ?? 'walk,idle').split(',').map(c => c.trim()).filter(Boolean).map(c => { const [name, as] = c.split('='); return { name, as: as ?? name }; });
+for (const { name: clip, as } of clips) {
+  const want = `anim_${clip}.glb`;
+  if (await have(want)) { console.log(`${id}: reusing the ${clip} clip (${want})`); continue; }
+  const before = new Set((await fs.readdir(dir)).filter(f => f.endsWith('.glb')));
   for (let attempt = 1; attempt <= 3; attempt++) {
-    try { await rundot('game', 'animate-3d', '--game-id', game, '--rig-id', rig, '--animations', clip, '--out-dir', dir, '--force'); break; }
+    try { await rundot('game', 'animate-3d', '--game-id', game, '--rig-id', rig, '--animations', as, '--out-dir', dir, '--force'); break; }
     catch (error) { if (/AI_POLICY_BUDGET_EXHAUSTED/.test(error.message) || attempt === 3) { console.log(`${id}: ${clip} clip unavailable (${error.message.split('\n').pop()})`); break; } }
+  }
+  if (!(await have(want))) {
+    const made = (await fs.readdir(dir)).filter(f => f.endsWith('.glb') && !before.has(f));
+    if (made.length) { await fs.rename(path.join(dir, made[0]), path.join(dir, want)); console.log(`${id}: ${clip} clip -> ${want} (from ${made[0]})`); }
   }
 }
 console.log(`${id}: done -> ${path.relative(root, dir)}: ${(await fs.readdir(dir)).join(', ')}`);
