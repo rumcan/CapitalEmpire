@@ -166,6 +166,16 @@
       "hx": 0.9,
       "hy": 0.5,
       "kind": "decor"
+    },
+    {
+      "id": "clubhouse-shanty",
+      "name": "Starter clubhouse (a tin and tarp shack)",
+      "size": "10 x 7 m, 4 m tall",
+      "aspect": "3:2",
+      "prompt": "From the T015 shanty tier: art/golf-tournament/shanty/01-clubhouse-and-arrival-shanty.png, top left (branch arena/T015-golf-tournament-sprites).",
+      "hx": 5,
+      "hy": 3.5,
+      "kind": "building"
     }
   ],
   "note": "hx / hy: half extents of the footprint in metres (X runs down-right on screen, Y down-left); the front faces +Y (lower-left), so flipped it faces +X. prep-golf.mjs sizes each sprite from its footprint: native width 64 * (hx + hy) px.",
