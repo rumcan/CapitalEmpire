@@ -4,13 +4,13 @@
   "scope": "Current selected sheets: PNG/alpha checks and pixel-conserving crops only. Boundary warnings, rigid rotation geometry and game registration require review.",
   "counts": {
     "requested": 305,
-    "generated": 53,
-    "fileValidated": 53,
+    "generated": 54,
+    "fileValidated": 54,
     "fileValidationFailed": 0,
     "alphaFlagged": 26,
     "visuallyReviewed": 0,
-    "nativeViewsExported": 212,
-    "pendingGeneration": 252
+    "nativeViewsExported": 216,
+    "pendingGeneration": 251
   },
   "activeSheets": [
     {
@@ -1231,6 +1231,26 @@
         "columnRightVisible": 0,
         "columnBothSidesVisible": 0
       }
+    },
+    {
+      "id": "town:fish_tackle",
+      "sheet": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1.png",
+      "sheetSha256": "a26add7d318cfeb6ebd13c12e99d5604e6d2f4749a00191e0d7ff1ddf6a2a43c",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 1024,
+        "rowSplit": 1024,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
     }
   ],
   "themeReferencePreserved": {
@@ -1241,8 +1261,8 @@
     "light": "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
     "season": "autumn foliage permitted, Halloween decorations prohibited"
   },
-  "checkedNativeViews": 212,
-  "checkedScaledVariants": 848,
+  "checkedNativeViews": 216,
+  "checkedScaledVariants": 864,
   "sourceSheetsConserved": true,
   "visualApproval": false,
   "gameScaleRegistered": false,

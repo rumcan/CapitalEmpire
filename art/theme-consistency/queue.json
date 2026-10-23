@@ -2150,7 +2150,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1.png",
+      "sheetSha256": "a26add7d318cfeb6ebd13c12e99d5604e6d2f4749a00191e0d7ff1ddf6a2a43c",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "town:grocery",
@@ -8690,11 +8701,11 @@
     "total": 305,
     "exportedRuntimeViews": 319,
     "sourceOnly": 26,
-    "generated": 53,
+    "generated": 54,
     "reviewed": 0,
-    "pending": 252,
-    "fileValidated": 53,
+    "pending": 251,
+    "fileValidated": 54,
     "alphaFlagged": 26,
-    "nativeViewsExported": 212
+    "nativeViewsExported": 216
   }
 }

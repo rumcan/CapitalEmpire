@@ -3,13 +3,13 @@
   "task": "T017",
   "counts": {
     "requested": 305,
-    "generated": 53,
-    "fileValidated": 53,
+    "generated": 54,
+    "fileValidated": 54,
     "fileValidationFailed": 0,
     "alphaFlagged": 26,
     "visuallyReviewed": 0,
-    "nativeViewsExported": 212,
-    "pendingGeneration": 252
+    "nativeViewsExported": 216,
+    "pendingGeneration": 251
   },
   "themeReference": {
     "file": "art/theme-consistency/references/theme-authoritative.png",
@@ -25827,6 +25827,505 @@
               "width": 599,
               "height": 546,
               "sha256": "1938a2f2901e5db8b78ffb9d591b32235b786f980ce59eb31fcce16bb0cd2688",
+              "hasAlpha": true
+            }
+          ]
+        }
+      ],
+      "policy": {
+        "alphaThreshold": 8,
+        "padding": 4,
+        "minComponentPixelsForBounds": 8,
+        "pixelEdits": "none; native crop and aspect-preserving resize only",
+        "cellPacking": "split at floor(width/2), floor(height/2); right/bottom cells retain any remainder pixels, without changing the source sheet",
+        "sourceSheetConserved": true,
+        "rasterRounding": "width rounded to nearest pixel, height derived from native aspect ratio; target CSS bounds retained separately"
+      }
+    },
+    {
+      "id": "town:fish_tackle",
+      "category": "buildings",
+      "sheet": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1.png",
+      "sheetSha256": "a26add7d318cfeb6ebd13c12e99d5604e6d2f4749a00191e0d7ff1ddf6a2a43c",
+      "width": 2048,
+      "height": 2048,
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "visualReview": "pending",
+      "gameRegistration": "pending",
+      "status": "generated-awaiting-visual-review",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 1024,
+        "rowSplit": 1024,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      },
+      "calibration": {
+        "status": "estimated-unregistered",
+        "referenceId": "east:town:fish_tackle",
+        "firstGeneratedDirection": "NE",
+        "originalReferenceDirection": "east",
+        "originalConfiguredCSS": {
+          "left": -94.153257,
+          "top": -106.71227999999999,
+          "right": 97.75044,
+          "bottom": 54.717012,
+          "width": 191.903697,
+          "height": 161.429292
+        },
+        "originalNormalMaxCSS": {
+          "left": -108.9264,
+          "top": -123.45599999999999,
+          "right": 113.088,
+          "bottom": 63.3024,
+          "width": 222.01439999999997,
+          "height": 186.7584
+        },
+        "originalFacingSizes": [
+          {
+            "id": "east:town:fish_tackle",
+            "direction": "east",
+            "configuredCSS": {
+              "left": -94.153257,
+              "top": -106.71227999999999,
+              "right": 97.75044,
+              "bottom": 54.717012,
+              "width": 191.903697,
+              "height": 161.429292
+            },
+            "normalMaxCSS": {
+              "left": -108.9264,
+              "top": -123.45599999999999,
+              "right": 113.088,
+              "bottom": 63.3024,
+              "width": 222.01439999999997,
+              "height": 186.7584
+            }
+          },
+          {
+            "id": "town:fish_tackle",
+            "direction": null,
+            "configuredCSS": {
+              "left": -97.75044,
+              "top": -106.71227999999999,
+              "right": 94.15325699999998,
+              "bottom": 54.717012,
+              "width": 191.903697,
+              "height": 161.429292
+            },
+            "normalMaxCSS": {
+              "left": -113.088,
+              "top": -123.45599999999999,
+              "right": 108.92639999999999,
+              "bottom": 63.3024,
+              "width": 222.01439999999997,
+              "height": 186.7584
+            }
+          }
+        ],
+        "firstNativeWidth": 728,
+        "configuredCSSPerNativePixel": 0.26360397939560437,
+        "normalMaxCSSPerNativePixel": 0.30496483516483514,
+        "policy": "One shared scale per mode for all four rotations, calibrated to the first original reference width. Other widths vary naturally. No independent width/height stretching. Actual game scale and orientation need registration/placement review."
+      },
+      "views": [
+        {
+          "direction": "NE",
+          "cell": {
+            "left": 0,
+            "top": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 148,
+            "top": 214,
+            "width": 728,
+            "height": 596
+          },
+          "alpha": {
+            "clear": 752518,
+            "partial": 295146,
+            "opaque": 912,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 293267,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 1,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 0
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.native.png",
+            "width": 728,
+            "height": 596,
+            "sha256": "5c35de50f82c3e8a4fc7af68f3e4c7f333f5bb70de83b44e0348486c12c04fa9",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 191.903697,
+                "height": 157.1079717197802
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.configured.png",
+              "width": 192,
+              "height": 157,
+              "sha256": "c821c66468d61ca0c2c5afeec9b6be6c385c9b7cf37adc14267181d730496333",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 191.903697,
+                "height": 157.1079717197802
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.configured@2x.png",
+              "width": 384,
+              "height": 314,
+              "sha256": "74d8e6b9151bdbb1a1033b22e55729f1bebd54cc851b58636fdef37ca02f4380",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 222.01439999999997,
+                "height": 181.75904175824175
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.max.png",
+              "width": 222,
+              "height": 182,
+              "sha256": "52a6a1cc2712c445957e5c77b0179e78cafd354ce6f655d798ebd2f19e881b4e",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 222.01439999999997,
+                "height": 181.75904175824175
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.max@2x.png",
+              "width": 444,
+              "height": 363,
+              "sha256": "3f3ba25333e96da71b2f9f69af29db439719e066dfbda2adb13be7f8f7e5c7a7",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SE",
+          "cell": {
+            "left": 1024,
+            "top": 0,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 1172,
+            "top": 194,
+            "width": 728,
+            "height": 637
+          },
+          "alpha": {
+            "clear": 727854,
+            "partial": 319751,
+            "opaque": 971,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 317213,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 1,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 0
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.native.png",
+            "width": 728,
+            "height": 637,
+            "sha256": "55a4335b5b0837b857d731368d5376174bf3214ba10a2098c7b0c044195392d6",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 191.903697,
+                "height": 167.915734875
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.configured.png",
+              "width": 192,
+              "height": 168,
+              "sha256": "e06823ed19a1efa68f29f8413b904dfacfca6157627fd4ffad00fa28387372eb",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 191.903697,
+                "height": 167.915734875
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.configured@2x.png",
+              "width": 384,
+              "height": 336,
+              "sha256": "6856c745250d273463dde8cc85a01702be03923389250800daa0be7a413399fd",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 222.01439999999997,
+                "height": 194.2626
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.max.png",
+              "width": 222,
+              "height": 194,
+              "sha256": "1b500da9e597fa4b271843fcda47bca8c401193711419dd6154c7ebe1b08dac5",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 222.01439999999997,
+                "height": 194.2626
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.max@2x.png",
+              "width": 444,
+              "height": 389,
+              "sha256": "58b23f5e61c295450b48a71fefe498df175a506f38d5b83d359dc32127c3b0c0",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "SW",
+          "cell": {
+            "left": 0,
+            "top": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 148,
+            "top": 1229,
+            "width": 728,
+            "height": 615
+          },
+          "alpha": {
+            "clear": 743132,
+            "partial": 304468,
+            "opaque": 976,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 299183,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 1,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 0
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.native.png",
+            "width": 728,
+            "height": 615,
+            "sha256": "6aed218973586d8e47661004b2ee644effc156bf11d5eb007e3078f21391d008",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 191.903697,
+                "height": 162.1164473282967
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.configured.png",
+              "width": 192,
+              "height": 162,
+              "sha256": "1e152fe21e3025249ad95acb7d370a261196f40cb5af91d2800e888805dbc0d0",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 191.903697,
+                "height": 162.1164473282967
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.configured@2x.png",
+              "width": 384,
+              "height": 324,
+              "sha256": "8caf02800498ff3a8ccfcc6023a356b344b7bd2e510855690658642511f02d72",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 222.01439999999997,
+                "height": 187.5533736263736
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.max.png",
+              "width": 222,
+              "height": 188,
+              "sha256": "e3d9586cc5a65330828d96aa5e85e40f6039bcb2477701851ceebedec29d99a4",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 222.01439999999997,
+                "height": 187.5533736263736
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.max@2x.png",
+              "width": 444,
+              "height": 375,
+              "sha256": "f79eeae5b72800d51e0e5bc7c256cc9fce387b9178391cbe18e7b738bc4e7f1c",
+              "hasAlpha": true
+            }
+          ]
+        },
+        {
+          "direction": "NW",
+          "cell": {
+            "left": 1024,
+            "top": 1024,
+            "width": 1024,
+            "height": 1024
+          },
+          "sourceRect": {
+            "left": 1172,
+            "top": 1246,
+            "width": 727,
+            "height": 579
+          },
+          "alpha": {
+            "clear": 728062,
+            "partial": 319375,
+            "opaque": 1139,
+            "maxAlpha": 255,
+            "visibleAtThreshold": 317157,
+            "edgePixelsAtThreshold": 0
+          },
+          "components": {
+            "total": 1,
+            "retained": 1,
+            "discardedIsolatedPixelsForBoundsOnly": 0
+          },
+          "clearMargin": 152,
+          "touchesCellEdge": false,
+          "warnings": [],
+          "native": {
+            "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.native.png",
+            "width": 727,
+            "height": 579,
+            "sha256": "0b23ad70d40b753466d7592fe10d558579efab8c7a8d083a1c214db5935f312e",
+            "hasAlpha": true
+          },
+          "nativePixelConservation": true,
+          "sizes": [
+            {
+              "mode": "configured",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 191.64009302060438,
+                "height": 152.62670407005493
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.configured.png",
+              "width": 192,
+              "height": 153,
+              "sha256": "7791313851c81977c1ea8a8ca639b0d95d59af0627e5225fea3fc5105dde3d8e",
+              "hasAlpha": true
+            },
+            {
+              "mode": "configured",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 191.64009302060438,
+                "height": 152.62670407005493
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.configured@2x.png",
+              "width": 383,
+              "height": 305,
+              "sha256": "66ced8cbf5afaf18419c073745fbbb8e5275865dec6dcaebd8217a8658f0efab",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 1,
+              "targetCSS": {
+                "width": 221.70943516483516,
+                "height": 176.57463956043955
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.max.png",
+              "width": 222,
+              "height": 177,
+              "sha256": "24c888f59ffe9c19747613b6b03b73d3c843c95f3621d9e9d3d7536d8ad8e385",
+              "hasAlpha": true
+            },
+            {
+              "mode": "max",
+              "dpr": 2,
+              "targetCSS": {
+                "width": 221.70943516483516,
+                "height": 176.57463956043955
+              },
+              "estimated": true,
+              "file": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.max@2x.png",
+              "width": 443,
+              "height": 353,
+              "sha256": "249ad5f74fb2cec4fa344b7deb616a64e704dda311c65b4666cafbc1924cca1d",
               "hasAlpha": true
             }
           ]
