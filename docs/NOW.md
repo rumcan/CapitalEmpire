@@ -4,7 +4,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 
 ## Current step
 - **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-results` (from `origin/main` f62c7da).
-- **Sub-step now:** M2.4 Results from the movers (M2.1 gates, M2.2 galleries, M2.3 going home landed on main).
+- **Sub-step now:** M2.5 The tournament on the town day (M2.1 gates, M2.2 galleries, M2.3 going home, M2.4 results landed on main).
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
 - **Start:** `City.startTournament` (city.ts) at the season's end: the crowd is `spectatorDemand(tier, rep)` (day 1's share, less the
@@ -85,12 +85,16 @@ Design (b):
 - `YearEndResult.measured: { gates: boolean; exit: boolean }`; the card marks estimates. No gates placed or old saves: the formula.
 - [x] b1. crowd.ts GateStats.late; city.ts kickOff gates.late; leave waits and p95; round.ts types.
 - [x] b2. yearend.ts measured facts; App.tsx card marks.
-- [ ] c. Tests (gates late counting; yearend with measured inputs; leave p95), browser check on 5181, land.
+- [x] c. Tests (gates late counting; yearend with measured inputs; leave p95), browser check on 5181, land.
+
+## Plan for M2.5 The tournament on the town day (write the details here before you start)
+
 
 ## Next action
-M2.4 c: tests done (`tests/results-measured.test.ts`, 900 pass); browser check on a test copy (5181): build, Skip to tournament at 8x, read `round.last.gates` / `.leave` and the card's Q / Exit (no est. once 95% of the cars are out).
+M2.5 a: read how the surge, kick-off and the leaving sit on the season clock and the town day (`City.planSurge`, `Round.sim`, `LEAVE_AFTER`, `Sim.townTime`); write the plan above. Ask the owner before starting (each M2 step is approved one by one). Cut `lead/m2-townday` from `origin/main`.
 
 ## Done (newest first)
+- 2026-10-23: **M2.4 Results from the movers landed** on main. Browser-checked on a test copy (5181, a gate placed by script, Skip to tournament at 8x): `last.gates` admitted 168, wait 0, late 0; the card read `Q 0m · Exit 0m est.` at kick-off, then the cars left (56 of 56, the exit P95 rising 0 → 8.8 → 12 sim s) and it read `Q 0m · Exit 12m` (both measured). Satisfaction 76 (unchanged: 12 min is under the 30 min full-marks line).
 - 2026-10-23: **Magenta keyer clean-up landed** on main (an aside from M2, the owner asked): despill 'keep', speck clean-up, haze limit, linear-light option in `scripts/assets/key-magenta.mjs`, each a setting; before/after sheets by `scripts/assets/key-compare.mjs`. Details in PROGRESS.md. M2.4 is still next.
 - 2026-10-23: **M2.3 Going home landed** on main. Browser-checked on a test copy (5181, Skip to tournament at 8x): 56 cars parked; the leaving started 120 sim s after kick-off; the first car left ~250 s later (the long walk back from the far greens), 53 of 56 had left by ~960 s; cars on the roads rose from ~41 to ~100 (the evening traffic). Note: the walk back from far greens is long; M2.5 (the town day) will set when the leaving starts.
 - 2026-10-23: **M2.2 Galleries landed** on main. Browser-checked on a test copy (5181, fresh golf game, Skip to tournament at 8x): 18 spots (9 greens, 9 tees), 102 of the 168 fans in standing at them while the rest still walked, drawn as rings of standing fans with `n watching` (15 by a green, 12 by a tee).

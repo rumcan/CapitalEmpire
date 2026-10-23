@@ -2293,3 +2293,10 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
   linear light; off: on the golf sprites it tints thin rails pink). `gen-golf.mjs` reads `art/golf/items.json` "key" and each item's
   "key". `scripts/assets/key-compare.mjs <folder> [--set k=v]` writes old / new / new-linear sheets to `output/key-compare/`.
   Tests: `tests/key-magenta.test.ts` (loads the keyer at run time, sharp is native). 896 tests pass.
+- **M2.4 Results from the movers landed** (branch `lead/m2-results`): the year-end's day facts come from what the crowd did, the formula
+  (`measureGateFlows`) only where the round did not measure it (`golf/yearend.ts measuredFlows`). Gates: the queue is the mean gate wait,
+  late = fans admitted after waiting over ON_TIME_GRACE_MIN (`GateStats.late`, `Crowd.grace`) plus those still queuing at kick-off (late,
+  no longer missed), on time = the rest of the arrived. Exit: each car's wait from its party back at the bay to the car out of its car park
+  (`City.leave.waits`), its 95th percentile (`RoundResult.leave.p95`) once 95% of the cars are out. `YearEndResult.measured`; the results
+  card marks estimates (`Q 0m · Exit 0m est.` until the cars are out). Sim s = game minutes. Browser-checked: exit measured 12 min with 56
+  cars. Tests: `tests/results-measured.test.ts`. 900 tests pass.
