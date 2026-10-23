@@ -62,11 +62,11 @@ describe('ext/ghost-preview (T018)', () => {
 
   it('resolves valid, refused, and unaffordable states in ghostStatus', () => {
     const ok = ghostStatus('', 1200, 5000, '24 bays');
-    assert.deepEqual(ok, { ok: true, status: 'valid', label: '24 bays · $1,200', bad: false });
+    assert.deepEqual(ok, { ok: true, status: 'valid', label: `24 bays · $${(1200).toLocaleString()}`, bad: false });
     const blocked = ghostStatus('A road runs through it', 1200, 5000, '24 bays');
     assert.deepEqual(blocked, { ok: false, status: 'invalid', label: 'A road runs through it', bad: true });
     const broke = ghostStatus('', 6000, 5000, '24 bays');
-    assert.deepEqual(broke, { ok: false, status: 'invalid', label: 'Not enough money: $6,000', bad: true });
+    assert.deepEqual(broke, { ok: false, status: 'invalid', label: `Not enough money: $${(6000).toLocaleString()}`, bad: true });
   });
 
   it('computes axis-aligned and rotated rectangle corners in tiles', () => {
