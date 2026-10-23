@@ -1,24 +1,31 @@
-## [T___] <task title>
+## Ticket
 
-**Task:** `agents/tasks/T___-....md`
+Closes #<issue-number>
 
-### Summary
-What the module does, in a few sentences.
+## Summary of Changes
 
-### API (what the lead calls)
-```ts
-// the exported types and functions, with one line each
-```
+- Ticket: `[<ticket-id>] <title>`
 
-### Tests
-- `tests/ext-<feature>.test.ts`: what each test checks
-- Key numbers printed by the tests (capacities, times, counts)
-- `npm run typecheck`: pass · `npm test`: <n> pass, 0 fail
+- Files touched (must match the ticket's **Files you may touch** list):
 
-### Integration notes (for the lead; nothing outside `src/game/ext/` was changed)
-- Where it plugs in (the city worker step, the engine tool, the renderer, the save), and what each needs from it
-- Data the renderer needs per frame (sizes, how often)
-- Performance: the cost per sim step at the task's target scale
+  - `<path>`
 
-### Unsure / not done
-- Anything ambiguous in the spec, and the choice made
+## Pre-Push Verification
+
+- [ ] `npm run typecheck` passes (0 errors)
+
+- [ ] `npm test` passes (`<passed>/<total>`)
+
+- [ ] Only files listed in the ticket's **Files you may touch** were modified
+
+- [ ] No new npm dependencies, no `Math.random()`, `/** ... */` doc comments on all exports
+
+- [ ] `PR-<ticket-id>-STATUS.md` (with `FINAL PUSH <sha>`, test summary, and `git diff origin/main...HEAD`) uploaded to Google Drive (`Capital Empire - Argon`)
+
+## Test Output
+
+```text
+
+<paste npm run typecheck and npm test output summary>
+Notes
+* Anything unsure or unrelated test flakes observed: <none>

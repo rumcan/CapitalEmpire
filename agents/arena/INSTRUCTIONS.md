@@ -1,51 +1,104 @@
-# Arena agent: instructions
+# Arena Agent Instructions — Capital Empire (`rumcan/CapitalEmpire`)
 
-You are an outside coding agent ("the Arena agent") helping build **Capital Empire**, an isometric city, traffic and
-business game (Vite + React + TypeScript, WebGL2 rendering, the simulation in Web Workers). The lead (Claude, with the
-owner) designs the game and wires features in. **You write code only**, the way the in-house Haiku coders do: you take
-one task from `agents/tasks/`, build it as a self-contained module with tests, and open a pull request. You do not
-design the game, edit the plan, or wire your module into the engine.
+You are an **Arena coding agent** working on **Capital Empire** (`https://github.com/rumcan/CapitalEmpire`), a golf course and tournament traffic management game built with Vite + React + TypeScript (strict), WebGL2 rendering, Web Worker traffic/town simulation, and OffscreenCanvas ground painting.
 
-## The rules
+Every ticket is written so you can complete it **mechanically and without guessing design**. You have both **GitHub** and **Google Drive** connected (shared folder `Capital Empire - Argon`, ID `11pAG2rlxViL4bby-cUapecWmP43gv7hC`). Follow the rules below to the letter.
 
-1. **One task, one branch, one PR.** Pick a task file in `agents/tasks/` whose `Status:` is `open`. Branch from `main`
-   as `arena/<task id>-<short-slug>` (for example `arena/T001-subways`). Open the PR against `main` on
-   `rumcan/CapitalEmpire`, titled `[<task id>] <task title>`, with the body from `agents/arena/PR_TEMPLATE.md`.
-   **Never push to `main`, never force-push a branch you did not create, never merge your own PR.**
-2. **Build separate, the lead wires in.** Your code lives in **`src/game/ext/<feature>/`** (and its tests in
-   **`tests/ext-<feature>.test.ts`**). It must be pure TypeScript with **no DOM, no React, no WebGL, no Web Worker globals**.
-   It may import types and pure helpers from `src/game/` (for example `Pt` from `src/game/network.ts`, `MAP` from
-   `src/game/iso.ts`, the terrain classes `TC` from `src/game/terrain/types.ts`) but must **not modify any file outside
-   `src/game/ext/<feature>/`, `tests/ext-<feature>.test.ts`, your task file's `Status:` line, and any other path your task file names explicitly (for example a report under
-   `agents/reports/`)**. Anything outside (the engine, the
-   city worker, the UI, saves, the renderer) is the lead's: describe what it needs under **Integration notes** in the PR.
-3. **Follow the task's interface.** The task file gives the exported API the lead will call. Keep its names and
-   shapes; you may add exports. If the spec is ambiguous or wrong, say so in the PR (or open it as a draft with your
-   questions) instead of guessing a different design.
-4. **Match the codebase.** Read `CLAUDE.md` first. Dense one-line helpers, short doc comments on every export (what it
-   is, units: tiles of 2 m, sim seconds, m/s), no new npm dependencies, deterministic code (a seeded random stream such
-   as `mulberry` from `src/game/iso.ts`, never `Math.random`), and allocation-free per-step loops (typed arrays, reused
-   objects) for anything that runs every sim step.
-5. **Checks before every push:** `npm ci` once, then `npm run typecheck` and `npm test` must pass (the whole suite, not
-   only yours). Tests run headless under Node (`node --test`); see `package.json`. Put the key numbers your tests print
-   (capacities, timings) in the PR.
-6. **Never touch:** `docs/` (PROGRESS.md and GAME-PLAN.md are the lead's), `CLAUDE.md`, `.claude/`, `scripts/worker/`,
-   saves and assets, `package.json` (ask in the PR if you need a script), and anything in the sibling `TrickOrTreat`
-   repository. No secrets, no network calls in code, no telemetry.
-7. **Keep PRs reviewable:** under ~800 changed lines when you can; split a big task into stacked PRs (`part 1/2`).
+---
 
-## How the game is laid out (what you need to read)
+## 1. Taking a Ticket (GitHub Issues + Drive Queue)
 
-- `CLAUDE.md` – the project rules. `docs/GAME-PLAN.md` – the design (read only the section your task names).
-- `src/game/network.ts` – roads: `Pt { x, y }` in tiles (1 tile = 2 m), `RoadNetwork`, `Seg`, `Node`.
-- `src/game/sim/` – the traffic sim (cars on a lane graph; IDM car following). A sim step is `DT = 0.1` s.
-- `src/game/event/` – the event rounds (the stadium, car parks, buses, the crowd). Your module will usually plug in
-  next to these: look at `bus.ts` and `crowd.ts` for the style of a transit module the lead wires in.
-- `src/game/terrain/` – the map (2048 x 2048 tiles), terrain classes (`TC.GROUND`, `HILL`, `WATER`, ...).
+1. **Tickets are GitHub issues** labelled `arena` (plus `status:open` / `status:in-progress` / `status:in-review` / `status:done` and an area label: `ui`, `roads`, `course`, `terrain`), mirrored in Google Drive as `TICKET-T0xx-*.md` inside `Capital Empire - Argon` (`11pAG2rlxViL4bby-cUapecWmP43gv7hC`).
 
-## Definition of done
+2. If the GitHub issue for your assigned `TICKET-T0xx-*.md` does not exist yet on `rumcan/CapitalEmpire`, create it first from the ticket markdown:
 
-- The module and its tests are in `src/game/ext/<feature>/` and `tests/ext-<feature>.test.ts`.
-- `npm run typecheck` and `npm test` pass on the branch.
-- The PR body has the summary, the API, the test numbers, the integration notes, and anything unsure.
-- The task file's `Status:` line says `in review (#<PR number>)`.
+   ```bash
+
+   gh issue create --title "[T0xx] <title>" --label "arena,status:open,<area>" --body-file <ticket-file>
+
+3. Take the open issue #<n>, comment "Taking this" on it, and switch its label to status:in-progress:
+
+gh issue comment <n> --body "Taking this"
+
+gh issue edit <n> --remove-label "status:open" --add-label "status:in-progress"
+
+________________
+
+2. Branch and Draft PR at Once
+1. Branch from main as arena/<ticket-id>-<short-slug> (for example, arena/T018-ghost-preview):
+
+git fetch origin
+
+git checkout -b arena/<ticket-id>-<short-slug> origin/main
+
+npm ci
+
+2. Make a first commit within the first few minutes (even a stub), push it, and open a draft PR immediately titled [<ticket-id>] <title>, body from agents/arena/PR_TEMPLATE.md, linking the issue (Closes #<n>):
+
+git add <files>
+
+git commit -m "[<ticket-id>] initial stub"
+
+git push -u origin arena/<ticket-id>-<short-slug>
+
+gh pr create --draft --base main --head arena/<ticket-id>-<short-slug> \
+
+  --title "[<ticket-id>] <title>" \
+
+  --body-file agents/arena/PR_TEMPLATE.md
+
+________________
+
+3. Push the Whole Time
+1. Commit and push after every meaningful step (each file, each passing test, at least every 15–20 minutes of work).
+2. Never sit on unpushed work; never squash everything into one push at the end. The reviewer reads progress from the pushes.
+
+________________
+
+4. Checks Before Every Push
+1. Before every push, run:
+
+npm run typecheck
+
+npm test
+
+(the whole suite).
+
+2. If a test fails that the ticket did not expect, say so in a PR comment with the output; do not "fix" unrelated tests.
+
+________________
+
+5. The Final Push Comment & Drive Status Sync
+When the ticket is complete:
+
+1. Mark the PR ready for review (gh pr ready <pr-number>) and switch the issue label to status:in-review.
+2. Post a PR comment exactly like:
+
+FINAL PUSH <short sha> — ready for review. typecheck: pass. npm test: <passed>/<total>. Notes: <anything unsure>
+
+3. Write PR-<ticket-id>-STATUS.md to Google Drive (in Capital Empire - Argon, ID 11pAG2rlxViL4bby-cUapecWmP43gv7hC) containing:
+   * Your FINAL PUSH <short sha> line, PR number, and Issue number
+   * Exact output of npm run typecheck and npm test
+   * Full git diff origin/main...HEAD This allows the reviewer in Gemini to inspect your exact diff and test output directly from Drive.
+
+________________
+
+6. The 20-Minute Review Loop (GitHub PR + Drive Review File)
+1. After the FINAL PUSH comment, check for review feedback every 20 minutes (for example sleep 1200 then gh pr view <n> --comments and search Google Drive for REVIEW-<ticket-id>), for at least 3 hours.
+2. When the reviewer asks for changes (either via a GitHub PR review comment or a REVIEW-<ticket-id>.md file in Google Drive with VERDICT: CHANGES_REQUESTED):
+   * Make exactly those numbered changes.
+   * Run npm run typecheck and npm test.
+   * Push to your branch.
+   * Post a new FINAL PUSH <sha> comment on the PR listing each requested change and how it was done, and update PR-<ticket-id>-STATUS.md in Google Drive with the new SHA and diff.
+   * Start the 20-minute loop again.
+3. Stop only when the PR is approved (VERDICT: APPROVED / GitHub PR approved) or merged. Never merge a PR yourself.
+
+________________
+
+7. Existing Repository Rules (Always Enforced)
+* No pushes to main and never merge a PR yourself.
+* No edits to docs/, CLAUDE.md, AGENTS.md, .claude/, agents/, or scripts/worker/.
+* Files outside the ticket's "Files you may touch" list are strictly off limits.
+* No new npm dependencies (package.json and package-lock.json are off limits).
+* Deterministic code only: use mulberry from src/game/iso.ts; never use Math.random() or Date.now().
+* Style & performance: include a /** ... */ JSDoc comment with units (tiles of 2 m, sim s, m/s, $) on every export; keep per-step loops allocation-free; never add a manual "rebuild ground" step.
