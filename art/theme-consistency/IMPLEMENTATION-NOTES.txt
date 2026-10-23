@@ -1,5 +1,7 @@
 T017: IMAGE DELIVERY FOR THE IMPLEMENTING AI
 
+Continuation handover: HANDOVER.md. Generation stopped at the owner's request on 2026-10-23 with 51 building subjects generated, 254 subjects pending, and no generation batch running. Read the handover for selected revisions, review caveats and the exact next subject.
+
 Authoritative owner-selected reference: references/theme-authoritative.png.
 Theme: early dusk with warm windows/exterior lamps on; low side sun from screen upper-right, shadows lower-left. No moonlight/night treatment. Absolutely no Halloween decorations or people. Autumn foliage is allowed.
 
