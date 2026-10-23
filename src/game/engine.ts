@@ -75,6 +75,7 @@ import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
+import { gallerySpots } from './golf/galleries';
 import { tierInfo, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 
@@ -350,6 +351,7 @@ export class Game {
     const placed = new Set<number>();
     for (const o of ops) if (o.op === 'set') { this.setGolfMarker(o.hole, o.kind, o.x, o.y); placed.add(o.hole); } else this.removeGolfMarker(o.hole, o.kind);
     if (placed.size) this.toast(`Hole ${[...placed].sort((a, b) => a - b).join(', ')}: pin and tee markers fitted to the green and tee`);
+    this.syncCourseGates(); // the galleries follow the greens and tees
     this.scheduleSave(); this.emit();
   }
   /** places or moves a pin or tee marker with its prop, marked auto (it goes when its green or tee is gone) */
@@ -1204,6 +1206,8 @@ export class Game {
     const gates: { x: number; y: number; lanes: number }[] = [];
     for (const s of this.golf?.structures ?? []) { const def = STRUCTURE[s.typeId]; if (def?.kind !== 'gate') continue; const [x, y, w, h] = structureRect(s); gates.push({ x: x + w / 2, y: y + h / 2, lanes: Math.max(1, def.capacity) }); }
     this.traffic.setGates(gates);
+    // the galleries (LEAD.md M2.2): the greens and tees of the course and the placed grandstands and tents
+    this.traffic.setSpots(this.golf ? gallerySpots(this.golf.tees ?? [], this.golf.pins ?? [], this.golf.structures ?? []) : []);
     }
     private syncGolfProps() {
     this.golfProps.clear();
@@ -2686,6 +2690,26 @@ export class Game {
     }
     for (const d of this.busDefs) { const a = this.screen(d.sx, d.sy), b = this.screen(d.dx, d.dy); busStop(ctx, a.x, a.y, dpr); busStop(ctx, b.x, b.y, dpr); }
   }
+  /** the galleries' standing crowds (LEAD.md M2.2): each spot's fans as up to 48 standing walkers in rings round its point (0.75 tiles
+   *  apart, the rings 0.9 tiles out each), with the count (`n watching`) at a closer zoom; below zoom 0.08 a green dot sized by the crowd */
+  private drawGalleries(ctx: CanvasRenderingContext2D) {
+    const G = this.traffic.gallery; if (!G.length) return;
+    if (!walkSheet) { walkSheet = new Image(); walkSheet.src = walkersUrl; }
+    const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y, sprites = this.cam.z >= 0.08, h = 0.9 * HH * 2 * ze, sheet = walkSheet;
+    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    for (let i = 0; i + 3 < G.length; i += 4) {
+      const x = G[i]!, y = G[i + 1]!, n = Math.round(G[i + 2]!); if (n <= 0) continue;
+      const c = this.screen(x, y); if (c.x < -200 || c.y < -200 || c.x > cw + 200 || c.y > ch + 200) continue;
+      if (!sprites) { ctx.fillStyle = 'rgba(134,239,172,0.85)'; ctx.beginPath(); ctx.arc(c.x, c.y, Math.min(10, 2 + Math.sqrt(n) / 3) * dpr, 0, Math.PI * 2); ctx.fill(); continue; }
+      // rings of standing fans: 6 on the first, 12 on the next, 18 on the third ..., each fan a quarter turn of the walk cycle apart in hero
+      for (let k = 0, ring = 1, onRing = 0, per = 6, m = Math.min(48, Math.ceil(n / 2)); k < m; k++) {
+        const a = (onRing / per) * Math.PI * 2 + ring * 0.37, r = ring * 0.9;
+        walkerSprite(ctx, sheet, x + Math.cos(a) * r, y + Math.sin(a) * r, (k + i) % 3, 0, ze, X0, Y0, cw, ch, h);
+        if (++onRing >= per) { ring++; onRing = 0; per = 6 * ring; }
+      }
+      if (this.cam.z >= 0.2) { const t = `${n} watching`, ty = c.y - h * 1.6; ctx.strokeText(t, c.x, ty); ctx.fillStyle = '#bbf7d0'; ctx.fillText(t, c.x, ty); }
+    }
+  }
   /** the shuttle crowd on the map (during a surge and its eval): each lot stop's queue as up to 24 walkers in a 4 x 6 grid 0.7 tiles apart, 1.5 tiles behind the
    *  kerb (toward the stop's car park), with the count (`n waiting`); each walking group as min(n, 3) walkers 0.4 tiles apart, feet at the tile, the walk cycle
    *  of hero (group % 3), a frame each 180 ms; below zoom 0.08 each group is a 2 px amber dot. Culled to the view */
@@ -3638,6 +3662,7 @@ export class Game {
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
+    this.drawGalleries(ctx);
     this.drawWalkers(ctx, now);
     if (this.grassPanel) {
       const s = this.grassScope();

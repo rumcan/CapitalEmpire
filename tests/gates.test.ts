@@ -31,3 +31,17 @@ test('gates: a group bound for a gate that is not there goes inside at once; the
   const c = C.counts();
   assert.deepEqual(c.fans, [3]); assert.deepEqual(c.atGate, [0]);
 });
+
+test('galleries in the crowd: fans in (through a gate or a door) go on as a stage 3 group to their spot and stand there', () => {
+  const C = new Crowd(1, 0); C.setGates(1); C.setSpots(2);
+  const ins: [number, number, number, number][] = [];
+  C.onIn = (town, n, x, y) => { ins.push([town, n, x, y]); C.add({ x, y, tx: x + 2, ty: y, n, town, stage: 3, route: 1 }); };
+  C.add({ x: 0, y: 0, tx: 0, ty: 1, n: 3, town: 0, stage: 2, route: 0 });
+  C.add({ x: 0, y: 0, tx: 1, ty: 0, n: 3, town: 0, stage: 1, route: -1 });
+  C.step(1.5);
+  assert.deepEqual(ins, [[0, 3, 1, 0]], 'the door group is in at its door'); assert.equal(C.atGate(0), 3);
+  assert.equal(C.admit(0, 10, 5, 5), 3);
+  assert.deepEqual(ins[1], [0, 3, 5, 5], 'admitted at the gate');
+  C.step(3);
+  assert.deepEqual(C.gallery, [0, 6]); assert.deepEqual(C.counts().fans, [6], 'inside counts them once');
+});

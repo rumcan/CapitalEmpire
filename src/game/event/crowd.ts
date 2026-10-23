@@ -4,8 +4,9 @@
 // walking + at a stop + on a bus + at a gate + at the doors.
 
 /** a group of n fans of town walking straight from (x, y) to (tx, ty) (tiles): stage 0 to the lot stop of route (then it queues there), stage 1 to a
- *  door (then the fans are at the doors), stage 2 to gate `route` (then it queues there); route -1 for a stage 1 group from no route */
-export interface Walker { x: number; y: number; tx: number; ty: number; n: number; town: number; stage: 0 | 1 | 2; route: number }
+ *  door (then the fans are at the doors), stage 2 to gate `route` (then it queues there), stage 3 (already inside) to gallery spot `route`
+ *  (then they stand there); route -1 for a stage 1 group from no route */
+export interface Walker { x: number; y: number; tx: number; ty: number; n: number; town: number; stage: 0 | 1 | 2 | 3; route: number }
 /** a party waiting at a lot stop or a gate: its town, its fans, and (gates) the time it joined the queue */
 export interface Party { town: number; n: number; since?: number }
 /** per town: the fans at the doors (arrived: inside), at a lot stop's queue, on a bus, and at a gate's queue */
@@ -31,6 +32,10 @@ export class Crowd {
   gate: GateStats = { admitted: 0, waitSum: 0, waitMax: 0 };
   /** the time now (sim s), set by the City before step and admit: a gate's queue stamps it on each party that joins */
   now = 0;
+  /** per gallery spot (golf, LEAD.md M2.2): the fans standing there */
+  gallery: number[] = [];
+  /** called when fans get in (a gate admits them at (x, y), or a group lands at a door): the City sends them on to a gallery */
+  onIn: ((town: number, n: number, x: number, y: number) => void) | null = null;
   /** the number of towns (the length of each per-town list) */
   readonly towns: number;
 
@@ -44,14 +49,17 @@ export class Crowd {
   waiting(r: number): number { let n = 0; for (const p of this.queue[r] ?? []) n += p.n; return n; }
   /** n gates (their queues empty; a queue already there keeps its fans) */
   setGates(n: number): void { while (this.gateQ.length < n) this.gateQ.push([]); }
+  /** n gallery spots (a spot already there keeps its fans) */
+  setSpots(n: number): void { while (this.gallery.length < n) this.gallery.push(0); }
   /** the fans waiting at gate g */
   atGate(g: number): number { let n = 0; for (const p of this.gateQ[g] ?? []) n += p.n; return n; }
-  /** gate g admits up to n fans from the head of its queue (a party may be split): they are inside (arrive); returns the fans admitted */
-  admit(g: number, n: number): number {
+  /** gate g (at x, y) admits up to n fans from the head of its queue (a party may be split): they are inside (arrive, then onIn); returns the
+   *  fans admitted */
+  admit(g: number, n: number, x = 0, y = 0): number {
     const q = this.gateQ[g]; let need = Math.floor(n), done = 0;
     while (need > 0 && q && q.length) {
       const h = q[0]!, k = Math.min(need, h.n), w = Math.max(0, this.now - (h.since ?? this.now));
-      this.arrive(h.town, k); need -= k; done += k; h.n -= k;
+      this.arrive(h.town, k); this.onIn?.(h.town, k, x, y); need -= k; done += k; h.n -= k;
       this.gate.admitted += k; this.gate.waitSum += k * w; this.gate.waitMax = Math.max(this.gate.waitMax, w);
       if (h.n <= 0) q.shift();
     }
@@ -96,7 +104,8 @@ export class Crowd {
   private land(w: Walker): void {
     if (w.stage === 0 && this.queue[w.route]) this.queue[w.route]!.push({ town: w.town, n: w.n });
     else if (w.stage === 2 && this.gateQ[w.route]) this.gateQ[w.route]!.push({ town: w.town, n: w.n, since: this.now });
-    else this.arrive(w.town, w.n);
+    else if (w.stage === 3) { if (this.gallery[w.route] !== undefined) this.gallery[w.route]! += w.n; }
+    else { this.arrive(w.town, w.n); this.onIn?.(w.town, w.n, w.tx, w.ty); }
   }
   /** moves every walker dist tiles straight at its target; a group that reaches it lands (see land) */
   step(dist: number): void {

@@ -1,6 +1,7 @@
 // The main thread's side of the traffic simulation: it posts edits and settings to the sim worker, keeps the last two
 // frames, and interpolates the cars between them so they move smoothly at 60 fps while the sim runs at 10 Hz.
 import SimWorker from './sim.worker?worker&inline';
+import type { GallerySpot } from '../golf/galleries';
 import type { NetOp } from '../ground-protocol';
 import { CAR_SCALE, type Drawable } from '../sprites';
 import { carHeading, facings } from '../traffic';
@@ -96,6 +97,8 @@ export class SimClient {
   /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
    *  tiles, fans, stage; stage 0 to a lot stop, 1 to a door) and the lot stops (4 floats each: x, y in tiles, the fans waiting, the route index) */
   walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
+  /** the galleries' standing crowds (LEAD.md M2.2): 4 floats a spot (x, y, fans, kind) */
+  gallery: Float32Array = NO_FLOATS;
   /** the active traffic incidents as the worker last sent them (with each frame): 3 floats each, x and y (tiles) and kind (1 crash, 0 breakdown) */
   incidents: Float32Array = NO_FLOATS;
   /** the active natural disaster as the worker last sent it (none: empty); called with the notes (warnings, starts, ends, repairs) of each such message */
@@ -162,6 +165,8 @@ export class SimClient {
   golfOn = false; townMinutes = 10; townTraffic = 1;
   /** the town day's length in sim seconds, as last sent */
   dayLen = 1440;
+  /** the galleries' spots (LEAD.md M2.2): sent with the gates, and when the holes change */
+  setSpots(spots: GallerySpot[]) { this.post({ t: 'spots', spots }); }
   /** the course's gates (LEAD.md M2.1): sent whenever the placed gate structures change */
   setGates(gates: { x: number; y: number; lanes: number }[]) { this.post({ t: 'gates', gates }); }
   setTownDay(minutes: number, traffic: number) { this.townMinutes = minutes; this.townTraffic = traffic; this.sendTownDay(); }
@@ -250,7 +255,7 @@ export class SimClient {
       this.onTown?.(m.events); return;
     }
     this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks;
-    this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS; this.incidents = m.inc;
+    this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS; this.gallery = m.gallery ?? NO_FLOATS; this.incidents = m.inc;
     const S = new Map<string, { idx: number; stage: number }>(), G = m.sig;
     for (let k = 0; k + 3 < G.length; k += 4) S.set(sigKey(G[k]!, G[k + 1]!), { idx: G[k + 2]!, stage: G[k + 3]! });
     this.sigs = S;

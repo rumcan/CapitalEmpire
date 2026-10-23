@@ -50,16 +50,17 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [x] a. Decide the gallery spots: per hole of the course (golf/holes.ts, holeview.ts: tees and greens; the featured holes), the placed
   grandstands and tents (golf.structures, STRUCTURE kinds 'grandstand', 'food', 'drink', ...), the 18th green. A pure module
   `src/game/golf/galleries.ts`: spots (x, y, capacity, kind) from the holes and structures; the share of the crowd each draws.
-- [ ] b. Admitted fans walk from the gate to a spot (a stage 3 walker in event/crowd.ts, or a gallery list in the crowd) and stand there
+- [x] b. Admitted fans walk from the gate to a spot (a stage 3 walker in event/crowd.ts, or a gallery list in the crowd) and stand there
   (counts per spot); later in the day they move between spots (follow the play: M2.5 ties it to the town day).
-- [ ] c. Send the spots to the sim (a message like `gates`), draw the standing crowds at street zoom (dense walker groups, the count).
+- [x] c. Send the spots to the sim (a message like `gates`), draw the standing crowds at street zoom (dense walker groups, the count).
 - [ ] d. Tests, browser check, land.
 
 ## Next action
-M2.2 b (branch `lead/m2-galleries`): in `event/crowd.ts` a walker stage 3 (to gallery spot `route`), `gallery: number[]` (fans standing at
-each spot), `setSpots(n)`, and an `onIn(town, n, x, y)` hook called when fans get in (a gate's `admit`, which takes the gate's point, and a
-stage 1 group landing at the doors); in `city.ts` `setSpots(spots)` and the hook: each party in walks to `pickSpot` (golf/galleries.ts) as
-a stage 3 group. (a is done: `src/game/golf/galleries.ts` gallerySpots / pickSpot / GALLERY, tests `tests/galleries.test.ts`.)
+M2.2 d: `npm run build`; browser check on a test copy (`npx vite preview --host 127.0.0.1 --port 5181 --strictPort`: its own browser
+storage, a fresh golf game, so the owner's saves are untouched): `window.__game.skipToTournament(); setSpeed(8)`, then at street zoom by a
+green: standing crowds (`n watching`), `window.__game.traffic.gallery` (4 floats a spot). b and c are in: `Crowd` stage 3, `gallery`,
+`setSpots`, `onIn`; `City.setSpots`, `toGallery` (pickSpot), `galleryBuf`; the `spots` message; `SimClient.setSpots`, `.gallery`;
+`Game.syncCourseGates` also sends the spots (and runs after `syncCourseMarkers`); `Game.drawGalleries`. Tests: 891 pass.
 
 ## Done (newest first)
 - 2026-10-23: **M2.1 Course gates landed** on main. Browser-checked on a test copy (port 5181, a fresh golf game, a gate placed by script between the car park and the clubhouse plot, Skip to tournament at 8x): the fans walked to the gate (stage 2 walkers seen), the gate admitted all 168 who arrived (`last.gates`: admitted 168, wait 0: a 4-lane gate admits 40 a second and they came about one a second, so no queue at tier 1); 168 of 360 fans arrived at all: the round's stuck list blames the town's 4-arm junctions (M3's job).

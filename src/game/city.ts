@@ -36,6 +36,7 @@ import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 import { golfTicketPrice } from './golf/yearend';
 import { gateRate } from './golf/venue';
 import { hasExpressGates } from './golf/golfcards';
+import { pickSpot, type GallerySpot } from './golf/galleries';
 import { dayShare, spectatorDemand, tierInfo } from './golf/tour';
 import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
 import { applyParkingFeeDemand } from './golf/parkingfee';
@@ -213,6 +214,15 @@ export class City {
    *  site's doors as before. gateAcc: each gate's admitting carried over between steps (fans) */
   gates: { x: number; y: number; lanes: number }[] = []; private gateAcc: number[] = [];
   setGates(list: { x: number; y: number; lanes: number }[]): void { this.gates = list.map(g => ({ x: g.x, y: g.y, lanes: Math.max(1, g.lanes) })); this.gateAcc = this.gates.map(() => 0); this.crowd?.setGates(this.gates.length); }
+  /** the galleries (golf, LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts), and the draws that pick them */
+  spots: GallerySpot[] = []; private spotRnd = seededRnd(0x6a11);
+  setSpots(list: GallerySpot[]): void { this.spots = list; this.crowd?.setSpots(list.length); }
+  /** fans in at (x, y) walk on to a gallery spot (by weight and room); with no spots they stay where they are (inside) */
+  private toGallery(town: number, n: number, x: number, y: number): void {
+    const C = this.crowd; if (!C || !this.golf || !this.spots.length) return;
+    const i = pickSpot(this.spots, C.gallery, this.spotRnd()), s = this.spots[i]!;
+    C.add({ x, y, tx: s.x + (this.spotRnd() - 0.5) * 3, ty: s.y + (this.spotRnd() - 0.5) * 3, n, town, stage: 3, route: i });
+  }
   busDefs: BusRouteDef[] = []; private busPts: ({ lot: Pt; doors: Pt } | null)[] = []; crowd: Crowd | null = null;
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
@@ -1094,6 +1104,7 @@ export class City {
     this.sim.dropBuses();
     const C = new Crowd(this.round.crowd.length, this.busDefs.length);
     this.crowd = C; C.setGates(this.gates.length); this.gateAcc = this.gates.map(() => 0);
+    C.setSpots(this.spots.length); C.onIn = (town, n, x, y) => this.toGallery(town, n, x, y);
     this.busDefs.forEach((d, r) => {
       const R = this.sim.busRoutes[r];
       if (!R) return;
@@ -1149,7 +1160,7 @@ export class City {
     const C = this.crowd; if (!C || !this.gates.length) return;
     const express = hasExpressGates(this.round.cards);
     this.gates.forEach((g, i) => {
-      const rate = gateRate(g.lanes, express), acc = (this.gateAcc[i] ?? 0) + rate * dt, done = C.admit(i, Math.floor(acc));
+      const rate = gateRate(g.lanes, express), acc = (this.gateAcc[i] ?? 0) + rate * dt, done = C.admit(i, Math.floor(acc), g.x, g.y);
       this.gateAcc[i] = Math.min(acc - done, rate);
     });
   }
@@ -1189,6 +1200,13 @@ export class City {
     const all = new Float32Array(out.length + 4 * this.gates.length); all.set(out);
     this.gates.forEach((g, i) => { const o = out.length + 4 * i; all[o] = g.x; all[o + 1] = g.y; all[o + 2] = this.crowd?.atGate(i) ?? 0; all[o + 3] = -1 - i; });
     return all;
+  }
+  /** the galleries as the frame sends them (LEAD.md M2.2): 4 floats a spot (x, y in tiles, the fans standing there, the kind: 0 green, 1 tee,
+   *  2 stand, 3 tent) */
+  galleryBuf(): Float32Array {
+    const K = { green: 0, tee: 1, stand: 2, tent: 3 } as const, out = new Float32Array(4 * this.spots.length);
+    this.spots.forEach((s, i) => { out[4 * i] = s.x; out[4 * i + 1] = s.y; out[4 * i + 2] = this.crowd?.gallery[i] ?? 0; out[4 * i + 3] = K[s.kind]; });
+    return out;
   }
   /** the round from a save (see Round.from): any surge under way is dropped with its party cars */
   loadRound(s?: RoundSave): void { const g = !!this.golf; this.round = Round.from(s); this.round.golf = g; this.grown = null; this.surge = null; this.sim.dropParty(); this.crowd = null; this.sim.dropBuses(); this.applyCards(); }
