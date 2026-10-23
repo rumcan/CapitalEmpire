@@ -36,7 +36,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - **M2.5 The tournament on the town day.** The tournament day maps onto one town day (gates 07:00, play, exits in the evening).
 
 ## Plan for M2.1 (tick as you go)
-- [ ] a. `event/crowd.ts`: a walker stage 2 (to gate `route`), gate queues (`gateQ`: FIFO of parties per gate), `admit(g, n)` (moves up to n
+- [x] a. `event/crowd.ts`: a walker stage 2 (to gate `route`), gate queues (`gateQ`: FIFO of parties per gate), `admit(g, n)` (moves up to n
   fans from gate g's queue inside: `arrive`), `atGate` in `counts()`; tests in `tests/crowd.test.ts` (or a new `tests/gates.test.ts`).
 - [ ] b. `sim/protocol.ts` `{ t: 'gates'; gates: { x; y; lanes }[] }`, `sim.worker.ts` case, `City.setGates`; `SimClient.setGates`.
 - [ ] c. `City.walkDoor` in golf mode with gates: walk to the nearest gate (stage 2); `City.step`: each gate admits `lanes * 10` fans a sim
@@ -47,7 +47,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [ ] f. typecheck, tests, build, browser check (place a gate, skip to the tournament, see the queue and the admitted count), land.
 
 ## Next action
-M2.1 a: read `event/crowd.ts` (98 lines) in full, then add stage 2 and the gate queues.
+M2.1 b: the `gates` message: `sim/protocol.ts` ToSim `{ t: 'gates'; gates: { x: number; y: number; lanes: number }[] }`, its case in `sim.worker.ts` calling `City.setGates`, `SimClient.setGates`. (a is done: `Crowd.setGates/atGate/admit`, `Walker.stage` 2, `FanCounts.atGate`, `GateStats`, `Crowd.now`; tests `tests/gates.test.ts`.)
 
 ## Done (newest first)
 - 2026-10-23: M2 findings and design written (above). M1 Living town landed on main (4c90e25).

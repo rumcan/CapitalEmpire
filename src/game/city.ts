@@ -1147,7 +1147,7 @@ export class City {
   private fanCounts(): FanCounts {
     if (this.crowd) return this.crowd.counts();
     const z = new Array<number>(this.round.crowd.length).fill(0);
-    return { fans: z, atStop: z.slice(), onBus: z.slice() };
+    return { fans: z, atStop: z.slice(), onBus: z.slice(), atGate: z.slice() };
   }
   /** the walkers as the frame sends them: 4 floats per group (x, y in tiles, n fans, stage) */
   walkBuf(): Float32Array {

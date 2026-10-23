@@ -171,7 +171,7 @@ test('City kick-off: a ticket per fan at the doors at the season price, booked a
   city.terrain(new Uint8Array(MAP * MAP), { x: O, y: O }, 7, CENTRES);
   city.netOps(gridEditor().commit(true));
   // the fans at the doors at kick-off, faked: 30 from the first town, 10 from the second
-  (city as unknown as { fanCounts(): FanCounts }).fanCounts = () => ({ fans: [30, 10, 0], atStop: [0, 0, 0], onBus: [0, 0, 0] });
+  (city as unknown as { fanCounts(): FanCounts }).fanCounts = () => ({ fans: [30, 10, 0], atStop: [0, 0, 0], onBus: [0, 0, 0], atGate: [0, 0, 0] });
   assert.equal(city.startRound(), true);
   city.round.cards = ['season', 'season'];
   city.wall(BUILD_S / 2); city.wall(BUILD_S / 2);
