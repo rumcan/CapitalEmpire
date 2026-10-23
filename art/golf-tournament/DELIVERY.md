@@ -6,4 +6,4 @@ The owner has since changed the starter direction to **a small budget**, express
 
 The current scene-first workflow, no-people budget reference, new four-view props/foliage and colour queue are on `arena/T016-grass-management`, under `art/grass-management/`. They are a separate task and review.
 
-The grouped tee/distance fixtures on sheet 26 still require independently placeable replacements. Old sheets require alpha/layout/scale inspection and packing; they are not claimed to be production-ready. `prompts.json` and adjacent prompt files preserve their generation briefs. Do not automatically register the historical starter variants as the new budget tier.
+Use the independent single-marker and single-stake replacements delivered under T016 in PR #12 instead of the grouped fixtures on sheet 26. Old sheets require alpha/layout/scale inspection and packing; they are not claimed to be production-ready. `prompts.json` and adjacent prompt files preserve their generation briefs. Do not automatically register the historical starter variants as the new budget tier.
