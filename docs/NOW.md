@@ -47,7 +47,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [x] f. typecheck, tests, build, browser check (place a gate, skip to the tournament, see the queue and the admitted count), land.
 
 ## Plan for M2.2 Galleries (write the details here before you start)
-- [ ] a. Decide the gallery spots: per hole of the course (golf/holes.ts, holeview.ts: tees and greens; the featured holes), the placed
+- [x] a. Decide the gallery spots: per hole of the course (golf/holes.ts, holeview.ts: tees and greens; the featured holes), the placed
   grandstands and tents (golf.structures, STRUCTURE kinds 'grandstand', 'food', 'drink', ...), the 18th green. A pure module
   `src/game/golf/galleries.ts`: spots (x, y, capacity, kind) from the holes and structures; the share of the crowd each draws.
 - [ ] b. Admitted fans walk from the gate to a spot (a stage 3 walker in event/crowd.ts, or a gallery list in the crowd) and stand there
@@ -56,8 +56,10 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [ ] d. Tests, browser check, land.
 
 ## Next action
-M2.2 a: cut `lead/m2-galleries` from `origin/main`; read `golf/holes.ts`, `golf/holeview.ts`, `golf/venue.ts` (viewing) and how the
-engine sends the course to the worker (`City.setGolf` land), then write the galleries module's design here.
+M2.2 b (branch `lead/m2-galleries`): in `event/crowd.ts` a walker stage 3 (to gallery spot `route`), `gallery: number[]` (fans standing at
+each spot), `setSpots(n)`, and an `onIn(town, n, x, y)` hook called when fans get in (a gate's `admit`, which takes the gate's point, and a
+stage 1 group landing at the doors); in `city.ts` `setSpots(spots)` and the hook: each party in walks to `pickSpot` (golf/galleries.ts) as
+a stage 3 group. (a is done: `src/game/golf/galleries.ts` gallerySpots / pickSpot / GALLERY, tests `tests/galleries.test.ts`.)
 
 ## Done (newest first)
 - 2026-10-23: **M2.1 Course gates landed** on main. Browser-checked on a test copy (port 5181, a fresh golf game, a gate placed by script between the car park and the clubhouse plot, Skip to tournament at 8x): the fans walked to the gate (stage 2 walkers seen), the gate admitted all 168 who arrived (`last.gates`: admitted 168, wait 0: a 4-lane gate admits 40 a second and they came about one a second, so no queue at tier 1); 168 of 360 fans arrived at all: the round's stuck list blames the town's 4-arm junctions (M3's job).
