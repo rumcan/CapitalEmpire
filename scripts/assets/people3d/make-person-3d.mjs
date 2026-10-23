@@ -44,19 +44,21 @@ const rundot = async (...args) => {
 const note = async (k, v) => { const f = path.join(dir, 'receipt.json'), r = JSON.parse(await fs.readFile(f, 'utf8').catch(() => '{}')); r[k] = v; r.look = look; await fs.writeFile(f, JSON.stringify(r, null, 2) + '\n'); return r; };
 /** the model of this prompt in RUN's library (rundot assets list: the newest 3D generation whose listed prompt start matches), polled every
  *  30 s for up to 20 min; its URL in RUN's storage */
-async function fromLibrary(prompt) {
-  for (let k = 0; k < 40; k++) {
+async function fromLibrary(prompt, tries = 40) {
+  for (let k = 0; k < tries; k++) {
     const out = await rundot('assets', 'list', '--game-id', game, '--service', 'threedgen', '--limit', '30').catch(e => e.message);
     for (const line of out.split('\n')) {
       const m = line.match(/([0-9a-f]{8}-[0-9a-f-]{27})\s+\S+\s+(.+?)\s+\d{4}-\d\d-\d\d \d\d:\d\d/);
       if (!m) continue;
-      const start = m[2].replace(/…$/, '').trim();
+      // the listed start ends in '…' on a console and '.' when piped (2026-10-23: the '.' kept the first batch from finding its model)
+      const start = m[2].trim().replace(/(…|\.{1,3})$/, '').trim();
       if (start.length < 12 || !prompt.startsWith(start)) continue;
       const url = `https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/${game}/${m[1]}/model.compressed.glb`;
       if ((await fetch(url, { method: 'HEAD' })).ok) { await note('generationId', m[1]); return url; }
     }
-    await new Promise(r => setTimeout(r, 30000));
+    if (k < tries - 1) await new Promise(r => setTimeout(r, 30000));
   }
+  if (tries === 1) return null;
   throw new Error(`${id}: the model never showed up in RUN's library`);
 }
 const receipt = JSON.parse(await fs.readFile(path.join(dir, 'receipt.json'), 'utf8').catch(() => '{}'));
@@ -66,7 +68,10 @@ let model = receipt.modelUrl;
 if (!model || !(await have('model.glb'))) {
   const pose = `${look}. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person's age, stylised hand-painted game look. No props, nothing in the hands, no logos.`;
   let out = '';
-  try { out = await rundot('game', 'generate-3d', '--game-id', game, ...(image ? ['--image-url', image] : ['--mode', 'text-to-3d', '--prompt', pose]), '--quality', 'standard', '--max-credits', cap, '--out', path.join(dir, 'model.glb'), '--force'); }
+  // already in RUN's library (an earlier run that stopped after paying)? then no new generation
+  model = await fromLibrary(pose, 1);
+  if (model) console.log(`${id}: found in RUN's library, no new generation`);
+  else try { out = await rundot('game', 'generate-3d', '--game-id', game, ...(image ? ['--image-url', image] : ['--mode', 'text-to-3d', '--prompt', pose]), '--quality', 'standard', '--max-credits', cap, '--out', path.join(dir, 'model.glb'), '--force'); }
   catch (error) {
     // the CLI gives up after 600 s while RUN keeps going (2026-10-23: the models took about 10.5 min): find it in the library, never pay twice
     if (!/HttpClient\.Timeout|TaskCanceled/i.test(error.message)) throw error;

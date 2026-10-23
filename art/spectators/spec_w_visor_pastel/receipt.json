@@ -1,0 +1,10 @@
+{
+  "generationId": "d560da22-afb6-4280-8b89-9354715afa31",
+  "look": "Pink-polo woman in her 30s at a 1985 golf tournament, slim, blonde shoulder-length hair, a pale pink short-sleeved polo shirt, a plain white visor, a white knee-length skirt, white sneakers. Plain clothes, no logos, no lettering",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/d560da22-afb6-4280-8b89-9354715afa31/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

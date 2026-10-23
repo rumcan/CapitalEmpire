@@ -71,6 +71,14 @@ and three arm angles and chose these; `-70,70` turns the palms the other way, an
   the origin.
 - **Keep the mesh indexed:** TrickOrTreat's `toNonIndexed()` tripled the vertices (1.5 million) and made 66 MB files; indexed they are 24 MB.
 
+- **Legs that touch in the A-pose** (bare legs, a skirt, slim trousers): the generated mesh joins them, and base_woman's trouser crotch
+  carries both legs' weights, so a white web stretched from foot to foot in the side views. Now: below the hips each vertex samples only
+  its own side of the body and keeps none of the other leg's bones, and every triangle with corners on both legs is cut ("leg-web
+  triangles cut" in the log; about 2,000 for spec_w_visor_pastel).
+- **Finding a model after the CLI's timeout:** `rundot assets list` ends the listed prompt in "…" on a console but "." when piped to a
+  script; the first batch's lookup kept the "." and never matched (a 30 min stall). make-person-3d.mjs strips both now, and checks the
+  library **before** generating, so a person whose model is already there costs nothing.
+
 **How to tell a broken rig fast:** the script logs the two bounding boxes (base_man about 1.10 x 1.70 m, the new person scaled to match),
 and `render-person-3d.mjs` logs "model N units tall": base_man is 1.67; 2.00 meant the quantization trap. A good preview shows the person
 whole in every facing with no spikes.

@@ -68,8 +68,18 @@ window.rig = async (base, person, keep) => {
     for (const c of [node.left, node.right]) if (c) for (let k = 0; k < 3; k++) { node.min[k] = Math.min(node.min[k], c.min[k]); node.max[k] = Math.max(node.max[k], c.max[k]); }
     return node;
   };
-  const index = tree(samples);
+  // below the hips each leg takes weights only from its own side: legs that touch in the A-pose (bare legs, a skirt) would otherwise take
+  // both legs' weights and stretch into a membrane between the feet when they walk (2026-10-23, spec_w_visor_pastel)
+  const hipsBone = sourceSkeleton.bones.find(b => /hips|pelvis/i.test(b.name)), hipY = hipsBone ? hipsBone.getWorldPosition(new T.Vector3()).y : targetCenter.y;
+  const legY = hipY - 0.04 * height, cx = targetCenter.x;
+  const indexAll = tree(samples.slice()), indexL = tree(samples.filter(q => q.p[1] < hipY && q.p[0] >= cx)), indexR = tree(samples.filter(q => q.p[1] < hipY && q.p[0] < cx));
+  let index = indexAll;
+  // which side the base's left leg is on (x), and each bone's leg (1 left, 2 right, 0 neither)
+  const legOf = b => /^(mixamorig:?)?Left(UpLeg|Leg|Foot|ToeBase)/i.test(b.name) ? 1 : /^(mixamorig:?)?Right(UpLeg|Leg|Foot|ToeBase)/i.test(b.name) ? 2 : 0;
+  const boneLeg = sourceSkeleton.bones.map(legOf), lUp = sourceSkeleton.bones.find(b => legOf(b) === 1);
+  const leftIsPlusX = lUp ? lUp.getWorldPosition(new T.Vector3()).x >= cx : true;
   const nearest = p => {
+    index = p[1] < legY ? (p[0] >= cx ? indexL : indexR) ?? indexAll : indexAll;
     const best = [];
     const visit = node => {
       if (!node) return;
@@ -83,7 +93,7 @@ window.rig = async (base, person, keep) => {
     visit(index); return best;
   };
   const rootInverse = original.scene.matrixWorld.clone().invert();
-  let vertices = 0, dropped = 0;
+  let vertices = 0, dropped = 0, webbed = 0;
   for (const mesh of newMeshes) {
     let geometry = mesh.geometry.clone();
     // RUN's models come quantized (KHR_mesh_quantization: positions, normals and UVs as normalized integers): writing metres back into those
@@ -121,10 +131,21 @@ window.rig = async (base, person, keep) => {
         const near = 1 / Math.max(d, height * height * 1e-8);
         for (let k = 0; k < 4; k++) w.set(sample.indices[k], (w.get(sample.indices[k]) || 0) + sample.weights[k] * near);
       }
+      // below the hips: none of the other leg's bones (the base's trouser crotch carries both legs' weights)
+      if (point.y < legY) { const mine = (point.x >= cx) === leftIsPlusX ? 1 : 2, other = [...w.keys()].filter(b => boneLeg[b] && boneLeg[b] !== mine); if ([...w].some(([b, v]) => v > 0 && !other.includes(b))) for (const b of other) w.delete(b); }
       const ranked = [...w].sort((a, b) => b[1] - a[1]).slice(0, 4), total = ranked.reduce((s, x) => s + x[1], 0);
       if (!total) throw new Error('A vertex has no skin weight');
       ranked.forEach(([bone, v], k) => { skinIndex[i * 4 + k] = bone; skinWeight[i * 4 + k] = v / total; });
       point.applyMatrix4(rootInverse); positions.setXYZ(i, point.x, point.y, point.z);
+    }
+    // the web between legs that touch in the A-pose: a triangle with corners on both legs (each corner's strongest bone) would stretch from
+    // foot to foot as they walk, so it goes (the inner legs may show a small gap; at sprite size it does not show)
+    const legSide = bi => { const n = skeleton.bones[bi]?.name ?? ''; return /^(mixamorig:?)?Left(UpLeg|Leg|Foot|ToeBase)/i.test(n) ? 1 : /^(mixamorig:?)?Right(UpLeg|Leg|Foot|ToeBase)/i.test(n) ? 2 : 0; };
+    const side = new Uint8Array(positions.count); for (let i = 0; i < positions.count; i++) side[i] = legSide(skinIndex[i * 4]);
+    if (geometry.index) {
+      const idx = geometry.index.array, keepTris = [];
+      for (let i = 0; i < idx.length; i += 3) { const a = side[idx[i]], b = side[idx[i + 1]], c = side[idx[i + 2]]; if ((a | b | c) === 3) { webbed++; continue; } keepTris.push(idx[i], idx[i + 1], idx[i + 2]); }
+      geometry.setIndex(keepTris);
     }
     geometry.setAttribute('skinIndex', new T.Uint16BufferAttribute(skinIndex, 4));
     geometry.setAttribute('skinWeight', new T.Float32BufferAttribute(skinWeight, 4));
@@ -138,7 +159,7 @@ window.rig = async (base, person, keep) => {
   let bin = ''; const bytes = new Uint8Array(buffer);
   for (let i = 0; i < bytes.length; i += 32768) bin += String.fromCharCode(...bytes.subarray(i, i + 32768));
   const span = s => { const xs = s.map(q => q.p); const lo = [0, 1, 2].map(k => Math.min(...xs.map(p => p[k]))), hi = [0, 1, 2].map(k => Math.max(...xs.map(p => p[k]))); return lo.map((v, k) => +(hi[k] - v).toFixed(2)); };
-  return { boxes: { base: [targetBox.min.toArray(), targetBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))), baseSamples: span(samples), person: [sourceBox.min.toArray(), sourceBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))) }, base64: btoa(bin), vertices, dropped, bones: skeleton.bones.length, animations: original.animations.map(a => a.name) };
+  return { boxes: { base: [targetBox.min.toArray(), targetBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))), baseSamples: span(samples), person: [sourceBox.min.toArray(), sourceBox.max.toArray()].map(v => v.map(x => +x.toFixed(2))) }, base64: btoa(bin), vertices, dropped, webbed, bones: skeleton.bones.length, animations: original.animations.map(a => a.name) };
 };
 window.ready = true;
 </script></body></html>`;
@@ -158,7 +179,7 @@ try {
     const out = await page.evaluate(([b, m, k]) => window.rig(b, m, k), [(await fs.readFile(s.file)).toString('base64'), model.toString('base64'), keep]);
     await fs.writeFile(path.join(dir, s.name), Buffer.from(out.base64, 'base64'));
     if (s === sources[0]) console.log(JSON.stringify(out.boxes));
-    console.log(`${id}: ${s.name} from ${from} (${out.vertices} vertices, ${out.dropped} loose triangles dropped, ${out.bones} bones, clips ${out.animations.join(', ') || 'none'})`);
+    console.log(`${id}: ${s.name} from ${from} (${out.vertices} vertices, ${out.dropped} loose triangles dropped, ${out.webbed} leg-web triangles cut, ${out.bones} bones, clips ${out.animations.join(', ') || 'none'})`);
   }
   const rf = path.join(dir, 'receipt.json'), r = JSON.parse(await fs.readFile(rf, 'utf8').catch(() => '{}'));
   r.rigFrom = `${from} (local rig transfer, rig-local-person.mjs)`; r.clipsFrom = Object.fromEntries(clips.map(c => [c, from]));
