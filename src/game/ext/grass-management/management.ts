@@ -14,7 +14,7 @@ export interface GrassSettings { enabled: boolean; strength: number; recovery: n
 /** Care cost in dollars per 8 m cell at full dose; other cell sizes scale by area. */
 export const GRASS_COST: Record<GrassAction, number> = { mow: 2, water: 1, fertilise: 3, aerate: 4, seed: 6, sod: 28, repair: 5 };
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, Number.isFinite(v) ? v : lo));
-const defaults = (): GrassSettings => ({ enabled: true, strength: 0.45, recovery: 1, wear: 1, rain: 0.06, evaporation: 0.035, temperature: 20, material: 'auto', mowing: false });
+const defaults = (): GrassSettings => ({ enabled: true, strength: 0, recovery: 1, wear: 1, rain: 0.06, evaporation: 0.035, temperature: 20, material: 'auto', mowing: false });
 const bands: GrassCondition[] = ['neglected', 'stressed', 'recovering', 'maintained', 'pristine'];
 /** Whether a tile-space point lies inside a polygon, including its boundary. */
 export function grassContains(pts: readonly number[], x: number, y: number): boolean {
@@ -25,6 +25,20 @@ export function grassContains(pts: readonly number[], x: number, y: number): boo
     if ((ay > y) !== (by > y) && x < (bx - ax) * (y - ay) / (by - ay) + ax) hit = !hit;
   }
   return hit;
+}
+/** Exact polygon/cell intersection, retaining thin diagonal turf and cell-edge slivers. */
+function intersects(pts: readonly number[], x: number, y: number, size: number): boolean {
+  if (grassContains(pts, x, y) || grassContains(pts, x + size, y) || grassContains(pts, x, y + size) || grassContains(pts, x + size, y + size)) return true;
+  for (let i = 0, j = pts.length - 2; i < pts.length; j = i, i += 2) {
+    const ax = pts[j], ay = pts[j + 1], dx = pts[i] - ax, dy = pts[i + 1] - ay;
+    let lo = 0, hi = 1;
+    if (dx === 0) { if (ax < x || ax > x + size) continue; }
+    else { const a = (x - ax) / dx, b = (x + size - ax) / dx; lo = Math.max(lo, Math.min(a, b)); hi = Math.min(hi, Math.max(a, b)); }
+    if (dy === 0) { if (ay < y || ay > y + size) continue; }
+    else { const a = (y - ay) / dy, b = (y + size - ay) / dy; lo = Math.max(lo, Math.min(a, b)); hi = Math.min(hi, Math.max(a, b)); }
+    if (lo <= hi) return true;
+  }
+  return false;
 }
 /** Deterministic coarse grass grid. Map units are 2 m tiles; default cells are 4 tiles (8 m). Only registered turf evolves. */
 export class GrassManagement {
@@ -51,14 +65,15 @@ export class GrassManagement {
   /** Clamp and persist independent tuning; auto chooses appearance from local condition, explicit material is a visual override. */
   configure(patch: Partial<GrassSettings>): void { const o = { ...this.settings, ...patch }; this.settings = { enabled: o.enabled !== false, strength: clamp(o.strength), recovery: clamp(o.recovery, 0, 5), wear: clamp(o.wear, 0, 10), rain: clamp(o.rain, 0, 2), evaporation: clamp(o.evaporation, 0, 2), temperature: clamp(o.temperature, -30, 60), material: GROUND_MATERIALS.some(m => m.id === o.material) ? o.material : 'auto', mowing: o.mowing === true }; this.refresh(); }
   private mark(i: number) { if (!this.dirty[i]) { this.dirty[i] = 1; this.queue[this.queued++] = i; } }
-  private init(i: number) {
+  private init(i: number, condition: GrassCondition = 'neglected') {
     if (this.initialized[i]) return;
     this.initialized[i] = 1; this.live[this.count++] = i;
-    // Starting turf needs care; no random daily damage or invented visitor movement.
-    this.data[0][i] = 0.6; this.data[1][i] = 0.65; this.data[2][i] = 0.42; this.data[3][i] = 0.38; this.data[4][i] = 0.25; this.data[5][i] = 0.55;
+    // Callers can preserve a healthy existing preset; deliberately neglected starter turf still needs care.
+    const score = condition === 'pristine' ? 0.99 : condition === 'maintained' ? 0.9 : condition === 'recovering' ? 0.8 : condition === 'stressed' ? 0.65 : 0.6;
+    this.data[0][i] = score; this.data[1][i] = Math.min(1, score + 0.05); this.data[2][i] = score > 0.8 ? 0.6 : 0.42; this.data[3][i] = score > 0.8 ? 0.7 : 0.38; this.data[4][i] = score > 0.8 ? 0.08 : 0.25; this.data[5][i] = score > 0.8 ? 0.15 : 0.55;
   }
   /** Add/change a turf polygon, preserving care at unchanged locations. Empty/invalid polygons remove it. */
-  register(key: string, pts: readonly number[], surface: GrassSurface): void {
+  register(key: string, pts: readonly number[], surface: GrassSurface, initial?: GrassCondition): void {
     const old = this.zones.get(key);
     if (old && old.surface === surface && old.pts.length === pts.length && old.pts.every((v, i) => v === pts[i])) return;
     this.remove(key);
@@ -67,9 +82,8 @@ export class GrassManagement {
     for (let k = 0; k < pts.length; k += 2) { x0 = Math.min(x0, pts[k]); y0 = Math.min(y0, pts[k + 1]); x1 = Math.max(x1, pts[k]); y1 = Math.max(y1, pts[k + 1]); }
     const cells: number[] = [], c = this.cell;
     for (let y = Math.max(0, Math.floor(y0 / c)); y < Math.min(this.side, Math.ceil(y1 / c)); y++) for (let x = Math.max(0, Math.floor(x0 / c)); x < Math.min(this.side, Math.ceil(x1 / c)); x++) {
-      // Thin turf polygons retain a cell; rendering remains clipped to their actual outline.
-      if (!grassContains(pts, clamp(x * c + c / 2, x0, x1), clamp(y * c + c / 2, y0, y1))) continue;
-      const i = y * this.side + x; this.init(i); this.refs[i]++; this.surface[i] = GRASS_SURFACES.indexOf(surface); cells.push(i); this.mark(i);
+      if (!intersects(pts, x * c, y * c, c)) continue;
+      const i = y * this.side + x; this.init(i, initial); this.refs[i]++; this.surface[i] = GRASS_SURFACES.indexOf(surface); cells.push(i); this.mark(i);
       let owners = this.owners.get(i); if (!owners) this.owners.set(i, owners = new Set()); owners.add(key);
     }
     this.zones.set(key, { pts: [...pts], surface, cells });
@@ -87,16 +101,16 @@ export class GrassManagement {
     const c = this.cell, r = Math.min(this.size * 2, s.radius), zone = s.zone ? this.zones.get(s.zone) : undefined;
     if (s.zone && !zone) return 0;
     let n = 0;
-    const touch = (i: number) => { const x = i % this.side * c + c / 2, y = Math.floor(i / this.side) * c + c / 2; if (this.refs[i] && (zone || Math.hypot(x - s.x, y - s.y) <= r + c / 2)) { visit(i); n++; } };
+    const touch = (i: number) => { const x = i % this.side * c, y = Math.floor(i / this.side) * c; if (this.refs[i] && (zone || Math.hypot(Math.max(x - s.x, 0, s.x - x - c), Math.max(y - s.y, 0, s.y - y - c)) <= r)) { visit(i); n++; } };
     if (zone) for (const i of zone.cells) touch(i);
     else for (let y = Math.max(0, Math.floor((s.y - r) / c)); y < Math.min(this.side, Math.floor((s.y + r) / c) + 1); y++) for (let x = Math.max(0, Math.floor((s.x - r) / c)); x < Math.min(this.side, Math.floor((s.x + r) / c) + 1); x++) touch(y * this.side + x);
     return n;
   }
   /** Quote care before spending; no state changes. Dollars, adjusted for actual cell area. */
-  quote(action: GrassAction, scope: GrassScope, amount = 1): number { return typeof GRASS_COST[action] !== 'number' ? 0 : Math.ceil(this.select(scope, () => {}) * GRASS_COST[action] * this.cell ** 2 / 16 * clamp(amount)); }
+  quote(action: GrassAction, scope: GrassScope, amount = 1): number { return !this.settings.enabled || typeof GRASS_COST[action] !== 'number' ? 0 : Math.ceil(this.select(scope, () => {}) * GRASS_COST[action] * this.cell ** 2 / 16 * clamp(amount)); }
   /** Apply care to selected turf. Returns affected cell count; no care spills into other cells. */
   apply(action: GrassAction, scope: GrassScope, amount = 1, angle = 0): number {
-    if (typeof GRASS_COST[action] !== 'number' || !Number.isFinite(amount) || amount <= 0) return 0;
+    if (!this.settings.enabled || typeof GRASS_COST[action] !== 'number' || !Number.isFinite(amount) || amount <= 0) return 0;
     const a = clamp(amount), d = this.data;
     return this.select(scope, i => {
       if (action === 'water') d[2][i] = clamp(d[2][i] + 0.45 * a);
@@ -111,7 +125,7 @@ export class GrassManagement {
   }
   /** A bounded local traffic stroke in tiles; count is actual passages, not simulated customers. Kind divot represents an actual turf strike. */
   traffic(x0: number, y0: number, x1: number, y1: number, count = 1, kind: 'foot' | 'cart' | 'divot' = 'foot', radius = 0.5): void {
-    if (![x0, y0, x1, y1, count, radius].every(Number.isFinite) || count <= 0 || radius < 0 || !['foot', 'cart', 'divot'].includes(kind)) return;
+    if (!this.settings.enabled || ![x0, y0, x1, y1, count, radius].every(Number.isFinite) || count <= 0 || radius < 0 || !['foot', 'cart', 'divot'].includes(kind)) return;
     const c = this.cell, r = Math.min(16, radius), dx = x1 - x0, dy = y1 - y0, len = dx * dx + dy * dy, d = this.data;
     if (len > 128 ** 2) return; // Long teleports/replans are not traversed turf.
     for (let y = Math.max(0, Math.floor((Math.min(y0, y1) - r) / c)); y < Math.min(this.side, Math.floor((Math.max(y0, y1) + r) / c) + 1); y++) for (let x = Math.max(0, Math.floor((Math.min(x0, x1) - r) / c)); x < Math.min(this.side, Math.floor((Math.max(x0, x1) + r) / c) + 1); x++) {

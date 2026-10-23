@@ -1,0 +1,16 @@
+{
+  "generator": "built-in imagegen",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-38cf43ce-1282-4a15-94de-2a46c3631f56.png",
+  "reference": "../scene-reference/tournament-small-budget-master-v1.png",
+  "subject": "One inexpensive clean3x3mwhitepopupgazebo withsimplefoldingtable",
+  "viewOrder": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "budget": "small",
+  "condition": "clean functional",
+  "people": false,
+  "status": "generated; requires visual angle/alpha/in-game scale validation"
+}

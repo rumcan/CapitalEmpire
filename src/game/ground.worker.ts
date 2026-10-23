@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 // A ground worker: holds its own copy of the road network, terrain and ground textures and bakes chunks on request.
-import { MAP } from './iso';
+import { MAP, CHUNK_W, CHUNK_H, MID_K } from './iso';
 import { RoadNetwork } from './network';
 import type { FromWorker, ToWorker } from './ground-protocol';
 import { applyOps } from './netops';
@@ -36,9 +36,8 @@ const handle = async (m: ToWorker) => {
     switch (m.t) {
       case 'grass': {
         painter.grassStrength = Math.min(1, Math.max(0, m.strength)); painter.grassHeat = m.heat; painter.grassMowing = m.mowing;
-        const ids = new Set<string>();
-        for (const c of m.cells) { if (c.active) { painter.grassCells.set(c.id, c); ids.add(c.material); if (c.foot > 0.005) ids.add(c.foot > 0.45 ? 'crowd-heavy' : c.moisture > 0.8 ? 'mud-footprints' : 'crowd-light'); if (c.carts > 0.005) ids.add('cart-tracks'); if (c.divots > 0.005) ids.add(c.repair > 0 ? 'divots-repair' : 'divots-fresh'); else if (c.repair > 0) ids.add('maintenance'); } else painter.grassCells.delete(c.id); }
-        if (m.mowing) ids.add('mowing-stripes'); await Promise.all([...ids].map(loadGrass)); break;
+        for (const c of m.cells) { if (c.active) painter.grassCells.set(c.id, c); else painter.grassCells.delete(c.id); }
+        break;
       }
       case 'init': {
         painter.setTerrain(m.terrain, m.height, m.waters);
@@ -71,6 +70,16 @@ const handle = async (m: ToWorker) => {
       }
       case 'paint': {
         await hasTextures;
+        // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
+        if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
+          const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
+          const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h), ids = new Set<string>();
+          for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
+            const c = painter.grassCells.get(y * (MAP / 4) + x); if (!c) continue;
+            ids.add(c.material); if (c.foot > 0.005) ids.add(c.foot > 0.45 ? 'crowd-heavy' : c.moisture > 0.8 ? 'mud-footprints' : 'crowd-light'); if (c.carts > 0.005) ids.add('cart-tracks'); if (c.divots > 0.005) ids.add(c.repair > 0 ? 'divots-repair' : 'divots-fresh'); else if (c.repair > 0) ids.add('maintenance');
+          }
+          if (painter.grassMowing) ids.add('mowing-stripes'); await Promise.all([...ids].map(loadGrass));
+        }
         const t0 = performance.now();
         const cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm');
         const bmp = cv.transferToImageBitmap();
