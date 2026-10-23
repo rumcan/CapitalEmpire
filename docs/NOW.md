@@ -9,10 +9,10 @@ Update this file **before** each edit and after each sub-step. If you are pickin
   the HUD's time of day; the owner sets the day's length and the town's traffic in the gear menu.
 
 ## Plan (tick as you go)
-- [ ] 1. `src/game/sim/trips.ts`: `demandAt(t, dayLen = DAY)` reads the hour as `(t / dayLen * 24) % 24`; `LotTrips.step/generate` make
+- [x] 1. `src/game/sim/trips.ts`: `demandAt(t, dayLen = DAY)` reads the hour as `(t / dayLen * 24) % 24`; `LotTrips.step/generate` make
   a town hour's trips every `dayLen / 24` sim seconds (not every 60), the hour's kind and demand from `sim.clock` with `dayLen`, and the
   trips per resident a town day times `sim.townTraffic` (default 1).
-- [ ] 2. `src/game/sim/sim.ts`: `dayLen = DAY` and `townTraffic = 1` fields; `fill()`'s profile uses `demandAt(this.clock, this.dayLen)`.
+- [x] 2. `src/game/sim/sim.ts`: `dayLen = DAY` and `townTraffic = 1` fields; `fill()`'s profile uses `demandAt(this.clock, this.dayLen)`.
 - [ ] 3. `src/game/sim/protocol.ts` + `sim.worker.ts`: a `{ t: 'townDay'; dayLen: number; traffic: number }` message sets them.
 - [ ] 4. `src/game/sim/client.ts`: `townDay(dayLen, traffic)` posts it and keeps `dayLen` for the clock.
 - [ ] 5. `src/game/engine.ts`: the owner's settings `townDay = { minutes, traffic }` (localStorage `capitalempire.townday`), sent on
@@ -27,7 +27,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 is a 4-minute town day at 1x; the season's month is 120 sim s, so about half a town day... the owner picks the length.
 
 ## Next action
-Step 1: edit `src/game/sim/trips.ts` (`demandAt`, `MEAN_DEMAND`, `LotTrips.step`, `LotTrips.generate`).
+Step 3: the `townDay` message in `src/game/sim/protocol.ts` (ToSim) and its case in `src/game/sim/sim.worker.ts` (sets `city.sim.dayLen` and `city.sim.townTraffic`).
 
 ## Done (newest first)
 - 2026-10-23: docs/LEAD.md and this file written; stock taken (see PROGRESS.md "2026-10-23: Claude leads the code").

@@ -6,7 +6,7 @@ import { Drivers, accACC, idm, iidm } from '../ext/drivers';
 import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, laneAt, nearestLink } from './lanes';
 import { MIN_GREEN, SIG, demandElsewhere, fixedToRed, phaseState, stepSignals } from './signals';
 import { Router } from './routing';
-import { LotTrips, Trips, demandAt, type Built } from './trips';
+import { DAY, LotTrips, Trips, demandAt, type Built } from './trips';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
 import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_Q, ENTRY_S, MAX_DWELL, MIN_DWELL, PD_CELL, SERVICE_S } from '../event/config';
@@ -111,6 +111,10 @@ export class Sim {
   target = 0;
   /** true: fill() aims at round(target * demandAt(t)) (the daily profile); arrivals bring the count down on their own */
   profile = false;
+  /** the town day: its length in sim seconds (DAY = the classic day; golf games set a shorter one, separate from the season, so the
+   *  commute peaks morning and evening) and the trips per resident a day times townTraffic (lot trips); see LEAD.md M1 */
+  dayLen = DAY;
+  townTraffic = 1;
   rnd: () => number;
   /** per slot driver parameters (ext/drivers): desired speed factor, headway, acceleration, braking, jam gap, MOBIL politeness and threshold;
    *  drawn from their own seeded stream at spawn (spawnAt, buses) */
@@ -1405,7 +1409,7 @@ export class Sim {
 
   /** up to FILL_TRIES spawn attempts per step while below the aim (the target, or the daily profile's share of it) */
   private fill() {
-    const aim = this.profile ? Math.round(this.target * demandAt(this.clock)) : this.target;
+    const aim = this.profile ? Math.round(this.target * demandAt(this.clock, this.dayLen)) : this.target;
     for (let n = 0; n < FILL_TRIES && this.active - this.busN < aim; n++) this.spawn();
   }
 }
