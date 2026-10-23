@@ -5,7 +5,7 @@ import { LIBRARY } from '../src/game/library';
 import { NIGHT_DEFAULT, clampNight, lightType, nightAt, nightDay } from '../src/game/night-light';
 
 test('night: dark from dusk to dawn by the clock, day between, smooth at the edges', () => {
-  const s = clampNight(null);
+  const s = clampNight({ mode: 'clock' }); // (the default is 'off', the owner's 2026-10-23 setting)
   assert.equal(nightAt(s, 12), 0); assert.equal(nightAt(s, 23), 1); assert.equal(nightAt(s, 2), 1);
   const dusk = nightAt(s, 19), dawn = nightAt(s, 6);
   assert.ok(dusk > 0 && dusk < 1 && dawn > 0 && dawn < 1);
@@ -16,7 +16,7 @@ test('night: dark from dusk to dawn by the clock, day between, smooth at the edg
 test('night: settings are held to their ranges, missing ones are the builder\'s', () => {
   assert.deepEqual(clampNight(null), NIGHT_DEFAULT);
   const n = clampNight({ mode: 'x' as never, strength: 5, tint: 'red', types: { lamp: { r: -3, i: 2 } } as never });
-  assert.equal(n.mode, 'clock'); assert.equal(n.strength, 1); assert.equal(n.tint, NIGHT_DEFAULT.tint);
+  assert.equal(n.mode, NIGHT_DEFAULT.mode); assert.equal(n.strength, 1); assert.equal(n.tint, NIGHT_DEFAULT.tint);
   assert.deepEqual(n.types.lamp, { r: 0, i: 1 }); assert.deepEqual(n.types.porch, NIGHT_DEFAULT.types.porch);
 });
 
@@ -28,10 +28,10 @@ test('night: the street lamp is a lamp, houses have porches, venues windows, and
 });
 
 test('by the clock the night falls on one day in `every`: a night belongs to the day of its dusk, the days between stay light', () => {
-  const s = clampNight({ every: 3 });
+  const s = clampNight({ mode: 'clock', every: 3 });
   assert.equal(s.every, 3); assert.equal(clampNight({ every: 0 }).every, 1); assert.equal(clampNight({ every: 99 }).every, 14);
   assert.equal(nightDay(s, 23, 6), 6); assert.equal(nightDay(s, 2, 7), 6); assert.equal(nightDay(s, 12, 7), 6);
   assert.equal(nightAt(s, 23, 6), 1); assert.equal(nightAt(s, 2, 7), 1);
   assert.equal(nightAt(s, 23, 7), 0); assert.equal(nightAt(s, 2, 8), 0); assert.equal(nightAt(s, 23, 8), 0);
-  assert.equal(nightAt(s, 23, 9), 1); assert.equal(nightAt(clampNight({ every: 1 }), 23, 7), 1); assert.equal(nightAt(s, 23), 1);
+  assert.equal(nightAt(s, 23, 9), 1); assert.equal(nightAt(clampNight({ mode: 'clock', every: 1 }), 23, 7), 1); assert.equal(nightAt(s, 23), 1);
 });

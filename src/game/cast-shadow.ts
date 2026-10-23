@@ -7,7 +7,7 @@ import file from './cast-shadow.json';
 /** the cast shadows: angle, the screen direction they fall in (degrees: 0 right, 90 down, 180 left); length, a shadow's length per unit of the
  *  sprite's height on screen; strength, how dark (0..1); on, drawn at all */
 export interface CastShadow { on: boolean; angle: number; length: number; strength: number }
-export const CAST_DEFAULT: CastShadow = { on: true, angle: 165, length: 0.55, strength: 0.32 };
+export const CAST_DEFAULT: CastShadow = { on: true, angle: 145, length: 0.9, strength: 0.6 };
 /** the ranges of the settings */
 export const CAST_RANGES = { angle: [0, 360], length: [0.1, 1.5], strength: [0, 1] } as const;
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
