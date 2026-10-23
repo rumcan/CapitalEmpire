@@ -1005,6 +1005,8 @@ export class City {
     const c = this.fanCounts(), by = this.surge ? this.surge.result(c) : [];
     let arrived = 0; for (const f of c.fans) arrived += f;
     L.byTown = by; L.arrived = arrived; L.rate = L.sent > 0 ? arrived / (L.sent * PARTY) : 0;
+    // the course's gates (golf, LEAD.md M2.1): what they measured, for the results (M2.4)
+    if (this.golf && this.crowd && this.gates.length) { const G = this.crowd.gate; let q = 0; for (const n of c.atGate) q += n; L.gates = { admitted: G.admitted, avgWait: G.admitted ? G.waitSum / G.admitted : 0, maxWait: G.waitMax, queuing: q }; }
     // the money: the payout (signed) is paid now in classic mode (golf mode replaces it with purse and sponsors), the net is the toll and payout less the upkeep
     L.perfect = L.rate >= PERFECT_RATE; L.payout = this.golf ? 0 : payout(L.rate, L.level);
     // the tickets: a ticket per fan at the doors (golf tier ticket price in golf mode, stadium ticket price in classic mode; booked as business takings)

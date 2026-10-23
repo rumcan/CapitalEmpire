@@ -13,7 +13,7 @@ export interface Stuck { label: string; x: number; y: number; loss: number }
  *  the road and signal upkeep and loan interest paid while it ran, $, the tolls taken while it ran, $ (absent when none), the stadium's tickets, $ (a ticket per fan at the doors at kick-off, see ticketPrice; absent when none),
  *  the payout (signed, $: see config payout), the net (toll + tickets + payout - upkeep, $),
  *  the previous run's rate at the same stadium level (null: none), the top bottlenecks at kick-off, whether it was perfect (rate >= PERFECT_RATE), and each town's counts at kick-off (see TownResult) */
-export interface RoundResult { level: number; run: number; sent: number; arrived: number; rate: number; upkeep: number; toll?: number; tickets?: number; payout: number; net: number; prevRate: number | null; stuck: Stuck[]; perfect: boolean; byTown: TownResult[] }
+export interface RoundResult { level: number; run: number; sent: number; arrived: number; /** golf, the course's gates at kick-off (LEAD.md M2.1): fans admitted, the mean and longest wait at a gate (sim s = game minutes), the fans still queuing */ gates?: { admitted: number; avgWait: number; maxWait: number; queuing: number }; rate: number; upkeep: number; toll?: number; tickets?: number; payout: number; net: number; prevRate: number | null; stuck: Stuck[]; perfect: boolean; byTown: TownResult[] }
 /** the game's first year: run 0 is START_YEAR (the calendar; the year is derived from the runs, so nothing new is saved) */
 export const START_YEAR = 1985;
 /** the year each signal tier opens (index = the tier: 0 fixed-time, 1 actuated, 2 adaptive) */
