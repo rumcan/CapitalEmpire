@@ -17,3 +17,6 @@ art/spectators/*/rigged.glb
 art/people3d/town_*/anim_walk.glb
 art/people3d/town_*/anim_idle.glb
 art/people3d/town_*/rigged.glb
+
+# nested checkouts (git worktrees) made inside the repo: never committed
+worktrees/
