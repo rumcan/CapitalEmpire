@@ -1,0 +1,14 @@
+Use case: stylized-concept
+Asset type: Capital Empire golf tournament service vehicle sprite sheet.
+Primary request: Create exactly FOUR complete isolated vehicles in a strict 2 by 2 arrangement on a square canvas, one complete vehicle wholly inside each quadrant, with generous fully transparent outer margins and a wide transparent cross gutter.
+Scene/backdrop: Genuine fully transparent PNG background outside all vehicle silhouettes.
+Top left: Compact white refrigerated catering delivery box truck with a deep-green lower stripe and a roof-mounted refrigeration chiller; no logos.
+Top right: Compact championship-green forklift carrying exactly one neatly secured pallet of bottled water cases on its front forks; no driver.
+Bottom left: Small white-and-green potable-water tanker service truck with a neatly coiled side hose and capped fittings attached to its body.
+Bottom right: Green golf driving-range ball collector utility buggy with a wide front roller cage holding practice balls; no driver.
+Camera: Every vehicle faces southeast, toward the lower right, consistently. Orthographic isometric camera with 45-degree azimuth and 30-degree elevation. Maintain one consistent camera and scale language across the four sprites.
+Style/medium: Detailed hand-painted 3D-like premium city-builder game illustration matching Capital Empire. Realistic, slightly charming proportions; crisp clear silhouettes; fine surface textures, thoughtful mechanical detail, warm metal fittings, tires and glass.
+Lighting/mood: Soft daylight from upper left.
+Color palette: Championship green, cream/white and warm metal.
+Composition/framing: Square sprite atlas, strict two rows and two columns. Whole vehicles including roof chiller, fork load, hoses, wheels and collector cage remain fully contained within their quadrants. Wide empty transparent separation between sprites. No detached props.
+Constraints: Exactly four vehicles, no people, no drivers, no logos, no letters or captions, no borders, no connecting ground, no ground tiles or bases, no backdrop, no fog, no glow, no broad shadows, no white or colored edge halos, no checkerboard. True alpha transparency, not a painted transparency pattern.
