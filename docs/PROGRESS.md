@@ -2269,3 +2269,9 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
   clock is frozen (the season's end, a round waiting). Browser-checked on a golf game: about 285 cars in the small hours and about 690 at
   the 09:00 rush (from 12-25 cars before); the night falls at 20:00 of the town day. Tests: two 'town day' tests in `tests/trips.test.ts`;
   885 pass. Note: the HUD's DAY still shows the season's day count (`game.day`), not the town day.
+- **M2.1 Course gates landed** (branch `lead/m2-crowds`): the golf course's entrance gates are the placed gate structures
+  (`Game.syncCourseGates` → the `gates` message → `City.setGates`); parked fans walk to the nearest gate (`Walker.stage` 2), queue there
+  (`Crowd.gateQ`, a FIFO of parties) and are admitted at the gates' lane rate (`City.admitGates`, `golf/venue.ts` gateRate, the Express
+  gates card); the queues are drawn like the shuttle stops'; kick-off records `RoundResult.gates` (admitted, mean and longest wait, still
+  queuing). With no gate placed the fans use the clubhouse plot's doors as before. Browser-checked on a test copy: all 168 arrived fans came
+  through the gate; at tier 1 a 4-lane gate never queues. Tests: `tests/gates.test.ts` (2); 887 pass. Findings and the M2 design: NOW.md.

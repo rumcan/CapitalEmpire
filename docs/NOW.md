@@ -4,7 +4,7 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 
 ## Current step
 - **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-crowds` (from `origin/main` 4c90e25).
-- **Sub-step now:** M2.1 Course gates and their queues.
+- **Sub-step now:** M2.2 Galleries (M2.1 Course gates landed on main).
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
 - **Start:** `City.startTournament` (city.ts) at the season's end: the crowd is `spectatorDemand(tier, rep)` (day 1's share, less the
@@ -44,10 +44,21 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - [x] d. The frame: the gate queues appended to `stops` (so the engine draws them), or their own array; the engine draws them.
 - [x] e. Engine: the gates from `golf.structures` (kind 'gate', `structureRect` middle, `STRUCTURE[type].capacity` lanes) sent on load and
   whenever the structures change.
-- [ ] f. typecheck, tests, build, browser check (place a gate, skip to the tournament, see the queue and the admitted count), land.
+- [x] f. typecheck, tests, build, browser check (place a gate, skip to the tournament, see the queue and the admitted count), land.
+
+## Plan for M2.2 Galleries (write the details here before you start)
+- [ ] a. Decide the gallery spots: per hole of the course (golf/holes.ts, holeview.ts: tees and greens; the featured holes), the placed
+  grandstands and tents (golf.structures, STRUCTURE kinds 'grandstand', 'food', 'drink', ...), the 18th green. A pure module
+  `src/game/golf/galleries.ts`: spots (x, y, capacity, kind) from the holes and structures; the share of the crowd each draws.
+- [ ] b. Admitted fans walk from the gate to a spot (a stage 3 walker in event/crowd.ts, or a gallery list in the crowd) and stand there
+  (counts per spot); later in the day they move between spots (follow the play: M2.5 ties it to the town day).
+- [ ] c. Send the spots to the sim (a message like `gates`), draw the standing crowds at street zoom (dense walker groups, the count).
+- [ ] d. Tests, browser check, land.
 
 ## Next action
-M2.1 f: `npm run build`, then the browser check: in a golf game place an entrance gate (Event tool, kind 'gate'; or `window.__game.placeEventStructure({ typeId: <a gate type id from golf/tents.ts STRUCTURE>, x, y, mode: 'rent' })` on owned land), press Skip to tournament, watch the fans walk to the gate and queue there (the 'n waiting' label), and read `window.__game.traffic` counts. b-e are in: the `gates` message (protocol, worker, `City.setGates`, `SimClient.setGates`), `City.walkDoor` to the nearest gate in golf mode, `City.admitGates` each step (gateRate per sim s, express card), the gate queues appended to `City.stopBuf` (index -1 - g, drawn like stops), `Game.syncCourseGates` (on load and on place / remove).
+M2.2 a: cut `lead/m2-galleries` from `origin/main`; read `golf/holes.ts`, `golf/holeview.ts`, `golf/venue.ts` (viewing) and how the
+engine sends the course to the worker (`City.setGolf` land), then write the galleries module's design here.
 
 ## Done (newest first)
+- 2026-10-23: **M2.1 Course gates landed** on main. Browser-checked on a test copy (port 5181, a fresh golf game, a gate placed by script between the car park and the clubhouse plot, Skip to tournament at 8x): the fans walked to the gate (stage 2 walkers seen), the gate admitted all 168 who arrived (`last.gates`: admitted 168, wait 0: a 4-lane gate admits 40 a second and they came about one a second, so no queue at tier 1); 168 of 360 fans arrived at all: the round's stuck list blames the town's 4-arm junctions (M3's job).
 - 2026-10-23: M2 findings and design written (above). M1 Living town landed on main (4c90e25).
