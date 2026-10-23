@@ -1,0 +1,13 @@
+{
+  "id": "red-maple-4views-v2",
+  "generator": "image_gen",
+  "prompt": "Edit the first reference sheet; the second reference is the original game scene style/camera. Keep exactly the same four red-orange autumn maple tree rotations and detailed branching designs. Make a clean production sprite sheet with four COMPLETE SEPARATE tree sprites, a 2x2 grid. Each tree must fit WITHIN ITS OWN QUADRANT with at least 48 pixels clear transparent margin to all quadrant edges, including the horizontal middle seam. Reduce each tree size uniformly enough to create generous gutters; never cut a tree or let leaves from one sprite enter another cell. No glow, ground, characters, shadows or backdrop. Preserve actual native alpha, fully transparent outside the tree silhouettes. Maintain NE SE SW NW order and original warm isometric game camera. All trunks and leaf tips complete. No text.",
+  "references": [
+    "art/grass-management/budget-props/red-maple-4views.png",
+    "art/grass-management/scene-reference/tournament-small-budget-master-v1.png"
+  ],
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-8e86e0b3-58cc-468e-966b-13b460825991.png",
+  "output": "art/grass-management/budget-props/red-maple-4views-v2.png",
+  "generated": "2026-10-23",
+  "review": "pending"
+}

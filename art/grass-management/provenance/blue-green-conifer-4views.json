@@ -1,0 +1,10 @@
+{
+  "id": "blue-green-conifer-4views",
+  "generator": "image_gen",
+  "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE tall blue-green conifer from immediately right of the picnic area near image point (1070,455). Dense layered irregular branch skirts, dark blue-green needles, visible brown trunk, warm highlights, realistic detailed town-builder foliage. Exactly the same tree rotated four ways, no snow, no ground mound.",
+  "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-bad650c5-cbd6-41db-84a0-02ccae46ff10.png",
+  "output": "art/grass-management/budget-props/blue-green-conifer-4views.png",
+  "generated": "2026-10-23",
+  "review": "pending"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "green-litter-bin-4views",
+  "generator": "image_gen",
+  "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE plain green cylindrical litter bin from the pair immediately right of the white gazebo row near image point (1025,432). Simple inexpensive ribbed plastic bin with dark open top and small molded rim, intact and clean. One bin per cell, no second bin or rack.",
+  "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-754ed203-8361-4991-9077-cd14de22426f.png",
+  "output": "art/grass-management/budget-props/green-litter-bin-4views.png",
+  "generated": "2026-10-23",
+  "review": "pending"
+}

@@ -1,0 +1,31 @@
+# T016 delivery: grass care and scene-derived budget sprites
+
+The catalogue now contains **100 independently generated ground materials**: 80 turf textures (16 families at five conditions) and 20 soil textures. There are **12 transparent decal sheets / 48 overlay variants**. `manifest.json` records native dimensions, alpha checks, file hashes and runtime files. Validated means file/alpha/packing validation, not a guarantee of seamless tiling or approval of every material in the game.
+
+Original PNGs are in `textures/` and `decals/`; WebP files are in `src/assets/ground/grass-management/`. Base textures are 1254 × 1254 native pixels, representing a broad approximately 16 m patch. The generator was asked for higher resolution but these files have not been upscaled. Ground textures are top-down because the renderer supplies the isometric projection. Source prompts and provenance are preserved.
+
+`scene-reference/tournament-small-budget-master-v1.png` derives from the supplied game screenshot. It establishes clean inexpensive white pop-up gazebos, plastic seating, modest timber furniture and ordinary bins. No new people are generated. Budget tier and age/condition are separate axes. `SPRITE-WORKFLOW.md` is the standing screenshot → complete venue scene → individual sprite workflow.
+
+Seven sheets provide four views each: gazebo with folding table, timber picnic table, white plastic chair, green litter bin, timber entrance sign, red-orange maple and blue-green conifer. `budget-props/individual/` contains **28 native transparent PNG crops**. Use `budget-props/manifest.json` for selected source versions, source rectangles, direction labels and estimated anchors. The corrected foliage sheets have clear cell boundaries. Tiny alpha noise is ignored for crop bounds; source pixel colours and alpha are preserved inside each crop. Tree/canopy symmetry limits visual proof of exact rotations. Final placement scale, ground anchors and all four rotations still require review in the game's prop library.
+
+`scene-sprite-queue.json` records generated sheets and the next colour/prop variants. Single tee markers and distance stakes remain pending scene-derived replacements; each must be independently placeable. Historical T015 worn/shanty sheets are superseded as the definition of a small-budget starter venue.
+
+## Runtime grass management
+
+The pure module is `src/game/ext/grass-management/`. `GrassManagement` registers real course paint and town-lawn polygons in an 8 m cell grid; tracks cover, health, moisture, nutrition, growth, compaction, foot/cart wear, small positioned divots and repairs; and applies daily weather/recovery plus paid mowing, water, fertiliser, aeration, seed, sod and repairs. Traffic follows actual town/venue walkers, entrance queues, galleries and vehicles on registered turf. Long respawn strokes are rejected. Only registered turf evolves; this is not a simulation of every unused base-grass tile in the valley.
+
+The owner's request for a complete system authorizes the task's minimal engine, UI, save and worker integration. Open **Grass** to inspect turf, select a radius or grass polygon and apply care. Expand Appearance and weather tuning to change condition-layer strength, material, recovery, traffic wear, rain, evaporation, temperature and temporary mowing marks. The default condition-layer strength is zero to preserve the owner's existing presets; enable Health colours or increase Condition layer to see the new appearance. Saved grass state is an independent optional field; existing paint tuples and studio controls remain intact.
+
+Workers receive local changed descriptors, clip overlays to actual turf, and decode only materials needed by visible chunks with a 16-image cache per worker. Base material, mowing, foot wear, cart wear and small player divots remain separate layers. Some catalogue decals are art-library options rather than automatic gameplay effects. There is no new golfer simulation here: gameplay can call the positioned divot hook, and the panel includes a manual divot control for verification.
+
+## Checks and limits
+
+- `npm ci`: completed once for this task.
+- TypeScript typecheck: passed.
+- Fresh compilation of every current `tests/*.test.ts`, then Node's full test runner with `--test-concurrency=1`: **905 passed, zero failures**, 151.4 seconds. Serial execution avoids the existing terrain-generation timing assertion failing under competing test processes. Grass-specific suite: 18 meaningful tests including thin polygons, local wear, care, invalid inputs, progression, deterministic saves and legacy defaults.
+- Production build passed with the first 87 installed materials; the complete-catalogue build is recorded separately in the final PR check results.
+- Built-game browser check: roughly 13,500–14,200 active cells; watering increased moisture from about 0.61 to 1; actual ground workers completed 18 bakes; a positioned divot persisted with strength 0.6 and selected material after save/reload; no ground-worker errors. The only recorded console error was the existing missing `/favicon.ico`. Checks of all 100 materials at every camera scale remain visual-review work.
+- The standard full-map GPU benchmark on AMD Radeon integrated graphics did not return its frame results within its 240-second window after constructing a roughly 387,000-prop benchmark world. No performance-budget pass is claimed. Smaller built-game care/worker checks completed, but large-map performance needs review before merging.
+- Opposite-edge differences are measured in the manifest; they do not prove seamlessness. Review tiling and art quality in context before promoting every catalogue choice. The transparent transition strip was regenerated to remove the original raised soil profile; both source versions remain available.
+
+Prepare assets with `node scripts/assets/prep-grass-management.mjs` and prop crops with `node scripts/assets/prep-grass-management-sprites.mjs`. These scripts preserve original artwork and do not manufacture missing assets. No documentation under `docs/` or main-branch history is edited by this task.

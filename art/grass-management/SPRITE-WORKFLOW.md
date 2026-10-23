@@ -49,7 +49,7 @@ The renderer projects top-down opaque base textures into the game plane; do not 
 
 ## Reusable scene prompt
 
-> Use the attached game screenshot as the exact reference for camera projection, zoom, on-screen scale, warm autumn lighting and existing town/course style. Show the entire golf tournament operating within this view, with a plausible white-tent food court near the clubhouse, visitors arriving from parking, walking through admission, queuing at food stalls and watching golf. Keep tents, people, cars, trees and furniture correctly proportioned. Preserve the existing course and street layout. This is the master scene for subsequent isolated game sprites; make the individual objects coherent and readable at this zoom.
+> Use the attached game screenshot as the exact reference for camera projection, zoom, on-screen scale, warm autumn lighting and existing town/course style. Show the entire golf tournament venue within this view, with a modest white pop-up tent food court near the clubhouse, simple admission furniture, basic signs and ordinary bins. Show the venue empty: no people, crowds, silhouettes or human figures. Keep tents, cars, trees and furniture correctly proportioned. Preserve the existing course and street layout. This is the master scene for subsequent isolated game sprites; make the individual objects coherent and readable at this zoom. Express a small budget through inexpensive construction and modest quantity, with clean usable equipment.
 
 ## Reusable sprite prompt
 

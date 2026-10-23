@@ -11,15 +11,15 @@
   "actual": {
     "materials": {
       "requested": 100,
-      "generated": 87,
-      "validated": 87,
-      "pending": 13
+      "generated": 100,
+      "validated": 100,
+      "pending": 0
     },
     "decalSheets": {
       "requested": 12,
-      "generated": 8,
-      "validated": 8,
-      "pending": 4
+      "generated": 12,
+      "validated": 12,
+      "pending": 0
     }
   },
   "sourcePreservation": "Original generated PNGs preserved; opaque WebP quality94, alpha decal WebP lossless; no procedural artwork, recolouring or edge alteration.",
@@ -3342,13 +3342,32 @@
       "worldMetres": 16,
       "source": "textures/sandy-soil-compacted.png",
       "runtime": "src/assets/ground/grass-management/sandy-soil-compacted.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/sandy-soil-compacted.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "9d94ca38bb9342437a0330f3c9aa6dac336f2b5cad6a3bf7204fccf6a863668d"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4495640,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 20.013,
+        "verticalMeanRgb255": 21.764,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "4de339fd70678935589d4488672eb289d3607f14775e18f0cd13a2d3b2877cb5",
+      "runtimeBytes": 996242,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 89,
@@ -3361,13 +3380,32 @@
       "worldMetres": 16,
       "source": "textures/sandy-soil-churned.png",
       "runtime": "src/assets/ground/grass-management/sandy-soil-churned.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/sandy-soil-churned.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "af797207477755ecac954e60511718b1d8266df805cfebfb972488d8a2ff63e5"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4496592,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 24.735,
+        "verticalMeanRgb255": 27.665,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "b4b7d5d4c97ad732992c1147645e95013f2e284b4c5928b72c73fa21f0d5294d",
+      "runtimeBytes": 1010464,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 90,
@@ -3380,13 +3418,32 @@
       "worldMetres": 16,
       "source": "textures/sandy-soil-prepared.png",
       "runtime": "src/assets/ground/grass-management/sandy-soil-prepared.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/sandy-soil-prepared.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine beige sandy soil with understated darker organic flecks and minuscule pale stones, no giant pebbles or dune landscape. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "43a1dfdb78ead48089a0a4874de95651fdc9c883d13b7e22166d2207ec4c6bf2"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4641402,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 24.393,
+        "verticalMeanRgb255": 23.504,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "75faf98df517943cca2b649492523b845b5a32cdbf7dbaa36b218daf780744bc",
+      "runtimeBytes": 1013516,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 91,
@@ -3399,13 +3456,32 @@
       "worldMetres": 16,
       "source": "textures/clay-soil-dry.png",
       "runtime": "src/assets/ground/grass-management/clay-soil-dry.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Dry granular fine surface with natural small tonal variation, dusty but not featureless, no cracked mega plates.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/clay-soil-dry.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Dry granular fine surface with natural small tonal variation, dusty but not featureless, no cracked mega plates.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Dry granular fine surface with natural small tonal variation, dusty but not featureless, no cracked mega plates.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "cfd779deee7dc29fee1f6fcb4d395c6469650c3a2a1fa81ad842d9bd1390d92a"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4330373,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 18.111,
+        "verticalMeanRgb255": 18.599,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "4e11df60b141f7a71a3e9f07858d6a99dd0c58079d3a9fa54cdb04896ba70edf",
+      "runtimeBytes": 961642,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 92,
@@ -3418,13 +3494,32 @@
       "worldMetres": 16,
       "source": "textures/clay-soil-damp.png",
       "runtime": "src/assets/ground/grass-management/clay-soil-damp.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Slightly damp rich darker earth, fine low-contrast subtle moisture, tiny uneven grain, no large puddles or shiny plastic finish.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/clay-soil-damp.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Slightly damp rich darker earth, fine low-contrast subtle moisture, tiny uneven grain, no large puddles or shiny plastic finish.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Slightly damp rich darker earth, fine low-contrast subtle moisture, tiny uneven grain, no large puddles or shiny plastic finish.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "d97c4c534d6dc1551517dc4ddbaf066d950ec4d76d9bab6d217f42281a9aefbf"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4252761,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 19.503,
+        "verticalMeanRgb255": 18.858,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "767f39f6b2e6b6ee681a7ca18633e31848637526630331f5db22d0181a92bb6c",
+      "runtimeBytes": 934082,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 93,
@@ -3437,13 +3532,32 @@
       "worldMetres": 16,
       "source": "textures/clay-soil-compacted.png",
       "runtime": "src/assets/ground/grass-management/clay-soil-compacted.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/clay-soil-compacted.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "b73024d8a62eb38d0f4a1120d79df63d44d1fe77803ffc91595364160e5f110a"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4104859,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 16.998,
+        "verticalMeanRgb255": 15.563,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "8057d55908c5723a0e5331c503407406b96cb8e81c97b141cca0d27a57bb3eee",
+      "runtimeBytes": 907354,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 94,
@@ -3456,13 +3570,32 @@
       "worldMetres": 16,
       "source": "textures/clay-soil-churned.png",
       "runtime": "src/assets/ground/grass-management/clay-soil-churned.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/clay-soil-churned.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "9589c117e29d7b26cfc45fc41248a6afa42103b87673a19b6b8c9bda5e39d49f"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4396233,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 21.426,
+        "verticalMeanRgb255": 23.904,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "753d1c729234552ada5247edbcf8af42ba5676f7713223b7996816ab837ea325",
+      "runtimeBytes": 991744,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 95,
@@ -3475,13 +3608,32 @@
       "worldMetres": 16,
       "source": "textures/clay-soil-prepared.png",
       "runtime": "src/assets/ground/grass-management/clay-soil-prepared.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/clay-soil-prepared.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: Fine reddish-brown clay earth with subtle compacted microtexture and minute mineral grit, no huge rocks or cliff faces. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "105b1982e855d4e6fed8d880534d42458dd5f4ac13c143db1c36926e5cacb89c"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4381755,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 20.933,
+        "verticalMeanRgb255": 20.871,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "6272571456759cf7386fac84943a05a822f1e0a44e0dfc039c32c05f3b59a540",
+      "runtimeBytes": 978126,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 96,
@@ -3494,13 +3646,32 @@
       "worldMetres": 16,
       "source": "textures/gravel-soil-dry.png",
       "runtime": "src/assets/ground/grass-management/gravel-soil-dry.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Dry granular fine surface with natural small tonal variation, dusty but not featureless, no cracked mega plates.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/gravel-soil-dry.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Dry granular fine surface with natural small tonal variation, dusty but not featureless, no cracked mega plates.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Dry granular fine surface with natural small tonal variation, dusty but not featureless, no cracked mega plates.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "0a9bab652658ab42052d7b353834142a797c00a279ebc074d4dacc3592c82d47"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4675126,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 24.296,
+        "verticalMeanRgb255": 23.511,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "615a5183e8b110e2f5a2e1c5de00415f6c14c026d800ae74849142007a8bffec",
+      "runtimeBytes": 1034808,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 97,
@@ -3513,13 +3684,32 @@
       "worldMetres": 16,
       "source": "textures/gravel-soil-damp.png",
       "runtime": "src/assets/ground/grass-management/gravel-soil-damp.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Slightly damp rich darker earth, fine low-contrast subtle moisture, tiny uneven grain, no large puddles or shiny plastic finish.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/gravel-soil-damp.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Slightly damp rich darker earth, fine low-contrast subtle moisture, tiny uneven grain, no large puddles or shiny plastic finish.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Slightly damp rich darker earth, fine low-contrast subtle moisture, tiny uneven grain, no large puddles or shiny plastic finish.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "ccbe9b5ee4bcc7af93a2e9acdb0030898844b76d64147cbc162358f780cbb1f7"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4540383,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 28.77,
+        "verticalMeanRgb255": 28.434,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "8c9bfb93f7b9f7e0b2f76c48c4334514109088d40a7640b0214aa2b8e98894c3",
+      "runtimeBytes": 1022342,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 98,
@@ -3532,13 +3722,32 @@
       "worldMetres": 16,
       "source": "textures/gravel-soil-compacted.png",
       "runtime": "src/assets/ground/grass-management/gravel-soil-compacted.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/gravel-soil-compacted.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Firm hard-packed ground, flattened fine grains, a few extremely faint tiny impressions but no continuous wheel tracks or crowd path baked in.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "12a0c4233bf2d10e04aa00723bf6e5f7ba85a59188916bd5b480a2d027872d79"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4742896,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 27.911,
+        "verticalMeanRgb255": 29.209,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "2bddea98d46f366157f1587cf21a95fd1d94d0b0ec35f7e4cc0319aceb9b10ce",
+      "runtimeBytes": 1046732,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 99,
@@ -3551,13 +3760,32 @@
       "worldMetres": 16,
       "source": "textures/gravel-soil-churned.png",
       "runtime": "src/assets/ground/grass-management/gravel-soil-churned.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/gravel-soil-churned.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Recently disturbed fine loose ground with tiny broken clods and fine irregular divot-sized pits, no huge earth piles or large tire patterns.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "b1c7087d9391e9ff47644a5b12e2fd414910c8243c3bc856601d2f7889974db6"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4564354,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 24.115,
+        "verticalMeanRgb255": 24.853,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "6e643475685a9b93cfc3994304926b5d6329cbf896968fe7581c3af2283b9cac",
+      "runtimeBytes": 1009940,
+      "nativeDimensionsPreserved": true
     },
     {
       "index": 100,
@@ -3570,13 +3798,32 @@
       "worldMetres": 16,
       "source": "textures/gravel-soil-prepared.png",
       "runtime": "src/assets/ground/grass-management/gravel-soil-prepared.webp",
-      "status": "pending",
+      "status": "validated",
       "prompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/textures/gravel-soil-prepared.png",
-        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet."
-      }
+        "exactPrompt": "Use case: photorealistic-natural. Asset type: Capital Empire large detailed TOP-DOWN GROUND MATERIAL TEXTURE for a golf-course and town management game. Request high-resolution square 2048 by 2048 if supported, preserve actual native generation size. A broad ZOOMED-OUT 16 by 16 metre patch seen perfectly vertically from directly above, orthographic, all-over material filling every pixel edge-to-edge. Hundreds of thousands of tiny blades/grains, realistic multi-scale detail but NO macro closeup. Tile-space material, not an isometric diamond, raised sample, diorama, whole golf hole or landscape overview. Flat diffuse overcast neutral daylight, no sun direction, shadows, vignette or central focal composition. Prefer naturally seamless matching opposite borders, avoid prominent repeating islands. Opaque surface, no transparency. No people, objects, buildings, equipment, golf balls, captions, labels, logos or watermarks. No paved paths, scene borders, bold stripes or crowd routes baked into base; those are separate decals. Match broad detail scale of the supplied project's fairway-sod/asphalt ground textures. Surface: A broad mix of fine dusty soil and numerous tiny irregular rounded gravel grains, restrained material color, stones remain small in the image. Condition: Neatly prepared fine seedbed or landscaped soil with uniform small crumbs and tiny mineral detail; very subtle shallow rake texture allowed, no deep geometry.Create one distinct natural ground texture; do not output a collage, grid or contact sheet.",
+        "sourceSha256": "d7846644bd6d6af04115cf1970f4fb5b27505886ff7d4eee6cba5d6c9aed19e3"
+      },
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 0,
+        "partial": 0,
+        "opaque": 1572516,
+        "valid": true
+      },
+      "sourceBytes": 4742896,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 25.616,
+        "verticalMeanRgb255": 25.909,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "d37677a452d50a8a82d7e46b86a6f27f9b00fadb61401255da7f1d2eba126bad",
+      "runtimeBytes": 1061278,
+      "nativeDimensionsPreserved": true
     }
   ],
   "decals": [
@@ -3936,56 +4183,176 @@
       "index": 9,
       "id": "dry-patches",
       "label": "Dryness and disease-like stress",
-      "status": "pending",
+      "status": "validated",
       "source": "decals/dry-patches.png",
       "prompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent natural irregular ground overlays: pale dry thatch patch, brown thin circular patch, light sparse heat-stress edge patch, tiny localized mossy thin-grass patch. No opaque green rectangular background.",
       "runtime": "src/assets/ground/grass-management/decals/dry-patches.webp",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/decals/dry-patches.png",
-        "exactPrompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent natural irregular ground overlays: pale dry thatch patch, brown thin circular patch, light sparse heat-stress edge patch, tiny localized mossy thin-grass patch. No opaque green rectangular background."
+        "exactPrompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent natural irregular ground overlays: pale dry thatch patch, brown thin circular patch, light sparse heat-stress edge patch, tiny localized mossy thin-grass patch. No opaque green rectangular background.",
+        "sourceSha256": "6af710471986c92a0e15c1f44c9e89acc954124691458ab272b575e0461659d3"
+      },
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 446532,
+        "partial": 1126332,
+        "opaque": 0,
+        "valid": true
+      },
+      "sourceBytes": 3460740,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 11.591,
+        "verticalMeanRgb255": 14.52,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "32bca6ff282e49e7df2aba40556188dcad27b7a667e2f416008c0e5e79f0bf40",
+      "runtimeBytes": 2251944,
+      "nativeDimensionsPreserved": true,
+      "layout": {
+        "rows": 2,
+        "columns": 2,
+        "order": [
+          "TL",
+          "TR",
+          "BL",
+          "BR"
+        ],
+        "alphaGuttersRequireVisualReview": true
       }
     },
     {
       "index": 10,
       "id": "maintenance",
       "label": "Turf maintenance marks",
-      "status": "pending",
+      "status": "validated",
       "source": "decals/maintenance.png",
       "prompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent overlays: sparse aeration hole cluster, fine topdressing sand scatter, small seeded repair patch, replaced turf plug seams around one small repair. No equipment.",
       "runtime": "src/assets/ground/grass-management/decals/maintenance.webp",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/decals/maintenance.png",
-        "exactPrompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent overlays: sparse aeration hole cluster, fine topdressing sand scatter, small seeded repair patch, replaced turf plug seams around one small repair. No equipment."
+        "exactPrompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent overlays: sparse aeration hole cluster, fine topdressing sand scatter, small seeded repair patch, replaced turf plug seams around one small repair. No equipment.",
+        "sourceSha256": "52dccc8a00fdbc54a661639689a777a0aff396a3de2d0b739e1f313bd91cd668"
+      },
+      "width": 1374,
+      "height": 1145,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 285363,
+        "partial": 1287867,
+        "opaque": 0,
+        "valid": true
+      },
+      "sourceBytes": 3382878,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 0.668,
+        "verticalMeanRgb255": 10.888,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "3777745601b320be34a13ab3ed385fb864aae95ecdb4839c3495e787b723f46d",
+      "runtimeBytes": 2280378,
+      "nativeDimensionsPreserved": true,
+      "layout": {
+        "rows": 2,
+        "columns": 2,
+        "order": [
+          "TL",
+          "TR",
+          "BL",
+          "BR"
+        ],
+        "alphaGuttersRequireVisualReview": true
       }
     },
     {
       "index": 11,
       "id": "leaves-litter",
       "label": "Natural fine debris",
-      "status": "pending",
+      "status": "validated",
       "source": "decals/leaves-litter.png",
       "prompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent tiny scattered overlays: restrained dry leaf fragments, tiny pine-needle scatter, small grass-clipping trail, sparse seed-head/flower petals. No unnatural rubbish or props.",
       "runtime": "src/assets/ground/grass-management/decals/leaves-litter.webp",
       "provenance": {
         "tool": "built-in imagegen",
         "source": "art/grass-management/decals/leaves-litter.png",
-        "exactPrompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent tiny scattered overlays: restrained dry leaf fragments, tiny pine-needle scatter, small grass-clipping trail, sparse seed-head/flower petals. No unnatural rubbish or props."
+        "exactPrompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four independent tiny scattered overlays: restrained dry leaf fragments, tiny pine-needle scatter, small grass-clipping trail, sparse seed-head/flower petals. No unnatural rubbish or props.",
+        "sourceSha256": "197cc8b974d69567e312b6cb969431c26febb87a2eec98f1a9a716e0d398c3d9"
+      },
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 778852,
+        "partial": 794012,
+        "opaque": 0,
+        "valid": true
+      },
+      "sourceBytes": 2116518,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 11.624,
+        "verticalMeanRgb255": 20.224,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "da712c250fbc2889d6fac456ce5caeb6bf752e8d5aec2926aa3322a0313e8c65",
+      "runtimeBytes": 1146012,
+      "nativeDimensionsPreserved": true,
+      "layout": {
+        "rows": 2,
+        "columns": 2,
+        "order": [
+          "TL",
+          "TR",
+          "BL",
+          "BR"
+        ],
+        "alphaGuttersRequireVisualReview": true
       }
     },
     {
       "index": 12,
       "id": "surface-transitions",
       "label": "Grass-soil edges",
-      "status": "pending",
-      "source": "decals/surface-transitions.png",
-      "prompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four separate narrow irregular transition strips: grass-to-loam edge, grass-to-sand edge, grass-to-gravel edge, fresh sod seam strip. Each isolated horizontal loose strip, transparent at outside boundaries.",
+      "status": "validated",
+      "source": "decals/surface-transitions-v2.png",
+      "prompt": "Correct the reference ground decal sheet. Four separate flat TOP DOWN ground overlays, strict 2x2 grid with generous fully transparent gutters. A perfectly vertical orthographic camera looking straight DOWN at the horizontal ground plane. No visible soil depth, exposed vertical dirt sides, floating chunks, raised sample, cliff edge or isometric perspective. The 4 subjects are narrow horizontal irregular feathered strips: short turf blended into fine loam, short turf blended into fine sand, short turf blended into tiny gravel, a narrow freshly laid sod seam. Show only tiny grass blades interspersed with fine grains and sparse organic ground speckles as if viewed from 16 metres above; no large pebbles. All marks are flat surface texture in one horizontal plane, with alpha between tiny blades and grains and transparency surrounding every strip. No rectangular opaque backgrounds, people, objects, text, labels or shadows. Neutral diffuse daylight. Do not reproduce the raised soil profile from the reference; change that projection to completely flat true top-down.",
       "runtime": "src/assets/ground/grass-management/decals/surface-transitions.webp",
       "provenance": {
         "tool": "built-in imagegen",
-        "source": "art/grass-management/decals/surface-transitions.png",
-        "exactPrompt": "Use case: stylized-concept / realistic ground material. Asset type: Capital Empire TOP-DOWN transparent GROUND DECAL SPRITE SHEET. EXACTLY FOUR separate flat ground overlays, rigid 2 by 2 grid, one overlay per cell, generous margins and clear transparent cross gutter. Camera perfectly vertical, no isometric diamond, no raised ground tile, no side faces. Broad tiny-blade/grain detail matching a zoomed-out 16-metre ground texture, natural colors and flat neutral daylight. True PNG alpha transparency outside every irregular mark and between fibres/grains; faded and feathered edges blend into existing lawn. These are localized marks laid ON an existing ground texture, not solid background lawn rectangles. No borders, labels, captions, watermark, sky, people, tools, checkerboard or scene. Four separate narrow irregular transition strips: grass-to-loam edge, grass-to-sand edge, grass-to-gravel edge, fresh sod seam strip. Each isolated horizontal loose strip, transparent at outside boundaries."
+        "source": "art/grass-management/decals/surface-transitions-v2.png",
+        "exactPrompt": "Correct the reference ground decal sheet. Four separate flat TOP DOWN ground overlays, strict 2x2 grid with generous fully transparent gutters. A perfectly vertical orthographic camera looking straight DOWN at the horizontal ground plane. No visible soil depth, exposed vertical dirt sides, floating chunks, raised sample, cliff edge or isometric perspective. The 4 subjects are narrow horizontal irregular feathered strips: short turf blended into fine loam, short turf blended into fine sand, short turf blended into tiny gravel, a narrow freshly laid sod seam. Show only tiny grass blades interspersed with fine grains and sparse organic ground speckles as if viewed from 16 metres above; no large pebbles. All marks are flat surface texture in one horizontal plane, with alpha between tiny blades and grains and transparency surrounding every strip. No rectangular opaque backgrounds, people, objects, text, labels or shadows. Neutral diffuse daylight. Do not reproduce the raised soil profile from the reference; change that projection to completely flat true top-down.",
+        "sourceSha256": "5a4ae9a71ef8c080d9d01ad880184498dbe8b1ea0985866043d4ccf92d9495e5"
+      },
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA",
+      "alpha": {
+        "clear": 600758,
+        "partial": 972106,
+        "opaque": 0,
+        "valid": true
+      },
+      "sourceBytes": 2719612,
+      "oppositeEdgeError": {
+        "horizontalMeanRgb255": 20.495,
+        "verticalMeanRgb255": 22.525,
+        "diagnosticOnly": true
+      },
+      "runtimeSha256": "b668b192552875bef37243bf750e9bb39f27d5e9264cc9edc00b14666e25034d",
+      "runtimeBytes": 1870892,
+      "nativeDimensionsPreserved": true,
+      "layout": {
+        "rows": 2,
+        "columns": 2,
+        "order": [
+          "TL",
+          "TR",
+          "BL",
+          "BR"
+        ],
+        "alphaGuttersRequireVisualReview": true
       }
     }
   ]

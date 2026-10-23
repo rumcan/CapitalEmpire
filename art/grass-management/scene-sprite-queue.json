@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+  "rule": "No new people. Budget construction and age are separate axes.",
+  "angles": [
+    "NE",
+    "SE",
+    "SW",
+    "NW"
+  ],
+  "sheet": "2x2",
+  "assets": [
+    {
+      "id": "timber-picnic-table-4views",
+      "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+      "locator": "~956,451",
+      "footprintMetres": [
+        2,
+        1.5
+      ],
+      "status": "generated",
+      "alphaReview": "four nonempty cells checked",
+      "gameReview": "pending",
+      "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. The modest honey-brown timber picnic table with attached benches, on lawn just below the white gazebo row near image point (956,451). One simple table with two fixed benches is one placeable assembly. Basic straight planks and triangular supports, clean economical usable timber; no luxury fittings."
+    },
+    {
+      "id": "white-plastic-chair-4views",
+      "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+      "locator": "~1010,452",
+      "footprintMetres": [
+        0.6,
+        0.6
+      ],
+      "status": "generated",
+      "alphaReview": "four nonempty cells checked",
+      "gameReview": "pending",
+      "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE white molded plastic patio chair from the small seating group to the right of the picnic table, near image point (1010,452). Inexpensive stackable monobloc chair with slatted curved back and integral arm rests. One chair per cell, no table or other chair. Front, sides, and genuine back must read differently."
+    },
+    {
+      "id": "green-litter-bin-4views",
+      "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+      "locator": "~1025,432",
+      "footprintMetres": [
+        0.6,
+        0.6
+      ],
+      "status": "generated",
+      "alphaReview": "four nonempty cells checked",
+      "gameReview": "pending",
+      "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE plain green cylindrical litter bin from the pair immediately right of the white gazebo row near image point (1025,432). Simple inexpensive ribbed plastic bin with dark open top and small molded rim, intact and clean. One bin per cell, no second bin or rack."
+    },
+    {
+      "id": "timber-entrance-sign-4views",
+      "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+      "locator": "~848,435",
+      "footprintMetres": [
+        1.8,
+        0.4
+      ],
+      "status": "generated",
+      "alphaReview": "four nonempty cells checked",
+      "gameReview": "pending",
+      "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE simple timber-framed dark green freestanding rectangular entrance sign from the left end of the tent forecourt, near image point (848,435). Two plain square wooden uprights, modest flat green board with a small crossed-clubs emblem on its front, unpainted plain board backing and rear braces visible in rear views. No letters or text. Clean economical construction."
+    },
+    {
+      "id": "red-maple-4views",
+      "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+      "locator": "~926,534",
+      "footprintMetres": [
+        5,
+        5
+      ],
+      "status": "generated",
+      "alphaReview": "four nonempty cells checked",
+      "gameReview": "pending",
+      "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE mature red-orange maple from the lower central lake edge near image point (926,534). Faithfully preserve the reference's dense scarlet and orange autumn leaf clusters, open irregular silhouette, visible branching trunk, finely modeled painterly 3D foliage. No lawn or leaf carpet underneath. Exactly the same tree rotated four ways, retain asymmetric branching.",
+      "source": "budget-props/red-maple-4views-v2.png"
+    },
+    {
+      "id": "blue-green-conifer-4views",
+      "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+      "locator": "~1070,455",
+      "footprintMetres": [
+        4,
+        4
+      ],
+      "status": "generated",
+      "alphaReview": "four nonempty cells checked",
+      "gameReview": "pending",
+      "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. ONE tall blue-green conifer from immediately right of the picnic area near image point (1070,455). Dense layered irregular branch skirts, dark blue-green needles, visible brown trunk, warm highlights, realistic detailed town-builder foliage. Exactly the same tree rotated four ways, no snow, no ground mound.",
+      "source": "budget-props/blue-green-conifer-4views-v2.png"
+    }
+  ],
+  "future": [
+    {
+      "subject": "pop-up-gazebo",
+      "colors": [
+        "white",
+        "green",
+        "blue"
+      ],
+      "budget": "basic folding frame and fabric",
+      "views": 4
+    },
+    {
+      "subject": "plastic-chair",
+      "colors": [
+        "white",
+        "green",
+        "charcoal"
+      ],
+      "views": 4
+    },
+    {
+      "subject": "plastic-bin",
+      "colors": [
+        "green",
+        "blue",
+        "grey"
+      ],
+      "views": 4
+    },
+    {
+      "subject": "folding-table",
+      "colors": [
+        "white",
+        "grey"
+      ],
+      "views": 4
+    },
+    {
+      "subject": "single-tee-marker",
+      "colors": [
+        "red",
+        "white",
+        "yellow",
+        "blue"
+      ],
+      "views": 4,
+      "placement": "One marker only; no paired assemblies",
+      "requires": "Add fixture to a full scene before deriving"
+    },
+    {
+      "subject": "single-distance-stake",
+      "colors": [
+        "white",
+        "green"
+      ],
+      "views": 4,
+      "placement": "One stake only",
+      "requires": "Add fixture to a full scene before deriving"
+    },
+    {
+      "subject": "rope-barrier-section",
+      "colors": [
+        "natural"
+      ],
+      "views": 4,
+      "requires": "Scene extension"
+    },
+    {
+      "subject": "folding-ticket-table",
+      "colors": [
+        "white"
+      ],
+      "views": 4,
+      "requires": "Scene extension"
+    },
+    {
+      "subject": "golf-cart",
+      "colors": [
+        "white",
+        "green",
+        "blue"
+      ],
+      "views": 4,
+      "requires": "Scene extension; empty vehicle"
+    },
+    {
+      "subject": "golden-maple",
+      "variants": [
+        "young",
+        "mature"
+      ],
+      "views": 4
+    },
+    {
+      "subject": "low-autumn-shrub",
+      "variants": [
+        "red",
+        "gold",
+        "green"
+      ],
+      "views": 4
+    }
+  ]
+}

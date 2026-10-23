@@ -1,0 +1,10 @@
+{
+  "id": "timber-picnic-table-4views",
+  "generator": "image_gen",
+  "prompt": "Use case: game-asset. Use the attached generated Capital Empire master scene as the required style, projection, lighting and design reference. Reconstruct the named visible subject as an isolated isometric game prop. Match the scene camera elevation and warm autumn illumination. Clean functional SMALL-BUDGET construction. Exactly FOUR sprites in a uniform 2-by-2 sheet, one complete object per cell, same object at true 90-degree world rotations in reading order NE, SE, SW, NW. Keep camera and light fixed as the object rotates; preserve design and proportions; never mirror a front view as a rear view. Upper cells front/side views, lower cells show genuine rear/other-side construction. All feet/trunk bases visible, generous transparent gutters and outer margins. True transparent PNG alpha, no ground, platform, scenery, labels, checkerboard, halo or large cast shadows. No people, figures, crowds, mannequins, characters or faces. This sheet must contain just the named subject in four views. The modest honey-brown timber picnic table with attached benches, on lawn just below the white gazebo row near image point (956,451). One simple table with two fixed benches is one placeable assembly. Basic straight planks and triangular supports, clean economical usable timber; no luxury fittings.",
+  "reference": "art/grass-management/scene-reference/tournament-small-budget-master-v1.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-f77a36ef-6cff-4bf1-9930-1e4c024b4161.png",
+  "output": "art/grass-management/budget-props/timber-picnic-table-4views.png",
+  "generated": "2026-10-23",
+  "review": "pending"
+}

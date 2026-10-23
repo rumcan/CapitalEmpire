@@ -1,0 +1,12 @@
+{
+  "id": "surface-transitions-v2",
+  "generator": "image_gen",
+  "prompt": "Correct the reference ground decal sheet. Four separate flat TOP DOWN ground overlays, strict 2x2 grid with generous fully transparent gutters. A perfectly vertical orthographic camera looking straight DOWN at the horizontal ground plane. No visible soil depth, exposed vertical dirt sides, floating chunks, raised sample, cliff edge or isometric perspective. The 4 subjects are narrow horizontal irregular feathered strips: short turf blended into fine loam, short turf blended into fine sand, short turf blended into tiny gravel, a narrow freshly laid sod seam. Show only tiny grass blades interspersed with fine grains and sparse organic ground speckles as if viewed from 16 metres above; no large pebbles. All marks are flat surface texture in one horizontal plane, with alpha between tiny blades and grains and transparency surrounding every strip. No rectangular opaque backgrounds, people, objects, text, labels or shadows. Neutral diffuse daylight. Do not reproduce the raised soil profile from the reference; change that projection to completely flat true top-down.",
+  "references": [
+    "art/grass-management/decals/surface-transitions.png"
+  ],
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-3b20b363-2dba-4f31-b9b3-74df9bc17d2f.png",
+  "output": "art/grass-management/decals/surface-transitions-v2.png",
+  "generated": "2026-10-23",
+  "review": "pending"
+}
