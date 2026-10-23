@@ -5,6 +5,7 @@ import { BUSINESSES } from '../src/game/business/catalogue';
 import { LIBRARY, ATLAS_PAGES } from '../src/game/library';
 import { BUSINESS_THUMBS } from '../src/game/business-library';
 import { hasLettering } from '../src/game/lots/lettering';
+import { unmirror } from '../src/game/views-library';
 const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
 
 test('every catalogue business has delivered thumbnails and world sprites inside its parcel', () => {
@@ -22,15 +23,20 @@ test('every catalogue business has delivered thumbnails and world sprites inside
   }
 });
 
-test('R mirrors the same composition and exchanges world axes without changing sprite scale', () => {
+test('R mirrors the same composition and exchanges world axes without changing sprite scale (the four-view art turns instead)', () => {
   const b = BUSINESSES.find(b => b.id === 'golf')!;
   const normal = businessArt({ id: 1, type: b.id, x: 20, y: 30, ...b.footprint }, LIBRARY, index);
   const turned = businessArt({ id: 1, type: b.id, x: 20, y: 30, w: b.footprint.h, h: b.footprint.w }, LIBRARY, index);
   assert.equal(normal.length, turned.length);
   for (let i = 0; i < normal.length; i++) {
-    assert.equal(turned[i].item, normal[i].item);
-    assert.equal(turned[i].scale, normal[i].scale);
-    assert.equal(turned[i].flip, !hasLettering(LIBRARY[turned[i].item]!.id, LIBRARY[turned[i].item]!.name));
+    // four-view art turns to its partner view, unflipped (sized to the same share of the parcel); the rest mirrors as before
+    const [id, flip] = unmirror(LIBRARY[normal[i].item]!.id, true);
+    if (!flip) { assert.equal(LIBRARY[turned[i].item]!.id, id); assert.equal(turned[i].flip, false); }
+    else {
+      assert.equal(turned[i].item, normal[i].item);
+      assert.equal(turned[i].scale, normal[i].scale);
+      assert.equal(turned[i].flip, !hasLettering(LIBRARY[turned[i].item]!.id, LIBRARY[turned[i].item]!.name));
+    }
     assert.ok(Math.abs((turned[i].x - 20) - (normal[i].y - 30)) < 1e-8);
     assert.ok(Math.abs((turned[i].y - 30) - (normal[i].x - 20)) < 1e-8);
   }

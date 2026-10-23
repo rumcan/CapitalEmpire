@@ -1,0 +1,10 @@
+{
+ "id": "business:golf-halfway-pavilion",
+ "version": "business-golf-halfway-pavilion-4views-v2",
+ "files": {
+  "NE": "0783e2307c1fcc4df9d131edec709e4800efe8e2dd86abfd929bb7fafd60f15b",
+  "SE": "ea5532181286d3f66de972cf7d58e6e71c2d5425d2c158ff44b997dce7ad5fa0",
+  "SW": "ca7bf1a920f3c1da60c19007cc64026fb2c7b86bba34b94632d426446b5d9ea4",
+  "NW": "6250d66df2c61f506dc2268583fcfe224d2ec16d99716bcb27dfc5758b4dd37a"
+ }
+}

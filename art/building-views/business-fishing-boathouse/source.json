@@ -1,0 +1,10 @@
+{
+ "id": "business:fishing-boathouse",
+ "version": "business-fishing-boathouse-4views-v1",
+ "files": {
+  "NE": "e2c1875a18f53205ddf8c99e7b7a6d906b29934b04ac3660d4f6f0bbb102dd1c",
+  "SE": "00e1e2d25a50172f968241faee2e0d03fb7ced511f6ebd7be013420305463591",
+  "SW": "a368e348b79ac6f856b1d201493a5b65b717eca34b94c6ef2fd16f0cb4036ad3",
+  "NW": "d1a484a88a374a6a9ce58b8e5cedd48fda1a47fb99cf5d04a66cf3e43dafe94a"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "business:golf-clubhouse",
+ "version": "business-golf-clubhouse-4views-v1",
+ "files": {
+  "NE": "80145907925e5693b77ffb2250948d30a48dc050fd973c5d6de52b50041e9fb3",
+  "SE": "c6b00270d597c79fc4a04ae50d0fc22275c86c28cd9ee3e012c17b69663e0c7b",
+  "SW": "88c170c377c74db1a51c8f825c5c4fea71d1e797fdf07c6d27cb76e200a6114a",
+  "NW": "f475b4c4ec3a79f77186068cc7ae9948276a23a99d1fd54c41fa7d4e57741b2f"
+ }
+}

@@ -46,10 +46,16 @@ if (fs.existsSync(GEN)) {
   }
 }
 
-// the original sprites (one item per line in the generated libraries) and the owner scales
+// the original sprites (every {"id": ...} object literal in the generated libraries) and the owner scales
 const items = new Map();
-for (const f of ['src/game/library.ts', 'src/game/east-library.ts'])
-  for (const line of fs.readFileSync(path.join(root, f), 'utf8').split('\n')) { const m = /^\s*(\{"id":.*\}),?$/.exec(line); if (m) { const it = JSON.parse(m[1]); items.set(it.id, it); } }
+for (const f of ['library', 'east-library', 'business-library', 'construction-library', 'golf-library', 'cars-library']) {
+  const text = fs.readFileSync(path.join(root, `src/game/${f}.ts`), 'utf8');
+  for (let i = text.indexOf('{"id":"'); i >= 0; i = text.indexOf('{"id":"', i + 1)) {
+    let depth = 0, quote = false, j = i;
+    for (; j < text.length; j++) { const c = text[j]; if (quote) { if (c === '\\') j++; else if (c === '"') quote = false; } else if (c === '"') quote = true; else if (c === '{') depth++; else if (c === '}' && --depth === 0) break; }
+    const it = JSON.parse(text.slice(i, j + 1)); if (!items.has(it.id)) items.set(it.id, it); i = j;
+  }
+}
 const scales = fs.readFileSync(path.join(root, 'src/game/lots/scales.ts'), 'utf8');
 const owner = id => +(new RegExp(`"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}": ([0-9.]+)`).exec(scales)?.[1] ?? 1);
 
@@ -67,19 +73,23 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
     const m = meas?.views?.[v], door = m?.door && m.sha256 === files[v] ? m.door : 0;
     views.push({ dir: v, png, W: info.width, H: info.height, bx: bx / n, by: by + 1, door, s: door ? measures.standardDoor / (door * k) : 0 });
   }
-  const measured = views.filter(x => x.s);
+  // business artwork is drawn at a share of its parcel (business/art.ts), whatever its size here: it keeps the original width, no door gauge
+  const business = base.kind === 'business', measured = business ? [] : views.filter(x => x.s);
   if (measured.length) { const mean = measured.reduce((a, x) => a + x.s, 0) / measured.length; for (const x of views) if (!x.s) x.s = mean; }
-  else { unmeasured.push(`${id} (${version})`); const s = base.quad[2] / views[0].W; for (const x of views) x.s = s; }
-  const f = views[0].W * views[0].s / (base.quad[2] - base.quad[0]);
+  else { if (!business && !meas?.noGauge) unmeasured.push(`${id} (${version})`); const s = (base.quad[2] - base.quad[0]) / views[0].W; for (const x of views) x.s = s; }
+  const f = business ? 1 : views[0].W * views[0].s / (base.quad[2] - base.quad[0]);
   for (const x of views) {
     const turn = x.dir === 'SE' || x.dir === 'NW';
     x.boxes = base.boxes.map(b => turn ? { hx: +(b.hy * f).toFixed(2), hy: +(b.hx * f).toFixed(2), dx: 0, dy: 0 } : { hx: +(b.hx * f).toFixed(2), hy: +(b.hy * f).toFixed(2), dx: 0, dy: 0 });
     const { hx, hy } = x.boxes[0];
-    x.w = x.W * x.s; x.h = x.H * x.s; x.ax = x.bx * x.s - 32 * (hx - hy); x.ay = x.by * x.s - 16 * (hx + hy);
-    x.glows = (await findGlows(x.png, { id, w: x.w, cat: base.cat })).map(g => ({ x: +g.x.toFixed(1), y: +g.y.toFixed(1), r: +g.r.toFixed(1) }));
+    x.w = x.W * x.s; x.h = x.H * x.s;
+    // business art: the ground point is a quarter of the width above the picture's lowest point (a footprint diamond as wide as the art)
+    if (business) { x.ax = x.bx * x.s; x.ay = x.by * x.s - x.w / 4; }
+    else { x.ax = x.bx * x.s - 32 * (hx - hy); x.ay = x.by * x.s - 16 * (hx + hy); }
+    x.glows = base.glows?.length ? (await findGlows(x.png, { id, w: x.w, cat: base.cat })).map(g => ({ x: +g.x.toFixed(1), y: +g.y.toFixed(1), r: +g.r.toFixed(1) })) : undefined;
   }
   subjects.push({ id, slug, version, base, views, f });
-  console.log(`${id} ${version}: doors ${views.map(x => `${x.dir} ${x.door || '-'}`).join(', ')}; scale ${views.map(x => x.s.toFixed(3)).join('/')}; width ${base.quad[2].toFixed(0)} -> ${views[0].w.toFixed(0)} (footprint x${f.toFixed(2)})`);
+  console.log(`${id} ${version}: ${business ? 'business art, original width' : `doors ${views.map(x => `${x.dir} ${x.door || '-'}`).join(', ')}`}; scale ${views.map(x => x.s.toFixed(3)).join('/')}; width ${base.quad[2].toFixed(0)} -> ${views[0].w.toFixed(0)} (footprint x${f.toFixed(2)})`);
 }
 
 // 4. shelf-pack onto as many 2048 pages as it takes
@@ -129,6 +139,13 @@ fs.writeFileSync(path.join(root, 'src/game/views-library.ts'), [
   `const APPEND: LibItem[] = [\n${append.map(it => '  ' + JSON.stringify(it)).join(',\n')}\n];`,
   '/** the east-facing (+X) view of the buildings without east art: [sprite id, its SE view] (lettering.ts EAST_FACING) */',
   `export const VIEW_EAST: [string, string][] = ${JSON.stringify(east)};`,
+  '/** the four-view art is never mirrored: a flip (the world axes swapped) is the building turned, NE <-> SE and SW <-> NW */',
+  `const VIEW_TURN: Record<string, string> = ${JSON.stringify(Object.fromEntries(subjects.flatMap(({ id }) => {
+    const se = items.has(`east:${id}`) ? `east:${id}` : `view:${id}:se`, sw = `view:${id}:sw`, nw = `view:${id}:nw`;
+    return [[id, se], [se, id], [sw, nw], [nw, sw]];
+  })))};`,
+  '/** a sprite and flip as it is drawn: the four-view art turned to its partner view, unflipped; anything else as it is */',
+  'export function unmirror(id: string, flip: boolean): [string, boolean] { const t = flip ? VIEW_TURN[id] : undefined; return t ? [t, false] : [id, flip]; }',
   '/** Last of the appends: replaced sprites keep their index (saves hold it) and take the art of the new pages; the new views go at the end. */',
   'export function appendViews(library: LibItem[], pages: string[][]) {',
   '  const first = pages.length; pages.push(...PAGES);',

@@ -1,0 +1,10 @@
+{
+ "id": "business:golf-cart-garage",
+ "version": "business-golf-cart-garage-4views-v2",
+ "files": {
+  "NE": "24a447b9e44c0dac40426aa87b668108c65dbfe33bab3f9b4ac6b5ec20c5acdb",
+  "SE": "00437129b6210695ce133c3211867e10c3e4539469aff94bb4998a85458dfa60",
+  "SW": "956ee4019621afcee70c5018ae1f2f2402a6c49cbe748b22fb882044780350ed",
+  "NW": "c9dfc586e3329ec4bd0e002f299f7c9af33a2089ebd32c105cf5d06ef4cda55b"
+ }
+}

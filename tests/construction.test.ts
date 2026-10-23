@@ -8,6 +8,7 @@ import { LIBRARY, ATLAS_PAGES } from '../src/game/library';
 import { compose, type LotGeom, type Placed } from '../src/game/lots/compose';
 import { OWNER_SCALE, REMOVED_IDS } from '../src/game/lots/scales';
 import { LU, LV } from '../src/game/lots/town';
+import { VIEW_ART } from '../src/game/views-library';
 
 const MATERIALS = ['timber-stack', 'brick-pallet', 'block-pallet', 'roof-tile-pallet', 'gravel-pile', 'sand-pile', 'cement-bag-pallet', 'tile-crate', 'pipe-bundle', 'steel-beams', 'rebar-bundle', 'pallet-stack', 'stone-pallet', 'mortar-tools', 'lumber-stack', 'mesh-rolls'].map(id => `construction:${id}`);
 const IDS = [...MATERIALS, 'construction:digger'], removed = new Set<string>(REMOVED_IDS);
@@ -34,8 +35,9 @@ function footprint(p: Placed): number[] {
 
 test('construction artwork is appended once after existing business art and honors studio removals', () => {
   const lastBusiness = LIBRARY.reduce((last, it, i) => it.id.startsWith('business:') ? i : last, -1);
-  // Construction art has its own appended page, after every business page (later sets such as golf may follow it).
-  const lastBusinessPage = Math.max(...LIBRARY.filter(it => it.id.startsWith('business:')).map(it => it.tex[0]));
+  // Construction art has its own appended page, after every business page (later sets such as golf may follow it; the business art redrawn
+  // from the four-view sheets, VIEW_ART, sits on the views pages appended last).
+  const lastBusinessPage = Math.max(...LIBRARY.filter(it => it.id.startsWith('business:') && !VIEW_ART.has(it.id)).map(it => it.tex[0]));
   const pages = new Set<number>();
   for (const id of IDS) {
     const entries = LIBRARY.filter(it => it.id === id);

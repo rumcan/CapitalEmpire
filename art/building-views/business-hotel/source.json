@@ -1,0 +1,10 @@
+{
+ "id": "business:hotel",
+ "version": "business-hotel-4views-v1",
+ "files": {
+  "NE": "7bba6ef2d932abd6a492a29b3dfb05ae209fcaf39f61033fac50bec9f9c3d9fc",
+  "SE": "f5072405d6220dd06baf4ab365923b824a617ab43d63dde8737cb231035e8885",
+  "SW": "d207a45cf86c0d52b7d975a6200658adc00eb3c307d2f5bd7bc3bca44a465176",
+  "NW": "3638ab6d2c2e0f719a2cbc01484e924b55c90110808f4758912dbd3bf17fc6c3"
+ }
+}

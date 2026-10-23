@@ -1,0 +1,10 @@
+{
+ "id": "business:buscompany",
+ "version": "business-buscompany-4views-v1",
+ "files": {
+  "NE": "1cb914c3fa9a01ab63233ccd45a6af3f274291eb3d71d84d650603ed7b95d113",
+  "SE": "80cd589bb77fe449cd5ea36306655112ac7f85d99e4a3ff9a3f1bd74e17045f0",
+  "SW": "6bb977cb0fa3036af8f19ae1cc422ff6fe943586cd910aace44e6aa74352583e",
+  "NW": "23d195df73539bf342b6c40b76b368ecdcaa6de4698547fa360e2312fef67ba2"
+ }
+}

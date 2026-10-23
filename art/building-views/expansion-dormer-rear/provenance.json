@@ -1,0 +1,16 @@
+{
+  "id": "expansion:dormer-rear",
+  "sheet": "art/theme-consistency/generated/buildings/expansion-dormer-rear-4views-v2.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-06b11437-a7c8-4f81-ad4f-fb28bb3e07f9.png",
+  "prompt": "Use case: precise-object-edit. Input roles: image 1 = owner-selected dusk art theme; image 2 = editable existing sprite sheet; image 3 = camera rotation diagram ONLY, never copy diagram artwork or labels; image 4 = original game asset identity. Produce a corrected transparent PNG of the SAME single subject with four sprites in a square 2x2 grid. FIX FOUR ANGLES, especially BOTTOM-RIGHT which repeats top-left. Preserve this green cottage's model and its two different porches. In bottom-right show the FRONT GABLE WITH BIG PORCH ON SCREEN-LEFT and the opposite long side wall extending up-right. Its long roof ridge must RISE toward screen-right, unlike the down-right ridge of top-left. Use reference 3's four exact rotated box projections as CAMERA/GEOMETRY GUIDE ONLY; never copy box colors, text or markers into the actual art. The cottage retains green siding, matching stone base, lit windows, slate roof, chimney and vents through all rotations. Reconstruct hidden walls, never mirror pixels or rotate lighting.\nMaintain the original building identity, fixed parallel 2:1 isometric camera and warm low SCREEN UPPER-RIGHT sunlight; tiny shadows screen lower-left. Keep early dusk with warm architectural lights already on, enough daylight to see all materials. NO night or moonlight. NO people anywhere. NO Halloween pumpkins, cobwebs, wreaths, spooky signs, decorative string-light garlands. Four COMPLETE sprites with broad clear gutters and margins, shrink uniformly to fit rather than cut off any part. Transparent alpha outside silhouettes; no ground tile, labels, frames, diagram or backdrop.",
+  "referencedImagePaths": [
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/expansion-dormer-rear-4views-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/expansion-dormer-rear.configured@2x.png"
+  ],
+  "generator": "built-in image_gen",
+  "generatedAt": "2026-10-23T15:59:33.818Z",
+  "status": "generated-awaiting-visual-review",
+  "correction": "FIX FOUR ANGLES, especially BOTTOM-RIGHT which repeats top-left. Preserve this green cottage's model and its two different porches. In bottom-right show the FRONT GABLE WITH BIG PORCH ON SCREEN-LEFT and the opposite long side wall extending up-right. Its long roof ridge must RISE toward screen-right, unlike the down-right ridge of top-left. Use reference 3's four exact rotated box projections as CAMERA/GEOMETRY GUIDE ONLY; never copy box colors, text or markers into the actual art. The cottage retains green siding, matching stone base, lit windows, slate roof, chimney and vents through all rotations. Reconstruct hidden walls, never mirror pixels or rotate lighting."
+}

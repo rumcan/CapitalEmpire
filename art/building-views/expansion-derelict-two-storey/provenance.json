@@ -1,0 +1,16 @@
+{
+  "id": "expansion:derelict-two-storey",
+  "sheet": "art/theme-consistency/generated/buildings/expansion-derelict-two-storey-4views-v2.png",
+  "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-96d1365c-f355-4f68-abc1-27115eebebbc.png",
+  "prompt": "Use case: precise-object-edit. Input roles: image 1 = owner-selected dusk art theme; image 2 = editable existing sprite sheet; image 3 = camera rotation diagram ONLY, never copy diagram artwork or labels; image 4 = original game asset identity. Produce a corrected transparent PNG of the SAME single subject with four sprites in a square 2x2 grid. FIX THE BOTTOM-RIGHT ANGLE ONLY. It repeats the top-left angle. Keep the other three views and the model architecture. Bottom-right must show the FRONT GABLE WITH PORCH ON THE SCREEN-LEFT FACE, and the opposite long side wall extending up-right from it. The long roof ridge must rise toward screen-right in this quadrant, opposite its current down-right slope. Reconstruct the opposite side's boarded windows in the same white siding. This is a new view of the same rigid building, not mirrored image pixels: chimney stays fixed to the same physical roof corner and SUN stays screen upper-right. Reference 3 illustrates four correct box projections. Copy only the camera/geometry projection, never colored boxes or labels.\nMaintain the original building identity, fixed parallel 2:1 isometric camera and warm low SCREEN UPPER-RIGHT sunlight; tiny shadows screen lower-left. Keep early dusk with warm architectural lights already on, enough daylight to see all materials. NO night or moonlight. NO people anywhere. NO Halloween pumpkins, cobwebs, wreaths, spooky signs, decorative string-light garlands. Four COMPLETE sprites with broad clear gutters and margins, shrink uniformly to fit rather than cut off any part. Transparent alpha outside silhouettes; no ground tile, labels, frames, diagram or backdrop.",
+  "referencedImagePaths": [
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/expansion-derelict-two-storey-4views-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/expansion-derelict-two-storey.configured@2x.png"
+  ],
+  "generator": "built-in image_gen",
+  "generatedAt": "2026-10-23T15:58:14.167Z",
+  "status": "generated-awaiting-visual-review",
+  "correction": "FIX THE BOTTOM-RIGHT ANGLE ONLY. It repeats the top-left angle. Keep the other three views and the model architecture. Bottom-right must show the FRONT GABLE WITH PORCH ON THE SCREEN-LEFT FACE, and the opposite long side wall extending up-right from it. The long roof ridge must rise toward screen-right in this quadrant, opposite its current down-right slope. Reconstruct the opposite side's boarded windows in the same white siding. This is a new view of the same rigid building, not mirrored image pixels: chimney stays fixed to the same physical roof corner and SUN stays screen upper-right. Reference 3 illustrates four correct box projections. Copy only the camera/geometry projection, never colored boxes or labels."
+}

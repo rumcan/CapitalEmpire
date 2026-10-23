@@ -7,7 +7,7 @@ import { LotMap, type Lot } from '../src/game/lots/lots';
 import { compose, type ComposeState } from '../src/game/lots/compose';
 import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lettering';
 import { EAST_PAIRS } from '../src/game/east-library';
-import { VIEW_ART } from '../src/game/views-library';
+import { VIEW_ART, unmirror } from '../src/game/views-library';
 import { REMOVED_IDS } from '../src/game/lots/scales';
 /** the fronts of the 14 east pictures in art/east-facing */
 const EAST_FRONTS = ['ref:building-corner-shop', 'ref:building-corner-store', 'ref:building-gas-canopy', 'ref:building-grocery', 'town:bakery', 'town:barber', 'town:fish_tackle', 'town:grocery', 'town:laundromat', 'town:pharmacy', 'town:postoffice', 'world:diner', 'world:snack_bar', 'world:video'];
@@ -162,4 +162,26 @@ test('a rotated business never mirrors a lettering sprite; its plain sprites sti
   }
   assert.ok(nLettered > 0, 'a rotated business has lettering art');
   assert.ok(turnedPlain > 0, 'a rotated business still turns its plain art');
+});
+
+test('the four-view buildings are never mirrored: a flip is the partner view (NE <-> SE, SW <-> NW), unflipped, on the same footprint', () => {
+  const four = LIBRARY.filter(it => VIEW_ART.has(it.id) || it.id.startsWith('view:'));
+  assert.ok(four.length >= 40, `${four.length} four-view sprites`);
+  const box = (id: string) => byId.get(id)!.boxes[0]!;
+  for (const it of four) {
+    const [id, flip] = unmirror(it.id, true);
+    assert.equal(flip, false, `${it.id} flipped is drawn unflipped`);
+    assert.ok(byId.has(id) && id !== it.id, `${it.id} turns to ${id}`);
+    assert.deepEqual(unmirror(id, true), [it.id, false], `${id} turns back to ${it.id}`);
+    const a = box(it.id), b = box(id);
+    assert.ok(Math.abs(a.hx - b.hy) < 0.011 && Math.abs(a.hy - b.hx) < 0.011, `${it.id} and ${id}: the footprint turned`);
+    assert.deepEqual(unmirror(it.id, false), [it.id, false], `${it.id} unflipped is itself`);
+  }
+  // a rotated business parcel draws its four-view art turned, never mirrored
+  let turned = 0;
+  for (const b of BUSINESSES) for (const p of businessArt({ id: 3, type: b.id, x: 20, y: 30, w: b.footprint.h, h: b.footprint.w }, LIBRARY, index)) {
+    const id = LIBRARY[p.item]!.id;
+    if (VIEW_ART.has(id) || id.startsWith('view:')) { assert.equal(p.flip, false, `${id} on a rotated ${b.id}`); if (id.startsWith('view:')) turned++; }
+  }
+  assert.ok(turned > 0, 'a rotated business draws turned views');
 });

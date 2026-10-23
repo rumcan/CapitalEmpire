@@ -1,0 +1,10 @@
+{
+ "id": "business:casino",
+ "version": "business-casino-4views-v1",
+ "files": {
+  "NE": "8b1e608ff10801023a79a189b2b29195ab08090c50dbaac35f64f58ec217e726",
+  "SE": "05d7a8793123f001ccdd7d7c18858d69658ad5b46b47a16818a4be1427537523",
+  "SW": "fa8ef06192508c64a1ce583e0f75cc07dd4c1bca4a8bbabaf563e685c210fe09",
+  "NW": "29df6fd4311ffacc544c9de31ff66b920fe270d4546699f8b629058770cdd6a5"
+ }
+}

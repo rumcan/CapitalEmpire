@@ -1,0 +1,10 @@
+{
+ "id": "business:sportsbar",
+ "version": "business-sportsbar-4views-v1",
+ "files": {
+  "NE": "e30239ae7c0f68fd018ae2445501c9a80a5530f62ec2d9fb33c68910ac941c91",
+  "SE": "fa63b9942ee2c751c27a2fc008391b1b9547733db4b135d2006f64317ccde8a9",
+  "SW": "240de00ef80db870c3601b79fa8af1f482837a00b0ae674e47dafac8719c6383",
+  "NW": "b7c6dbe3ef2244b8e0a41217659bfc87e93aa51f8070bc4627cc4e3c4736d4b0"
+ }
+}

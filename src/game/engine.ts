@@ -78,6 +78,7 @@ import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
 import { tierInfo, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
+import { unmirror } from './views-library';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -746,6 +747,8 @@ export class Game {
     if (n) this.scheduleSave(); return n;
   }
   addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string): Prop {
+    // the four-view buildings are never mirrored: a flip draws the building turned (its partner view), as it is
+    const [id, f0] = unmirror(LIBRARY[item]!.id, flip); if (f0 !== flip) { item = LIB_INDEX.get(id) ?? item; flip = f0; }
     const f = this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;

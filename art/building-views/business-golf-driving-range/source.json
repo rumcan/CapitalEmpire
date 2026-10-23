@@ -1,0 +1,10 @@
+{
+ "id": "business:golf-driving-range",
+ "version": "business-golf-driving-range-4views-v2",
+ "files": {
+  "NE": "ef315793c23e086706559b88bae1f8908bed36e8de8a77fff5d43db3e461de7f",
+  "SE": "fcac201aeb39b5afb12431172c7b939611444b806e5be6f1d80c84e0675261f6",
+  "SW": "603436693dfec98d4f096324af46e026da76a8a2517b576137895d5d3b4ab801",
+  "NW": "40376889f57e1799bbd637a4004899012fb165618d8042aad6581c064eef4524"
+ }
+}

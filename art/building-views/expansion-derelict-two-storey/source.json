@@ -1,0 +1,10 @@
+{
+ "id": "expansion:derelict-two-storey",
+ "version": "expansion-derelict-two-storey-4views-v2",
+ "files": {
+  "NE": "b1fe18779bb46675470020cd1cd415beedc2970e0ae1b69a1a52fda3c0879c56",
+  "SE": "4cc4ea805dc15dbc0b0a44990c876f1f4c776febbe8dfd7af52bccea6cecf8c4",
+  "SW": "0765dfe057cb592dac9c0747ce740bc6daac0070b03c3eb2d6c03574fc2e3ec7",
+  "NW": "ba06fd1eb1464befd8e0e70b42ea61d1608ca619569b749a79d1684923582e59"
+ }
+}

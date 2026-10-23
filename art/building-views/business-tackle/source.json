@@ -1,0 +1,10 @@
+{
+ "id": "business:tackle",
+ "version": "business-tackle-4views-v1",
+ "files": {
+  "NE": "1c3e1111b42a1624405aa9b805e09d4b5f199b7f63bec236535f04f8ba6eaaf9",
+  "SE": "acebb91a0e2d433c1cef80a10d3f2b5bd3e001c4fa38358e2b48de7d46fdec7f",
+  "SW": "b831c9a8b03f8056512990f79bbd693ae84b1888eb8a98ffb50f06623e8cf451",
+  "NW": "0d95e0fef17485233e6aec82175127196a5178030ac02b19f92cb89f4a9c8583"
+ }
+}

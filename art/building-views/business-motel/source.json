@@ -1,0 +1,10 @@
+{
+ "id": "business:motel",
+ "version": "business-motel-4views-v1",
+ "files": {
+  "NE": "c7b227175c2dfff90a0543fcf97baf8e22558bb007e57af89f4956a1926892d5",
+  "SE": "95dd8e369db27ef9f9f0093f573796739feef2609ad2961868854083c2c8794f",
+  "SW": "a4bc0f2e363e905a8b451b10e2bcd40c379d6eef33e1e73af06b6c29609fc1f8",
+  "NW": "06df0ccf31e93e6c173e4a2e243f946804aa67cfb880ecaf229deba49bff78d4"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "business:taxi",
+ "version": "business-taxi-4views-v1",
+ "files": {
+  "NE": "c0e5be0d305d25de447848f7b6157454f0ecc473e78f9f8a55333549fb2b792c",
+  "SE": "aa1f345116a103848f9ea20a177f7c961970d8c1faa3ad3bf88e566020cd46e0",
+  "SW": "8d8ee43f8654994b99769447d749476c029558e4f187b4becf33d3bed98cb281",
+  "NW": "a62cc64dca94a324e49f424de9bd2b9b11d818beb9ac12bc2291b3c650d6e8b9"
+ }
+}

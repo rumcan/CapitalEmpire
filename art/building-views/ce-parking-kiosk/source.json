@@ -1,0 +1,10 @@
+{
+ "id": "ce:parking-kiosk",
+ "version": "ce-parking-kiosk-4views-v2",
+ "files": {
+  "NE": "e42b7db4a3257fc333ea4834e21865ad84645a6ce01af148aeb287f0cc6aef75",
+  "SE": "ba2ecf8fbd624c9ca5f6f9f6354036c46228e43cbf57f944851fed676685c351",
+  "SW": "8dc5c96f10fa5e3b6b06401c9c7ebe4535306f792d20f2a117bcf14d936a9c6c",
+  "NW": "a011c93c603792d29477970debefc0125f17bfe495d7cd526afc4270928fe62b"
+ }
+}

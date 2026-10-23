@@ -1,0 +1,10 @@
+{
+ "id": "business:fishing-rental-kiosk",
+ "version": "business-fishing-rental-kiosk-4views-v1",
+ "files": {
+  "NE": "75073ac5c2756739448094ebf81a2368afb4d06055f9ab32746e53c45a8dfc35",
+  "SE": "6d6be29dd98f79ec61e232666e342c1eb5addf345753b028dec0715bbf1d169e",
+  "SW": "8f81853a2701991e4dc088ca9f926f4687ed18e9ca765257a79291988f41c24d",
+  "NW": "450cde44e2295c24dc97d05665d2b2273bf61987e20b0245295ef43d40bf1e34"
+ }
+}

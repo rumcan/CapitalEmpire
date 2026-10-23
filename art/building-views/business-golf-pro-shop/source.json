@@ -1,0 +1,10 @@
+{
+ "id": "business:golf-pro-shop",
+ "version": "business-golf-pro-shop-4views-v1",
+ "files": {
+  "NE": "aa38b47e5916b68862216e3d6f6d6c7ce81f6fb801bed21d972fde009bfd46ca",
+  "SE": "7a0b3030f872ba2f1789a3304fa2ff507b627a0f39437e37eb5cabb589f55ac2",
+  "SW": "302c9fb3e643c967b292bed5167a2762e3c6d96187904d5f92e6506d2917e53b",
+  "NW": "2b3dec10b1981fae63d022f9ede7ed0f587028f0f0fa257a80e02026d02173cf"
+ }
+}

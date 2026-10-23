@@ -1,0 +1,10 @@
+{
+ "id": "business:stadium",
+ "version": "business-stadium-4views-v3",
+ "files": {
+  "NE": "6b329fb2cf8fde2fd841a2a1eedcb6b70237a1768d45c4c039a39e308b78f58b",
+  "SE": "a66269a1e7d3b463440fd730933031b55198417a3c8055664fdb253db4e292af",
+  "SW": "2cdebf8e763ccd052a1448c04af89539aec70835ee47ae5459d730e888252d9c",
+  "NW": "bc3324b9c586ef6921ec589c08d49d90da04e1b9be49bfcb91bc0d7983154ae0"
+ }
+}

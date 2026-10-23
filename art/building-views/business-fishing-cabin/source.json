@@ -1,0 +1,10 @@
+{
+ "id": "business:fishing-cabin",
+ "version": "business-fishing-cabin-4views-v1",
+ "files": {
+  "NE": "47f8d7b626c759c88c7dfc54ca3f22a672a11fd45f64d2c00656792b636e13f4",
+  "SE": "272826bac5bc2961f547f7d7c9926294370c29f57f6e49e28cd2065c8b69e669",
+  "SW": "c7686c74509807ee09d4dab56dbfb43b13dd1e2b67c0f6d57b1b50dffd808995",
+  "NW": "747f1cdb16d0bc63e10fe0851780a528db5d7052f5ad43e8e23a6b0c637b7cc9"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "business:diner",
+ "version": "business-diner-4views-v1",
+ "files": {
+  "NE": "e55b80f35ad938e9aa823ab91e84e3715dd41450b43b1fbb7d54120be7860278",
+  "SE": "a220303566fa875ef02a80f38a830fa3b4303b2f0b68918687a5a2fd445c7565",
+  "SW": "0b4616da33ba9fdca3eecd1953ddcff11c040c81af94a3792e7703caf2ad25ba",
+  "NW": "a29a938f3c1207f53d986c0f5b5a79f787b4249582d9fc46251f7bcd069e49de"
+ }
+}

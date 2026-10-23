@@ -1,0 +1,10 @@
+{
+ "id": "expansion:dormer-rear",
+ "version": "expansion-dormer-rear-4views-v2",
+ "files": {
+  "NE": "965dbf1610753153f478d8144bd260ed9ca3e6fe885bb6e6be73bed8f66e5c4a",
+  "SE": "a5fd7b0e63410d1ef01b576cb42d659d36f0886e736c86ef35af6326cc3c1f20",
+  "SW": "9f64191c217c0991b03f9abd5865bd4aa02b8c535a0eb76b9487b8c9f4bad802",
+  "NW": "b1089b1aede35afe3f3e393b76eae2c5de1fd649dbfa2fb75999bbd27a4770e8"
+ }
+}

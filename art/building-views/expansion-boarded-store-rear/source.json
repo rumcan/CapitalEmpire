@@ -1,0 +1,10 @@
+{
+ "id": "expansion:boarded-store-rear",
+ "version": "expansion-boarded-store-rear-4views-v1",
+ "files": {
+  "NE": "86904e7a6f40792ecc19503ef84cda1110ec9abf5aa7fcd095d0328904da8b7a",
+  "SE": "20595e5d024067c0112de2116e6440fdbb680a6017bc304d0629672a183ffa05",
+  "SW": "8dd50801a27ce059645730b88398b3ef4def885015721bbe8c47e5fc3fefb562",
+  "NW": "42625232b1b5c38283249ecb8d77534ddcf314c412555810a8f6af75844d0b8b"
+ }
+}

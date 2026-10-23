@@ -1,5 +1,5 @@
 {
- "about": "Door gauges for the four-view building art (scripts/assets/prep-views.mjs). door = the height in native pixels of a plain single-leaf door (a house front door, a shop back or side door; glazed shopfront doors are left out, they are drawn taller), read on the leaf edge from under the head casing to the threshold. A view is scaled so its door stands standardDoor game px tall at the building owner scale; a view with no clear plain door takes the mean scale of its measured views; a version with no measured view keeps the original sprite width. The sha256 ties each reading to the exact picture: a regenerated picture is unmeasured until re-read.",
+ "about": "Door gauges for the four-view building art (scripts/assets/prep-views.mjs). door = the height in native pixels of a plain single-leaf door (a house front door, a shop back or side door; glazed shopfront doors are left out, they are drawn taller), read on the leaf edge from under the head casing to the threshold. A view is scaled so its door stands standardDoor game px tall at the building owner scale; a view with no clear plain door takes the mean scale of its measured views; a version with no measured view keeps the original sprite width (noGauge marks a subject with nothing to measure). Business artwork is drawn at a share of its parcel, so it keeps its original width and takes no gauge. The sha256 ties each reading to the exact picture: a regenerated picture is unmeasured until re-read.",
  "standardDoor": 98,
  "standardFrom": "median front door of the six original houses on the map (display px x owner scale): house_0 100.0, house_1 95.2, house_2 107.9, house_3 93.7, house_4 84.1, house_5 104.8",
  "subjects": {
@@ -211,6 +211,98 @@
     "NW": {
      "sha256": "8720c6145b68563196c1c20585d515daf4afb2a1728c141e8c35f22416f1d6d1",
      "door": 52
+    }
+   }
+  },
+  "ce:parking-kiosk": {
+   "version": "ce-parking-kiosk-4views-v2",
+   "views": {
+    "NE": {
+     "sha256": "e42b7db4a3257fc333ea4834e21865ad84645a6ce01af148aeb287f0cc6aef75",
+     "door": 232
+    },
+    "SE": {
+     "sha256": "ba2ecf8fbd624c9ca5f6f9f6354036c46228e43cbf57f944851fed676685c351"
+    },
+    "SW": {
+     "sha256": "8dc5c96f10fa5e3b6b06401c9c7ebe4535306f792d20f2a117bcf14d936a9c6c"
+    },
+    "NW": {
+     "sha256": "a011c93c603792d29477970debefc0125f17bfe495d7cd526afc4270928fe62b"
+    }
+   }
+  },
+  "expansion:boarded-store-rear": {
+   "version": "expansion-boarded-store-rear-4views-v1",
+   "views": {
+    "NE": {
+     "sha256": "86904e7a6f40792ecc19503ef84cda1110ec9abf5aa7fcd095d0328904da8b7a"
+    },
+    "SE": {
+     "sha256": "20595e5d024067c0112de2116e6440fdbb680a6017bc304d0629672a183ffa05",
+     "door": 89
+    },
+    "SW": {
+     "sha256": "8dd50801a27ce059645730b88398b3ef4def885015721bbe8c47e5fc3fefb562",
+     "door": 88
+    },
+    "NW": {
+     "sha256": "42625232b1b5c38283249ecb8d77534ddcf314c412555810a8f6af75844d0b8b"
+    }
+   }
+  },
+  "expansion:derelict-two-storey": {
+   "version": "expansion-derelict-two-storey-4views-v2",
+   "views": {
+    "NE": {
+     "sha256": "b1fe18779bb46675470020cd1cd415beedc2970e0ae1b69a1a52fda3c0879c56"
+    },
+    "SE": {
+     "sha256": "4cc4ea805dc15dbc0b0a44990c876f1f4c776febbe8dfd7af52bccea6cecf8c4"
+    },
+    "SW": {
+     "sha256": "0765dfe057cb592dac9c0747ce740bc6daac0070b03c3eb2d6c03574fc2e3ec7",
+     "door": 80
+    },
+    "NW": {
+     "sha256": "ba06fd1eb1464befd8e0e70b42ea61d1608ca619569b749a79d1684923582e59"
+    }
+   }
+  },
+  "expansion:dormer-rear": {
+   "version": "expansion-dormer-rear-4views-v2",
+   "views": {
+    "NE": {
+     "sha256": "965dbf1610753153f478d8144bd260ed9ca3e6fe885bb6e6be73bed8f66e5c4a"
+    },
+    "SE": {
+     "sha256": "a5fd7b0e63410d1ef01b576cb42d659d36f0886e736c86ef35af6326cc3c1f20",
+     "door": 88
+    },
+    "SW": {
+     "sha256": "9f64191c217c0991b03f9abd5865bd4aa02b8c535a0eb76b9487b8c9f4bad802"
+    },
+    "NW": {
+     "sha256": "b1089b1aede35afe3f3e393b76eae2c5de1fd649dbfa2fb75999bbd27a4770e8",
+     "door": 90
+    }
+   }
+  },
+  "expansion:backyard-tent": {
+   "version": "expansion-backyard-tent-4views-v1",
+   "noGauge": "no door, window or step: keeps the original width",
+   "views": {
+    "NE": {
+     "sha256": "7b020f4f15808344e22ffea37588cb2ad91ebe8404af6eb160dda31734618e2f"
+    },
+    "SE": {
+     "sha256": "37a6bc399d43db8785b35b37a1a9af20aa07e986ca3fd606608b49867a5a406f"
+    },
+    "SW": {
+     "sha256": "1a91a6287739d36ff37a7b10c82fd1d222660ecf1dca7be40b0c1769f7b8318d"
+    },
+    "NW": {
+     "sha256": "b6ff07c5fefff6e45f0c05d2d05d2619b84da00ae0daff938e936fe0f5c244e6"
     }
    }
   }
