@@ -93,6 +93,10 @@ on every lot so they meet), with planting along both faces and leaf drifts at th
 - **Rebuild**: runs the asset steps. Every step reads these files (`overrides.mjs`, `removed.mjs`).
 
 ## Townspeople (`src/game/ext/pedestrians/`)
+**Making a new 3D person** (townsperson or spectator): `docs/SPECTATOR-ART.md` sections 1 and 1b. When RUN's rig service fails,
+`scripts/assets/people3d/rig-local-person.mjs` rigs a RUN model locally from a base person (free); RUN's models are quantized, so any
+script that edits their vertices must convert the attributes to Float32 first (1b explains the three traps).
+
 Seeded walkers on the town sidewalks: each has a home door and walks to a place (shops, work, civic, venues: built lots'
 frontages) and back, entering and leaving only through doors; road edits keep walkers on unchanged sidewalks. Drawn as
 movers at the Street tier (engine `updatePeds` / `pedMovers`). The generated walk sheets have wrong-way frames (the SE row's

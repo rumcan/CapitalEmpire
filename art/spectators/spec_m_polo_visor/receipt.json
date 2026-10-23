@@ -1,5 +1,10 @@
 {
   "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/8db4bebc-03a3-4d1d-9ac5-627ee227b626/model.compressed.glb",
   "generationId": "8db4bebc-03a3-4d1d-9ac5-627ee227b626",
-  "note": "recovered after the CLI 600 s timeout (rundot assets list)"
+  "note": "recovered after the CLI 600 s timeout (rundot assets list)",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
 }

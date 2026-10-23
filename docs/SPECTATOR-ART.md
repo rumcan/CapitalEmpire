@@ -40,6 +40,37 @@ The people walking around town are **3D models rendered to sprite sheets**, not 
 
 Look at `art/people3d/base_man/` (`receipt.json` has the look prompt, `sheet.json` the format) before you start.
 
+### 1b. The way that works today (2026-10-23): RUN's model, our own rig
+RUN's rig service (`rig-3d`) rejected every model on 2026-10-23, base_man's too, so spectator 1 was rigged **locally**:
+1. **The model** from RUN: `make-person-3d.mjs <id> "<look>" --root art/spectators`. It stops at the rig step when RUN's rig fails; the
+   model is already saved (`model.glb`, `receipt.json` `modelUrl`). If the CLI times out (section 7, the 600 s note), recover the model
+   from `rundot assets list` instead of paying again.
+2. **The rig and the walk and idle, free:** `node scripts/assets/people3d/rig-local-person.mjs <id> [--from base_man] [--root art/spectators]`
+   moves base_man's skeleton and his walk and idle clips onto the new model (TrickOrTreat's `rig-local-costume.mjs` method: the two meshes
+   lined up by their bounds, each new vertex takes the skin weights of base_man's 4 nearest vertices). Writes `anim_walk.glb`,
+   `anim_idle.glb`, `rigged.glb`; about a minute; no credits. Use `--from base_woman` / `base_kid` for women and children (the closer
+   the build, the better the joints line up).
+3. **Render:** `render-person-3d.mjs <id> --root art/spectators --height <m>`, then look at `preview.png` (section 4).
+
+**Three traps the transfer hit (all fixed in the script; keep them fixed if you change it):**
+- **RUN's models are quantized** (glTF `KHR_mesh_quantization`: positions, normals and UVs stored as normalized 16-bit integers). Writing
+  metre values back into those attributes clamps them to [-1, 1]: the person comes out as stretched columns 2 m tall (the arms, legs and
+  shirt smeared into vertical bars). Every attribute is converted to plain Float32 before it is transformed.
+- **The base's bone matrices are empty until a render:** `skeleton.update()` before reading skinned vertex positions, or they all read as
+  the origin.
+- **Keep the mesh indexed:** TrickOrTreat's `toNonIndexed()` tripled the vertices (1.5 million) and made 66 MB files; indexed they are 24 MB.
+
+**How to tell a broken rig fast:** the script logs the two bounding boxes (base_man about 1.10 x 1.70 m, the new person scaled to match),
+and `render-person-3d.mjs` logs "model N units tall": base_man is 1.67; 2.00 meant the quantization trap. A good preview shows the person
+whole in every facing with no spikes.
+
+**Clips beyond walk and idle** (run, clap, cheer, sit, the wayward-ball set) still need RUN's animation service, which needs RUN's rig
+(`animate-3d --rig-id`). Try `rundot game animate-3d --input <rigged.glb>` (it takes a local model instead of a rig id) when you get
+there; if RUN stays down, the fallback is base clips: make the clip once on a base person when RUN works and transfer it like walk.
+
+**What goes in git:** `model.glb`, `receipt.json`, `sheet.webp`, `sheet.json`, `preview.png` and any clip sheets. The transferred
+`anim_walk.glb`, `anim_idle.glb` and `rigged.glb` (24 MB each) are git-ignored: rerun `rig-local-person.mjs` to get them back.
+
 ## 2. What the game needs the crowd to do
 Spectators are parties of 3 fans (`PARTY`) who drive in, park, walk to the course gates, queue, go through, and stand or sit in
 **galleries**: beside each green, behind each tee, in the grandstands and in front of the tents. After play they walk back to their cars.
@@ -175,12 +206,18 @@ LEAD.md).
 
 ## 6. Order of work
 1. Check `rundot` works and list the animation names (section 7). Show the owner the cast and the credit estimate.
-2. Make `spec_m_polo_visor` with walk + idle; extend the scripts (3c); render; check (section 4); show the owner.
+2. ~~Make `spec_m_polo_visor` with walk + idle; extend the scripts (3c); render; check (section 4); show the owner.~~ Done 2026-10-23
+   (model from RUN, rig and walk/idle by `rig-local-person.mjs`, section 1b).
 3. Add the other clips to that person (3b and 3b+); check; show. Then `marshal_m` with its clips.
 4. The rest of the P1 cast, one at a time, checking each.
 5. The crowd patches (3d), then P2.
 
 ## 7. Progress (update this as you go)
+- 2026-10-23 (latest): **spectator 1 done for walk + idle.** `spec_m_polo_visor`: RUN's model, rigged locally from base_man
+  (`rig-local-person.mjs`, section 1b), rendered at 1.80 m: `art/spectators/spec_m_polo_visor/sheet.webp`, `preview.png`. Checked: whole
+  in all 8 facings, clean shoulders, elbows and hips. Not yet: the other clips (RUN's rig service down), the studio People-tab check for
+  wrong-way frames, the game wiring (the lead). **Next:** step 6.4, the next people (`--from base_woman` for the women, `base_kid` for
+  the children), one at a time: `make-person-3d.mjs` (model only while RUN's rig is down), `rig-local-person.mjs`, render, check.
 - 2026-10-23: brief written; the scripts extended (3c). Nothing generated yet: the RUN CLI is not installed on the owner's PC now (not on
   PATH, not in npm, the worker PC unreachable); installing it is the owner's call (the install script from
   github.com/series-ai/rundot-cli-releases, then `rundot login` by the owner).

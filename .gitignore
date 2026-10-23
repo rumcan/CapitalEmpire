@@ -8,3 +8,8 @@ output/
 
 # lossless webp copies of the grass-v1 PNG masters (pixel-identical; the scripts read the PNGs)
 src/assets/ground/grass-v1/webp/
+
+# the spectators' locally rigged models (24 MB each; scripts/assets/people3d/rig-local-person.mjs remakes them from model.glb, free)
+art/spectators/*/anim_walk.glb
+art/spectators/*/anim_idle.glb
+art/spectators/*/rigged.glb
