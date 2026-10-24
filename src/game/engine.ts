@@ -83,7 +83,7 @@ import { tierInfo, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
-import { NEW_ART_ONLY, lookOf } from './newart';
+import { NEW_ART_ONLY, OLD_ART, lookOf } from './newart';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -510,8 +510,8 @@ export class Game {
       for (const p of this.props) {
         const cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2, X = worldX(cx, cy), Y = worldY(cx, cy);
         if (Math.abs(X - this.cam.X) > 1.5 * hw || Math.abs(Y - this.cam.Y) > 1.5 * hh) continue;
-        // the new-art preview lights the picture it draws (newart.ts)
-        const q = NEW_ART_ONLY ? { ...p, ...lookOf(p) } : p, it = LIBRARY[q.item]; if (it) propLights(q, it, this.night, world, 1, out);
+        // the new-art pictures (the default, and ?newart) light the picture they draw (newart.ts): a hidden building lights nothing
+        const l = lookOf(p); if (l.hidden) continue; const q = l === p ? p : { ...p, ...l }, it = LIBRARY[q.item]; if (it) propLights(q, it, this.night, world, 1, out);
       }
       this.nightLights = out;
     }
@@ -567,6 +567,7 @@ export class Game {
       this.scheduleSave(); this.emit();
     };
     if (NEW_ART_ONLY) setTimeout(() => this.toast('New-art preview: only the new four-view buildings and generated trees are drawn (?newart)', 'info'), 4000);
+    else if (OLD_ART) setTimeout(() => this.toast('Old art: buildings without their four new views show their old pictures (?oldart)', 'info'), 4000);
     this.traffic.onDisasters = (notes) => { for (const n of notes) this.toast(disasterText(n), n.k === 'repaired' ? 'good' : n.k === 'ended' ? 'info' : 'warn'); };
     this.traffic.onMilestone = (newly, won) => {
       for (const m of newly) {
