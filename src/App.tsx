@@ -864,9 +864,11 @@ const ROAD_FAMILIES: { id: Family; label: string; desc: string }[] = [
   { id: 'medium', label: 'Medium', desc: 'For higher traffic and main routes.' },
   { id: 'large', label: 'Large', desc: 'For major connections and high density.' },
   { id: 'rural', label: 'Rural', desc: 'Between the towns: shoulders, no sidewalks.' },
+  // the golf course's drives (P19): listed in golf games only (RoadPanel filters it out otherwise)
+  { id: 'course', label: 'Course', desc: 'Drives on the golf course: start as gravel, upgrade to paved and avenue' },
 ];
 /** the variant chip labels, by a variant's flags joined with dots ('' is the plain type) */
-const VARIANT_LABEL: Record<string, string> = { '': 'Plain', tr: 'Trees', gr: 'Grass median', tl: 'Turn lane', 'tl.tr': 'Turn lane + trees', ow: 'One-way', 'ow.tr': 'One-way + trees' };
+const VARIANT_LABEL: Record<string, string> = { '': 'Plain', tr: 'Trees', gr: 'Grass median', gd: 'Garden median', tl: 'Turn lane', 'tl.tr': 'Turn lane + trees', ow: 'One-way', 'ow.tr': 'One-way + trees' };
 /** the variant chip icons, by the same flags */
 const VARIANT_ICON: Record<string, IconName> = { '': 'road', tr: 'trees', gr: 'forest', tl: 'swap', 'tl.tr': 'swap', ow: 'oneway', 'ow.tr': 'oneway' };
 
@@ -883,7 +885,7 @@ function RoadPanel({ game }: { game: Game }) {
   return (
     <Panel title="Road Construction" icon="road" desc="Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.">
       <div className="mt-2 flex flex-col gap-2">
-        {ROAD_FAMILIES.map(f => { const ex = isOpen(f.id); return (
+        {ROAD_FAMILIES.filter(f => f.id !== 'course' || game.golfMode).map(f => { const ex = isOpen(f.id); return (
           <div key={f.id}>
             <button className="mb-1 flex w-full items-baseline gap-2 text-left" onClick={() => setOpenFam(ex ? 'none' : f.id)} aria-expanded={ex}>
               <span className="label-caps">{f.label}</span>

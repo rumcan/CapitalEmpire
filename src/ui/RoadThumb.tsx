@@ -15,6 +15,8 @@ export function RoadThumb({ cls, w = W, h = H }: { cls: RoadClass; w?: number; h
   parts.push(band(-cls.h, cls.h, SURFACE[cls.tex] ?? '#43474e', 'surface'));
   if (cls.median) parts.push(band(-cls.median / 2, cls.median / 2, '#5d7a3a', 'median'));
   if (cls.medianTrees) for (let x = 6; x < W; x += 14) parts.push(<circle key={`mt${x}`} cx={x} cy={y(0)} r={2.6} fill="#2f5a24" />);
+  // a garden median (P19): flower dots, pink and yellow alternating, where the trees would stand
+  if (cls.medianGarden) for (let x = 6, k = 0; x < W; x += 14, k++) parts.push(<circle key={`mg${x}`} cx={x} cy={y(0)} r={1.8} fill={k % 2 ? '#f2d24b' : '#e879a8'} />);
   if (cls.streetTrees) for (const s of [-1, 1]) for (let x = 3; x < W; x += 16) parts.push(<circle key={`st${s}${x}`} cx={x} cy={y(s * (half - 0.35))} r={2.4} fill="#2f5a24" />);
   if (cls.shoulder) for (const s of [-1, 1]) parts.push(line(s * (cls.h - cls.shoulder), '#e7c24a', undefined, `sh${s}`, 0.7));
   // lane lines: a one-way class lists them across the whole width, a two-way class for one side (mirrored)
