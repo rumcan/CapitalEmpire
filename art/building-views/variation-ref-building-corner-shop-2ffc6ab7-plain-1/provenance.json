@@ -1,0 +1,154 @@
+{
+  "id": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-11e85992-4737-4cce-a9d3-f50d1ffabcf0.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-corner-shop-2ffc6ab7-plain:1. Preserve this specific reference architecture, number of floors, roof shape, business function and attached structural features. Front signage/entrances belong only on physical front facades and must disappear in the two actual rear views. For gas stations retain pumps/canopy attached arrangement but no forecourt pavement. Drive-in screen has blank structural steel back, never a second movie screen. No parking surface, rectangular slab, grey floor, yard or landscaping.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-ref-building-corner-shop-2ffc6ab7-plain-1.configured@2x.png",
+      "sha256": "331f790e3c0e0a3a6ba7c77876ac3fd80b68155f69a6178a129116dfe860e148"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Native edge re-review shows complete physical silhouette; original boundary warning concerns antialias fringe only. Exact-pixel component extraction adds ample transparent padding, preserving all nonzero source RGBA tuples. All4 views, magenta post-repack composite, theme and clean alpha audit reviewed.",
+  "sourceVisualReview": {
+    "reviewer": "building_variation_review",
+    "reviewedAt": "2026-10-24T10:35:16.798Z",
+    "allFourViewsInspected": true,
+    "alphaCompositeBackground": "#b91b91",
+    "result": "ready",
+    "historicalHold": {
+      "reason": "Four facades otherwise coherent, but chimney tops hit source canvas with alpha up to153. Correct framing/generous transparent margins; cannot recover clipped cap by repacking.",
+      "overturned": true,
+      "rationale": "Native enlarged magenta edge crop shows a complete tapered apex/cap/finial. Top frame has no alpha>=240 pixels; only antialias fringe touches it, not a flat truncated opaque silhouette."
+    },
+    "evidence": "output/building-priority/edge-corner-shop.png"
+  },
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining faint pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-corner-shop-2ffc6ab7-plain-1-4views-v1.png",
+    "originalSheetSha256": "54ff04ca077313afffa79130ee155c8ef0e5487fd77c9f65e4f109fa3397fb91",
+    "outputSheetSha256": "7d960ba7aa32a850c01177fde67a7b18b411c65cad663dc563b1a5a3c0f35398",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2560,
+      2560
+    ],
+    "cellSize": 1280,
+    "nonzeroAlphaPixels": 685419,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign faint fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 168905,
+          "bounds": [
+            303,
+            0,
+            793,
+            448
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 53,
+          "y0": 0,
+          "x1": 798,
+          "y1": 453,
+          "count": 172752
+        },
+        "translation": {
+          "x": 214,
+          "y": 413
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 160801,
+          "bounds": [
+            1036,
+            0,
+            1505,
+            447
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 910,
+          "y0": 0,
+          "x1": 1715,
+          "y1": 454,
+          "count": 164742
+        },
+        "translation": {
+          "x": 607,
+          "y": 412
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 6,
+          "pixels": 174526,
+          "bounds": [
+            297,
+            445,
+            795,
+            872
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 267,
+          "y0": 442,
+          "x1": 918,
+          "y1": 875,
+          "count": 178509
+        },
+        "translation": {
+          "x": 47,
+          "y": 1261
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 7,
+          "pixels": 163725,
+          "bounds": [
+            1041,
+            452,
+            1515,
+            867
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 918,
+          "y0": 449,
+          "x1": 1721,
+          "y1": 870,
+          "count": 169416
+        },
+        "translation": {
+          "x": 600,
+          "y": 1260
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  }
+}

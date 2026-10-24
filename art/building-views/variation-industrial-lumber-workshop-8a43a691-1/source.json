@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-lumber-workshop-8a43a691:1",
+ "version": "variation-industrial-lumber-workshop-8a43a691-1-4views-v2",
+ "files": {
+  "NE": "c15ab4507481e569c40f2c68d5fa441d66309707ad214cc8f2eb7469821c7438",
+  "SE": "c72d0ee93bdd65407ee79d917bdbb1b0ed160a43713a8158c73bd48a7c6655d7",
+  "SW": "7f47551750e117e907e1e5216dc321bd5e9ccb41f16c101b8504efb10138806f",
+  "NW": "faadf19e44ac708a16baa9de8f44583ea5d7683c50bbbefdfe1a4f49596da4d6"
+ }
+}

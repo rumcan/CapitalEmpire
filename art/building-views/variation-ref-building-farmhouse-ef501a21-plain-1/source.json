@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-farmhouse-ef501a21-plain:1",
+ "version": "variation-ref-building-farmhouse-ef501a21-plain-1-4views-v2",
+ "files": {
+  "NE": "9b85720a8e154b1578d85c38fe73239e3a62e38c1b8e8140c8c4bd4d6e9a5579",
+  "SE": "a7b183aef8d13b68b45baada38c7c4f42f74d1c5ff0b579987d83d4ab5dd46d9",
+  "SW": "374d38e03eb0ea9fdd273fde92288e8ef71cc28dff0188e2f016fc086502941d",
+  "NW": "cc8d813fa764852224cb7493e054e9d8eb788c6388a5ac7823acfa94207802a3"
+ }
+}

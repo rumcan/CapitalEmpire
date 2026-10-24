@@ -1,0 +1,15 @@
+{
+  "id": "variation:ref-building-church-1df07e15-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-57836617-ff78-43f5-ae04-012df0343316.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: NW repeats NE church front at screen right with nave side left; missing opposite front corner. NW should put entrance facade left and opposite nave side right. Cross also clipped by top frame (7 visible source boundary pixels). Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-ref-building-church-1df07e15-plain-1-4views-v1.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Targeted v2 successfully shows opposite front corner NW (entry/front LEFT, nave sideRIGHT), distinct rear gable views SE/SW; front bell tower/cross and lancet windows follow rigid quarterturns. Complete cross tips, actual alpha/margins pass withoutwarnings; Maple Bean matte redtimber/slate/amber matched."
+}

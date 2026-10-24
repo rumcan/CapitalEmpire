@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-cold-storage-378b3489:1",
+ "version": "variation-industrial-cold-storage-378b3489-1-4views-v2",
+ "files": {
+  "NE": "b3f9e9b8b34b890517e9242f5b2a5b290595e833c67cdd5af2764a67dd585d17",
+  "SE": "d504f4a632a709bf81b445f61dd8d7dca2209871a113d636d7e24a89c4b770a9",
+  "SW": "d0e0471b54c08f034ff188127097e712a9acc50088512c9568464c20f829c9b6",
+  "NW": "a06b8e120e2337d4542b2bbd1dabe72e7008fb48a2cae76782b81ba2f39854d1"
+ }
+}

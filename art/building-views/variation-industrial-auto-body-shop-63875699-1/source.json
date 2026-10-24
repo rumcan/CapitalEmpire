@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-auto-body-shop-63875699:1",
+ "version": "variation-industrial-auto-body-shop-63875699-1-4views-v2",
+ "files": {
+  "NE": "cb32fcbb51240ef99f0fe5258fe7ce12a076e3ba5bea5148db5de275bf213444",
+  "SE": "64862f618085d530777fbd30235857663d9c96647d1ad443daea25204526308f",
+  "SW": "87b07d0769b8735c47bc8e9f9ce4c15bfadf70d06f3145756faf71853c0a1d42",
+  "NW": "f21660ac9725c49f7b51c714e840acc0631c4fa8831db3ee7f59ce06623467ad"
+ }
+}

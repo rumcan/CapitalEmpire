@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, isCarPark, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+import { BAKED_LOTS, compose, isCarPark, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
@@ -105,7 +105,7 @@ test('300 combos: every prop and patch lies inside its lot, and no two uprights 
   }
 });
 
-test('RES at BUILT: one baked lot of the lot size, facing the road (front variants on +Y lots, rear on -Y), centred on it; a flipped (+X/-X) lot is composed live (a baked picture is never mirrored, mirror.ts)', () => {
+test('RES at BUILT: one baked lot of the lot size, facing the road (front variants on +Y lots, rear on -Y), centred on it; a flipped (+X/-X) lot is composed live (a baked picture is never mirrored, mirror.ts)', { skip: BAKED_LOTS ? false : 'the baked lots are off (compose.ts BAKED_LOTS)' }, () => {
   let n = 0;
   for (const lot of LOTS) for (let seed = 1; seed <= 4; seed++) {
     const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: (lot.id * 97 + seed * 7919) >>> 0 };
@@ -127,12 +127,21 @@ test('RES at BUILT: one baked lot of the lot size, facing the road (front varian
     n++;
   }
   assert.ok(n > 30, `${n} baked lots`); // fewer, wider lots in the grid since the house lots grew 25% (2026-10-22)
-  // neighbours along a street never share a variant; decline 2 takes the neglected ones
+});
+
+test('baked lots: neighbours along a street never share a variant; decline 2 takes the neglected ones', { skip: BAKED_LOTS ? false : 'the baked lots are off (compose.ts BAKED_LOTS)' }, () => {
   const rows = new Map<string, { a: number; id: string }[]>();
   for (const lot of LOTS) { if (!bakedSize(lot) || Math.abs(lot.n.x) > Math.abs(lot.n.y)) continue; const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props.find(p => p.id.startsWith('lot:'))!.id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
   for (const r of rows.values()) { r.sort((p, q) => p.a - q.a); for (let i = 1; i < r.length; i++) if (Math.abs(r[i].a - r[i - 1].a - LOTS[0].w) < 0.01) assert.notEqual(r[i].id, r[i - 1].id, 'two neighbours share a variant'); }
   const neg = compose(LOTS[0], { use: LU.RES, level: LV.BUILT, decline: 2, seed: 5 }).props.find(p => p.id.startsWith('lot:'))!;
   assert.match(byId.get(neg.id)!.name, /neglected/);
+});
+
+test('house lots never place a baked lot picture while BAKED_LOTS is off (every house lot is composed from the game\'s art)', { skip: BAKED_LOTS ? 'the baked lots are on (compose.ts BAKED_LOTS)' : false }, () => {
+  for (const lot of LOTS) for (const level of [LV.BUILT, LV.UPGRADED]) for (let decline = 0; decline <= 3; decline++) {
+    const c = compose(lot, { use: LU.RES, level, decline, seed: lot.id });
+    assert.ok(c.props.every(p => !p.id.startsWith('lot:')), `${lot.key} level ${level} decline ${decline}: a baked lot picture (${c.props.filter(p => p.id.startsWith('lot:')).map(p => p.id).join(' ')})`);
+  }
 });
 
 test('residential fence boundaries meet exactly in every orientation, with one owner per shared line', () => {
@@ -251,7 +260,7 @@ test('the average uprights per archetype (log)', () => {
   const lines = [...sum.keys()].map(k => `${k}: ${(sum.get(k)! / cnt.get(k)!).toFixed(1)}`);
   console.log(`uprights per lot (decline 0, ${LOTS.length} lots x 2 seeds)\n  ${lines.join('\n  ')}`);
   const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
-  assert.ok(avg('RES BUILT') >= 6, 'a house lot is one baked picture plus its fence layer (panels and planting)');
+  assert.ok(avg('RES BUILT') >= 6, 'house lots are composed from the game\'s art: the house and yard, plus the fence layer (panels and planting)');
   // TOUR 13.7 (measured 13.705 with the east-facing venue art, prep-east.mjs; 12.3 without it, when the venues on lots facing +X were car parks)
   for (const [u, min] of [['IND', 14], ['TOUR', 13.7], ['GOV', 14]] as const) assert.ok(avg(`${u} BUILT`) >= min, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want ${min}+`);
   // a shop's car park now runs from its back wall to the back line (the bush row there goes): 12+ instead of 14+
@@ -331,15 +340,15 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-24 for no building ever mirrored (mirror.ts: an old one flipped is drawn unflipped) and the barn true SE view; 2026-10-23 for the four-view building art (sizes by door gauge, the SE view as east art; the derelict, boarded store and dormer rear views; the 28 generated four-view trees in the tree pool; 16 more four-view buildings); 2026-10-22 for the yards keeping only their leaves and the house lots 25% wider; 2026-10-21 for the owner evening curation, the generated trees (capital:tree-*) in the tree pool, the digger on building sites, every library building in the pools, the building site recolours, the decal variations, the pay boom at car park drives, the second studio curation, the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
+test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-24 for the four-view buildings prep-views cropped from reviewed sheets (the shop rears and the industrial variations), and for no building ever mirrored (mirror.ts: an old one flipped is drawn unflipped) and the barn true SE view; 2026-10-23 for the four-view building art (sizes by door gauge, the SE view as east art; the derelict, boarded store and dormer rear views; the 28 generated four-view trees in the tree pool; 16 more four-view buildings); 2026-10-22 for the yards keeping only their leaves and the house lots 25% wider; 2026-10-21 for the owner evening curation, the generated trees (capital:tree-*) in the tree pool, the digger on building sites, every library building in the pools, the building site recolours, the decal variations, the pay boom at car park drives, the second studio curation, the fence ownership at the higher end, the concrete back yards, lettering never mirrored, CAR_SCALE 0.88 and the cars kept CAR_INSET inside their lots, the studio curation, the straight-on variations left out (frontal.ts), the car park layout (bays 2.75 deep, the eight-way cars), the boundary fences of every use, the old pickup footprints at CAR_SCALE; 2026-10-20 for separate residential boundaries; panels off their line; the studio removals; the leaf drifts at DRIFT_K; the fenced block lots; shops at the street front)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '6fd8c94e'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, 'dc1b87ce'],
     [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '89a20dda'],
     [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '4651a946'],
     [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '9e1951a8'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e9201342'],
     [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'a0bbf300'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, 'd057c572'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '156255fc'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
   assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));

@@ -1,0 +1,150 @@
+{
+  "id": "variation:industrial-bottling-plant-13e91e4e:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-377763f5-5b37-4029-aa22-2dfffcf71c56.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-bottling-plant-13e91e4e:1. Stepped mint-green bottling factory, central taller clerestory block, flat charcoal roofs, exposed service pipes and integral elevated metal water tank. MAPLE FALLS BOTTLING CO front sign, plain reconstructed rear. No pumpkins, banners or yard objects.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-bottling-plant-13e91e4e:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-bottling-plant-13e91e4e-1.configured@2x.png",
+      "sha256": "98b3db7ecf5d7ed734651991067070332706b6d45e4ea88ed848ebfd466c0558"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-bottling-plant-13e91e4e-1-4views-v1.png",
+    "originalSheetSha256": "6e3fdbb066ecf6246ab9daba205d44ca2540e101f7521fd5dc23f6dfdd42b0ff",
+    "outputSheetSha256": "0c70d0ebb41a23a7797b2e08a1942ba8b85f142d2c789eb178853a12629f93b5",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2560,
+      2560
+    ],
+    "cellSize": 1280,
+    "nonzeroAlphaPixels": 622729,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 165341,
+          "bounds": [
+            250,
+            8,
+            784,
+            460
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 67,
+          "y0": 0,
+          "x1": 904,
+          "y1": 500,
+          "count": 170328
+        },
+        "translation": {
+          "x": 154,
+          "y": 389
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 152652,
+          "bounds": [
+            1014,
+            9,
+            1546,
+            446
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 904,
+          "y0": 0,
+          "x1": 1735,
+          "y1": 528,
+          "count": 157405
+        },
+        "translation": {
+          "x": 600,
+          "y": 375
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 11,
+          "pixels": 142357,
+          "bounds": [
+            219,
+            459,
+            730,
+            867
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 106,
+          "y0": 455,
+          "x1": 886,
+          "y1": 870,
+          "count": 146308
+        },
+        "translation": {
+          "x": 143,
+          "y": 1257
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 7,
+          "pixels": 144450,
+          "bounds": [
+            1049,
+            450,
+            1553,
+            868
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 874,
+          "y0": 441,
+          "x1": 1753,
+          "y1": 870,
+          "count": 148688
+        },
+        "translation": {
+          "x": 606,
+          "y": 1264
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

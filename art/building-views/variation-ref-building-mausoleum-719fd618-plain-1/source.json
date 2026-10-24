@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-mausoleum-719fd618-plain:1",
+ "version": "variation-ref-building-mausoleum-719fd618-plain-1-4views-v2",
+ "files": {
+  "NE": "a6c948cc572bef28eb65f868633193e9a51959d1a24c5ddda1438e2fcf019eab",
+  "SE": "477290d11bb2f67053213c113f3a16bf50ea7faa1007b7f98fc4924885f6597b",
+  "SW": "c649088c0855d720754ce8bb0f8df5762c9fdea533cef7e0aef98616d0ea31f0",
+  "NW": "f6244314410748afe225a7f22070ff1ea5351c8f953d2aac14371ea736e6e753"
+ }
+}

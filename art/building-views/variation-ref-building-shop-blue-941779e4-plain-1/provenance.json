@@ -1,0 +1,148 @@
+{
+  "id": "variation:ref-building-shop-blue-941779e4-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-c7735083-5b32-47d3-9ed0-1e15bff647ad.png",
+  "prompt": "SQUARE 1:1 CANVAS, 2048x2048. Four small isolated building cutouts, widely separated in a 2x2 grid. All 4 silhouettes COMPLETE, each occupies only 60% of its cell height, with a fully transparent 100-pixel border all around and between sprites. ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-shop-blue-941779e4-plain:1. Rebuild this exact architecture in the shared Maple Bean art theme. Keep building height, wing/deck/garage position and roof shape. True opposite rear facades, no duplicated entrance/porch on all four sides. If identity is a rear view, retain it as one real rear face and reconstruct a sensible front; never clone the rear facade four times. Keep full roof/chimney and steps well clear of all canvas edges; small sprites with generous transparent space, no floors or yards.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:ref-building-shop-blue-941779e4-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-ref-building-shop-blue-941779e4-plain-1.configured@2x.png",
+      "sha256": "fb84833a97cde9d8afd932e719375db22cc95ea9a0e5161bc3fd69aa16d99217"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Front sign/bay-window face and service rear are distinct; side windows and three chimney cluster follow opposite corners. Matte blue brick, slate roof, amber glazing and fixed screen-right key match master. Exact component v2 repack preserves all source pixels; v1 already passed alpha/margins.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-shop-blue-941779e4-plain-1-4views-v1.png",
+    "originalSheetSha256": "ab6033331fbeed9b22f1a0c6237b06989266f3e263de4bbf470bb798a56f00ae",
+    "outputSheetSha256": "465911bb12f8cf332359bf68e937164c9530e2cd47ee7fba1e9a57204625c6a6",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "cellSize": 1024,
+    "nonzeroAlphaPixels": 851378,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 217565,
+          "bounds": [
+            70,
+            65,
+            597,
+            588
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 10,
+          "x1": 638,
+          "y1": 616,
+          "count": 222408
+        },
+        "translation": {
+          "x": 192,
+          "y": 198
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 190461,
+          "bounds": [
+            685,
+            64,
+            1194,
+            606
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 666,
+          "y0": 23,
+          "x1": 1239,
+          "y1": 608,
+          "count": 195787
+        },
+        "translation": {
+          "x": 583,
+          "y": 196
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 13,
+          "pixels": 209390,
+          "bounds": [
+            68,
+            662,
+            600,
+            1190
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 33,
+          "y0": 618,
+          "x1": 642,
+          "y1": 1205,
+          "count": 214247
+        },
+        "translation": {
+          "x": 174,
+          "y": 624
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 14,
+          "pixels": 213639,
+          "bounds": [
+            686,
+            672,
+            1199,
+            1184
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 628,
+          "y0": 616,
+          "x1": 1207,
+          "y1": 1223,
+          "count": 218936
+        },
+        "translation": {
+          "x": 618,
+          "y": 616
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "actualAlphaComposite": "magenta",
+    "rotationReview": "four distinct paired facades; no mirrored repeat",
+    "theme": "Maple Bean matte materials, navy roof/amber lamps, upper-right dusk",
+    "reviewed": "2026-10-24"
+  }
+}

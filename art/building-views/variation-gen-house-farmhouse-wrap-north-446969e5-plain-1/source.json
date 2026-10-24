@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-house-farmhouse-wrap-north-446969e5-plain:1",
+ "version": "variation-gen-house-farmhouse-wrap-north-446969e5-plain-1-4views-v2",
+ "files": {
+  "NE": "9c93144486a53ef622385712edc2fcd7e4899621645b4ad2d46ec771bef3ae85",
+  "SE": "9fd7cd4f9a2e3adbe5ab28b3b0193f6f1579388b3631ca52d3c45eeff1f37c5e",
+  "SW": "e1de444abe9e00459a8b61c72143e1368dfadb30a4b46f711b5b141b049de718",
+  "NW": "f6439356d9fb60431bb765e8faf9c3ee065a92413059cd9e898d7ee829e6018c"
+ }
+}

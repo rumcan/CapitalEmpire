@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-house-dormer-north-6952cea5-plain:1",
+ "version": "variation-ref-building-house-dormer-north-6952cea5-plain-1-4views-v2",
+ "files": {
+  "NE": "d21a0a06b4911ce4c5abd8daaa72f4bca6c1b149eea4721b1cf7f21397533b50",
+  "SE": "386ac3c76e0b67d43ccb470944369693ac44fdea7c500574f2b456fe03858892",
+  "SW": "b73448e6bbb469cf7e5b2ad6594f1588269659bc2247669e7ce9f64afc2bdb30",
+  "NW": "14d9bb87af966587f18df519a39c40ea8d9b69df9015f8a68bbe5dd91a955709"
+ }
+}
