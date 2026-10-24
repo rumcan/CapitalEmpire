@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
-import { SAVE_VERSION, MIGRATIONS, upgradeSave, readSave, listSaveBackups, setSaveStore, gzip, type SaveStore } from '../src/game/save';
+import { SAVE_VERSION, MIGRATIONS, upgradeSave, readSave, listSaveBackups, backupTownSlot, setSaveStore, gzip, type SaveStore } from '../src/game/save';
 
 /** an in-memory save store; putThrows makes every put fail (a full or private store) */
 function memStore(opts: { putThrows?: boolean; getThrows?: boolean } = {}): SaveStore & { m: Map<string, ArrayBuffer> } {
@@ -161,4 +161,16 @@ test('listSaveBackups lists only the backup slots, newest first', async () => {
   const s = memStore(); setSaveStore(s);
   for (const k of ['town', 'other', 'town-pre-v4', 'town-backup-future-6-1000', 'town-backup-corrupt-x-2000']) s.m.set(k, new ArrayBuffer(0));
   assert.deepEqual(await listSaveBackups(), ['town-backup-corrupt-x-2000', 'town-backup-future-6-1000', 'town-pre-v4']);
+});
+
+test('backupTownSlot copies the town slot (a save that read but failed to load), and reports a failed copy', async () => {
+  const s = memStore(); setSaveStore(s);
+  assert.equal(await backupTownSlot('loadfailed'), false); // nothing to copy
+  const buf = await gzip(JSON.stringify({ version: SAVE_VERSION, map: MAP }));
+  s.m.set('town', buf);
+  assert.equal(await backupTownSlot('loadfailed'), true);
+  const k = [...s.m.keys()].find(x => x.startsWith('town-backup-loadfailed-'));
+  assert.ok(k); assert.deepEqual(new Uint8Array(s.m.get(k!)!), new Uint8Array(buf));
+  const f = memStore({ putThrows: true }); setSaveStore(f); f.m.set('town', buf);
+  assert.equal(await backupTownSlot('loadfailed'), false);
 });

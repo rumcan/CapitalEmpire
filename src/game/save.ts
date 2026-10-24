@@ -168,6 +168,10 @@ async function unreadable(status: 'future' | 'otherMap' | 'corrupt', buf: ArrayB
   try { await store.put(backup, buf); return { save: null, status, version, backedUp: true, backup }; }
   catch { return { save: null, status, version, backedUp: false }; }
 }
+/** copies the town slot's bytes to a backup slot, for a save that read fine but failed to load; false when there was nothing to copy or the copy failed */
+export async function backupTownSlot(tag: string): Promise<boolean> {
+  try { const buf = await store.get(SLOT); if (!buf) return false; await store.put(`town-backup-${tag}-x-${Date.now()}`, buf); return true; } catch { return false; }
+}
 /** the time in a backup slot's key (its last number; 0 for the pre-version copies) */
 const slotStamp = (k: string) => { const m = /-(\d+)$/.exec(k); return m ? Number(m[1]) : 0; };
 /** the backup slots (newest first) */

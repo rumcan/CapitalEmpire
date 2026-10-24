@@ -26,7 +26,7 @@ import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
-import { readSave, writeSave, clearSave, SAVE_VERSION, segRec, type SaveV5 } from './save';
+import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { SimClient, type LotView } from './sim/client';
 import { zoneOf } from './sim/routing';
@@ -607,10 +607,16 @@ export class Game {
       if (!read.backedUp) { this.saveBlocked = true; readNote = { text: 'The save could not be read or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; }
       else readNote = { text: read.status === 'future' ? `This save is from a newer build (v${read.version}). It is kept as a backup; a new game started.` : read.status === 'otherMap' ? 'This save is for another map size. It is kept as a backup; a new game started.' : 'The save could not be read. It is kept as a backup; a new game started.', kind: 'warn' };
     }
+    // the store could not even be read: we cannot know what the slot holds, so never write over it (a private window cannot save anyway)
+    if (read && read.status === 'none' && !read.backedUp) this.saveBlocked = true;
     let loaded: SaveV5 | null = null;
     if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
     else if (!save && this.newGolfGame()) { /* a new golf game: its town, drive and course are laid (see newGolfGame) */ }
-    else if (!save || !this.load(save)) { this.golf = null; this.genTerrain(newSeed()); this.seedTowns(); }
+    else if (!save || !this.load(save)) {
+      // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
+      if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
+      this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
+    }
     else loaded = save;
     tick(0.7);
     const tl = performance.now();
