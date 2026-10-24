@@ -5,20 +5,18 @@
  * relax calms staircase waves; the result is clipped per chunk into fill rings, edge polylines and collar rings.
  * Pure TS, no DOM. Units: tiles of 2 m for every input and output coordinate; cells of 1 m (0.5 tile) for radii and widths. */
 
-// ---- the course grid as this module reads it (T072, src/game/ext/course-grid; local until it lands) ----
+import { CELL_T, SURF, type Grid } from '../course-grid';
 
-/** tiles per course-grid cell (T072's CELL_T) */
-const CELL = 0.5;
-/** surface ids in draw order, low to high (T072's SURF) */
-const NONE = 0, ROUGH = 1, FESCUE = 2, WATER = 3, FAIRWAY = 4, TEE = 5, WASTE = 7, GREEN = 8; // bunker is 6
+// ---- the course grid (T072): origin (x0, y0) in tiles, w x h cells of CELL_T tiles, surf row-major (j * w + i, as cellAt) ----
+
+/** tiles per course-grid cell */
+const CELL = CELL_T;
+/** the surface ids this module names (course-grid's SURF, in draw order) */
+const { none: NONE, rough: ROUGH, fescue: FESCUE, water: WATER, fairway: FAIRWAY, tee: TEE, waste: WASTE, green: GREEN } = SURF;
 /** the number of surface ids (0..8) */
-const N_SURF = 9;
+const N_SURF = Object.keys(SURF).length;
 /** a window cell outside the grid (never claimed, never a collar) */
 const OUTSIDE = 255;
-
-/** the fields of T072's course grid that outlines read: origin (x0, y0) in tiles, size w x h in cells of 0.5 tile, and one
- * surface id per cell, row-major (index = j * w + i; cell (i, j) spans tiles x0 + i/2 .. x0 + (i+1)/2). T072's grid fits it. */
-export interface BlobGrid { x0: number; y0: number; w: number; h: number; surf: Uint8Array }
 
 // ---- constants (section 3.2) ----
 
@@ -125,7 +123,7 @@ function disc(r: number): Int8Array {
 interface Occ { occ: Uint8Array; ci0: number; cj0: number; cw: number; ch: number }
 
 /** the grid's surface ids over a cell window, OUTSIDE where the window leaves the grid */
-function readSurf(g: BlobGrid, ci0: number, cj0: number, cw: number, ch: number): Uint8Array {
+function readSurf(g: Grid, ci0: number, cj0: number, cw: number, ch: number): Uint8Array {
   const out = new Uint8Array(cw * ch).fill(OUTSIDE);
   const i0 = Math.max(0, ci0), i1 = Math.min(g.w, ci0 + cw), j0 = Math.max(0, cj0), j1 = Math.min(g.h, cj0 + ch);
   for (let j = j0; j < j1; j++) {
@@ -612,19 +610,19 @@ function dpRing(p: number[], tol: number): number[] {
 // ---- the surface pipeline ----
 
 /** cell coordinates -> tiles, in place copy */
-function toTiles(g: BlobGrid, p: number[]): number[] {
+function toTiles(g: Grid, p: number[]): number[] {
   const out = new Array<number>(p.length);
   for (let i = 0; i < p.length; i += 2) { out[i] = g.x0 + p[i] * CELL; out[i + 1] = g.y0 + p[i + 1] * CELL; }
   return out;
 }
 
 /** a tile box in global cell coordinates */
-function cellBox(g: BlobGrid, b: BlobBox): BlobBox {
+function cellBox(g: Grid, b: BlobBox): BlobBox {
   return { x0: (b.x0 - g.x0) / CELL, y0: (b.y0 - g.y0) / CELL, x1: (b.x1 - g.x0) / CELL, y1: (b.y1 - g.y0) / CELL };
 }
 
 /** a surface's contours over box (tiles) plus a margin: its own (closed per style) and, when asked, its collar's */
-function surfaceChains(g: BlobGrid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean) {
+function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withCollar: boolean) {
   const a0 = Math.floor((box.x0 - CHUNK_MARGIN - g.x0) / LATTICE), a1 = Math.ceil((box.x1 + CHUNK_MARGIN - g.x0) / LATTICE);
   const b0 = Math.floor((box.y0 - CHUNK_MARGIN - g.y0) / LATTICE), b1 = Math.ceil((box.y1 + CHUNK_MARGIN - g.y0) / LATTICE);
   const L: Lat = { a0, b0, na: a1 - a0 + 1, nb: b1 - b0 + 1 };
@@ -661,7 +659,7 @@ function reverseRing(p: number[]): number[] {
 }
 
 /** fill rings over box (cells) from chains, simplified, in tiles */
-function fillRings(g: BlobGrid, o: Occ, chains: readonly Chain[], b: BlobBox): number[][] {
+function fillRings(g: Grid, o: Occ, chains: readonly Chain[], b: BlobBox): number[][] {
   const tol = SIMPLIFY_TOL / CELL, { pieces, inner } = clip(chains, b), out: number[][] = [];
   for (const r of assemble(pieces, b, fieldAt(o, b.x0, b.y0) >= ISO_T)) { const d = dpRing(r, tol); if (d.length >= 6) out.push(toTiles(g, d)); }
   for (const c of inner) { const d = c.simple ? c.p : dpRing(c.p, tol); if (d.length >= 6) out.push(toTiles(g, d)); }
@@ -669,7 +667,7 @@ function fillRings(g: BlobGrid, o: Occ, chains: readonly Chain[], b: BlobBox): n
 }
 
 /** edge polylines over box (cells) from chains, simplified, in tiles; whole rings close on their first point */
-function edgeLines(g: BlobGrid, chains: readonly Chain[], b: BlobBox): number[][] {
+function edgeLines(g: Grid, chains: readonly Chain[], b: BlobBox): number[][] {
   const tol = SIMPLIFY_TOL / CELL, { pieces, inner } = clip(chains, b), out: number[][] = [];
   for (const pc of pieces) {
     if (pc.p.length < 4) continue;
@@ -703,7 +701,7 @@ function presimplify(chains: readonly Chain[], b: BlobBox): void {
 }
 
 /** the surfaces whose cells lie within `pad` cells of box (tiles), in draw order */
-function surfacesNear(g: BlobGrid, box: BlobBox, pad: number): number[] {
+function surfacesNear(g: Grid, box: BlobBox, pad: number): number[] {
   const i0 = Math.max(0, Math.floor((box.x0 - g.x0) / CELL) - pad), i1 = Math.min(g.w - 1, Math.ceil((box.x1 - g.x0) / CELL) + pad);
   const j0 = Math.max(0, Math.floor((box.y0 - g.y0) / CELL) - pad), j1 = Math.min(g.h - 1, Math.ceil((box.y1 - g.y0) / CELL) + pad);
   const seen = new Uint8Array(256);
@@ -719,7 +717,7 @@ function surfacesNear(g: BlobGrid, box: BlobBox, pad: number): number[] {
  * (draw order, none excluded), fill rings clipped to the box grown by FILL_GROW, edge polylines cut exactly at the box, and the
  * collar when the style has one. The field reads the global grid with a CHUNK_MARGIN-tile margin and the relax runs before the
  * cut, so neighbouring chunks' edges meet exactly. `styles` overrides BLOB_STYLE (indexed by surface id). */
-export function chunkOutlines(g: BlobGrid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE): SurfaceOutline[] {
+export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE): SurfaceOutline[] {
   const box: BlobBox = { x0: cx * size, y0: cy * size, x1: (cx + 1) * size, y1: (cy + 1) * size };
   let maxCollar = 0;
   for (const st of styles) if (st?.collar) maxCollar = Math.max(maxCollar, st.collar.width);
@@ -744,7 +742,7 @@ export function chunkOutlines(g: BlobGrid, cx: number, cy: number, size = 64, st
 /** a surface's outline rings within box (tiles), for ghosts and the holes adapter: the same field, closing and relax as the
  * chunks (style defaults to BLOB_STYLE[surf]); rings wholly inside are whole, rings that leave the box are closed along it.
  * Outer rings counter-clockwise on the map's axes, holes clockwise; flat [x0, y0, ...] arrays in tiles. */
-export function blobOutlines(g: BlobGrid, surf: number, box: BlobBox, style: BlobStyle = BLOB_STYLE[surf] ?? { close: 0, relax: 0 }): number[][] {
+export function blobOutlines(g: Grid, surf: number, box: BlobBox, style: BlobStyle = BLOB_STYLE[surf] ?? { close: 0, relax: 0 }): number[][] {
   const sc = surfaceChains(g, surf, style, box, false);
   return fillRings(g, sc.oS, sc.chains, cellBox(g, box));
 }

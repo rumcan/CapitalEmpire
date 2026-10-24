@@ -5,25 +5,25 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { BLOB_STYLE, blobOutlines, chunkOutlines, ISO_T, KERNEL_R, LATTICE } from '../src/game/ext/course-blobs/index.js';
-import type { BlobGrid, BlobStyle, SurfaceOutline } from '../src/game/ext/course-blobs/index.js';
+import type { BlobStyle, SurfaceOutline } from '../src/game/ext/course-blobs/index.js';
+import { makeGrid, SURF } from '../src/game/ext/course-grid/index.js';
+import type { Grid } from '../src/game/ext/course-grid/index.js';
 
-/** surface ids (T072's SURF) */
-const ROUGH = 1, WATER = 3, FAIRWAY = 4, TEE = 5, BUNKER = 6, GREEN = 8;
+/** surface ids (course-grid's SURF) */
+const { rough: ROUGH, water: WATER, fairway: FAIRWAY, tee: TEE, bunker: BUNKER, green: GREEN } = SURF;
 /** metres per tile */
 const M = 2;
 /** a plain style */
 const st = (close: number, relax: number): BlobStyle => ({ close, relax });
 
-/** an empty grid of w x h cells at the origin, shaped like T072's CourseGrid */
-function grid(w: number, h: number, x0 = 0, y0 = 0): BlobGrid & { hole: Uint8Array; month: Uint16Array; rev: number } {
-  return { x0, y0, w, h, surf: new Uint8Array(w * h), hole: new Uint8Array(w * h), month: new Uint16Array(w * h), rev: 0 };
-}
+/** an empty course grid of w x h cells with its origin at (x0, y0) tiles */
+const grid = (w: number, h: number, x0 = 0, y0 = 0): Grid => makeGrid(x0, y0, w, h);
 /** sets cells i0..i1, j0..j1 (inclusive) to s */
-function put(g: BlobGrid, i0: number, j0: number, i1: number, j1: number, s: number): void {
+function put(g: Grid, i0: number, j0: number, i1: number, j1: number, s: number): void {
   for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) g.surf[j * g.w + i] = s;
 }
 /** sets every cell whose centre is within r cells of (cx, cy) (cells) to s */
-function disc(g: BlobGrid, cx: number, cy: number, r: number, s: number): void {
+function disc(g: Grid, cx: number, cy: number, r: number, s: number): void {
   for (let j = 0; j < g.h; j++) for (let i = 0; i < g.w; i++) if ((i + 0.5 - cx) ** 2 + (j + 0.5 - cy) ** 2 <= r * r) g.surf[j * g.w + i] = s;
 }
 /** a ring or polyline in metres (relative to a grid at the origin) */
@@ -75,7 +75,7 @@ function samples(p: number[], closed = true): number[] {
 /** a seeded LCG in 0..1 */
 function rng(seed: number): () => number { let s = seed >>> 0; return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); }
 /** the rings of one surface over a whole grid at the origin (box in tiles) */
-const whole = (g: BlobGrid, s: number, style: BlobStyle) => blobOutlines(g, s, { x0: 0, y0: 0, x1: g.w / M, y1: g.h / M }, style).map(toM);
+const whole = (g: Grid, s: number, style: BlobStyle) => blobOutlines(g, s, { x0: 0, y0: 0, x1: g.w / M, y1: g.h / M }, style).map(toM);
 
 test('constants are the plan\'s (R 1.25 cells, lattice 0.25 tile) and T is near 0.62', () => {
   assert.equal(KERNEL_R, 1.25);
@@ -159,7 +159,7 @@ test('5. two cells one apart stay two rings with close 0 and join with close 1',
 
 /** a staircase of slope 1:q through the middle of a 60 x 60 grid, and the wobble (max - min distance from its line, metres) of
  * the outline within 10 m of the middle */
-function staircase(q: number, relax: number): { g: BlobGrid; wobble: number } {
+function staircase(q: number, relax: number): { g: Grid; wobble: number } {
   const g = grid(60, 60), c = 30 + q * 30;
   for (let j = 0; j < 60; j++) for (let i = 0; i < 60; i++) if (i + 0.5 + q * (j + 0.5) < c) g.surf[j * 60 + i] = FAIRWAY;
   const rings = whole(g, FAIRWAY, st(0, relax)), L = Math.hypot(1, q);
@@ -184,7 +184,7 @@ test('6. a 1:2 staircase wobbles at most 0.55 m with relax 0 and at most 0.15 m 
 });
 
 /** a fairway blob across the seam x = 64 tiles (cell 128) of chunks (0, 0) and (1, 0), with a few stray cells */
-function seamGrid(): BlobGrid {
+function seamGrid(): Grid {
   const g = grid(260, 100), r = rng(7);
   disc(g, 128, 50, 16, FAIRWAY);
   disc(g, 140, 40, 9, FAIRWAY);
@@ -227,7 +227,7 @@ test('7. a blob across a chunk border: the fills cover its interior, the edge en
 });
 
 /** a fairway block (cells 20..59 x 20..39) with a pond on its right, bunkers in its collar band and a rough island inside */
-function collarGrid(): BlobGrid {
+function collarGrid(): Grid {
   const g = grid(100, 70);
   put(g, 20, 20, 59, 39, FAIRWAY);
   put(g, 60, 22, 69, 37, WATER);
@@ -331,10 +331,10 @@ const BG = '#30592a';
 
 /** one panel: a title, its window (metres, in the grid's frame), its scale (px per m), the layers to draw in order, and the
  * grid whose filled cells are outlined faintly (when set) */
-interface Panel { title: string; x0: number; y0: number; w: number; h: number; s: number; layers: { rings: number[][]; color: string }[]; cells?: BlobGrid; seams?: number }
+interface Panel { title: string; x0: number; y0: number; w: number; h: number; s: number; layers: { rings: number[][]; color: string }[]; cells?: Grid; seams?: number }
 
 /** a panel of one surface's rings (metres) over a window of the grid (metres) */
-function ringsPanel(title: string, g: BlobGrid, s: number, style: BlobStyle, scale: number, win?: [number, number, number, number]): Panel {
+function ringsPanel(title: string, g: Grid, s: number, style: BlobStyle, scale: number, win?: [number, number, number, number]): Panel {
   const [x0, y0, x1, y1] = win ?? [0, 0, g.w, g.h];
   const rings = blobOutlines(g, s, { x0: x0 / M, y0: y0 / M, x1: x1 / M, y1: y1 / M }, style).map(toM);
   return { title, x0, y0, w: x1 - x0, h: y1 - y0, s: scale, layers: [{ rings, color: FILL[s] }], cells: g };
@@ -342,7 +342,7 @@ function ringsPanel(title: string, g: BlobGrid, s: number, style: BlobStyle, sca
 
 /** the sample hole: a curving fairway, a kidney green with a fringe, two bunkers in the fairway's collar and two by the green,
  * a pond, a tee, and stray single cells and corner pairs */
-function sampleGrid(): BlobGrid {
+function sampleGrid(): Grid {
   const g = grid(150, 110);
   for (let t = 0; t <= 1.0001; t += 0.02) { const x = 22 + 80 * t, y = 82 - 46 * t - 18 * Math.sin(Math.PI * t); disc(g, x, y, 9 + 3 * Math.sin(Math.PI * t), FAIRWAY); }
   disc(g, 112, 30, 10, GREEN); disc(g, 122, 38, 7, GREEN); disc(g, 104, 22, 6, GREEN);
@@ -359,7 +359,7 @@ function sampleGrid(): BlobGrid {
 }
 
 /** every surface's fill and collar from chunk outlines (32-tile chunks, so seams cross the hole), in draw order */
-function sampleLayers(g: BlobGrid): Panel['layers'] {
+function sampleLayers(g: Grid): Panel['layers'] {
   const C = 32, layers: Panel['layers'] = [], per = new Map<number, { fill: number[][]; collar: number[][] }>();
   for (let cy = 0; cy * C < g.h / M; cy++) for (let cx = 0; cx * C < g.w / M; cx++) {
     for (const o of chunkOutlines(g, cx, cy, C)) {
@@ -379,7 +379,7 @@ function sampleLayers(g: BlobGrid): Panel['layers'] {
 
 /** strokes painted with a 1-cell brush: a diagonal line of corner-touching cells, a 2-cell-wide line, a dotted row (gaps of 1
  * and 2), a 1:3 painted edge and a few dabs */
-function strokesGrid(): BlobGrid {
+function strokesGrid(): Grid {
   const g = grid(40, 30);
   for (let k = 0; k < 12; k++) g.surf[(3 + k) * 40 + 3 + k] = FAIRWAY;
   put(g, 18, 3, 35, 4, FAIRWAY);
