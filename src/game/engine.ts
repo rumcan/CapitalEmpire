@@ -1272,7 +1272,9 @@ export class Game {
     for (const p of this.props) {
     if (!claimed.has(p) && p.item === item && (Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2)) { found = p; break; }
     }
-    if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated)));
+    const scale = structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated));
+    if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), scale);
+    else if (Math.abs(found.scale - scale) > 1e-6) { found.scale = scale; this.propChanged(found); } // a save keeps the size it was drawn at: refit it to today's rule
     claimed.add(found);
     this.golfStructureProps.set(s.id, found);
     }
