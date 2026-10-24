@@ -10,6 +10,7 @@ import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
 import { mulberry } from '../src/game/iso';
 import { CAR_SCALE } from '../src/game/ext/car-art';
+import { OWNER_SCALE, TABLE_SCALE } from '../src/game/lots/scales';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
 import { toWorld } from '../src/game/lots/preset-frame';
@@ -384,18 +385,21 @@ function digest(c: Composition): string {
   return h.toString(16).padStart(8, '0');
 }
 
-test('compositions are pinned: digests of fixed seeds (re-pinned 2026-10-24 for P20 / T064: every built lot drawn from its preset (lot-presets.json), the street items, leaves, fences and decline touches procedural; the building site is unchanged. Earlier: 2026-10-24 for the four-view buildings prep-views cropped from reviewed sheets and no building ever mirrored; 2026-10-23 for the four-view building art; 2026-10-22 for the yards keeping only their leaves and the house lots 25% wider; 2026-10-21 for the owner evening curation and the car park layout; 2026-10-20 for separate residential boundaries)', () => {
+test('compositions are pinned: digests of fixed seeds, drawn at the table sizes so a studio resize never breaks them (re-pinned 2026-10-24 evening for that; earlier 2026-10-24 for P20 / T064: every built lot drawn from its preset (lot-presets.json), the street items, leaves, fences and decline touches procedural; the building site is unchanged. Earlier: 2026-10-24 for the four-view buildings prep-views cropped from reviewed sheets and no building ever mirrored; 2026-10-23 for the four-view building art; 2026-10-22 for the yards keeping only their leaves and the house lots 25% wider; 2026-10-21 for the owner evening curation and the car park layout; 2026-10-20 for separate residential boundaries)', () => {
   const CASES: [number, ComposeState, string][] = [
-    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '2838339e'],
-    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, 'c68b4389'],
-    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '53d442ef'],
-    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '87728a8a'],
+    [0, { use: LU.COM, level: LV.BUILT, decline: 0, seed: 123456 }, '5688befb'],
+    [7, { use: LU.COM, level: LV.UPGRADED, decline: 1, seed: 271828 }, '1538a361'],
+    [15, { use: LU.COM, level: LV.BUILT, decline: 2, seed: 987654 }, '48f49438'],
+    [30, { use: LU.COM, level: LV.BUILT, decline: 3, seed: 42 }, '46cbdf24'],
     [4, { use: LU.COM, level: LV.BUILDING, decline: 0, seed: 5 }, 'e9201342'],
-    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'f1710d2b'],
-    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '29ea72b1'],
+    [20, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 555555 }, 'bc1a57fd'],
+    [22, { use: LU.IND, level: LV.BUILT, decline: 0, seed: 777777 }, '0887558a'],
   ];
   for (const [, st] of CASES) assert.ok(!isCarPark(st), `${JSON.stringify(st)} is a car park`);
-  assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2]));
+  // drawn at the table's sizes, not the owner's studio sizes (scale-overrides.json): a studio resize must never break the suite
+  const live = { ...OWNER_SCALE }, use = (to: Record<string, number>) => { for (const k of Object.keys(OWNER_SCALE)) delete OWNER_SCALE[k]; Object.assign(OWNER_SCALE, to); };
+  use(TABLE_SCALE);
+  try { assert.deepEqual(CASES.map(([i, st]) => digest(compose(LOTS[i], st))), CASES.map(c => c[2])); } finally { use(live); }
 });
 
 test('about 15% of built commercial lots are public car parks: a car park has an asphalt bay patch and no building', () => {
