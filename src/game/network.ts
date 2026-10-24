@@ -97,8 +97,10 @@ export const CLASSES: RoadClass[] = [...PLAIN, ...BUILT.map(([t, fl]) => fl.redu
 export const CLASS = Object.fromEntries(CLASSES.map(c => [c.id, c])) as Record<string, RoadClass>;
 /** the class of a stored id (a save, a netop); an unknown id is a street */
 export function classOf(id: string): RoadClass { return CLASS[id] ?? CLASS.street! }
-/** a course road class is open at this golf tier (P19): gravel always, paved from tier 2, the avenue drives from tier 3; any other class: true */
-export function courseClassOpen(id: ClassId, tier: number): boolean { const b = classOf(id).base; return b === 'drive' ? tier >= 2 : b === 'drive-avenue' ? tier >= 3 : true }
+/** the golf tier a course road class opens at (P19): gravel 1, paved 2, the avenue drives 3; null for any other class */
+export function courseTierNeeded(id: ClassId): number | null { const c = classOf(id); return c.family !== 'course' ? null : c.base === 'drive' ? 2 : c.base === 'drive-avenue' ? 3 : 1 }
+/** a course road class is open at this golf tier (courseTierNeeded); any other class: true */
+export function courseClassOpen(id: ClassId, tier: number): boolean { return (courseTierNeeded(id) ?? 0) <= tier }
 /** the variant ids of each type, in Tab order (the road tool's Tab key cycles them) */
 export const VARIANTS: Record<TypeId, string[]> = {
   gravel: ['gravel'], lane: ['lane'], street: ['street', 'street.ow', 'street.tr', 'street.ow.tr'], road: ['road'], avenue: ['avenue', 'avenue.gr'],
@@ -1077,7 +1079,7 @@ export class RoadNetwork {
     return changed;
   }
   private decalsFor(r: Route, out: Decal[]) {
-    if (r.cls.id === 'gravel') return; // unpaved: no manholes, drains or patches
+    if (r.cls.tex === 'gravel') return; // unpaved (a gravel surface, the town's gravel and the gravel drive): no manholes, drains or patches
     const cls = r.cls, p0 = r.pts[0], rng = mulberry(((p0.x * 73856093) ^ (p0.y * 19349663) ^ (cls.order * 83492791)) >>> 0);
     const curbed = cls.walkTex === 'slabs';
     const weights: [DecalType, number][] = curbed ? [['manhole', 2], ['drain', 2.5], ['oil', 1.5], ['patch', cls.id === 'lane' ? 2.5 : 1]] : [['manhole', 0.4], ['oil', 2], ['patch', 2]];

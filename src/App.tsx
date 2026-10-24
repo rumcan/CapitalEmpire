@@ -3,7 +3,7 @@ import { FLOW_COLS, Game, HEAT_COLS, HIST_RAMP, LOS_COL, SPEEDS, UPGRADE_COST } 
 import { ROW_BAY_COST, rowLots } from './game/event/rows';
 import { LIBRARY } from './game/library';
 import { type Tool } from './game/types';
-import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, SPEED_BONUS_KMH, TYPES, VARIANTS, speedOf, type Family, type Node } from './game/network';
+import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, SPEED_BONUS_KMH, TYPES, VARIANTS, courseTierNeeded, speedOf, type Family, type Node } from './game/network';
 import { SIGNAL_TIER_YEAR, SPEED_TIER_YEAR } from './game/event/round';
 import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
 import { isLights, junctionCorners, slipRule } from './game/junctions';
@@ -894,17 +894,18 @@ function RoadPanel({ game }: { game: Game }) {
               <Icon name={ex ? 'up' : 'down'} size={12} />
             </button>
             {ex && TYPES.filter(t => t.family === f.id).map(t => {
-              const c = CLASS[t.id]!, lk = game.classOpen(t.id) ? null : unlockOf('class', t.id)!, on = game.cls.base === t.id;
+              // a locked card: a course drive shows its golf tier, a town class the career milestone that unlocks it (greyed either way)
+              const c = CLASS[t.id]!, open = game.classOpen(t.id), tier = courseTierNeeded(t.id), lk = open ? null : unlockOf('class', t.id), lock = open ? null : tier !== null ? `🔒 Tier ${tier}` : lk ? lockText(lk.pop) : '🔒', on = game.cls.base === t.id;
               return (
                 <div key={`${f.id}-${t.id}`}>
-                  <button className={`card mb-1 ${on ? 'card-on' : ''} ${lk ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
+                  <button className={`card mb-1 ${on ? 'card-on' : ''} ${lock ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
                     <div className="flex w-full items-center gap-2.5">
                       <RoadThumb cls={c} w={84} h={36} />
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-semibold text-slate-100">{c.name}</div>
                         <div className="text-[10px] text-[var(--muted)]">{[...c.desc.split(' · ').filter(p => /\d/.test(p)), `${Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h`].join(' · ')}</div>
                       </div>
-                      <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{lk ? lockText(lk.pop) : `${money(c.cost)} / 2 m`}</span>
+                      <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{lock ?? `${money(c.cost)} / 2 m`}</span>
                     </div>
                   </button>
                   {on && VARIANTS[t.id].length > 1 && (
