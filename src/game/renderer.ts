@@ -11,7 +11,7 @@ import { layOnGround } from './base-grass';
 import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
-import { classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
+import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { quadBox, type LotPatch, type PatchTex } from './ground-protocol';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
@@ -137,7 +137,7 @@ export class GroundPainter {
     // meadow and forest in 4 x 4 tile blocks (the planner never shows finer detail)
     const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1), byType = new Map<number, Path2D>();
     for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (t !== TC.PATCH && t !== TC.HILL) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
-    for (const [t, p] of byType) { ctx.fillStyle = this.planColour(t === TC.PATCH ? 'meadow' : 'forest'); ctx.fill(p); }
+    for (const [t, p] of byType) { ctx.fillStyle = this.planColour(t === TC.PATCH ? 'meadow' : WOODLAND_TEX); ctx.fill(p); }
     // bare rock on the steep faces, as a flat colour (before the river banks, so they read on top)
     const ra = rockAlpha(this.slope, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.edgeNoise);
     if (ra) { const rb = this.buffer('small', ra.W, ra.H), rg = ctx2d(rb); rg.putImageData(new ImageData(ra.data as Uint8ClampedArray<ArrayBuffer>, ra.W, ra.H), 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = this.planColour('rock'); rg.fillRect(0, 0, ra.W, ra.H); rg.globalCompositeOperation = 'source-over'; ctx.setTransform(M); ctx.drawImage(rb, tx0, ty0, ra.W / 0.25, ra.H / 0.25); }
@@ -195,6 +195,14 @@ export class GroundPainter {
   private groundPattern(g: C2D, img: Cnv, G?: DOMMatrix, period = MOSAIC_TILES) {
     const p = g.createPattern(img, 'repeat')!, s = period / img.width, S = new DOMMatrix([s, 0, 0, s, 0, 0]); p.setTransform(G ? G.multiply(S) : S); return p;
   }
+  /** a Paint photo texture (an owner's preset or a grass-art PHOTO_TEX photo) as a tile-space fill under the current transform, as the painted
+   *  areas lay it: the photo itself at the mip L * sx asks for (the mosaic only when the source is missing), turned and scaled by G; its flat
+   *  Paint swatch while this worker has not built it (Textures.ensure) */
+  private paintPhoto(g: C2D, t: string, L: number, G?: DOMMatrix, sx = 1): CanvasPattern | string {
+    if (!this.tex.has(t)) return PAINT_COL.get(t) ?? '#808080';
+    const src = this.tex.sourceFor(t, L * sx);
+    return src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * sx), G, this.tex.periodOf(t));
+  }
   /** the ground photo that replaces a painted ground texture (GROUND_PHOTO), in tile space under the current transform; null when there is none
    *  or this worker has not built it (the caller paints the screen texture) */
   private photoFill(g: C2D, t: string, L: number): CanvasPattern | null {
@@ -235,7 +243,9 @@ export class GroundPainter {
     /** the water: the photo in tile space (under M) when this worker has it, else the screen texture */
     const water = (g: C2D): CanvasPattern | string => this.photoFill(g, 'water', L) ?? this.screenPattern(g, 'water', L, X0, Y0, Minv);
     const cres = lite ? 1 : 4;
-    for (const [want, name] of [[TC.PATCH, 'meadow'], [TC.HILL, 'forest']] as const) { const a = classAlpha(this.terrain, want, tx0, ty0, bw, bh, cres, this.edgeNoise); if (a) layer(name, g => overlay(g, a, cres)); }
+    const meadow = classAlpha(this.terrain, TC.PATCH, tx0, ty0, bw, bh, cres, this.edgeNoise); if (meadow) layer('meadow', g => overlay(g, meadow, cres));
+    // the woodland floor in the course's Fescue (terrain-paint.ts WOODLAND_TEX), laid in tile space at scale 1 like a painted course area
+    const woods = classAlpha(this.terrain, TC.HILL, tx0, ty0, bw, bh, cres, this.edgeNoise); if (woods) layer('meadow', g => overlay(g, woods, cres), g => this.paintPhoto(g, WOODLAND_TEX, L));
     const ra = rockAlpha(this.slope, tx0, ty0, bw, bh, cres, this.edgeNoise); if (ra) layer('rock', g => overlay(g, ra, cres));
     const near = this.waters.filter(w => vis(w.box)), rivers = near.filter(w => w.w.kind === 'river'), creeks = near.filter(w => w.w.kind === 'creek');
     /** a feathered waterway mask: 4 nested shapes from extra + f down to extra - f (tiles), each adding a quarter of the alpha */
@@ -604,11 +614,9 @@ export class GroundPainter {
         }
         if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * sx), Gx)); return; }
         if (isPaintPhoto(t)) {
-          // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
-          if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
-          // the photo itself at the mip this zoom and scale ask for (sharp at every scale); the mosaic only when the source is missing
-          const src = this.tex.sourceFor(t, L * sx);
-          put(src ? this.groundPattern(ctx, src.img, Gx, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L * sx), Gx, this.tex.periodOf(t))); return;
+          // the photo itself at the mip this zoom and scale ask for (sharp at every scale); a photo this worker has not built yet
+          // (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
+          put(this.paintPhoto(ctx, t, L, Gx, sx)); return;
         }
         put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, Gx));
       };

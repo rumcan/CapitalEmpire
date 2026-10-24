@@ -5,7 +5,10 @@ import { MAP } from '../src/game/iso';
 import { HS, TC, type WaterPoint } from '../src/game/terrain/types';
 import { makeNoise } from '../src/game/terrain/noise';
 import { CH_SIZE, courseShadeInto } from '../src/game/ext/course-height';
-import { shadeField, shadeRGBA, courseShadeRGBA, classAlpha, rockAlpha, waterShape, waterBox, type PathSink } from '../src/game/terrain-paint';
+import { shadeField, shadeRGBA, courseShadeRGBA, classAlpha, rockAlpha, waterShape, waterBox, woodlandTex, WOODLAND_TEX, type PathSink } from '../src/game/terrain-paint';
+import fs from 'node:fs';
+import { PRESETS, surfacePreset } from '../src/game/paint-presets';
+import { PAINT_TEXES, isPaintPhoto } from '../src/game/paint';
 
 /** a sink that records every call as a plain list of points, arcs and closes */
 function recorder() {
@@ -113,4 +116,19 @@ test('courseShadeRGBA: shaded over a raised bump, null far from it', () => {
   for (let k = 3; k < over.data.length; k += 4) alphaMax = Math.max(alphaMax, over.data[k]!);
   assert.ok(alphaMax > 0, 'some pixel has alpha > 0');
   assert.equal(courseShadeRGBA(shade, 100, 100, 40, 40, 1), null);
+});
+
+test("the woodland floor paints with the Fescue: the preset for the course's fescue surface, else the owner's Fescue preset, else the old fescue photo", () => {
+  // the owner, 2026-10-24: "the map has this vector texture and it should be Fescue texture"
+  const expect = surfacePreset('fescue') ?? (PRESETS.some(p => p.id === 'fescue') ? 'preset:fescue' : 'golfFescue');
+  assert.equal(WOODLAND_TEX, expect);
+  assert.equal(WOODLAND_TEX, 'preset:fescue', "the presets the game is built with: the owner's Fescue (it stands for no surface yet)");
+  assert.ok(isPaintPhoto(WOODLAND_TEX), 'laid in tile space like a painted course area, never the painted forest floor');
+  assert.ok(PAINT_TEXES.some(t => t.id === WOODLAND_TEX && t.name === 'Fescue'), 'a Paint texture named Fescue (its swatch is the flat fill until a worker builds it)');
+  assert.ok(fs.existsSync('src/assets/ground/preset-fescue.webp'), 'the preset has its baked picture, so the ground workers can build it');
+  // the order of the choice
+  assert.equal(woodlandTex([{ id: 'deep', surface: 'fescue' }, { id: 'fescue', surface: null }]), 'preset:deep', 'a preset standing for fescue wins: the woodland follows the course');
+  assert.equal(woodlandTex([{ id: 'rough', surface: 'rough' }, { id: 'fescue', surface: null }]), 'preset:fescue');
+  assert.equal(woodlandTex([{ id: 'rough', surface: 'rough' }]), 'golfFescue', "no Fescue preset: the course's old fescue photo");
+  assert.equal(woodlandTex([]), 'golfFescue');
 });
