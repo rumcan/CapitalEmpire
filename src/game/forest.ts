@@ -16,6 +16,11 @@ export interface ForestTree { x: number; y: number; id: string; scale: number; f
 /** spacing of the jittered global grid, in tiles */
 const S = 2.4;
 
+/** the conifer share at tile (x, y) from the clearing noise at a coarser scale and an offset (stands about 300 m across): 0.08 in the broadleaf woods, up to 0.9 inside a stand */
+export function conifer(clearing: Noise, x: number, y: number): number {
+  return 0.08 + 0.82 * smoothstep(0.05, 0.3, fbm(clearing, x / 150 + 71.3, y / 150 - 23.9, 3));
+}
+
 /** the trees of cell (ci, cj): a pure function of the seed, terrain and clearing noise, so cells plant in any order and never overlap */
 export function forestCell(seed: number, cls: Uint8Array, height: Float32Array, slope: Float32Array, clearing: Noise, ci: number, cj: number): ForestTree[] {
   const out: ForestTree[] = [];
@@ -33,7 +38,7 @@ export function forestCell(seed: number, cls: Uint8Array, height: Float32Array, 
       if (fbm(clearing, x / 48, y / 48, 3) < -0.32) continue;
       const fx = Math.floor(x), fy = Math.floor(y);
       if ((!hill(fx + 2, fy) || !hill(fx - 2, fy) || !hill(fx, fy + 2) || !hill(fx, fy - 2)) && r() < 0.3) continue;
-      const h = sampleField(height, x, y), pc = 0.08 + 0.85 * smoothstep(150, 400, h);
+      const h = sampleField(height, x, y), pc = Math.max(0.08 + 0.85 * smoothstep(150, 400, h), conifer(clearing, x, y));
       let id: string;
       if (r() < pc) id = FOREST_CONIFER[Math.floor(r() * 3)];
       else {
