@@ -32,7 +32,7 @@ describe('golf/hole-terrain (T037)', () => {
 
   it('plays a hole with an empty line as its length, with every terrain number at 0', () => {
     const t = holeTerrain(createCourseHeightField(), { ...hole(3), line: [] });
-    assert.deepEqual(t, { hole: 3, teeM: 0, pinM: 0, riseM: 0, minM: 0, maxM: 0, reliefM: 0, maxSlope: 0, playsLikeM: 400 });
+    assert.deepEqual(t, { hole: 3, teeM: 0, pinM: 0, riseM: 0, minM: 0, maxM: 0, reliefM: 0, maxSlope: 0, fairwayMaxSlope: 0, playsLikeM: 400 });
   });
 
   it('a raised pin end makes an uphill hole that plays longer', () => {
@@ -68,5 +68,24 @@ describe('golf/hole-terrain (T037)', () => {
     const all = courseTerrain(createCourseHeightField(), [hole(1), hole(2)]);
     assert.equal(all.length, 2);
     assert.deepEqual(all.map(t => t.hole), [1, 2]);
+  });
+});
+
+describe('golf/hole-terrain fairway slope (T038)', () => {
+  it('a raised tee bank at the tee does not count as a steep fairway, a ramp mid-hole does', () => {
+    const field = createCourseHeightField();
+    // the Raised tee piece's height op (course-snap: raise, strength 0.95, radius about 0.85 × the tee's size)
+    applyCourseHeightBrush(field, { x: 100, y: 100, radiusTiles: 7, mode: 'raise', strength: 0.95 });
+    const t = holeTerrain(field, hole(1));
+    assert.ok(t.fairwayMaxSlope < 0.12, `tee bank leaked into the fairway: ${t.fairwayMaxSlope}`);
+    assert.ok(t.maxSlope >= t.fairwayMaxSlope);
+    applyCourseHeightBrush(field, { x: 200, y: 100, radiusTiles: 4, mode: 'raise', strength: 3 });
+    assert.ok(holeTerrain(field, hole(1)).fairwayMaxSlope > 0.12);
+  });
+  it('a hole too short for a fairway stretch has fairwayMaxSlope 0', () => {
+    const field = createCourseHeightField();
+    applyCourseHeightBrush(field, { x: 110, y: 100, radiusTiles: 4, mode: 'raise', strength: 3 });
+    const short: Hole = { n: 2, par: 3, lengthM: 40, memberLengthM: 36, line: [{ x: 100, y: 100 }, { x: 120, y: 100 }], warnings: [] };
+    assert.equal(holeTerrain(field, short).fairwayMaxSlope, 0);
   });
 });

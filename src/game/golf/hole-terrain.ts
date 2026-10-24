@@ -10,6 +10,8 @@ export const TERRAIN_STEP = 2;
 export const PLAYS_LIKE_PER_M = 1;
 /** distances (tiles) below this are treated as zero */
 const EPS = 1e-6;
+/** the stretches (tiles) after the tee and before the pin that fairwayMaxSlope skips: the tee bank (30 m; a raised tee's bank is steep and played over) and the green's run-up (20 m; greens have their own check) */
+export const FAIRWAY_SKIP_TEE = 15, FAIRWAY_SKIP_PIN = 10;
 
 /** a hole's terrain along its played line (heights in metres, slopes in metres per metre) */
 export interface HoleTerrain {
@@ -22,6 +24,8 @@ export interface HoleTerrain {
   minM: number; maxM: number; reliefM: number;
   /** the steepest slope between two neighbouring samples along the line (|Δh| / distance) */
   maxSlope: number;
+  /** the same over the fairway stretch only: from FAIRWAY_SKIP_TEE tiles after the tee to FAIRWAY_SKIP_PIN tiles before the pin (0 on a hole too short to have one) */
+  fairwayMaxSlope: number;
   /** the hole's length plus riseM × PLAYS_LIKE_PER_M, never below half its length */
   playsLikeM: number;
 }
@@ -49,13 +53,19 @@ export function sampleLine(line: readonly Pt[], step = TERRAIN_STEP): Pt[] {
 export function holeTerrain(field: CourseHeightField, hole: Hole): HoleTerrain {
   const pts = sampleLine(hole.line);
   const h = pts.map(p => sampleCourseHeight(field, p.x, p.y));
-  let minM = 0, maxM = 0, maxSlope = 0;
+  let minM = 0, maxM = 0, maxSlope = 0, fairwayMaxSlope = 0, along = 0, total = 0;
+  for (let k = 0; k + 1 < pts.length; k++) total += Math.hypot(pts[k + 1]!.x - pts[k]!.x, pts[k + 1]!.y - pts[k]!.y);
   for (let k = 0; k < h.length; k++) {
     if (k === 0 || h[k]! < minM) minM = h[k]!;
     if (k === 0 || h[k]! > maxM) maxM = h[k]!;
     if (k + 1 < h.length) {
       const d = Math.hypot(pts[k + 1]!.x - pts[k]!.x, pts[k + 1]!.y - pts[k]!.y);
-      if (d >= EPS) maxSlope = Math.max(maxSlope, Math.abs(h[k + 1]! - h[k]!) / (d * TILE_M));
+      if (d >= EPS) {
+        const s = Math.abs(h[k + 1]! - h[k]!) / (d * TILE_M);
+        maxSlope = Math.max(maxSlope, s);
+        if (along >= FAIRWAY_SKIP_TEE && along + d <= total - FAIRWAY_SKIP_PIN) fairwayMaxSlope = Math.max(fairwayMaxSlope, s);
+      }
+      along += d;
     }
   }
   const teeM = h.length ? h[0]! : 0, pinM = h.length ? h[h.length - 1]! : 0, riseM = pinM - teeM;
@@ -63,7 +73,7 @@ export function holeTerrain(field: CourseHeightField, hole: Hole): HoleTerrain {
     hole: hole.n,
     teeM: teeM + 0, pinM: pinM + 0, riseM: riseM + 0,
     minM: minM + 0, maxM: maxM + 0, reliefM: maxM - minM + 0,
-    maxSlope: maxSlope + 0,
+    maxSlope: maxSlope + 0, fairwayMaxSlope: fairwayMaxSlope + 0,
     playsLikeM: Math.max(hole.lengthM / 2, hole.lengthM + riseM * PLAYS_LIKE_PER_M) + 0,
   };
 }

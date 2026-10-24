@@ -181,7 +181,7 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
    if (!t) continue;
    r.playsLikeM = Math.round(t.playsLikeM);
    r.riseM = Math.round(t.riseM * 10) / 10 + 0;
-   if (t.maxSlope > FAIRWAY_MAX_SLOPE) { steepFair.push(r.hole); r.warnings.push('Fairway slope over 12% (smooth it)'); }
+   if (t.fairwayMaxSlope > FAIRWAY_MAX_SLOPE) { steepFair.push(r.hole); r.warnings.push('Fairway slope over 12% (smooth it)'); }
    if (Math.abs(t.riseM) >= SHAPED_RISE_M || t.reliefM >= SHAPED_RELIEF_M) shapedN++;
    if (Math.abs(t.riseM) >= PLAYS_LIKE_SHOW_M && parFromLength(t.playsLikeM) !== r.par) qualityHints.push(`Hole ${r.hole} plays like a par ${parFromLength(t.playsLikeM)} (${t.riseM > 0 ? 'uphill' : 'downhill'})`);
   }
