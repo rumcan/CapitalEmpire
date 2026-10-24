@@ -2,8 +2,8 @@
 // Pure TypeScript, deterministic. Units: tiles of 2 m; money in $.
 import { checkArea, clampStyle, DEFAULT_STYLE, type BorderTex, type BrushKind, type PaintArea, type PaintTex } from '../../paint';
 import { areaBuildCost, type PlantKind } from '../../golf/costs';
-import { kindOfTex } from '../../golf/holepreset';
-import type { CoursePieceArchetype, SnapPieceKind, SnapPiecePlacement, SnapTargetArea } from '../course-snap';
+import { kindOfTex, type PresetProp } from '../../golf/holepreset';
+import type { CoursePieceArchetype, CoursePiecePropAnchor, SnapPieceKind, SnapPiecePlacement, SnapTargetArea } from '../course-snap';
 
 /** the pieces the Course panel offers, in its order */
 export const PIECE_BUTTONS: readonly { arch: CoursePieceArchetype; kind: SnapPieceKind; name: string }[] = [
@@ -53,4 +53,20 @@ export function pieceCost(areas: readonly { pts: number[]; tex: PaintTex }[], pl
   let c = 0;
   for (const a of areas) c += areaBuildCost(a.pts, a.tex, plant);
   return Math.round(c);
+}
+
+/** the sprite (library id) or preset kind each piece prop anchor places; null: no sprite yet (art to make: see docs/GOLF-SPRITES.md) */
+export const PIECE_PROP_SPRITE: Record<CoursePiecePropAnchor['kind'], { kind: PresetProp['kind']; id?: string } | null> = {
+  'pin': null,               // the hole's pin: the marker system places it (pinHint)
+  'practice-pin': { kind: 'flag' },
+  'tee-back': null, 'tee-middle': null, 'tee-forward': null, // tee markers: the marker system
+  'tee-steps': null, 'bunker-rake': null, 'pond-waterfall': null, 'pond-rock': null, // no sprite yet
+  'pond-reeds': { kind: 'flower', id: 'town:ornamental_grass' },
+};
+
+/** the props a placed piece dresses itself with: each anchor with a sprite in PIECE_PROP_SPRITE, at its spot (the rest wait for their art) */
+export function piecePropsOf(anchors: readonly CoursePiecePropAnchor[]): PresetProp[] {
+  const out: PresetProp[] = [];
+  for (const a of anchors) { const s = PIECE_PROP_SPRITE[a.kind]; if (s) out.push({ kind: s.kind, x: a.x, y: a.y, ...(s.id ? { id: s.id } : {}) }); }
+  return out;
 }

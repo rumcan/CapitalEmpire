@@ -167,3 +167,6 @@ so 1024 px is plenty (section 1).
 - P2: about 40 items (about 120 images): tiers 4–5.
 - P3: about 12 items.
 - The biggest single items (L grandstand, hospitality village, merchandise pavilion, broadcast compound) are one per sheet.
+
+## Course piece props (T030b)
+- Still missing: tee steps, a bunker rake, a pond waterfall, pond rocks, and pond reeds (reeds use the roadside ornamental grass for now). They plug into `PIECE_PROP_SPRITE` in `src/game/ext/course-pieces/index.ts` (a sprite id, or `null` until the art exists).
