@@ -699,12 +699,15 @@ export class GroundPainter {
         // the field images (steps 1 and 7) of each chunk over its own box within this ground chunk
         const ims: { im: ReturnType<typeof edgeImages>; x0: number; y0: number }[] = [];
         if (!lite && look && (look.light > 0 || look.dark > 0 || look.shadow > 0)) {
+          // every chunk here, with or without this surface, takes the field over its own box from all the surface's edges within reach: a
+          // shadow cast across a chunk border lands in the next chunk (whose rings, if it has none of the surface, are empty: no rims)
           const reach = edgeReach(look, f), all = ls.flatMap(q => q.l.edges);
-          for (const { c, l } of ls) {
-            if (!l.edges.length) continue;
+          let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;
+          for (const e of all) for (let k = 0; k + 1 < e.length; k += 2) { const x = e[k]!, y = e[k + 1]!; if (x < ex0) ex0 = x; if (x > ex1) ex1 = x; if (y < ey0) ey0 = y; if (y > ey1) ey1 = y; }
+          for (const c of cs) {
             const x0 = Math.max(box[0], c.cx * c.size), y0 = Math.max(box[1], c.cy * c.size), x1 = Math.min(box[2], (c.cx + 1) * c.size), y1 = Math.min(box[3], (c.cy + 1) * c.size);
-            if (x1 <= x0 || y1 <= y0) continue;
-            const F = lineField(l.fill, all, x0, y0, x1 - x0, y1 - y0, res, reach);
+            if (x1 <= x0 || y1 <= y0 || ex1 < x0 - reach || ex0 > x1 + reach || ey1 < y0 - reach || ey0 > y1 + reach) continue;
+            const F = lineField(c.layers.find(q => q.s === s)?.fill ?? [], all, x0, y0, x1 - x0, y1 - y0, res, reach);
             if (F.any) ims.push({ im: edgeImages(F, look, f), x0, y0 });
           }
         }

@@ -53,3 +53,15 @@ test('3. a seam: the neighbour chunk edges give the same field as the uncut boun
   assert.ok(maxSplit < 1e-5, `with the neighbour's edge: ${maxSplit}`);
   assert.ok(maxAlone > 0.01, `its own edge alone differs near the seam (${maxAlone.toFixed(3)}), hence the neighbours' edges`);
 });
+
+test('4. a shadow cast across a chunk border lands in the next chunk, which has none of the surface', () => {
+  // a green whose south edge runs along y = 9.6, just north of the chunk border at y = 10 (its shadow falls south, away from the sun)
+  const edge = [12, 9.6, 2, 9.6]; // travelling west: the surface (y < 9.6) on the left, outward normal (0, 1) = south
+  const below = lineField([], [edge], 0, 10, 14, 4, 4, 1.6); // the next chunk's box: no rings of the surface
+  assert.ok(below.any, 'the edge is within reach of the next chunk');
+  const im = edgeImages(below, EDGE_LOOKS.raised!, 0.55);
+  assert.ok(im.shadow, 'the next chunk draws the shadow');
+  assert.ok(!im.light && !im.dark, 'but no rims: nothing of the surface is inside it');
+  const px = (x: number, y: number) => 4 * (Math.floor((y - 10) * 4) * below.W + Math.floor(x * 4));
+  assert.ok(im.shadow!.data[px(7, 10.1) + 3]! > 10, 'shadow just past the border');
+});
