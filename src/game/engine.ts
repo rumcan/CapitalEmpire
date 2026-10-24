@@ -3149,7 +3149,7 @@ export class Game {
   private downloadBytes(buf: ArrayBuffer, name: string) {
     const url = URL.createObjectURL(new Blob([buf], { type: 'application/gzip' }));
     const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 10000); // released later: some browsers start the download after the click returns
   }
   /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed
    *  directly (no town) with a use from uses (cycled), the level, decline and seed + i. The states hold until the next reset. */
