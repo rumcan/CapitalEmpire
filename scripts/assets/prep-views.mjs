@@ -4,7 +4,8 @@
 //    the art model delivers, then the theme-consistency worktree's and this checkout's; a version found in several is taken from the first):
 //    its <slug>-4views-v<n>/ crops and <slug>-4views-v<n>.provenance.json, whose id is the library id. The newest version with all four
 //    NE/SE/SW/NW.native.png crops and no integrationStatus "blocked" is copied to art/building-views/<slug>/, unless
-//    art/building-views/measures.json pins a version. Without the generated folders (a fresh clone) the copies already there are used.
+//    art/building-views/measures.json pins a version. A 'ready' version with no crops yet is cut from its sheet (<version>.png) in memory by
+//    four-view-cells.mjs (the art model's cell rules) and marked cropsBy in its source.json. Without the generated folders (a fresh clone) the copies already there are used.
 // 2. Scale: each view is sized by its doorway (measures.json: a plain door's height in native px, tied to the picture's sha256) so the door
 //    stands standardDoor game px tall at the building's owner scale. A view with no clear door takes the mean scale of its measured views;
 //    a subject with none measured keeps the original sprite's width (and is reported, to be measured).
@@ -23,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import sharp from 'sharp';
 import { findGlows } from './find-glows.mjs';
+import { cropFourViews } from './four-view-cells.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const BUILDINGS = 'art/theme-consistency/generated/buildings', STORE = path.join(root, 'art/building-views');
@@ -46,20 +48,26 @@ if (GENS.length) {
     seen.add(d);
     const provenance = JSON.parse(fs.readFileSync(prov, 'utf8')), id = provenance.id;
     if (provenance.integrationStatus === 'blocked') { withhold(id, d, provenance.integrationReason ?? 'blocked'); console.log(`withheld ${id} (${d}): ${provenance.integrationReason}`); continue; }
-    const missing = DIRS.filter(v => !fs.existsSync(path.join(GEN, d, `${v}.native.png`)));
-    if (missing.length) { withhold(id, d, `no ${missing.join('/')} crop yet`); continue; }
+    // a reviewed ('ready') sheet with no crops yet is cut in memory by the art model's cell rules (four-view-cells.mjs)
+    let crops = null;
+    const missing = DIRS.filter(v => !fs.existsSync(path.join(GEN, d, `${v}.native.png`))), sheet = path.join(GEN, `${d}.png`);
+    if (missing.length && provenance.integrationStatus === 'ready' && fs.existsSync(sheet)) {
+      try { crops = await cropFourViews(fs.readFileSync(sheet)); }
+      catch (error) { withhold(id, d, `no ${missing.join('/')} crop yet; cutting its sheet failed: ${error.message}`); console.log(`withheld ${id} (${d}): cutting its sheet failed: ${error.message}`); continue; }
+    } else if (missing.length) { withhold(id, d, `no ${missing.join('/')} crop yet`); continue; }
     const b = best.get(id);
-    if (pinned.has(id) ? pinned.get(id) === d : !b || b.n < +m[2]) best.set(id, { slug: m[1], version: d, n: +m[2], GEN });
+    if (pinned.has(id) ? pinned.get(id) === d : !b || b.n < +m[2]) best.set(id, { slug: m[1], version: d, n: +m[2], GEN, crops });
   }
   console.log(`sources: ${GENS.map(d => path.relative(root, d) || '.').join(', ')}`);
-  for (const [id, { slug, version, GEN }] of best) {
+  for (const [id, { slug, version, GEN, crops }] of best) {
     const dir = path.join(STORE, slug), source = path.join(dir, 'source.json');
     const old = fs.existsSync(source) ? JSON.parse(fs.readFileSync(source, 'utf8')) : null, files = {};
     fs.mkdirSync(dir, { recursive: true });
-    for (const v of DIRS) { const buf = fs.readFileSync(path.join(GEN, version, `${v}.native.png`)); files[v] = sha(buf); if (old?.files?.[v] !== files[v]) fs.writeFileSync(path.join(dir, `${v}.png`), buf); }
+    for (const v of DIRS) { const buf = crops ? crops.views[v] : fs.readFileSync(path.join(GEN, version, `${v}.native.png`)); files[v] = sha(buf); if (old?.files?.[v] !== files[v]) fs.writeFileSync(path.join(dir, `${v}.png`), buf); }
     fs.copyFileSync(path.join(GEN, `${version}.provenance.json`), path.join(dir, 'provenance.json'));
-    fs.writeFileSync(source, JSON.stringify({ id, version, files }, null, 1) + '\n');
+    fs.writeFileSync(source, JSON.stringify({ id, version, files, ...(crops ? { cropsBy: 'prep-views (four-view-cells.mjs)' } : {}) }, null, 1) + '\n');
     if (old?.version !== version) console.log(`synced ${id}: ${version}`);
+    if (crops) { console.log(`cropped ${id} (${version}) from its reviewed sheet`); if (crops.warnings.length) console.warn(`crop warnings ${id} (${version}): ${crops.warnings.join('; ')}`); }
   }
 }
 

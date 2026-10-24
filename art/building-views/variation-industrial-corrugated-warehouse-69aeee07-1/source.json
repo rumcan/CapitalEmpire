@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-corrugated-warehouse-69aeee07:1",
+ "version": "variation-industrial-corrugated-warehouse-69aeee07-1-4views-v2",
+ "files": {
+  "NE": "b54f990e772f2819ed00f59c7ecc495ad2f5491d2e79828cf80e5f81f25eb47a",
+  "SE": "27e423978884eaee49825e682e78858438484779056628001aed142d581728cd",
+  "SW": "5a002f6d710592c7ef8d7b328faf641bfb1f2eeaba490d8b993e73a880cb8ed0",
+  "NW": "0aa60919bd68bad09aabf66efc975746ec143a0c9807750b4fd86aec2b81e519"
+ }
+}

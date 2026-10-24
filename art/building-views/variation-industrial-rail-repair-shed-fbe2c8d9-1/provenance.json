@@ -1,0 +1,150 @@
+{
+  "id": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-3f51413a-e5ce-4ab8-9101-89b1178bcca5.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-rail-repair-shed-fbe2c8d9:1. Tall corrugated rail repair shed with distinctive barrel-vault roof and small brick side office annex, very tall open front maintenance portal and roof vent. Empty inside, no vehicle or locomotive; reconstruct rear. No ground, rails extending outside structure or Halloween.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-rail-repair-shed-fbe2c8d9-1.configured@2x.png",
+      "sha256": "b207d1ccc439432fd7a3cc7f97ec0e3910a8626fb2e230eb3fb2da881defdd2a"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-rail-repair-shed-fbe2c8d9-1-4views-v1.png",
+    "originalSheetSha256": "cff9743d6009f0cdc651348992364ba710770ac670c412493ae7513084481702",
+    "outputSheetSha256": "9f46b1468938e1f85d2ffc0364fefc68bf5efb0b11f12386149fedc8ed401a7c",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2816,
+      2816
+    ],
+    "cellSize": 1408,
+    "nonzeroAlphaPixels": 665787,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 161380,
+          "bounds": [
+            202,
+            23,
+            744,
+            450
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 33,
+          "y0": 14,
+          "x1": 904,
+          "y1": 489,
+          "count": 168958
+        },
+        "translation": {
+          "x": 235,
+          "y": 452
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 158489,
+          "bounds": [
+            1033,
+            16,
+            1586,
+            440
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 888,
+          "y0": 14,
+          "x1": 1757,
+          "y1": 467,
+          "count": 165829
+        },
+        "translation": {
+          "x": 789,
+          "y": 463
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 3,
+          "pixels": 160417,
+          "bounds": [
+            192,
+            451,
+            719,
+            868
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 448,
+          "x1": 894,
+          "y1": 886,
+          "count": 167952
+        },
+        "translation": {
+          "x": 256,
+          "y": 1444
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 4,
+          "pixels": 155929,
+          "bounds": [
+            1043,
+            458,
+            1563,
+            869
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 872,
+          "y0": 448,
+          "x1": 1719,
+          "y1": 871,
+          "count": 163048
+        },
+        "translation": {
+          "x": 816,
+          "y": 1452
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

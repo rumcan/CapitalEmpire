@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-house-cottage-fc52ce66-plain:1",
+ "version": "variation-ref-building-house-cottage-fc52ce66-plain-1-4views-v2",
+ "files": {
+  "NE": "0c7da80fadb5e04a5da18beade2ae97c0ff723ec507090fb095bd26bf564d302",
+  "SE": "3f07932bc260d5d1659e88351c6aeb31144b0fbe5f15c0866a2de8e5ddc67866",
+  "SW": "290d36c80106547ad46ccebc50f881109936194a55fccf27e0de68ca973d2238",
+  "NW": "2481a7fd786e66c21a8728800db91425f2a697d9d0fb2cdeb5894510de2a2a67"
+ }
+}

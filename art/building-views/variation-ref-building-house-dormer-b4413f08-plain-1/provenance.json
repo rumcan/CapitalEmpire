@@ -1,0 +1,151 @@
+{
+  "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-house-dormer-b4413f08-plain-1-4views-v1.png",
+    "originalSheetSha256": "e4b508b56735e81cd99533b1ad38ff4630a8b6c521ac48537288a446e4e593fc",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "f5104a79e23c17389e4abdbfbdc0b5aaa4be0f78251b870141dbfa98846f42ba",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 576,
+      "endExclusive": 671,
+      "midpoint": 623,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 601,
+        "endExclusive": 664,
+        "midpoint": 632,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 579,
+        "endExclusive": 664,
+        "midpoint": 621,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 7,
+          "width": 632,
+          "height": 616
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 205771,
+        "visibleAlphaPixelsThreshold8": 200439,
+        "nonzeroRgbaSha256": "835008b6a07e55528970d581fb6e1685e3a08d62c79f6ea5edf998cfdf478d41",
+        "destination": {
+          "left": 196,
+          "top": 204,
+          "width": 632,
+          "height": 616
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 632,
+          "top": 35,
+          "width": 608,
+          "height": 588
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 196638,
+        "visibleAlphaPixelsThreshold8": 190594,
+        "nonzeroRgbaSha256": "1462a26c4120c7ddd7979fec2a9d0d703d43f9bc91d929c003f3005f9df43c17",
+        "destination": {
+          "left": 1232,
+          "top": 218,
+          "width": 608,
+          "height": 588
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 627,
+          "width": 621,
+          "height": 627
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 185309,
+        "visibleAlphaPixelsThreshold8": 179680,
+        "nonzeroRgbaSha256": "81ed76a208aebd4bf0d332081c0968ce558818ee8bbc67a44a0b088f901910f9",
+        "destination": {
+          "left": 201,
+          "top": 1222,
+          "width": 621,
+          "height": 627
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 621,
+          "top": 623,
+          "width": 617,
+          "height": 631
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 200917,
+        "visibleAlphaPixelsThreshold8": 194997,
+        "nonzeroRgbaSha256": "92cba488797204ea294f81537f3e32fb023ce3305932c1100d35b448a189f96a",
+        "destination": {
+          "left": 1227,
+          "top": 1220,
+          "width": 617,
+          "height": 631
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 788635,
+      "visibleAlphaPixelsThreshold8": 765710,
+      "nonzeroRgbaSha256": "6a99011b8785f24a02b66df3b58a15fdcff72272ce91bae74e7d0d0cc21eea6f"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "integrationStatus": "ready",
+  "integrationReason": "Three dormer/porch front and plain rear gable are distinct; chimney and side windows follow quarter turns. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings.",
+  "sourceVisualReview": {
+    "reviewer": "building_variation_review",
+    "allFourViewsInspected": true,
+    "alphaCompositeBackground": "#b91b91",
+    "result": "ready",
+    "reason": "Three dormer/porch front and plain rear gable are distinct; chimney and side windows follow quarter turns. Pixel-preserving v2 layout inspected on magenta; alpha audit passes with zero crop/split warnings.",
+    "reviewedAt": "2026-10-24T10:38:12.380Z"
+  }
+}

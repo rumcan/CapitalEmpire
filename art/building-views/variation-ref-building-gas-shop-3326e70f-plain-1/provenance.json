@@ -1,0 +1,151 @@
+{
+  "id": "variation:ref-building-gas-shop-3326e70f-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-012e5ee5-c040-4818-9c24-af0082db026e.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-gas-shop-3326e70f-plain:1. Preserve this specific reference architecture, number of floors, roof shape, business function and attached structural features. Front signage/entrances belong only on physical front facades and must disappear in the two actual rear views. For gas stations retain pumps/canopy attached arrangement but no forecourt pavement. Drive-in screen has blank structural steel back, never a second movie screen. No parking surface, rectangular slab, grey floor, yard or landscaping.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:ref-building-gas-shop-3326e70f-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-ref-building-gas-shop-3326e70f-plain-1.configured@2x.png",
+      "sha256": "2db1b22679ed184db4c7fb8bf418dc36421dc620990fe33b05795b082c67502b"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Gas shop front sign and right-corner pump canopy stay on fixed walls; rear service door and ladder/utility faces turn consistently. Genuine cutout on magenta. Verify native alpha and repack cell split before ready. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining faint pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-gas-shop-3326e70f-plain-1-4views-v1.png",
+    "originalSheetSha256": "17ca12ae9018d5f4d5c69469aee07dcf752becb42b6224a05ac82db56f498358",
+    "outputSheetSha256": "3feb1223bd755b3fc7f09ab7645fe2e9a53c46e2b9208e1781e0e8555f806cd3",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2560,
+      2560
+    ],
+    "cellSize": 1280,
+    "nonzeroAlphaPixels": 832894,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign faint fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 204601,
+          "bounds": [
+            141,
+            7,
+            771,
+            483
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 870,
+          "y1": 487,
+          "count": 215538
+        },
+        "translation": {
+          "x": 204,
+          "y": 396
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 199198,
+          "bounds": [
+            972,
+            8,
+            1662,
+            418
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 876,
+          "y0": 0,
+          "x1": 1757,
+          "y1": 434,
+          "count": 208661
+        },
+        "translation": {
+          "x": 603,
+          "y": 422
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 10,
+          "pixels": 178502,
+          "bounds": [
+            144,
+            453,
+            776,
+            872
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 423,
+          "x1": 880,
+          "y1": 886,
+          "count": 188273
+        },
+        "translation": {
+          "x": 199,
+          "y": 1265
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 9,
+          "pixels": 210134,
+          "bounds": [
+            988,
+            446,
+            1682,
+            853
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 856,
+          "y0": 420,
+          "x1": 1739,
+          "y1": 856,
+          "count": 220422
+        },
+        "translation": {
+          "x": 622,
+          "y": 1281
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewedAt": "2026-10-24T10:27:17.710Z",
+    "reviewer": "building_variation_review",
+    "alphaCompositeBackground": "#b91b91",
+    "allFourViewsInspected": true,
+    "themeReference": "art/theme-consistency/references/theme-authoritative.png",
+    "result": "ready",
+    "reason": "Gas shop front sign and right-corner pump canopy stay on fixed walls; rear service door and ladder/utility faces turn consistently. Genuine cutout on magenta. Verify native alpha and repack cell split before ready. Lossless disconnected-silhouette v2 extraction passed every nonzero RGBA copy/conservation assertion, alpha audit with no warnings, and post-repack magenta/theme visual review.",
+    "postRepackContact": "output/building-priority/variation-post-repack-2.png"
+  }
+}

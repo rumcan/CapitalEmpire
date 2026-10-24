@@ -1,0 +1,21 @@
+{
+  "id": "static:shop_market_rear",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-b4401c14-1d82-4212-9ddb-d529e11f2740.png",
+  "prompt": "Precise single-cell geometry correction of this EXISTING four-view game sprite sheet. Keep same building identity, miniature material style, palette, exposure, warm lamps, fixed SCREEN UPPER RIGHT sun, 2:1 isometric camera and physical scale. Change ONLY bottom-leftSW: remove the vent from its image-RIGHT wall because that is physical LEFT sideD, which is plain whitewashed brick in bottom-rightNW. Keep BACK C plain on imageLEFT. Preserve existing roof equipment/tealcoping/doors/barredwindow in other3cells; no new openings. Preserve the other views and their facades. Output square 2x2 NE,SE,SW,NW cutout sheet, complete silhouettes inside cells, generous blank gutters/margins. Actual fully transparent alpha outside silhouettes and between objects, RGBA PNG. NO floor, ground, backdrop, haze, labels, captions, scene, people or decorative props. Do not mirror the entire sprite to fake the correction; rotate geometry, keep light fixed.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/static-shop_market_rear-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/static-shop_market_rear-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master.",
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

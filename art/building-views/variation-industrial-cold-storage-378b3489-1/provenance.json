@@ -1,0 +1,150 @@
+{
+  "id": "variation:industrial-cold-storage-378b3489:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-02e5cc3c-ae13-45c2-adde-9f373c26d2ce.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-cold-storage-378b3489:1. Small cream-brick cold-storage building, low flat charcoal roof, paired rooftop cooling condensers, reinforced pale blue cold-store door, fixed access ladder and integral raised timber loading deck. ICE & COLD STORAGE lettering small/readable. No separate barrels/crates.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-cold-storage-378b3489:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-cold-storage-378b3489-1.configured@2x.png",
+      "sha256": "38df6032e87ccd1b061c3cd261e4a56c2c2847d071a4b76860b9d9cef3fcfe1a"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-cold-storage-378b3489-1-4views-v1.png",
+    "originalSheetSha256": "50d9d7b96b13a7a13cab404ca6edeff47a20df674b1b1670955fd3c422e686bd",
+    "outputSheetSha256": "97317d20b767c3198ff703c76bb8f7f91e0ac29f3dfc5cd9bf8e19ea71abbbd4",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2816,
+      2816
+    ],
+    "cellSize": 1408,
+    "nonzeroAlphaPixels": 680973,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 169614,
+          "bounds": [
+            256,
+            9,
+            817,
+            462
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 0,
+          "x1": 904,
+          "y1": 477,
+          "count": 176016
+        },
+        "translation": {
+          "x": 251,
+          "y": 465
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 171356,
+          "bounds": [
+            960,
+            8,
+            1556,
+            462
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 926,
+          "y0": 0,
+          "x1": 1755,
+          "y1": 466,
+          "count": 176608
+        },
+        "translation": {
+          "x": 771,
+          "y": 470
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 6,
+          "pixels": 157983,
+          "bounds": [
+            195,
+            466,
+            792,
+            868
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 0,
+          "y0": 457,
+          "x1": 932,
+          "y1": 871,
+          "count": 163429
+        },
+        "translation": {
+          "x": 237,
+          "y": 1447
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 5,
+          "pixels": 159506,
+          "bounds": [
+            1061,
+            455,
+            1641,
+            873
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 922,
+          "y0": 447,
+          "x1": 1741,
+          "y1": 886,
+          "count": 164920
+        },
+        "translation": {
+          "x": 780,
+          "y": 1445
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}
