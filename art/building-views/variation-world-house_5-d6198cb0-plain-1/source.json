@@ -1,0 +1,11 @@
+{
+ "id": "variation:world-house_5-d6198cb0-plain:1",
+ "version": "variation-world-house_5-d6198cb0-plain-1-4views-v1",
+ "files": {
+  "NE": "a1abdc52763b52e9676b7d1fbfffa644333470e362f091fcc1da5c4a9a81ff9b",
+  "SE": "3fea2bae939edcba13afcc31bf8433bf38da8392799368ce1d47698e046c3dd7",
+  "SW": "06e97fcf0d345ed7196813331f75dc8c3374b2daedf26e447b953d8e7b385955",
+  "NW": "0d89d642bb2b20c612281fd7dd82035917cad163e52644f556608af7d3c8ea29"
+ },
+ "cropsBy": "prep-views (four-view-cells.mjs)"
+}

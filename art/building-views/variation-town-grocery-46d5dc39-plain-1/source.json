@@ -1,0 +1,10 @@
+{
+ "id": "variation:town-grocery-46d5dc39-plain:1",
+ "version": "variation-town-grocery-46d5dc39-plain-1-4views-v1",
+ "files": {
+  "NE": "a686041ee2fb38160279adfc1f46df8569d67d76554116f8072fde6c07166ffa",
+  "SE": "9a2cc8bac4187a6d011a7ea49fee9ef3e6404ff18dc996460813c91449a04ac5",
+  "SW": "33f228cf7242f9afd98de8d6586b00bb683a9e9971721216a9e24fac93ca976a",
+  "NW": "ac9bfbdb6ac36d6c50d12ba1787ec5e3486987a1ce90574aea4d9b1ccb1a0c1b"
+ }
+}
