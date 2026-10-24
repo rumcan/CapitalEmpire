@@ -34,6 +34,7 @@ import { Minimap } from './ui/Minimap';
 import { CourseStatsPanel } from './ui/CourseStatsPanel';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
+import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
@@ -139,7 +140,7 @@ export default function App() {
   const gid = game ? groupOf(game.uiTool) : '', grp = GROUPS.find(g => g.id === gid);
   if (game) last.current[gid] = game.uiTool;
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
-  const gv = game?.golfMode ? game.golfView() : null;
+  const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
   /** the tool visibility in force (T033 progressive unlocks; null shows everything) */
   const ui = game?.toolUi() ?? null;
   /** whether a golf top-bar chip is shown under the progressive unlocks */
@@ -203,13 +204,14 @@ export default function App() {
               {gv ? (
                 <>
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
-                  <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
+                  <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="The tour's invitation: the first tournament is held at the end of the season it names">The Club Championship: end of {fv.due ? 'this' : 'next'} season</span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
                   {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>}
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
  {chip('event') && <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>}
+ {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</button>}
                   {game.playerProgressFacts() && <button className={`chip ${ui?.advancedMode || !ui ? 'chip-on' : ''}`} onClick={() => { game.setAdvancedTools(!(ui?.advancedMode)); bump(); }} title={ui ? ui.stageLabel : 'All tools'}><Icon name="up" size={16} />All tools</button>}
                 </>
               ) : game.eventMode
@@ -393,6 +395,7 @@ export default function App() {
           )}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
+          {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />
