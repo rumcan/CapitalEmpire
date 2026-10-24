@@ -233,7 +233,8 @@ export function buildPiecePolygon(kind: SnapPieceKind, anchor: SnapPt, angleDeg:
   return buildArchetypePolygon(arch, anchor, angleDeg, scale, endAnchored).pts;
 }
 
-/** builds the multi-layer concentric PaintArea stack (rough rim, collar, core; the painter adds the sun-lit bevel), height ops, and prop anchors */
+/** builds the PaintArea stack (collar and core; no rough rim: the course's own rough shows round a piece, and a rim painted over its neighbours and
+ *  read as a dark outline round bunkers; the painter adds the feather and the sun-lit bevel), height ops, and prop anchors */
 function buildRichPieceStack(kind: SnapPieceKind, archetype: CoursePieceArchetype, corePts: number[], center: SnapPt, ux: number, uy: number, nx: number, ny: number, L: number, W: number, angleDeg: number, recipe: AutoTextureRecipe): { layers: CoursePieceLayer[]; heightOps: CoursePieceHeightOp[]; props: CoursePiecePropAnchor[] } {
   const angle = recipe.angle, layers: CoursePieceLayer[] = [], heightOps: CoursePieceHeightOp[] = [], props: CoursePiecePropAnchor[] = [];
   const toWorld = (lx: number, ly: number): SnapPt => ({ x: q4(center.x + ux * lx + nx * ly), y: q4(center.y + uy * lx + ny * ly) });
@@ -241,27 +242,22 @@ function buildRichPieceStack(kind: SnapPieceKind, archetype: CoursePieceArchetyp
     ({ role, kind: k, tex, border, btex, radius, angle, pts, ...(tone ? { tone, toneAmt, tint } : {}) });
   const pushPt = (k: CoursePiecePropAnchor['kind'], lx: number, ly: number, a = angleDeg, n?: number) => { const p = toWorld(lx, ly); props.push({ kind: k, x: p.x, y: p.y, angleDeg: a, ...(n ? { number: n } : {}) }); };
   if (kind === 'green') {
-    const outR = offsetPolygonRadial(corePts, 2.5);
-    layers.push(mk('outer-rim', 'rough', 'golfRough', 0, 'golfRough', 4, outR), mk('collar', 'fairway', 'golfFringe', 3, 'golfFirstCut', 4, offsetPolygonRadial(corePts, 1.25)), mk('core', 'green', recipe.tex, 3, recipe.btex, recipe.radius, corePts));
+    layers.push(mk('collar', 'fairway', 'golfFringe', 3, 'golfFirstCut', 4, offsetPolygonRadial(corePts, 1.25)), mk('core', 'green', recipe.tex, 3, recipe.btex, recipe.radius, corePts));
     heightOps.push({ x: q4(center.x + ux * (L * 0.18)), y: q4(center.y + uy * (L * 0.18)), radiusTiles: Math.max(4, Math.round(L * 0.45)), mode: 'raise', strength: 0.35 });
     if (archetype === 'green-practice') { pushPt('practice-pin', -L * 0.2, -W * 0.15, 0, 1); pushPt('practice-pin', 0.05 * L, W * 0.22, 0, 2); pushPt('practice-pin', L * 0.24, -W * 0.1, 0, 3); }
     else pushPt('pin', L * 0.15, 0, 0);
   } else if (kind === 'tee') {
-    const outR = offsetPolygonRadial(corePts, 2.0);
-    layers.push(mk('outer-rim', 'rough', 'golfRough', 0, 'golfRough', 2, outR), mk('collar', 'fairway', 'golfFirstCut', 2, 'golfFringe', 1.5, offsetPolygonRadial(corePts, 0.85)), mk('core', 'tee', recipe.tex, 2, recipe.btex, recipe.radius, corePts));
+    layers.push(mk('collar', 'fairway', 'golfFirstCut', 2, 'golfFringe', 1.5, offsetPolygonRadial(corePts, 0.85)), mk('core', 'tee', recipe.tex, 2, recipe.btex, recipe.radius, corePts));
     if (archetype === 'tee-raised') { heightOps.push({ x: center.x, y: center.y, radiusTiles: Math.max(4, Math.round(Math.max(L, W) * 0.85)), mode: 'raise', strength: 0.95 }); pushPt('tee-steps', 0, -W * 0.65, (angleDeg - 90 + 360) % 360); }
     pushPt('tee-back', -L * 0.25, 0); pushPt('tee-middle', 0, 0); pushPt('tee-forward', L * 0.25, 0);
   } else if (kind === 'fairway') {
-    const outR = offsetPolygonRadial(corePts, 2.5);
-    layers.push(mk('outer-rim', 'rough', 'golfRough', 3, 'golfFirstCut', 3, outR), mk('collar', 'fairway', 'golfFirstCut', 3, 'golfFringe', 3, offsetPolygonRadial(corePts, 1.2)), mk('core', 'fairway', recipe.tex, 3, recipe.btex, recipe.radius, corePts));
+    layers.push(mk('collar', 'fairway', 'golfFirstCut', 3, 'golfFringe', 3, offsetPolygonRadial(corePts, 1.2)), mk('core', 'fairway', recipe.tex, 3, recipe.btex, recipe.radius, corePts));
   } else if (kind === 'bunker') {
-    const outR = offsetPolygonRadial(corePts, 1.75);
-    layers.push(mk('outer-rim', 'rough', 'golfRough', 0, 'golfRough', 2, outR), mk('core', 'bunker', recipe.tex, 0, recipe.btex, recipe.radius, corePts));
+    layers.push(mk('core', 'bunker', recipe.tex, 0, recipe.btex, recipe.radius, corePts));
     heightOps.push({ x: center.x, y: center.y, radiusTiles: Math.max(3, Math.round(Math.max(L, W) * 0.6)), mode: 'lower', strength: archetype === 'bunker-pot' ? 0.9 : 0.65 }, { x: q4(center.x + ux * (L * 0.35)), y: q4(center.y + uy * (L * 0.35)), radiusTiles: Math.max(2, Math.round(W * 0.5)), mode: 'raise', strength: 0.45 });
     pushPt('bunker-rake', -L * 0.15, -W * 0.1);
   } else if (kind === 'water') {
-    const outR = offsetPolygonRadial(corePts, 2.0);
-    layers.push(mk('outer-rim', 'rough', 'meadowFlowers', 3, 'golfRough', 3, outR), mk('core', 'water', recipe.tex, 0, recipe.btex, recipe.radius, corePts));
+    layers.push(mk('core', 'water', recipe.tex, 0, recipe.btex, recipe.radius, corePts));
     heightOps.push({ x: center.x, y: center.y, radiusTiles: Math.max(4, Math.round(Math.max(L, W) * 0.65)), mode: 'lower', strength: 0.6 });
     pushPt('pond-waterfall', -L * 0.42, 0); pushPt('pond-rock', L * 0.38, W * 0.28); pushPt('pond-reeds', -L * 0.1, -W * 0.42, 0);
   } else {

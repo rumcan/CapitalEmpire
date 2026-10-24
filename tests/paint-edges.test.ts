@@ -75,7 +75,8 @@ describe('paint edges: profiles, widths, resolution', () => {
   it('featherTiles: about half a tile to a tile at the close and mid zooms, wider (at most 1.5) far out; edgeRes 1..5 and finer when closer', () => {
     for (const k of ['flat', 'water', 'turf', 'raised', 'sunken'] as const) for (const L of [0.6, 0.45, 0.3, 0.2, 0.15]) {
       const f = featherTiles(EDGE_LOOKS[k]!, L);
-      assert.ok(f >= 0.4 && f <= 1, `${k} at ${L}: ${f}`);
+      // a bunker's sand edge is crisper (its hollow is drawn by the inner shade): a quarter tile and up
+      assert.ok(f >= (k === 'sunken' ? 0.25 : 0.4) && f <= 1, `${k} at ${L}: ${f}`);
     }
     assert.ok(featherTiles(EDGE_LOOKS.turf!, 0.035) > featherTiles(EDGE_LOOKS.turf!, 0.3));
     assert.ok(featherTiles(EDGE_LOOKS.turf!, 0.001) <= 1.5);
