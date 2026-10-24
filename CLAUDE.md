@@ -27,6 +27,10 @@ who owns which files and how to land work on main without clashing is in `docs/S
     several systems at once, and updating `docs/PROGRESS.md`.
 - **Slow checks run on the LAN worker PC** (`scripts/worker/run.sh "<command>"`; setup in `docs/PROGRESS.md`). The
   worker clone is read-only: never commit or push from it.
+- **Since 2026-10-24 the Claude sessions run ON the worker PC** (PiskriekDesk, 192.168.0.5): there is no `cworker`
+  here, so `scripts/worker/run.sh` only applies from the old dev PC. Coders run typecheck and their own test files;
+  the leads run the full suite, builds, gates and the bench locally, **one heavy run at a time across all sessions**
+  (16 GB RAM: check no other `vite build` / `node --test` is running first).
 - **Update `docs/PROGRESS.md`** after every verified step: status table, numbers, decisions, next steps.
 - **Commit locally after each verified step** (message ends with the Co-Authored-By line). Push only when the owner
   says so.
