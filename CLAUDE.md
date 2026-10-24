@@ -31,6 +31,13 @@ who owns which files and how to land work on main without clashing is in `docs/S
 - **Commit locally after each verified step** (message ends with the Co-Authored-By line). Push only when the owner
   says so.
 
+## Disk: never use the C: drive (the owner, 2026-10-24)
+
+C: is full. **Never put a clone, worktree, `node_modules`, build output, art export or large log on C:**, not even in your
+scratchpad (it lives on C:). Worktrees go under `E:\Repos\CapitalEmpire\.claude\worktrees` (the `isolation: worktree` agents do
+this already); temp and bulky files under `E:\ClaudeTemp`; the npm cache is `E:\npm-cache`. Remove your worktree
+(`git worktree remove`) once its PR is merged. D: and E: have room; check `df -h /c /d /e` before anything big.
+
 ## Project facts
 
 - **The game is a golf events manager** (the owner's pivot, 2026-10-21): the design is `docs/GOLF-PLAN.md`, the art list
