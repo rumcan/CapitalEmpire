@@ -10,9 +10,10 @@ import { growShare, growStage } from './areas';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
-/** how far past its chunk box a course patch is drawn (its feathers and drop shadows), tiles: the patch's pts box is the chunk box grown
- *  by this, so the ground index finds it from a neighbouring ground chunk and an edit re-bakes that far */
-export const COURSE_PATCH_REACH = 2;
+/** how far past its chunk box a course patch is drawn (its feathers, rims and drop shadows: a bunker's sunken bevel reaches 2.3 tiles),
+ *  tiles: the patch's pts box is the chunk box grown by this, so the ground index finds it (and its edges, for the neighbours' rims) from
+ *  a neighbouring ground chunk, and an edit re-bakes that far */
+export const COURSE_PATCH_REACH = 3;
 /** how far past an edited box a chunk's outlines can change, tiles: the field's margin plus the widest collar and closing */
 export const COURSE_EDIT_REACH = CHUNK_MARGIN + 2;
 

@@ -12,7 +12,10 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { quadBox, type CoursePatch, type CourseTex, type LotPatch, type PatchTex } from './ground-protocol';
+import { quadBox, type CourseLayer, type CoursePatch, type CourseTex, type LotPatch, type PatchTex } from './ground-protocol';
+import { BLOB_STYLE } from './ext/course-blobs';
+import { SURF_GROW } from './ext/course-grid/areas';
+import { lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
@@ -51,6 +54,17 @@ const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], p
 const ringPath = (p: Path2D, pts: readonly number[]) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
 /** a painted area's or course chunk's place in the draw order among the painted areas */
 const paintZ = (p: LotPatch) => p.course ? p.course.z : p.paint!.z;
+/** the course chunks' draw-order switches (renderer drawCourses): step 5, the mowing stripes, waits for T075's stripe bands; step 6, the
+ *  dirt of seeded cells through the growth mask, is on (T076 landed) */
+const COURSE_STRIPES = false;
+const COURSE_DIRT = true;
+/** the strokes of a course surface's outward feather (a linear fade in this many steps) */
+const FEATHER_STEPS = 4;
+/** the soil seeded course cells show while they grow in (plan P21 3.4; a seeded-soil photo is in the art queue) */
+const DIRT_TEX = 'dirt';
+/** the surface after whose fill the collar of surface s is drawn: s itself (the collar goes just before it) unless the collar lies over a
+ *  higher surface (the bunker's grass lip over a green), then the highest one it lies over */
+function collarAfter(s: number): number { let m = s; for (const t of BLOB_STYLE[s]?.collar?.over ?? []) if (t > m && t < 255) m = t; return m; }
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
 const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += pts[2 * i] * pts[2 * j + 1] - pts[2 * j] * pts[2 * i + 1]; } return a / 2; };
 
@@ -597,8 +611,11 @@ export class GroundPainter {
       const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
+    let course = false;
     for (const p of paints) {
-      if (p.course) { this.drawCourse(ctx, p.course, L, X0, Y0, M, Minv, box, lite); continue; }
+      // the course chunks (all z 0, so side by side in the order) draw together, surface by surface, so a chunk's lower surface never
+      // lands over its neighbour's higher one at a seam
+      if (p.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => q.course!), L, X0, Y0, M, Minv, box, lite); } continue; }
       const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null;
       if (!look) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
       const feather = featherTiles(look, L), reach = edgeReach(look, feather), eb = edgeBox(quadBox(p.pts), box, reach);
@@ -619,21 +636,112 @@ export class GroundPainter {
       }
     }
   }
-  /** a course chunk (the course grid, T078) onto ctx, under the chunk transform: each surface in draw order, its collar band then its fill
-   *  rings (even-odd), each in its texture laid in tile space (turned and scaled about the origin, as painted areas lay theirs) */
-  private drawCourse(ctx: C2D, c: CoursePatch, L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, _lite: boolean) {
-    const r = [Math.max(box[0], c.cx * c.size - 1), Math.max(box[1], c.cy * c.size - 1), Math.min(box[2], (c.cx + 1) * c.size + 1), Math.min(box[3], (c.cy + 1) * c.size + 1)];
-    if (r[2]! <= r[0]! || r[3]! <= r[1]!) return;
-    const fill = (t: CourseTex, rings: number[][]) => {
-      if (!rings.length) return;
-      const path = new Path2D(); for (const q of rings) ringPath(path, q);
+  /** the course chunks of a ground chunk (the course grid; plan P21 sections 3.4 and 3.8, T077), under the chunk transform, surface by
+   *  surface in draw order (rough 1 .. green 8) across every chunk, each surface in seven steps:
+   *  1. its drop shadow on the ground outside (raised surfaces; paint-edges' cast shadow, laid after its collar so the collar does not hide it);
+   *  2. its collar: the band's outward feather, then its fill (a collar laid over a higher surface, the bunker's lip over a green, goes
+   *     after that surface instead);
+   *  3. its outward feather: the edge polylines stroked in its own texture at FEATHER_STEPS widths, widest first (a linear fade out to the
+   *     feather, unclipped; the fill covers the inner half);
+   *  4. its fill: the rings, even-odd;
+   *  5. the mowing stripes (COURSE_STRIPES, off until T075 lands);
+   *  6. the dirt of seeded cells through the growth mask times the soft-patch noise (COURSE_DIRT);
+   *  7. its light rim and shade (paint-edges' images, light from the upper right; a sunken bunker inverted), inside its rings.
+   *  No dark outline stroke. A district (lite) chunk draws only the collar fills and the fills. The field steps (1, 7) are made per chunk
+   *  over its own box only, from its own edges and its neighbours' (so a seam is lit as one curve and nothing is drawn twice) */
+  private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
+    const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = edgeRes(L);
+    /** a course texture as a fill style on g: the photo or preset in tile space (turned and scaled about the origin), else the screen texture */
+    const style = (g: C2D, t: CourseTex) => {
       const G = new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
-      ctx.save(); ctx.setTransform(M); ctx.clip(path, 'evenodd');
-      ctx.fillStyle = isPaintPhoto(t.tex) ? this.paintPhoto(ctx, t.tex, L, G, t.sc) : this.screenPattern(ctx, t.tex as TexName, L, X0, Y0, Minv, G);
-      ctx.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
+      return isPaintPhoto(t.tex) ? this.paintPhoto(g, t.tex, L, G, t.sc) : this.screenPattern(g, t.tex as TexName, L, X0, Y0, Minv, G);
+    };
+    const ringsOf = (rings: readonly number[][]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
+    /** step 4: rings filled even-odd in t */
+    const fill = (t: CourseTex, rings: readonly number[][]) => {
+      if (!rings.length) return;
+      ctx.save(); ctx.setTransform(M); ctx.clip(ringsOf(rings), 'evenodd'); ctx.fillStyle = style(ctx, t); ctx.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); ctx.restore();
+    };
+    /** steps 2 and 3: the edge polylines stroked in t, FEATHER_STEPS strokes from 2f wide down, alpha 1 / (n - k): out to f tiles past the
+     *  edge the coverage falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
+    const feather = (t: CourseTex, lines: readonly number[][], f: number) => {
+      if (!lines.length || f <= 0) return;
+      const p = new Path2D();
+      for (const q of lines) {
+        const m = q.length; if (m < 4) continue;
+        const ring = m >= 8 && q[0] === q[m - 2] && q[1] === q[m - 1]; // a closed edge: joined round at its first point too
+        p.moveTo(q[0]!, q[1]!); for (let k = 2; k + 1 < (ring ? m - 2 : m); k += 2) p.lineTo(q[k]!, q[k + 1]!);
+        if (ring) p.closePath();
+      }
+      const n = FEATHER_STEPS;
+      ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt'; ctx.strokeStyle = style(ctx, t);
+      for (let k = 0; k < n; k++) { ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); }
       ctx.restore();
     };
-    for (const l of c.layers) { if (l.collar) fill(l.collar, l.collar.fill); fill(l, l.fill); }
+    /** an edge image over the tiles from (x0, y0), stretched onto ctx through the chunk transform with the op */
+    const put = (img: EdgeImage | null, x0: number, y0: number, op: GlobalCompositeOperation) => {
+      if (!img) return;
+      const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
+      ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = op; ctx.imageSmoothingEnabled = true; ctx.drawImage(s, x0, y0, img.W / res, img.H / res); ctx.restore();
+    };
+    const flatF = featherTiles(EDGE_LOOKS.flat!, L);
+    /** step 2 for the layers of surface s: the collar's feather and fill */
+    const collars = (ls: { c: CoursePatch; l: CourseLayer }[]) => {
+      if (!lite) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.edges, flatF);
+      for (const { l } of ls) if (l.collar) fill(l.collar, l.collar.fill);
+    };
+    const layers = (s: number) => { const out: { c: CoursePatch; l: CourseLayer }[] = []; for (const c of cs) for (const l of c.layers) if (l.s === s) out.push({ c, l }); return out; };
+    for (let s = 1; s <= 8; s++) {
+      const ls = layers(s);
+      if (ls.length) {
+        if (collarAfter(s) === s) collars(ls);
+        const look = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = look ? featherTiles(look, L) : flatF;
+        // the field images (steps 1 and 7) of each chunk over its own box within this ground chunk
+        const ims: { im: ReturnType<typeof edgeImages>; x0: number; y0: number }[] = [];
+        if (!lite && look && (look.light > 0 || look.dark > 0 || look.shadow > 0)) {
+          const reach = edgeReach(look, f), all = ls.flatMap(q => q.l.edges);
+          for (const { c, l } of ls) {
+            if (!l.edges.length) continue;
+            const x0 = Math.max(box[0], c.cx * c.size), y0 = Math.max(box[1], c.cy * c.size), x1 = Math.min(box[2], (c.cx + 1) * c.size), y1 = Math.min(box[3], (c.cy + 1) * c.size);
+            if (x1 <= x0 || y1 <= y0) continue;
+            const F = lineField(l.fill, all, x0, y0, x1 - x0, y1 - y0, res, reach);
+            if (F.any) ims.push({ im: edgeImages(F, look, f), x0, y0 });
+          }
+        }
+        for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'source-over');                    // 1
+        if (!lite) for (const { l } of ls) feather(l, l.edges, f);                                 // 3
+        for (const { l } of ls) fill(l, l.fill);                                                   // 4
+        if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 5
+        if (!lite && COURSE_DIRT && SURF_GROW[s]! > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 6
+        for (const q of ims) { put(q.im.light, q.x0, q.y0, 'screen'); put(q.im.dark, q.x0, q.y0, 'multiply'); } // 7
+      }
+      // the collars laid over this surface (the bunker's grass lip over a green) go on top of it
+      for (let t = 1; t < s; t++) if (collarAfter(t) === s) collars(layers(t));
+    }
+  }
+  /** step 5 of a course layer, the mowing stripes along each hole's centre line (P21 3.4): the hook for T075's stripeBands, drawn only
+   *  when COURSE_STRIPES is on (off until T075 lands and is wired here) */
+  private courseStripes(_ctx: C2D, _l: CourseLayer, _L: number, _M: DOMMatrix) { /* T075: light and dark bands along l.stripes, clipped to l.fill */ }
+  /** step 6 of a course layer: the soil over its seeded cells while they grow in (P21 3.4). The chunk's growth mask (1 px per cell, alpha =
+   *  1 - the grass share in quarters) is split by stage; each stage's cells take the dirt through the soft-patch noise (blendMask, the
+   *  same noise for every stage, so the grass comes in as patches that spread), inside the layer's rings */
+  private courseDirt(ctx: C2D, c: CoursePatch, l: CourseLayer, L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, r: number[]) {
+    const n = Math.round(c.size / 0.5), grow = c.grow!; if (grow.length !== n * n || !l.fill.length) return;
+    const clip = new Path2D(); for (const q of l.fill) ringPath(clip, q);
+    for (let st = 0; st < 4; st++) {
+      const a = Math.round(255 * (1 - st / 4)); let any = false;
+      const data = new Uint8ClampedArray(n * n * 4);
+      for (let i = 0; i < n * n; i++) if (grow[i] === a) { data[4 * i + 3] = 255; any = true; }
+      if (!any) continue;
+      const m = this.buffer('small', n, n); ctx2d(m).putImageData(new ImageData(data, n, n), 0, 0);
+      const b = this.buffer('courseDirt', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b);
+      g.save(); g.setTransform(M); g.clip(clip, 'evenodd');
+      g.fillStyle = isPaintPhoto(DIRT_TEX) ? this.paintPhoto(g, DIRT_TEX, L) : this.screenPattern(g, DIRT_TEX as TexName, L, X0, Y0, Minv); g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
+      g.globalCompositeOperation = 'destination-in'; g.imageSmoothingEnabled = true; g.drawImage(m, c.cx * c.size, c.cy * c.size, c.size, c.size);
+      if (st > 0) { const mask = this.blendMask(1 - st / 4, 0.12), mp = g.createPattern(mask, 'repeat')!; mp.setTransform(new DOMMatrix().scaleSelf(24 / mask.width, 24 / mask.width)); g.fillStyle = mp; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }
+      g.restore();
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(b, 0, 0); ctx.restore();
+    }
   }
   /** one painted area onto ctx: its polygon filled with its texture through G (turned and scaled in tile space about the origin), an optional
    *  tone filter over the fill, an optional border band inside its edge, and a thin rim for the paved textures; soft > 0 (the feather in tiles of an area

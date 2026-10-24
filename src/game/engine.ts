@@ -503,6 +503,8 @@ export class Game {
     }
     this.cgSentAt = performance.now();
   }
+  /** how many course chunks are on the ground (the benchmark's log) */
+  courseChunkCount(): number { return this.cgSent.size; }
   /** every chunk of the grid again (a load, a new look); chunks sent before that are now off the grid are dropped */
   resendCourse() {
     const g = this.courseGrid; if (!g) return;
