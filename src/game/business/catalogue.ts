@@ -4,7 +4,7 @@
 // stays the main income and a good spin-off pays for itself in about ten game days. Pure TS, no DOM.
 
 /** a business type's id */
-export type BusinessId = 'stadium' | 'sportsbar' | 'buscompany' | 'diner' | 'taxi' | 'golf' | 'estate' | 'fishing' | 'tackle' | 'casino' | 'hotel' | 'motel' | 'clubhouse';
+export type BusinessId = 'stadium' | 'sportsbar' | 'buscompany' | 'diner' | 'taxi' | 'golf' | 'estate' | 'fishing' | 'tackle' | 'casino' | 'hotel' | 'motel' | 'clubhouse' | 'range';
 /** how a business earns: event (the stadium's rounds), visit (customers drive to its door during its hours), fleet (fares from its vehicles),
  *  estate (lots it sells as the town builds on them) */
 export type BusinessKind = 'event' | 'visit' | 'fleet' | 'estate';
@@ -82,8 +82,14 @@ export const BUSINESSES: BusinessType[] = [
 const CLUBHOUSE: BusinessType = { id: 'clubhouse', name: 'Clubhouse', family: 'leisure', kind: 'visit', footprint: { w: 40, h: 24 }, buildCost: 0, upkeepPerDay: 300, pricePerVisitor: 22, party: 4,
   hours: [7, 19], rate: 25, tau: 6, max: 1, townMin: 150, water: false, unlock: { parent: null }, spinOffs: [],
   blurb: 'The course\'s front door: golfers park here, pay their green fees and walk out to the first tee.' };
-/** a type by id (the clubhouse too, though it is not in BUSINESSES) */
-export const BUSINESS: Record<BusinessId, BusinessType> = Object.fromEntries([...BUSINESSES, CLUBHOUSE].map(b => [b.id, b])) as Record<BusinessId, BusinessType>;
+/** the driving range (plan P22 2.2.1, range starts): the game places it with the county road, so it is not in BUSINESSES either. Its visitors
+ *  are passing drivers and the town's golfers, floodlit until 22:00. The sim's scale: one car stands for five real parties buying $6 buckets, so
+ *  its price is $60 a visitor and a car books $120 (P03's CAR_SCALE idea: the car park stays lively without flooding the road); P05 tunes it */
+const RANGE: BusinessType = { id: 'range', name: 'Driving range', family: 'leisure', kind: 'visit', footprint: { w: 70, h: 24 }, buildCost: 0, upkeepPerDay: 2000, pricePerVisitor: 60, party: 2,
+  hours: [7, 22], rate: 80, tau: 8, max: 1, townMin: 0, water: false, unlock: { parent: null }, spinOffs: [],
+  blurb: 'Your first golf business: drivers on the county road pull in to hit a bucket.' };
+/** a type by id (the clubhouse and the driving range too, though they are not in BUSINESSES) */
+export const BUSINESS: Record<BusinessId, BusinessType> = Object.fromEntries([...BUSINESSES, CLUBHOUSE, RANGE].map(b => [b.id, b])) as Record<BusinessId, BusinessType>;
 
 /** the level for xp (1..LEVEL_XP.length): the last level whose XP is reached */
 export function levelFromXp(xp: number): number { let L = 1; for (let i = 1; i < LEVEL_XP.length; i++) if (xp >= LEVEL_XP[i]!) L = i + 1; return L; }

@@ -5,7 +5,7 @@ import { drawnAs } from '../mirror';
 import { OWNER_SCALE, STUDIO_SCALE } from '../lots/scales';
 
 /** The representative delivered sprite for each business's catalogue card. */
-export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel', clubhouse: 'golf-clubhouse' };
+export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel', clubhouse: 'golf-clubhouse', range: 'golf-driving-range' };
 // Positions and sizes are fractions of the canonical parcel; R exchanges its world axes. A size of 0 draws the sprite at its own map size (the
 // studio's size; never stretched past its art); an id with a ':' is a library id as it is (else 'business:' + id). A sprite the owner sized in the
 // sprite studio is drawn at that size whatever its share (the owner, 2026-10-24: "I need to be able to fix the sizes of all of the stuff in the
@@ -29,6 +29,8 @@ const LAYOUT: Record<BusinessId, Piece[]> = {
   // the starting clubhouse is a tin-and-tarp shack (the owner, 2026-10-22: start with a poor clubhouse; the grand clubhouse, the pro shop and the
   // cart garage are built later), at its own size
   clubhouse: [['golf:clubhouse-shanty', .5, .5, 0]],
+  // the driving range's hut at its own size, a placeholder until T096 draws the range from golf/range.ts rangeLayout (hut, mats, flags, lights)
+  range: [['golf-driving-range', .5, .5, 0]],
   fishing: [ ['fishing-lodge', .45, .45, .38], ['fishing-cabin', .18, .2, .18], ['fishing-cabin', .18, .7, .18],
     ['fishing-boathouse', .78, .45, .22], ['fishing-dock-rope', .82, .2, .14], ['fishing-dock-lifebuoy', .85, .7, .14],
     ['fishing-rental-kiosk', .54, .83, .12], ['fishing-bass-boat', .93, .7, .1] ],
