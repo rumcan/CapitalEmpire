@@ -10,6 +10,7 @@ import type { TownEvent } from '../lots/town';
 import type { Ledger } from '../budget';
 import type { Milestone } from '../career';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
+import { retime } from './townclock';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 /** wall-clock frame period, ms; the sim is stepped once per DT of its speed. A skip (fast-forward) runs for SKIP_MS of each frame */
@@ -130,7 +131,7 @@ function frame() {
   const buf = new Float32Array(sim.cap * 4); sim.writeFrame(buf);
   // the shuttle crowd (walkers and stops) goes with the frames of a surge and its eval
   const walkers = city.surge ? city.walkBuf() : null, stops = city.surge ? city.stopBuf() : null, gallery = city.surge ? city.galleryBuf() : null;
-  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.roundView(), parks: city.parkView() };
+  const stats: SimStats = { active: sim.active, target: sim.target, lanes: city.lanes, stepMs: sim.stats.stepMs, tickMs: city.tickMs, maxTickMs: city.maxTickMs, graphMs: city.graphMs, respawned: sim.stats.respawned, simT: sim.t, skipping: skipUntil > sim.t, clock: sim.clock, frozen: sim.frozen, round: city.roundView(), parks: city.parkView(), town: sim.town };
   // the signal states (4 floats per plan) go with every frame
   const sig = sim.signalFrame();
   // the active traffic incidents go with every frame (3 floats each: see City.incidentBuf)
@@ -150,7 +151,14 @@ scope.onmessage = (e: MessageEvent<ToSim>) => {
       case 'target': city.sim.setTarget(m.n); forcePost = true; break;
       case 'gates': city.setGates(m.gates); forcePost = true; break;
       case 'spots': city.setSpots(m.spots); forcePost = true; break;
-      case 'townDay': city.sim.dayLen = Math.max(24, m.dayLen); city.sim.townTraffic = Math.max(0, m.traffic); city.sim.townFree = m.free; forcePost = true; break;
+      case 'townDay': {
+        // a new length moves the town clock's rate at once (no jump), unless the tournament day runs: the day's end applies it (City.endTourneyDay)
+        const s = city.sim, L = Math.max(24, m.dayLen);
+        if (L !== s.dayLen && !city.tourneyDay) s.town = retime(s.town, s.t, 1440 / L);
+        s.dayLen = L; s.townTraffic = Math.max(0, m.traffic); s.townFree = m.free; forcePost = true; break;
+      }
+      // the saved clock (after townState, so sim.t is the saved time): it runs at the normal rate again, the tournament day never carries over
+      case 'townClock': city.sim.town = retime(m.clock, city.sim.t, 1440 / city.sim.dayLen); city.tourneyDay = false; forcePost = true; break;
       case 'speed': speed = m.k; break;
       case 'skip': skipUntil = m.until; forcePost = true; break;
       case 'option': city.option(m.id); break;

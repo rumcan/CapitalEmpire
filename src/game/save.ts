@@ -10,6 +10,7 @@ import type { CareerSave } from './career';
 import type { RoundSave } from './event/round';
 import type { BusinessId } from './business/catalogue';
 import type { BizStats } from './business/state';
+import type { TownClock } from './sim/townclock';
 import type { Seg } from './network';
 import type { GolfSave } from './golf/mode';
 import type { GrassSave } from './ext/grass-management';
@@ -69,6 +70,8 @@ export interface SaveV5 {
   simT?: number;
   /** the game clock's offset from simT, s (clock = simT + shift; missing = 0): a frozen clock saves as it stood (optional, no version bump) */
   shift?: number;
+  /** the town clock (T048; optional, no version bump; missing = a clock from 0 at the current day length) */
+  townClock?: TownClock;
   /** the city's books: the treasury, loans, days in the red, bankruptcy and the ledgers (v5; missing = a fresh budget with money) */
   budget?: BudgetSave;
   /** the career: the highest milestone reached and the win (v5; missing = a fresh career at the hamlet) */

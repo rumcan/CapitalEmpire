@@ -18,6 +18,8 @@ import { zoneOf } from './sim/routing';
 import { Budget, CONNECT_FEE, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensation, saleOf, segUpkeep, startMoney, type BudgetSave, type DayIn, type Ledger, type LotIn, type SegIn } from './budget';
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
+import { retime, jumpTo, townTimeOf } from './sim/townclock';
+import { EXIT_END } from './golf/calendar';
 import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
@@ -48,6 +50,8 @@ const CAP = 12000, TICKS = 100;
 const GAME_HOUR = 60;
 /** going home (golf, LEAD.md M2.3): the leaving starts this long after kick-off and releases the parked cars' parties over LEAVE_S (sim s) */
 const LEAVE_AFTER = 120, LEAVE_S = 300;
+/** the tournament day (T048), minutes of the day: the town clock starts at 05:00 and the day ends at 22:00 at the latest (or at EXIT_END once the leaving is done) */
+const TOURNEY_START = 5 * 60, TOURNEY_END = 22 * 60;
 /** the 95th percentile of some values (0 with none) */
 export const p95 = (v: readonly number[]): number => { if (!v.length) return 0; const s = [...v].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil(0.95 * s.length) - 1)]!; };
 /** the game hours' snapshots kept (four game days of them: see beforeafter.ts) */
@@ -233,6 +237,8 @@ export class City {
    *  counts and the last car's time */
   private parkedCars: { town: number; park: number; bay: number }[] = []; private surgeHomes: SurgeHome[][] = []; private leaveRnd = seededRnd(0x1ea7e);
   leave: { at: number; order: number[]; next: number; pending: { k: number; at: number }[]; cars: number; gone: number; last: number; waits: number[] } | null = null;
+  /** the tournament day is running (T048): the town clock runs at 1 minute per sim s from 05:00 */
+  tourneyDay = false;
   busDefs: BusRouteDef[] = []; private busPts: ({ lot: Pt; doors: Pt } | null)[] = []; crowd: Crowd | null = null;
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
@@ -334,7 +340,7 @@ export class City {
   /** a new valley: its terrain classes, the water field, the highway entry (tiles), the seed, the town centres (tiles; none: the single town) and the
    *  heights (HS*HS metres, the terrain's height field: the disasters' flood and slope tests; none: flat); the town starts again, at the sim time (no lots yet) */
   terrain(cls: Uint8Array, entry: Pt, seed: number, towns: Pt[] = [], height?: Float32Array, golf = false): void {
-  this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y };
+  this.cls = cls; this.water = waterField(cls); this.ctx.entry = { x: entry.x, y: entry.y }; this.endTourneyDay();
     this.heightOf = height ? (x, y) => sampleField(height, x, y) : () => 0; this.segs = new WeakMap();
     this.centres = towns;
     this.town = new Town(seed); this.town.setCentres(towns); this.town.option = optionOf(this.optId); this.town.speed = this.growSpeed; this.town.tick(this.sim.clock, this.ctx); this.syncHour = -1;
@@ -426,6 +432,8 @@ export class City {
     if (!this.round.start(crowdFor(this.round.level, this.town.popK, Math.round(day1Spectators / PARTY)))) return false;
     this.town.skipTo(at);
     this.freeze(at);
+    // the tournament day (T048): the town clock jumps to 05:00 and runs at 1 game minute per sim s until endTourneyDay
+    this.sim.town = jumpTo(this.sim.town, this.sim.t, TOURNEY_START, 1); this.tourneyDay = true;
     this.round.startNow(); this.beginSurge();
     return true;
   }
@@ -451,9 +459,18 @@ export class City {
     // the roads clear after the event: a surge can leave the towns' junctions gridlocked, and the next round must start on an open network
     // (the everyday trips start again on their own)
     for (let i = 0; i < this.sim.cap; i++) if (this.sim.alive[i]) this.sim.despawn(i);
-    this.unfreeze(); this.emptyParks();
+    this.unfreeze(); this.emptyParks(); this.endTourneyDay();
     if (this.golf) { const rate = last ? roundTownGrowthRate(last, this.golf.tier, this.golf.rep) : 0; if (rate > 0 && this.centres.length) this.grown = this.growTowns(rate); } else if (perfect && this.centres.length) this.grown = this.growTowns();
     return true;
+  }
+  /** the tournament day's end (T048): the town clock returns to the normal rate (the day length as last set: see the townDay message); a no-op otherwise */
+  private endTourneyDay(): void { if (!this.tourneyDay) return; this.sim.town = retime(this.sim.town, this.sim.t, GAME_DAY / this.sim.dayLen); this.tourneyDay = false; }
+  /** the tournament day is over (T048): the round is free again, or the town reads 22:00, or the leaving is done (every parked car out: leave.gone of
+   *  leave.cars) and it reads EXIT_END (19:30) */
+  private dayOver(): boolean {
+    if (this.round.stage === 'free') return true;
+    const m = townTimeOf(this.sim.town, this.sim.t).dayMin, lv = this.leave;
+    return m >= TOURNEY_END || (!!lv && lv.gone >= lv.cars && m >= EXIT_END);
   }
   /** a perfect run's growth: each town is stamped to its residents times 1 + TOWN_GROWTH (the land may run out short of that); returns the new lots'
    *  events and the residents each town reached */
@@ -649,6 +666,7 @@ export class City {
     }
     if (this.crowd) { this.crowd.now = this.sim.t; this.crowd.step(WALK_V * n * DT / MPT); this.admitGates(n * DT); this.stepLeaving(); this.syncWait(); }
     if (rs === 'surge' && this.round.sim(n * DT)) this.kickOff();
+    if (this.tourneyDay && this.dayOver()) this.endTourneyDay();
     const events = this.town.tick(this.sim.clock, this.ctx);
     const ch = Math.floor(this.sim.clock / GAME_HOUR); if (this.golfLand.length && ch !== this.courseHour) { this.courseHour = ch; this.clearCourse(events); }
     const towns = this.centres.length > 0;
