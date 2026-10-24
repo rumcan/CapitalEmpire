@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { structureGhost, markerGhost } from '../src/game/ext/event-ghost';
+import { structureGhost, markerGhost, tollGhostLabel, busGhostLabel } from '../src/game/ext/event-ghost';
 
 describe('event ghost previews (T019)', () => {
   const rect: [number, number, number, number] = [10, 20, 6, 4];
@@ -49,5 +49,49 @@ describe('event ghost previews (T019)', () => {
   it('a valid middle tee is labelled as a middle tee', () => {
     const g = markerGhost(100, 200, 3, 'middle', { ok: true });
     assert.equal(g.label, 'Hole 3 middle tee');
+  });
+});
+
+describe('toll and bus ghost labels (T021)', () => {
+  it('a toll plaza that is affordable is valid with its booths and cost', () => {
+    const g = tollGhostLabel('', 3, 4500, 10000);
+    assert.equal(g.status, 'valid');
+    assert.equal(g.label, `3 booths · $${(4500).toLocaleString()}`);
+  });
+
+  it('a toll plaza short of the money is invalid with the money label', () => {
+    const g = tollGhostLabel('', 3, 4500, 1000);
+    assert.equal(g.status, 'invalid');
+    assert.equal(g.label, `Not enough money: $${(4500).toLocaleString()}`);
+  });
+
+  it('a refused toll plaza is invalid with the reason', () => {
+    const g = tollGhostLabel('Too close to a junction', 3, 4500, 10000);
+    assert.equal(g.label, 'Too close to a junction');
+    assert.equal(g.bad, true);
+  });
+
+  it('before the first stop, a lot stop on the town car park is labelled as such', () => {
+    const g = busGhostLabel('', false, 0, 0, true, 0);
+    assert.equal(g.label, 'Lot stop · town car park');
+    assert.equal(g.status, 'valid');
+  });
+
+  it('before the first stop, a lot stop on a car park is labelled with its number', () => {
+    const g = busGhostLabel('', false, 0, 0, false, 7);
+    assert.equal(g.label, 'Lot stop · car park #7');
+  });
+
+  it('after the first stop, a free route with the starting kit is labelled as free', () => {
+    const g = busGhostLabel('', true, 0, 0, false, 7);
+    assert.equal(g.label, 'Bus route · free (the starting kit)');
+  });
+
+  it('after the first stop, a paid route shows its cost, and is invalid when short of the money', () => {
+    const ok = busGhostLabel('', true, 2000, 5000, false, 7);
+    assert.equal(ok.label, `Bus route · $${(2000).toLocaleString()}`);
+    assert.equal(ok.status, 'valid');
+    const short = busGhostLabel('', true, 2000, 100, false, 7);
+    assert.equal(short.status, 'invalid');
   });
 });
