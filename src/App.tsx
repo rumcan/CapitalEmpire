@@ -874,14 +874,24 @@ function RoadPanel({ game }: { game: Game }) {
   const legs = game.previewLegs(), block = game.routeBlock(legs);
   const len = game.net.legsLength(legs);
   const cost = game.routeCost(), comp = game.routeCompensation();
-  const cls = game.cls;
+  const cls = game.cls, ui = game.toolUi(), adv = !ui || ui.advancedMode;
+  /** the family the picked type lives in, and its name (shown on a collapsed header) */
+  const curType = TYPES.find(t => t.id === game.cls.base), curFam = curType?.family, curName = curType ? CLASS[curType.id]!.name : '';
+  /** the open family: null = the picked type's family (the default), 'none' = all collapsed, else the family the player opened */
+  const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
+  const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
     <Panel title="Road Construction" icon="road" desc="Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.">
       <div className="mt-2 flex flex-col gap-2">
-        {ROAD_FAMILIES.map(f => (
+        {ROAD_FAMILIES.map(f => { const ex = isOpen(f.id); return (
           <div key={f.id}>
-            <div className="mb-1 flex items-baseline gap-2"><span className="label-caps">{f.label}</span><span className="truncate text-[10px] text-[var(--muted)]">{f.desc}</span></div>
-            {TYPES.filter(t => t.family === f.id).map(t => {
+            <button className="mb-1 flex w-full items-baseline gap-2 text-left" onClick={() => setOpenFam(ex ? 'none' : f.id)} aria-expanded={ex}>
+              <span className="label-caps">{f.label}</span>
+              <span className="min-w-0 flex-1 truncate text-[10px] text-[var(--muted)]">{f.desc}</span>
+              {!ex && f.id === curFam && <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{curName}</span>}
+              <Icon name={ex ? 'up' : 'down'} size={12} />
+            </button>
+            {ex && TYPES.filter(t => t.family === f.id).map(t => {
               const c = CLASS[t.id]!, lk = game.classOpen(t.id) ? null : unlockOf('class', t.id)!, on = game.cls.base === t.id;
               return (
                 <div key={`${f.id}-${t.id}`}>
@@ -912,30 +922,34 @@ function RoadPanel({ game }: { game: Game }) {
               );
             })}
           </div>
-        ))}
+        ); })}
       </div>
-      <div className="mt-2 flex items-center gap-1 text-xs">
-        <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Bends</span>
-        {([90, 45] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title="Q toggles">{b}°</button>)}
-        <span className="ml-auto text-[10px] text-slate-500">Shift: straight line</span>
-      </div>
-      <div className="mt-2 flex items-center gap-1 text-xs">
-        <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Replace</span>
-        <button className={`chip ${game.replaceMode ? 'chip-on' : ''}`} onClick={() => { game.replaceMode = !game.replaceMode; game.emit(); }} title="E toggles">{game.replaceMode ? 'On' : 'Off'}</button>
-        <span className="ml-auto text-[10px] text-slate-500">Roads in the way are bulldozed</span>
-      </div>
-      <div className="mt-2 flex flex-wrap items-center gap-1 text-xs">
-        <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Speed limits</span>
-        {([0, 1, 2, 3] as const).map(t => { const open = t <= game.speedTierMax(); return <button key={t} className={`chip ${game.net.speedTier === t ? 'chip-on' : ''} ${open ? '' : 'opacity-50'}`} onClick={() => game.setSpeedTier(t)} title={open ? (t ? `Every road +${SPEED_BONUS_KMH[t]} km/h (up to 140)` : 'Each road its own limit') : `From ${SPEED_TIER_YEAR[t]}`}>{t ? `+${SPEED_BONUS_KMH[t]}` : 'Standard'}</button>; })}
-      </div>
-      {cls.centre === 'style' && (
-        <div className="mt-2 flex items-center gap-1">
-          <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Centre line</span>
-          {([['Dashed', 0], ['Double', 1], ['None', 2]] as const).map(([n, v]) => (
-            <button key={v} className={`chip ${game.lineStyle === v ? 'chip-on' : ''}`} onClick={() => { game.lineStyle = v; game.emit(); }}>{n}</button>
-          ))}
+      {/* T036: the fine tuning rows sit under All tools (advanced); their hotkeys (Q, E, Tab) work from the engine either way */}
+      {adv && <>
+        <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
+        <div className="mt-2 flex items-center gap-1 text-xs">
+          <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Bends</span>
+          {([90, 45] as const).map(b => <button key={b} className={`chip ${game.bendMode === b ? 'chip-on' : ''}`} onClick={() => { game.bendMode = b; game.emit(); }} title="Q toggles">{b}°</button>)}
+          <span className="ml-auto text-[10px] text-slate-500">Shift: straight line</span>
         </div>
-      )}
+        <div className="mt-2 flex items-center gap-1 text-xs">
+          <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Replace</span>
+          <button className={`chip ${game.replaceMode ? 'chip-on' : ''}`} onClick={() => { game.replaceMode = !game.replaceMode; game.emit(); }} title="E toggles">{game.replaceMode ? 'On' : 'Off'}</button>
+          <span className="ml-auto text-[10px] text-slate-500">Roads in the way are bulldozed</span>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-1 text-xs">
+          <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Speed limits</span>
+          {([0, 1, 2, 3] as const).map(t => { const open = t <= game.speedTierMax(); return <button key={t} className={`chip ${game.net.speedTier === t ? 'chip-on' : ''} ${open ? '' : 'opacity-50'}`} onClick={() => game.setSpeedTier(t)} title={open ? (t ? `Every road +${SPEED_BONUS_KMH[t]} km/h (up to 140)` : 'Each road its own limit') : `From ${SPEED_TIER_YEAR[t]}`}>{t ? `+${SPEED_BONUS_KMH[t]}` : 'Standard'}</button>; })}
+        </div>
+        {cls.centre === 'style' && (
+          <div className="mt-2 flex items-center gap-1">
+            <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Centre line</span>
+            {([['Dashed', 0], ['Double', 1], ['None', 2]] as const).map(([n, v]) => (
+              <button key={v} className={`chip ${game.lineStyle === v ? 'chip-on' : ''}`} onClick={() => { game.lineStyle = v; game.emit(); }}>{n}</button>
+            ))}
+          </div>
+        )}
+      </>}
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Route</span><span>{game.route.length} point{game.route.length === 1 ? '' : 's'} · {Math.round(len * 2)} m</span></div>
         <div className="flex justify-between"><span className="text-slate-400">Cost</span><span className={cost + comp.comp > game.money ? 'text-red-300' : 'text-emerald-300'}>{money(cost)}</span></div>
