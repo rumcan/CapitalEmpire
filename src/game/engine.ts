@@ -181,13 +181,14 @@ const STRUCTURE_SPRITE: Record<string, string> = {
  coach: 'business:golf-cart-garage', hotel: 'business:golf-clubhouse', interchange: 'ce:parking-entry', rangeStand: 'business:golf-bench-course-map', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',  
 };
 /** a golf structure's sprite scale: its picture fitted to the structure's footprint (tiles, turned when rotated), then the owner's size for
- *  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for. */
+ *  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for; a smaller one keeps
+ *  its own size (the entrance gate stood in by a 0.8-tile boom gate was drawn 7.8x) until the structure has its own art. */
 function structureScale(typeId: string, it: LibItem, rotated: boolean) {
   const def = STRUCTURE[typeId], own = OWNER_SCALE[it.id] ?? 1; if (!def) return own;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const b of it.boxes) { const hx = (rotated ? b.hy : b.hx) / 2, hy = (rotated ? b.hx : b.hy) / 2, dx = (rotated ? b.dy : b.dx) / 2, dy = (rotated ? b.dx : b.dy) / 2; x0 = Math.min(x0, dx - hx); x1 = Math.max(x1, dx + hx); y0 = Math.min(y0, dy - hy); y1 = Math.max(y1, dy + hy); }
   const w = rotated ? def.footprint.h : def.footprint.w, h = rotated ? def.footprint.w : def.footprint.h, fw = x1 - x0, fh = y1 - y0;
-  return (fw > 0 && fh > 0 ? Math.min(w / fw, h / fh) : 1) * own;
+  return (fw > 0 && fh > 0 ? Math.min(1, w / fw, h / fh) : 1) * own; // shrink to fit, never blow up: an upscaled stand-in is huge and blurry (past its 0.6x mip)
 }
 const autoKey = (a: AutoProp) => `${a.kind}@${a.x.toFixed(2)},${a.y.toFixed(2)}`;
 /** a natural disaster's area colour and name (see Game.drawDisasters, disasterText) */
@@ -1271,7 +1272,9 @@ export class Game {
     for (const p of this.props) {
     if (!claimed.has(p) && p.item === item && (Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2)) { found = p; break; }
     }
-    if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated)));
+    const scale = structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated));
+    if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), scale);
+    else if (Math.abs(found.scale - scale) > 1e-6) { found.scale = scale; this.propChanged(found); } // a save keeps the size it was drawn at: refit it to today's rule
     claimed.add(found);
     this.golfStructureProps.set(s.id, found);
     }
