@@ -6,7 +6,8 @@ import { CELL_T, type Grid } from './index';
 import { BLOB_STYLE, CHUNK_MARGIN, chunkOutlines } from '../course-blobs';
 import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
-import { growShare, growStage } from './areas';
+import { MONTH_BASE } from './areas';
+import { growMask } from '../course-fx';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
@@ -41,23 +42,62 @@ function chunkCells(g: Grid, cx: number, cy: number): { i0: number; j0: number; 
   return { i0: Math.round((cx * COURSE_CHUNK - g.x0) / CELL_T), j0: Math.round((cy * COURSE_CHUNK - g.y0) / CELL_T), n: Math.round(COURSE_CHUNK / CELL_T) };
 }
 
-/** a chunk's grow-in now: its key (changes when any seeded cell's stage changes: the stage sum and the count of growing cells, since
- *  stages only go up) and its growth mask (n x n bytes over the chunk box, alpha 255 x (1 - stage / 4); null when nothing grows).
- *  now: the effective game month (grow cards included). */
-export function chunkGrow(g: Grid, cx: number, cy: number, now: number): { key: string; mask: Uint8Array | null } {
-  const { i0, j0, n } = chunkCells(g, cx, cy);
-  let mask: Uint8Array | null = null, sum = 0, growing = 0;
-  for (let j = Math.max(0, -j0); j < n && j0 + j < g.h; j++) {
-    const row = (j0 + j) * g.w;
-    for (let i = Math.max(0, -i0); i < n && i0 + i < g.w; i++) {
-      const q = row + i0 + i, m = g.month[q]!; if (!m) continue;
-      const st = growStage(growShare(g.surf[q]!, m, now)); if (st >= 4) continue;
-      mask ??= new Uint8Array(n * n);
-      mask[j * n + i] = Math.round(255 * (1 - st / 4)); sum += st; growing++;
-    }
-  }
-  return { key: growing ? `${growing}:${sum}` : 'static', mask };
+/** a chunk's growth mask (T076 growMask: 1 byte per cell over the chunk box, alpha 255 x (1 - stage / 4)), or null when nothing grows;
+ *  now: the effective game month (grow cards included; the cells hold month + MONTH_BASE, established cells 0) */
+export function courseGrow(g: Grid, cx: number, cy: number, now: number): Uint8Array | null {
+  const m = growMask(g, cx, cy, COURSE_CHUNK, now + MONTH_BASE);
+  for (let i = 0; i < m.length; i++) if (m[i]) return m;
+  return null;
 }
+/** a chunk's grow key: how many cells stand at each unfinished grow stage (the mask's alphas 255, 191, 128, 64), which changes whenever a
+ *  seeded cell reaches its next quarter (stages only go up); 'static' when nothing grows. mask: the chunk's mask when already made */
+export function courseGrowKey(g: Grid, cx: number, cy: number, now: number, mask?: Uint8Array | null): string {
+  const m = mask === undefined ? courseGrow(g, cx, cy, now) : mask; if (!m) return 'static';
+  const n = [0, 0, 0, 0];
+  for (let i = 0; i < m.length; i++) { const a = m[i]!; if (a) n[4 - Math.round(a / 63.75)]!++; }
+  return n.join(':');
+}
+/** whether a grow key says nothing in its chunk grows (the month tick skips such a chunk) */
+export const growStatic = (key: string) => key === 'static';
+/** the most points one surface of one chunk carries (P21 3.8): above it, its rings and edges are simplified again, coarser */
+export const POINT_CAP = 4000;
+/** Douglas-Peucker on a flat polyline (both ends kept) at tolerance tol (tiles) */
+function dp(p: readonly number[], tol: number): number[] {
+  const n = p.length >> 1; if (n < 3) return p.slice();
+  const keep = new Uint8Array(n); keep[0] = keep[n - 1] = 1;
+  const stack: number[] = [0, n - 1], t2 = tol * tol;
+  while (stack.length) {
+    const b = stack.pop()!, a = stack.pop()!, ax = p[2 * a]!, ay = p[2 * a + 1]!, dx = p[2 * b]! - ax, dy = p[2 * b + 1]! - ay, l2 = dx * dx + dy * dy;
+    let far = -1, fd = t2;
+    for (let i = a + 1; i < b; i++) {
+      const ex = p[2 * i]! - ax, ey = p[2 * i + 1]! - ay, c = l2 > 0 ? (ex * dy - ey * dx) ** 2 / l2 : ex * ex + ey * ey;
+      if (c > fd) { fd = c; far = i; }
+    }
+    if (far >= 0) { keep[far] = 1; stack.push(a, far, far, b); }
+  }
+  const out: number[] = []; for (let i = 0; i < n; i++) if (keep[i]) out.push(p[2 * i]!, p[2 * i + 1]!);
+  return out;
+}
+/** a closed ring simplified (split at its first point and its farthest point, so both halves keep their ends) */
+function dpRing(p: readonly number[], tol: number): number[] {
+  const n = p.length >> 1; if (n < 4) return p.slice();
+  let far = 0, fd = -1; for (let i = 1; i < n; i++) { const d = (p[2 * i]! - p[0]!) ** 2 + (p[2 * i + 1]! - p[1]!) ** 2; if (d > fd) { fd = d; far = i; } }
+  const a = dp(p.slice(0, 2 * far + 2), tol), b = dp([...p.slice(2 * far), p[0]!, p[1]!], tol);
+  const out = a.concat(b.slice(2, b.length - 2));
+  return out.length >= 6 ? out : p.slice();
+}
+/** rings and edges of one surface within POINT_CAP points: simplified again at doubling tolerances from 0.08 tile until they fit (up to 2
+ *  tiles; a chunk of thousands of separate specks may stay over: every ring keeps at least three points) */
+export function capPoints(fill: number[][], edges: number[][]): [number[][], number[][]] {
+  const count = () => (fill.reduce((s, r) => s + r.length, 0) + edges.reduce((s, r) => s + r.length, 0)) / 2;
+  for (let tol = 0.08; count() > POINT_CAP && tol < 2; tol *= 2) {
+    fill = fill.map(r => dpRing(r, tol));
+    edges = edges.map(e => { const m = e.length, ring = m >= 8 && e[0] === e[m - 2] && e[1] === e[m - 1]; if (!ring) return dp(e, tol); const r = dpRing(e.slice(0, m - 2), tol); return [...r, r[0]!, r[1]!]; });
+  }
+  return [fill, edges];
+}
+/** flat tile rings and polylines as Float32Arrays (a patch posts and clones as plain memory, not number by number) */
+const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.from(q));
 
 /** the lot-ground patch of course chunk (cx, cy), or null when no surface reaches it: pts is the chunk box grown by COURSE_PATCH_REACH,
  *  the layers come from chunkOutlines in draw order, each in its look (a surface with no look is left out), the fairway carries the
@@ -67,9 +107,10 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   const S = COURSE_CHUNK, outs = chunkOutlines(g, cx, cy, S, BLOB_STYLE), layers: CourseLayer[] = [];
   for (const o of outs) {
     const look = looks.surf[o.surf]; if (!look) continue;
-    const L: CourseLayer = { s: o.surf, tex: look.tex, sc: look.sc, a: look.a, e: SURF_EDGE[o.surf] ?? 'flat', fill: o.fill, edges: o.edges };
+    const [fill, edges] = capPoints(o.fill, o.edges);
+    const L: CourseLayer = { s: o.surf, tex: look.tex, sc: look.sc, a: look.a, e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges) };
     const col = BLOB_STYLE[o.surf]?.collar;
-    if (o.collar && col) { const cl = looks.collar[col.name]; L.collar = { n: col.name, tex: cl.tex, sc: cl.sc, a: cl.a, fill: o.collar.fill, edges: o.collar.edges }; }
+    if (o.collar && col) { const cl = looks.collar[col.name], [cf, ce] = capPoints(o.collar.fill, o.collar.edges); L.collar = { n: col.name, tex: cl.tex, sc: cl.sc, a: cl.a, fill: f32(cf), edges: f32(ce) }; }
     if (o.surf === 4 && lines?.size && o.fill.length) {
       const holes = holesIn(g, cx, cy, o.surf), st: { hole: number; line: number[] }[] = [];
       for (const h of holes) { const l = lines.get(h); if (l && l.length >= 4) st.push({ hole: h, line: l.slice() }); }
@@ -79,8 +120,16 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   }
   if (!layers.length) return null;
   const R = COURSE_PATCH_REACH, x0 = cx * S - R, y0 = cy * S - R, x1 = (cx + 1) * S + R, y1 = (cy + 1) * S + R;
-  const grow = chunkGrow(g, cx, cy, now).mask;
+  const grow = courseGrow(g, cx, cy, now);
   return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(grow ? { grow } : {}), z: 0 } };
+}
+
+/** the buffers of a patch's typed arrays (a postMessage transfer list) */
+export function patchBuffers(p: LotPatch): ArrayBuffer[] {
+  const out: ArrayBuffer[] = [], c = p.course; if (!c) return out;
+  for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.collar ? [...l.collar.fill, ...l.collar.edges] : [])]) out.push(a.buffer as ArrayBuffer);
+  if (c.grow) out.push(c.grow.buffer as ArrayBuffer);
+  return out;
 }
 
 /** the hole numbers (1..255) of surface s's cells in chunk (cx, cy) and 4 cells round it, ascending */

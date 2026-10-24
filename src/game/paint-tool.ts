@@ -13,7 +13,7 @@ import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceH
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
 import { applyDiff, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
-import { SURF_SURFACE, mergeMany, plantMonth, surfOfSurface, type GridArea } from './ext/course-grid/areas';
+import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
@@ -51,6 +51,8 @@ interface AreaSnap { ids: number[]; ts: PaintTuple[]; keys: string[]; nextId: nu
 interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: PropJournal | null; spent: number; height: CourseHeightStep | null; grid: GridDiff | null; plans: { before: string; after: string } | null }
 /** the most undo steps kept */
 const UNDO_MAX = 100;
+/** the most course-grid cells the undo steps keep in all (13 bytes a cell: about 26 MB); the oldest steps go first */
+const UNDO_CELLS = 2_000_000;
 /** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
 type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> };
 /** the localStorage key of the edited brush presets */
@@ -341,6 +343,9 @@ export class PaintTool {
     const gd = mergeMany(t.gd), grid = gd && gd.n ? gd : null, pk = this.plansKey(), plans = pk !== t.plans ? { before: t.plans, after: pk } : null;
     if (!props && !t.spent && same && !height && !grid && !plans) return;
     this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    // a few big grid steps (a whole preset hole, a long stroke) can outweigh a hundred small ones: the steps are capped by their cells too
+    let cells = 0; for (const u of this.undos) cells += u.grid?.n ?? 0;
+    while (cells > UNDO_CELLS && this.undos.length > 1) cells -= this.undos.shift()!.grid?.n ?? 0;
     this.redos = [];
     const hint = this.pinHint; this.pinHint = undefined; this.host.changed?.(hint);
   }
@@ -455,12 +460,28 @@ export class PaintTool {
     const areas = pieceAreas(pl);
     // a snapped cart path's join apron sits on the road's verge, which may lie outside the course land: only the piece's own layers must be on owned land (the apron is still laid and priced)
     const landAreas = b.kind === 'path' ? areas.filter((_, i) => pl.layers[i]?.role !== 'join-apron') : areas;
-    return { key, pl, areas, why: pieceWhy(landAreas, golf ? this.host.ownedLand : undefined), cost: golf ? pieceCost(areas, this.plantKind) + this.earthworkCost(pl.heightOps) : 0 };
+    return { key, pl, areas, why: pieceWhy(landAreas, golf ? this.host.ownedLand : undefined), cost: golf ? this.piecePrice(areas) + this.earthworkCost(pl.heightOps) : 0 };
   }
   /** what a piece can snap to: the painted areas and, on the course grid, its blobs (outer rings; their texture says their kind; no collars) */
   private snapAreas(): (Pick<PaintArea, 'id' | 'pts' | 'kind' | 'hole'> & { tex?: string; order?: number })[] {
     const grid = this.courseGrid() ? this.host.gridAreas?.() ?? [] : [];
     return grid.length ? [...this.areas, ...grid.filter(a => !a.collar).map(a => ({ id: a.id, pts: a.outer, hole: a.hole || undefined, tex: a.tex }))] : this.areas;
+  }
+  /** the price of a piece's areas (golf mode): on the course grid, its golf surfaces by the cells they would change (1 m² each, as the
+   *  Shape method charges; the collar layers it drops cost nothing: collars are automatic), its other layers (a cart path) by their
+   *  painted area; without a grid, every layer by its area (pieceCost) */
+  private piecePrice(areas: readonly Omit<PaintArea, 'id'>[]): number {
+    const g = this.courseGrid(); if (!g) return pieceCost(areas, this.plantKind);
+    const own = this.host.ownedAt, rest: Omit<PaintArea, 'id'>[] = [];
+    let cost = 0;
+    for (const a of areas) {
+      const gs = PaintTool.surfOf(a), sf = a.kind ?? surfaceOfTex(a.tex);
+      if (!gs) { if (sf !== 'fringe' && sf !== 'firstCut') rest.push(a); continue; }
+      let n = 0;
+      polyCells(g, roundCorners(a.pts, a.radius), (i, x, y) => { if (g.surf[i]! < gs && (!own || own(x, y))) n++; });
+      cost += n * unitBuildCost(SURF_SURFACE[gs] ?? 'other', this.plantKind);
+    }
+    return Math.round(cost + (rest.length ? pieceCost(rest, this.plantKind) : 0));
   }
   /** applies a placed piece's height ops to the course height field (journaled for undo); the engine is told the changed box */
   private applyHeightOps(ops: readonly CoursePieceHeightOp[]) {
