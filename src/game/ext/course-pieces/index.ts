@@ -2,6 +2,7 @@
 // Pure TypeScript, deterministic. Units: tiles of 2 m; money in $.
 import { checkArea, clampStyle, DEFAULT_STYLE, type BorderTex, type BrushKind, type PaintArea, type PaintTex } from '../../paint';
 import { areaBuildCost, type PlantKind } from '../../golf/costs';
+import { kindOfTex } from '../../golf/holepreset';
 import type { CoursePieceArchetype, SnapPieceKind, SnapPiecePlacement, SnapTargetArea } from '../course-snap';
 
 /** the pieces the Course panel offers, in its order */
@@ -21,10 +22,14 @@ export const PIECE_BUTTONS: readonly { arch: CoursePieceArchetype; kind: SnapPie
   { arch: 'water-creek', kind: 'water', name: 'Creek' },
 ];
 
-/** the painted areas a new piece can snap to: the course areas with a piece kind (rough and areas without a kind are not targets) */
-export function snapTargets(areas: readonly Pick<PaintArea, 'id' | 'pts' | 'kind' | 'hole'>[]): SnapTargetArea[] {
+/** the painted areas a new piece can snap to: the course areas with a piece kind (rough is not a target). An area without a kind takes its
+ *  texture's (the generated course and preset holes carry none); a piece's under-layers (they carry an order) stay out */
+export function snapTargets(areas: readonly (Pick<PaintArea, 'id' | 'pts' | 'kind' | 'hole'> & { tex?: string; order?: number })[]): SnapTargetArea[] {
   const out: SnapTargetArea[] = [];
-  for (const a of areas) if (a.kind && a.kind !== 'rough') out.push({ id: a.id, kind: a.kind, pts: a.pts, ...(a.hole ? { hole: a.hole } : {}) });
+  for (const a of areas) {
+    const k = a.kind ?? (a.order === undefined && a.tex ? kindOfTex(a.tex) : undefined);
+    if (k && k !== 'rough') out.push({ id: a.id, kind: k, pts: a.pts, ...(a.hole ? { hole: a.hole } : {}) });
+  }
   return out;
 }
 
