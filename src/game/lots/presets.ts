@@ -1,15 +1,15 @@
 // The lot presets (P20 / T062): the preset format, the size buckets, the look state of a lot, which presets fit a lot, the pick by street slot, and fitting a preset to a lot of another size. Pure, no DOM, no randomness. The lot's own frame: tiles of 2 m, x along the street, y away from it.
 import { LV } from './town';
 
-/** a lot's use, as its preset is filed */
-export type PresetUse = 'res' | 'com' | 'ind' | 'tour' | 'civic';
+/** a lot's use, as its preset is filed; 'park' is the public car park (a commercial lot with no building, compose.ts isCarPark) */
+export type PresetUse = 'res' | 'com' | 'park' | 'ind' | 'tour' | 'civic';
 /** a lot's look state: built, upgraded, or declined (decline 2 or more) */
 export type PresetState = 'built' | 'upgraded' | 'declined';
-/** the turn of a prop's four-view art against the lot's facing: 0 = its front faces the street, 1, 2, 3 = quarter turns */
+/** the turn of a prop's four-view art against the lot's facing: 0 = its front faces the street, 1, 2, 3 = quarter turns (one turn takes the front from the street to the lot's +x side; preset-art.ts turned) */
 export type View = 0 | 1 | 2 | 3;
-/** a prop in a preset, in the lot's own frame (tiles): x along the street (0 at the left as seen from the street), y away from the street (0 at the street edge); scale: a multiplier, 1 = the prop's stored size */
+/** a prop in a preset, in the lot's own frame (tiles): x, y the centre of its footprint, x along the street (0 at the left as seen from the street), y away from the street (0 at the street edge); scale: a multiplier of the sprite's owner scale (scales.ts OWNER_SCALE; vehicles: of 1), 1 = the prop's stored size */
 export interface PresetProp { id: string; x: number; y: number; scale: number; view: View }
-/** a ground patch in the lot's frame: pts as x, y pairs (tiles); lines: the patch's painted line offsets, kept as they are */
+/** a ground patch in the lot's frame: pts as x, y pairs (tiles); lines: its painted lines (parking bays, furrows) as segment end points x0, y0, x1, y1 in the same frame (tiles) */
 export interface PresetPatch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: string; pts: number[]; lines?: number[] }
 /** one preset: its id, use, state, the size it was laid out for (tiles), its props and ground patches; curated: the owner has edited it */
 export interface LotPreset { id: string; use: PresetUse; state: PresetState; w: number; d: number; props: PresetProp[]; patches: PresetPatch[]; curated?: boolean }
@@ -75,7 +75,7 @@ export function fitPreset(p: LotPreset, w: number, d: number): Fitted {
 }
 
 /** the uses, states and patch kinds a preset file may name */
-const USES: readonly string[] = ['res', 'com', 'ind', 'tour', 'civic'];
+const USES: readonly string[] = ['res', 'com', 'park', 'ind', 'tour', 'civic'];
 const STATES: readonly string[] = ['built', 'upgraded', 'declined'];
 const KINDS: readonly string[] = ['drive', 'walk', 'lot', 'yard', 'bed'];
 /** a plain object (not null, not an array) */
@@ -124,4 +124,23 @@ export function parsePresets(json: unknown): { presets: LotPreset[]; invalid: nu
   let invalid = 0;
   for (const v of json) { const p = readPreset(v); if (p) presets.push(p); else invalid++; }
   return { presets, invalid };
+}
+
+/** a number as the preset file writes it: rounded to 3 decimals, never -0 */
+const num = (v: number) => { const r = Math.round(v * 1000) / 1000; return Object.is(r, -0) ? '0' : String(r); };
+/** a list of numbers as the preset file writes it */
+const nlist = (a: readonly number[]) => `[${a.map(num).join(',')}]`;
+
+/** the preset file's text (src/game/lots/lot-presets.json): a JSON array, one preset's header per line and each prop and patch on its own line
+ *  (an edit to one prop is a one-line diff), numbers rounded to 3 decimals (tiles); parsePresets reads it back. The freeze script and the dev
+ *  editor's save both write with it */
+export function formatPresets(list: readonly LotPreset[]): string {
+  const out = list.map(p => {
+    const head = `{"id":${JSON.stringify(p.id)},"use":"${p.use}","state":"${p.state}","w":${num(p.w)},"d":${num(p.d)}${p.curated ? ',"curated":true' : ''}`;
+    const props = p.props.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"view":${q.view}}`);
+    const patches = p.patches.map(a => `{"kind":"${a.kind}","tex":${JSON.stringify(a.tex)},"pts":${nlist(a.pts)}${a.lines ? `,"lines":${nlist(a.lines)}` : ''}}`);
+    const block = (rows: string[]) => (rows.length ? `\n${rows.join(',\n')}\n` : '');
+    return `${head},"props":[${block(props)}],"patches":[${block(patches)}]}`;
+  });
+  return `[\n${out.join(',\n')}\n]\n`;
 }

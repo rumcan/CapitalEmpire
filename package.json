@@ -11,6 +11,8 @@
     "assets:ground": "node scripts/assets/prep-ground.mjs",
     "assets:sprites": "node scripts/assets/prep-sprites.mjs",
     "assets:scales": "node scripts/assets/prep-scales.mjs",
+    "lots:freeze": "node scripts/assets/freeze-lot-presets.mjs",
+    "lots:check": "node scripts/assets/freeze-lot-presets.mjs --check",
     "typecheck": "tsc --noEmit -p .",
     "bench": "node scripts/perf/bench.mjs",
     "worker:test": "bash scripts/worker/run.sh \"npm test\"",

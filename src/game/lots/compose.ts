@@ -881,6 +881,22 @@ export function fenceOnly(lot: LotGeom, seed: number, lines: FenceLines = ALL_LI
   return B.done();
 }
 
+/** the layout of a built lot's use alone, for the lot presets' freeze (scripts/assets/freeze-lot-presets.ts, P20 T063): the props done() keeps
+ *  (street items flagged) and the ground patches with their kind (world tiles), no fence layer, boundary or decline touches; the public car
+ *  park when isCarPark. null for a lot that is not built or upgraded, or of no use */
+export function layoutOfUse(lot: LotGeom, st: ComposeState): { props: Placed[]; patches: { kind: Patch['kind']; tex: LotPatch['tex']; pts: number[]; lines?: number[] }[] } | null {
+  if (st.level < LV.BUILT || st.use === LU.NONE) return null;
+  const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
+  B.noCars = st.decline >= 3;
+  if (st.use === LU.RES) res(B, st);
+  else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); }
+  else if (st.use === LU.TOUR) com(B, st, true);
+  else if (st.use === LU.IND) ind(B, st);
+  else civic(B, st);
+  const { props } = B.done();
+  return { props, patches: B.patches.map(p => ({ kind: p.kind, tex: p.tex, pts: p.quad.slice(), ...(p.lines ? { lines: p.lines.slice() } : {}) })) };
+}
+
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed. */
 export function compose(lot: LotGeom, st: ComposeState): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
