@@ -2,7 +2,7 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLA
 import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
-import { drawGhostBlueprint, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { drawGhostBlueprint, drawGhostHint, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { markerGhost, structureGhost } from './ext/event-ghost';
 import { getTournamentWeather } from './golf/weather';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
@@ -2500,17 +2500,10 @@ export class Game {
    *  (the reason, or the cost short of the money, or the bays and the cost) */
   private drawParkPreview(ctx: CanvasRenderingContext2D) {
     const pd = this.parkDrag; if (!pd) return;
-    const dpr = this.dpr, d = pd.def, pk = pd.park;
-    this.setIso(ctx); ctx.beginPath(); ctx.rect(d.x, d.y, d.w, d.h); ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = pd.why ? 'rgba(230,80,80,0.3)' : 'rgba(80,200,120,0.3)'; ctx.fill();
-    if (pk) { this.bayOutlines(ctx, pk.bays); for (const e of pk.entrances) { const p = this.screen(e.x, e.y); disc(ctx, p.x, p.y, 4 * dpr, '#ffbe3c'); } }
-    const short = !pd.why && pd.cost > this.money, bad = !!pd.why || short;
-    const text = pd.why || (short ? `Not enough money: $${pd.cost.toLocaleString()}` : `${pk ? pk.bays.length : 0} bays · $${pd.cost.toLocaleString()}`);
-    const x = pd.mx * dpr + 14 * dpr, y = pd.my * dpr - 12 * dpr;
-    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
-    ctx.fillStyle = bad ? '#fecaca' : '#bbf7d0'; ctx.fillText(text, x, y);
-    ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+    const d = pd.def, pk = pd.park, v = this.ghostView(ctx), g = ghostStatus(pd.why, pd.cost, this.money, `${pk ? pk.bays.length : 0} bays`);
+    drawGhostBlueprint(v, { status: g.status, rects: [{ rect: { x: d.x, y: d.y, w: d.w, h: d.h } }] });
+    if (pk) { this.bayOutlines(ctx, pk.bays); drawGhostBlueprint(v, { status: g.status, entrances: pk.entrances }); }
+    drawGhostHint(v, pd.mx, pd.my, g.label, g.bad);
   }
 
   // ---------- toll gates (Phase 5 step 5b) ----------
@@ -3837,6 +3830,10 @@ export class Game {
     }
     if (h.why) this.hintAt(ctx, h.mx, h.my, h.why, true);
   }
+  /** the overlay view the shared ghost drawers take (T019/T020) */
+  private ghostView(ctx: CanvasRenderingContext2D): GhostView {
+    return { ctx, setIso: c => this.setIso(c as CanvasRenderingContext2D), screen: (x, y) => this.screen(x, y), dpr: this.dpr };
+  }
   /** the Event tool's and the Holes tool's ghosts at the cursor (T019): the pending structure's footprint or the selected marker's ring, green when the click would succeed, else red, with its one-line label; rebuilt only when the hover spot or the course changes */
   private drawEventGhosts(ctx: CanvasRenderingContext2D) {
     const h = this.hover, m = this.ghostMouse, g = this.golf; if (!h || !m || !g) return;
@@ -3852,8 +3849,7 @@ export class Game {
     }
     if (!make) return;
     if (this.ghostCache?.key !== key) this.ghostCache = { key, bp: make() };
-    const v: GhostView = { ctx, setIso: c => this.setIso(c as CanvasRenderingContext2D), screen: (x, y) => this.screen(x, y), dpr: this.dpr };
-    drawGhostBlueprint(v, this.ghostCache.bp, m.mx, m.my);
+    drawGhostBlueprint(this.ghostView(ctx), this.ghostCache.bp, m.mx, m.my);
   }
   /** a hint label beside the cursor at (mx, my) (screen px, as the tools' why): the text in red when bad, else green */
   private hintAt(ctx: CanvasRenderingContext2D, mx: number, my: number, text: string, bad: boolean) {
