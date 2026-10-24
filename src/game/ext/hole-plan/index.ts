@@ -12,10 +12,10 @@ import {
 } from '../course-grid';
 import { parFromLength } from '../../golf/holes';
 import { buildArchetypePolygon, type CoursePieceArchetype } from '../course-snap';
-import type { CourseArea } from '../../golf/types';
+import type { AimPoint, CourseArea } from '../../golf/types';
 
 export { parFromLength };
-export type { Pt };
+export type { Pt, AimPoint };
 
 /** supported archetype green shapes */
 export type GreenShape = 'round' | 'kidney' | 'peanut' | 'pear' | CoursePieceArchetype;
@@ -50,14 +50,6 @@ export interface HolePlan {
   fwStart: number;
   /** deterministic seed for edge swell noise (0 = no swell) */
   seed: number;
-}
-
-/** aim point on a hole's dogleg */
-export interface AimPoint {
-  hole: number;
-  x: number;
-  y: number;
-  order: number;
 }
 
 /** summary information for a hole plan */
@@ -130,11 +122,11 @@ export function defaultPlan(
   }
 
   if (par === 4) {
-    // Par 4: fairway from 100 m; widths 30 at 100, 40 at landing (210), 28 at length-50, 22 at green front
-    const fwStart = 100;
-    const wLanding = Math.min(210, Math.max(fwStart + 20, totalM - 70));
-    const w50 = Math.max(wLanding + 20, totalM - 50);
-    const wFront = Math.max(w50 + 10, totalM - 20);
+    // Par 4: fairway from fwStart; widths 30 at fwStart, 40 at landing, 28 at length-50, 22 at green front
+    const fwStart = Math.min(100, Math.max(30, totalM - 90));
+    const sFront = Math.max(fwStart + 30, totalM - 20);
+    const sLanding = Math.min(210, Math.round(fwStart + (sFront - fwStart) * 0.55));
+    const s50 = Math.min(Math.max(sLanding + 20, totalM - 50), sFront - 15);
     return {
       hole,
       tee: { x: tee.x, y: tee.y },
@@ -144,19 +136,20 @@ export function defaultPlan(
       greenTurn: approachAngleDeg,
       bends: bends.map((b) => ({ x: b.x, y: b.y })),
       widths: [
-        { s: 100, w: 30 },
-        { s: 210, w: 40 },
-        { s: w50, w: 28 },
-        { s: wFront, w: 22 },
+        { s: fwStart, w: 30 },
+        { s: sLanding, w: 40 },
+        { s: s50, w: 28 },
+        { s: sFront, w: 22 },
       ],
-      fwStart: 100,
+      fwStart,
       seed: 0,
     };
   }
 
   // Par 5: as par 4, plus 32 at 300 and second landing 38 at 390
-  const w50 = Math.max(410, totalM - 50);
-  const wFront = Math.max(w50 + 10, totalM - 20);
+  const fwStart = 100;
+  const sFront = Math.max(fwStart + 60, totalM - 20);
+  const s50 = Math.min(Math.max(410, totalM - 50), sFront - 15);
   return {
     hole,
     tee: { x: tee.x, y: tee.y },
@@ -170,8 +163,8 @@ export function defaultPlan(
       { s: 210, w: 40 },
       { s: 300, w: 32 },
       { s: 390, w: 38 },
-      { s: w50, w: 28 },
-      { s: wFront, w: 22 },
+      { s: s50, w: 28 },
+      { s: sFront, w: 22 },
     ],
     fwStart: 100,
     seed: 0,
@@ -331,16 +324,13 @@ export function widthAt(plan: HolePlan, s: number): number {
 
 /**
  * seeded fairway edge swell in metres (wavelength 40–70 m, amplitude at most 8% and 2.5 m, zero at ends),
- * plus 15% outside a bend.
+ * plus 15% outside a dogleg bend.
  */
 export function edgeOffset(
   plan: HolePlan,
   s: number,
   side: 'left' | 'right' | -1 | 1,
 ): number {
-  if (plan.seed === 0) {
-    return 0;
-  }
   const greenFront = greenFrontDistance(plan);
   if (s <= plan.fwStart || s >= greenFront) {
     return 0;
@@ -349,35 +339,70 @@ export function edgeOffset(
   const w = widthAt(plan, s);
   if (w <= 0) return 0;
 
-  // envelope that is strictly 0 at fwStart and greenFront
-  const span = greenFront - plan.fwStart;
-  const env = Math.sin((Math.PI * (s - plan.fwStart)) / span);
+  let wavySwell = 0;
+  if (plan.seed !== 0) {
+    // envelope that is strictly 0 at fwStart and greenFront
+    const span = greenFront - plan.fwStart;
+    const env = Math.sin((Math.PI * (s - plan.fwStart)) / span);
 
-  // two low-frequency waves (wavelengths 52 m and 68 m)
-  const seedShift = (plan.seed * 1337) % 1000;
-  const sidePhase = side === 'left' || side === -1 ? 0.785 : 2.356;
-  const wave1 = Math.sin((2 * Math.PI * s) / 52 + seedShift + sidePhase);
-  const wave2 = Math.cos((2 * Math.PI * s) / 68 + seedShift * 0.7);
-  const combined = (wave1 * 0.65 + wave2 * 0.35);
+    // two low-frequency waves (wavelengths 52 m and 68 m)
+    const seedShift = (plan.seed * 1337) % 1000;
+    const sidePhase = side === 'left' || side === -1 ? 0.785 : 2.356;
+    const wave1 = Math.sin((2 * Math.PI * s) / 52 + seedShift + sidePhase);
+    const wave2 = Math.cos((2 * Math.PI * s) / 68 + seedShift * 0.7);
+    const combined = wave1 * 0.65 + wave2 * 0.35;
 
-  const maxAmp = Math.min(2.5, 0.08 * w);
-  let swell = combined * maxAmp * env;
+    const maxAmp = Math.min(2.5, 0.08 * w);
+    wavySwell = Math.max(-2.5, Math.min(2.5, combined * maxAmp * env));
+  }
 
-  // plus 15% outside a dogleg bend if near any bend
+  // plus 15% outside a dogleg bend
+  let bendBoost = 0;
   if (plan.bends.length > 0) {
-    // calculate bend turn direction
-    for (const b of plan.bends) {
-      const distFromBendM = Math.abs(s - (ptDist(plan.tee, b) * 2));
-      if (distFromBendM < 40) {
-        // inside 40 m of bend
-        const bendBoost = 0.15 * (w / 2) * (1 - distFromBendM / 40);
-        swell += bendBoost * 0.5;
+    const isLeft = side === 'left' || side === -1;
+    const pts = [plan.tee, ...plan.bends, plan.green];
+    const line = centreLine(plan);
+
+    for (let k = 0; k < plan.bends.length; k++) {
+      const bend = plan.bends[k]!;
+      const prevPt = pts[k]!;
+      const nextPt = pts[k + 2]!;
+
+      // find arc length of bend along centre line (line sampled every 1 m)
+      let bendS = 0;
+      let minD = Infinity;
+      for (let i = 0; i < line.length; i++) {
+        const d = Math.hypot(line[i]!.x - bend.x, line[i]!.y - bend.y);
+        if (d < minD) {
+          minD = d;
+          bendS = i;
+        }
+      }
+
+      // turn direction: cross product of (bend - prev) and (next - bend) in tile coords
+      const v1x = bend.x - prevPt.x;
+      const v1y = bend.y - prevPt.y;
+      const v2x = nextPt.x - bend.x;
+      const v2y = nextPt.y - bend.y;
+      const cp = v1x * v2y - v1y * v2x;
+
+      // cp > 0 means turning right, so OUTSIDE of bend is left.
+      // cp < 0 means turning left, so OUTSIDE of bend is right.
+      const outsideIsLeft = cp > 0;
+      const isOutside = isLeft === outsideIsLeft;
+
+      if (isOutside && Math.abs(cp) > 1e-4) {
+        const ds = Math.abs(s - bendS);
+        const radius = 35; // 35 m transition window around bend
+        if (ds < radius) {
+          const fade = 0.5 * (1 + Math.cos((Math.PI * ds) / radius));
+          bendBoost += 0.15 * w * fade;
+        }
       }
     }
   }
 
-  // clamp strictly to 2.5 m maximum
-  return Math.max(-2.5, Math.min(2.5, swell));
+  return wavySwell + bendBoost;
 }
 
 /** helper to calculate polygon area in tiles² */
@@ -440,54 +465,40 @@ function buildTeePolygon(plan: HolePlan, line: Pt[]): Pt[] {
   const nx = -uy;
   const ny = ux;
 
-  // 28 m x 10 m in tiles is 14 x 5 tiles
-  const halfL = 7;
-  const halfW = 2.5;
+  // 28 m x 10 m in tiles: total length 14 tiles, width 5 tiles (r = 2.5 tiles).
+  // Straight body half-length = (14 - 2 * 2.5) / 2 = 4.5 tiles.
+  const r = 2.5;
+  const halfBody = 4.5;
+  const cx = plan.tee.x + ux * (halfBody + r * 0.5);
+  const cy = plan.tee.y + uy * (halfBody + r * 0.5);
 
-  // Center tee box slightly forward so back marker sits near rear edge
-  const cx = plan.tee.x + ux * (halfL * 0.6);
-  const cy = plan.tee.y + uy * (halfL * 0.6);
+  const pts: Pt[] = [];
+  const frontCenter = { x: cx + ux * halfBody, y: cy + uy * halfBody };
+  const backCenter = { x: cx - ux * halfBody, y: cy - uy * halfBody };
 
-  return [
-    { x: cx - ux * halfL + nx * halfW, y: cy - uy * halfL + ny * halfW },
-    { x: cx + ux * halfL + nx * halfW, y: cy + uy * halfL + ny * halfW },
-    { x: cx + ux * halfL - nx * halfW, y: cy + uy * halfL - ny * halfW },
-    { x: cx - ux * halfL - nx * halfW, y: cy - uy * halfL - ny * halfW },
-  ];
-}
-
-/** point-in-polygon test (even-odd rule) */
-function pointInPoly(px: number, py: number, poly: readonly Pt[]): boolean {
-  let inside = false;
-  const n = poly.length;
-  for (let i = 0, j = n - 1; i < n; j = i++) {
-    const xi = poly[i]!.x;
-    const yi = poly[i]!.y;
-    const xj = poly[j]!.x;
-    const yj = poly[j]!.y;
-    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
-      inside = !inside;
-    }
+  const steps = 8;
+  for (let i = 0; i <= steps; i++) {
+    const a = -Math.PI / 2 + (Math.PI * i) / steps;
+    const cosA = Math.cos(a);
+    const sinA = Math.sin(a);
+    pts.push({
+      x: frontCenter.x + (ux * sinA + nx * cosA) * r,
+      y: frontCenter.y + (uy * sinA + ny * cosA) * r,
+    });
   }
-  return inside;
-}
-
-/** polygon bounding box in tiles [minX, minY, maxX, maxY] */
-function polyBounds(poly: readonly Pt[]): [number, number, number, number] {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const p of poly) {
-    if (p.x < minX) minX = p.x;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.y > maxY) maxY = p.y;
+  for (let i = 0; i <= steps; i++) {
+    const a = Math.PI / 2 + (Math.PI * i) / steps;
+    const cosA = Math.cos(a);
+    const sinA = Math.sin(a);
+    pts.push({
+      x: backCenter.x + (ux * sinA + nx * cosA) * r,
+      y: backCenter.y + (uy * sinA + ny * cosA) * r,
+    });
   }
-  return [minX, minY, maxX, maxY];
+  return pts;
 }
 
-/** rasterize a polygon into a cell map with surface id */
+/** rasterize a polygon into a cell map with surface id using fast scanline fill */
 function rasterizePoly(
   g: Grid,
   poly: readonly Pt[],
@@ -495,21 +506,47 @@ function rasterizePoly(
   map: Map<number, number>,
   allow?: (i: number) => boolean,
 ): void {
-  if (poly.length < 3) return;
-  const [minX, minY, maxX, maxY] = polyBounds(poly);
+  const n = poly.length;
+  if (n < 3) return;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const p = poly[i]!;
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
   const cx0 = Math.max(0, Math.floor((minX - g.x0) / CELL_T));
-  const cx1 = Math.min(g.w - 1, Math.ceil((maxX - g.x0) / CELL_T));
+  const cx1 = Math.min(g.w - 1, Math.floor((maxX - g.x0) / CELL_T));
   const cy0 = Math.max(0, Math.floor((minY - g.y0) / CELL_T));
-  const cy1 = Math.min(g.h - 1, Math.ceil((maxY - g.y0) / CELL_T));
+  const cy1 = Math.min(g.h - 1, Math.floor((maxY - g.y0) / CELL_T));
 
+  const xs: number[] = [];
   for (let cy = cy0; cy <= cy1; cy++) {
-    const py = g.y0 + (cy + 0.5) * CELL_T;
+    const yc = g.y0 + (cy + 0.5) * CELL_T;
+    xs.length = 0;
+    for (let j = 0, k = n - 1; j < n; k = j++) {
+      const p = poly[k]!;
+      const q = poly[j]!;
+      if ((p.y > yc) !== (q.y > yc)) {
+        xs.push(p.x + ((yc - p.y) * (q.x - p.x)) / (q.y - p.y));
+      }
+    }
+    if (xs.length === 0) continue;
+    xs.sort((u, v) => u - v);
+    let e = 0;
+    const rowOffset = cy * g.w;
     for (let cx = cx0; cx <= cx1; cx++) {
-      const px = g.x0 + (cx + 0.5) * CELL_T;
-      const idx = cy * g.w + cx;
-      if (allow && !allow(idx)) continue;
-      if (pointInPoly(px, py, poly)) {
-        map.set(idx, surfId);
+      const xc = g.x0 + (cx + 0.5) * CELL_T;
+      while (e < xs.length && xs[e]! <= xc) e++;
+      if (e & 1) {
+        const idx = rowOffset + cx;
+        if (!allow || allow(idx)) {
+          map.set(idx, surfId);
+        }
       }
     }
   }
@@ -561,8 +598,9 @@ function buildFairwayPolygon(plan: HolePlan, line: Pt[]): Pt[] {
   return [...left, ...right.reverse()];
 }
 
-/** build 30 m rough corridor polygon (60 m total width) along centre line */
+/** build 30 m rough corridor polygon (60 m total width) along centre line with rounded end caps */
 function buildCorridorPolygon(line: Pt[]): Pt[] {
+  if (line.length < 2) return [];
   const left: Pt[] = [];
   const right: Pt[] = [];
   const halfTiles = 15; // 30 m = 15 tiles
@@ -585,7 +623,56 @@ function buildCorridorPolygon(line: Pt[]): Pt[] {
       y: line[i]!.y - ny * halfTiles,
     });
   }
-  return [...left, ...right.reverse()];
+
+  // End cap around green (line end): semicircle from left[last] to right[last]
+  const lastIdx = line.length - 1;
+  const pLast = line[lastIdx]!;
+  const pPen = line[Math.max(0, lastIdx - 1)]!;
+  const dxE = pLast.x - pPen.x;
+  const dyE = pLast.y - pPen.y;
+  const lenE = Math.hypot(dxE, dyE) || 1;
+  const uxE = dxE / lenE;
+  const uyE = dyE / lenE;
+  const nxE = -uyE;
+  const nyE = uxE;
+
+  const greenCap: Pt[] = [];
+  const steps = 8;
+  for (let i = 1; i < steps; i++) {
+    const a = (Math.PI * i) / steps;
+    const cosA = Math.cos(a);
+    const sinA = Math.sin(a);
+    // starts at left (nxE), swings forward (uxE), lands at right (-nxE)
+    greenCap.push({
+      x: pLast.x + (nxE * cosA + uxE * sinA) * halfTiles,
+      y: pLast.y + (nyE * cosA + uyE * sinA) * halfTiles,
+    });
+  }
+
+  // End cap around tee (line start): semicircle from right[0] to left[0]
+  const p0 = line[0]!;
+  const p1 = line[Math.min(line.length - 1, 1)]!;
+  const dxS = p1.x - p0.x;
+  const dyS = p1.y - p0.y;
+  const lenS = Math.hypot(dxS, dyS) || 1;
+  const uxS = dxS / lenS;
+  const uyS = dyS / lenS;
+  const nxS = -uyS;
+  const nyS = uxS;
+
+  const teeCap: Pt[] = [];
+  for (let i = 1; i < steps; i++) {
+    const a = (Math.PI * i) / steps;
+    const cosA = Math.cos(a);
+    const sinA = Math.sin(a);
+    // starts at right (-nxS), swings backward (-uxS), lands at left (nxS)
+    teeCap.push({
+      x: p0.x + (-nxS * cosA - uxS * sinA) * halfTiles,
+      y: p0.y + (-nyS * cosA - uyS * sinA) * halfTiles,
+    });
+  }
+
+  return [...left, ...greenCap, ...right.reverse(), ...teeCap];
 }
 
 /**
@@ -640,7 +727,7 @@ export function planDiff(
 
   const changes: { idx: number; s0: number; h0: number; m0: number; s1: number; h1: number; m1: number }[] = [];
 
-  // Cells in old footprint and not the new: go back to rough or none
+  // Cells in old footprint and not the new: revert to none
   if (oldMap) {
     for (const [idx, oldExpectedSurf] of oldMap.entries()) {
       if (nextMap.has(idx)) continue;
@@ -648,25 +735,20 @@ export function planDiff(
       if (g.surf[idx] === oldExpectedSurf && g.hole[idx] === hole) {
         // player bunker/water never change
         if (g.surf[idx] === SURF.bunker || g.surf[idx] === SURF.water) continue;
-        // reverts to none if it was rough corridor, or rough if it was playing surface
-        const newSurf = oldExpectedSurf === SURF.rough ? SURF.none : SURF.rough;
-        const newHole = newSurf === SURF.none ? 0 : hole;
-        const newMonth = newSurf === SURF.none ? 0 : month;
-
         changes.push({
           idx,
           s0: g.surf[idx]!,
           h0: g.hole[idx]!,
           m0: g.month[idx]!,
-          s1: newSurf,
-          h1: newHole,
-          m1: newMonth,
+          s1: SURF.none,
+          h1: 0,
+          m1: 0,
         });
       }
     }
   }
 
-  // Cells in next footprint: set with 'below'
+  // Cells in next footprint:
   for (const [idx, newSurf] of nextMap.entries()) {
     // other holes' cells never change
     if (g.hole[idx] !== 0 && g.hole[idx] !== hole) continue;
@@ -674,19 +756,27 @@ export function planDiff(
     if (g.surf[idx] === SURF.water || g.surf[idx] === SURF.bunker) continue;
 
     const curSurf = g.surf[idx]!;
-    // 'below' logic: only overwrite if current surface is lower or equal
-    if (curSurf <= newSurf) {
-      if (curSurf !== newSurf || g.hole[idx] !== hole || g.month[idx] !== month) {
+    const curHole = g.hole[idx]!;
+    const curMonth = g.month[idx]!;
+
+    const holdsOldPlanSurf =
+      oldMap !== null && oldMap.has(idx) && curHole === hole && curSurf === oldMap.get(idx);
+
+    // If cell still holds old plan's surface for this hole, set it straight to newSurf.
+    // Otherwise, only overwrite if current surface is lower or equal.
+    if (holdsOldPlanSurf || curSurf <= newSurf) {
+      if (curSurf !== newSurf || curHole !== hole) {
         changes.push({
           idx,
           s0: curSurf,
-          h0: g.hole[idx]!,
-          m0: g.month[idx]!,
+          h0: curHole,
+          m0: curMonth,
           s1: newSurf,
           h1: hole,
           m1: month,
         });
       }
+      // If surface and hole are unchanged, keep existing planted month (do not re-seed)
     }
   }
 
@@ -784,12 +874,13 @@ export function planInfo(plan: HolePlan): PlanInfo {
 export function planHandles(plan: HolePlan): PlanHandles {
   const line = centreLine(plan);
 
-  // width handles
+  // width handles (sorted by distance s)
   const widths: { s: number; w: number; left: Pt; right: Pt }[] = [];
   let cumM = 0;
   let lineIdx = 0;
+  const sortedWidths = [...plan.widths].sort((a, b) => a.s - b.s);
 
-  for (const h of plan.widths) {
+  for (const h of sortedWidths) {
     while (lineIdx < line.length - 1 && cumM < h.s) {
       lineIdx++;
       cumM += ptDist(line[lineIdx - 1]!, line[lineIdx]!) * 2;
@@ -834,7 +925,7 @@ export function planHandles(plan: HolePlan): PlanHandles {
 }
 
 /** generates CourseArea polygons for hole validation in deriveHoles */
-export function gridAreas(plan: HolePlan): CourseArea[] {
+export function planAreas(plan: HolePlan): CourseArea[] {
   const line = centreLine(plan);
   const corridor = buildCorridorPolygon(line);
   const fairway = buildFairwayPolygon(plan, line);
@@ -856,6 +947,9 @@ export function gridAreas(plan: HolePlan): CourseArea[] {
   return areas;
 }
 
+/** alias for backwards compatibility */
+export { planAreas as gridAreas };
+
 /** compact tuple representation of a HolePlan */
 export type HolePlanTuple = [
   number, // 0: hole
@@ -870,9 +964,9 @@ export type HolePlanTuple = [
   number, // 9: seed
 ];
 
-/** encodes a HolePlan into a compact tuple JSON string */
-export function encodePlan(plan: HolePlan): string {
-  const tuple: HolePlanTuple = [
+/** encodes a HolePlan into a compact tuple */
+export function encodePlan(plan: HolePlan): HolePlanTuple {
+  return [
     plan.hole,
     [plan.tee.x, plan.tee.y],
     [plan.green.x, plan.green.y],
@@ -884,11 +978,10 @@ export function encodePlan(plan: HolePlan): string {
     plan.fwStart,
     plan.seed,
   ];
-  return JSON.stringify(tuple);
 }
 
-/** decodes a compact tuple JSON string back into a HolePlan */
-export function decodePlan(raw: string | unknown): HolePlan | null {
+/** decodes a compact tuple back into a HolePlan */
+export function decodePlan(raw: HolePlanTuple | string | unknown): HolePlan | null {
   try {
     const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!Array.isArray(data) || data.length < 10) return null;
@@ -906,29 +999,42 @@ export function decodePlan(raw: string | unknown): HolePlan | null {
     ] = data;
 
     if (
-      typeof hole !== 'number' ||
-      !Array.isArray(tee) ||
-      !Array.isArray(green) ||
+      typeof hole !== 'number' || !Number.isFinite(hole) || hole < 0 ||
+      !Array.isArray(tee) || tee.length !== 2 || typeof tee[0] !== 'number' || typeof tee[1] !== 'number' ||
+      !Array.isArray(green) || green.length !== 2 || typeof green[0] !== 'number' || typeof green[1] !== 'number' ||
       typeof greenShape !== 'string' ||
-      typeof greenM2 !== 'number' ||
-      typeof greenTurn !== 'number' ||
-      !Array.isArray(bends) ||
+      !['round', 'kidney', 'peanut', 'pear'].includes(greenShape) ||
+      typeof greenM2 !== 'number' || !Number.isFinite(greenM2) ||
+      typeof greenTurn !== 'number' || !Number.isFinite(greenTurn) ||
+      !Array.isArray(bends) || bends.length > 3 ||
       !Array.isArray(widths) ||
-      typeof fwStart !== 'number' ||
-      typeof seed !== 'number'
+      typeof fwStart !== 'number' || !Number.isFinite(fwStart) ||
+      typeof seed !== 'number' || !Number.isFinite(seed)
     ) {
       return null;
     }
 
+    for (const b of bends) {
+      if (!Array.isArray(b) || b.length !== 2 || typeof b[0] !== 'number' || typeof b[1] !== 'number') {
+        return null;
+      }
+    }
+
+    for (const w of widths) {
+      if (!Array.isArray(w) || w.length !== 2 || typeof w[0] !== 'number' || typeof w[1] !== 'number') {
+        return null;
+      }
+    }
+
     return {
       hole,
-      tee: { x: tee[0], y: tee[1] },
-      green: { x: green[0], y: green[1] },
+      tee: { x: tee[0]!, y: tee[1]! },
+      green: { x: green[0]!, y: green[1]! },
       greenShape: greenShape as GreenShape,
       greenM2,
       greenTurn,
-      bends: bends.map((b: [number, number]) => ({ x: b[0], y: b[1] })),
-      widths: widths.map((w: [number, number]) => ({ s: w[0], w: w[1] })),
+      bends: bends.map((b: [number, number]) => ({ x: b[0]!, y: b[1]! })),
+      widths: widths.map((w: [number, number]) => ({ s: w[0]!, w: w[1]! })),
       fwStart,
       seed,
     };

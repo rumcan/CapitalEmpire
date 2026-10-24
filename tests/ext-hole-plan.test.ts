@@ -10,12 +10,13 @@ import {
   planAims,
   planInfo,
   planHandles,
+  planAreas,
   gridAreas,
   encodePlan,
   decodePlan,
   type HolePlan,
 } from '../src/game/ext/hole-plan';
-import { makeGrid, paintDisc, SURF, cellAt, cellCentre } from '../src/game/ext/course-grid';
+import { makeGrid, paintDisc, SURF, cellAt, cellCentre, applyDiff } from '../src/game/ext/course-grid';
 import { deriveHoles } from '../src/game/golf/holes';
 
 test('1. A straight 380 m line with seed 0 gives par 4; fairway width at s=210 is 40 ±1 m; fairway starts within 2 m of 100 m; green is 550 m² ±5%', () => {
@@ -97,7 +98,7 @@ test('2. A 200 m line gives par 3 with no fairway and an 18 m apron', () => {
   assert.equal(widthAt(plan, 190), 18, '18 m apron at green entrance');
 });
 
-test('3. A dogleg: the line passes through the bend; planAims returns it; deriveHoles on gridAreas of the raster gives no "off the course" warning', () => {
+test('3. A dogleg: the line passes through the bend; planAims returns it; deriveHoles on planAreas gives no "off the course" warning', () => {
   const tee = { x: 0, y: 0 };
   const bend = { x: 60, y: 30 }; // dogleg bend in tiles
   const green = { x: 100, y: 100 };
@@ -122,8 +123,8 @@ test('3. A dogleg: the line passes through the bend; planAims returns it; derive
   assert.equal(aims[0]!.order, 0);
   assert.equal(aims[0]!.hole, 1);
 
-  // deriveHoles on gridAreas gives no "off the course" warning
-  const areas = gridAreas(plan);
+  // deriveHoles on planAreas gives no "off the course" warning
+  const areas = planAreas(plan);
   const tees = [{ hole: 1, x: tee.x, y: tee.y, kind: 'back' as const }];
   const pins = [{ hole: 1, x: green.x, y: green.y }];
   const holes = deriveHoles(areas, tees, pins, aims);
@@ -131,9 +132,14 @@ test('3. A dogleg: the line passes through the bend; planAims returns it; derive
   assert.equal(holes.length, 1);
   const offCourseWarning = holes[0]!.warnings.find((w) => w.toLowerCase().includes('off the course'));
   assert.equal(offCourseWarning, undefined, `unexpected warning: ${offCourseWarning}`);
+
+  // rasterPlan produces cells matching plan
+  const g = makeGrid(0, 0, 150, 150);
+  const rMap = rasterPlan(plan, g);
+  assert.ok(rMap.size > 0, 'rasterPlan should produce cells');
 });
 
-test('4. Moving the green 20 m changes only cells in the symmetric difference', () => {
+test('4. Moving the green 20 m changes only cells in the symmetric difference, and diff is applied and undoable', () => {
   const g = makeGrid(0, 0, 400, 200);
   const tee = { x: 20, y: 50 };
   const green1 = { x: 120, y: 50 }; // 200 m hole
@@ -141,12 +147,15 @@ test('4. Moving the green 20 m changes only cells in the symmetric difference', 
 
   // Initial planDiff
   planDiff(g, null, plan1, 1, 0);
+  const oldGreenIdx = cellAt(g, 120, 50);
+  assert.equal(g.surf[oldGreenIdx], SURF.green, 'initial green must be green');
 
   // Move green 20 m (10 tiles)
   const green2 = { x: 130, y: 50 };
   const plan2 = defaultPlan(1, tee, green2);
 
   const diff = planDiff(g, plan1, plan2, 1, 0);
+  assert.ok(diff.n > 0, 'diff should contain changes');
 
   // Footprint maps
   const map1 = rasterPlan(plan1, g);
@@ -163,12 +172,27 @@ test('4. Moving the green 20 m changes only cells in the symmetric difference', 
       `cell ${idx} in diff should have differed between plan1 (${s1}) and plan2 (${s2})`,
     );
   }
+
+  // Assert diff was applied to grid: new green cell is green, old green cell is no longer green
+  const newGreenIdx = cellAt(g, 130, 50);
+  assert.equal(g.surf[newGreenIdx], SURF.green, 'new green must be applied to grid');
+  assert.notEqual(g.surf[oldGreenIdx], SURF.green, 'old green cell should no longer be green');
+
+  // Assert undo works cleanly
+  applyDiff(g, diff, true);
+  assert.equal(g.surf[oldGreenIdx], SURF.green, 'undo should restore old green');
 });
 
-test("5. A player bunker inside the fairway survives a plan edit; hole 5's cells never change while editing hole 4", () => {
+test("5. Plan diff narrows widths, moves green cleanly without orphaned green, survives player bunker, and preserves planted months", () => {
   const g = makeGrid(0, 0, 400, 300);
   const planHole4 = defaultPlan(4, { x: 20, y: 50 }, { x: 150, y: 50 });
   planDiff(g, null, planHole4, 4, 0);
+
+  let initialFwCount = 0;
+  for (let i = 0; i < g.surf.length; i++) {
+    if (g.surf[i] === SURF.fairway && g.hole[i] === 4) initialFwCount++;
+  }
+  assert.ok(initialFwCount > 0, 'initial fairway cells exist');
 
   // Player paints a bunker inside hole 4's fairway (at x = 80, y = 50)
   paintDisc(g, 80, 50, 3, SURF.bunker, 4, 0);
@@ -183,12 +207,36 @@ test("5. A player bunker inside the fairway survives a plan edit; hole 5's cells
   assert.equal(g.hole[hole5CellIdx], 5, 'hole 5 cell set');
   const h5SurfBefore = g.surf[hole5CellIdx];
 
-  // Edit hole 4 (e.g. widen fairway)
-  const nextHole4: HolePlan = {
+  // A. Narrow hole 4 by 10 m
+  const narrowHole4: HolePlan = {
     ...planHole4,
-    widths: planHole4.widths.map((w) => ({ s: w.s, w: w.w + 10 })),
+    widths: planHole4.widths.map((w) => ({ s: w.s, w: Math.max(10, w.w - 10) })),
   };
-  planDiff(g, planHole4, nextHole4, 4, 1);
+  planDiff(g, planHole4, narrowHole4, 4, 1);
+
+  let narrowFwCount = 0;
+  for (let i = 0; i < g.surf.length; i++) {
+    if (g.surf[i] === SURF.fairway && g.hole[i] === 4) narrowFwCount++;
+  }
+  assert.ok(narrowFwCount < initialFwCount, `narrowing widths must reduce fairway cells (from ${initialFwCount} to ${narrowFwCount})`);
+
+  // B. Move green 30 m (15 tiles) farther
+  const moveGreenHole4: HolePlan = {
+    ...narrowHole4,
+    green: { x: narrowHole4.green.x + 15, y: narrowHole4.green.y },
+  };
+  planDiff(g, narrowHole4, moveGreenHole4, 4, 2);
+
+  let greenCells = 0;
+  for (let i = 0; i < g.surf.length; i++) {
+    if (g.surf[i] === SURF.green && g.hole[i] === 4) greenCells++;
+  }
+  // Green area is ~550 m², so greenCells should remain around 550 without doubling
+  assert.ok(greenCells >= 520 && greenCells <= 580, `moving green must not leave old green behind, got ${greenCells}`);
+
+  // C. Re-planning the identical plan 6 months later must not re-seed unchanged cells
+  const reseedDiff = planDiff(g, moveGreenHole4, moveGreenHole4, 4, 8);
+  assert.equal(reseedDiff.n, 0, 're-planning identical plan should not re-seed unchanged cells');
 
   // The player bunker MUST survive
   assert.equal(g.surf[bunkerIdx], SURF.bunker, 'player bunker must survive plan edit');
@@ -198,7 +246,7 @@ test("5. A player bunker inside the fairway survives a plan edit; hole 5's cells
   assert.equal(g.surf[hole5CellIdx], h5SurfBefore, 'hole 5 surface must remain unchanged');
 });
 
-test('6. The swell never exceeds 2.5 m, and two seeds differ', () => {
+test('6. The swell never exceeds 2.5 m, two seeds differ, and 15% outside dogleg applies with seed 0', () => {
   const planA = defaultPlan(1, { x: 0, y: 0 }, { x: 150, y: 0 });
   planA.seed = 42;
   const planB = { ...planA, seed: 99 };
@@ -218,17 +266,56 @@ test('6. The swell never exceeds 2.5 m, and two seeds differ', () => {
 
   assert.ok(maxSwell <= 2.5001, `max swell (${maxSwell}) must not exceed 2.5 m`);
   assert.ok(differences > 10, 'two different seeds must produce different swells');
+
+  // Dogleg with seed 0: outside of bend gets 15% more width
+  // Tee at (0, 0), bend at (80, 0), green at (80, 80) -> 320 m par 4.
+  // Vector in: (80, 0) (East). Vector out: (0, 80) (South).
+  // cp = 80*80 - 0 = +6400 > 0 (turns right). Outside of turn is LEFT!
+  const doglegPlan = defaultPlan(1, { x: 0, y: 0 }, { x: 80, y: 80 }, [{ x: 80, y: 0 }]);
+  doglegPlan.seed = 0;
+
+  // Arc length at bend is 160 m (fairway runs from 100 m to ~300 m)
+  const leftOffAtBend = edgeOffset(doglegPlan, 160, 'left');
+  const rightOffAtBend = edgeOffset(doglegPlan, 160, 'right');
+  assert.ok(leftOffAtBend > 2.0, `outside of bend (left) should get 15% width boost, got ${leftOffAtBend}`);
+  assert.equal(rightOffAtBend, 0, `inside of bend (right) should get 0 boost, got ${rightOffAtBend}`);
 });
 
-test('7. Deterministic and serializable (encodePlan / decodePlan)', () => {
+test('7. Deterministic and serializable (encodePlan / decodePlan tuple)', () => {
   const plan = defaultPlan(3, { x: 15.5, y: 22.25 }, { x: 145.5, y: 88.75 }, [{ x: 80, y: 40 }]);
   plan.seed = 7;
 
-  // encode and decode
+  // encode returns tuple
   const encoded = encodePlan(plan);
+  assert.ok(Array.isArray(encoded), 'encodePlan must return tuple');
+  assert.equal(encoded.length, 10);
+
   const decoded = decodePlan(encoded);
   assert.ok(decoded !== null, 'decoded plan must not be null');
   assert.deepEqual(decoded, plan, 'decoded plan must match original plan');
+
+  // decodePlan rejects invalid input
+  assert.equal(decodePlan([1, [0, 0], [10, 10], 'invalid_shape', 550, 0, [], [], 100, 0]), null);
+  assert.equal(
+    decodePlan([
+      1,
+      [0, 0],
+      [10, 10],
+      'round',
+      550,
+      0,
+      [
+        [1, 1],
+        [2, 2],
+        [3, 3],
+        [4, 4],
+      ], // > 3 bends
+      [],
+      100,
+      0,
+    ]),
+    null,
+  );
 
   // repeated calls to centreLine and rasterPlan are deterministic
   const line1 = centreLine(plan);
@@ -242,6 +329,7 @@ test('7. Deterministic and serializable (encodePlan / decodePlan)', () => {
   assert.ok(handles.widths.length > 0, 'must have width handles');
   assert.ok(handles.insertPoints.length > 0, 'must have insert points');
 
+  assert.equal(gridAreas, planAreas, 'gridAreas should be an alias for planAreas');
   const g1 = makeGrid(0, 0, 100, 100);
   const g2 = makeGrid(0, 0, 100, 100);
   const map1 = rasterPlan(plan, g1);
