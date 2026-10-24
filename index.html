@@ -66,6 +66,22 @@ section.prs h2 { font: 800 18px var(--display); margin: 0 0 10px; }
 @media (max-width: 900px) { .board, .score { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .board, .score { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: no-preference) { .card { transition: border-color .2s; } }
+.tabs { max-width: 1400px; margin: 0 auto 16px; display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; padding: 8px 14px; color: var(--muted); font-size: 14px; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--fairway); }
+.roadmap { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 14px; align-items: start; }
+.track { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.track h2 { font: 800 18px var(--display); margin: 0 0 2px; }
+.track p.goal { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-bottom: 10px; }
+.bar i { display: block; height: 100%; background: var(--fairway); }
+.step { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.step:first-of-type { border-top: 0; }
+.st { font: 600 11px var(--body); letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 2px 8px; text-align: center; align-self: start; }
+.st.done { background: var(--green-soft); color: var(--fairway); } .st.review { background: var(--flag-soft); color: var(--flag); }
+.st.prog { background: var(--sand-soft); color: var(--sand); } .st.open { background: var(--sky-soft); color: var(--sky); }
+.st.planned, .st.dropped { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.step b { font-weight: 600; } .step span.note { color: var(--muted); } .step a { color: inherit; }
 </style>
 </head>
 <body>
@@ -77,10 +93,17 @@ section.prs h2 { font: 800 18px var(--display); margin: 0 0 10px; }
     <button id="refresh" type="button">Refresh now</button>
   </div>
 </header>
+<nav class="tabs" role="tablist">
+  <button type="button" role="tab" id="tab-board" aria-selected="true">Board</button>
+  <button type="button" role="tab" id="tab-roadmap" aria-selected="false">Roadmap</button>
+</nav>
 <div class="err" id="err" hidden></div>
+<div id="view-board">
 <div class="score" id="score"></div>
 <main class="board" id="board"></main>
 <section class="prs"><h2>Pull requests</h2><div class="prlist" id="prs"></div></section>
+</div>
+<div id="view-roadmap" hidden><div class="roadmap" id="roadmap"></div></div>
 <script>
 // Reads one GitHub API page (the 100 most recently updated issues and PRs) and sorts the arena tickets by their status label.
 // Conditional requests (ETag): an unchanged answer is a 304, which does not count against the 60-an-hour limit for anonymous callers.
@@ -98,7 +121,88 @@ const ago = iso => { const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000
 const labels = it => it.labels.map(l => typeof l === 'string' ? l : l.name);
 const colOf = it => { const L = labels(it); if (it.state === 'closed' || L.includes('status:done')) return 'done'; if (L.includes('status:in-review')) return 'review'; if (L.includes('status:in-progress')) return 'prog'; return 'open'; };
 const closes = pr => { const m = (pr.body || '').match(/(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)/i); return m ? +m[1] : 0; };
+// The roadmap: the tracks of work and their steps. A step with `done` is finished for good; any other step with a ticket id takes its
+// live status from GitHub (a merged PR titled [Tid] is done, an open one is in review, its issue's label otherwise); `planned` and
+// `dropped` steps have no ticket yet / will not be built. Edit this list as the plan changes (the leads keep it current).
+const ROADMAP = [
+  { name: 'See it before you build it', goal: 'Every build tool shows a green or red ghost and a one-line label (what, how much, or why not) before the click.', steps: [
+    { id: 'T018', title: 'Shared ghost and wireframe style', done: true },
+    { id: 'T019', title: 'Event structures and hole markers', done: true },
+    { id: 'T020', title: 'Car parks and parking rows', done: true },
+    { id: 'T021', title: 'Toll gates and bus stops', done: true },
+    { id: 'T022', title: 'Road, lane and bulldoze cursor labels', done: true },
+    { id: 'T023', title: 'Junction ghosts', dropped: true, note: 'the junction tool already shows its ring and the reason' },
+    { id: 'T024', title: 'Paint and course outlines', done: true },
+  ] },
+  { name: 'SimGolf-style course building', goal: 'Click-to-place course pieces that snap together, with fat grass borders, sun-lit bevels and their props.', steps: [
+    { id: 'T029', title: 'Piece shapes, borders and bevels (maths)', done: true },
+    { id: 'T030', title: 'Course > Build > Pieces', done: true },
+    { id: 'T030b', title: 'Pieces place their props (pins, flags, reeds)', done: true },
+    { id: 'T031', title: 'Cart path piece snaps to roads', done: true },
+    { title: 'Sprites for tee steps, rakes, rocks, waterfalls', planned: true, note: 'art side: docs/GOLF-SPRITES.md' },
+  ] },
+  { name: 'The land and the light', goal: 'A flat playable map with a subtle course height field, all lit by one sun at the upper right.', steps: [
+    { id: 'T025', title: 'Flat map: no mountains', done: true },
+    { id: 'T025b', title: 'Woods become buildable', issue: 39 },
+    { id: 'T034', title: 'Conifer stands from noise', issue: 41 },
+    { id: 'T026', title: 'Course height field (maths)', done: true },
+    { id: 'T027', title: 'Height data, undo, roads flatten', done: true },
+    { id: 'T027b', title: 'Height brush', done: true },
+    { id: 'T028', title: 'Course height in the hillshade', done: true },
+    { id: 'T028b', title: 'Shade over the painted course', done: true },
+    { id: 'T040', title: 'One sun at the upper right everywhere (145°)' },
+  ] },
+  { name: 'Easy to pick up', goal: 'A new player sees a few clear tools; more unlock in Year 1; All tools shows everything; far less clutter.', steps: [
+    { id: 'T032', title: 'Progressive unlock rules', done: true },
+    { id: 'T033a', title: 'Player progress counters', done: true },
+    { id: 'T033b', title: 'Tools unlock step by step', done: true },
+    { id: 'T035', title: 'Less clutter: Developer toggle, slim top bar', done: true },
+    { id: 'T036', title: 'Road panel tidy', done: true },
+    { id: 'T039', title: 'Which Car park / Bus / Toll controls show', issue: 60 },
+    { title: 'Transport panels wired to T039', planned: true },
+  ] },
+  { name: 'Slopes in play', goal: 'The course height changes how holes play and how the course is rated.', steps: [
+    { id: 'T037', title: 'Hole terrain stats', issue: 59 },
+    { id: 'T038', title: 'Slope affects quality and "plays like"', planned: true },
+  ] },
+  { name: 'Art: one consistent look', goal: 'Every building regenerated with four true views, lit from the same side, never mirrored.', steps: [
+    { id: 'PR52', title: 'Import the regenerated buildings; no mirroring', done: true, note: '68 of 204 building types' },
+    { title: 'The other 136 building types', planned: true, note: 'waiting on the art model' },
+    { title: 'Event structures and the clubhouse with their own art', planned: true },
+    { title: 'Ship the art as separate files (the single-file build is 277 MB)', planned: true },
+  ] },
+];
+const ST_NAME = { done: 'Done', review: 'In review', prog: 'In progress', open: 'Open', planned: 'Planned', dropped: 'Dropped' };
+/** a roadmap step's status and its link, from the step's flags or the live GitHub data */
+function stepState(s) {
+  if (s.done) return { st: 'done' }; if (s.dropped) return { st: 'dropped' };
+  if (s.id) {
+    const tag = `[${s.id}]`, pr = items.find(it => it.pull_request && it.title.startsWith(tag));
+    if (pr) return { st: pr.pull_request.merged_at ? 'done' : pr.state === 'open' ? 'review' : 'open', url: pr.html_url };
+    const iss = items.find(it => !it.pull_request && (it.number === s.issue || it.title.startsWith(tag)));
+    if (iss) { const c = colOf(iss); return { st: c, url: iss.html_url }; }
+  }
+  return { st: 'planned' };
+}
+function renderRoadmap() {
+  $('roadmap').innerHTML = ROADMAP.map(t => {
+    const states = t.steps.map(stepState), live = t.steps.filter(s => !s.dropped).length, done = states.filter(x => x.st === 'done').length;
+    return `<section class="track"><h2>${esc(t.name)}</h2><p class="goal">${esc(t.goal)}</p><div class="bar" title="${done} of ${live} done"><i style="width:${live ? Math.round(100 * done / live) : 0}%"></i></div>${t.steps.map((s, i) => { const x = states[i], label = `${s.id ? `<b>${esc(s.id)}</b> ` : ''}${esc(s.title)}`;
+      return `<div class="step"><span class="st ${x.st}">${ST_NAME[x.st]}</span><span>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${label}</a>` : label}${s.note ? ` <span class="note">· ${esc(s.note)}</span>` : ''}</span></div>`; }).join('')}</section>`;
+  }).join('');
+}
+/** shows the Board or the Roadmap (the choice is kept in the address as #roadmap) */
+function showTab(name) {
+  const road = name === 'roadmap';
+  $('view-board').hidden = road; $('view-roadmap').hidden = !road;
+  $('tab-board').setAttribute('aria-selected', String(!road)); $('tab-roadmap').setAttribute('aria-selected', String(road));
+  if (road) renderRoadmap();
+  try { history.replaceState(null, '', road ? '#roadmap' : location.pathname + location.search); } catch { /* the address is a convenience */ }
+}
+$('tab-board').addEventListener('click', () => showTab('board'));
+$('tab-roadmap').addEventListener('click', () => showTab('roadmap'));
 function render() {
+  renderRoadmap();
   const issues = items.filter(it => !it.pull_request && labels(it).includes('arena'));
   const prs = items.filter(it => it.pull_request);
   const prFor = new Map(); for (const p of prs) { const n = closes(p); if (n && !prFor.has(n)) prFor.set(n, p); }
@@ -130,6 +234,7 @@ async function poll() {
   }
 }
 $('refresh').addEventListener('click', poll);
+if (location.hash === '#roadmap') showTab('roadmap');
 poll(); setInterval(poll, POLL_MS); setInterval(() => { if (items.length) render(); }, 30000);
 </script>
 </body>
