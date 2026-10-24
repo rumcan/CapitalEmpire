@@ -45,6 +45,13 @@ const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [strin
 /** the painted ground textures a photo (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads (the dark grey
  *  Asphalt photo, the owner's call 2026-10-21), water, and the river and creek banks (the dirt photo, the owner 2026-10-21) */
 const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'asphalt'], ['field', 'field'], ['water', 'waterDark'], ['bank', 'dirt'], ['creek', 'dirt']]);
+/** the starter cart paths' painted looks (T084, the hand-painted game-art style of T082), by road surface: a flat fill (multiplied by the grime
+ *  blotches), the bevel rims (the sun at the upper right: lit rim on the upper-right edge, shade rim on the lower-left) with their strengths, a
+ *  dirt path's feathered worn halo, and the slabs' thin cast shade. The planner's flat colour is plan */
+export const CART_SURFACE = new Map<string, { fill: string; plan: string; lit: string; litA: number; shade: string; shadeA: number; halo?: string; cast?: string }>([
+  ['dirt', { fill: '#cba673', plan: '#b08f60', lit: '#fbe8c0', litA: 0.5, shade: '#5e4127', shadeA: 0.3, halo: 'rgba(98,74,42,0.55)' }],
+  ['cement', { fill: '#d4d0c7', plan: '#bdb9b0', lit: '#fdfaf2', litA: 0.75, shade: '#6c675e', shadeA: 0.5, cast: 'rgba(18,22,16,0.32)' }],
+]);
 /** a ground photo drawn this many times its size (the owner, 2026-10-21: the gravel roads' asphalt "a lot" bigger); the hex-mixed mosaic
  *  still has 43 px a tile at 3x, above the 38 the closest zoom asks for */
 const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
@@ -181,7 +188,9 @@ export class GroundPainter {
     if (this.courseAny) { const cs = courseShadeRGBA(this.courseShade, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25); if (cs) { const cb = this.buffer('small', cs.W, cs.H); ctx2d(cb).putImageData(new ImageData(cs.data as Uint8ClampedArray<ArrayBuffer>, cs.W, cs.H), 0, 0); ctx.setTransform(M); ctx.drawImage(cb, tx0, ty0, cs.W / 0.25, cs.H / 0.25); } }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
-    fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), '#404040'); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
+    fill(v.walkF.filter(f => f.tex !== 'turf'), '#9a9184');
+    for (const [kind, look] of CART_SURFACE) fill(v.asphF.filter(f => f.tex === kind), look.plan); // the starter cart paths (T084), under the roads
+    fill(v.asphF.filter(f => f.tex === 'gravel'), '#404040'); fill(v.asphF.filter(f => f.tex !== 'gravel' && !CART_SURFACE.has(f.tex)), '#3c4150'); fill(v.medianF, '#557a35');
     ctx.fillStyle = '#557a35'; for (const r of v.rbIslands) { ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill(); }
     // tunnel routes have no road fills, so the planner marks them with a dashed line
     ctx.strokeStyle = 'rgba(60,65,80,0.85)'; ctx.lineCap = 'butt'; ctx.setLineDash([3, 2]);
@@ -361,7 +370,8 @@ export class GroundPainter {
     }
 
     if (asph.length) {
-      const kerbed = asph.filter(f => f.kerb), plain = asph.filter(f => !f.kerb);
+      // the starter cart paths (dirt, cement slabs: T084) draw their own soft edges (5a), not the plain roads' dark one
+      const kerbed = asph.filter(f => f.kerb), plain = asph.filter(f => !f.kerb && !CART_SURFACE.has(f.tex));
       const asphMask = maskOf('asphMask', asph), shift = Math.max(1, FACE_WORLD * L);
       // ---- 4. curb: raised top ring (joint colour outside, cream top inside), then the visible face between the top and the road
       if (kerbed.length) {
@@ -385,8 +395,32 @@ export class GroundPainter {
       // plain (verge) roads: a soft dark edge instead of a curb, feathered by a 1 px blur (the owner: no hard vector line)
       if (plain.length) { ctx.save(); ctx.filter = 'blur(1px)'; ctx.strokeStyle = 'rgba(12,10,8,0.5)'; for (const f of plain) ring(ctx, f, Math.max(0.2, 2 * minW)); ctx.restore(); ctx.setTransform(M); }
       // ---- 5. asphalt: the painted mosaic in ground space, per class tone
+      // ---- 5a. the starter cart paths (T084), first, so every road meeting one paints over it: packed dirt and cement slabs in flat painted
+      // colour with soft blotches (the grime layer), a feathered worn halo round the dirt, a thin cast shade under the slabs' lower-left edge, and
+      // the sun's bevel (the sun at the upper right): a light rim on each path's upper-right edge, a shade rim on its lower-left edge. Their
+      // slab joints, wheel ruts and centre grass are markings (8); a dirt path's edge tufts are litter (10)
+      const cartF = asph.filter(f => CART_SURFACE.has(f.tex));
+      if (cartF.length) {
+        const tpx = Math.hypot(M.a, M.b), shift = (s: number) => [M.c * s, M.d * s] as const; // px per tile; a tile-space (0, s) step on screen (+y: toward the lower left)
+        for (const [kind, look] of CART_SURFACE) {
+          const feats = cartF.filter(f => f.tex === kind); if (!feats.length) continue;
+          const m = maskOf('cartMask', feats);
+          if (!lite && look.halo) { ctx.save(); ctx.filter = `blur(${Math.max(1, 0.14 * tpx).toFixed(1)}px)`; ctx.lineJoin = 'round'; ctx.strokeStyle = look.halo; for (const f of feats) ring(ctx, f, 0.4); ctx.restore(); ctx.setTransform(M); }
+          if (!lite && look.cast) { const cb = this.buffer('cartRim', W, H), cg = ctx2d(cb), [dx, dy] = shift(0.09); cg.drawImage(m, dx, dy); cg.globalCompositeOperation = 'source-in'; cg.fillStyle = look.cast; cg.fillRect(0, 0, W, H); composite(cb); }
+          const bb = this.buffer('cartBody', W, H), bg = ctx2d(bb);
+          bg.fillStyle = look.fill; bg.fillRect(0, 0, W, H);
+          bg.setTransform(M); bg.globalCompositeOperation = 'multiply'; bg.fillStyle = this.screenPattern(bg, 'grime', L, X0, Y0, Minv); bg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0); bg.globalCompositeOperation = 'source-over';
+          through(bb, m); composite(bb);
+          if (!lite) for (const [col, s, alpha] of [[look.lit, 0.11, look.litA], [look.shade, -0.11, look.shadeA]] as const) {
+            // a rim: the path's mask less the same mask stepped s tiles along y (a positive step leaves its upper-right edge, a negative its lower-left)
+            const rb = this.buffer('cartRim', W, H), rg = ctx2d(rb), [dx, dy] = shift(s);
+            rg.drawImage(m, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = col; rg.fillRect(0, 0, W, H);
+            rg.globalCompositeOperation = 'destination-out'; rg.drawImage(m, dx, dy); composite(rb, 'source-over', alpha);
+          }
+        }
+      }
       // gravel roads are painted first, with their own pattern and no tones, so a paved road meeting one paints over it
-      const gravelF = asph.filter(f => f.tex === 'gravel'), paved = asph.filter(f => f.tex !== 'gravel');
+      const gravelF = asph.filter(f => f.tex === 'gravel'), paved = asph.filter(f => f.tex !== 'gravel' && !CART_SURFACE.has(f.tex));
       if (gravelF.length) { const gp = pat('roadgravel'); for (const f of gravelF) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = gp; ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = gp; ctx.fill(f.path); } } }
       const base = this.groundPattern(ctx, tex.mosaicFor('base', L));
       for (const f of paved) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = base; ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = base; ctx.fill(f.path); } }

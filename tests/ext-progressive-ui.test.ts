@@ -23,7 +23,7 @@ describe('ext/progressive-ui (T032)', () => {
     const st = computeProgressiveUiState(baseFacts);
     assert.equal(st.stage, 1);
     assert.deepEqual(st.visibleGroups, ['select', 'roads', 'course', 'transport']);
-    assert.deepEqual(st.visibleTools, ['select', 'road', 'course', 'park']);
+    assert.deepEqual(st.visibleTools, ['select', 'road', 'course', 'path', 'park']);
     assert.deepEqual(st.visibleCourseBrushes, ['tee', 'fairway', 'green']);
     assert.deepEqual(st.visibleFineControls, []);
     assert.equal(st.activeHint?.id, 'hint-build-first-hole');
@@ -56,7 +56,7 @@ describe('ext/progressive-ui (T032)', () => {
   it('exposes every tool and all fine controls immediately when advancedMode is toggled on', () => {
     const adv = computeProgressiveUiState({ ...baseFacts, advancedMode: true });
     assert.equal(adv.stage, 3);
-    assert.equal(adv.visibleTools.length, 12);
+    assert.equal(adv.visibleTools.length, 13);
     assert.equal(adv.visibleCourseBrushes.length, 7);
     assert.deepEqual(adv.visibleFineControls, [
       'snapToggle',
