@@ -283,6 +283,15 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
 /** the golf brush presets, in the panel's order: each kind's texture style and its brush radius r (tiles); the Paint panel's edits replace these (remembered) */
 /** a golf surface's texture: the owner's first preset standing for it, else the game's old one */
 const S = (surface: string, old: PaintTex): PaintTex => surfacePreset(surface) ?? old;
+/** the golf surface each of the game's old course photos stands for, and the photo the brushes fall back to (the water pieces' clear water
+ *  lays as the brushes' dark water) */
+const COURSE_SURFACE_OF: Record<string, [string, PaintTex]> = {
+  golfFairway: ['fairway', 'golfFairway'], golfFirstCut: ['firstCut', 'golfFirstCut'], golfFringe: ['fringe', 'golfFringe'], golfGreen: ['green', 'golfGreen'],
+  golfTee: ['tee', 'golfTee'], golfRough: ['rough', 'golfRough'], bunkerSand: ['bunker', 'bunkerSand'], waterDark: ['water', 'waterDark'], waterClear: ['water', 'waterDark'],
+};
+/** a course texture as the brushes lay it: the owner's preset for its golf surface, else the brushes' photo, so a placed piece and a brush stroke
+ *  of the same surface always match (the owner, 2026-10-24: the pieces laid a blocky old fairway photo the brushes never use) */
+export function courseTex(tex: PaintTex): PaintTex { const s = COURSE_SURFACE_OF[tex]; return s ? S(s[0], s[1]) : tex; }
 export const BRUSH_PRESETS: { kind: BrushKind; name: string; r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> }[] = [
   { kind: 'fairway', name: 'Fairway', r: 5, style: clampStyle({ ...DEFAULT_STYLE, tex: S('fairway', 'golfFairway'), border: 3, btex: S('firstCut', 'golfFirstCut'), radius: 0 }) },
   { kind: 'green', name: 'Green', r: 4, style: clampStyle({ ...DEFAULT_STYLE, tex: S('green', 'golfGreen'), border: 2, btex: S('fringe', 'golfFringe') }) },

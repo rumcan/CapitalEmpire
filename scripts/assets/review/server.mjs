@@ -167,12 +167,15 @@ function rebuild() {
   const steps = ['scripts/assets/prep-decals.mjs', 'scripts/assets/nature-patches.mjs', 'scripts/assets/prep-sprites.mjs', 'scripts/assets/prep-scales.mjs', 'scripts/assets/prep-construction.mjs', 'scripts/assets/audit-sprites.mjs'];
   job = { log: '', done: false, code: 0, step: '', started: Date.now() };
   const run = i => {
-    if (i >= steps.length) return build();
+    if (i >= steps.length) return process.env.STUDIO_DEV_GAME ? devDone() : build();
     job.step = steps[i]; job.log += `\n> node ${steps[i]}\n`;
     const p = spawn(process.execPath, [steps[i]], { cwd: ROOT, env: { ...process.env, TOT_REPO: TOT } });
     p.stdout.on('data', d => { job.log += d; }); p.stderr.on('data', d => { job.log += d; });
     p.on('close', code => { if (code) { job.done = true; job.code = code; job.log += `\nFailed (${code}).\n`; } else run(i + 1); });
   };
+  // STUDIO_DEV_GAME set: the game runs on a vite dev server from this same checkout, which reloads the new atlases by itself, so the
+  // production build (minutes and an 8 GB heap) is skipped
+  const devDone = () => { job.done = true; job.log += '\nAll done: the dev game reloads the new sprites by itself (no build needed).\n'; };
   // the last step: the production build, so the test server on 5174 (vite preview of dist/) serves the new sprites
   const build = () => {
     job.step = 'npm run build'; job.log += '\n> npm run build\n';
