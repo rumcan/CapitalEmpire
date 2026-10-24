@@ -25,5 +25,145 @@
   "generator": "built-in image_gen",
   "generatedAt": "2026-10-23T16:27:37.255Z",
   "status": "generated-awaiting-visual-review",
-  "implementation": "Other AI handles runtime integration"
+  "implementation": "Other AI handles runtime integration",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/gen-house-l-shape-4views-v1.png",
+    "originalSheetSha256": "752179222c26c99f40c31d757148563e44d951b83fef707700f5fd92451b6f5d",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "f5130ad39b025d7a5eeeaa67f5c4f40ecdebfd914aef42ce5a19874bd329c287",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 625,
+      "endExclusive": 647,
+      "midpoint": 636,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 617,
+        "endExclusive": 680,
+        "midpoint": 648,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 612,
+        "endExclusive": 655,
+        "midpoint": 633,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 17,
+          "top": 15,
+          "width": 631,
+          "height": 621
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 236376,
+        "visibleAlphaPixelsThreshold8": 224074,
+        "nonzeroRgbaSha256": "463d963ce300f0ee61726842ea5f69533b0976dcf8d5b9a0e4bc2232c348155c",
+        "destination": {
+          "left": 196,
+          "top": 201,
+          "width": 631,
+          "height": 621
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 648,
+          "top": 19,
+          "width": 585,
+          "height": 617
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 206290,
+        "visibleAlphaPixelsThreshold8": 197956,
+        "nonzeroRgbaSha256": "e021ac895162d4256c0a59225342a41510ee01c6d1292ad36d102a8f60723ee6",
+        "destination": {
+          "left": 1243,
+          "top": 203,
+          "width": 585,
+          "height": 617
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 636,
+          "width": 633,
+          "height": 606
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 218654,
+        "visibleAlphaPixelsThreshold8": 209046,
+        "nonzeroRgbaSha256": "e05923b21a140682c6e2e63b4a31744dbfd3171d8576506a749ae1dd656e2cbf",
+        "destination": {
+          "left": 195,
+          "top": 1233,
+          "width": 633,
+          "height": 606
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 636,
+          "top": 640,
+          "width": 618,
+          "height": 609
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 201292,
+        "visibleAlphaPixelsThreshold8": 193590,
+        "nonzeroRgbaSha256": "98880b09acd5b74083d2ee497790e9513db1cbaefdf87c965a686c6a5dbc62aa",
+        "destination": {
+          "left": 1227,
+          "top": 1231,
+          "width": 618,
+          "height": 609
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 862612,
+      "visibleAlphaPixelsThreshold8": 824666,
+      "nonzeroRgbaSha256": "15f0ab479f7e11c9bccc7a8386c7136ed8f56c504d9090654e5f8b2cac1e2de7"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "integrationStatus": "ready",
+  "integrationReason": "Exact pixel-conserving layout correction of finished master-theme building, original four facades retained; post-repack actual alpha over magenta and geometry reviewed. No new image generation."
 }

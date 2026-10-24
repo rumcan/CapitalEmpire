@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-corner-shop-2ffc6ab7-plain:1",
+ "version": "variation-ref-building-corner-shop-2ffc6ab7-plain-1-4views-v2",
+ "files": {
+  "NE": "c4d8525a59a289a3eca87dbd871fde20cd32ca35d4d9756057f5fe7723dbcef8",
+  "SE": "cb0a202678ce28a29847f869668ac1f1183b91619e1fc398bf27979f5ee85c89",
+  "SW": "ef3e0b6855434468b1177ba69e72fd3d0a578249f9bc5f0afb0d0d75a9a7ab15",
+  "NW": "91b054c7c6275507984881580dbbab07efc72479827d127917b9aa121777f105"
+ }
+}

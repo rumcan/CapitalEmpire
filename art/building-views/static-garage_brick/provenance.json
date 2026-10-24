@@ -1,0 +1,21 @@
+{
+  "id": "static:garage_brick",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-6eda424f-968b-47d2-be5c-a18e0031c57c.png",
+  "prompt": "Precise single-cell geometry correction of this EXISTING four-view game sprite sheet. Keep same building identity, miniature material style, palette, exposure, warm lamps, fixed SCREEN UPPER RIGHT sun, 2:1 isometric camera and physical scale. Change ONLY bottom-left SW view: show BACK wall on image LEFT with its green single service door, and LEFT side wall on image RIGHT with the same single warm window shown on the left wall of the bottom-right NW view. This is a true quarter turn beyond top-right SE, not a repeat. Preserve green garage front only in NE/NW, roof and downpipes consistent. Preserve the other views and their facades. Output square 2x2 NE,SE,SW,NW cutout sheet, complete silhouettes inside cells, generous blank gutters/margins. Actual fully transparent alpha outside silhouettes and between objects, RGBA PNG. NO floor, ground, backdrop, haze, labels, captions, scene, people or decorative props. Do not mirror the entire sprite to fake the correction; rotate geometry, keep light fixed.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/static-garage_brick-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/static-garage_brick-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master.",
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "id": "variation:industrial-utility-substation-54820c2b:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-4cd90f28-e501-4c3f-9560-09b2ff054043.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-utility-substation-54820c2b:1. Small weathered red-brick utility substation hut, single grey steel service door, low parapet flat charcoal roof with small cooling unit and vents. No giant outdoor transformer yard; same simple compact building across four rotations.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-utility-substation-54820c2b:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-utility-substation-54820c2b-1.configured@2x.png",
+      "sha256": "62e42203fa0d7685774829e1d7952e69bf89b47e9165ea1f8b7d58fd920a20e6"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-utility-substation-54820c2b-1-4views-v1.png",
+    "originalSheetSha256": "136d938b9ac278ef2a9d501c2ab8e0a2d8c9cfffb5750a77916c94ce6b3c7ce0",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "outputSheetSha256": "c6e43bf652b1fef9c00d087d9c5f625f7ebb4c2d28789c7e0a34da1868bba8c2",
+    "cellSize": 1152,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 441,
+      "endExclusive": 445,
+      "midpoint": 443,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 817,
+        "endExclusive": 999,
+        "midpoint": 908,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 802,
+        "endExclusive": 1004,
+        "midpoint": 903,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 293,
+          "top": 0,
+          "width": 595,
+          "height": 443
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 138230,
+        "visibleAlphaPixelsThreshold8": 135017,
+        "nonzeroRgbaSha256": "f35186ca0acf71a580b7964a1a562e8ac6c62de8dcb066dbb890295f0ff9ae41",
+        "destination": {
+          "left": 278,
+          "top": 354,
+          "width": 595,
+          "height": 443
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 993,
+          "top": 0,
+          "width": 594,
+          "height": 440
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 132993,
+        "visibleAlphaPixelsThreshold8": 128418,
+        "nonzeroRgbaSha256": "f7b38507e41d7229375fce1d5de26e0957bc4c08dc443cac436c6812228f6718",
+        "destination": {
+          "left": 1431,
+          "top": 356,
+          "width": 594,
+          "height": 440
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 78,
+          "top": 443,
+          "width": 777,
+          "height": 427
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 126875,
+        "visibleAlphaPixelsThreshold8": 124244,
+        "nonzeroRgbaSha256": "c9eee78c2ef9452323362598e6135b7b08abd5235fab95cca42399937f002987",
+        "destination": {
+          "left": 187,
+          "top": 1514,
+          "width": 777,
+          "height": 427
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 998,
+          "top": 443,
+          "width": 651,
+          "height": 434
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 131193,
+        "visibleAlphaPixelsThreshold8": 128472,
+        "nonzeroRgbaSha256": "05cd347b54709dd9218dceff2518d9943089c3f02b077b38860d9120c98a4b0e",
+        "destination": {
+          "left": 1402,
+          "top": 1511,
+          "width": 651,
+          "height": 434
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 529291,
+      "visibleAlphaPixelsThreshold8": 516151,
+      "nonzeroRgbaSha256": "e4bd9b40f4a56cb39c0e1f6dd891b8a2a83ba14c17656b7a749e8da6e5a3902d"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "static:garage_timber",
+ "version": "static-garage_timber-4views-v2",
+ "files": {
+  "NE": "0af35eb5e07892e25fcd5579a005d3fd3f9b3016d95a0d5a35d518b9ef11df48",
+  "SE": "02e450615fdc5ce73eced1f8b2e00560fef49223692899e0007fa52c7589d349",
+  "SW": "dfa0d228daf5f346267be2245460d9119a9345737ef2dc5eb7f3706930180adc",
+  "NW": "2e9666562b3f0402e30854241a3c2f799863809e9750545a481310931067f95c"
+ }
+}

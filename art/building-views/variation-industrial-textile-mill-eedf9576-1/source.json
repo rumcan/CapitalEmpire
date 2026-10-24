@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-textile-mill-eedf9576:1",
+ "version": "variation-industrial-textile-mill-eedf9576-1-4views-v2",
+ "files": {
+  "NE": "487e7f4a9389bd7a653f676c3a02660e8809e935d2855205c9ee85145043cc99",
+  "SE": "42af797fb5db1fe968d4583f8472dd9529e5b985eb61708b318ecb05fff3229c",
+  "SW": "739efebe82766f002145230c6a4d38927d26d36b09cc34ac49b6c614d95e40bc",
+  "NW": "6ac79cbbeb682c996599ded4536e8dab233f49e46cd35d75f9e08ebf07b8bbba"
+ }
+}

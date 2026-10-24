@@ -1,0 +1,149 @@
+{
+  "id": "variation:static-garage_brick-v2-be1ee461-plain:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "static:garage_brick-v2",
+  "sourceSheet": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2.png",
+  "sourceSha256": "02331b7152189bbbfb2803e66b5abf47e2968aecb9190ef73ee654c9b35ff615",
+  "sourceProvenanceSha256": "4145727e89d2e893005ea874d6b0e138022231ac75356e326c4cf2d062c4fbe0",
+  "prompt": "Precise single-cell geometry correction of this EXISTING four-view game sprite sheet. Keep same building identity, miniature material style, palette, exposure, warm lamps, fixed SCREEN UPPER RIGHT sun, 2:1 isometric camera and physical scale. Change ONLY bottom-left SW view: BACK wall appears on image LEFT and is plain brick, LEFT side appears on image RIGHT and has one warm rectangular window matching the left wall of bottom-right NW. Current SW incorrectly repeats top-right SE window-left/plain-right. Front glazed green garage belongs only NE/NW. Preserve the other views and their facades. Output square 2x2 NE,SE,SW,NW cutout sheet, complete silhouettes inside cells, generous blank gutters/margins. Actual fully transparent alpha outside silhouettes and between objects, RGBA PNG. NO floor, ground, backdrop, haze, labels, captions, scene, people or decorative props. Do not mirror the entire sprite to fake the correction; rotate geometry, keep light fixed.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v1.png"
+  ],
+  "originalProvenance": {
+    "id": "static:garage_brick-v2",
+    "generator": "image_gen",
+    "generated": "2026-10-24",
+    "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-1ee6e708-f37f-49e6-923d-eae9ca4c536b.png",
+    "prompt": "Precise single-cell geometry correction of this EXISTING four-view game sprite sheet. Keep same building identity, miniature material style, palette, exposure, warm lamps, fixed SCREEN UPPER RIGHT sun, 2:1 isometric camera and physical scale. Change ONLY bottom-left SW view: BACK wall appears on image LEFT and is plain brick, LEFT side appears on image RIGHT and has one warm rectangular window matching the left wall of bottom-right NW. Current SW incorrectly repeats top-right SE window-left/plain-right. Front glazed green garage belongs only NE/NW. Preserve the other views and their facades. Output square 2x2 NE,SE,SW,NW cutout sheet, complete silhouettes inside cells, generous blank gutters/margins. Actual fully transparent alpha outside silhouettes and between objects, RGBA PNG. NO floor, ground, backdrop, haze, labels, captions, scene, people or decorative props. Do not mirror the entire sprite to fake the correction; rotate geometry, keep light fixed.",
+    "references": [
+      "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v1.png"
+    ],
+    "corrects": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v1.png",
+    "integrationStatus": "ready",
+    "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master.",
+    "sourceVisualReview": {
+      "reviewer": "source_review_resume",
+      "actualAlphaBackground": "magenta #ff00c8",
+      "theme": "references/theme-authoritative.png",
+      "sourceOnly": true,
+      "geometry": "four-corner cycle reviewed",
+      "gameScaleNotCertified": true
+    }
+  },
+  "physicalIdentityEvidence": "Identity comparison reviewed: same red brick hip-roof garage, green sectional door and single side window, roof/chimney-free construction. Finished master-theme corrected base reused exactly rather than regenerated.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1.png",
+      "sha256": "02331b7152189bbbfb2803e66b5abf47e2968aecb9190ef73ee654c9b35ff615"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NE.configured.png",
+      "sha256": "463d0577ca0bad14940fa212ba22cb3ffe0bac95e8aa873a69ae4d6e59a1993d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NE.configured@2x.png",
+      "sha256": "4f917a0f2f33b04b74eaca2c73f02155f3719c698d8ede0436e7cd274a8136c6"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NE.max.png",
+      "sha256": "51e7218351627a730016d5e3a9395b695ebd818e8a0be23ce8a03f0b5120e14a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NE.max@2x.png",
+      "sha256": "2d22db82c8092b718a5fdba744f3630478ddead1418fb747eb6a6d4e69262996"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NE.native.png",
+      "sha256": "edc99e90d6d0bcdc6ab81ecf0c3603954ae767bdae57546f5c3e79e9d9272d0a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NW.configured.png",
+      "sha256": "2269333c3cb77026c069a62424bf8f717b1207a0b0789da02fa818ef0c7e4bbe"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NW.configured@2x.png",
+      "sha256": "c8753ef422b7ab4f2d7969858afae8f4e0f13950675ad94c981c50745b69a7a2"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NW.max.png",
+      "sha256": "ca605f13867bc0a4cd05c487805c769f1fdcdac26ca16dafa494fd0aeac2d28e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NW.max@2x.png",
+      "sha256": "767c10e7dac647425f6e2c30574054e8fdf5496796825878e2bc40cd4237db82"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/NW.native.png",
+      "sha256": "a4869861ebf0fb037f82a432101bdeadcf659bd847bda0c36114dfc2e8c7ee31"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SE.configured.png",
+      "sha256": "930c77bb5c3895f14effc37fa13b271f95bd1a5476363ba5cd310064d44eb034"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SE.configured@2x.png",
+      "sha256": "d903d0534201aa7e30f55166bcc1b0769321cc96a9648d76caa6ceac7a91f0ab"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SE.max.png",
+      "sha256": "f2dcc64d98ac5d94e971a085931fda45388cdbdeb843f8c78d01bb1e603f151b"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SE.max@2x.png",
+      "sha256": "5c40e8e70f7cdbae3ec98cbe5a076e130da6c78a82f4eabe858353042e7df2ee"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SE.native.png",
+      "sha256": "09c341cc93c34df6786dbdee0e1cd041af076ea66e692eca3eef2380cdc1f6d6"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SW.configured.png",
+      "sha256": "7122ebd44f6d2f83c1273c0c94c079141580188a7e8db62aa3d7074fbd63396f"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SW.configured@2x.png",
+      "sha256": "460af7e467361ebbdfc6e58ec44a19732bae885cabc36724470c0e1b4e1e85c6"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SW.max.png",
+      "sha256": "c64857b58d85d2fc968c88be491051c34e53ffd891b1a4623b808544591cc81e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SW.max@2x.png",
+      "sha256": "738f83711f6ffc9d264b5963df03d69c9d4e65d8226a55e83ce5bba544730918"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/static-garage_brick-v2-4views-v2/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-static-garage_brick-v2-be1ee461-plain-1-4views-v1/SW.native.png",
+      "sha256": "e6d1306631cbc64bbc7da550e5d2bad074bb1b9cacfca97cc217977670651d94"
+    }
+  ]
+}

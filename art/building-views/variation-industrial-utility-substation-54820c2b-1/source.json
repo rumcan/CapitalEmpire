@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-utility-substation-54820c2b:1",
+ "version": "variation-industrial-utility-substation-54820c2b-1-4views-v2",
+ "files": {
+  "NE": "71c46547a85f66dfcf840ae61dd08945f6ce64065a58801a7a3b61f73f4dcf38",
+  "SE": "810bec1459130ca2da8c86bf888b8dfc1079bce881cc750de996504a60417d54",
+  "SW": "735f2fc2b83677c945b0d50b32aa033d5a14cd06b2a7ec913ef496cec975ea87",
+  "NW": "60a81fd07b7571736289647fac1527a3967f56efcb99b038fe0d747f63060b3c"
+ }
+}

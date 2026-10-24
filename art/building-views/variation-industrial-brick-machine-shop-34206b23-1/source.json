@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-brick-machine-shop-34206b23:1",
+ "version": "variation-industrial-brick-machine-shop-34206b23-1-4views-v2",
+ "files": {
+  "NE": "214084cee56a3015f89dba71e94b7b92febede176b2571fc0619ec696590cd54",
+  "SE": "c785b8b5db3df1ac1f524b44f33ad04245f9e49bd2b6403af0650c08609620a3",
+  "SW": "1d1260f98d4c846caaa400cc96d86c6cd71d41b77f4623b5967ff55b6da91e3a",
+  "NW": "39c71212be47601e9b421f3ca04a2d7fa2316f0c812cd5d80089ce55d17a5e09"
+ }
+}

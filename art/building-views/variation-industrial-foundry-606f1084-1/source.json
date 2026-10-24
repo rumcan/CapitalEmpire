@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-foundry-606f1084:1",
+ "version": "variation-industrial-foundry-606f1084-1-4views-v2",
+ "files": {
+  "NE": "0987eddfede2e1a48567e3fdfa7c04e72c036f7c740bee051ee9acb7504e013d",
+  "SE": "7ddb5b54398eed7838f78854b9da71f5f0f14d9e3270e6a1cd027b20eb54c687",
+  "SW": "e72d9190bbffbe9a50ba9a8fb2ba8964c70b8596cbad7ac4bf068e9810d89b4a",
+  "NW": "784a60fc8ae48c9614ea03ee8c1169c15378f6d55f38401eb3ef78ff9c9a1e57"
+ }
+}

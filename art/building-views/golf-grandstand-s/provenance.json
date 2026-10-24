@@ -1,0 +1,141 @@
+{
+  "id": "golf:grandstand-s",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-8fa0049f-f9b1-4e1c-b18a-2ea851e5d065.png",
+  "prompt": "Precise BACKGROUND EXTRACTION of this one four-view game object sheet. Preserve subject designs, proportions, materials, warm palette and fixed upper-right dusk lighting. Remove the ENTIRE background, floor, ground patches, vegetation, fallen leaves, broad cast shadows, labels/captions and dividing lines. Keep ONLY the four physical structures and integral supports/bases; no environment. Every exterior pixel and holes between supports must be empty TRANSPARENT ALPHA, RGBA PNG. NO backdrop, haze, gradient, floor or glow cloud. Four complete distinct rotations on a SQUARE 2x2 sheet, row-major front+right, right+back, back+left, left+front, generous transparent gutters and outer margins. Keep existing object views in their own cells, shrink all uniformly only if needed to avoid clipping. Do not add or restyle anything; change only unwanted background/layout. No text.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/golf-grandstand-s-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/golf-grandstand-s-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "Four physical stand corners and actual magenta transparency reviewed; empty seat blocks, structural rail/stair/supports, fixed upper-right dusk and coherent master materials. Lossless4component extraction preserves every nonzero RGBA pixel, fixes packing without generation.",
+  "integrationReview": {
+    "alpha": "passed",
+    "geometry": "held-for-correction-or-parent-decision",
+    "themeAssessment": "Muted green seats/tarp, grey metal and warm practical stair lamps share master palette; packing held.",
+    "terrainOrCaptionsVisible": false,
+    "gameScaleRegistered": false,
+    "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+    "correctionBrief": null
+  },
+  "layoutCorrection": {
+    "method": "Disconnected alpha>8 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 8,
+    "originalSheet": "art/theme-consistency/generated/buildings/golf-grandstand-s-4views-v2.png",
+    "originalSheetSha256": "6294fdec02d439a8d5ffa7401ddd619826b832600c5c17b3c2ca8683e8f8fbcc",
+    "outputSheetSha256": "5c1be360376096f1f8bd6e7375f2d83049467d3765b64e0346fc9e63ff5753f7",
+    "originalDimensions": [
+      1536,
+      1024
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "cellSize": 1152,
+    "nonzeroAlphaPixels": 816746,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>8 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 198919,
+          "bounds": [
+            71,
+            14,
+            745,
+            493
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 31,
+          "y0": 9,
+          "x1": 783,
+          "y1": 525,
+          "count": 212187
+        },
+        "translation": {
+          "x": 168,
+          "y": 308
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 184485,
+          "bounds": [
+            828,
+            14,
+            1459,
+            489
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 779,
+          "y0": 0,
+          "x1": 1519,
+          "y1": 536,
+          "count": 196683
+        },
+        "translation": {
+          "x": 578,
+          "y": 307
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 28,
+          "pixels": 178564,
+          "bounds": [
+            40,
+            508,
+            725,
+            922
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 32,
+          "y0": 443,
+          "x1": 797,
+          "y1": 1023,
+          "count": 192073
+        },
+        "translation": {
+          "x": 161,
+          "y": 994
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 27,
+          "pixels": 203442,
+          "bounds": [
+            815,
+            485,
+            1502,
+            971
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 765,
+          "y0": 463,
+          "x1": 1511,
+          "y1": 999,
+          "count": 215803
+        },
+        "translation": {
+          "x": 589,
+          "y": 996
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  }
+}

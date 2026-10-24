@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-barn-v2-b96e34dc-plain:1",
+ "version": "variation-ref-building-barn-v2-b96e34dc-plain-1-4views-v2",
+ "files": {
+  "NE": "a77a2675741b16fcb83efa9309cff522c20ed273f1171471fcb42c58f89b6d89",
+  "SE": "fa93b40bdc822d13f1c68e0b53c0f2c9634dfb88e1cc2c9dc5db636ac7bd099d",
+  "SW": "70d58ab9e9016b83d87d9f03230a713350c558fea45838e6f67cd4520c54334c",
+  "NW": "f3ae4758abaa69798b3a3c1f84bb7a2eb095f0fb751fdbee202266321fdb1d95"
+ }
+}

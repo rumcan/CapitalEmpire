@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-shop-blue-941779e4-plain:1",
+ "version": "variation-ref-building-shop-blue-941779e4-plain-1-4views-v2",
+ "files": {
+  "NE": "5227518ac7f032744046aa0624c4d4b62334bb5f5394bdbd5e5e53b6b6bfc78d",
+  "SE": "92808ea37f8d95fdbbde0054a400345f17c953ce1a1283f50325f2e192de6f4d",
+  "SW": "3d5049021b3caa227d4f567d477107a0e5c95df87235c3f57ec8757a4d7feff7",
+  "NW": "4dcb726272fa51e3e5c45ec3249227049a567c354d020e1eda866b3629ac94cf"
+ }
+}

@@ -1,0 +1,142 @@
+{
+  "id": "variation:industrial-textile-mill-eedf9576:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-6444ec59-c12b-462b-a86f-bd1309452d85.png",
+  "prompt": "ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Subject library ID variation:industrial-textile-mill-eedf9576:1. Tall three-storey narrow red-brick textile mill, flat charcoal roof with small integral tank on frame, brick chimney and exterior metal fire escape on one side. MAPLE FALLS TEXTILE MILL sign, arched tall grid windows. All tank/stairs consistent, no surroundings.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:industrial-textile-mill-eedf9576:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-industrial-textile-mill-eedf9576-1.configured@2x.png",
+      "sha256": "cb4cd37e0965421103a0ec0354accb047769198b00622b6fa7fddbe208307e7a"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Four coherent rigid corners, matte master materials and fixed screen-upper-right dusk; low-alpha bridge required seed128 for component partition. Every nonzero source RGBA pixel conserved unchanged and complete source silhouettes retained; no generation.",
+  "layoutCorrection": {
+    "method": "Disconnected alpha>128 silhouette extraction with nearest-silhouette assignment of all remaining fringe pixels; exact source RGBA pixel copies only, no resize, repaint or deletion.",
+    "seedAlphaThresholdExclusive": 128,
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-industrial-textile-mill-eedf9576-1-4views-v1.png",
+    "originalSheetSha256": "12cea09d8b2e9eef5a87ab1b41c1062c7bd4219a7b487a7c62760c7d32ee2547",
+    "outputSheetSha256": "6d7cb046ea42e090f32b6d7866c0e0d2e66ce3a831322f9f5dd7442f269d0d9d",
+    "originalDimensions": [
+      1774,
+      887
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "cellSize": 1152,
+    "nonzeroAlphaPixels": 512403,
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "assignmentPolicy": "Every alpha>128 dominant component remains intact. Multi-source orthogonal nearest-silhouette flood fills assign fringe and tiny detached components; every nonzero source tuple is copied exactly once.",
+    "views": [
+      {
+        "direction": "NE",
+        "dominantComponent": {
+          "label": 1,
+          "pixels": 133729,
+          "bounds": [
+            340,
+            4,
+            726,
+            469
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 106,
+          "y0": 0,
+          "x1": 898,
+          "y1": 477,
+          "count": 139735
+        },
+        "translation": {
+          "x": 73,
+          "y": 337
+        }
+      },
+      {
+        "direction": "SE",
+        "dominantComponent": {
+          "label": 2,
+          "pixels": 128117,
+          "bounds": [
+            1062,
+            5,
+            1435,
+            465
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 896,
+          "y0": 0,
+          "x1": 1678,
+          "y1": 473,
+          "count": 134559
+        },
+        "translation": {
+          "x": 440,
+          "y": 339
+        }
+      },
+      {
+        "direction": "SW",
+        "dominantComponent": {
+          "label": 4,
+          "pixels": 107578,
+          "bounds": [
+            361,
+            468,
+            699,
+            880
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 344,
+          "y0": 465,
+          "x1": 870,
+          "y1": 886,
+          "count": 113710
+        },
+        "translation": {
+          "x": -32,
+          "y": 1052
+        }
+      },
+      {
+        "direction": "NW",
+        "dominantComponent": {
+          "label": 3,
+          "pixels": 116913,
+          "bounds": [
+            1051,
+            466,
+            1414,
+            876
+          ]
+        },
+        "allAssignedPixelsBounds": {
+          "x0": 872,
+          "y0": 463,
+          "x1": 1574,
+          "y1": 886,
+          "count": 124399
+        },
+        "translation": {
+          "x": 504,
+          "y": 1053
+        }
+      }
+    ],
+    "visualReviewRequired": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-house-duplex-north-521714ac-plain:1",
+ "version": "variation-gen-house-duplex-north-521714ac-plain-1-4views-v2",
+ "files": {
+  "NE": "55c38d4e300c4db913319ada4764c9d41ba9f2b9015b7a73b51526b21fe26dd5",
+  "SE": "87149c48deeea86c05dbe9b651dc635cbd55262a36c62c62448a0588751d0429",
+  "SW": "c823252aaab7658fc8e0e976dbc6cfa8ab0f5da9fad4e2fc10b48c90a6fddd5f",
+  "NW": "9b95c00ffa2bc3587d1cdffc47dbbf216094f4cdeab39386ca964b8502043509"
+ }
+}

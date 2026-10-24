@@ -1,0 +1,167 @@
+{
+  "id": "variation:ref-building-mausoleum-719fd618-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-b6a44659-5f51-4e94-8911-5270e8693abb.png",
+  "prompt": "SQUARE 1:1 CANVAS, 2048x2048. Four small isolated building cutouts, widely separated in a 2x2 grid. All 4 silhouettes COMPLETE, each occupies only 60% of its cell height, with a fully transparent 100-pixel border all around and between sprites. ONE GAME ASSET CUTOUT on EMPTY TRANSPARENT ALPHA, RGBA PNG. Reference1 is STYLE ONLY: the Maple Bean street's coherent miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve this building's architecture, not its old rendering or blue night cast. It must look natural beside the buildings in reference1. Fixed 2:1 isometric camera and SCREEN UPPER RIGHT SUN in every view; right-facing planes warm, left-facing planes cooler. Exactly four true rigid quarter turns of the SAME physical object on a square 2x2 sheet: NE front+right, SE right+back, SW back+left, NW left+front. Same roof, windows, equipment and physical scale throughout; reconstruct hidden sides, never mirror a front. Centre each complete sprite within its own cell with20% blank margins on every side. Empty alpha in corners, gutters and gaps, zero clipping. NO BACKDROP OR FLOOR: no stage, ground surface, paving, terrain tile, foliage, leaves, broad shadow, haze, gradient, checkerboard, caption, divider, view label or frame. No people, vehicles, Halloween, pumpkins, skulls, cobwebs, spooky signage or decorative garlands. Only the physical building and integral structural parts, no attached landscape.  Ground isolation is critical: every pixel outside the physical building, steps and supports must have alpha=0. No grey floor patch or studio surface. Geometry audit: name four physical facades A front,B right,C rear,D left internally, then draw A+B, B+C, C+D, D+A respectively; unique front-only entrance must appear only in the two views which face A. Rear views need genuinely reconstructed rear facades, not four front variations. Do not copy reference camera four times.  Subject library ID variation:ref-building-mausoleum-719fd618-plain:1. Rebuild this exact architecture in the shared Maple Bean art theme. Keep building height, wing/deck/garage position and roof shape. True opposite rear facades, no duplicated entrance/porch on all four sides. If identity is a rear view, retain it as one real rear face and reconstruct a sensible front; never clone the rear facade four times. Keep full roof/chimney and steps well clear of all canvas edges; small sprites with generous transparent space, no floors or yards.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:ref-building-mausoleum-719fd618-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-ref-building-mausoleum-719fd618-plain-1.configured@2x.png",
+      "sha256": "fd51c671949c16d0aed1fe072b42dc7924be6ca20f3277a013959c1eb3069279"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "All four physical facade pairs are distinct; front carved pediment/door versus plain rear and two side lancet windows/one side chimney remain coherent. Existing lossless v2 repack preserves all source RGBA; alpha audit passes zero warnings.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-mausoleum-719fd618-plain-1-4views-v1.png",
+    "originalSheetSha256": "f377c60f5e4c5d2a4057eaf2c173e41f74e84578328d1e38a4e734649e9912f4",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "bd90c551664f43ded6716a8ee3892da3dae76ecb732f38097213a1245e05e5dc",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 585,
+      "endExclusive": 708,
+      "midpoint": 646,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 564,
+        "endExclusive": 703,
+        "midpoint": 633,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 550,
+        "endExclusive": 714,
+        "midpoint": 632,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 13,
+          "width": 633,
+          "height": 633
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 178223,
+        "visibleAlphaPixelsThreshold8": 167588,
+        "nonzeroRgbaSha256": "9d2b23654c2d55689ca36172da53f6fdaa535b9349b21ba825bf41d0f9ebc1b4",
+        "destination": {
+          "left": 195,
+          "top": 195,
+          "width": 633,
+          "height": 633
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 633,
+          "top": 20,
+          "width": 615,
+          "height": 626
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 172211,
+        "visibleAlphaPixelsThreshold8": 160691,
+        "nonzeroRgbaSha256": "21ad2bc29383e16f0837b49d4e9e31f67a935da2095b6e00b51e5fc3f79cd5df",
+        "destination": {
+          "left": 1228,
+          "top": 199,
+          "width": 615,
+          "height": 626
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 646,
+          "width": 632,
+          "height": 608
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 166376,
+        "visibleAlphaPixelsThreshold8": 150245,
+        "nonzeroRgbaSha256": "7f897a0de2c5204aa092230e6eff7ad54ab846d16847f733c2cea078b9626e71",
+        "destination": {
+          "left": 196,
+          "top": 1232,
+          "width": 632,
+          "height": 608
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 632,
+          "top": 646,
+          "width": 622,
+          "height": 608
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 169828,
+        "visibleAlphaPixelsThreshold8": 156432,
+        "nonzeroRgbaSha256": "8172528611baf8bd19fa33f2f7573aa40a9bf65dd5b2f8352a45b172056b0bdb",
+        "destination": {
+          "left": 1225,
+          "top": 1232,
+          "width": 622,
+          "height": 608
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 686638,
+      "visibleAlphaPixelsThreshold8": 634956,
+      "nonzeroRgbaSha256": "8586f8124410db3efe77af8adb7f25515f1a1121cf461b4a2488b7f03ed4c6ac"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "sourceVisualReview": {
+    "actualAlphaComposite": "magenta",
+    "rotationReview": "four distinct paired facades; no mirrored repeat",
+    "theme": "Maple Bean matte materials, navy roof/amber lamps, upper-right dusk",
+    "reviewed": "2026-10-24"
+  }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-rail-repair-shed-fbe2c8d9:1",
+ "version": "variation-industrial-rail-repair-shed-fbe2c8d9-1-4views-v2",
+ "files": {
+  "NE": "07646cf3d249e84b1216372d7b70f604113084fa1490993b149a0e59f5089b4a",
+  "SE": "f726d91fc8ebcbcedf97fcb33ad7b933cb61af477b57821f7e1b39ebec16f713",
+  "SW": "fce7dfd7c6576b697b089330810580aada818f2a6c935c1cbc791fd78fa16dba",
+  "NW": "a3e01b0be00c75321f3f9c5a5bd5cfe72a610bbaacd2fc36521068be56b95ce5"
+ }
+}
