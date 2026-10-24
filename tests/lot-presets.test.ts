@@ -87,6 +87,21 @@ describe('lot presets (T062)', () => {
     assert.deepEqual(qf.patches[0]?.pts, [8.5, 13.5, 9, 5], 'the point pushed past the edge is clamped to 9');
   });
 
+  it('5b. fitPreset moves a patch\'s lines like its points (T064) and tells each kept prop\'s index in the preset', () => {
+    const p = preset('l', 'park', 'built', 10, 16, [
+      { id: 'a', x: 2, y: 3, scale: 1, view: 0 }, { id: 'b', x: 9.5, y: 15.5, scale: 1, view: 0 }, { id: 'c', x: 4, y: 7, scale: 1, view: 2 },
+    ], [{ kind: 'lot', tex: 'asphalt', pts: [0, 8, 10, 8, 10, 16, 0, 16], lines: [2, 8, 2, 11, 8, 8, 8, 11] }]);
+    const f = fitPreset(p, 12, 14);
+    // y 8 is on the far half (>= 16 / 2): it moves with the back line, 2 tiles in; x 8 moves with the right side, 2 out
+    assert.deepEqual(f.patches[0]?.lines, [2, 6, 2, 9, 10, 6, 10, 9]);
+    assert.deepEqual(f.from, [0, 1, 2]);
+    // 4 x 6: c (near half, y 7) falls past the back line; b moves with the far corner and stays
+    const g = fitPreset(p, 4, 6);
+    assert.deepEqual(g.props.map(q => q.id), ['a', 'b']);
+    assert.deepEqual(g.from, [0, 1]);
+    assert.equal(g.dropped, 1);
+  });
+
   it('6. parsePresets keeps a valid entry and skips the ones with no props or a view of 5, counting them invalid', () => {
     const good = { id: 'ok', use: 'res', state: 'built', w: 10, d: 15, props: [{ id: 'tree', x: 1, y: 2, scale: 1, view: 0 }], patches: [{ kind: 'lot', tex: 'grass', pts: [0, 0, 10, 0, 10, 15] }] };
     const noProps = { id: 'bad1', use: 'res', state: 'built', w: 10, d: 15, patches: [] };
