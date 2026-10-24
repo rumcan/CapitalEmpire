@@ -94,11 +94,11 @@ export type ToWorker =
   /** the course height as a sub-rect of samples (i0, j0, w by h, row-major data), see GroundCache.courseHeight */
   | { t: 'course'; i0: number; j0: number; w: number; h: number; data: Float32Array }
   | { t: 'lotground'; set: [string, LotPatch[]][]; drop: string[] }
-  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number };
+  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number };
 
 export type FromWorker =
   | { t: 'ready'; ms: number }
   | { t: 'texpack'; snaps: TexSnapshot[] }
-  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; bmp: ImageBitmap; ms: number }
+  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; bmp: ImageBitmap; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };

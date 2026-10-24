@@ -77,6 +77,17 @@ const handle = async (m: ToWorker) => {
       case 'paint': {
         await hasTextures;
         if (m.kind !== 'p') await (woods ??= tex.ensure(WOODLAND_TEX).catch(err => post({ t: 'error', message: String(err) })));
+        if (m.kind !== 'p') {
+          const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
+          const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
+          const need = new Set<string>(['grass']);
+          for (const p of painter.lotsIn(box)) {
+            need.add(p.tex);
+            if (p.paint?.b) need.add(p.paint.bt);
+            if (p.paint?.m) need.add(p.paint.m.t);
+          }
+          await tex.preparePainted(m.artL ?? m.L, need);
+        } else await tex.preparePainted(.035, ['grass']);
         // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
         if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
@@ -90,7 +101,7 @@ const handle = async (m: ToWorker) => {
         const t0 = performance.now();
         const cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm');
         const bmp = cv.transferToImageBitmap();
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, bmp, ms: performance.now() - t0 }, [bmp]);
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, bmp, ms: performance.now() - t0 }, [bmp]);
         break;
       }
     }

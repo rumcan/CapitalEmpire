@@ -1,0 +1,180 @@
+{
+  "date": "2026-10-24",
+  "branch": "lead/painted-grass-lod-20261024",
+  "scope": "Functional authored turf zoom LOD support; grass first family only, remaining photographic types unchanged.",
+  "status": "functional-preview-only",
+  "artStatus": "v1 rejected for repeated diagonal motifs and bright carpet appearance; awaiting reviewed lower-contrast v2, not delivered into root",
+  "worldMetres": 8,
+  "periodTiles": 4,
+  "levels": [
+    "far",
+    "mid",
+    "near"
+  ],
+  "artSelection": "Quantized CSS camera zoom; independent of DPR and brush scale. Raster mip separately follows effective pixel density and brush scale.",
+  "lazy": "One or two authored levels per visible turf family, concurrent requests deduplicated, up to six blended mip chains cached. Planner uses far-family mean.",
+  "transition": "Current visible transition epoch retains cached old-tier/old-resolution pictures until target pictures arrive, then every visible chunk shares one 180ms blend. No per-frame invalidation or extra fallback bake requests.",
+  "checks": {
+    "typecheck": "pass",
+    "focused": "34/34",
+    "browser": {
+      "pageErrors": [],
+      "requestFailures": [],
+      "httpFailures": [],
+      "captures": [
+        {
+          "name": "far",
+          "z": 0.055,
+          "before": {
+            "baked": 38,
+            "busy": 0,
+            "errors": []
+          },
+          "after": {
+            "baked": 38,
+            "busy": 0,
+            "errors": []
+          }
+        },
+        {
+          "name": "mid",
+          "z": 0.14,
+          "before": {
+            "baked": 103,
+            "busy": 0,
+            "errors": []
+          },
+          "after": {
+            "baked": 103,
+            "busy": 0,
+            "errors": []
+          }
+        },
+        {
+          "name": "near",
+          "z": 0.3,
+          "before": {
+            "baked": 123,
+            "busy": 0,
+            "errors": []
+          },
+          "after": {
+            "baked": 123,
+            "busy": 0,
+            "errors": []
+          }
+        }
+      ],
+      "sourceRequests": [
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v1.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v1.png"
+      ],
+      "textureContract": {
+        "decodedCounts": [
+          1,
+          1,
+          2,
+          3
+        ],
+        "periods": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "farSample": [
+          154,
+          186,
+          12,
+          255
+        ],
+        "midSample": [
+          151,
+          183,
+          13,
+          255
+        ],
+        "nearSample": [
+          178,
+          204,
+          18,
+          255
+        ],
+        "otherPhotoStillUnbuilt": true,
+        "sourceKeys": [
+          "@painted:[\"grass\",8,\"/src/assets/ground/painted/grass-painted-8m-far-v1.png\",\"/src/assets/ground/painted/grass-painted-8m-mid-v1.png\",\"/src/assets/ground/painted/grass-painted-8m-near-v1.png\"]:far",
+          "@painted:[\"grass\",8,\"/src/assets/ground/painted/grass-painted-8m-far-v1.png\",\"/src/assets/ground/painted/grass-painted-8m-mid-v1.png\",\"/src/assets/ground/painted/grass-painted-8m-near-v1.png\"]:near",
+          "@painted:[\"grass\",8,\"/src/assets/ground/painted/grass-painted-8m-far-v1.png\",\"/src/assets/ground/painted/grass-painted-8m-mid-v1.png\",\"/src/assets/ground/painted/grass-painted-8m-near-v1.png\"]:mid"
+        ],
+        "existingTierFallback": {
+          "uv": [
+            0.25,
+            0.25,
+            0.5,
+            0.5
+          ],
+          "noNewTilesDuringFallback": true
+        },
+        "authoredLevelCacheIdentity": true
+      },
+      "transitions": [
+        {
+          "from": 0.099,
+          "to": 0.101,
+          "draws": {
+            "partial": 1100,
+            "croppedFallback": 2499,
+            "maxFrameAlphaSpread": 0,
+            "frame": []
+          }
+        },
+        {
+          "from": 0.149,
+          "to": 0.151,
+          "draws": {
+            "partial": 490,
+            "croppedFallback": 0,
+            "maxFrameAlphaSpread": 0,
+            "frame": []
+          }
+        },
+        {
+          "from": 0.199,
+          "to": 0.201,
+          "draws": {
+            "partial": 360,
+            "croppedFallback": 0,
+            "maxFrameAlphaSpread": 0,
+            "frame": []
+          }
+        }
+      ]
+    }
+  },
+  "rootFilesCopied": false,
+  "buildings": "Paused and preserved in separate building-art-priority worktree; no building changes in this branch."
+}

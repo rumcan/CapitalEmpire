@@ -14,6 +14,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
+import { grassZoomLevels } from './painted-grass-lod';
 import { lotBatch, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
@@ -3972,6 +3973,10 @@ export class Game {
   /** a hook for the benchmark's camera path */
   onFrame: ((now: number, dt: number) => void) | null = null;
 
+  private groundTier: 'g' | 'm' | null = null;
+  private groundTarget = '';
+  private groundBlendAt = Infinity;
+  private groundBlendOtherTier = false;
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
@@ -3997,8 +4002,16 @@ export class Game {
       }
     } else {
       // ---- ground: full chunks close up, district chunks (4 x 4, lite) further out
-      const mid = z < MID_BELOW, kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H, L = mid ? midLevelFor(ze) : levelFor(ze);
+      const { district: mid, artL, rasterL: L } = grassZoomLevels(z, this.dpr), kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H;
       const i0 = Math.floor(X0 / CW), i1 = Math.floor(X1 / CW), j0 = Math.floor(Y0 / CH), j1 = Math.floor(Y1 / CH);
+      const target = kind + '@' + L + ':' + artL;
+      if (this.groundTarget !== target) { this.groundBlendOtherTier = this.groundTier !== kind; this.groundTier = kind; this.groundTarget = target; this.groundBlendAt = Infinity; }
+      if (!Number.isFinite(this.groundBlendAt)) {
+        let complete = true;
+        for (let j = j0; j <= j1 && complete; j++) for (let i = i0; i <= i1; i++) { const t = this.ground.tile(kind, i, j); if (!t.tex || t.texL !== L || t.texArtL !== artL || t.stale) { complete = false; break; } }
+        if (complete) this.groundBlendAt = now;
+      }
+      const zoomBlend = Number.isFinite(this.groundBlendAt) ? Math.max(0, Math.min(1, (now - this.groundBlendAt) / 180)) : 0;
       // a chunk not baked yet shows its piece of the planner map meanwhile
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (t.tex || t.prev) continue;
@@ -4009,9 +4022,17 @@ export class Game {
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j);
-        this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now);
+        this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
         if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); }
+        else if (zoomBlend < 1) {
+          const targetReady = t.texL === L && t.texArtL === artL, old = targetReady ? t.fadeFrom : t.tex;
+          const fallback = this.groundBlendOtherTier || !old ? this.ground.zoomFallback(kind, r, now) : [];
+          if (fallback.length) for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
+          else if (old) gl.drawChunk(old, ...r);
+          if (t.tex && targetReady && zoomBlend > 0) gl.drawChunk(t.tex, ...r, false, zoomBlend);
+          if (t.fadeFrom && Number.isFinite(this.groundBlendAt)) t.fadeStart = this.groundBlendAt;
+        }
         else if (t.tex) gl.drawChunk(t.tex, ...r);
       }
       // ---- sprites: every visible tile in one instanced draw (each instance clipped to its tile), vehicles merged in

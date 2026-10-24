@@ -1,9 +1,10 @@
 /** Ground textures are procedural and take seconds to build. One worker builds them (or reads them from an IndexedDB
  *  cache written on an earlier visit) and hands the other workers copies as ImageBitmaps. */
 import { canvas, ctx2d, type CurbColours, type Cnv, type Textures } from './textures';
+import { PAINTED_GRASS } from './painted-grass-art';
 
 /** bump when the texture generation code changes, so stale caches are rebuilt */
-const TEX_VERSION = 'tex-19';
+const TEX_VERSION = 'tex-20-painted-grass';
 export interface TexSnapshot { names: string[]; bitmaps: ImageBitmap[]; curb: CurbColours; stampAngle: number }
 
 function entries(t: Textures): [string, Cnv][] {
@@ -34,7 +35,7 @@ export function restore(t: Textures, s: TexSnapshot) {
 /* ---- IndexedDB cache (works inside workers) ---- */
 function db(): Promise<IDBDatabase> { return new Promise((res, rej) => { const r = indexedDB.open('capital-empire-textures', 1); r.onupgradeneeded = () => r.result.createObjectStore('t'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 function hash(s: string) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); }
-export const cacheKey = (art: unknown) => TEX_VERSION + ':' + hash(JSON.stringify(art));
+export const cacheKey = (art: unknown) => TEX_VERSION + ':' + hash(JSON.stringify([art, PAINTED_GRASS]));
 interface Stored { names: string[]; blobs: Blob[]; curb: CurbColours; stampAngle: number }
 export async function loadCached(key: string): Promise<TexSnapshot | null> {
   try {

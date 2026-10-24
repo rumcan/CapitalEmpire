@@ -2,6 +2,8 @@ import { LEVELS, MID_LEVELS, mulberry } from './iso';
 import { canvas, clamp, ctx2d, fbm, smooth, type C2D, type Cnv } from './canvas2d';
 import { DEFAULT_MIX, mixGrass, type BaseGrassArt } from './base-grass';
 import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
+import { PAINTED_GRASS } from './painted-grass-art';
+import { grassDetailWeights, grassDetailSourceKey, grassFamilyKey, grassFamilyPeriod } from './painted-grass-lod';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -200,6 +202,49 @@ export class Textures {
   /** each built photo's full-resolution source canvas (sourceFor: a large Paint scale shows it, not the mosaic) */
   photoSrc = new Map<string, Cnv>();
   private photoBuilds = new Map<string, Promise<void>>();
+  /** Authored detail follows quantized CSS zoom; sourceFor's L additionally includes DPR and brush scale. */
+  private paintedLevel = .3;
+  private paintedLoads = new Map<string, Promise<void>>();
+  private paintedBlends = new Map<string, Cnv[]>();
+  isPainted(variant: string) { return !!PAINTED_GRASS[variant]; }
+  /** Called before baking a requested chunk; only visible families and the one/two required authored levels are decoded. */
+  async preparePainted(L: number, variants: Iterable<string>) {
+    this.paintedLevel = L;
+    await Promise.all([...new Set(variants)].map(async variant => {
+      const family = PAINTED_GRASS[variant]; if (!family) return;
+      await Promise.all(grassDetailWeights(L).map(async ({ detail }) => {
+        const key = grassDetailSourceKey(variant, family, detail);
+        if (this.photoSrc.has(key)) return;
+        let pending = this.paintedLoads.get(key);
+        if (!pending) {
+          pending = (async () => {
+            const image = await loadImage(family[detail]);
+            try { this.photoSrc.set(key, toCanvas(image)); } finally { image.close(); }
+          })().finally(() => this.paintedLoads.delete(key));
+          this.paintedLoads.set(key, pending);
+        }
+        await pending;
+      }));
+    }));
+  }
+  private paintedSource(variant: string, L: number): { img: Cnv; period: number } | null {
+    const family = PAINTED_GRASS[variant]; if (!family) return null;
+    const weights = grassDetailWeights(this.paintedLevel), sources = weights.map(w => ({ ...w, src: this.photoSrc.get(grassDetailSourceKey(variant, family, w.detail)) }));
+    if (sources.some(s => !s.src)) return null;
+    const key = grassFamilyKey(variant, family) + '@' + this.paintedLevel;
+    let chain = this.paintedBlends.get(key);
+    if (!chain) {
+      const size = Math.max(...sources.map(s => s.src!.width)), image = canvas(size, size), g = ctx2d(image);
+      // Opaque authored paintings blend without rotations, mirrors or hex patches; all represent the same 8m square.
+      for (const [i, s] of sources.entries()) { g.globalAlpha = i ? s.weight : 1; g.drawImage(s.src!, 0, 0, size, size); }
+      g.globalAlpha = 1;
+      chain = this.mipChain(image); this.paintedBlends.set(key, chain);
+      while (this.paintedBlends.size > 6) this.paintedBlends.delete(this.paintedBlends.keys().next().value!);
+    }
+    const period = grassFamilyPeriod(family), want = 128 * L;
+    let img = chain[0]; for (const m of chain) { if (m.width / period >= want) img = m; else break; }
+    return { img, period };
+  }
   slabs!: Cnv; leaves!: Cnv; pool1!: Cnv; pool2!: Cnv;
   /** the builder's grass decals (ground-art DECALS rects) and SOIL_STAMPS ragged bare-soil stamps in a row (SOIL_W x SOIL_H each) */
   decals!: Cnv; soil!: Cnv;
@@ -324,6 +369,7 @@ export class Textures {
    *  its period in tiles. The Paint areas always draw this, never the hex-mixed mosaic: the mosaic is 128 px a tile (the photo has ~500)
    *  and its feathered patches blend, so a Paint area at scale 1 or below looked soft and smeared (the owner, 2026-10-21). null: no photo */
   sourceFor(variant: string, L: number): { img: Cnv; period: number } | null {
+    const painted = this.paintedSource(variant, L); if (painted) return painted;
     const src = this.photoSrc.get(variant); if (!src) return null;
     let chain = this.photoMips.get(variant); if (!chain) this.photoMips.set(variant, chain = this.mipChain(src));
     const period = photoSrcPeriod(this.photos.find(q => q.tex === variant)!), want = 128 * L; let img = chain[0];
@@ -331,7 +377,7 @@ export class Textures {
     return { img, period };
   }
   /** true when a tile-space texture is built in this worker (the eager ones always are; a lazy photo once ensure has run) */
-  has(variant: string) { return this.mosaics.has(variant); }
+  has(variant: string) { const family = PAINTED_GRASS[variant]; return !!family && grassDetailWeights(this.paintedLevel).every(w => this.photoSrc.has(grassDetailSourceKey(variant, family, w.detail))) || this.mosaics.has(variant); }
   /** builds a lazy photo texture (grass-art.ts PHOTO_TEX) the first time an area uses it; concurrent calls share one build;
    *  a name that is not a photo, or is built already, resolves at once */
   ensure(variant: string): Promise<void> {

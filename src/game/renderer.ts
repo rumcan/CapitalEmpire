@@ -142,7 +142,7 @@ export class GroundPainter {
   private planColour(name: string): string {
     let c = this.planCols.get(name);
     if (!c) {
-      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
+      const img = this.tex.isPainted(name) ? this.tex.sourceFor(name, .035)?.img : name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
       if (!img) return PAINT_COL.get(name) ?? '#808080';
       const d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
@@ -239,6 +239,7 @@ export class GroundPainter {
   /** the ground photo that replaces a painted ground texture (GROUND_PHOTO), in tile space under the current transform; null when there is none
    *  or this worker has not built it (the caller paints the screen texture) */
   private photoFill(g: C2D, t: string, L: number): CanvasPattern | null {
+    if (this.tex.isPainted(t)) { const source = this.tex.sourceFor(t, L); if (source) return this.groundPattern(g, source.img, undefined, source.period); }
     const photo = GROUND_PHOTO.get(t); if (!photo || !this.tex.has(photo)) return null;
     const k = GROUND_SCALE.get(t) ?? 1;
     return this.groundPattern(g, this.tex.mosaicFor(photo, L * k), undefined, this.tex.periodOf(photo) * k);
