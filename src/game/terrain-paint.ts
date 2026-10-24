@@ -3,14 +3,14 @@ import { MAP, clamp } from './iso';
 import { HS, HSTEP, TC, sampleField, type WaterPoint } from './terrain/types';
 import { fbm, smoothstep, type Noise } from './terrain/noise';
 import type { BBox } from './network';
-import { SUN_RIGHT_LIGHT, sampleCourseGrid } from './ext/course-height';
+import { SUN_LIGHT, sampleCourseGrid } from './ext/course-height';
 
 /** a canvas-like path target (Path2D satisfies it) */
 export interface PathSink { moveTo(x: number, y: number): void; lineTo(x: number, y: number): void; arc(x: number, y: number, r: number, a0: number, a1: number): void; closePath(): void }
 
 const EXAG = 1.5;
-/** the light: the sun on the right of the isometric screen (+tileX, −tileY) */
-const { lx, ly, lz } = SUN_RIGHT_LIGHT;
+/** the light: the sun at the upper right of the isometric screen; shadows fall at 145°, as the cast shadows (SUN_LIGHT) */
+const { lx, ly, lz } = SUN_LIGHT;
 
 /** hillshade per height sample: 0 on flat ground, < 0 in shadow, > 0 lit */
 export function shadeField(height: Float32Array): Float32Array {

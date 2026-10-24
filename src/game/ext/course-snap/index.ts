@@ -1,5 +1,7 @@
-// SimGolf-Plus modular course piece, spline ribbon, fat dimensional borders, sun-on-right bevel lighting, and 3D height/prop stamp maths (UIX revamp T029, Owner choice 3A).
+// SimGolf-Plus modular course piece, spline ribbon, fat dimensional borders, sun-upper-right bevel lighting (T040), and 3D height/prop stamp maths (UIX revamp T029, Owner choice 3A).
 // Pure TypeScript, no DOM globals, deterministic. Units: world coordinates, lengths, and widths in tiles of 2 m; angles in degrees; heights in m.
+
+import { SUN_TILE_DIR } from '../course-height';
 
 /** piece family kinds supported by the click-to-place and spline snap brush */
 export type SnapPieceKind = 'fairway' | 'green' | 'tee' | 'bunker' | 'water' | 'path' | 'road';
@@ -16,8 +18,8 @@ export type CoursePieceArchetype =
 /** 2D point in world tiles (2 m per tile) */
 export interface SnapPt { x: number; y: number }
 
-/** unit sun direction in world tiles for sun on the right of the isometric screen (+screenX = +tileX - tileY) */
-export const SUN_RIGHT_TILE_VEC: Readonly<SnapPt> = { x: 0.70710678, y: -0.70710678 };
+/** unit sun direction in world tiles: the sun at the upper right of the isometric screen (SUN_TILE_DIR, shadows at 145°) */
+export const SUN_TILE_VEC: Readonly<SnapPt> = { x: SUN_TILE_DIR.x, y: SUN_TILE_DIR.y };
 
 /** existing course area that a new modular piece can snap against */
 export interface SnapTargetArea { id: number; kind: SnapPieceKind; pts: readonly number[]; hole?: number }
@@ -176,9 +178,9 @@ export function offsetPolygonRadial(pts: readonly number[], padTiles: number, sh
   return out;
 }
 
-/** builds sun-on-the-right lit and shaded bevel polygons for raised (tee/green/fairway) or sunken (bunker/pond) pieces */
+/** builds sun-upper-right lit and shaded bevel polygons for raised (tee/green/fairway) or sunken (bunker/pond) pieces */
 export function buildSunRightBevelPolygons(pts: readonly number[], elevationMode: 'raised' | 'sunken', bevelTiles = 0.75): { sunLitPts: number[]; shadedPts: number[] } {
-  const sx = SUN_RIGHT_TILE_VEC.x * bevelTiles, sy = SUN_RIGHT_TILE_VEC.y * bevelTiles;
+  const sx = SUN_TILE_VEC.x * bevelTiles, sy = SUN_TILE_VEC.y * bevelTiles;
   return elevationMode === 'raised'
     ? { sunLitPts: offsetPolygonRadial(pts, bevelTiles * 0.4, sx * 0.6, sy * 0.6), shadedPts: offsetPolygonRadial(pts, bevelTiles * 0.6, -sx, -sy) }
     : { sunLitPts: offsetPolygonRadial(pts, bevelTiles * 0.35, -sx * 0.7, -sy * 0.7), shadedPts: offsetPolygonRadial(pts, bevelTiles * 0.35, sx * 0.7, sy * 0.7) };
@@ -229,7 +231,7 @@ export function buildPiecePolygon(kind: SnapPieceKind, anchor: SnapPt, angleDeg:
   return buildArchetypePolygon(arch, anchor, angleDeg, scale, endAnchored).pts;
 }
 
-/** builds the multi-layer concentric PaintArea stack (with fat grass borders + sun-from-right 3D bevels), height ops, and prop anchors */
+/** builds the multi-layer concentric PaintArea stack (with fat grass borders + sun-upper-right 3D bevels), height ops, and prop anchors */
 function buildRichPieceStack(kind: SnapPieceKind, archetype: CoursePieceArchetype, corePts: number[], center: SnapPt, ux: number, uy: number, nx: number, ny: number, L: number, W: number, angleDeg: number, recipe: AutoTextureRecipe): { layers: CoursePieceLayer[]; heightOps: CoursePieceHeightOp[]; props: CoursePiecePropAnchor[] } {
   const angle = recipe.angle, layers: CoursePieceLayer[] = [], heightOps: CoursePieceHeightOp[] = [], props: CoursePiecePropAnchor[] = [];
   const toWorld = (lx: number, ly: number): SnapPt => ({ x: q4(center.x + ux * lx + nx * ly), y: q4(center.y + uy * lx + ny * ly) });
@@ -296,7 +298,7 @@ function matchAreaSnapRule(piece: SnapPieceKind, target: SnapPieceKind): SnapPie
     : piece === 'water' && target === 'water' ? 'water-to-water' : 'none';
 }
 
-/** computes the snapped or freehand placement, fat grass border layers, sun-right bevels, height ops, and prop anchors */
+/** computes the snapped or freehand placement, fat grass border layers, sun-upper-right bevels, height ops, and prop anchors */
 export function computeSnapPiecePlacement(opts: SnapPieceOptions): SnapPiecePlacement {
   const kind = opts.kind, scale = Math.max(0.5, Math.min(2.5, Number.isFinite(opts.scale) ? opts.scale! : 1));
   const userAngle = Number.isFinite(opts.angleDeg) ? opts.angleDeg! : 0, snapOn = opts.snapEnabled !== false;
