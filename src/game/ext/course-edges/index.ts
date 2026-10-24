@@ -1,10 +1,12 @@
 // Course edges: sun-lit rims, bevel shading, drop shadows, edge binning, and mowing stripes (plan P21, section 3.4).
 // Pure TypeScript, no DOM, deterministic.
-// Units: tiles (1 tile = 2 m); widthM and distances ending in M are in metres.
+// Units: styles, widths and offsets are specified in metres; polylines, coordinates and output geometries are in tiles of 2 m.
 import { SUN_TILE_DIR } from '../course-height';
-import { sunFacing } from '../../paint-edges';
+import { sunFacing, type EdgeProfile } from '../../paint-edges';
+import { SURF } from '../course-grid';
 
-export { SUN_TILE_DIR };
+export { SUN_TILE_DIR, SURF };
+export type { EdgeProfile };
 
 /** 2D point in tile coordinates */
 export interface Pt {
@@ -19,14 +21,8 @@ export type EdgePolyline = readonly Pt[] | readonly number[];
 export interface EdgeRun {
   /** polyline points as flat coordinates [x0, y0, x1, y1, ...] (tiles) */
   pts: number[];
-  /** polyline points as { x, y } objects (tiles) */
-  points: Pt[];
-  /** alias for points */
-  line: Pt[];
   /** mean sun factor L (-1..1) along this run */
   L: number;
-  /** alias for L */
-  meanL: number;
   /** the normal direction bin index (0..bins-1) */
   bin: number;
 }
@@ -103,16 +99,6 @@ export function binEdges(
     const totalLen = d[n - 1]!;
     if (totalLen < 1e-6) continue;
 
-    // compute polygon winding for closed curves to guarantee outward normal
-    let sWind = 1;
-    if (isClosed) {
-      let area2 = 0;
-      for (let i = 0; i < n - 1; i++) {
-        area2 += poly[i]!.x * poly[i + 1]!.y - poly[i + 1]!.x * poly[i]!.y;
-      }
-      sWind = area2 >= 0 ? 1 : -1;
-    }
-
     // interpolation along polyline
     const ptAt = (s: number): Pt => {
       let curS = s;
@@ -121,7 +107,6 @@ export function binEdges(
       } else {
         curS = Math.max(0, Math.min(totalLen, curS));
       }
-      // binary search / linear scan
       let lo = 0;
       let hi = n - 1;
       while (lo < hi - 1) {
@@ -138,7 +123,7 @@ export function binEdges(
       };
     };
 
-    // calculate smoothed normal and bin for each segment
+    // calculate smoothed normal and bin for each segment: surface on left of travel, outward normal is (dy, -dx)
     const segBins: number[] = new Array(segCount);
     const segLs: number[] = new Array(segCount);
     const segLens: number[] = new Array(segCount);
@@ -165,16 +150,16 @@ export function binEdges(
       let nx = 0;
       let ny = 0;
       if (chordLen > 1e-9) {
-        nx = (dy / chordLen) * sWind;
-        ny = (-dx / chordLen) * sWind;
+        nx = dy / chordLen;
+        ny = -dx / chordLen;
       } else {
         // fallback to segment's own tangent
         const sx = poly[i + 1]!.x - poly[i]!.x;
         const sy = poly[i + 1]!.y - poly[i]!.y;
         const slen = Math.hypot(sx, sy);
         if (slen > 1e-9) {
-          nx = (sy / slen) * sWind;
-          ny = (-sx / slen) * sWind;
+          nx = sy / slen;
+          ny = -sx / slen;
         }
       }
 
@@ -232,31 +217,24 @@ export function binEdges(
 
     // construct EdgeRun objects
     for (const r of rawRuns) {
-      const ptsObj: Pt[] = [];
+      const flat: number[] = [];
       if (r.segStart > r.segEnd) {
         // wrap-around closed run: last segments then first segments
         for (let i = r.segStart; i < segCount; i++) {
-          ptsObj.push({ x: poly[i]!.x, y: poly[i]!.y });
+          flat.push(poly[i]!.x, poly[i]!.y);
         }
         for (let i = 0; i <= r.segEnd + 1; i++) {
-          ptsObj.push({ x: poly[i]!.x, y: poly[i]!.y });
+          flat.push(poly[i]!.x, poly[i]!.y);
         }
       } else {
         for (let i = r.segStart; i <= r.segEnd + 1; i++) {
-          ptsObj.push({ x: poly[i]!.x, y: poly[i]!.y });
+          flat.push(poly[i]!.x, poly[i]!.y);
         }
       }
-      const flat: number[] = [];
-      for (const p of ptsObj) {
-        flat.push(p.x, p.y);
-      }
-      const meanL = r.totalLen > 0 ? r.sumL / r.totalLen : 0;
+      const L = r.totalLen > 0 ? r.sumL / r.totalLen : 0;
       runs.push({
         pts: flat,
-        points: ptsObj,
-        line: ptsObj,
-        L: meanL,
-        meanL,
+        L,
         bin: r.bin,
       });
     }
@@ -275,7 +253,7 @@ export interface EdgeStyleRimShade {
   color: string;
   /** peak opacity (0..1) */
   alpha: number;
-  /** side of the edge (upper-right or lower-left) */
+  /** side of the edge (upper-right or lower-left) - only set for sunken surfaces */
   side?: 'upper-right' | 'lower-left';
 }
 
@@ -292,7 +270,7 @@ export interface EdgeStyleDrop {
 /** edge styling numbers and look of a golf surface (P21 section 3.4) */
 export interface EdgeStyle {
   /** profile behavior */
-  profile: 'raised' | 'turf' | 'flat' | 'sunken' | 'crisp' | 'water';
+  profile: EdgeProfile;
   /** feather band width in metres */
   feather: number;
   /** light rim inside the edge facing the sun (null if none) */
@@ -303,100 +281,113 @@ export interface EdgeStyle {
   drop: EdgeStyleDrop | null;
 }
 
-/** each golf surface's edge style table (P21 section 3.4) */
-export const EDGE_STYLE: Readonly<Record<string, Readonly<EdgeStyle>>> = {
-  green: {
-    profile: 'raised',
-    feather: 0.3,
-    rim: { width: 0.8, blend: 'screen', color: '#fff4c8', alpha: 0.22 },
-    shade: { width: 0.8, blend: 'multiply', color: '#233018', alpha: 0.22 },
-    drop: { offset: 0.4, soft: 0.8, alpha: 0.16 },
-  },
-  tee: {
-    profile: 'raised',
-    feather: 0.3,
-    rim: { width: 1.0, blend: 'screen', color: '#fff4c8', alpha: 0.26 },
-    shade: { width: 1.0, blend: 'multiply', color: '#233018', alpha: 0.26 },
-    drop: { offset: 0.6, soft: 1.0, alpha: 0.20 },
-  },
-  fairway: {
-    profile: 'turf',
-    feather: 0.4,
-    rim: { width: 1.2, blend: 'screen', color: '#fff4c8', alpha: 0.12 },
-    shade: { width: 1.2, blend: 'multiply', color: '#233018', alpha: 0.12 },
-    drop: null,
-  },
-  firstCut: {
+export type CollarName = 'first-cut' | 'fringe' | 'lip' | 'bank';
+
+export interface EdgeStyleTable extends ReadonlyArray<Readonly<EdgeStyle>> {
+  readonly [surf: number]: Readonly<EdgeStyle>;
+  readonly 'first-cut': Readonly<EdgeStyle>;
+  readonly fringe: Readonly<EdgeStyle>;
+  readonly lip: Readonly<EdgeStyle>;
+  readonly bank: Readonly<EdgeStyle>;
+}
+
+const baseEdgeStyles: EdgeStyle[] = [
+  /* none (0) */ {
     profile: 'flat',
-    feather: 0.4,
+    feather: 0,
     rim: null,
     shade: null,
     drop: null,
   },
-  'first-cut': {
-    profile: 'flat',
-    feather: 0.4,
-    rim: null,
-    shade: null,
-    drop: null,
-  },
-  fringe: {
-    profile: 'flat',
-    feather: 0.4,
-    rim: null,
-    shade: null,
-    drop: null,
-  },
-  rough: {
+  /* rough (1) */ {
     profile: 'flat',
     feather: 1.0,
     rim: null,
     shade: { width: 0.6, blend: 'multiply', color: '#233018', alpha: 0.06 },
     drop: null,
   },
-  fescue: {
+  /* fescue (2) */ {
     profile: 'flat',
     feather: 1.2,
     rim: null,
     shade: null,
     drop: null,
   },
-  bunker: {
-    profile: 'sunken',
-    feather: 0.15,
-    rim: { width: 0.6, blend: 'screen', color: '#fff2d6', alpha: 0.20, side: 'lower-left' },
-    shade: { width: 0.9, blend: 'multiply', color: '#3a2a18', alpha: 0.30, side: 'upper-right' },
-    drop: null,
-  },
-  water: {
+  /* water (3) */ {
     profile: 'sunken',
     feather: 0.2,
     rim: { width: 0.25, blend: 'screen', color: '#ffffff', alpha: 0.25, side: 'lower-left' },
     shade: { width: 1.4, blend: 'multiply', color: '#0d1a2a', alpha: 0.35, side: 'upper-right' },
     drop: null,
   },
-  waste: {
+  /* fairway (4) */ {
+    profile: 'turf',
+    feather: 0.4,
+    rim: { width: 1.2, blend: 'screen', color: '#fff4c8', alpha: 0.12 },
+    shade: { width: 1.2, blend: 'multiply', color: '#233018', alpha: 0.12 },
+    drop: null,
+  },
+  /* tee (5) */ {
+    profile: 'raised',
+    feather: 0.3,
+    rim: { width: 1.0, blend: 'screen', color: '#fff4c8', alpha: 0.26 },
+    shade: { width: 1.0, blend: 'multiply', color: '#233018', alpha: 0.26 },
+    drop: { offset: 0.6, soft: 1.0, alpha: 0.20 },
+  },
+  /* bunker (6) */ {
+    profile: 'sunken',
+    feather: 0.15,
+    rim: { width: 0.6, blend: 'screen', color: '#fff2d6', alpha: 0.20, side: 'lower-left' },
+    shade: { width: 0.9, blend: 'multiply', color: '#3a2a18', alpha: 0.30, side: 'upper-right' },
+    drop: null,
+  },
+  /* waste (7) */ {
     profile: 'flat',
     feather: 0.4,
     rim: null,
     shade: null,
     drop: null,
   },
-  path: {
-    profile: 'crisp',
-    feather: 0,
-    rim: null,
-    shade: null,
-    drop: null,
+  /* green (8) */ {
+    profile: 'raised',
+    feather: 0.3,
+    rim: { width: 0.8, blend: 'screen', color: '#fff4c8', alpha: 0.22 },
+    shade: { width: 0.8, blend: 'multiply', color: '#233018', alpha: 0.22 },
+    drop: { offset: 0.4, soft: 0.8, alpha: 0.16 },
   },
-  other: {
-    profile: 'flat',
+];
+
+/** each golf surface's edge style table (P21 section 3.4), indexed by SURF id and collar names */
+export const EDGE_STYLE: EdgeStyleTable = Object.assign(baseEdgeStyles, {
+  'first-cut': {
+    profile: 'flat' as const,
     feather: 0.4,
     rim: null,
     shade: null,
     drop: null,
   },
-};
+  fringe: {
+    profile: 'flat' as const,
+    feather: 0.4,
+    rim: null,
+    shade: null,
+    drop: null,
+  },
+  lip: {
+    profile: 'flat' as const,
+    feather: 0.4,
+    rim: null,
+    shade: null,
+    drop: null,
+  },
+  bank: {
+    profile: 'flat' as const,
+    feather: 0.4,
+    rim: null,
+    shade: null,
+    drop: null,
+  },
+});
 
 /** one step in a multi-stroke feather ramp */
 export interface FeatherStep {
@@ -431,7 +422,7 @@ export function dropOffset(m: number): { x: number; y: number } {
 }
 
 /** pattern for mowing stripes along fairways */
-export type StripePattern = 'along' | 'across' | 'checker' | 'half' | 'half-and-half' | 'none';
+export type StripePattern = 'along' | 'across' | 'checker' | 'half' | 'none';
 
 /** light and dark band polygons in tile coordinates */
 export interface StripeBands {
@@ -542,7 +533,7 @@ export function stripeBands(
   const light: Pt[][] = [];
   const dark: Pt[][] = [];
 
-  if (pattern === 'half' || pattern === 'half-and-half') {
+  if (pattern === 'half') {
     // left side (u >= 0) is light, right side (u <= 0) is dark, split directly at the line (u = 0)
     light.push(makeRibbon(0, halfExtentTiles));
     dark.push(makeRibbon(-halfExtentTiles, 0));

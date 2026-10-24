@@ -10,6 +10,7 @@ import {
   stripeBands,
   type Pt,
 } from '../src/game/ext/course-edges';
+import { SURF } from '../src/game/ext/course-grid';
 
 test('1. sunFactor(SUN_TILE_DIR) is 1 and opposite -1; normal pointing up-right on screen has L > 0.9', () => {
   // sunFactor with SUN_TILE_DIR
@@ -145,14 +146,28 @@ test("4. 'along' bands on a straight line alternate at 3 m; 'half' splits at the
   const cornerBands = stripeBands(cornerLine, 'along', 3, 15);
   assert.ok(cornerBands.light.length > 0 && cornerBands.dark.length > 0);
 
-  // Check that no consecutive bands self-intersect or cross
+  // Check that no bands self-intersect or cross
   const allBands = [...cornerBands.light, ...cornerBands.dark];
   for (const b of allBands) {
     assert.ok(b.length >= 4, 'each band should be a valid closed polygon');
-    // vertices should all be finite numbers
     for (const pt of b) {
       assert.ok(Number.isFinite(pt.x) && Number.isFinite(pt.y), 'band vertex must be finite');
     }
+    // assert non-zero signed area without inversion
+    let area = 0;
+    for (let i = 0; i < b.length; i++) {
+      const p1 = b[i]!;
+      const p2 = b[(i + 1) % b.length]!;
+      area += p1.x * p2.y - p2.x * p1.y;
+    }
+    assert.ok(Math.abs(area) > 1e-3, 'band polygon must have non-zero area without self-crossing');
+  }
+
+  // Check that miter corner vertices at the 90° bend are strictly nested without crossing
+  for (const b of allBands) {
+    const ptCornA = b[1]!;
+    const ptCornB = b[b.length - 2]!;
+    assert.ok(ptCornA.x !== ptCornB.x || ptCornA.y !== ptCornB.y, 'miter corners must not collapse');
   }
 });
 
@@ -170,47 +185,103 @@ test('5. The feather alphas sum to 1', () => {
   }
 });
 
-test('EDGE_STYLE table conforms to P21 Section 3.4 specifications', () => {
+test('6. EDGE_STYLE table conforms to P21 Section 3.4 specifications and SURF indexing', () => {
+  assert.ok(Array.isArray(EDGE_STYLE), 'EDGE_STYLE must be an array indexed by SURF id');
+  assert.equal(EDGE_STYLE.length, 9, 'EDGE_STYLE must have 9 SURF entries (0..8)');
+
   // green: raised, 0.3m feather, 0.8m light rim, 0.8m shade, 0.4m drop offset
-  assert.equal(EDGE_STYLE.green.profile, 'raised');
-  assert.equal(EDGE_STYLE.green.feather, 0.3);
-  assert.equal(EDGE_STYLE.green.rim?.alpha, 0.22);
-  assert.equal(EDGE_STYLE.green.shade?.alpha, 0.22);
-  assert.equal(EDGE_STYLE.green.drop?.offset, 0.4);
+  const greenStyle = EDGE_STYLE[SURF.green];
+  assert.equal(greenStyle.profile, 'raised');
+  assert.equal(greenStyle.feather, 0.3);
+  assert.equal(greenStyle.rim?.alpha, 0.22);
+  assert.equal(greenStyle.shade?.alpha, 0.22);
+  assert.equal(greenStyle.drop?.offset, 0.4);
 
   // tee: raised, 0.3m feather, 1.0m rim, 1.0m shade, 0.6m drop offset
-  assert.equal(EDGE_STYLE.tee.profile, 'raised');
-  assert.equal(EDGE_STYLE.tee.feather, 0.3);
-  assert.equal(EDGE_STYLE.tee.rim?.alpha, 0.26);
-  assert.equal(EDGE_STYLE.tee.shade?.alpha, 0.26);
-  assert.equal(EDGE_STYLE.tee.drop?.offset, 0.6);
+  const teeStyle = EDGE_STYLE[SURF.tee];
+  assert.equal(teeStyle.profile, 'raised');
+  assert.equal(teeStyle.feather, 0.3);
+  assert.equal(teeStyle.rim?.alpha, 0.26);
+  assert.equal(teeStyle.shade?.alpha, 0.26);
+  assert.equal(teeStyle.drop?.offset, 0.6);
 
   // fairway: turf, 0.4m feather, 1.2m rim, 1.2m shade, no drop
-  assert.equal(EDGE_STYLE.fairway.profile, 'turf');
-  assert.equal(EDGE_STYLE.fairway.feather, 0.4);
-  assert.equal(EDGE_STYLE.fairway.drop, null);
+  const fairwayStyle = EDGE_STYLE[SURF.fairway];
+  assert.equal(fairwayStyle.profile, 'turf');
+  assert.equal(fairwayStyle.feather, 0.4);
+  assert.equal(fairwayStyle.drop, null);
 
   // bunker: sunken, 0.15m feather, screen light rim lower-left, multiply shade upper-right
-  assert.equal(EDGE_STYLE.bunker.profile, 'sunken');
-  assert.equal(EDGE_STYLE.bunker.feather, 0.15);
-  assert.equal(EDGE_STYLE.bunker.rim?.side, 'lower-left');
-  assert.equal(EDGE_STYLE.bunker.shade?.side, 'upper-right');
+  const bunkerStyle = EDGE_STYLE[SURF.bunker];
+  assert.equal(bunkerStyle.profile, 'sunken');
+  assert.equal(bunkerStyle.feather, 0.15);
+  assert.equal(bunkerStyle.rim?.side, 'lower-left');
+  assert.equal(bunkerStyle.shade?.side, 'upper-right');
 
   // water: sunken, 0.2m feather, 0.25m glint
-  assert.equal(EDGE_STYLE.water.feather, 0.2);
-  assert.equal(EDGE_STYLE.water.rim?.width, 0.25);
+  const waterStyle = EDGE_STYLE[SURF.water];
+  assert.equal(waterStyle.feather, 0.2);
+  assert.equal(waterStyle.rim?.width, 0.25);
+  assert.equal(waterStyle.rim?.side, 'lower-left');
+  assert.equal(waterStyle.shade?.side, 'upper-right');
+
+  // collar styles under course-blobs' collar names
+  assert.equal(EDGE_STYLE['first-cut'].profile, 'flat');
+  assert.equal(EDGE_STYLE['first-cut'].feather, 0.4);
+  assert.equal(EDGE_STYLE.fringe.profile, 'flat');
+  assert.equal(EDGE_STYLE.fringe.feather, 0.4);
+  assert.equal(EDGE_STYLE.lip.profile, 'flat');
+  assert.equal(EDGE_STYLE.lip.feather, 0.4);
+  assert.equal(EDGE_STYLE.bank.profile, 'flat');
+  assert.equal(EDGE_STYLE.bank.feather, 0.4);
 });
 
-test('dropOffset(m) calculates tile-space offset toward 145° shadow', () => {
+test('7. dropOffset(m) calculates tile-space offset toward 145° shadow', () => {
   const off = dropOffset(2); // 2 metres = 1 tile
   const len = Math.hypot(off.x, off.y);
   assert.ok(Math.abs(len - 1.0) < 1e-9, `expected 1.0 tile magnitude for 2 m, got ${len}`);
 
   // screen angle of (off.x, off.y)
-  // screenX = (off.x - off.y) * 64, screenY = (off.x + off.y) * 32
   const sx = (off.x - off.y) * 64;
   const sy = (off.x + off.y) * 32;
   const deg = (Math.atan2(sy, sx) * 180) / Math.PI;
   const normDeg = (deg + 360) % 360;
   assert.ok(Math.abs(normDeg - 145) < 0.1, `expected 145° shadow angle, got ${normDeg}°`);
+});
+
+test('8. CW hole ring has outward normals pointing into the hole (L < 0 on the sun side, matching open polyline)', () => {
+  // CW circle representing a hole ring inside a fairway
+  const N = 32;
+  const R = 10;
+  const cwRing: Pt[] = [];
+  for (let i = 0; i < N; i++) {
+    const th = (-2 * Math.PI * i) / N; // clockwise
+    cwRing.push({
+      x: 20 + R * Math.cos(th),
+      y: 20 + R * Math.sin(th),
+    });
+  }
+  cwRing.push({ x: cwRing[0]!.x, y: cwRing[0]!.y });
+
+  const closedRuns = binEdges([cwRing], 8);
+  const openPoly = cwRing.slice(0, -1);
+  const openRuns = binEdges([openPoly], 8);
+
+  assert.equal(closedRuns.length, 8);
+  // Compare closed runs with open polyline runs
+  for (let b = 0; b < 8; b++) {
+    const closedRun = closedRuns.find((r) => r.bin === b);
+    const openRun = openRuns.find((r) => r.bin === b);
+    if (closedRun && openRun) {
+      assert.ok(
+        Math.abs(closedRun.L - openRun.L) < 0.2,
+        `bin ${b} closed L (${closedRun.L}) should match open L (${openRun.L})`,
+      );
+    }
+  }
+
+  // The sun-facing edge of a CW hole ring has outward normals pointing into the hole (away from the sun)
+  // so L should be negative (around -0.79)
+  const sunSideRun = closedRuns.find((r) => r.L < -0.7);
+  assert.ok(sunSideRun, 'sun side of CW hole ring should have negative L (around -0.79)');
 });
