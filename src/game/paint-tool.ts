@@ -378,6 +378,7 @@ export class PaintTool {
   }
   /** piece mode: a click lays the planned piece (all its areas, one undo step) when it can go and is affordable, else the toast says why; the layers under the core draw just below it (order), the core on its kind's layer */
   private placePiece() {
+    if (this.cursor) this.piece = this.pieceAt(this.cursor); // re-plan: an undo since the last move may have changed the height (the price)
     const p = this.piece; if (!p) return;
     if (p.why) { this.host.toast(p.why, 'warn'); return; }
     if (p.cost > 0) {
