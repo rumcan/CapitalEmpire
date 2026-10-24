@@ -22,8 +22,11 @@ export const NEW_BUILDINGS_ONLY = !OLD_ART;
 export interface Look { item: number; flip: boolean; scale: number; hidden?: boolean }
 
 const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.startsWith('gen:tree-');
-/** the class a picture can stand in for: trees, shops, and every other building (houses, lot buildings, baked lots, business pictures, golf and event structures) */
-const classOf = (it: LibItem) => it.kind === 'tree' ? 'tree' : isBuilding(it) ? (it.kind === 'venue' ? 'venue' : 'building') : null;
+/** a baked lot (kind 'lot': a whole house lot as one picture, the studio's Lots presets) is never swapped for a building: it is baked from the
+ *  library's current art (the studio's Rebuild), and one building stretched over a whole lot would not be a house lot */
+const BAKED_LOT = (it: LibItem) => it.kind === 'lot';
+/** the class a picture can stand in for: trees, shops, and every other building (houses, lot buildings, business pictures, golf and event structures) */
+const classOf = (it: LibItem) => it.kind === 'tree' ? 'tree' : isBuilding(it) && !BAKED_LOT(it) ? (it.kind === 'venue' ? 'venue' : 'building') : null;
 const span = (it: LibItem) => { const b = it.boxes[0]; return b ? b.hx + b.hy : 1; };
 /** the stand-ins of each class: new art, the front (NE) views only for buildings (a flip turns them, unmirror) */
 const POOL = new Map<string, number[]>();
@@ -47,7 +50,7 @@ function standIn(it: LibItem, x: number, y: number): number | undefined {
 }
 
 /** which items are drawn as a stand-in (the flags above): an old tree with ?newart, an old building by default (or with ?newart) */
-const swaps = (it: LibItem) => !isNew(it.id) && (it.kind === 'tree' ? NEW_ART_ONLY : isBuilding(it) && (NEW_BUILDINGS_ONLY || NEW_ART_ONLY));
+const swaps = (it: LibItem) => !isNew(it.id) && (it.kind === 'tree' ? NEW_ART_ONLY : isBuilding(it) && !BAKED_LOT(it) && (NEW_BUILDINGS_ONLY || NEW_ART_ONLY));
 const SWAP = LIBRARY.map(swaps);
 
 const cache = new WeakMap<object, Look & { src: number; srcFlip: boolean; srcScale: number }>();

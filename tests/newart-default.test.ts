@@ -17,7 +17,7 @@ test('the default: no URL flag, so buildings only are swapped (?oldart and ?newa
 test('by default every building is drawn as itself when it is new art, else as a new-art stand-in on its footprint, never mirrored', () => {
   let swapped = 0;
   LIBRARY.forEach((it, i) => {
-    if (!isBuilding(it)) return;
+    if (!isBuilding(it) || it.kind === 'lot') return;
     for (const flip of [false, true]) {
       const d = { item: i, flip, scale: 1.5, x: 100 + i, y: 200 - i }, look = lookOf(d);
       if (isNew(it.id)) { assert.equal(look, d, `${it.id} is new art, drawn as itself`); continue; }
@@ -43,10 +43,22 @@ test('by default a tree that is not generated is drawn as itself (trees keep the
 test('thumbItem: an old building is thumbnailed as its new-art stand-in, a new-art building as itself', () => {
   let old = 0;
   LIBRARY.forEach(it => {
-    if (!isBuilding(it)) return;
+    if (!isBuilding(it) || it.kind === 'lot') return;
     if (isNew(it.id)) { assert.equal(thumbItem(it), it, `${it.id} thumbnails as itself`); return; }
     old++;
     assert.ok(isNew(thumbItem(it).id), `${it.id} thumbnails as ${thumbItem(it).id}`);
   });
   assert.ok(old > 50, `${old} old buildings thumbnailed as new art`);
+});
+
+test("a baked lot (the studio's Lots presets) is drawn as itself, never as one building stretched over the lot", () => {
+  let lots = 0;
+  LIBRARY.forEach((it, i) => {
+    if (it.kind !== 'lot') return;
+    lots++;
+    const d = { item: i, flip: false, scale: 1, x: 10, y: 20 };
+    assert.equal(lookOf(d), d, `${it.id} is drawn as itself`);
+    assert.equal(thumbItem(it), it, `${it.id} thumbnails as itself`);
+  });
+  assert.ok(lots > 0, `${lots} baked lots`);
 });
