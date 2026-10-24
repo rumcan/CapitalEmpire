@@ -2348,3 +2348,19 @@ lays every layer in one undo step; R turns, [ ] sizes, Snap toggle; snaps to the
 
 **Next:** the laptop takes #39 and #41; the second lead lands T027b, T028, then T033 (player-action counters, then App.tsx) and T030b
 (pins, tee markers and pond dressing from placed pieces).
+
+## Lead takeover, 2026-10-24 (afternoon)
+
+A new Claude lead took over the board (docs/LEAD.md section 5). It reviews and merges coder PRs, delegates coding and investigation to other AIs, and leaves its own PRs for the owner.
+
+- **Merged** after a source review against each brief and a combined full suite (typecheck clean; `npm test` 1072/1072, then 1077/1077 and 1089/1089 on the combined branches): T048 (the tournament day clock), T043 (save fixtures), T045 (guided Year 1 rules), T049 (the day timeline), T054 (highway crowd rules), T050 (the movers on the timeline), T051a (gallery draw weights) and T060a (the late reasons and the Traffic line). The PRs are #102–#106, #110, #111 and #113.
+- **Buildings (PR #112, waiting for the owner):**
+  - The import cuts the art model's reviewed sheets itself (`four-view-cells.mjs`): **131 of 204** subjects in the game, 73 missing, 14 atlas pages.
+  - Old building pictures never show: a stand-in from the same family is drawn instead, and `?oldart` compares.
+  - The baked house lots are off (old TrickOrTreat art). The suite on the branch: 1091 pass, 2 skipped (the baked-lot tests), 0 fail.
+- **Plans:** P19 (course roads: a miniature road catalogue on the course, cart paths in their own path network, buildings snapping to drives and paths) and P20 (every lot from a curated preset). Tickets open: #114 T062, #115 T069a, #116 T067.
+- **The owner's requests in flight:**
+  - woodland fescue ground and every tree used and lit from the right;
+  - library sizes (some houses drawn big enough to pixelate);
+  - painted edges with a feather and a sun-lit bevel;
+  - the fairway tool rethink (plan P21, after research).
