@@ -2,7 +2,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LV } from '../src/game/lots/town';
-import { BUCKET, bucketOf, stateOf, presetsFor, streetHash, pickPreset, fitPreset, parsePresets } from '../src/game/lots/presets';
+import { BUCKET, bucketOf, stateOf, presetsFor, streetHash, pickPreset, fitPreset, parsePresets, formatPresets } from '../src/game/lots/presets';
 import type { LotPreset, PresetProp, PresetPatch, Fitted } from '../src/game/lots/presets';
 
 /** a test preset of a use and state at w x d tiles, with the given props and patches */
@@ -97,5 +97,18 @@ describe('lot presets (T062)', () => {
     assert.equal(r.invalid, 2);
     assert.deepEqual(r.presets[0], good);
     assert.deepEqual(parsePresets('nope'), { presets: [], invalid: 0 });
+  });
+
+  it('7. the file header ({ meta: { notes } }) is read as meta, neither a preset nor invalid, and formatPresets writes it first', () => {
+    const good = { id: 'ok', use: 'res', state: 'built', w: 10, d: 15, props: [], patches: [] };
+    const r = parsePresets([{ meta: { notes: ['2026-10-24: frozen'] } }, good]);
+    assert.deepEqual(r, { presets: [good], invalid: 0, meta: { notes: ['2026-10-24: frozen'] } });
+    // a header with anything else, or notes that are not strings, is an invalid entry
+    assert.equal(parsePresets([{ meta: { notes: [3] } }, good]).invalid, 1);
+    assert.equal(parsePresets([{ meta: { notes: [] }, id: 'x' }, good]).invalid, 1);
+    const text = formatPresets([good as LotPreset], { notes: ['a', 'b "quoted"'] });
+    assert.ok(text.startsWith('[\n{"meta":{"notes":[\n"a",\n"b \\"quoted\\""\n]}},\n{"id":"ok"'), text.slice(0, 80));
+    assert.deepEqual(parsePresets(JSON.parse(text)), { presets: [good], invalid: 0, meta: { notes: ['a', 'b "quoted"'] } });
+    assert.equal(formatPresets([good as LotPreset]), '[\n{"id":"ok","use":"res","state":"built","w":10,"d":15,"props":[],"patches":[]}\n]\n', 'no header without meta');
   });
 });
