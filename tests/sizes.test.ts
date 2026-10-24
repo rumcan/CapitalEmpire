@@ -5,7 +5,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ATLAS_MIP0, LIBRARY } from '../src/game/library';
 import { lookOf, maxDrawScale, thumbItem } from '../src/game/newart';
-import { PIXEL_LIMIT, PIXEL_SLACK, pixelLimit } from '../src/game/sizes';
+import { PIXEL_LIMIT, PIXEL_SLACK, atlasMip0, pixelLimit } from '../src/game/sizes';
+import { ZOOM_MAX } from '../src/game/iso';
 import { spriteRect } from '../src/game/sprites';
 import { OWNER_SCALE, STUDIO_SCALE } from '../src/game/lots/scales';
 import { businessArt } from '../src/game/business/art';
@@ -151,4 +152,12 @@ test('thumbItem: an old building is thumbnailed as the stand-in it is drawn as a
     assert.equal(LIBRARY[lookOf(drawable(i, 0, 0, false, OWNER_SCALE[it.id] ?? 1)).item], t, it.id);
   });
   assert.ok(n > 20, `${n} thumbnails`);
+});
+
+test('every screen above 1x samples mip 0, so a sprite at its pixel limit is never stretched at the closest zoom (a dpr-1.25 screen was, from mip 1)', () => {
+  for (const dpr of [1, 1.1, 1.25, 1.5, 1.75, 2]) {
+    const held = ATLAS_MIP0 * (atlasMip0(dpr) ? 1 : 0.5), need = ZOOM_MAX * dpr;
+    assert.ok(need <= held * PIXEL_SLACK, `dpr ${dpr}: needs ${need.toFixed(3)} device px per display px, the atlas holds ${held}`);
+  }
+  assert.equal(atlasMip0(1), false, 'a 1x screen keeps skipping mip 0 (a quarter of the memory)');
 });

@@ -19,5 +19,9 @@ export function atlasRes(it: LibItem): number {
 /** the largest scale (a multiple of its display size w x h) an item is drawn at without stretching its atlas pixels at the closest zoom */
 export function pixelLimit(it: LibItem): number { return atlasRes(it) / ATLAS_MIP0; }
 
+/** does a screen of device pixel ratio dpr need the atlas's mip 0: at the closest zoom it needs ZOOM_MAX x dpr device px per display px of a
+ *  sprite at scale 1, more than mip 1 holds (half of ATLAS_MIP0, which ZOOM_MAX at 1x needs exactly) at any dpr above 1 (gl.ts loadAtlas) */
+export const atlasMip0 = (dpr: number): boolean => dpr > 1;
+
 /** pixelLimit of every library item, by index (library.ts appends every library before it exports, so LIBRARY is complete here) */
 export const PIXEL_LIMIT: Float64Array = Float64Array.from(LIBRARY, pixelLimit);
