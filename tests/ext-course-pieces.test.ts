@@ -33,6 +33,15 @@ describe('course pieces (T030)', () => {
     assert.equal(t[0]!.id, 1); assert.equal(t[0]!.kind, 'fairway'); assert.equal(t[0]!.hole, 3);
   });
 
+  it('snapTargets reads the kind from the texture on kindless areas (the generated course), but not on a piece\'s under-layers', () => {
+    const t = snapTargets([
+      { id: 1, pts: [0, 0, 10, 0, 10, 10, 0, 10], tex: 'golfGreen', hole: 2 },
+      { id: 2, pts: [20, 0, 30, 0, 30, 10, 20, 10], tex: 'golfGreen', order: 5 },
+      { id: 3, pts: [40, 0, 50, 0, 50, 10, 40, 10], tex: 'golfRough' },
+    ]);
+    assert.deepEqual(t.map(q => [q.id, q.kind, q.hole]), [[1, 'green', 2]]);
+  });
+
   it('pieceWhy refuses a self-crossing shape, and an owned-land test that fails', () => {
     const square = [0, 0, 10, 0, 10, 10, 0, 10];
     assert.notEqual(pieceWhy([{ pts: [0, 0, 10, 10, 10, 0, 0, 10] }]), '');
