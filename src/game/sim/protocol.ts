@@ -18,11 +18,12 @@ import type { BusRouteDef } from '../event/bus';
 import type { BizDef, BizStats, BizView } from '../business/state';
 import type { DisasterNote, DisasterView } from '../city';
 import type { DisasterKind } from '../ext/disasters';
+import type { TownClock } from './townclock';
 
 /** what the worker measured, sent with every frame (walkers and stops: while a surge or its eval is on: the walking fan groups, 4 floats each (x, y in tiles, fans, stage),
  *  and the lot stops, 4 floats each (x, y in tiles, the fans waiting, the route index)); skipping: a fast-forward is running (simT is then the last frame's, not extrapolated);
  *  clock: the game clock, s (simT + the clock's shift); frozen: the clock is frozen (it does not move while simT does) */
-export interface SimStats { active: number; target: number; lanes: number; stepMs: number; tickMs: number; maxTickMs: number; graphMs: number; respawned: number; simT: number; skipping: boolean; clock: number; frozen: boolean; round: RoundView; parks: ParkView[] }
+export interface SimStats { active: number; target: number; lanes: number; stepMs: number; tickMs: number; maxTickMs: number; graphMs: number; respawned: number; simT: number; skipping: boolean; clock: number; frozen: boolean; round: RoundView; parks: ParkView[]; /** the town day's clock (T048, see townclock.ts) */ town: TownClock }
 /** a parcel as plain data: origin o, along u and away n (tiles, unit vectors), width w, depth d, the frontage's road class and a corner flag */
 export interface LotRec { key: string; o: [number, number]; u: [number, number]; n: [number, number]; w: number; d: number; cls: string; corner: boolean }
 /** main thread to worker: network edits, a new valley (terrain classes, the highway entry in tiles, the seed, the town centres as flat x, y pairs in tiles (none: the single town)), the vehicle target, the speed (0 pauses; 1 is real time), the growth option id, a saved town (its lots, the sim time, s, the clock's shift from it (s; 0 if none), and its books, or the treasury of an old save; sent after the net ops of a load), a skip: fast-forward the sim as fast as the worker can until the sim time until (s),
@@ -37,6 +38,8 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   | { t: 'disastersOn'; on: boolean } | { t: 'repairDisaster'; id: number; key: string } | { t: 'forceDisaster'; kind: DisasterKind } | { t: 'golf'; on: boolean; tier: number; rep: number; /** the course, then the player's parcels */ land?: [number, number, number, number][] }
   /** the town day (LEAD.md M1): its length in sim seconds (Sim.dayLen) and the lot trips' density (Sim.townTraffic) */
   | { t: 'townDay'; dayLen: number; traffic: number; free: boolean }
+  /** the town day's clock (T048), set on load (after townState): the worker retimes it to the normal rate */
+  | { t: 'townClock'; clock: TownClock }
   /** the course's gates (LEAD.md M2.1): each gate's point (tiles) and its lanes (golf: the placed gate structures) */
   | { t: 'gates'; gates: { x: number; y: number; lanes: number }[] }
   /** the galleries (LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts) */

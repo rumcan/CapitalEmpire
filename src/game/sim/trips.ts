@@ -8,6 +8,7 @@ import { dot, norm, perp, sub, type Seg } from '../network';
 import type { Lot } from '../lots/lots';
 import { LU } from '../lots/town';
 import type { Sim } from './sim';
+import { townHourIndex } from './townclock';
 
 /** sim seconds per in-game day: one game minute per sim second */
 export const DAY = 1440;
@@ -227,7 +228,7 @@ export class LotTrips {
   /** once per sim step (lots mode): at the start of each town hour (sim.dayLen / 24 sim seconds) its trips are made; then the waiting
    *  trips try to leave */
   step(sim: Sim) {
-    const H = Math.floor(sim.t / (sim.dayLen / 24));
+    const H = sim.townFree ? townHourIndex(sim.town, sim.t) : Math.floor(sim.t / (sim.dayLen / 24));
     if (H !== this.hour) { this.hour = H; this.generate(sim, H); }
     if (this.busy.length) this.retry(sim);
   }
@@ -236,7 +237,9 @@ export class LotTrips {
    *  sim.townTraffic), by the hour's kind */
   /** the hour H is the sim hour (scheduling); its kind and demand come from the game clock's hour C, so a frozen evening keeps making evening trips */
   private generate(sim: Sim, H: number) {
-    const hl = sim.dayLen / 24, C = Math.floor(sim.townTime / hl), hod = ((C % 24) + 24) % 24, k = PER_RES * sim.townTraffic / 24 * demandAt((C + 0.5) * hl, sim.dayLen) / MEAN_DEMAND;
+    // a golf game reads its town clock (townclock.ts): hours of 60 minutes on a 1440-minute day; the classic game keeps its clock-based day
+    const free = sim.townFree, hl = free ? 60 : sim.dayLen / 24, L = free ? DAY : sim.dayLen;
+    const C = free ? townHourIndex(sim.town, sim.t) : Math.floor(sim.townTime / hl), hod = ((C % 24) + 24) % 24, k = PER_RES * sim.townTraffic / 24 * demandAt((C + 0.5) * hl, L) / MEAN_DEMAND;
     const morning = hod >= 6 && hod <= 11, evening = hod >= 15 && hod <= 21;
     for (const r of this.homes) {
       r.acc += r.pop * k; const n = Math.floor(r.acc); r.acc -= n;

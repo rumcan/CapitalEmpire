@@ -10,6 +10,7 @@ import { zoneOf } from './routing';
 import { sigKey } from './signals';
 import { POINT_STRIDE } from '../gl';
 import type { FromSim, LotRec, SimStats, ToSim } from './protocol';
+import { townClockFor, type TownClock } from './townclock';
 import type { DisasterNote, DisasterView } from '../city';
 import type { DisasterKind } from '../ext/disasters';
 import { LV, type LotTuple, type TownEvent } from '../lots/town';
@@ -37,7 +38,7 @@ const JUMP = 3;
 const NO_ROUND: RoundView = new Round().view();
 /** no walkers or stops (before a surge, and after it) */
 const NO_FLOATS = new Float32Array(0);
-const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false, round: NO_ROUND, parks: [] };
+const EMPTY: SimStats = { active: 0, target: 0, lanes: 0, stepMs: 0, tickMs: 0, maxTickMs: 0, graphMs: 0, respawned: 0, simT: 0, skipping: false, clock: 0, frozen: false, round: NO_ROUND, parks: [], town: townClockFor(1440) };
 /** half a car's length per vehicle type, tiles (the lights sit at its front and rear) */
 const HALF = VTYPES.map(v => v.len / 4);
 
@@ -165,12 +166,16 @@ export class SimClient {
   golfOn = false; townMinutes = 10; townTraffic = 1;
   /** the town day's length in sim seconds, as last sent */
   dayLen = 1440;
+  /** the town day's clock as the worker last sent it (with the frame stats; see townclock.ts) */
+  town: TownClock = townClockFor(1440);
   /** the galleries' spots (LEAD.md M2.2): sent with the gates, and when the holes change */
   setSpots(spots: GallerySpot[]) { this.post({ t: 'spots', spots }); }
   /** the course's gates (LEAD.md M2.1): sent whenever the placed gate structures change */
   setGates(gates: { x: number; y: number; lanes: number }[]) { this.post({ t: 'gates', gates }); }
   setTownDay(minutes: number, traffic: number) { this.townMinutes = minutes; this.townTraffic = traffic; this.sendTownDay(); }
   private sendTownDay() { this.dayLen = this.golfOn ? Math.max(24, Math.round(this.townMinutes * 60)) : 1440; this.post({ t: 'townDay', dayLen: this.dayLen, traffic: this.golfOn ? this.townTraffic : 1, free: this.golfOn }); }
+  /** the town day's clock from a save (after townState, and after the golf setup so dayLen is current; see townclock.ts): the worker runs it at the normal rate */
+  setTownClock(clock: TownClock) { this.post({ t: 'townClock', clock }); }
   /** dev test hook: n cars sent to car park id's entrances (round-robin), for the browser check */
   parkTest(id: number, n: number) { this.post({ t: 'parkTest', id, n }); }
   /** the toll gates as the player placed them (the full list): the worker builds their booths (see City.setTolls) */
@@ -254,7 +259,7 @@ export class SimClient {
       for (const v of this.lots.values()) if (v.level >= LV.BUILT && v.use) this.builtZone[zoneOf(v.o[0] + v.u[0] * v.w / 2 + v.n[0] * v.d / 2, v.o[1] + v.u[1] * v.w / 2 + v.n[1] * v.d / 2)] = 1;
       this.onTown?.(m.events); return;
     }
-    this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks;
+    this.stats = m.stats; this.round = m.stats.round; this.parks = m.stats.parks; this.town = m.stats.town;
     this.walkers = m.walkers ?? NO_FLOATS; this.stops = m.stops ?? NO_FLOATS; this.gallery = m.gallery ?? NO_FLOATS; this.incidents = m.inc;
     const S = new Map<string, { idx: number; stage: number }>(), G = m.sig;
     for (let k = 0; k + 3 < G.length; k += 4) S.set(sigKey(G[k]!, G[k + 1]!), { idx: G[k + 2]!, stage: G[k + 3]! });
