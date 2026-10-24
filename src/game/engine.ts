@@ -59,6 +59,7 @@ import { WIN_POP, classUnlocked, junctionUnlocked, tunnelsUnlocked, unlockOf } f
 import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
+import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { planGolfGame } from './golf/start';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
@@ -330,7 +331,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k),
+  paint = new PaintTool({ setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, heightChanged: b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins) });
   /** the Paint and Course tools drive the same PaintTool */
@@ -1115,10 +1116,21 @@ export class Game {
     const ops = this.edit.commit(); this.lanes.update(this.net);
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); this.dropTownTrees(d[0], d[1], d[2], d[3]); }
+    if (this.net.lastDirty) { const hb = this.flattenRoadsIn(this.net.lastDirty); if (hb) this.courseHeightChanged(hb); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate(); this.scheduleBlockLawns();
     this.syncLamps(); if (this.parkDefs.length) this.syncParks(); this.parking.sync(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
     this.scheduleSave(); this.emit();
   }
+  /** flattens the course height under every road near box (its asphalt and verge, feathered over 2 tiles); returns the changed box */
+  private flattenRoadsIn(box: CourseTileBox | BBox): CourseTileBox | null {
+    const f = this.courseHeight; if (!f.rev) return null; // never edited: flat
+    const cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2, r = Math.max(box[2] - box[0], box[3] - box[1]) / 2 + 16;
+    let out: CourseTileBox | null = null;
+    for (const s of this.net.segsNear({ x: cx, y: cy }, r)) out = unionCourseBox(out, flattenCourseCorridor(f, { ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk, marginTiles: 2 }));
+    return out;
+  }
+  /** the course height changed in box: save (T028 adds the ground re-bake here) */
+  private courseHeightChanged(_box: CourseTileBox) { this.scheduleSave(); }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
@@ -2795,6 +2807,10 @@ export class Game {
   get eventMode(): boolean { return this.townPts.length > 0; }
   /** the golf game's state (golf/mode.ts; null: a legacy classic game, which loads and plays as before) */
   golf: GolfSave | null = null;
+  /** the course's subtle height field (T027; saved in golf.height) */
+  courseHeight: CourseHeightField = createCourseHeightField();
+  /** the course height as save chunks, cached by field and rev (see courseHeightChunks) */
+  private chSave: { field: CourseHeightField; rev: number; chunks: CourseHeightSaveChunk[] } | null = null;
   /** golf mode: a new game is a golf game (one town, the old nine, the season); the stadium and the Business tool are off */
   get golfMode(): boolean { return this.golf !== null; }
   landMode = false;
@@ -2985,9 +3001,14 @@ export class Game {
       curbs: this.parking.curbs.map((c): [number, number, number, number] => [c.ax, c.ay, c.bx, c.by]),
       parkFee: this.parking.fee,
       speed: this.net.speedTier,
-      golf: this.golf ?? undefined,
+      golf: this.golf ? { ...this.golf, height: this.courseHeightChunks() } : undefined,
     };
     try { return await writeSave(d); } catch { return 0; }
+  }
+  /** the course height as save chunks (undefined when flat), recomputed only when the field changed */
+  private courseHeightChunks(): CourseHeightSaveChunk[] | undefined {
+    const f = this.courseHeight; if (!this.chSave || this.chSave.field !== f || this.chSave.rev !== f.rev) this.chSave = { field: f, rev: f.rev, chunks: saveCourseHeight(f) };
+    return this.chSave.chunks.length ? this.chSave.chunks : undefined;
   }
   private load(d: SaveV5): boolean {
     try {
@@ -2995,6 +3016,7 @@ export class Game {
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
+      this.courseHeight = loadCourseHeight(this.golf?.height); this.chSave = null;
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
       if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
@@ -3021,6 +3043,7 @@ export class Game {
     } catch (e) { console.error('load failed', e); return false; }
   }
   private reset() {
+    this.courseHeight = createCourseHeightField(); this.chSave = null;
     this.grass.clear(); this.grassZones.clear(); this.grassSim = -1; this.grassElapsed = 0; this.grassTrafficT = -1; this.grassPedOut.fill(0); this.grassCarAlive.fill(0); this.grassTarget = null; this.grassAction = null;
     this.edit.clear(); this.snapshot = null;
     for (const p of [...this.props]) this.removeProp(p);
