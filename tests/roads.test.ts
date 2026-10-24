@@ -15,7 +15,7 @@ import { TC } from '../src/game/terrain/types';
 const HOUR = 60;
 const ENTRY: Pt = { x: 100, y: 100 };
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
-const isBad = (c: number) => c === TC.HILL || c === TC.WATER || c === TC.CREEK || c === TC.BANK;
+const isBad = (c: number) => c === TC.WATER || c === TC.CREEK || c === TC.BANK;
 /** a seg's verge radius: h + walk */
 const radius = (s: Seg) => s.cls.h + s.cls.walk;
 
@@ -81,8 +81,8 @@ function run(cls: Uint8Array, days: number, seed: number, prep?: (e: NetEditor) 
   return { net: e.net, lm, town, built, cls };
 }
 
-/** the valley of test 1: a hill block off the street */
-const hillValley = () => valley(c => box(c, 300, 200, 330, 230, TC.HILL));
+/** the valley of test 1: a water block off the street (T025b: TC.WATER replaces TC.HILL) */
+const hillValley = () => valley(c => box(c, 300, 200, 330, 230, TC.WATER));
 let day15: Run | null = null;
 /** the run of test 1, shared by tests 1 and 3 */
 function hillRun(): Run { return day15 ??= run(hillValley(), 15, 7); }

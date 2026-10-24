@@ -40,7 +40,7 @@ const BLOCK_REACH = 100;
 const CUT_CAP = 4000;
 
 const hund = (v: number) => Math.round(v * 100);
-const isBad = (c: number) => c === TC.HILL || c === TC.WATER || c === TC.CREEK || c === TC.BANK;
+const isBad = (c: number) => c === TC.WATER || c === TC.CREEK || c === TC.BANK;
 const isJunction = (n: Node) => n.arms.length >= 3 || (n.type === 'roundabout' && n.arms.length >= 2);
 /** how far a seg's usable span is cut back at one end: a junction's reach, a dead end's bulb, else nothing */
 function endReach(n: Node, cls: RoadClass): number {
@@ -126,7 +126,7 @@ function depthOf(o: Pt, u: Pt, n: Pt, W: number, D: number): number {
   for (let j = 0; j <= D; j++) for (let i = 0; i <= W; i++) if (blocked(o.x + u.x * i + n.x * j, o.y + u.y * i + n.y * j)) return j - 1;
   return D;
 }
-/** the share of a lot's samples (depth d) on HILL, WATER, CREEK, BANK or off the map (exported for the block lots) */
+/** the share of a lot's samples (depth d) on WATER, CREEK, BANK or off the map (exported for the block lots) */
 export function badShare(terr: Uint8Array, o: Pt, u: Pt, n: Pt, W: number, d: number): number {
   let bad = 0;
   for (let j = 0; j <= d; j++) for (let i = 0; i <= W; i++) {
