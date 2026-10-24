@@ -12,6 +12,7 @@ type CourseTab = 'build' | 'presets' | 'plants';
 /** the Course tool's panel: the current hole with undo and redo, then three tabs: Build (the surfaces and their style), Presets (the 1-18 holes) and Plants (docs/COURSE-BUILDER.md, C1) */
 export function CoursePanel({ game }: { game: Game }) {
   const p = game.paint, n = p.brushHole, br = p.brush[p.brushKind], name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
+  const ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k), fine = (k: string) => !ui || (ui.visibleFineControls as string[]).includes(k);
   const tab: CourseTab = p.mode === 'hole' ? 'presets' : p.mode === 'plant' ? 'plants' : 'build';
   const help = p.mode === 'height'
     ? `Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} per m³.` : ''}`
@@ -39,14 +40,14 @@ export function CoursePanel({ game }: { game: Game }) {
         <>
           <div className="mt-2 text-[11px] text-slate-400">Surface (keys 1–7)</div>
           <div className="flex flex-wrap gap-1">
-            {BRUSH_PRESETS.map(b => <button key={b.kind} className={`chip ${p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.mode === 'draw' ? p.setShape(b.kind) : p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
+            {BRUSH_PRESETS.filter(b => brushOk(b.kind)).map(b => <button key={b.kind} className={`chip ${p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.mode === 'draw' ? p.setShape(b.kind) : p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
           </div>
           <div className="mt-2 text-[11px] text-slate-400">Method</div>
           <div className="flex flex-wrap gap-1">
             <button className={`chip ${p.mode === 'piece' ? 'chip-on' : ''}`} onClick={() => p.setPiece(p.pieceArch)}>Pieces</button>
             <button className={`chip ${p.mode === 'brush' ? 'chip-on' : ''}`} onClick={() => p.setBrush(p.brushKind)}>Brush</button>
             <button className={`chip ${p.mode === 'draw' ? 'chip-on' : ''}`} onClick={() => p.setShape(p.brushKind)}>Shape</button>
-            <button className={`chip ${p.mode === 'height' ? 'chip-on' : ''}`} onClick={() => p.setHeight()}>Height</button>
+            {fine('heightBrush') && <button className={`chip ${p.mode === 'height' ? 'chip-on' : ''}`} onClick={() => p.setHeight()}>Height</button>}
           </div>
           {p.mode === 'brush' && (
             <>
@@ -64,14 +65,14 @@ export function CoursePanel({ game }: { game: Game }) {
             <>
               <div className="mt-2 text-[11px] text-slate-400">Piece</div>
               <div className="flex flex-wrap gap-1">
-                {PIECE_BUTTONS.map(b => <button key={b.arch} className={`chip ${p.pieceArch === b.arch ? 'chip-on' : ''}`} onClick={() => p.setPiece(b.arch)}>{b.name}</button>)}
+                {PIECE_BUTTONS.filter(b => brushOk(b.kind)).map(b => <button key={b.arch} className={`chip ${p.pieceArch === b.arch ? 'chip-on' : ''}`} onClick={() => p.setPiece(b.arch)}>{b.name}</button>)}
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-1">
-                <button className="chip" title="R (Shift+R turns back)" onClick={() => p.setPieceOpts({ angle: p.pieceAngle + 15 })}>{`Turn ${p.pieceAngle}°`}</button>
-                <button className="chip" title="[" onClick={() => p.setPieceOpts({ scale: p.pieceScale - 0.25 })}>Smaller</button>
-                <button className="chip" title="]" onClick={() => p.setPieceOpts({ scale: p.pieceScale + 0.25 })}>Bigger</button>
-                <span className="text-xs text-slate-300">{`${p.pieceScale}×`}</span>
-                <button className={`chip ${p.pieceSnap ? 'chip-on' : ''}`} title="Snap to the piece it touches" onClick={() => p.setPieceOpts({ snap: !p.pieceSnap })}>Snap</button>
+                {fine('pieceAngle') && <button className="chip" title="R (Shift+R turns back)" onClick={() => p.setPieceOpts({ angle: p.pieceAngle + 15 })}>{`Turn ${p.pieceAngle}°`}</button>}
+                {fine('pieceScale') && <button className="chip" title="[" onClick={() => p.setPieceOpts({ scale: p.pieceScale - 0.25 })}>Smaller</button>}
+                {fine('pieceScale') && <button className="chip" title="]" onClick={() => p.setPieceOpts({ scale: p.pieceScale + 0.25 })}>Bigger</button>}
+                {fine('pieceScale') && <span className="text-xs text-slate-300">{`${p.pieceScale}×`}</span>}
+                {fine('snapToggle') && <button className={`chip ${p.pieceSnap ? 'chip-on' : ''}`} title="Snap to the piece it touches" onClick={() => p.setPieceOpts({ snap: !p.pieceSnap })}>Snap</button>}
               </div>
             </>
           )}
