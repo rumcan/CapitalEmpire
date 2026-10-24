@@ -5,6 +5,12 @@ import type { Game } from './engine';
 import { MAP, PLANNER_Z, mulberry, worldX, worldY } from './iso';
 import { LIBRARY } from './library';
 import { benchLayout, benchNetwork, M0 } from './bench-net';
+import { makeGrid } from './ext/course-grid';
+import { rasterAreas } from './ext/course-grid/areas';
+import { generateOldNine } from './golf/coursegen';
+import { courseAreas } from './golf/paintcourse';
+import { surfaceOfTex } from './golf/costs';
+import { roundCorners } from './paint';
 
 export const BENCH_CARS = 10000;
 
@@ -49,9 +55,22 @@ export function buildBenchmark(g: Game, size = 1) {
   g.setTraffic(BENCH_CARS);
   const mid = (M0 + last) / 2 + 3;
   g.cam = { X: worldX(mid, mid), Y: worldY(mid, mid), z: 0.3 };
+  // ?bench&course=1 (bench.mjs --course): a course on screen (T077): the old nine laid into a course grid under the tour's start
+  const course = new URLSearchParams(location.search).get('course') === '1' ? benchCourse(g, mid) : 0;
+  if (course) console.log('[bench] course', course, 'chunks');
   const info = { heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lamps, buildNetMs: Math.round(tNet - t0), buildPropsMs: Math.round(tProps - tNet) };
   console.log('[bench] built', info);
   startTour(g, info);
+}
+
+/** the benchmark's course: the generated old nine on a 300 x 450 tile site centred on tile (mid, mid), its golf areas laid into a course
+ *  grid (established turf, no holes) and every chunk sent, with no golf game; returns how many chunks were sent */
+function benchCourse(g: Game, mid: number): number {
+  const site = { x0: Math.round(mid - 150), y0: Math.round(mid - 225), x1: Math.round(mid + 150), y1: Math.round(mid + 225) };
+  const grid = makeGrid(site.x0 - 32, site.y0 - 32, (site.x1 - site.x0 + 64) * 2, (site.y1 - site.y0 + 64) * 2);
+  rasterAreas(grid, courseAreas(generateOldNine(site, 1)).map(a => ({ pts: roundCorners(a.pts, a.radius), surface: surfaceOfTex(a.tex), month: 0 })));
+  g.courseGrid = grid; g.resendCourse();
+  return g.courseChunkCount();
 }
 
 interface Stage { name: string; z: number; vx: number; vy: number; secs: number }

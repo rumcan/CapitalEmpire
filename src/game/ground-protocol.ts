@@ -16,12 +16,34 @@ import type { EdgeProfile } from './paint-edges';
 export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string;
   /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile }
 
+/** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin) */
+export interface CourseTex { tex: string; sc: number; a: number }
+/** one surface of a course chunk (plan P21 sections 3.2 to 3.4, T078), all coordinates flat x0 y0 x1 y1 ... in tiles:
+ *  - `fill`: closed rings clipped to the chunk box grown by 0.1 tile (filled even-odd; neighbouring chunks overlap, so no seam shows);
+ *  - `edges`: open polylines on the true boundary only (the surface on the left of travel), cut exactly at the chunk box and never along
+ *    it; a ring wholly inside the chunk is one closed polyline (last point = first). The feather, rims and shade follow these;
+ *  - `e`: how its edge is drawn (paint-edges.ts profile: raised green and tee, turf fairway, sunken bunker, water, flat rough and fescue);
+ *  - `collar`: its automatic collar (first cut, fringe, the bunker's grass lip, the pond's bank): band rings (even-odd: the surface is
+ *    cut out) and the band's outer edges, in its own texture;
+ *  - `stripes`: on the fairway, each hole's centre line (tee, aim points, pin) for the mowing stripes (T075), for the holes whose
+ *    fairway cells reach this chunk */
+export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: number[][]; edges: number[][];
+  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; fill: number[][]; edges: number[][] }; stripes?: { hole: number; line: number[] }[] }
+/** a course chunk's ground (key cg:<cx>:<cy>; plan P21 section 3.8): its 64-tile chunk (cx, cy, size in tiles), its surfaces in draw
+ *  order (rough 1 .. green 8), the growth mask (1 byte per 1 m cell over the chunk box, size * 2 square, row-major; alpha 255 x (1 - the
+ *  grass share in quarters): the dirt that shows through while seeded cells grow in; absent when nothing in the chunk grows), and z, its
+ *  place among the painted areas (0: under every painted area) */
+export interface CoursePatch { cx: number; cy: number; size: number; layers: CourseLayer[]; grow?: Uint8Array; z: number }
+
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
 export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
   /** tex 'marks' (nothing filled; pts only bound it): flat decals (lot-decals.ts), five numbers each: index, x, y (tiles, the decal's centre), scale (negative: mirrored), alpha */
   marks?: number[]; paint?: PatchPaint; /** a lawn (lawns.ts): the texture (a preset) laid under the lots' own ground, turned by a (degrees), over share of the
    *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1 */ lawn?: { a: number; share: number; soft: number; patch: number; z: number }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
-  /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean }
+  /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean;
+  /** a course chunk (the course grid, T078): drawn with the painted areas (by its z) from its layers; pts is its chunk box grown by
+   *  COURSE_PATCH_REACH (the index and the stale box: its feathers and shadows reach past the chunk), tex is unused ('grass') */
+  course?: CoursePatch }
 /** the surface of a ground patch */
 export type PatchTex = LotPatch['tex'];
 
