@@ -95,7 +95,7 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": false
+   "lawn": true
   },
   {
    "id": "fairway",
@@ -388,9 +388,9 @@
   {
    "id": "lawns",
    "name": "Lawns",
-   "surface": "tee",
+   "surface": "rough",
    "size": 8,
-   "col": "#212804",
+   "col": "#232904",
    "a": {
     "src": "art/grass-photo/meadow-lush.png",
     "scale": 1.35,
@@ -412,9 +412,9 @@
     "hue": 25
    },
    "mix": {
-    "share": 0.66,
+    "share": 0.75,
     "soft": 0.5,
-    "patch": 1.9,
+    "patch": 0.25,
     "tone": 0.29,
     "warm": 0.05,
     "angle": -56,
@@ -434,6 +434,6 @@
    "lawn": true
   }
  ],
- "blocks": "lawns",
+ "blocks": null,
  "blockShare": 1
 }

@@ -8934,9 +8934,9 @@
 {"kind":"drive","tex":"paving","pts":[0,0,1.6,0,1.6,7.52,0,7.52]},
 {"kind":"walk","tex":"paving","pts":[10.192,0,10.792,0,10.792,3.488,10.192,3.488]}
 ]},
-{"id":"res-built-18x12-3","use":"res","state":"built","w":17,"d":12,"props":[
+{"id":"res-built-18x12-3","use":"res","state":"built","w":17,"d":12,"curated":true,"props":[
 {"id":"gen:house-duplex","x":6.491,"y":6.723,"scale":0.963,"view":0},
-{"id":"static:garage_timber","x":13.241,"y":6.805,"scale":0.966,"view":0},
+{"id":"static:garage_timber","x":13.241,"y":6.805,"scale":0.966,"view":2},
 {"id":"static:pickup_n","x":16.015,"y":1.157,"scale":1,"view":0},
 {"id":"cars:burgundy-wagon:SW","x":16.2,"y":4.104,"scale":1,"view":0},
 {"id":"expansion:woodpile","x":2.82,"y":11.088,"scale":0.989,"view":0},
