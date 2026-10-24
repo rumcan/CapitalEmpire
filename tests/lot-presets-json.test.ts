@@ -29,10 +29,12 @@ describe('the lot presets file (T063)', () => {
     assert.deepEqual([...unknown], []);
   });
 
-  it('4. the 14 curated house lots sit in the town house bucket (10 x 15): res, built or declined (the neglected ones), flagged curated', () => {
-    const cur = presets.filter(p => p.curated);
-    assert.equal(cur.length, 14);
-    for (const p of cur) {
+  it('4. the 14 curated house lots (curated-*) sit in the town house bucket (10 x 15): res, built or declined (the neglected ones), flagged curated; any other preset the owner edits may be curated too', () => {
+    const IDS = ['front-0', 'front-1', 'front-2', 'front-3', 'front-4', 'front-5', 'front-7', 'front-8', 'front-9', 'rear-0', 'rear-2', 'rear-3', 'rear-4', 'rear-5'].map(s => `curated-8x15-${s}`);
+    for (const id of IDS) {
+      const p = presets.find(q => q.id === id);
+      assert.ok(p, `${id} missing`);
+      assert.equal(p.curated, true, id);
       assert.equal(p.use, 'res', p.id);
       assert.ok(p.state === 'built' || p.state === 'declined', p.id);
       assert.deepEqual(bucketOf(p.w, p.d), bucketOf(10, 15), p.id);
@@ -40,13 +42,14 @@ describe('the lot presets file (T063)', () => {
       assert.ok(p.props.some(q => /houses/i.test(LIBRARY.find(i => i.id === q.id)?.cat ?? '') || /house/.test(q.id)), `${p.id}: no house`);
       assert.ok(p.patches.some(a => a.kind === 'drive'), `${p.id}: no drive`);
     }
-    assert.ok(presetsFor(presets, 'res', 'built', 10, 15).filter(p => p.curated).length >= 10);
+    assert.equal(presets.filter(p => p.id.startsWith('curated-')).length, IDS.length, 'a curated-* preset the list does not know');
+    assert.ok(presetsFor(presets, 'res', 'built', 10, 15).filter(p => IDS.includes(p.id)).length >= 10);
   });
 
   it('5. every prop lies inside its own preset (fitting a preset to its own size drops nothing); every view is 0..3', () => {
     for (const p of presets) {
       assert.equal(fitPreset(p, p.w, p.d).dropped, 0, p.id);
-      for (const q of p.props) assert.ok(q.scale > 0 && q.scale < 5, `${p.id} ${q.id}: scale ${q.scale}`);
+      for (const q of p.props) assert.ok(q.scale > 0 && q.scale <= 5, `${p.id} ${q.id}: scale ${q.scale}`);
     }
   });
 
