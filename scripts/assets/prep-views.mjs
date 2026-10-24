@@ -142,9 +142,9 @@ for (const slug of fs.readdirSync(STORE).filter(d => fs.existsSync(path.join(STO
 }
 
 // 4. shelf-pack onto as many 2048 pages as it takes
-// each view at its largest drawn size at the closest zoom (0.6 x its owner scale with the Lot Composer's +5%, at least 1), as far as its
-// picture's own pixels go
-const packAt = (sub, x) => Math.min(x.W / x.w, MIP0 * Math.max(1, owner(sub.id) * 1.05));
+// each view at its drawn size at the closest zoom (0.6 x its owner scale, at least 1), as far as its picture's own pixels go; no headroom for
+// the Lot Composer's +5% (the GPU memory: the game caps those few draws at the picture's pixels, newart.ts lookOf)
+const packAt = (sub, x) => Math.min(x.W / x.w, MIP0 * Math.max(1, owner(sub.id)));
 const all = subjects.flatMap(sub => sub.views.map(x => ({ sub, x, width: Math.max(1, Math.round(x.w * packAt(sub, x))), height: Math.max(1, Math.round(x.h * packAt(sub, x))) }))).sort((a, b) => b.height - a.height);
 const pages = [[]];
 let px = GUT, py = GUT, rowH = 0;
