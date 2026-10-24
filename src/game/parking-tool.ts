@@ -2,6 +2,7 @@
 // and hover, validation and the preview. No React; the engine calls it, and the city worker gets the full lists (ParkingHost.sendParking).
 import type { LotPatch } from './ground-protocol';
 import type { PaintView } from './paint-tool';
+import { GHOST_STYLE, drawGhostPoly, ghostStatus } from './ext/ghost-preview';
 import { type Pt, type RoadNetwork, type Seg, sub, vlen } from './network';
 import { ROW_BAY_COST, lotPark, rowBays, rowCheck, rowGeom, rowLines, rowLots, rowQuad, type BayRowDef } from './event/rows';
 import { curbCheck, curbFrom, curbLines, curbQuad, resolveCurb, type Curb, type CurbDef } from './event/curb';
@@ -311,12 +312,13 @@ export class ParkingTool {
       const dr = this.drag;
       if (dr && vlen(sub(dr.b, dr.a)) >= CLICK) {
         const def = this.def(dr.a, dr.b), G = rowGeom(def), bad = this.why !== '';
-        poly(v, rowQuad(def), bad ? 'rgba(160,40,40,0.5)' : 'rgba(50,60,80,0.45)', null, 0);
+        drawGhostPoly(v, rowQuad(def), bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : GHOST_STYLE.neutralFill });
         segs(v, rowLines(def), bad ? '#f87171' : def.col === 'yellow' ? '#facc15' : '#f8fafc', 1.5);
         const ctx = v.ctx, e = { x: dr.a.x + G.u.x * G.count * G.pitch, y: dr.a.y + G.u.y * G.count * G.pitch };
         v.setIso(ctx); ctx.beginPath(); ctx.moveTo(dr.a.x, dr.a.y); ctx.lineTo(e.x, e.y);
         ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2 * v.dpr; ctx.setLineDash([6 * v.dpr, 4 * v.dpr]); ctx.stroke(); ctx.setLineDash([]);
-        if (m) v.hint(m.mx, m.my, bad ? this.why : `${this.count} bays · $${this.cost}`, bad);
+        const g = ghostStatus(this.why, this.cost, Infinity, `${this.count} bays`);
+        if (m) v.hint(m.mx, m.my, g.label, g.bad);
         return;
       }
       const r = this.rows.find(q => q.id === this.hoverRow);
@@ -331,10 +333,11 @@ export class ParkingTool {
         return;
       }
       if (this.shown) {
-        poly(v, curbQuad(this.shown), bad ? 'rgba(160,40,40,0.35)' : 'rgba(255,216,102,0.35)', null, 0);
+        drawGhostPoly(v, curbQuad(this.shown), bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : 'rgba(255,216,102,0.35)' });
         segs(v, curbLines(this.shown), '#f8fafc', 1.5);
       }
-      if (m) v.hint(m.mx, m.my, bad ? this.why : `${this.count} on-street bays · $${this.cost}`, bad);
+      const g = ghostStatus(this.why, this.cost, Infinity, `${this.count} on-street bays`);
+      if (m) v.hint(m.mx, m.my, g.label, g.bad);
     }
   }
 }
