@@ -21,13 +21,16 @@ The owner, 2026-10-24: "We want Blizzard Entertainment style textures." Referenc
 Make this surface as a SET OF 3 IMAGES, one for each zoom level of the game. All three show the same surface with the
 same palette, the same average colour and the same overall brightness, so the game can blend from one to the next
 without a visible jump. Each one is seamless and tileable on its own, 1024 x 1024 px.
-- CLOSE (the closest zoom): the tile covers 8 x 8 metres. Full painted detail: the individual clumps, strokes, flowers
-  or pebbles described below.
-- MID: the tile covers 32 x 32 metres. The same surface seen from further away: clumps merge into bigger painted patches,
-  strokes are broader, and small details (flowers, pebbles) become tiny dots of colour.
-- FAR (the district view): the tile covers 128 x 128 metres. Only soft painted colour fields and gentle light and dark
-  drifts, no individual tufts or strokes.
-The "Scale" line in the style block applies to CLOSE; MID and FAR follow the sizes above.
+The game shows each image at its own full size (one image pixel per screen pixel) when you are zoomed to its level,
+and only shrinks it between levels, so paint every detail at the size it will really be seen:
+- CLOSE (the closest zoom): 1 metre of ground is about 21 px, so the tile covers about 48 x 48 metres. A golf green
+  30 m across would be about 650 px wide and a person about 38 px tall. Full painted detail at that size: the clumps,
+  strokes, flowers or pebbles described below, sized like the tufts in the reference picture.
+- MID (half that zoom): 1 metre is about 11 px, so the tile covers about 96 x 96 metres. Clumps merge into bigger
+  painted patches, strokes are broader, and flowers or pebbles become single dots of colour.
+- FAR (half again, and the district view beyond): 1 metre is about 5 px, so the tile covers about 192 x 192 metres.
+  Only soft painted colour fields and gentle light and dark drifts, no individual tufts or strokes.
+The pixel sizes in the surface lines below are for CLOSE.
 ```
 
 ## STYLE (paste first, every time)
@@ -45,7 +48,7 @@ One sun at the UPPER RIGHT: every clump, tuft or ripple is lit on its upper-righ
 lower-left side. No cast shadows of objects, no spotlight, and an even overall brightness across the whole tile (no
 bright or dark corner).
 
-Scale: the tile covers 8 x 8 metres of ground. Keep shapes big enough to read when the tile is shown small.
+Scale: see the ZOOM LEVELS block (each image is shown at its own pixels at its zoom level, never stretched).
 Output: 1024 x 1024 px, PNG.
 ```
 
@@ -53,19 +56,19 @@ Output: 1024 x 1024 px, PNG.
 
 **1. lawn (town lawns and base grass)**
 ```
-Surface: neatly kept town lawn. Medium fresh green, short soft grass painted as small rounded clumps (20-40 px), gentle
+Surface: neatly kept town lawn. Medium fresh green, short soft grass painted as small rounded clumps (8-16 px), gentle
 light and dark green patches drifting across the tile, a few slightly yellower spots. Calm and even; no flowers, no stripes.
 ```
 
 **2. meadow (parks, open land)**
 ```
-Surface: open meadow. Light warm green with a touch of yellow, soft grass clumps (30-50 px) in loose swirls, sparse tiny
-white and yellow flowers (a dozen per tile, 4-8 px), very gentle colour variation.
+Surface: open meadow. Light warm green with a touch of yellow, soft grass clumps (12-24 px) in loose swirls, sparse tiny
+white and yellow flowers (a few dozen per tile, 2-4 px), very gentle colour variation.
 ```
 
 **3. rough (beside fairways)**
 ```
-Surface: golf course rough, like the long grass around the green in the reference. Chunky clumpy tufts (40-70 px) with
+Surface: golf course rough, like the long grass around the green in the reference. Chunky clumpy tufts (16-32 px) with
 bright yellow-green lit tips and darker blue-green gaps between them, a few tiny white and yellow flowers, lively but
 not noisy. Deeper and more textured than the lawn.
 ```
@@ -78,14 +81,14 @@ warm gold highlights and olive shadows, airy and windswept. Taller and wilder th
 
 **5. fairway**
 ```
-Surface: golf fairway. Short, smooth, bright green mown grass with a fine soft painted grain (strokes of 8-16 px), very
+Surface: golf fairway. Short, smooth, bright green mown grass with a fine soft painted grain (strokes of 3-8 px), very
 subtle light and dark variation. NO mowing stripes (the game paints the stripes itself). Cleaner and brighter than the rough.
 ```
 
 **6. first-cut (the band between fairway and rough)**
 ```
 Surface: golf first cut. Like the fairway but a little longer and a little darker green, with a slightly coarser painted
-grain (strokes of 12-24 px). No stripes.
+grain (strokes of 5-12 px). No stripes.
 ```
 
 **7. fringe (the collar around the green)**
@@ -115,14 +118,14 @@ and cool tints. No edge lip, no grass (the game paints the lip).
 
 **11. waste (sandy waste area)**
 ```
-Surface: sandy waste area. Pale dusty sand-dirt mix with scattered small painted pebbles (6-14 px), a few tiny dry grass
+Surface: sandy waste area. Pale dusty sand-dirt mix with scattered small painted pebbles (3-8 px), a few tiny dry grass
 tufts and sparse dark specks. Rougher and drier than the bunker sand.
 ```
 
 **12. dirt (newly seeded ground, before the grass grows)**
 ```
 Surface: freshly worked and seeded soil. Rich warm brown painted earth with soft clods and furrows, fine pale seed specks,
-and a very sparse sprinkle of tiny bright green sprouts (2-6 px). Inviting, not muddy.
+and a very sparse sprinkle of tiny bright green sprouts (1-3 px). Inviting, not muddy.
 ```
 
 **13. shore (wet ground at the water's edge)**
