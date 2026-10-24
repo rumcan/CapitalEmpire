@@ -19,6 +19,7 @@ export interface PatchPaint { s: number; a: number; b: number; bt: string; z: nu
 /** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin) */
 export interface CourseTex { tex: string; sc: number; a: number }
 /** one surface of a course chunk (plan P21 sections 3.2 to 3.4, T078), all coordinates flat x0 y0 x1 y1 ... in tiles:
+ *  (rings and polylines are Float32Arrays, so a patch posts and clones as plain memory)
  *  - `fill`: closed rings clipped to the chunk box grown by 0.1 tile (filled even-odd; neighbouring chunks overlap, so no seam shows);
  *  - `edges`: open polylines on the true boundary only (the surface on the left of travel), cut exactly at the chunk box and never along
  *    it; a ring wholly inside the chunk is one closed polyline (last point = first). The feather, rims and shade follow these;
@@ -27,8 +28,8 @@ export interface CourseTex { tex: string; sc: number; a: number }
  *    cut out) and the band's outer edges, in its own texture;
  *  - `stripes`: on the fairway, each hole's centre line (tee, aim points, pin) for the mowing stripes (T075), for the holes whose
  *    fairway cells reach this chunk */
-export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: number[][]; edges: number[][];
-  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; fill: number[][]; edges: number[][] }; stripes?: { hole: number; line: number[] }[] }
+export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: Float32Array[]; edges: Float32Array[];
+  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; fill: Float32Array[]; edges: Float32Array[] }; stripes?: { hole: number; line: number[] }[] }
 /** a course chunk's ground (key cg:<cx>:<cy>; plan P21 section 3.8): its 64-tile chunk (cx, cy, size in tiles), its surfaces in draw
  *  order (rough 1 .. green 8), the growth mask (1 byte per 1 m cell over the chunk box, size * 2 square, row-major; alpha 255 x (1 - the
  *  grass share in quarters): the dirt that shows through while seeded cells grow in; absent when nothing in the chunk grows), and z, its

@@ -6,6 +6,7 @@ import { CELL_T, SURF, fillPolygon, type Grid, type GridDiff, mergeDiffs } from 
 import { BLOB_STYLE, blobOutlines, type CollarStyle } from '../course-blobs';
 import type { CourseArea, GolfSurface } from '../../golf/types';
 import type { PaintTex } from '../../paint';
+import { SURF_GROW_MONTHS } from '../course-fx';
 
 // ---- planting months ----
 
@@ -17,16 +18,7 @@ export const MONTH_BASE = 64;
 export function plantMonth(kind: 'seed' | 'sod' | undefined, month: number | undefined): number {
   return kind === 'seed' && month !== undefined && Number.isFinite(month) ? Math.min(65535, Math.max(1, Math.round(month) + MONTH_BASE)) : 0;
 }
-/** each surface id's grow-in from seed, months (costs.ts SURFACE_COST growIn; water, bunker and waste have none) */
-export const SURF_GROW: readonly number[] = [0, 2, 3, 0, 3, 3, 0, 0, 6];
-/** a cell's grass share (0..1) at game month `now` (the effective month: grow cards included) from its surface and month value */
-export function growShare(surf: number, m: number, now: number): number {
-  const need = SURF_GROW[surf] ?? 0;
-  if (!m || need <= 0) return 1;
-  return Math.min(1, Math.max(0, now + MONTH_BASE - m) / need);
-}
-/** a grass share stepped to quarters (0, 1, 2, 3, 4), so a chunk re-bakes at most four times during its grow-in */
-export function growStage(share: number): number { return share <= 0 ? 0 : share >= 1 ? 4 : Math.round(share * 4); }
+// (the grow-in itself, stages, masks and chunk keys, is T076's ext/course-fx: pass it now + MONTH_BASE)
 
 // ---- surfaces ----
 
@@ -80,7 +72,7 @@ export function gridAreas(g: Grid, holes?: Iterable<number>): GridArea[] {
   for (let s = 1; s <= 8; s++) for (let h = 0; h < 256; h++) {
     const k = s * 256 + h; if (!cnt[k]) continue;
     const st = BLOB_STYLE[s] ?? { close: 0, relax: 0 }, col = st.collar;
-    const plant = SURF_GROW[s]! > 0 && seeded[k] * 2 >= cnt[k] ? { plantKind: 'seed' as const, plantedMonth: Math.round(msum[k] / seeded[k]) - MONTH_BASE } : {};
+    const plant = (SURF_GROW_MONTHS[s] ?? 0) > 0 && seeded[k] * 2 >= cnt[k] ? { plantKind: 'seed' as const, plantedMonth: Math.round(msum[k] / seeded[k]) - MONTH_BASE } : {};
     const pad = 4 + Math.ceil(st.close) + (col ? Math.ceil(col.width) : 0);
     const w = window(g, bx0[k] - pad, by0[k] - pad, bx1[k] + pad, by1[k] + pad, s, h);
     const box = { x0: w.x0, y0: w.y0, x1: w.x0 + w.w * CELL_T, y1: w.y0 + w.h * CELL_T };
@@ -116,6 +108,24 @@ export function rasterAreas(g: Grid, areas: readonly RasterArea[]): number {
     n += fillPolygon(g, p, s, Math.max(0, Math.min(255, Math.round(a.hole ?? 0))), a.month).n;
   }
   return n;
+}
+
+/** visits every cell of g whose centre lies inside the polygon pts (tiles, even-odd), as fillPolygon fills them (a dry run: the price of a
+ *  fill before it is made) */
+export function polyCells(g: Grid, pts: readonly number[], visit: (i: number, x: number, y: number) => void): void {
+  const n = pts.length >> 1; if (n < 3) return;
+  let y0 = Infinity, y1 = -Infinity;
+  for (let k = 0; k < n; k++) { const y = pts[2 * k + 1]!; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const r0 = Math.max(0, Math.floor((y0 - g.y0) / CELL_T) - 1), r1 = Math.min(g.h - 1, Math.floor((y1 - g.y0) / CELL_T) + 1), xs: number[] = [];
+  for (let cy = r0; cy <= r1; cy++) {
+    const yc = g.y0 + (cy + 0.5) * CELL_T; xs.length = 0;
+    for (let j = 0, k = n - 1; j < n; k = j++) { const py = pts[2 * k + 1]!, qy = pts[2 * j + 1]!; if ((py > yc) !== (qy > yc)) { const px = pts[2 * k]!, qx = pts[2 * j]!; xs.push(px + ((yc - py) * (qx - px)) / (qy - py)); } }
+    xs.sort((a, b) => a - b);
+    for (let e = 0; e + 1 < xs.length; e += 2) {
+      const c0 = Math.max(0, Math.ceil((xs[e]! - g.x0) / CELL_T - 0.5)), c1 = Math.min(g.w - 1, Math.ceil((xs[e + 1]! - g.x0) / CELL_T - 0.5) - 1);
+      for (let cx = c0; cx <= c1; cx++) visit(cy * g.w + cx, g.x0 + (cx + 0.5) * CELL_T, yc);
+    }
+  }
 }
 
 /** merges diffs made in order into one (course-grid mergeDiffs, pairwise in a balanced tree: n log k for k diffs of n cells in all);
@@ -167,8 +177,8 @@ function collarWindow(w: Grid, s: number, col: CollarStyle): Grid {
 
 /** the shoelace area of a flat ring, tiles² (positive: counter-clockwise on the map's axes, x east and y south, as course-blobs' outer
  *  rings; holes are negative) */
-export function ringArea(p: readonly number[]): number { return signedArea(p); }
-function signedArea(p: readonly number[]): number {
+export function ringArea(p: ArrayLike<number>): number { return signedArea(p); }
+function signedArea(p: ArrayLike<number>): number {
   let a = 0;
   for (let i = 0, n = p.length; i < n; i += 2) { const j = (i + 2) % n; a += p[i]! * p[j + 1]! - p[j]! * p[i + 1]!; }
   return a / 2;

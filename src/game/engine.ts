@@ -19,10 +19,11 @@ import { PaintTool } from './paint-tool';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, cellAt, diffBox, encodeGrid, growGrid, makeGrid, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
-import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, gridAreas, ringArea, type GridArea } from './ext/course-grid/areas';
-import { loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
-import { COURSE_EDIT_REACH, chunkGrow, courseChunksIn, courseKey, coursePatch, type CourseLooks } from './ext/course-grid/patch';
+import { CELL_T, SURF, cellAt, diffBox, encodeGrid, growGrid, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, ringArea, type GridArea } from './ext/course-grid/areas';
+import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
+import { COURSE_EDIT_REACH, COURSE_PATCH_REACH, courseChunksIn, courseGrowKey, courseKey, growStatic, type CourseLooks } from './ext/course-grid/patch';
+import { CourseContour, type CourseChunkOut } from './course-contour';
 import { surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
 import { ParkingTool } from './parking-tool';
@@ -176,7 +177,7 @@ const PLAYING_SURFACES: ReadonlySet<string> = new Set(['fairway', 'firstCut', 'f
 /** how far past the golf land the course grid reaches, tiles (plan P21 3.1: the owned box plus a margin) */
 const COURSE_GRID_PAD = 32;
 /** the least time between two sends of the course chunks during a stroke, ms (paint-tool.ts SEND_MS) */
-const COURSE_SEND_MS = 120;
+const COURSE_SEND_MS = 100;
 /** a course area as the golf rules read it (deriveHoles, holeViews, markerPlan, the stats, the upkeep): its surface, hole, a texture that
  *  reads back as the surface, and its planting */
 type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
@@ -352,7 +353,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -383,6 +384,12 @@ export class Game {
    *  undo and redo, outside the undo journal (pins: a placed preset's flag spot by hole) */
   private syncCourseMarkers(pins?: Map<number, { x: number; y: number }>, quiet = false) {
     const g = this.golf; if (!g) return;
+    if (this.areasPending) {
+      // the grid's areas are being worked out off the main thread: the markers are fitted when they land (the preset pins kept)
+      const m = this.gaMarkers, all = new Map([...(m?.pins ?? []), ...(pins ?? [])]);
+      this.gaMarkers = { ...(all.size ? { pins: all } : {}), quiet: (m ? m.quiet : true) && quiet };
+      this.gridAreaList(); return;
+    }
     const ops = markerPlan(this.courseAreaList(), g.pins, g.tees, pins);
     if (!ops.length) return;
     const placed = new Set<number>();
@@ -419,33 +426,54 @@ export class Game {
   /** the golf game's course grid: one surface, hole and planting month per 1 m cell over the owned land plus COURSE_GRID_PAD tiles (null in
    *  a classic game); the Course tool paints into it and each 64-tile chunk of it is one lot-ground patch (cg:cx:cy) */
   courseGrid: CourseGrid | null = null;
-  /** the course chunks sent, by key, with their grow key ('static': nothing grows; the month tick skips it) */
+  /** the course chunks on the ground, by key, with their grow key ('static': nothing grows; the month tick skips it) */
   private cgSent = new Map<string, string>();
-  /** the tile box whose chunks are waiting to be sent (an edit in progress), and when chunks last went out (performance.now ms) */
+  /** the tile box whose chunks are waiting to be sent (an edit in progress), when it first changed, and when chunks last went out */
   private cgDirty: number[] | null = null;
+  private cgDirtyAt = 0;
   private cgSentAt = 0;
-  /** the grid's course areas by hole (gridAreas), the holes to work out again (null: all of them), and a revision bumped when they change */
+  /** the course workers (T077b): one contours chunks, one works out the course areas, each with its own copy of the grid (so a long areas
+   *  job never holds up the chunks under the brush); the grid object they hold; whether a chunk job is in flight and the chunks waiting
+   *  for it (keys cx * 4096 + cy, the box the ground must re-bake: null for the whole chunk, and when their first change was made) */
+  private contour = new CourseContour();
+  private areaWorker = new CourseContour();
+  private contourOf: CourseGrid | null = null;
+  private cgJob = false;
+  private cgWait: { chunks: Set<number>; stale: number[] | null; at: number } | null = null;
+  /** per lot-ground key, the box its last update changed (a course edit: only that much of the ground re-bakes), until the next flush */
+  private lotStale = new Map<string, BBox>();
+  /** the course grass zones waiting to be registered (key: its patches, null: drop), a millisecond a frame */
+  private grassWait = new Map<string, LotPatch[] | null>();
+  /** the grid's course areas by hole (gridAreas), the holes to work out again (null: all of them), a revision bumped by every grid change,
+   *  the list's own version (bumped when new areas land), the list, an areas job in flight (and whether another is wanted after it), and
+   *  the marker fit waiting for the areas (the pins a placed preset asked for; quiet: no toast) */
   private gaByHole = new Map<number, GridArea[]>();
   private gaDirty: Set<number> | null = null;
   private gaRev = 0;
-  private gaList: { rev: number; v: GridArea[] } | null = null;
+  private gaVer = 0;
+  private gaList: GridArea[] = [];
+  private gaJob = false;
+  private gaAgain = false;
+  private gaMarkers: { pins?: Map<number, { x: number; y: number }>; quiet: boolean } | null = null;
   /** the course's areas as the golf rules read them (grid areas, then the painted areas), and the key they were made for */
   private caCache: { key: string; v: CourseAreaRec[] } | null = null;
   /** the grid's save, kept until the grid changes */
   private gridSaveCache: { g: CourseGrid; rev: number; s: GridSave } | null = null;
   /** whether tile (x, y) lies on the golf game's own land (the course and its parcels) */
   ownedAt(x: number, y: number): boolean { for (const [rx, ry, rw, rh] of this.golfLand()) if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) return true; return false; }
-  /** the grid box the golf land needs (tiles: x0, y0, w, h in cells): the land's bounds plus COURSE_GRID_PAD, on the map */
-  private courseGridBox(): [number, number, number, number] | null {
+  /** the grid box the golf land needs, grown to hold extra (a tile box: the painted areas a migration lays in), as x0, y0 (tiles) and w, h
+   *  (cells): the bounds plus COURSE_GRID_PAD, on the map */
+  private courseGridBox(extra?: readonly number[] | null): [number, number, number, number] | null {
     const land = this.golfLand(); if (!land.length) return null;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const [x, y, w, h] of land) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + w); y1 = Math.max(y1, y + h); }
+    if (extra) { x0 = Math.min(x0, extra[0]!); y0 = Math.min(y0, extra[1]!); x1 = Math.max(x1, extra[2]!); y1 = Math.max(y1, extra[3]!); }
     x0 = Math.max(0, Math.floor(x0 - COURSE_GRID_PAD)); y0 = Math.max(0, Math.floor(y0 - COURSE_GRID_PAD)); x1 = Math.min(MAP, Math.ceil(x1 + COURSE_GRID_PAD)); y1 = Math.min(MAP, Math.ceil(y1 + COURSE_GRID_PAD));
     return [x0, y0, Math.round((x1 - x0) / CELL_T), Math.round((y1 - y0) / CELL_T)];
   }
-  /** grows the grid to hold the golf land (land was bought); a new grid when there is none. Undo diffs made on the old box still apply */
-  private fitCourseGrid() {
-    const b = this.courseGridBox(); if (!b) return;
+  /** grows the grid to hold the golf land (land was bought) and extra; a new grid when there is none. Undo diffs made on the old box still apply */
+  private fitCourseGrid(extra?: readonly number[] | null) {
+    const b = this.courseGridBox(extra); if (!b) return;
     const g = this.courseGrid;
     if (!g) { this.courseGrid = makeGrid(b[0], b[1], b[2], b[3]); return; }
     const x0 = Math.min(g.x0, b[0]), y0 = Math.min(g.y0, b[1]), x1 = Math.max(g.x0 + g.w * CELL_T, b[0] + b[2] * CELL_T), y1 = Math.max(g.y0 + g.h * CELL_T, b[1] + b[3] * CELL_T);
@@ -454,12 +482,14 @@ export class Game {
     this.gaDirty = null; this.gaRev++;
   }
   /** a golf game's grid after a load or a new game (afterLoad): the saved grid, else a new one with the golf-surface painted areas laid into it
-   *  (the migration of plan 3.7: their paint keys go, fringe and first-cut bands are dropped, collars are automatic now); then every chunk is
-   *  sent and the markers fitted (quietly) */
+   *  (the migration of plan 3.7: the grid is made big enough for all of them, their paint keys go, fringe and first-cut bands are dropped,
+   *  collars are automatic now); then every chunk is sent and the markers fitted (quietly) */
   private setupCourseGrid() {
     if (!this.golf) return;
     if (!this.courseGrid) {
-      this.fitCourseGrid();
+      let box: number[] | null = null;
+      for (const a of this.paint.areas) if (isCourseArea(a)) { const b = ptsBox(a.pts); box = box ? [Math.min(box[0]!, b[0]!), Math.min(box[1]!, b[1]!), Math.max(box[2]!, b[2]!), Math.max(box[3]!, b[3]!)] : b; }
+      this.fitCourseGrid(box);
       const g = this.courseGrid; if (!g) return;
       // the cells first: taking the areas out replants the trees round them, and the grid must already keep them off the course
       const gone = new Set(migrateAreas(g, this.paint.areas));
@@ -488,16 +518,54 @@ export class Game {
   }
   /** the effective game month for grow-in (the grow cards included) */
   private growMonth(): number { return this.golf ? effectiveGrowInClockMonth(this.golfMonthIndex(), this.golf.cards ?? this.traffic.round.cards) : 0; }
-  /** re-contours the course chunks a tile box touches (grown by how far an edit reaches) and sends their patches (cg:cx:cy; none: dropped) */
-  sendCourseChunks(box: readonly number[]) {
-    const g = this.courseGrid; if (!g) return;
-    const looks = this.courseLooks(), now = this.growMonth(), lines = this.holeLines();
-    for (const [cx, cy] of courseChunksIn(g, box, COURSE_EDIT_REACH)) {
-      const key = courseKey(cx, cy), p = coursePatch(g, cx, cy, looks, now, lines);
-      if (p) { this.setLotGround(key, [p]); this.cgSent.set(key, chunkGrow(g, cx, cy, now).key); }
-      else if (this.cgSent.has(key)) { this.setLotGround(key, null); this.cgSent.delete(key); }
-    }
+  /** the course grid, with both workers holding a copy of this very grid object (a new or grown grid goes to them whole first) */
+  private contourGrid(): CourseGrid | null {
+    const g = this.courseGrid;
+    if (this.contourOf !== g) { this.contour.setGrid(g); this.areaWorker.setGrid(g); this.contourOf = g; }
+    return g;
+  }
+  /** re-contours the course chunks a tile box touches (grown by how far an edit reaches) and sends their patches (cg:cx:cy; none: dropped).
+   *  stale: the box is an edit, and only it (grown by the outlines' and the drawing's reach) of the ground re-bakes; else whole chunks.
+   *  The work is the contour worker's: the patches land a few ms later, all of one job in the same frame */
+  sendCourseChunks(box: readonly number[], stale = false, at = performance.now()) {
+    const g = this.contourGrid(); if (!g) return;
+    const R = COURSE_EDIT_REACH + COURSE_PATCH_REACH;
+    this.queueChunks(courseChunksIn(g, box, COURSE_EDIT_REACH), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
+  }
+  /** chunks for the contour worker: a job now, or (one in flight) merged into the next */
+  private queueChunks(chunks: readonly [number, number][], stale: number[] | null, at: number) {
+    if (!chunks.length) return;
+    const w = this.cgWait ?? (this.cgWait = { chunks: new Set(), stale, at });
+    for (const [cx, cy] of chunks) w.chunks.add(cx * 4096 + cy);
+    w.stale = w.stale && stale ? [Math.min(w.stale[0]!, stale[0]!), Math.min(w.stale[1]!, stale[1]!), Math.max(w.stale[2]!, stale[2]!), Math.max(w.stale[3]!, stale[3]!)] : null;
+    w.at = Math.min(w.at, at);
+    if (!this.cgJob) this.runChunks();
+  }
+  /** posts the waiting chunks as one job; its patches are applied together when it comes back */
+  private runChunks() {
+    const w = this.cgWait, g = this.contourGrid(); if (!w || !g) return;
+    this.cgWait = null; this.cgJob = true;
+    const chunks: number[] = []; for (const k of w.chunks) chunks.push(Math.floor(k / 4096), k % 4096);
+    this.contour.chunks({ chunks, looks: this.courseLooks(), now: this.growMonth(), lines: [...this.holeLines()] }, (out, ms) => {
+      this.perf.courseJobMs = ms; this.perf.courseJobChunks = chunks.length / 2;
+      const t0 = performance.now();
+      this.cgJob = false;
+      if (this.courseGrid) this.applyChunks(out, w.stale, w.at); // a reset forgets the job (drop), a grown grid keeps its results
+      if (this.cgWait) this.runChunks();
+      this.cMs += performance.now() - t0;
+    });
     this.cgSentAt = performance.now();
+  }
+  /** a chunk job's results onto the ground: each patch (or its drop), the box it changed, its grow key; the lag after the first change */
+  private applyChunks(out: readonly CourseChunkOut[], stale: number[] | null, at: number) {
+    for (const o of out) {
+      const key = courseKey(o.cx, o.cy);
+      if (o.patch) {
+        this.setLotGround(key, [o.patch]); this.cgSent.set(key, o.grow);
+        if (stale) { const b = this.lotStale.get(key); this.lotStale.set(key, b ? [Math.min(b[0], stale[0]!), Math.min(b[1], stale[1]!), Math.max(b[2], stale[2]!), Math.max(b[3], stale[3]!)] : [stale[0]!, stale[1]!, stale[2]!, stale[3]!]); }
+      } else if (this.cgSent.has(key)) { this.setLotGround(key, null); this.cgSent.delete(key); }
+    }
+    this.perf.courseLagMs = performance.now() - at;
   }
   /** how many course chunks are on the ground (the benchmark's log) */
   courseChunkCount(): number { return this.cgSent.size; }
@@ -506,29 +574,44 @@ export class Game {
     const g = this.courseGrid; if (!g) return;
     this.sendCourseChunks([g.x0, g.y0, g.x0 + g.w * CELL_T, g.y0 + g.h * CELL_T]);
   }
-  /** the grid changed (the Course tool, undo, redo): its box waits to be sent (flush: now; else within the frame loop's 120 ms), the holes it
-   *  touched are worked out again and the trees on its new playing surfaces go */
+  /** the grid changed (the Course tool, undo, redo): the workers get the cells, its box waits to be sent (flush: now; else within the frame
+   *  loop's 120 ms), the holes it touched are worked out again and the trees on its new playing surfaces go */
   private courseGridChanged(d: GridDiff | null, flush: boolean) {
-    const b = d ? diffBox(d) : null;
-    if (b && d) {
+    const t0 = performance.now(), b = d ? diffBox(d) : null, g = this.courseGrid;
+    if (b && d && g) {
+      if (this.contourOf === g) { this.contour.cells(g, d); this.areaWorker.cells(g, d); }
+      if (!this.cgDirty) this.cgDirtyAt = t0;
       this.cgDirty = this.cgDirty ? [Math.min(this.cgDirty[0]!, b.x0), Math.min(this.cgDirty[1]!, b.y0), Math.max(this.cgDirty[2]!, b.x1), Math.max(this.cgDirty[3]!, b.y1)] : [b.x0, b.y0, b.x1, b.y1];
       if (this.gaDirty) for (let k = 0; k < d.n; k++) { this.gaDirty.add(d.h0[k]!); this.gaDirty.add(d.h1[k]!); }
       this.gaRev++;
     }
-    if (flush || performance.now() - this.cgSentAt >= COURSE_SEND_MS) this.flushCourse();
+    if (flush || performance.now() - this.cgSentAt >= this.courseSendMs) this.flushCourse();
+    this.cMs += performance.now() - t0;
   }
   /** sends the waiting chunks (the frame loop calls it too) and clears the town and painted trees off the cells that became playing surfaces */
   private flushCourse() {
     const b = this.cgDirty; if (!b) return; this.cgDirty = null;
-    this.sendCourseChunks(b);
+    this.sendCourseChunks(b, true, this.cgDirtyAt);
     this.dropTownTrees(b[0]!, b[1]!, b[2]!, b[3]!);
     this.clearTreesOnGrid(b);
     this.scheduleSave();
   }
+  /** the least ms between two course chunk sends during a stroke (COURSE_SEND_MS; the benchmark tries others) */
+  courseSendMs = COURSE_SEND_MS;
+  /** the main-thread ms spent on the course grid's chunks this frame (the perf counter courseMs) */
+  private cMs = 0;
+  /** a dab of surface s (radius r tiles) from (ax, ay) to (bx, by) straight into the grid, as the Course brush lays one (the benchmark's
+   *  scripted stroke; no undo, no price); returns how many cells changed */
+  courseDab(ax: number, ay: number, bx: number, by: number, r: number, s: number): number {
+    const g = this.courseGrid; if (!g) return 0;
+    const d = paintStroke(g, ax, ay, bx, by, r, s, 0, 0, { over: 'below' });
+    this.courseGridChanged(d, false);
+    return d.n;
+  }
   /** the tree props whose foot stands on a playing surface cell of the grid in box (fairway, green, tee, bunker, waste, water) go */
   private clearTreesOnGrid(b: readonly number[]) {
     const g = this.courseGrid; if (!g) return;
-    for (const p of [...this.props]) {
+    for (const p of [...this.propGrid.query([b[0]!, b[1]!, b[2]!, b[3]!])]) {
       if (LIBRARY[p.item]?.kind !== 'tree') continue;
       const cx = (p.x0 + p.x1) / 2, cy = (p.y0 + p.y1) / 2; if (cx < b[0]! || cx > b[2]! || cy < b[1]! || cy > b[3]!) continue;
       const i = cellAt(g, cx, cy); if (i >= 0 && g.surf[i]! >= SURF.water) this.removeProp(p);
@@ -536,25 +619,38 @@ export class Game {
   }
   /** the grid's surface id at tile (x, y) (0: none or no grid) */
   courseSurfAt(x: number, y: number): number { const g = this.courseGrid; if (!g) return 0; const i = cellAt(g, x, y); return i >= 0 ? g.surf[i]! : 0; }
-  /** the grid's course areas (gridAreas), in draw order; the holes an edit touched are worked out again when asked */
+  /** the grid's course areas (gridAreas), in draw order. The holes an edit touched are worked out again by the areas worker: until they
+   *  land this is the list as it was (the panel and the markers follow when they do) */
   gridAreaList(): GridArea[] {
-    const g = this.courseGrid; if (!g) return [];
-    if (this.gaList?.rev === this.gaRev) return this.gaList.v;
-    const todo = this.gaDirty;
-    if (!todo) { this.gaByHole.clear(); for (const a of gridAreas(g)) { let l = this.gaByHole.get(a.hole); if (!l) this.gaByHole.set(a.hole, l = []); l.push(a); } }
-    else if (todo.size) {
-      for (const h of todo) this.gaByHole.delete(h);
-      for (const a of gridAreas(g, todo)) { let l = this.gaByHole.get(a.hole); if (!l) this.gaByHole.set(a.hole, l = []); l.push(a); }
-    }
-    this.gaDirty = new Set();
-    const v = [...this.gaByHole.values()].flat().sort((p, q) => areaRank(p) - areaRank(q));
-    this.gaList = { rev: this.gaRev, v };
-    return v;
+    if (!this.courseGrid) return [];
+    if (this.gaDirty === null || this.gaDirty.size) this.refreshAreas();
+    return this.gaList;
   }
+  /** asks the areas worker for the dirty holes' areas (one job at a time; edits made meanwhile ask again after it) */
+  private refreshAreas() {
+    const g = this.contourGrid(); if (!g) return;
+    if (this.gaJob) { this.gaAgain = true; return; }
+    const todo = this.gaDirty; this.gaDirty = new Set(); this.gaJob = true;
+    this.areaWorker.areas(todo ? [...todo] : null, (areas, ms) => {
+      const t0 = performance.now(); this.perf.areasJobMs = ms;
+      this.gaJob = false;
+      if (!todo) this.gaByHole.clear(); else for (const h of todo) this.gaByHole.delete(h);
+      for (const a of areas) { let l = this.gaByHole.get(a.hole); if (!l) this.gaByHole.set(a.hole, l = []); l.push(a); }
+      this.gaList = [...this.gaByHole.values()].flat().sort((p, q) => areaRank(p) - areaRank(q));
+      this.gaVer++;
+      if (this.gaAgain || this.gaDirty === null || this.gaDirty.size) { this.gaAgain = false; this.refreshAreas(); return; }
+      const m = this.gaMarkers; this.gaMarkers = null;
+      if (m) this.syncCourseMarkers(m.pins, m.quiet);
+      this.emit();
+      this.perf.areasApplyMs = performance.now() - t0;
+    });
+  }
+  /** the grid's areas are out of date and being worked out off the main thread (the marker fit waits for them) */
+  private get areasPending(): boolean { return !!this.courseGrid && this.areaWorker.async && (this.gaJob || this.gaDirty === null || this.gaDirty.size > 0); }
   /** the course's areas as the golf rules read them (holes, markers, stats, quality, upkeep): the grid's, then the painted areas (each with
    *  its golf surface, 'other' when it has none), worked out again when either changes */
   courseAreaList(): CourseAreaRec[] {
-    const grid = this.gridAreaList(), key = `${this.gaRev}:${this.paintRev}:${this.paint.areas.length}`;
+    const grid = this.gridAreaList(), key = `${this.gaVer}:${this.paintRev}:${this.paint.areas.length}`;
     if (this.caCache?.key === key) return this.caCache.v;
     const v: CourseAreaRec[] = [...grid, ...this.paint.areas.map(a => ({ id: a.id, hole: a.hole, tex: a.tex, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts, plantKind: a.plantKind, plantedMonth: a.plantedMonth }))];
     this.caCache = { key, v };
@@ -567,21 +663,38 @@ export class Game {
     if (!c || c.g !== g || c.rev !== g.rev) this.gridSaveCache = c = { g, rev: g.rev, s: encodeGrid(g) };
     return c.s;
   }
-  /** drops the grid and its chunks (a reset) */
+  /** drops the grid and its chunks (a reset); the workers' jobs in flight are forgotten */
   private dropCourseGrid() {
     for (const k of this.cgSent.keys()) this.setLotGround(k, null);
-    this.cgSent.clear(); this.cgDirty = null; this.courseGrid = null; this.gaByHole.clear(); this.gaDirty = null; this.gaRev++; this.gaList = null; this.caCache = null; this.gridSaveCache = null;
+    this.contour.drop(); this.areaWorker.drop(); this.cgJob = false; this.cgWait = null; this.gaJob = false; this.gaAgain = false; this.gaMarkers = null;
+    this.cgSent.clear(); this.cgDirty = null; this.courseGrid = null; this.gaByHole.clear(); this.gaDirty = null; this.gaRev++; this.gaList = []; this.gaVer++; this.caCache = null; this.gridSaveCache = null;
+    this.contourGrid();
   }
-  /** the month tick: the chunks whose grow key changed (a seeded cell reached its next quarter) are sent again */
+  /** the month tick: the chunks whose grow key changed (a seeded cell reached its next quarter) are sent again (whole chunks re-bake) */
   private courseMonth() {
-    const g = this.courseGrid; if (!g || !this.cgSent.size) return;
-    const now = this.growMonth(); let looks: CourseLooks | null = null, lines: Map<number, number[]> | null = null;
+    const g = this.contourGrid(); if (!g || !this.cgSent.size) return;
+    const now = this.growMonth(), todo: [number, number][] = [];
     for (const [key, gk] of this.cgSent) {
-      if (gk === 'static') continue;
-      const [, sx, sy] = key.split(':'), cx = +sx!, cy = +sy!, k2 = chunkGrow(g, cx, cy, now).key;
-      if (k2 === gk) continue;
-      const p = coursePatch(g, cx, cy, looks ??= this.courseLooks(), now, lines ??= this.holeLines());
-      if (p) { this.setLotGround(key, [p]); this.cgSent.set(key, k2); }
+      if (growStatic(gk)) continue;
+      const [, sx, sy] = key.split(':'), cx = +sx!, cy = +sy!;
+      if (courseGrowKey(g, cx, cy, now) !== gk) todo.push([cx, cy]);
+    }
+    this.queueChunks(todo, null, performance.now());
+  }
+  /** registers the waiting course grass zones (each chunk's turf rings), at most budget ms a frame: the grass care needs them, the
+   *  picture does not wait for them */
+  private courseGrass(budget: number) {
+    const t0 = performance.now();
+    for (const [key, patches] of this.grassWait) {
+      this.grassWait.delete(key);
+      const keep: string[] = [];
+      for (const p of patches ?? []) for (const l of p.course?.layers ?? []) {
+        const surface = grassSurface(SURFACE_TEX_ID[SURF_SURFACE[l.s] ?? 'other']); if (!surface) continue;
+        l.fill.forEach((r, k) => { if (ringArea(r) <= 0) return; const id = `${key}/${l.s}/${k}`, step = Math.ceil(r.length / 2000), pts: number[] = []; for (let j = 0; j + 1 < r.length; j += 2 * step) pts.push(r[j]!, r[j + 1]!); keep.push(id); this.grass.register(id, pts, surface, 'maintained'); });
+      }
+      for (const id of this.grassZones.get(key) ?? []) if (!keep.includes(id)) this.grass.remove(id);
+      if (keep.length) this.grassZones.set(key, keep); else this.grassZones.delete(key);
+      if (performance.now() - t0 > budget) break;
     }
   }
   /** the props added and removed while the Paint tool's action is open (undo), or null */
@@ -882,7 +995,7 @@ export class Game {
     return false;
   }
   dead = false;
-  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); }
+  destroy() { this.dead = true; cancelAnimationFrame(this.raf); clearTimeout(this.saveTimer); clearTimeout(this.blocksTimer); clearTimeout(this.lotBlocksTimer); this.ground.terminate(); this.traffic?.terminate(); this.contour.terminate(); this.areaWorker.terminate(); }
 
   // ---------- geometry helpers ----------
   resize() {
@@ -1130,13 +1243,13 @@ export class Game {
   setLotGround(key: string, patches: LotPatch[] | null) {
     const keep: string[] = [];
     for (let i = 0; i < (patches?.length ?? 0); i++) { const p = patches![i], surface = (p.paint || p.lawn) && grassSurface(p.tex, !!p.lawn, surfaceOfTex(p.tex as PaintTex)); if (!surface) continue; const id = `${key}/${i}`; keep.push(id); this.grass.register(id, p.pts, surface, /worn|dry/i.test(p.tex) ? 'stressed' : 'maintained'); }
-    // a course chunk's turf: each grass surface's outer fill rings are managed grass zones (at most 1,000 corners each: longer rings are thinned)
-    for (const p of patches ?? []) for (const l of p.course?.layers ?? []) {
-      const surface = grassSurface(SURFACE_TEX_ID[SURF_SURFACE[l.s] ?? 'other']); if (!surface) continue;
-      l.fill.forEach((r, k) => { if (ringArea(r) <= 0) return; const id = `${key}/${l.s}/${k}`, step = Math.ceil(r.length / 2000); keep.push(id); this.grass.register(id, step > 1 ? r.filter((_, j) => (j >> 1) % step === 0) : r, surface, 'maintained'); });
+    // a course chunk's turf (each grass surface's outer fill rings, at most 1,000 corners each) waits for courseGrass, a millisecond a frame
+    if (key.startsWith('cg:')) this.grassWait.set(key, patches);
+    else {
+      for (const id of this.grassZones.get(key) ?? []) if (!keep.includes(id)) this.grass.remove(id);
+      if (keep.length) this.grassZones.set(key, keep); else this.grassZones.delete(key);
     }
-    for (const id of this.grassZones.get(key) ?? []) if (!keep.includes(id)) this.grass.remove(id);
-    if (keep.length) this.grassZones.set(key, keep); else this.grassZones.delete(key);
+    this.lotStale.delete(key);
     if (key.startsWith('paint:')) this.paintChanged(key, patches);
     if (key.startsWith('curb:')) this.laybyChanged(key, patches);
     this.lotPending.set(key, patches);
@@ -1181,7 +1294,7 @@ export class Game {
       if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1 && areaAt([a], cx, cy)) this.removeProp(p);
     }
   }
-  private flushLotGround() { if (!this.lotPending.size) return; const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop); }
+  private flushLotGround() { if (!this.lotPending.size) return; const t0 = performance.now(); const { set, drop } = lotBatch(this.lotPending); this.lotPending.clear(); this.ground.lotGround(set, drop, this.lotStale); this.lotStale = new Map(); this.perf.lotFlushMs = performance.now() - t0; }
   /** the town's lots: up to 40 queued keys a frame (more while the queue is over 2,000, up to 400), so a loaded city fills in */
   private applyLotQueue() {
     const q = this.lotQueue; if (!q.size) return;
@@ -3630,7 +3743,9 @@ export class Game {
     this.raf = requestAnimationFrame(this.frame);
     // real play seconds of a golf game while the sim runs (T033): stops at the Stage 3 mark, so the save does not churn
     const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STAGE_3_TIME_SEC) gp.playS += pdt;
-    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= COURSE_SEND_MS) this.flushCourse(); this.flushLotGround(); this.laybyLots();
+    this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
+    if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
+    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.flushLotGround(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();

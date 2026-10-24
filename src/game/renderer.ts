@@ -14,8 +14,8 @@ import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseTex, type LotPatch, type PatchTex } from './ground-protocol';
 import { BLOB_STYLE } from './ext/course-blobs';
-import { SURF_GROW } from './ext/course-grid/areas';
-import { lineField } from './ext/course-grid/field';
+import { SURF_GROW_MONTHS } from './ext/course-fx';
+import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
@@ -51,9 +51,9 @@ const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
 /** adds a closed flat ring x0 y0 x1 y1 ... (tiles) to a path */
-const ringPath = (p: Path2D, pts: readonly number[]) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
+const ringPath = (p: Path2D, pts: ArrayLike<number>) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
 /** a painted area's or course chunk's place in the draw order among the painted areas */
-const paintZ = (p: LotPatch) => p.course ? p.course.z : p.paint!.z;
+const paintZ = (p: LotPatch) => p.course ? -1e300 : p.paint!.z; // the course under every painted area, even one ordered below 0
 /** the course chunks' draw-order switches (renderer drawCourses): step 5, the mowing stripes, waits for T075's stripe bands; step 6, the
  *  dirt of seeded cells through the growth mask, is on (T076 landed) */
 const COURSE_STRIPES = false;
@@ -563,6 +563,8 @@ export class GroundPainter {
 
   /** the blend masks (blendMask), by share and softness */
   private blendMasks = new Map<string, Cnv>();
+  /** the course dirt's stage image (courseDirt), kept between chunks */
+  private dirtImg: ImageData | null = null;
   /** a tileable mask of soft patches (the map grass's mix: B where the low-frequency noise is past 1 - share, blended over +-soft) */
   private blendMask(share: number, soft: number) {
     const key = `${share.toFixed(2)},${soft.toFixed(2)}`; let m = this.blendMasks.get(key);
@@ -650,21 +652,21 @@ export class GroundPainter {
    *  No dark outline stroke. A district (lite) chunk draws only the collar fills and the fills. The field steps (1, 7) are made per chunk
    *  over its own box only, from its own edges and its neighbours' (so a seam is lit as one curve and nothing is drawn twice) */
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
-    const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = edgeRes(L);
+    const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     /** a course texture as a fill style on g: the photo or preset in tile space (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex) => {
       const G = new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
       return isPaintPhoto(t.tex) ? this.paintPhoto(g, t.tex, L, G, t.sc) : this.screenPattern(g, t.tex as TexName, L, X0, Y0, Minv, G);
     };
-    const ringsOf = (rings: readonly number[][]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
+    const ringsOf = (rings: readonly ArrayLike<number>[]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
     /** step 4: rings filled even-odd in t */
-    const fill = (t: CourseTex, rings: readonly number[][]) => {
+    const fill = (t: CourseTex, rings: readonly ArrayLike<number>[]) => {
       if (!rings.length) return;
       ctx.save(); ctx.setTransform(M); ctx.clip(ringsOf(rings), 'evenodd'); ctx.fillStyle = style(ctx, t); ctx.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); ctx.restore();
     };
     /** steps 2 and 3: the edge polylines stroked in t, FEATHER_STEPS strokes from 2f wide down, alpha 1 / (n - k): out to f tiles past the
      *  edge the coverage falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
-    const feather = (t: CourseTex, lines: readonly number[][], f: number) => {
+    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number) => {
       if (!lines.length || f <= 0) return;
       const p = new Path2D();
       for (const q of lines) {
@@ -697,7 +699,7 @@ export class GroundPainter {
         if (collarAfter(s) === s) collars(ls);
         const look = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = look ? featherTiles(look, L) : flatF;
         // the field images (steps 1 and 7) of each chunk over its own box within this ground chunk
-        const ims: { im: ReturnType<typeof edgeImages>; x0: number; y0: number }[] = [];
+        const ims: { im: ReturnType<typeof courseImages>; x0: number; y0: number }[] = [];
         if (!lite && look && (look.light > 0 || look.dark > 0 || look.shadow > 0)) {
           // every chunk here, with or without this surface, takes the field over its own box from all the surface's edges within reach: a
           // shadow cast across a chunk border lands in the next chunk (whose rings, if it has none of the surface, are empty: no rims)
@@ -708,14 +710,14 @@ export class GroundPainter {
             const x0 = Math.max(box[0], c.cx * c.size), y0 = Math.max(box[1], c.cy * c.size), x1 = Math.min(box[2], (c.cx + 1) * c.size), y1 = Math.min(box[3], (c.cy + 1) * c.size);
             if (x1 <= x0 || y1 <= y0 || ex1 < x0 - reach || ex0 > x1 + reach || ey1 < y0 - reach || ey0 > y1 + reach) continue;
             const F = lineField(c.layers.find(q => q.s === s)?.fill ?? [], all, x0, y0, x1 - x0, y1 - y0, res, reach);
-            if (F.any) ims.push({ im: edgeImages(F, look, f), x0, y0 });
+            if (F.any) ims.push({ im: courseImages(F, look, f), x0, y0 });
           }
         }
         for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'source-over');                    // 1
         if (!lite) for (const { l } of ls) feather(l, l.edges, f);                                 // 3
         for (const { l } of ls) fill(l, l.fill);                                                   // 4
         if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 5
-        if (!lite && COURSE_DIRT && SURF_GROW[s]! > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 6
+        if (!lite && COURSE_DIRT && (SURF_GROW_MONTHS[s] ?? 0) > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 6
         for (const q of ims) { put(q.im.light, q.x0, q.y0, 'screen'); put(q.im.dark, q.x0, q.y0, 'multiply'); } // 7
       }
       // the collars laid over this surface (the bunker's grass lip over a green) go on top of it
@@ -733,10 +735,12 @@ export class GroundPainter {
     const clip = new Path2D(); for (const q of l.fill) ringPath(clip, q);
     for (let st = 0; st < 4; st++) {
       const a = Math.round(255 * (1 - st / 4)); let any = false;
-      const data = new Uint8ClampedArray(n * n * 4);
-      for (let i = 0; i < n * n; i++) if (grow[i] === a) { data[4 * i + 3] = 255; any = true; }
+      for (let i = 0; i < n * n; i++) if (grow[i] === a) { any = true; break; }
       if (!any) continue;
-      const m = this.buffer('small', n, n); ctx2d(m).putImageData(new ImageData(data, n, n), 0, 0);
+      // the stage's cells as an alpha image (one ImageData kept and reused, chunk after chunk)
+      const img = this.dirtImg?.width === n ? this.dirtImg : (this.dirtImg = new ImageData(n, n)), data = img.data;
+      for (let i = 0; i < n * n; i++) data[4 * i + 3] = grow[i] === a ? 255 : 0;
+      const m = this.buffer('small', n, n); ctx2d(m).putImageData(img, 0, 0);
       const b = this.buffer('courseDirt', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b);
       g.save(); g.setTransform(M); g.clip(clip, 'evenodd');
       g.fillStyle = isPaintPhoto(DIRT_TEX) ? this.paintPhoto(g, DIRT_TEX, L) : this.screenPattern(g, DIRT_TEX as TexName, L, X0, Y0, Minv); g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);

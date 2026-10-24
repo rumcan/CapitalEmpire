@@ -4,8 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SURF, applyDiff, makeGrid, paintDisc, paintStroke, fillPolygon, type Grid } from '../src/game/ext/course-grid';
-import { MONTH_BASE, SURF_GROW, SURF_SURFACE, areaRank, growShare, growStage, gridAreas, mergeMany, plantMonth, rasterAreas, surfOfSurface, type GridArea } from '../src/game/ext/course-grid/areas';
-import { COURSE_CHUNK, COURSE_PATCH_REACH, chunkGrow, courseChunksIn, courseKey, coursePatch, type CourseLooks } from '../src/game/ext/course-grid/patch';
+import { MONTH_BASE, SURF_SURFACE, areaRank, gridAreas, mergeMany, plantMonth, rasterAreas, surfOfSurface, type GridArea } from '../src/game/ext/course-grid/areas';
+import { COURSE_CHUNK, COURSE_PATCH_REACH, POINT_CAP, capPoints, courseChunksIn, courseGrow, courseGrowKey, courseKey, coursePatch, growStatic, type CourseLooks } from '../src/game/ext/course-grid/patch';
+import { SURF_GROW_MONTHS } from '../src/game/ext/course-fx';
 import { generateOldNine } from '../src/game/golf/coursegen';
 import { courseAreas } from '../src/game/golf/paintcourse';
 import { growInMonths, surfaceOfTex } from '../src/game/golf/costs';
@@ -76,14 +77,16 @@ test('3. planting months and grow-in', () => {
   assert.equal(plantMonth('seed', 0), MONTH_BASE);
   assert.equal(plantMonth('sod', 5), 0, 'sod is established at once');
   assert.equal(plantMonth(undefined, 5), 0);
-  for (let s = 1; s <= 8; s++) assert.equal(SURF_GROW[s], growInMonths(SURF_SURFACE[s]!, 'seed'), `${SURF_SURFACE[s]} grow-in`);
-  const m = plantMonth('seed', 10);
-  assert.equal(growShare(SURF.green, m, 10), 0);
-  assert.equal(growShare(SURF.green, m, 13), 0.5);
-  assert.equal(growShare(SURF.green, m, 20), 1);
-  assert.equal(growShare(SURF.green, 0, 0), 1, 'established');
-  assert.equal(growShare(SURF.bunker, m, 10), 1, 'sand has no grow-in');
-  assert.deepEqual([0, 0.1, 0.3, 0.5, 0.74, 1].map(growStage), [0, 0, 1, 2, 3, 4]);
+  for (let s = 1; s <= 8; s++) assert.equal(SURF_GROW_MONTHS[s], growInMonths(SURF_SURFACE[s]!, 'seed'), `${SURF_SURFACE[s]} grow-in (T076's table)`);
+  // T076's mask on the grid's month scale (patch.ts courseGrow passes now + MONTH_BASE): a green seeded in month 10 grows in over 6 months
+  const g = makeGrid(0, 0, 128, 128);
+  paintDisc(g, 20, 20, 6, SURF.green, 1, plantMonth('seed', 10)); paintDisc(g, 44, 20, 6, SURF.green, 1, 0); paintDisc(g, 20, 44, 6, SURF.bunker, 1, plantMonth('seed', 10));
+  const cell = (x: number, y: number) => y * 2 * 128 + x * 2;
+  assert.equal(courseGrow(g, 0, 0, 10)![cell(20, 20)], 255, 'just seeded: all dirt');
+  assert.equal(courseGrow(g, 0, 0, 13)![cell(20, 20)], 128, 'half way');
+  assert.equal(courseGrow(g, 0, 0, 10)![cell(44, 20)], 0, 'established (month 0)');
+  assert.equal(courseGrow(g, 0, 0, 10)![cell(20, 44)], 0, 'sand has no grow-in');
+  assert.equal(courseGrow(g, 0, 0, 16), null, 'grown in: no mask');
   for (const s of ['rough', 'fescue', 'water', 'fairway', 'tee', 'bunker', 'waste', 'green'] as GolfSurface[]) assert.equal(SURF_SURFACE[surfOfSurface(s)], s);
   for (const s of ['fringe', 'firstCut', 'path', 'other'] as GolfSurface[]) assert.equal(surfOfSurface(s), 0);
 });
@@ -144,11 +147,31 @@ test('6. a course chunk patch: its layers in draw order, the collar, the mowing 
   assert.ok(fw.fill.length >= 1 && fw.edges.length >= 1);
   // growing: the fairway was seeded in month 2 (3 months to grow in): dirt everywhere at first, then quarters
   assert.ok(p.course.grow && p.course.grow.length === (S / 0.5) ** 2);
-  const k0 = chunkGrow(g, 1, 1, 2), k1 = chunkGrow(g, 1, 1, 3), k5 = chunkGrow(g, 1, 1, 5);
-  assert.notEqual(k0.key, k1.key, 'a month later the key moves');
-  assert.equal(k5.key, 'static'); assert.equal(k5.mask, null, 'grown in');
+  const k0 = courseGrowKey(g, 1, 1, 2), k0b = courseGrowKey(g, 1, 1, 2.2), k1 = courseGrowKey(g, 1, 1, 3), k5 = courseGrowKey(g, 1, 1, 5);
+  assert.equal(k0, k0b, 'within a stage the key holds');
+  assert.notEqual(k0, k1, 'a month later the key moves');
+  assert.ok(growStatic(k5), 'grown in'); assert.equal(courseGrow(g, 1, 1, 5), null);
+  assert.equal(courseGrowKey(g, 1, 1, 2, p.course.grow), k0, 'the key from the patch mask is the same');
   const i = ((80 - 64) * 2 + 1) * (S * 2) + (80 - 64) * 2 + 1;
-  assert.equal(k0.mask![i], 255); assert.ok(k1.mask![i]! > 0 && k1.mask![i]! < 255);
+  assert.equal(courseGrow(g, 1, 1, 2)![i], 255); assert.ok(courseGrow(g, 1, 1, 3)![i]! > 0 && courseGrow(g, 1, 1, 3)![i]! < 255);
+  // the rings travel as Float32Arrays (a postMessage copies memory, not numbers one by one)
+  assert.ok(fw.fill[0] instanceof Float32Array && fw.edges[0] instanceof Float32Array);
   // an empty chunk has no patch
   assert.equal(coursePatch(g, 3, 3, LOOKS, 2), null);
+});
+
+test('7. a surface over the point cap is simplified again, coarser, until it fits; edges keep their ends', () => {
+  // a 30-tile wobbly ring of 6,000 points and an open edge of 3,000 points across a chunk (its ends on the chunk box)
+  const ring: number[] = [], edge: number[] = [];
+  for (let k = 0; k < 6000; k++) { const a = (k / 6000) * Math.PI * 2, r = 15 + 0.05 * Math.sin(k * 1.7); ring.push(32 + r * Math.cos(a), 32 + r * Math.sin(a)); }
+  for (let k = 0; k <= 3000; k++) edge.push((64 * k) / 3000, 10 + 0.03 * Math.sin(k));
+  const [f, e] = capPoints([ring], [edge]);
+  const n = (f[0]!.length + e[0]!.length) / 2;
+  assert.ok(n <= POINT_CAP, `${n} points`);
+  assert.deepEqual([e[0]![0], e[0]![1]], [edge[0], edge[1]], 'the edge keeps its first point (on the chunk box)');
+  assert.deepEqual(e[0]!.slice(-2), edge.slice(-2), 'and its last');
+  const area = (p: number[]) => { let a = 0; for (let i = 0; i < p.length; i += 2) { const j = (i + 2) % p.length; a += p[i]! * p[j + 1]! - p[j]! * p[i + 1]!; } return Math.abs(a / 2); };
+  assert.ok(Math.abs(area(f[0]!) - area(ring)) / area(ring) < 0.01, 'the ring keeps its shape');
+  const [f2, e2] = capPoints([ring.slice(0, 200)], [edge.slice(0, 100)]);
+  assert.equal(f2[0]!.length, 200, 'under the cap nothing changes'); assert.equal(e2[0]!.length, 100);
 });

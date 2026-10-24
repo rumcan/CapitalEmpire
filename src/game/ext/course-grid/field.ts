@@ -6,13 +6,41 @@
 // the outward normal is (dy, -dx) for holes and outer rings alike.
 // Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m; res = image px per tile.
 import { SUN_TILE_DIR } from '../course-height';
-import type { EdgeField } from '../../paint-edges';
+import { DARK_RGB, LIGHT_RGB, SHADOW_RGB, castWeight, edgeShade, rimWeight, sunkenWeight, type EdgeField, type EdgeImage, type EdgeLook } from '../../paint-edges';
+import { HH, HW } from '../../iso';
+
+/** the course fields' resolution at cache level L, px per tile: one image px per about 10 cache px, 1 to 4 (paint-edges' edgeRes takes 6:
+ *  the course's rims and shadows are a tile or so wide and soft, so the coarser image looks the same and costs a third to a half) */
+export function courseRes(L: number): number { return Math.max(1, Math.min(4, Math.round((Math.hypot(HW, HH) * L) / 10))); }
+
+/** a course layer's edge images from its field: paint-edges' light rim, dark rim and cast shadow (its look, sun at the upper right; sunken
+ *  inverted), without the feather cut (course surfaces feather outward with strokes); each null when it would draw nothing */
+export function courseImages(f: EdgeField, look: Readonly<EdgeLook>, feather: number): { light: EdgeImage | null; dark: EdgeImage | null; shadow: EdgeImage | null } {
+  const N = f.W * f.H, mk = () => new Uint8ClampedArray(N * 4);
+  let light: Uint8ClampedArray | null = null, dark: Uint8ClampedArray | null = null, shadow: Uint8ClampedArray | null = null;
+  if (f.any) for (let k = 0; k < N; k++) {
+    const d = f.d[k]!, q = 4 * k;
+    if (d >= 0) {
+      if (look.light > 0 || look.dark > 0) {
+        const rim = look.sunken ? sunkenWeight(d, feather, look.bevel) : rimWeight(d, feather, look.bevel); if (rim <= 0) continue;
+        const s = edgeShade(f.sun[k]!, look.sunken), la = rim * s.light * look.light, da = rim * s.dark * look.dark;
+        if (la > 0.002) { light ??= mk(); light[q] = LIGHT_RGB[0]; light[q + 1] = LIGHT_RGB[1]; light[q + 2] = LIGHT_RGB[2]; light[q + 3] = la * 255; }
+        if (da > 0.002) { dark ??= mk(); dark[q] = DARK_RGB[0]; dark[q + 1] = DARK_RGB[1]; dark[q + 2] = DARK_RGB[2]; dark[q + 3] = da * 255; }
+      }
+      continue; // the cast shadow under the surface itself is hidden by its fill
+    }
+    const sa = castWeight(d, f.sun[k]!, feather, look) * look.shadow;
+    if (sa > 0.002) { shadow ??= mk(); shadow[q] = SHADOW_RGB[0]; shadow[q + 1] = SHADOW_RGB[1]; shadow[q + 2] = SHADOW_RGB[2]; shadow[q + 3] = sa * 255; }
+  }
+  const img = (data: Uint8ClampedArray | null): EdgeImage | null => (data ? { data, W: f.W, H: f.H } : null);
+  return { light: img(light), dark: img(dark), shadow: img(shadow) };
+}
 
 /** the edge field over tiles [x0, x0 + w) x [y0, y0 + h) at res px per tile, out to reach tiles from the boundary: inside = even-odd of
  *  rings (flat closed rings, tiles), d = signed distance to the nearest edge polyline (+ inside, clamped to +-reach), sun = the outward
  *  direction's sun facing there (rounded about a polyline's corners and ends); no seams. Cost: one scanline pass for inside, then the px
  *  within reach of each segment, so it scales with the edges' length, not the box */
-export function lineField(rings: readonly (readonly number[])[], edges: readonly (readonly number[])[], x0: number, y0: number, w: number, h: number, res: number, reach: number): EdgeField {
+export function lineField(rings: readonly ArrayLike<number>[], edges: readonly ArrayLike<number>[], x0: number, y0: number, w: number, h: number, res: number, reach: number): EdgeField {
   const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res)), N = W * H;
   const d = new Float32Array(N).fill(reach), sun = new Float32Array(N), seam = new Uint8Array(N), inside = new Uint8Array(N);
   // inside: even-odd crossings of every ring along each px row
