@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node --max-old-space-size=8192 node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
     "test": "esbuild tests/*.test.ts --bundle --platform=node --format=esm --loader:.webp=empty --loader:.png=empty --outdir=output/tests --out-extension:.js=.mjs --log-level=warning && node --test \"output/tests/*.mjs\"",
     "assets:ground": "node scripts/assets/prep-ground.mjs",
