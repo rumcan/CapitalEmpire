@@ -20,16 +20,16 @@ function recorder() {
   return { sink, quads, arcs: () => arcs };
 }
 
-test('shadeField: flat ground is exactly 0; the sun is on the right (+x, -y): a field falling to +x or rising to +y is lit, rising to +x is shaded', () => {
+test('shadeField: flat ground is exactly 0; the sun is at the upper right (toward -y): a field rising to +y (falling toward the sun) is lit, rising to -y is shaded', () => {
   const flat = new Float32Array(HS * HS).fill(10);
   for (const v of shadeField(flat)) assert.ok(Math.abs(v) < 1e-9);
-  const rise = new Float32Array(HS * HS), fall = new Float32Array(HS * HS), up = new Float32Array(HS * HS);
-  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) { rise[j * HS + i] = i * 4; fall[j * HS + i] = -i * 4; up[j * HS + i] = j * 4; }
-  const sr = shadeField(rise), sf = shadeField(fall), su = shadeField(up);
+  const up = new Float32Array(HS * HS), down = new Float32Array(HS * HS);
+  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) { up[j * HS + i] = j * 4; down[j * HS + i] = -j * 4; }
+  const su = shadeField(up), sd = shadeField(down);
+  // the sun leans only slightly toward -x (SUN_TILE_DIR.x ≈ -0.16), so x-facing slopes are not pinned here: the y slopes carry the test
   for (let j = 1; j < HS - 1; j++) for (let i = 1; i < HS - 1; i++) {
-    assert.ok(sr[j * HS + i] < 0, `rising to +x is shaded at ${i},${j}`);
-    assert.ok(sf[j * HS + i] > 0, `falling to +x is lit at ${i},${j}`);
-    assert.ok(su[j * HS + i] > 0, `rising to +y (falling to -y) is lit at ${i},${j}`);
+    assert.ok(su[j * HS + i]! > 0.1, `rising to +y (falling toward the sun) is lit at ${i},${j}`);
+    assert.ok(sd[j * HS + i]! < -0.1, `rising to -y (facing away from the sun) is shaded at ${i},${j}`);
   }
 });
 

@@ -5,7 +5,8 @@ import {
   CH_MIN_M,
   CH_SIZE,
   CH_STEP,
-  SUN_RIGHT_LIGHT,
+  SUN_LIGHT,
+  SUN_TILE_DIR,
   applyCourseHeightBrush,
   clampCourseHeightM,
   courseShadeAt,
@@ -58,17 +59,26 @@ describe('ext/course-height (T026)', () => {
     assert.ok(sampleCourseHeight(f, 300, 310) > 0.2, 'mound outside road corridor remains raised');
   });
 
-  it('lights right-facing (+x, -y) slopes and shades left-facing (-x, +y) slopes from sun on the right', () => {
+  it('the sun is at the upper right: SUN_TILE_DIR projects opposite the 145° shadows and SUN_LIGHT is its unit light vector', () => {
+    const sx = (SUN_TILE_DIR.x - SUN_TILE_DIR.y) * 64, sy = (SUN_TILE_DIR.x + SUN_TILE_DIR.y) * 32;
+    const deg = (Math.atan2(sy, sx) * 180) / Math.PI;
+    assert.ok(Math.abs(deg - -35) < 0.5, `sun screen angle ${deg}, expected -35 (325, opposite 145)`);
+    assert.ok(sx > 0 && sy < 0, 'the sun projects to the upper right of the screen');
+    assert.ok(Math.abs(Math.hypot(SUN_TILE_DIR.x, SUN_TILE_DIR.y) - 1) < 1e-9);
+    assert.ok(Math.abs(Math.hypot(SUN_LIGHT.lx, SUN_LIGHT.ly, SUN_LIGHT.lz) - 1) < 1e-9);
+    assert.ok(Math.abs(SUN_LIGHT.lz - 1.05 / Math.hypot(0.85, 0.55, 1.05)) < 0.01, `lz ${SUN_LIGHT.lz} keeps the old elevation`);
+    assert.ok(SUN_LIGHT.lx * SUN_TILE_DIR.x > 0 && SUN_LIGHT.ly * SUN_TILE_DIR.y > 0, 'the light leans toward SUN_TILE_DIR');
+  });
+
+  it('lights slopes that face the sun (toward SUN_TILE_DIR) and shades the far side of a hill', () => {
     const f = createCourseHeightField();
-    assert.ok(SUN_RIGHT_LIGHT.lx > 0 && SUN_RIGHT_LIGHT.ly < 0);
     assert.equal(courseShadeAt(f, 400, 400), 0);
     applyCourseHeightBrush(f, { x: 400, y: 400, radiusTiles: 12, mode: 'raise', strength: 1.5 });
-    // Right side on isometric screen is (+x, -y); left side is (-x, +y)
-    const rightFace = courseShadeAt(f, 406, 394);
-    const leftFace = courseShadeAt(f, 394, 406);
-    assert.ok(rightFace > 0, `expected right-facing slope lit (>0), got ${rightFace}`);
-    assert.ok(leftFace < 0, `expected left-facing slope shaded (<0), got ${leftFace}`);
-    assert.ok(courseSlopeAt(f, 405, 400).mag > 0.01);
+    const sunward = courseShadeAt(f, 400 + 6 * SUN_TILE_DIR.x, 400 + 6 * SUN_TILE_DIR.y);
+    const away = courseShadeAt(f, 400 - 6 * SUN_TILE_DIR.x, 400 - 6 * SUN_TILE_DIR.y);
+    assert.ok(sunward > 0, `expected the sun-facing slope lit (>0), got ${sunward}`);
+    assert.ok(away < 0, `expected the slope facing away shaded (<0), got ${away}`);
+    assert.ok(courseSlopeAt(f, 400 + 5 * SUN_TILE_DIR.x, 400 + 5 * SUN_TILE_DIR.y).mag > 0.01);
   });
 
   it('evaluates course quality bonus (+0..+5) and flags steep putting greens (>6%)', () => {
@@ -107,7 +117,7 @@ describe('ext/course-height (T026)', () => {
     assert.ok(Math.abs(sampleCourseHeight(loaded, 64, 64) - sampleCourseHeight(f, 64, 64)) <= 0.01);
   });
 
-  it('courseShadeInto: flat ground is all zeros; on a raised hill it matches courseShadeAt, lit on +x (sunward) and shaded on -x', () => {
+  it('courseShadeInto: flat ground is all zeros; on a raised hill it matches courseShadeAt, lit toward the sun and shaded away from it', () => {
     const whole: [number, number, number, number] = [0, 0, CH_SIZE * CH_STEP, CH_SIZE * CH_STEP];
     const flatOut = new Float32Array(CH_SIZE * CH_SIZE);
     courseShadeInto(createCourseHeightField().data, flatOut, whole);
@@ -121,7 +131,8 @@ describe('ext/course-height (T026)', () => {
       const ref = courseShadeAt(f, (i + 0.5) * CH_STEP, (j + 0.5) * CH_STEP);
       assert.ok(Math.abs(out[j * CH_SIZE + i]! - ref) <= 0.02, `sample ${i},${j}: ${out[j * CH_SIZE + i]} vs ${ref}`);
     }
-    assert.ok(out[250 * CH_SIZE + 253]! > 0, 'the +x side of the hill is lit');
-    assert.ok(out[250 * CH_SIZE + 246]! < 0, 'the -x side of the hill is shaded');
+    const at = (x: number, y: number) => out[Math.floor(y / CH_STEP) * CH_SIZE + Math.floor(x / CH_STEP)]!;
+    assert.ok(at(500 + 6 * SUN_TILE_DIR.x, 500 + 6 * SUN_TILE_DIR.y) > 0, 'the side toward the sun is lit');
+    assert.ok(at(500 - 6 * SUN_TILE_DIR.x, 500 - 6 * SUN_TILE_DIR.y) < 0, 'the side away from the sun is shaded');
   });
 });

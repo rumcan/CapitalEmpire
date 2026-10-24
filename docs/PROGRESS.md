@@ -2343,6 +2343,7 @@ lays every layer in one undo step; R turns, [ ] sizes, Snap toggle; snaps to the
 - Roads through woodland still became tunnels (HILL = tunnel in structures.ts): T025b makes woods ground for roads and lots and clears
   the forest trees around anything built (shared tree clearance with the town trees).
 - The terrain hillshade lit from the screen's top-left; T028 moves all shading to the sun on the right (every slope's shading flips).
+- 2026-10-24 (owner): all lighting comes from the sun at the upper right; cast shadows fall at 145° on screen, and the hillshade (SUN_LIGHT) and the course-piece bevels (SUN_TILE_VEC) use the same sun (T040).
 - T023 dropped: the junction tool already draws the ring it would build and the reason it cannot.
 
 **Next:** the laptop takes #39 and #41; the second lead lands T027b, T028, then T033 (player-action counters, then App.tsx) and T030b

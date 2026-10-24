@@ -1,7 +1,7 @@
 // Subtle golf course height field (UIX revamp T026, Owner choice 2A).
 // Fine 2-tile (4 m) grid on the 2048x2048 tile map (1024x1024 samples), clamped to [-3.0, +3.0] m.
-// Lighting is strictly from the sun on the right of the isometric screen (+screenX => +tileX, -tileY).
-// Supports raise/lower/smooth brushes, automatic road-corridor flattening, sun-right hillshade/slope, and course quality evaluation.
+// Lighting is strictly from the sun at the upper right of the isometric screen (cast shadows fall at 145°, the sun lies opposite).
+// Supports raise/lower/smooth brushes, automatic road-corridor flattening, sun-upper-right hillshade/slope, and course quality evaluation.
 // Pure TypeScript, no DOM globals, deterministic. Units: world coordinates in tiles (2 m); heights in metres (m).
 /** map width/height in 2 m tiles (matches MAP in src/game/iso.ts) */
 export const COURSE_MAP_TILES = 2048;
@@ -16,9 +16,18 @@ export const CH_MAX_M = 3.0;
 export const COURSE_CELL_M2 = 16;
 /** maximum comfortable putting green slope (metres per metre, 0.06 = 6%) before a warning is raised */
 export const GREEN_MAX_SLOPE = 0.06;
-/** unit light vector in tile-space (x, y, z) for the sun on the right of the isometric screen (+screenX = +tileX - tileY) */
-export const SUN_RIGHT_LIGHT = (() => {
- const LX = 0.85, LY = -0.55, LZ = 1.05, L = Math.hypot(LX, LY, LZ);
+/** the screen direction (degrees: 0 right, 90 down, 180 left) the cast shadows fall in: the sun sits opposite, at the upper right (owner, T040; matches cast-shadow.ts CAST_DEFAULT.angle) */
+export const SUN_SHADOW_DEG = 145;
+/** the unit tile-space (x, y) direction toward the sun: the ground direction whose iso screen image points opposite the shadows (screenX = (x − y)·HW, screenY = (x + y)·HH) */
+export const SUN_TILE_DIR = (() => {
+ const a = (SUN_SHADOW_DEG * Math.PI) / 180, sx = -Math.cos(a), sy = -Math.sin(a);
+ const HW = 64, HH = 32; // iso half-tile sizes in screen px (src/game/iso.ts)
+ const u = sx / HW, v = sy / HH, x = (u + v) / 2, y = (v - u) / 2, l = Math.hypot(x, y);
+ return { x: x / l, y: y / l } as const;
+})();
+/** unit light vector in tile space (x, y, z) for the sun at the upper right of the screen: horizontal toward SUN_TILE_DIR, the same elevation as before (horizontal 1.012 : up 1.05) */
+export const SUN_LIGHT = (() => {
+ const H = 1.0124, LX = SUN_TILE_DIR.x * H, LY = SUN_TILE_DIR.y * H, LZ = 1.05, L = Math.hypot(LX, LY, LZ);
  return { lx: LX / L, ly: LY / L, lz: LZ / L } as const;
 })();
 /** brush mode for editing the subtle course height field */
@@ -90,21 +99,21 @@ export function courseSlopeAt(field: CourseHeightField, x: number, y: number): {
  const gy = (hy1 - hy0) / (2 * stepM) + 0;
  return { gx, gy, mag: Math.hypot(gx, gy) };
 }
-/** computes directional hillshade (-1..+1, 0 on flat ground) at world tile (x, y) with the sun on the right of the screen */
+/** computes directional hillshade (-1..+1, 0 on flat ground) at world tile (x, y) with the sun at the upper right of the screen */
 export function courseShadeAt(field: CourseHeightField, x: number, y: number): number {
  const { gx, gy } = courseSlopeAt(field, x, y);
  if (gx === 0 && gy === 0) return 0;
  const EXAG = 2.2;
- const { lx, ly, lz } = SUN_RIGHT_LIGHT;
+ const { lx, ly, lz } = SUN_LIGHT;
  const nx = -EXAG * gx, ny = -EXAG * gy, nz = 1, nl = Math.hypot(nx, ny, nz);
  return (nx * lx + ny * ly + nz * lz) / nl - lz;
 }
-/** writes the sun-right hillshade of the raw height samples h into out (as courseShadeAt, 0 on flat ground) for every sample whose centre lies in box grown by one sample (clamped) */
+/** writes the sun-upper-right hillshade of the raw height samples h into out (as courseShadeAt, 0 on flat ground) for every sample whose centre lies in box grown by one sample (clamped) */
 export function courseShadeInto(h: Float32Array, out: Float32Array, box: CourseTileBox): void {
  const i0 = Math.max(0, Math.ceil(box[0] / CH_STEP - 1.5)), i1 = Math.min(CH_SIZE - 1, Math.floor(box[2] / CH_STEP + 0.5));
  const j0 = Math.max(0, Math.ceil(box[1] / CH_STEP - 1.5)), j1 = Math.min(CH_SIZE - 1, Math.floor(box[3] / CH_STEP + 0.5));
  const EXAG = 2.2;
- const { lx, ly, lz } = SUN_RIGHT_LIGHT;
+ const { lx, ly, lz } = SUN_LIGHT;
  for (let j = j0; j <= j1; j++) {
   const ja = Math.max(0, j - 1) * CH_SIZE, jb = Math.min(CH_SIZE - 1, j + 1) * CH_SIZE, jc = j * CH_SIZE;
   for (let i = i0; i <= i1; i++) {

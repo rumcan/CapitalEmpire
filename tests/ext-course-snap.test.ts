@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SNAP_PIECE_DIMS,
-  SUN_RIGHT_TILE_VEC,
+  SUN_TILE_VEC,
   autoTextureForPiece,
   buildPiecePolygon,
   buildSplineRibbonPolygon,
@@ -12,6 +12,7 @@ import {
   type SnapTargetArea,
   type SnapTargetRoad,
 } from '../src/game/ext/course-snap';
+import { SUN_TILE_DIR } from '../src/game/ext/course-height';
 
 describe('ext/course-snap (T029)', () => {
   it('wraps paint angles to [-90, 90] and builds auto-texture collar recipes (Choice 3A)', () => {
@@ -84,11 +85,15 @@ describe('ext/course-snap (T029)', () => {
     assert.deepEqual(prac.props.map(p => p.number), [1, 2, 3]);
   });
 
-  it('builds sun-from-right 3D bevels, raised tee boxes with steps, sunken bunkers, and natural ponds', () => {
-    assert.ok(SUN_RIGHT_TILE_VEC.x > 0 && SUN_RIGHT_TILE_VEC.y < 0);
+  it('builds sun-upper-right 3D bevels, raised tee boxes with steps, sunken bunkers, and natural ponds', () => {
+    assert.deepEqual({ x: SUN_TILE_VEC.x, y: SUN_TILE_VEC.y }, { x: SUN_TILE_DIR.x, y: SUN_TILE_DIR.y });
+    const sx = (SUN_TILE_VEC.x - SUN_TILE_VEC.y) * 64, sy = (SUN_TILE_VEC.x + SUN_TILE_VEC.y) * 32;
+    assert.ok(sx > 0 && sy < 0, 'the sun projects to the upper right of the screen');
     const bev = buildSunRightBevelPolygons([100, 100, 110, 100, 110, 110, 100, 110], 'raised', 1.0);
-    assert.ok(bev.sunLitPts[0]! > bev.shadedPts[0]!, 'sun-lit bevel shifts toward +x (right on screen)');
-    assert.ok(bev.sunLitPts[1]! < bev.shadedPts[1]!, 'sun-lit bevel shifts toward -y (right on screen)');
+    // mean position of each bevel ring: the sun-lit ring shifts toward the sun, the shaded ring away from it
+    const mean = (p: number[], k: number) => { let s = 0; for (let i = k; i < p.length; i += 2) s += p[i]!; return s / (p.length / 2); };
+    assert.ok((mean(bev.sunLitPts, 0) - mean(bev.shadedPts, 0)) * SUN_TILE_VEC.x > 0, 'sun-lit bevel shifts toward the sun (x)');
+    assert.ok((mean(bev.sunLitPts, 1) - mean(bev.shadedPts, 1)) * SUN_TILE_VEC.y > 0, 'sun-lit bevel shifts toward the sun (y)');
 
     const tee = computeSnapPiecePlacement({
       kind: 'tee',
