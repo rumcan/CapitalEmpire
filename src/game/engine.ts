@@ -2,6 +2,8 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLA
 import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
+import { drawGhostBlueprint, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { markerGhost, structureGhost } from './ext/event-ghost';
 import { getTournamentWeather } from './golf/weather';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
@@ -73,7 +75,7 @@ import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
-import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure } from './golf/eventtool';
+import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
 import { tierInfo, type Need } from './golf/tour';
@@ -429,6 +431,10 @@ export class Game {
    *  site: its site; why: the reason it cannot be built, '' if it can) */
   private bizRot = false;
   private bizHover: null | { mx: number; my: number; def: BizDef; site: Site; why: string } = null;
+  /** the cursor in css px for the ghosts' labels (T019); null off the canvas */
+  private ghostMouse: { mx: number; my: number } | null = null;
+  /** the last event/marker ghost and the hover state it was built for (rebuilt when the key changes) */
+  private ghostCache: { key: string; bp: GhostBlueprint } | null = null;
   /** the add-lane tool's plan at the cursor: the straight run of road under it (segs; none on a toll plaza), the class it widens to (null: already the widest),
    *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
   laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string; down: boolean } = null;
@@ -1140,15 +1146,15 @@ export class Game {
     this.toast(`Selected ${def ? def.name : typeId} (${mode}). Click open owned land to place it.`);
     this.emit();
     }
+    /** checkStructurePlacement for a candidate against the course's holes, placed structures and owned parcels (the click and the ghost share it) */
+    private structureCheck(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean }): StructurePlacementCheck {
+    const g = this.golf!;
+    const holes = this.courseStatsView() ? deriveHoles(this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })), g.tees, g.pins, g.aims) : [];
+    return checkStructurePlacement(candidate, { tier: g.tier, holes, existing: g.structures ?? [], parcels: g.parcels ?? [g.parcel] });
+    }
     placeEventStructure(candidate: { typeId: string; x: number; y: number; mode: 'rent' | 'buy'; rotated?: boolean }): boolean {
     if (!this.golf) return false;
-    const holes = this.courseStatsView() ? deriveHoles(this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })), this.golf.tees, this.golf.pins, this.golf.aims) : [];
-    const check = checkStructurePlacement(candidate, {
-    tier: this.golf.tier,
-    holes,
-    existing: this.golf.structures ?? [],
-    parcels: this.golf.parcels ?? [this.golf.parcel],
-    });
+    const check = this.structureCheck(candidate);
     if (!check.ok) {
     this.toast(check.reason ?? 'Cannot place structure here', 'warn');
     return false;
@@ -1996,6 +2002,7 @@ export class Game {
   }
   pointerMove(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
+  this.ghostMouse = { mx, my };
   this.hover = this.tileAt(mx, my);
   if (this.landMode && this.golf && this.hover) {
   const bx = Math.floor(this.hover.x / 40) * 40, by = Math.floor(this.hover.y / 40) * 40;
@@ -2040,7 +2047,7 @@ export class Game {
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     this.dragging = null;
   }
-  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.busHover = null; this.laneHover = null; }
+  pointerLeave() { this.paint.cursor = null; this.paint.mouse = null; this.paint.hover = 0; this.paint.hoverH = null; this.hover = null; this.hoverProp = null; this.hoverNode = null; this.hoverPiece = null; this.hoverRoad = ''; this.tollHover = null; this.bizHover = null; this.ghostMouse = null; this.busHover = null; this.laneHover = null; }
   /** the name of the road under tile t (the piece under it, then its route), or '' */
   roadNameAt(t: Pt | null): string {
     const piece = t ? this.net.pieceNear(t) : null;
@@ -3696,6 +3703,7 @@ export class Game {
     this.drawTolls(ctx);
     this.drawTollPreview(ctx);
     this.drawBizPreview(ctx);
+    this.drawEventGhosts(ctx);
     this.drawBusPreview(ctx);
     for (const p of [this.selected, this.hoverProp]) {
       if (!p) continue;
@@ -3828,6 +3836,24 @@ export class Game {
       ctx.restore();
     }
     if (h.why) this.hintAt(ctx, h.mx, h.my, h.why, true);
+  }
+  /** the Event tool's and the Holes tool's ghosts at the cursor (T019): the pending structure's footprint or the selected marker's ring, green when the click would succeed, else red, with its one-line label; rebuilt only when the hover spot or the course changes */
+  private drawEventGhosts(ctx: CanvasRenderingContext2D) {
+    const h = this.hover, m = this.ghostMouse, g = this.golf; if (!h || !m || !g) return;
+    let key = '', make: (() => GhostBlueprint) | null = null;
+    if (this.eventTool && this.eventStructurePending) {
+      const p = this.eventStructurePending, cand = { typeId: p.typeId, mode: p.mode, x: Math.round(h.x), y: Math.round(h.y) };
+      key = `s|${p.typeId}|${p.mode}|${cand.x}|${cand.y}|${this.money}|${this.paint.areas.length}|${(g.structures ?? []).length}`;
+      make = () => structureGhost(structureRect(cand), this.structureCheck(cand), this.money, STRUCTURE[p.typeId]?.name ?? p.typeId, p.mode);
+    } else if (this.holesTool && this.selectedGolfMarker) {
+      const s = this.selectedGolfMarker;
+      key = `m|${s.hole}|${s.kind}|${h.x}|${h.y}|${this.paint.areas.length}`;
+      make = () => markerGhost(h.x, h.y, s.hole, s.kind, validateMarkerPlacement(this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })), s.kind, h.x, h.y));
+    }
+    if (!make) return;
+    if (this.ghostCache?.key !== key) this.ghostCache = { key, bp: make() };
+    const v: GhostView = { ctx, setIso: c => this.setIso(c as CanvasRenderingContext2D), screen: (x, y) => this.screen(x, y), dpr: this.dpr };
+    drawGhostBlueprint(v, this.ghostCache.bp, m.mx, m.my);
   }
   /** a hint label beside the cursor at (mx, my) (screen px, as the tools' why): the text in red when bad, else green */
   private hintAt(ctx: CanvasRenderingContext2D, mx: number, my: number, text: string, bad: boolean) {
