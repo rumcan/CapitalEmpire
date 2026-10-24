@@ -164,7 +164,7 @@ export class SimClient {
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
-  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][], start?: 'range', exits?: Pt[]) { this.post({ t: 'golf', on, tier, rep, land, start, exits }); this.golfOn = on; this.sendTownDay(); }
+  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][], range?: { start?: 'range'; exits?: Pt[]; invited?: { at: number } }) { this.post({ t: 'golf', on, tier, rep, land, start: range?.start, exits: range?.exits, invited: range?.invited }); this.golfOn = on; this.sendTownDay(); }
   /** the town day (LEAD.md M1): in a golf game the town lives a day of townMinutes (real minutes at 1x; one sim second is one game minute)
    *  with its own commute, separate from the season; townTraffic scales its lot trips. A classic game keeps the classic day (DAY). */
   golfOn = false; townMinutes = 10; townTraffic = 1;

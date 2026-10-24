@@ -41,7 +41,7 @@ import { ON_TIME_GRACE_MIN } from './golf/tournamentday';
 import { gateRate } from './golf/venue';
 import { hasExpressGates } from './golf/golfcards';
 import { pickSpot, type GallerySpot } from './golf/galleries';
-import { dayShare, spectatorDemand, tierInfo } from './golf/tour';
+import { dayShare, spectatorDemand, tierInfo, tournamentDue } from './golf/tour';
 import { roundTownGrowthRate, townGrowthTargets } from './golf/towngrowth';
 import { applyParkingFeeDemand } from './golf/parkingfee';
 
@@ -186,7 +186,7 @@ export class City {
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
   /** golf mode (null: off): the tournament's tier and its reputation; the season (one game day) ends with the tournament (see startTournament) */
-  golf: { tier: number; rep: number; start?: 'range'; exits?: Pt[] } | null = null;
+  golf: { tier: number; rep: number; start?: 'range'; exits?: Pt[]; invited?: { at: number } } | null = null;
   /** the player's businesses (setBusinesses: the full list, with each one's stats; the stadium's level is its own, from its fan cars (XP), not the round's) */
   businesses: BizView[] = [];
   /** each placed business's stats by id (kept across setBusinesses while it stands; restoreBiz fills them from a save) */
@@ -423,11 +423,11 @@ export class City {
     return true;
   }
   /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
-  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[] } | null): TownEvent[] {
-    // a range start's start and exits (plan P22) are kept for the range-start rules that read them (T088-T094); an old start's golf state has
-    // neither key, exactly as before
+  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[]; invited?: { at: number } } | null): TownEvent[] {
+    // a range start's start, exits and invitation (plan P22) are kept for the range-start rules that read them (T088-T094); an old start's golf
+    // state has none of these keys, exactly as before
     this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
-    if (this.golf && g?.start === 'range') { this.golf.start = 'range'; if (g.exits) this.golf.exits = g.exits; }
+    if (this.golf && g?.start === 'range') { this.golf.start = 'range'; if (g.exits) this.golf.exits = g.exits; if (g.invited) this.golf.invited = g.invited; }
     // the town's lots inside the course go now (and every game hour: a loaded town's lots may come after this): the events to post
     const ev: TownEvent[] = []; this.clearCourse(ev);
     return ev;
@@ -438,6 +438,8 @@ export class City {
   private startTournament(at: number): boolean {
     const g = this.golf;
     if (!g || !this.site || this.round.stage !== 'free') return false;
+    // a range start's founding seasons end with no tournament: it is held only once the tour's invitation is due (plan P22 2.5.3)
+    if (g.start === 'range' && !tournamentDue(g.invited?.at, at)) return false;
     const day1Spectators = applyParkingFeeDemand(Math.round(spectatorDemand(g.tier, g.rep) * dayShare(0, tierInfo(g.tier).days)), this.parkFee);
     if (!this.round.start(crowdFor(this.round.level, this.town.popK, Math.round(day1Spectators / PARTY)))) return false;
     this.town.skipTo(at);
