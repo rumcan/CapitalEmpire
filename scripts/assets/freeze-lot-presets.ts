@@ -1,7 +1,7 @@
 // Freeze today's lots into presets (P20 / T063), the bundled half of scripts/assets/freeze-lot-presets.mjs (run that, not this):
 //   freeze.mjs --freeze <curated.json> <lot-presets.json>   the freeze, then the check
 //   freeze.mjs --check  <curated.json> <lot-presets.json>   the check alone
-// The freeze runs the game's own composer (compose.ts layoutOfUse) on a canonical lot (the street on +y, so nothing turned or flipped) for
+// The freeze runs the game's own composer (legacy-layout.ts layoutOfUse, the old use layouts kept for it) on a canonical lot (the street on +y, so nothing turned or flipped) for
 // every use (res, com, park, tour, ind, civic) x state (built, upgraded, declined) x size bucket of a real town, with 4 fixed seeds each, and
 // converts each layout into a preset in the lot frame: props as { id, x, y, scale, view } (x, y the footprint centre; four-view art by its base
 // id and view; scale over the owner scale), ground patches as { kind, tex, pts, lines }. What stays procedural (P20 decision 2) is left out:
@@ -13,7 +13,8 @@ import { CLASS, RoadNetwork, type Leg } from '../../src/game/network';
 import { NetEditor } from '../../src/game/netops';
 import { LotMap, type Lot } from '../../src/game/lots/lots';
 import { townGrid, TOWN_BLOCKS } from '../../src/game/lots/seedtowns';
-import { layoutOfUse, isCarPark, type ComposeState, type LotGeom } from '../../src/game/lots/compose';
+import { layoutOfUse } from '../../src/game/lots/legacy-layout';
+import { isCarPark, type ComposeState, type LotGeom } from '../../src/game/lots/compose-core';
 import { LU, LV } from '../../src/game/lots/town';
 import { TC } from '../../src/game/terrain/types';
 import { LIBRARY } from '../../src/game/library';

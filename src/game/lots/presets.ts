@@ -13,8 +13,9 @@ export interface PresetProp { id: string; x: number; y: number; scale: number; v
 export interface PresetPatch { kind: 'drive' | 'walk' | 'lot' | 'yard' | 'bed'; tex: string; pts: number[]; lines?: number[] }
 /** one preset: its id, use, state, the size it was laid out for (tiles), its props and ground patches; curated: the owner has edited it */
 export interface LotPreset { id: string; use: PresetUse; state: PresetState; w: number; d: number; props: PresetProp[]; patches: PresetPatch[]; curated?: boolean }
-/** a preset fitted to a lot: its props and patches as new objects (tiles of the lot), and how many props were dropped for lying outside it */
-export interface Fitted { props: PresetProp[]; patches: PresetPatch[]; dropped: number }
+/** a preset fitted to a lot: its props and patches as new objects (tiles of the lot), each prop's index in the preset's props (from), and how
+ *  many props were dropped for lying outside it */
+export interface Fitted { props: PresetProp[]; patches: PresetPatch[]; from: number[]; dropped: number }
 
 /** the size bucket step (tiles): a lot's width and depth are rounded to it */
 export const BUCKET = 2;
@@ -54,24 +55,21 @@ export function pickPreset(list: readonly LotPreset[], slot: number, street: str
   return list.length ? list[(Math.max(0, Math.floor(slot)) + streetHash(street)) % list.length] : undefined;
 }
 
-/** a preset laid out for p.w x p.d tiles, fitted to a lot of w x d tiles (tiles): a coordinate on the far half (x >= p.w / 2, y >= p.d / 2) moves by the change in size, the near half stays; a prop outside the lot is dropped and counted in dropped; patch points move the same way and are clamped into the lot; the preset itself is not changed */
+/** a preset laid out for p.w x p.d tiles, fitted to a lot of w x d tiles (tiles): a coordinate on the far half (x >= p.w / 2, y >= p.d / 2) moves by the change in size, the near half stays; a prop outside the lot is dropped and counted in dropped; patch points and their lines move the same way and are clamped into the lot; the preset itself is not changed */
 export function fitPreset(p: LotPreset, w: number, d: number): Fitted {
   const dx = w - p.w, dy = d - p.d, eps = 1e-9;
   const fx = (x: number) => x < p.w / 2 ? x : x + dx;
   const fy = (y: number) => y < p.d / 2 ? y : y + dy;
-  const props: PresetProp[] = [];
+  const props: PresetProp[] = [], from: number[] = [];
   let dropped = 0;
-  for (const q of p.props) {
+  p.props.forEach((q, i) => {
     const x = fx(q.x), y = fy(q.y);
     if (x < -eps || x > w + eps || y < -eps || y > d + eps) dropped++;
-    else props.push({ ...q, x, y });
-  }
-  const patches = p.patches.map(a => {
-    const pts: number[] = [];
-    for (let i = 0; i < a.pts.length; i += 2) pts.push(Math.min(w, Math.max(0, fx(a.pts[i]))), Math.min(d, Math.max(0, fy(a.pts[i + 1]))));
-    return { ...a, pts, ...(a.lines ? { lines: a.lines.slice() } : {}) };
+    else { props.push({ ...q, x, y }); from.push(i); }
   });
-  return { props, patches, dropped };
+  const fit = (a: readonly number[]) => { const out: number[] = []; for (let i = 0; i + 1 < a.length; i += 2) out.push(Math.min(w, Math.max(0, fx(a[i]!))), Math.min(d, Math.max(0, fy(a[i + 1]!)))); return out; };
+  const patches = p.patches.map(a => ({ ...a, pts: fit(a.pts), ...(a.lines ? { lines: fit(a.lines) } : {}) }));
+  return { props, patches, from, dropped };
 }
 
 /** the uses, states and patch kinds a preset file may name */
