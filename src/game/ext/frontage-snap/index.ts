@@ -2,6 +2,13 @@
 
 /** a road segment to snap to: its centre line from (ax, ay) to (bx, by) (tiles), and the distance from that line to the verge's outer edge (tiles: the class's half width plus its verge, cls.h + cls.walk); kind: drive or path (the snap itself does not read it) */
 export interface SnapSeg { ax: number; ay: number; bx: number; by: number; verge: number; kind: 'drive' | 'path' }
+/** a road seg as a snap target (T084): its centre line, its verge (the class's half width plus its verge: cls.h + cls.walk, so a footprint's front
+ *  edge lands just off the surface at any width) and its kind (a cart path 'path', a course drive 'drive'); null for a town road (the golf
+ *  buildings snap to the course's drives and paths only, P19 decision 3) */
+export function snapSegOf(s: { a: { x: number; y: number }; b: { x: number; y: number }; cls: { h: number; walk: number; family: string } }): SnapSeg | null {
+  const kind = s.cls.family === 'cart' ? 'path' : s.cls.family === 'course' ? 'drive' : null;
+  return kind ? { ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, verge: s.cls.h + s.cls.walk, kind } : null;
+}
 /** a building's footprint (tiles): w along the frontage, d deep (away from the road) */
 export interface Footprint { w: number; d: number }
 /** where the footprint goes: its centre (tiles), the axis it faces (a unit vector from the footprint toward the road: (1,0), (-1,0), (0,1) or (0,-1)), rot (the frontage runs along y, so the footprint's w lies along y), the segment's index, and the cursor's distance from the segment's centre line (tiles) */

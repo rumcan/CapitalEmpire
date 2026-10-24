@@ -12,7 +12,8 @@ import { enclosedBlocks } from '../src/game/blocks';
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
-const isCourse = (id: ClassId) => classOf(id).family === 'course';
+/** a course road: a drive or (T084) a cart path */
+const isCourse = (id: ClassId) => classOf(id).family === 'course' || classOf(id).family === 'cart';
 
 test('the course drives: three plain classes and their variants, with their median and lane rules', () => {
   for (const id of ['drive-gravel', 'drive', 'drive-avenue']) {
