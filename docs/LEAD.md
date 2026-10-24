@@ -62,6 +62,12 @@ tents, stands, car parks) and above all **manage the transport and roads around 
   gates (the placed gate structures, else the clubhouse plot's doors), queue there and are admitted at the gates' lane rate; inside they
   stand in galleries (tees, greens, stands, tents); at the day's end they walk back and their cars drive home. The results' gate waits,
   lateness and exit times come from these movers (replacing `measureGateFlows`). Details and the step list: NOW.md "The M2 design".
+- **2026-10-24, the owner: the lead's recommendation is the decision.** Design and planning questions no longer wait for the owner: the
+  lead takes the recommended option, records it in the plan's "Owner decisions" and here, and states it in the chat. Irreversible or
+  outward-facing actions still get asked first.
+- **2026-10-24: Alpha 1.0 is defined (plans/P01.md)** — testers are the owner plus 2–3 newcomers; tiers 1–3 balanced, 4–5 smoke-tested;
+  placeholder art allowed if it reads; the single HTML file is the Alpha build. **The season loop (plans/P04.md)**: money booked by the
+  month, the tier offer is a choice (Move up default), Skip warns about un-grown seeded surfaces with Lay sod, practice days stay resolved.
 
 ## 6. How to work (so anyone can continue)
 - **The live log is `docs/NOW.md`.** Before you edit, write there: the step, the branch, the files and the exact change you are about to
