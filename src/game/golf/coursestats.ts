@@ -1,9 +1,19 @@
 // Course stats panel model (docs/GOLF-PLAN.md sections 4.2, 4.3, 5.1 and 8.2): turns holes.ts derivation, costs.ts maintenance, and tour.ts missingFor into panel rows and quality hints. Pure TS, no DOM.
 import { courseMonthlyUpkeep, growInShare } from './costs';
 import { evaluateCourseHeightQuality, type CourseHeightField } from '../ext/course-height';
-import { courseStats, deriveHoles, type CourseStats, type Hole } from './holes';
+import { courseStats, deriveHoles, parFromLength, type CourseStats, type Hole } from './holes';
+import { courseTerrain } from './hole-terrain';
 import { missingFor, tierInfo, type CourseFacts, type Need } from './tour';
 import type { CourseLayout } from './types';
+
+/** quality lost per hole whose green is over 6% steep (T038), and the most it can cost */
+export const STEEP_GREEN_PENALTY = 4, STEEP_GREEN_CAP = 12;
+/** the steepest fairway slope along a hole's line that is still fair (m per m), the quality lost per hole over it, and the cap */
+export const FAIRWAY_MAX_SLOPE = 0.12, STEEP_FAIRWAY_PENALTY = 3, STEEP_FAIRWAY_CAP = 9;
+/** a hole is "shaped" when it climbs or falls this much tee to pin (m), or its relief along the line reaches this (m) */
+export const SHAPED_RISE_M = 1, SHAPED_RELIEF_M = 1.5;
+/** the plays-like line shows when the hole climbs or falls at least this much (m) */
+export const PLAYS_LIKE_SHOW_M = 0.5;
 
 /** metres to yards conversion factor */
 export const YARDS_PER_M = 1.0936133;
@@ -42,6 +52,9 @@ export interface HolePanelRow {
   lengthYards: number;
   memberLengthM: number;
   memberLengthYards: number;
+  /** the plays-like length (m) and the tee-to-pin rise (m, > 0 uphill); 0 rise without a height field */
+  playsLikeM: number;
+  riseM: number;
   playable: boolean;
   warnings: string[];
 }
@@ -58,6 +71,8 @@ export interface CourseStatsPanel {
   heightBonus: number;
   /** the holes whose putting green is over 6% steep (each row carries the warning; empty without a height field) */
   steepGreenHoles: number[];
+  /** the slope adjustments to the quality score (T038): steep greens, steep fairways (both ≤ 0), the character bonus (≥ 0) */
+  slopeQuality: { steepGreens: number; steepFairways: number; shaped: number };
   tier: number;
   nextTier: number | null;
   missingForCurrent: (Need | 'holes' | 'length')[];
@@ -77,6 +92,8 @@ export function toHoleRow(h: Hole): HolePanelRow {
     lengthYards: metresToYards(h.lengthM),
     memberLengthM: h.memberLengthM,
     memberLengthYards: metresToYards(h.memberLengthM),
+    playsLikeM: h.lengthM,
+    riseM: 0,
     playable: h.line.length >= 2,
     warnings: h.warnings.slice(),
   };
@@ -147,12 +164,34 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
  lengthYards: metresToYards(baseTotals.lengthM),
  memberLengthYards: metresToYards(baseTotals.memberLengthM),
  };
- const warningCount = rows.reduce((s, r) => s + r.warnings.length, 0);
  const monthlyUpkeep = Math.round(courseMonthlyUpkeep(layout.areas));
  const quality = courseQuality(layout, holes, baseTotals, currentMonth);
  const qualityHints = quality.hints;
  let qualityScore = quality.score;
- if (hq) { qualityScore = Math.min(100, qualityScore + hq.bonusPoints); qualityHints.push(...hq.hints); }
+ if (hq) qualityHints.push(...hq.hints);
+ // slope in play (T038): steep greens (from hq), steep fairways, shaped holes and the plays-like lengths come from the height field
+ const steepGreenCost = hq ? Math.min(STEEP_GREEN_CAP, hq.steepGreenHoles.length * STEEP_GREEN_PENALTY) : 0;
+ const slopeQuality = { steepGreens: steepGreenCost > 0 ? -steepGreenCost : 0, steepFairways: 0, shaped: 0 };
+ if (height) {
+  const terr = courseTerrain(height.field, holes);
+  const steepFair: number[] = [];
+  let shapedN = 0;
+  for (const r of rows) {
+   const t = terr.find(x => x.hole === r.hole);
+   if (!t) continue;
+   r.playsLikeM = Math.round(t.playsLikeM);
+   r.riseM = Math.round(t.riseM * 10) / 10 + 0;
+   if (t.fairwayMaxSlope > FAIRWAY_MAX_SLOPE) { steepFair.push(r.hole); r.warnings.push('Fairway slope over 12% (smooth it)'); }
+   if (Math.abs(t.riseM) >= SHAPED_RISE_M || t.reliefM >= SHAPED_RELIEF_M) shapedN++;
+   if (Math.abs(t.riseM) >= PLAYS_LIKE_SHOW_M && parFromLength(t.playsLikeM) !== r.par) qualityHints.push(`Hole ${r.hole} plays like a par ${parFromLength(t.playsLikeM)} (${t.riseM > 0 ? 'uphill' : 'downhill'})`);
+  }
+  const fairCost = Math.min(STEEP_FAIRWAY_CAP, steepFair.length * STEEP_FAIRWAY_PENALTY);
+  slopeQuality.steepFairways = fairCost > 0 ? -fairCost : 0;
+  slopeQuality.shaped = shapedN >= 6 ? 2 : shapedN >= 3 ? 1 : 0;
+  if (steepFair.length > 0) qualityHints.push(`Smooth the steep fairway${steepFair.length === 1 ? '' : 's'} on hole${steepFair.length === 1 ? '' : 's'} ${steepFair.join(', ')}`);
+ }
+ const warningCount = rows.reduce((s, r) => s + r.warnings.length, 0);
+ qualityScore = Math.max(0, Math.min(100, qualityScore + (hq?.bonusPoints ?? 0) + slopeQuality.steepGreens + slopeQuality.steepFairways + slopeQuality.shaped));
   const clampedTier = tierInfo(tier).tier;
   const nextTier = clampedTier < 5 ? clampedTier + 1 : null;
   const facts: CourseFacts = { holes: totals.holes, lengthM: totals.lengthM, have };
@@ -174,6 +213,7 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
     qualityHints,
     heightBonus: hq?.bonusPoints ?? 0,
     steepGreenHoles: hq?.steepGreenHoles ?? [],
+    slopeQuality,
     tier: clampedTier,
     nextTier,
     missingForCurrent,

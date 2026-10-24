@@ -122,7 +122,10 @@ export function CourseStatsPanel({ stats, onClose, onSelectHole }: CourseStatsPa
                 >
                   <td className="px-2 py-1 font-bold text-white">#{h.hole}</td>
                   <td className={`px-1 py-1 font-semibold ${parColorClass(h.par)}`}>P{h.par}</td>
-                  <td className="px-2 py-1 text-right tabular-nums text-slate-200">{h.lengthM}m</td>
+                  <td className="px-2 py-1 text-right tabular-nums text-slate-200">
+                    {h.lengthM}m
+                    {Math.abs(h.riseM) >= 0.5 && <div className="text-[10px] text-slate-400">plays {h.playsLikeM}m ({h.riseM > 0 ? '+' : ''}{h.riseM} m)</div>}
+                  </td>
                   <td className="px-2 py-1 text-right tabular-nums text-slate-400">{h.memberLengthM}m</td>
                   <td className="px-2 py-1 text-[10px]">
                     {h.warnings.length === 0 ? (
