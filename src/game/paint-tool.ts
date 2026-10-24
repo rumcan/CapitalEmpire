@@ -7,7 +7,9 @@ import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, ty
 import HOLE_PRESETS from './golf/hole-presets.json';
 import { areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
 import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
-import { drawGhostPoly } from './ext/ghost-preview';
+import { drawGhostPoly, drawGhostSnap, ghostStatus } from './ext/ghost-preview';
+import { computeSnapPiecePlacement, type CoursePieceArchetype, type SnapPiecePlacement } from './ext/course-snap';
+import { PIECE_BUTTONS, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -30,7 +32,7 @@ function loadPlant(): Record<PlantBrushKind, PlantSet> {
   return out;
 }
 
-export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant';
+export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece';
 /** the golf holes a course has (the Course tool's hole strip) */
 export const HOLE_COUNT = 18;
 /** the studio's 18 preset holes (src/game/golf/hole-presets.json; null: an empty slot) */
@@ -166,6 +168,12 @@ export class PaintTool {
   /** plant mode: the plant brush in use and each kind's brush (remembered); the drag in progress (erasing or not, the last dab) */
   plantBrush: PlantBrushKind = 'trees';
   plant: Record<PlantBrushKind, PlantSet> = loadPlant();
+  /** piece mode (T030): the archetype in hand, its turn (degrees, R) and size (×, [ ]), whether it snaps to the piece it touches, and the plan at the cursor (rebuilt when its key changes) */
+  pieceArch: CoursePieceArchetype = 'fairway-corridor';
+  pieceAngle = 0;
+  pieceScale = 1;
+  pieceSnap = true;
+  piece: { key: string; pl: SnapPiecePlacement; areas: Omit<PaintArea, 'id'>[]; why: string; cost: number } | null = null;
   private planting: { erase: boolean; last: { x: number; y: number }; n: number } | null = null;
   private plantSeed = (Date.now() % 100000) | 0;
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
@@ -232,9 +240,9 @@ export class PaintTool {
   /** the Course tool's Shape method: click corners (or lasso) to lay the kind for the current hole, in its preset's style */
   setShape(kind: BrushKind) { this.mode = 'draw'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
   /** the Course tool opens (the engine calls it): coming from Paint, or from Pick or Erase, it starts on the current surface's brush */
-  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'draw')) this.setBrush(this.brushKind); }
+  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'draw')) this.setBrush(this.brushKind); }
   /** the Paint tool opens: the golf brush, the Shape method and the hole presets are the Course tool's, so they fall back to Draw */
-  enterPaint() { const was = this.course; this.course = false; if (this.mode === 'brush' || this.mode === 'hole' || (was && this.mode === 'draw')) this.setMode('draw'); }
+  enterPaint() { const was = this.course; this.course = false; if (this.mode === 'brush' || this.mode === 'hole' || this.mode === 'piece' || (was && this.mode === 'draw')) this.setMode('draw'); }
   /** the hole numbers that have painted areas */
   usedHoles(): Set<number> { const out = new Set<number>(); for (const a of this.areas) if (a.hole) out.add(a.hole); return out; }
   /** the lowest hole number (1..18) with no areas, or 0 when every hole has some */
@@ -324,6 +332,55 @@ export class PaintTool {
 
   /** the plant brush: Trees, Bushes or Flowers scattered by dragging (Rub out / Alt removes them) */
   setPlant(kind: PlantBrushKind) { this.mode = 'plant'; this.plantBrush = kind; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
+  /** piece mode: takes archetype arch in hand (T030) */
+  setPiece(arch: CoursePieceArchetype) { this.mode = 'piece'; this.pieceArch = arch; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.piece = null; this.refreshPiece(); }
+  /** piece mode: the turn (degrees, wrapped to 0..345), the size (0.5 to 2.5) and snapping of the piece in hand */
+  setPieceOpts(o: { angle?: number; scale?: number; snap?: boolean }) {
+    if (o.angle !== undefined) this.pieceAngle = ((Math.round(o.angle) % 360) + 360) % 360;
+    if (o.scale !== undefined) this.pieceScale = Math.min(2.5, Math.max(0.5, Math.round(o.scale * 4) / 4));
+    if (o.snap !== undefined) this.pieceSnap = o.snap;
+    this.refreshPiece();
+  }
+  /** piece mode: re-plans the piece at the cursor and redraws the panel */
+  private refreshPiece() { this.piece = this.cursor ? this.pieceAt(this.cursor) : null; this.host.emit(); }
+  /** piece mode: the plan for the piece in hand at tile t: its placement (snapped to the touching course piece unless snapping is off), the areas it lays, why it cannot go ('' if it can) and its cost (golf mode) */
+  private pieceAt(t: { x: number; y: number }): NonNullable<PaintTool['piece']> {
+    const key = `${this.pieceArch}|${Math.round(t.x * 4)}|${Math.round(t.y * 4)}|${this.pieceAngle}|${this.pieceScale}|${this.pieceSnap}|${this.brushHole}|${this.areas.length}|${this.nextId}|${this.plantKind}`;
+    if (this.piece?.key === key) return this.piece;
+    const b = PIECE_BUTTONS.find(q => q.arch === this.pieceArch) ?? PIECE_BUTTONS[2]!, golf = !!this.host.golfMode?.();
+    const pl = computeSnapPiecePlacement({ kind: b.kind, archetype: b.arch, cursor: t, angleDeg: this.pieceAngle, scale: this.pieceScale, snapEnabled: this.pieceSnap, defaultHole: this.brushHole, areas: snapTargets(this.areas) });
+    const areas = pieceAreas(pl);
+    return { key, pl, areas, why: pieceWhy(areas, golf ? this.host.ownedLand : undefined), cost: golf ? pieceCost(areas, this.plantKind) : 0 };
+  }
+  /** piece mode: a click lays the planned piece (all its areas, one undo step) when it can go and is affordable, else the toast says why; the layers under the core draw just below it (order), the core on its kind's layer */
+  private placePiece() {
+    const p = this.piece; if (!p) return;
+    if (p.why) { this.host.toast(p.why, 'warn'); return; }
+    if (p.cost > 0) {
+      const treasury = this.host.money?.() ?? 0;
+      if (treasury < p.cost) { this.host.toast(`Not enough money: this piece costs $${p.cost.toLocaleString()} (treasury: $${Math.round(treasury).toLocaleString()})`, 'warn'); return; }
+    }
+    this.begin('place ' + this.pieceArch);
+    if (p.cost) { this.host.spend?.(p.cost); this.tx!.spent += p.cost; }
+    const m = this.host.currentMonth?.() ?? 0, core = p.areas.find(a => a.kind);
+    for (const s of p.areas) {
+      const id = this.nextId++;
+      const a: PaintArea = { id, ...s, plantKind: this.plantKind, plantedMonth: m, ...(!s.kind && core?.kind ? { order: drawZ({ kind: core.kind, id }) } : {}) };
+      this.areas.push(a); this.send(a, m);
+    }
+    this.commit(); this.piece = null; this.refreshPiece(); this.host.save();
+  }
+  /** piece mode: the planned piece as ghosts, bottom layer first (each in its surface's colour with its border band, the core dashed; red when it cannot go), the snap tick on the edge it joins, and its label */
+  private drawPiece(v: PaintView) {
+    const p = this.piece; if (!p) return;
+    const status = p.why ? 'invalid' : 'valid';
+    for (const a of p.areas) drawGhostPoly(v, a.pts, status, { fillColor: p.why ? undefined : rgba(TEX_COL.get(a.tex) ?? '#888888', 0.45), dashed: !!a.kind, borderWidthTiles: a.border > 0 ? BORDER_W[a.border]! : 0, borderColor: rgba(BTEX_COL.get(a.btex) ?? '#888888', 0.7) });
+    const pl = p.pl;
+    if (pl.snapPt && pl.snapNormal) drawGhostSnap(v, { x: pl.snapPt.x, y: pl.snapPt.y, kind: 'edge', nx: pl.snapNormal.x, ny: pl.snapNormal.y, halfSpan: 2 });
+    const name = PIECE_BUTTONS.find(q => q.arch === this.pieceArch)?.name ?? 'Piece';
+    const g = ghostStatus(p.why, p.cost, this.host.money?.() ?? Infinity, pl.snapped ? `${name} · joins hole ${pl.hole}` : `${name} · hole ${pl.hole}`);
+    if (this.mouse) v.hint(this.mouse.mx, this.mouse.my, g.label, g.bad);
+  }
   /** edits the current plant brush (radius, spacing, size range, sprites) and remembers it */
   setPlantSet(p: Partial<PlantSet>) {
     const k = this.plantBrush; this.plant[k] = clampPlant({ ...this.plant[k], ...p }, k);
@@ -362,6 +419,7 @@ export class PaintTool {
     const sel = this.selectedArea();
     if (sel) { const g = this.grabAt(sel, t, mx, my); if (g) { this.startDrag(sel, g, t); this.host.emit(); return; } }
     if (this.mode === 'hole') { this.placeHoleAt(t); return; }
+    if (this.mode === 'piece') { this.placePiece(); return; }
     if (this.mode === 'brush') { this.strokeStart(t, alt); return; }
     if (this.mode === 'plant') { const erase = this.rubOut || alt; this.begin(erase ? 'rub out plants' : 'plant ' + this.plantBrush); this.planting = { erase, last: { x: t.x, y: t.y }, n: 0 }; this.plantDab(t, erase); this.host.emit(); return; }
     if (this.mode === 'draw') {
@@ -390,6 +448,7 @@ export class PaintTool {
   pointerMove(t: { x: number; y: number } | null, mx: number, my: number, shift = false) {
     this.cursor = t; this.mouse = { mx, my };
     if (this.drag) { this.dragTo(t, shift); return; }
+    if (this.mode === 'piece') { this.piece = t ? this.pieceAt(t) : null; return; }
     if (this.mode === 'brush') { const s = this.stroke; if (s && t) { brushStroke(s.m, s.last.x, s.last.y, t.x, t.y, s.r, s.erase); s.last.x = t.x; s.last.y = t.y; s.dabs.push(t.x, t.y); } return; }
     if (this.mode === 'plant') {
       // a dab every half radius along the drag (each dab only adds where the spacing allows, so going over a spot again fills it in)
@@ -602,6 +661,11 @@ export class PaintTool {
     if (this.selected && (e.key === 'PageUp' || e.key === 'PageDown')) {
       e.preventDefault(); const f = e.key === 'PageUp'; this.moveLayer(e.shiftKey ? (f ? 'front' : 'back') : f ? 1 : -1); return true;
     }
+    if (this.mode === 'piece') {
+      if (e.key === 'r' || e.key === 'R') { this.setPieceOpts({ angle: this.pieceAngle + (e.shiftKey ? -15 : 15) }); return true; }
+      if (e.key === ']' || e.key === '[') { this.setPieceOpts({ scale: this.pieceScale + (e.key === ']' ? 0.25 : -0.25) }); return true; }
+      if (e.key === 'Escape') { this.setBrush(this.brushKind); return true; }
+    }
     if (this.course && e.key >= '1' && e.key <= '9') {
       const b = BRUSH_PRESETS[+e.key - 1]; if (!b) return false;
       if (this.mode === 'draw') this.setShape(b.kind); else this.setBrush(b.kind);
@@ -641,6 +705,7 @@ export class PaintTool {
 
   /** the overlay preview: the outline being drawn (draw); the selected area, shaded, with its handles (draw and pick); a drag's candidate that cannot be applied, in red; the hovered area (pick and erase) */
   drawPreview(v: PaintView) {
+    if (this.mode === 'piece') { this.drawPiece(v); return; }
     if (this.mode === 'draw') this.drawOutline(v);
     if (this.mode === 'hole') { this.drawHolePreview(v); return; }
     if (this.mode === 'brush') { this.drawBrush(v); return; }
