@@ -2877,6 +2877,8 @@ export class Game {
   playerProgressFacts(): PlayerProgressFacts | null { const p = this.golf?.progress; return p ? progressFacts(p, this.traffic.round.runs) : null; }
   /** the progressive tool visibility (T032/T033), null outside golf mode (classic and sandbox show everything) */
   progressiveUi(): ProgressiveUiState | null { const f = this.playerProgressFacts(); return f ? computeProgressiveUiState(f) : null; }
+  /** the tool visibility in force (T033): null shows everything (classic games, and the dev sandbox's unlock-all) */
+  toolUi(): ProgressiveUiState | null { return this.unlockAll ? null : this.progressiveUi(); }
   /** hides a first-run hint for good (saved) */
   dismissHint(id: string) { const p = this.golf?.progress; if (!p || p.dismissed.includes(id)) return; p.dismissed.push(id); this.scheduleSave(); this.emit(); }
   /** the "Show all tools (Advanced)" toggle (saved) */

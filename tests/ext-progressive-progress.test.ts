@@ -62,3 +62,30 @@ describe('player progress (T033)', () => {
     assert.equal(n, 0);
   });
 });
+
+/** the rail group ids of App.tsx GROUPS (T033b): mirrored here, the headless test cannot read App.tsx */
+const APP_GROUP_IDS = ['select', 'roads', 'paint', 'course', 'junction', 'bulldoze', 'transport', 'business'];
+/** every Tool id in src/game/types.ts */
+const TOOL_IDS = ['select', 'road', 'junction', 'bulldoze', 'park', 'toll', 'bus', 'lane', 'downgrade', 'business', 'paint', 'course'];
+
+describe('progressive tool unlocks (T033b)', () => {
+  it('stage 1 hides Junctions and Bus routes; stage 3 shows every tool', () => {
+    const s1 = computeProgressiveUiState(progressFacts(prog({}), 0));
+    assert.equal(s1.stage, 1);
+    assert.ok(!(s1.visibleTools as string[]).includes('junction'));
+    assert.ok(!(s1.visibleTools as string[]).includes('bus'));
+    const s3 = computeProgressiveUiState(progressFacts(prog({ pieces: 9 }), 0));
+    assert.equal(s3.stage, 3);
+    for (const id of TOOL_IDS) assert.ok((s3.visibleTools as string[]).includes(id), id);
+  });
+
+  it('stage 1 rail shows Select, Roads, Course and Transport; every stage lists only known tools and rail groups', () => {
+    const s1 = computeProgressiveUiState(progressFacts(prog({}), 0));
+    assert.deepEqual(s1.visibleGroups, ['select', 'roads', 'course', 'transport']);
+    for (const p of [prog({}), prog({ pieces: 3 }), prog({ pieces: 9 })]) {
+      const ui = computeProgressiveUiState(progressFacts(p, 0));
+      for (const t of ui.visibleTools) assert.ok(TOOL_IDS.includes(t), t);
+      for (const g of ui.visibleGroups) assert.ok(APP_GROUP_IDS.includes(g), g);
+    }
+  });
+});

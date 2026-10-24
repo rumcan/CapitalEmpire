@@ -127,6 +127,14 @@ export default function App() {
   if (game) last.current[gid] = game.tool;
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
   const gv = game?.golfMode ? game.golfView() : null;
+  /** the tool visibility in force (T033 progressive unlocks; null shows everything) */
+  const ui = game?.toolUi() ?? null;
+  /** whether a golf top-bar chip is shown under the progressive unlocks */
+  const chip = (id: string) => !ui || (ui.visibleGolfChips as string[]).includes(id);
+  /** the first-run hint banner (null when none or all dismissed) */
+  const hint = ui?.activeHint ?? null;
+  /** the open group's tools that the progressive unlocks show */
+  const shownTools = grp ? grp.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
@@ -172,11 +180,12 @@ export default function App() {
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
-                  <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>
-                  <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>
-                  <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>  
- <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>  
- <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>
+                  {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>}
+                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>}
+                  {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
+ {chip('event') && <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
+ {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>}
+                  {game.playerProgressFacts() && <button className={`chip ${ui?.advancedMode || !ui ? 'chip-on' : ''}`} onClick={() => { game.setAdvancedTools(!(ui?.advancedMode)); bump(); }} title={ui ? ui.stageLabel : 'All tools'}><Icon name="up" size={16} />All tools</button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -249,7 +258,7 @@ export default function App() {
 
           <div className="absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2">
             <div className="glass flex flex-col gap-1 p-1.5">
-              {(game.golfMode ? GROUPS.filter(g => g.id !== 'business') : GROUPS).map(g => (
+              {(game.golfMode ? GROUPS.filter(g => g.id !== 'business' && (!ui || (ui.visibleGroups as string[]).includes(g.id))) : GROUPS).map(g => (
                 <button key={g.id} onClick={() => game.setTool(last.current[g.id] ?? g.tools[0]!.id)} title={g.label} className={`rail-tab ${gid === g.id ? 'rail-tab-on' : ''}`}>
                   <Icon name={g.icon} size={30} />
                   <span>{g.label}</span>
@@ -257,9 +266,16 @@ export default function App() {
               ))}
             </div>
             <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3">
-              {grp && grp.tools.length > 1 && (
+              {hint && (
+                <div className="rounded-md border border-amber-400/40 bg-amber-400/15 p-2 text-xs text-amber-100 mb-3">
+                  <div className="font-bold">{hint.title}</div>
+                  <div className="mt-0.5">{hint.body}</div>
+                  <button className="chip mt-2" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button>
+                </div>
+              )}
+              {shownTools.length > 1 && (
                 <div className="seg mb-3">
-                  {grp.tools.map(t => (
+                  {shownTools.map(t => (
                     <button key={t.id} className={game.tool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={`${t.label} (${t.key})`}><Icon name={t.icon} size={16} />{t.label}</button>
                   ))}
                 </div>
