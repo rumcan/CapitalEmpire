@@ -7,6 +7,7 @@ import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, ty
 import HOLE_PRESETS from './golf/hole-presets.json';
 import { areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
 import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
+import { drawGhostPoly } from './ext/ghost-preview';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -655,21 +656,25 @@ export class PaintTool {
     }
   }
 
+  /** why outline P cannot be placed ('' if it can), as the commit checks it: the shape (checkArea), then in golf mode the owned course land */
+  private outlineWhy(P: number[]): string {
+    return checkArea(P) || (this.host.golfMode?.() && this.host.ownedLand && !this.host.ownedLand(P) ? 'Cannot paint outside owned course land' : '');
+  }
+
   /** the outline being drawn: its fill, border band, dashed edge, crossing edges, corners, and why it cannot be placed; or the snapped cursor before the first corner */
   private drawOutline(v: PaintView) {
     const ctx = v.ctx, d = v.dpr;
     const P = this.outline();
     if (P.length >= 4) {
-      const why = P.length >= 6 ? checkArea(P) : '', bad = why !== '';
-      v.setIso(ctx); ctx.beginPath(); trace(ctx, P, true); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = bad ? 'rgba(160,40,40,0.5)' : rgba(TEX_COL.get(this.style.tex) ?? '#888888', 0.5); ctx.fill();
-      if (this.style.border > 0 && P.length >= 6) {
-        // the border band: twice the width, stroked in tile units on the clipped edge
-        v.setIso(ctx); ctx.beginPath(); trace(ctx, P, true);
-        ctx.save(); ctx.clip(); ctx.lineWidth = 2 * BORDER_W[this.style.border]!; ctx.strokeStyle = rgba(BTEX_COL.get(this.style.btex) ?? '#888888', 0.75); ctx.stroke(); ctx.restore();
+      const why = P.length >= 6 ? this.outlineWhy(P) : '', bad = why !== '';
+      if (P.length >= 6) {
+        // the shared ghost (T024): texture-tinted fill, the collar band clipped inside, the dashed wireframe; red with the reason when it cannot be placed
+        drawGhostPoly(v, P, bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : rgba(TEX_COL.get(this.style.tex) ?? '#888888', 0.5), borderWidthTiles: this.style.border > 0 ? BORDER_W[this.style.border]! : 0, borderColor: rgba(BTEX_COL.get(this.style.btex) ?? '#888888', 0.75) });
+      } else {
+        // two corners: the first edge, dashed
+        v.setIso(ctx); ctx.beginPath(); trace(ctx, P, false); ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.strokeStyle = 'rgba(255,230,150,0.9)'; ctx.lineWidth = 1.5 * d; ctx.setLineDash([6 * d, 4 * d]); ctx.stroke(); ctx.setLineDash([]);
       }
-      v.setIso(ctx); ctx.beginPath(); trace(ctx, P, true); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.strokeStyle = bad ? '#f87171' : 'rgba(255,230,150,0.9)'; ctx.lineWidth = 1.5 * d; ctx.setLineDash([6 * d, 4 * d]); ctx.stroke(); ctx.setLineDash([]);
       if (P.length >= 6) {
         const hit = crossings(P), n = P.length >> 1;
         if (hit.length) {
@@ -734,9 +739,7 @@ export class PaintTool {
   /** a candidate shape that cannot be applied during a drag: red, its crossing edges marked, and why beside the pointer */
   private drawBad(v: PaintView, P: number[], why: string) {
     const ctx = v.ctx, d = v.dpr;
-    v.setIso(ctx); ctx.beginPath(); trace(ctx, P, true); ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = 'rgba(160,40,40,0.5)'; ctx.fill();
-    ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5 * d; ctx.setLineDash([6 * d, 4 * d]); ctx.stroke(); ctx.setLineDash([]);
+    drawGhostPoly(v, P, 'invalid');
     const hit = crossings(P), n = P.length >> 1;
     if (hit.length) {
       v.setIso(ctx); ctx.beginPath();
