@@ -113,8 +113,12 @@ No more prepainted streets for the town." The full design is [plans/P22.md](plan
   end, else the next one. A season that ends uninvited shows the season card (the takings, the residents, the checklist "6 of 9 holes ·
   car park ✓ · clubhouse ✗", Continue), the clock never stops, the calendar counts it (`golf.founding`), and Skip reads "Skip to season
   end". In range starts the driving range meets tier 3's `range` need.
-- **Still to come** (P22's tickets): the clubhouse the player places (T089), the grown-town growth rules (T090, T091), the exits feeding
-  the range (T092), through traffic (T093), the off-map tournament crowd (T094), the first-minute guide (T095) and the range's look (T096).
+- **The clubhouse is the player's to place** (Course > Buildings, $45,000, one only, 40 × 24 tiles; `golf/range.ts` clubhouseSpotOk):
+  on the player's land, off the range plot and the course, beside a drive or road (its front snaps to a course drive within 6 tiles,
+  P19). It becomes the venue (the crowd's doors and the tournament's site) and its green fees start. An old save's game-placed clubhouse
+  stays, and a second one is refused.
+- **Still to come** (P22's tickets): the grown-town growth rules (T090, T091), the exits feeding the range (T092), through traffic
+  (T093), the off-map tournament crowd (T094), the first-minute guide (T095) and the range's look (T096).
 - **Old saves keep their towns.** A save without `golf.start` is the old start: one seeded town (one asphalt main avenue with gravel
   branches, about 1,000 residents), the old nine placed and painted by the game 150-350 tiles from the town centre, and its clubhouse.
   It loads and grows by today's rules. The old start stays behind `?start=town` for comparisons and tests; `?start=valley` gives the

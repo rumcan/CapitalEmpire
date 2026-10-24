@@ -75,3 +75,27 @@ export function rangeLayout(plot: Rect, facing: 0 | 1 | 2 | 3): RangeLayout {
     lights: LIGHT_U.flatMap(u => LIGHT_V.map(v => P(u, v))),
   };
 }
+
+// The clubhouse the player places (plan P22 2.5.2, T089): in a range start the clubhouse is a building on the player's land, beside a drive.
+/** how far the clubhouse's footprint may stand from a drive or road verge, tiles (and the reach of its frontage snap) */
+export const CLUB_REACH = 6;
+/** what a clubhouse spot is checked against: the clubhouses placed already, whether a tile is the player's land, the range plot (null: none),
+ *  whether a tile holds course (a grid surface), and the gap from the footprint to the nearest drive or road verge (tiles; below 0 when a road
+ *  runs through it, Infinity with no road near) */
+export interface ClubSpotCtx { clubs: number; owned: (x: number, y: number) => boolean; plot: Rect | null; course: (x: number, y: number) => boolean; roadGap: number }
+/** why a clubhouse cannot stand on rect r ('' when it can), in order: a second clubhouse; off the player's land; over the range plot; over the
+ *  course; a road through it; no drive or road verge within CLUB_REACH. The land and the course are sampled every tile (tile centres) */
+export function clubhouseSpotWhy(r: Rect, c: ClubSpotCtx): string {
+  if (c.clubs >= 1) return 'You have a clubhouse already';
+  const [x0, y0, w, h] = r, cells: Pt[] = [];
+  for (let y = y0 + 0.5; y < y0 + h; y += 1) for (let x = x0 + 0.5; x < x0 + w; x += 1) cells.push({ x, y });
+  if (cells.some(p => !c.owned(p.x, p.y))) return 'Off your land: place it on your parcel';
+  const p = c.plot;
+  if (p && x0 < p[0] + p[2] && p[0] < x0 + w && y0 < p[1] + p[3] && p[1] < y0 + h) return 'The driving range is there';
+  if (cells.some(q => c.course(q.x, q.y))) return 'The course is there';
+  if (c.roadGap < 0) return 'A road runs through it';
+  if (c.roadGap > CLUB_REACH) return `Place it beside a drive (within ${CLUB_REACH} tiles of one)`;
+  return '';
+}
+/** whether a clubhouse can stand on rect r (clubhouseSpotWhy is '') */
+export function clubhouseSpotOk(r: Rect, c: ClubSpotCtx): boolean { return clubhouseSpotWhy(r, c) === ''; }

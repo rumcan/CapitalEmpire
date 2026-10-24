@@ -88,6 +88,8 @@ const CLUBHOUSE: BusinessType = { id: 'clubhouse', name: 'Clubhouse', family: 'l
 const RANGE: BusinessType = { id: 'range', name: 'Driving range', family: 'leisure', kind: 'visit', footprint: { w: 70, h: 24 }, buildCost: 0, upkeepPerDay: 2000, pricePerVisitor: 60, party: 2,
   hours: [7, 22], rate: 80, tau: 8, max: 1, townMin: 0, water: false, unlock: { parent: null }, spinOffs: [],
   blurb: 'Your first golf business: drivers on the county road pull in to hit a bucket.' };
+/** the clubhouse's price in a range start, $ (plan P22 2.5.2: the player places it; the old start's game-placed clubhouse is free) */
+export const CLUBHOUSE_RANGE_COST = 45000;
 /** a type by id (the clubhouse and the driving range too, though they are not in BUSINESSES) */
 export const BUSINESS: Record<BusinessId, BusinessType> = Object.fromEntries([...BUSINESSES, CLUBHOUSE, RANGE].map(b => [b.id, b])) as Record<BusinessId, BusinessType>;
 
