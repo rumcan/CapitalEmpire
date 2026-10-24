@@ -10,6 +10,7 @@ import { isLights, junctionCorners, slipRule } from './game/junctions';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { shortName } from './game/ext/names';
+import { parkPanelControls, busHowTo, tollHowTo } from './game/ext/progressive-ui';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
@@ -317,10 +318,10 @@ export default function App() {
               )}
               {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.tool === 'course' && <CoursePanel game={game} />}
-              {game.tool === 'park' && <ParkPanel game={game} />}
-              {game.tool === 'toll' && <TollPanel game={game} />}
+              {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
+              {game.tool === 'toll' && <TollPanel game={game} dev={dev} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
-              {game.tool === 'bus' && <BusPanel game={game} />}
+              {game.tool === 'bus' && <BusPanel game={game} dev={dev} />}
               {game.tool === 'select' && <SelectPanel game={game} />}
             </div>
           </div>
@@ -971,13 +972,18 @@ const PARK_MODES: { id: 'rect' | 'rows' | 'curb'; label: string }[] = [{ id: 're
 
 /** the car park tool: its mode and how to place with it, the parking fee, the lots and runs with their cars, the parks' cars (rectangles: the list; Go;
  *  a dev-only test of 50 cars) */
-function ParkPanel({ game }: { game: Game }) {
-  const views = game.traffic.parks, pk = game.parking, mode = pk.mode;
+function ParkPanel({ game, dev }: { game: Game; dev: boolean }) {
+  const views = game.traffic.parks, pk = game.parking;
+  const ui = game.toolUi(), facts = { golf: game.golfMode, advanced: !ui || ui.advancedMode, dev };
+  const show = new Set(parkPanelControls(facts));
+  /** the mode chips the rules show; a hidden current mode displays as Rectangle (pk.mode itself is unchanged) */
+  const modes = PARK_MODES.filter(m => show.has(m.id === 'rect' ? 'modeRect' : m.id === 'rows' ? 'modeRows' : 'modeCurb'));
+  const mode = modes.some(m => m.id === pk.mode) ? pk.mode : 'rect';
   return (
     <Panel title="Car park" icon="pin">
-      <div className="flex flex-wrap gap-1">
-        {PARK_MODES.map(m => <button key={m.id} className={`chip ${mode === m.id ? 'chip-on' : ''}`} onClick={() => { pk.mode = m.id; game.emit(); }}>{m.label}</button>)}
-      </div>
+      {modes.length > 1 && <div className="flex flex-wrap gap-1">
+        {modes.map(m => <button key={m.id} className={`chip ${mode === m.id ? 'chip-on' : ''}`} onClick={() => { pk.mode = m.id; game.emit(); }}>{m.label}</button>)}
+      </div>}
       {mode === 'rect' && <>
         <p className="mt-2 text-xs leading-relaxed text-slate-300">
           <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
@@ -986,27 +992,27 @@ function ParkPanel({ game }: { game: Game }) {
       </>}
       {mode === 'rows' && <>
         <p className="mt-2 text-xs leading-relaxed text-slate-300">Drag to lay a row of bays along the drag. Tab flips the side, Shift snaps the angle to 15°. Click a row to remove it.</p>
-        <div className="mt-2 flex gap-1">{([90, 60, 45] as const).map(a => <button key={a} className={`chip ${pk.bay === a ? 'chip-on' : ''}`} onClick={() => { pk.bay = a; game.emit(); }}>{a}°</button>)}</div>
-        <div className="mt-1 flex gap-1">{(['yellow', 'white'] as const).map(c => <button key={c} className={`chip ${pk.col === c ? 'chip-on' : ''}`} onClick={() => { pk.col = c; game.emit(); }}>{c === 'yellow' ? 'Yellow' : 'White'}</button>)}</div>
+        {show.has('rowAngle') && <div className="mt-2 flex gap-1">{([90, 60, 45] as const).map(a => <button key={a} className={`chip ${pk.bay === a ? 'chip-on' : ''}`} onClick={() => { pk.bay = a; game.emit(); }}>{a}°</button>)}</div>}
+        {show.has('rowColour') && <div className="mt-1 flex gap-1">{(['yellow', 'white'] as const).map(c => <button key={c} className={`chip ${pk.col === c ? 'chip-on' : ''}`} onClick={() => { pk.col = c; game.emit(); }}>{c === 'yellow' ? 'Yellow' : 'White'}</button>)}</div>}
         <div className="mt-2 text-xs text-amber-300">{`$${ROW_BAY_COST} per bay`}</div>
       </>}
       {mode === 'curb' && <>
         <p className="mt-2 text-xs leading-relaxed text-slate-300">Hover a road: the kerb on the pointer's side gets parallel bays. Roads with 2+ lanes that way give up their kerb lane; plain roads park on the shoulder. Click again to remove.</p>
         <div className="mt-2 text-xs text-amber-300">{`$${CURB_BAY_COST} per bay`}</div>
       </>}
-      <div className="mt-2 flex items-center gap-2 text-xs text-slate-200">
+      {show.has('fee') && <div className="mt-2 flex items-center gap-2 text-xs text-slate-200">
         <span>Parking fee per car</span>
         <button className="btn" onClick={() => pk.setFee(pk.fee - 1)}>−</button>
         <span className="tabular-nums">{`$${pk.fee}`}</span>
         <button className="btn" onClick={() => pk.setFee(pk.fee + 1)}>+</button>
-      </div>
-      <div className="mt-2 text-xs tabular-nums text-slate-200">{`${rowLots(pk.rows).length} lots · ${pk.curbs.length} on-street runs`}</div>
+      </div>}
+      {show.has('counts') && <div className="mt-2 text-xs tabular-nums text-slate-200">{`${rowLots(pk.rows).length} lots · ${pk.curbs.length} on-street runs`}</div>}
       {game.extraParks.map(p => { const v = views.find(q => q.id === p.id); return v ? <div key={p.id} className="text-xs tabular-nums text-slate-300">{`P · ${v.parked}/${v.bays}`}</div> : null; })}
-      <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
+      {show.has('demandToggle') && <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
         <input type="checkbox" checked={game.showParkDemand} onChange={e => { game.setParkDemand(e.target.checked); game.emit(); }} />
         Show parking demand (cars per hour wanting a space)
-      </label>
-      {mode === 'rect' && <div className="mt-2 max-h-64 overflow-y-auto">
+      </label>}
+      {mode === 'rect' && show.has('parkList') && <div className="mt-2 max-h-64 overflow-y-auto">
         {game.parkDefs.length === 0 && <p className="text-xs text-slate-400">No car parks yet.</p>}
         {game.parkDefs.map(d => {
           const v = views.find(q => q.id === d.id);
@@ -1015,7 +1021,7 @@ function ParkPanel({ game }: { game: Game }) {
               <span className="tabular-nums text-slate-200">#{d.id} · {v ? `${v.bays} bays · ${v.parked}/${v.turned}` : 'no road along it'}</span>
               <span className="flex gap-1">
                 <button className="btn" onClick={() => game.goToPark(d.id)}>Go</button>
-                {import.meta.env.DEV && <button className="btn" onClick={() => game.parkTest(d.id, 50)}>Test 50 cars</button>}
+                {show.has('parkTest') && <button className="btn" onClick={() => game.parkTest(d.id, 50)}>Test 50 cars</button>}
               </span>
             </div>
           );
@@ -1093,12 +1099,12 @@ function TouristLine({ game }: { game: Game }) {
 }
 
 /** the toll gate tool: how it works, the price per car (at the round's level), the booths a new gate has and its cost, and the list of toll gates (Go) */
-function TollPanel({ game }: { game: Game }) {
-  const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST;
+function TollPanel({ game }: { game: Game; dev: boolean }) {
+  const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST, how = tollHowTo(game.golfMode);
   return (
     <Panel title="Toll gate" icon="swap">
       <p className="text-xs leading-relaxed text-slate-300">
-        <b className="text-slate-100">Click a straight road.</b> The gate is a plaza across it: each car that passes a booth pays {money(price)}. Drivers avoid a toll road when a free way exists, so close the free ways. R flips the way in. Roads cannot cross the plaza; bulldozing it removes the gate (the road stays, no refund).
+        <b className="text-slate-100">{how.lead}</b> {how.body} R flips the way in. Roads cannot cross the plaza; bulldozing it removes the gate (the road stays, no refund).
       </p>
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Toll per car</span><span>{money(price)}</span></div>
@@ -1120,12 +1126,12 @@ function TollPanel({ game }: { game: Game }) {
 
 /** the bus route tool: how a route works (fans walk to the lot stop, the buses carry them to the doors), its buses and seats, its cost (the first is
  *  free), and the routes (Go) */
-function BusPanel({ game }: { game: Game }) {
-  const cost = game.busDefs.length ? BUS_ROUTE_COST : 0;
+function BusPanel({ game }: { game: Game; dev: boolean }) {
+  const cost = game.busDefs.length ? BUS_ROUTE_COST : 0, how = busHowTo(game.golfMode);
   return (
     <Panel title="Bus route" icon="bus">
       <p className="text-xs leading-relaxed text-slate-300">
-        <b className="text-slate-100">Click a road beside a car park, then a road near the stadium.</b> Fans walk from the bays to the stop and queue there; the buses carry them to the doors. Without a route they walk all the way. Esc cancels; with Bulldoze (X), click a stop to remove its route (no refund).
+        <b className="text-slate-100">{how.lead}</b> {how.body} Esc cancels; with Bulldoze (X), click a stop to remove its route (no refund).
       </p>
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Buses per new route</span><span>{game.busFleet}</span></div>
