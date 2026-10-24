@@ -3,14 +3,60 @@
 // the presets' freeze script (scripts/assets/freeze-lot-presets.ts, P20 T063), which runs them once to write src/game/lots/lot-presets.json.
 // Nothing in the game imports this file. Pure TS, no DOM; the lot frame and the checks are compose-core.ts's.
 import type { LotPatch } from '../ground-protocol';
+import type { LibItem } from '../types';
 import { mulberry } from '../iso';
+import { CAR_SCALE, carFootprint } from '../ext/car-art';
+import { FRONTAL } from './frontal';
 import { LU, LV } from './town';
 import {
-  AISLE, BARN, BAY, BAY_DEPTH, BOARDED, BUSHES, Build, CHAIN, CIVIC, CLUTTER, DEAD_TREES, DRIVE_GAP, DRIVE_W, FLOWERS, GARAGE_FRONT, GARAGE_REAR,
-  HOUSE_FRONT, HOUSE_REAR, HOUSE_RUNDOWN, NOSE, PICKUPS, PUMPKINS, SCHOOL_SIGNS, SCRAP, SHED, SHOP_FRONT, SHOP_REAR, SIDE_YARD, SPOOKY, STOP_IN,
-  STORY_KIT, TOWERS, TRAILERS, TREES, VENUE, WHEEL, WORKS, clamp, isCarPark, mix, pick, plain, specFit, withVariations,
+  BAY, BAY_DEPTH, BUSHES, Build, CHAIN, DEAD_TREES, PICKUPS, SCHOOL_SIGNS, TREES, WHEEL, cat, clamp, isCarPark, mix, names, pick, plain, specFit, withVariations,
   type ComposeState, type LotGeom, type Patch, type Placed,
 } from './compose-core';
+
+// the pools and sizes only the old layouts deal from
+/** the two-way aisle between the bay rows, the entrance drive's width (two lanes), a wheel stop's inset from a bay's outer edge, a nosed-in car's gap to its stop */
+/** NOSE: a parked car's centre this far short of its wheel stop: half a car at CAR_SCALE (the 4.5 m car is 3.96 m at 0.88: 0.99 tiles half) and a 0.15-tile gap, so its nose stops just short of the stop */
+const AISLE = 2.6, DRIVE_W = 2.6, STOP_IN = 0.35, NOSE = carFootprint(0).hx * CAR_SCALE / 2 + 0.15;
+/** the house band: the gap between the drive and the house (or its garage), and the side yard on the far side from the drive (tiles) */
+const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
+/** a library sprite drawn straight on (frontal.ts) or not isometric enough for a lot is never dealt; the house variations are kind 'building' */
+const isoBuilding = (i: LibItem) => !FRONTAL.has(i.id) && (i.kind === 'house' || i.kind === 'building');
+/** a rear view of a house: the north variations and the 'house back' sets (patio, pool, shed, swings, deck, porch) */
+const REAR_VIEW = /-north-|^gen:back-|^variation:gen-back-/;
+/** every isometric house front the library has, with the variations (the owner, 2026-10-21: use everything); garages go in their own pool */
+const HOUSE_FRONT = cat(i => i.cat === 'Houses' && isoBuilding(i) && !REAR_VIEW.test(i.id) && !/garage_|-garage-[0-9a-f]{8}|^ref:building-garage/.test(i.id));
+const HOUSE_REAR = withVariations(['expansion:ranch-rear', 'expansion:cottage-rear', 'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear']).concat(cat(i => i.cat === 'Houses' && isoBuilding(i) && REAR_VIEW.test(i.id)));
+const HOUSE_RUNDOWN = withVariations(['expansion:rundown-house']);
+const GARAGE_FRONT = withVariations(['static:garage_timber', 'static:garage_brick', 'static:garage_brick-v2']);
+const GARAGE_REAR = withVariations(['expansion:garage-rear']).filter(id => id !== 'variation:expansion-garage-rear-91bcbe45:1');
+/** every front-facing shop the game has, with its variations (the street fronts deal from it, see com) */
+const SHOP_FRONT = withVariations(['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:fish_tackle', 'town:barber', 'town:hardware', 'world:video_rental', 'world:video',
+  'ref:building-grocery', 'ref:building-corner-shop', 'ref:building-corner-store']);
+const SHOP_REAR = withVariations(['static:shop_brick_rear', 'static:shop_brick_rear-v2', 'static:shop_market_rear', 'static:shop_market_rear-v2']);
+const BOARDED = withVariations(['expansion:boarded-store-rear', 'expansion:derelict-two-storey']);
+const VENUE = withVariations(['world:diner', 'world:arcade', 'world:snack_bar', 'ref:building-gas-canopy']).concat(cat(i => i.id.startsWith('variation:ref-building-gas-shop-') && isoBuilding(i)));
+const CIVIC = withVariations(['town:firestation', 'town:postoffice', 'world:primary_school', 'world:church', 'world:school']);
+const SHED = withVariations(['ref:building-farm-shed', 'expansion:abandoned-workshop']);
+/** the works buildings (foundry, mill, depots, workshops: the industrial variations), and the tall pieces a big works yard may have */
+const WORKS = cat(i => /^(industrial:|variation:industrial-)/.test(i.id) && isoBuilding(i));
+const TOWERS = names(['world:watertower', 'ref:landmark-water-tower', 'ref:landmark-silo', 'ref:landmark-windmill']);
+const BARN = withVariations(['world:barn', 'ref:building-barn']);
+const SCRAP = names(['expansion:scrap-engine', 'expansion:tyre-stack', 'expansion:yard-workbench', 'expansion:air-compressor']);
+const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle', 'expansion:appliance-pile']);
+const TRAILERS = names(['expansion:camper', 'expansion:boxcar', 'expansion:boat-trailer', 'expansion:utility-trailer', 'expansion:lean-to-shed']);
+/** flower beds (the soft plants), porch pumpkins, and the bigger Halloween yard pieces (Maple Falls in October) */
+const FLOWERS = names(['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'ref:halloween-mums']);
+const PUMPKINS = names(['world:pumpkin_0', 'world:pumpkin_1']);
+const SPOOKY = names(['ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost', 'world:scarecrow', 'expansion:blowmold-ghost', 'expansion:yard-spider', 'expansion:yard-coffin', 'ref:halloween-witch-sign', 'ref:halloween-lantern', 'world:grave_0', 'world:grave_1', 'world:grave_2']);
+/** the props each household story adds to the back yard (one of each, in this order, as they fit) */
+const STORY_KIT: Record<string, string[]> = {
+  family: names(['expansion:sandbox', 'expansion:kiddie-pool', 'expansion:tricycle', 'expansion:wagon', 'expansion:washing-line']),
+  retired: names(['expansion:glasshouse', 'expansion:rain-barrel', 'expansion:compost-bin', 'expansion:garden-pump', 'expansion:patio-swing']),
+  worker: names(['expansion:woodpile', 'expansion:rideon-mower', 'expansion:canoe', 'expansion:lawn-roller', 'expansion:washing-line']),
+  party: names(['expansion:firepit', 'expansion:hot-tub', 'expansion:camping-cooler', 'expansion:brick-barbecue']),
+  mechanic: names(['expansion:motorcycle-front', 'expansion:rototiller', 'expansion:oil-drums']),
+  neglected: names(['expansion:attic-trunk', 'expansion:antique-pram', 'expansion:crt-curb', 'expansion:outhouse']),
+};
 
 /** the house and its yard: a drive on one side (a garage beside the house when the lot is wide enough), a front walk,
  *  bushes against the house, a story for the yard, fences and the bins at the kerb */

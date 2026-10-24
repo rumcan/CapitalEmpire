@@ -13,7 +13,7 @@ import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, JUNK, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, TREES, clamp, isCarPark, mix, names, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom,
 } from './compose-core';
-import { fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetMeta, type PresetUse } from './presets';
+import { bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetMeta, type PresetState, type PresetUse } from './presets';
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
 import { frameOf, listToWorld, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
@@ -164,7 +164,14 @@ export const lotPresets = (): readonly LotPreset[] => PRESETS;
 export const lotPresetsMeta = (): PresetMeta | undefined => META;
 /** replaces the presets (the dev editor after a save, a hot reload of lot-presets.json), and the header when given; the caller composes the
  *  lots again */
-export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; META = meta; }
+export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; META = meta; BUCKETS.clear(); }
+/** presetsFor's answer by use, state and size bucket for the presets now (every compose asks; setLotPresets clears it) */
+const BUCKETS = new Map<string, LotPreset[]>();
+function presetsOf(use: PresetUse, state: PresetState, w: number, d: number): LotPreset[] {
+  const b = bucketOf(w, d), k = `${use}|${state}|${b.w}x${b.d}`;
+  let l = BUCKETS.get(k); if (!l) BUCKETS.set(k, (l = presetsFor(PRESETS, use, state, w, d)));
+  return l;
+}
 
 /** the preset use of a lot's state: res, com (a public car park: park), tour, ind, civic; null for a lot of no use */
 export function presetUse(st: ComposeState): PresetUse | null {
@@ -183,12 +190,16 @@ export const streetKey = (lot: LotGeom) => `${Math.round(lot.o.x * lot.n.x + lot
  *  0); the neighbours of one street take consecutive slots */
 export const streetSlot = (lot: LotGeom) => Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w) + 4096;
 
-/** the preset a built lot draws (presetsFor by use, state and size; pickPreset by its street slot), fitted to the lot, and the lot's preset
- *  frame; null when the lot is not built or upgraded, is of no use, or no preset of its use and state exists */
-export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; fit: Fitted; frame: PresetFrame } | null {
+/** the preset a built lot draws (presetsFor by use, state and size; pickPreset by its street slot); null when the lot is not built or
+ *  upgraded, is of no use, or no preset of its use and state exists */
+export function pickedPreset(lot: LotGeom, st: ComposeState): LotPreset | null {
   const use = presetUse(st), state = stateOf(st.level, st.decline);
   if (!use || !state) return null;
-  const preset = pickPreset(presetsFor(PRESETS, use, state, lot.w, lot.d), streetSlot(lot), streetKey(lot));
+  return pickPreset(presetsOf(use, state, lot.w, lot.d), streetSlot(lot), streetKey(lot)) ?? null;
+}
+/** the preset a built lot draws (pickedPreset), fitted to the lot, and the lot's preset frame; null as pickedPreset */
+export function lotPreset(lot: LotGeom, st: ComposeState): { preset: LotPreset; fit: Fitted; frame: PresetFrame } | null {
+  const preset = pickedPreset(lot, st);
   return preset ? { preset, fit: fitPreset(preset, lot.w, lot.d), frame: frameOf(lot) } : null;
 }
 

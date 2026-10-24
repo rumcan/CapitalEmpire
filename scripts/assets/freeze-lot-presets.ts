@@ -2,7 +2,7 @@
 //   freeze.mjs --freeze <curated.json> <lot-presets.json> [--note "<text>"]... [--refreeze-curated]   the freeze, then the check
 //   freeze.mjs --check  <curated.json> <lot-presets.json>   the check alone
 // A freeze keeps the file's curated presets (curated: true) exactly as they are, and its header notes; the check compares the curated presets
-// with the last commit's (git HEAD) and fails when one changed.
+// with the last commit's (git HEAD) and warns about the changed ones (the owner's uncommitted edits); the freeze stops if it would change one.
 // The freeze runs the game's own composer (legacy-layout.ts layoutOfUse, the old use layouts kept for it) on a canonical lot (the street on +y, so nothing turned or flipped) for
 // every use (res, com, park, tour, ind, civic) x state (built, upgraded, declined) x size bucket of a real town, with 4 fixed seeds each, and
 // converts each layout into a preset in the lot frame: props as { id, x, y, scale, view } (x, y the footprint centre; four-view art by its base
@@ -259,14 +259,17 @@ if (mode === '--freeze') {
   console.log(`mapped (curated): ${mapped.map(m => `\n  ${m}`).join('')}`);
 }
 const text = fs.readFileSync(presetFile, 'utf8'), parsed = parsePresets(JSON.parse(text));
-let bad = report(parsed.presets, parsed.invalid, Buffer.byteLength(text));
+const bad = report(parsed.presets, parsed.invalid, Buffer.byteLength(text));
 if (parsed.meta) console.log(`notes:${parsed.meta.notes.map(n => `\n  ${n}`).join('')}`);
-// the curated presets against the last commit's (git HEAD): a freeze must leave them as they were; an owner's edit since shows here too
+// the curated presets against the last commit's (git HEAD): listed when they differ, a warning only (the owner edits in the dev editor and the
+// edits are committed later); the freeze itself never changes one (it stops with an error above)
 try {
   const head = parsePresets(JSON.parse(execFileSync('git', ['show', 'HEAD:src/game/lots/lot-presets.json'], { cwd: path.dirname(presetFile), maxBuffer: 256 << 20 }).toString()));
   const now = new Map(parsed.presets.map(p => [p.id, formatPresets([p])] as const));
   const diff = head.presets.filter(p => p.curated && now.get(p.id) !== formatPresets([p])).map(p => p.id);
-  if (diff.length) { console.log(`CURATED presets changed since the last commit (or gone): ${diff.join(' ')}`); bad += diff.length; }
+  const added = parsed.presets.filter(p => p.curated && !head.presets.some(q => q.id === p.id && q.curated)).map(p => p.id);
+  if (diff.length) console.log(`WARNING: curated presets changed since the last commit (or gone), not committed yet: ${diff.join(' ')}`);
   else console.log(`the ${head.presets.filter(p => p.curated).length} curated presets of the last commit are unchanged`);
+  if (added.length) console.log(`newly curated since the last commit (the dev editor's edits): ${added.join(' ')}`);
 } catch { console.log('(no committed lot-presets.json to compare the curated presets with)'); }
 process.exit(bad ? 1 : 0);

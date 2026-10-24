@@ -4,7 +4,12 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, type ComposeState } from '../src/game/lots/compose';
+import { compose, setLotPresets, type ComposeState } from '../src/game/lots/compose';
+import { parsePresets } from '../src/game/lots/presets';
+import PRESET_FIXTURE from './fixtures/lot-presets.json';
+// the lots draw from a committed copy of the presets (tests/fixtures/lot-presets.json), so the owner's edits to the live file cannot break the
+// turned-shop test below (it reads the frozen shops at view 0)
+{ const f = parsePresets(PRESET_FIXTURE); setLotPresets(f.presets, f.meta); }
 import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lettering';
 import { EAST_PAIRS } from '../src/game/east-library';
 import { VIEW_ART, unmirror } from '../src/game/views-library';
