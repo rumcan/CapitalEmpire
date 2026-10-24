@@ -228,7 +228,7 @@ export class PaintTool {
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
   private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts } } | null = null;
   private host: PaintHost;
-  /** the engine draws the brush as a 3D surface puck (T081, ext/course-cursor): the OS cursor and the plain brush ring step aside */
+  /** the engine draws the brush (and a course piece) as a 3D surface puck (T081, ext/course-cursor): the OS cursor and the plain brush ring step aside */
   puckCursor = false;
 
   constructor(host: PaintHost) { this.host = host; }
@@ -583,7 +583,7 @@ export class PaintTool {
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
-    if (this.puckCursor && this.mode === 'brush') return 'none';
+    if (this.puckCursor && (this.mode === 'brush' || this.mode === 'piece')) return 'none';
     if (this.drag) return 'grabbing';
     const g = this.hoverH;
     if (!g || !this.selected) return 'crosshair';

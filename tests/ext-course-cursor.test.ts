@@ -2,8 +2,8 @@
 // rounded and sits on those cells, the puck is the brush's size on screen, and a still frame makes nothing new. npm test (esbuild + node).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CourseCursor, Footprints, dabCells, puckAxes, type CursorView, type Shape, type SpriteCanvas } from '../src/game/ext/course-cursor';
-import { CELL_T, SURF, makeGrid, paintDisc } from '../src/game/ext/course-grid';
+import { CourseCursor, Footprints, dabCells, polyFootprint, puckAxes, type CursorView, type Shape, type SpriteCanvas } from '../src/game/ext/course-cursor';
+import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc } from '../src/game/ext/course-grid';
 import { CELL as BRUSH_CELL, dab, type Mask } from '../src/game/brush';
 import { HH, HW } from '../src/game/iso';
 import { PaintTool } from '../src/game/paint-tool';
@@ -237,4 +237,19 @@ test('on the golf course grid (T078) the footprint is exactly the cells a real d
   // a cart path paints areas, not cells: no grid rules
   tool.rubOut = false; tool.setBrush('path'); foot();
   assert.equal(cur.feet.grid, false);
+});
+
+test('a course piece: its footprint is the cells fillPolygon lays for its layers, outlined on them', () => {
+  const kidney = [100, 200, 106, 199.5, 109, 203, 105, 207.2, 101.3, 206, 99.2, 203.4], pot = [110.2, 201, 112.6, 201.3, 112.1, 203.7, 110.4, 203.2];
+  const { shape, ax, ay } = polyFootprint([kidney, pot]);
+  const g = makeGrid(90, 190, 60, 60), toPts = (P: number[]) => { const o: { x: number; y: number }[] = []; for (let i = 0; i < P.length; i += 2) o.push({ x: P[i]!, y: P[i + 1]! }); return o; };
+  fillPolygon(g, toPts(kidney), 1, 0, 0); fillPolygon(g, toPts(pot), 1, 0, 0);
+  const ref: number[] = [], ox = Math.round(g.x0 / CELL_T), oy = Math.round(g.y0 / CELL_T);
+  for (let i = 0; i < g.surf.length; i++) if (g.surf[i]) { const cx = i % g.w; ref.push(key(ox + cx, oy + (i - cx) / g.w)); }
+  assert.deepEqual(shapeCells(shape, ax, ay), ref.sort((a, b) => a - b), 'the same cells as the piece lays');
+  assert.equal(shape.rings.length, 2, 'two blobs, two rings');
+  for (let i = 0; i < shape.cells.length; i += 2) {
+    const x = (shape.cells[i]! + 0.5) * CELL_T, y = (shape.cells[i + 1]! + 0.5) * CELL_T;
+    assert.ok(shape.rings.some(p => inside(p, x, y)), 'every laid cell lies inside its outline');
+  }
 });
