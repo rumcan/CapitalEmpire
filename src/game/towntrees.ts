@@ -2,7 +2,7 @@
 import { MAP, mulberry } from './iso';
 import { fbm, hash2, type Noise } from './terrain/noise';
 import { TC } from './terrain/types';
-import { FOREST_BROADLEAF, FOREST_CELL, FOREST_CONIFERS, dealTree, ownerSize, treeDeal, type ForestTree } from './forest';
+import { FOREST_CELL, LIVE_BROAD_DEAL, LIVE_CONIFER_DEAL, dealTree, ownerSize, type ForestTree } from './forest';
 
 /** spacing of the jittered global grid of the town trees, in tiles */
 export const TOWN_TREE_S = 4.5;
@@ -10,7 +10,7 @@ const S = TOWN_TREE_S;
 /** the clearance a town tree needs from the roads, lots and the rest, in tiles (its trunk and footprint) */
 const CLEAR = 1.6;
 /** the town trees' deals: every live tree of the forest pools (no dead snags beside the lots) */
-export const TOWN_CONIFER_DEAL = treeDeal(FOREST_CONIFERS, true), TOWN_BROAD_DEAL = treeDeal(FOREST_BROADLEAF, true);
+export const TOWN_CONIFER_DEAL = LIVE_CONIFER_DEAL, TOWN_BROAD_DEAL = LIVE_BROAD_DEAL;
 
 /** the town trees of cell (ci, cj): a pure function of the seed, the terrain, the clump noise and the predicates, so cells plant in any order and never overlap.
  *  A point is kept when it is in a town (near), on GROUND or PATCH, and free of the roads and lots (free, with CLEAR tiles); clumps keep most of their points and the open lawn some */

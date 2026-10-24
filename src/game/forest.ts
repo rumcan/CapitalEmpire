@@ -56,6 +56,8 @@ export function dealTree(d: TreeDeal, u: number): string {
 }
 /** the deals of the woods: every conifer, every broadleaf tree with the snags */
 export const FOREST_CONIFER_DEAL = treeDeal(FOREST_CONIFERS), FOREST_BROAD_DEAL = treeDeal(FOREST_BROADLEAF);
+/** the deals of the trees beside the town and the course (towntrees.ts, golf/dressing.ts): every live tree, no dead snags */
+export const LIVE_CONIFER_DEAL = treeDeal(FOREST_CONIFERS, true), LIVE_BROAD_DEAL = treeDeal(FOREST_BROADLEAF, true);
 /** a tree's size at owner scale (lots/scales.ts OWNER_SCALE: the size the owner set in the studio; 1, the art's own size, when unset) */
 export const ownerSize = (id: string) => (OWNER_SCALE as Record<string, number>)[id] ?? 1;
 /** the woods' trees stand at this share of their owner size (about the size the forest drew its old trees at), times 0.82..1.18 */

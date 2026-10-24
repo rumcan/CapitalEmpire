@@ -4,16 +4,16 @@ import { HS, HSTEP, TC, sampleField, type WaterPoint } from './terrain/types';
 import { fbm, smoothstep, type Noise } from './terrain/noise';
 import type { BBox } from './network';
 import { SUN_LIGHT, sampleCourseGrid } from './ext/course-height';
-import { PRESETS, presetTex, type PaintPreset } from './paint-presets';
+import { PRESETS, surfacePreset, type PaintPreset } from './paint-presets';
 import type { PaintTex } from './paint';
 
 /** the woodland floor's texture (TC.HILL; the owner, 2026-10-24: "the map has this vector texture and it should be Fescue texture"): the
- *  preset standing for the course's fescue surface (what the course lays, paint-presets.ts surfacePreset), else the owner's preset named
- *  Fescue (the Paint tool's), else the course's old fescue photo. The ground painter lays it in tile space at scale 1, as a painted course
- *  area (renderer.ts paintPhoto), through the woodland's soft noise-edged mask; a pure choice, so the bake needs no rebuild step */
+ *  course's fescue (paint-presets.ts surfacePreset: the preset standing for the fescue surface, else the owner's preset named Fescue, the
+ *  Paint tool's), else the course's old fescue photo, so the woodland and the course's fescue always match. The ground painter lays it in
+ *  tile space at scale 1, as a painted course area (renderer.ts paintPhoto), through the woodland's soft noise-edged mask; a pure choice,
+ *  so the bake needs no rebuild step */
 export function woodlandTex(presets: readonly Pick<PaintPreset, 'id' | 'surface'>[] = PRESETS): PaintTex {
-  const p = presets.find(q => q.surface === 'fescue') ?? presets.find(q => q.id === 'fescue');
-  return p ? presetTex(p.id) : 'golfFescue';
+  return surfacePreset('fescue', presets) ?? 'golfFescue';
 }
 /** the woodland floor's texture with the presets the game was built with (woodlandTex) */
 export const WOODLAND_TEX: PaintTex = woodlandTex();
