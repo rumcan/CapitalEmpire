@@ -20,6 +20,7 @@ export const PIECE_BUTTONS: readonly { arch: CoursePieceArchetype; kind: SnapPie
   { arch: 'bunker-pot', kind: 'bunker', name: 'Pot bunker' },
   { arch: 'water-pond', kind: 'water', name: 'Pond' },
   { arch: 'water-creek', kind: 'water', name: 'Creek' },
+  { arch: 'path-stub', kind: 'path', name: 'Cart path' },
 ];
 
 /** the painted areas a new piece can snap to: the course areas with a piece kind (rough is not a target). An area without a kind takes its

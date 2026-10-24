@@ -1,8 +1,8 @@
 // Headless tests for the Course tool's click-to-place pieces (T030): npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { pieceAreas, piecePropsOf, pieceWhy, snapTargets } from '../src/game/ext/course-pieces';
-import { computeSnapPiecePlacement } from '../src/game/ext/course-snap';
+import { PIECE_BUTTONS, pieceAreas, piecePropsOf, pieceWhy, snapTargets } from '../src/game/ext/course-pieces';
+import { computeSnapPiecePlacement, type SnapTargetRoad } from '../src/game/ext/course-snap';
 import { DEFAULT_STYLE } from '../src/game/paint';
 import { PaintTool } from '../src/game/paint-tool';
 import type { PresetProp } from '../src/game/golf/holepreset';
@@ -112,5 +112,83 @@ describe('course pieces (T030)', () => {
     assert.equal(tool.piece!.why, '');
     tool.pointerDown({ x: 60, y: 60 }, 0, 0);
     assert.equal(got.filter(q => q.kind === 'flower' && q.id === 'town:ornamental_grass').length, reeds);
+  });
+});
+
+describe('cart path snap (T031)', () => {
+  const road: SnapTargetRoad[] = [{ id: 1, ax: 100, ay: 120, bx: 160, by: 120, halfWidthTiles: 4 }];
+  // the road's kerbs are at y = 116 (north) and y = 124 (south); the cursor at (130, 125.5) is south of the road
+  const golf = (ownedLand: (pts: number[]) => boolean, roads: SnapTargetRoad[] = road) => new PaintTool({ ...host(), golfMode: () => true, ownedLand, roadsNear: () => roads });
+
+  it('a cart path snaps to the road kerb it touches; its core starts at the kerb and lies on the far (+y) side', () => {
+    const tool = new PaintTool({ ...host(), roadsNear: () => road });
+    tool.enterCourse();
+    tool.setPiece('path-stub');
+    tool.pointerMove({ x: 130, y: 125.5 }, 0, 0);
+    assert.equal(tool.piece!.pl.snapped, true);
+    assert.equal(tool.piece!.pl.snapRule, 'path-to-road');
+    const core = tool.piece!.areas.filter(a => a.kind === 'path');
+    assert.equal(core.length, 1);
+    assert.ok(core[0]!.pts.every((v, i) => i % 2 === 0 || v >= 123.5));
+  });
+
+  it('land only south of the kerb: the join apron on the verge does not block the snapped cart path', () => {
+    const tool = golf(pts => pts.every((v, i) => i % 2 === 0 || v >= 124));
+    tool.enterCourse();
+    tool.setPiece('path-stub');
+    tool.pointerMove({ x: 130, y: 125.5 }, 0, 0);
+    assert.equal(tool.piece!.why, '');
+    assert.equal(tool.piece!.areas.length, tool.piece!.pl.layers.length);
+  });
+
+  it('the apron is not checked for land: land that cuts the apron (x >= 128.8) but not the core (x 129..131) still lets the path go', () => {
+    const tool = golf(pts => pts.every((v, i) => i % 2 === 1 || v >= 128.8));
+    tool.enterCourse();
+    tool.setPiece('path-stub');
+    tool.pointerMove({ x: 130, y: 125.5 }, 0, 0);
+    assert.equal(tool.piece!.pl.layers.some(l => l.role === 'join-apron' && l.pts.some((v, i) => i % 2 === 0 && v < 128.8)), true);
+    assert.equal(tool.piece!.why, '');
+  });
+
+  it('the land test still refuses a snapped cart path whose own core is off the land (north of the road, land south only)', () => {
+    const tool = golf(pts => pts.every((v, i) => i % 2 === 0 || v >= 124));
+    tool.enterCourse();
+    tool.setPiece('path-stub');
+    tool.pointerMove({ x: 130, y: 112 }, 0, 0);
+    assert.equal(tool.piece!.pl.snapped, true);
+    assert.equal(tool.piece!.why, 'Cannot place outside owned course land');
+  });
+
+  it('with no roadsNear on the host a cart path lays free (unsnapped) and does not throw; snapping off does the same with a road present', () => {
+    const tool = new PaintTool(host());
+    tool.enterCourse();
+    tool.setPiece('path-stub');
+    tool.pointerMove({ x: 130, y: 125.5 }, 0, 0);
+    assert.equal(tool.piece!.pl.snapped, false);
+    assert.equal(tool.piece!.pl.snapRule, 'none');
+    const off = new PaintTool({ ...host(), roadsNear: () => road });
+    off.enterCourse();
+    off.setPiece('path-stub');
+    off.setPieceOpts({ snap: false });
+    off.pointerMove({ x: 130, y: 125.5 }, 0, 0);
+    assert.equal(off.piece!.pl.snapped, false);
+  });
+
+  it('a road edit (roadRev) re-plans the cart path at the same cursor', () => {
+    let rev = 0, roads: SnapTargetRoad[] = [];
+    const tool = new PaintTool({ ...host(), roadsNear: () => roads, roadRev: () => rev });
+    tool.enterCourse();
+    tool.setPiece('path-stub');
+    tool.pointerMove({ x: 130, y: 125.5 }, 0, 0);
+    assert.equal(tool.piece!.pl.snapped, false);
+    roads = road; rev++;
+    tool.pointerMove({ x: 130, y: 125.5 }, 0, 0);
+    assert.equal(tool.piece!.pl.snapped, true);
+  });
+
+  it('PIECE_BUTTONS lists the cart path last, as a path piece', () => {
+    const last = PIECE_BUTTONS.at(-1)!;
+    assert.equal(last.arch, 'path-stub');
+    assert.equal(last.kind, 'path');
   });
 });
