@@ -38,12 +38,15 @@ export type PuckStyle = Pick<PaintArea, 'tex' | 'scale' | 'angle' | 'border' | '
 export interface CursorTexture { pick(tex: string, pxPerTile: number): { img: CanvasImageSource & { width: number }; period: number } | null; rev(): number }
 /** a 2D canvas the cursor can draw its sprites on */
 export interface SpriteCanvas { width: number; height: number; getContext(id: '2d'): CanvasRenderingContext2D | null }
-/** what the cursor is given: a canvas factory (default: a DOM canvas), the photo source (default: swatch colours only), and, once the game
- *  paints a live course grid (T078), the cells a dab skips (refuse: a cell centre in tiles) and the grid's revision (re-runs the dab) */
+/** the cells a dab skips, by a cell centre in tiles */
+export type Refuse = (x: number, y: number) => boolean;
+/** what the cursor is given: a canvas factory (default: a DOM canvas), the photo source (default: swatch colours only), and for the golf
+ *  game's course grid (T078): refuse, asked once per new footprint, gives the cells a dab skips right now (PaintTool.brushSkip; null when
+ *  the brush paints areas instead), and rev, a number that changes whenever those could (the grid's revision, the hole, Rub out) */
 export interface CursorEnv {
   canvas?: (w: number, h: number) => SpriteCanvas;
   texture?: CursorTexture | null;
-  refuse?: ((x: number, y: number) => boolean) | null;
+  refuse?: (() => Refuse | null) | null;
   rev?: () => number;
 }
 
@@ -145,7 +148,7 @@ class DabPad {
   ax = 0; ay = 0;
   /** paints a dab of radius r at (x, y) with course-grid's paintDisc and returns the changed cells (the dab: every cell starts empty) as
    *  scratch-grid indices; refuse leaves a cell out (its centre in tiles) */
-  run(x: number, y: number, r: number, refuse?: ((x: number, y: number) => boolean) | null): { idx: Uint32Array; n: number } {
+  run(x: number, y: number, r: number, refuse?: Refuse | null): { idx: Uint32Array; n: number } {
     const ax = Math.floor(x / CELL_T), ay = Math.floor(y / CELL_T), m = Math.ceil(r / CELL_T) + PAD_CELLS;
     let g = this.g;
     if (!g || this.m !== m) { g = this.g = makeGrid(0, 0, 2 * m + 1, 2 * m + 1); this.m = m; } else g.surf.fill(0);
@@ -162,7 +165,7 @@ class DabPad {
 const PAD = new DabPad();
 /** the cells a brush dab of radius r tiles at tile (x, y) paints, by course-grid's own paintDisc: (cx, cy) pairs of world cell indices
  *  (cell (cx, cy) spans tiles cx * CELL_T to (cx + 1) * CELL_T, as every course grid, whose origin sits on that lattice) */
-export function dabCells(x: number, y: number, r: number, refuse?: ((x: number, y: number) => boolean) | null): Int32Array {
+export function dabCells(x: number, y: number, r: number, refuse?: Refuse | null): Int32Array {
   const { idx, n } = PAD.run(x, y, r, refuse), g = PAD.g!, out = new Int32Array(2 * n), ox = Math.round(g.x0 / CELL_T), oy = Math.round(g.y0 / CELL_T);
   for (let k = 0; k < n; k++) { const i = idx[k]!, cx = i % g.w; out[2 * k] = ox + cx; out[2 * k + 1] = oy + (i - cx) / g.w; }
   return out;
@@ -274,12 +277,15 @@ export class Footprints {
   ax = 0; ay = 0;
   /** counters for the tests: dabs run and outlines contoured */
   dabs = 0; contours = 0;
-  /** the footprint of a dab of radius r at (x, y) for surface surf (its droplet style): re-runs the dab only when the inputs changed, and
-   *  contours only a shape it has not kept */
-  at(x: number, y: number, r: number, surf: number, refuse?: ((x: number, y: number) => boolean) | null, rev = 0): Shape {
+  /** whether the last dab ran on the course grid's rules (refuse gave a function): its collars lie outside the cells */
+  grid = false;
+  /** the footprint of a dab of radius r at (x, y) for surface surf: re-runs the dab only when the inputs changed (rev: see CursorEnv),
+   *  asking refuse then for the cells it skips, and contours only a shape it has not kept */
+  at(x: number, y: number, r: number, surf: number, refuse?: (() => Refuse | null) | null, rev = 0): Shape {
     if (this.shape && x === this.kx && y === this.ky && r === this.kr && surf === this.ks && rev === this.krev) return this.shape;
     this.kx = x; this.ky = y; this.kr = r; this.ks = surf; this.krev = rev; this.dabs++;
-    const { idx, n } = this.pad.run(x, y, r, refuse), g = this.pad.g!, m = this.pad.margin;
+    const skip = refuse?.() ?? null; this.grid = !!skip;
+    const { idx, n } = this.pad.run(x, y, r, skip), g = this.pad.g!, m = this.pad.margin;
     const cells = new Int16Array(2 * n);
     let h = 2166136261 ^ (surf * 97 + n);
     for (let k = 0; k < n; k++) {
@@ -320,7 +326,7 @@ const rgba = (c: readonly number[], a: number) => `rgba(${c[0]},${c[1]},${c[2]},
 /** paints a puck sprite for a brush of R tiles whose top face is rx, ry device px across (so s = rx / (R sqrt2 HW) device px per world px:
  *  the map scale it was bucketed at): the wall, the top face in the brush's photo with its tone and border band, the sun's light and shade,
  *  and the rim lights */
-function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, erase: boolean, R: number, rx: number, ry: number, thick: number, pad: number, d: number, tex: CursorTexture | null | undefined) {
+function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, erase: boolean, withBand: boolean, R: number, rx: number, ry: number, thick: number, pad: number, d: number, tex: CursorTexture | null | undefined) {
   const cx = pad + rx, cy = pad + ry, look = LOOKS[kind] ?? LOOKS.fairway!, s = rx / (R * SQ2 * HW), E = R + 2;
   const profile: EdgeProfile = edgeProfileOf(kind === 'path' ? null : kind, st.tex, st.border > 0 ? st.btex : undefined);
   /** a tile-space pattern of texture t (scale k, angle a degrees) for the current tile-space transform, or its swatch colour */
@@ -378,8 +384,9 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   g.save(); iso(); g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.clip();
   g.fillStyle = fillOf(st.tex, st.scale, st.angle); g.fillRect(-R, -R, 2 * R, 2 * R);
   if (st.tone) { g.globalCompositeOperation = st.tone === 1 ? 'multiply' : 'screen'; g.globalAlpha = st.toneAmt; g.fillStyle = st.tint; g.fillRect(-R, -R, 2 * R, 2 * R); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
-  // the border band (first cut round a fairway, fringe round a green): the painter's width, held to a third of the puck so the surface reads
-  const bw = st.border > 0 ? Math.min(BORDER_W[st.border]!, 0.34 * R) : 0;
+  // the border band of a painted area (first cut round a fairway, fringe round a green), the painter's width held to a third of the puck so
+  // the surface reads; on the course grid the collars are laid outside the cells (course-blobs), so the puck is the surface alone
+  const bw = withBand && st.border > 0 ? Math.min(BORDER_W[st.border]!, 0.34 * R) : 0;
   if (bw > 0 && st.btex !== 'kerb') {
     g.strokeStyle = fillOf(st.btex, st.bscale, st.bangle);
     g.lineWidth = 2 * bw; g.stroke();
@@ -466,7 +473,7 @@ export class CourseCursor {
   /** the puck sprites (LRU) and the one in use */
   private sprites = new Map<string, Sprite>();
   private spr: Sprite | null = null;
-  private sk = { kind: '', st: null as PuckStyle | null, erase: false, r: NaN, b: NaN, d: 0, rev: -1, tex: '', scale: 0, angle: 0, border: -1, btex: '', tone: -1 };
+  private sk = { kind: '', st: null as PuckStyle | null, erase: false, band: true, r: NaN, b: NaN, d: 0, rev: -1, tex: '', scale: 0, angle: 0, border: -1, btex: '', tone: -1 };
 
   constructor(env: CursorEnv = {}) { this.env = env; }
 
@@ -528,7 +535,7 @@ export class CourseCursor {
     const gx = ((this.px - this.py) * HW - v.camX) * ze + v.cw / 2, gy = ((this.px + this.py) * HH - v.camY) * ze + v.ch / 2;
     this.last.x = gx; this.last.y = gy;
     if (rx >= 6 * d) {
-      const sp = this.sprite(tool.brushKind, st, erase, r, rx, d), k = rx / sp.rx;
+      const sp = this.sprite(tool.brushKind, st, erase, !this.feet.grid, r, rx, d), k = rx / sp.rx;
       const h = this.hov + thick * 0.5, shx = gx + SHEAR.sx * h, shy = gy + SHEAR.sy * h, grow = 1 + (0.3 * this.hov) / Math.max(ry, 1);
       const sw = sp.sh.width * k * grow * sx, shh = sp.sh.height * k * grow;
       ctx.globalAlpha = CAST.strength * (0.95 - 0.3 * clamp(this.hov / (rest + 2 * d), 0, 1));
@@ -641,19 +648,20 @@ export class CourseCursor {
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   }
 
-  /** the puck sprite for this look of a brush of r tiles drawn rx device px across, from the cache, painted when missing */
-  private sprite(kind: string, st: PuckStyle, erase: boolean, r: number, rx: number, d: number): Sprite {
+  /** the puck sprite for this look (band: with its border band) of a brush of r tiles drawn rx device px across, from the cache, painted
+   *  when missing */
+  private sprite(kind: string, st: PuckStyle, erase: boolean, band: boolean, r: number, rx: number, d: number): Sprite {
     const b = Math.round(Math.log(Math.max(rx, 1)) / BUCKET), rev = this.env.texture?.rev() ?? 0, k = this.sk;
-    if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.r === r && k.b === b && k.d === d && k.rev === rev
+    if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.band === band && k.r === r && k.b === b && k.d === d && k.rev === rev
       && k.tex === st.tex && k.scale === st.scale && k.angle === st.angle && k.border === st.border && k.btex === st.btex && k.tone === st.tone) return this.spr;
-    Object.assign(k, { kind, st, erase, r, b, d, rev, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
-    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${r}|${b}|${d}|${rev}`;
+    Object.assign(k, { kind, st, erase, band, r, b, d, rev, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
+    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${r}|${b}|${d}|${rev}`;
     let sp = this.sprites.get(key);
     if (sp) { this.sprites.delete(key); this.sprites.set(key, sp); return (this.spr = sp); }
     const sr = Math.min(RX_CAP, Math.exp(b * BUCKET)), sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2);
     const make = this.env.canvas ?? domCanvas;
     const c = make(Math.ceil(2 * sr + 2 * pad), Math.ceil(2 * sry + thick + 2 * pad)), g = c.getContext('2d');
-    if (g) paintPuck(g, st, kind, erase, r, sr, sry, thick, pad, d, this.env.texture);
+    if (g) paintPuck(g, st, kind, erase, band, r, sr, sry, thick, pad, d, this.env.texture);
     const sh = make(Math.ceil(2 * sr * 1.3 + 4), Math.ceil(2 * sry * 1.3 + 4)), gs = sh.getContext('2d');
     if (gs) paintShadow(gs, sr, sry);
     sp = { key, c, sh, rx: sr, ry: sry, thick, pad };

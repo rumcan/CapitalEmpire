@@ -612,8 +612,9 @@ export class Game {
   private gateProps = new Map<string, Prop>();
   /** the overlay's view of this engine (its canvas is set each frame; reused, so the render loop allocates nothing) */
   private parkView: ParkOverlayView = { ctx: null as unknown as CanvasRenderingContext2D, dpr: 1, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y) };
-  /** the Course brush's cursor (T081): the surface puck, the course grid and the glowing footprint; and its camera view (reused) */
-  private courseCursor = new CourseCursor({ texture: browserCursorTexture() });
+  /** the Course brush's cursor (T081): the surface puck, the course grid and the glowing footprint (the cells a dab paints, by the grid's
+   *  brush rules; re-run when the grid, the hole or Rub out change); and its camera view (reused) */
+  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), refuse: () => this.paint.brushSkip(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0) });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the car park drag (the park tool, left button): the tile where it began and the one under the pointer (x1, y1), the rect it makes (def, id 0),
    *  its built park (null if not valid), the verdict (why: the reason it cannot be built, '' if it can) and the cost; mx, my: the cursor (CSS px) */

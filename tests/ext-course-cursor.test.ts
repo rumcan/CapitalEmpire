@@ -204,3 +204,37 @@ test('a click squashes the puck, flashes the footprint and splashes; the OS curs
   assert.equal(tool.cursorStyle, 'crosshair');
   assert.equal(cur.draw(m.ctx, v, tool, 3000), false, 'no puck outside the brush');
 });
+
+test('on the golf course grid (T078) the footprint is exactly the cells a real dab changes, and a rub out takes only its own surface', () => {
+  // a grid of empty cells with a green in the middle; the land east of x = 102 is not yours
+  const g = makeGrid(80, 180, 80, 80);
+  paintDisc(g, 100, 200, 1.2, SURF.green, 1, 0);
+  const tool = new PaintTool({ setLotGround() {}, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [],
+    golfMode: () => true, grid: () => g, gridChanged() {}, ownedAt: (x: number) => x < 102 });
+  tool.course = true; tool.setBrush('fairway'); tool.setBrushR(3); tool.cursor = { x: 100.13, y: 200.07 };
+  const cur = new CourseCursor({ canvas: mockCanvases().make, refuse: () => tool.brushSkip(), rev: () => g.rev * 64 + tool.brushHole * 2 + (tool.rubOut ? 1 : 0) });
+  const m = mockCtx({ width: 1600, height: 1000 }), v = view(0.3);
+  /** the footprint now, as sorted world cell keys */
+  const foot = () => { cur.draw(m.ctx, v, tool, 1000); return shapeCells(cur.feet.shape!, cur.feet.ax, cur.feet.ay); };
+  /** the cells whose surface a press and release at the cursor changes, as sorted world cell keys */
+  const changed = () => {
+    const before = g.surf.slice(), out: number[] = [];
+    tool.pointerDown(tool.cursor!, 0, 0); tool.pointerUp(0.5);
+    for (let i = 0; i < g.surf.length; i++) if (g.surf[i] !== before[i]) { const cx = i % g.w; out.push(key(Math.round(g.x0 / CELL_T) + cx, Math.round(g.y0 / CELL_T) + (i - cx) / g.w)); }
+    return out.sort((a, b) => a - b);
+  };
+  const f1 = foot(), whole = refCells(100.13, 200.07, 3);
+  assert.ok(cur.feet.grid, 'the footprint follows the grid rules');
+  assert.ok(f1.length > 20 && f1.length < whole.length, `it skips the green and the land that is not yours (${f1.length} of ${whole.length} cells)`);
+  assert.deepEqual(f1, changed(), 'the footprint is exactly the cells the dab painted');
+  // painting changed the grid: the footprint re-runs, and over its own fairway it keeps every cell (the dab still covers them)
+  assert.deepEqual(foot(), f1, 'over its own surface the footprint stays whole');
+  // rub out: only this hole's fairway cells, which is what the rub changes
+  tool.rubOut = true; tool.cursor = { x: 99.4, y: 201.3 };
+  const f2 = foot();
+  assert.ok(f2.length > 0 && f2.every(k => f1.includes(k)), 'a rub out only takes fairway cells');
+  assert.deepEqual(f2, changed(), 'the rub-out footprint is exactly the cells the rub changed');
+  // a cart path paints areas, not cells: no grid rules
+  tool.rubOut = false; tool.setBrush('path'); foot();
+  assert.equal(cur.feet.grid, false);
+});
