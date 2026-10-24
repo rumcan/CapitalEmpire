@@ -337,7 +337,7 @@ export default function App() {
           </div>
           )}
           {(game.showAccess || (dev && game.cam.z < PLANNER_Z)) && <AccessLegend game={game} />}
-          {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} time={game.flowMode === 'time'} />}
+          {game.showFlow && <HeatLegend raised={game.showAccess || (dev && game.cam.z < PLANNER_Z)} time={game.flowMode === 'time'} />}
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (
