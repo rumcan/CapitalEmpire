@@ -29,8 +29,9 @@ export function spriteRect<T extends number[] | Float32Array>(d0: Drawable, out:
   const l = lookOf(d0), it = LIBRARY[l.item]!;
   if (l.hidden) { const X = worldX(d0.x, d0.y), Y = worldY(d0.x, d0.y); out[o] = X; out[o + 1] = Y; out[o + 2] = X; out[o + 3] = Y; return out; }
   const parked = it.kind === 'car' && !d0.moving, f = parked ? CAR_SCALE : 1, k = l.scale * f, ax = l.flip ? it.w - it.ax : it.ax;
-  // a parked car shrinks about the middle of its footprint, so it stays in its bay
-  const cx = (d0.x0 + d0.x1) / 2, cy = (d0.y0 + d0.y1) / 2, px = parked ? cx + (d0.x - cx) * f : d0.x, py = parked ? cy + (d0.y - cy) * f : d0.y, X = worldX(px, py), Y = worldY(px, py);
+  // a parked car shrinks about the middle of its footprint, so it stays in its bay; a stand-in is drawn at its own anchor (centred on the footprint)
+  const x = l.x ?? d0.x, y = l.y ?? d0.y;
+  const cx = (d0.x0 + d0.x1) / 2, cy = (d0.y0 + d0.y1) / 2, px = parked ? cx + (x - cx) * f : x, py = parked ? cy + (y - cy) * f : y, X = worldX(px, py), Y = worldY(px, py);
   const left = X - ax * k, top = Y - it.ay * k, q = it.quad;
   const qx0 = l.flip ? it.w - q[2] : q[0], qx1 = l.flip ? it.w - q[0] : q[2];
   out[o] = left + qx0 * k; out[o + 1] = top + q[1] * k; out[o + 2] = left + qx1 * k; out[o + 3] = top + q[3] * k;
@@ -50,7 +51,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   spriteRect(d0, out, o);
   out[o + 4] = l.flip ? t[3] : t[1]; out[o + 5] = t[2]; out[o + 6] = l.flip ? t[1] : t[3]; out[o + 7] = t[4];
   // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked); a hidden one draws nothing
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden ? -1 : worldY(d0.x, d0.y);
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0) corners
   out[o + 16] = worldX(d0.x1, d0.y1); out[o + 17] = worldY(d0.x1, d0.y1); out[o + 18] = worldX(d0.x0, d0.y1); out[o + 19] = worldX(d0.x1, d0.y0);

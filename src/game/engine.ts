@@ -84,7 +84,8 @@ import { tierInfo, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
-import { NEW_ART_ONLY, OLD_ART, lookOf } from './newart';
+import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale } from './newart';
+import { atlasMip0 } from './sizes';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -257,7 +258,14 @@ export class Game {
   /** lot ground edits made since the last frame (key -> patches, or null to drop), sent as one message per frame */
   private lotPending = new Map<string, LotPatch[] | null>();
   /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
-  pageImages: HTMLImageElement[] = []; private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
+  pageImages: HTMLImageElement[] = [];
+  /** the atlas pages at full size (mip 0), loaded on first use for the 2D previews (the business ghost), so a preview is never drawn from mip 1 */
+  private pageFull = new Map<number, HTMLImageElement>();
+  private pageImage0(page: number): HTMLImageElement | null {
+    let im = this.pageFull.get(page); if (!im) { im = new Image(); im.src = ATLAS_PAGES[page]![0]!; this.pageFull.set(page, im); }
+    return im.complete && im.naturalWidth ? im : null;
+  }
+  private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
@@ -600,7 +608,9 @@ export class Game {
     if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; this.sandboxUnlock = false; }
     this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney); // before the terrain: the city worker reads its options from the first messages
     this.resize();
-    const atlas = this.gl.loadAtlas(this.dpr >= 1.5);
+    // mip 0 on every screen above 1x: at the closest zoom a dpr-1.25 screen needs 0.375 device px per display px, more than mip 1 holds (0.3), so
+    // without it every sprite drawn at its pixel limit would be stretched 1.25x (the owner, 2026-10-24: nothing painted blurry or pixelated)
+    const atlas = this.gl.loadAtlas(atlasMip0(this.dpr));
     this.pageImages = await Promise.all(ATLAS_PAGES.map(row => new Promise<HTMLImageElement>(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(im); im.src = row[1]; })));
     this.pageAlpha = this.pageImages.map(im => { const w = Math.max(1, im.naturalWidth >> 1), h = Math.max(1, im.naturalHeight >> 1), c = new OffscreenCanvas(w, h), g = c.getContext('2d', { willReadFrequently: true })!; g.drawImage(im, 0, 0, w, h); return { w, h, data: g.getImageData(0, 0, w, h).data }; });
     tick(0.3);
@@ -767,7 +777,8 @@ export class Game {
       let near = false;
       for (const p of this.propGrid.query([q.x - spacing, q.y - spacing, q.x + spacing, q.y + spacing])) if ((p.x - q.x) ** 2 + (p.y - q.y) ** 2 < s2) { near = true; break; }
       if (near) continue;
-      const i = pool[Math.floor(rnd() * pool.length)]!, flip = rnd() < 0.5, scale = (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (size[0] + (size[1] - size[0]) * rnd());
+      // never bigger than the picture's pixels allow (newart.ts maxDrawScale), so a plant's footprint is its picture's
+      const i = pool[Math.floor(rnd() * pool.length)]!, flip = rnd() < 0.5, scale = Math.min(maxDrawScale(i), (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (size[0] + (size[1] - size[0]) * rnd()));
       if (this.canPlace(LIBRARY[i]!, q.x, q.y, flip, scale)) continue;
       this.addProp(i, q.x, q.y, flip, scale).plant = 1; n++;
     }
@@ -1997,7 +2008,9 @@ export class Game {
     const it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto && !p.plant) this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit();
   }
   scaleSelected(f: number) {
-    const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, 1.6);
+    // never bigger than its picture's pixels allow at the closest zoom (newart.ts maxDrawScale), so the footprint stays the picture's
+    const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, Math.min(1.6, Math.max(p.scale, maxDrawScale(p.item))));
+    if (f > 1 && k <= p.scale) { if (maxDrawScale(p.item) < 1.6) this.toast(`${it.name} is as big as its picture allows`, 'warn'); return; }
     const err = this.canPlace(it, p.x, p.y, p.flip, k, p); if (err) { this.toast(err, 'warn'); return; }
     p.scale = k; this.propChanged(p); this.scheduleSave(); this.emit();
   }
@@ -2794,7 +2807,8 @@ export class Game {
     if (!W.length && !S.length) return;
     if (!walkSheet) { walkSheet = new Image(); walkSheet.src = walkersUrl; }
     const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y;
-    const sprites = this.cam.z >= 0.08, h = 0.9 * HH * 2 * ze, tick = now / 180, sheet = walkSheet;
+    // never taller than the sheet's 32 px cells (no walker drawn past its pixels at the closest zoom)
+    const sprites = this.cam.z >= 0.08, h = Math.min(32, 0.9 * HH * 2 * ze), tick = now / 180, sheet = walkSheet;
     ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
     for (let i = 0; i + 3 < S.length; i += 4) {
@@ -3921,11 +3935,13 @@ export class Game {
       const ze = this.cam.z * this.dpr;
       ctx.save(); ctx.globalAlpha = h.why ? .35 : .65;
       for (const p of businessArt(h.def, LIBRARY, LIB_INDEX)) {
-        const it = LIBRARY[p.item], [page, u0, v0, u1, v1] = it.tex, image = this.pageImages[page];
-        if (!image?.naturalWidth) continue;
+        // the picture the placed business draws (newart.ts: a stand-in, capped at its pixels), cut from its full-size page (mip 0, loaded on first use)
+        const l = lookOf(p); if (l.hidden) continue;
+        const it = LIBRARY[l.item], [page, u0, v0, u1, v1] = it.tex, image = this.pageImage0(page);
+        if (!image) continue;
         const r = spriteRect(p), x = (r[0] - this.cam.X) * ze + this.cw / 2, y = (r[1] - this.cam.Y) * ze + this.ch / 2;
         const w = (r[2] - r[0]) * ze, height = (r[3] - r[1]) * ze;
-        ctx.save(); ctx.translate(p.flip ? x + w : x, y); if (p.flip) ctx.scale(-1, 1);
+        ctx.save(); ctx.translate(l.flip ? x + w : x, y); if (l.flip) ctx.scale(-1, 1);
         ctx.drawImage(image, u0 * image.naturalWidth, v0 * image.naturalHeight, (u1 - u0) * image.naturalWidth, (v1 - v0) * image.naturalHeight, 0, 0, w, height); ctx.restore();
       }
       ctx.restore();
