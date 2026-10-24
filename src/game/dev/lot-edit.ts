@@ -32,6 +32,23 @@ export function worldToPreset(f: PresetFrame, p: { w: number; d: number }, wx: n
   return { x: unfit(c.x, p.w, f.w, keep ? keep.x >= p.w / 2 : null), y: unfit(c.y, p.d, f.d, keep ? keep.y >= p.d / 2 : null) };
 }
 
+/** a world point (tiles) for a prop whose footprint has world half extents hx, hy, moved onto a lot so the whole footprint lies inside it: the
+ *  point in the lot's frame clamped to [half, size - half] on each side (the lot's middle when the footprint is wider than the lot); the point
+ *  back in world tiles, and whether it moved (an arrow move that met the lot edge, a placing past it) */
+export function clampToLot(f: PresetFrame, wx: number, wy: number, hx: number, hy: number): { x: number; y: number; clamped: boolean } {
+  const c = toFrame(f, wx, wy), ha = Math.abs(f.u.x) * hx + Math.abs(f.u.y) * hy, hb = Math.abs(f.n.x) * hx + Math.abs(f.n.y) * hy;
+  const x = 2 * ha >= f.w ? f.w / 2 : clamp(c.x, ha, f.w - ha), y = 2 * hb >= f.d ? f.d / 2 : clamp(c.y, hb, f.d - hb), w = toWorld(f, x, y);
+  return { x: w.x, y: w.y, clamped: Math.abs(x - c.x) > 1e-9 || Math.abs(y - c.y) > 1e-9 };
+}
+/** a sprite placed at a world point (tiles) on a lot drawn from preset p: its point in the preset (the footprint kept inside the lot, then the
+ *  turn and the fit undone, the half by the lot half it lies in), and whether the lot edge stopped it */
+export function placeInPreset(f: PresetFrame, p: { w: number; d: number }, wx: number, wy: number, hx: number, hy: number): { x: number; y: number; clamped: boolean } {
+  const c = clampToLot(f, wx, wy, hx, hy), q = worldToPreset(f, p, c.x, c.y);
+  return { x: q.x, y: q.y, clamped: c.clamped };
+}
+/** a point snapped to the move grid (quarter tiles), as the arrows move */
+export const snap = (v: number) => Math.round(v * 4) / 4;
+
 /** one edit to a preset: move a prop to a preset point, scale it by a factor, turn its view, delete it, duplicate it (offset in the preset,
  *  tiles), or add a library sprite at a preset point */
 export type PresetEdit =

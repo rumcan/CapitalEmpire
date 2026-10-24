@@ -49,7 +49,7 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
-import { acrossLines, compose, fenceOnly, isCarPark, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { acrossLines, compose, fenceOnly, isCarPark, pickedPreset, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -1089,10 +1089,24 @@ export class Game {
   }
   /** the props a lot has now */
   propsOfLot(key: string): readonly Prop[] { return this.lotProps.get(key) ?? []; }
-  /** composes lots again after the lot presets changed: `now` at once (the lot being edited), every other lot through the lot queue */
-  recomposeLots(now: string[] = []) {
+  /** the key of the lot (staged, else the town's) whose rectangle holds the tile point (x, y), or null */
+  lotKeyAt(x: number, y: number): string | null {
+    for (const k of new Set([...this.staged.keys(), ...this.traffic.lots.keys()])) {
+      const at = this.lotOf(k); if (!at) continue;
+      const { o, u, n, w, d } = at.g, rx = x - o.x, ry = y - o.y, a = rx * u.x + ry * u.y, b = rx * n.x + ry * n.y;
+      if (a >= 0 && a <= w && b >= 0 && b <= d) return k;
+    }
+    return null;
+  }
+  /** composes lots again after the lot presets changed: `now` at once (the lot being edited), the others through the lot queue: with `preset`,
+   *  only the lots drawn from that preset (an edit to one preset re-bakes their ground alone), else every lot (a library size, a reload) */
+  recomposeLots(now: string[] = [], preset?: string) {
     for (const k of now) this.applyLot(k);
-    for (const k of [...this.staged.keys(), ...this.traffic.lots.keys()]) if (!now.includes(k)) this.lotQueue.add(k);
+    for (const k of new Set([...this.staged.keys(), ...this.traffic.lots.keys()])) {
+      if (now.includes(k)) continue;
+      if (preset !== undefined) { const at = this.lotOf(k); if (!at || pickedPreset(at.g, at.st)?.id !== preset) continue; }
+      this.lotQueue.add(k);
+    }
     this.flushLotGround(); this.emit();
   }
   /** a prop the dev editor moved, scaled or turned: its footprint, grids and sprites follow, and the game saves (player props) */

@@ -23,6 +23,9 @@ import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
  *  from: the preset it was drawn from and its prop index there (compose.ts; the dev editor maps an edit back to the preset by it) */
 export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number } }
 export interface Composition { props: Placed[]; ground: LotPatch[] }
+/** a preset prop a lot leaves out: the preset and the prop's index there, its sprite id as drawn, and why (past the lot line, overlaps <id>
+ *  NN%, the fit, the decline) */
+export interface PresetDrop { preset: string; prop: number; id: string; why: string }
 /** the lot state a composition depends on (the seed is the lot's own) */
 export interface ComposeState { use: number; level: number; decline: number; seed: number }
 
@@ -52,11 +55,6 @@ export const OVERLAP = 0.35;
 export const CAR_INSET = 0.4;
 /** the car park's bay pitch and depth, tiles (the depth is 5.5 m); the wheel stop id */
 export const BAY = 2, BAY_DEPTH = 2.75, WHEEL = 'expansion:wheel-stop';
-/** the two-way aisle between the bay rows, the entrance drive's width (two lanes), a wheel stop's inset from a bay's outer edge, a nosed-in car's gap to its stop */
-/** NOSE: a parked car's centre this far short of its wheel stop: half a car at CAR_SCALE (the 4.5 m car is 3.96 m at 0.88: 0.99 tiles half) and a 0.15-tile gap, so its nose stops just short of the stop */
-export const AISLE = 2.6, DRIVE_W = 2.6, STOP_IN = 0.35, NOSE = carFootprint(0).hx * CAR_SCALE / 2 + 0.15;
-/** the house band: the gap between the drive and the house (or its garage), and the side yard on the far side from the drive (tiles) */
-export const DRIVE_GAP = 0.5, SIDE_YARD = 1.4;
 
 export const BY = new Map<string, LibItem>(LIBRARY.map(i => [i.id, i]));
 export const names = (ids: string[]) => ids.filter(id => BY.has(id));
@@ -91,32 +89,10 @@ export const faced = (id: string, flip: boolean): [string, boolean] => { const [
 
 /** ids with their plain variations in the library ('town:bakery' -> 'variation:town-bakery-<hash>-plain:1'), the ones the game has */
 export const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => !FRONTAL.has(k) && base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
-/** a library sprite drawn straight on (frontal.ts) or not isometric enough for a lot is never dealt; the house variations are kind 'building' */
-export const isoBuilding = (i: LibItem) => !FRONTAL.has(i.id) && (i.kind === 'house' || i.kind === 'building');
-/** a rear view of a house: the north variations and the 'house back' sets (patio, pool, shed, swings, deck, porch) */
-export const REAR_VIEW = /-north-|^gen:back-|^variation:gen-back-/;
-/** every isometric house front the library has, with the variations (the owner, 2026-10-21: use everything); garages go in their own pool */
-export const HOUSE_FRONT = cat(i => i.cat === 'Houses' && isoBuilding(i) && !REAR_VIEW.test(i.id) && !/garage_|-garage-[0-9a-f]{8}|^ref:building-garage/.test(i.id));
-export const HOUSE_REAR = withVariations(['expansion:ranch-rear', 'expansion:cottage-rear', 'expansion:dormer-rear', 'expansion:duplex-rear', 'expansion:victorian-rear']).concat(cat(i => i.cat === 'Houses' && isoBuilding(i) && REAR_VIEW.test(i.id)));
-export const HOUSE_RUNDOWN = withVariations(['expansion:rundown-house']);
-export const GARAGE_FRONT = withVariations(['static:garage_timber', 'static:garage_brick', 'static:garage_brick-v2']);
-export const GARAGE_REAR = withVariations(['expansion:garage-rear']).filter(id => id !== 'variation:expansion-garage-rear-91bcbe45:1');
 export const TREES = cat(i => i.kind === 'tree' && !/dead/.test(i.id));
 export const BUSHES = cat(i => i.kind === 'bush');
-/** every front-facing shop the game has, with its variations (the street fronts deal from it, see com) */
-export const SHOP_FRONT = withVariations(['town:bakery', 'town:grocery', 'town:pharmacy', 'town:laundromat', 'town:fish_tackle', 'town:barber', 'town:hardware', 'world:video_rental', 'world:video',
-  'ref:building-grocery', 'ref:building-corner-shop', 'ref:building-corner-store']);
-export const SHOP_REAR = withVariations(['static:shop_brick_rear', 'static:shop_brick_rear-v2', 'static:shop_market_rear', 'static:shop_market_rear-v2']);
-export const BOARDED = withVariations(['expansion:boarded-store-rear', 'expansion:derelict-two-storey']);
-export const VENUE = withVariations(['world:diner', 'world:arcade', 'world:snack_bar', 'ref:building-gas-canopy']).concat(cat(i => i.id.startsWith('variation:ref-building-gas-shop-') && isoBuilding(i)));
-export const CIVIC = withVariations(['town:firestation', 'town:postoffice', 'world:primary_school', 'world:church', 'world:school']);
-export const SHED = withVariations(['ref:building-farm-shed', 'expansion:abandoned-workshop']);
-/** the works buildings (foundry, mill, depots, workshops: the industrial variations), and the tall pieces a big works yard may have */
-export const WORKS = cat(i => /^(industrial:|variation:industrial-)/.test(i.id) && isoBuilding(i));
-export const TOWERS = names(['world:watertower', 'ref:landmark-water-tower', 'ref:landmark-silo', 'ref:landmark-windmill']);
 /** a small green's centrepiece */
 export const PARK_PIECES = names(['world:gazebo', 'ref:landmark-fountain-v2', 'world:junglegym_0', 'world:junglegym_1']);
-export const BARN = withVariations(['world:barn', 'ref:building-barn']);
 /** cars with a facing letter in the name (n = -Y, s = +Y, e = +X, w = -X) */
 export const CARS = cat(i => i.cat === 'Vehicles' && /_[news](-v2)?$/.test(i.id));
 export const PICKUPS = CARS.filter(id => /pickup|van/.test(id));
@@ -124,27 +100,11 @@ export const FACE: Record<string, Pt> = { n: { x: 0, y: -1 }, s: { x: 0, y: 1 },
 /** the car art's direction (0 +x, 1 +y, 2 -x, 3 -y) of the axis a lot-frame vector points along */
 export const dirOf = (v: Pt) => (Math.abs(v.x) > Math.abs(v.y) ? (v.x > 0 ? 0 : 2) : (v.y > 0 ? 1 : 3));
 export const JUNK = names(['expansion:junk-car', 'expansion:appliance-pile', 'expansion:scrap-metal', 'expansion:tyre-stack', 'expansion:oil-drums', 'expansion:concrete-rubble']);
-export const SCRAP = names(['expansion:scrap-engine', 'expansion:tyre-stack', 'expansion:yard-workbench', 'expansion:air-compressor']);
-export const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle', 'expansion:appliance-pile']);
-export const TRAILERS = names(['expansion:camper', 'expansion:boxcar', 'expansion:boat-trailer', 'expansion:utility-trailer', 'expansion:lean-to-shed']);
 export const PRIVACY: Pair = { x: 'expansion:fence-privacy-x', y: 'expansion:fence-privacy-y' };
 export const CHAIN: Pair = { x: 'expansion:chainlink-x', y: 'expansion:chainlink-y' };
-/** flower beds (the soft plants), porch pumpkins, and the bigger Halloween yard pieces (Maple Falls in October) */
-export const FLOWERS = names(['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'ref:halloween-mums']);
-export const PUMPKINS = names(['world:pumpkin_0', 'world:pumpkin_1']);
-export const SPOOKY = names(['ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost', 'world:scarecrow', 'expansion:blowmold-ghost', 'expansion:yard-spider', 'expansion:yard-coffin', 'ref:halloween-witch-sign', 'ref:halloween-lantern', 'world:grave_0', 'world:grave_1', 'world:grave_2']);
 /** the school and pedestrian signs (TrickOrTreat road sign set) for the kerb by a civic building */
 export const SCHOOL_SIGNS = cat(i => /^variation:sign-pedestrians-school-/.test(i.id));
 export const DEAD_TREES = names(['world:tree_dead_0', 'world:tree_dead_1', 'world:tree_dead_2']);
-/** the props each household story adds to the back yard (one of each, in this order, as they fit) */
-export const STORY_KIT: Record<string, string[]> = {
-  family: names(['expansion:sandbox', 'expansion:kiddie-pool', 'expansion:tricycle', 'expansion:wagon', 'expansion:washing-line']),
-  retired: names(['expansion:glasshouse', 'expansion:rain-barrel', 'expansion:compost-bin', 'expansion:garden-pump', 'expansion:patio-swing']),
-  worker: names(['expansion:woodpile', 'expansion:rideon-mower', 'expansion:canoe', 'expansion:lawn-roller', 'expansion:washing-line']),
-  party: names(['expansion:firepit', 'expansion:hot-tub', 'expansion:camping-cooler', 'expansion:brick-barbecue']),
-  mechanic: names(['expansion:motorcycle-front', 'expansion:rototiller', 'expansion:oil-drums']),
-  neglected: names(['expansion:attic-trunk', 'expansion:antique-pram', 'expansion:crt-curb', 'expansion:outhouse']),
-};
 
 /** does an axis-aligned footprint overlap a convex quad (8 numbers, corners in order); touching is not overlap */
 export function hit(fp: Box4, q: number[]): boolean {
@@ -183,6 +143,8 @@ export class Build {
   readonly marks: number[] = [];
   /** no cars at all (derelict); the upright cap for plants (the rest are kept) */
   noCars = false; cap = 28;
+  /** where the preset props this lot leaves out are told, with why (compose's drops argument: the dev editor); null: not told */
+  drops: PresetDrop[] | null = null;
   /** a building site keeps all its ground decals (mud, footprints, gravel); every other lot keeps only its leaves (the owner, 2026-10-22) */
   allMarks = false;
   readonly r: () => number;
@@ -357,7 +319,12 @@ export class Build {
     for (let i = 0; i < n && pool.length; i++) this.put(pick(this.r, pool), a0 + (a1 - a0) * this.r(), b0 + (b1 - b0) * this.r(), o);
   }
   /** decline 1+: a third of the plants go */
-  thin(f: number) { for (let i = this.items.length - 1; i >= 0; i--) if (this.items[i].plant && this.r() < f) this.items.splice(i, 1); }
+  thin(f: number) {
+    for (let i = this.items.length - 1; i >= 0; i--) if (this.items[i].plant && this.r() < f) {
+      const it = this.items[i]!; if (it.from && this.drops) this.drops.push({ ...it.from, id: it.id, why: 'fewer plants on a declined lot' });
+      this.items.splice(i, 1);
+    }
+  }
   /** drops the boundary panels that stand on a drive (a drive's mouth and the run beside it stay open) */
   clearDrives() {
     for (let i = this.items.length - 1; i >= 0; i--) { const it = this.items[i]!; if (it.boundary && this.patches.some(p => p.kind === 'drive' && hit(it.fp, p.quad))) this.items.splice(i, 1); }
@@ -384,14 +351,19 @@ export class Build {
   /** the composition: candidates in order, the first that fits wins; plants stop at the cap */
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
+    // a preset prop left out is told to the drops sink, with why (the dev editor shows them: nothing in a preset goes unseen)
+    const drop = (it: Item, why: string) => { if (it.from && this.drops) this.drops.push({ ...it.from, id: it.id, why }); };
     for (const it of this.items) {
       // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
-      if (!this.inside(it) || (!it.boundary && !it.paved && !it.from && this.onPatch(it))) continue;
+      if (!this.inside(it)) { drop(it, 'past the lot line'); continue; }
+      if (!it.boundary && !it.paved && !it.from && this.onPatch(it)) continue;
       // two cars never share ground (a car is kept only if it shares none with an earlier car)
-      if (it.car && acc.some(a => a.car && share(a.fp, it.fp) > 0)) continue;
+      const car = it.car ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;
+      if (car) { drop(it, `overlaps the car ${car.id}`); continue; }
       if (!it.fence && !it.wheel) {
         if (it.plant && !it.from && ups >= this.cap) continue;
-        if (acc.some(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP)) continue;
+        const over = acc.find(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP);
+        if (over) { drop(it, `overlaps ${over.id} ${Math.round(100 * share(over.fp, it.fp))}%`); continue; }
         ups++;
       }
       acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; props.push(p);

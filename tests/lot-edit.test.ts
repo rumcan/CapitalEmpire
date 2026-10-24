@@ -2,16 +2,16 @@
 // dev server's save whitelist. npm test.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyEdit, fit1, growWithin, presetToWorld, removeSprite, replacePreset, scaleOverride, studioJson, unfit, worldToPreset } from '../src/game/dev/lot-edit';
+import { applyEdit, clampToLot, fit1, growWithin, placeInPreset, presetToWorld, removeSprite, replacePreset, scaleOverride, snap, studioJson, unfit, worldToPreset } from '../src/game/dev/lot-edit';
 import { maxDrawScale } from '../src/game/newart';
-import { checkDevSave, devSavePath, DEV_SAVE_FILES } from '../src/game/dev/dev-save';
-import { frameOf, toWorld } from '../src/game/lots/preset-frame';
-import { fitPreset, type LotPreset } from '../src/game/lots/presets';
+import { checkDevRequest, checkDevSave, devSavePath, DEV_SAVE_FILES } from '../src/game/dev/dev-save';
+import { frameOf, toFrame, toWorld } from '../src/game/lots/preset-frame';
+import { fitPreset, formatPresets, type LotPreset } from '../src/game/lots/presets';
 import { mulberry } from '../src/game/iso';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap } from '../src/game/lots/lots';
-import { compose, lotPreset } from '../src/game/lots/compose';
+import { compose, lotPreset, setLotPresets, type PresetDrop } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { footprintOf } from '../src/game/lots/preset-art';
 import { LIBRARY } from '../src/game/library';
@@ -40,6 +40,33 @@ describe('the dev editor (T071)', () => {
       }
     }
     assert.equal(n, 8 * 4 * 50);
+  });
+
+  it('1b. a move or a placing keeps the footprint inside the lot, for all 8 frames: clampToLot clamps in the lot frame, placeInPreset goes back to the preset', () => {
+    const r = mulberry(171);
+    for (const fr of FRAMES) for (const [pw, pd, lw, ld] of [[10, 15, 10, 15], [12, 16, 10.5, 14], [10, 15, 11, 16.5]]) {
+      const f = frameOf({ o: { x: 300, y: 400 }, ...fr, w: lw!, d: ld! }), p = { w: pw!, d: pd! };
+      for (let k = 0; k < 40; k++) {
+        const hx = 0.2 + r() * 1.5, hy = 0.2 + r() * 1.5;
+        // a point anywhere near the lot, often well past its edge
+        const a = -6 + r() * (lw! + 12), b = -6 + r() * (ld! + 12), w = toWorld(f, a, b), c = clampToLot(f, w.x, w.y, hx, hy);
+        // the footprint (world half extents) lies inside the lot: every corner in its frame within 0..size
+        for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const q = toFrame(f, c.x + sx * hx, c.y + sy * hy); assert.ok(q.x >= -1e-9 && q.x <= lw! + 1e-9 && q.y >= -1e-9 && q.y <= ld! + 1e-9, `${JSON.stringify(fr)}: corner (${q.x}, ${q.y}) off a ${lw} x ${ld} lot`); }
+        const inside = toFrame(f, w.x, w.y), ha = Math.abs(f.u.x) * hx + Math.abs(f.u.y) * hy, hb = Math.abs(f.n.x) * hx + Math.abs(f.n.y) * hy;
+        assert.equal(c.clamped, !(inside.x >= ha - 1e-9 && inside.x <= lw! - ha + 1e-9 && inside.y >= hb - 1e-9 && inside.y <= ld! - hb + 1e-9), 'clamped says whether it moved');
+        if (!c.clamped) assert.ok(Math.hypot(c.x - w.x, c.y - w.y) < 1e-9, 'a point already inside stays');
+        // placed: the preset point draws back at the clamped point (exactly, wherever a preset point fits there: not in the gap of a bigger lot)
+        const pl = placeInPreset(f, p, w.x, w.y, hx, hy), back = presetToWorld(f, p, pl.x, pl.y), cf = toFrame(f, c.x, c.y);
+        const gap = (lw! > pw! && cf.x >= pw! / 2 && cf.x < pw! / 2 + lw! - pw!) || (ld! > pd! && cf.y >= pd! / 2 && cf.y < pd! / 2 + ld! - pd!);
+        if (!gap) assert.ok(Math.hypot(back.x - c.x, back.y - c.y) < 1e-6, `${JSON.stringify(fr)} ${pw}x${pd} on ${lw}x${ld}: placed at (${c.x}, ${c.y}), drawn at (${back.x}, ${back.y})`);
+        assert.equal(pl.clamped, c.clamped);
+      }
+    }
+    // a footprint wider than the lot sits in its middle
+    const f = frameOf({ o: { x: 0, y: 0 }, ...FRAMES[0]!, w: 4, d: 6 }), c = clampToLot(f, 50, 50, 5, 5), m = toFrame(f, c.x, c.y);
+    assert.ok(Math.abs(m.x - 2) < 1e-9 && Math.abs(m.y - 3) < 1e-9 && c.clamped);
+    assert.equal(snap(3.37), 3.25);
+    assert.equal(snap(-0.13), -0.25);
   });
 
   it('2. unfit: the near and far halves go back by their rule; the overlap of a smaller lot keeps the old half; the gap of a bigger lot goes to the half\'s edge', () => {
@@ -77,6 +104,30 @@ describe('the dev editor (T071)', () => {
     }
     assert.equal(qs.size, 4, 'lots of all four facings');
     assert.ok(checked > 200, `${checked} props checked`);
+  });
+
+  it('3b. compose tells every preset prop a lot leaves out, with why (the dev editor\'s ghosts and its list): an overlap, the fit', () => {
+    const lot = { o: { x: 100, y: 100 }, u: { x: 1, y: 0 }, n: { x: 0, y: -1 }, w: 10, d: 15 };
+    const house = { id: 'world:house_1', x: 5, y: 7, scale: 1, view: 0 as const };
+    const p: LotPreset = { id: 'test-res', use: 'res', state: 'built', w: 10, d: 15, props: [house, { ...house, x: 5.2, y: 7.1 }, { id: 'world:bench', x: 9.9, y: 14.9, scale: 1, view: 0 }], patches: [] };
+    setLotPresets([p]);
+    const drops: PresetDrop[] = [], c = compose(lot, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 1 }, drops);
+    assert.equal(c.props.filter(q => q.from?.preset === 'test-res' && q.from.prop === 1).length, 0, 'the copy on top of the house is left out');
+    const d = drops.find(x => x.prop === 1);
+    assert.ok(d && /^overlaps world:house_1 \d+%$/.test(d.why), JSON.stringify(drops));
+    // every drop names its preset, a prop of it and a reason; the bench on the corner, if left out, is past the lot line
+    for (const x of drops) assert.ok(x.preset === 'test-res' && p.props[x.prop] && x.why.length > 0, JSON.stringify(x));
+    const bench = drops.find(x => x.prop === 2);
+    if (bench) assert.equal(bench.why, 'past the lot line');
+    // a lot smaller than the preset: a prop of the near half past the new size is left out by the fit
+    const small: PresetDrop[] = [];
+    setLotPresets([{ ...p, props: [house, { id: 'world:bench', x: 4, y: 7.4, scale: 1, view: 0 }] }]);
+    compose({ ...lot, w: 10, d: 7 }, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 1 }, small);
+    assert.ok(small.some(x => x.prop === 1 && x.why === 'outside the lot at this size (the fit)'), JSON.stringify(small));
+    const none: PresetDrop[] = [];
+    setLotPresets([{ ...p, props: [house] }]);
+    compose(lot, { use: LU.RES, level: LV.BUILT, decline: 0, seed: 1 }, none);
+    assert.deepEqual(none, []);
   });
 
   it('4. the edits: move, scale, turn, delete, duplicate and add make a new curated preset and leave the old one as it was', () => {
@@ -130,11 +181,36 @@ describe('the dev editor (T071)', () => {
     assert.deepEqual(Object.keys(DEV_SAVE_FILES).sort(), ['lot-presets.json', 'removed.json', 'scale-overrides.json']);
     assert.equal(devSavePath('lot-presets.json'), 'src/game/lots/lot-presets.json');
     for (const bad of ['../lot-presets.json', 'src/game/lots/lot-presets.json', 'package.json', 'LOT-PRESETS.JSON', '__proto__', 'constructor', 'toString', '', null, 3, ['lot-presets.json']]) assert.equal(devSavePath(bad), null, String(bad));
-    const ok = checkDevSave({ file: 'lot-presets.json', json: '[\n]\n' });
-    assert.deepEqual(ok, { ok: true, path: 'src/game/lots/lot-presets.json', text: '[\n]\n' });
+    const one = formatPresets([preset(10, 15, [{ id: 'world:bench', x: 1, y: 2, scale: 1, view: 0 }])], { notes: ['n'] });
+    const ok = checkDevSave({ file: 'lot-presets.json', json: one });
+    assert.deepEqual(ok, { ok: true, path: 'src/game/lots/lot-presets.json', text: one });
     assert.equal(checkDevSave({ file: 'scale-overrides.json', json: '{"a":1}' }).ok, true);
     assert.equal(checkDevSave({ file: 'removed.json', json: '{}' }).ok, true);
     for (const body of [null, 'x', [], { file: 'vite.config.ts', json: '{}' }, { file: '../../x.json', json: '{}' }, { file: 'lot-presets.json', json: [] }, { file: 'lot-presets.json', json: '{}' },
-      { file: 'lot-presets.json', json: '[' }, { file: 'scale-overrides.json', json: '[]' }, { file: 'removed.json', json: 'null' }]) assert.equal(checkDevSave(body).ok, false, JSON.stringify(body));
+      { file: 'lot-presets.json', json: '[' }, { file: 'scale-overrides.json', json: '[]' }, { file: 'removed.json', json: 'null' },
+      // an empty list, a header alone or a broken preset would turn every lot vacant: refused
+      { file: 'lot-presets.json', json: '[]' }, { file: 'lot-presets.json', json: '[{"meta":{"notes":[]}}]' }, { file: 'lot-presets.json', json: one.replace('"view":0', '"view":7') },
+      { file: 'lot-presets.json', json: '[{"id":"x"}]' }]) assert.equal(checkDevSave(body).ok, false, JSON.stringify(body).slice(0, 80));
+  });
+
+  it('7. the endpoints answer only the dev server\'s own pages: another Origin or a cross-site fetch is refused, and a save must be application/json (a cross-site form can only send text/plain without a preflight)', () => {
+    const host = '127.0.0.1:5233', own = `http://${host}`, json = 'application/json';
+    assert.equal(checkDevRequest({ method: 'POST', host, origin: own, secFetchSite: 'same-origin', contentType: json }), null);
+    assert.equal(checkDevRequest({ method: 'POST', host, origin: own, contentType: 'application/json; charset=utf-8' }), null);
+    assert.equal(checkDevRequest({ method: 'GET', host, secFetchSite: 'same-origin' }), null, 'a same-origin GET sends no Origin and no Content-Type');
+    assert.equal(checkDevRequest({ method: 'GET', host }), null, 'a tool with no browser headers (curl) is the owner on the PC');
+    for (const r of [
+      { method: 'POST', host, origin: 'https://evil.example', contentType: json },
+      { method: 'POST', host, origin: 'http://127.0.0.1:5234', contentType: json },
+      { method: 'POST', host, origin: 'null', contentType: json },
+      { method: 'POST', host, secFetchSite: 'cross-site', contentType: json },
+      { method: 'POST', host, secFetchSite: 'same-site', contentType: json },
+      { method: 'POST', host, origin: own, contentType: 'text/plain' },
+      { method: 'POST', host, origin: own },
+      { method: 'POST', host, origin: own, contentType: 'application/jsonx' },
+      { method: 'GET', host, origin: 'https://evil.example' },
+      { method: 'GET', host, secFetchSite: 'cross-site' },
+      { method: 'POST', origin: own, contentType: json },
+    ]) assert.notEqual(checkDevRequest(r), null, JSON.stringify(r));
   });
 });

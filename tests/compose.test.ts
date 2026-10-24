@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, isCarPark, lotPreset, streetKey, streetSlot, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+import { compose, isCarPark, lotPreset, setLotPresets, streetKey, streetSlot, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
@@ -13,7 +13,12 @@ import { CAR_SCALE } from '../src/game/ext/car-art';
 import { isBuilding } from '../src/game/mirror';
 import { footprintOf, turned } from '../src/game/lots/preset-art';
 import { toWorld } from '../src/game/lots/preset-frame';
-import type { PresetProp } from '../src/game/lots/presets';
+import { parsePresets, type PresetProp } from '../src/game/lots/presets';
+import PRESET_FIXTURE from './fixtures/lot-presets.json';
+
+// the presets these tests pin against: a committed copy of lot-presets.json (tests/fixtures/lot-presets.json, 2026-10-24, after the re-freeze
+// with #125 and #143), so the owner's edits to the live file in the dev editor never break the digests, the kept share or the averages
+{ const f = parsePresets(PRESET_FIXTURE); setLotPresets(f.presets, f.meta); }
 
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
