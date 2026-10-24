@@ -238,6 +238,9 @@ LEAD.md).
 5. The crowd patches (3d), then P2.
 
 ## 7. Progress (update this as you go)
+- 2026-10-24 07:30 UTC: **a free rescue for the fused ground plates:** `scripts/assets/people3d/cut-plate.mjs` cuts the plate off a RUN
+  model locally; 10 of the 11 bad people came out clean (the 11th, the security guard, had no plate, only badges). Waiting on the
+  owner's choice of options (rescue, words, picture first, another provider). Details: `docs/HANDOVER-PEOPLE.md` 1b.
 - **2026-10-24: see `docs/HANDOVER-PEOPLE.md`** (10 good people, 11 bad ones with fused ground plates, the batch stopped, what to try next).
 - 2026-10-23 15:10 UTC: **the stop is RUN's daily 3D cap, not storage.** `rundot game generate-3d ... --json` answers
   `[AI_POLICY_BUDGET_EXHAUSTED] Daily user credit cap reached for threeDGen` (without `--json` it only says "Too Many Requests").

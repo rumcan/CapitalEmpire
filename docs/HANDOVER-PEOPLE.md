@@ -16,6 +16,32 @@ clips, the wayward-ball scene, the quality bar, the traps). This file is the sta
   the teens, the kids at the tournament, the vendor, the two pros, ...).
 - **Nothing is running.** The retry loop was stopped on purpose (it was spending the daily cap on bad models).
 
+## 1b. Update 2026-10-24 07:30 UTC (the next AI): a free rescue of the plates, waiting on the owner
+- **New: `scripts/assets/people3d/cut-plate.mjs <in.glb> <out.glb>`** cuts a fused ground plate off a RUN model, locally, no credits.
+  It finds the plate's flat top from the height profile (a spike of upward-facing area low down: plates 0.13 to 0.67 of the height
+  squared, good people 0.002), cuts every triangle at or below it and drops what that sets loose (balls, clubs). Controls: `--margin`
+  (cut height above the found top, default 0.004 of the height), `--top` (set the plate top by hand), `--clear` (also cut clubs or balls
+  fused beside a shoe), `--flat` (the plate threshold), `--keep` (loose-piece size). On a good model it says "no ground plate found" and
+  writes nothing. It also drops the plate's unused vertices (left in, they made the render read "2.10 units tall").
+- **Tried on all 11 bad people** (`worktrees/people-ground/output/cut-test/<id>/`, git-ignored; then rig-local-person.mjs and the render as
+  usual): 10 had a plate and came out clean, at 1.64 to 1.71 units tall. Contact sheets: `output/cut-test/rescued-a.png`, `rescued-b.png`.
+  - Clean: spec_m_dad, spec_m_sun_hat, spec_m_young_cap, staff_caddie_m, town_m_elder, town_w_shopper, spec_w_older_cardigan; spec_m_plaid
+    (a small green chest emblem on the sweater).
+  - spec_w_young_shorts: plate gone, but the hands meet in front of the crotch (3B) and a small chest emblem.
+  - staff_marshal_w: plate gone, but a navy leg web between the feet in the side and back walk frames and a white speck by the visor
+    (the rig transfer, not the cut).
+  - staff_security_m: **no plate**; it was bad for a police-style badge, chest tag and arm patches (the no-logo rule). Remake or keep: the
+    owner's call.
+- **Why the plates got worse:** 2 of the first 13 models had a plate (plaid, security); after the "Nothing under the feet: no ground, no
+  grass, ... no golf balls" line went into the pose prompt, 11 of 11 did, the two townspeople with no golf words too. The negation names
+  the things the generator then makes.
+- **The options put to the owner (2026-10-24), none chosen yet:** 1. the rescue (free; also as an automatic step in make-cast.mjs so a
+  plate never costs a remake); 2. words (drop "golf" and the negation line, about 1,000 credits a model); 3. picture first (RUN image,
+  about 130 credits, then image-to-3d, about 1,000); 4. another 3D provider (price unknown). They can be combined.
+- **Credits (2026-10-24 04:48 UTC):** balance 63,493. hunyuan3d-v3.1-pro averages 986 a model (1,013 today); gemini-3.1-flash-image-preview
+  131 an image, gemini-3.1-flash-lite-image 88. `RUNDOT_BETA_FEATURES=1 rundot credits --group-by model` (or `--period today`) shows it.
+  11 models were made since 00:00 UTC today, so about 2 are left before the daily cap resets (about 00:15 UTC).
+
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
 1. `make-person-3d.mjs <id> "<look>" --root <dir> --model-only`: the model from RUN (text-to-3d, an A-pose prompt around the look). It
    checks RUN's library first (never pays twice), and when the CLI gives up after 600 s it waits for the model in the library.
@@ -39,7 +65,8 @@ of them, the owner chooses; never pre-pick):
    under them; `rundot generate image`, which takes a real `--negative-prompt` for "ground, grass, golf ball"; see `scripts/assets/gen-golf.mjs`), check it, then
    `make-person-3d.mjs --image <png>` (image-to-3d). More control over the look too; costs an image plus the model.
 3. **Another provider:** `rundot game generate-3d --help` lists pixal3d, trellis-2, meshy, tripo-v2.5, rodin-v2.5; untested here.
-Check each new person at once: the render log's "model N units tall" (1.66 to 1.68 is right) and its `preview.png`.
+4. **Rescue (2026-10-24, free):** cut the plate off locally, `cut-plate.mjs` (section 1b). Fixed 10 of the 11 bad models.
+Check each new person at once: the render log's "model N units tall" (1.66 to 1.68 is right; rescued women came out at 1.69 to 1.71) and its `preview.png`.
 
 **B. Hands in front of the crotch on some models.** The owner's hands and arms settings were chosen on `spec_m_polo_visor`; on some
 other models (the young woman in shorts, the caddie) the hands meet in front of the body. Give `art/people-cast.json` a per-person
