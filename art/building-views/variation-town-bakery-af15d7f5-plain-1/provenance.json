@@ -1,0 +1,143 @@
+{
+  "id": "variation:town-bakery-af15d7f5-plain:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "town:bakery",
+  "sourceSheet": "art/theme-consistency/generated/buildings/town-bakery-4views-v1.png",
+  "sourceSha256": "d63a53204ce69ad87803092e0eefb6379906d2b58e3cc1a37760d08f42268a5c",
+  "sourceProvenanceSha256": "cb3500ba2426da433b655c20cbb1074e5e5a98130fef7120d0a5763d4017a455",
+  "prompt": "ONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only house and integral steps/porch; small attached plants only if essential, no broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\nSUBJECT: Rose's Bakery (east) (town:bakery). Preserve THIS building's shop/residential use and structure. Plain roof fascia and bare shingles/flat roof, no leaf scatter, no cobweb-like ornamental brackets. Shop signs may retain original simple business name where legible, no invented themed signs. SHEET PACKING: SQUARE transparent canvas; each building should occupy only about60percent of its quadrant width and60percent of its height, centered in quadrant, at least15percent of cell dimension completely clear around every side. This empty space is mandatory: no silhouette may cross middle horizontal/vertical lines or touch another view. Do not fill the sheet with large buildings.",
+  "references": [
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/town-bakery.configured@2x.png",
+    "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/east-town-bakery.configured@2x.png"
+  ],
+  "originalProvenance": {
+    "id": "town:bakery",
+    "generator": "image_gen",
+    "generatorSource": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-24f9667c-2013-4dbb-b82b-dbeab66042f7.png",
+    "prompt": "ONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only house and integral steps/porch; small attached plants only if essential, no broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\nSUBJECT: Rose's Bakery (east) (town:bakery). Preserve THIS building's shop/residential use and structure. Plain roof fascia and bare shingles/flat roof, no leaf scatter, no cobweb-like ornamental brackets. Shop signs may retain original simple business name where legible, no invented themed signs. SHEET PACKING: SQUARE transparent canvas; each building should occupy only about60percent of its quadrant width and60percent of its height, centered in quadrant, at least15percent of cell dimension completely clear around every side. This empty space is mandatory: no silhouette may cross middle horizontal/vertical lines or touch another view. Do not fill the sheet with large buildings.",
+    "references": [
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/town-bakery.configured@2x.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/east-town-bakery.configured@2x.png"
+    ],
+    "generated": "2026-10-23",
+    "status": "generated-awaiting-visual-review"
+  },
+  "physicalIdentityEvidence": "Same one-storey cream bakery facade, burgundy striped awning, central glazed red door, two broad display windows, curved bakery sign and flat parapet. Variation is frontal projection of the same visible facade.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1.png",
+      "sha256": "d63a53204ce69ad87803092e0eefb6379906d2b58e3cc1a37760d08f42268a5c"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NE.configured.png",
+      "sha256": "bb3674e3855e64d3358662157afac99bd14ab3c1b2a613c8b42f1cd1274040df"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NE.configured@2x.png",
+      "sha256": "8b47cc043d2fa1956fd5ef59820bb26049f984455e43ce206a2cb6e83d7258e5"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NE.max.png",
+      "sha256": "88d8cfbda8aa1c37f9ab3ca1b511b32f67c02b3521bd0dce7cebb0fb7ce5d396"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NE.max@2x.png",
+      "sha256": "716fa39b061fdf1fd4984d347766642a965ca78bf45016f63fed508d4077bbef"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NE.native.png",
+      "sha256": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NW.configured.png",
+      "sha256": "eb5dffda6cba6234ecd5716a8ef52618f1d49aeab2d65770e6eaae5224575eeb"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NW.configured@2x.png",
+      "sha256": "16b78401a4fa71640283a40a6012af021771b8dabc533cfa3b70554442c17bd5"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NW.max.png",
+      "sha256": "63b43c613fa8af061f2badbc17518e50b44c935252cdf6be2c9f878a7759aab3"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NW.max@2x.png",
+      "sha256": "aaa18d96230f4215b423f33f7da5de24bd710a47bd523897bc889d4ebe259777"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/NW.native.png",
+      "sha256": "273e69694cbbe4a0d10fbde9853e35d6e6110a4033c1323f05ccb809f3780180"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SE.configured.png",
+      "sha256": "11dcfb30d23b310371bfbd2ba7a166148644202bf60d205c461f8b114104dcfa"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SE.configured@2x.png",
+      "sha256": "3f2fe6934bda41dabd233d1fbffad3cf7b9ea3ba9ea18434bdcb0277dec29e72"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SE.max.png",
+      "sha256": "36ed0db1be5a7412ec8f7894a118877e94f02cba5a8b0d80e708d4a279194f25"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SE.max@2x.png",
+      "sha256": "cf1aa6a0529dd1fb668a0734a7c2988dc8297f9e2dfd3be8550259e66b85604a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SE.native.png",
+      "sha256": "070344cd20832110b8536aaa4682d6aa46066071c7e4bb5e7984accfc58013f2"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SW.configured.png",
+      "sha256": "0e50d03769fad6c6ccaad1e906101da3cbeffd391771cf2ca13335661a779b34"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SW.configured@2x.png",
+      "sha256": "e5581e7473a8297ee311593f9ea8c32e15d334450c90ef9ad8a6bfbff22c9cac"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SW.max.png",
+      "sha256": "df1fa959bd5c96e0fdcfbdd5382bdffceb51d7afc6ab6b2999c227845f7a8f1b"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SW.max@2x.png",
+      "sha256": "337227781c05dea3b47dd174039f5598c9a1d538df58aa6beef965f39b04e285"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-bakery-4views-v1/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-bakery-af15d7f5-plain-1-4views-v1/SW.native.png",
+      "sha256": "d0a73d6fb0a1931af4fc168af50a7652efadc0067f4e1c9cbfd6f16776a9ad64"
+    }
+  ]
+}

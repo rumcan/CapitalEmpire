@@ -1,0 +1,141 @@
+{
+  "id": "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "gen:house-splitlevel",
+  "sourceSheet": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2.png",
+  "sourceSha256": "6b094db1c399b1984be7eb4080ba0d80c874d849a0c9d99ffa7e330c0ee8098f",
+  "sourceProvenanceSha256": "977f9c98ea92e87147c1ce602f5a92e8c1f538357487b3ee0ed2021bf86ef2c6",
+  "prompt": "Use case: precise-object-edit. Image 1 = authoritative full autumn dusk scene for STYLE. Image 2 = this single subject's four-view sheet to edit. Image 3 = camera rotation diagram only, never copy its boxes, colors or labels. Image 4 = original game building identity. Remove ALL COBWEBS/SPIDERWEBS from roof corners and eaves in ALL FOUR VIEWS, including the cream-white triangular web lattices under the gable corners. Replace them with plain clean siding, fascia and a simple solid timber structural bracket only. NO thin web-like mesh or lacework. This is an ordinary maintained split-level house; retain its roof, chimney, two storey and one storey wings, windows, doors and bay window.\nKeep the SAME single model, palette, architecture, material detail, fixed 2:1 isometric camera and four genuine quarter-turn views. Early dusk, warm low sun FIXED SCREEN UPPER RIGHT, shadows lower-left; architectural windows and lamps on. No night or moonlight, no people, NO Halloween: no pumpkins, cobwebs, wreaths, garlands, decorative string lights or spooky ornaments. Complete four sprites on SQUARE transparent PNG 2x2 sheet with very broad clear quadrant margins and center gutters; uniformly reduce the sprites rather than clipping roofs or contact shadows. Only this subject and its integral architecture, no terrain tile, border, text or diagram. Preserve alpha transparency and the unedited building details.",
+  "originalProvenance": {
+    "id": "gen:house-splitlevel",
+    "sheet": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2.png",
+    "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-d2747f70-6a06-408a-8391-8f41c7b4ba34.png",
+    "prompt": "Use case: precise-object-edit. Image 1 = authoritative full autumn dusk scene for STYLE. Image 2 = this single subject's four-view sheet to edit. Image 3 = camera rotation diagram only, never copy its boxes, colors or labels. Image 4 = original game building identity. Remove ALL COBWEBS/SPIDERWEBS from roof corners and eaves in ALL FOUR VIEWS, including the cream-white triangular web lattices under the gable corners. Replace them with plain clean siding, fascia and a simple solid timber structural bracket only. NO thin web-like mesh or lacework. This is an ordinary maintained split-level house; retain its roof, chimney, two storey and one storey wings, windows, doors and bay window.\nKeep the SAME single model, palette, architecture, material detail, fixed 2:1 isometric camera and four genuine quarter-turn views. Early dusk, warm low sun FIXED SCREEN UPPER RIGHT, shadows lower-left; architectural windows and lamps on. No night or moonlight, no people, NO Halloween: no pumpkins, cobwebs, wreaths, garlands, decorative string lights or spooky ornaments. Complete four sprites on SQUARE transparent PNG 2x2 sheet with very broad clear quadrant margins and center gutters; uniformly reduce the sprites rather than clipping roofs or contact shadows. Only this subject and its integral architecture, no terrain tile, border, text or diagram. Preserve alpha transparency and the unedited building details.",
+    "referencedImagePaths": [
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/theme-authoritative.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v1.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/references/rotation-guide-v1.png",
+      "C:/Work Admin/PERSONAL/Repos/CapitalEmpire/art/theme-consistency/exports/buildings/gen-house-splitlevel.configured@2x.png"
+    ],
+    "generator": "built-in image_gen",
+    "generatedAt": "2026-10-23T16:39:02.123Z",
+    "status": "generated-awaiting-visual-review",
+    "correction": "Remove ALL COBWEBS/SPIDERWEBS from roof corners and eaves in ALL FOUR VIEWS, including the cream-white triangular web lattices under the gable corners. Replace them with plain clean siding, fascia and a simple solid timber structural bracket only. NO thin web-like mesh or lacework. This is an ordinary maintained split-level house; retain its roof, chimney, two storey and one storey wings, windows, doors and bay window."
+  },
+  "physicalIdentityEvidence": "Same brown split-level house, tall chimney on garage junction, round attic window, projecting front bay, front steps and attached single-garage wing. Direct source inspection confirms matching architecture.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1.png",
+      "sha256": "6b094db1c399b1984be7eb4080ba0d80c874d849a0c9d99ffa7e330c0ee8098f"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NE.configured.png",
+      "sha256": "87251add2d9e4df9c000810f8d1330aef0874980673668a9d834bd8d85c00a6c"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NE.configured@2x.png",
+      "sha256": "6a6302950f24d4415eb911f39e7b7b268f65bd4dce0e277eec0807b76d333406"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NE.max.png",
+      "sha256": "1916aa157b103e11fe1419e0b847f33572d316ab380631c9273c481deeb81fb0"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NE.max@2x.png",
+      "sha256": "37358f2163761bab5b273de0cccdf01ef93bd8678d3da136c05fc504a0b56daa"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NE.native.png",
+      "sha256": "368876cb67bf0522804c7dbfdc84232d94f2bf4bcfd0346cf4c84d9ef4d17f48"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NW.configured.png",
+      "sha256": "46366bb078378ed937603ecab0e4d24c6b5774673bdb58a30c66ba079c5a0b1c"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NW.configured@2x.png",
+      "sha256": "fae4b920079ce32a3a34652ac8b90529f7c610889830b86af051a9f304414518"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NW.max.png",
+      "sha256": "d15529763e527452a2c09175f10ac8fd67a594f8cd83ea26913cfa48a936c288"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NW.max@2x.png",
+      "sha256": "dc360e88cf385a51adaa6f4aa28b83f8d234c8e61b81cb2a5720ff8892b1a277"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/NW.native.png",
+      "sha256": "f0c8a81f9ed5ec53d6ade73b105fd8ae5a8a749634acf0017060bf5bee9ea1be"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SE.configured.png",
+      "sha256": "0dbbe3c761c79280ac695097788043c6cbd1ebb57cdb01601788cf806b1776fe"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SE.configured@2x.png",
+      "sha256": "6df21b21c054c32832f846d8b0f69cfaf3c88748307b0d5bf5f4c88dff28edb3"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SE.max.png",
+      "sha256": "836945b98a5ac3d1375f05e0cde07a2f95311810f31958d0a1f22ff44a8d9a8d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SE.max@2x.png",
+      "sha256": "38e73924a90f47c3037843b09b1f06fdf378ce20c3a9082fb10d516369abd040"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SE.native.png",
+      "sha256": "e2aa5471f68255b8c0301ff9e6a102f862e964aa2b2fdf1723170a160c3a76d8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SW.configured.png",
+      "sha256": "49fff414517d56b1afc6a339738a0a488921b5dda55a250a26ca5a0d013cdcdc"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SW.configured@2x.png",
+      "sha256": "f4f94fa94790dc4be214506744108d5d33baa68bd390d7a8524124e30a83c613"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SW.max.png",
+      "sha256": "1e378d0416a39590536173446cbd71ffe49057fa76a8cd8f1852b6b7261a6588"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SW.max@2x.png",
+      "sha256": "5d81e16498b44adfcb9f345f4fdc790c866ca229b736f4cff474b2b296a9cab9"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-splitlevel-4views-v2/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1/SW.native.png",
+      "sha256": "bb35b7dd968a68e796f7cab93923374aa1c54a8e82ee3fc18ba73d8e8fb5afad"
+    }
+  ]
+}

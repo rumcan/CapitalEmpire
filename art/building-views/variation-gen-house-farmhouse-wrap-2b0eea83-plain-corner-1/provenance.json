@@ -1,0 +1,173 @@
+{
+  "id": "variation:gen-house-farmhouse-wrap-2b0eea83-plain-corner:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "gen:house-farmhouse-wrap",
+  "sourceSheet": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1.png",
+  "sourceSha256": "0e5c7f908de3d65ec472afc2f5fe9eea867cf866c632c88bf4e1d946b673791a",
+  "sourceProvenanceSha256": "a8cd22684f05fddf89f6bdf10fed517ad569af08fac8d3e6ecdbd97892ed3d60",
+  "prompt": "Subject ID: gen:house-farmhouse-wrap. Category: buildings. Existing name: Farmhouse ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â wraparound porch.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"gen:house-farmhouse-wrap\",\"direction\":null,\"configuredCSS\":{\"left\":-139.59,\"top\":-189.2925,\"right\":139.93262999999996,\"bottom\":68.32718999999999,\"width\":279.52263,\"height\":257.61969},\"normalMaxCSS\":{\"left\":-158.4,\"top\":-214.79999999999998,\"right\":158.78879999999998,\"bottom\":77.53439999999999,\"width\":317.18879999999996,\"height\":292.33439999999996},\"configuredReference\":\"art/theme-consistency/exports/buildings/gen-house-farmhouse-wrap.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"gen:house-farmhouse-wrap\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/gen-house-farmhouse-wrap.configured@2x.png\",\"sha256\":\"8f0fc1f9693848bd98cb0288ad330af1893419998592bb3f168fa6bde5de3cc7\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "gen:house-farmhouse-wrap",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/gen-house-farmhouse-wrap.configured@2x.png",
+      "sha256": "8f0fc1f9693848bd98cb0288ad330af1893419998592bb3f168fa6bde5de3cc7"
+    },
+    {
+      "role": "camera-rotation-guide-only",
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    }
+  ],
+  "originalProvenance": {
+    "id": "gen:house-farmhouse-wrap",
+    "sheet": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1.png",
+    "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-85109e52-f43f-47b7-a5d2-e8c77dc9784f.png",
+    "prompt": "Subject ID: gen:house-farmhouse-wrap. Category: buildings. Existing name: Farmhouse ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â wraparound porch.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"gen:house-farmhouse-wrap\",\"direction\":null,\"configuredCSS\":{\"left\":-139.59,\"top\":-189.2925,\"right\":139.93262999999996,\"bottom\":68.32718999999999,\"width\":279.52263,\"height\":257.61969},\"normalMaxCSS\":{\"left\":-158.4,\"top\":-214.79999999999998,\"right\":158.78879999999998,\"bottom\":77.53439999999999,\"width\":317.18879999999996,\"height\":292.33439999999996},\"configuredReference\":\"art/theme-consistency/exports/buildings/gen-house-farmhouse-wrap.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"gen:house-farmhouse-wrap\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/gen-house-farmhouse-wrap.configured@2x.png\",\"sha256\":\"8f0fc1f9693848bd98cb0288ad330af1893419998592bb3f168fa6bde5de3cc7\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+    "references": [
+      {
+        "role": "authoritative-theme",
+        "file": "art/theme-consistency/references/theme-authoritative.png",
+        "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+      },
+      {
+        "role": "existing-subject-identity",
+        "id": "gen:house-farmhouse-wrap",
+        "direction": null,
+        "file": "art/theme-consistency/exports/buildings/gen-house-farmhouse-wrap.configured@2x.png",
+        "sha256": "8f0fc1f9693848bd98cb0288ad330af1893419998592bb3f168fa6bde5de3cc7"
+      },
+      {
+        "role": "camera-rotation-guide-only",
+        "file": "art/theme-consistency/references/rotation-guide-v1.png",
+        "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+      }
+    ],
+    "generator": "built-in image_gen",
+    "generatedAt": "2026-10-23T16:26:11.163Z",
+    "status": "generated-awaiting-visual-review",
+    "implementation": "Other AI handles runtime integration"
+  },
+  "physicalIdentityEvidence": "Same grey two-storey farmhouse, intersecting gables, chimney and continuous wraparound porch with matching posts/window rhythm.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1.png",
+      "sha256": "0e5c7f908de3d65ec472afc2f5fe9eea867cf866c632c88bf4e1d946b673791a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NE.configured.png",
+      "sha256": "bd6ce763f8b3618690c8bddd239e3aa37d20eed7a6cf14a42438c0459c441f48"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NE.configured@2x.png",
+      "sha256": "08806645d0d75d0dd8c48c3b194048ef323e39da2c331c90ed09d0f8954dac75"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NE.max.png",
+      "sha256": "76b0464e4a20180d46bdf54c659fb59c5afa0c7e987592939c6e061f47f6b316"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NE.max@2x.png",
+      "sha256": "c903ec6bd527a12d5d0b3aede7b7a4f5b974c83159d3df6a8bdd5d6d2e27c4b9"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NE.native.png",
+      "sha256": "aaddc4f69472fd8bede578d003a52874550292df445d8f6987944badddb7bd1a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NW.configured.png",
+      "sha256": "dad68c3adc50d05d8bd428adcf898a98d1b2a58e8b0ea9ddfc2443fe0891b4fd"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NW.configured@2x.png",
+      "sha256": "2abb0192592a8553fa29886f74992445b1eb60609fe7bcecd5a1fe5ef8ff2dfe"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NW.max.png",
+      "sha256": "e63f052e4afc124f1658ace3f54e76d70cf6612b268a853fa36576845ef78ae8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NW.max@2x.png",
+      "sha256": "0ba008d1e2a61c90a432266306cfe0e1edd4674ce7906283657cc01e89897f66"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/NW.native.png",
+      "sha256": "764764a6251d504212a4088cc139106c2c7dfa547ef67402fe336064a4e7ca40"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SE.configured.png",
+      "sha256": "36bfe205b7310bee19d37b5a38f27df60d7db62394a060f34dc18aba1bb4a477"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SE.configured@2x.png",
+      "sha256": "a47f217318ca9213ee6d55fd4ee5eb0592d68b60c789b4dfbe9f9c64ff1fe43b"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SE.max.png",
+      "sha256": "0c6c7a1653013b6fcbc15f4c3d5bdd546407dadaa1106ee1b9113eb2adcf93a0"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SE.max@2x.png",
+      "sha256": "ed3553d7eec700e89151b64662909061072f827c2072f7cbc29c3b8e44e4776b"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SE.native.png",
+      "sha256": "fd9c3293d31e188fbe54dfb7eab7cc2aae303b04ba33d9494bb7e1cc5629199a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SW.configured.png",
+      "sha256": "edeb542c8b3bb166a54873bd7a04c2219ca918c2d967f5a6563343f475a2df48"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SW.configured@2x.png",
+      "sha256": "942f352a65e36d9d79c949fba36954bb73f9d4e599b2a1a82e9d99e9bd3009ff"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SW.max.png",
+      "sha256": "1647ea7551bcc022c5ec6258cf178e879a1fcf4d57ade0e74bed74a491862699"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SW.max@2x.png",
+      "sha256": "bd338e1e67f2c4367e952a9c79e24265aafb1d5292e8c72d90b063b1d57ad371"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-house-farmhouse-wrap-4views-v1/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-house-farmhouse-wrap-2b0eea83-plain-corner-1-4views-v1/SW.native.png",
+      "sha256": "4bb78489a71479f6bd2fa44f0a5fa9812793f88826e4cd22dcf4fcc41e2c25dc"
+    }
+  ]
+}

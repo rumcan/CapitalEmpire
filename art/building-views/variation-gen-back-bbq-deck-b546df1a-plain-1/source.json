@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+ "version": "variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1",
+ "files": {
+  "NE": "a52a7021f8317f7445ca08e3c429843292b9e3f35267df5131180bc5370c6a71",
+  "SE": "43c0229feaaa14387bf36f0735c552d35e52fe5e6c10e06aba9699ca50a183fb",
+  "SW": "b589fcaba4845499a1336b73c5c7bc3ba7076d63eb97e3ee9021a6e4c96ae176",
+  "NW": "0483a865e0893fa7f27332e0de903e947d6757f42c4b128bb20851cf6bb9434a"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:world-barn-ae80f6c9-plain:1",
+ "version": "variation-world-barn-ae80f6c9-plain-1-4views-v1",
+ "files": {
+  "NE": "7d02f0c5fcc5b02578deb727e08ae3597e0a5c68171785336717781d4b402748",
+  "SE": "77493036b4d7d7e75d10d79362248a06cda28e84750c07f153591414fe7b0db0",
+  "SW": "4603911c5305e9f1746f099f536e460b04783a55e42421f47715bf6b4204b2ae",
+  "NW": "2f6d421de1d8cac2420125c329704841ad1d20be409a6f925a6e78e487676294"
+ }
+}

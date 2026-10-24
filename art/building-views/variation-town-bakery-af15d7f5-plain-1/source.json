@@ -1,0 +1,10 @@
+{
+ "id": "variation:town-bakery-af15d7f5-plain:1",
+ "version": "variation-town-bakery-af15d7f5-plain-1-4views-v1",
+ "files": {
+  "NE": "29b411b0e050769e6ece08db9d7cf8e015e966076ae66430e632bf42b135ff48",
+  "SE": "070344cd20832110b8536aaa4682d6aa46066071c7e4bb5e7984accfc58013f2",
+  "SW": "d0a73d6fb0a1931af4fc168af50a7652efadc0067f4e1c9cbfd6f16776a9ad64",
+  "NW": "273e69694cbbe4a0d10fbde9853e35d6e6110a4033c1323f05ccb809f3780180"
+ }
+}

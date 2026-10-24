@@ -1,0 +1,173 @@
+{
+  "id": "variation:gen-back-bbq-deck-b546df1a-plain:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "gen:back-bbq-deck",
+  "sourceSheet": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1.png",
+  "sourceSha256": "611040e4935830264c747e4625e15c3ff665a07d15ddcbe845c42970fb7e1dbe",
+  "sourceProvenanceSha256": "ee7a38db6959d57cb274c241e33428f449826e0707c3560febfea1ab6b588b9d",
+  "prompt": "Subject ID: gen:back-bbq-deck. Category: buildings. Existing name: House back ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â deck & barbecue.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"gen:back-bbq-deck\",\"direction\":null,\"configuredCSS\":{\"left\":-96.05049,\"top\":-158.0325,\"right\":102.521505,\"bottom\":48.158325,\"width\":198.57199500000002,\"height\":206.190825},\"normalMaxCSS\":{\"left\":-138.576,\"top\":-228,\"right\":147.912,\"bottom\":69.48,\"width\":286.488,\"height\":297.47999999999996},\"configuredReference\":\"art/theme-consistency/exports/buildings/gen-back-bbq-deck.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"gen:back-bbq-deck\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/gen-back-bbq-deck.configured@2x.png\",\"sha256\":\"6ff238cec4f4f60a24d5da36c6e1b922c010d478d16cd8c9cfc072007bf9e037\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "gen:back-bbq-deck",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/gen-back-bbq-deck.configured@2x.png",
+      "sha256": "6ff238cec4f4f60a24d5da36c6e1b922c010d478d16cd8c9cfc072007bf9e037"
+    },
+    {
+      "role": "camera-rotation-guide-only",
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    }
+  ],
+  "originalProvenance": {
+    "id": "gen:back-bbq-deck",
+    "sheet": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1.png",
+    "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-aa84d0cc-3634-4d88-9ae6-96cb418e2b48.png",
+    "prompt": "Subject ID: gen:back-bbq-deck. Category: buildings. Existing name: House back ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â deck & barbecue.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"gen:back-bbq-deck\",\"direction\":null,\"configuredCSS\":{\"left\":-96.05049,\"top\":-158.0325,\"right\":102.521505,\"bottom\":48.158325,\"width\":198.57199500000002,\"height\":206.190825},\"normalMaxCSS\":{\"left\":-138.576,\"top\":-228,\"right\":147.912,\"bottom\":69.48,\"width\":286.488,\"height\":297.47999999999996},\"configuredReference\":\"art/theme-consistency/exports/buildings/gen-back-bbq-deck.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"gen:back-bbq-deck\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/gen-back-bbq-deck.configured@2x.png\",\"sha256\":\"6ff238cec4f4f60a24d5da36c6e1b922c010d478d16cd8c9cfc072007bf9e037\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+    "references": [
+      {
+        "role": "authoritative-theme",
+        "file": "art/theme-consistency/references/theme-authoritative.png",
+        "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+      },
+      {
+        "role": "existing-subject-identity",
+        "id": "gen:back-bbq-deck",
+        "direction": null,
+        "file": "art/theme-consistency/exports/buildings/gen-back-bbq-deck.configured@2x.png",
+        "sha256": "6ff238cec4f4f60a24d5da36c6e1b922c010d478d16cd8c9cfc072007bf9e037"
+      },
+      {
+        "role": "camera-rotation-guide-only",
+        "file": "art/theme-consistency/references/rotation-guide-v1.png",
+        "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+      }
+    ],
+    "generator": "built-in image_gen",
+    "generatedAt": "2026-10-23T16:18:28.582Z",
+    "status": "generated-awaiting-visual-review",
+    "implementation": "Other AI handles runtime integration"
+  },
+  "physicalIdentityEvidence": "Same red-clapboard house back, raised wooden deck, left back door, high small window, short side roof and barbecue furniture. Same visible two faces; facing:north does not imply rotating this already-rear-view base.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1.png",
+      "sha256": "611040e4935830264c747e4625e15c3ff665a07d15ddcbe845c42970fb7e1dbe"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NE.configured.png",
+      "sha256": "0ebb50a49e1f9af497f34da62a9e3398ee171ecd676f4acd194fe529dc424f05"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NE.configured@2x.png",
+      "sha256": "2091cf01fffc3013790adbfce6aac7f84a30b6742f26ad6fc9f72265029a7418"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NE.max.png",
+      "sha256": "4bb8ed8c35c4bc918856d38b902cece7322c93ceb6d13f2133e73e6a66b6165d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NE.max@2x.png",
+      "sha256": "e6d5a9a51ce503a4f8fd55b9c49d5841841d5c90df1318a4529e54ea1a58ef82"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NE.native.png",
+      "sha256": "a52a7021f8317f7445ca08e3c429843292b9e3f35267df5131180bc5370c6a71"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NW.configured.png",
+      "sha256": "78ded9a83a726fc2c4a2c64d085483116d957930a1538564b1bc0b50b93fa02d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NW.configured@2x.png",
+      "sha256": "5a93ee7f51af51199ad59344935481ae2790f075e9d9d6d3e402ecbd1568c0e6"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NW.max.png",
+      "sha256": "9ed214178756f75ace58c33c0f69f467e2bf830ddf8a57656104fd6139ef3540"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NW.max@2x.png",
+      "sha256": "fad85acc3784bbdada67f38e75be8fbc0c0b4bcf3d67bd57c4d940dec2566fa7"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/NW.native.png",
+      "sha256": "0483a865e0893fa7f27332e0de903e947d6757f42c4b128bb20851cf6bb9434a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SE.configured.png",
+      "sha256": "e089ec86d417189c2eb9c64c7e592d601968f5b8c0f7360eab8ea85bac3eb387"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SE.configured@2x.png",
+      "sha256": "4c4b3736937327dd1936c73fcd76184245f79d4e4c04ab24bc5d78cff553ac69"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SE.max.png",
+      "sha256": "81a72095dfb791a0ef0e7b52fa0276f91789bb7643377b7a33d61bbefad7317a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SE.max@2x.png",
+      "sha256": "d5f4549085d8b296587800bdc447af163b6b79a432c04b220a6e93597b3689b5"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SE.native.png",
+      "sha256": "43c0229feaaa14387bf36f0735c552d35e52fe5e6c10e06aba9699ca50a183fb"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SW.configured.png",
+      "sha256": "cd9cb16e3554750ee6ae57c8bb11ef5ffdca5c1a8952636ac72de4c96382df98"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SW.configured@2x.png",
+      "sha256": "0918dd35cfd6b01324bd5a69046ac852a866328944b8e2fe0428c2146112b73a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SW.max.png",
+      "sha256": "1203b720c4e94cb1de202b8cb218230b0b07ac10d3424bb859a0ea396fa82725"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SW.max@2x.png",
+      "sha256": "a5ae1b389cf12994bc187044916b6aa8804ade447ac6551a70f05929837948f8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/gen-back-bbq-deck-4views-v1/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-gen-back-bbq-deck-b546df1a-plain-1-4views-v1/SW.native.png",
+      "sha256": "b589fcaba4845499a1336b73c5c7bc3ba7076d63eb97e3ee9021a6e4c96ae176"
+    }
+  ]
+}

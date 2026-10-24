@@ -1,0 +1,10 @@
+{
+ "id": "variation:town-barber-13c5ef06-plain:1",
+ "version": "variation-town-barber-13c5ef06-plain-1-4views-v1",
+ "files": {
+  "NE": "f9e48dd649b9a359a6405d8e890da0aaca6567bd245cff490db5b3d5fd6943e7",
+  "SE": "ddfdb5318b21e7e719788dd080c92de8ff135809b7c43f95854fcff2944e447a",
+  "SW": "7388ed9c3b5ac5561116b004a916cc144ea9caa897cf845cb34f2b7aa30b2e89",
+  "NW": "21e3275ab735a1dfe25c8658cca6ce0fd25c3292b8884925d102afb52700d3a9"
+ }
+}

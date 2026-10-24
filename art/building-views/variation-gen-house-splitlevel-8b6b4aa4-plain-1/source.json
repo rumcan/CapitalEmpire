@@ -1,0 +1,10 @@
+{
+ "id": "variation:gen-house-splitlevel-8b6b4aa4-plain:1",
+ "version": "variation-gen-house-splitlevel-8b6b4aa4-plain-1-4views-v1",
+ "files": {
+  "NE": "368876cb67bf0522804c7dbfdc84232d94f2bf4bcfd0346cf4c84d9ef4d17f48",
+  "SE": "e2aa5471f68255b8c0301ff9e6a102f862e964aa2b2fdf1723170a160c3a76d8",
+  "SW": "bb35b7dd968a68e796f7cab93923374aa1c54a8e82ee3fc18ba73d8e8fb5afad",
+  "NW": "f0c8a81f9ed5ec53d6ade73b105fd8ae5a8a749634acf0017060bf5bee9ea1be"
+ }
+}
