@@ -1130,15 +1130,15 @@ export class Game {
     for (const s of this.net.segsNear({ x: cx, y: cy }, r)) out = unionCourseBox(out, flattenCourseCorridor(f, { ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, halfWidthTiles: s.cls.h + s.cls.walk, marginTiles: 2 }));
     return out;
   }
-  /** the course height changed in box: save (T028 adds the ground re-bake here) */
-  private courseHeightChanged(_box: CourseTileBox) { this.scheduleSave(); }
+  /** the course height changed in box: save, and the workers take the new heights and re-bake the ground there */
+  private courseHeightChanged(box: CourseTileBox) { this.scheduleSave(); this.ground.courseHeight(this.courseHeight.data, box); }
   private afterLoad() {
     const ops = this.edit.commit(true); this.lanes.update(this.net);
     // the city worker gets the whole network (the bench commits its own edits before this, so `ops` can be empty)
     this.ground.netOps(ops); this.traffic.netOps(netToOps(this.net)); this.syncPortals();
     this.syncAutoProps(this.net.autoProps, []);
     this.syncLamps(); this.sendBlocks(false); this.syncBlockLawns();
-    this.ground.invalidateAll(); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
+    this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
     this.traffic.setGolf(!!this.golf, this.golf?.tier ?? 1, this.golf?.rep ?? 0, this.golfLand());
@@ -2916,7 +2916,7 @@ export class Game {
   for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   const gCards = this.golf.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
-  const panel = buildCourseStatsPanel(layout, this.golf.tier, have, effectiveGrowInClockMonth(curM, gCards));
+  const panel = buildCourseStatsPanel(layout, this.golf.tier, have, effectiveGrowInClockMonth(curM, gCards), { field: this.courseHeight, areas: this.paint.areas.map(a => ({ hole: a.hole, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })) });
   return { ...panel, qualityScore: applyCourseConsultantQuality(panel.qualityScore, gCards) };
   }
   /** evaluates tournament day outcome and tour progression (null outside golf mode or without a finished round) */
@@ -2930,7 +2930,7 @@ export class Game {
   const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
   const gCards = this.golf.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
-  const baseQ = stats ? buildCourseStatsPanel({ areas: this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts, plantKind: a.plantKind, plantedMonth: a.plantedMonth })), tees: this.golf.tees, pins: this.golf.pins, aims: this.golf.aims, clubhouse: this.golf.clubhouse }, this.golf.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards)).qualityScore : 85;
+  const baseQ = stats ? buildCourseStatsPanel({ areas: this.paint.areas.map(a => ({ id: a.id, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts, plantKind: a.plantKind, plantedMonth: a.plantedMonth })), tees: this.golf.tees, pins: this.golf.pins, aims: this.golf.aims, clubhouse: this.golf.clubhouse }, this.golf.tier, have, effectiveGrowInClockMonth(this.golfMonthIndex(), gCards), { field: this.courseHeight, areas: this.paint.areas.map(a => ({ hole: a.hole, surface: surfaceOfTex(a.tex) ?? 'other', pts: a.pts })) }).qualityScore : 85;
   const parked = countParkedCars(this.traffic.parks, this.traffic.round.surge, last.byTown);
   return computeYearEnd(this.golf.tier, this.golf.rep, last, facts, this.golf.poorYears ?? 0, this.golf.structures ?? [], holes, this.seed, baseQ, gCards, parked, this.parking.fee);
   }

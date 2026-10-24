@@ -3,6 +3,7 @@
  *  keeps showing its old picture until the new one arrives, and every visible chunk falls back to the planner map. */
 import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
 import { GROUND_ART } from './ground-art';
+import { CH_SIZE, CH_STEP } from './ext/course-height';
 import { withBaseGrass } from './base-grass-saved';
 import { withPresets } from './paint-presets-saved';
 import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker } from './ground-protocol';
@@ -46,6 +47,15 @@ export class GroundCache {
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }
   terrain(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.broadcast({ t: 'terrain', cls: t.cls, height: t.height, waters: t.waters }); }
   blocks(data: Float32Array) { this.broadcast({ t: 'blocks', data }); }
+  /** the course height in tile box b (whole samples, clamped) goes to every worker, and the ground there re-bakes (the old bake shows until then) */
+  courseHeight(field: Float32Array, b: [number, number, number, number]) {
+    const i0 = Math.max(0, Math.floor(b[0] / CH_STEP) - 1), i1 = Math.min(CH_SIZE - 1, Math.ceil(b[2] / CH_STEP) + 1);
+    const j0 = Math.max(0, Math.floor(b[1] / CH_STEP) - 1), j1 = Math.min(CH_SIZE - 1, Math.ceil(b[3] / CH_STEP) + 1);
+    const w = i1 - i0 + 1, h = j1 - j0 + 1, data = new Float32Array(w * h);
+    for (let j = 0; j < h; j++) data.set(field.subarray((j0 + j) * CH_SIZE + i0, (j0 + j) * CH_SIZE + i1 + 1), j * w);
+    this.broadcast({ t: 'course', i0, j0, w, h, data });
+    this.invalidate([b[0] - 4, b[1] - 4, b[2] + 4, b[3] + 4], true);
+  }
   /** Changed turf cells invalidate only the chunks that touch them, retaining the old bake until replacement. */
   grass(cells: GrassCellView[], strength: number, heat: boolean, mowing = false) {
     this.broadcast({ t: 'grass', cells, strength, heat, mowing });

@@ -66,6 +66,8 @@ export type ToWorker =
   | { t: 'lamps'; pts: Float32Array }
   | { t: 'terrain'; cls: Uint8Array; height: Float32Array; waters: Waterway[] }
   | { t: 'blocks'; data: Float32Array }
+  /** the course height as a sub-rect of samples (i0, j0, w by h, row-major data), see GroundCache.courseHeight */
+  | { t: 'course'; i0: number; j0: number; w: number; h: number; data: Float32Array }
   | { t: 'lotground'; set: [string, LotPatch[]][]; drop: string[] }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number };
 

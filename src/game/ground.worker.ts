@@ -60,6 +60,7 @@ const handle = async (m: ToWorker) => {
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
       case 'blocks': painter.blocks = m.data; break;
+      case 'course': painter.setCourse(m.i0, m.j0, m.w, m.h, m.data); break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
         const need = new Set<string>();

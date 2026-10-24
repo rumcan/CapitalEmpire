@@ -1,5 +1,6 @@
 // Course stats panel model (docs/GOLF-PLAN.md sections 4.2, 4.3, 5.1 and 8.2): turns holes.ts derivation, costs.ts maintenance, and tour.ts missingFor into panel rows and quality hints. Pure TS, no DOM.
 import { courseMonthlyUpkeep, growInShare } from './costs';
+import { evaluateCourseHeightQuality, type CourseHeightField } from '../ext/course-height';
 import { courseStats, deriveHoles, type CourseStats, type Hole } from './holes';
 import { missingFor, tierInfo, type CourseFacts, type Need } from './tour';
 import type { CourseLayout } from './types';
@@ -53,6 +54,10 @@ export interface CourseStatsPanel {
   monthlyUpkeep: number;
   qualityScore: number;
   qualityHints: string[];
+  /** the course height's quality bonus (0..5 points, already counted in qualityScore; 0 without a height field) */
+  heightBonus: number;
+  /** the holes whose putting green is over 6% steep (each row carries the warning; empty without a height field) */
+  steepGreenHoles: number[];
   tier: number;
   nextTier: number | null;
   missingForCurrent: (Need | 'holes' | 'length')[];
@@ -130,10 +135,12 @@ export function courseQuality(layout: CourseLayout, holes: readonly Hole[], stat
   return { score: Math.max(0, Math.min(100, Math.round(score))), hints };
 }
 
-/** build the complete CourseStatsPanel from a CourseLayout, current tournament tier (1..5), and present venue Needs */
-export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: ReadonlySet<Need> = new Set(), currentMonth = 7): CourseStatsPanel {
+/** build the complete CourseStatsPanel from a CourseLayout, current tournament tier (1..5), and present venue Needs; height (optional) adds the course height's quality bonus and steep-green warnings */
+export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: ReadonlySet<Need> = new Set(), currentMonth = 7, height?: { field: CourseHeightField; areas: readonly { hole?: number; surface: string; pts: readonly number[] }[] }): CourseStatsPanel {
  const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
  const rows = holes.map(toHoleRow);
+ const hq = height ? evaluateCourseHeightQuality(height.field, height.areas) : null;
+ if (hq) for (const r of rows) if (hq.steepGreenHoles.includes(r.hole)) r.warnings.push('Green too steep (over 6%)');
  const baseTotals = courseStats(holes);
  const totals = {
  ...baseTotals,
@@ -142,7 +149,10 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
  };
  const warningCount = rows.reduce((s, r) => s + r.warnings.length, 0);
  const monthlyUpkeep = Math.round(courseMonthlyUpkeep(layout.areas));
- const { score: qualityScore, hints: qualityHints } = courseQuality(layout, holes, baseTotals, currentMonth);
+ const quality = courseQuality(layout, holes, baseTotals, currentMonth);
+ const qualityHints = quality.hints;
+ let qualityScore = quality.score;
+ if (hq) { qualityScore = Math.min(100, qualityScore + hq.bonusPoints); qualityHints.push(...hq.hints); }
   const clampedTier = tierInfo(tier).tier;
   const nextTier = clampedTier < 5 ? clampedTier + 1 : null;
   const facts: CourseFacts = { holes: totals.holes, lengthM: totals.lengthM, have };
@@ -162,6 +172,8 @@ export function buildCourseStatsPanel(layout: CourseLayout, tier = 1, have: Read
     monthlyUpkeep,
     qualityScore,
     qualityHints,
+    heightBonus: hq?.bonusPoints ?? 0,
+    steepGreenHoles: hq?.steepGreenHoles ?? [],
     tier: clampedTier,
     nextTier,
     missingForCurrent,

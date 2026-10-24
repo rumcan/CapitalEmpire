@@ -1,6 +1,7 @@
 // Tests for the course stats panel model (golf/coursestats.ts): hole rows, totals, monthly upkeep, quality hints, and tier needs.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { applyCourseHeightBrush, createCourseHeightField } from '../src/game/ext/course-height';
 import { generateOldNine } from '../src/game/golf/coursegen';
 import { NEED_LABEL, buildCourseStatsPanel, metresToYards } from '../src/game/golf/coursestats';
 import type { Need } from '../src/game/golf/tour';
@@ -41,4 +42,40 @@ test('buildCourseStatsPanel reports hole warnings, quality deductions, and Tier 
   assert.equal(panel.nextTier, 3);
   assert.ok(panel.missingForNext.includes('holes'));
   assert.ok(panel.missingForNext.includes('length'));
+});
+
+test('buildCourseStatsPanel with the course height: a flat field changes nothing, a raised fairway adds a bonus, a steep green is flagged on its hole', () => {
+  const layout = generateOldNine(SITE, 4);
+  const have = new Set<Need>(['carpark']);
+  const centroid = (pts: number[]) => { let x = 0, y = 0; for (let k = 0; k + 1 < pts.length; k += 2) { x += pts[k]!; y += pts[k + 1]!; } const n = pts.length / 2; return { x: x / n, y: y / n }; };
+  const base = buildCourseStatsPanel(layout, 1, have);
+  assert.equal(base.heightBonus, 0);
+  assert.deepEqual(base.steepGreenHoles, []);
+
+  const flat = buildCourseStatsPanel(layout, 1, have, 7, { field: createCourseHeightField(), areas: layout.areas });
+  assert.equal(flat.qualityScore, base.qualityScore);
+  assert.equal(flat.heightBonus, 0);
+  assert.deepEqual(flat.steepGreenHoles, []);
+
+  const fairway = layout.areas.find(a => a.surface === 'fairway')!;
+  const raised = createCourseHeightField();
+  const fc = centroid(fairway.pts);
+  applyCourseHeightBrush(raised, { x: fc.x, y: fc.y, radiusTiles: 10, mode: 'raise', strength: 0.8 });
+  const bumpy = buildCourseStatsPanel(layout, 1, have, 7, { field: raised, areas: layout.areas });
+  assert.ok(bumpy.heightBonus >= 1, `height bonus ${bumpy.heightBonus}`);
+
+  // the green nearest hole 1's pin is hole 1's green: a steep raise at its edge flags that hole
+  const pin = layout.pins.find(p => p.hole === 1)!;
+  const greens = layout.areas.filter(a => a.surface === 'green');
+  const green = greens.reduce((best, g) => {
+    const c = centroid(g.pts), b = centroid(best.pts);
+    return Math.hypot(c.x - pin.x, c.y - pin.y) < Math.hypot(b.x - pin.x, b.y - pin.y) ? g : best;
+  });
+  const steep = createCourseHeightField();
+  applyCourseHeightBrush(steep, { x: green.pts[0]!, y: green.pts[1]!, radiusTiles: 8, mode: 'raise', strength: 3 });
+  const tagged = layout.areas.map(a => (a === green ? { hole: pin.hole, surface: a.surface, pts: a.pts } : { surface: a.surface, pts: a.pts }));
+  const steepPanel = buildCourseStatsPanel(layout, 1, have, 7, { field: steep, areas: tagged });
+  assert.deepEqual(steepPanel.steepGreenHoles, [pin.hole]);
+  assert.ok(steepPanel.rows.find(r => r.hole === pin.hole)!.warnings.includes('Green too steep (over 6%)'));
+  assert.ok(steepPanel.warningCount >= 1);
 });

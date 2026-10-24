@@ -15,6 +15,7 @@ import { classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, wat
 import { quadBox, type LotPatch, type PatchTex } from './ground-protocol';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
+import { CH_SIZE, CH_STEP, courseShadeInto } from './ext/course-height';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -61,6 +62,8 @@ export class GroundPainter {
   shade: Float32Array = new Float32Array(HS * HS);
   /** slope magnitude per height sample (bare rock on the steep faces) */
   slope: Float32Array = new Float32Array(HS * HS);
+  /** the course height (T027) and its sun-right shade, CH_SIZE² samples; any: some height is not 0 */
+  courseH = new Float32Array(CH_SIZE * CH_SIZE); courseShade = new Float32Array(CH_SIZE * CH_SIZE); courseAny = false;
   waters: { w: Waterway; box: BBox }[] = [];
   /** lot ground patches by lot key, and a grid (LOT_CELL tiles) of the patches they cover, keyed by cell */
   lotPatches = new Map<string, LotPatch[]>();
@@ -70,6 +73,12 @@ export class GroundPainter {
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
   setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
+  /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in, and its shade redone with a one-sample margin */
+  setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
+    for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
+    courseShadeInto(this.courseH, this.courseShade, [i0 * CH_STEP, j0 * CH_STEP, (i0 + w) * CH_STEP, (j0 + h) * CH_STEP]);
+    this.courseAny ||= data.some(v => v !== 0);
+  }
   /** apply lot ground edits: each key in `set` replaces its patches, each key in `drop` loses them */
   setLotGround(set: [string, LotPatch[]][], drop: string[]) {
     for (const k of drop) this.lotRemove(k);
@@ -136,7 +145,7 @@ export class GroundPainter {
     const vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1, near = this.waters.filter(w => vis(w.box));
     const shape = (kind: 'river' | 'creek', extra: number, col: string) => { const p = new Path2D(); let any = false; for (const w of near) if (w.w.kind === kind) any = waterShape(p, w.w.pts, extra, box) || any; if (any) { ctx.fillStyle = col; ctx.fill(p); } };
     shape('river', 3, this.planColour('bank'));
-    const sm = shadeRGBA(this.shade, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25), sb = this.buffer('small', sm.W, sm.H);
+    const sm = shadeRGBA(this.shade, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.courseAny ? this.courseShade : null), sb = this.buffer('small', sm.W, sm.H);
     ctx2d(sb).putImageData(new ImageData(sm.data as Uint8ClampedArray<ArrayBuffer>, sm.W, sm.H), 0, 0); ctx.setTransform(M); ctx.drawImage(sb, tx0, ty0, sm.W / 0.25, sm.H / 0.25);
     shape('river', 0, this.planColour('water'));
     shape('creek', 0, this.planColour('water'));
@@ -231,7 +240,7 @@ export class GroundPainter {
     const shore = (g: C2D, list: typeof near, extra: number, f: number, scale = 1) => { g.setTransform(M); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(0,0,0,0.25)'; for (let s = 0; s < 4; s++) { const p = new Path2D(); let any = false; for (const w of list) any = waterShape(p, w.w.pts, extra + f * (1 - (2 * s) / 3), box, scale) || any; if (any) g.fill(p); } g.globalCompositeOperation = 'source-over'; };
     if (rivers.length) layer('bank', g => shore(g, rivers, 3, 0.8));
     if (creeks.length) { layer('creek', g => shore(g, creeks, 0.5, 0.5)); layer('water', g => shore(g, creeks, 0, 0.25, 0.35), water); }
-    const sres = lite ? 0.25 : 0.5; overlay(ctx, shadeRGBA(this.shade, tx0, ty0, bw, bh, sres), sres); ctx.setTransform(M);
+    const sres = lite ? 0.25 : 0.5; overlay(ctx, shadeRGBA(this.shade, tx0, ty0, bw, bh, sres, this.courseAny ? this.courseShade : null), sres); ctx.setTransform(M);
     if (rivers.length) layer('water', g => shore(g, rivers, 0, 0.3), water);
 
     const walk = net.walkF.filter(f => vis(f.bbox)), asph = net.asphF.filter(f => vis(f.bbox));

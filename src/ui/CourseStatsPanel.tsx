@@ -48,6 +48,7 @@ export function CourseStatsPanel({ stats, onClose, onSelectHole }: CourseStatsPa
             <span className={`rounded border px-1.5 py-0.5 text-xs font-bold ${qBadge.bg} ${qBadge.text}`}>
               {stats.qualityScore}/100
             </span>
+            {stats.heightBonus > 0 && <span className="text-[10px] text-slate-400">+{stats.heightBonus} contours</span>}
           </div>
           <div className="text-[10px] text-slate-400">{stats.warningCount === 0 ? 'Clean layout' : `${stats.warningCount} warning(s)`}</div>
         </div>
