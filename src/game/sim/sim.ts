@@ -7,6 +7,7 @@ import { CTL, LK, type Lane, type LaneGraph, type Movement, type SignalPlan, lan
 import { MIN_GREEN, SIG, demandElsewhere, fixedToRed, phaseState, stepSignals } from './signals';
 import { Router } from './routing';
 import { DAY, LotTrips, Trips, demandAt, type Built } from './trips';
+import { townClockFor, townMinute, type TownClock } from './townclock';
 import { LU } from '../lots/town';
 import type { Node } from '../network';
 import { ALIGHT_S, BOARD_S, BUS_LEN, ENTRY_Q, ENTRY_S, MAX_DWELL, MIN_DWELL, PD_CELL, SERVICE_S } from '../event/config';
@@ -120,6 +121,8 @@ export class Sim {
   townFree = false;
   /** the time the town day reads (see townFree) */
   get townTime(): number { return this.townFree ? this.t : this.clock; }
+  /** the town day's clock (T048); townFree games read it from t, the classic game keeps its clock-based day */
+  town: TownClock = townClockFor(DAY);
   rnd: () => number;
   /** per slot driver parameters (ext/drivers): desired speed factor, headway, acceleration, braking, jam gap, MOBIL politeness and threshold;
    *  drawn from their own seeded stream at spawn (spawnAt, buses) */
@@ -1414,7 +1417,7 @@ export class Sim {
 
   /** up to FILL_TRIES spawn attempts per step while below the aim (the target, or the daily profile's share of it) */
   private fill() {
-    const aim = this.profile ? Math.round(this.target * demandAt(this.townTime, this.dayLen)) : this.target;
+    const aim = this.profile ? Math.round(this.target * (this.townFree ? demandAt(townMinute(this.town, this.t), 1440) : demandAt(this.townTime, this.dayLen))) : this.target;
     for (let n = 0; n < FILL_TRIES && this.active - this.busN < aim; n++) this.spawn();
   }
 }

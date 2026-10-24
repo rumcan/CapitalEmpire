@@ -184,3 +184,6 @@ export * from './progress';
 /** which Transport panel controls show (T039) */
 export * from './transport';
 
+/** the guided Year 1 (P06/T045) */
+export * from './guide';
+

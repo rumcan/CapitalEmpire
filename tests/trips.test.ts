@@ -6,6 +6,7 @@ import { NetEditor } from '../src/game/netops';
 import { LaneGraph, laneAt } from '../src/game/sim/lanes';
 import { DAY, demandAt, driveway } from '../src/game/sim/trips';
 import { DT, Sim } from '../src/game/sim/sim';
+import { townClockFor, townHourIndex, townMinute } from '../src/game/sim/townclock';
 import { zoneOf } from '../src/game/sim/routing';
 import { LotMap, type Lot } from '../src/game/lots/lots';
 import { LU, LV, Town, builtLots, type LotTuple } from '../src/game/lots/town';
@@ -128,6 +129,18 @@ test('town day: the demand curve follows the town day: the same shape at the sam
   assert.ok(demandAt(8 / 24 * L, L) > 0.99 && demandAt(17 / 24 * L, L) > 0.99, 'the morning and evening peaks');
   assert.ok(demandAt(3 / 24 * L, L) < 0.4, 'the small hours are quiet');
   assert.equal(demandAt(L + 30, L), demandAt(30, L), 'the curve repeats every town day');
+});
+
+// the town clock (T048): an untouched clock (townClockFor) reads a town day the old way: the same hour index as t / (dayLen / 24), and the same demand
+test('town clock: an untouched clock gives the old hour index and demand on every step', () => {
+  for (const L of [240, 600, 1440]) {
+    const c = townClockFor(L);
+    for (let k = 0; k < Math.round(3 * L / DT); k++) {
+      const t = k * DT;
+      assert.equal(townHourIndex(c, t), Math.floor(t / (L / 24)), `hour index at ${t} of a ${L} s day`);
+      assert.ok(Math.abs(demandAt(townMinute(c, t), 1440) - demandAt(t, L)) < 1e-9, `demand at ${t} of a ${L} s day`);
+    }
+  }
 });
 
 test('town day: a short day keeps the commute (morning to jobs, evening home) and a day\'s trips; town traffic scales them', () => {

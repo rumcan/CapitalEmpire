@@ -29,6 +29,7 @@ import { SpriteTiles, spriteRect, type Drawable } from './sprites';
 import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { SimClient, type LotView } from './sim/client';
+import { townClockFor, townTimeOf } from './sim/townclock';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
@@ -624,7 +625,7 @@ export class Game {
     this.ground.init(this.terrain);
     this.sendTerrain(); this.afterLoad();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
-    if (loaded) this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats);
+    if (loaded) { this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats); this.traffic.setTownClock(loaded.townClock ?? townClockFor(this.traffic.dayLen)); }
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -2197,8 +2198,10 @@ export class Game {
    *  else the classic game day (hours of GAME_HOUR) */
   clock(): { day: number; hour: number; minute: number } {
     // a golf game's town day runs on the sim's own time (it never stops; the season clock freezes at the season's end)
-    const now = performance.now(), t = this.golfMode ? this.traffic.simTime(now) : this.traffic.clockTime(now), L = this.golfMode ? this.traffic.dayLen : 24 * GAME_HOUR, hl = L / 24;
-    return { day: this.golfMode ? Math.floor(t / L) + 1 : this.day, hour: Math.floor(t / hl) % 24, minute: Math.floor((t % hl) / hl * 60) };
+    // a golf game's town clock (townclock.ts, T048): the sim's time through the clock's pieces (the day's start, its speed)
+    if (this.golfMode) { const tt = townTimeOf(this.traffic.town, this.traffic.simTime(performance.now())); return { day: tt.day, hour: tt.hour, minute: tt.minute }; }
+    const now = performance.now(), t = this.traffic.clockTime(now), L = 24 * GAME_HOUR, hl = L / 24;
+    return { day: this.day, hour: Math.floor(t / hl) % 24, minute: Math.floor((t % hl) / hl * 60) };
   }
   /** the owner's town day (LEAD.md M1): its length in real minutes at 1x and the town's traffic (times the lot trips); remembered */
   townDay = { minutes: 10, traffic: 1 };
@@ -2976,7 +2979,9 @@ export class Game {
     const until = this.traffic.simTime(now) + (target - c) + 1; // one sim second past the target, so the worker's step crosses it
     if (!this.speed) this.setSpeed(this.lastSpeed);
     this.traffic.skip(until);
-    this.toast('Skipping to the tournament…');
+    // the tournament day plays at 8x (about 3 real minutes): its town clock runs at 1 game minute per sim s from 05:00 (see City.startTournament)
+    this.setSpeed(8);
+    this.toast('Skipping to the tournament… (8× for the day)');
   }
   /** a road class is open to build: every class in event mode, else as the Career unlocks it */
   classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
@@ -3033,7 +3038,7 @@ export class Game {
       props: [...this.props].filter(p => !p.auto).map(p => p.plant ? [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale, 1] : [LIBRARY[p.item].id, +p.x.toFixed(3), +p.y.toFixed(3), p.flip ? 1 : 0, p.scale]),
       money: this.traffic.budget.money, day: this.day, cam: { ...this.cam },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
-      simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
+      simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, townClock: this.traffic.town, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
       tolls: this.tollDefs.map((d): [number, number, number, number, number] => [d.ax, d.ay, d.bx, d.by, d.booths]),
       buses: this.busDefs.map((d): [number, number, number, number, number, number, number, number] => [d.park, +d.sx.toFixed(3), +d.sy.toFixed(3), +d.dx.toFixed(3), +d.dy.toFixed(3), d.buses, d.seats, d.town ?? -1]),
