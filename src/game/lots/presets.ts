@@ -72,67 +72,10 @@ export function fitPreset(p: LotPreset, w: number, d: number): Fitted {
   return { props, patches, from, dropped };
 }
 
-/** the uses, states and patch kinds a preset file may name */
-const USES: readonly string[] = ['res', 'com', 'park', 'ind', 'tour', 'civic'];
-const STATES: readonly string[] = ['built', 'upgraded', 'declined'];
-const KINDS: readonly string[] = ['drive', 'walk', 'lot', 'yard', 'bed'];
-/** a plain object (not null, not an array) */
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
-/** a finite number */
-const fin = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
-/** an array of finite numbers */
-const nums = (v: unknown): v is number[] => Array.isArray(v) && v.every(fin);
-
-/** one prop read from JSON, or undefined when it is not a valid prop */
-function readProp(v: unknown): PresetProp | undefined {
-  if (!isObj(v)) return undefined;
-  const { id, x, y, scale, view } = v;
-  if (typeof id !== 'string' || !fin(x) || !fin(y) || !fin(scale) || !fin(view) || !Number.isInteger(view) || view < 0 || view > 3) return undefined;
-  return { id, x, y, scale, view: view as View };
-}
-
-/** one ground patch read from JSON, or undefined when it is not valid (lines, when present, must be finite numbers) */
-function readPatch(v: unknown): PresetPatch | undefined {
-  if (!isObj(v)) return undefined;
-  const { kind, tex, pts, lines } = v;
-  if (typeof kind !== 'string' || !KINDS.includes(kind) || typeof tex !== 'string' || !nums(pts) || pts.length % 2) return undefined;
-  const out: PresetPatch = { kind: kind as PresetPatch['kind'], tex, pts: pts.slice() };
-  if (lines !== undefined) { if (!nums(lines)) return undefined; out.lines = lines.slice(); }
-  return out;
-}
-
-/** one preset read from JSON, or undefined when it is not valid (props and patches must all be valid) */
-function readPreset(v: unknown): LotPreset | undefined {
-  if (!isObj(v)) return undefined;
-  const { id, use, state, w, d, props, patches, curated } = v;
-  if (typeof id !== 'string' || typeof use !== 'string' || !USES.includes(use) || typeof state !== 'string' || !STATES.includes(state)) return undefined;
-  if (!fin(w) || !fin(d) || w <= 0 || d <= 0 || !Array.isArray(props) || !Array.isArray(patches)) return undefined;
-  const pr: PresetProp[] = [], pa: PresetPatch[] = [];
-  for (const q of props) { const r = readProp(q); if (!r) return undefined; pr.push(r); }
-  for (const a of patches) { const r = readPatch(a); if (!r) return undefined; pa.push(r); }
-  const out: LotPreset = { id, use: use as PresetUse, state: state as PresetState, w, d, props: pr, patches: pa };
-  if (curated === true) out.curated = true;
-  return out;
-}
-
 /** the preset file's header (an entry { "meta": ... } before the presets): dated notes on how the file was made, newest last */
 export interface PresetMeta { notes: string[] }
-/** the header read from JSON, or undefined when the entry is not one ({ meta: { notes: string[] } }, nothing else) */
-function readMeta(v: unknown): PresetMeta | undefined {
-  if (!isObj(v) || Object.keys(v).length !== 1 || !isObj(v.meta)) return undefined;
-  const { notes } = v.meta;
-  return Array.isArray(notes) && notes.every(n => typeof n === 'string') ? { notes: notes.slice() } : undefined;
-}
-
-/** the presets read from a JSON array (the studio's file): the valid entries in file order, the others counted in invalid; the header entry
- *  ({ meta }), when there is one, as meta (neither a preset nor invalid); any other input gives none */
-export function parsePresets(json: unknown): { presets: LotPreset[]; invalid: number; meta?: PresetMeta } {
-  if (!Array.isArray(json)) return { presets: [], invalid: 0 };
-  const presets: LotPreset[] = [];
-  let invalid = 0, meta: PresetMeta | undefined;
-  for (const v of json) { const m = meta ? undefined : readMeta(v); if (m) { meta = m; continue; } const p = readPreset(v); if (p) presets.push(p); else invalid++; }
-  return meta ? { presets, invalid, meta } : { presets, invalid };
-}
+/** the presets read from the file's JSON: preset-read.ts (dependency-free, for the dev server's save check too) */
+export { parsePresets } from './preset-read';
 
 /** a number as the preset file writes it: rounded to 3 decimals, never -0 */
 const num = (v: number) => { const r = Math.round(v * 1000) / 1000; return Object.is(r, -0) ? '0' : String(r); };

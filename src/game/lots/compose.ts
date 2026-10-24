@@ -11,13 +11,13 @@ import { isBuilding } from '../mirror';
 import { LU, LV } from './town';
 import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, JUNK, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, TREES, clamp, isCarPark, mix, names, pick, specFit, withVariations,
-  type Composition, type ComposeState, type LotGeom,
+  type Composition, type ComposeState, type LotGeom, type PresetDrop,
 } from './compose-core';
 import { bucketOf, fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetMeta, type PresetState, type PresetUse } from './presets';
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
 import { frameOf, listToWorld, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
-export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed } from './compose-core';
+export { isCarPark, type Composition, type ComposeState, type LotGeom, type Placed, type PresetDrop } from './compose-core';
 
 /** the fence grid of a house lot, drawn as its own layer (procedural: the presets hold no fences): wooden privacy panels on the
  *  lower world-coordinate side line (every lot owns one side) from the back line to 3.65 tiles (7.3 m)
@@ -172,6 +172,13 @@ function presetsOf(use: PresetUse, state: PresetState, w: number, d: number): Lo
   let l = BUCKETS.get(k); if (!l) BUCKETS.set(k, (l = presetsFor(PRESETS, use, state, w, d)));
   return l;
 }
+/** who takes a hot reload of lot-presets.json in the dev server (the dev editor: it ignores the echo of its own saves, else sets the presets and
+ *  composes the lots again); with none, the reload replaces the presets and the header */
+let reloadHandler: ((list: LotPreset[], meta: PresetMeta | undefined) => void) | null = null;
+/** takes the hot reloads of lot-presets.json (dev server only; never in a build); returns the release */
+export function onLotPresetsReload(fn: (list: LotPreset[], meta: PresetMeta | undefined) => void): () => void { reloadHandler = fn; return () => { if (reloadHandler === fn) reloadHandler = null; }; }
+// the dev server: a saved lot-presets.json (the dev editor's, the studio's or by hand) replaces the presets in place, no page reload
+if (import.meta.hot) import.meta.hot.accept('./lot-presets.json', m => { if (!m) return; const f = parsePresets(m.default); if (reloadHandler) reloadHandler(f.presets, f.meta); else setLotPresets(f.presets, f.meta); });
 
 /** the preset use of a lot's state: res, com (a public car park: park), tour, ind, civic; null for a lot of no use */
 export function presetUse(st: ComposeState): PresetUse | null {
@@ -222,11 +229,12 @@ function fromPreset(B: Build, lot: LotGeom, st: ComposeState, p: { preset: LotPr
     B.patches.push({ kind: a.kind, tex: a.tex as LotPatch['tex'], quad: listToWorld(f, a.pts), ...(a.lines ? { lines: listToWorld(f, a.lines) } : {}) });
     if (a.kind === 'drive' && !drive) drive = range(a.pts);
   }
+  if (B.drops) { const kept = new Set(fit.from); preset.props.forEach((q, i) => { if (!kept.has(i)) B.drops!.push({ preset: preset.id, prop: i, id: q.id, why: 'outside the lot at this size (the fit)' }); }); }
   fit.props.forEach((q, k) => {
     const t = turned(q.id, f.q + q.view), it = BY.get(t.id);
     if (!it) return;
     const car = it.cat === 'Vehicles';
-    if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) return;
+    if (car && (B.noCars || (st.decline === 1 && B.r() >= CAR_KEEP_D1))) { B.drops?.push({ preset: preset.id, prop: fit.from[k]!, id: t.id, why: B.noCars ? 'no cars on a derelict lot' : 'cars thinned on a shabby lot' }); return; }
     const s = car ? 1 : q.scale * ownerScaleOf(q.id);
     const item = B.atW({ id: t.id, s, flip: t.flip, h: footprintOf(t.id, s, t.flip) }, toWorld(f, q.x, q.y), { plant: it.kind === 'tree' || it.kind === 'bush', from: { preset: preset.id, prop: fit.from[k]! } });
     if (item && !item.fence && !item.wheel) ups++;
@@ -275,8 +283,9 @@ function chainRing(B: Build) {
 }
 
 /** The composition of a lot in a given state: deterministic from the lot, its use, level, decline and seed (and the presets). */
-export function compose(lot: LotGeom, st: ComposeState): Composition {
+export function compose(lot: LotGeom, st: ComposeState, drops?: PresetDrop[]): Composition {
   const B = new Build(lot, mulberry(mix(st.seed, st.use, st.level, st.decline)));
+  B.drops = drops ?? null;
   B.noCars = st.decline >= 3;
   // building sprites face the map axes only: a lot whose frontage runs more than 20 degrees off both axes is a green, not its use
   const angled = Math.max(Math.abs(lot.u.x), Math.abs(lot.u.y)) < Math.cos(Math.PI / 9);

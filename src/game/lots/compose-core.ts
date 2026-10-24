@@ -23,6 +23,9 @@ import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
  *  from: the preset it was drawn from and its prop index there (compose.ts; the dev editor maps an edit back to the preset by it) */
 export interface Placed { id: string; x: number; y: number; flip: boolean; scale: number; street?: true; from?: { preset: string; prop: number } }
 export interface Composition { props: Placed[]; ground: LotPatch[] }
+/** a preset prop a lot leaves out: the preset and the prop's index there, its sprite id as drawn, and why (past the lot line, overlaps <id>
+ *  NN%, the fit, the decline) */
+export interface PresetDrop { preset: string; prop: number; id: string; why: string }
 /** the lot state a composition depends on (the seed is the lot's own) */
 export interface ComposeState { use: number; level: number; decline: number; seed: number }
 
@@ -140,6 +143,8 @@ export class Build {
   readonly marks: number[] = [];
   /** no cars at all (derelict); the upright cap for plants (the rest are kept) */
   noCars = false; cap = 28;
+  /** where the preset props this lot leaves out are told, with why (compose's drops argument: the dev editor); null: not told */
+  drops: PresetDrop[] | null = null;
   /** a building site keeps all its ground decals (mud, footprints, gravel); every other lot keeps only its leaves (the owner, 2026-10-22) */
   allMarks = false;
   readonly r: () => number;
@@ -314,7 +319,12 @@ export class Build {
     for (let i = 0; i < n && pool.length; i++) this.put(pick(this.r, pool), a0 + (a1 - a0) * this.r(), b0 + (b1 - b0) * this.r(), o);
   }
   /** decline 1+: a third of the plants go */
-  thin(f: number) { for (let i = this.items.length - 1; i >= 0; i--) if (this.items[i].plant && this.r() < f) this.items.splice(i, 1); }
+  thin(f: number) {
+    for (let i = this.items.length - 1; i >= 0; i--) if (this.items[i].plant && this.r() < f) {
+      const it = this.items[i]!; if (it.from && this.drops) this.drops.push({ ...it.from, id: it.id, why: 'fewer plants on a declined lot' });
+      this.items.splice(i, 1);
+    }
+  }
   /** drops the boundary panels that stand on a drive (a drive's mouth and the run beside it stay open) */
   clearDrives() {
     for (let i = this.items.length - 1; i >= 0; i--) { const it = this.items[i]!; if (it.boundary && this.patches.some(p => p.kind === 'drive' && hit(it.fp, p.quad))) this.items.splice(i, 1); }
@@ -341,14 +351,19 @@ export class Build {
   /** the composition: candidates in order, the first that fits wins; plants stop at the cap */
   done(): Composition {
     const props: Placed[] = [], acc: Item[] = []; let ups = 0;
+    // a preset prop left out is told to the drops sink, with why (the dev editor shows them: nothing in a preset goes unseen)
+    const drop = (it: Item, why: string) => { if (it.from && this.drops) this.drops.push({ ...it.from, id: it.id, why }); };
     for (const it of this.items) {
       // Shared boundary panels remain on their surveyed line even when a driveway reaches the lot edge.
-      if (!this.inside(it) || (!it.boundary && !it.paved && !it.from && this.onPatch(it))) continue;
+      if (!this.inside(it)) { drop(it, 'past the lot line'); continue; }
+      if (!it.boundary && !it.paved && !it.from && this.onPatch(it)) continue;
       // two cars never share ground (a car is kept only if it shares none with an earlier car)
-      if (it.car && acc.some(a => a.car && share(a.fp, it.fp) > 0)) continue;
+      const car = it.car ? acc.find(a => a.car && share(a.fp, it.fp) > 0) : undefined;
+      if (car) { drop(it, `overlaps the car ${car.id}`); continue; }
       if (!it.fence && !it.wheel) {
         if (it.plant && !it.from && ups >= this.cap) continue;
-        if (acc.some(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP)) continue;
+        const over = acc.find(a => !a.fence && !a.wheel && share(a.fp, it.fp) > OVERLAP);
+        if (over) { drop(it, `overlaps ${over.id} ${Math.round(100 * share(over.fp, it.fp))}%`); continue; }
         ups++;
       }
       acc.push(it); const p: Placed = { id: it.id, x: it.x, y: it.y, flip: it.flip, scale: it.s }; if (it.street) p.street = true; if (it.from) p.from = it.from; props.push(p);
