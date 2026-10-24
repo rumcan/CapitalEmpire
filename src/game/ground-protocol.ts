@@ -8,11 +8,13 @@ import type { LineStyle } from './types';
 import type { Waterway } from './terrain/types';
 import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
+import type { EdgeProfile } from './paint-edges';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone filter over the fill: t 1 Multiply (darker) or 2 Lighten (screen),
  *  ta its strength (0..1), tc its tint ('#rrggbb'); absent when the area has no tone */
-export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string }
+export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string;
+  /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile }
 
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
 export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;

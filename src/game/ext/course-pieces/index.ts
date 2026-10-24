@@ -1,6 +1,6 @@
 // Click-to-place course pieces (UIX revamp T030): the piece list, snap targets from the painted areas, and the paint areas a placed piece lays.
 // Pure TypeScript, deterministic. Units: tiles of 2 m; money in $.
-import { checkArea, clampStyle, DEFAULT_STYLE, type BorderTex, type BrushKind, type PaintArea, type PaintTex } from '../../paint';
+import { checkArea, clampStyle, courseTex, DEFAULT_STYLE, type BorderTex, type BrushKind, type PaintArea, type PaintTex } from '../../paint';
 import { areaBuildCost, type PlantKind } from '../../golf/costs';
 import { kindOfTex, type PresetProp } from '../../golf/holepreset';
 import type { CoursePieceArchetype, CoursePiecePropAnchor, SnapPieceKind, SnapPiecePlacement, SnapTargetArea } from '../course-snap';
@@ -35,9 +35,11 @@ export function snapTargets(areas: readonly (Pick<PaintArea, 'id' | 'pts' | 'kin
 }
 
 /** the paint areas (bottom to top) a placed piece lays: each layer's style on the default style; every layer carries the hole, only the core carries the piece's kind (so it is a snap target and joins brush strokes of its kind) */
+// golf surfaces lay their textures unturned, as the brushes and the generated course do: a fairway photo turned to the piece's heading broke its
+// mowing stripes into a blocky checker (the owner, 2026-10-24); paths keep their heading (the paving runs along them)
 export function pieceAreas(pl: SnapPiecePlacement): Omit<PaintArea, 'id'>[] {
   return pl.layers.map(l => {
-    const style = clampStyle({ ...DEFAULT_STYLE, tex: l.tex as PaintTex, border: l.border, btex: l.btex as BorderTex, radius: l.radius, angle: l.angle, ...(l.tone ? { tone: l.tone, toneAmt: l.toneAmt ?? DEFAULT_STYLE.toneAmt, tint: l.tint ?? DEFAULT_STYLE.tint } : {}) });
+    const style = clampStyle({ ...DEFAULT_STYLE, tex: courseTex(l.tex as PaintTex), border: l.border, btex: l.btex as BorderTex, radius: l.radius, angle: l.kind === 'path' ? l.angle : 0, ...(l.tone ? { tone: l.tone, toneAmt: l.toneAmt ?? DEFAULT_STYLE.toneAmt, tint: l.tint ?? DEFAULT_STYLE.tint } : {}) });
     return { ...style, pts: l.pts.slice(), hole: pl.hole, ...(l.role === 'core' ? { kind: l.kind as BrushKind } : {}) };
   });
 }

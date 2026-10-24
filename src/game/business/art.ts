@@ -2,12 +2,14 @@ import { BUSINESS, type BusinessId } from './catalogue';
 import type { BizDef } from './state';
 import type { LibItem, Prop } from '../types';
 import { drawnAs } from '../mirror';
-import { OWNER_SCALE } from '../lots/scales';
+import { OWNER_SCALE, STUDIO_SCALE } from '../lots/scales';
 
 /** The representative delivered sprite for each business's catalogue card. */
 export const BUSINESS_IMAGE: Record<BusinessId, string> = { stadium: 'stadium', sportsbar: 'sportsbar', buscompany: 'buscompany', diner: 'diner', taxi: 'taxi', golf: 'golf-clubhouse', estate: 'estate-villa', fishing: 'fishing-lodge', tackle: 'tackle', casino: 'casino', hotel: 'hotel', motel: 'motel', clubhouse: 'golf-clubhouse' };
 // Positions and sizes are fractions of the canonical parcel; R exchanges its world axes. A size of 0 draws the sprite at its own map size (the
-// studio's size; never stretched past its art); an id with a ':' is a library id as it is (else 'business:' + id).
+// studio's size; never stretched past its art); an id with a ':' is a library id as it is (else 'business:' + id). A sprite the owner sized in the
+// sprite studio is drawn at that size whatever its share (the owner, 2026-10-24: "I need to be able to fix the sizes of all of the stuff in the
+// library"), and no picture is drawn past its pixels (newart.ts lookOf).
 type Piece = [string, number, number, number];
 const single = (id: string): Piece[] => [[id, 0.5, 0.5, 0.88]];
 const LAYOUT: Record<BusinessId, Piece[]> = {
@@ -39,7 +41,7 @@ export function businessArt(def: BizDef, library: LibItem[], index: ReadonlyMap<
     const front = index.get(id.includes(':') ? id : 'business:' + id); if (front === undefined) return [];
     // a rotated parcel draws the four-view art turned (its partner view) and any other picture unflipped: never mirrored (mirror.ts)
     const [tid, tflip] = drawnAs(library[front]!, flip), item = index.get(tid) ?? front;
-    const it = library[item], scale = fraction ? 64 * (def.w + def.h) * fraction / it.w : OWNER_SCALE[it.id] ?? 1;
+    const it = library[item], sized = STUDIO_SCALE[library[front]!.id], scale = sized ?? (fraction ? 64 * (def.w + def.h) * fraction / it.w : OWNER_SCALE[it.id] ?? 1);
     const x = def.x + (flip ? v : u) * def.w, y = def.y + (flip ? u : v) * def.h;
     const b = it.boxes[0], radius = fraction ? Math.min(def.w, def.h) * fraction * .35 : b ? Math.max(b.hx, b.hy) * scale : 2;
     return [{ uid: -1000000 - def.id * 100 - n, item, x, y, flip: tflip, scale, x0: x - radius, y0: y - radius, x1: x + radius, y1: y + radius, auto: 'business-art' }];
