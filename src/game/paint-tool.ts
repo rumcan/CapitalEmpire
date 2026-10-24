@@ -8,6 +8,7 @@ import HOLE_PRESETS from './golf/hole-presets.json';
 import { EARTHWORK_PER_M3, areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
 import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
 import { drawGhostPoly, drawGhostRing, drawGhostSnap, ghostStatus } from './ext/ghost-preview';
+import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
@@ -109,6 +110,13 @@ const BTEX_COL = new Map(BORDER_TEXES.map(t => [t.id as string, t.col] as [strin
 /** a '#rrggbb' colour with an alpha, as an rgba() string */
 function rgba(hex: string, a: number): string { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
 
+/** the edge profile field of an area's ground patch (paint-edges.ts): from its brush kind, else its texture's golf surface, else its texture;
+ *  nothing when crisp (paving, kerbs), so those patches stay as they were */
+function edgeOf(a: PaintArea): { e?: ReturnType<typeof edgeProfileOf> } {
+  const e = edgeProfileOf(a.kind ?? surfaceOfTex(a.tex), a.tex, a.border > 0 ? a.btex : undefined);
+  return e === 'crisp' ? {} : { e };
+}
+
 /** adds a polygon's corners to the current path (the caller begins the path and sets the transform) */
 function trace(ctx: CanvasRenderingContext2D, pts: number[], closed: boolean) {
   const n = pts.length >> 1; if (n < 1) return;
@@ -201,7 +209,7 @@ export class PaintTool {
   constructor(host: PaintHost) { this.host = host; }
 
   /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
-  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}) } }; }
+  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}), ...edgeOf(a) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {

@@ -15,6 +15,8 @@ import { classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeFie
 import { quadBox, type LotPatch, type PatchTex } from './ground-protocol';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
+import { CELL as COURSE_CELL } from './golf/paintcourse';
+import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE, CH_STEP, courseShadeInto } from './ext/course-height';
 
 /** screen px per tile unit along the iso axes at level 1 */
@@ -565,67 +567,102 @@ export class GroundPainter {
     g.globalCompositeOperation = 'destination-in'; g.fillStyle = mp; g.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); g.globalCompositeOperation = 'source-over'; g.restore();
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(b, 0, 0); ctx.restore();
   }
-  /** the painted areas of a chunk (the Paint tool), in id order: each polygon filled with its texture through G (turned and
-   *  scaled in tile space about the origin), an optional tone filter over the fill, an optional border band inside its edge, and a thin rim for the paved textures */
+  /** the painted areas of a chunk (the Paint tool), in id order. A crisp area (paving, kerbs: no edge profile) is drawn straight onto the
+   *  chunk, as before. Any other is drawn into a scratch layer, given its sun-lit light and dark rims and its feather (paint-edges.ts: images
+   *  from its outline, made when the chunk bakes, never per frame), and laid over the chunk after the shadow it casts on the ground below */
   private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
+    const res = edgeRes(L);
+    let layer: Cnv | null = null;
+    /** an edge image over the tiles from (x0, y0) (res px a tile), stretched onto g through the chunk transform (bilinear) with the op */
+    const put = (g: C2D, img: EdgeImage | null, x0: number, y0: number, op: GlobalCompositeOperation) => {
+      if (!img) return;
+      const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
+      g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
+    };
     for (const p of paints) {
-      const st = p.paint!, path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(st.s, st.s), pb = quadBox(p.pts);
-      // the border band's own scale and angle (absent: the fill's, as before); without them it shares G
-      const bsx = st.bs ?? st.s, Gb = st.bs === undefined && st.ba === undefined ? G : new DOMMatrix().rotateSelf(0, 0, st.ba ?? st.a).scaleSelf(bsx, bsx);
-      const r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
-      if (r[2] <= r[0] || r[3] <= r[1]) continue;
-      const asph = p.tex === 'asphalt' || p.tex === 'asphaltDark' || p.tex === 'asphaltWorn' || p.tex === 'lotAsphalt', paved = asph || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs';
-      /** paints texture t over the area: a fill of its rectangle (w = 0), or a stroke of its edge w tiles wide */
-      const lay = (t: string, w: number, Gx: DOMMatrix, sx: number) => {
-        const put = (style: string | CanvasPattern) => { if (w) { ctx.strokeStyle = style; ctx.lineWidth = w; ctx.stroke(path); } else { ctx.fillStyle = style; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); } };
-        const tone = (col: string, op: GlobalCompositeOperation, alpha: number) => { ctx.globalCompositeOperation = op; ctx.globalAlpha = alpha; put(col); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; };
-        if (t === 'kerb') { ctx.strokeStyle = this.tex.curb.joint; ctx.lineWidth = w; ctx.stroke(path); ctx.strokeStyle = this.tex.curb.top; ctx.lineWidth = Math.max(0.02, w - 0.08); ctx.stroke(path); return; }
-        if (t === 'slabs') {
-          put(this.tex.curb.top);
-          if (!lite) {
-            if (w) {
-              // one row of slab sprites along each edge, on the inside (the sign of the area says which normal points in)
-              const n = p.pts.length / 2, sg = signedArea(p.pts) > 0 ? 1 : -1;
-              for (let i = 0; i < n; i++) {
-                const j = (i + 1) % n, ax = p.pts[2 * i], ay = p.pts[2 * i + 1], bx = p.pts[2 * j], by = p.pts[2 * j + 1], len = Math.hypot(bx - ax, by - ay);
-                if (len < 1e-6) continue;
-                const ux = (bx - ax) / len, uy = (by - ay) / len, seed = Math.round(ax * 4) * 73856093 ^ Math.round(ay * 4) * 19349663 ^ Math.round(bx * 4) * 83492791;
-                this.drawSlabs(ctx, { kind: 'straight', a: { x: ax, y: ay }, b: { x: bx, y: by }, n: { x: -uy * sg, y: ux * sg }, w0: -(CURB_TOP + CURB_JOINT), w1: w / 2, visible: false, seed }, box);
-              }
-            } else this.slabGrid(ctx, Gx, r, M);
-          }
-          ctx.globalCompositeOperation = 'multiply'; put(this.screenPattern(ctx, 'grime', L, X0, Y0, Minv)); ctx.globalCompositeOperation = 'source-over';
-          return;
-        }
-        if (t === 'asphaltDark') {
-          put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * sx), Gx));
-          if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
-          return;
-        }
-        if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * sx), Gx)); return; }
-        if (isPaintPhoto(t)) {
-          // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
-          if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
-          // the photo itself at the mip this zoom and scale ask for (sharp at every scale); the mosaic only when the source is missing
-          const src = this.tex.sourceFor(t, L * sx);
-          put(src ? this.groundPattern(ctx, src.img, Gx, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L * sx), Gx, this.tex.periodOf(t))); return;
-        }
-        put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, Gx));
-      };
-      ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
-      lay(p.tex, 0, G, st.s);
-      if (st.m && !lite) this.drawBlend(ctx, st, G, path, r, L, X0, Y0, M, Minv);
-      // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
-      if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
-      this.drawManagedGrass(ctx, [p], box, L);
-      if (st.b > 0) {
-        ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); lay(st.bt, 2 * st.b, Gb, bsx);
-        // the border's tone: the same path stroked over the band (Multiply or Screen of its tint at its strength), inside the clip
-        if (st.bto) { ctx.globalCompositeOperation = st.bto === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.bta ?? 0; ctx.strokeStyle = st.btc ?? '#000000'; ctx.lineWidth = 2 * st.b; ctx.stroke(path); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+      const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null;
+      if (!look) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
+      const feather = featherTiles(look, L), reach = edgeReach(look, feather), eb = edgeBox(quadBox(p.pts), box, reach);
+      if (!eb) continue;
+      const [ex0, ey0, ex1, ey1] = eb, im = edgeImages(edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL), look, feather);
+      put(ctx, im.shadow, ex0, ey0, 'source-over');
+      layer ??= this.buffer('paintEdge', ctx.canvas.width, ctx.canvas.height);
+      const g = ctx2d(layer);
+      this.drawPaint(g, p, L, X0, Y0, M, Minv, box, lite, feather);
+      put(g, im.light, ex0, ey0, 'screen'); put(g, im.dark, ex0, ey0, 'multiply'); put(g, im.cut, ex0, ey0, 'destination-out');
+      // only the canvas px under the image box: laid over the chunk, then cleared for the next area
+      let sx0 = Infinity, sy0 = Infinity, sx1 = -Infinity, sy1 = -Infinity;
+      for (const [x, y] of [[ex0, ey0], [ex1, ey0], [ex0, ey1], [ex1, ey1]]) { const X = M.a * x! + M.c * y! + M.e, Y = M.b * x! + M.d * y! + M.f; sx0 = Math.min(sx0, X); sx1 = Math.max(sx1, X); sy0 = Math.min(sy0, Y); sy1 = Math.max(sy1, Y); }
+      const rx = Math.max(0, Math.floor(sx0) - 2), ry = Math.max(0, Math.floor(sy0) - 2), rw = Math.min(layer.width, Math.ceil(sx1) + 2) - rx, rh = Math.min(layer.height, Math.ceil(sy1) + 2) - ry;
+      if (rw > 0 && rh > 0) {
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(layer, rx, ry, rw, rh, rx, ry, rw, rh); ctx.restore();
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(rx, ry, rw, rh); g.restore();
       }
-      else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
-      ctx.restore();
     }
+  }
+  /** one painted area onto ctx: its polygon filled with its texture through G (turned and scaled in tile space about the origin), an optional
+   *  tone filter over the fill, an optional border band inside its edge, and a thin rim for the paved textures; soft > 0 (the feather in tiles of an area
+   *  with an edge profile: the caller feathers and bevels it) leaves out the border band's dark hairline and softens the band's inner edge (bandRamp) */
+  private drawPaint(ctx: C2D, p: LotPatch, L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean, soft: number) {
+    const st = p.paint!, path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(st.s, st.s), pb = quadBox(p.pts);
+    // the border band's own scale and angle (absent: the fill's, as before); without them it shares G
+    const bsx = st.bs ?? st.s, Gb = st.bs === undefined && st.ba === undefined ? G : new DOMMatrix().rotateSelf(0, 0, st.ba ?? st.a).scaleSelf(bsx, bsx);
+    const r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
+    if (r[2] <= r[0] || r[3] <= r[1]) return;
+    const asph = p.tex === 'asphalt' || p.tex === 'asphaltDark' || p.tex === 'asphaltWorn' || p.tex === 'lotAsphalt', paved = asph || p.tex === 'paving' || p.tex === 'pad' || p.tex === 'slabs';
+    /** paints texture t over the area: a fill of its rectangle (w = 0), or a stroke of its edge w tiles wide */
+    const lay = (t: string, w: number, Gx: DOMMatrix, sx: number) => {
+      const put = (style: string | CanvasPattern) => { if (w) { ctx.strokeStyle = style; ctx.lineWidth = w; ctx.stroke(path); } else { ctx.fillStyle = style; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); } };
+      const tone = (col: string, op: GlobalCompositeOperation, alpha: number) => { ctx.globalCompositeOperation = op; ctx.globalAlpha = alpha; put(col); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; };
+      if (t === 'kerb') { ctx.strokeStyle = this.tex.curb.joint; ctx.lineWidth = w; ctx.stroke(path); ctx.strokeStyle = this.tex.curb.top; ctx.lineWidth = Math.max(0.02, w - 0.08); ctx.stroke(path); return; }
+      if (t === 'slabs') {
+        put(this.tex.curb.top);
+        if (!lite) {
+          if (w) {
+            // one row of slab sprites along each edge, on the inside (the sign of the area says which normal points in)
+            const n = p.pts.length / 2, sg = signedArea(p.pts) > 0 ? 1 : -1;
+            for (let i = 0; i < n; i++) {
+              const j = (i + 1) % n, ax = p.pts[2 * i], ay = p.pts[2 * i + 1], bx = p.pts[2 * j], by = p.pts[2 * j + 1], len = Math.hypot(bx - ax, by - ay);
+              if (len < 1e-6) continue;
+              const ux = (bx - ax) / len, uy = (by - ay) / len, seed = Math.round(ax * 4) * 73856093 ^ Math.round(ay * 4) * 19349663 ^ Math.round(bx * 4) * 83492791;
+              this.drawSlabs(ctx, { kind: 'straight', a: { x: ax, y: ay }, b: { x: bx, y: by }, n: { x: -uy * sg, y: ux * sg }, w0: -(CURB_TOP + CURB_JOINT), w1: w / 2, visible: false, seed }, box);
+            }
+          } else this.slabGrid(ctx, Gx, r, M);
+        }
+        ctx.globalCompositeOperation = 'multiply'; put(this.screenPattern(ctx, 'grime', L, X0, Y0, Minv)); ctx.globalCompositeOperation = 'source-over';
+        return;
+      }
+      if (t === 'asphaltDark') {
+        put(this.groundPattern(ctx, this.tex.mosaicFor('base', L * sx), Gx));
+        if (t === 'asphaltDark') tone('rgb(10,12,24)', 'multiply', 0.28);
+        return;
+      }
+      if (t === 'lotAsphalt') { put(this.groundPattern(ctx, this.tex.mosaicFor('lot', L * sx), Gx)); return; }
+      if (isPaintPhoto(t)) {
+        // a photo this worker has not built yet (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
+        if (!this.tex.has(t)) { put(PAINT_COL.get(t) ?? '#808080'); return; }
+        // the photo itself at the mip this zoom and scale ask for (sharp at every scale); the mosaic only when the source is missing
+        const src = this.tex.sourceFor(t, L * sx);
+        put(src ? this.groundPattern(ctx, src.img, Gx, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L * sx), Gx, this.tex.periodOf(t))); return;
+      }
+      put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, Gx));
+    };
+    ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
+    lay(p.tex, 0, G, st.s);
+    if (st.m && !lite) this.drawBlend(ctx, st, G, path, r, L, X0, Y0, M, Minv);
+    // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
+    if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+    this.drawManagedGrass(ctx, [p], box, L);
+    if (st.b > 0) {
+      if (!soft) { ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 2 * st.b + 0.08; ctx.stroke(path); }
+      const ramp = soft > 0 && st.bt !== 'kerb' && st.bt !== 'slabs' ? bandRamp(st.b, soft) : [{ half: st.b, alpha: 1 }];
+      for (const s of ramp) { ctx.globalAlpha = s.alpha; lay(st.bt, 2 * s.half, Gb, bsx); }
+      ctx.globalAlpha = 1;
+      // the border's tone: the same path stroked over the band (Multiply or Screen of its tint at its strength), inside the clip
+      if (st.bto) { ctx.globalCompositeOperation = st.bto === 1 ? 'multiply' : 'screen'; ctx.strokeStyle = st.btc ?? '#000000'; for (const s of ramp) { ctx.globalAlpha = (st.bta ?? 0) / ramp.length; ctx.lineWidth = 2 * s.half; ctx.stroke(path); } ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+    }
+    else if (paved) { ctx.strokeStyle = asph ? 'rgba(12,10,8,0.5)' : 'rgba(0,0,0,0.3)'; ctx.lineWidth = asph ? 0.3 : 0.16; ctx.stroke(path); }
+    ctx.restore();
   }
   /** sidewalk slab sprites in a running bond over the rectangle r (tiles), in texture space: a tile is G (u, v), so the
    *  slabs turn with the area; the seeds depend on the cell only, so neighbouring chunks agree */
