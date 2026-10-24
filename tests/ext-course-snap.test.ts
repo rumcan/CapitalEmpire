@@ -151,3 +151,16 @@ describe('ext/course-snap (T029)', () => {
     assert.equal(spanX, SNAP_PIECE_DIMS.tee.lengthTiles * 2);
   });
 });
+
+describe('ext/course-snap join strips', () => {
+  it('edges a turf join with first cut, a cart path join with gravel and only a road join with a kerb', () => {
+    const fairway: SnapTargetArea = { id: 1, kind: 'fairway', hole: 2, pts: [200, 200, 224, 200, 224, 212, 200, 212] };
+    const green = computeSnapPiecePlacement({ kind: 'green', archetype: 'green-kidney', cursor: { x: 225.5, y: 206 }, areas: [fairway] });
+    assert.equal(green.layers.find(l => l.role === 'join-apron')?.btex, 'golfFirstCut');
+    const road: SnapTargetRoad = { id: 5, ax: 300, ay: 300, bx: 340, by: 300, halfWidthTiles: 3 };
+    const path = computeSnapPiecePlacement({ kind: 'path', cursor: { x: 320, y: 304.5 }, roads: [road] });
+    assert.equal(path.layers.find(l => l.role === 'join-apron')?.btex, 'gravel');
+    const stub = computeSnapPiecePlacement({ kind: 'road', cursor: { x: 320, y: 304.5 }, roads: [road] });
+    assert.equal(stub.layers.find(l => l.role === 'join-apron')?.btex, 'kerb');
+  });
+});

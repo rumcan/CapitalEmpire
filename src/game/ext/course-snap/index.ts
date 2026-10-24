@@ -263,7 +263,8 @@ function buildRichPieceStack(kind: SnapPieceKind, archetype: CoursePieceArchetyp
   } else {
     layers.push(mk('core', 'path', recipe.tex, recipe.border, recipe.btex, recipe.radius, corePts));
   }
-  if (recipe.joinCollarPts && recipe.joinCollarTex) layers.push(mk('join-apron', kind === 'path' || kind === 'road' ? 'path' : 'fairway', recipe.joinCollarTex, 2, 'kerb', 1, recipe.joinCollarPts));
+  // the join strip's edge: a kerb only where a road meets a road, gravel at a cart path, first cut where turf meets turf (a kerb there read as a pale ring on the course)
+  if (recipe.joinCollarPts && recipe.joinCollarTex) layers.push(mk('join-apron', kind === 'path' || kind === 'road' ? 'path' : 'fairway', recipe.joinCollarTex, 2, kind === 'road' ? 'kerb' : kind === 'path' ? 'gravel' : 'golfFirstCut', 1, recipe.joinCollarPts));
   return { layers, heightOps, props };
 }
 
