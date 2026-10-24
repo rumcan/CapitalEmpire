@@ -1,0 +1,10 @@
+{
+ "id": "world:bleachers",
+ "version": "world-bleachers-4views-v1",
+ "files": {
+  "NE": "4cf8af9cc8b3ea603c102f84b5b2cc556dfbcf9b35f79b79f3128630577df335",
+  "SE": "8c5c84dc9f105f905d0e89a9cea4a450d9d3f634a1f83e81cd7f215b7982dbdb",
+  "SW": "62666b4f814d0f0a178c5be97ef194ac07a02d434359f23d8fd3d573048b4c3b",
+  "NW": "11e65c263eb0892c717f903c14f1f63246979aa074ea3ae1c4c94737ad453094"
+ }
+}

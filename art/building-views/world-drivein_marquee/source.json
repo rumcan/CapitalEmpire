@@ -1,0 +1,10 @@
+{
+ "id": "world:drivein_marquee",
+ "version": "world-drivein_marquee-4views-v1",
+ "files": {
+  "NE": "f98c4cde9bdcb8b99b95aa2a11cb487bfdc1e53c7fde39fb546fc06c28657bd9",
+  "SE": "0798d075dd5c4b13c341f9d2fe10aa753f047b85ee7e70c82f642b4ec2d889b2",
+  "SW": "95e81f8ce35aef0d34956cd082d5048262c20ea64cf2bde3f818091898477438",
+  "NW": "92d84623a35334b923240b0d315fe704123a92870817ef1307e1442a12f5aa99"
+ }
+}

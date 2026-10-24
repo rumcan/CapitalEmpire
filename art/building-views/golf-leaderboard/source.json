@@ -1,0 +1,10 @@
+{
+ "id": "golf:leaderboard",
+ "version": "golf-leaderboard-4views-v3",
+ "files": {
+  "NE": "7637d784f6a8a9215a3d9f875a64407f3b090fbd7db539e723015ec7b832d914",
+  "SE": "f293c7bb71886a259047b2d972bedb470ba98547ad406921f6b962cc84205668",
+  "SW": "20e9872b07ddfd305a0b8ef49a6cf61dbe6e16afb1bd9c60133c15a00df3df12",
+  "NW": "a71489c64a04849166b8b528e06dcb6a0a854e6f13a61c85686be9bc0db7a9a0"
+ }
+}

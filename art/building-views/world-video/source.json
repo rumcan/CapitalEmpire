@@ -1,0 +1,10 @@
+{
+ "id": "world:video",
+ "version": "world-video-4views-v1",
+ "files": {
+  "NE": "034e755910fc3f99a9afe3049b6e189f4c86ecdf9a1ed7307cbdc9cd3e44505d",
+  "SE": "b76825095ee9476f8288f622141c2cc5353c3661b75e8519619d13b0b2186cab",
+  "SW": "2251fe45d69f53e00ee47f92d84ad58414317b3854fbf2a115efc0978c7e0b6c",
+  "NW": "d0f1a7b632628cb546ecb7f1b0e9ed37de64cd0f50a40c5eb887f6cf8f8b53b4"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "ref:building-gas-canopy",
+ "version": "ref-building-gas-canopy-4views-v3",
+ "files": {
+  "NE": "25272bdd2857bc3b2153d7e6eab54bc909720df4f3f14723c2b289c499824c65",
+  "SE": "33d54749f057974eec0e8ccf324f9e7a945f089ded9b7964b6c1a43419de44a2",
+  "SW": "897245882c820182dfeb6b18e031456e30021dedbf268027b99c0dce6171709a",
+  "NW": "cb689376ecd337e4c5baba2ca344179306478ee083ee5c2489001cf6e57523c6"
+ }
+}

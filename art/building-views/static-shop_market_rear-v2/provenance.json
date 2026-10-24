@@ -1,0 +1,37 @@
+{
+  "id": "static:shop_market_rear-v2",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-ac597b41-3dcc-4b07-a83c-be74bc2c316e.png",
+  "prompt": "Production game sprites. First reference ONLY STYLE: owner's detailed illustrated 3D miniature Maple Bean street, warm early dusk (not night), warm windows already on. Middle reference(s) ONLY IDENTITY of ONE object, preserve its actual architecture/features/proportions. Last image is ONLY a quarter-turn GEOMETRY diagram; never copy its labels, blocks, colours or marker. Make ONE SQUARE transparent RGBA PNG sheet with exactly FOUR complete genuine 90-degree turns of SAME rigid object in strict 2x2 row-major: NE front+right; SE right+back; SW back+left; NW left+front. Reconstruct actual rear, never mirror a front or duplicate an angle; maintain same physical roof equipment/doors/windows across turns. Camera fixed parallel 2:1 isometric, axes +/-26.565 degrees, verticals vertical. SUN FIXED SCREEN UPPER RIGHT in EVERY cell: warm right-facing planes, cool left-facing planes; tiny contact shadow lower-left. Rotate geometry under fixed light. TRUE ALPHA background empty outside silhouette, no black/white backdrop, checkerboard, haze or shadows outside own cell. CRITICAL LAYOUT: centre each object within its exact quadrant; leave at least20% of EACH CELL clear on EVERY side, shrink all four uniformly if necessary; very wide transparent central gutters and outer padding; zero clipping. NO PEOPLE, crowds, occupants, vehicles, neighbouring objects, terrain/lawn/platform tile or garden. NO HALLOWEEN: no pumpkins, skulls, ghosts, bats, cobwebs, spooky posters/signs, wreaths or decorative garlands. Keep only the specified object and its integral architecture. No captions, view labels, frames or diagram graphics.  Subject library ID static:shop_market_rear-v2. Distinct low whitewashed brick market service building variant: cream/green double doors, barred side window, teal parapet coping, two roof ventilation fixtures and HVAC; keep source proportions and door positions while applying shared master scene materials/light.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "static:shop_market_rear-v2",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/static-shop_market_rear-v2.configured@2x.png",
+      "sha256": "5ed3b69dd7e60a6e47f7462fed98fe2fd3e92a5ddb033e4aec80bdd5f19b9796"
+    },
+    {
+      "role": "camera-rotation-guide-only",
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+  "integrationReview": {
+    "alpha": "passed",
+    "geometry": "passed",
+    "themeAssessment": "Aged brick/whitewashed masonry or muted timber, slate roof, warm practical windows and fixed screen-upper-right dusk highlights match master material/exposure; geometry checked independently.",
+    "terrainOrCaptionsVisible": false,
+    "gameScaleRegistered": false,
+    "reviewContact": "output/building-priority/mixed-standalone-review-3.png",
+    "correctionBrief": null
+  }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "world:diner",
+ "version": "world-diner-4views-v1",
+ "files": {
+  "NE": "f493318cf0f534a611684c158f709821ef3507a1e4d68a59cec2ad704eea3e7e",
+  "SE": "55bce3b0ecaef711b66c88a6672afedbe8a4567f1f37bfc4c4375d0a011099fa",
+  "SW": "3e2b987fe49ccbedeb2f707394a8cf6077bff77a3940574d9e3e2977513b476d",
+  "NW": "3746d8d98bba82e1a6abd6d8a4e568568be497a9da1ab8ce4683aa01221d095c"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "ref:landmark-water-tower",
+ "version": "ref-landmark-water-tower-4views-v3",
+ "files": {
+  "NE": "7081bcf84a15c947845e8b3c7d492d1d7828bd8512157f8a67e460df9d58ca10",
+  "SE": "a5232e154d39dd82264b2201850e619a6a4e4841fb97b6c6fb71f44d3ba90f87",
+  "SW": "a6d6d7441a697cd8419da1200ad31bc4a67b74547f90457690f57edf2eb7736e",
+  "NW": "9e009e3573277117dffbe18fd795bee8da7735a1b647f7c0b9efd23be04ab0f5"
+ }
+}
