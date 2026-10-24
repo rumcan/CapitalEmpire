@@ -84,7 +84,7 @@ import { tierInfo, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
-import { NEW_ART_ONLY, OLD_ART, lookOf } from './newart';
+import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale } from './newart';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -1980,7 +1980,9 @@ export class Game {
     const it = LIBRARY[p.item]; this.removeProp(p); if (!p.auto && !p.plant) this.traffic.spend('construction', -Math.round(it.cost * 0.5)); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(`Removed ${it.name}`); this.emit();
   }
   scaleSelected(f: number) {
-    const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, 1.6);
+    // never bigger than its picture's pixels allow at the closest zoom (newart.ts maxDrawScale), so the footprint stays the picture's
+    const p = this.selected; if (!p) return; const it = LIBRARY[p.item], k = clamp(p.scale * f, 0.6, Math.min(1.6, Math.max(p.scale, maxDrawScale(p.item))));
+    if (f > 1 && k <= p.scale) { if (maxDrawScale(p.item) < 1.6) this.toast(`${it.name} is as big as its picture allows`, 'warn'); return; }
     const err = this.canPlace(it, p.x, p.y, p.flip, k, p); if (err) { this.toast(err, 'warn'); return; }
     p.scale = k; this.propChanged(p); this.scheduleSave(); this.emit();
   }
