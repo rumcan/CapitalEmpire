@@ -19,7 +19,8 @@ import { Budget, CONNECT_FEE, GAME_DAY, LOAN, LOAN_RATE, SIGNAL_UPKEEP, compensa
 import { Career, type CareerSave, type Milestone } from './career';
 import type { HourStat } from './beforeafter';
 import { retime, jumpTo, townTimeOf } from './sim/townclock';
-import { EXIT_END } from './golf/calendar';
+import { EXIT_END, GATES_OPEN } from './golf/calendar';
+import { LATE_AFTER_MIN, minuteAt, simAt, travelEstimate, wantedLeaves } from './golf/daytimeline';
 import { DECK_SEATS, ENTRY_S, EVENT_CLOCK, EXPRESS_ENTRY, GRAVEL_EVERY_H, PARTY, PERFECT_RATE, SURGE_SEED, TOWN_GROWTH, WALK_V, payout, promoMul, ticketPrice, tollPrice, type CardId } from './event/config';
 import type { BusRoute, BusRouteDef, BusStop } from './event/bus';
 import { Crowd, type FanCounts } from './event/crowd';
@@ -33,7 +34,7 @@ import { driveway } from './sim/trips';
 import { buildPark, parkBox, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { lotPark, rowLots, rowQuad, type BayRowDef } from './event/rows';
 import { resolveCurb, type Curb, type CurbDef } from './event/curb';
-import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop } from './event/surge';
+import { Surge, matchSink, type SurgeHome, type SurgePark, type SurgeStop, type SurgeTimeline } from './event/surge';
 import { Taxis, type Order, type Rank, type TaxiEcon } from './ext/taxi';
 import { golfTicketPrice } from './golf/yearend';
 import { ON_TIME_GRACE_MIN } from './golf/tournamentday';
@@ -48,7 +49,8 @@ import { applyParkingFeeDemand } from './golf/parkingfee';
 const CAP = 12000, TICKS = 100;
 /** the game hour (sim s): the town's access is copied and the built lots given to the sim at its start; the planner runs once per hour */
 const GAME_HOUR = 60;
-/** going home (golf, LEAD.md M2.3): the leaving starts this long after kick-off and releases the parked cars' parties over LEAVE_S (sim s) */
+/** going home (golf, LEAD.md M2.3): the leaving starts this long after kick-off and releases the parked cars' parties over LEAVE_S (sim s); the
+ *  tournament day (T050) releases them at the timeline's leave times instead (see kickOff), and these two stay for the other rounds */
 const LEAVE_AFTER = 120, LEAVE_S = 300;
 /** the tournament day (T048), minutes of the day: the town clock starts at 05:00 and the day ends at 22:00 at the latest (or at EXIT_END once the leaving is done) */
 const TOURNEY_START = 5 * 60, TOURNEY_END = 22 * 60;
@@ -236,9 +238,12 @@ export class City {
    *  drive back to), and the leaving: when it starts, the release order, the next to release, the cars waiting to leave their car park, the
    *  counts and the last car's time */
   private parkedCars: { town: number; park: number; bay: number }[] = []; private surgeHomes: SurgeHome[][] = []; private leaveRnd = seededRnd(0x1ea7e);
-  leave: { at: number; order: number[]; next: number; pending: { k: number; at: number }[]; cars: number; gone: number; last: number; waits: number[] } | null = null;
+  /** times: the tournament day's release times (T050; sim s, sorted, the k-th for order[k]); null: the even spread from at */
+  leave: { at: number; order: number[]; next: number; pending: { k: number; at: number }[]; cars: number; gone: number; last: number; waits: number[]; times: number[] | null } | null = null;
   /** the tournament day is running (T048): the town clock runs at 1 minute per sim s from 05:00 */
   tourneyDay = false;
+  /** the tournament day's start: sim s at 05:00 (T050; -1 while no tournament day runs) */
+  private dayT0 = -1;
   busDefs: BusRouteDef[] = []; private busPts: ({ lot: Pt; doors: Pt } | null)[] = []; crowd: Crowd | null = null;
   /** the road, signal and loan upkeep per game day, $ (cached: null when stale, after a net batch, a loan change or new books) */
   private upkeepC: number | null = null;
@@ -433,7 +438,7 @@ export class City {
     this.town.skipTo(at);
     this.freeze(at);
     // the tournament day (T048): the town clock jumps to 05:00 and runs at 1 game minute per sim s until endTourneyDay
-    this.sim.town = jumpTo(this.sim.town, this.sim.t, TOURNEY_START, 1); this.tourneyDay = true;
+    this.sim.town = jumpTo(this.sim.town, this.sim.t, TOURNEY_START, 1); this.tourneyDay = true; this.dayT0 = this.sim.t;
     this.round.startNow(); this.beginSurge();
     return true;
   }
@@ -464,7 +469,7 @@ export class City {
     return true;
   }
   /** the tournament day's end (T048): the town clock returns to the normal rate (the day length as last set: see the townDay message); a no-op otherwise */
-  private endTourneyDay(): void { if (!this.tourneyDay) return; this.sim.town = retime(this.sim.town, this.sim.t, GAME_DAY / this.sim.dayLen); this.tourneyDay = false; }
+  private endTourneyDay(): void { if (!this.tourneyDay) return; this.sim.town = retime(this.sim.town, this.sim.t, GAME_DAY / this.sim.dayLen); this.tourneyDay = false; this.dayT0 = -1; }
   /** the tournament day is over (T048): the round is free again, or the town reads 22:00, or the leaving is done (every parked car out: leave.gone of
    *  leave.cars) and it reads EXIT_END (19:30) */
   private dayOver(): boolean {
@@ -1004,8 +1009,23 @@ export class City {
     const stops: SurgeStop[] = [];
     this.busDefs.forEach((d, r) => { const p = this.busPts[r]?.lot; if (d.town !== undefined && p) stops.push({ route: r, town: d.town, x: p.x, y: p.y }); });
     const s = new Surge(); this.surgeHomes = homes; this.parkedCars = []; this.leave = null;
-    s.plan(this.round.crowd, homes, this.surgeParks(), seededRnd(SURGE_SEED), this.sim.t, stops);
+    const parks = this.surgeParks();
+    // the tournament day (T050): the departures follow its timeline, each car's travel from its home to the gate (see surgeTravel)
+    const timeline: SurgeTimeline | undefined = this.tourneyDay && this.dayT0 >= 0 ? { t0: this.dayT0, seed: SURGE_SEED, travel: (home: SurgeHome, park: number, bus: number) => this.surgeTravel(home, park, bus, parks, stops) } : undefined;
+    s.plan(this.round.crowd, homes, parks, seededRnd(SURGE_SEED), this.sim.t, stops, timeline);
     return s;
+  }
+  /** a party's travel on the tournament day (T050, sim s): by road from its home's centre to its car park's entrance (a car party) or its bus stop
+   *  (a bus party), at 1.3 times the straight distance (a street grid's detour), then the walk from there to the nearest gate (the site's middle with no
+   *  gate; none: no walk). Tiles, 2 m each (see travelEstimate) */
+  private surgeTravel(home: SurgeHome, park: number, bus: number, parks: SurgePark[], stops: SurgeStop[]): number {
+    const l = home.lot, fx = l.o.x + l.u.x * l.w / 2 + l.n.x * l.d / 2, fy = l.o.y + l.u.y * l.w / 2 + l.n.y * l.d / 2;
+    const stop = bus >= 0 ? stops.find(q => q.route === bus) : undefined;
+    const to = stop ?? (park >= 0 ? parks[park]?.pts?.[0] : undefined), tx = to?.x ?? fx, ty = to?.y ?? fy;
+    let walk = Infinity;
+    for (const g of this.gates) walk = Math.min(walk, Math.hypot(g.x - tx, g.y - ty));
+    if (!this.gates.length && this.site) walk = Math.hypot(this.site.c.x - tx, this.site.c.y - ty);
+    return travelEstimate(1.3 * Math.hypot(tx - fx, ty - fy), 9, 2 * (Number.isFinite(walk) ? walk : 0));
   }
   /** the car parks for the surge: each with its frontage's component, its bays, and its sinks (indices into sim.sinks), each sink's point and direction */
   private surgeParks(): SurgePark[] {
@@ -1061,11 +1081,13 @@ export class City {
     if (bs && this.busRiders >= BUS_GOOD_RIDERS) bs.goodDays++;
     L.stuck = this.report(5).top.map(i => ({ label: i.label, x: i.x, y: i.y, loss: i.loss }));
     if (!this.golf) this.budget.payout(L.payout);
-    // golf: the crowd goes home (LEAD.md M2.3) LEAVE_AFTER sim s from now, the parked cars' parties in a seeded random order
+    // golf: the crowd goes home (LEAD.md M2.3) LEAVE_AFTER sim s from now, the parked cars' parties in a seeded random order; on the tournament day
+    // (T050) the cars leave at the timeline's wanted leave times instead (never before kick-off), in that same order
     if (this.golf) {
       const order = this.parkedCars.map((_, i) => i);
       for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(this.leaveRnd() * (i + 1)); [order[i], order[j]] = [order[j]!, order[i]!]; }
-      this.leave = { at: this.sim.t + LEAVE_AFTER, order, next: 0, pending: [], cars: order.length, gone: 0, last: 0, waits: [] };
+      const times = this.dayT0 >= 0 ? wantedLeaves(order.length, SURGE_SEED + 7).map(m => Math.max(this.sim.t, simAt(m, this.dayT0))) : null;
+      this.leave = { at: times ? (times[0] ?? this.sim.t) : this.sim.t + LEAVE_AFTER, times, order, next: 0, pending: [], cars: order.length, gone: 0, last: 0, waits: [] };
       L.leave = { cars: order.length, gone: 0, start: this.leave.at, last: 0 };
     }
   }
@@ -1142,6 +1164,7 @@ export class City {
     C.setSpots(this.spots.length); C.onIn = (town, n, x, y) => this.toGallery(town, n, x, y);
     C.onBack = (_town, route) => { this.leave?.pending.push({ k: route, at: this.sim.t }); };
     if (this.golf) C.grace = ON_TIME_GRACE_MIN;
+    if (this.dayT0 >= 0) C.lateAt = simAt(LATE_AFTER_MIN, this.dayT0);
     this.busDefs.forEach((d, r) => {
       const R = this.sim.busRoutes[r];
       if (!R) return;
@@ -1191,13 +1214,15 @@ export class City {
     if (r >= 0) { const t = this.busPts[r]!.lot; C.add({ x: b.x, y: b.y, tx: t.x, ty: t.y, n: PARTY, town, stage: 0, route: r }); return; }
     this.walkDoor(town, b, PARTY, -1);
   }
-  /** going home (LEAD.md M2.3): from LEAVE_AFTER after kick-off the parked cars' parties are released evenly over LEAVE_S, each walking from
-   *  a gallery spot with fans (taking its fans off the spot) back to its car's bay; the cars whose party is back leave their car park in
-   *  order as the road has room (driveHome). The round's result follows the counts (RoundResult.leave) */
+  /** going home (LEAD.md M2.3): from LEAVE_AFTER after kick-off the parked cars' parties are released evenly over LEAVE_S (on the tournament day, T050:
+   *  each at its timeline leave time, see kickOff), each walking from a gallery spot with fans (taking its fans off the spot) back to its car's bay;
+   *  the cars whose party is back leave their car park in order as the road has room (driveHome). The round's result follows the counts (RoundResult.leave) */
   private stepLeaving(): void {
     const Lv = this.leave, C = this.crowd, t = this.sim.t; if (!Lv || !C) return;
     if (t >= Lv.at && Lv.next < Lv.order.length) {
-      const due = Math.min(Lv.order.length, Math.floor((t - Lv.at) / LEAVE_S * Lv.order.length) + 1);
+      // the cars due by now: with times, every car whose time has come (sorted); without, the even spread
+      let due = Math.min(Lv.order.length, Math.floor((t - Lv.at) / LEAVE_S * Lv.order.length) + 1);
+      if (Lv.times) { due = Lv.next; while (due < Lv.order.length && Lv.times[due]! <= t) due++; }
       while (Lv.next < due) {
         const k = Lv.order[Lv.next++]!, car = this.parkedCars[k]!, b = this.parks[car.park]?.bays[car.bay];
         if (!b) { Lv.gone++; continue; }
@@ -1234,9 +1259,10 @@ export class City {
     return true;
   }
   /** each gate admits its lanes' rate (golf/venue.ts gateRate: a game minute is a sim second) from its queue; capacity a gate does not use
-   *  (its queue ran dry) is carried over for at most a second */
+   *  (its queue ran dry) is carried over for at most a second. On the tournament day (T050) the gates stay shut until GATES_OPEN: the early fans queue */
   private admitGates(dt: number): void {
     const C = this.crowd; if (!C || !this.gates.length) return;
+    if (this.dayT0 >= 0 && minuteAt(this.sim.t, this.dayT0) < GATES_OPEN) { this.gateAcc.fill(0); return; }
     const express = hasExpressGates(this.round.cards);
     this.gates.forEach((g, i) => {
       const rate = gateRate(g.lanes, express), acc = (this.gateAcc[i] ?? 0) + rate * dt, done = C.admit(i, Math.floor(acc), g.x, g.y);

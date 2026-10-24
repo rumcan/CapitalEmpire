@@ -54,3 +54,18 @@ test('going home: a stage 4 group walks back to its car\'s bay and calls onBack 
   C.step(3); assert.deepEqual(back, [[1, 7]]);
   assert.deepEqual(C.counts().fans, [0, 0], 'leaving is not arriving');
 });
+
+test('late (P02/T050): with lateAt, a fan admitted after it is late whatever the wait, and one admitted by it is not; with none, a wait over the grace is', () => {
+  const C = new Crowd(1, 0); C.setGates(1); C.lateAt = 100;
+  C.now = 0; C.add({ x: 0, y: 0, tx: 0, ty: 0, n: 3, town: 0, stage: 2, route: 0 }); C.step(1);
+  C.now = 90; C.admit(0, 3);
+  assert.deepEqual([C.gate.admitted, C.gate.late], [3, 0], 'admitted at 90, before lateAt: on time');
+  C.now = 0; C.add({ x: 0, y: 0, tx: 0, ty: 0, n: 3, town: 0, stage: 2, route: 0 }); C.step(1);
+  C.now = 110; C.admit(0, 3);
+  assert.deepEqual([C.gate.admitted, C.gate.late], [6, 3], 'admitted at 110, after lateAt: late');
+  // no lateAt: the old rule, a wait over the grace is late
+  const D = new Crowd(1, 0); D.setGates(1); D.grace = 45;
+  D.now = 0; D.add({ x: 0, y: 0, tx: 0, ty: 0, n: 3, town: 0, stage: 2, route: 0 }); D.step(1);
+  D.now = 50; D.admit(0, 3);
+  assert.deepEqual([D.gate.admitted, D.gate.late], [3, 3], 'waited 50 over the grace of 45: late');
+});
