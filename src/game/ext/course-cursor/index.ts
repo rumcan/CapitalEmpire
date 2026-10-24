@@ -63,6 +63,8 @@ const ISO_PERP = (2 * HW * HH) / Math.hypot(HW, HH);
 const TILE_AXIS = Math.hypot(HW, HH);
 /** cells of margin round a dab on the scratch grid: room for the droplet field, closing and relax (course-blobs) */
 const PAD_CELLS = 8;
+/** a dab of this many cells or more contours at most every CONTOUR_GAP_MS while the cursor moves (Footprints.at) */
+const BIG_CELLS = 1500, CONTOUR_GAP_MS = 45;
 /** footprint shapes kept, and puck sprites kept */
 const SHAPE_CACHE = 48, SPRITE_CACHE = 12;
 /** a new puck sprite every 6% of size; the largest sprite half-width in device px (bigger pucks scale it up) */
@@ -202,20 +204,23 @@ function smoothRing(p: number[], sigma: number): number[] {
   }
   return out;
 }
-/** even-odd: (x, y) inside the rings */
-function insideRings(rings: readonly number[][], x: number, y: number): boolean {
-  let c = false;
-  for (const p of rings) for (let i = 0, n = p.length >> 1, j = n - 1; i < n; j = i++) {
-    const xi = p[2 * i]!, yi = p[2 * i + 1]!, xj = p[2 * j]!, yj = p[2 * j + 1]!;
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
-  }
-  return c;
-}
 /** whether the rings hold exactly the cells ((dx, dy) from the anchor; rings in tiles from its corner): every cell on the edge of the dab
  *  has its centre inside, and every cell touching the dab from outside has its centre outside */
 function holdsExactly(rings: readonly number[][], cells: Int16Array): boolean {
   const K = (dx: number, dy: number) => (dy + 4096) * 8192 + dx + 4096, have = new Set<number>(), out = new Set<number>();
-  for (let i = 0; i < cells.length; i += 2) have.add(K(cells[i]!, cells[i + 1]!));
+  let r0 = Infinity, r1 = -Infinity;
+  for (let i = 0; i < cells.length; i += 2) { have.add(K(cells[i]!, cells[i + 1]!)); r0 = Math.min(r0, cells[i + 1]! - 1); r1 = Math.max(r1, cells[i + 1]! + 1); }
+  // where the rings cross each row of cell centres (y = (row + 0.5) cells), as insideRings counts them
+  const cross: number[][] = [];
+  for (let r = r0; r <= r1; r++) cross.push([]);
+  for (const p of rings) for (let i = 0, n = p.length >> 1, j = n - 1; i < n; j = i++) {
+    const xi = p[2 * i]!, yi = p[2 * i + 1]!, xj = p[2 * j]!, yj = p[2 * j + 1]!, lo = Math.min(yi, yj), hi = Math.max(yi, yj);
+    for (let r = Math.max(r0, Math.ceil(lo / CELL_T - 0.5)); r <= r1 && (r + 0.5) * CELL_T < hi; r++) {
+      const yc = (r + 0.5) * CELL_T; if (yc < lo) continue;
+      cross[r - r0]!.push(xi + ((xj - xi) * (yc - yi)) / (yj - yi));
+    }
+  }
+  const insideRow = (x: number, r: number) => { const c = cross[r - r0]; let k = false; if (c) for (const v of c) if (x < v) k = !k; return k; };
   for (let i = 0; i < cells.length; i += 2) {
     const cx = cells[i]!, cy = cells[i + 1]!;
     let edge = false;
@@ -225,9 +230,9 @@ function holdsExactly(rings: readonly number[][], cells: Int16Array): boolean {
       edge = true;
       if (out.has(k)) continue;
       out.add(k);
-      if (insideRings(rings, (cx + ox + 0.5) * CELL_T, (cy + oy + 0.5) * CELL_T)) return false;
+      if (insideRow((cx + ox + 0.5) * CELL_T, cy + oy)) return false;
     }
-    if (edge && !insideRings(rings, (cx + 0.5) * CELL_T, (cy + 0.5) * CELL_T)) return false;
+    if (edge && !insideRow((cx + 0.5) * CELL_T, cy)) return false;
   }
   return true;
 }
@@ -299,10 +304,15 @@ export class Footprints {
   dabs = 0; contours = 0;
   /** whether the last dab ran on the course grid's rules (refuse gave a function): its collars lie outside the cells */
   grid = false;
+  /** when the last outline was contoured (ms; the frame clock the cursor passes in) */
+  private contourAt = -1e9;
   /** the footprint of a dab of radius r at (x, y) for surface surf: re-runs the dab only when the inputs changed (rev: see CursorEnv),
-   *  asking refuse then for the cells it skips, and contours only a shape it has not kept */
-  at(x: number, y: number, r: number, surf: number, refuse?: (() => Refuse | null) | null, rev = 0): Shape {
+   *  asking refuse then for the cells it skips, and contours only a shape it has not kept. With the frame clock now, a big dab (BIG_CELLS
+   *  or more) contours at most every CONTOUR_GAP_MS while the cursor moves: in between, the last outline moves with the dab's anchor and
+   *  the next frame tries again, so the outline is exact again as soon as the cursor rests */
+  at(x: number, y: number, r: number, surf: number, refuse?: (() => Refuse | null) | null, rev = 0, now?: number): Shape {
     if (this.shape && x === this.kx && y === this.ky && r === this.kr && surf === this.ks && rev === this.krev) return this.shape;
+    const prev = this.shape && r === this.kr && surf === this.ks ? this.shape : null;
     this.kx = x; this.ky = y; this.kr = r; this.ks = surf; this.krev = rev; this.dabs++;
     const skip = refuse?.() ?? null; this.grid = !!skip;
     const { idx, n } = this.pad.run(x, y, r, skip), g = this.pad.g!, m = this.pad.margin;
@@ -317,8 +327,9 @@ export class Footprints {
     let s = this.shapes.get(h);
     if (s && !sameCells(s.cells, cells)) s = undefined;
     if (s) { this.shapes.delete(h); this.shapes.set(h, s); }
+    else if (prev && now !== undefined && n >= BIG_CELLS && now - this.contourAt < CONTOUR_GAP_MS) { this.kx = NaN; return prev; }
     else {
-      s = contour(g, this.pad.ax, this.pad.ay, cells, h, FOOT_STYLE); this.contours++;
+      s = contour(g, this.pad.ax, this.pad.ay, cells, h, FOOT_STYLE); this.contours++; if (now !== undefined) this.contourAt = now;
       this.shapes.set(h, s);
       if (this.shapes.size > SHAPE_CACHE) this.shapes.delete(this.shapes.keys().next().value!);
     }
@@ -556,7 +567,7 @@ export class CourseCursor {
     this.motion(cx, cy, ry, d, now, dt);
     // the grid round the cursor, then the footprint (the dab's cells at the cursor) as a prism round the puck
     this.drawGrid(ctx, v, cx, cy, r);
-    const fp = this.feet.at(cx, cy, r, base.surf, this.env.refuse, this.env.rev?.() ?? 0);
+    const fp = this.feet.at(cx, cy, r, base.surf, this.env.refuse, this.env.rev?.() ?? 0, now);
     const ps = this.project(fp, this.feet.ax * CELL_T, this.feet.ay * CELL_T, v);
     this.prismBack(ctx, fp, ps, look, d);
     this.puck(ctx, v, tool.brushKind, st, erase, !this.feet.grid, r, rx, ry, d);
@@ -653,8 +664,8 @@ export class CourseCursor {
     ctx.translate(cx, cy);
     ctx.strokeStyle = this.grad; ctx.lineWidth = v.dpr / (ze * ISO_PERP); ctx.lineCap = 'butt';
     const k0x = Math.ceil((cx - R) / CELL_T), k1x = Math.floor((cx + R) / CELL_T), k0y = Math.ceil((cy - R) / CELL_T), k1y = Math.floor((cy + R) / CELL_T);
-    for (let odd = 0; odd < 2; odd++) {
-      const a = odd ? 0.3 * aCell : 0.5 * aTile;
+    for (let odd = 0, many = k1x - k0x > 140; odd < 2; odd++) {
+      const a = odd ? (many ? 0 : 0.3 * aCell) : 0.5 * aTile;
       if (a < 0.01) continue;
       ctx.beginPath();
       for (let k = k0x; k <= k1x; k++) { if ((k & 1) !== odd) continue; const dx = k * CELL_T - cx, h = Math.sqrt(Math.max(0, R * R - dx * dx)); ctx.moveTo(dx, -h); ctx.lineTo(dx, h); }
@@ -681,14 +692,15 @@ export class CourseCursor {
     this.offs[fp.rings.length] = o;
     return s;
   }
-  /** adds the rings (lifted lift px; holes too when holes) to a new path */
+  /** adds the rings (lifted lift px; holes too when holes) to a new path, leaving out points within a px of the last one drawn */
   private ringsPath(ctx: CanvasRenderingContext2D, fp: Shape, s: Float32Array, lift: number, holes: boolean) {
     ctx.beginPath();
     for (let i = 0; i < fp.rings.length; i++) {
       if (!holes && fp.sign[i]! < 0) continue;
       const o = this.offs[i]!, e = this.offs[i + 1]!;
-      ctx.moveTo(s[o]!, s[o + 1]! - lift);
-      for (let j = o + 2; j < e; j += 2) ctx.lineTo(s[j]!, s[j + 1]! - lift);
+      let lx = s[o]!, ly = s[o + 1]!;
+      ctx.moveTo(lx, ly - lift);
+      for (let j = o + 2; j < e; j += 2) { const x = s[j]!, y = s[j + 1]!; if ((x - lx) * (x - lx) + (y - ly) * (y - ly) < 1) continue; ctx.lineTo(x, y - lift); lx = x; ly = y; }
       ctx.closePath();
     }
   }
@@ -700,15 +712,23 @@ export class CourseCursor {
       ctx.moveTo(s[j]!, s[j + 1]!); ctx.lineTo(s[j]!, s[j + 1]! - lift);
     }
   }
-  /** adds the front walls of the outer rings (the segments facing the viewer, swept up lift px) */
+  /** adds the front walls of the outer rings: each run of segments facing the viewer as one sheet, along the ground and back along the top
+   *  (lift px up) */
   private walls(ctx: CanvasRenderingContext2D, fp: Shape, s: Float32Array, lift: number) {
     for (let i = 0; i < fp.rings.length; i++) {
       if (fp.sign[i]! < 0) continue;
       const o = this.offs[i]!, n = (this.offs[i + 1]! - o) >> 1, f = fp.front[i]!;
-      for (let k = 0; k < n; k++) {
-        if (!f[k]) continue;
-        const a = o + 2 * k, b = o + 2 * ((k + 1) % n);
-        ctx.moveTo(s[a]!, s[a + 1]!); ctx.lineTo(s[b]!, s[b + 1]!); ctx.lineTo(s[b]!, s[b + 1]! - lift); ctx.lineTo(s[a]!, s[a + 1]! - lift); ctx.closePath();
+      // start just after a segment that faces away, so no run wraps past the start
+      let st = 0;
+      for (let k = 0; k < n; k++) if (!f[k]) { st = (k + 1) % n; break; }
+      for (let k = 0; k < n;) {
+        if (!f[(st + k) % n]) { k++; continue; }
+        let e = k; while (e < n && f[(st + e) % n]) e++;
+        let q = o + 2 * ((st + k) % n); ctx.moveTo(s[q]!, s[q + 1]!);
+        for (let j = k + 1; j <= e; j++) { q = o + 2 * ((st + j) % n); ctx.lineTo(s[q]!, s[q + 1]!); }
+        for (let j = e; j >= k; j--) { q = o + 2 * ((st + j) % n); ctx.lineTo(s[q]!, s[q + 1]! - lift); }
+        ctx.closePath();
+        k = e;
       }
     }
   }

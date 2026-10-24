@@ -185,6 +185,18 @@ test('a still frame makes nothing new: no dab, outline, sprite, gradient, patter
   assert.equal(cur.feet.shape, first.shape);
 });
 
+test('a big dab re-contours at most every 45 ms while it moves, and is exact again once the cursor rests', () => {
+  const cur = new CourseCursor({ canvas: mockCanvases().make }), m = mockCtx({ width: 1600, height: 1000 }), tool = brushTool('rough', 20, 300.2, 400.3), v = view(0.3);
+  cur.draw(m.ctx, v, tool, 1000);
+  assert.equal(cur.feet.contours, 1);
+  tool.cursor = { x: 300.37, y: 400.41 }; cur.draw(m.ctx, v, tool, 1016);
+  tool.cursor = { x: 300.52, y: 400.58 }; cur.draw(m.ctx, v, tool, 1033);
+  assert.equal(cur.feet.contours, 1, 'moving: the last outline rides along');
+  cur.draw(m.ctx, v, tool, 1050);
+  assert.equal(cur.feet.contours, 2, 'resting: contoured again');
+  assert.deepEqual(shapeCells(cur.feet.shape!, cur.feet.ax, cur.feet.ay), refCells(300.52, 400.58, 20), 'and exact');
+});
+
 test('a click squashes the puck, flashes the footprint and splashes; the OS cursor hides only on the Course brush', () => {
   const cv = mockCanvases(), cur = new CourseCursor({ canvas: cv.make }), m = mockCtx({ width: 1600, height: 1000 }), tool = brushTool('bunker', 3, 50.5, 60.5), v = view(0.3);
   for (let f = 0; f < 30; f++) cur.draw(m.ctx, v, tool, 1000 + f * 16);
