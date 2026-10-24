@@ -1,7 +1,8 @@
 [
 {"meta":{"notes":[
 "2026-10-24 (T063): frozen from the composer's own layouts (every use, state and size bucket of a seed town, 4 fixed seeds each) and the owner's 14 curated house lots: npm run lots:freeze (scripts/assets/freeze-lot-presets.mjs)",
-"2026-10-24: re-frozen after #125 (library sizes): its five capped buildings (school 58%, primary school 78%, post office, farmhouse-wrap and rundown house 88%) changed the composer's layouts, so every frozen preset was laid out again; the 14 curated lots (curated: true) were kept exactly as committed"
+"2026-10-24: re-frozen after #125 (library sizes): its five capped buildings (school 58%, primary school 78%, post office, farmhouse-wrap and rundown house 88%) changed the composer's layouts, so every frozen preset was laid out again; the 14 curated lots (curated: true) were kept exactly as committed",
+"2026-10-24: re-frozen again after #143 (13 more four-view buildings): no preset changed; the 14 curated lots kept as committed"
 ]}},
 {"id":"res-built-8x16-0","use":"res","state":"built","w":8,"d":16.5,"props":[
 {"id":"world:house_2","x":4.35,"y":6.485,"scale":0.959,"view":0},
