@@ -281,7 +281,7 @@ test('the average uprights per archetype (log)', () => {
   const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
   // 2026-10-24 (P20 / T064): every built lot is drawn from its preset (frozen from the old layouts at each size bucket's usual size, then
   // fitted), with its street items, fence layer and procedural planting (EXTRA_PLANTS) added: measured RES 27.3, COM 17.8, IND 14.9, TOUR 19.2,
-  // GOV 23.8 (the old floors were 6, 11.7, 14, 13.7, 14)
+  // GOV 25.2 (23.8 before the re-freeze after #125, 2026-10-24; the old floors were 6, 11.7, 14, 13.7, 14)
   for (const [u, min] of [['RES', 20], ['COM', 14], ['IND', 14], ['TOUR', 15], ['GOV', 18]] as const) assert.ok(avg(`${u} BUILT`) >= min, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want ${min}+`);
 });
 

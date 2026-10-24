@@ -1,0 +1,153 @@
+{
+  "id": "variation:ref-building-barn-74bee205-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-3a67ce76-d5f1-4c7f-9f6a-a53f53839d1b.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: NW repeats NE: barn door front remains left, lean-to right. Need opposite front+left NW, front right and other blank long wall left; preserve lean-to on same physical side. Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-ref-building-barn-74bee205-plain-1-4views-v1.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Corrected v2 NW now has barn door-front on screenRIGHT and opposite long sideLEFT; lean-to properly recedes on far right. NE frontLEFT/lean-toRIGHT and distinct blankrear SE/SW follow rigid turns. Shared matte timber/slate and fixed upperright dusk preserved; no surrounding floor.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/variation-ref-building-barn-74bee205-plain-1-4views-v2.png",
+    "originalSheetSha256": "5a13ba3f66cb8c31bd947d02d5c0a881a83e9855319405aa199e7cc90570e7ef",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "e17123b5c7c1b3afae2e86d00b67565eb70c673a9254db50b4cb78fd5af80cc0",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 594,
+      "endExclusive": 673,
+      "midpoint": 633,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 624,
+        "endExclusive": 672,
+        "midpoint": 648,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 608,
+        "endExclusive": 671,
+        "midpoint": 639,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 41,
+          "width": 648,
+          "height": 572
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 180118,
+        "visibleAlphaPixelsThreshold8": 168239,
+        "nonzeroRgbaSha256": "f325821369828e4809a5beed01859052667203dd47b4537f8fa63c8a0794ae09",
+        "destination": {
+          "left": 188,
+          "top": 226,
+          "width": 648,
+          "height": 572
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 648,
+          "top": 37,
+          "width": 578,
+          "height": 586
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 168780,
+        "visibleAlphaPixelsThreshold8": 158199,
+        "nonzeroRgbaSha256": "cbdaf75366d30ab9861c2834c578a816950ebb0da462dc994ac425b5bc9eb5fe",
+        "destination": {
+          "left": 1247,
+          "top": 219,
+          "width": 578,
+          "height": 586
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 633,
+          "width": 639,
+          "height": 607
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 167223,
+        "visibleAlphaPixelsThreshold8": 156285,
+        "nonzeroRgbaSha256": "9c3a9404659ca04fc2f0701baf42213f4132e76eb4d53f3bcb3c2eddf0d743ca",
+        "destination": {
+          "left": 192,
+          "top": 1232,
+          "width": 639,
+          "height": 607
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 639,
+          "top": 670,
+          "width": 595,
+          "height": 556
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 163529,
+        "visibleAlphaPixelsThreshold8": 154319,
+        "nonzeroRgbaSha256": "23bd736f176620aeb863762b6db02beb7bf7d044436f36794a8fa684689c1d2b",
+        "destination": {
+          "left": 1238,
+          "top": 1258,
+          "width": 595,
+          "height": 556
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 679650,
+      "visibleAlphaPixelsThreshold8": 637042,
+      "nonzeroRgbaSha256": "f60a99cde9179ea0ba970f718d075bc29e5b919a0b4e4f533deb798bdef1705d"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  }
+}

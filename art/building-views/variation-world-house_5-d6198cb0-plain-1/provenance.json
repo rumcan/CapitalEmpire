@@ -1,0 +1,23 @@
+{
+  "id": "variation:world-house_5-d6198cb0-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-4e4880de-783a-4d0e-aeae-c6cc27b1e20c.png",
+  "prompt": "SQUARE 1:1 CANVAS 2048x2048, exactly four SMALL complete building cutouts in 2x2 cells. Transparent RGBA alpha=0 outside the physical building. Each building occupies at most 60% of cell height; 100 pixels of fully clear padding around all sprites and canvas. Reference1 is STYLE ONLY: the Maple Bean street miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve architecture, not old rendering or blue night cast. All assets must belong beside reference1. Fixed orthographic 2:1 isometric camera, vertical walls vertical, ground axes +/-26.565deg, SCREEN UPPER RIGHT SUN in EVERY view; right planes warm, left planes cooler. Four TRUE rigid quarterturns: top-left NE=Afront+Bphysicalright, top-right SE=Bright+Crear, bottom-left SW=Crear+Dleft, bottom-right NW=Dleft+Afront. Afront appears on SCREEN LEFT in NE and SCREEN RIGHT in NW. Roof/chimney/doors/windows/equipment stay at fixed physical corners; reconstruct plain rear, NEVER fourfronts or samecorner repeated. Same scale each cell. NO FLOOR/BACKDROP/grey surface/terrain/paving/yard/leaves/broad shadow/haze/gradient/checkerboard/caption/label/divider/frame. No people, vehicles, Halloween or garlands. Only building and integral structural parts.  Subject library ID variation:world-house_5-d6198cb0-plain:1. Identity image can be frontal or rear elevation. Do NOT copy that head-on camera. Reconstruct its 3D volume under exact orthographic2:1, with equal two-facequarter-corner exposure. Four true quarterturns, firsttwo opposite backfaces and frontpairatoppositecorners, no copiedcorner, no sign relocatedtofourwalls. Keep specific door/baywindow/porch/deck/roofandchimney layout but unify materials andcolourresponse toMapleBeanstreet. No attached lawn or shrublandfloor.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:world-house_5-d6198cb0-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-world-house_5-d6198cb0-plain-1.configured@2x.png",
+      "sha256": "d1ba914c1b62ccb512951f54113383447b5fd4b099df71c86b9cce3e0de14459"
+    }
+  ],
+  "integrationStatus": "blocked",
+  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+}

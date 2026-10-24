@@ -13,7 +13,7 @@ import {
   BUSHES, BY, Build, CHAIN, DEAD_TREES, JUNK, PARK_PIECES, PICKUPS, PRIVACY, SCHOOL_SIGNS, TREES, clamp, isCarPark, mix, names, pick, specFit, withVariations,
   type Composition, type ComposeState, type LotGeom,
 } from './compose-core';
-import { fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetUse } from './presets';
+import { fitPreset, parsePresets, pickPreset, presetsFor, stateOf, type Fitted, type LotPreset, type PresetMeta, type PresetUse } from './presets';
 import { footprintOf, ownerScaleOf, turned } from './preset-art';
 import { frameOf, listToWorld, toWorld, type PresetFrame } from './preset-frame';
 import PRESET_JSON from './lot-presets.json';
@@ -155,12 +155,16 @@ export function fenceOnly(lot: LotGeom, seed: number, lines: FenceLines = ALL_LI
 
 
 // ---------------------------------------------------------------- the lots from presets (P20)
-/** the lot presets the built lots are drawn from (lot-presets.json, read once) */
-let PRESETS: LotPreset[] = parsePresets(PRESET_JSON).presets;
+/** the lot presets the built lots are drawn from (lot-presets.json, read once), and the file's header (its dated notes: a save writes it back) */
+const FILE = parsePresets(PRESET_JSON);
+let PRESETS: LotPreset[] = FILE.presets, META: PresetMeta | undefined = FILE.meta;
 /** the presets the lots are drawn from now */
 export const lotPresets = (): readonly LotPreset[] => PRESETS;
-/** replaces the presets (the dev editor after a save, a hot reload of lot-presets.json); the caller composes the lots again */
-export function setLotPresets(list: LotPreset[]) { PRESETS = list; }
+/** the preset file's header (formatPresets writes it first), or undefined for a file without one */
+export const lotPresetsMeta = (): PresetMeta | undefined => META;
+/** replaces the presets (the dev editor after a save, a hot reload of lot-presets.json), and the header when given; the caller composes the
+ *  lots again */
+export function setLotPresets(list: LotPreset[], meta: PresetMeta | undefined = META) { PRESETS = list; META = meta; }
 
 /** the preset use of a lot's state: res, com (a public car park: park), tour, ind, civic; null for a lot of no use */
 export function presetUse(st: ComposeState): PresetUse | null {

@@ -1,0 +1,11 @@
+{
+ "id": "variation:world-house_5-north-bffd2c68-plain:1",
+ "version": "variation-world-house_5-north-bffd2c68-plain-1-4views-v1",
+ "files": {
+  "NE": "54adaea58c1d0d0feb5dbc272807e930047f682d132f7d846ad79fcabfda2090",
+  "SE": "fb83f95153063888e09b4f851ebd07bd4c7b802e0e277f6f16f8f4e0aa07b51b",
+  "SW": "f21a272215c5fd591a064240441c40cb2bdfb40c46a7209585294369e9c96a84",
+  "NW": "bd60aa5d6ac3f44506af82eb167f11f407a6bdd912e4fe1cd63aa515806c7c2d"
+ },
+ "cropsBy": "prep-views (four-view-cells.mjs)"
+}
