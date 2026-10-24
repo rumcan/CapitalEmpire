@@ -18,9 +18,10 @@ import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
-import { areaAt, drawZ, roundCorners, toTuple, type PaintArea, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, cellAt, decodeGrid, diffBox, encodeGrid, growGrid, makeGrid, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
-import { GRID_AREA_ID, SURFACE_TEX_ID, SURF_SURFACE, areaRank, gridAreas, plantMonth, rasterAreas, ringArea, type GridArea } from './ext/course-grid/areas';
+import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
+import { CELL_T, SURF, cellAt, diffBox, encodeGrid, growGrid, makeGrid, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, gridAreas, ringArea, type GridArea } from './ext/course-grid/areas';
+import { loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_EDIT_REACH, chunkGrow, courseChunksIn, courseKey, coursePatch, type CourseLooks } from './ext/course-grid/patch';
 import { surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
@@ -460,14 +461,9 @@ export class Game {
     if (!this.courseGrid) {
       this.fitCourseGrid();
       const g = this.courseGrid; if (!g) return;
-      const golf = (a: PaintArea) => { const s = a.kind ?? surfaceOfTex(a.tex); return !!s && s !== 'path' && s !== 'other'; };
-      const gone = this.paint.areas.filter(golf).sort((a, b) => drawZ(a) - drawZ(b));
-      if (gone.length) {
-        // the cells first: taking the areas out replants the trees round them, and the grid must already keep them off the course
-        rasterAreas(g, gone.map(a => ({ pts: roundCorners(a.pts, a.radius), surface: a.kind ?? surfaceOfTex(a.tex), hole: a.hole, month: plantMonth(a.plantKind, a.plantedMonth) })));
-        this.paint.takeAreas(golf);
-        this.paintRev++; this.scheduleSave();
-      }
+      // the cells first: taking the areas out replants the trees round them, and the grid must already keep them off the course
+      const gone = new Set(migrateAreas(g, this.paint.areas));
+      if (gone.size) { this.paint.takeAreas(a => gone.has(a)); this.paintRev++; this.scheduleSave(); }
     } else this.fitCourseGrid();
     this.gaDirty = null; this.gaRev++;
     this.resendCourse();
@@ -550,7 +546,6 @@ export class Game {
     }
     this.gaDirty = new Set();
     const v = [...this.gaByHole.values()].flat().sort((p, q) => areaRank(p) - areaRank(q));
-    v.forEach((a, i) => { a.id = GRID_AREA_ID + i; });
     this.gaList = { rev: this.gaRev, v };
     return v;
   }
@@ -3301,6 +3296,9 @@ export class Game {
       this.genTerrain(d.seed);
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
+      // a course grid that does not decode fails the load (the slot is backed up, T042), never an empty course saved over the real one
+      const lg = this.golf ? loadCourseGrid(this.golf.grid) : 'migrate';
+      if (lg === 'bad') { console.error('load failed: the course grid does not decode'); this.golf = null; return false; }
       this.courseHeight = loadCourseHeight(this.golf?.height); this.chSave = null;
       if (this.golf) this.golf.progress = normalizeProgress(this.golf.progress);
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
@@ -3320,7 +3318,7 @@ export class Game {
       this.paint.load(d.paints as PaintTuple[] | undefined);
       // the course grid (T078): decoded here; a save without one (or a bad one) migrates its golf areas in afterLoad
       this.dropCourseGrid();
-      if (this.golf) { this.courseGrid = decodeGrid(this.golf.grid); delete this.golf.grid; this.golf.plans = Array.isArray(this.golf.plans) ? this.golf.plans.filter(Array.isArray) : undefined; }
+      if (this.golf) { this.courseGrid = lg === 'migrate' ? null : lg; delete this.golf.grid; this.golf.plans = Array.isArray(this.golf.plans) ? this.golf.plans.filter(Array.isArray) : undefined; }
       this.grass.load(d.grass); this.grassSim = -1;
       // the bay rows and on-street runs (their ground and lists go to the City now: the network is built above; afterLoad syncs their gates)
       this.parking.load(d.rows?.map(([ax, ay, bx, by, side, bay, col], k): BayRowDef => ({ id: k + 1, ax, ay, bx, by, side: side < 0 ? -1 : 1, bay: bay === 60 || bay === 45 ? bay : 90, col: col === 'white' ? 'white' : 'yellow' })), d.curbs?.map(([ax, ay, bx, by], k): CurbDef => ({ id: k + 1, ax, ay, bx, by })), d.parkFee);
