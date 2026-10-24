@@ -5,6 +5,7 @@ import type { AimPoint, Pin, TeeMark } from './types';
 import type { PlacedEventStructure } from './eventtool';
 import type { CourseHeightSaveChunk } from '../ext/course-height';
 import type { GolfProgress } from '../ext/progressive-ui';
+import type { GridSave } from '../ext/course-grid';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -23,6 +24,12 @@ export interface GolfSave {
  height?: CourseHeightSaveChunk[];
  /** what the player did (T033; missing in older saves: see normalizeProgress) */
  progress?: GolfProgress;
+ /** the course grid (plan P21 3.7, T078: ext/course-grid encodeGrid); missing in older saves, whose golf-surface paint areas then move into
+  *  a new grid on load. The engine keeps the live grid; this field is only written by a save */
+ grid?: GridSave;
+ /** the hole plans, one save tuple per hole (plan P21 3.7: hole, tee, green, green shape and m², turn, bends, width handles, fairway start,
+  *  seed; ext/hole-plan's HolePlanTuple once it lands); kept as they are, undo carries them */
+ plans?: unknown[];
 }
 
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament

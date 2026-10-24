@@ -604,7 +604,7 @@ function EvalScreen({ game }: { game: Game }) {
  if (!last) return null;
  const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
  const ye = golf ? game.golfYearEnd(last) : null;
- const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.paint.areas, last.upkeep, last.toll ?? 0) : null;
+ const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.courseAreaList(), last.upkeep, last.toll ?? 0) : null;
  return (
  <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
  <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
