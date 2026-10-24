@@ -18,6 +18,7 @@ const painter = new GroundPainter(terrain, net, tex);
 const grassAssets = import.meta.glob('../assets/ground/grass-management/**/*.{webp,png}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const grassLoads = new Set<string>();
 const loadGrass = async (id: string) => {
+  if (tex.isPainted(id)) return; // A registered condition family uses the same authored zoom path, not the legacy single image.
   if (grassLoads.has(id)) return;
   const path = Object.keys(grassAssets).find(p => p.endsWith('/' + id + '.webp') || p.endsWith('/' + id + '.png'));
   if (!path) return;
@@ -85,6 +86,11 @@ const handle = async (m: ToWorker) => {
             need.add(p.tex);
             if (p.paint?.b) need.add(p.paint.bt);
             if (p.paint?.m) need.add(p.paint.m.t);
+          }
+          if (painter.grassStrength > 0 && !painter.grassHeat) {
+            for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
+              const cell = painter.grassCells.get(y * (MAP / 4) + x); if (cell) need.add(cell.material);
+            }
           }
           await tex.preparePainted(m.artL ?? m.L, need);
         } else await tex.preparePainted(.035, ['grass']);

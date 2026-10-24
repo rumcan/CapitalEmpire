@@ -878,9 +878,10 @@ export class GroundPainter {
         ctx.clip();
         if (this.grassHeat) { ctx.globalAlpha = 0.5; ctx.fillStyle = `hsl(${Math.round(v.health * v.coverage * 120)},75%,45%)`; ctx.fillRect(x, y, 4, 4); }
         else {
-          const picture = this.grassImages.get(v.material);
+          const picture = this.grassImages.get(v.material), authored = this.tex.isPainted(v.material) ? this.tex.sourceFor(v.material, _L) : null;
           ctx.globalAlpha = this.grassStrength;
-          if (picture) { ctx.fillStyle = this.groundPattern(ctx, picture, undefined, 8); ctx.fillRect(x, y, 4, 4); }
+          if (authored) { ctx.fillStyle = this.groundPattern(ctx, authored.img, undefined, authored.period); ctx.fillRect(x, y, 4, 4); }
+          else if (picture) { ctx.fillStyle = this.groundPattern(ctx, picture, undefined, 8); ctx.fillRect(x, y, 4, 4); }
           else { // Graceful condition tint until this exact generated material is installed.
             const stress = Math.max(1 - v.health, 1 - v.coverage); ctx.globalAlpha *= stress;
             ctx.fillStyle = '#9b8150'; ctx.beginPath(); ctx.ellipse(x + 2, y + 2, 2.8, 2.8, 0, 0, Math.PI * 2); ctx.fill();

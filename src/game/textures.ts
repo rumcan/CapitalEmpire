@@ -3,7 +3,7 @@ import { canvas, clamp, ctx2d, fbm, smooth, type C2D, type Cnv } from './canvas2
 import { DEFAULT_MIX, mixGrass, type BaseGrassArt } from './base-grass';
 import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
 import { PAINTED_GRASS } from './painted-grass-art';
-import { grassDetailWeights, grassDetailSourceKey, grassFamilyKey, grassFamilyPeriod } from './painted-grass-lod';
+import { grassDetailWeights, grassDetailSourceKey, grassFamilyKey, grassFamilyPeriod, trimPaintedSources } from './painted-grass-lod';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -210,11 +210,14 @@ export class Textures {
   /** Called before baking a requested chunk; only visible families and the one/two required authored levels are decoded. */
   async preparePainted(L: number, variants: Iterable<string>) {
     this.paintedLevel = L;
-    await Promise.all([...new Set(variants)].map(async variant => {
-      const family = PAINTED_GRASS[variant]; if (!family) return;
-      await Promise.all(grassDetailWeights(L).map(async ({ detail }) => {
-        const key = grassDetailSourceKey(variant, family, detail);
-        if (this.photoSrc.has(key)) return;
+    const needed = [...new Set(variants)].flatMap(variant => {
+      const family = PAINTED_GRASS[variant];
+      return family ? grassDetailWeights(L).map(({ detail }) => ({ variant, family, detail, key: grassDetailSourceKey(variant, family, detail) })) : [];
+    });
+    const protectedKeys = new Set(needed.map(x => x.key));
+    try {
+      await Promise.all(needed.map(async ({ family, detail, key }) => {
+        if (this.photoSrc.has(key)) { const source = this.photoSrc.get(key)!; this.photoSrc.delete(key); this.photoSrc.set(key, source); return; }
         let pending = this.paintedLoads.get(key);
         if (!pending) {
           pending = (async () => {
@@ -225,7 +228,10 @@ export class Textures {
         }
         await pending;
       }));
-    }));
+    } finally {
+      // Snapshot-restored sources participate too. Keep the entire visible batch, even if it temporarily exceeds the cap.
+      trimPaintedSources(this.photoSrc, protectedKeys);
+    }
   }
   private paintedSource(variant: string, L: number): { img: Cnv; period: number } | null {
     const family = PAINTED_GRASS[variant]; if (!family) return null;

@@ -7,6 +7,13 @@ export function grassZoomLevels(zoom: number, dpr: number) {
 export type GrassDetail = 'far' | 'mid' | 'near';
 export interface PaintedGrassFamily { far: string; mid: string; near: string; worldMetres: 8 }
 export interface GrassDetailWeight { detail: GrassDetail; weight: number }
+export const MAX_PAINTED_SOURCES = 24;
+/** Map insertion order is the source LRU. Ordinary photos are outside this cache and never removed. */
+export function trimPaintedSources<T>(sources: Map<string, T>, protectedKeys: ReadonlySet<string>, limit = MAX_PAINTED_SOURCES) {
+  const painted = [...sources.keys()].filter(key => key.startsWith('@painted:'));
+  let size = painted.length;
+  for (const key of painted) { if (size <= limit) break; if (!protectedKeys.has(key)) { sources.delete(key); size--; } }
+}
 const smooth = (a: number, b: number, x: number) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 /** At most two real authored images are required; their shared footprint never changes with zoom. */
 export function grassDetailWeights(L: number): GrassDetailWeight[] {

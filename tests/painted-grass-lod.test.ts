@@ -1,6 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { grassDetailWeights, grassFamilyKey, grassDetailSourceKey, grassFamilyPeriod, grassZoomLevels, type PaintedGrassFamily } from '../src/game/painted-grass-lod';
+import { grassDetailWeights, grassFamilyKey, grassDetailSourceKey, grassFamilyPeriod, grassZoomLevels, trimPaintedSources, type PaintedGrassFamily } from '../src/game/painted-grass-lod';
+
+test('decoded painted source LRU protects the visible batch and ordinary photo fallback', () => {
+  const sources = new Map<string, number>([['old-photo-grass', 10]]);
+  for (let i = 0; i < 40; i++) sources.set('@painted:' + i, i);
+  const visible = new Set(Array.from({ length: 30 }, (_, i) => '@painted:' + i));
+  trimPaintedSources(sources, visible);
+  assert.equal(sources.size, 31, 'A visible batch larger than the budget remains intact');
+  assert.ok([...visible].every(key => sources.has(key)));
+  trimPaintedSources(sources, new Set(['@painted:0']));
+  assert.equal(sources.size, 25, 'Overage is released once the visible batch shrinks');
+  assert.ok(sources.has('@painted:0'));
+  assert.equal(sources.has('@painted:1'), false, 'Least recent unprotected source evicted first');
+  assert.equal(sources.get('old-photo-grass'), 10, 'Existing photo textures never participate');
+});
 
 test('camera zoom chooses the same authored art on DPR1 and DPR2 while raster sharpness remains independent', () => {
   for (const zoom of [.04, .055, .099, .101, .14, .15, .199, .201, .3]) {

@@ -11,12 +11,12 @@
     "mid",
     "near"
   ],
-  "artSelection": "Quantized CSS camera zoom; independent of DPR and brush scale. Raster mip separately follows effective pixel density and brush scale.",
-  "lazy": "One or two authored levels per visible turf family, concurrent requests deduplicated, up to six blended mip chains cached. Planner uses far-family mean.",
+  "artSelection": "Quantized CSS camera zoom, independent of DPR and brush scale; worker/chunk cache identity carries artL separately from DPR-aware raster L.",
+  "lazy": "One or two visible authored sources per family, decoded-source LRU cap24 protecting entire current batch (temporary overage allowed), six blended mip chains, ordinary photo fallback not evicted.",
   "transition": "Current visible transition epoch retains cached old-tier/old-resolution pictures until target pictures arrive, then every visible chunk shares one 180ms blend. No per-frame invalidation or extra fallback bake requests.",
   "checks": {
-    "typecheck": "pass",
-    "focused": "34/34",
+    "typecheck": "passed after removing obsolete level-selection imports",
+    "focused": "35/35",
     "browser": {
       "pageErrors": [],
       "requestFailures": [],
@@ -173,8 +173,56 @@
           }
         }
       ]
+    },
+    "latestTextureContract": {
+      "decodedCounts": [
+        1,
+        1,
+        2,
+        3
+      ],
+      "periods": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "farSample": [
+        154,
+        186,
+        12,
+        255
+      ],
+      "midSample": [
+        151,
+        183,
+        13,
+        255
+      ],
+      "nearSample": [
+        178,
+        204,
+        18,
+        255
+      ],
+      "otherPhotoStillUnbuilt": true,
+      "sourceCap": 24,
+      "evictedSourceReloaded": true,
+      "existingTierFallback": {
+        "uv": [
+          0.25,
+          0.25,
+          0.5,
+          0.5
+        ],
+        "noNewTilesDuringFallback": true
+      },
+      "authoredLevelCacheIdentity": true
     }
   },
   "rootFilesCopied": false,
-  "buildings": "Paused and preserved in separate building-art-priority worktree; no building changes in this branch."
+  "buildings": "Paused and preserved in separate building-art-priority worktree; no building changes in this branch.",
+  "managedConditions": "Any of the80 managed condition IDs may register a reviewed authored family via the same map; unregistered legacy16m images/decals unchanged."
 }
