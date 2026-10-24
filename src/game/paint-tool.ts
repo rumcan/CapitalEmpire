@@ -254,7 +254,8 @@ export class PaintTool {
   /** the Course tool's Shape method: click corners (or lasso) to lay the kind for the current hole, in its preset's style */
   setShape(kind: BrushKind) { this.mode = 'draw'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
   /** the Course tool opens (the engine calls it): coming from Paint, or from Pick or Erase, it starts on the current surface's brush */
-  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw')) this.setBrush(this.brushKind); }
+  /** the Course tool opens on its Pieces method in golf mode (T035); classic keeps the brush */
+  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw')) { if (this.host.golfMode?.()) this.setPiece(this.pieceArch); else this.setBrush(this.brushKind); } }
   /** the Paint tool opens: the golf brush, the Shape method and the hole presets are the Course tool's, so they fall back to Draw */
   enterPaint() { const was = this.course; this.course = false; if (this.mode === 'brush' || this.mode === 'hole' || this.mode === 'piece' || this.mode === 'height' || (was && this.mode === 'draw')) this.setMode('draw'); }
   /** the hole numbers that have painted areas */

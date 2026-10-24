@@ -92,18 +92,24 @@ export function CoursePanel({ game }: { game: Game }) {
               </div>
             </>
           )}
-          {game.golfMode && (
+          <div className="mt-1 text-xs text-slate-300">{help}</div>
+          {/* T035: the planting method and the surface style sit under Advanced (the all-tools toggle); without them new areas use seed planting and the preset style */}
+          {fine('customStyle') && (
             <>
-              <div className="mt-2 text-[11px] text-slate-400">Planting method</div>
-              <div className="flex flex-wrap gap-1">
-                <button className={`chip ${p.plantKind === 'seed' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Seed (grows in)</button>
-                <button className={`chip ${p.plantKind === 'sod' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'sod'; game.emit(); }}>Sod (instant, 3–5× cost)</button>
-              </div>
+              <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
+              {game.golfMode && (
+                <>
+                  <div className="mt-2 text-[11px] text-slate-400">Planting method</div>
+                  <div className="flex flex-wrap gap-1">
+                    <button className={`chip ${p.plantKind === 'seed' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Seed (grows in)</button>
+                    <button className={`chip ${p.plantKind === 'sod' ? 'chip-on' : ''}`} onClick={() => { p.plantKind = 'sod'; game.emit(); }}>Sod (instant, 3–5× cost)</button>
+                  </div>
+                </>
+              )}
+              <div className="mt-2 text-[11px] text-slate-400">{`${name} style (every ${name} on hole ${n} follows it; remembered)`}</div>
+              <StyleEditor game={game} />
             </>
           )}
-          <div className="mt-1 text-xs text-slate-300">{help}</div>
-          <div className="mt-2 text-[11px] text-slate-400">{`${name} style (every ${name} on hole ${n} follows it; remembered)`}</div>
-          <StyleEditor game={game} />
         </>
       )}
       {tab === 'presets' && (
