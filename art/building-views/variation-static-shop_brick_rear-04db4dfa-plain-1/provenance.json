@@ -1,0 +1,23 @@
+{
+  "id": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-63b2aa0d-0d61-461c-bb82-93a962e54798.png",
+  "prompt": "SQUARE 1:1 CANVAS 2048x2048, exactly four SMALL complete building cutouts in 2x2 cells. Transparent RGBA alpha=0 outside the physical building. Each building occupies at most 60% of cell height; 100 pixels of fully clear padding around all sprites and canvas. Reference1 is STYLE ONLY: the Maple Bean street miniature 3D illustration, softly textured matte materials, restrained rich colours, charcoal roofs, warm amber lamps, readable fine detail, early dusk with remaining daylight. Reference2 shows IDENTITY ONLY: preserve architecture, not old rendering or blue night cast. All assets must belong beside reference1. Fixed orthographic 2:1 isometric camera, vertical walls vertical, ground axes +/-26.565deg, SCREEN UPPER RIGHT SUN in EVERY view; right planes warm, left planes cooler. Four TRUE rigid quarterturns: top-left NE=Afront+Bphysicalright, top-right SE=Bright+Crear, bottom-left SW=Crear+Dleft, bottom-right NW=Dleft+Afront. Afront appears on SCREEN LEFT in NE and SCREEN RIGHT in NW. Roof/chimney/doors/windows/equipment stay at fixed physical corners; reconstruct plain rear, NEVER fourfronts or samecorner repeated. Same scale each cell. NO FLOOR/BACKDROP/grey surface/terrain/paving/yard/leaves/broad shadow/haze/gradient/checkerboard/caption/label/divider/frame. No people, vehicles, Halloween or garlands. Only building and integral structural parts.  Subject library ID variation:static-shop_brick_rear-04db4dfa-plain:1. Preserve exact building massing, floor count and roof in the identity reference. If source shows a rear wall, keep it as physical rear and construct a sensible front, not four duplicate rear walls. Signs and unique front entrances visible in exactlytwo of4true quarterturns. No paved surface or invented floor, no cropping.",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "variation:static-shop_brick_rear-04db4dfa-plain:1",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/variation-static-shop_brick_rear-04db4dfa-plain-1.configured@2x.png",
+      "sha256": "bbf8b68520d95bd8392df584ad7b050218192bb693f7285ec21aad3a1e8cee76"
+    }
+  ],
+  "integrationStatus": "blocked",
+  "integrationReason": "Awaiting real alpha, four-view geometry, fixed camera/light and cohesive-theme review."
+}

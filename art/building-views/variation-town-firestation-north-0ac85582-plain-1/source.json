@@ -1,0 +1,10 @@
+{
+ "id": "variation:town-firestation-north-0ac85582-plain:1",
+ "version": "variation-town-firestation-north-0ac85582-plain-1-4views-v1",
+ "files": {
+  "NE": "b1fa5053fc34f59c29569fd0562171f646846aac6fcaecaf93e79b068080f494",
+  "SE": "f9e4c06e70f4e753e9b56a3d0cdc47150fc57c631e579068b7b51b5984ab461f",
+  "SW": "6e50e02c5d24c67645a01d28057f02a80b41f18e4ef1e89b401580ad3f40c2c6",
+  "NW": "539ccaa1f20373b0688d5a99d815feb24da5b7c3011691818cb23bc6385430d0"
+ }
+}

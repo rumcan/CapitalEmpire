@@ -1,6 +1,8 @@
 // The sprite studio: the owner's screen for fixing the game's sprites.
 //   Library: every sprite as the game has it (cut from the atlas) and every lot decal (leaf drifts, stains: the decal strip), beside a person for scale: remove it from the game, or make it
-//            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json)
+//            bigger or smaller everywhere it is placed (scripts/assets/removed.json, scale-overrides.json). Each card is the picture the game draws at the size it
+//            draws it (an old building as its new-art stand-in; review/size-report.ts runs the game's own code), with the size it is sharp to at the closest
+//            zoom: a size past its picture's own pixels is refused. The game reads scale-overrides.json at runtime: a size shows after a reload of the game.
 //   Lots:    the baked house lots: click any sprite in one to move, resize, flip or delete it there (lot-edits.json)
 //   People:  every townsperson's walk (art/people3d, 8 facings x idle + 8 walk frames), animated: fix any frame that faces the wrong way (mirror it, use another frame in its
 //            place, or drop in a new picture): walker-fixes.json, the pictures in scripts/assets/walker-frames (walker-fix.mjs)
@@ -10,12 +12,12 @@
 //            and the map decals over it (nature patches, bare soil, grass patches, leaf scatters, tufts): Save decals writes src/game/map-decals.json
 //   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { buildSync } from 'esbuild';
+import { build, buildSync } from 'esbuild';
 import sharp from 'sharp';
 // no file cache: sharp keeps the atlas pages it read open, and on Windows the Rebuild then cannot delete them (EPERM)
 sharp.cache(false);
@@ -32,6 +34,31 @@ const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'outp
 fs.mkdirSync(CACHE, { recursive: true });
 const LOT_RES = 0.45;
 
+// ---------------------------------------------------------------- sizes: every sprite as the game draws it (review/size-report.ts)
+const SIZE_SRC = path.join(ROOT, 'scripts/assets/review/size-report.ts'), SIZE_OUT = path.join(ROOT, 'output/review/size-report.mjs');
+const SIZE_INPUTS = [SIZE_SRC, path.join(ROOT, 'scripts/assets/scale-overrides.json'), ...['library', 'views-library', 'trees-library', 'cars-library', 'east-library', 'business-library',
+  'construction-library', 'golf-library', 'newart', 'sizes', 'lots/scales', 'lots/studio-base'].map(f => path.join(ROOT, 'src/game', `${f}.ts`))];
+let sizes = { stamp: '', data: {} }, sizing = null;
+/** the size report: id -> { scale, base, sizeId, drawn: { id, name, quad, scale, fill, cap } | null, sharp, native, and the picture's atlas rect and page },
+ *  rebuilt when a library, the scales or the studio's sizes change (fresh: false takes the last one as it is) */
+async function sizeReport(fresh = true) {
+  if (!fresh && sizes.stamp) return sizes.data;
+  const stamp = SIZE_INPUTS.map(f => { try { return fs.statSync(f).mtimeMs; } catch { return 0; } }).join(',');
+  if (stamp === sizes.stamp) return sizes.data;
+  sizing ??= (async () => {
+    try {
+      // the atlas pages as their file paths (the thumbnails are cut from them), every other import as the game has it
+      await build({ entryPoints: [SIZE_SRC], bundle: true, platform: 'node', format: 'esm', outfile: SIZE_OUT, logLevel: 'silent',
+        plugins: [{ name: 'atlas-paths', setup(b) { b.onLoad({ filter: /\.(webp|png)$/ }, a => ({ contents: `export default ${JSON.stringify(a.path)};`, loader: 'js' })); } }] });
+      const out = await new Promise((ok, fail) => execFile(process.execPath, [SIZE_OUT], { cwd: ROOT, maxBuffer: 256 << 20 }, (e, so) => (e ? fail(e) : ok(so))));
+      sizes = { stamp, data: JSON.parse(out) };
+    } catch (e) { console.warn(`size report failed (the Library shows the sprites without their game sizes): ${e.message}`); sizes = { stamp, data: sizes.data }; }
+    finally { sizing = null; }
+  })();
+  await sizing; return sizes.data;
+}
+await sizeReport();
+
 // ---------------------------------------------------------------- the game's sprites (src/game/library.ts)
 function library() {
   const src = fs.readFileSync(path.join(ROOT, 'src/game/library.ts'), 'utf8'), out = [];
@@ -45,6 +72,14 @@ function library() {
   for (const a of APPENDED) {
     const txt = a.re.exec(fs.readFileSync(path.join(ROOT, a.file), 'utf8'))[1].replace(/,(\s*)\]/g, '$1]');
     for (const e of JSON.parse(txt)) if (!have.has(e.id) && !gone[e.id] && !gone[e.id.replace(/^east:/, '')]) { have.add(e.id); out.push({ id: e.id, name: e.name, cat: e.cat, kind: e.kind, tex: e.tex, w: e.w, h: e.h, quad: e.quad, ax: e.ax, ay: e.ay, page: path.join(ROOT, a.page(e.tex[0])) }); }
+  }
+  // the game's own pictures (size-report.ts): the four-view art in place of the old pictures it replaced, and the libraries not listed above (the
+  // generated trees); a building's other views (view:<id>:se|sw|nw) are not cards of their own: they take their building's size and removal
+  const at = new Map(out.map((s, i) => [s.id, i]));
+  for (const [id, e] of Object.entries(sizes.data)) {
+    const i = at.get(id), pic = { tex: e.tex, w: e.w, h: e.h, quad: e.quad, ax: e.ax, ay: e.ay, page: e.page };
+    if (i !== undefined) { if (!out[i].rect && e.page) Object.assign(out[i], pic); }
+    else if (!id.startsWith('view:') && !gone[id] && e.page) { out.push({ id, name: e.name, cat: e.cat, kind: e.kind, ...pic }); at.set(id, out.length - 1); }
   }
   const people = JSON.parse(/WALKER_PEOPLE[^=]*= (\[.*\]);/.exec(src)?.[1] ?? '[]'), wf = JSON.parse('[' + (/const WF = \[(.*)\];/.exec(src)?.[1] ?? '') + ']');
   // WF holds every frame of every person (per person: WALK_DIRS x WALK_FRAMES frames of 9 numbers); the first one (idle, facing S) is the picture
@@ -272,11 +307,17 @@ http.createServer(async (req, res) => {
     if (P === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(fs.readFileSync(path.join(ROOT, 'scripts/assets/review/studio.html'), 'utf8')); }
     // library
     if (P === '/api/sprites') {
-      const list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
+      const rep = await sizeReport(), list = library(), have = new Set(list.map(s => s.id)), rm = readRemoved(), sc = readScales();
       for (const id of Object.keys(rm)) if (!have.has(id)) list.push({ id, name: rm[id].name ?? id, cat: rm[id].cat ?? 'Removed', kind: rm[id].kind ?? '', tex: null, w: rm[id].w ?? 100, h: rm[id].h ?? 100, quad: rm[id].quad, ax: rm[id].ax, ay: rm[id].ay });
       // every golf sprite under one heading: the tournament art (golf:) and the business art's course pieces and buildings (business:golf-)
       for (const s of list) if (/^(golf:|business:golf-)/.test(s.id)) s.cat = 'Golf';
       for (const s of list) { s.base = s.kind === 'car' ? 0.8 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = s.kind === 'car' ? 0.8 : sc[s.id] ?? s.base; s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
+      // the game's sizes (size-report.ts): the scale it places each sprite at, what a reset falls back to, the id whose size it takes (a building's
+      // views share one), what it is drawn as and how big, the scale it is sharp to at the closest zoom and the most its source pixels allow
+      for (const s of list) {
+        const e = rep[s.id]; if (!e || s.kind === 'car' || s.kind === 'walker' || s.kind === 'decal') continue;
+        Object.assign(s, { scale: e.scale, base: e.base, sizeId: e.sizeId, drawn: e.drawn, sharp: e.sharp, native: e.native });
+      }
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
       return json({ sprites: list, removed: rm, walkers });
@@ -289,10 +330,16 @@ http.createServer(async (req, res) => {
       writeRemoved(rm); return json({ removed: rm });
     }
     if (req.method === 'POST' && P === '/api/scale') {
-      const { id, factor, reset } = await body(req), sc = readScales();
-      // a lot decal's base is 1 (prep-decals packs it at its scale), a sprite's is the owner's map scale
-      const base = (library().find(x => x.id === id)?.kind ?? readRemoved()[id]?.kind) === 'decal' ? 1 : mapScale(id);
-      if (reset) delete sc[id]; else { const cur = sc[id] ?? base; sc[id] = +(cur * factor).toFixed(3); }
+      const { id: asked, factor, reset } = await body(req), sc = readScales(), rep = await sizeReport(false), e = rep[asked];
+      // the size is the building's for any of its views (sizeId); a lot decal's base is 1 (prep-decals packs it at its scale), a sprite's is the
+      // game's own fallback (its table scale) when the game has it, else the owner's map scale
+      const id = e?.sizeId ?? asked, own = rep[id] ?? e;
+      const base = (library().find(x => x.id === asked)?.kind ?? readRemoved()[asked]?.kind) === 'decal' ? 1 : own?.base ?? mapScale(id);
+      const cur = sc[id] ?? own?.scale ?? base, next = reset ? base : +(cur * factor).toFixed(3);
+      // never past its picture's own pixels: the smallest limit of the pictures that take this size (a building's four views; a stand-in's atlas)
+      const limit = Math.min(...Object.values(rep).filter(x => x.sizeId === id && x.native != null).map(x => x.native));
+      if (!reset && factor > 1 && next > limit * 1.001) return json({ id, scale: cur, base, refused: `pixelates above x${limit.toFixed(2)}: its picture has no more pixels` });
+      if (reset) delete sc[id]; else sc[id] = next;
       writeScales(sc); return json({ id, scale: sc[id] ?? base, base });
     }
     // lots

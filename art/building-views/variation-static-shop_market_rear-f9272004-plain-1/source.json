@@ -1,0 +1,10 @@
+{
+ "id": "variation:static-shop_market_rear-f9272004-plain:1",
+ "version": "variation-static-shop_market_rear-f9272004-plain-1-4views-v1",
+ "files": {
+  "NE": "b334a0bfeea43e1741a86db47d090c3e86c06b2855266da47f074dafa1f0d717",
+  "SE": "0367ba067fe35e67b1400f1b6f2d8c0f142761bcfb890faab1c1cbebe03386e4",
+  "SW": "f0b470997b685162b69553745054172a91bb16f35d2e072b4c2b1831ae501dcc",
+  "NW": "81de68b0d0a2318ee3718236cc88ae6fce8e1ffe6f198b39ae43666f190880b5"
+ }
+}
