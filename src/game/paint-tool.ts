@@ -12,7 +12,7 @@ import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
-import { applyDiff, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
@@ -230,6 +230,8 @@ export class PaintTool {
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
   private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts } } | null = null;
   private host: PaintHost;
+  /** the engine draws the brush (and a course piece) as a 3D surface puck (T081, ext/course-cursor): the OS cursor and the plain brush ring step aside */
+  puckCursor = false;
 
   constructor(host: PaintHost) { this.host = host; }
 
@@ -379,6 +381,14 @@ export class PaintTool {
     const own = this.host.ownedAt;
     const h = this.brushHole;
     return { over: 'below', rub: erase, allow: i => { if (erase && (g.surf[i] !== s || g.hole[i] !== h)) return false; if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
+  }
+  /** the course-grid cells a Course brush dab would skip right now (T081's footprint), by a cell centre in tiles: outside the grid, else
+   *  the brush rules above (off your land, a higher surface it slides past, for a rub out another surface or hole); null when the brush
+   *  paints areas (a cart path, a classic game) */
+  brushSkip(): ((x: number, y: number) => boolean) | null {
+    const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
+    const o = this.gridOpts(g, s, this.rubOut);
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (o.allow ? !o.allow(i) : false) || (!o.rub && o.over === 'below' && g.surf[i]! > s); };
   }
   /** fills polygon pts (tiles) into grid g as surface s for hole h (the brush rules): the cells that change are charged (1 m² each at the
    *  surface's price; golf mode) and kept in the open action; false, with the toast and nothing changed, when the treasury cannot pay */
@@ -594,6 +604,7 @@ export class PaintTool {
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
+    if (this.puckCursor && (this.mode === 'brush' || this.mode === 'piece')) return 'none';
     if (this.drag) return 'grabbing';
     const g = this.hoverH;
     if (!g || !this.selected) return 'crosshair';
@@ -839,7 +850,7 @@ export class PaintTool {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = erase ? 'rgba(240,80,60,0.35)' : rgba(TEX_COL.get(this.brush[this.brushKind].style.tex) ?? '#888888', 0.35); ctx.fill();
     }
-    if (!c) return;
+    if (!c || this.puckCursor) return;
     v.setIso(ctx); ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.strokeStyle = erase ? '#f87171' : '#ffffff'; ctx.lineWidth = 1.5 * d; ctx.stroke();
   }
