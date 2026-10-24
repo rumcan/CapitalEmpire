@@ -2,6 +2,7 @@ import type { Game } from '../../game/engine';
 import { BRUSH_PRESETS, PAINT_TEXES } from '../../game/paint';
 import { PLANT_KINDS } from '../../game/plant';
 import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
+import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
 import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
 import { HoleStrip } from './HoleStrip';
 import { HoleInspector } from './HoleInspector';
@@ -12,7 +13,9 @@ type CourseTab = 'build' | 'presets' | 'plants';
 export function CoursePanel({ game }: { game: Game }) {
   const p = game.paint, n = p.brushHole, br = p.brush[p.brushKind], name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   const tab: CourseTab = p.mode === 'hole' ? 'presets' : p.mode === 'plant' ? 'plants' : 'build';
-  const help = p.mode === 'piece'
+  const help = p.mode === 'height'
+    ? `Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} per m³.` : ''}`
+    : p.mode === 'piece'
     ? `Click to lay a ${PIECE_BUTTONS.find(b => b.arch === p.pieceArch)?.name ?? 'piece'} for hole ${n}. It snaps to the end or edge of the course piece it touches and dresses its own borders. R turns it, [ ] sizes it.`
     : p.mode === 'brush'
     ? `Drag to paint ${name} for hole ${n}; strokes of the same surface on a hole join into one area. Alt-drag or Rub out erases. [ ] size.`
@@ -43,6 +46,7 @@ export function CoursePanel({ game }: { game: Game }) {
             <button className={`chip ${p.mode === 'piece' ? 'chip-on' : ''}`} onClick={() => p.setPiece(p.pieceArch)}>Pieces</button>
             <button className={`chip ${p.mode === 'brush' ? 'chip-on' : ''}`} onClick={() => p.setBrush(p.brushKind)}>Brush</button>
             <button className={`chip ${p.mode === 'draw' ? 'chip-on' : ''}`} onClick={() => p.setShape(p.brushKind)}>Shape</button>
+            <button className={`chip ${p.mode === 'height' ? 'chip-on' : ''}`} onClick={() => p.setHeight()}>Height</button>
           </div>
           {p.mode === 'brush' && (
             <>
@@ -68,6 +72,22 @@ export function CoursePanel({ game }: { game: Game }) {
                 <button className="chip" title="]" onClick={() => p.setPieceOpts({ scale: p.pieceScale + 0.25 })}>Bigger</button>
                 <span className="text-xs text-slate-300">{`${p.pieceScale}×`}</span>
                 <button className={`chip ${p.pieceSnap ? 'chip-on' : ''}`} title="Snap to the piece it touches" onClick={() => p.setPieceOpts({ snap: !p.pieceSnap })}>Snap</button>
+              </div>
+            </>
+          )}
+          {p.mode === 'height' && (
+            <>
+              <div className="mt-2 text-[11px] text-slate-400">Ground</div>
+              <div className="flex flex-wrap gap-1">
+                {(['raise', 'lower', 'smooth', 'flatten'] as const).map(m => <button key={m} className={`chip ${p.heightMode === m ? 'chip-on' : ''}`} onClick={() => p.setHeight({ mode: m })}>{m[0]!.toUpperCase() + m.slice(1)}</button>)}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-1">
+                <button className="chip" title="[" onClick={() => p.setHeight({ r: p.heightR - 2 })}>Smaller</button>
+                <button className="chip" title="]" onClick={() => p.setHeight({ r: p.heightR + 2 })}>Bigger</button>
+                <span className="text-xs text-slate-300">{`${p.heightR} tiles`}</span>
+                <button className="chip" onClick={() => p.setHeight({ level: p.heightLevel - 1 })}>Gentler</button>
+                <button className="chip" onClick={() => p.setHeight({ level: p.heightLevel + 1 })}>Stronger</button>
+                <span className="text-xs text-slate-300">{`Strength ${p.heightLevel}/5`}</span>
               </div>
             </>
           )}
