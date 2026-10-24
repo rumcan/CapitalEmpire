@@ -438,7 +438,7 @@ export class PaintTool {
     this.applyHeightOps(p.pl.heightOps);
     // the pin goes to the piece's pin anchor (the engine's marker plan puts the hole's pin there); the dressing props are journaled with the step
     const pin = p.pl.props.find(q => q.kind === 'pin'); if (pin) this.pinHint = new Map([[p.pl.hole, { x: pin.x, y: pin.y }]]);
-    this.host.placeProps(piecePropsOf(p.pl.props), this.plantSeed++);
+    const dress = piecePropsOf(p.pl.props); if (dress.length) this.host.placeProps(dress, this.plantSeed++);
     this.commit(); this.host.progress?.('piece'); this.piece = null; this.refreshPiece(); this.host.save();
   }
   /** piece mode: the planned piece as ghosts, bottom layer first (each in its surface's colour with its border band, the core dashed; red when it cannot go), the snap tick on the edge it joins, and its label */
