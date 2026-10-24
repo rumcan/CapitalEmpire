@@ -35,6 +35,16 @@ test('different seeds give different maps', () => {
   assert.notEqual(fnv(gen(1).cls), fnv(gen(2).cls));
 });
 
+test('the map is a flat plane: zero relief, rivers and woodland kept', () => {
+  const t = gen(1);
+  let first = -1;
+  for (let i = 0; i < t.height.length && first < 0; i++) if (t.height[i] !== 0) first = i;
+  assert.equal(first, -1, `seed 1: height at index ${first} is not zero`);
+  assert.ok(t.cls.includes(TC.HILL), 'woodland (TC.HILL) remains');
+  assert.ok(t.cls.includes(TC.WATER), 'water (TC.WATER) remains');
+  assert.ok(t.waters.length >= 1, 'the river remains');
+});
+
 /** cumulative arc length along a polyline, in tiles (entry k is the length up to point k) */
 function arcLengths(pts: { x: number; y: number }[]): number[] {
   const s = [0];
