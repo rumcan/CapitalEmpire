@@ -68,6 +68,9 @@ const lockText = (pop: number) => `🔒 ${pop.toLocaleString()} residents`;
 const hhmm = (c: { hour: number; minute: number }) => `${String(c.hour).padStart(2, '0')}:${String(c.minute).padStart(2, '0')}`;
 /** a game hour of the day as HH:00 */
 const hod = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
+/** the Developer toggle (T035): the perf panel, the dev badge, the Studio button and the cars/growth controls; F3 flips it, ?debug forces it on, remembered in localStorage, off by default */
+const DEV_KEY = 'capitalempire.dev';
+function devStart(): boolean { try { return new URLSearchParams(location.search).has('debug') || localStorage.getItem(DEV_KEY) === '1'; } catch { return false; } }
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,6 +86,11 @@ export default function App() {
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
  const [eventTool, setEventTool] = useState(false);
+  /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
+  const [dev, setDevState] = useState(devStart);
+  const devRef = useRef(dev);
+  const setDev = (v: boolean) => { devRef.current = v; setDevState(v); try { localStorage.setItem(DEV_KEY, v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
+  useEffect(() => { const f3 = (e: KeyboardEvent) => { if (e.key === 'F3') { e.preventDefault(); setDev(!devRef.current); } }; window.addEventListener('keydown', f3); return () => window.removeEventListener('keydown', f3); }, []);
   /** the last tool picked in each rail group, so a group's tab returns to it */
   const last = useRef<Record<string, Tool>>({});
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
@@ -131,10 +139,22 @@ export default function App() {
   const ui = game?.toolUi() ?? null;
   /** whether a golf top-bar chip is shown under the progressive unlocks */
   const chip = (id: string) => !ui || (ui.visibleGolfChips as string[]).includes(id);
-  /** the first-run hint banner (null when none or all dismissed) */
+  /** the first-run hint (null when none or all dismissed); golf mode shows it in the bottom bar */
   const hint = ui?.activeHint ?? null;
   /** the open group's tools that the progressive unlocks show */
   const shownTools = grp ? grp.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
+
+  /** the top bar's money figure (a button: it opens the budget) */
+  const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : money(g.money)} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
+  /** the population, jobs, day and daily income: inline in classic mode, in the Treasury drawer in golf mode (T035) */
+  const moreStats = (g: Game) => (
+    <>
+      <Stat icon="people" label="Population" value={g.traffic.pop.toLocaleString()} />
+      <Stat icon="briefcase" label="Jobs" value={g.traffic.jobs.toLocaleString()} />
+      <Stat icon="sun" label="Day" value={String(g.day)} sub={hhmm(g.clock())} />
+      <Stat icon="income" label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
+    </>
+  );
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
@@ -190,12 +210,16 @@ export default function App() {
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
                 : <Stat icon="trophy" label="Career" {...careerStat(game)} tone="text-amber-200" />}
-              <Stat icon="bank" label="Treasury" value={game.unlimited ? '∞' : money(game.money)} tone={game.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { game.panel = game.panel === 'budget' ? null : 'budget'; game.emit(); }} />
-              <Stat icon="people" label="Population" value={game.traffic.pop.toLocaleString()} />
-              <Stat icon="briefcase" label="Jobs" value={game.traffic.jobs.toLocaleString()} />
-              <Stat icon="sun" label="Day" value={String(game.day)} sub={hhmm(game.clock())} />
-              <Stat icon="income" label="Daily income" value={(net >= 0 ? '+' : '') + money(net)} tone={net >= 0 ? 'text-emerald-300' : 'text-red-300'} />
-              {(game.growth !== 1 || game.unlimited || !game.stamped) && (
+              {gv ? (
+                <div className="group relative">
+                  {treasury(game)}
+                  <div className="absolute left-0 top-full z-30 hidden pt-1 group-hover:block">
+                    <div className="glass flex flex-col gap-2 p-2">{moreStats(game)}</div>
+                  </div>
+                </div>
+              ) : <>{treasury(game)}{moreStats(game)}</>}
+              {dev && <span className="rounded-md border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 text-[10px] font-bold text-sky-200" title="Developer panels are on (F3 hides them)">DEV</span>}
+              {dev && (game.growth !== 1 || game.unlimited || !game.stamped) && (
                 <div className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="Dev sandbox options (URL: ?grow=N, ?money=0|1, ?stamp=0|1)">
                   dev: {[game.growth !== 1 && `grow ${game.growth}×`, game.unlimited && '∞ $', !game.stamped && 'no stamp', game.unlockAll && 'all unlocked'].filter(Boolean).join(' · ')}
                 </div>
@@ -223,6 +247,7 @@ export default function App() {
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
@@ -251,7 +276,7 @@ export default function App() {
                   </div>
                 )}
               </div>
-              {ON_PC && <a className="btn" href={STUDIO_URL} target="studio" rel="noopener" title="The sprite studio (5179): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
+              {dev && ON_PC && <a className="btn" href={STUDIO_URL} target="studio" rel="noopener" title="The sprite studio (5179): sprites, lots, holes, the ground grass and map decals. Its Rebuild game sprites rebuilds this game: reload to see it">Studio</a>}
               <button className="btn-icon" onClick={() => setHelp(true)} title="How it works"><Icon name="help" size={22} /></button>
             </div>
           </div>
@@ -266,13 +291,6 @@ export default function App() {
               ))}
             </div>
             <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3">
-              {hint && (
-                <div className="rounded-md border border-amber-400/40 bg-amber-400/15 p-2 text-xs text-amber-100 mb-3">
-                  <div className="font-bold">{hint.title}</div>
-                  <div className="mt-0.5">{hint.body}</div>
-                  <button className="chip mt-2" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button>
-                </div>
-              )}
               {shownTools.length > 1 && (
                 <div className="seg mb-3">
                   {shownTools.map(t => (
@@ -307,15 +325,19 @@ export default function App() {
             </div>
           </div>
 
-          {/* the hint bar, centred in the lane between the minimap's town chip and the stats card */}
+          {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): only the first-run hint, with its Got it; no bar without one */}
+          {(!gv || hint) && (
           <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex justify-center">
-            <div className="flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs">
+            <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
-              <span>{keyed(hintFor(game))}</span>
+              {gv && hint
+                ? <><span><b>{hint.title}</b> · {hint.body}</span><button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
+                : <span>{keyed(hintFor(game))}</span>}
             </div>
           </div>
-          {(game.showAccess || game.cam.z < PLANNER_Z) && <AccessLegend game={game} />}
-          {game.showFlow && <HeatLegend raised={game.showAccess || game.cam.z < PLANNER_Z} time={game.flowMode === 'time'} />}
+          )}
+          {(game.showAccess || (dev && game.cam.z < PLANNER_Z)) && <AccessLegend game={game} />}
+          {game.showFlow && <HeatLegend raised={game.showAccess || (dev && game.cam.z < PLANNER_Z)} time={game.flowMode === 'time'} />}
 
           <div className="pointer-events-none absolute left-1/2 top-20 z-30 flex -translate-x-1/2 flex-col items-center gap-1">
             {toasts.map(t => (
@@ -398,7 +420,7 @@ export default function App() {
           )}
 
           <Minimap game={game} />
-          <PerfPanel game={game} />
+          {dev && <PerfPanel game={game} />}
           {help && <Help onClose={() => setHelp(false)} />}
         </>
       )}
@@ -520,7 +542,7 @@ function RoundPanel({ game }: { game: Game }) {
     : r.stage === 'free' ? 'Host a major stadium event to boost happiness, income and the local economy.'
     : r.stage === 'build' ? 'Fans are on their way: finish the roads before kick-off.' : 'Kick-off: the crowd is driving to the stadium.';
   // minimized (the owner: "always open in my face"): a small pill with the event, the month and the clock; remembered
-  const [min, setMin] = useState(() => { try { return localStorage.getItem('capitalempire.eventMin') === '1'; } catch { return false; } });
+  const [min, setMin] = useState(() => { try { return localStorage.getItem('capitalempire.eventMin') !== '0'; } catch { return true; } });
   const minimize = (v: boolean) => { setMin(v); try { localStorage.setItem('capitalempire.eventMin', v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
   const clock = r.stage === 'build' ? `Build ${mmss(Math.ceil(r.buildLeft))}` : r.stage === 'surge' ? `${golf ? 'Tee-off' : 'Kick-off'} ${mmss(Math.ceil(r.surgeLeft))}` : '';
   if (min) return (
