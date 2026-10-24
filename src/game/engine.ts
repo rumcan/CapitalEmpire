@@ -2,8 +2,8 @@ import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLA
 import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
-import { drawGhostBlueprint, drawGhostHint, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
-import { markerGhost, structureGhost } from './ext/event-ghost';
+import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
+import { busGhostLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { getTournamentWeather } from './golf/weather';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
@@ -2609,17 +2609,16 @@ export class Game {
     const dpr = this.dpr, s = h.seg;
     if (s) {
       const d: TollDef = { id: 0, ax: h.a.x, ay: h.a.y, bx: h.b.x, by: h.b.y, booths: h.booths }, off0 = laneOff(s, 0), c = PLAZA_LEN / 2;
-      this.setIso(ctx); ctx.beginPath(); ring(ctx, plazaOutline(d, s.cls.h, off0));
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = h.why ? 'rgba(230,80,80,0.3)' : 'rgba(80,200,120,0.3)'; ctx.fill();
+      const outline = plazaOutline(d, s.cls.h, off0);
+      drawGhostPoly(this.ghostView(ctx), outline, h.why ? 'invalid' : 'valid');
       const q = (t: number, o: number, first = false) => { const p = plazaPoint(d, t, o); if (first) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); };
       this.setIso(ctx); ctx.beginPath();
       q(c - 6, 0, true); q(c + 6, 0); q(c + 3, -1.5); q(c + 6, 0); q(c + 3, 1.5);
       for (let k = 0; k < h.booths; k++) { const o = off0 + BOOTH_W * k; q(c, o - 0.8, true); q(c, o + 0.8); }
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.5 * dpr; ctx.stroke();
     }
-    const short = !h.why && h.cost > this.money, bad = !!h.why || short;
-    const text = h.why || (short ? `Not enough money: $${h.cost.toLocaleString()}` : `${h.booths} booths · $${h.cost.toLocaleString()}`);
-    this.hintAt(ctx, h.mx, h.my, text, bad);
+    const g = tollGhostLabel(h.why, h.booths, h.cost, this.money);
+    drawGhostHint(this.ghostView(ctx), h.mx, h.my, g.label, g.bad);
   }
 
   // ---------- shuttle bus routes (Phase 5 step 6b) ----------
@@ -2765,14 +2764,10 @@ export class Game {
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.setLineDash([6 * dpr, 4 * dpr]); ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5 * dpr; ctx.stroke(); ctx.setLineDash([]);
       busStop(ctx, a.x, a.y, dpr);
     }
+    drawGhostRing(this.ghostView(ctx), h.x, h.y, 1.5, 0, h.why ? 'invalid' : 'valid');
     if (!h.why) { const b = this.screen(h.x, h.y); busStop(ctx, b.x, b.y, dpr); }
-    const cost = this.busDefs.length ? BUS_ROUTE_COST : 0, short = !h.why && !!P && cost > this.money, bad = !!h.why || short;
-    const text = h.why || (!P ? (h.town !== undefined ? 'Lot stop · town car park' : `Lot stop · car park #${h.park}`) : short ? `Not enough money: $${cost.toLocaleString()}` : cost ? `Bus route · $${cost.toLocaleString()}` : 'Bus route · free (the starting kit)');
-    const x = h.mx * dpr + 14 * dpr, y = h.my * dpr - 12 * dpr;
-    ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(text, x, y);
-    ctx.fillStyle = bad ? '#fecaca' : '#bbf7d0'; ctx.fillText(text, x, y);
-    ctx.lineJoin = 'miter'; ctx.textBaseline = 'alphabetic';
+    const cost = this.busDefs.length ? BUS_ROUTE_COST : 0, g = busGhostLabel(h.why, !!P, cost, this.money, h.town !== undefined, h.park);
+    drawGhostHint(this.ghostView(ctx), h.mx, h.my, g.label, g.bad);
   }
 
   // ---------- economy / save ----------
