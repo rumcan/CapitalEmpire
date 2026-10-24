@@ -177,7 +177,7 @@ export class GLRenderer {
     gl.texParameteri(target, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(target, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
 
-  /** load the sprite atlas pages into one texture array; dpr-1 screens skip mip 0 (half the memory) */
+  /** load the sprite atlas pages into one texture array; dpr-1 screens skip mip 0 (a quarter of the memory; engine.ts: every screen above 1x keeps it) */
   async loadAtlas(hiDpi: boolean) {
     const gl = this.gl, base = hiDpi ? 0 : 1, levels = ATLAS_PAGES[0].length - base, size = ATLAS_SIZE >> base;
     const tex = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);

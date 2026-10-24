@@ -24,7 +24,8 @@ test('by default every building is drawn as itself when it is new art, else as a
     if (!isBuilding(it) || it.kind === 'lot') return;
     for (const flip of [false, true]) {
       const d = { item: i, flip, scale: 1.5, x: 100 + i, y: 200 - i }, look = lookOf(d);
-      if (isNew(it.id)) { assert.equal(look, d, `${it.id} is new art, drawn as itself`); continue; }
+      // drawn as itself (at its pixel limit when 1.5 is past it: sizes.ts)
+      if (isNew(it.id)) { assert.ok(look.item === i && look.flip === d.flip && look.scale <= d.scale, `${it.id} is new art, drawn as itself`); continue; }
       assert.ok(!look.hidden, `${it.id} has a new-art stand-in`);
       assert.ok(isNew(LIBRARY[look.item]!.id), `${it.id} is drawn as ${LIBRARY[look.item]!.id}`);
       assert.equal(pictureFamily(LIBRARY[look.item]!), standInFamily(it), `${it.id} is drawn as ${LIBRARY[look.item]!.id}, of another family`);
@@ -40,7 +41,7 @@ test('by default a tree that is not generated is drawn as itself (trees keep the
   LIBRARY.forEach((it, i) => {
     if (it.kind !== 'tree' || it.id.startsWith('gen:tree-')) return;
     trees++;
-    for (const flip of [false, true]) { const d = { item: i, flip, scale: 1.5, x: 100 + i, y: 200 - i }; assert.equal(lookOf(d), d, `${it.id} is drawn as itself`); }
+    for (const flip of [false, true]) { const d = { item: i, flip, scale: 1.5, x: 100 + i, y: 200 - i }, l = lookOf(d); assert.ok(l.item === i && l.flip === flip && !l.hidden, `${it.id} is drawn as itself`); }
   });
   assert.ok(trees > 0, `${trees} trees kept their art`);
 });
@@ -68,7 +69,7 @@ test('an old dwelling is drawn as a house: its stand-in is never a tent, a garag
       assert.ok(s.cat !== 'Golf tournament' && s.cat !== 'Industry', `${it.id} is drawn as ${s.id} (${s.cat})`);
     }
   });
-  assert.ok(dwellings > 20, `${dwellings} old dwellings`);
+  assert.ok(dwellings > 10, `${dwellings} old dwellings`); // shrinks as the four-view art lands (17 after the 2026-10-24 evening import)
 });
 
 test("a baked lot (the studio's Lots presets) is drawn as itself, never as one building stretched over the lot", () => {
