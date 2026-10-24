@@ -91,7 +91,8 @@ export function inPark(d: CarParkDef, p: Pt): boolean {
 export function frontage(net: RoadNetwork, d: CarParkDef): { side: 0 | 1 | 2 | 3; seg: Seg; entrances: Pt[] } | null {
   // a turned park's corners lie farther from its centre than half its longer side
   const r = (d.a ? Math.hypot(d.w, d.h) : Math.max(d.w, d.h)) / 2 + FRONT_GAP + 8;
-  const near = net.segsNear(toWorld(d, { x: d.w / 2, y: d.h / 2 }), r);
+  // a cart path (T084: noCars) is no frontage: no car could reach the park along it
+  const near = [...net.segsNear(toWorld(d, { x: d.w / 2, y: d.h / 2 }), r)].filter(s => !s.cls.noCars);
   let best: { side: 0 | 1 | 2 | 3; seg: Seg; A: Pt; B: Pt; lo: number; ov: number; ea: 'x' | 'y' } | null = null;
   for (let si = 0; si < 4; si++) {
     const side = si as 0 | 1 | 2 | 3;

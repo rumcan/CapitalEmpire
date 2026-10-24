@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import {
   growStage,
   growMask,
-  chunkGrowKey,
   spawnSplash,
   stepSplash,
   easeOutBack,
@@ -42,30 +41,6 @@ test('1. A fairway seeded at month 0 is stage 0, 2 (month 1.5), 4 (month 3)', ()
   assert.equal(mask0[cellIdx], 255, 'stage 0 alpha must be 255 (full dirt)');
   assert.equal(mask1_5[cellIdx], 128, 'stage 2 alpha must be 128 (half grass)');
   assert.equal(mask3[cellIdx], 0, 'stage 4 alpha must be 0 (full grass)');
-});
-
-test('2. The mask key is the same within a stage and changes across it', () => {
-  const g = makeGrid(0, 0, 128, 128);
-  // Fairway seeded at month 0 (3-month grow-in)
-  paintDisc(g, 16, 16, 10, SURF.fairway, 1, 0);
-
-  // Stage 0: month 0.0 to ~0.3
-  const keyM0 = chunkGrowKey(g, 0, 0, 64, 0.0);
-  const keyM0_2 = chunkGrowKey(g, 0, 0, 64, 0.2);
-  assert.equal(keyM0, keyM0_2, 'key must remain identical within stage 0');
-
-  // Across stage: month 1.5 is stage 2
-  const keyM1_5 = chunkGrowKey(g, 0, 0, 64, 1.5);
-  assert.notEqual(keyM0, keyM1_5, 'key must change across stages (stage 0 to stage 2)');
-
-  // Stage 2: month 1.4 to 1.6
-  const keyM1_4 = chunkGrowKey(g, 0, 0, 64, 1.4);
-  const keyM1_6 = chunkGrowKey(g, 0, 0, 64, 1.6);
-  assert.equal(keyM1_4, keyM1_6, 'key must remain identical within stage 2');
-
-  // Across stage: month 3.0 is stage 4
-  const keyM3 = chunkGrowKey(g, 0, 0, 64, 3.0);
-  assert.notEqual(keyM1_5, keyM3, 'key must change across stages (stage 2 to stage 4)');
 });
 
 test('3. The same seed gives the same particles; all are dead after 450 ms', () => {

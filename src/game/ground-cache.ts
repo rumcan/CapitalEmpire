@@ -19,7 +19,12 @@ export interface Tile {
   /** the picture before the last edit, kept for the build reveal */
   prev: WebGLTexture | null; prevUntil: number;
   gen: number; stale: boolean; pendingL: number; used: number;
+  /** when its picture last landed (performance.now ms), and the earliest time it may be baked again while it still has a picture (a course
+   *  stroke re-staling the same chunks every send: each is re-baked at most every COURSE_HOLD_MS, showing its last picture meanwhile) */
+  baked: number; hold: number;
 }
+/** the least time between two bakes of a ground chunk that course edits keep re-staling, ms */
+export const COURSE_HOLD_MS = 150;
 const key = (k: TileKind, i: number, j: number) => (k === 'g' ? 0 : k === 'm' ? 1 : 2) * 1e10 + (j + 2048) * 65536 + (i + 32768);
 const SIZE: Record<TileKind, [number, number]> = { g: [CHUNK_W, CHUNK_H], m: [MID_W, MID_H], p: [PLAN_W, PLAN_H] };
 
@@ -64,39 +69,45 @@ export class GroundCache {
     for (const box of local.values()) this.invalidate(box, false, 0, 'gm');
   }
   /** the lot patches of the keys in `set` replace their old ones, `drop` removes keys; the chunks under the old and new patches go stale */
-  lotGround(set: [string, LotPatch[]][], drop: string[]) {
+  /** stale: per key, the box its new patches actually changed (a course chunk edited in one corner), which goes stale instead of their
+   *  whole boxes (the ground outside it was baked from identical geometry) */
+  lotGround(set: [string, LotPatch[]][], drop: string[], stale?: ReadonlyMap<string, BBox>) {
     if (!set.length && !drop.length) return;
     let box: BBox | null = null;
     for (const k of drop) { const old = this.lotPatches.get(k); if (old) { const b = patchBox(old); if (b) box = unionBox(box, b); this.lotPatches.delete(k); } }
+    let held: BBox | null = null;
     for (const [k, ps] of set) {
-      const old = this.lotPatches.get(k); if (old) { const b = patchBox(old); if (b) box = unionBox(box, b); }
+      const s = stale?.get(k), old = this.lotPatches.get(k);
+      if (s && old) { held = unionBox(held, s); if (ps.length) this.lotPatches.set(k, ps); else this.lotPatches.delete(k); continue; }
+      if (old) { const b = patchBox(old); if (b) box = unionBox(box, b); }
       const b = patchBox(ps); if (b) box = unionBox(box, b);
       if (ps.length) this.lotPatches.set(k, ps); else this.lotPatches.delete(k);
     }
     this.broadcast({ t: 'lotground', set, drop });
     if (box) this.invalidate([box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], false, 0, 'gmp');
+    if (held) this.invalidate([held[0] - 1, held[1] - 1, held[2] + 1, held[3] + 1], false, 0, 'gmp', this.courseHoldMs);
   }
 
   tile(kind: TileKind, i: number, j: number) {
     const k = key(kind, i, j); let t = this.tiles.get(k);
-    if (!t) { t = { kind, i, j, tex: null, texL: 0, px: 0, prev: null, prevUntil: 0, gen: 0, stale: false, pendingL: 0, used: 0 }; this.tiles.set(k, t); }
+    if (!t) { t = { kind, i, j, tex: null, texL: 0, px: 0, prev: null, prevUntil: 0, gen: 0, stale: false, pendingL: 0, used: 0, baked: 0, hold: 0 }; this.tiles.set(k, t); }
     return t;
   }
   /** mark the chunks over a tile-space box stale; keepPrev keeps the current picture for the build reveal */
-  invalidate(b: BBox, keepPrev = false, until = 0, kinds = 'gmp') {
+  invalidate(b: BBox, keepPrev = false, until = 0, kinds = 'gmp', hold = 0) {
     const xs = [(b[0] - b[1]) * 64, (b[2] - b[1]) * 64, (b[0] - b[3]) * 64, (b[2] - b[3]) * 64], ys = [(b[0] + b[1]) * 32, (b[2] + b[1]) * 32, (b[0] + b[3]) * 32, (b[2] + b[3]) * 32];
     const X0 = Math.min(...xs), X1 = Math.max(...xs), Y0 = Math.min(...ys), Y1 = Math.max(...ys);
     for (const t of this.tiles.values()) {
       if (!kinds.includes(t.kind)) continue;
       const [W, H] = SIZE[t.kind];
       if ((t.i + 1) * W < X0 || t.i * W > X1 || (t.j + 1) * H < Y0 || t.j * H > Y1) continue;
-      t.gen++; t.stale = true;
+      t.gen++; t.stale = true; t.hold = hold ? Math.max(t.hold, t.baked + hold) : 0;
       if (keepPrev && t.tex && t.kind !== 'p') { if (t.prev && t.prev !== t.tex) this.gl.deleteTexture(t.prev); t.prev = t.tex; t.prevUntil = Math.max(t.prevUntil, until); }
     }
   }
-  invalidateAll() { for (const t of this.tiles.values()) { t.gen++; t.stale = true; } }
+  invalidateAll() { for (const t of this.tiles.values()) { t.gen++; t.stale = true; t.hold = 0; } }
   /** ask for a tile at a level this frame (lower pri = sooner) */
-  need(t: Tile, L: number, pri: number, now: number) { t.used = now; if ((t.tex && t.texL === L && !t.stale) || t.pendingL === L) return; this.want.push({ t, L, pri }); }
+  need(t: Tile, L: number, pri: number, now: number) { t.used = now; if ((t.tex && t.texL === L && (!t.stale || now < t.hold)) || t.pendingL === L) return; this.want.push({ t, L, pri }); }
   /** send the most urgent requests to idle workers */
   pump() {
     if (!this.ready) { this.want = []; return; }
@@ -111,6 +122,8 @@ export class GroundCache {
     this.want = [];
   }
   get busy() { return this.inflight.reduce((s, v) => s + v, 0); }
+  /** the hold on chunks a course edit re-stales (COURSE_HOLD_MS; the benchmark tries others) */
+  courseHoldMs = COURSE_HOLD_MS;
   private onMessage(w: number, m: FromWorker) {
     if (m.t === 'ready') { this.ready++; this.isReady[w] = true; return; }
     if (m.t === 'error') { this.errors.push(m.message); console.error('[ground worker]', m.message); return; }
@@ -122,7 +135,7 @@ export class GroundCache {
     this.bakeMs += m.ms; this.baked++;
     if (r.gen !== t.gen) { m.bmp.close(); return; } // edited while baking: it will be asked for again
     const u0 = performance.now();
-    const old = t.tex; t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.px = m.bmp.width * m.bmp.height; t.stale = false; m.bmp.close();
+    const old = t.tex; t.tex = this.gl.textureFrom(m.bmp); t.texL = m.L; t.px = m.bmp.width * m.bmp.height; t.stale = false; t.baked = u0; m.bmp.close();
     if (old && old !== t.prev) this.gl.deleteTexture(old);
     const u1 = performance.now(); this.upCount++; this.upMs += u1 - u0;
     if (u1 - this.upT > 1000) { this.uploadsThisSecond = this.upCount; this.uploadMsPerSecond = this.upMs; this.upCount = 0; this.upMs = 0; this.upT = u1; }

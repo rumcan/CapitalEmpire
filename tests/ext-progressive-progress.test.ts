@@ -66,7 +66,7 @@ describe('player progress (T033)', () => {
 /** the rail group ids of App.tsx GROUPS (T033b): mirrored here, the headless test cannot read App.tsx */
 const APP_GROUP_IDS = ['select', 'roads', 'paint', 'course', 'junction', 'bulldoze', 'transport', 'business'];
 /** every Tool id in src/game/types.ts */
-const TOOL_IDS = ['select', 'road', 'junction', 'bulldoze', 'park', 'toll', 'bus', 'lane', 'downgrade', 'business', 'paint', 'course'];
+const TOOL_IDS = ['select', 'road', 'junction', 'bulldoze', 'park', 'toll', 'bus', 'lane', 'downgrade', 'business', 'paint', 'course', 'path'];
 
 describe('progressive tool unlocks (T033b)', () => {
   it('stage 1 hides Junctions and Bus routes; stage 3 shows every tool', () => {

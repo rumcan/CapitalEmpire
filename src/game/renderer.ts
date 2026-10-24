@@ -14,8 +14,8 @@ import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseTex, type LotPatch, type PatchTex } from './ground-protocol';
 import { BLOB_STYLE } from './ext/course-blobs';
-import { SURF_GROW } from './ext/course-grid/areas';
-import { lineField } from './ext/course-grid/field';
+import { SURF_GROW_MONTHS } from './ext/course-fx';
+import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
@@ -45,15 +45,22 @@ const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [strin
 /** the painted ground textures a photo (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads (the dark grey
  *  Asphalt photo, the owner's call 2026-10-21), water, and the river and creek banks (the dirt photo, the owner 2026-10-21) */
 const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'asphalt'], ['field', 'field'], ['water', 'waterDark'], ['bank', 'dirt'], ['creek', 'dirt']]);
+/** the starter cart paths' painted looks (T084, the hand-painted game-art style of T082), by road surface: a flat fill (multiplied by the grime
+ *  blotches), the bevel rims (the sun at the upper right: lit rim on the upper-right edge, shade rim on the lower-left) with their strengths, a
+ *  dirt path's feathered worn halo, and the slabs' thin cast shade. The planner's flat colour is plan */
+export const CART_SURFACE = new Map<string, { fill: string; plan: string; lit: string; litA: number; shade: string; shadeA: number; halo?: string; cast?: string }>([
+  ['dirt', { fill: '#cba673', plan: '#b08f60', lit: '#fbe8c0', litA: 0.5, shade: '#5e4127', shadeA: 0.3, halo: 'rgba(98,74,42,0.55)' }],
+  ['cement', { fill: '#d4d0c7', plan: '#bdb9b0', lit: '#fdfaf2', litA: 0.75, shade: '#6c675e', shadeA: 0.5, cast: 'rgba(18,22,16,0.32)' }],
+]);
 /** a ground photo drawn this many times its size (the owner, 2026-10-21: the gravel roads' asphalt "a lot" bigger); the hex-mixed mosaic
  *  still has 43 px a tile at 3x, above the 38 the closest zoom asks for */
 const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
 /** adds a closed flat ring x0 y0 x1 y1 ... (tiles) to a path */
-const ringPath = (p: Path2D, pts: readonly number[]) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
+const ringPath = (p: Path2D, pts: ArrayLike<number>) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
 /** a painted area's or course chunk's place in the draw order among the painted areas */
-const paintZ = (p: LotPatch) => p.course ? p.course.z : p.paint!.z;
+const paintZ = (p: LotPatch) => p.course ? -1e300 : p.paint!.z; // the course under every painted area, even one ordered below 0
 /** the course chunks' draw-order switches (renderer drawCourses): step 5, the mowing stripes, waits for T075's stripe bands; step 6, the
  *  dirt of seeded cells through the growth mask, is on (T076 landed) */
 const COURSE_STRIPES = false;
@@ -181,7 +188,9 @@ export class GroundPainter {
     if (this.courseAny) { const cs = courseShadeRGBA(this.courseShade, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25); if (cs) { const cb = this.buffer('small', cs.W, cs.H); ctx2d(cb).putImageData(new ImageData(cs.data as Uint8ClampedArray<ArrayBuffer>, cs.W, cs.H), 0, 0); ctx.setTransform(M); ctx.drawImage(cb, tx0, ty0, cs.W / 0.25, cs.H / 0.25); } }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
-    fill(v.walkF, '#9a9184'); fill(v.asphF.filter(f => f.tex === 'gravel'), '#404040'); fill(v.asphF.filter(f => f.tex !== 'gravel'), '#3c4150'); fill(v.medianF, '#557a35');
+    fill(v.walkF.filter(f => f.tex !== 'turf'), '#9a9184');
+    for (const [kind, look] of CART_SURFACE) fill(v.asphF.filter(f => f.tex === kind), look.plan); // the starter cart paths (T084), under the roads
+    fill(v.asphF.filter(f => f.tex === 'gravel'), '#404040'); fill(v.asphF.filter(f => f.tex !== 'gravel' && !CART_SURFACE.has(f.tex)), '#3c4150'); fill(v.medianF, '#557a35');
     ctx.fillStyle = '#557a35'; for (const r of v.rbIslands) { ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill(); }
     // tunnel routes have no road fills, so the planner marks them with a dashed line
     ctx.strokeStyle = 'rgba(60,65,80,0.85)'; ctx.lineCap = 'butt'; ctx.setLineDash([3, 2]);
@@ -361,7 +370,8 @@ export class GroundPainter {
     }
 
     if (asph.length) {
-      const kerbed = asph.filter(f => f.kerb), plain = asph.filter(f => !f.kerb);
+      // the starter cart paths (dirt, cement slabs: T084) draw their own soft edges (5a), not the plain roads' dark one
+      const kerbed = asph.filter(f => f.kerb), plain = asph.filter(f => !f.kerb && !CART_SURFACE.has(f.tex));
       const asphMask = maskOf('asphMask', asph), shift = Math.max(1, FACE_WORLD * L);
       // ---- 4. curb: raised top ring (joint colour outside, cream top inside), then the visible face between the top and the road
       if (kerbed.length) {
@@ -385,8 +395,32 @@ export class GroundPainter {
       // plain (verge) roads: a soft dark edge instead of a curb, feathered by a 1 px blur (the owner: no hard vector line)
       if (plain.length) { ctx.save(); ctx.filter = 'blur(1px)'; ctx.strokeStyle = 'rgba(12,10,8,0.5)'; for (const f of plain) ring(ctx, f, Math.max(0.2, 2 * minW)); ctx.restore(); ctx.setTransform(M); }
       // ---- 5. asphalt: the painted mosaic in ground space, per class tone
+      // ---- 5a. the starter cart paths (T084), first, so every road meeting one paints over it: packed dirt and cement slabs in flat painted
+      // colour with soft blotches (the grime layer), a feathered worn halo round the dirt, a thin cast shade under the slabs' lower-left edge, and
+      // the sun's bevel (the sun at the upper right): a light rim on each path's upper-right edge, a shade rim on its lower-left edge. Their
+      // slab joints, wheel ruts and centre grass are markings (8); a dirt path's edge tufts are litter (10)
+      const cartF = asph.filter(f => CART_SURFACE.has(f.tex));
+      if (cartF.length) {
+        const tpx = Math.hypot(M.a, M.b), shift = (s: number) => [M.c * s, M.d * s] as const; // px per tile; a tile-space (0, s) step on screen (+y: toward the lower left)
+        for (const [kind, look] of CART_SURFACE) {
+          const feats = cartF.filter(f => f.tex === kind); if (!feats.length) continue;
+          const m = maskOf('cartMask', feats);
+          if (!lite && look.halo) { ctx.save(); ctx.filter = `blur(${Math.max(1, 0.14 * tpx).toFixed(1)}px)`; ctx.lineJoin = 'round'; ctx.strokeStyle = look.halo; for (const f of feats) ring(ctx, f, 0.4); ctx.restore(); ctx.setTransform(M); }
+          if (!lite && look.cast) { const cb = this.buffer('cartRim', W, H), cg = ctx2d(cb), [dx, dy] = shift(0.09); cg.drawImage(m, dx, dy); cg.globalCompositeOperation = 'source-in'; cg.fillStyle = look.cast; cg.fillRect(0, 0, W, H); composite(cb); }
+          const bb = this.buffer('cartBody', W, H), bg = ctx2d(bb);
+          bg.fillStyle = look.fill; bg.fillRect(0, 0, W, H);
+          bg.setTransform(M); bg.globalCompositeOperation = 'multiply'; bg.fillStyle = this.screenPattern(bg, 'grime', L, X0, Y0, Minv); bg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0); bg.globalCompositeOperation = 'source-over';
+          through(bb, m); composite(bb);
+          if (!lite) for (const [col, s, alpha] of [[look.lit, 0.11, look.litA], [look.shade, -0.11, look.shadeA]] as const) {
+            // a rim: the path's mask less the same mask stepped s tiles along y (a positive step leaves its upper-right edge, a negative its lower-left)
+            const rb = this.buffer('cartRim', W, H), rg = ctx2d(rb), [dx, dy] = shift(s);
+            rg.drawImage(m, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = col; rg.fillRect(0, 0, W, H);
+            rg.globalCompositeOperation = 'destination-out'; rg.drawImage(m, dx, dy); composite(rb, 'source-over', alpha);
+          }
+        }
+      }
       // gravel roads are painted first, with their own pattern and no tones, so a paved road meeting one paints over it
-      const gravelF = asph.filter(f => f.tex === 'gravel'), paved = asph.filter(f => f.tex !== 'gravel');
+      const gravelF = asph.filter(f => f.tex === 'gravel'), paved = asph.filter(f => f.tex !== 'gravel' && !CART_SURFACE.has(f.tex));
       if (gravelF.length) { const gp = pat('roadgravel'); for (const f of gravelF) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = gp; ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = gp; ctx.fill(f.path); } } }
       const base = this.groundPattern(ctx, tex.mosaicFor('base', L));
       for (const f of paved) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.strokeStyle = base; ctx.lineWidth = f.w; ctx.stroke(f.path); } else { ctx.fillStyle = base; ctx.fill(f.path); } }
@@ -563,6 +597,8 @@ export class GroundPainter {
 
   /** the blend masks (blendMask), by share and softness */
   private blendMasks = new Map<string, Cnv>();
+  /** the course dirt's stage image (courseDirt), kept between chunks */
+  private dirtImg: ImageData | null = null;
   /** a tileable mask of soft patches (the map grass's mix: B where the low-frequency noise is past 1 - share, blended over +-soft) */
   private blendMask(share: number, soft: number) {
     const key = `${share.toFixed(2)},${soft.toFixed(2)}`; let m = this.blendMasks.get(key);
@@ -650,21 +686,21 @@ export class GroundPainter {
    *  No dark outline stroke. A district (lite) chunk draws only the collar fills and the fills. The field steps (1, 7) are made per chunk
    *  over its own box only, from its own edges and its neighbours' (so a seam is lit as one curve and nothing is drawn twice) */
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
-    const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = edgeRes(L);
+    const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     /** a course texture as a fill style on g: the photo or preset in tile space (turned and scaled about the origin), else the screen texture */
     const style = (g: C2D, t: CourseTex) => {
       const G = new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
       return isPaintPhoto(t.tex) ? this.paintPhoto(g, t.tex, L, G, t.sc) : this.screenPattern(g, t.tex as TexName, L, X0, Y0, Minv, G);
     };
-    const ringsOf = (rings: readonly number[][]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
+    const ringsOf = (rings: readonly ArrayLike<number>[]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
     /** step 4: rings filled even-odd in t */
-    const fill = (t: CourseTex, rings: readonly number[][]) => {
+    const fill = (t: CourseTex, rings: readonly ArrayLike<number>[]) => {
       if (!rings.length) return;
       ctx.save(); ctx.setTransform(M); ctx.clip(ringsOf(rings), 'evenodd'); ctx.fillStyle = style(ctx, t); ctx.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); ctx.restore();
     };
     /** steps 2 and 3: the edge polylines stroked in t, FEATHER_STEPS strokes from 2f wide down, alpha 1 / (n - k): out to f tiles past the
      *  edge the coverage falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
-    const feather = (t: CourseTex, lines: readonly number[][], f: number) => {
+    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number) => {
       if (!lines.length || f <= 0) return;
       const p = new Path2D();
       for (const q of lines) {
@@ -697,7 +733,7 @@ export class GroundPainter {
         if (collarAfter(s) === s) collars(ls);
         const look = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = look ? featherTiles(look, L) : flatF;
         // the field images (steps 1 and 7) of each chunk over its own box within this ground chunk
-        const ims: { im: ReturnType<typeof edgeImages>; x0: number; y0: number }[] = [];
+        const ims: { im: ReturnType<typeof courseImages>; x0: number; y0: number }[] = [];
         if (!lite && look && (look.light > 0 || look.dark > 0 || look.shadow > 0)) {
           // every chunk here, with or without this surface, takes the field over its own box from all the surface's edges within reach: a
           // shadow cast across a chunk border lands in the next chunk (whose rings, if it has none of the surface, are empty: no rims)
@@ -708,14 +744,14 @@ export class GroundPainter {
             const x0 = Math.max(box[0], c.cx * c.size), y0 = Math.max(box[1], c.cy * c.size), x1 = Math.min(box[2], (c.cx + 1) * c.size), y1 = Math.min(box[3], (c.cy + 1) * c.size);
             if (x1 <= x0 || y1 <= y0 || ex1 < x0 - reach || ex0 > x1 + reach || ey1 < y0 - reach || ey0 > y1 + reach) continue;
             const F = lineField(c.layers.find(q => q.s === s)?.fill ?? [], all, x0, y0, x1 - x0, y1 - y0, res, reach);
-            if (F.any) ims.push({ im: edgeImages(F, look, f), x0, y0 });
+            if (F.any) ims.push({ im: courseImages(F, look, f), x0, y0 });
           }
         }
         for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'source-over');                    // 1
         if (!lite) for (const { l } of ls) feather(l, l.edges, f);                                 // 3
         for (const { l } of ls) fill(l, l.fill);                                                   // 4
         if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 5
-        if (!lite && COURSE_DIRT && SURF_GROW[s]! > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 6
+        if (!lite && COURSE_DIRT && (SURF_GROW_MONTHS[s] ?? 0) > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 6
         for (const q of ims) { put(q.im.light, q.x0, q.y0, 'screen'); put(q.im.dark, q.x0, q.y0, 'multiply'); } // 7
       }
       // the collars laid over this surface (the bunker's grass lip over a green) go on top of it
@@ -733,10 +769,12 @@ export class GroundPainter {
     const clip = new Path2D(); for (const q of l.fill) ringPath(clip, q);
     for (let st = 0; st < 4; st++) {
       const a = Math.round(255 * (1 - st / 4)); let any = false;
-      const data = new Uint8ClampedArray(n * n * 4);
-      for (let i = 0; i < n * n; i++) if (grow[i] === a) { data[4 * i + 3] = 255; any = true; }
+      for (let i = 0; i < n * n; i++) if (grow[i] === a) { any = true; break; }
       if (!any) continue;
-      const m = this.buffer('small', n, n); ctx2d(m).putImageData(new ImageData(data, n, n), 0, 0);
+      // the stage's cells as an alpha image (one ImageData kept and reused, chunk after chunk)
+      const img = this.dirtImg?.width === n ? this.dirtImg : (this.dirtImg = new ImageData(n, n)), data = img.data;
+      for (let i = 0; i < n * n; i++) data[4 * i + 3] = grow[i] === a ? 255 : 0;
+      const m = this.buffer('small', n, n); ctx2d(m).putImageData(img, 0, 0);
       const b = this.buffer('courseDirt', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b);
       g.save(); g.setTransform(M); g.clip(clip, 'evenodd');
       g.fillStyle = isPaintPhoto(DIRT_TEX) ? this.paintPhoto(g, DIRT_TEX, L) : this.screenPattern(g, DIRT_TEX as TexName, L, X0, Y0, Minv); g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
