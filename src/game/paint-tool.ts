@@ -8,7 +8,7 @@ import HOLE_PRESETS from './golf/hole-presets.json';
 import { EARTHWORK_PER_M3, areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
 import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
 import { drawGhostPoly, drawGhostRing, drawGhostSnap, ghostStatus } from './ext/ghost-preview';
-import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement } from './ext/course-snap';
+import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
@@ -69,6 +69,10 @@ function loadBrush(): Record<BrushKind, BrushSet> {
 export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void; ownedLand?: (pts: number[]) => boolean; currentMonth?: () => number;
   /** the player did something that counts toward the tool unlocks (T033) */
   progress?(what: 'piece'): void;
+  /** the road segments near tile (x, y) within r tiles, as snap targets for a cart path (T031) */
+  roadsNear?(x: number, y: number, r: number): SnapTargetRoad[];
+  /** the road network's revision (changes on every road edit): a planned cart path re-snaps when it does (T031) */
+  roadRev?(): number;
   /** a plant brush dab: props from ids scattered in the circle (spaced, sized size[0]..size[1]); returns how many were placed */
   plant(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number): number;
   /** removes the plant-brush props in the circle; returns how many */
@@ -363,12 +367,16 @@ export class PaintTool {
   private refreshPiece() { this.piece = this.cursor ? this.pieceAt(this.cursor) : null; this.host.emit(); }
   /** piece mode: the plan for the piece in hand at tile t: its placement (snapped to the touching course piece unless snapping is off), the areas it lays, why it cannot go ('' if it can) and its cost (golf mode) */
   private pieceAt(t: { x: number; y: number }): NonNullable<PaintTool['piece']> {
-    const key = `${this.pieceArch}|${Math.round(t.x * 4)}|${Math.round(t.y * 4)}|${this.pieceAngle}|${this.pieceScale}|${this.pieceSnap}|${this.brushHole}|${this.areas.length}|${this.nextId}|${this.plantKind}|${this.host.courseHeight?.()?.rev ?? 0}`;
+    const key = `${this.pieceArch}|${Math.round(t.x * 4)}|${Math.round(t.y * 4)}|${this.pieceAngle}|${this.pieceScale}|${this.pieceSnap}|${this.brushHole}|${this.areas.length}|${this.nextId}|${this.plantKind}|${this.host.courseHeight?.()?.rev ?? 0}|${this.host.roadRev?.() ?? 0}`;
     if (this.piece?.key === key) return this.piece;
     const b = PIECE_BUTTONS.find(q => q.arch === this.pieceArch) ?? PIECE_BUTTONS[2]!, golf = !!this.host.golfMode?.();
-    const pl = computeSnapPiecePlacement({ kind: b.kind, archetype: b.arch, cursor: t, angleDeg: this.pieceAngle, scale: this.pieceScale, snapEnabled: this.pieceSnap, defaultHole: this.brushHole, areas: snapTargets(this.areas) });
+    // a cart path snaps to the road kerbs near it (T031); the other pieces do not look at the roads
+    const roads = b.kind === 'path' && this.pieceSnap ? this.host.roadsNear?.(t.x, t.y, 12) : undefined;
+    const pl = computeSnapPiecePlacement({ kind: b.kind, archetype: b.arch, cursor: t, angleDeg: this.pieceAngle, scale: this.pieceScale, snapEnabled: this.pieceSnap, defaultHole: this.brushHole, areas: snapTargets(this.areas), roads });
     const areas = pieceAreas(pl);
-    return { key, pl, areas, why: pieceWhy(areas, golf ? this.host.ownedLand : undefined), cost: golf ? pieceCost(areas, this.plantKind) + this.earthworkCost(pl.heightOps) : 0 };
+    // a snapped cart path's join apron sits on the road's verge, which may lie outside the course land: only the piece's own layers must be on owned land (the apron is still laid and priced)
+    const landAreas = b.kind === 'path' ? areas.filter((_, i) => pl.layers[i]?.role !== 'join-apron') : areas;
+    return { key, pl, areas, why: pieceWhy(landAreas, golf ? this.host.ownedLand : undefined), cost: golf ? pieceCost(areas, this.plantKind) + this.earthworkCost(pl.heightOps) : 0 };
   }
   /** applies a placed piece's height ops to the course height field (journaled for undo); the engine is told the changed box */
   private applyHeightOps(ops: readonly CoursePieceHeightOp[]) {

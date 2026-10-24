@@ -127,7 +127,7 @@ export function autoTextureForPiece(
     : kind === 'tee' ? { tex: 'golfTee', border: 1, btex: 'golfFirstCut', radius: 1, angle }
     : kind === 'bunker' ? { tex: 'bunkerSand', border: 2, btex: 'golfRough', radius: 2, angle }
     : kind === 'water' ? { tex: 'waterClear', border: 2, btex: 'rockyDirt', radius: 3, angle }
-    : kind === 'path' ? { tex: 'asphalt', border: 1, btex: 'gravel', radius: 0, angle }
+    : kind === 'path' ? { tex: 'spectatorPath', border: 1, btex: 'gravel', radius: 0, angle }
     : { tex: 'asphalt', border: 1, btex: 'kerb', radius: 0, angle };
   if ((snapRule === 'path-to-road' || snapRule === 'road-to-road') && snapPt && snapNormal) {
     const hw = kind === 'path' ? 1.5 : 2.5, depth = 1.5, nx = snapNormal.x, ny = snapNormal.y, tx = -ny, ty = nx;
