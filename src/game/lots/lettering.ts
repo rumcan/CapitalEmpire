@@ -2,7 +2,7 @@
 // a flipped sign reads backwards, so the composer and the business art never flip these sprites.
 import { LIBRARY } from '../library';
 import { EAST_PAIRS } from '../east-library';
-import { VIEW_EAST } from '../views-library';
+import { VIEW_ART, VIEW_EAST } from '../views-library';
 
 /** shop words, matched as whole words (or a word with a plural / a compound) against the sprite id and its library name. 'garage' is not
  *  a word: the house garages say it too often (the commercial one, the golf cart garage, is in INCLUDE) */
@@ -39,8 +39,9 @@ export function hasLettering(id: string, name?: string): boolean {
 
 /** the east-facing (+X) art of a front shop, by the front sprite's id (EAST_PAIRS, from east-library.ts, made by scripts/assets/prep-east.mjs):
  *  a flipped lot draws it unflipped (its signs read right, the art faces +X) in place of the front sprite. The four-view buildings without
- *  east art add their SE view (VIEW_EAST), so a house turned to +X is drawn turned, not mirrored. */
-export const EAST_FACING: Record<string, string> = Object.fromEntries([...EAST_PAIRS, ...VIEW_EAST]);
+ *  east art add their SE view (VIEW_EAST), so a house turned to +X is drawn turned, not mirrored. Only the east art that is an SE view now
+ *  (VIEW_ART): the rest is its front mirrored, so the sun on the wrong side (mirror.ts draws it as the front, unflipped). */
+export const EAST_FACING: Record<string, string> = Object.fromEntries([...EAST_PAIRS.filter(([, east]) => VIEW_ART.has(east)), ...VIEW_EAST]);
 
 /** the library ids (over LIBRARY) that carry lettering: the test and the audit list */
 export const LETTERING_IDS: ReadonlySet<string> = new Set(LIBRARY.filter(i => hasLettering(i.id, i.name)).map(i => i.id));

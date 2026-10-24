@@ -81,7 +81,7 @@ import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
 import { tierInfo, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
-import { unmirror } from './views-library';
+import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
 import { NEW_ART_ONLY, lookOf } from './newart';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
@@ -761,8 +761,8 @@ export class Game {
     if (n) this.scheduleSave(); return n;
   }
   addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string): Prop {
-    // the four-view buildings are never mirrored: a flip draws the building turned (its partner view), as it is
-    const [id, f0] = unmirror(LIBRARY[item]!.id, flip); if (f0 !== flip) { item = LIB_INDEX.get(id) ?? item; flip = f0; }
+    // no building is ever mirrored (mirror.ts): a flip draws the four-view art turned (its partner view), any other building unflipped
+    const [id, f0] = drawnAs(LIBRARY[item]!, flip); if (id !== LIBRARY[item]!.id) item = LIB_INDEX.get(id) ?? item; flip = f0;
     // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts)
     if (LIBRARY[item]!.kind === 'tree') flip = TREE_MIRROR.has(LIBRARY[item]!.id);
     const f = this.footprint(LIBRARY[item], x, y, flip, scale);

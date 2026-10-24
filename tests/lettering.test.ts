@@ -9,6 +9,7 @@ import { hasLettering, LETTERING_IDS, EAST_FACING } from '../src/game/lots/lette
 import { EAST_PAIRS } from '../src/game/east-library';
 import { VIEW_ART, unmirror } from '../src/game/views-library';
 import { REMOVED_IDS } from '../src/game/lots/scales';
+import { drawnAs, isBuilding } from '../src/game/mirror';
 /** the fronts of the 14 east pictures in art/east-facing */
 const EAST_FRONTS = ['ref:building-corner-shop', 'ref:building-corner-store', 'ref:building-gas-canopy', 'ref:building-grocery', 'town:bakery', 'town:barber', 'town:fish_tackle', 'town:grocery', 'town:laundromat', 'town:pharmacy', 'town:postoffice', 'world:diner', 'world:snack_bar', 'world:video'];
 import { LU, LV } from '../src/game/lots/town';
@@ -87,7 +88,8 @@ test('east-facing art: each pair is a library sprite of its front\'s kind and ca
     const f = byId.get(front), e = byId.get(east);
     assert.ok(f, `${front} is in the library`);
     assert.ok(e, `${east} is in the library`);
-    assert.equal(EAST_FACING[front], east, `${front} maps to ${east}`);
+    // only the east art that is an SE view now is drawn: the rest is the front mirrored (mirror.ts draws the front, unflipped, in its place)
+    assert.equal(EAST_FACING[front], VIEW_ART.has(east) ? east : undefined, `${front} maps to ${VIEW_ART.has(east) ? east : 'nothing (its east art is mirrored)'}`);
     assert.equal(east, `east:${front}`, `${east} is named for its front`);
     assert.equal(e.kind, f.kind, `${east} kind`);
     assert.equal(e.cat, f.cat, `${east} category`);
@@ -150,18 +152,40 @@ test('the east-facing hook: a flipped front with east-facing art draws that art 
   }
 });
 
-test('a rotated business never mirrors a lettering sprite; its plain sprites still turn', () => {
-  let nLettered = 0, turnedPlain = 0;
+test('a rotated business never mirrors a picture, lettering or plain (mirror.ts: no building is mirrored)', () => {
+  let nLettered = 0, n = 0;
   for (const b of BUSINESSES) {
     const turned = businessArt({ id: 3, type: b.id, x: 20, y: 30, w: b.footprint.h, h: b.footprint.w }, LIBRARY, index);
     for (const p of turned) {
       const id = LIBRARY[p.item]!.id;
-      if (lettered(id)) { nLettered++; assert.equal(p.flip, false, `${id} on a rotated ${b.id}`); }
-      else if (p.flip) turnedPlain++;
+      n++; if (lettered(id)) nLettered++;
+      assert.equal(p.flip, false, `${id} on a rotated ${b.id}`);
     }
   }
-  assert.ok(nLettered > 0, 'a rotated business has lettering art');
-  assert.ok(turnedPlain > 0, 'a rotated business still turns its plain art');
+  assert.ok(nLettered > 0 && n > nLettered, 'a rotated business has lettering and plain art');
+});
+
+test('no building is ever drawn flipped: lots of every use facing +X and +Y, across seeds (mirror.ts)', () => {
+  const rnd = mulberry(20261024);
+  let buildings = 0, turned = 0;
+  for (const lot of LOTS) for (let k = 0; k < 12; k++) {
+    const st: ComposeState = { use: [LU.RES, LU.COM, LU.IND, LU.TOUR, LU.GOV][k % 5]!, level: k % 2 ? LV.BUILT : LV.UPGRADED, decline: k % 4, seed: Math.floor(rnd() * 4294967296) >>> 0 };
+    for (const p of compose(lot, st).props) {
+      const it = byId.get(p.id); if (!it || !isBuilding(it)) continue;
+      buildings++; if (p.id.startsWith('view:') || (p.id.startsWith('east:') && VIEW_ART.has(p.id))) turned++;
+      assert.equal(p.flip, false, `${lot.key} ${JSON.stringify(st)}: ${p.id} is drawn mirrored`);
+    }
+  }
+  assert.ok(buildings > 200, `${buildings} buildings composed`);
+  assert.ok(turned > 0, 'a flipped lot draws the four-view buildings turned (their partner views)');
+  // every way a sprite is drawn (engine.addProp, the business art): a building flipped is its partner view or itself, unflipped
+  for (const it of LIBRARY) {
+    const [id, flip] = drawnAs(it, true);
+    if (isBuilding(it)) assert.equal(flip, false, `${it.id} is drawn mirrored`);
+    assert.ok(byId.has(id), `${it.id} is drawn as ${id}, in the library`);
+  }
+  // the east art that is its front mirrored (no SE view yet) is drawn as the front, unflipped
+  for (const [front, east] of EAST_PAIRS) if (byId.has(east) && !VIEW_ART.has(east)) assert.deepEqual(drawnAs(byId.get(east)!, false), [front, false], east);
 });
 
 test('the four-view buildings are never mirrored: a flip is the partner view (NE <-> SE, SW <-> NW), unflipped, on the same footprint', () => {
