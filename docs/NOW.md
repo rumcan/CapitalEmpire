@@ -14,9 +14,20 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - **The new lead's board** (2026-10-24, LEAD.md section 5). Open tickets: GitHub issues `arena` + `status:open`.
 - **M2.5 (P02):** T048 and T050 landed (the tournament day clock; the movers on the timeline). Next on the city.ts / event chain: T051b (galleries follow the play, wiring T051a), T052 (viewing and tents from the movers), T053 (the tournament-day strip).
 - **P03:** T055/T056 after that chain (surge.ts / city.ts are single-owner).
-- **P19:** T067 (course drive), T069a (frontage snap) in progress; then T068 (path network), T069b, T070.
-- **P20:** T062 (preset data) in progress; then T063, T064, T065, T066.
-- **The owner's requests in flight (delegated, 2026-10-24):** the woodland's fescue ground, every tree in the forests and every tree lit from the right (`lead/woodland-fescue-trees`); library sizes, nothing drawn above its pixels, and the studio sizing every sprite (`lead/library-sizes`); painted surface edges with a feather and a sun-lit bevel (`lead/paint-edges`); the fairway tool rethink: research and plan P21 (a tiny iso grid whose cells merge with same-surface neighbours like water droplets, a splash on placing, dirt then grass growing in).
+- **P19:** T067 (course drive) merged; T069a (frontage snap) in progress; then T068 (path network), T069b, T070.
+- **P20 (2026-10-24 evening):** T063 #130, T064 #132, T071 #139 (in-game dev editor) up to date with main; being re-frozen after #125 and #143
+  (curated 14 lots unchanged) and reviewed; then the lead runs the full suite and merges them in order.
+- **P21 (the course grid):** T072 #133, T073 #134 (droplet outlines) and T076 #140 (grow-in, splash) merged. T078 (the grid in the game) then
+  T077 (the painter draws course chunks) in progress with a lead-coder agent. Flash's T075 #137 (edge light, stripes) and T074 #138 (hole plan)
+  sent back with blocking review findings (posted on the PRs).
+- **Sizes (#125, merged cd94dce):** nothing on any draw path is drawn past its native pixels (size-audit: 0 of 1405 pictures over 278k draws, dpr 1
+  to 2; mip 0 now loads on every screen above 1x). No sharper sources exist for the 5 capped buildings and the business art: art requests in #125.
+  GPU memory: atlases 1050 MB at dpr 2 (budget 96 MB): T080 #141 (compressed pages, residency, separate asset files), queued after the art import.
+- **Art (#143, merged 64a1c9b):** 13 more four-view buildings, 144 of 204; 17 sheets rejected with reasons (measures.json `rejected`, COVERAGE.md);
+  `accepted` lets in sheets the art chat parked as awaiting review. Still wrong in the game: world:house_2 v2 (NW repeats NE). The roadmap card
+  (tools/jobboard/index.html) is updated; the live site serves a hand copy on gh-pages.
+- **Housekeeping:** merged worktrees removed (E: had 3.8 GB free, now about 50 GB). The course-blobs speed test fails the full suite only past 30 ms
+  (target 15 ms alone, best 8.5 ms): parallel test files slowed it to 15.6 ms.
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
 - **Start:** `City.startTournament` (city.ts) at the season's end: the crowd is `spectatorDemand(tier, rep)` (day 1's share, less the
