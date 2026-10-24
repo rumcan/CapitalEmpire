@@ -363,8 +363,9 @@ export class LaneGraph {
     for (const id of this.nodeLanes.get(n) ?? []) this.killLane(id);
     for (const id of this.nodeMoves.get(n) ?? []) this.killMove(id);
     this.signals.delete(n);
-    // a cart path's arm (T084: no lanes) takes no part: a road it meets runs on through as if it were not there; a node of cart paths only builds nothing
-    const io: ArmIO[] = n.arms.map((a, i) => { const ids = this.segDs.get(a.seg)!, fwd = a.seg.a === n; return { a, i, inD: fwd ? ids[1] : ids[0], outD: fwd ? ids[0] : ids[1] }; }).filter(x => x.a.cls.laneCentres.length > 0);
+    // a cart path's arm (T084: no lanes) takes no part: a road it meets runs on through as if it were not there; a node of cart paths only builds
+    // nothing. (i is the place in io, which majorArms, twoArms and the phases index by)
+    const io: ArmIO[] = n.arms.filter(a => a.cls.laneCentres.length > 0).map((a, i) => { const ids = this.segDs.get(a.seg)!, fwd = a.seg.a === n; return { a, i, inD: fwd ? ids[1] : ids[0], outD: fwd ? ids[0] : ids[1] }; });
     for (const x of io) {
       this.dsegs[x.inD]!.out = [];
       for (const id of this.dsegs[x.inD]!.lanes) this.L(id).next = [];

@@ -111,6 +111,28 @@ test('a dirt path crossing a street: a node, the street keeps its through traffi
   assert.ok(moves.some(m => m!.node === cross && m!.turn === 'S'), 'the street runs straight on through the crossing');
 });
 
+test('a cart path T-joining a street from any side: one straight movement each way through the node, never back into its own seg', () => {
+  const cases: [string, Leg, Leg][] = [
+    ['north', leg(100, 200, 300, 200), leg(200, 200, 200, 120)], ['south', leg(100, 200, 300, 200), leg(200, 200, 200, 280)],
+    ['west', leg(200, 100, 200, 300), leg(200, 200, 120, 200)], ['east', leg(200, 100, 200, 300), leg(200, 200, 280, 200)],
+  ];
+  for (const [side, street, path] of cases) {
+    const net = netOf(['street', [street]], ['cart-slab', [path]]);
+    const g = new LaneGraph(); g.update(net);
+    assert.deepEqual(checkGraph(g), [], side);
+    const node = [...net.nodes.values()].find(n => n.x === 200 && n.y === 200)!;
+    assert.equal(node.arms.length, 3, `${side}: a node of three arms`);
+    const moves = g.moves.filter(m => m && m.node === node);
+    assert.equal(moves.length, 2, `${side}: one movement each way`);
+    for (const m of moves) {
+      const f = g.dsegs[m!.from]!, t = g.dsegs[m!.to]!;
+      assert.notEqual(f.seg, t.seg, `${side}: not back into its own seg`);
+      assert.ok(!f.seg.cls.noCars && !t.seg.cls.noCars, `${side}: street to street`);
+      assert.equal(m!.turn, 'S', `${side}: straight on`);
+    }
+  }
+});
+
 test('a node of cart paths only builds no lanes; a car park never opens onto a cart path', () => {
   const net = netOf(['cart-slab', [leg(100, 100, 200, 100), leg(150, 50, 150, 100)]]);
   const g = new LaneGraph(); g.update(net);

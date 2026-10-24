@@ -864,13 +864,14 @@ function Panel({ title, children, icon, desc }: { title: string; children: React
   );
 }
 
-/** the road tool's size headers, in order: the town's (the Roads panel) and the course's (the Course menu's Paths & drives, T084) */
+/** the road tool's size headers, in order: the town's (the Roads panel) */
 const ROAD_FAMILIES: { id: Family; label: string; desc: string }[] = [
   { id: 'small', label: 'Small', desc: 'For residential areas and low traffic.' },
   { id: 'medium', label: 'Medium', desc: 'For higher traffic and main routes.' },
   { id: 'large', label: 'Large', desc: 'For major connections and high density.' },
   { id: 'rural', label: 'Rural', desc: 'Between the towns: shoulders, no sidewalks.' },
 ];
+/** the course's headers (the Course menu's Paths & drives, T084): its cart paths, then its drives */
 const COURSE_FAMILIES_UI: { id: Family; label: string; desc: string }[] = [
   { id: 'cart', label: 'Cart paths', desc: 'Carts and walkers: start as dirt or cement slabs, upgrade to paved' },
   { id: 'course', label: 'Course drives', desc: 'Cars, one lane: start as gravel, upgrade to paved and avenue' },
