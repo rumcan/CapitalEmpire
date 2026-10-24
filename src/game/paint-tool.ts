@@ -9,7 +9,7 @@ import { EARTHWORK_PER_M3, areaBuildCost, growInMonths, surfaceOfTex, type Plant
 import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
 import { drawGhostPoly, drawGhostRing, drawGhostSnap, ghostStatus } from './ext/ghost-preview';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement } from './ext/course-snap';
-import { PIECE_BUTTONS, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
+import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
@@ -436,6 +436,9 @@ export class PaintTool {
       this.areas.push(a); this.send(a, m);
     }
     this.applyHeightOps(p.pl.heightOps);
+    // the pin goes to the piece's pin anchor (the engine's marker plan puts the hole's pin there); the dressing props are journaled with the step
+    const pin = p.pl.props.find(q => q.kind === 'pin'); if (pin) this.pinHint = new Map([[p.pl.hole, { x: pin.x, y: pin.y }]]);
+    const dress = piecePropsOf(p.pl.props); if (dress.length) this.host.placeProps(dress, this.plantSeed++);
     this.commit(); this.host.progress?.('piece'); this.piece = null; this.refreshPiece(); this.host.save();
   }
   /** piece mode: the planned piece as ghosts, bottom layer first (each in its surface's colour with its border band, the core dashed; red when it cannot go), the snap tick on the edge it joins, and its label */
