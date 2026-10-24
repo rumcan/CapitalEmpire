@@ -5,10 +5,30 @@ The owner, 2026-10-24: "We want Blizzard Entertainment style textures." Referenc
 
 ## How to use
 1. Attach the reference picture.
-2. Paste the **STYLE** block, then **one** surface block.
-3. Ask for **3 variants** of that surface, one image each, at **1024 x 1024 px**.
-4. **Check the seams:** tile the image 2 x 2 (or look at it in the studio). If an edge, a line or a repeating blob shows, regenerate it.
-5. Save each one as `art/ground-painted/<surface>-v<n>.png` (for example `rough-v1.png`). Note the prompt you used next to it, in `<surface>-v<n>.txt`.
+2. Paste the **STYLE** block, then the **ZOOM LEVELS** block, then **one** surface block.
+3. You get **3 images** for that surface, one per zoom level (close, mid, far), each at **1024 x 1024 px**. (The owner,
+   2026-10-24: three images for three different zoom levels of each grass texture.)
+4. **Check the seams:** tile each image 2 x 2 (or look at it in the studio). If an edge, a line or a repeating blob shows,
+   regenerate it.
+5. **Check the set:** put the three side by side, shrunk to the same size. Their average colour and brightness must match,
+   or the game shows a jump when it blends from one zoom level to the next.
+6. Save them as `art/ground-painted/<surface>-<close|mid|far>-v<n>.png` (for example `rough-close-v1.png`). Note the
+   prompt you used next to them, in `<surface>-v<n>.txt`.
+
+## ZOOM LEVELS (paste after STYLE, every time)
+
+```
+Make this surface as a SET OF 3 IMAGES, one for each zoom level of the game. All three show the same surface with the
+same palette, the same average colour and the same overall brightness, so the game can blend from one to the next
+without a visible jump. Each one is seamless and tileable on its own, 1024 x 1024 px.
+- CLOSE (the closest zoom): the tile covers 8 x 8 metres. Full painted detail: the individual clumps, strokes, flowers
+  or pebbles described below.
+- MID: the tile covers 32 x 32 metres. The same surface seen from further away: clumps merge into bigger painted patches,
+  strokes are broader, and small details (flowers, pebbles) become tiny dots of colour.
+- FAR (the district view): the tile covers 128 x 128 metres. Only soft painted colour fields and gentle light and dark
+  drifts, no individual tufts or strokes.
+The "Scale" line in the style block applies to CLOSE; MID and FAR follow the sizes above.
+```
 
 ## STYLE (paste first, every time)
 
@@ -114,7 +134,7 @@ Cooler colours than the dirt.
 ## Extra sheets (transparent background; replace the tiling lines in STYLE)
 
 For these, paste STYLE but replace its "SEAMLESS, TILEABLE square texture" paragraph with "on a fully transparent
-background, no ground".
+background, no ground". Leave out the ZOOM LEVELS block: one image each, which the game shrinks itself.
 
 **14. grass tufts for edges**
 ```
