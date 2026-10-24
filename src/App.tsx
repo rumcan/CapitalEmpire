@@ -319,9 +319,9 @@ export default function App() {
               {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.tool === 'course' && <CoursePanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
-              {game.tool === 'toll' && <TollPanel game={game} dev={dev} />}
+              {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
-              {game.tool === 'bus' && <BusPanel game={game} dev={dev} />}
+              {game.tool === 'bus' && <BusPanel game={game} />}
               {game.tool === 'select' && <SelectPanel game={game} />}
             </div>
           </div>
@@ -976,9 +976,8 @@ function ParkPanel({ game, dev }: { game: Game; dev: boolean }) {
   const views = game.traffic.parks, pk = game.parking;
   const ui = game.toolUi(), facts = { golf: game.golfMode, advanced: !ui || ui.advancedMode, dev };
   const show = new Set(parkPanelControls(facts));
-  /** the mode chips the rules show; a hidden current mode displays as Rectangle (pk.mode itself is unchanged) */
-  const modes = PARK_MODES.filter(m => show.has(m.id === 'rect' ? 'modeRect' : m.id === 'rows' ? 'modeRows' : 'modeCurb'));
-  const mode = modes.some(m => m.id === pk.mode) ? pk.mode : 'rect';
+  /** the mode chips the rules show, plus the current mode (hidden is not locked: a hotkey may have picked it) */
+  const modes = PARK_MODES.filter(m => m.id === pk.mode || show.has(m.id === 'rect' ? 'modeRect' : m.id === 'rows' ? 'modeRows' : 'modeCurb')), mode = pk.mode;
   return (
     <Panel title="Car park" icon="pin">
       {modes.length > 1 && <div className="flex flex-wrap gap-1">
@@ -1099,7 +1098,7 @@ function TouristLine({ game }: { game: Game }) {
 }
 
 /** the toll gate tool: how it works, the price per car (at the round's level), the booths a new gate has and its cost, and the list of toll gates (Go) */
-function TollPanel({ game }: { game: Game; dev: boolean }) {
+function TollPanel({ game }: { game: Game }) {
   const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST, how = tollHowTo(game.golfMode);
   return (
     <Panel title="Toll gate" icon="swap">
@@ -1126,7 +1125,7 @@ function TollPanel({ game }: { game: Game; dev: boolean }) {
 
 /** the bus route tool: how a route works (fans walk to the lot stop, the buses carry them to the doors), its buses and seats, its cost (the first is
  *  free), and the routes (Go) */
-function BusPanel({ game }: { game: Game; dev: boolean }) {
+function BusPanel({ game }: { game: Game }) {
   const cost = game.busDefs.length ? BUS_ROUTE_COST : 0, how = busHowTo(game.golfMode);
   return (
     <Panel title="Bus route" icon="bus">
