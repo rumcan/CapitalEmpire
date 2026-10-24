@@ -2,14 +2,15 @@
 import { MAP, mulberry } from './iso';
 import { fbm, hash2, type Noise } from './terrain/noise';
 import { TC } from './terrain/types';
-import { BROAD_W, FOREST_BROAD, FOREST_CELL, FOREST_CONIFER, type ForestTree } from './forest';
-import { OWNER_SCALE } from './lots/scales';
+import { FOREST_CELL, LIVE_BROAD_DEAL, LIVE_CONIFER_DEAL, dealTree, ownerSize, type ForestTree } from './forest';
 
 /** spacing of the jittered global grid of the town trees, in tiles */
 export const TOWN_TREE_S = 4.5;
 const S = TOWN_TREE_S;
 /** the clearance a town tree needs from the roads, lots and the rest, in tiles (its trunk and footprint) */
 const CLEAR = 1.6;
+/** the town trees' deals: every live tree of the forest pools (no dead snags beside the lots) */
+export const TOWN_CONIFER_DEAL = LIVE_CONIFER_DEAL, TOWN_BROAD_DEAL = LIVE_BROAD_DEAL;
 
 /** the town trees of cell (ci, cj): a pure function of the seed, the terrain, the clump noise and the predicates, so cells plant in any order and never overlap.
  *  A point is kept when it is in a town (near), on GROUND or PATCH, and free of the roads and lots (free, with CLEAR tiles); clumps keep most of their points and the open lawn some */
@@ -27,14 +28,8 @@ export function townTreeCell(seed: number, cls: Uint8Array, clump: Noise, ci: nu
       if (!near(x, y) || !free(x, y, CLEAR)) continue;
       const clumped = fbm(clump, x / 20, y / 20, 2) > 0.1;
       if (r() >= (clumped ? 0.85 : 0.35)) continue;
-      let id: string;
-      if (r() < 0.2) id = FOREST_CONIFER[Math.floor(r() * FOREST_CONIFER.length)]!;
-      else {
-        const u = r(); let acc = 0, k = 0;
-        for (; k < BROAD_W.length - 1; k++) { acc += BROAD_W[k]!; if (u < acc) break; }
-        id = FOREST_BROAD[k]!;
-      }
-      const scale = ((OWNER_SCALE as Record<string, number>)[id] ?? 1.5) * (0.9 + r() * 0.2), flip = r() < 0.5;
+      const id = dealTree(r() < 0.2 ? TOWN_CONIFER_DEAL : TOWN_BROAD_DEAL, r());
+      const scale = ownerSize(id) * (0.9 + r() * 0.2), flip = r() < 0.5;
       out.push({ x, y, id, scale, flip });
     }
   }

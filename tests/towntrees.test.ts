@@ -3,9 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
 import { TC, makeNoise } from '../src/game/terrain';
-import { FOREST_CELL } from '../src/game/forest';
+import { FOREST_CELL, ownerSize } from '../src/game/forest';
 import { TOWN_TREE_S, townTreeCell } from '../src/game/towntrees';
-import { OWNER_SCALE } from '../src/game/lots/scales';
 
 const SEED = 7;
 const clump = makeNoise(SEED ^ 0x7c1a);
@@ -28,8 +27,9 @@ test('a town cell on open ground plants between 20% and 90% of its grid points, 
   assert.ok(trees.length >= 0.2 * n && trees.length <= 0.9 * n, `planted ${trees.length} of ${n}`);
   assert.deepEqual(townTreeCell(SEED, cls, clump, 5, 5, always, always), trees);
   for (const tr of trees) {
-    const k = (OWNER_SCALE as Record<string, number>)[tr.id] ?? 1.5;
+    const k = ownerSize(tr.id);
     assert.ok(tr.scale >= 0.9 * k - 1e-9 && tr.scale <= 1.1 * k + 1e-9, `${tr.id} scale ${tr.scale}: the lot trees' size ${k} +-10%`);
+    assert.ok(!/dead/.test(tr.id), `${tr.id}: no dead snag in the town`);
     assert.equal(typeof tr.flip, 'boolean');
   }
 });
