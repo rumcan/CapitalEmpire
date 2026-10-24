@@ -180,3 +180,7 @@ export function computeProgressiveUiState(facts: PlayerProgressFacts): Progressi
 
 /** what the player did in the golf game (T033): the saved counters and the facts T032 reads */
 export * from './progress';
+
+/** which Transport panel controls show (T039) */
+export * from './transport';
+
