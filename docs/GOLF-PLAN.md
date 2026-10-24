@@ -107,9 +107,14 @@ No more prepainted streets for the town." The full design is [plans/P22.md](plan
 - **The camera** starts on the range's hut at the street zoom (17%), with the Course tool open.
 - **Start money:** $600,000 (today's $800,000 less the $200,000 stadium, which golf mode does not have). The first nine is the
   player's to build.
-- **Still to come** (P22's tickets): founding seasons and the tour's invitation (T088), the clubhouse the player places (T089), the
-  grown-town growth rules (T090, T091), the exits feeding the range (T092), through traffic (T093), the off-map tournament crowd (T094),
-  the first-minute guide (T095) and the range's look (T096).
+- **Founding seasons:** no tournament until the tour invites the player (`golf/tour.ts` invitationNeeds, tournamentDue). The invitation
+  comes the moment the course has 9 holes, a car park (the range's counts) and a clubhouse: a toast, and the HUD chip "The Club
+  Championship: end of this season" (or next). The tournament closes that season if the invitation came at least 3 months before its
+  end, else the next one. A season that ends uninvited shows the season card (the takings, the residents, the checklist "6 of 9 holes ·
+  car park ✓ · clubhouse ✗", Continue), the clock never stops, the calendar counts it (`golf.founding`), and Skip reads "Skip to season
+  end". In range starts the driving range meets tier 3's `range` need.
+- **Still to come** (P22's tickets): the clubhouse the player places (T089), the grown-town growth rules (T090, T091), the exits feeding
+  the range (T092), through traffic (T093), the off-map tournament crowd (T094), the first-minute guide (T095) and the range's look (T096).
 - **Old saves keep their towns.** A save without `golf.start` is the old start: one seeded town (one asphalt main avenue with gravel
   branches, about 1,000 residents), the old nine placed and painted by the game 150-350 tiles from the town centre, and its clubhouse.
   It loads and grows by today's rules. The old start stays behind `?start=town` for comparisons and tests; `?start=valley` gives the

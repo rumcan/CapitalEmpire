@@ -37,8 +37,10 @@ export interface GolfSave {
  exits?: Pt[];
  /** the town's growth factor from tournament success (range starts, T090; missing = 1) */
  townBoost?: number;
- /** when the tour invited the player (range starts, T088: sim seconds); missing = not yet */
+ /** when the tour invited the player (range starts, T088: the game clock, golf/tour.ts tournamentDue); missing = not yet */
  invited?: { at: number };
+ /** the founding seasons passed: season ends with no tournament (range starts, T088); the calendar counts them with the tournaments (missing = 0) */
+ founding?: number;
 }
 
 /** a golf game's start money, $ (City.setBudget's golf treasury) */
@@ -53,7 +55,7 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (!g || !g.town || !g.course || !g.clubhouse) return null;
   const parcel: Rect = g.parcel ?? g.parcels?.[0] ?? g.course;
   // the range start's fields (plan P22 2.6) are taken out and put back only when well formed, so an old start's save normalizes as before
-  const { start, exits, townBoost, invited, ...rest } = g;
+  const { start, exits, townBoost, invited, founding, ...rest } = g;
   const out: GolfSave = {
     ...rest,
     v: 1,
@@ -72,5 +74,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (Array.isArray(exits)) out.exits = exits.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y)).map(p => ({ x: p.x, y: p.y }));
   if (typeof townBoost === 'number' && Number.isFinite(townBoost)) out.townBoost = townBoost;
   if (invited && Number.isFinite(invited.at)) out.invited = { at: invited.at };
+  if (typeof founding === 'number' && Number.isFinite(founding) && founding > 0) out.founding = Math.floor(founding);
   return out;
 }

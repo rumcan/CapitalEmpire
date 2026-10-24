@@ -3,8 +3,8 @@
 // shares follow the rules. Pure: npm test (bundled by esbuild, run by node --test).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { arrivalShare, exitShare, monthName, monthOf, yearOf, GATES_OPEN, EXIT_END } from '../src/game/golf/calendar';
-import { TIERS, PRACTICE_SHARE, daySatisfaction, dayShare, missingFor, reputationAfter, spectatorDemand, verdict, type CourseFacts, type Need } from '../src/game/golf/tour';
+import { arrivalShare, exitShare, monthName, monthOf, yearOf, GATES_OPEN, EXIT_END, MONTH_LEN, SEASON_LEN } from '../src/game/golf/calendar';
+import { INVITE_LEAD, TIERS, PRACTICE_SHARE, daySatisfaction, dayShare, invitationNeeds, invitedFacts, missingFor, reputationAfter, spectatorDemand, tournamentDue, verdict, type CourseFacts, type Need } from '../src/game/golf/tour';
 
 /** a course with the given holes, length and needs */
 const course = (holes: number, lengthM: number, have: readonly Need[]): CourseFacts => ({ holes, lengthM, have: new Set(have) });
@@ -153,4 +153,29 @@ test('dayShare builds to the last day, with the last N of 0.6, 0.7, 0.85, 1 for 
   assert.equal(PRACTICE_SHARE, 0.3);
   assert.equal(dayShare(-1, 4), 0.3);
   assert.equal(dayShare(-3, 1), 0.3);
+});
+
+test("the tour's invitation (plan P22 T088): a range start needs 9 holes, a car park and the clubhouse; the old start needs none and its tiers are unchanged", () => {
+  assert.deepEqual(invitationNeeds('range'), { holes: 9, carpark: true, clubhouse: true });
+  assert.equal(invitationNeeds(undefined), null, 'the old start is invited from the start');
+  // the old start's tier 1 is as it was: 9 holes and a car park, so a course with both misses nothing
+  assert.deepEqual(TIERS[0].needs, ['carpark']); assert.equal(TIERS[0].holes, 9);
+  assert.deepEqual(missingFor(1, course(9, 2700, ['carpark'])), []);
+  // the checklist
+  const none = invitedFacts({ holes: 0, carpark: true, clubhouse: false });
+  assert.equal(none.met, false); assert.equal(none.text, '0 of 9 holes · car park ✓ · clubhouse ✗');
+  assert.equal(invitedFacts({ holes: 6, carpark: true, clubhouse: true }).met, false, 'six holes are not enough');
+  assert.equal(invitedFacts({ holes: 9, carpark: false, clubhouse: true }).met, false, 'no car park');
+  const all = invitedFacts({ holes: 12, carpark: true, clubhouse: true });
+  assert.equal(all.met, true); assert.equal(all.text, '9 of 9 holes · car park ✓ · clubhouse ✓');
+});
+
+test('the 3-month rule: invited 3 months or more before a season boundary, the tournament is held there; later, at the next boundary', () => {
+  assert.equal(INVITE_LEAD, 3 * MONTH_LEN);
+  const b = 5 * SEASON_LEN;
+  assert.equal(tournamentDue(undefined, b), false, 'not invited');
+  assert.equal(tournamentDue(b - 4 * MONTH_LEN, b), true, 'invited 4 months before');
+  assert.equal(tournamentDue(b - 3 * MONTH_LEN, b), true, 'exactly 3 months before');
+  assert.equal(tournamentDue(b - 2 * MONTH_LEN, b), false, 'invited 2 months before: not this season');
+  assert.equal(tournamentDue(b - 2 * MONTH_LEN, b + SEASON_LEN), true, '...but at the next boundary');
 });

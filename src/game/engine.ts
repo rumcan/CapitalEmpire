@@ -90,7 +90,7 @@ import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID }
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
-import { tierInfo, type Need } from './golf/tour';
+import { invitedFacts, tierInfo, tournamentDue, type InviteCheck, type Need } from './golf/tour';
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
@@ -107,6 +107,10 @@ const SIGNAL_TOAST = ['', 'actuated traffic lights (loop detectors)', 'adaptive 
 
 /** a game day and a game hour, sim s (one sim second is one game minute) */
 const GAME_DAY = 1440, GAME_HOUR = 60;
+/** a range start's founding season as its season card shows it (plan P22 2.5.3): the season's year, the season's business takings ($: the range,
+ *  and the clubhouse once placed), the residents, the invitation checklist at the season's end, and whether the tour had invited the player (too
+ *  late for this season) */
+export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean }
 /** the most townspeople walking at once */
 const PED_MAX = 3000;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
@@ -889,6 +893,7 @@ export class Game {
     // a lot whose road was widened (or narrowed) keeps its house but moves back to the new verge: composed again there, not left over the road
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
     this.traffic.onLedger = (l) => {
+      this.foundingSeasonEnd(l);
       if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
       else if (l.money < 0 && !this.traffic.unlimited) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
@@ -2302,6 +2307,46 @@ export class Game {
     this.toast(`${name} lights${tier === 1 ? ' (loop detectors)' : ''} installed for $${cost.toLocaleString()}`, 'good');
   }
   /** the calendar: the year against the one seen last frame; a signal tier's year coming in toasts once (the first frame only records the year) */
+  /** a range start's season card (plan P22 2.5.3): set when a founding season ends with no tournament; the UI's Continue clears it */
+  seasonReport: SeasonReport | null = null;
+  dismissSeasonReport() { this.seasonReport = null; this.emit(); }
+  /** the seasons played: the tournaments held and a range start's founding seasons (the calendar's year and the grow-in months count both) */
+  private seasonsDone(): number { return this.traffic.round.runs + (this.golf?.founding ?? 0); }
+  /** a range start's invitation checklist (golf/tour.ts invitedFacts: the holes with a tee and a pin, a car park, a clubhouse); null in other games */
+  inviteCheck(): InviteCheck | null {
+    if (this.golf?.start !== 'range') return null;
+    return invitedFacts({ holes: this.courseHoleViews().filter(h => h.par > 0).length, carpark: this.parkDefs.length > 0, clubhouse: this.bizDefs.some(d => d.type === 'clubhouse') });
+  }
+  /** the founding seasons as the HUD shows them (range starts; null otherwise): the checklist, whether the tour has invited the player, and whether
+   *  the tournament is held at this season's end (the invitation came at least 3 months before it) */
+  foundingView(): { check: InviteCheck; invited: boolean; due: boolean } | null {
+    const g = this.golf; if (g?.start !== 'range') return null;
+    const c = this.traffic.clockTime(performance.now()), next = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
+    return { check: this.inviteCheck()!, invited: !!g.invited, due: tournamentDue(g.invited?.at, next) };
+  }
+  private foundTick = 0;
+  /** the tour's invitation (range starts, about twice a second): the moment the checklist is met, golf.invited is the clock's time, the worker
+   *  hears of it (setGolf) and a toast says which season's end holds the first tournament */
+  private foundingCheck() {
+    const g = this.golf; if (g?.start !== 'range' || g.invited || ++this.foundTick % 30) return;
+    if (!this.inviteCheck()?.met) return;
+    const c = this.traffic.clockTime(performance.now()), next = Math.floor(c / GAME_DAY) * GAME_DAY + GAME_DAY;
+    g.invited = { at: c };
+    this.sendGolf(); this.scheduleSave();
+    this.toast(`The tour invites you: the ${tierInfo(1).name} at the end of ${tournamentDue(c, next) ? 'this' : 'next'} season`, 'good');
+    this.emit();
+  }
+  /** a range start's season boundary (the ledger of the day that closed): with no tournament due there, the founding season ends with the season
+   *  card (the season's business takings, the residents and the invitation checklist) and the calendar counts it (golf.founding) */
+  private foundingSeasonEnd(l: Ledger) {
+    const g = this.golf; if (g?.start !== 'range') return;
+    const boundary = Math.round(this.traffic.clockTime(performance.now()) / GAME_DAY) * GAME_DAY;
+    if (tournamentDue(g.invited?.at, boundary)) return;
+    const year = yearOf(this.seasonsDone());
+    g.founding = (g.founding ?? 0) + 1;
+    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited };
+    this.scheduleSave();
+  }
   private yearCheck() {
     const y = this.traffic.round.year, was = this.seenYear; this.seenYear = y;
     // a jump of more than one year is a load (or a new valley), not a finished round: no toast
@@ -2676,7 +2721,7 @@ export class Game {
     }
   }
   /** the golf state for the city worker: on or off, the tier, the reputation, the golf land, and a range start's start and exits */
-  private sendGolf() { const g = this.golf; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start, g?.exits); }
+  private sendGolf() { const g = this.golf; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start === 'range' ? { start: 'range', exits: g.exits, invited: g.invited } : undefined); }
   /** the terrain of the valley for the city worker: its classes, the highway entry (a range start's: its map exit nearer the town; the start
    *  block's centre if none) and the seed */
   private sendTerrain() {
@@ -3340,7 +3385,7 @@ export class Game {
   /** the game month as an absolute count (seasons so far x 12 + months since September), for planting and grow-in; on tournament day the clock sits on the next season's first instant, so it is read a unit earlier */
   golfMonthIndex(): number {
     const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0);
-    return r.runs * 12 + ((seasonMonth(c) - SEASON_START + 12) % 12);
+    return this.seasonsDone() * 12 + ((seasonMonth(c) - SEASON_START + 12) % 12);
   }
   /** counts a player action toward the tool unlocks (golf mode only; saved) */
   private bump(k: 'pieces' | 'roads' | 'parks' | 'structures') { const p = this.golf?.progress; if (!p) return; p[k]++; this.scheduleSave(); this.emit(); }
@@ -3364,7 +3409,7 @@ export class Game {
   for (const a of this.paint.areas) if (a.plantKind === 'seed' && a.plantedMonth !== undefined) this.paint.send(a, effM); // only areas still growing in change with the month
   this.courseMonth(); // and the course grid's chunks whose seeded cells reached their next quarter
   }
-  return { tier, tierName: tierInfo(tier).name, month: seasonLabel(r.stage !== 'free' ? c - 1 : c, r.runs), monthsLeft: monthsLeft(c), year: yearOf(r.runs), live: r.stage !== 'free' };
+  return { tier, tierName: tierInfo(tier).name, month: seasonLabel(r.stage !== 'free' ? c - 1 : c, this.seasonsDone()), monthsLeft: monthsLeft(c), year: yearOf(this.seasonsDone()), live: r.stage !== 'free' };
   }
   /** course stats panel view data (null outside golf mode), derived from painted areas and hole objects */
   courseStatsView(): CourseStatsPanel | null {
@@ -3381,6 +3426,7 @@ export class Game {
   const holes = deriveHoles(layout.areas, layout.tees, layout.pins, layout.aims);
   const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
+  if (this.golf.start === 'range' && this.bizDefs.some(d => d.type === 'range')) have.add('range'); // a range start's driving range meets tier 3's range
   for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   const gCards = this.golf.cards ?? this.traffic.round.cards;
   for (const n of parkRideNeedsWithCards(this.golf.clubhouse, this.parkDefs, this.busDefs, gCards)) have.add(n);
@@ -3394,6 +3440,7 @@ export class Game {
   const holes = stats ? deriveHoles(this.courseAreaList(), this.golf.tees, this.golf.pins, this.golf.aims) : [];
   const have = new Set<Need>(structuresNeeds(this.golf.structures ?? [], holes));
   if (this.parkDefs.length > 0) have.add('carpark');
+  if (this.golf.start === 'range' && this.bizDefs.some(d => d.type === 'range')) have.add('range'); // a range start's driving range meets tier 3's range
   for (const n of parkRideNeeds(this.golf.clubhouse, this.parkDefs, this.busDefs)) have.add(n);
   const facts: CourseFacts = { holes: stats?.totals.holes ?? 0, lengthM: stats?.totals.lengthM ?? 0, have };
   const gCards = this.golf.cards ?? this.traffic.round.cards;
@@ -3410,6 +3457,8 @@ export class Game {
     const until = this.traffic.simTime(now) + (target - c) + 1; // one sim second past the target, so the worker's step crosses it
     if (!this.speed) this.setSpeed(this.lastSpeed);
     this.traffic.skip(until);
+    // a range start's founding season ends with no tournament (golf/tour.ts tournamentDue): the skip stops at the season's end
+    if (this.golf.start === 'range' && !tournamentDue(this.golf.invited?.at, target)) { this.toast('Skipping to the end of the season… (no tournament yet)'); return; }
     // the tournament day plays at 8x (about 3 real minutes): its town clock runs at 1 game minute per sim s from 05:00 (see City.startTournament)
     this.setSpeed(8);
     this.toast('Skipping to the tournament… (8× for the day)');
@@ -3817,7 +3866,7 @@ export class Game {
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
-    this.yearCheck();
+    this.yearCheck(); this.foundingCheck();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();

@@ -84,3 +84,48 @@ for (const grow of [1, 20]) test(`a season (one game day) at growth x${grow} pas
   assert.equal(onParcel, 0, 'nothing built on the parcel');
   assert.equal(city.round.stage, 'free', 'no tournament without a clubhouse (the venue is the range until T088/T089)');
 });
+
+// ---- founding seasons (plan P22 2.5.3, T088): no tournament until the tour's invitation is due ----
+
+/** a range start with a clubhouse placed (the worker's tournament site), invited at `invitedAt` (clock; undefined: not invited), and the clock
+ *  of its first season boundary */
+function founding(invitedAt?: (boundary: number) => number): { city: City; boundary: number } {
+  const { city, range } = build();
+  const [px, py, pw] = P.save.parcel, club: BizDef = { id: 2, type: 'clubhouse', x: px + pw / 2, y: py + 60, w: 40, h: 24 };
+  city.setBusinesses([range, club]);
+  const boundary = Math.floor(city.sim.clock / 1440) * 1440 + 1440;
+  city.setGolf({ tier: 1, rep: GOLF_REP_START, land: [P.save.course, P.save.parcel], start: 'range', exits: P.save.exits, invited: invitedAt ? { at: invitedAt(boundary) } : undefined });
+  return { city, boundary };
+}
+/** steps the city one sim second at a time until its clock reaches `clock` (or `max` steps) */
+function runTo(city: City, clock: number, max = 4000) { for (let s = 0; s < max && city.sim.clock < clock; s++) city.step(10); }
+
+test('a range start with no holes crosses a season boundary with no round, and its clock keeps running', () => {
+  const { city, boundary } = founding();
+  assert.ok(city.site, 'a site (the clubhouse) exists, so only the invitation holds the round back');
+  runTo(city, boundary + 30);
+  assert.equal(city.round.stage, 'free', 'no tournament in a founding season');
+  assert.ok(city.sim.clock >= boundary + 30, 'the clock never freezes');
+});
+
+test('invited 4 months before the boundary, the round starts there; invited 2 months before, it starts a season later', () => {
+  const early = founding(b => b - 4 * 120);
+  runTo(early.city, early.boundary + 1);
+  assert.notEqual(early.city.round.stage, 'free', 'the tournament starts at this boundary');
+
+  const late = founding(b => b - 2 * 120);
+  runTo(late.city, late.boundary + 30);
+  assert.equal(late.city.round.stage, 'free', 'too late for this season');
+  runTo(late.city, late.boundary + 1440 + 1, 1500);
+  assert.notEqual(late.city.round.stage, 'free', 'the tournament starts at the next boundary');
+});
+
+test('an old start (no golf.start) still holds its tournament at the first boundary, with no invitation', () => {
+  const { city, range } = build();
+  const [px, py, pw] = P.save.parcel;
+  city.setBusinesses([range, { id: 2, type: 'clubhouse', x: px + pw / 2, y: py + 60, w: 40, h: 24 }]);
+  city.setGolf({ tier: 1, rep: GOLF_REP_START, land: [P.save.course, P.save.parcel] });
+  const boundary = Math.floor(city.sim.clock / 1440) * 1440 + 1440;
+  runTo(city, boundary + 1);
+  assert.notEqual(city.round.stage, 'free', 'the old start keeps its yearly tournament');
+});

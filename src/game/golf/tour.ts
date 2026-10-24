@@ -109,3 +109,27 @@ export function dayShare(dayIndex: number, days: number): number {
   const n = Math.min(4, Math.max(1, days)), i = Math.min(n - 1, dayIndex);
   return DAY_BUILD[4 - n + i];
 }
+
+// The tour's first invitation (plan P22 2.5.3): a range start holds no tournament in its founding seasons. The tour invites the player the
+// moment the course has tier 1's holes and car park and the clubhouse the player places; the tournament is then held at that season's end
+// if the invitation came at least INVITE_LEAD before it, else at the next season's end. The old start is invited from the start, as before.
+/** what the invitation needs: tier 1's holes, a car park (the range's counts) and the clubhouse */
+export interface InviteNeeds { holes: number; carpark: true; clubhouse: true }
+/** the invitation's needs for a start ('range'; undefined: the old start, which needs no invitation: null) */
+export function invitationNeeds(start?: 'range'): InviteNeeds | null { return start === 'range' ? { holes: tierInfo(1).holes, carpark: true, clubhouse: true } : null; }
+/** a range start's course as the invitation reads it: its holes (with a tee and a pin), and whether it has a car park and a clubhouse */
+export interface InviteFacts { holes: number; carpark: boolean; clubhouse: boolean }
+/** the invitation's checklist: the holes and how many are needed, the car park, the clubhouse, whether all are met, and its line for the season
+ *  card and the HUD ("6 of 9 holes · car park ✓ · clubhouse ✗") */
+export interface InviteCheck { holes: number; holesNeeded: number; carpark: boolean; clubhouse: boolean; met: boolean; text: string }
+/** the checklist of a range start's facts (see InviteCheck) */
+export function invitedFacts(f: InviteFacts): InviteCheck {
+  const need = invitationNeeds('range')!, holes = Math.max(0, Math.floor(f.holes)), mark = (b: boolean) => (b ? '✓' : '✗');
+  const met = holes >= need.holes && f.carpark && f.clubhouse;
+  return { holes, holesNeeded: need.holes, carpark: f.carpark, clubhouse: f.clubhouse, met, text: `${Math.min(holes, need.holes)} of ${need.holes} holes · car park ${mark(f.carpark)} · clubhouse ${mark(f.clubhouse)}` };
+}
+/** the invitation's lead before a season's end, clock units: 3 months of calendar.ts MONTH_LEN (120; a literal, so tour.ts imports nothing) */
+export const INVITE_LEAD = 360;
+/** whether a range start's tournament is held at the season boundary `boundary` (clock units): only when invited (at: the clock when the
+ *  invitation came) at least INVITE_LEAD before it; an invitation later than that waits for the next boundary */
+export function tournamentDue(invitedAt: number | undefined, boundary: number): boolean { return invitedAt !== undefined && boundary - invitedAt >= INVITE_LEAD - 1e-6; }
