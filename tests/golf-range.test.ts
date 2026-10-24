@@ -2,7 +2,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BUSINESS, BUSINESSES, START_SAT, dailyDemand } from '../src/game/business/catalogue';
-import { RANGE_BAYS, RANGE_FRONT, RANGE_PASS_POP, RANGE_PLOT, RANGE_TARGETS, plotPoint, rangeLayout, type RangeLayout } from '../src/game/golf/range';
+import { CLUB_REACH, RANGE_BAYS, RANGE_FRONT, RANGE_PASS_POP, RANGE_PLOT, RANGE_TARGETS, clubhouseSpotOk, clubhouseSpotWhy, plotPoint, rangeLayout, type ClubSpotCtx, type RangeLayout } from '../src/game/golf/range';
+import { CLASS, type Leg } from '../src/game/network';
+import { generateTerrain } from '../src/game/terrain';
+import { planRangeStart } from '../src/game/golf/rangestart';
 import type { Rect } from '../src/game/golf/mode';
 import type { Pt } from '../src/game/network';
 
@@ -76,4 +79,49 @@ test('RANGE_PASS_POP rises by tier from 1,500; the layout is deterministic', () 
   for (let i = 1; i < p.length; i++) assert.ok(p[i]! > p[i - 1]!);
   assert.equal(RANGE_PASS_POP(0), 1500); assert.equal(RANGE_PASS_POP(9), 3600);
   for (const f of FACINGS) assert.deepEqual(rangeLayout(plots[f], f), rangeLayout(plots[f], f));
+});
+
+// ---- the clubhouse the player places (plan P22 2.5.2, T089) ----
+const PLAN = planRangeStart(generateTerrain(1), 1)!;
+/** the gap from rect r to the nearest verge of the county road or the drive (as Engine.roadGapOf: each leg sampled every half tile) */
+function roadGap(r: Rect): number {
+  const legs: [Leg, number][] = [...PLAN.road.legs.map((l): [Leg, number] => [l, CLASS.road!.h + CLASS.road!.walk]), ...PLAN.site.drive.map((l): [Leg, number] => [l, CLASS['drive-gravel']!.h + CLASS['drive-gravel']!.walk])];
+  let best = Infinity;
+  for (const [l, v] of legs) {
+    const n = Math.max(1, Math.ceil(Math.hypot(l.b.x - l.a.x, l.b.y - l.a.y) / 0.5));
+    for (let k = 0; k <= n; k++) {
+      const x = l.a.x + (l.b.x - l.a.x) * k / n, y = l.a.y + (l.b.y - l.a.y) * k / n;
+      best = Math.min(best, Math.hypot(Math.max(r[0] - x, 0, x - r[0] - r[2]), Math.max(r[1] - y, 0, y - r[1] - r[3])) - v);
+    }
+  }
+  return best;
+}
+/** the spot check's context for seed 1's range start: owned = the parcel, its range plot, no course (unless course says so), clubs placed */
+function ctx(r: Rect, clubs = 0, course: (x: number, y: number) => boolean = () => false): ClubSpotCtx {
+  const [px, py, pw, ph] = PLAN.site.parcel;
+  return { clubs, owned: (x, y) => x >= px && x < px + pw && y >= py && y < py + ph, plot: PLAN.site.rangePlot, course, roadGap: roadGap(r) };
+}
+
+test("clubhouseSpotOk accepts a spot on the drive's verge on the player's land, beside the range", () => {
+  // seed 1: the county road runs east-west at y = 880 (J = 1000, 880), the drive north to y = 858, the range plot east of it (x 1002-1072)
+  assert.deepEqual(PLAN.site.J, { x: 1000, y: 880 });
+  const spot: Rect = [974, 834, 24, 40];
+  assert.equal(clubhouseSpotWhy(spot, ctx(spot)), '');
+  assert.ok(clubhouseSpotOk(spot, ctx(spot)));
+});
+
+test('clubhouseSpotOk refuses a second clubhouse, a spot off the parcel, over the range plot, over the course, through a road or far from any', () => {
+  const ok: Rect = [974, 834, 24, 40];
+  assert.equal(clubhouseSpotWhy(ok, ctx(ok, 1)), 'You have a clubhouse already');
+  const off: Rect = [974, 850, 24, 40];
+  assert.match(clubhouseSpotWhy(off, ctx(off)), /Off your land/);
+  const [qx, qy] = PLAN.site.rangePlot, onPlot: Rect = [qx + 10, qy + 40, 40, 24];
+  assert.equal(clubhouseSpotWhy(onPlot, ctx(onPlot)), 'The driving range is there');
+  assert.equal(clubhouseSpotWhy(ok, ctx(ok, 0, (x, y) => x > 980 && y > 860)), 'The course is there');
+  const across: Rect = [990, 834, 24, 40];
+  assert.equal(clubhouseSpotWhy(across, { ...ctx(across), plot: null }), 'A road runs through it', 'over the drive');
+  const far: Rect = [800, 500, 40, 24];
+  assert.ok(roadGap(far) > CLUB_REACH);
+  assert.match(clubhouseSpotWhy(far, ctx(far)), /beside a drive/);
+  for (const r of [off, onPlot, far]) assert.equal(clubhouseSpotOk(r, ctx(r)), false);
 });

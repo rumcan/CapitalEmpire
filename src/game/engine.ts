@@ -41,7 +41,8 @@ import { townClockFor, townTimeOf } from './sim/townclock';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
-import { BUSINESS, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
+import { BUSINESS, CLUBHOUSE_RANGE_COST, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
+import { snapFrontage, snapSegOf, type SnapSeg } from './ext/frontage-snap';
 import { freshStats, ownedOf, type BizDef, type BizStats } from './business/state';
 import { businessArt } from './business/art';
 import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PD_CELL, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
@@ -71,7 +72,7 @@ import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
 import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
-import { plotOfFront, rangeLayout } from './golf/range';
+import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
@@ -1774,7 +1775,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (t === 'road') this.setRoadScope(scope); if (t !== 'course') this.clubPlacing = false; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -2516,7 +2517,9 @@ export class Game {
       case 'bus': this.busUpdate(mx, my); this.busClick(); break;
       case 'lane': case 'downgrade': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
-      case 'paint': case 'course': this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); this.courseCursor.press(this.paint, e.altKey); break;
+      case 'paint': case 'course':
+        if (this.clubPlacing && this.tool === 'course') { this.clubUpdate(mx, my); this.clubClick(); break; }
+        this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); this.courseCursor.press(this.paint, e.altKey); break;
       case 'park': {
         // the bay rows drag and the on-street click are the Parking tool's (docs/PARKING.md); the rectangle is the car park drag below
         if (this.parking.mode !== 'rect') { if (this.parking.mode === 'rows') this.parking.down(this.tileAt(mx, my)); else this.parking.click(); break; }
@@ -2555,7 +2558,8 @@ export class Game {
     if (this.tool === 'toll') this.tollUpdate(mx, my);
     if (this.tool === 'business') this.bizUpdate(mx, my);
     if (this.tool === 'bus') this.busUpdate(mx, my);
-    if (this.paintOn) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift'));
+    if (this.clubPlacing && this.tool === 'course') this.clubUpdate(mx, my);
+    else if (this.paintOn) this.paint.pointerMove(this.hover, mx, my, this.keys.has('Shift'));
     if (this.tool === 'park') {
       if (this.parking.mode === 'rows') { if (this.hover) { this.parking.snap15 = this.keys.has('Shift'); this.parking.move(this.hover, mx, my); } }
       else if (this.parking.mode === 'curb') this.parking.hover(this.hover ? this.net.pieceNear(this.hover)?.seg ?? null : null, this.hover ?? { x: 0, y: 0 }, mx, my);
@@ -2612,6 +2616,10 @@ export class Game {
   keyDown(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     this.keys.add(e.key);
+    if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R' || e.key === 'Escape')) {
+      if (e.key === 'Escape') this.placeClubhouse(false); else { this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit(); }
+      return;
+    }
     if (this.paintOn && this.paint.key(e)) return;
     if (this.tool === 'park' && this.parking.key(e)) return;
     switch (e.key) {
@@ -2814,6 +2822,64 @@ export class Game {
     this.traffic.setBusinesses(this.bizDefs); this.farmsUpdate();
     this.scheduleSave(); this.toast(`${B.name} built (-$${B.buildCost.toLocaleString()})`, 'good');
     this.bizUpdate(h.mx, h.my); this.emit();
+  }
+  // ---------- the clubhouse the player places (range starts, plan P22 2.5.2, T089) ----------
+  /** the Course tool's Buildings tab: the clubhouse's ghost follows the cursor and a click places it */
+  clubPlacing = false;
+  /** starts (on) or ends placing the clubhouse (golf games; the Course tool opens) */
+  placeClubhouse(on: boolean) {
+    this.clubPlacing = on && !!this.golf; this.bizHover = null;
+    if (this.clubPlacing && this.tool !== 'course') this.setTool('course');
+    this.emit();
+  }
+  /** the gap from rect (x, y, w, h) to the nearest road's verge (any road or drive), tiles: below 0 when a verge reaches into it; Infinity with no
+   *  road within 30 tiles */
+  private roadGapOf(x: number, y: number, w: number, h: number): number {
+    let best = Infinity;
+    for (const s of this.net.segsNear({ x: x + w / 2, y: y + h / 2 }, Math.hypot(w, h) / 2 + 30)) {
+      const v = s.cls.h + s.cls.walk, n = Math.max(1, Math.ceil(Math.hypot(s.b.x - s.a.x, s.b.y - s.a.y) / 0.5));
+      for (let k = 0; k <= n; k++) { const f = k / n, d = rectDist({ x: s.a.x + (s.b.x - s.a.x) * f, y: s.a.y + (s.b.y - s.a.y) * f }, x, y, w, h) - v; if (d < best) best = d; }
+    }
+    return best;
+  }
+  /** why the clubhouse cannot stand on rect r ('' if it can): golf/range.ts clubhouseSpotWhy (one only, the player's land, off the range plot and the
+   *  course, beside a drive or road), then the money */
+  private clubWhy(r: [number, number, number, number]): string {
+    const g = this.golf, grid = this.courseGrid, rng = g?.start === 'range' ? this.bizDefs.find(d => d.type === 'range') : undefined;
+    return clubhouseSpotWhy(r, {
+      clubs: this.bizCount('clubhouse'), owned: (x, y) => this.ownedAt(x, y), plot: g && rng ? plotOfFront([rng.x, rng.y, rng.w, rng.h], g.dir) : null,
+      course: (x, y) => { if (!grid) return false; const i = cellAt(grid, x, y); return i >= 0 && grid.surf[i]! > 0; }, roadGap: this.roadGapOf(r[0], r[1], r[2], r[3]),
+    }) || (CLUBHOUSE_RANGE_COST > this.money ? `Not enough money: the clubhouse costs $${CLUBHOUSE_RANGE_COST.toLocaleString()}` : '');
+  }
+  /** the clubhouse's ghost at the cursor: its front snapped to the nearest course drive or path within CLUB_REACH (ext/frontage-snap, P19) and slid
+   *  along it (up to 40 tiles, nearest first) to the first spot it can be built on (the range's drive is shorter than the clubhouse, so it runs on
+   *  past the drive's end); else the footprint centred on the cursor (R turns it). With no spot, the first try shows with its reason */
+  private clubUpdate(mx: number, my: number) {
+    const t = this.tileAt(mx, my), B = BUSINESS.clubhouse, fp = { w: B.footprint.w, d: B.footprint.h }, segs: SnapSeg[] = [];
+    for (const s of this.net.segsNear(t, 60)) { const g = snapSegOf(s); if (g) segs.push(g); }
+    const sn = snapFrontage(t.x, t.y, fp, segs, CLUB_REACH), cands: [number, number, number, number][] = [];
+    if (sn) {
+      // whole tiles, rounded away from the road so the front stays off its verge
+      const w = sn.rot ? fp.d : fp.w, h = sn.rot ? fp.w : fp.d, away = (v: number, f: number) => (f > 0 ? Math.floor(v) : f < 0 ? Math.ceil(v) : Math.round(v));
+      const x0 = away(sn.cx - w / 2, sn.face.x), y0 = away(sn.cy - h / 2, sn.face.y);
+      for (let k = 0; k <= 40; k++) { const off = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 2; cands.push(sn.rot ? [x0, y0 + off, w, h] : [x0 + off, y0, w, h]); }
+    }
+    const w = this.bizRot ? fp.d : fp.w, h = this.bizRot ? fp.w : fp.d; cands.push([Math.round(t.x - w / 2), Math.round(t.y - h / 2), w, h]);
+    let r = cands[0]!, why = this.clubWhy(r);
+    for (let i = 1; why && i < cands.length; i++) { const wy = this.clubWhy(cands[i]!); if (!wy) { r = cands[i]!; why = ''; } }
+    this.bizHover = { mx, my, def: { id: 0, type: 'clubhouse', x: r[0], y: r[1], w: r[2], h: r[3] }, site: siteAt(r[0], r[1], r[2], r[3]), why };
+  }
+  /** places the clubhouse on the ghost: it is paid for, becomes the venue (the engine's site and the worker's: setBusinesses prefers it over the
+   *  range) and its green fees start; golf.clubhouse moves to its door nearest a road */
+  private clubClick() {
+    const h = this.bizHover; if (!h || h.def.type !== 'clubhouse') return;
+    if (h.why) { this.toast(h.why, 'warn'); return; }
+    this.traffic.spend('construction', CLUBHOUSE_RANGE_COST);
+    this.setBizDefs([...this.bizDefs, { ...h.def, id: Math.max(0, ...this.bizDefs.map(d => d.id)) + 1 }]);
+    this.traffic.setBusinesses(this.bizDefs); this.farmsUpdate();
+    if (this.golf) { let best = Infinity; for (const d of h.site.doors) { const g = this.roadGapOf(d.x, d.y, 0, 0); if (g < best) { best = g; this.golf.clubhouse = { x: d.x, y: d.y }; } } }
+    this.clubPlacing = false; this.bizHover = null;
+    this.scheduleSave(); this.toast(`Clubhouse built (-$${CLUBHOUSE_RANGE_COST.toLocaleString()}): green fees start, and the tournament's crowd will head here`, 'good'); this.emit();
   }
   /** demolishes a business by id (the stadium between rounds only): half its build cost comes back, and the worker drops it */
   demolishBusiness(id: number) {
@@ -4531,6 +4597,8 @@ export class Game {
       ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke();
       const gm = this.ghostMouse;
       if (gm) drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, `Click removes this ${cls.name.toLowerCase()} (refunds its value)`, true);
+    } else if (this.clubPlacing && this.tool === 'course') {
+      const bt = this.bizType; this.bizType = 'clubhouse'; this.drawBizPreview(ctx); this.bizType = bt;
     } else if (this.paintOn) {
       this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
       const v = this.cursorView; v.ze = this.cam.z * this.dpr; v.camX = this.cam.X; v.camY = this.cam.Y; v.cw = this.cw; v.ch = this.ch; v.dpr = this.dpr;

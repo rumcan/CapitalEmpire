@@ -3,17 +3,19 @@ import { BRUSH_PRESETS, PAINT_TEXES } from '../../game/paint';
 import { PLANT_KINDS } from '../../game/plant';
 import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
 import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
+import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
 import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
 import { HoleStrip } from './HoleStrip';
 import { HoleInspector } from './HoleInspector';
 
-type CourseTab = 'build' | 'presets' | 'plants';
+type CourseTab = 'build' | 'presets' | 'plants' | 'buildings';
 
-/** the Course tool's panel: the current hole with undo and redo, then three tabs: Build (the surfaces and their style), Presets (the 1-18 holes) and Plants (docs/COURSE-BUILDER.md, C1) */
+/** the Course tool's panel: the current hole with undo and redo, then the tabs: Build (the surfaces and their style), Presets (the 1-18 holes) and Plants
+ *  (docs/COURSE-BUILDER.md, C1), and in a golf game Buildings (the clubhouse the player places, plan P22 T089) */
 export function CoursePanel({ game }: { game: Game }) {
   const p = game.paint, n = p.brushHole, br = p.brush[p.brushKind], name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   const ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k), fine = (k: string) => !ui || (ui.visibleFineControls as string[]).includes(k);
-  const tab: CourseTab = p.mode === 'hole' ? 'presets' : p.mode === 'plant' ? 'plants' : 'build';
+  const tab: CourseTab = game.clubPlacing ? 'buildings' : p.mode === 'hole' ? 'presets' : p.mode === 'plant' ? 'plants' : 'build';
   const help = p.mode === 'height'
     ? `Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} per m³.` : ''}`
     : p.mode === 'piece'
@@ -32,9 +34,10 @@ export function CoursePanel({ game }: { game: Game }) {
       <HoleStrip game={game} />
       <HoleInspector game={game} />
       <div className="mt-2 flex flex-wrap gap-1">
-        <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => p.setBrush(p.brushKind)}>Build</button>
-        <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => p.setMode('hole')}>Presets</button>
-        <button className={`chip ${tab === 'plants' ? 'chip-on' : ''}`} onClick={() => p.setPlant(p.plantBrush)}>Plants</button>
+        <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setBrush(p.brushKind); }}>Build</button>
+        <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setMode('hole'); }}>Presets</button>
+        <button className={`chip ${tab === 'plants' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setPlant(p.plantBrush); }}>Plants</button>
+        {game.golfMode && <button className={`chip ${tab === 'buildings' ? 'chip-on' : ''}`} onClick={() => game.placeClubhouse(true)}>Buildings</button>}
       </div>
       {tab === 'build' && (
         <>
@@ -123,6 +126,16 @@ export function CoursePanel({ game }: { game: Game }) {
           </div>
         </>
       )}
+      {tab === 'buildings' && (() => {
+        const built = game.bizDefs.some(d => d.type === 'clubhouse'), B = BUSINESS.clubhouse;
+        return (
+          <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-2 text-xs">
+            <div className="flex items-center justify-between"><span className="font-semibold text-slate-100">Clubhouse</span><span className="text-amber-200">{built ? '✓ Built' : `$${CLUBHOUSE_RANGE_COST.toLocaleString()}`}</span></div>
+            <div className="mt-1 text-slate-400">{`${B.footprint.w} × ${B.footprint.h} tiles · one only. The course's front door: green fees start, the tournament's crowd heads here, and the tour needs it before it invites you.`}</div>
+            <div className="mt-1 text-slate-300">{built ? 'Your clubhouse stands: there is one only.' : 'Click beside a drive on your land (its front snaps to the drive); R turns it, Esc stops.'}</div>
+          </div>
+        );
+      })()}
       {tab === 'plants' && (
         <>
           <div className="mt-2 flex flex-wrap gap-1">
