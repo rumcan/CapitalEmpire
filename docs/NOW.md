@@ -11,8 +11,12 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - This integration does not start M2.5 or generate new images. The existing milestone plan below remains unchanged.
 
 ## Current step
-- **Milestone:** M2 Crowds (LEAD.md section 3). **Branch:** `lead/m2-results` (from `origin/main` f62c7da).
-- **Sub-step now:** M2.5 The tournament on the town day (M2.1 gates, M2.2 galleries, M2.3 going home, M2.4 results landed on main).
+- **The new lead's board** (2026-10-24, LEAD.md section 5). Open tickets: GitHub issues `arena` + `status:open`.
+- **M2.5 (P02):** T048 and T050 landed (the tournament day clock; the movers on the timeline). Next on the city.ts / event chain: T051b (galleries follow the play, wiring T051a), T052 (viewing and tents from the movers), T053 (the tournament-day strip).
+- **P03:** T055/T056 after that chain (surge.ts / city.ts are single-owner).
+- **P19:** T067 (course drive), T069a (frontage snap) in progress; then T068 (path network), T069b, T070.
+- **P20:** T062 (preset data) in progress; then T063, T064, T065, T066.
+- **The owner's requests in flight (delegated, 2026-10-24):** the woodland's fescue ground, every tree in the forests and every tree lit from the right (`lead/woodland-fescue-trees`); library sizes, nothing drawn above its pixels, and the studio sizing every sprite (`lead/library-sizes`); painted surface edges with a feather and a sun-lit bevel (`lead/paint-edges`); the fairway tool rethink: research and plan P21 (a tiny iso grid whose cells merge with same-surface neighbours like water droplets, a splash on placing, dirt then grass growing in).
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
 - **Start:** `City.startTournament` (city.ts) at the season's end: the crowd is `spectatorDemand(tier, rep)` (day 1's share, less the
@@ -99,9 +103,11 @@ Design (b):
 
 
 ## Next action
-M2.5 a: read how the surge, kick-off and the leaving sit on the season clock and the town day (`City.planSurge`, `Round.sim`, `LEAVE_AFTER`, `Sim.townTime`); write the plan above. Ask the owner before starting (each M2 step is approved one by one). Cut `lead/m2-townday` from `origin/main`.
+Review the open PRs as they land, and the full-suite runs (one heavy run at a time on this PC).
 
 ## Done (newest first)
+- 2026-10-24: **Merged T048, T043, T045, T049, T054, T050, T051a, T060a** (PRs #102–#106, #110, #111, #113).
+- 2026-10-24: **The building import reached 131 of 204**, with old pictures never shown (PR #112, awaiting the owner).
 - 2026-10-23: **M2.4 Results from the movers landed** on main. Browser-checked on a test copy (5181, a gate placed by script, Skip to tournament at 8x): `last.gates` admitted 168, wait 0, late 0; the card read `Q 0m · Exit 0m est.` at kick-off, then the cars left (56 of 56, the exit P95 rising 0 → 8.8 → 12 sim s) and it read `Q 0m · Exit 12m` (both measured). Satisfaction 76 (unchanged: 12 min is under the 30 min full-marks line).
 - 2026-10-23: **Magenta keyer clean-up landed** on main (an aside from M2, the owner asked): despill 'keep', speck clean-up, haze limit, linear-light option in `scripts/assets/key-magenta.mjs`, each a setting; before/after sheets by `scripts/assets/key-compare.mjs`. Details in PROGRESS.md. M2.4 is still next.
 - 2026-10-23: **M2.3 Going home landed** on main. Browser-checked on a test copy (5181, Skip to tournament at 8x): 56 cars parked; the leaving started 120 sim s after kick-off; the first car left ~250 s later (the long walk back from the far greens), 53 of 56 had left by ~960 s; cars on the roads rose from ~41 to ~100 (the evening traffic). Note: the walk back from far greens is long; M2.5 (the town day) will set when the leaving starts.

@@ -1,0 +1,159 @@
+{
+  "id": "static:shop_brick_rear-v2",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-2902bddd-5ef0-4fea-9077-4a753aee75fd.png",
+  "prompt": "Precise single-cell geometry correction of this EXISTING four-view game sprite sheet. Keep same building identity, miniature material style, palette, exposure, warm lamps, fixed SCREEN UPPER RIGHT sun, 2:1 isometric camera and physical scale. Fix ONLY bottom-left SW: plain BACK wall C on image LEFT, LEFT sideD on image RIGHT with two upper warm windows consistent with left side seen in bottom-rightNW. CurrentSW puts these faces in the opposite order. Preserve front service door/boarded window only NE/NW and all roof equipment. Preserve the other views and their facades. Output square 2x2 NE,SE,SW,NW cutout sheet, complete silhouettes inside cells, generous blank gutters/margins. Actual fully transparent alpha outside silhouettes and between objects, RGBA PNG. NO floor, ground, backdrop, haze, labels, captions, scene, people or decorative props. Do not mirror the entire sprite to fake the correction; rotate geometry, keep light fixed.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/static-shop_brick_rear-v2-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/static-shop_brick_rear-v2-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master. Layout-only repack preserves every nonzero source RGBA pixel without generation/repainting. Original low-alpha edge fringe does not truncate physical silhouette.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/static-shop_brick_rear-v2-4views-v2.png",
+    "originalSheetSha256": "750758166be68eb61db458f2fd9e342f59a7a6c0aa68b4b6f227c7612f50c118",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "bb400036fcad8d5d81582298716c1d426b600ab43a9f40c28c9f2682c84429e5",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "partitionMode": "row-first",
+    "rowFirstFailure": null,
+    "rowGap": {
+      "start": 585,
+      "endExclusive": 624,
+      "midpoint": 604,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 604,
+        "endExclusive": 693,
+        "midpoint": 648,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 610,
+        "endExclusive": 709,
+        "midpoint": 659,
+        "alphaThreshold": 8
+      }
+    ],
+    "globalColumnGap": null,
+    "columnRowGaps": [],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 19,
+          "width": 614,
+          "height": 585
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 202192,
+        "visibleAlphaPixelsThreshold8": 198249,
+        "nonzeroRgbaSha256": "0c524cc04a3cad052bf1ee0b1f19aed11f29c16c3659552588943e173be03f6b",
+        "destination": {
+          "left": 205,
+          "top": 219,
+          "width": 614,
+          "height": 585
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 684,
+          "top": 27,
+          "width": 512,
+          "height": 565
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 197762,
+        "visibleAlphaPixelsThreshold8": 191744,
+        "nonzeroRgbaSha256": "8ea5a53462538aafd05b36fb37638eb02e68c4f62b96dd3bc3352cd3a7a42de5",
+        "destination": {
+          "left": 1280,
+          "top": 229,
+          "width": 512,
+          "height": 565
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 604,
+          "width": 649,
+          "height": 631
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 215016,
+        "visibleAlphaPixelsThreshold8": 210062,
+        "nonzeroRgbaSha256": "0b2407550cdc7a6d7975d2f90697623b2625f8dd819d947496a8327f9343737b",
+        "destination": {
+          "left": 187,
+          "top": 1220,
+          "width": 649,
+          "height": 631
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 688,
+          "top": 604,
+          "width": 525,
+          "height": 621
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 205567,
+        "visibleAlphaPixelsThreshold8": 200866,
+        "nonzeroRgbaSha256": "abe9c922c293ee95e85418f1b3758b075c256d5685f4ba9a9aa24233b77fcaa2",
+        "destination": {
+          "left": 1273,
+          "top": 1225,
+          "width": 525,
+          "height": 621
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 820537,
+      "visibleAlphaPixelsThreshold8": 800921,
+      "nonzeroRgbaSha256": "9ec7c344acc89e7a08f89eebdb00d362ce724bae727b2cef3aa200d71fc7909f"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

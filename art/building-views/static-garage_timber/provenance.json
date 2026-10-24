@@ -1,0 +1,21 @@
+{
+  "id": "static:garage_timber",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-9b424707-cfcc-4096-b742-b145f25e2227.png",
+  "prompt": "Precise single-cell geometry correction of this EXISTING four-view game sprite sheet. Keep same building identity, miniature material style, palette, exposure, warm lamps, fixed SCREEN UPPER RIGHT sun, 2:1 isometric camera and physical scale. Fix ONLY two rear views. Top-right SE must show RIGHT wall on image LEFT with one warm rectangular window matching top-leftNE right wall, BACK wall plain on image RIGHT. Bottom-left SW must show plain BACK wall on image LEFT and LEFT wall on image RIGHT with warm rectangular window matching bottom-rightNW left wall. Current rears wrongly omit both side windows. Preserve front cream garage and roof in NE/NW. Preserve the other views and their facades. Output square 2x2 NE,SE,SW,NW cutout sheet, complete silhouettes inside cells, generous blank gutters/margins. Actual fully transparent alpha outside silhouettes and between objects, RGBA PNG. NO floor, ground, backdrop, haze, labels, captions, scene, people or decorative props. Do not mirror the entire sprite to fake the correction; rotate geometry, keep light fixed.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/static-garage_timber-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/static-garage_timber-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "All4 visible physical corners form front/right/back/left cycle; actual magenta alpha has no surrounding floor/haze. Matte timber/masonry/metal, charcoal roofs, amber practical lights and fixed screen-upper-right dusk are coherent with master.",
+  "sourceVisualReview": {
+    "reviewer": "source_review_resume",
+    "actualAlphaBackground": "magenta #ff00c8",
+    "theme": "references/theme-authoritative.png",
+    "sourceOnly": true,
+    "geometry": "four-corner cycle reviewed",
+    "gameScaleNotCertified": true
+  }
+}

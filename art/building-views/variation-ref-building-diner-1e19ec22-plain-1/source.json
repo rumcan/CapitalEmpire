@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-diner-1e19ec22-plain:1",
+ "version": "variation-ref-building-diner-1e19ec22-plain-1-4views-v2",
+ "files": {
+  "NE": "3d97ef887b307f5bcdf5f9632b8a5da7c3f239d799dbe92254fb3bae5f444bb5",
+  "SE": "431cfda3f32d1d096471e7daa7f1a18f00777925b4ba8718b25a87cae6d0a700",
+  "SW": "5d9adbf0596d08418d0267fb9618f5e59cafe982f64db92b1352ba502019b832",
+  "NW": "7fc99993eb3190928994f1ca6a68bf4c231b9ceb9a9d50b51c4623e3750583cc"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "variation:ref-building-house-dormer-b4413f08-plain:1",
+ "version": "variation-ref-building-house-dormer-b4413f08-plain-1-4views-v2",
+ "files": {
+  "NE": "bcf67c2ecb3c46704ff9bc7d8faca5cb3c5ab209af4b3025ba2d9e4a07d3d65f",
+  "SE": "6124db69e157512a2ba23eb83cda6d185407c48df695497c927b266ac38ad718",
+  "SW": "6832664a93a7944d9ac3a99f7b25de01e97d51e3cd0891e1bbb7866604e45172",
+  "NW": "2a98bde47db9192f330a059bca4ed56bcc789785d0fc976dfdf0b6c2e769f470"
+ }
+}

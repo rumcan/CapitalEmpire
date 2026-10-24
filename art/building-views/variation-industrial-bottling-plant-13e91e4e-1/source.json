@@ -1,0 +1,10 @@
+{
+ "id": "variation:industrial-bottling-plant-13e91e4e:1",
+ "version": "variation-industrial-bottling-plant-13e91e4e-1-4views-v2",
+ "files": {
+  "NE": "609ef2d5651ca3d9c18cc8dd9142e7ca0b8b200f704aa4cba42fc3207f1ab67e",
+  "SE": "b5f6f8a0a10f6498bd242c7895accb94bddfff05f774a453340a3aed63f94a69",
+  "SW": "f1b081560335db07415f074d7865dd0ed680eecb3e71880415954cb4f9e1fdf0",
+  "NW": "370f2235b4cb00a38f435718062d6a1e4f2402e0974a8c18639770ca833c53dc"
+ }
+}

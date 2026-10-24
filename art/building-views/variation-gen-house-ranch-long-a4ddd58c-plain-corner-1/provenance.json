@@ -1,0 +1,15 @@
+{
+  "id": "variation:gen-house-ranch-long-a4ddd58c-plain-corner:1",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-24dfea94-bebd-4f58-803a-a67b8f5650b6.png",
+  "prompt": "Edit this existing transparent game sprite sheet, maintaining EXACT shared matte miniature theme, material colours, physical building identity, early dusk and fixed SCREEN UPPER RIGHT SUN. Concrete correction: NW repeats NE front corner: carport gable remains left and front long wall remains right. Rotate NW to opposite front+left corner with front long wall left and other side right; keep carport physically fixed. Preserve every other correct cell and all physical architecture/equipment. Never mirror text, geometry or lighting; draw actual opposite corner. Keep 2x2 NEtop-left,SEtop-right,SWbottom-left,NWbottom-right. Output SQUARE 1:1 CANVAS with four SMALL complete sprites, each only60% cellheight, full roof/chimney/cross withincanvasand100pxclear gutters. Actual transparentalpha=0 outsidephysicalbuilding. No floor/greybackground/terrain/shadow/haze/labels/captions. Reference1 is EDIT TARGET, preserve its artwork rather than invent a new building. ",
+  "references": [
+    {
+      "role": "edit-target",
+      "file": "art/theme-consistency/generated/buildings/variation-gen-house-ranch-long-a4ddd58c-plain-corner-1-4views-v1.png"
+    }
+  ],
+  "integrationStatus": "ready",
+  "integrationReason": "Targeted v2 successfully turns NW to opposite front-left corner: long front facade on screenLEFT, carport gable/basket hoop on screenRIGHT; NE carport remainsLEFT. Rear air conditioner, short sidewindows and structure follow quarterturns. Actual alpha and generous intact margins pass with no warnings; master materials/light retained."
+}
