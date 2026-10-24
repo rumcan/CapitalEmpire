@@ -68,6 +68,23 @@ tents, stands, car parks) and above all **manage the transport and roads around 
 - **2026-10-24: Alpha 1.0 is defined (plans/P01.md)** — testers are the owner plus 2–3 newcomers; tiers 1–3 balanced, 4–5 smoke-tested;
   placeholder art allowed if it reads; the single HTML file is the Alpha build. **The season loop (plans/P04.md)**: money booked by the
   month, the tier offer is a choice (Move up default), Skip warns about un-grown seeded surfaces with Lay sod, practice days stay resolved.
+- 2026-10-24: **A new Claude lead took over** (the owner: "see where you can take over as lead"; the earlier leads had been quiet since
+  about 13:20). It runs the job board (GitHub issues `arena` + `status:open`), writes the briefs, reviews and merges coder PRs, and
+  delegates all coding and investigation to other AIs (the owner: "delegate this work and all the work I give you here to other AIs").
+  Its own PRs wait for the owner's approval.
+- 2026-10-24: **Old building pictures never show** (the owner: "remove all the old ones from showing until it was replaced"). A building
+  without its four generated views is drawn as the new-art building of the same family nearest in size (dwelling, outbuilding, business,
+  or its library category); never mirrored; `?oldart` compares (src/game/newart.ts).
+- 2026-10-24: **The baked house lots are off** (compose.ts BAKED_LOTS): rendered from the old TrickOrTreat art; plan P20 replaces them
+  with curated lot presets for every lot.
+- 2026-10-24: **The building import cuts reviewed sheets itself** (prep-views.mjs + four-view-cells.mjs): a version the art model marked
+  `ready` with no crops yet is cut by the art model's own cell rules; nothing is written to the delivery folder.
+- 2026-10-24: **Plan P19** (course roads: a miniature road catalogue on the golf course, cart paths in their own path network, buildings
+  snap to drives and paths) and **plan P20** (every lot from a curated preset): docs/plans/P19.md and P20.md, decided under the owner's
+  standing rule.
+- 2026-10-24: Design constants taken for **T051a** (featured hole ×3, the 18th green ×2 after 14:30, a quarter of an over-full spot's
+  fans move every 30 minutes) and **T060a** (Traffic satisfaction 100 at ≤1.2× free flow, 0 at ≥3×; tent spend falls to 50% on the same
+  scale).
 
 ## 6. How to work (so anyone can continue)
 - **The live log is `docs/NOW.md`.** Before you edit, write there: the step, the branch, the files and the exact change you are about to

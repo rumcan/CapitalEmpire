@@ -34,6 +34,8 @@ export class Crowd {
   gate: GateStats = { admitted: 0, waitSum: 0, waitMax: 0, late: 0 };
   /** the longest wait at a gate (sim s) a fan may have and still be on time (the City sets ON_TIME_GRACE_MIN in golf) */
   grace = Infinity;
+  /** the tournament day (P02/T050): a fan admitted after this sim time is late; null: the old rule (a wait longer than grace) */
+  lateAt: number | null = null;
   /** the time now (sim s), set by the City before step and admit: a gate's queue stamps it on each party that joins */
   now = 0;
   /** per gallery spot (golf, LEAD.md M2.2): the fans standing there */
@@ -66,7 +68,7 @@ export class Crowd {
     while (need > 0 && q && q.length) {
       const h = q[0]!, k = Math.min(need, h.n), w = Math.max(0, this.now - (h.since ?? this.now));
       this.arrive(h.town, k); this.onIn?.(h.town, k, x, y); need -= k; done += k; h.n -= k;
-      this.gate.admitted += k; this.gate.waitSum += k * w; this.gate.waitMax = Math.max(this.gate.waitMax, w); if (w > this.grace) this.gate.late += k;
+      this.gate.admitted += k; this.gate.waitSum += k * w; this.gate.waitMax = Math.max(this.gate.waitMax, w); const late = this.lateAt !== null ? this.now > this.lateAt : w > this.grace; if (late) this.gate.late += k;
       if (h.n <= 0) q.shift();
     }
     return done;
