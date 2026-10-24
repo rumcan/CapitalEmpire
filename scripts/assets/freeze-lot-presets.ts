@@ -1,6 +1,8 @@
 // Freeze today's lots into presets (P20 / T063), the bundled half of scripts/assets/freeze-lot-presets.mjs (run that, not this):
-//   freeze.mjs --freeze <curated.json> <lot-presets.json>   the freeze, then the check
+//   freeze.mjs --freeze <curated.json> <lot-presets.json> [--note "<text>"]... [--refreeze-curated]   the freeze, then the check
 //   freeze.mjs --check  <curated.json> <lot-presets.json>   the check alone
+// A freeze keeps the file's curated presets (curated: true) exactly as they are, and its header notes; the check compares the curated presets
+// with the last commit's (git HEAD) and fails when one changed.
 // The freeze runs the game's own composer (compose.ts layoutOfUse) on a canonical lot (the street on +y, so nothing turned or flipped) for
 // every use (res, com, park, tour, ind, civic) x state (built, upgraded, declined) x size bucket of a real town, with 4 fixed seeds each, and
 // converts each layout into a preset in the lot frame: props as { id, x, y, scale, view } (x, y the footprint centre; four-view art by its base
@@ -9,6 +11,8 @@
 // houses, cars to the eight-way cars), Halloween and builder-only sprites dropped, the paving decals turned into drive, walk and yard patches,
 // centred on the town's 10 x 15 house lot (res, built; the neglected ones declined), curated: true.
 import fs from 'node:fs';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { CLASS, RoadNetwork, type Leg } from '../../src/game/network';
 import { NetEditor } from '../../src/game/netops';
 import { LotMap, type Lot } from '../../src/game/lots/lots';
@@ -27,7 +31,7 @@ import { frameOf, listToFrame, toFrame } from '../../src/game/lots/preset-frame'
 // the network builds Path2D outlines for the painters; in Node a stub that ignores them is enough
 (globalThis as unknown as { Path2D: unknown }).Path2D ??= class { moveTo() {} lineTo() {} arc() {} arcTo() {} closePath() {} rect() {} };
 
-const [mode, curatedFile, presetFile] = process.argv.slice(2) as [string, string, string];
+const [mode, curatedFile, presetFile, ...opts] = process.argv.slice(2) as [string, string, string, ...string[]];
 const BY = new Map(LIBRARY.map(i => [i.id, i]));
 const isFence = (id: string) => { const k = BY.get(id)?.kind; return k === 'fencex' || k === 'fencey' || id === 'world:hedge'; };
 /** a FNV-1a hash of a string (the variants' seeds) */
@@ -231,13 +235,37 @@ if (mode === '--freeze') {
     // the curated house lots join the town's house bucket, after the composer's own
     if (use === 'res') for (const c of cur) { const cb = bucketOf(c.w, c.d); if (c.state === state && cb.w === b.bw && cb.d === b.bd) list.push(c); }
   }
-  const text = formatPresets(list);
+  // the presets the owner has curated (curated: true) are his: kept from the file exactly as they are, in their place (or at the end when the
+  // freeze makes no preset of that id), unless --refreeze-curated; the file's notes are kept, and each --note adds one
+  const old = fs.existsSync(presetFile) ? parsePresets(JSON.parse(fs.readFileSync(presetFile, 'utf8'))) : { presets: [] as LotPreset[], invalid: 0 };
+  const oldCurated = new Map(old.presets.filter(p => p.curated).map(p => [p.id, p] as const)), kept: string[] = [];
+  if (!opts.includes('--refreeze-curated')) {
+    list.forEach((p, i) => { const o = oldCurated.get(p.id); if (o) { list[i] = o; kept.push(p.id); } });
+    for (const [id, o] of oldCurated) if (!kept.includes(id)) { list.push(o); kept.push(id); }
+  }
+  const notes = [...(old.meta?.notes ?? []), ...opts.flatMap((o, i) => (o === '--note' && opts[i + 1] ? [opts[i + 1]!] : []))];
+  const text = formatPresets(list, notes.length ? { notes } : undefined);
+  const block = (p: LotPreset) => formatPresets([p]);
+  for (const id of kept) if (block(list.find(p => p.id === id)!) !== block(oldCurated.get(id)!)) throw new Error(`curated preset ${id} changed in the freeze`);
+  const oldText = new Map(old.presets.map(p => [p.id, block(p)] as const)), changed = list.filter(p => oldText.has(p.id) && oldText.get(p.id) !== block(p));
   fs.writeFileSync(presetFile, text);
   console.log(`wrote ${presetFile}`);
+  console.log(`curated presets kept exactly as they were: ${kept.length}${opts.includes('--refreeze-curated') ? ' (--refreeze-curated: laid out again)' : ''}`);
+  const byUse = new Map<string, number>(); for (const p of changed) byUse.set(p.use, (byUse.get(p.use) ?? 0) + 1);
+  console.log(`presets that differ from the file before: ${changed.length} (${[...byUse].map(([u, n]) => `${u} ${n}`).join(', ') || 'none'}); new: ${list.filter(p => !oldText.has(p.id)).length}; gone: ${old.presets.filter(p => !list.some(q => q.id === p.id)).length}`);
   console.log(`left out: ${[...dropped].map(([k, n]) => `\n  ${k}: ${n}`).join('')}`);
   console.log(`props whose footprint centre lay past the lot line, moved onto it: ${clamped}`);
   console.log(`mapped (curated): ${mapped.map(m => `\n  ${m}`).join('')}`);
 }
 const text = fs.readFileSync(presetFile, 'utf8'), parsed = parsePresets(JSON.parse(text));
-const bad = report(parsed.presets, parsed.invalid, Buffer.byteLength(text));
+let bad = report(parsed.presets, parsed.invalid, Buffer.byteLength(text));
+if (parsed.meta) console.log(`notes:${parsed.meta.notes.map(n => `\n  ${n}`).join('')}`);
+// the curated presets against the last commit's (git HEAD): a freeze must leave them as they were; an owner's edit since shows here too
+try {
+  const head = parsePresets(JSON.parse(execFileSync('git', ['show', 'HEAD:src/game/lots/lot-presets.json'], { cwd: path.dirname(presetFile), maxBuffer: 256 << 20 }).toString()));
+  const now = new Map(parsed.presets.map(p => [p.id, formatPresets([p])] as const));
+  const diff = head.presets.filter(p => p.curated && now.get(p.id) !== formatPresets([p])).map(p => p.id);
+  if (diff.length) { console.log(`CURATED presets changed since the last commit (or gone): ${diff.join(' ')}`); bad += diff.length; }
+  else console.log(`the ${head.presets.filter(p => p.curated).length} curated presets of the last commit are unchanged`);
+} catch { console.log('(no committed lot-presets.json to compare the curated presets with)'); }
 process.exit(bad ? 1 : 0);

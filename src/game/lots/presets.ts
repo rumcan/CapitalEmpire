@@ -117,13 +117,23 @@ function readPreset(v: unknown): LotPreset | undefined {
   return out;
 }
 
-/** the presets read from a JSON array (the studio's file): the valid entries in file order, the others counted in invalid; any other input gives none */
-export function parsePresets(json: unknown): { presets: LotPreset[]; invalid: number } {
+/** the preset file's header (an entry { "meta": ... } before the presets): dated notes on how the file was made, newest last */
+export interface PresetMeta { notes: string[] }
+/** the header read from JSON, or undefined when the entry is not one ({ meta: { notes: string[] } }, nothing else) */
+function readMeta(v: unknown): PresetMeta | undefined {
+  if (!isObj(v) || Object.keys(v).length !== 1 || !isObj(v.meta)) return undefined;
+  const { notes } = v.meta;
+  return Array.isArray(notes) && notes.every(n => typeof n === 'string') ? { notes: notes.slice() } : undefined;
+}
+
+/** the presets read from a JSON array (the studio's file): the valid entries in file order, the others counted in invalid; the header entry
+ *  ({ meta }), when there is one, as meta (neither a preset nor invalid); any other input gives none */
+export function parsePresets(json: unknown): { presets: LotPreset[]; invalid: number; meta?: PresetMeta } {
   if (!Array.isArray(json)) return { presets: [], invalid: 0 };
   const presets: LotPreset[] = [];
-  let invalid = 0;
-  for (const v of json) { const p = readPreset(v); if (p) presets.push(p); else invalid++; }
-  return { presets, invalid };
+  let invalid = 0, meta: PresetMeta | undefined;
+  for (const v of json) { const m = meta ? undefined : readMeta(v); if (m) { meta = m; continue; } const p = readPreset(v); if (p) presets.push(p); else invalid++; }
+  return meta ? { presets, invalid, meta } : { presets, invalid };
 }
 
 /** a number as the preset file writes it: rounded to 3 decimals, never -0 */
@@ -133,8 +143,9 @@ const nlist = (a: readonly number[]) => `[${a.map(num).join(',')}]`;
 
 /** the preset file's text (src/game/lots/lot-presets.json): a JSON array, one preset's header per line and each prop and patch on its own line
  *  (an edit to one prop is a one-line diff), numbers rounded to 3 decimals (tiles); parsePresets reads it back. The freeze script and the dev
- *  editor's save both write with it */
-export function formatPresets(list: readonly LotPreset[]): string {
+ *  editor's save both write with it; meta, when given, goes first, one note per line */
+export function formatPresets(list: readonly LotPreset[], meta?: PresetMeta): string {
+  const top = meta ? [`{"meta":{"notes":[${meta.notes.length ? `\n${meta.notes.map(n => JSON.stringify(n)).join(',\n')}\n` : ''}]}}`] : [];
   const out = list.map(p => {
     const head = `{"id":${JSON.stringify(p.id)},"use":"${p.use}","state":"${p.state}","w":${num(p.w)},"d":${num(p.d)}${p.curated ? ',"curated":true' : ''}`;
     const props = p.props.map(q => `{"id":${JSON.stringify(q.id)},"x":${num(q.x)},"y":${num(q.y)},"scale":${num(q.scale)},"view":${q.view}}`);
@@ -142,5 +153,5 @@ export function formatPresets(list: readonly LotPreset[]): string {
     const block = (rows: string[]) => (rows.length ? `\n${rows.join(',\n')}\n` : '');
     return `${head},"props":[${block(props)}],"patches":[${block(patches)}]}`;
   });
-  return `[\n${out.join(',\n')}\n]\n`;
+  return `[\n${[...top, ...out].join(',\n')}\n]\n`;
 }

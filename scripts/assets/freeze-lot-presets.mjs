@@ -1,6 +1,9 @@
 // Freeze today's lots into presets (P20 / T063): writes src/game/lots/lot-presets.json, the only source of the lots from then on.
 //   node scripts/assets/freeze-lot-presets.mjs           (npm run lots:freeze) the freeze, then the check
-//   node scripts/assets/freeze-lot-presets.mjs --check   (npm run lots:check)  the check alone: counts per use, state and bucket; ids unknown to the game
+//   node scripts/assets/freeze-lot-presets.mjs --check   (npm run lots:check)  the check alone: counts per use, state and bucket; ids unknown to the game;
+//                                                        the curated presets against the last commit's (they must be unchanged)
+//   options of the freeze: --note "<dated note>" adds a note to the file's header (repeatable); --refreeze-curated lays the curated presets out
+//   again too (by default every preset flagged curated: true is kept exactly as the file has it: the owner's work)
 // Two parts: this node step lays out the owner's 14 curated house lots the way lot-variants.mjs does (layoutLot and lot-edits.json, from the
 // TrickOrTreat builder library, read only) into output/lot-presets/curated.json; freeze-lot-presets.ts (bundled with esbuild like the tests)
 // runs the game's own composer for every use, state and size bucket, converts both into presets in the lot frame and writes the file.
@@ -42,5 +45,5 @@ if (!check) {
 const bundle = path.join(OUT, 'freeze.mjs');
 await build({ entryPoints: [path.join(ROOT, 'scripts/assets/freeze-lot-presets.ts')], bundle: true, platform: 'node', format: 'esm', outfile: bundle,
   loader: { '.webp': 'empty', '.png': 'empty' }, logLevel: 'warning' });
-const r = spawnSync(process.execPath, [bundle, check ? '--check' : '--freeze', curatedFile, path.join(ROOT, 'src/game/lots/lot-presets.json')], { stdio: 'inherit' });
+const r = spawnSync(process.execPath, [bundle, check ? '--check' : '--freeze', curatedFile, path.join(ROOT, 'src/game/lots/lot-presets.json'), ...process.argv.slice(2).filter(a => a !== '--check')], { stdio: 'inherit' });
 process.exit(r.status ?? 1);

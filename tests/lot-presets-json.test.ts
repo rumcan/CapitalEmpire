@@ -5,7 +5,7 @@ import PRESET_JSON from '../src/game/lots/lot-presets.json';
 import { bucketOf, fitPreset, formatPresets, parsePresets, presetsFor, type PresetState, type PresetUse } from '../src/game/lots/presets';
 import { LIBRARY } from '../src/game/library';
 
-const { presets, invalid } = parsePresets(PRESET_JSON);
+const { presets, invalid, meta } = parsePresets(PRESET_JSON);
 const USES: PresetUse[] = ['res', 'com', 'park', 'tour', 'ind', 'civic'], STATES: PresetState[] = ['built', 'upgraded', 'declined'];
 
 describe('the lot presets file (T063)', () => {
@@ -50,9 +50,15 @@ describe('the lot presets file (T063)', () => {
     }
   });
 
-  it('6. formatPresets writes the file back as it is (the freeze and the dev editor write the same text)', () => {
-    const again = parsePresets(JSON.parse(formatPresets(presets)));
+  it('6. formatPresets writes the file back as it is, its header notes too (the freeze and the dev editor write the same text)', () => {
+    const again = parsePresets(JSON.parse(formatPresets(presets, meta)));
     assert.equal(again.invalid, 0);
     assert.deepEqual(again.presets, presets);
+    assert.deepEqual(again.meta, meta);
+  });
+
+  it('7. the header notes how the file was made: the freeze, and the re-freeze after #125 that kept the curated lots', () => {
+    assert.ok(meta && meta.notes.length >= 2, 'no header notes');
+    assert.ok(meta.notes.some(n => /#125/.test(n) && /curated/.test(n)), meta.notes.join(' | '));
   });
 });
