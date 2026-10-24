@@ -3,7 +3,8 @@ import { checkArea, clampStyle, DEFAULT_STYLE, MIN_AREA, polyArea, polyBox, type
 import { surfacePreset } from '../paint-presets';
 import type { CourseLayout, GolfSurface } from './types';
 
-/** each course surface's Paint texture and its corner radius (tiles) */
+/** each course surface's own Paint texture and its corner radius (tiles); the owner's preset for a surface wins (paint-presets.ts
+ *  surfacePreset: the fescue lays the owner's Fescue preset, as the woodland floor does) */
 export const SURFACE_TEX: Record<GolfSurface, { tex: PaintTex; radius: number }> = {
   green: { tex: 'golfGreen', radius: 0 }, fringe: { tex: 'golfFringe', radius: 0 }, tee: { tex: 'golfTee', radius: 1 },
   fairway: { tex: 'golfFairway', radius: 4 }, firstCut: { tex: 'golfFirstCut', radius: 2 }, rough: { tex: 'golfRough', radius: 0 },

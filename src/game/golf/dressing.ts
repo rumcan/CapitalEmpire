@@ -1,5 +1,6 @@
 // Course dressing (docs/GOLF-PLAN.md sections 3, 4.2 and 10): deterministic prop placements {id, x, y, flip, scale} for tee markers, flagsticks at pins, benches near tees, trees lining holes outside fairways, and a painted cart path loop. Pure TS, no DOM.
 import { mulberry } from '../iso';
+import { LIVE_BROAD_DEAL, LIVE_CONIFER_DEAL, dealTree, ownerSize } from '../forest';
 import { deriveHoles, surfaceAt, type Pt } from './holes';
 import type { CourseArea, CourseLayout } from './types';
 
@@ -19,21 +20,15 @@ export const TEE_FORWARD_ID = 'business:golf-pin-yellow';
 /** tee-side bench with course map (src/game/business-library.ts line 66, w=562, h=494; never flipped per owner's lettering rule) */
 export const BENCH_ID = 'business:golf-bench-course-map';
 
-/** verified tree sprite IDs from src/game/library.ts ("Capital vegetation" and "Trees & plants", kind="tree") */
-export const TREE_IDS = [
-  'capital:tree-pine-open',
-  'capital:tree-pine-moderate',
-  'capital:tree-spruce-open',
-  'capital:tree-spruce-moderate',
-  'capital:tree-maple-open',
-  'capital:tree-maple-moderate',
-  'capital:tree-birch-open',
-  'capital:tree-birch-moderate',
-  'capital:tree-oak-open',
-  'capital:tree-oak-moderate',
-  'world:tree_oak_1',
-  'world:tree_pine_1',
-] as const;
+/** the share of conifers among the trees lining the holes (the old 12-tree list had 4 conifers in 12) */
+export const DRESS_CONIFER_SHARE = 1 / 3;
+/** the trees lining the holes: every live tree of the forest pools (forest.ts, no dead snags; the lead, 2026-10-24) */
+export const TREE_IDS: readonly string[] = [...LIVE_CONIFER_DEAL.ids, ...LIVE_BROAD_DEAL.ids];
+/** the tree a uniform u in [0, 1) deals for the course: a conifer below DRESS_CONIFER_SHARE, else a broadleaf tree, each by its species'
+ *  weight (one draw, so the placements keep their random stream) */
+export function dressTree(u: number): string {
+  return u < DRESS_CONIFER_SHARE ? dealTree(LIVE_CONIFER_DEAL, u / DRESS_CONIFER_SHARE) : dealTree(LIVE_BROAD_DEAL, (u - DRESS_CONIFER_SHARE) / (1 - DRESS_CONIFER_SHARE));
+}
 
 /** set of every sprite ID used by course dressing, for fast verification */
 export const DRESSING_SPRITE_IDS: ReadonlySet<string> = new Set<string>([
@@ -202,9 +197,10 @@ export function dressCourse(layout: CourseLayout, seed: number): DressedProp[] {
           const off = 15 + rng() * 5;
           const tx = q4(a.x + (d + jitterAlong) * ux + side * off * nx);
           const ty = q4(a.y + (d + jitterAlong) * uy + side * off * ny);
-          const treeId = TREE_IDS[Math.floor(rng() * TREE_IDS.length)]!;
+          const treeId = dressTree(rng());
           const flip = rng() < 0.5;
-          const scale = Math.round((0.42 + rng() * 0.16) * 100) / 100;
+          // at owner size, as the town trees (lots/scales.ts OWNER_SCALE), +-10%
+          const scale = Math.round(ownerSize(treeId) * (0.9 + rng() * 0.2) * 100) / 100;
           if (!safeTree(tx, ty)) continue;
           treePts.push({ x: tx, y: ty });
           props.push({ id: treeId, x: tx, y: ty, flip, scale });

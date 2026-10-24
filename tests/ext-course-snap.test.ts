@@ -30,7 +30,7 @@ describe('ext/course-snap (T029)', () => {
     assert.deepEqual(tee, { tex: 'golfTee', border: 1, btex: 'golfFirstCut', radius: 1, angle: -15 });
   });
 
-  it('snaps a fairway segment to an existing fairway edge with fat dimensional borders and sun-right bevels', () => {
+  it('snaps a fairway segment to an existing fairway edge with its collar and no rough rim (the rough of the course shows round it; the painter bevels the outline)', () => {
     const existingFairway: SnapTargetArea = {
       id: 11,
       kind: 'fairway',
@@ -50,7 +50,7 @@ describe('ext/course-snap (T029)', () => {
     assert.deepEqual(res.snapPt, { x: 124, y: 106 });
     assert.equal(res.angleDeg, 0);
     assert.ok(res.pts.includes(124) && res.pts.includes(148));
-    assert.deepEqual(res.layers.map(l => l.role), ['shadow-bevel', 'outer-rim', 'collar', 'core']);
+    assert.deepEqual(res.layers.map(l => l.role), ['collar', 'core']);
     assert.ok(res.layers.every(l => l.border === 3));
   });
 
@@ -73,7 +73,7 @@ describe('ext/course-snap (T029)', () => {
     assert.equal(res.recipe.tex, 'golfGreen');
     assert.equal(res.recipe.btex, 'golfFringe');
     assert.equal(res.recipe.joinCollarTex, 'golfFringe');
-    assert.deepEqual(res.layers.map(l => l.role), ['shadow-bevel', 'outer-rim', 'sun-bevel', 'collar', 'core', 'join-apron']);
+    assert.deepEqual(res.layers.map(l => l.role), ['collar', 'core', 'join-apron']);
     assert.equal(res.heightOps.length, 1);
     assert.equal(res.props.filter(p => p.kind === 'pin').length, 1);
 
@@ -110,8 +110,13 @@ describe('ext/course-snap (T029)', () => {
       cursor: { x: 180, y: 150 },
     });
     assert.equal(bunker.heightOps.length, 2);
-    assert.ok(bunker.layers.some(l => l.role === 'shadow-bevel' && l.tone === 1));
-    assert.ok(bunker.layers.some(l => l.role === 'sun-bevel' && l.tone === 2));
+    // no bevel rings and no brown rim bands any more (the owner, 2026-10-24): the ground painter feathers and sun-bevels every outline (paint-edges.ts)
+    const brown = new Set(['pineStraw', 'barkMulch', 'rockyDirt']);
+    for (const pl of [tee, bunker]) {
+      assert.ok(pl.layers.every(l => l.role !== 'shadow-bevel' && l.role !== 'sun-bevel'));
+      assert.ok(pl.layers.every(l => !brown.has(l.tex) && (l.border === 0 || !brown.has(l.btex))), pl.kind);
+    }
+    assert.equal(bunker.layers.find(l => l.role === 'core')?.border, 0, 'the sand meets the rough: its sunken bevel is drawn on the sand');
 
     const pond = computeSnapPiecePlacement({
       kind: 'water',
@@ -120,6 +125,7 @@ describe('ext/course-snap (T029)', () => {
     });
     assert.equal(pond.heightOps[0]?.mode, 'lower');
     assert.ok(pond.props.some(p => p.kind === 'pond-waterfall'));
+    assert.ok(pond.layers.every(l => !brown.has(l.tex) && (l.border === 0 || !brown.has(l.btex))), 'no brown bank or rim round the pond');
 
     const dogleg = buildSplineRibbonPolygon({ x: 100, y: 100 }, { x: 120, y: 105 }, { x: 140, y: 120 }, 3, 7, 8);
     assert.equal(dogleg.length, 36);
