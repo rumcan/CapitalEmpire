@@ -24,8 +24,21 @@ async function idbDo<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDB
   const db = await idb();
   return new Promise((res, rej) => { const tx = db.transaction(STORE, mode), q = fn(tx.objectStore(STORE)); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
 }
-async function gzip(text: string) { return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer(); }
-async function gunzip(buf: ArrayBuffer) { return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
+export async function gzip(text: string) { return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer(); }
+export async function gunzip(buf: ArrayBuffer) { return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); }
+
+/** where saves live: get, put and delete a slot's bytes, and list the slots (IndexedDB in the game; a Map in the tests) */
+export interface SaveStore { get(k: string): Promise<ArrayBuffer | undefined>; put(k: string, v: ArrayBuffer): Promise<void>; del(k: string): Promise<void>; keys(): Promise<string[]> }
+/** the IndexedDB store (the existing idb/idbDo helpers; keys via getAllKeys) */
+export const idbStore: SaveStore = {
+  get: k => idbDo<ArrayBuffer | undefined>('readonly', s => s.get(k)),
+  put: async (k, v) => { await idbDo('readwrite', s => s.put(v, k)); },
+  del: async k => { await idbDo('readwrite', s => s.delete(k)); },
+  keys: () => idbDo<IDBValidKey[]>('readonly', s => s.getAllKeys()).then(ks => ks.map(String)),
+};
+let store: SaveStore = idbStore;
+/** swaps the store (tests) */
+export function setSaveStore(s: SaveStore) { store = s; }
 
 /** a seg as saved (see SaveV5.segs): its ends, class, style and kind, and 1 for the towns' (Seg.town; absent for the player's) */
 export function segRec(s: Seg): SaveV5['segs'][number] { const r: SaveV5['segs'][number] = [s.a.x, s.a.y, s.b.x, s.b.y, s.cls.id, s.style, s.kind]; if (s.town) r.push(1); return r; }
@@ -103,23 +116,64 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
   'world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood',
   'gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line'];
 
-export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify(d)); await idbDo('readwrite', s => s.put(buf, SLOT)); return buf.byteLength; }
+export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify(d)); await store.put(SLOT, buf); return buf.byteLength; }
+/** the save migrations, one step per version: step `from` turns a save of that version into the next one's shape; upgradeSave runs them in order */
+export const MIGRATIONS: { from: number; up(d: any): any }[] = [
+  // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
+  { from: 3, up: d => ({ version: 4, map: MAP, seed: d.seed ?? 1, segs: d.segs, nodes: d.nodes, props: d.props, money: d.money, day: d.day, cam: d.cam }) },
+  // v4: the same town, no lots yet
+  { from: 4, up: d => ({ ...d, version: 5 }) },
+];
 /** a parsed save of any version we read as the current one (null if it is not ours or not a version we read) */
 export function upgradeSave(d: { version: number; map: number } & Partial<SaveV5>): SaveV5 | null {
   if (d.map !== MAP) return null;
   if (d.version === SAVE_VERSION) return d as SaveV5;
-  // v4: the same town, no lots yet
-  if (d.version === 4) return { ...(d as SaveV5), version: SAVE_VERSION };
-  // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
-  if (d.version === 3) return { version: SAVE_VERSION, map: MAP, seed: d.seed ?? 1, segs: d.segs!, nodes: d.nodes!, props: d.props!, money: d.money!, day: d.day!, cam: d.cam };
-  return null;
+  let x: any = d;
+  while (x.version !== SAVE_VERSION) { const m = MIGRATIONS.find(s => s.from === x.version); if (!m) return null; x = m.up(x); }
+  return x as SaveV5;
 }
-export async function readSave(): Promise<SaveV5 | null> {
-  try {
-    const buf = await idbDo<ArrayBuffer | undefined>('readonly', s => s.get(SLOT));
-    if (buf) { const d = upgradeSave(JSON.parse(await gunzip(buf))); if (d) return d; }
-  } catch { /* no IndexedDB (private window): fall through */ }
-  return migrateV2();
+/** what reading the save found: ok (the save, maybe migrated from an older version), none (no save), future (a newer build's), otherMap, corrupt (unreadable bytes, bad JSON, an unknown older version); backedUp: the unreadable save's bytes were copied to a backup slot first */
+export interface SaveRead { save: SaveV5 | null; status: 'ok' | 'none' | 'future' | 'otherMap' | 'corrupt'; version?: number; migratedFrom?: number; backedUp: boolean; backup?: string }
+/** reads the town slot. A save is never overwritten unless it was read or copied to a backup slot first (T042). Never throws. */
+export async function readSave(): Promise<SaveRead> {
+  try { return await readSlot(); } catch { return { save: null, status: 'none', backedUp: false }; }
+}
+async function readSlot(): Promise<SaveRead> {
+  let buf: ArrayBuffer | undefined, idbOk = true;
+  try { buf = await store.get(SLOT); } catch { idbOk = false; } // no IndexedDB (private window): the v2 save may still be in localStorage
+  if (!buf) {
+    const v2 = migrateV2();
+    if (v2) return { save: v2, status: 'ok', version: SAVE_VERSION, migratedFrom: 2, backedUp: true };
+    return { save: null, status: 'none', backedUp: idbOk }; // nothing in the slot to lose
+  }
+  let d: any;
+  try { d = JSON.parse(await gunzip(buf)); } catch { d = undefined; }
+  if (!d || typeof d !== 'object') return unreadable('corrupt', buf);
+  const v: number | undefined = typeof d.version === 'number' ? d.version : undefined;
+  if (d.map !== MAP) return unreadable('otherMap', buf, v);
+  if (v !== undefined && v > SAVE_VERSION) return unreadable('future', buf, v);
+  const save = v === undefined || v < 3 ? null : upgradeSave(d);
+  if (!save) return unreadable('corrupt', buf, v);
+  if (v! < SAVE_VERSION) { // a migrated save: keep the original bytes once per version
+    const pre = `town-pre-v${v}`;
+    let backedUp = true;
+    try { if ((await store.get(pre)) === undefined) await store.put(pre, buf); } catch { backedUp = false; }
+    return { save, status: 'ok', version: SAVE_VERSION, migratedFrom: v, backedUp, ...(backedUp ? { backup: pre } : {}) };
+  }
+  return { save, status: 'ok', version: SAVE_VERSION, backedUp: true };
+}
+/** copies an unreadable save's bytes to a backup slot; backedUp false if that failed (the caller then must not write over the slot) */
+async function unreadable(status: 'future' | 'otherMap' | 'corrupt', buf: ArrayBuffer, version?: number): Promise<SaveRead> {
+  const backup = `town-backup-${status}-${version ?? 'x'}-${Date.now()}`;
+  try { await store.put(backup, buf); return { save: null, status, version, backedUp: true, backup }; }
+  catch { return { save: null, status, version, backedUp: false }; }
+}
+/** the time in a backup slot's key (its last number; 0 for the pre-version copies) */
+const slotStamp = (k: string) => { const m = /-(\d+)$/.exec(k); return m ? Number(m[1]) : 0; };
+/** the backup slots (newest first) */
+export async function listSaveBackups(): Promise<string[]> {
+  try { return (await store.keys()).filter(k => k.startsWith('town-backup-') || k.startsWith('town-pre-v')).sort((a, b) => slotStamp(b) - slotStamp(a)); }
+  catch { return []; }
 }
 /** a v2 save (160-tile map) moved into the centre of the big map; its painted terrain is dropped (seed 1) */
 function migrateV2(): SaveV5 | null {
@@ -136,4 +190,4 @@ function migrateV2(): SaveV5 | null {
     };
   } catch { return null; }
 }
-export async function clearSave() { try { await idbDo('readwrite', s => s.delete(SLOT)); } catch { /* ignore */ } }
+export async function clearSave() { try { await store.del(SLOT); } catch { /* ignore */ } }
