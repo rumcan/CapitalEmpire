@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { structureGhost, markerGhost, tollGhostLabel, busGhostLabel } from '../src/game/ext/event-ghost';
+import { structureGhost, markerGhost, tollGhostLabel, busGhostLabel, costLabel } from '../src/game/ext/event-ghost';
 
 describe('event ghost previews (T019)', () => {
   const rect: [number, number, number, number] = [10, 20, 6, 4];
@@ -93,5 +93,38 @@ describe('toll and bus ghost labels (T021)', () => {
     assert.equal(ok.status, 'valid');
     const short = busGhostLabel('', true, 2000, 100, false, 7);
     assert.equal(short.status, 'invalid');
+  });
+});
+
+describe('cost labels (T022)', () => {
+  it('a route that costs and is affordable is valid with its length, class and price', () => {
+    const g = costLabel('', 1500, 5000, '120 m of street');
+    assert.equal(g.status, 'valid');
+    assert.equal(g.label, `120 m of street · $${(1500).toLocaleString()}`);
+  });
+
+  it('a run that refunds is valid with its refund, not invalid', () => {
+    const g = costLabel('', -800, 0, 'Downgrade to gravel');
+    assert.equal(g.status, 'valid');
+    assert.equal(g.bad, false);
+    assert.equal(g.label, `Downgrade to gravel · refund $${(800).toLocaleString()}`);
+  });
+
+  it('a cost short of the money is invalid with the money label', () => {
+    const g = costLabel('', 9000, 100, 'Upgrade to road');
+    assert.equal(g.status, 'invalid');
+    assert.equal(g.label, `Not enough money: $${(9000).toLocaleString()}`);
+  });
+
+  it('a refused run shows its reason in red, whatever the price', () => {
+    const g = costLabel('No room to widen: another road is too close', 900, 5000, 'Upgrade to road');
+    assert.equal(g.label, 'No room to widen: another road is too close');
+    assert.equal(g.bad, true);
+  });
+
+  it('a zero-cost run is labelled with its summary alone', () => {
+    const g = costLabel('', 0, 0, 'x');
+    assert.equal(g.label, 'x');
+    assert.equal(g.status, 'valid');
   });
 });

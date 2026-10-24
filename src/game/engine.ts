@@ -3,7 +3,7 @@ import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAME
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
-import { busGhostLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
+import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { getTournamentWeather } from './golf/weather';
 import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
@@ -435,6 +435,8 @@ export class Game {
   private ghostMouse: { mx: number; my: number } | null = null;
   /** the last event/marker ghost and the hover state it was built for (rebuilt when the key changes) */
   private ghostCache: { key: string; bp: GhostBlueprint } | null = null;
+  /** the road route's price for the cursor label, kept while the route is unchanged (routeCost walks the route's structures) */
+  private routeCostCache: { key: string; cost: number } | null = null;
   /** the add-lane tool's plan at the cursor: the straight run of road under it (segs; none on a toll plaza), the class it widens to (null: already the widest),
    *  its cost ($, as the road tool charges the upgrade) and why it cannot be built ('' if it can) */
   laneHover: null | { segs: Seg[]; to: RoadClass | null; cost: number; why: string; down: boolean } = null;
@@ -3903,6 +3905,14 @@ export class Game {
         this.drawSnapMark(ctx, cs);
         if (bad) { const c = this.screen(cs.p.x, cs.p.y); ctx.font = `bold ${12 * this.dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * this.dpr; ctx.strokeStyle = '#0f172a'; ctx.strokeText(block, c.x, c.y - 18 * this.dpr); ctx.fillStyle = '#f87171'; ctx.fillText(block, c.x, c.y - 18 * this.dpr); }
       }
+      const gm = this.ghostMouse;
+      if (legs.length && !bad && gm) {
+        const key = `${cls.id}|` + legs.map(l => `${l.a.x},${l.a.y},${l.b.x},${l.b.y}`).join('|');
+        if (this.routeCostCache?.key !== key) this.routeCostCache = { key, cost: this.routeCost() };
+        let len = 0; for (const l of legs) len += vlen(sub(l.b, l.a));
+        const g = costLabel('', this.routeCostCache.cost, this.money, `${Math.round(len * 2)} m of ${cls.name.toLowerCase()}`);
+        drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, g.label, g.bad);
+      }
     } else if (this.tool === 'junction' && this.hoverNode) {
       const n = this.hoverNode, b = this.brush;
       if (b === 'roundabout' || b === 'mini') {
@@ -3927,10 +3937,14 @@ export class Game {
       ctx.fillStyle = h.why ? 'rgba(240,80,60,0.3)' : h.down ? 'rgba(96,165,250,0.3)' : 'rgba(255,216,102,0.3)'; ctx.fill();
       this.setIso(ctx); ctx.beginPath(); for (const l of legs) { ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); } ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.strokeStyle = h.why ? '#f87171' : h.down ? '#60a5fa' : '#ffd866'; ctx.lineWidth = 2; ctx.stroke();
+      const gm = this.ghostMouse;
+      if (gm) { const g = costLabel(h.why, h.cost, this.money, h.to ? `${h.down ? 'Downgrade' : 'Upgrade'} to ${h.to.name.toLowerCase()}` : ''); drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, g.label, g.bad); }
     } else if (this.tool === 'bulldoze' && this.hoverPiece) {
       const pc = this.hoverPiece, cls = pc.seg.cls;
       this.setIso(ctx); ctx.beginPath(); strip([{ a: pc.p0, b: pc.p1 }], cls.h + cls.walk); ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke();
+      const gm = this.ghostMouse;
+      if (gm) drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, `Click removes this ${cls.name.toLowerCase()} (refunds its value)`, true);
     } else if (this.paintOn) this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
     else if (this.tool === 'park' && this.parking.mode !== 'rect') this.parking.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
   }
