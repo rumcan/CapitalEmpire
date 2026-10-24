@@ -84,6 +84,12 @@ export default function App() {
   /** the menu button waiting for its second click (New town, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
+  /** the save file input (Load save file…) and the backup slots listed under the gear (T044); the list is read when the menu opens */
+  const saveFile = useRef<HTMLInputElement>(null);
+  const [backups, setBackups] = useState<string[]>([]);
+  const [backupsOpen, setBackupsOpen] = useState(false);
+  const [armedBackup, setArmedBackup] = useState<string | null>(null);
+  useEffect(() => { if (!menu || !game) { setBackupsOpen(false); setArmedBackup(null); return; } void game.saveBackups().then(setBackups); }, [menu, game]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
  const [eventTool, setEventTool] = useState(false);
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
@@ -270,6 +276,17 @@ export default function App() {
                     ))}
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} title="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
+                    <button className="btn w-full" onClick={() => saveFile.current?.click()} title="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
+                    <input ref={saveFile} type="file" accept=".cesave,application/gzip" className="hidden" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void game.loadSaveFile(f); }} />
+                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} title="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
+                    {backupsOpen && backups.map(k => (
+                      <div key={k} className="flex items-center gap-1 px-2 py-1 text-xs">
+                        <span className="min-w-0 flex-1 truncate text-[10px] opacity-70" title={k}>{k}</span>
+                        <button className="btn" onClick={() => void game.downloadBackup(k)} title="Download this backup as a .cesave file">Download</button>
+                        <button className={`btn ${armedBackup === k ? '!border-red-400 !text-red-300' : ''}`} title="Delete this backup for good" onClick={async () => { if (armedBackup !== k) { setArmedBackup(k); return; } setArmedBackup(null); await game.deleteSaveBackup(k); setBackups(await game.saveBackups()); }}>{armedBackup === k ? 'Click again' : 'Delete'}</button>
+                      </div>
+                    ))}
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New town'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>

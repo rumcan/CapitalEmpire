@@ -16,6 +16,8 @@ import type { GrassSave } from './ext/grass-management';
 
 const DB = 'capital-empire', STORE = 'saves', SLOT = 'town', V2_KEY = 'maple-falls-town-v2';
 export const SAVE_VERSION = 5;
+/** the build that writes saves (P07/T044): the package version and the git sha; 'dev' when not built by Vite (the tests) */
+export const BUILD = typeof __BUILD__ !== 'undefined' && __BUILD__ ? __BUILD__ : { app: '0.0.0', sha: 'dev' };
 
 function idb(): Promise<IDBDatabase> {
   return new Promise((res, rej) => { const r = indexedDB.open(DB, 1); r.onupgradeneeded = () => r.result.createObjectStore(STORE); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
@@ -104,6 +106,8 @@ export interface SaveV5 {
   speed?: number;
   /** the golf game's state (golf/mode.ts; optional, no version bump; missing = a legacy classic game, which loads as before) */
   golf?: GolfSave;
+  /** the build that wrote this save (T044; optional, informational only, never used to refuse a save) */
+  build?: { app: string; sha: string };
 }
 /** the v2 library order (scripts/prep-sprites.py), so v2 saves' item indices can be read */
 const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-duplex', 'gen:house-l-ranch', 'gen:house-ranch-long', 'gen:house-splitlevel', 'gen:house-l-shape', 'gen:house-farmhouse-wrap', 'static:garage_timber', 'static:garage_brick',
@@ -116,7 +120,7 @@ const V2_IDS = ['world:house_1', 'world:house_3', 'world:house_4', 'gen:house-du
   'world:fence_picket_x', 'world:fence_picket_y', 'world:fence_iron_x', 'world:fence_iron_y', 'gen:fence-privacy-wood',
   'gen:trash-cans-row', 'gen:kids-bikes', 'expansion:trampoline', 'expansion:doghouse', 'expansion:basketball-hoop', 'expansion:washing-line'];
 
-export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify(d)); await store.put(SLOT, buf); return buf.byteLength; }
+export async function writeSave(d: SaveV5) { const buf = await gzip(JSON.stringify({ ...d, build: BUILD })); await store.put(SLOT, buf); return buf.byteLength; }
 /** the save migrations, one step per version: step `from` turns a save of that version into the next one's shape; upgradeSave runs them in order */
 export const MIGRATIONS: { from: number; up(d: any): any }[] = [
   // v3: the same town with the painted terrain dropped; the seed came in v3 but was optional, so default to 1
@@ -195,3 +199,33 @@ function migrateV2(): SaveV5 | null {
   } catch { return null; }
 }
 export async function clearSave() { try { await store.del(SLOT); } catch { /* ignore */ } }
+
+/** the town slot's bytes as stored (gzip JSON), for a download; null with no save */
+export async function exportSaveBytes(): Promise<ArrayBuffer | null> {
+  try { return (await store.get(SLOT)) ?? null; } catch { return null; }
+}
+/** loads a save file's bytes into the town slot: refused (nothing written) unless it gunzips, parses and upgrades (upgradeSave); on success the current town slot is first copied to a backup (backupTownSlot('import')) */
+export async function importSaveBytes(buf: ArrayBuffer): Promise<{ ok: boolean; why?: string; version?: number }> {
+  let d: any;
+  try { d = JSON.parse(await gunzip(buf)); } catch { d = undefined; }
+  if (!d || typeof d !== 'object') return { ok: false, why: 'Not a Capital Empire save' };
+  const v: number | undefined = typeof d.version === 'number' ? d.version : undefined;
+  if (v !== undefined && v > SAVE_VERSION) return { ok: false, why: `This save is from a newer build (v${v})`, version: v };
+  if (d.map !== MAP) return { ok: false, why: 'This save is for another map size', version: v };
+  const save = v === undefined || v < 3 ? null : upgradeSave(d);
+  if (!save) return { ok: false, why: 'This save could not be read', version: v };
+  try {
+    // a current save that cannot be copied to a backup is never written over
+    if ((await store.get(SLOT)) !== undefined && !(await backupTownSlot('import'))) return { ok: false, why: 'The current save could not be backed up, so nothing was loaded', version: v };
+    await store.put(SLOT, buf);
+  } catch { return { ok: false, why: 'The save could not be written', version: v }; }
+  return { ok: true, version: v };
+}
+/** a backup slot's bytes (null if missing or not a backup slot: only the keys listSaveBackups lists are read) */
+export async function readBackup(key: string): Promise<ArrayBuffer | null> {
+  try { if (!(await listSaveBackups()).includes(key)) return null; return (await store.get(key)) ?? null; } catch { return null; }
+}
+/** deletes a backup slot; false for any key listSaveBackups does not list (the town slot is never one of them) or when the delete failed */
+export async function deleteBackup(key: string): Promise<boolean> {
+  try { if (!(await listSaveBackups()).includes(key)) return false; await store.del(key); return true; } catch { return false; }
+}

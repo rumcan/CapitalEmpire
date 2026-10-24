@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
-import { SAVE_VERSION, MIGRATIONS, upgradeSave, readSave, listSaveBackups, backupTownSlot, setSaveStore, gzip, type SaveStore } from '../src/game/save';
+import { SAVE_VERSION, MIGRATIONS, upgradeSave, readSave, listSaveBackups, backupTownSlot, setSaveStore, gzip, gunzip, writeSave, exportSaveBytes, importSaveBytes, readBackup, deleteBackup, type SaveStore } from '../src/game/save';
 
 /** an in-memory save store; putThrows makes every put fail (a full or private store) */
 function memStore(opts: { putThrows?: boolean; getThrows?: boolean } = {}): SaveStore & { m: Map<string, ArrayBuffer> } {
@@ -173,4 +173,79 @@ test('backupTownSlot copies the town slot (a save that read but failed to load),
   assert.ok(k); assert.deepEqual(new Uint8Array(s.m.get(k!)!), new Uint8Array(buf));
   const f = memStore({ putThrows: true }); setSaveStore(f); f.m.set('town', buf);
   assert.equal(await backupTownSlot('loadfailed'), false);
+});
+
+test('a written save carries its build stamp (sha dev under the tests)', async () => {
+  const s = memStore(); setSaveStore(s);
+  await writeSave(v5 as any);
+  const d = JSON.parse(await gunzip(s.m.get('town')!));
+  assert.equal(d.build.sha, 'dev');
+  assert.equal(typeof d.build.app, 'string');
+  assert.equal(d.seed, 7);
+});
+
+test('exportSaveBytes: null with no save, and the exact bytes of the town slot when there is one', async () => {
+  const s = memStore(); setSaveStore(s);
+  assert.equal(await exportSaveBytes(), null);
+  const buf = await gzip(JSON.stringify(v5));
+  s.m.set('town', buf);
+  assert.deepEqual(bytesOf((await exportSaveBytes())!), bytesOf(buf));
+});
+
+test('importSaveBytes refuses garbage, a newer build and another map size, and writes nothing', async () => {
+  const s = memStore(); setSaveStore(s);
+  const kept = await gzip(JSON.stringify(v5));
+  s.m.set('town', kept);
+  const keysBefore = [...s.m.keys()].sort();
+  const garbage = await importSaveBytes(new Uint8Array([9, 8, 7, 6]).buffer);
+  assert.deepEqual(garbage, { ok: false, why: 'Not a Capital Empire save' });
+  const newer = await importSaveBytes(await gzip(JSON.stringify({ ...v5, version: 99 })));
+  assert.equal(newer.ok, false);
+  assert.equal(newer.why, 'This save is from a newer build (v99)');
+  assert.equal(newer.version, 99);
+  const otherMap = await importSaveBytes(await gzip(JSON.stringify({ ...v5, map: MAP + 1 })));
+  assert.deepEqual(otherMap, { ok: false, why: 'This save is for another map size', version: 5 });
+  assert.deepEqual([...s.m.keys()].sort(), keysBefore);
+  assert.deepEqual(bytesOf(s.m.get('town')), bytesOf(kept));
+});
+
+test('importSaveBytes on a valid v5 save: ok, the town slot holds the new bytes and the old ones go to a town-backup-import slot', async () => {
+  const s = memStore(); setSaveStore(s);
+  const old = await gzip(JSON.stringify({ ...v5, simT: 1 }));
+  s.m.set('town', old);
+  const fresh = await gzip(JSON.stringify(v5));
+  const r = await importSaveBytes(fresh);
+  assert.deepEqual(r, { ok: true, version: 5 });
+  assert.deepEqual(bytesOf(s.m.get('town')), bytesOf(fresh));
+  const k = [...s.m.keys()].find(x => x.startsWith('town-backup-import-'));
+  assert.ok(k, 'an import backup slot');
+  assert.deepEqual(bytesOf(s.m.get(k!)), bytesOf(old));
+  // with no current save nothing is backed up
+  const empty = memStore(); setSaveStore(empty);
+  assert.deepEqual(await importSaveBytes(fresh), { ok: true, version: 5 });
+  assert.deepEqual([...empty.m.keys()], ['town']);
+  // a current save that cannot be copied is never written over
+  const full = memStore({ putThrows: true }); setSaveStore(full); full.m.set('town', old);
+  const refused = await importSaveBytes(fresh);
+  assert.equal(refused.ok, false);
+  assert.deepEqual(bytesOf(full.m.get('town')), bytesOf(old));
+});
+
+test('readBackup and deleteBackup work on a listed backup key and refuse the town slot', async () => {
+  const s = memStore(); setSaveStore(s);
+  const town = await gzip(JSON.stringify(v5)), backup = new Uint8Array([4, 5, 6]).buffer;
+  s.m.set('town', town);
+  s.m.set('town-backup-corrupt-x-2000', backup);
+  s.m.set('town-pre-v4', new Uint8Array([7]).buffer);
+  s.m.set('other', new Uint8Array([8]).buffer);
+  assert.deepEqual(bytesOf((await readBackup('town-backup-corrupt-x-2000'))!), bytesOf(backup));
+  assert.equal(await readBackup('town'), null);
+  assert.equal(await readBackup('other'), null);
+  assert.equal(await deleteBackup('town'), false);
+  assert.equal(await deleteBackup('other'), false);
+  assert.deepEqual(bytesOf(s.m.get('town')), bytesOf(town));
+  assert.ok(s.m.has('other'));
+  assert.equal(await deleteBackup('town-pre-v4'), true);
+  assert.equal(s.m.has('town-pre-v4'), false);
+  assert.deepEqual(await listSaveBackups(), ['town-backup-corrupt-x-2000']);
 });
