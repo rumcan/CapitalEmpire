@@ -27,6 +27,12 @@ export function shadeField(height: Float32Array): Float32Array {
   return out;
 }
 
+/** writes the shade pixel for the shade value s at data[k..k+3]: dark where in shadow (s < 0), pale where lit */
+function shadePixel(data: Uint8ClampedArray, k: number, s: number): void {
+  if (s < 0) { data[k] = 14; data[k + 1] = 10; data[k + 2] = 34; data[k + 3] = Math.min(0.5, -s * 1.6) * 255; }
+  else { data[k] = 190; data[k + 1] = 200; data[k + 2] = 230; data[k + 3] = Math.min(0.12, s * 0.6) * 255; }
+}
+
 /** an RGBA overlay of the shade over tiles [x0, x0+w) x [y0, y0+h) at res px per tile; course (optional) is the course height's shade, added to the terrain's */
 export function shadeRGBA(shade: Float32Array, x0: number, y0: number, w: number, h: number, res: number, course: Float32Array | null = null): { data: Uint8ClampedArray; W: number; H: number } {
   const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res));
@@ -34,11 +40,23 @@ export function shadeRGBA(shade: Float32Array, x0: number, y0: number, w: number
   for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
     const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, k = (v * W + u) * 4;
     if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) continue; // off the map: no shade (clamped samples would streak)
-    const s = sampleField(shade, tx, ty) + (course ? sampleCourseGrid(course, tx, ty) : 0);
-    if (s < 0) { data[k] = 14; data[k + 1] = 10; data[k + 2] = 34; data[k + 3] = Math.min(0.5, -s * 1.6) * 255; }
-    else { data[k] = 190; data[k + 1] = 200; data[k + 2] = 230; data[k + 3] = Math.min(0.12, s * 0.6) * 255; }
+    shadePixel(data, k, sampleField(shade, tx, ty) + (course ? sampleCourseGrid(course, tx, ty) : 0));
   }
   return { data, W, H };
+}
+
+/** an RGBA overlay of the course height's shade alone (the same colours as shadeRGBA) over tiles [x0, x0+w) x [y0, y0+h) at res px per tile; null when nothing in the box is shaded (flat), so the caller can skip it */
+export function courseShadeRGBA(course: Float32Array, x0: number, y0: number, w: number, h: number, res: number): { data: Uint8ClampedArray; W: number; H: number } | null {
+  const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res));
+  const data = new Uint8ClampedArray(W * H * 4);
+  let any = false;
+  for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
+    const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, k = (v * W + u) * 4;
+    if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) continue; // off the map: no shade (clamped samples would streak)
+    shadePixel(data, k, sampleCourseGrid(course, tx, ty));
+    if (data[k + 3]! > 0) any = true;
+  }
+  return any ? { data, W, H } : null;
 }
 
 /** one 3-tap box blur pass over a gw x gh grid, along x (dx=1) or y (dx=0), clamped at the edges */
