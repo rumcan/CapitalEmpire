@@ -32,7 +32,9 @@ if (fs.existsSync(GEN)) {
   for (const d of fs.readdirSync(GEN)) {
     const m = /^(.+)-4views-v(\d+)$/.exec(d);
     if (!m || !DIRS.every(v => fs.existsSync(path.join(GEN, d, `${v}.native.png`))) || !fs.existsSync(path.join(GEN, `${d}.provenance.json`))) continue;
-    const id = JSON.parse(fs.readFileSync(path.join(GEN, `${d}.provenance.json`), 'utf8')).id, b = best.get(id);
+    const provenance = JSON.parse(fs.readFileSync(path.join(GEN, `${d}.provenance.json`), 'utf8')), id = provenance.id;
+    if (provenance.integrationStatus === 'blocked') { console.log(`withheld ${id} (${d}): ${provenance.integrationReason}`); continue; }
+    const b = best.get(id);
     if (pinned.has(id) ? pinned.get(id) === d : !b || b.n < +m[2]) best.set(id, { slug: m[1], version: d, n: +m[2] });
   }
   for (const [id, { slug, version }] of best) {

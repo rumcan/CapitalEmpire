@@ -1,0 +1,10 @@
+{
+ "id": "world:school",
+ "version": "world-school-4views-v1",
+ "files": {
+  "NE": "1fd478376888b52dd45abc53c105337d86aac2506681cf8e03bd87346a5e6963",
+  "SE": "f3d247df9f52bd680798687e94ce5ff21b7a01853d725ef1d66f110015366b8f",
+  "SW": "a5f32eba92bccd7fd0286c26898b3bb1c746134d35c088d363c00edab48bf061",
+  "NW": "6525af8436ddf2ccc416651d7f132e9aba7614f4668c341acd300dd4e47895f3"
+ }
+}

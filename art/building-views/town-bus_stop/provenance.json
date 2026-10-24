@@ -1,0 +1,15 @@
+{
+  "id": "town:bus_stop",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-f4e88677-b12c-4bf3-9cd1-b2c4b59bd3b1.png",
+  "prompt": "Production game sprite asset, detailed illustrated 3D miniature matching first reference (Maple Bean street) for materials and warm early dusk. Second reference is ONLY object's existing identity; final reference is a GEOMETRY diagram only, never copy labels or colours. Create square transparent RGBA PNG, actual alpha empty background, exactly four independent views in a 2x2 sheet row-major NE front+right, SE right+back, SW back+left, NW left+front. Four true rigid quarter turns of SAME object, same details, proportions and scale; reconstruct hidden sides. Fixed parallel 2:1 isometric camera, axes +/-26.565 degrees, verticals vertical. Light from SCREEN UPPER RIGHT in ALL cells, warm right-facing planes, cool left-facing planes, tiny lower-left contact shadow. Early dusk, not night. No people, vehicles, scenery, ground tile, Halloween, pumpkins, garlands, checkerboard, backdrop, haze, labels or caption. Each complete silhouette centred WITHIN its own cell with 15% clear margins ON EVERY SIDE; very wide central gutter, no clipping. Preserve this small glass-sided bus shelter: dark charcoal flat gently sloped canopy, dark thin metal posts, clear glass rear and side panels, timber bench inside and its small integral timetable panel. Open front, bench along rear, reconstruct rear transparent glass face; no illuminated advertising scene or attached bus stop pole. Four turns must show bench and open front rotating with the shelter.",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/buildings/town-bus_stop.configured@2x.png",
+    "art/theme-consistency/references/rotation-guide-v1.png"
+  ],
+  "review": "Four different front/rear views present; alpha and crop verification required.",
+  "integrationStatus": "ready",
+  "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges."
+}

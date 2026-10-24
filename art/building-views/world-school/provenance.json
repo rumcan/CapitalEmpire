@@ -1,0 +1,15 @@
+{
+  "id": "world:school",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-4d2ccc72-fa06-4d74-965e-3b10af6b0c37.png",
+  "prompt": "Game sprite production, single subject in FOUR genuine 90-degree rotations on one SQUARE transparent RGBA PNG sheet. Reference1 ONLY style: warm early-dusk Maple Bean street, detailed coherent illustrated 3D miniature; reference2 original identity, preserve architecture, proportions, doors/windows/roof, do not copy Halloween. Reference3 rotation DIAGRAM only, no diagram text/colours. Strict row-major 2x2 NE front+right, SE right+back, SW back+left, NW left+front; same object, reconstruct hidden rear, never mirror front. Fixed parallel 2:1 isometric camera, verticals vertical. Sun FIXED SCREEN UPPER RIGHT in every cell, warm right-facing planes, cooler left-facing planes, contact shadows lower-left. Warm windows and exterior lamps already on, early dusk still detailed, not night. ACTUAL transparent alpha outside silhouettes: no backdrop, haze, checkerboard, terrain tile or broad shadow. At least 15% cell margin EVERY side, broad centre gutters, complete objects never clipped, consistent physical scale. No people, cars, neighbouring objects, trees, flags, pumpkins, cobwebs, bats, ghosts, Halloween decor or garlands; captions forbidden. Two-storey rectangular red-brick school, flat charcoal parapet roof, large cream clock pediment on roof centre toward front, rooftop HVAC and vents, symmetrical rows of tall warm windows, centred blue double front doors with stone lintel, steps and rails. Rear utilitarian classroom windows and service door; clock remains same physical roof feature across turns. No attached bushes or planting, no flags, no pumpkins or seasonal decals.",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/buildings/world-school.configured@2x.png",
+    "art/theme-consistency/references/rotation-guide-v1.png"
+  ],
+  "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured.",
+  "integrationStatus": "ready",
+  "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges."
+}

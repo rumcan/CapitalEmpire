@@ -1,5 +1,7 @@
 T017: IMAGE DELIVERY FOR THE IMPLEMENTING AI
 
+CURRENT 2026-10-24: The owner resumed generation, prioritised buildings and requested runtime replacement too. Eight pending subjects were generated; seven plus the existing tackle shop are now integrated (59 total building subjects, 236 views). All source sheets, native crops and exact provenance are in the MAIN checkout's generated/buildings folder. Known defective drafts carry integrationStatus=blocked and prep-views skips/reports them. House 2 stays pinned to v2. Primary school selects pixel-preserving repacked v2. Tests 915/915, typecheck, production build and all-32-facade browser smoke passed. See HANDOVER.md and building-priority-20261024.json for the current state; the stopped/generation-only notes below are historical. Trees/grass belong to the other integrating AI. Remaining:128 building subjects, then trees and vehicles. No background generation is running.
+
 Continuation handover: HANDOVER.md. Complete operational guide: ../../docs/SPRITE-GENERATION-WORKFLOW.md. Generation is stopped at the owner's request; the latest recorded checkpoint is 54 generated building drafts, 251 subjects pending, and no generation batch running. Refresh current selected files/reports rather than relying on counts. Read the handover for selected revisions, review caveats and town-building priority.
 
 Authoritative owner-selected reference: references/theme-authoritative.png.

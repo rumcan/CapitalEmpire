@@ -33,5 +33,7 @@
       "prompt": "One isolated game sprite cutout of the SAME red-brick town firestation in image 1. View from the FRONT-LEFT corner: left wall appears to image-left, front facade with exactly two red garage doors, green central door and bell appears to image-right. Rotate its geometry 90° from source, keeping the fixed 2:1 isometric camera and warm low dusk sun at screen upper right. Same flat roof, two-flue chimney, rooftop vent, cream trim, warm windows. Image 2 provides only the owner's town style. NO BACKGROUND; outside the building is empty transparent alpha in an RGBA PNG. No ground or scene."
     }
   ],
-  "review": "Draft only. All four sources have alpha, but NE, SE and NW source silhouettes touch canvas borders and may be clipped. Visual geometry and lighting review still pending."
+  "review": "Draft only. All four sources have alpha, but NE, SE and NW source silhouettes touch canvas borders and may be clipped. Visual geometry and lighting review still pending.",
+  "integrationStatus": "blocked",
+  "integrationReason": "NE source clips the lower building corner: final visible native row is 108 opaque pixels wide. Original clipping concern confirmed; keep draft out of runtime."
 }

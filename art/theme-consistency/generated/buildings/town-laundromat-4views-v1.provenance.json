@@ -1,0 +1,16 @@
+{
+  "id": "town:laundromat",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-b3a19bc8-f164-4abf-acb3-d7e40838fcb8.png",
+  "prompt": "Create production game sprite sheet for town:laundromat, Spin Cycle Laundry. Reference 1 is sole STYLE authority: warm early dusk Maple Bean street with fine detailed coherent illustrated 3D miniature materials; reference 2 and 3 are original building identity (they are two old front views, do not repeat these angles); final reference is ONLY turntable geometry guide, do not copy diagram labels or colours. Preserve single-storey rectangular dark navy-blue laundromat, flat charcoal parapet roof, one HVAC box and turbine vent and small flues, teal fascia with readable LAUNDRY lettering only on FRONT, central glass double entrance and warm glowing laundromat windows with washing machines behind, modest integral window boxes. Reconstruct a plain functional rear with service door and vents, left side consistent with same building. EXACTLY four genuinely different rigid 90-degree rotations of same physical object, square 2x2 sheet: top-left NE FRONT+RIGHT, top-right SE RIGHT+BACK, bottom-left SW BACK+LEFT, bottom-right NW LEFT+FRONT. Front sign visible ONLY top-left and bottom-right. Fixed parallel 2:1 isometric camera, verticals vertical. SUN FIXED SCREEN UPPER RIGHT in EVERY cell, warm right-facing surfaces and cooler left-facing surfaces, tiny contact shadow lower left. Early dusk warm windows already on, not night. NO BACKGROUND: actual transparent alpha RGBA PNG outside four silhouettes. No checkerboard, backdrop or haze. Each whole building entirely inside its cell, at least 15% blank margin on every side within cell; shrink all views uniformly for very generous central gutters. No clipping. No people, vehicles, trees, pavement, terrain tiles, separate props, Halloween, pumpkins, cobwebs, garlands, captions or labels. Architecture and roof objects consistent across all rotations. 1536x1536 or larger square sheet.",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/buildings/town-laundromat.configured@2x.png",
+    "art/theme-consistency/exports/buildings/east-town-laundromat.configured@2x.png",
+    "art/theme-consistency/references/rotation-guide-v1.png"
+  ],
+  "review": "Four distinct facades present, front sign only NE/NW; rear service door present SE/SW. Preserve raw output. File and game-size review follow preparation.",
+  "integrationStatus": "ready",
+  "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges."
+}

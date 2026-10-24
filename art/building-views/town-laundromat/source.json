@@ -1,0 +1,10 @@
+{
+ "id": "town:laundromat",
+ "version": "town-laundromat-4views-v1",
+ "files": {
+  "NE": "8b94bf0667d32345b1a7e5a65c3da614d6be55055ca19e80467682bbc0b636ea",
+  "SE": "cc3e108c847a91b64155f39d908653b0ca6ee4bcf4904bba454cc49d190d5a2b",
+  "SW": "076793a3263a65b2ef93a0ff4634b4a5308d98b66d8f20435be747b3dff6d885",
+  "NW": "f7e18cddab91fdd7815eb672387a88234c6f491ba56cea692233ed1ef2ecfa18"
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "id": "town:bus_stop",
+ "version": "town-bus_stop-4views-v1",
+ "files": {
+  "NE": "aa642945259dd3ce2a843828c1448fb5d334e479137bdcc47a8e8c3fbdaa031e",
+  "SE": "85fad51ecfeb29569025363c6cf30a4b884d9399ede3d034d864a365550da9ba",
+  "SW": "3bb3378babaf798b7c1a3906850e2a1635a0a062140e914b54127bad55c6436b",
+  "NW": "f62a608ff1a638ad0dab2e6190a5be03180bac9110e0991eb02565e85292ed23"
+ }
+}

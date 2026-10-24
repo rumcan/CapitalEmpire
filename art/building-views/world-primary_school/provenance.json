@@ -1,0 +1,126 @@
+{
+  "id": "world:primary_school",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-3575f86d-951c-42a6-83e7-fbf908c9a738.png",
+  "prompt": "Game sprite production, single subject in FOUR genuine 90-degree rotations on one SQUARE transparent RGBA PNG sheet. Reference1 ONLY style: warm early-dusk Maple Bean street, detailed coherent illustrated 3D miniature; reference2 original identity, preserve architecture, proportions, doors/windows/roof, do not copy Halloween. Reference3 rotation DIAGRAM only, no diagram text/colours. Strict row-major 2x2 NE front+right, SE right+back, SW back+left, NW left+front; same object, reconstruct hidden rear, never mirror front. Fixed parallel 2:1 isometric camera, verticals vertical. Sun FIXED SCREEN UPPER RIGHT in every cell, warm right-facing planes, cooler left-facing planes, contact shadows lower-left. Warm windows and exterior lamps already on, early dusk still detailed, not night. ACTUAL transparent alpha outside silhouettes: no backdrop, haze, checkerboard, terrain tile or broad shadow. At least 15% cell margin EVERY side, broad centre gutters, complete objects never clipped, consistent physical scale. No people, cars, neighbouring objects, trees, flags, pumpkins, cobwebs, bats, ghosts, Halloween decor or garlands; captions forbidden. Long low single-storey primary school, cream upper walls on red-brick plinth, dark green fascia, flat navy roof, small cream bell cupola with green pyramid roof and gold finial, broad classroom windows glowing warm, centred red entrance doors with modest steps and rails. Front sign HOLLOW CREEK PRIMARY only on front, plain classroom rear. Remove ALL Halloween window decals and pumpkins; windows show ordinary empty classroom interiors. Retain modest integral foundation but omit attached garden beds.",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/buildings/world-primary_school.configured@2x.png",
+    "art/theme-consistency/references/rotation-guide-v1.png"
+  ],
+  "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving row-specific gap split, tight nonzero-alpha bounds plus four-pixel padding, centred in four transparent 1024px cells. No generation, repainting or resizing.",
+    "originalSheet": "art\\theme-consistency\\generated\\buildings\\world-primary_school-4views-v1.png",
+    "originalSheetSha256": "8b1acf6c098ce995a235e2090b81f28a2b7a1491e7f2946a7c7681fd5bbd11bc",
+    "originalDimensions": [
+      1254,
+      1254
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "rowSplit": 627,
+    "gaps": [
+      {
+        "row": 0,
+        "start": 660,
+        "endExclusive": 692,
+        "midpoint": 676,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 609,
+        "endExclusive": 647,
+        "midpoint": 628,
+        "alphaThreshold": 8
+      }
+    ],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 676,
+          "height": 623
+        },
+        "destination": {
+          "left": 174,
+          "top": 200,
+          "width": 676,
+          "height": 623
+        },
+        "nonzeroAlphaPixels": 197146,
+        "visibleAlphaPixelsThreshold8": 191692,
+        "nonzeroRgbaSha256": "4befeb679334d7c108031ee161039769b2d1c76774008b7c193241f38f9b4807"
+      },
+      {
+        "direction": "SE",
+        "extraction": {
+          "left": 684,
+          "top": 53,
+          "width": 548,
+          "height": 574
+        },
+        "destination": {
+          "left": 1262,
+          "top": 225,
+          "width": 548,
+          "height": 574
+        },
+        "nonzeroAlphaPixels": 158988,
+        "visibleAlphaPixelsThreshold8": 153415,
+        "nonzeroRgbaSha256": "ea1db1c9bb662caf68b91109ab682647be6daa0c64f14c59fdbd276afd824ee2"
+      },
+      {
+        "direction": "SW",
+        "extraction": {
+          "left": 19,
+          "top": 640,
+          "width": 609,
+          "height": 594
+        },
+        "destination": {
+          "left": 207,
+          "top": 1239,
+          "width": 609,
+          "height": 594
+        },
+        "nonzeroAlphaPixels": 184636,
+        "visibleAlphaPixelsThreshold8": 178650,
+        "nonzeroRgbaSha256": "61e243bb2c88c720ecbe57953d6a794f2f0abd890e43cac7c63e17cc2148786f"
+      },
+      {
+        "direction": "NW",
+        "extraction": {
+          "left": 628,
+          "top": 646,
+          "width": 586,
+          "height": 564
+        },
+        "destination": {
+          "left": 1243,
+          "top": 1254,
+          "width": 586,
+          "height": 564
+        },
+        "nonzeroAlphaPixels": 178877,
+        "visibleAlphaPixelsThreshold8": 172874,
+        "nonzeroRgbaSha256": "c1bda6886698a932c867ccda76de97e57b4947745f9c129a767d4f30095df7f1"
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 719647,
+      "visibleAlphaPixelsThreshold8": 696631,
+      "nonzeroRgbaSha256": "d807837313d132d5bf025b4b0f416cce21f24ec1672f81ef7271c47a41d1415e"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true
+  },
+  "integrationStatus": "ready",
+  "integrationReason": "Pixel-preserving layout correction retains all four complete views; prep reports no alpha boundary warnings."
+}

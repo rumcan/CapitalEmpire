@@ -1,0 +1,37 @@
+{
+  "id": "town:fish_tackle",
+  "generator": "image_gen",
+  "generated": "2026-10-23",
+  "assembly": "node scripts/assets/assemble-theme-consistency.mjs buildings town-fish_tackle",
+  "references": [
+    "art/theme-consistency/exports/buildings/town-fish_tackle.configured@2x.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "sourceViews": [
+    {
+      "direction": "NE",
+      "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/NE.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-40e16224-c788-4f6b-91e4-5897f7b57078.png",
+      "prompt": "Single isolated game sprite cutout of the exact small fishing tackle shop in image 1. Same teal siding, green-and-cream awning, fish sign, front door, display windows and roof vents. Front-right 2:1 isometric view. Warm early dusk with upper-right sun, in image 2's town style. The surrounding canvas has NO BACKGROUND and is fully transparent alpha. Output one RGBA PNG sprite."
+    },
+    {
+      "direction": "SE",
+      "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/SE.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-ccd90514-77bc-4b23-8460-1db2b54f38d7.png",
+      "prompt": "Single isolated game sprite cutout of the SAME teal fishing-tackle shop in image 1, viewed from its RIGHT-REAR corner after a 90° world turn. Show its right wall on image-left and reconstruct its plain back wall on image-right; the fish sign and green striped storefront awning belong only on the hidden front. Preserve the single-storey flat parapet roof, rooftop box and two metal vents, teal timber siding, warm windows, proportions and early-dusk upper-right sunlight. Image 2 provides the owner's town style. NO BACKGROUND: the surrounding canvas is fully transparent alpha. Output one RGBA PNG sprite."
+    },
+    {
+      "direction": "SW",
+      "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/SW.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-77566c59-558f-4ca3-9f53-494eaa56291d.png",
+      "prompt": "Single isolated game sprite cutout of the SAME small teal timber fishing-tackle shop in image 1, viewed from its BACK-LEFT corner after a half turn. Both visible walls are rear/left service walls, with plausible warm windows and a plain service door; the fish sign and green striped awning remain on the hidden opposite storefront and must not appear here. Same single-storey flat parapet roof, rooftop equipment, proportions, teal siding and early-dusk upper-right sunlight. Image 2 is only the owner's visual style. NO BACKGROUND: all surrounding canvas is transparent alpha. Output one RGBA PNG sprite."
+    },
+    {
+      "direction": "NW",
+      "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/NW.png",
+      "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-89b20311-3401-438a-8d7d-d5fb3e7aa6e4.png",
+      "prompt": "Single isolated game sprite cutout of the SAME teal timber fishing-tackle shop in image 1, viewed from its FRONT-LEFT corner after a 270° world turn. Show its left wall on image-left and its recognizable FRONT storefront on image-right: green-and-cream striped awning, fish-shaped sign, central teal door, two bright display windows and warm lamps. Preserve the single-storey flat parapet roof, rooftop box and metal vents, proportions and dusk upper-right sunlight. Image 2 provides the owner's town style. NO BACKGROUND: all surrounding canvas is transparent alpha. Output one RGBA PNG sprite."
+    }
+  ],
+  "review": "Draft only. All four sources have alpha, but the NE source silhouette touches its bottom canvas edge and may be clipped. Visual geometry and lighting review still pending."
+}

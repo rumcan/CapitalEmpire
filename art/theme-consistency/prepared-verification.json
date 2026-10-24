@@ -4,13 +4,13 @@
   "scope": "Current selected sheets: PNG/alpha checks and pixel-conserving crops only. Boundary warnings, rigid rotation geometry and game registration require review.",
   "counts": {
     "requested": 305,
-    "generated": 54,
-    "fileValidated": 54,
+    "generated": 62,
+    "fileValidated": 62,
     "fileValidationFailed": 0,
     "alphaFlagged": 26,
     "visuallyReviewed": 0,
-    "nativeViewsExported": 216,
-    "pendingGeneration": 251
+    "nativeViewsExported": 248,
+    "pendingGeneration": 243
   },
   "activeSheets": [
     {
@@ -1251,6 +1251,166 @@
         "columnRightVisible": 0,
         "columnBothSidesVisible": 0
       }
+    },
+    {
+      "id": "town:laundromat",
+      "sheet": "art/theme-consistency/generated/buildings/town-laundromat-4views-v1.png",
+      "sheetSha256": "6eb12c297dc46a0cc70d9bd7989c79515ee2448ca43076d696afa14d159d37f2",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "town:bus_stop",
+      "sheet": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1.png",
+      "sheetSha256": "0265b943d24011599090f696ffafb5876bad918391f07249ef454f3200be20ee",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "town:phone_booth",
+      "sheet": "art/theme-consistency/generated/buildings/town-phone_booth-4views-v1.png",
+      "sheetSha256": "a6fe3a9a0bd512a19d8ad7a2ff60006aacecfec15607fd0dda1024231bc9fd30",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "town:produce_stand",
+      "sheet": "art/theme-consistency/generated/buildings/town-produce_stand-4views-v1.png",
+      "sheetSha256": "97d1ba36253e0fa8494a4b0512c6f0f0b5d63ad7c7fb10ff93d7f6d2dc812ca5",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "world:arcade",
+      "sheet": "art/theme-consistency/generated/buildings/world-arcade-4views-v1.png",
+      "sheetSha256": "69de0eebd8f4ed2d745c636f87287dbbf972d22b8867b993bf9749a3bf93cdeb",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "world:barn",
+      "sheet": "art/theme-consistency/generated/buildings/world-barn-4views-v1.png",
+      "sheetSha256": "477774298bb9bb268d9eaa4c39f12f07d2e6faaadcbf18e9dbd5421e60a721f5",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "world:school",
+      "sheet": "art/theme-consistency/generated/buildings/world-school-4views-v1.png",
+      "sheetSha256": "6be70d7da6b47ef9fcbf8394a241710165034be66c3f8ee972e33433e91d6336",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 627,
+        "rowSplit": 627,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
+    },
+    {
+      "id": "world:primary_school",
+      "sheet": "art/theme-consistency/generated/buildings/world-primary_school-4views-v2.png",
+      "sheetSha256": "157637362f06cc6c30906efcbc24e915fa83e80e2b5291a6d2df9653e3002dba",
+      "fileValidation": "passed",
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "warnings": [],
+      "packingReview": {
+        "columnSplit": 1024,
+        "rowSplit": 1024,
+        "oddDimensionsHandled": false,
+        "alphaThreshold": 8,
+        "rowAboveVisible": 0,
+        "rowBelowVisible": 0,
+        "rowBothSidesVisible": 0,
+        "columnLeftVisible": 0,
+        "columnRightVisible": 0,
+        "columnBothSidesVisible": 0
+      }
     }
   ],
   "themeReferencePreserved": {
@@ -1261,8 +1421,8 @@
     "light": "fixed screen upper-right, shadows lower-left; object rotates and light stays fixed",
     "season": "autumn foliage permitted, Halloween decorations prohibited"
   },
-  "checkedNativeViews": 216,
-  "checkedScaledVariants": 864,
+  "checkedNativeViews": 248,
+  "checkedScaledVariants": 992,
   "sourceSheetsConserved": true,
   "visualApproval": false,
   "gameScaleRegistered": false,

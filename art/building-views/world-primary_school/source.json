@@ -1,0 +1,10 @@
+{
+ "id": "world:primary_school",
+ "version": "world-primary_school-4views-v2",
+ "files": {
+  "NE": "c2b4143be02660071e2de8a3a940f854166c81b1a8d5e95ae83e08ce20353b98",
+  "SE": "84b8f8f4c6166d13541f68076ed69236cd58c5964ed33d6e0bbee8f6638f3437",
+  "SW": "c5f52b6050d907a697cc5cedd3467fd7fd82e9d2f37ba60dd5c18558b143ae09",
+  "NW": "525c6d33d98eb43048d21ed4950598b82ede0e7878898f6944e53b2a17d16c7d"
+ }
+}
