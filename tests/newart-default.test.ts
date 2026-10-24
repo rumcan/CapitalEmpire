@@ -2,11 +2,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIBRARY } from '../src/game/library';
-import { NEW_ART_ONLY, NEW_BUILDINGS_ONLY, OLD_ART, lookOf, thumbItem } from '../src/game/newart';
+import { NEW_ART_ONLY, NEW_BUILDINGS_ONLY, OLD_ART, lookOf, standInFamily, thumbItem } from '../src/game/newart';
 import { isBuilding } from '../src/game/mirror';
 import { VIEW_ART } from '../src/game/views-library';
+import type { LibItem } from '../src/game/types';
 
 const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:');
+const BY_ID = new Map(LIBRARY.map(it => [it.id, it] as const));
+/** the family of a picture as drawn: a flipped stand-in is a turned view (view:<base>:se, sw or nw), a picture of its building, so of that family */
+const pictureFamily = (it: LibItem) => standInFamily(BY_ID.get(it.id.replace(/^view:(.+):(se|sw|nw)$/, '$1')) ?? it);
 
 test('the default: no URL flag, so buildings only are swapped (?oldart and ?newart are off)', () => {
   assert.equal(NEW_ART_ONLY, false);
@@ -14,7 +18,7 @@ test('the default: no URL flag, so buildings only are swapped (?oldart and ?newa
   assert.equal(NEW_BUILDINGS_ONLY, true);
 });
 
-test('by default every building is drawn as itself when it is new art, else as a new-art stand-in on its footprint, never mirrored', () => {
+test('by default every building is drawn as itself when it is new art, else as a new-art stand-in of its family on its footprint, never mirrored', () => {
   let swapped = 0;
   LIBRARY.forEach((it, i) => {
     if (!isBuilding(it) || it.kind === 'lot') return;
@@ -23,6 +27,7 @@ test('by default every building is drawn as itself when it is new art, else as a
       if (isNew(it.id)) { assert.equal(look, d, `${it.id} is new art, drawn as itself`); continue; }
       assert.ok(!look.hidden, `${it.id} has a new-art stand-in`);
       assert.ok(isNew(LIBRARY[look.item]!.id), `${it.id} is drawn as ${LIBRARY[look.item]!.id}`);
+      assert.equal(pictureFamily(LIBRARY[look.item]!), standInFamily(it), `${it.id} is drawn as ${LIBRARY[look.item]!.id}, of another family`);
       assert.equal(look.flip, false, `${it.id} is turned, never mirrored`);
       swapped++;
     }
@@ -49,6 +54,21 @@ test('thumbItem: an old building is thumbnailed as its new-art stand-in, a new-a
     assert.ok(isNew(thumbItem(it).id), `${it.id} thumbnails as ${thumbItem(it).id}`);
   });
   assert.ok(old > 50, `${old} old buildings thumbnailed as new art`);
+});
+
+test('an old dwelling is drawn as a house: its stand-in is never a tent, a garage or an industrial building, nor golf or industry art (the owner, 2026-10-24)', () => {
+  let dwellings = 0;
+  LIBRARY.forEach((it, i) => {
+    if (!isBuilding(it) || it.kind === 'lot' || isNew(it.id) || standInFamily(it) !== 'dwelling') return;
+    dwellings++;
+    for (const flip of [false, true]) {
+      const look = lookOf({ item: i, flip, scale: 1, x: 100 + i, y: 200 - i }), s = LIBRARY[look.item]!;
+      assert.ok(!look.hidden, `${it.id} has a stand-in`);
+      assert.doesNotMatch(s.id, /tent|garage|shed|warehouse|workshop|factory|mill|plant/, `${it.id} is drawn as ${s.id}`);
+      assert.ok(s.cat !== 'Golf tournament' && s.cat !== 'Industry', `${it.id} is drawn as ${s.id} (${s.cat})`);
+    }
+  });
+  assert.ok(dwellings > 20, `${dwellings} old dwellings`);
 });
 
 test("a baked lot (the studio's Lots presets) is drawn as itself, never as one building stretched over the lot", () => {

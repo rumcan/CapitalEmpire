@@ -1,5 +1,5 @@
 // The new-art pictures (the owner, 2026-10-24: "remove all the old ones from showing until it was replaced"). By default no building is drawn
-// with its old picture: a building whose four new views are not in the game yet is drawn as the new-art building of its class nearest in size,
+// with its old picture: a building whose four new views are not in the game yet is drawn as the new-art building of its family nearest in size,
 // on the same footprint (a building with no stand-in at all is not drawn). Trees keep their art. The URL flags:
 //   ?newart: the preview: buildings AND trees are drawn as new art (the owner, 2026-10-23: "see what the game looks like with only the new corrected images").
 //   ?oldart: the old pictures of the buildings without their four views, for comparison only.
@@ -25,10 +25,21 @@ const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.s
 /** a baked lot (kind 'lot': a whole house lot as one picture, the studio's Lots presets) is never swapped for a building: it is baked from the
  *  library's current art (the studio's Rebuild), and one building stretched over a whole lot would not be a house lot */
 const BAKED_LOT = (it: LibItem) => it.kind === 'lot';
-/** the class a picture can stand in for: trees, shops, and every other building (houses, lot buildings, business pictures, golf and event structures) */
-const classOf = (it: LibItem) => it.kind === 'tree' ? 'tree' : isBuilding(it) && !BAKED_LOT(it) ? (it.kind === 'venue' ? 'venue' : 'building') : null;
+/** outbuildings (garages, sheds, yard buildings) stand in only for each other */
+const OUTBUILDING = /garage|shed|carport|outhouse|lean-to|glasshouse|greenhouse|swingset|kennel|coop|shelter/;
+/** the family a picture can stand in for, so a house is only ever drawn as a house (the owner, 2026-10-24: tents and industrial garages turned up on
+ *  house lots): trees; dwellings and outbuildings (the house categories and the yard buildings); business art; every other building by its library
+ *  category (golf tournament, industry, shops and services, landmarks, street furniture, parking). A baked lot has none (never swapped) */
+export function standInFamily(it: LibItem): string | null {
+  if (it.kind === 'tree') return 'tree';
+  if (!isBuilding(it) || BAKED_LOT(it)) return null;
+  if (it.kind === 'business') return 'business';
+  if (it.kind === 'house' || it.cat === 'Houses' || it.cat === 'More houses' || it.cat === 'Yard') return it.cat === 'Yard' || OUTBUILDING.test(it.id) ? 'outbuilding' : 'dwelling';
+  return `cat:${it.cat || it.kind}`;
+}
+const classOf = standInFamily;
 const span = (it: LibItem) => { const b = it.boxes[0]; return b ? b.hx + b.hy : 1; };
-/** the stand-ins of each class: new art, the front (NE) views only for buildings (a flip turns them, unmirror) */
+/** the stand-ins of each family: new art, the front (NE) views only for buildings (a flip turns them, unmirror) */
 const POOL = new Map<string, number[]>();
 LIBRARY.forEach((it, i) => {
   const c = classOf(it); if (!c || !isNew(it.id) || it.id.startsWith('east:') || (c !== 'tree' && it.id.startsWith('view:'))) return;
@@ -37,11 +48,11 @@ LIBRARY.forEach((it, i) => {
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const hash = (x: number, y: number) => { let h = Math.imul(Math.floor(x * 7.3) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(Math.floor(y * 5.1), 0xc2b2ae35); h ^= h >>> 15; return (h >>> 0) / 4294967296; };
 
-/** a building's stand-in: the new-art building of its class whose footprint is nearest in size (within 25% of the nearest, one picked by place);
- *  a venue with no venue art uses the building stand-ins */
+/** a building's stand-in: the new-art building of its family whose footprint is nearest in size (within 25% of the nearest, one picked by place);
+ *  none when its family has no new art (lookOf then hides it: a house is never drawn as a shop or a tent) */
 function standIn(it: LibItem, x: number, y: number): number | undefined {
   const c = classOf(it); if (!c) return undefined;
-  let pool = POOL.get(c); if ((!pool || !pool.length) && c !== 'tree') pool = POOL.get('building');
+  const pool = POOL.get(c);
   if (!pool?.length) return undefined;
   if (c === 'tree') return pool[Math.floor(hash(x, y) * pool.length)];
   const want = span(it), d = pool.map(i => Math.abs(Math.log(span(LIBRARY[i]!) / want))), best = Math.min(...d);

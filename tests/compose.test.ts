@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { CLASS, RoadNetwork, type Leg } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
 import { LotMap, type Lot } from '../src/game/lots/lots';
-import { compose, isCarPark, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
+import { BAKED_LOTS, compose, isCarPark, type ComposeState, type Composition, type Placed } from '../src/game/lots/compose';
 import { LU, LV } from '../src/game/lots/town';
 import { LIBRARY } from '../src/game/library';
 import { LOT_DECALS } from '../src/game/lot-decals';
@@ -105,7 +105,7 @@ test('300 combos: every prop and patch lies inside its lot, and no two uprights 
   }
 });
 
-test('RES at BUILT: one baked lot of the lot size, facing the road (front variants on +Y lots, rear on -Y), centred on it; a flipped (+X/-X) lot is composed live (a baked picture is never mirrored, mirror.ts)', () => {
+test('RES at BUILT: one baked lot of the lot size, facing the road (front variants on +Y lots, rear on -Y), centred on it; a flipped (+X/-X) lot is composed live (a baked picture is never mirrored, mirror.ts)', { skip: BAKED_LOTS ? false : 'the baked lots are off (compose.ts BAKED_LOTS)' }, () => {
   let n = 0;
   for (const lot of LOTS) for (let seed = 1; seed <= 4; seed++) {
     const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: (lot.id * 97 + seed * 7919) >>> 0 };
@@ -127,12 +127,21 @@ test('RES at BUILT: one baked lot of the lot size, facing the road (front varian
     n++;
   }
   assert.ok(n > 30, `${n} baked lots`); // fewer, wider lots in the grid since the house lots grew 25% (2026-10-22)
-  // neighbours along a street never share a variant; decline 2 takes the neglected ones
+});
+
+test('baked lots: neighbours along a street never share a variant; decline 2 takes the neglected ones', { skip: BAKED_LOTS ? false : 'the baked lots are off (compose.ts BAKED_LOTS)' }, () => {
   const rows = new Map<string, { a: number; id: string }[]>();
   for (const lot of LOTS) { if (!bakedSize(lot) || Math.abs(lot.n.x) > Math.abs(lot.n.y)) continue; const st: ComposeState = { use: LU.RES, level: LV.BUILT, decline: 0, seed: lot.id }; const id = compose(lot, st).props.find(p => p.id.startsWith('lot:'))!.id, k = `${lot.n.x},${lot.n.y},${Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y)}`; let r = rows.get(k); if (!r) rows.set(k, (r = [])); r.push({ a: lot.o.x * lot.u.x + lot.o.y * lot.u.y, id }); }
   for (const r of rows.values()) { r.sort((p, q) => p.a - q.a); for (let i = 1; i < r.length; i++) if (Math.abs(r[i].a - r[i - 1].a - LOTS[0].w) < 0.01) assert.notEqual(r[i].id, r[i - 1].id, 'two neighbours share a variant'); }
   const neg = compose(LOTS[0], { use: LU.RES, level: LV.BUILT, decline: 2, seed: 5 }).props.find(p => p.id.startsWith('lot:'))!;
   assert.match(byId.get(neg.id)!.name, /neglected/);
+});
+
+test('house lots never place a baked lot picture while BAKED_LOTS is off (every house lot is composed from the game\'s art)', { skip: BAKED_LOTS ? 'the baked lots are on (compose.ts BAKED_LOTS)' : false }, () => {
+  for (const lot of LOTS) for (const level of [LV.BUILT, LV.UPGRADED]) for (let decline = 0; decline <= 3; decline++) {
+    const c = compose(lot, { use: LU.RES, level, decline, seed: lot.id });
+    assert.ok(c.props.every(p => !p.id.startsWith('lot:')), `${lot.key} level ${level} decline ${decline}: a baked lot picture (${c.props.filter(p => p.id.startsWith('lot:')).map(p => p.id).join(' ')})`);
+  }
 });
 
 test('residential fence boundaries meet exactly in every orientation, with one owner per shared line', () => {
@@ -251,7 +260,7 @@ test('the average uprights per archetype (log)', () => {
   const lines = [...sum.keys()].map(k => `${k}: ${(sum.get(k)! / cnt.get(k)!).toFixed(1)}`);
   console.log(`uprights per lot (decline 0, ${LOTS.length} lots x 2 seeds)\n  ${lines.join('\n  ')}`);
   const avg = (k: string) => sum.get(k)! / cnt.get(k)!;
-  assert.ok(avg('RES BUILT') >= 6, 'a house lot is one baked picture plus its fence layer (panels and planting)');
+  assert.ok(avg('RES BUILT') >= 6, 'house lots are composed from the game\'s art: the house and yard, plus the fence layer (panels and planting)');
   // TOUR 13.7 (measured 13.705 with the east-facing venue art, prep-east.mjs; 12.3 without it, when the venues on lots facing +X were car parks)
   for (const [u, min] of [['IND', 14], ['TOUR', 13.7], ['GOV', 14]] as const) assert.ok(avg(`${u} BUILT`) >= min, `${u} BUILT averages ${avg(`${u} BUILT`).toFixed(1)} uprights, want ${min}+`);
   // a shop's car park now runs from its back wall to the back line (the bush row there goes): 12+ instead of 14+

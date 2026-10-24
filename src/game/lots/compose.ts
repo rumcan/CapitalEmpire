@@ -508,6 +508,10 @@ function res(B: Build, st: ComposeState) {
   for (let b = 0.8; b <= sb - 0.6; b += 1.4) for (let a = 0.8; a <= W - 0.8; a += 1.4) B.put(pick(r, BUSHES), a, b, { plant: true });
 }
 
+/** the baked house lot pictures are off (the owner, 2026-10-24: "remove these houses, they do not have right lighting or style"): they are rendered from
+ *  the TrickOrTreat builder's old art (lot-render.mjs), so every house lot is composed from the game's own art until the curated lot presets replace
+ *  both (docs/plans/P20.md) */
+export const BAKED_LOTS = false;
 /** the baked house lots (scripts/assets/lot-variants.mjs) by size and facing: 'w x d front|rear' -> [normal ids, neglected ids] */
 const BAKED = new Map<string, [string[], string[]]>();
 /** the pictures for a lot no picture was made for: the widest one at most as wide as the lot, of its depth */
@@ -889,7 +893,7 @@ export function compose(lot: LotGeom, st: ComposeState): Composition {
   if (st.use === LU.NONE || st.level === LV.EMPTY) { vacant(B); edge(); }
   else if (angled) { green(B); edge(); }
   else if (st.level === LV.BUILDING) { site(B); edge(); }
-  else if (st.use === LU.RES) { const b = baked(B, lot, st); if (b) { fenceLayer(B, lot); const f = B.done(); return { props: [...b.props, ...f.props], ground: f.ground }; } res(B, st); fenceLayer(B, lot); }
+  else if (st.use === LU.RES) { const b = BAKED_LOTS ? baked(B, lot, st) : null; if (b) { fenceLayer(B, lot); const f = B.done(); return { props: [...b.props, ...f.props], ground: f.ground }; } res(B, st); fenceLayer(B, lot); }
   else if (st.use === LU.COM) { if (isCarPark(st)) park(B, st); else com(B, st, false); edge(); }
   else if (st.use === LU.TOUR) { com(B, st, true); edge(); }
   else if (st.use === LU.IND) ind(B, st);
