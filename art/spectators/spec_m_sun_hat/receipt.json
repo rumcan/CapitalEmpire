@@ -1,0 +1,10 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/6695d38b-cdc4-4f66-a077-255dcbf7c7fb/model.compressed.glb",
+  "look": "Elderly man in his 70s watching golf in 1985, a wide straw hat, a cream short-sleeved button shirt, brown slacks, brown shoes. Plain clothes, no logos, no lettering",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  },
+  "plateCut": "RUN fused a ground plate to the feet; cut off locally by cut-plate.mjs (2026-10-24)"
+}

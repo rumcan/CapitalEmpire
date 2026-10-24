@@ -1,0 +1,10 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/c068a0d9-7388-4b83-ad00-368e7aabfdee/model.compressed.glb",
+  "look": "Moustached dad in his 30s watching golf in 1985, a pale green polo shirt, beige shorts, white socks, brown boat shoes. Plain clothes, no logos, no lettering",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  },
+  "plateCut": "RUN fused a ground plate to the feet; cut off locally by cut-plate.mjs (2026-10-24)"
+}

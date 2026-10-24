@@ -1,0 +1,14 @@
+{
+  "generationId": "4e313f35-e37a-4db1-b0ef-14fe86840dc0",
+  "prompt": "Full-body character for a 3D model: club lady golfer in her 50s, short set grey hair, a plain lemon-yellow short-sleeved polo shirt, a white knee-length golf skirt, a plain white visor, white golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 57921651,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/437797f7-95c0-4711-8b13-38e375ca1ca2.png",
+  "requestPrompt": "Full-body character for a 3D model: club lady golfer in her 50s, short set grey hair, a plain lemon-yellow short-sleeved polo shirt, a white knee-length golf skirt, a plain white visor, white golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\golfers\\pics\\golf_am_w1.png",
+  "status": "saved",
+  "sha256": "b78feceb446a7d9107f0b4706a8a05bdee96673650c97ecefe1c9561211bf0f2"
+}

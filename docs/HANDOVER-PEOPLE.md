@@ -57,6 +57,42 @@ clips, the wayward-ball scene, the quality bar, the traps). This file is the sta
   - **Next:** compare the previews (quality, the walk, the height line), the credits each (`rundot credits --period today --group-by model`),
     and report to the owner what works best; then the 14 and the remakes the chosen way.
 
+## 1c. Update 2026-10-24 13:00 UTC: golfers that swing, the rescue taken, the batch picture-first
+The owner: *"see if you can create some more. some golfers would be nice"*, then *"we need golfers who are swinging golf clubs"*.
+Decisions taken (the owner pre-approves the lead's recommendation; recorded here):
+1. **The rescue is in.** The 7 clean rescued people are now cast members (the cut model, sheet and preview copied from
+   `output/cut-test/`; `receipt.json` has the original look and model URL and a `plateCut` note): spectators `spec_m_dad`, `spec_m_sun_hat`,
+   `spec_m_young_cap`, `spec_w_older_cardigan`; staff `staff_caddie_m`; townspeople `town_m_elder`, `town_w_shopper`. **17 good people now.**
+   Not taken (remade instead, below): `spec_m_plaid` (chest emblem), `spec_w_young_shorts` (hands), `staff_marshal_w` (leg web),
+   `staff_security_m` (badges).
+2. **The plate cut is automatic** in `make-cast.mjs` (cut-plate.mjs after every model). The cut model is `model-cut.glb`, git-ignored (about
+   18 MB uncompressed; remade free from `model.glb`, which stays RUN's 2 MB original in git); `rig-local-person.mjs` uses it when it is there.
+   The negation line ("Nothing under the feet ...") is gone from the pose prompt (it named what RUN then made).
+3. **Picture first for the golfers and the 4 remakes:** an A-pose picture with RUN's image generator (`make-pictures.mjs`, the painted
+   style of `base_man/style.png`, about 120 credits; images are not under the 3D cap), then image-to-3d. Golf words in a text prompt are what
+   brought the plates. The pictures: `art/golfers/pics/`, `art/spectators/pics/` (with their `.json`: prompt, seed, generation id).
+4. **The golfers, `art/golfers/`** (role `golfer`, sheets prefixed `golfer:`): 10 in `art/people-cast.json`, first in the batch: 6 pros
+   (`golf_pro_m1..m4`, `golf_pro_w1`, `golf_pro_w2`; the old `staff_pro_m1/m2` became `golf_pro_m1/m2`, m2's picture is the head-to-head's
+   `pro_ref.png`) and 4 club players (`golf_am_m1..m3`, `golf_am_w1`).
+5. **The swing: Meshy's `golf_drive`** (RUN's animation service is Meshy's library: its walk is Meshy's `Casual_Walk`; the full list, 680
+   clips, is public at `https://api.meshy.ai/web/public/animations/resources`; golf_drive is id 323: address, backswing, top, through, a held
+   finish, about 3 s). It is made **once per base** (`base_man`, `base_woman`) with `animate-3d --input <base>/rigged.glb` (about 480
+   credits, under the same daily 3D cap) and moved onto each golfer by `rig-local-person.mjs --clips walk,idle,golf_drive`, like the walk.
+   `make-cast.mjs` does all of it from the cast's `clips` field.
+6. **The club is drawn by the renderer** (`render-person-3d.mjs --prop club`): a 1985 persimmon driver (steel shaft, black grip, brown wooden
+   head) set in the hands every frame. It is calibrated at the clip's address (the hands' lowest point in its first 35%): the head resting
+   on the ground in front, held in the lead (left) hand's frame from then on. The swing sheet `golf_drive.webp/.json` (12 frames, once
+   through; 400 px wide frames so the club fits) has `prop`, `addressSecs` and `shot` (right-handed: the ball flies 90 degrees to the
+   golfer's left of the row's facing). Its rows face by the body at address, not the clip's average.
+7. Other crowd clips Meshy has (for SPECTATOR-ART 3b/3b+, not made yet): `Sitting_Clap` 354, `Cheer_with_Both_Hands_Up` 298,
+   `Victory_Cheer` 59, `Chair_Sit_Idle_M` 33 / `_F` 32, `Seated_Fist_Pump` 304, `Stand_Clap_and_Sit_Down` 299, `Headache_Relief` 316 (a
+   groan), `RunFast` 16, `Quick_Walk` 115, `Wave_One_Hand` 290. No putt, no standing clap: those need hand keys or another source.
+
+**State at the hand-over:** RUN's 3D cap was used up for 2026-10-24 (it resets about 00:15 UTC); the batch loop runs and waits for it
+(`output/people-cast.log`): first the two base swing clips, then the 10 golfers, the 4 remakes, the rest. **Next:** look at every new
+`preview.png` and `preview-golf_drive.png` (the club in the hands at address, at the top, at the finish; no clipping at the frame edges), then
+the studio People tab and the game wiring. The head-to-head test (1b) waits behind the batch; the golfers already show picture-first at scale.
+
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
 1. `make-person-3d.mjs <id> "<look>" --root <dir> --model-only`: the model from RUN (text-to-3d, an A-pose prompt around the look). It
    checks RUN's library first (never pays twice), and when the CLI gives up after 600 s it waits for the model in the library.

@@ -1,0 +1,10 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/9f118449-cdc5-4634-b862-6c1cffe92f69/model.compressed.glb",
+  "look": "Young man in his 20s at a 1985 golf tournament, lean, a plain royal-blue baseball cap, a plain white t-shirt, blue jeans, white sneakers. Plain clothes, no logos, no lettering",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  },
+  "plateCut": "RUN fused a ground plate to the feet; cut off locally by cut-plate.mjs (2026-10-24)"
+}

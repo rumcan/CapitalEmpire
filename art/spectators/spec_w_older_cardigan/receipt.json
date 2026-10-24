@@ -1,0 +1,10 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/1f219c2e-35f7-4b10-a273-459e2a6cbfcf/model.compressed.glb",
+  "look": "White-haired woman in her 70s at a 1985 golf tournament, a lavender cardigan over a white blouse, grey slacks, comfortable beige shoes. Plain clothes, no logos, no lettering",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  },
+  "plateCut": "RUN fused a ground plate to the feet; cut off locally by cut-plate.mjs (2026-10-24)"
+}
