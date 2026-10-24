@@ -205,6 +205,8 @@ export class PaintTool {
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
   private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[] } | null = null;
   private host: PaintHost;
+  /** the engine draws the brush as a 3D surface puck (T081, ext/course-cursor): the OS cursor and the plain brush ring step aside */
+  puckCursor = false;
 
   constructor(host: PaintHost) { this.host = host; }
 
@@ -490,6 +492,7 @@ export class PaintTool {
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
+    if (this.puckCursor && this.mode === 'brush') return 'none';
     if (this.drag) return 'grabbing';
     const g = this.hoverH;
     if (!g || !this.selected) return 'crosshair';
@@ -702,7 +705,7 @@ export class PaintTool {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = erase ? 'rgba(240,80,60,0.35)' : rgba(TEX_COL.get(this.brush[this.brushKind].style.tex) ?? '#888888', 0.35); ctx.fill();
     }
-    if (!c) return;
+    if (!c || this.puckCursor) return;
     v.setIso(ctx); ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.strokeStyle = erase ? '#f87171' : '#ffffff'; ctx.lineWidth = 1.5 * d; ctx.stroke();
   }

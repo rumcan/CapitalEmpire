@@ -4,6 +4,8 @@ import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from '
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
+import { CourseCursor, type CursorView } from './ext/course-cursor';
+import { browserCursorTexture } from './ext/course-cursor/tex';
 import { getTournamentWeather } from './golf/weather';
 import { CLASS, FLAG_COST, Grid, classOf, courseClassOpen, courseTierNeeded, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
@@ -425,6 +427,9 @@ export class Game {
   private gateProps = new Map<string, Prop>();
   /** the overlay's view of this engine (its canvas is set each frame; reused, so the render loop allocates nothing) */
   private parkView: ParkOverlayView = { ctx: null as unknown as CanvasRenderingContext2D, dpr: 1, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y) };
+  /** the Course brush's cursor (T081): the surface puck, the course grid and the glowing footprint; and its camera view (reused) */
+  private courseCursor = new CourseCursor({ texture: browserCursorTexture() });
+  private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the car park drag (the park tool, left button): the tile where it began and the one under the pointer (x1, y1), the rect it makes (def, id 0),
    *  its built park (null if not valid), the verdict (why: the reason it cannot be built, '' if it can) and the cost; mx, my: the cursor (CSS px) */
   private parkDrag: null | { x0: number; y0: number; x1: number; y1: number; def: CarParkDef; park: CarPark | null; why: string; cost: number; mx: number; my: number } = null;
@@ -552,6 +557,7 @@ export class Game {
   constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement) {
     this.gl = new GLRenderer(canvas);
     this.ov = overlay.getContext('2d')!;
+    this.paint.puckCursor = true;
     this.net.paintData = false;
     this.ground = new GroundCache(this.gl);
     this.traffic = new SimClient();
@@ -2071,7 +2077,7 @@ export class Game {
       case 'bus': this.busUpdate(mx, my); this.busClick(); break;
       case 'lane': case 'downgrade': this.laneUpdate(this.tileAt(mx, my)); this.laneClick(); break;
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
-      case 'paint': case 'course': this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); break;
+      case 'paint': case 'course': this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); this.courseCursor.press(this.paint, e.altKey); break;
       case 'park': {
         // the bay rows drag and the on-street click are the Parking tool's (docs/PARKING.md); the rectangle is the car park drag below
         if (this.parking.mode !== 'rect') { if (this.parking.mode === 'rows') this.parking.down(this.tileAt(mx, my)); else this.parking.click(); break; }
@@ -2121,7 +2127,7 @@ export class Game {
     if (d?.kind === 'park') this.parkRelease();
     // a right click (no drag) in the road tool builds the route drawn so far, as Enter does (the owner, 2026-10-19); a right drag still pans
     if (d?.kind === 'pan' && d.build && !d.moved && this.tool === 'road' && this.route.length > 1) this.finishRoute();
-    if (this.paintOn) this.paint.pointerUp(this.paintTol);
+    if (this.paintOn) { this.paint.pointerUp(this.paintTol); this.courseCursor.release(); }
     if (this.tool === 'park' && this.parking.mode === 'rows') this.parking.up();
     this.dragging = null;
   }
@@ -4066,7 +4072,11 @@ export class Game {
       ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke();
       const gm = this.ghostMouse;
       if (gm) drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, `Click removes this ${cls.name.toLowerCase()} (refunds its value)`, true);
-    } else if (this.paintOn) this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
+    } else if (this.paintOn) {
+      this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
+      const v = this.cursorView; v.ze = this.cam.z * this.dpr; v.camX = this.cam.X; v.camY = this.cam.Y; v.cw = this.cw; v.ch = this.ch; v.dpr = this.dpr;
+      this.courseCursor.draw(ctx, v, this.paint, performance.now());
+    }
     else if (this.tool === 'park' && this.parking.mode !== 'rect') this.parking.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
   }
 }
