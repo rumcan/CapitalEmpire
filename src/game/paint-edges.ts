@@ -38,7 +38,7 @@ export const EDGE_LOOKS: Readonly<Record<EdgeProfile, Readonly<EdgeLook> | null>
   water: { feather: 0.45, bevel: 0, light: 0, dark: 0, shadow: 0, shadowLen: 0, sunken: false },
   turf: { feather: 0.6, bevel: 0.55, light: 0.14, dark: 0.2, shadow: 0.16, shadowLen: 0.55, sunken: false },
   raised: { feather: 0.55, bevel: 0.75, light: 0.26, dark: 0.36, shadow: 0.3, shadowLen: 0.95, sunken: false },
-  sunken: { feather: 0.4, bevel: 1.1, light: 0.22, dark: 0.6, shadow: 0, shadowLen: 0, sunken: true },
+  sunken: { feather: 0.25, bevel: 1.8, light: 0.3, dark: 0.65, shadow: 0, shadowLen: 0, sunken: true },
 };
 
 /** the light rim's colour (warm sunlight), RGB 0..255 */
@@ -208,6 +208,12 @@ export function rimWeight(d: number, feather: number, bevel: number): number {
   const a = 0.35 * feather, b = feather + bevel;
   return b <= a ? 0 : 1 - smooth01((d - a) / (b - a));
 }
+/** a sunken surface's wall (bunker) at distance d inside (tiles): full from the outline through the feather, where the sand is solid, fading
+ *  to 0 a bevel further in, so the far lip's shade and the near wall's light read as a hollow instead of being cut away with the feather */
+export function sunkenWeight(d: number, feather: number, bevel: number): number {
+  if (d < 0) return 0;
+  return d <= feather ? 1 : 1 - smooth01((d - feather) / Math.max(bevel, 1e-6));
+}
 /** the cast shadow's weight (0..1) at signed distance d (tiles) by an edge of sun facing `facing`: under the feather band inside (where the
  *  surface is see-through), and outside out to 0.25 + shadowLen * (how much the edge faces away); 0 on edges facing the sun */
 export function castWeight(d: number, facing: number, feather: number, look: Readonly<EdgeLook>): number {
@@ -229,7 +235,7 @@ export function edgeImages(f: EdgeField, look: Readonly<EdgeLook>, feather: numb
     const rem = 1 - featherAlpha(d, feather);
     if (rem > 0.002) { cut ??= mk(); cut[q + 3] = rem * 255; }
     if (d >= 0 && (look.light > 0 || look.dark > 0)) {
-      const rim = rimWeight(d, feather, look.bevel);
+      const rim = look.sunken ? sunkenWeight(d, feather, look.bevel) : rimWeight(d, feather, look.bevel);
       if (rim > 0) {
         const s = edgeShade(f.sun[k]!, look.sunken), la = rim * s.light * look.light, da = rim * s.dark * look.dark;
         if (la > 0.002) { light ??= mk(); light[q] = LIGHT_RGB[0]; light[q + 1] = LIGHT_RGB[1]; light[q + 2] = LIGHT_RGB[2]; light[q + 3] = la * 255; }

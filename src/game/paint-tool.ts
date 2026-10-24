@@ -190,7 +190,7 @@ export class PaintTool {
   plantBrush: PlantBrushKind = 'trees';
   plant: Record<PlantBrushKind, PlantSet> = loadPlant();
   /** piece mode (T030): the archetype in hand, its turn (degrees, R) and size (×, [ ]), whether it snaps to the piece it touches, and the plan at the cursor (rebuilt when its key changes) */
-  pieceArch: CoursePieceArchetype = 'fairway-corridor';
+  pieceArch: CoursePieceArchetype = 'fairway-pear';
   pieceAngle = 0;
   pieceScale = 1;
   pieceSnap = true;
@@ -448,7 +448,10 @@ export class PaintTool {
     const m = this.host.currentMonth?.() ?? 0, core = p.areas.find(a => a.kind);
     for (const s of p.areas) {
       const id = this.nextId++;
-      const a: PaintArea = { id, ...s, plantKind: this.plantKind, plantedMonth: m, ...(!s.kind && core?.kind ? { order: drawZ({ kind: core.kind, id }) } : {}) };
+      // the piece's core takes the remembered look of its surface (the brush style every area of that kind on the hole follows: texture, angle,
+      // tone and border look), keeping its own corner radius: a placed piece and a brush stroke of the same surface match (the owner, 2026-10-24)
+      const look = s.kind && this.brush[s.kind] ? (({ radius: _r, ...rest }) => rest)(this.brush[s.kind].style) : null;
+      const a: PaintArea = { id, ...s, ...(look ?? {}), plantKind: this.plantKind, plantedMonth: m, ...(!s.kind && core?.kind ? { order: drawZ({ kind: core.kind, id }) } : {}) };
       this.areas.push(a); this.send(a, m);
     }
     this.applyHeightOps(p.pl.heightOps);
