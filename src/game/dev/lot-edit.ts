@@ -66,6 +66,13 @@ export function applyEdit(p: LotPreset, e: PresetEdit): { preset: LotPreset; pro
   }
   return { preset: { ...p, props, patches: p.patches.map(a => ({ ...a, pts: a.pts.slice(), ...(a.lines ? { lines: a.lines.slice() } : {}) })), curated: true }, prop };
 }
+/** a drawn size grown or shrunk by factor, a grow never past limit (the largest size the picture's pixels allow: newart.ts maxDrawScale): the
+ *  new size, clamped to the limit by a step that would cross it; null for a grow from the limit (or past it), which the studio refuses too */
+export function growWithin(now: number, factor: number, limit: number): number | null {
+  if (factor <= 1) return now * factor;
+  if (now >= limit / 1.001) return null;
+  return Math.min(now * factor, limit);
+}
 /** a preset list with one preset replaced by its edited copy (matched by id), the others as they are; the list unchanged when none matches */
 export const replacePreset = (list: readonly LotPreset[], p: LotPreset): LotPreset[] => list.map(q => (q.id === p.id ? p : q));
 

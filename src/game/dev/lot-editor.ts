@@ -5,7 +5,8 @@
 //   a lot prop drawn from a preset: the preset's prop, in the lot's frame (the turn and the fit undone), saved to lot-presets.json and flagged
 //     curated: every lot drawn from that preset follows, now and whenever a lot is composed again;
 //   'this sprite everywhere' (the panel's toggle): the library sprite's size or removal for the whole game, written to the studio Library tab's
-//     scale-overrides.json and removed.json;
+//     scale-overrides.json (read at runtime: the size shows at once) and removed.json (read at the next asset rebuild); a size never grows past
+//     the picture's pixels (newart.ts maxDrawScale), here or in a preset or the save, as the studio and the game's own resize refuse it;
 //   a player's prop: the prop in the game save, as the game's own tools do.
 // The dev server writes the files (vite.config.ts: POST /__dev/save, whitelisted) and hot-reloads the presets with no page reload or rebuild.
 import type { Game } from '../engine';
@@ -13,11 +14,12 @@ import type { Prop } from '../types';
 import { LIBRARY } from '../library';
 import { spriteRect } from '../sprites';
 import { worldX, worldY } from '../iso';
-import { OWNER_SCALE } from '../lots/scales';
+import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
+import { maxDrawScale } from '../newart';
 import { lotPreset, lotPresets, onLotPresetsReload, setLotPresets } from '../lots/compose';
 import { formatPresets, type LotPreset } from '../lots/presets';
 import { fourViews, ownerScaleOf, turned } from '../lots/preset-art';
-import { applyEdit, presetToWorld, removeSprite, replacePreset, scaleOverride, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
+import { applyEdit, growWithin, presetToWorld, removeSprite, replacePreset, scaleOverride, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
 
 /** an edit's kind, as the keys name it */
 type Act = 'bigger' | 'smaller' | 'move' | 'turn' | 'delete' | 'duplicate';
@@ -30,16 +32,21 @@ type Source =
 /** one step back: a preset as it was, a studio file's text as it was, or a player prop's state (or its removal / addition) */
 type Undo =
   | { kind: 'preset'; before: LotPreset; lot: string; index: number }
-  | { kind: 'file'; file: 'scale-overrides.json' | 'removed.json'; text: string }
+  | { kind: 'file'; file: 'scale-overrides.json' | 'removed.json'; text: string; restore?: () => void }
   | { kind: 'player'; prop: Prop; item: number; x: number; y: number; scale: number; flip: boolean }
   | { kind: 'player-del'; item: number; x: number; y: number; scale: number; flip: boolean }
   | { kind: 'player-add'; prop: Prop };
 
 /** the resize step (a factor) and the move steps (tiles) */
 const GROW = 1.05, STEP = 0.25, STEP_BIG = 1;
-/** scope (b) is drawn by the game only once it reads the studio files at runtime (PR #125, lead/library-sizes) */
-const LIBRARY_NOTE = 'the game draws it once it reads the studio files at runtime (PR #125, lead/library-sizes); until then the studio\'s Rebuild applies it';
+/** a removal is read when the assets are generated (scales.ts REMOVED_IDS, by prep-scales.mjs); the sizes are read at runtime */
+const REMOVED_NOTE = 'the sprite leaves the game at the next asset rebuild (the studio\'s Rebuild), which reads removed.json';
 const INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
+/** the largest drawn scale a sprite's art allows (newart.ts maxDrawScale: its picture's pixels at the closest zoom); four-view art takes the
+ *  smallest of its four views, since a preset or a library size draws it in any of them; Infinity for a stand-in (it fills any footprint) */
+const artLimit = (id: string) => Math.min(...(fourViews(id)?.views ?? [id]).map(v => { const i = INDEX.get(v); return i === undefined ? Infinity : maxDrawScale(i); }));
+/** the message for a grow the picture's pixels refuse (as the studio refuses it) */
+const refused = (id: string, lim: number) => `${id}: as big as its picture allows (drawn x${lim.toFixed(2)}): it pixelates above that`;
 
 /** fetches a whitelisted file's text from the dev server */
 async function load(file: string): Promise<string> {
@@ -120,6 +127,12 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     sel = index < 0 ? null : game.propsOfLot(lot).find(p => { const f = game.lotFrom.get(p); return !!f && f.preset === preset && f.prop === index; }) ?? null;
     render();
   }
+  /** composes every lot again (a library size changed), the selected lot's at once, and keeps the selection on its preset prop */
+  function recomposeKeeping() {
+    const lot = sel?.auto?.startsWith('lot:') ? sel.auto.slice(4) : null, from = sel ? game.lotFrom.get(sel) : undefined;
+    game.recomposeLots(lot ? [lot] : []);
+    if (lot && from) reselect(lot, from.preset, from.prop); else if (sel && !game.props.has(sel)) select(null); else render();
+  }
 
   // ---------- the edits
   async function commitPreset(lot: string, before: LotPreset, after: LotPreset, index: number, what: string, undoIndex: number | null = index) {
@@ -133,8 +146,12 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   async function presetEdit(s: Extract<Source, { kind: 'preset' }>, a: Act, dx: number, dy: number) {
     const q = s.preset.props[s.index]!, here = presetToWorld(s.frame, s.preset, q.x, q.y);
     let e: PresetEdit;
-    if (a === 'bigger' || a === 'smaller') e = { op: 'scale', prop: s.index, factor: a === 'bigger' ? GROW : 1 / GROW };
-    else if (a === 'turn') e = { op: 'turn', prop: s.index, by: 1 };
+    if (a === 'bigger' || a === 'smaller') {
+      // the drawn size (the preset's scale x the owner scale) never past the picture's pixels in any of its views
+      const own = ownerScaleOf(q.id), lim = artLimit(q.id), next = growWithin(q.scale * own, a === 'bigger' ? GROW : 1 / GROW, lim);
+      if (next === null) return say(refused(q.id, lim));
+      e = { op: 'scale', prop: s.index, factor: next / (q.scale * own) };
+    } else if (a === 'turn') e = { op: 'turn', prop: s.index, by: 1 };
     else if (a === 'delete') e = { op: 'delete', prop: s.index };
     else if (a === 'duplicate') { const n = worldToPreset(s.frame, s.preset, here.x + 0.5, here.y + 0.5, q); e = { op: 'duplicate', prop: s.index, dx: n.x - q.x, dy: n.y - q.y }; }
     else { const n = worldToPreset(s.frame, s.preset, here.x + dx, here.y + dy, q); e = { op: 'move', prop: s.index, x: n.x, y: n.y }; }
@@ -144,20 +161,33 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   async function libraryEdit(p: Prop, a: Act) {
     const it = LIBRARY[p.item]!, id = fourViews(it.id)?.views[0] ?? it.id;
     if (a === 'bigger' || a === 'smaller') {
-      const text = await load('scale-overrides.json'), next = scaleOverride(JSON.parse(text) as Record<string, number>, id, OWNER_SCALE[id] ?? 1, a === 'bigger' ? GROW : 1 / GROW);
-      await save('scale-overrides.json', studioJson(next)); undo.push({ kind: 'file', file: 'scale-overrides.json', text });
-      say(`${id}: size ${next[id]} saved to scale-overrides.json; ${LIBRARY_NOTE}`);
+      // the studio's rule (server.mjs /api/scale): its size, else the table's, times the step; never past the pixels of any of its views
+      const text = await load('scale-overrides.json'), sizes = JSON.parse(text) as Record<string, number>, base = TABLE_SCALE[id] ?? OWNER_SCALE[id] ?? 1, cur = sizes[id] ?? base;
+      const lim = artLimit(id), next = growWithin(cur, a === 'bigger' ? GROW : 1 / GROW, lim);
+      if (next === null) return say(refused(id, lim));
+      const out = scaleOverride(sizes, id, base, next / cur), views = fourViews(id)?.views ?? [id], before = views.map(v => [v, OWNER_SCALE[v]] as const);
+      await save('scale-overrides.json', studioJson(out));
+      // scales.ts reads the studio sizes at runtime: the lots take the new size now (the dev server may reload the page to apply it everywhere)
+      const apply = (s: (v: string) => number | undefined) => { for (const v of views) { const k = s(v); if (k === undefined) delete OWNER_SCALE[v]; else OWNER_SCALE[v] = k; } recomposeKeeping(); };
+      apply(() => out[id]);
+      undo.push({ kind: 'file', file: 'scale-overrides.json', text, restore: () => apply(v => before.find(b => b[0] === v)?.[1]) });
+      say(`${id}: size ${out[id]} saved to scale-overrides.json; the game draws it at that size now`);
     } else if (a === 'delete') {
       const text = await load('removed.json'), base = LIBRARY[INDEX.get(id) ?? p.item]!;
       await save('removed.json', studioJson(removeSprite(JSON.parse(text) as Record<string, unknown>, id, base, new Date().toISOString()))); undo.push({ kind: 'file', file: 'removed.json', text });
-      say(`${id}: removed in removed.json; ${LIBRARY_NOTE}`);
+      say(`${id}: removed in removed.json; ${REMOVED_NOTE}`);
     } else say('this sprite everywhere: only its size ([ ]) and removal (Delete) apply');
   }
   function playerEdit(p: Prop, a: Act, dx: number, dy: number) {
     if (a === 'delete') { undo.push({ kind: 'player-del', item: p.item, x: p.x, y: p.y, scale: p.scale, flip: p.flip }); game.removeProp(p); game.scheduleSave(); select(null); say('removed (the save)'); game.emit(); return; }
     if (a === 'duplicate') { const c = game.addProp(p.item, p.x + 0.5, p.y + 0.5, p.flip, p.scale); undo.push({ kind: 'player-add', prop: c }); game.scheduleSave(); select(c); say('duplicated (the save)'); game.emit(); return; }
     undo.push({ kind: 'player', prop: p, item: p.item, x: p.x, y: p.y, scale: p.scale, flip: p.flip });
-    if (a === 'bigger' || a === 'smaller') p.scale = Math.min(4, Math.max(0.2, p.scale * (a === 'bigger' ? GROW : 1 / GROW)));
+    if (a === 'bigger' || a === 'smaller') {
+      // as the game's own resize (engine scaleSelected): never past the picture's pixels
+      const lim = Math.min(4, maxDrawScale(p.item)), next = growWithin(p.scale, a === 'bigger' ? GROW : 1 / GROW, lim);
+      if (next === null) { undo.pop(); say(refused(LIBRARY[p.item]!.id, lim)); return; }
+      p.scale = Math.max(0.2, next);
+    }
     else if (a === 'move') { p.x += dx; p.y += dy; }
     else { const t = turned(LIBRARY[p.item]!.id, 1), i = INDEX.get(t.id); if (i !== undefined && i !== p.item) p.item = i; else if (t.flip) p.flip = !p.flip; else { undo.pop(); say('this sprite has no other view'); return; } }
     game.devPropChanged(p); say(`${a} (the save)`);
@@ -190,7 +220,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       if (u.kind === 'preset') {
         const now = lotPresets().find(p => p.id === u.before.id);
         await commitPreset(u.lot, now ?? u.before, u.before, u.index, 'undone', null);
-      } else if (u.kind === 'file') { await save(u.file, u.text); say(`undone: ${u.file} restored`); }
+      } else if (u.kind === 'file') { await save(u.file, u.text); u.restore?.(); say(`undone: ${u.file} restored`); }
       else if (u.kind === 'player') { Object.assign(u.prop, { item: u.item, x: u.x, y: u.y, scale: u.scale, flip: u.flip }); game.devPropChanged(u.prop); say('undone (the save)'); }
       else if (u.kind === 'player-del') { select(game.addProp(u.item, u.x, u.y, u.flip, u.scale)); game.scheduleSave(); game.emit(); say('undone: put back (the save)'); }
       else { game.removeProp(u.prop); game.scheduleSave(); select(null); game.emit(); say('undone: the copy removed (the save)'); }

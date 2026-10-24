@@ -2,7 +2,8 @@
 // dev server's save whitelist. npm test.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyEdit, fit1, presetToWorld, removeSprite, replacePreset, scaleOverride, studioJson, unfit, worldToPreset } from '../src/game/dev/lot-edit';
+import { applyEdit, fit1, growWithin, presetToWorld, removeSprite, replacePreset, scaleOverride, studioJson, unfit, worldToPreset } from '../src/game/dev/lot-edit';
+import { maxDrawScale } from '../src/game/newart';
 import { checkDevSave, devSavePath, DEV_SAVE_FILES } from '../src/game/dev/dev-save';
 import { frameOf, toWorld } from '../src/game/lots/preset-frame';
 import { fitPreset, type LotPreset } from '../src/game/lots/presets';
@@ -111,6 +112,18 @@ describe('the dev editor (T071)', () => {
     const rm = removeSprite({ old: { at: 't0' } }, 'world:bush_1', { name: 'Bush 1', cat: 'Trees & plants', kind: 'bush', w: 10, h: 12, quad: [0, 0, 10, 12], ax: 5, ay: 11 }, '2026-10-24T00:00:00.000Z');
     assert.deepEqual(rm['world:bush_1'], { at: '2026-10-24T00:00:00.000Z', name: 'Bush 1', cat: 'Trees & plants', kind: 'bush', w: 10, h: 12, quad: [0, 0, 10, 12], ax: 5, ay: 11 });
     assert.deepEqual(rm.old, { at: 't0' });
+  });
+
+  it('5b. a grow never passes the picture\'s pixels (newart.ts maxDrawScale): clamped by the step that would cross the limit, refused at it; a shrink always goes', () => {
+    assert.equal(growWithin(1, 1.05, 2), 1.05);
+    assert.equal(growWithin(1.98, 1.05, 2), 2, 'the step that crosses the limit stops at it');
+    assert.equal(growWithin(2, 1.05, 2), null, 'refused at the limit, as the studio refuses');
+    assert.equal(growWithin(2.5, 1.05, 2), null, 'and past it');
+    assert.equal(growWithin(2.5, 1 / 1.05, 2), 2.5 / 1.05, 'a shrink from past the limit goes');
+    assert.equal(growWithin(1, 1.05, Infinity), 1.05, 'a stand-in has no limit');
+    // the four-view houses the presets hold: the largest drawn size of each is its smallest view's limit, finite and above 1
+    const house = LIBRARY.findIndex(i => i.id === 'world:house_1');
+    assert.ok(Number.isFinite(maxDrawScale(house)) && maxDrawScale(house) > 1, `world:house_1 limit ${maxDrawScale(house)}`);
   });
 
   it('6. the save endpoint writes only its three whitelisted files, whole and parsed', () => {
