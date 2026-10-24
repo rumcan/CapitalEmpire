@@ -5,7 +5,7 @@ import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, ty
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { getTournamentWeather } from './golf/weather';
-import { CLASS, FLAG_COST, Grid, classOf, courseClassOpen, courseTierNeeded, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
+import { CLASS, FLAG_COST, Grid, classOf, courseRoadOpen, courseTierNeeded, isCourseClass, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
@@ -281,6 +281,11 @@ export class Game {
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
+  /** the road tool's scope (T084): 'course' when the Course menu's Paths & drives opened it (it lays the course's cart paths and drives), 'town'
+   *  from Roads; scopeClass: the class last picked in each scope, picked again on coming back to it */
+  roadScope: 'town' | 'course' = 'town'; private scopeClass: Record<'town' | 'course', ClassId> = { town: 'street', course: 'cart-dirt' };
+  /** the tool as the menus show it: the road tool in the course scope is the Course menu's Paths & drives ('path') */
+  get uiTool(): Tool { return this.tool === 'road' && this.roadScope === 'course' ? 'path' : this.tool; }
   /** Replace on (E): finishing a route first bulldozes the road pieces it would clash with (replaceCuts in snap.ts), then builds it */
   replaceMode = false;
   /** the junction tool's brush: 'select' (a click selects a junction), or a type that a click installs on the junction (plain, stop, mini, signal, roundabout) */
@@ -1562,7 +1567,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.tool !== t) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -3203,11 +3208,18 @@ export class Game {
     this.setSpeed(8);
     this.toast('Skipping to the tournament… (8× for the day)');
   }
-  /** a road class is open to build: every class in event mode, else as the Career unlocks it. A course drive (P19) is open only in a golf game, at its
-   *  tier (golf.tier: courseClassOpen); outside golf no course class is open */
+  /** a road class is open to build: every class in event mode, else as the Career unlocks it. A course path or drive (P19) is open only in a golf
+   *  game, at its tier (golf.tier: courseRoadOpen); the dev sandbox's unlock-all (sandboxUnlock: the dev server, or ?unlock=1) opens every tier (T084) */
   classOpen(id: ClassId): boolean {
-    if (this.golf ? !courseClassOpen(id, this.golf.tier) : classOf(id).family === 'course') return false;
+    if (isCourseClass(id)) return courseRoadOpen(id, this.golf ? this.golf.tier : null, this.sandboxUnlock);
     return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached);
+  }
+  /** the road tool's scope (T084): entering the other scope swaps the picked class for the one last picked there (a town class under Roads, a
+   *  course path or drive under the Course menu's Paths & drives) */
+  private setRoadScope(scope: 'town' | 'course') {
+    const course = scope === 'course';
+    this.roadScope = scope;
+    if (isCourseClass(this.roadClass) !== course) { this.scopeClass[course ? 'town' : 'course'] = this.roadClass; this.roadClass = this.scopeClass[scope]; }
   }
   /** why a road class is not open (classOpen is false): a course drive's golf tier (P19; outside golf it is only on golf courses), else the career
    *  milestone that unlocks it; a town class no milestone lists gets a plain note */

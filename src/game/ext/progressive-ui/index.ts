@@ -7,7 +7,7 @@
 export type RailGroupId = 'select' | 'roads' | 'paint' | 'course' | 'junction' | 'bulldoze' | 'transport' | 'business';
 
 /** individual tool ids matching Tool in src/game/types.ts */
-export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
+export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
 
 /** top-bar golf chip ids in src/App.tsx */
 export type GolfChipId = 'courseStats' | 'land' | 'holes' | 'event' | 'skipTournament' | 'grass';
@@ -73,9 +73,10 @@ const STAGE_1_GROUPS: readonly RailGroupId[] = ['select', 'roads', 'course', 'tr
 const STAGE_2_GROUPS: readonly RailGroupId[] = ['select', 'roads', 'course', 'paint', 'bulldoze', 'transport'];
 const STAGE_3_GROUPS: readonly RailGroupId[] = ['select', 'roads', 'paint', 'course', 'junction', 'bulldoze', 'transport', 'business'];
 
-const STAGE_1_TOOLS: readonly UiToolId[] = ['select', 'road', 'course', 'park'];
-const STAGE_2_TOOLS: readonly UiToolId[] = ['select', 'road', 'lane', 'downgrade', 'paint', 'course', 'bulldoze', 'park'];
-const STAGE_3_TOOLS: readonly UiToolId[] = ['select', 'road', 'lane', 'downgrade', 'paint', 'course', 'junction', 'bulldoze', 'bus', 'park', 'toll', 'business'];
+// path: the Course menu's Paths & drives (T084), from the start: the dirt and cement slab cart paths are the first tier
+const STAGE_1_TOOLS: readonly UiToolId[] = ['select', 'road', 'course', 'path', 'park'];
+const STAGE_2_TOOLS: readonly UiToolId[] = ['select', 'road', 'lane', 'downgrade', 'paint', 'course', 'path', 'bulldoze', 'park'];
+const STAGE_3_TOOLS: readonly UiToolId[] = ['select', 'road', 'lane', 'downgrade', 'paint', 'course', 'path', 'junction', 'bulldoze', 'bus', 'park', 'toll', 'business'];
 
 const STAGE_1_CHIPS: readonly GolfChipId[] = ['courseStats'];
 const STAGE_2_CHIPS: readonly GolfChipId[] = ['courseStats', 'event', 'skipTournament'];

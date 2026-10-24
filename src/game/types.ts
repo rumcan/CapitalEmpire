@@ -50,7 +50,8 @@ export interface Prop {
   plant?: 1;
 }
 
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course';
+/** path: the Course menu's Paths & drives (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course') */
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
 
