@@ -9,6 +9,7 @@ import { Textures } from './textures';
 import { EAGER_PHOTO } from './grass-art';
 import { isPaintPhoto } from './paint';
 import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
+import { WOODLAND_TEX } from './terrain-paint';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
@@ -29,6 +30,8 @@ let ready: Promise<void> | null = null, gotTextures: (() => void) | null = null;
 let texReady!: () => void;
 const hasTextures = new Promise<void>(res => { texReady = res; });
 const post = (m: FromWorker, transfer: Transferable[] = []) => scope.postMessage(m, transfer);
+/** the woodland floor's Fescue (terrain-paint.ts WOODLAND_TEX), a lazy photo: built once, before this worker's first full bake */
+let woods: Promise<void> | null = null;
 
 /** one message: init and the texture pack run on arrival (init waits for the pack); every other message runs after the one before it */
 const handle = async (m: ToWorker) => {
@@ -71,6 +74,7 @@ const handle = async (m: ToWorker) => {
       }
       case 'paint': {
         await hasTextures;
+        if (m.kind !== 'p') await (woods ??= tex.ensure(WOODLAND_TEX).catch(err => post({ t: 'error', message: String(err) })));
         // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
         if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;

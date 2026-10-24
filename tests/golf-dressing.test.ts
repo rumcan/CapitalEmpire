@@ -4,12 +4,13 @@ import assert from 'node:assert/strict';
 import { generateOldNine } from '../src/game/golf/coursegen';
 import {
   BENCH_ID, DRESSING_SPRITE_IDS, PIN_RED_ID, PIN_YELLOW_ID,
-  TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID, TREE_IDS,
-  buildCartPathLoop, dressCourse, withCartPathLoop,
+  DRESS_CONIFER_SHARE, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID, TREE_IDS,
+  buildCartPathLoop, dressCourse, dressTree, withCartPathLoop,
 } from '../src/game/golf/dressing';
 import { deriveHoles, surfaceAt } from '../src/game/golf/holes';
 import { courseAreas } from '../src/game/golf/paintcourse';
 import { surfacePreset } from '../src/game/paint-presets';
+import { CONIFER_IDS, LIVE_BROAD_DEAL, LIVE_CONIFER_DEAL, TREE_POOL_IDS, ownerSize } from '../src/game/forest';
 
 const SITE = { x0: 100, y0: 100, x1: 400, y1: 550 };
 
@@ -74,4 +75,34 @@ test('buildCartPathLoop and withCartPathLoop add painted path areas that pass co
   const holes = deriveHoles(dressedLayout.areas, dressedLayout.tees, dressedLayout.pins, dressedLayout.aims);
   assert.equal(holes.length, 9);
   assert.equal(holes.every(h => h.warnings.length === 0), true);
+});
+
+test('the trees lining the holes: every live tree of the forest pools can appear, at owner size, a third of them conifers', () => {
+  // the pool: every tree of the forest pools but the dead snags (tree-sun.test.ts holds the pools to the library)
+  assert.deepEqual([...TREE_IDS].sort(), TREE_POOL_IDS.filter(id => !/dead/.test(id)).sort());
+  for (const id of TREE_IDS) assert.ok(DRESSING_SPRITE_IDS.has(id), `${id} is a dressing sprite`);
+  // every live tree has its own band of the one draw
+  const reach = new Set<string>();
+  for (const [d, lo, hi] of [[LIVE_CONIFER_DEAL, 0, DRESS_CONIFER_SHARE], [LIVE_BROAD_DEAL, DRESS_CONIFER_SHARE, 1]] as const) {
+    for (let k = 0; k < d.ids.length; k++) {
+      const u = lo + ((k ? d.cum[k - 1]! : 0) + d.cum[k]!) / 2 * (hi - lo);
+      assert.equal(dressTree(u), d.ids[k]); reach.add(dressTree(u));
+    }
+  }
+  assert.equal(reach.size, TREE_IDS.length);
+  // and courses dressed with many seeds plant them all, deterministically
+  const layout = generateOldNine(SITE, 12), seen = new Map<string, number>(), treeSet = new Set<string>(TREE_IDS);
+  let total = 0, conifers = 0;
+  for (let seed = 1; seed <= 60; seed++) {
+    for (const p of dressCourse(layout, seed)) {
+      if (!treeSet.has(p.id)) continue;
+      total++; if (CONIFER_IDS.has(p.id)) conifers++;
+      seen.set(p.id, (seen.get(p.id) ?? 0) + 1);
+      const k = ownerSize(p.id);
+      assert.ok(p.scale >= 0.9 * k - 0.006 && p.scale <= 1.1 * k + 0.006, `${p.id} scale ${p.scale}: owner size ${k} +-10%`);
+    }
+  }
+  for (const id of TREE_IDS) assert.ok((seen.get(id) ?? 0) > 0, `${id} lines a hole on some seed`);
+  assert.ok(conifers / total > 0.25 && conifers / total < 0.42, `conifers ${conifers} of ${total}`);
+  console.log(`dressing: ${total} trees over 60 seeds, ${seen.size} sprites, the rarest ${Math.min(...seen.values())} times`);
 });

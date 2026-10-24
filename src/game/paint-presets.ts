@@ -91,5 +91,10 @@ const FILE = clampPresets(file as Partial<PresetsFile>);
 export const PRESETS: PaintPreset[] = FILE.presets;
 /** the road blocks' grass the game was built with (PresetsFile blocks, blockShare) */
 export const BLOCK_GRASS = { id: FILE.blocks, share: FILE.blockShare };
-/** the first preset standing for a golf surface, as a Paint texture id, or null */
-export function surfacePreset(surface: string): `preset:${string}` | null { const p = PRESETS.find(q => q.surface === surface); return p ? presetTex(p.id) : null; }
+/** the preset a golf surface paints with, as a Paint texture id, or null: the first preset standing for it; for fescue, else the owner's
+ *  preset with id 'fescue' (the Paint tool's Fescue), so the course's fescue, the woodland floor (terrain-paint.ts woodlandTex) and the
+ *  Paint tool's Fescue always match (the lead, 2026-10-24) */
+export function surfacePreset(surface: string, presets: readonly Pick<PaintPreset, 'id' | 'surface'>[] = PRESETS): `preset:${string}` | null {
+  const p = presets.find(q => q.surface === surface) ?? (surface === 'fescue' ? presets.find(q => q.id === 'fescue') : undefined);
+  return p ? presetTex(p.id) : null;
+}

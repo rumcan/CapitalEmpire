@@ -5,7 +5,7 @@ import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, ty
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
 import { busGhostLabel, costLabel, markerGhost, structureGhost, tollGhostLabel } from './ext/event-ghost';
 import { getTournamentWeather } from './golf/weather';
-import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
+import { CLASS, FLAG_COST, Grid, classOf, courseClassOpen, courseTierNeeded, JUNCTIONS, KEY_CLASSES, RoadNetwork, SLIP_CORNER_COST, SPEED_BONUS_KMH, RB_LANE, ringRadius, NARROWER, VARIANTS as CLASS_VARIANTS, WIDER, SK, add, dot, mul, norm, perp, sub, unionBox, variantCost, vlen, type AutoProp, type BBox, type ClassId, type Leg, type Node, type NodeType, type PieceSel, type Pt, type PortalRec, type RoadClass, type Seg, type SegKind, type TypeId } from './network';
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
@@ -172,7 +172,9 @@ interface Build { legs: Leg[]; cls: RoadClass; t0: number; dur: number; total: n
 interface Particle { x: number; y: number; vx: number; vy: number; vz: number; z: number; life: number; age: number; r: number }
 export interface Toast { id: number; text: string; t: number; kind: 'info' | 'warn' | 'good' }
 export interface Camera { X: number; Y: number; z: number }
-const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];  
+const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
+/** a garden median's plants (P19): the beds' flowers and shrubs (lots/compose.ts FLOWERS and the bushes it scatters), picked by the prop's index */
+const AUTO_GARDEN = ['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'world:bush_2'];
 const STRUCTURE_SPRITE: Record<string, string> = {  
  foodTent: 'golf:food-tent', drinksTent: 'expansion:backyard-tent', kiosk: 'business:fishing-rental-kiosk', foodTruck: 'town:produce_stand',  
  merchTent: 'expansion:backyard-tent', merchPavilion: 'business:golf-halfway-pavilion', chalet: 'business:golf-halfway-pavilion', village: 'business:golf-halfway-pavilion',  
@@ -656,7 +658,7 @@ export class Game {
       const byClass = new Map<ClassId, Leg[]>();
       s.town.legs.forEach((l, i) => { const id = s.town.cls[i]!; let a = byClass.get(id); if (!a) byClass.set(id, a = []); a.push(l); });
       for (const [id, legs] of byClass) this.edit.addLegs(legs, classOf(id), 0, undefined, true);
-      this.edit.addLegs(s.drive, classOf('gravel'), 0, undefined, true);
+      this.edit.addLegs(s.drive, classOf('drive-gravel'), 0, undefined, true);
       this.cam.X = worldX(s.centre.x, s.centre.y); this.cam.Y = worldY(s.centre.x, s.centre.y);
       if (this.stampOn) this.stampPending = true;
       const [vx, vy, vw, vh] = s.venue, [px, py, pw, ph] = s.carpark;
@@ -1113,9 +1115,9 @@ export class Game {
       const k = autoKey(a); if (this.autoByKey.has(k)) continue;
       // a town road's lamp stands only where the town has houses within 12 tiles
       if (a.town) { let near = false; for (const p of this.propGrid.query([a.x - 12, a.y - 12, a.x + 12, a.y + 12])) { const kind = LIBRARY[p.item]?.kind; if (kind === 'lot' || kind === 'house') { near = true; break; } } if (!near) { this.lampWait.set(k, a); continue; } this.lampWait.delete(k); }
-      const id = a.kind === 'tree' ? AUTO_TREES[a.i % AUTO_TREES.length] : a.kind === 'rbtree' ? 'world:tree_oak_0' : a.kind === 'lamp' ? 'world:streetlamp' : 'town:traffic_light';
+      const id = a.kind === 'tree' ? AUTO_TREES[a.i % AUTO_TREES.length] : a.kind === 'garden' ? AUTO_GARDEN[a.i % AUTO_GARDEN.length] : a.kind === 'rbtree' ? 'world:tree_oak_0' : a.kind === 'lamp' ? 'world:streetlamp' : 'town:traffic_light';
       const item = LIBRARY.findIndex(i => i.id === id); if (item < 0) continue;
-      const it = LIBRARY[item], b = it.boxes[0], scale = a.kind === 'tree' ? 0.85 : a.kind === 'rbtree' ? 1.2 : a.kind === 'lamp' ? 0.9 : 1, x = a.x - b.dx * scale / 2, y = a.y - b.dy * scale / 2;
+      const it = LIBRARY[item], b = it.boxes[0], scale = a.kind === 'tree' ? 0.85 : a.kind === 'garden' ? 0.6 : a.kind === 'rbtree' ? 1.2 : a.kind === 'lamp' ? 0.9 : 1, x = a.x - b.dx * scale / 2, y = a.y - b.dy * scale / 2;
       // a street lamp gives way to whatever already stands there (a lot's own lamps, a tree, a building)
       if (a.kind === 'lamp' && this.canPlace(it, x, y, false, scale)) continue;
       const p = this.addProp(item, x, y, false, scale); p.auto = k; this.autoByKey.set(k, p); lamps ||= a.kind === 'lamp';
@@ -1541,7 +1543,7 @@ export class Game {
     if (block) { this.toast(block, 'warn'); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost: build, lens } = st, cost = Math.round(build - this.piecesValue(cuts));
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
-    if (!this.classOpen(cls.id)) { const lk = unlockOf('class', cls.id)!; this.toast(`${cls.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
+    if (!this.classOpen(cls.id)) { this.toast(this.classLockWhy(cls.id), 'warn'); return; }
     if (kinds.includes(SK.TUNNEL) && !this.tunnelsOpen()) { const lk = unlockOf('tunnel')!; this.toast(`Tunnels unlock at ${lk.pop.toLocaleString()} residents (${lk.name})`, 'warn'); return; }
     if (cost + comp > this.money) { this.toast(`Not enough money: the route costs $${cost.toLocaleString()}${comp ? ` and $${comp.toLocaleString()} compensation` : ''}`, 'warn'); return; }
     if (st.err) { this.toast(st.err, 'warn'); return; }
@@ -1693,7 +1695,7 @@ export class Game {
     let why = '';
     if (tolls.includes(seg)) why = down ? 'Toll plazas cannot be narrowed' : 'Toll plazas cannot be widened';
     else if (!to) why = down ? `${seg.cls.name} is already the smallest road of its kind` : `${seg.cls.name} is already the biggest road of its kind (more in Phase 7)`;
-    else if (!down && !this.classOpen(to.id)) { const lk = unlockOf('class', to.id)!; why = `${to.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})`; }
+    else if (!down && !this.classOpen(to.id)) why = this.classLockWhy(to.id);
     else if (to.h + to.walk > seg.cls.h + seg.cls.walk && this.widenClash(segs, to)) why = 'No room to widen: another road is too close';
     else if (cost > this.money) why = `Not enough money: ${to.name.toLowerCase()} costs $${cost.toLocaleString()} more`;
     this.laneHover = { segs, to, cost, why, down };
@@ -2985,8 +2987,20 @@ export class Game {
     this.setSpeed(8);
     this.toast('Skipping to the tournament… (8× for the day)');
   }
-  /** a road class is open to build: every class in event mode, else as the Career unlocks it */
-  classOpen(id: ClassId): boolean { return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached); }
+  /** a road class is open to build: every class in event mode, else as the Career unlocks it. A course drive (P19) is open only in a golf game, at its
+   *  tier (golf.tier: courseClassOpen); outside golf no course class is open */
+  classOpen(id: ClassId): boolean {
+    if (this.golf ? !courseClassOpen(id, this.golf.tier) : classOf(id).family === 'course') return false;
+    return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached);
+  }
+  /** why a road class is not open (classOpen is false): a course drive's golf tier (P19; outside golf it is only on golf courses), else the career
+   *  milestone that unlocks it; a town class no milestone lists gets a plain note */
+  classLockWhy(id: ClassId): string {
+    const c = classOf(id), tier = courseTierNeeded(id);
+    if (tier !== null) return this.golf ? `${c.name} opens at golf tier ${tier}` : `${c.name} is only on golf courses`;
+    const lk = unlockOf('class', id);
+    return lk ? `${c.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})` : `${c.name} is not open yet`;
+  }
   /** a junction type is open: in event mode all but the roundabout, which the Roundabout card opens; else as the Career unlocks it */
   junctionOpen(t: NodeType): boolean { if (this.golf?.cards?.includes('roundabout') && t === 'roundabout') return true; return this.sandboxUnlock ? true : this.eventMode ? t !== 'roundabout' || this.traffic.round.cards.includes('roundabout') : junctionUnlocked(t, this.reached); }
   /** the highest speed-limit tier open: the year's (see speedTierOpen), all of them with the dev sandbox's unlock-all */
