@@ -3,7 +3,7 @@
 // costs keep their inputs; `rasterAreas` lays old golf-surface paint areas into the grid (the load migration); and the planting month
 // each cell stores. Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m for every coordinate; cells of 1 m (0.5 tile).
 import { CELL_T, SURF, fillPolygon, type Grid, type GridDiff, mergeDiffs } from './index';
-import { BLOB_STYLE, blobOutlines, type BlobStyle, type CollarStyle } from '../course-blobs';
+import { BLOB_STYLE, blobOutlines, type CollarStyle } from '../course-blobs';
 import type { CourseArea, GolfSurface } from '../../golf/types';
 import type { PaintTex } from '../../paint';
 
@@ -95,7 +95,8 @@ export function gridAreas(g: Grid, holes?: Iterable<number>): GridArea[] {
     for (const p of bridgeAll(rings)) out.push({ id: 0, surface, hole: h, tex: SURFACE_TEX_ID[surface], s, pts: p.pts, outer: p.outer, ...plant });
   }
   out.sort((p, q) => areaRank(p) - areaRank(q)); // stable: blobs keep their order within a surface and hole
-  out.forEach((a, i) => { a.id = GRID_AREA_ID + i; });
+  const seen = new Map<number, number>(); // ids per hole (GRID_AREA_ID + hole x 100,000 + its rank in the hole), so lists made hole by hole never clash
+  for (const a of out) { const k = seen.get(a.hole) ?? 0; seen.set(a.hole, k + 1); a.id = GRID_AREA_ID + a.hole * 100_000 + k; }
   return out;
 }
 
@@ -218,5 +219,3 @@ function bridge(P: readonly number[], H: readonly number[]): number[] {
   return out;
 }
 
-/** the style course-blobs gives a surface id (re-exported for the patches and tests) */
-export function styleOf(s: number): BlobStyle { return BLOB_STYLE[s] ?? { close: 0, relax: 0 }; }

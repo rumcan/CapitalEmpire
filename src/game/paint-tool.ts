@@ -278,11 +278,14 @@ export class PaintTool {
     if (this.mode === 'brush' || (this.course && this.mode === 'draw')) {
       // the brush preset takes the change (the Course tool's Shape method paints with it too), and the areas of this hole and kind re-style at once
       const k = this.brushKind;
+      const was = this.brush[k].style;
       this.brush[k] = { r: this.brush[k].r, style: { ...this.style } }; this.saveBrush();
       let changed = false;
       for (const a of this.areas) if (a.hole === this.brushHole && a.kind === k) { Object.assign(a, this.brush[k].style); this.send(a); changed = true; }
       if (changed) this.host.save();
-      if (this.courseGrid()) this.host.courseLook?.(); // the grid's surfaces wear the brush looks: its chunks are drawn again
+      // the grid's surfaces wear the brush looks (texture, scale, angle; not the tone): its chunks are drawn again only when one of those changed
+      const st = this.brush[k].style;
+      if (this.courseGrid() && (st.tex !== was.tex || st.scale !== was.scale || st.angle !== was.angle)) this.host.courseLook?.();
     }
     this.host.emit();
   }
@@ -330,11 +333,12 @@ export class PaintTool {
   private commit() {
     const t = this.tx; if (!t || --t.depth > 0) return;
     this.tx = null;
+    // the action's last chunks go out first, inside the prop journal: the trees they clear off new playing surfaces come back on undo
+    if (t.gd.length) this.host.gridChanged?.(null, true);
     const props = this.host.journal?.end() ?? null, after = this.snapshot();
     const f = this.host.courseHeight?.() ?? null, height = f ? this.hj.end(f) : null; if (!f) this.hj.drop();
     const same = after.keys.length === t.before.keys.length && after.keys.every((k, i) => k === t.before.keys[i]); // a stroke that changed nothing re-made the same areas under new ids
     const gd = mergeMany(t.gd), grid = gd && gd.n ? gd : null, pk = this.plansKey(), plans = pk !== t.plans ? { before: t.plans, after: pk } : null;
-    if (t.gd.length) this.host.gridChanged?.(null, true); // the action's last chunks go out now
     if (!props && !t.spent && same && !height && !grid && !plans) return;
     this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.redos = [];
@@ -365,10 +369,11 @@ export class PaintTool {
   /** keeps a grid change in the open action and tells the engine (its chunks are sent within SEND_MS) */
   private gridApply(d: GridDiff) { if (!d.n) return; this.tx?.gd.push(d); this.host.gridChanged?.(d, false); }
   /** the brush rules on grid g for surface s: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did), owned
-   *  cells only, and a rub out takes only cells of its own surface */
+   *  cells only, and a rub out takes only cells of its own surface on the current hole (as the old per-hole brush areas did) */
   private gridOpts(g: Grid, s: number, erase: boolean): PaintOpts {
     const own = this.host.ownedAt;
-    return { over: 'below', rub: erase, allow: i => { if (erase && g.surf[i] !== s) return false; if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
+    const h = this.brushHole;
+    return { over: 'below', rub: erase, allow: i => { if (erase && (g.surf[i] !== s || g.hole[i] !== h)) return false; if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
   }
   /** fills polygon pts (tiles) into grid g as surface s for hole h (the brush rules): the cells that change are charged (1 m² each at the
    *  surface's price; golf mode) and kept in the open action; false, with the toast and nothing changed, when the treasury cannot pay */
