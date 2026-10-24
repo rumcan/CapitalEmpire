@@ -5,11 +5,12 @@ import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } f
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
 import HOLE_PRESETS from './golf/hole-presets.json';
-import { areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
+import { EARTHWORK_PER_M3, areaBuildCost, growInMonths, surfaceOfTex, type PlantKind } from './golf/costs';  
 import { PLANT_KINDS, clampPlant, type PlantBrushKind, type PlantSet } from './plant';
 import { drawGhostPoly, drawGhostSnap, ghostStatus } from './ext/ghost-preview';
-import { computeSnapPiecePlacement, type CoursePieceArchetype, type SnapPiecePlacement } from './ext/course-snap';
+import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement } from './ext/course-snap';
 import { PIECE_BUTTONS, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
+import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -41,8 +42,8 @@ const STORED: (StoredHole | null)[] = Array.from({ length: HOLE_COUNT }, (_, i) 
 export interface PropJournal { added: unknown[]; removed: unknown[] }
 /** the areas at one moment, for undo: each area's id and save tuple (and the tuple as text, to compare), and the next id */
 interface AreaSnap { ids: number[]; ts: PaintTuple[]; keys: string[]; nextId: number }
-/** an undoable action: the areas before and after it, the props it added or removed, and the money it spent */
-interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: PropJournal | null; spent: number }
+/** an undoable action: the areas before and after it, the props it added or removed, the money it spent, and the course height blocks it changed (T027) */
+interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: PropJournal | null; spent: number; height: CourseHeightStep | null }
 /** the most undo steps kept */
 const UNDO_MAX = 100;
 /** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
@@ -75,6 +76,10 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** the prop journal (undo): begin records every prop added or removed until end, which returns them (null: none); undo and redo
    *  reverse or replay a journal and return the journal to keep for the opposite step */
   journal?: { begin(): void; end(): PropJournal | null; undo(j: PropJournal): PropJournal; redo(j: PropJournal): PropJournal };
+  /** the course height field to edit, if any (T027) */
+  courseHeight?(): CourseHeightField | null;
+  /** the course height changed in this box: the engine re-flattens the roads there, saves and re-bakes */
+  heightChanged?(box: CourseTileBox): void;
   /** the areas changed (an undo step was made, undone or redone): the engine re-fits the holes' pins and tee markers; pins: where a placed
    *  preset's flag stands, by hole (the pin goes there when it is on the green) */
   changed?(pins?: Map<number, { x: number; y: number }>): void }
@@ -156,6 +161,8 @@ export class PaintTool {
   private undos: UndoStep[] = [];
   private redos: UndoStep[] = [];
   private tx: { before: AreaSnap; spent: number; depth: number; label: string } | null = null;
+  /** the course height blocks the action in progress touches, for undo (T027) */
+  private hj = new CourseHeightJournal();
   /** the flag of the preset being placed (golf mode): the pin's spot for its hole, handed to the engine when the step commits */
   private pinHint: Map<number, { x: number; y: number }> | undefined;
   /** brush mode: the kind painted, the hole it is painted for, Rub out (strokes erase), and each kind's brush (radius, style: the presets, edited and remembered) */
@@ -196,7 +203,7 @@ export class PaintTool {
   send(a: PaintArea, currentMonth?: number) { const m = currentMonth === undefined || isAreaMature(a, currentMonth); this.host.setLotGround('paint:' + a.id, [PaintTool.patch(a, m)]); }
 
   /** replaces the areas with the save tuples (none: clears) and sends their patches */
-  load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.undos = []; this.redos = []; this.tx = null; this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
+  load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.undos = []; this.redos = []; this.tx = null; this.hj = new CourseHeightJournal(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
 
   /** removes every area from the ground and resets the drawing and selection (the style and mode stay) */
   clear() {
@@ -263,15 +270,16 @@ export class PaintTool {
   /** the areas now, for undo */
   private snapshot(): AreaSnap { const ts = this.areas.map(a => toTuple(a)); return { ids: this.areas.map(a => a.id), ts, keys: ts.map(t => JSON.stringify(t)), nextId: this.nextId }; }
   /** starts an undoable action (a nested begin joins the open one) */
-  private begin(label: string) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label }; this.host.journal?.begin(); }
+  private begin(label: string) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label }; this.host.journal?.begin(); this.hj.begin(); }
   /** ends an undoable action: it becomes an undo step when it changed the areas or the props, or spent money (the redo steps are dropped) */
   private commit() {
     const t = this.tx; if (!t || --t.depth > 0) return;
     this.tx = null;
     const props = this.host.journal?.end() ?? null, after = this.snapshot();
+    const f = this.host.courseHeight?.() ?? null, height = f ? this.hj.end(f) : null; if (!f) this.hj.drop();
     const same = after.keys.length === t.before.keys.length && after.keys.every((k, i) => k === t.before.keys[i]); // a stroke that changed nothing re-made the same areas under new ids
-    if (!props && !t.spent && same) return;
-    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    if (!props && !t.spent && same && !height) return;
+    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height }); if (this.undos.length > UNDO_MAX) this.undos.shift();
     this.redos = [];
     const hint = this.pinHint; this.pinHint = undefined; this.host.changed?.(hint);
   }
@@ -297,6 +305,7 @@ export class PaintTool {
     if (this.tx) return;
     const u = this.undos.pop(); if (!u) return;
     this.restore(u.before);
+    const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'before'); if (b) this.host.heightChanged?.(b); }
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
     if (u.spent) this.host.spend?.(-u.spent);
     this.host.changed?.();
@@ -307,6 +316,7 @@ export class PaintTool {
     if (this.tx) return;
     const u = this.redos.pop(); if (!u) return;
     this.restore(u.after);
+    const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'after'); if (b) this.host.heightChanged?.(b); }
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
     if (u.spent) this.host.spend?.(u.spent);
     this.host.changed?.();
@@ -345,15 +355,30 @@ export class PaintTool {
   private refreshPiece() { this.piece = this.cursor ? this.pieceAt(this.cursor) : null; this.host.emit(); }
   /** piece mode: the plan for the piece in hand at tile t: its placement (snapped to the touching course piece unless snapping is off), the areas it lays, why it cannot go ('' if it can) and its cost (golf mode) */
   private pieceAt(t: { x: number; y: number }): NonNullable<PaintTool['piece']> {
-    const key = `${this.pieceArch}|${Math.round(t.x * 4)}|${Math.round(t.y * 4)}|${this.pieceAngle}|${this.pieceScale}|${this.pieceSnap}|${this.brushHole}|${this.areas.length}|${this.nextId}|${this.plantKind}`;
+    const key = `${this.pieceArch}|${Math.round(t.x * 4)}|${Math.round(t.y * 4)}|${this.pieceAngle}|${this.pieceScale}|${this.pieceSnap}|${this.brushHole}|${this.areas.length}|${this.nextId}|${this.plantKind}|${this.host.courseHeight?.()?.rev ?? 0}`;
     if (this.piece?.key === key) return this.piece;
     const b = PIECE_BUTTONS.find(q => q.arch === this.pieceArch) ?? PIECE_BUTTONS[2]!, golf = !!this.host.golfMode?.();
     const pl = computeSnapPiecePlacement({ kind: b.kind, archetype: b.arch, cursor: t, angleDeg: this.pieceAngle, scale: this.pieceScale, snapEnabled: this.pieceSnap, defaultHole: this.brushHole, areas: snapTargets(this.areas) });
     const areas = pieceAreas(pl);
-    return { key, pl, areas, why: pieceWhy(areas, golf ? this.host.ownedLand : undefined), cost: golf ? pieceCost(areas, this.plantKind) : 0 };
+    return { key, pl, areas, why: pieceWhy(areas, golf ? this.host.ownedLand : undefined), cost: golf ? pieceCost(areas, this.plantKind) + this.earthworkCost(pl.heightOps) : 0 };
+  }
+  /** applies a placed piece's height ops to the course height field (journaled for undo); the engine is told the changed box */
+  private applyHeightOps(ops: readonly CoursePieceHeightOp[]) {
+    const f = this.host.courseHeight?.(); if (!f || !ops.length) return;
+    let box: CourseTileBox | null = null;
+    for (const op of ops) { const dab: CourseHeightBrushDab = { x: op.x, y: op.y, radiusTiles: op.radiusTiles, mode: op.mode, strength: op.strength }; this.hj.touch(f, brushBox(dab)); box = unionBox(box, applyCourseHeightBrush(f, dab)); }
+    if (box) this.host.heightChanged?.(box);
+  }
+  /** the earthworks price of a piece's height ops (golf mode): each op's earth (m³) measured on the field as it is now, × EARTHWORK_PER_M3; 0 with no field */
+  private earthworkCost(ops: readonly CoursePieceHeightOp[]): number {
+    const f = this.host.courseHeight?.(); if (!f || !ops.length) return 0;
+    let m3 = 0;
+    for (const op of ops) m3 += estimateCourseBrushM3(f, { x: op.x, y: op.y, radiusTiles: op.radiusTiles, mode: op.mode, strength: op.strength });
+    return Math.round(m3 * EARTHWORK_PER_M3);
   }
   /** piece mode: a click lays the planned piece (all its areas, one undo step) when it can go and is affordable, else the toast says why; the layers under the core draw just below it (order), the core on its kind's layer */
   private placePiece() {
+    if (this.cursor) this.piece = this.pieceAt(this.cursor); // re-plan: an undo since the last move may have changed the height (the price)
     const p = this.piece; if (!p) return;
     if (p.why) { this.host.toast(p.why, 'warn'); return; }
     if (p.cost > 0) {
@@ -368,6 +393,7 @@ export class PaintTool {
       const a: PaintArea = { id, ...s, plantKind: this.plantKind, plantedMonth: m, ...(!s.kind && core?.kind ? { order: drawZ({ kind: core.kind, id }) } : {}) };
       this.areas.push(a); this.send(a, m);
     }
+    this.applyHeightOps(p.pl.heightOps);
     this.commit(); this.piece = null; this.refreshPiece(); this.host.save();
   }
   /** piece mode: the planned piece as ghosts, bottom layer first (each in its surface's colour with its border band, the core dashed; red when it cannot go), the snap tick on the edge it joins, and its label */

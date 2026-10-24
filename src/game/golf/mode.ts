@@ -3,6 +3,7 @@
 import type { Pt } from '../network';
 import type { AimPoint, Pin, TeeMark } from './types';
 import type { PlacedEventStructure } from './eventtool';
+import type { CourseHeightSaveChunk } from '../ext/course-height';
 
 /** a rectangle in tiles: top-left x, y and the size w, h */
 export type Rect = [number, number, number, number];
@@ -17,6 +18,8 @@ export interface GolfSave {
  parcels?: Rect[];
  structures?: PlacedEventStructure[];
  cards?: string[];
+ /** the course height field as sparse chunks (T027); missing = flat */
+ height?: CourseHeightSaveChunk[];
 }
 
 /** the golf HUD's view (Engine.golfView): the tier and its event name, the month label ("Mar 1985"), the months left to the tournament

@@ -12,6 +12,8 @@ export const CH_SIZE = COURSE_MAP_TILES / CH_STEP;
 /** minimum and maximum course height offset in metres (±3.0 m) */
 export const CH_MIN_M = -3.0;
 export const CH_MAX_M = 3.0;
+/** area of one course height sample (4 m × 4 m), for earth volumes: m³ = Σ|Δh| (m) × COURSE_CELL_M2 */
+export const COURSE_CELL_M2 = 16;
 /** maximum comfortable putting green slope (metres per metre, 0.06 = 6%) before a warning is raised */
 export const GREEN_MAX_SLOPE = 0.06;
 /** unit light vector in tile-space (x, y, z) for the sun on the right of the isometric screen (+screenX = +tileX - tileY) */
@@ -95,14 +97,20 @@ export function courseShadeAt(field: CourseHeightField, x: number, y: number): n
  const nx = -EXAG * gx, ny = -EXAG * gy, nz = 1, nl = Math.hypot(nx, ny, nz);
  return (nx * lx + ny * ly + nz * lz) / nl - lz;
 }
-/** applies a raise, lower, smooth, or flatten brush dab and returns the dirtied world-tile bounding box (or null if unchanged) */
-export function applyCourseHeightBrush(field: CourseHeightField, dab: CourseHeightBrushDab): CourseTileBox | null {
+/** a brush dab's radius (clamped to 1..32 tiles) and its inclusive sample range i0..i1, j0..j1 (clamped to the field) */
+function brushRange(dab: CourseHeightBrushDab) {
  const rTiles = Math.max(1, Math.min(32, Number.isFinite(dab.radiusTiles) ? dab.radiusTiles : 6));
  const i0 = Math.max(0, Math.floor((dab.x - rTiles) / CH_STEP));
  const i1 = Math.min(CH_SIZE - 1, Math.ceil((dab.x + rTiles) / CH_STEP));
  const j0 = Math.max(0, Math.floor((dab.y - rTiles) / CH_STEP));
  const j1 = Math.min(CH_SIZE - 1, Math.ceil((dab.y + rTiles) / CH_STEP));
- if (i0 > i1 || j0 > j1) return null;
+ return { rTiles, i0, i1, j0, j1 };
+}
+/** one pass of a brush dab: writes the new heights (write), or only measures them (no write: the field and its rev are untouched, box is null).
+ *  m3 is the earth moved, Σ|next − old| × COURSE_CELL_M2 over the samples */
+function brushPass(field: CourseHeightField, dab: CourseHeightBrushDab, write: boolean): { box: CourseTileBox | null; m3: number } {
+ const { rTiles, i0, i1, j0, j1 } = brushRange(dab);
+ if (i0 > i1 || j0 > j1) return { box: null, m3: 0 };
  const d = field.data;
  const strength = Number.isFinite(dab.strength) ? dab.strength! : (dab.mode === 'smooth' || dab.mode === 'flatten' ? 0.5 : 0.25);
  let snapshot: Float32Array | null = null;
@@ -117,7 +125,7 @@ export function applyCourseHeightBrush(field: CourseHeightField, dab: CourseHeig
    }
   }
  }
- let changed = false;
+ let changed = false, moved = 0;
  const wSnap = i1 - i0 + 3;
  for (let j = j0; j <= j1; j++) {
   const wy = (j + 0.5) * CH_STEP;
@@ -144,23 +152,50 @@ export function applyCourseHeightBrush(field: CourseHeightField, dab: CourseHeig
     const w = Math.max(0, Math.min(1, strength)) * falloff;
     next = clampCourseHeightM(old + (avg - old) * w);
    }
-   if (Math.abs(next - old) > 1e-6) {
+   moved += Math.abs(next - old);
+   if (write && Math.abs(next - old) > 1e-6) {
     d[idx] = next;
     changed = true;
    }
   }
  }
- if (!changed) return null;
+ const m3 = moved * COURSE_CELL_M2;
+ if (!write || !changed) return { box: null, m3 };
  field.rev++;
+ return { box: [i0 * CH_STEP, j0 * CH_STEP, (i1 + 1) * CH_STEP, (j1 + 1) * CH_STEP], m3 };
+}
+/** applies a raise, lower, smooth, or flatten brush dab and returns the dirtied world-tile bounding box (or null if unchanged) */
+export function applyCourseHeightBrush(field: CourseHeightField, dab: CourseHeightBrushDab): CourseTileBox | null { return brushPass(field, dab, true).box; }
+/** the earth (m³) a brush dab would move on this field, without changing it (the golf earthwork price) */
+export function estimateCourseBrushM3(field: CourseHeightField, dab: CourseHeightBrushDab): number { return brushPass(field, dab, false).m3; }
+/** the tile box a brush dab may touch (its sample range: applyCourseHeightBrush writes nothing outside it) */
+export function brushBox(dab: CourseHeightBrushDab): CourseTileBox {
+ const { i0, i1, j0, j1 } = brushRange(dab);
  return [i0 * CH_STEP, j0 * CH_STEP, (i1 + 1) * CH_STEP, (j1 + 1) * CH_STEP];
 }
-/** flattens course height to 0 m along a road corridor (and feathers over marginTiles) so roads stay flat and drivable */
-export function flattenCourseCorridor(field: CourseHeightField, road: CourseRoadCorridor): CourseTileBox | null {
+/** the union of two tile boxes (null is empty): the box covering both */
+export function unionBox(a: CourseTileBox | null, b: CourseTileBox | null): CourseTileBox | null {
+ if (!a) return b;
+ if (!b) return a;
+ return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
+}
+/** the corridor's half-width, feather margin, outer reach and inclusive sample range (shared by flattenCourseCorridor and corridorBox) */
+function corridorRange(road: CourseRoadCorridor) {
  const hw = Math.max(0.5, road.halfWidthTiles), margin = Math.max(0, road.marginTiles ?? 2), outer = hw + margin;
  const minX = Math.min(road.ax, road.bx) - outer, maxX = Math.max(road.ax, road.bx) + outer;
  const minY = Math.min(road.ay, road.by) - outer, maxY = Math.max(road.ay, road.by) + outer;
  const i0 = Math.max(0, Math.floor(minX / CH_STEP)), i1 = Math.min(CH_SIZE - 1, Math.ceil(maxX / CH_STEP));
  const j0 = Math.max(0, Math.floor(minY / CH_STEP)), j1 = Math.min(CH_SIZE - 1, Math.ceil(maxY / CH_STEP));
+ return { hw, margin, outer, i0, i1, j0, j1 };
+}
+/** the tile box flattenCourseCorridor may touch for a road segment */
+export function corridorBox(road: CourseRoadCorridor): CourseTileBox {
+ const { i0, i1, j0, j1 } = corridorRange(road);
+ return [i0 * CH_STEP, j0 * CH_STEP, (i1 + 1) * CH_STEP, (j1 + 1) * CH_STEP];
+}
+/** flattens course height to 0 m along a road corridor (and feathers over marginTiles) so roads stay flat and drivable */
+export function flattenCourseCorridor(field: CourseHeightField, road: CourseRoadCorridor): CourseTileBox | null {
+ const { hw, margin, outer, i0, i1, j0, j1 } = corridorRange(road);
  if (i0 > i1 || j0 > j1) return null;
  const dx = road.bx - road.ax, dy = road.by - road.ay, len2 = dx * dx + dy * dy;
  const d = field.data;
@@ -264,3 +299,6 @@ export function loadCourseHeight(chunks: readonly CourseHeightSaveChunk[] | unde
  field.rev = 1;
  return field;
 }
+
+// The undo journal (T027): the height blocks an action changes, for undo and redo.
+export * from './journal';

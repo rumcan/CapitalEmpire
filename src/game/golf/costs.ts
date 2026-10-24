@@ -26,6 +26,9 @@ export const SURFACE_COST: Record<GolfSurface, SurfaceCost> = {
   other: { seed: 0, sod: null, growIn: 0, upkeepYear: 0 },
 };
 
+/** earthworks: $ per m³ of earth moved by the height brush or a piece's height ops (golf mode only) */
+export const EARTHWORK_PER_M3 = 15;
+
 /** reverse lookup from SURFACE_TEX PaintTex ids to their GolfSurface */
 export const TEX_SURFACE: Partial<Record<PaintTex, GolfSurface>> = Object.fromEntries([
   ...(Object.entries(SURFACE_TEX) as [GolfSurface, { tex: PaintTex; radius: number }][]).map(([s, { tex }]) => [tex, s]),
