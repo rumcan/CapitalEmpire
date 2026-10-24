@@ -40,7 +40,7 @@ export function CoursePanel({ game }: { game: Game }) {
         <>
           <div className="mt-2 text-[11px] text-slate-400">Surface (keys 1–7)</div>
           <div className="flex flex-wrap gap-1">
-            {BRUSH_PRESETS.filter(b => brushOk(b.kind)).map(b => <button key={b.kind}className={`chip ${p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.mode === 'draw' ? p.setShape(b.kind) : p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
+            {BRUSH_PRESETS.filter(b => brushOk(b.kind)).map(b => <button key={b.kind} className={`chip ${p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.mode === 'draw' ? p.setShape(b.kind) : p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
           </div>
           <div className="mt-2 text-[11px] text-slate-400">Method</div>
           <div className="flex flex-wrap gap-1">
@@ -65,7 +65,7 @@ export function CoursePanel({ game }: { game: Game }) {
             <>
               <div className="mt-2 text-[11px] text-slate-400">Piece</div>
               <div className="flex flex-wrap gap-1">
-                {PIECE_BUTTONS.filter(b => brushOk(b.kind)).map(b => <button key={b.arch}className={`chip ${p.pieceArch === b.arch ? 'chip-on' : ''}`} onClick={() => p.setPiece(b.arch)}>{b.name}</button>)}
+                {PIECE_BUTTONS.filter(b => brushOk(b.kind)).map(b => <button key={b.arch} className={`chip ${p.pieceArch === b.arch ? 'chip-on' : ''}`} onClick={() => p.setPiece(b.arch)}>{b.name}</button>)}
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-1">
                 {fine('pieceAngle') && <button className="chip" title="R (Shift+R turns back)" onClick={() => p.setPieceOpts({ angle: p.pieceAngle + 15 })}>{`Turn ${p.pieceAngle}°`}</button>}
