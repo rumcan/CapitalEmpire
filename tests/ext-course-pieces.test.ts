@@ -1,7 +1,7 @@
 // Headless tests for the Course tool's click-to-place pieces (T030): npm test (bundled by esbuild, run by node --test; no DOM, no canvas).
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PIECE_BUTTONS, pieceAreas, piecePropsOf, pieceWhy, snapTargets } from '../src/game/ext/course-pieces';
+import { PIECE_BUTTONS, pieceAreas, pieceCost, piecePropsOf, pieceWhy, snapTargets } from '../src/game/ext/course-pieces';
 import { computeSnapPiecePlacement, type SnapTargetRoad } from '../src/game/ext/course-snap';
 import { DEFAULT_STYLE } from '../src/game/paint';
 import { PaintTool } from '../src/game/paint-tool';
@@ -190,5 +190,14 @@ describe('cart path snap (T031)', () => {
     const last = PIECE_BUTTONS.at(-1)!;
     assert.equal(last.arch, 'path-stub');
     assert.equal(last.kind, 'path');
+  });
+});
+
+describe('cart path price (T031)', () => {
+  it('a cart path is laid in the Path surface texture, so golf mode prices it', () => {
+    const pl = computeSnapPiecePlacement({ kind: 'path', archetype: 'path-stub', cursor: { x: 200, y: 200 }, snapEnabled: false, defaultHole: 1 });
+    const areas = pieceAreas(pl);
+    assert.equal(areas.find(a => a.kind === 'path')?.tex, 'spectatorPath');
+    assert.ok(pieceCost(areas) > 0);
   });
 });
