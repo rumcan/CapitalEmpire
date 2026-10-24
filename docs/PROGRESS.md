@@ -3,7 +3,7 @@
 The living status of the project. Every session reads this first and updates it before it ends.
 The full design is in [GAME-PLAN.md](GAME-PLAN.md); the working rules are in [../CLAUDE.md](../CLAUDE.md).
 
-_Last updated: 2026-10-21 evening: **handover** (section "Handover, 2026-10-21" at the end). Earlier 2026-10-21: **the golf events pivot (v6)**: the plan, the review of all development and the golf sprite list
+_Last updated: 2026-10-24 morning: **the UIX revamp** (section "UIX revamp, 2026-10-24" at the end: who builds what, the job board, what is merged). Before that 2026-10-21 evening: **handover** (section "Handover, 2026-10-21" at the end). Earlier 2026-10-21: **the golf events pivot (v6)**: the plan, the review of all development and the golf sprite list
 ([GOLF-PLAN.md](GOLF-PLAN.md), [GOLF-SPRITES.md](GOLF-SPRITES.md)); every plan doc updated; in-flight work parked (section "The golf
 pivot" near the end). Before that 2026-10-20 evening: the art branch claude/sprites-and-people merged (TrickOrTreat sprites, baked lots with a separate fence layer, townspeople, sprite studio with walk-frame fixes; docs/ART-PIPELINE.md); before that 2026-10-20 afternoon (B.3 daily visit businesses, B.4 tickets and cards, B.5 bus and taxi companies); before that 2026-10-19 evening, paint branch (the Paint tool: ground areas, docs/PAINT-TOOL.md); before that 2026-10-19 late night (Phase B started: docs/BUSINESSES.md, B.1 the player places the stadium); before that 2026-10-19 night (road builder stress test and its fixes, junction preview); before that 2026-10-19 evening (rings at awkward joins, road Replace mode, lane look-ahead); before that 2026-10-19 afternoon (3-lane ring fixes, lots and town roads clear of rings, dev unlock-all); before that 2026-10-19 morning (all ten Arena PRs merged; disasters and farms wired); before that 2026-10-18 night: Phase 6R in progress; approach flares done; Arena PRs #1 and #2 reviewed (changes requested). Pushed to origin at `21f2092`._
 
@@ -30,6 +30,7 @@ pivot" near the end). Before that 2026-10-20 evening: the art branch claude/spri
 | Art: trees lit from the right (2026-10-23, main) | **Done**: the sun comes from the right, so no tree is mirrored at random any more. `node scripts/assets/tree-sun.mjs` measures which tree art is lit from the left (the brightness slope across the crown; TREE_SIDE overrides by hand) and writes `src/game/tree-sun.ts`: those trees (world:tree_pine_0/1/2, ref:tree-spruce-blue) are always drawn mirrored, every other tree never (engine.addProp and treeSprites, so lots, scatter, farms, golf holes, town and forest trees). Review: output/tree-sun/contact.png. 28 new trees: the other AI's seven four-view sheets (scarlet maple, amber oak, young spruce, young aspen, tall fir, crimson oak, ember maple) via `node scripts/assets/prep-new-trees.mjs` (sources in art/trees-generated), each view a tree (gen:tree-<name>:ne/se/sw/nw) sized to the library tree of its kind, in the kind-based pools (lots, scatter, farms, golf holes); the forest and town-edge species lists are unchanged |
 | Art: new-art preview and coverage (2026-10-23, main) | Open the game with `?newart` (e.g. http://localhost:5174/?newart): every building, shop and tree without new art is drawn as the new-art one of its class nearest in footprint (src/game/newart.ts, in the sprite layer only: ids, footprints and saves untouched). Coverage: 51 four-view subjects of the 305 T017 requested; 45 of 208 library buildings have new art (all 11 houses, 5 of 15 shops, 19 of 39 business pictures, 10 of 30 lot buildings; none of the 99 recolour variations or 14 baked lots). `node scripts/assets/views-sun.mjs` scores each view's light side; the scores sit near zero for many views (wall colours and lamps), so the check is by eye: all views read lit from the right except possibly expansion:outhouse NE (front-left lit), to regenerate. Unmeasured door gauges: screened porch, swing set, lean-to shed, bbq deck (glass doors) |
 | Shadows: sun on the right (2026-10-23, main) | Defaults are the owner's settings: box (contact) shadows 110%, cast shadows on, sun side 145° (they fall down-left), length 90%, darkness 60%, night Never (cast-shadow.json, engine shadowStrength, NIGHT_DEFAULT; a browser's saved gear-menu values still win). The cast shader (gl.ts VS_CAST) now stands every column of a picture on its own foot, the front edges of its footprint diamond (four floats per sprite: SPRITE_STRIDE 20), drawn as five vertical slices; before, one flat foot line through the middle made the near half of fences and building fronts cast backwards (up-right). The picture below its foot casts nothing. Contact shadows lean toward the shadow side (uShift, 6 px per metre of half extent x length). The baked lot pictures (kind lot) still carry shadows baked with the old settings. **Open: worker benchmark** (the worker PC was off on 2026-10-23): run `scripts/worker/run.sh` from `.claude/worktrees/bench-base` (72317a9, before) and from this branch (after) and compare; on the laptop (AMD integrated) district 4.5% p95 was 9.3-10.5 ms with no usable before run (the before build stalled at the ground bake on the laptop) |
+| UIX revamp (2026-10-24, main; Argon's tickets, section "UIX revamp" at the end) | **In progress.** Merged: T018 ghost module, T019 event/marker ghosts, T020 car park ghosts, T021 toll/bus ghosts, T022 road/lane/bulldoze cursor labels, T024 paint outline ghosts, T025 flat map, T026 course height module, T027 course height data + undo + road flattening, T029 snap maths, T030 course pieces (Course > Build > Pieces), T032 progressive-UI rules, the gate image loaders, the job board. Open: T025b woods buildable (#39), T034 conifers (#41), T027b height brush, T028 sun-right hillshade, T033 progressive unlocks, T030b piece props. T023 dropped (the junction preview already shows the ring and the reason) |
 
 ## Decisions so far
 
@@ -2304,3 +2305,44 @@ Landed since c07271b (all Argon bundles, applied, fixed, tested and browser-chec
   (`City.leave.waits`), its 95th percentile (`RoundResult.leave.p95`) once 95% of the cars are out. `YearEndResult.measured`; the results
   card marks estimates (`Q 0m · Exit 0m est.` until the cars are out). Sim s = game minutes. Browser-checked: exit measured 12 min with 56
   cars. Tests: `tests/results-measured.test.ts`. 900 tests pass.
+
+## UIX revamp, 2026-10-24
+
+**Goal (the owner):** easy to pick up, hard to master. Every build tool shows what it will do before the click (a green/red ghost with a
+one-line label: what, how much, or why not), SimGolf-style click-to-place course pieces with fat dimensional borders and the sun on the
+right, a subtle course height field, a flat map, and tools that unlock step by step in Year 1 with a "Show all tools (Advanced)" switch.
+
+**Who does what.**
+- **Argon** (a Gemini chat) is the big-picture designer: priorities, player-facing goals, owner decisions. Talk to him through Google Docs
+  in Drive folder "Capital Empire - Argon": `TO-CLAUDE.md` (his requests to the Claude leads), `TO-ARGON.md` (status, questions, findings
+  for him). `ARENA-QUEUE.md` is his board (he owns the order).
+- **The Claude lead** turns requests into exact briefs, reviews every PR and merges it (the owner authorised the lead to merge reviewed
+  PRs, 2026-10-24). A **second Claude lead** owns the course-height + lighting track (T027/T027b/T028), then T033 and T030b; it has no
+  GitHub login, so the first lead opens its PRs.
+- **Coders:** Haiku coders (one per ticket, own worktree and `arena/T0xx-*` branch) and a **laptop agent** that works the job board.
+
+**The job board:** GitHub issues labelled `arena` + `status:open` are free tickets (lowest number first); an agent claims with a comment
+and `status:in-progress`, opens a PR with `Closes #n` and a `FINAL PUSH` comment, and relabels `status:in-review`. The issue body is the
+whole brief (files, code, tests, checks, manual check). Live view: https://rumcan.github.io/CapitalEmpire/ (the `gh-pages` branch holds a
+copy of `tools/jobboard/index.html`; re-copy it when the page changes).
+
+**Merged (main, 967 tests pass after T027):** T018 `src/game/ext/ghost-preview` (the shared ghost style); T019 event structure and hole
+marker ghosts (`src/game/ext/event-ghost`); T020 car park and parking row ghosts; T021 toll and bus ghosts; T022 cursor labels for road,
+lane and bulldoze (price, refund or reason); T024 paint/course outline ghosts (red outside owned land before the click); T025 flat map
+(`height.fill(0)` after the rivers are traced; TC.HILL stays as woodland); T026 `src/game/ext/course-height` (4 m grid, ±3 m, brush maths,
+sun-right shade, quality score); T027 the course height in the golf save, undo, piece height ops, roads flatten their corridor,
+earthworks $15/m³; T029 `src/game/ext/course-snap` (piece shapes, fat borders, sun-right bevels); T030 Course > Build > Pieces (one click
+lays every layer in one undo step; R turns, [ ] sizes, Snap toggle; snaps to the generated course by texture, #40); T032
+`src/game/ext/progressive-ui` (not wired yet); gate scripts load images as empty (town:gate runs again).
+
+**Findings and decisions.**
+- A new golf game starts with a full course, a car park and town roads, so the progressive unlocks (T033) need counters of what the
+  *player* did, saved in the golf save; T033 comes after T030 so its first hint points at real tools.
+- The flat map made every forest broadleaf (species depended on height): T034 picks conifer stands from noise.
+- Roads through woodland still became tunnels (HILL = tunnel in structures.ts): T025b makes woods ground for roads and lots and clears
+  the forest trees around anything built (shared tree clearance with the town trees).
+- The terrain hillshade lit from the screen's top-left; T028 moves all shading to the sun on the right (every slope's shading flips).
+- T023 dropped: the junction tool already draws the ring it would build and the reason it cannot.
+
+**Next:** the laptop takes #39 and #41; the second lead lands T027b, T028, then T033 (player-action counters, then App.tsx) and T030b
+(pins, tee markers and pond dressing from placed pieces).
