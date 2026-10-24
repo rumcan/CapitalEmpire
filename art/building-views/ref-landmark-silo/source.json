@@ -1,0 +1,10 @@
+{
+ "id": "ref:landmark-silo",
+ "version": "ref-landmark-silo-4views-v2",
+ "files": {
+  "NE": "05bb49da9fbaa0ff480aef423ba052af7ad10d2ce87e2fe8845c33dadca80ca8",
+  "SE": "7517a8a6b497c7bd704f90a8669e643d829dfba4c3f4ba8b7c7580f2e989e4ee",
+  "SW": "503459a85d80601f8b54beb5146ef8872557e0b8745fe4a44185d6f860fdf8e6",
+  "NW": "5c7c8e5c9abd7ce2e4931e2021cbe6fd9f363c787e570eb10f7e5df141ec6e2f"
+ }
+}

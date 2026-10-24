@@ -1,0 +1,156 @@
+{
+  "id": "golf:leaderboard",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-7612f81f-d15b-4a30-aad0-720abe663e45.png",
+  "prompt": "Precise BACKGROUND EXTRACTION of this one four-view game object sheet. Preserve subject designs, proportions, materials, warm palette and fixed upper-right dusk lighting. Remove the ENTIRE background, floor, ground patches, vegetation, fallen leaves, broad cast shadows, labels/captions and dividing lines. Keep ONLY the four physical structures and integral supports/bases; no environment. Every exterior pixel and holes between supports must be empty TRANSPARENT ALPHA, RGBA PNG. NO backdrop, haze, gradient, floor or glow cloud. Four complete distinct rotations on a SQUARE 2x2 sheet, row-major front+right, right+back, back+left, left+front, generous transparent gutters and outer margins. Keep existing object views in their own cells, shrink all uniformly only if needed to avoid clipping. Do not add or restyle anything; change only unwanted background/layout. No text.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/golf-leaderboard-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/golf-leaderboard-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art\\theme-consistency\\generated\\buildings\\golf-leaderboard-4views-v2.png",
+    "originalSheetSha256": "4b92e5f7a5baa79965f1d9154f94dabf08313b40d93fbf0f68bc339f82605154",
+    "originalDimensions": [
+      1536,
+      1024
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "outputSheetSha256": "f9eb0edba2466657cc780589043572ed850fde09e8b37f98e33544d6b8658e2e",
+    "cellSize": 1152,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "rowGap": {
+      "start": 483,
+      "endExclusive": 487,
+      "midpoint": 485,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 656,
+        "endExclusive": 924,
+        "midpoint": 790,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 620,
+        "endExclusive": 904,
+        "midpoint": 762,
+        "alphaThreshold": 8
+      }
+    ],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 756,
+          "height": 485
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 151112,
+        "visibleAlphaPixelsThreshold8": 142218,
+        "nonzeroRgbaSha256": "76d4b901f4ab51c60a759a742b4fac29972c1445993d934db872506aa6babd49",
+        "destination": {
+          "left": 198,
+          "top": 333,
+          "width": 756,
+          "height": 485
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 807,
+          "top": 9,
+          "width": 713,
+          "height": 476
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 131471,
+        "visibleAlphaPixelsThreshold8": 121124,
+        "nonzeroRgbaSha256": "cc9cee8df98a0ac6fe6f41c5ad543dc71563e1ca0f3d328099f774f03293c5a8",
+        "destination": {
+          "left": 1371,
+          "top": 338,
+          "width": 713,
+          "height": 476
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 65,
+          "top": 493,
+          "width": 697,
+          "height": 484
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 146410,
+        "visibleAlphaPixelsThreshold8": 137063,
+        "nonzeroRgbaSha256": "5693a382b8f81de6af2641adabc51ded275ab50800592a6abc0be7148db2193d",
+        "destination": {
+          "left": 227,
+          "top": 1486,
+          "width": 697,
+          "height": 484
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 789,
+          "top": 485,
+          "width": 667,
+          "height": 522
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 179548,
+        "visibleAlphaPixelsThreshold8": 171054,
+        "nonzeroRgbaSha256": "9cd7814f616347aaba475259fe3a7c556f2615bce8c96a9c1ffebce8a7bf59f4",
+        "destination": {
+          "left": 1394,
+          "top": 1467,
+          "width": 667,
+          "height": 522
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 608541,
+      "visibleAlphaPixelsThreshold8": 571459,
+      "nonzeroRgbaSha256": "6dce285aff1d1f2c70d57aee21c22d912b0c33cdf1aa490fae76d5186592cb42"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "integrationReview": {
+    "alpha": "passed",
+    "geometry": "passed",
+    "themeAssessment": "Muted dark green board, warm timber, navy shingles and practical amber lamps fit master; extracted backdrop/labels/landscaped terrain absent in actual composite.",
+    "terrainOrCaptionsVisible": false,
+    "gameScaleRegistered": false,
+    "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+    "correctionBrief": null
+  }
+}

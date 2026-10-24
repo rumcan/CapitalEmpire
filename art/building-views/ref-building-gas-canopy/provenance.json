@@ -1,0 +1,156 @@
+{
+  "id": "ref:building-gas-canopy",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-9293ec44-6096-4a96-aa29-a5dbc7619e9e.png",
+  "prompt": "Precise BACKGROUND EXTRACTION of this one four-view game object sheet. Preserve subject designs, proportions, materials, warm palette and fixed upper-right dusk lighting. Remove the ENTIRE background, floor, ground patches, vegetation, fallen leaves, broad cast shadows, labels/captions and dividing lines. Keep ONLY the four physical structures and integral supports/bases; no environment. Every exterior pixel and holes between supports must be empty TRANSPARENT ALPHA, RGBA PNG. NO backdrop, haze, gradient, floor or glow cloud. Four complete distinct rotations on a SQUARE 2x2 sheet, row-major front+right, right+back, back+left, left+front, generous transparent gutters and outer margins. Keep existing object views in their own cells, shrink all uniformly only if needed to avoid clipping. Do not add or restyle anything; change only unwanted background/layout. No text.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/ref-building-gas-canopy-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/ref-building-gas-canopy-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art\\theme-consistency\\generated\\buildings\\ref-building-gas-canopy-4views-v2.png",
+    "originalSheetSha256": "3b260ba54d38bfd13f8871db0016f30db81166cc3aeeb28781f25ca32698e40a",
+    "originalDimensions": [
+      1536,
+      1024
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "outputSheetSha256": "829fed07eabba9e06974e62abc6b75326fd8bc8f0f6970294f0c34fadc7d008b",
+    "cellSize": 1152,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "rowGap": {
+      "start": 494,
+      "endExclusive": 512,
+      "midpoint": 503,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 696,
+        "endExclusive": 829,
+        "midpoint": 762,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 693,
+        "endExclusive": 828,
+        "midpoint": 760,
+        "alphaThreshold": 8
+      }
+    ],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 9,
+          "width": 762,
+          "height": 494
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 180391,
+        "visibleAlphaPixelsThreshold8": 163080,
+        "nonzeroRgbaSha256": "5223ee37011c3ac1ecb33a05d791636e4337a8280bdb10b46de9a89728a5bfeb",
+        "destination": {
+          "left": 195,
+          "top": 329,
+          "width": 762,
+          "height": 494
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 762,
+          "top": 5,
+          "width": 760,
+          "height": 498
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 182594,
+        "visibleAlphaPixelsThreshold8": 165705,
+        "nonzeroRgbaSha256": "b542831d5e22086c901a20cc31bba9e8b1b24be7168987f58f411e52eaa2351d",
+        "destination": {
+          "left": 1348,
+          "top": 327,
+          "width": 760,
+          "height": 498
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 503,
+          "width": 760,
+          "height": 521
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 184755,
+        "visibleAlphaPixelsThreshold8": 166263,
+        "nonzeroRgbaSha256": "502b1452899a497a6285cf92f8de3bac89f67ac4bcccdaddee80d0d852726f33",
+        "destination": {
+          "left": 196,
+          "top": 1467,
+          "width": 760,
+          "height": 521
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 760,
+          "top": 503,
+          "width": 758,
+          "height": 507
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 187950,
+        "visibleAlphaPixelsThreshold8": 169528,
+        "nonzeroRgbaSha256": "9ebaf2ff8153d67354c5b664122eb91403413ef2cb9f28acfe347afb9cecdab5",
+        "destination": {
+          "left": 1349,
+          "top": 1474,
+          "width": 758,
+          "height": 507
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 735690,
+      "visibleAlphaPixelsThreshold8": 664576,
+      "nonzeroRgbaSha256": "38d5a4bb605a9669671aa144ea0a755bcabf26e97f40733ef650fc650bb3fde0"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "integrationReview": {
+    "alpha": "passed",
+    "geometry": "passed",
+    "themeAssessment": "Slate roof, cream columns, red business trim, weathered pumps and warm practical light fit master; original floor/background/dividers removed.",
+    "terrainOrCaptionsVisible": false,
+    "gameScaleRegistered": false,
+    "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+    "correctionBrief": null
+  }
+}

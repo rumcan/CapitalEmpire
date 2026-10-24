@@ -1,0 +1,10 @@
+{
+ "id": "ref:landmark-windmill",
+ "version": "ref-landmark-windmill-4views-v1",
+ "files": {
+  "NE": "953092625c9fb7349cdd4a34999365cae5f05ab434ffdb349cb8d0f93468ff92",
+  "SE": "8b409e2cb4250fddcd6cad14a36c1ec4d495b358815ca8f0d4366036c9536866",
+  "SW": "74022a8ce72ed3cc842f9a2095b458d506f6c9985101496e6561f24957c82af9",
+  "NW": "1daf4d13164b65a1ce761aa1b6c744f6477430f6498d817638dcb80ba96c9612"
+ }
+}

@@ -1,0 +1,156 @@
+{
+  "id": "golf:food-tent",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-16d76294-9758-444d-a68d-32478af046c4.png",
+  "prompt": "BACKGROUND EXTRACTION / precise image edit. This is one existing four-view game sprite sheet. Preserve the exact four subject designs, their four different rotations, materials, colours, upper-right dusk lighting and cell positions. Remove every paving stone, ground patch, fallen leaf and broad ground shadow. Keep ONLY the four actual canvas tents with their integral counters/stools/equipment. The ENTIRE area outside each object's physical silhouette MUST be EMPTY TRANSPARENT ALPHA (RGBA PNG), including all four corners, gutters and holes between supports. NO floor, backdrop, haze, checkerboard, gradient, glow cloud or cast shadow. Output the same four independent cutout sprites on one square transparent PNG. No scene rendering. Do not add anything. Correct background only; do not invent or change architecture.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/golf-food-tent-4views-v1.png"
+  ],
+  "corrects": "golf-food-tent-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/golf-food-tent-4views-v2.png",
+    "originalSheetSha256": "453ac8c57a7c54d98f85dec5f95298a9458dd1c5424ae0505b92c0615a54b51a",
+    "originalDimensions": [
+      1536,
+      1024
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "outputSheetSha256": "237331004d3b852693fcf5d74e26b7f748cbb98f2fec249064a01797c315ecc5",
+    "cellSize": 1152,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "rowGap": {
+      "start": 497,
+      "endExclusive": 504,
+      "midpoint": 500,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 659,
+        "endExclusive": 869,
+        "midpoint": 764,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 664,
+        "endExclusive": 873,
+        "midpoint": 768,
+        "alphaThreshold": 8
+      }
+    ],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 0,
+          "width": 740,
+          "height": 500
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 188432,
+        "visibleAlphaPixelsThreshold8": 177793,
+        "nonzeroRgbaSha256": "1fa927360212cf8ab1670af182457a7b5d59c8ccd4778f6e7740a85ac9d2b7aa",
+        "destination": {
+          "left": 206,
+          "top": 326,
+          "width": 740,
+          "height": 500
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 813,
+          "top": 0,
+          "width": 639,
+          "height": 500
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 184864,
+        "visibleAlphaPixelsThreshold8": 175326,
+        "nonzeroRgbaSha256": "029fd0c54a0ffbaf89608fafb152523cd594355d4e42b66000f06f1f59495179",
+        "destination": {
+          "left": 1408,
+          "top": 326,
+          "width": 639,
+          "height": 500
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 0,
+          "top": 500,
+          "width": 768,
+          "height": 500
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 181100,
+        "visibleAlphaPixelsThreshold8": 171837,
+        "nonzeroRgbaSha256": "0d903f24ed0497fc7b17ff0d116216ae63f99d616539e96fdd95f15fb3dc5c93",
+        "destination": {
+          "left": 192,
+          "top": 1478,
+          "width": 768,
+          "height": 500
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 768,
+          "top": 500,
+          "width": 746,
+          "height": 499
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 185422,
+        "visibleAlphaPixelsThreshold8": 175093,
+        "nonzeroRgbaSha256": "b6b8f22bbcda3fb966c9f5cae2ffbe5003c717b8a2db2c961c355f0bf6e82162",
+        "destination": {
+          "left": 1355,
+          "top": 1478,
+          "width": 746,
+          "height": 499
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 739818,
+      "visibleAlphaPixelsThreshold8": 700049,
+      "nonzeroRgbaSha256": "8ff8a9e19f19a5551cd73d5bd8d15a7c0a545cb54a4efab06537b13942e744eb"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "integrationReview": {
+    "alpha": "passed",
+    "geometry": "passed",
+    "themeAssessment": "Warm cream canvas, timber counters, practical amber bulbs and detailed restrained materials fit master dusk; parent approved corrected v3.",
+    "terrainOrCaptionsVisible": false,
+    "gameScaleRegistered": false,
+    "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+    "correctionBrief": null
+  }
+}

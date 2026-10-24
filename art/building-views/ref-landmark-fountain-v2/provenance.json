@@ -1,0 +1,156 @@
+{
+  "id": "ref:landmark-fountain-v2",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-c5629f06-5b5e-475e-8547-04a10b380713.png",
+  "prompt": "Precise BACKGROUND EXTRACTION of this one four-view game object sheet. Preserve subject designs, proportions, materials, warm palette and fixed upper-right dusk lighting. Remove the ENTIRE background, floor, ground patches, vegetation, fallen leaves, broad cast shadows, labels/captions and dividing lines. Keep ONLY the four physical structures and integral supports/bases; no environment. Every exterior pixel and holes between supports must be empty TRANSPARENT ALPHA, RGBA PNG. NO backdrop, haze, gradient, floor or glow cloud. Four complete distinct rotations on a SQUARE 2x2 sheet, row-major front+right, right+back, back+left, left+front, generous transparent gutters and outer margins. Keep existing object views in their own cells, shrink all uniformly only if needed to avoid clipping. Do not add or restyle anything; change only unwanted background/layout. No text.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/ref-landmark-fountain-v2-4views-v1.png"
+  ],
+  "corrects": "art/theme-consistency/generated/buildings/ref-landmark-fountain-v2-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art\\theme-consistency\\generated\\buildings\\ref-landmark-fountain-v2-4views-v2.png",
+    "originalSheetSha256": "c67c3cab618bafa91da6bdc893efa0705e5c797f7aebde48a36b181b834de808",
+    "originalDimensions": [
+      1536,
+      1024
+    ],
+    "outputDimensions": [
+      2048,
+      2048
+    ],
+    "outputSheetSha256": "a6fe95b9ed33eb54c85c4bd091eedc682bf48b146b55f3a0afef2a08debcf9c4",
+    "cellSize": 1024,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "rowGap": {
+      "start": 468,
+      "endExclusive": 509,
+      "midpoint": 488,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 650,
+        "endExclusive": 895,
+        "midpoint": 772,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 670,
+        "endExclusive": 875,
+        "midpoint": 772,
+        "alphaThreshold": 8
+      }
+    ],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 143,
+          "top": 17,
+          "width": 573,
+          "height": 461
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 108656,
+        "visibleAlphaPixelsThreshold8": 102351,
+        "nonzeroRgbaSha256": "2820c9194e967e50c48ec620cd2bd100cbb0126ff0992f6ed20e30e26b15f764",
+        "destination": {
+          "left": 225,
+          "top": 281,
+          "width": 573,
+          "height": 461
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 813,
+          "top": 21,
+          "width": 703,
+          "height": 467
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 115298,
+        "visibleAlphaPixelsThreshold8": 109209,
+        "nonzeroRgbaSha256": "54c9d2852efa55cb5a2bba0b39afc0f1a19997ac56e27f0d301d497a155ccc35",
+        "destination": {
+          "left": 1184,
+          "top": 278,
+          "width": 703,
+          "height": 467
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 117,
+          "top": 501,
+          "width": 655,
+          "height": 471
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 118404,
+        "visibleAlphaPixelsThreshold8": 112105,
+        "nonzeroRgbaSha256": "8b316d54ab389c50546f069db945d35480a43f43c1d0f24f46f78fbe14f301bc",
+        "destination": {
+          "left": 184,
+          "top": 1300,
+          "width": 655,
+          "height": 471
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 772,
+          "top": 508,
+          "width": 656,
+          "height": 485
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 120711,
+        "visibleAlphaPixelsThreshold8": 113351,
+        "nonzeroRgbaSha256": "495ddf03c42292e9d7ee4a4b5e649f39fa7d9423feed9a041c606b297168d4a4",
+        "destination": {
+          "left": 1208,
+          "top": 1293,
+          "width": 656,
+          "height": 485
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 463069,
+      "visibleAlphaPixelsThreshold8": 437016,
+      "nonzeroRgbaSha256": "3463ded1220c50b4d6ad93dcd6334bd8f96a5a4693d9ea8ad3ededfe16555d78"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "integrationReview": {
+    "alpha": "passed",
+    "geometry": "passed",
+    "themeAssessment": "Warm pale stone, restrained blue water and gold highlight fit master material detail; detached paving/foliage/captions removed.",
+    "terrainOrCaptionsVisible": false,
+    "gameScaleRegistered": false,
+    "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+    "correctionBrief": null
+  }
+}

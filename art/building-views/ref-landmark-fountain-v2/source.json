@@ -1,0 +1,10 @@
+{
+ "id": "ref:landmark-fountain-v2",
+ "version": "ref-landmark-fountain-v2-4views-v3",
+ "files": {
+  "NE": "6c7f82ff13edd1899115666aa6d4ba4cb21e8f6bd16261f3c4f9edfb627ae150",
+  "SE": "e9bdc63e688f4b05c05a6954a9a5ef2f625abb7dbf329dd3ef4ffd67a764a6b2",
+  "SW": "e68ccde8342a2a3faef51ac1a387ed7d3389d2eb951424485b4dc7c71201ad6c",
+  "NW": "c533d5dbb81e8f9632434a8ffb8ea7db5eea45745cf13e9a893cd2105a452a77"
+ }
+}

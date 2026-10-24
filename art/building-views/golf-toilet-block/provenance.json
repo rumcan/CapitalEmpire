@@ -1,0 +1,156 @@
+{
+  "id": "golf:toilet-block",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-b5782692-7eb4-41d1-96a1-9d49769c5586.png",
+  "prompt": "BACKGROUND EXTRACTION / precise image edit. This is one existing four-view game sprite sheet. Preserve the exact four subject designs, their four different rotations, materials, colours, upper-right dusk lighting and cell positions. Remove every grey/brown ground surface, leaves, plants, ground shadow and ALL captions and quadrant divider lines. Keep ONLY each four-toilet assembly, integral timber platform/ramp and attached handwash station; remove decorative lanterns. The ENTIRE area outside each object's physical silhouette MUST be EMPTY TRANSPARENT ALPHA (RGBA PNG), including all four corners, gutters and holes between supports. NO floor, backdrop, haze, checkerboard, gradient, glow cloud or cast shadow. Output the same four independent cutout sprites on one square transparent PNG. No scene rendering. Do not add anything. Correct background only; do not invent or change architecture.",
+  "references": [
+    "E:/Repos/CapitalEmpire/art/theme-consistency/generated/buildings/golf-toilet-block-4views-v1.png"
+  ],
+  "corrects": "golf-toilet-block-4views-v1.png",
+  "integrationStatus": "ready",
+  "integrationReason": "Source review passed actual-alpha blue composite, rigid visible-facade cycle, coherent Maple-master materials/detail/upper-right dusk light and clear equal-cell packing. Game scale/street integration remains to be reviewed.",
+  "layoutCorrection": {
+    "method": "Pixel-preserving clear-gap split and centred four-cell repack; no generation, resizing or repainting.",
+    "originalSheet": "art/theme-consistency/generated/buildings/golf-toilet-block-4views-v2.png",
+    "originalSheetSha256": "b35b2e1b6d1dcb2d14d47c1a051d9096254cb7048cc501d9fa71fc86ad78a295",
+    "originalDimensions": [
+      1536,
+      1024
+    ],
+    "outputDimensions": [
+      2304,
+      2304
+    ],
+    "outputSheetSha256": "bf8f47c3519f3bc31f89f7a27f3e229d84fda99eefa702ecc7430946b2db2c7e",
+    "cellSize": 1152,
+    "minimumCellMarginFraction": 0.15,
+    "padding": 4,
+    "rowGap": {
+      "start": 497,
+      "endExclusive": 507,
+      "midpoint": 502,
+      "alphaThreshold": 8
+    },
+    "columnGaps": [
+      {
+        "row": 0,
+        "start": 739,
+        "endExclusive": 850,
+        "midpoint": 794,
+        "alphaThreshold": 8
+      },
+      {
+        "row": 1,
+        "start": 718,
+        "endExclusive": 830,
+        "midpoint": 774,
+        "alphaThreshold": 8
+      }
+    ],
+    "extractionRects": [
+      {
+        "direction": "NE",
+        "row": 0,
+        "column": 0,
+        "extraction": {
+          "left": 27,
+          "top": 5,
+          "width": 767,
+          "height": 497
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 198844,
+        "visibleAlphaPixelsThreshold8": 188167,
+        "nonzeroRgbaSha256": "441ee73c3aace18b0a47a9f1c7373a80a185e4c23e45cd6a1a28547f15cacf66",
+        "destination": {
+          "left": 192,
+          "top": 327,
+          "width": 767,
+          "height": 497
+        }
+      },
+      {
+        "direction": "SE",
+        "row": 0,
+        "column": 1,
+        "extraction": {
+          "left": 794,
+          "top": 5,
+          "width": 714,
+          "height": 497
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 165706,
+        "visibleAlphaPixelsThreshold8": 156229,
+        "nonzeroRgbaSha256": "218ada1318d10c5810c9047fe7a240b091874396cc0a76487054d6c1e634259c",
+        "destination": {
+          "left": 1371,
+          "top": 327,
+          "width": 714,
+          "height": 497
+        }
+      },
+      {
+        "direction": "SW",
+        "row": 1,
+        "column": 0,
+        "extraction": {
+          "left": 27,
+          "top": 502,
+          "width": 731,
+          "height": 510
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 180364,
+        "visibleAlphaPixelsThreshold8": 171971,
+        "nonzeroRgbaSha256": "b43fe000ce15f4608819aa6eee4d8cc277a7acb9351f0203c9e271164557c948",
+        "destination": {
+          "left": 210,
+          "top": 1473,
+          "width": 731,
+          "height": 510
+        }
+      },
+      {
+        "direction": "NW",
+        "row": 1,
+        "column": 1,
+        "extraction": {
+          "left": 793,
+          "top": 502,
+          "width": 721,
+          "height": 504
+        },
+        "sourceTouchesCanvasThreshold8": false,
+        "nonzeroAlphaPixels": 192686,
+        "visibleAlphaPixelsThreshold8": 185447,
+        "nonzeroRgbaSha256": "9652bad0273f9b022be8416dda0ab51eb1c1ca3b64b7d4f82af6b83482d43f9e",
+        "destination": {
+          "left": 1367,
+          "top": 1476,
+          "width": 721,
+          "height": 504
+        }
+      }
+    ],
+    "sourcePixelCounts": {
+      "nonzeroAlphaPixels": 737600,
+      "visibleAlphaPixelsThreshold8": 701814,
+      "nonzeroRgbaSha256": "8972aeb8474cb2cd8aeb749163721d199521ca73fc34b430a9678d03559f13e9"
+    },
+    "nonzeroAndVisiblePixelConservation": true,
+    "exactVisibleRgbaConservation": true,
+    "visualReviewRequired": true,
+    "warnings": []
+  },
+  "integrationReview": {
+    "alpha": "passed",
+    "geometry": "passed",
+    "themeAssessment": "Muted green cubicles, cream roofs and warm timber platform fit master exposure/material detail; parent approved corrected v3.",
+    "terrainOrCaptionsVisible": false,
+    "gameScaleRegistered": false,
+    "reviewContact": "output/building-priority/mixed-standalone-review-2.png",
+    "correctionBrief": null
+  }
+}

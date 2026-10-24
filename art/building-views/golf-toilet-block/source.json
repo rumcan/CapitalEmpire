@@ -1,0 +1,10 @@
+{
+ "id": "golf:toilet-block",
+ "version": "golf-toilet-block-4views-v3",
+ "files": {
+  "NE": "807a8ce07db9052f58d27f0fa46fa382979d2a88e2f796a9e1e267289eedd1d2",
+  "SE": "81356327ee9534ad4598fde5bd4485604789322e8a14c03e05d11cb398ce96a0",
+  "SW": "4d525f8fe0b9111b7437906a1f369962615ae29e38a44fd339b57448930343a1",
+  "NW": "9d30e2da0a13e3eeca82142608e8005dd756b4d8be9133344004b8e4b4564c74"
+ }
+}

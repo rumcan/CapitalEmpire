@@ -29,7 +29,7 @@
   "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
   "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
   "integrationStatus": "ready",
-  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "integrationReason": "Parent explicitly approved proven physical-identity reuse from clean selected existing base; no generation/pixel changes.",
   "freshVisualApproval": false,
   "copiedFiles": [
     {

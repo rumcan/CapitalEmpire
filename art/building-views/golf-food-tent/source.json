@@ -1,0 +1,10 @@
+{
+ "id": "golf:food-tent",
+ "version": "golf-food-tent-4views-v3",
+ "files": {
+  "NE": "81cd525fb0bfacbdfcb803906ec9572d7671902356fea800d324de06c10bdf24",
+  "SE": "e1329174264bc43634f35c922faac458ae23fb8a1c3a850ffd7cf73dead7372b",
+  "SW": "c661129bce39a94de435c4c4c638918cf6b82cba62417d293ce0a0b5a6625b0c",
+  "NW": "d85827d9a4b5449d53ef1c6367fc6fd3ca6a6be4e2f0d510e915223ebe66ff68"
+ }
+}

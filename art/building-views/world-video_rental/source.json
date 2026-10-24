@@ -1,0 +1,10 @@
+{
+ "id": "world:video_rental",
+ "version": "world-video_rental-4views-v2",
+ "files": {
+  "NE": "4e909c83906d4a80792b33e196532c6c210ecfaac009b79415297839b70b60c3",
+  "SE": "b464b1af1d63d986136ed88b39c578e53671176798acc5671c092bc9185e5704",
+  "SW": "7ef9bbecdd27795285738cfefe9a938b6f96b3ed0e10d39cc284be00368c89ef",
+  "NW": "da61e8f8f30ba5d2dbd44004284b08de73f6d3cb3fe8b499ffb5a24792925a01"
+ }
+}
