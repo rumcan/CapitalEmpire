@@ -81,6 +81,14 @@ section.prs h2 { font: 800 18px var(--display); margin: 0 0 10px; }
 .st.done { background: var(--green-soft); color: var(--fairway); } .st.review { background: var(--flag-soft); color: var(--flag); }
 .st.prog { background: var(--sand-soft); color: var(--sand); } .st.open { background: var(--sky-soft); color: var(--sky); }
 .st.planned, .st.dropped { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.rel-wrap { max-width: 1400px; margin: 0 auto 26px; }
+.rel-wrap > h2, .tracks-h { max-width: 1400px; margin: 0 auto 10px; font: 800 20px var(--display); }
+.rel-wrap > p { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.releases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.release { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--rel); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.release h3 { font: 800 18px var(--display); margin: 0 0 2px; } .release p.goal { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.r-alpha { --rel: var(--sky); } .r-beta { --rel: var(--sand); } .r-rc { --rel: var(--flag); }
+@media (max-width: 900px) { .releases { grid-template-columns: minmax(0, 1fr); } }
 .step b { font-weight: 600; } .step span.note { color: var(--muted); } .step a { color: inherit; }
 </style>
 </head>
@@ -103,7 +111,11 @@ section.prs h2 { font: 800 18px var(--display); margin: 0 0 10px; }
 <main class="board" id="board"></main>
 <section class="prs"><h2>Pull requests</h2><div class="prlist" id="prs"></div></section>
 </div>
-<div id="view-roadmap" hidden><div class="roadmap" id="roadmap"></div></div>
+<div id="view-roadmap" hidden>
+<section class="rel-wrap"><h2>Road to 1.0</h2><p>Planning tickets (label <b>plan</b>): each ends in a short plan in docs/plans/ and coding tickets on the board. The leads and Argon do these; the coding agents do not.</p><div class="releases" id="releases"></div></section>
+<h2 class="tracks-h">Tracks in progress</h2>
+<div class="roadmap" id="roadmap"></div>
+</div>
 <script>
 // Reads one GitHub API page (the 100 most recently updated issues and PRs) and sorts the arena tickets by their status label.
 // Conditional requests (ETag): an unchanged answer is a 304, which does not count against the 60-an-hour limit for anonymous callers.
@@ -172,6 +184,43 @@ const ROADMAP = [
     { title: 'Ship the art as separate files (the single-file build is 277 MB)', planned: true },
   ] },
 ];
+// The road to 1.0: the three release gates and the planning tickets each needs (GitHub issues labelled plan + release:<rel>).
+const RELEASES = [
+  { key: 'alpha', name: 'Alpha 1.0', goal: 'The whole core loop plays end to end: a new golf game, a season of building, tournament crowds on the roads, results, the next season (M1-M5).' },
+  { key: 'beta', name: 'Beta 1.0', goal: 'Content complete and balanced, in the hands of outside playtesters: all art in one consistent look, the 1.0 features chosen, sound and settings.' },
+  { key: 'rc', name: 'Release candidate 1.0', goal: 'Ready to ship: no known blockers, budgets met on the minimum machine, saves safe, packaged and licensed.' },
+];
+const PLANS = [
+    { id: 'P01', rel: 'alpha', issue: 64, title: 'Alpha 1.0: scope and exit criteria' },
+    { id: 'P02', rel: 'alpha', issue: 65, title: 'M2 Crowds: finish and verify' },
+    { id: 'P03', rel: 'alpha', issue: 66, title: 'M3 Transport and roads on the day' },
+    { id: 'P04', rel: 'alpha', issue: 67, title: 'M4 The season loop and the "what next" HUD' },
+    { id: 'P05', rel: 'alpha', issue: 68, title: 'M5 Balance: economy, upkeep, crowd per tier' },
+    { id: 'P06', rel: 'alpha', issue: 69, title: 'Year 1 onboarding: a guided first tournament' },
+    { id: 'P07', rel: 'alpha', issue: 70, title: 'Save versioning and migrations' },
+    { id: 'P08', rel: 'alpha', issue: 71, title: 'Build size and asset delivery' },
+    { id: 'P09', rel: 'beta', issue: 72, title: 'Beta 1.0: scope, exit criteria and the playtest program' },
+    { id: 'P10', rel: 'beta', issue: 73, title: 'Art completion plan' },
+    { id: 'P11', rel: 'beta', issue: 74, title: 'Which after-MVP features make 1.0' },
+    { id: 'P12', rel: 'beta', issue: 75, title: 'Progression, difficulty and campaign length' },
+    { id: 'P13', rel: 'beta', issue: 76, title: 'Audio plan' },
+    { id: 'P14', rel: 'beta', issue: 77, title: 'Settings and accessibility' },
+    { id: 'P15', rel: 'rc', issue: 78, title: 'Release candidate: exit criteria, QA matrix and soak tests' },
+    { id: 'P16', rel: 'rc', issue: 79, title: 'Distribution and platform' },
+    { id: 'P17', rel: 'rc', issue: 80, title: 'Localization and number formats' },
+    { id: 'P18', rel: 'rc', issue: 81, title: 'Licences, art provenance, credits and store assets' },
+];
+/** a planning ticket's status words, by its issue's board column */
+const PLAN_ST = { open: ['planned', 'To plan'], prog: ['prog', 'Planning'], review: ['review', 'For approval'], done: ['done', 'Planned'] };
+function renderReleases() {
+  $('releases').innerHTML = RELEASES.map(r => {
+    const rows = PLANS.filter(p => p.rel === r.key).map(p => {
+      const it = items.find(x => !x.pull_request && x.number === p.issue), [cls, name] = PLAN_ST[it ? colOf(it) : 'open'], url = it ? it.html_url : `https://github.com/${REPO}/issues/${p.issue}`;
+      return `<div class="step"><span class="st ${cls}">${name}</span><span><a href="${esc(url)}" target="_blank" rel="noopener"><b>${esc(p.id)}</b> ${esc(p.title)}</a></span></div>`;
+    }).join('');
+    return `<section class="release r-${r.key}"><h3>${esc(r.name)}</h3><p class="goal">${esc(r.goal)}</p>${rows}</section>`;
+  }).join('');
+}
 const ST_NAME = { done: 'Done', review: 'In review', prog: 'In progress', open: 'Open', planned: 'Planned', dropped: 'Dropped' };
 /** a roadmap step's status and its link, from the step's flags or the live GitHub data */
 function stepState(s) {
@@ -185,6 +234,7 @@ function stepState(s) {
   return { st: 'planned' };
 }
 function renderRoadmap() {
+  renderReleases();
   $('roadmap').innerHTML = ROADMAP.map(t => {
     const states = t.steps.map(stepState), live = t.steps.filter(s => !s.dropped).length, done = states.filter(x => x.st === 'done').length;
     return `<section class="track"><h2>${esc(t.name)}</h2><p class="goal">${esc(t.goal)}</p><div class="bar" title="${done} of ${live} done"><i style="width:${live ? Math.round(100 * done / live) : 0}%"></i></div>${t.steps.map((s, i) => { const x = states[i], label = `${s.id ? `<b>${esc(s.id)}</b> ` : ''}${esc(s.title)}`;
