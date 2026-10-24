@@ -424,8 +424,10 @@ export class City {
   }
   /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
   setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[] } | null): TownEvent[] {
-    // a range start's start and exits (plan P22) are kept for the range-start rules that read them (T088-T094)
-    this.golf = g ? { tier: g.tier, rep: g.rep, start: g.start, exits: g.exits } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
+    // a range start's start and exits (plan P22) are kept for the range-start rules that read them (T088-T094); an old start's golf state has
+    // neither key, exactly as before
+    this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
+    if (this.golf && g?.start === 'range') { this.golf.start = 'range'; if (g.exits) this.golf.exits = g.exits; }
     // the town's lots inside the course go now (and every game hour: a loaded town's lots may come after this): the events to post
     const ev: TownEvent[] = []; this.clearCourse(ev);
     return ev;
