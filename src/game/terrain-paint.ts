@@ -3,14 +3,14 @@ import { MAP, clamp } from './iso';
 import { HS, HSTEP, TC, sampleField, type WaterPoint } from './terrain/types';
 import { fbm, smoothstep, type Noise } from './terrain/noise';
 import type { BBox } from './network';
+import { SUN_RIGHT_LIGHT, sampleCourseGrid } from './ext/course-height';
 
 /** a canvas-like path target (Path2D satisfies it) */
 export interface PathSink { moveTo(x: number, y: number): void; lineTo(x: number, y: number): void; arc(x: number, y: number, r: number, a0: number, a1: number): void; closePath(): void }
 
 const EXAG = 1.5;
-/** light from the screen top-left, normalised */
-const LX = -1, LY = -0.35, LZ = 1.1, LLEN = Math.hypot(LX, LY, LZ);
-const lx = LX / LLEN, ly = LY / LLEN, lz = LZ / LLEN;
+/** the light: the sun on the right of the isometric screen (+tileX, −tileY) */
+const { lx, ly, lz } = SUN_RIGHT_LIGHT;
 
 /** hillshade per height sample: 0 on flat ground, < 0 in shadow, > 0 lit */
 export function shadeField(height: Float32Array): Float32Array {
@@ -27,14 +27,14 @@ export function shadeField(height: Float32Array): Float32Array {
   return out;
 }
 
-/** an RGBA overlay of the shade over tiles [x0, x0+w) x [y0, y0+h) at res px per tile */
-export function shadeRGBA(shade: Float32Array, x0: number, y0: number, w: number, h: number, res: number): { data: Uint8ClampedArray; W: number; H: number } {
+/** an RGBA overlay of the shade over tiles [x0, x0+w) x [y0, y0+h) at res px per tile; course (optional) is the course height's shade, added to the terrain's */
+export function shadeRGBA(shade: Float32Array, x0: number, y0: number, w: number, h: number, res: number, course: Float32Array | null = null): { data: Uint8ClampedArray; W: number; H: number } {
   const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res));
   const data = new Uint8ClampedArray(W * H * 4);
   for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
     const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, k = (v * W + u) * 4;
     if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) continue; // off the map: no shade (clamped samples would streak)
-    const s = sampleField(shade, tx, ty);
+    const s = sampleField(shade, tx, ty) + (course ? sampleCourseGrid(course, tx, ty) : 0);
     if (s < 0) { data[k] = 14; data[k + 1] = 10; data[k + 2] = 34; data[k + 3] = Math.min(0.5, -s * 1.6) * 255; }
     else { data[k] = 190; data[k + 1] = 200; data[k + 2] = 230; data[k + 3] = Math.min(0.12, s * 0.6) * 255; }
   }

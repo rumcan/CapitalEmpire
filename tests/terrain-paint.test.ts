@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
 import { HS, TC, type WaterPoint } from '../src/game/terrain/types';
 import { makeNoise } from '../src/game/terrain/noise';
+import { CH_SIZE } from '../src/game/ext/course-height';
 import { shadeField, shadeRGBA, classAlpha, rockAlpha, waterShape, waterBox, type PathSink } from '../src/game/terrain-paint';
 
 /** a sink that records every call as a plain list of points, arcs and closes */
@@ -19,15 +20,16 @@ function recorder() {
   return { sink, quads, arcs: () => arcs };
 }
 
-test('shadeField: flat ground is exactly 0, a field rising to +x is lit, falling to +x is shaded', () => {
+test('shadeField: flat ground is exactly 0; the sun is on the right (+x, -y): a field falling to +x or rising to +y is lit, rising to +x is shaded', () => {
   const flat = new Float32Array(HS * HS).fill(10);
   for (const v of shadeField(flat)) assert.ok(Math.abs(v) < 1e-9);
-  const rise = new Float32Array(HS * HS), fall = new Float32Array(HS * HS);
-  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) { rise[j * HS + i] = i * 4; fall[j * HS + i] = -i * 4; }
-  const sr = shadeField(rise), sf = shadeField(fall);
+  const rise = new Float32Array(HS * HS), fall = new Float32Array(HS * HS), up = new Float32Array(HS * HS);
+  for (let j = 0; j < HS; j++) for (let i = 0; i < HS; i++) { rise[j * HS + i] = i * 4; fall[j * HS + i] = -i * 4; up[j * HS + i] = j * 4; }
+  const sr = shadeField(rise), sf = shadeField(fall), su = shadeField(up);
   for (let j = 1; j < HS - 1; j++) for (let i = 1; i < HS - 1; i++) {
-    assert.ok(sr[j * HS + i] > 0, `rising slope lit at ${i},${j}`);
-    assert.ok(sf[j * HS + i] < 0, `falling slope shaded at ${i},${j}`);
+    assert.ok(sr[j * HS + i] < 0, `rising to +x is shaded at ${i},${j}`);
+    assert.ok(sf[j * HS + i] > 0, `falling to +x is lit at ${i},${j}`);
+    assert.ok(su[j * HS + i] > 0, `rising to +y (falling to -y) is lit at ${i},${j}`);
   }
 });
 
@@ -40,6 +42,16 @@ test('shadeRGBA: returns W*H*4 bytes with W = ceil(w*res)', () => {
   const flat = shadeRGBA(new Float32Array(HS * HS), 0, 0, 4, 4, 1);
   assert.equal(flat.W, 4);
   assert.equal(flat.data.length, 4 * 4 * 4);
+});
+
+test('shadeRGBA: a course shade adds shadow alpha where the terrain shade alone gives none', () => {
+  const flat = new Float32Array(HS * HS);
+  const without = shadeRGBA(flat, 100, 100, 4, 4, 1);
+  for (let k = 3; k < without.data.length; k += 4) assert.equal(without.data[k], 0);
+  const course = new Float32Array(CH_SIZE * CH_SIZE).fill(-0.4);
+  const withCourse = shadeRGBA(flat, 100, 100, 4, 4, 1, course);
+  for (let k = 3; k < withCourse.data.length; k += 4) assert.ok(withCourse.data[k]! > 0, `shadow at ${k}`);
+  assert.equal(withCourse.data[0], 14);
 });
 
 test('classAlpha: a fully covered box is opaque, a box without the class is null', () => {

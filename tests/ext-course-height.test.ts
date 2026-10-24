@@ -9,6 +9,7 @@ import {
   applyCourseHeightBrush,
   clampCourseHeightM,
   courseShadeAt,
+  courseShadeInto,
   courseSlopeAt,
   createCourseHeightField,
   evaluateCourseHeightQuality,
@@ -104,5 +105,23 @@ describe('ext/course-height (T026)', () => {
     assert.ok(saved.length > 0 && saved.length < 10);
     const loaded = loadCourseHeight(saved);
     assert.ok(Math.abs(sampleCourseHeight(loaded, 64, 64) - sampleCourseHeight(f, 64, 64)) <= 0.01);
+  });
+
+  it('courseShadeInto: flat ground is all zeros; on a raised hill it matches courseShadeAt, lit on +x (sunward) and shaded on -x', () => {
+    const whole: [number, number, number, number] = [0, 0, CH_SIZE * CH_STEP, CH_SIZE * CH_STEP];
+    const flatOut = new Float32Array(CH_SIZE * CH_SIZE);
+    courseShadeInto(createCourseHeightField().data, flatOut, whole);
+    assert.ok(flatOut.every(v => v === 0));
+
+    const f = createCourseHeightField();
+    applyCourseHeightBrush(f, { x: 500, y: 500, radiusTiles: 12, mode: 'raise', strength: 1.5 });
+    const out = new Float32Array(CH_SIZE * CH_SIZE);
+    courseShadeInto(f.data, out, whole);
+    for (let j = 248; j <= 249; j++) for (let i = 246; i <= 255; i++) {
+      const ref = courseShadeAt(f, (i + 0.5) * CH_STEP, (j + 0.5) * CH_STEP);
+      assert.ok(Math.abs(out[j * CH_SIZE + i]! - ref) <= 0.02, `sample ${i},${j}: ${out[j * CH_SIZE + i]} vs ${ref}`);
+    }
+    assert.ok(out[250 * CH_SIZE + 253]! > 0, 'the +x side of the hill is lit');
+    assert.ok(out[250 * CH_SIZE + 246]! < 0, 'the -x side of the hill is shaded');
   });
 });

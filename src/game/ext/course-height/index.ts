@@ -67,16 +67,18 @@ export function clampCourseHeightM(h: number): number {
  if (!Number.isFinite(h)) return 0;
  return Math.max(CH_MIN_M, Math.min(CH_MAX_M, h)) + 0;
 }
-/** bilinear sample of the course height offset (metres) at world tile (x, y) */
-export function sampleCourseHeight(field: CourseHeightField, x: number, y: number): number {
+/** bilinear sample of a raw CH_SIZE² course height array (metres) at world tile (x, y) */
+export function sampleCourseGrid(d: Float32Array, x: number, y: number): number {
  const fx = Math.max(0, Math.min(CH_SIZE - 1, (x - CH_STEP * 0.5) / CH_STEP));
  const fy = Math.max(0, Math.min(CH_SIZE - 1, (y - CH_STEP * 0.5) / CH_STEP));
  const i = Math.min(CH_SIZE - 2, Math.floor(fx)), j = Math.min(CH_SIZE - 2, Math.floor(fy));
- const tx = fx - i, ty = fy - j, k = j * CH_SIZE + i, d = field.data;
+ const tx = fx - i, ty = fy - j, k = j * CH_SIZE + i;
  const top = d[k]! + (d[k + 1]! - d[k]!) * tx;
  const bot = d[k + CH_SIZE]! + (d[k + CH_SIZE + 1]! - d[k + CH_SIZE]!) * tx;
  return top + (bot - top) * ty;
 }
+/** bilinear sample of the course height offset (metres) at world tile (x, y) */
+export function sampleCourseHeight(field: CourseHeightField, x: number, y: number): number { return sampleCourseGrid(field.data, x, y); }
 /** computes local slope gradient { gx, gy, mag } in metres per metre at world tile (x, y) */
 export function courseSlopeAt(field: CourseHeightField, x: number, y: number): { gx: number; gy: number; mag: number } {
  const stepM = CH_STEP * 2; // 2 tiles = 4 m
@@ -96,6 +98,24 @@ export function courseShadeAt(field: CourseHeightField, x: number, y: number): n
  const { lx, ly, lz } = SUN_RIGHT_LIGHT;
  const nx = -EXAG * gx, ny = -EXAG * gy, nz = 1, nl = Math.hypot(nx, ny, nz);
  return (nx * lx + ny * ly + nz * lz) / nl - lz;
+}
+/** writes the sun-right hillshade of the raw height samples h into out (as courseShadeAt, 0 on flat ground) for every sample whose centre lies in box grown by one sample (clamped) */
+export function courseShadeInto(h: Float32Array, out: Float32Array, box: CourseTileBox): void {
+ const i0 = Math.max(0, Math.ceil(box[0] / CH_STEP - 1.5)), i1 = Math.min(CH_SIZE - 1, Math.floor(box[2] / CH_STEP + 0.5));
+ const j0 = Math.max(0, Math.ceil(box[1] / CH_STEP - 1.5)), j1 = Math.min(CH_SIZE - 1, Math.floor(box[3] / CH_STEP + 0.5));
+ const EXAG = 2.2;
+ const { lx, ly, lz } = SUN_RIGHT_LIGHT;
+ for (let j = j0; j <= j1; j++) {
+  const ja = Math.max(0, j - 1) * CH_SIZE, jb = Math.min(CH_SIZE - 1, j + 1) * CH_SIZE, jc = j * CH_SIZE;
+  for (let i = i0; i <= i1; i++) {
+   const ia = Math.max(0, i - 1), ib = Math.min(CH_SIZE - 1, i + 1);
+   const gx = (h[jc + ib]! - h[jc + ia]!) / 8, gy = (h[jb + i]! - h[ja + i]!) / 8; // neighbours 2 samples (8 m) apart
+   const k = jc + i;
+   if (gx === 0 && gy === 0) { out[k] = 0; continue; }
+   const nx = -EXAG * gx, ny = -EXAG * gy, nz = 1, nl = Math.hypot(nx, ny, nz);
+   out[k] = (nx * lx + ny * ly + nz * lz) / nl - lz;
+  }
+ }
 }
 /** a brush dab's radius (clamped to 1..32 tiles) and its inclusive sample range i0..i1, j0..j1 (clamped to the field) */
 function brushRange(dab: CourseHeightBrushDab) {
