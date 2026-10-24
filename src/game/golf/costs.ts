@@ -1,7 +1,7 @@
 // Course surface build costs, seed/sod grow-in and monthly maintenance (docs/GOLF-PLAN.md sections 2.1, 4.1 and 7). Pure TS, no DOM.
 import { polyArea, type PaintTex } from '../paint';
 import { SURFACE_TEX } from './paintcourse';
-import { PRESETS, presetTex } from '../paint-presets';
+import { PRESETS, PRESET_SURFACES, presetTex, surfacePreset } from '../paint-presets';
 import { TILE_M, type GolfSurface } from './types';
 
 /** planting mode when painting a course surface: seed (needs grow-in) or sod (ready at once, 3-5x turf price) */
@@ -34,6 +34,8 @@ export const TEX_SURFACE: Partial<Record<PaintTex, GolfSurface>> = Object.fromEn
   ...(Object.entries(SURFACE_TEX) as [GolfSurface, { tex: PaintTex; radius: number }][]).map(([s, { tex }]) => [tex, s]),
   // the owner's texture presets stand for the golf surface they are tagged with (the studio's Texture presets)
   ...PRESETS.filter(p => p.surface).map(p => [presetTex(p.id), p.surface]),
+  // and the preset each surface paints with (surfacePreset: the owner's Fescue lays the course's fescue even untagged)
+  ...PRESET_SURFACES.flatMap(s => { const t = surfacePreset(s); return t ? [[t, s]] : []; }),
 ]);
 
 /** the GolfSurface for a PaintTex id in SURFACE_TEX, or null for non-course textures */

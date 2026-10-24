@@ -5,6 +5,8 @@ import { CELL, clipToBox, courseAreas, SURFACE_TEX } from '../src/game/golf/pain
 import { generateOldNine } from '../src/game/golf/coursegen';
 import { checkArea, polyArea, polyBox } from '../src/game/paint';
 import { surfacePreset } from '../src/game/paint-presets';
+import { WOODLAND_TEX, woodlandTex } from '../src/game/terrain-paint';
+import { surfaceOfTex } from '../src/game/golf/costs';
 /** the texture the course paints a surface with: the owner's preset for it when there is one (paint-presets surfacePreset), else its own */
 const texOf = (s: keyof typeof SURFACE_TEX) => surfacePreset(s) ?? SURFACE_TEX[s].tex;
 
@@ -81,4 +83,26 @@ test('seeds 1 to 5 on the old nine and on a 240 x 360 site: all areas valid, non
       assert.ok(Math.abs(areaSum(rough) - want) <= 0.01 * want, `seed ${seed} rough ${areaSum(rough)}`);
     }
   }
+});
+
+test("the course's fescue lays the woodland floor's texture (the owner's Fescue preset), and both follow a preset set to the fescue surface", () => {
+  const lay = generateOldNine(SITE, 7);
+  // the old nine has no fescue: its first fairway becomes one, to see what the course paints it with
+  const k = lay.areas.findIndex(a => a.surface === 'fairway');
+  const areas = courseAreas({ ...lay, areas: lay.areas.map((a, i) => (i === k ? { ...a, surface: 'fescue' as const } : a)) });
+  assert.ok(areas.some(a => a.tex === texOf('fescue') && a.radius === SURFACE_TEX.fescue.radius), 'the fescue area is painted');
+  assert.equal(texOf('fescue'), WOODLAND_TEX, 'the same texture as the woodland');
+  assert.equal(WOODLAND_TEX, 'preset:fescue');
+  assert.ok(!areas.some(a => a.tex === 'golfFescue'), 'never the old fescue photo while the owner has a Fescue preset');
+  // a fescue area is still course fescue for costs, grow-in and quality (costs.ts surfaceOfTex), and so is the old photo in old saves
+  assert.equal(surfaceOfTex(WOODLAND_TEX), 'fescue');
+  assert.equal(surfaceOfTex('golfFescue'), 'fescue');
+  // a preset later set to the fescue surface: the course and the woodland both take it
+  const later = [{ id: 'fescue', surface: null }, { id: 'deep-fescue', surface: 'fescue' as const }];
+  assert.equal(surfacePreset('fescue', later), 'preset:deep-fescue');
+  assert.equal(woodlandTex(later), surfacePreset('fescue', later));
+  // no Fescue preset at all: both fall back to the old photo
+  assert.equal(surfacePreset('fescue', []) ?? SURFACE_TEX.fescue.tex, woodlandTex([]));
+  // the fallback is the fescue's alone: another surface without a preset keeps its own texture
+  assert.equal(surfacePreset('waste', [{ id: 'waste', surface: null }]), null);
 });
