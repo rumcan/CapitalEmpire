@@ -24,3 +24,9 @@ export function busGhostLabel(why: string, picked: boolean, cost: number, money:
   if (!picked) return ghostStatus(why, 0, Infinity, town ? 'Lot stop · town car park' : `Lot stop · car park #${park}`);
   return ghostStatus(why, cost, money, cost ? 'Bus route' : 'Bus route · free (the starting kit)');
 }
+
+/** a tool's cursor label whose price can be a refund: the reason; else "summary · $cost" (invalid when short of the money), or "summary · refund $n" when cost < 0 */
+export function costLabel(why: string, cost: number, money: number, summary: string): { ok: boolean; status: GhostStatus; label: string; bad: boolean } {
+  if (why.trim() || !(cost < 0)) return ghostStatus(why, cost, money, summary);
+  return { ok: true, status: 'valid', label: `${summary} · refund $${Math.round(-cost).toLocaleString()}`, bad: false };
+}
