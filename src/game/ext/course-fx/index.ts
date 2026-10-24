@@ -34,9 +34,10 @@ export const SURF_GROW_MONTHS: Readonly<Record<number, number>> = {
  * alpha = round(255 * (1 - stage/4)). Sod and zero-grow-in surfaces give 0.
  *
  * g: global course grid.
- * cx, cy: chunk coordinate (chunk index or tile origin).
+ * cx, cy: the chunk's index (its box starts at tile cx * size, cy * size).
  * size: chunk dimension (default 64 tiles = 128 cells).
- * nowMonth: current game month.
+ * nowMonth: current game month, on the grid's month scale (the course grid stores month + MONTH_BASE, established cells 0: pass the
+ *   effective game month + MONTH_BASE; ext/course-grid/patch.ts courseGrow does).
  */
 export function growMask(
   g: Grid,
@@ -45,9 +46,9 @@ export function growMask(
   size = 64,
   nowMonth: number,
 ): Uint8Array {
-  // determine whether cx/cy are chunk indices (0, 1, 2) or tile coordinates
-  const tileX0 = cx < size ? cx * size : cx;
-  const tileY0 = cy < size ? cy * size : cy;
+  // the chunk's tile origin (cx, cy are always chunk indices: guessing a tile origin from a small value picked the wrong box)
+  const tileX0 = cx * size;
+  const tileY0 = cy * size;
 
   // chunk dimension in cells (1 tile = 2 cells)
   const cellW = Math.round(size / CELL_T);
@@ -88,66 +89,6 @@ export function growMask(
   }
 
   return mask;
-}
-
-/**
- * a chunk grow key that changes only when a cell's grow stage changes.
- * The engine re-sends chunks only when this key changes.
- */
-export function chunkGrowKey(
-  g: Grid,
-  cx: number,
-  cy: number,
-  size = 64,
-  nowMonth: number,
-): string {
-  const tileX0 = cx < size ? cx * size : cx;
-  const tileY0 = cy < size ? cy * size : cy;
-  const cellW = Math.round(size / CELL_T);
-  const cellH = cellW;
-
-  const startCx = Math.round((tileX0 - g.x0) / CELL_T);
-  const startCy = Math.round((tileY0 - g.y0) / CELL_T);
-
-  // collect stage counts to form a lightweight, deterministic key
-  let stage0 = 0;
-  let stage1 = 0;
-  let stage2 = 0;
-  let stage3 = 0;
-  let stage4 = 0;
-  let hasGrowing = false;
-
-  for (let dy = 0; dy < cellH; dy++) {
-    const curCy = startCy + dy;
-    if (curCy < 0 || curCy >= g.h) continue;
-
-    for (let dx = 0; dx < cellW; dx++) {
-      const curCx = startCx + dx;
-      if (curCx < 0 || curCx >= g.w) continue;
-
-      const idx = curCy * g.w + curCx;
-      const surf = g.surf[idx]!;
-      const totalMonths = SURF_GROW_MONTHS[surf] ?? 0;
-      if (totalMonths <= 0 || surf === SURF.none) continue;
-
-      hasGrowing = true;
-      const plantedMonth = g.month[idx]!;
-      const elapsed = Math.max(0, nowMonth - plantedMonth);
-      const share = Math.min(1, elapsed / totalMonths);
-      const stage = growStage(share);
-
-      if (stage === 0) stage0++;
-      else if (stage === 1) stage1++;
-      else if (stage === 2) stage2++;
-      else if (stage === 3) stage3++;
-      else stage4++;
-    }
-  }
-
-  if (!hasGrowing) {
-    return `${cx}:${cy}:static`;
-  }
-  return `${cx}:${cy}:s${stage0}_${stage1}_${stage2}_${stage3}_${stage4}`;
 }
 
 /** particle material type for dab/brush placement splash */
