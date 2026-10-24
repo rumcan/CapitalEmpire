@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Capital Empire Job Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a clubhouse leaderboard. Four status columns read left to right like a hole's progress, a scoreboard strip above. */
+:root {
+  --bg: #f3f5ef; --panel: #ffffff; --ink: #18221a; --muted: #5d6b60; --line: #dbe2d6;
+  --fairway: #2f7d4a; --green-soft: #e3f1e6; --sand: #c99a3b; --sand-soft: #f7ecd2;
+  --flag: #c2412d; --flag-soft: #f9e1dc; --sky: #2f6a9e; --sky-soft: #dfeaf5;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1511; --panel: #172019; --ink: #e5ede6; --muted: #93a296; --line: #26332a;
+  --fairway: #5fbf7f; --green-soft: #1b3324; --sand: #e0b45a; --sand-soft: #3a2f17;
+  --flag: #ef7a64; --flag-soft: #3d1f19; --sky: #7fb3e3; --sky-soft: #172b3d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1511; --panel: #172019; --ink: #e5ede6; --muted: #93a296; --line: #26332a;
+  --fairway: #5fbf7f; --green-soft: #1b3324; --sand: #e0b45a; --sand-soft: #3a2f17;
+  --flag: #ef7a64; --flag-soft: #3d1f19; --sky: #7fb3e3; --sky-soft: #172b3d; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; max-width: 1400px; margin: 0 auto 18px; }
+h1 { font: 800 clamp(24px, 3.2vw, 36px)/1.05 var(--display); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+h1 small { display: block; font: 600 12px/1.4 var(--body); color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; color: var(--muted); font-size: 13px; }
+.meta b { color: var(--ink); font-weight: 600; }
+button { font: 600 13px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+button:hover { border-color: var(--fairway); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--fairway); outline-offset: 2px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fairway); display: inline-block; margin-right: 6px; }
+.dot.stale { background: var(--sand); } .dot.err { background: var(--flag); }
+.score { max-width: 1400px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.score div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+.score span { display: block; font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.score strong { font: 800 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.board { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.col h2 { font: 600 12px/1 var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; display: flex; justify-content: space-between; }
+.col h2 i { font-style: normal; font-variant-numeric: tabular-nums; }
+.cards { display: flex; flex-direction: column; gap: 8px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--state); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.card a { color: inherit; text-decoration: none; }
+.card a:hover .t { text-decoration: underline; }
+.id { font: 500 12px var(--mono); color: var(--muted); }
+.t { font-weight: 600; margin: 2px 0 6px; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
+.chip { border-radius: 999px; padding: 1px 8px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
+.chip.pr-open { background: var(--sky-soft); border-color: transparent; color: var(--sky); }
+.chip.pr-merged { background: var(--green-soft); border-color: transparent; color: var(--fairway); }
+.chip.final { background: var(--sand-soft); border-color: transparent; color: var(--sand); }
+.when { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); font-size: 13px; border: 1px dashed var(--line); border-radius: 8px; padding: 14px; }
+.c-open { --state: var(--sky); } .c-prog { --state: var(--sand); } .c-review { --state: var(--flag); } .c-done { --state: var(--fairway); }
+section.prs { max-width: 1400px; margin: 26px auto 0; }
+section.prs h2 { font: 800 18px var(--display); margin: 0 0 10px; }
+.prlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 8px; }
+.err { max-width: 1400px; margin: 0 auto 12px; background: var(--flag-soft); color: var(--flag); border-radius: 8px; padding: 10px 14px; }
+@media (max-width: 900px) { .board, .score { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .board, .score { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: no-preference) { .card { transition: border-color .2s; } }
+</style>
+</head>
+<body>
+<header>
+  <h1><small>rumcan/CapitalEmpire · arena tickets</small>Capital Empire Job Board</h1>
+  <div class="meta">
+    <span><span class="dot" id="dot"></span><span id="status">Loading…</span></span>
+    <span>API left this hour: <b id="rate">–</b></span>
+    <button id="refresh" type="button">Refresh now</button>
+  </div>
+</header>
+<div class="err" id="err" hidden></div>
+<div class="score" id="score"></div>
+<main class="board" id="board"></main>
+<section class="prs"><h2>Pull requests</h2><div class="prlist" id="prs"></div></section>
+<script>
+// Reads one GitHub API page (the 100 most recently updated issues and PRs) and sorts the arena tickets by their status label.
+// Conditional requests (ETag): an unchanged answer is a 304, which does not count against the 60-an-hour limit for anonymous callers.
+const REPO = 'rumcan/CapitalEmpire', URL_ = `https://api.github.com/repos/${REPO}/issues?state=all&per_page=100&sort=updated&direction=desc`;
+const POLL_MS = 60000, COLS = [
+  { key: 'open', name: 'Open: claim me', cls: 'c-open' },
+  { key: 'prog', name: 'In progress', cls: 'c-prog' },
+  { key: 'review', name: 'In review', cls: 'c-review' },
+  { key: 'done', name: 'Done', cls: 'c-done' },
+];
+let etag = '', items = [], lastOk = 0;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const ago = iso => { const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000); return s < 60 ? 'now' : s < 3600 ? `${Math.floor(s / 60)} min` : s < 86400 ? `${Math.floor(s / 3600)} h` : `${Math.floor(s / 86400)} d`; };
+const labels = it => it.labels.map(l => typeof l === 'string' ? l : l.name);
+const colOf = it => { const L = labels(it); if (it.state === 'closed' || L.includes('status:done')) return 'done'; if (L.includes('status:in-review')) return 'review'; if (L.includes('status:in-progress')) return 'prog'; return 'open'; };
+const closes = pr => { const m = (pr.body || '').match(/(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)/i); return m ? +m[1] : 0; };
+function render() {
+  const issues = items.filter(it => !it.pull_request && labels(it).includes('arena'));
+  const prs = items.filter(it => it.pull_request);
+  const prFor = new Map(); for (const p of prs) { const n = closes(p); if (n && !prFor.has(n)) prFor.set(n, p); }
+  const by = { open: [], prog: [], review: [], done: [] };
+  for (const it of issues) by[colOf(it)].push(it);
+  by.open.sort((a, b) => a.number - b.number); // the claim order: lowest number first
+  by.done = by.done.slice(0, 12);
+  $('score').innerHTML = COLS.map(c => `<div><span>${esc(c.name)}</span><strong>${c.key === 'done' ? issues.filter(i => colOf(i) === 'done').length : by[c.key].length}</strong></div>`).join('');
+  $('board').innerHTML = COLS.map(c => `<div class="col ${c.cls}"><h2>${esc(c.name)} <i>${by[c.key].length}</i></h2><div class="cards">${by[c.key].length ? by[c.key].map(it => card(it, prFor.get(it.number))).join('') : `<div class="empty">${c.key === 'open' ? 'No open tickets. Agents check every 20 minutes.' : 'Nothing here.'}</div>`}</div></div>`).join('');
+  $('prs').innerHTML = prs.slice(0, 18).map(p => { const merged = !!p.pull_request.merged_at, open = p.state === 'open';
+    return `<div class="card ${merged ? 'c-done' : open ? 'c-review' : 'c-open'}"><a href="${esc(p.html_url)}" target="_blank" rel="noopener"><div class="id">PR #${p.number}${closes(p) ? ` · closes #${closes(p)}` : ''}</div><div class="t">${esc(p.title)}</div></a><div class="chips"><span class="chip ${merged ? 'pr-merged' : open ? 'pr-open' : ''}">${merged ? 'merged' : open ? (p.draft ? 'draft' : 'open') : 'closed'}</span><span class="chip">${esc(p.user.login)}</span><span class="when">${ago(p.updated_at)}</span></div></div>`; }).join('') || '<div class="empty">No pull requests yet.</div>';
+}
+function card(it, pr) {
+  const area = labels(it).filter(l => !l.startsWith('status:') && l !== 'arena');
+  const prChip = pr ? `<a class="chip ${pr.pull_request.merged_at ? 'pr-merged' : 'pr-open'}" href="${esc(pr.html_url)}" target="_blank" rel="noopener">PR #${pr.number} ${pr.pull_request.merged_at ? 'merged' : pr.state === 'open' ? 'open' : 'closed'}</a>` : '';
+  return `<article class="card"><a href="${esc(it.html_url)}" target="_blank" rel="noopener"><div class="id">#${it.number}</div><div class="t">${esc(it.title)}</div></a><div class="chips">${area.map(a => `<span class="chip">${esc(a)}</span>`).join('')}${prChip}${it.comments ? `<span class="chip">${it.comments} comment${it.comments === 1 ? '' : 's'}</span>` : ''}<span class="when">${ago(it.updated_at)}</span></div></article>`;
+}
+async function poll() {
+  try {
+    const r = await fetch(URL_, { headers: { Accept: 'application/vnd.github+json', ...(etag ? { 'If-None-Match': etag } : {}) } });
+    const left = r.headers.get('x-ratelimit-remaining'); if (left !== null) $('rate').textContent = left;
+    if (r.status === 304) { lastOk = Date.now(); }
+    else if (r.ok) { etag = r.headers.get('etag') || ''; items = await r.json(); lastOk = Date.now(); render(); }
+    else { const reset = r.headers.get('x-ratelimit-reset'); throw new Error(r.status === 403 && reset ? `GitHub's hourly limit for this network is used up; it resets at ${new Date(+reset * 1000).toLocaleTimeString()}.` : `GitHub answered ${r.status}.`); }
+    $('err').hidden = true; $('dot').className = 'dot'; $('status').textContent = `Live · checked ${new Date(lastOk).toLocaleTimeString()}`;
+  } catch (e) {
+    $('err').hidden = false; $('err').textContent = `Could not refresh: ${e.message} The board shows the last data it had.`;
+    $('dot').className = lastOk ? 'dot stale' : 'dot err'; $('status').textContent = lastOk ? `Stale · last ok ${new Date(lastOk).toLocaleTimeString()}` : 'Offline';
+  }
+}
+$('refresh').addEventListener('click', poll);
+poll(); setInterval(poll, POLL_MS); setInterval(() => { if (items.length) render(); }, 30000);
+</script>
+</body>
+</html>
