@@ -238,6 +238,8 @@ LEAD.md).
 5. The crowd patches (3d), then P2.
 
 ## 7. Progress (update this as you go)
+- 2026-10-24 10:20 UTC: the owner cleared the spending and asked what works best: a test of every option on one person (`staff_pro_m2`)
+  is set up and waits for RUN's 3D cap to reset (about 00:15 UTC). Details and how to rerun: `docs/HANDOVER-PEOPLE.md` 1b.
 - 2026-10-24 07:30 UTC: **a free rescue for the fused ground plates:** `scripts/assets/people3d/cut-plate.mjs` cuts the plate off a RUN
   model locally; 10 of the 11 bad people came out clean (the 11th, the security guard, had no plate, only badges). Waiting on the
   owner's choice of options (rescue, words, picture first, another provider). Details: `docs/HANDOVER-PEOPLE.md` 1b.

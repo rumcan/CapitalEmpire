@@ -41,6 +41,21 @@ clips, the wayward-ball scene, the quality bar, the traps). This file is the sta
 - **Credits (2026-10-24 04:48 UTC):** balance 63,493. hunyuan3d-v3.1-pro averages 986 a model (1,013 today); gemini-3.1-flash-image-preview
   131 an image, gemini-3.1-flash-lite-image 88. `RUNDOT_BETA_FEATURES=1 rundot credits --group-by model` (or `--period today`) shows it.
   11 models were made since 00:00 UTC today, so about 2 are left before the daily cap resets (about 00:15 UTC).
+- **2026-10-24 10:20 UTC, the owner: "spend as many RUN credits as you want. so what works best".** A head-to-head test is running:
+  one person (`staff_pro_m2`, the young golf pro: the golf-heavy look) made every way, each rigged and rendered the same.
+  - Pictures made (RUN images, 120 credits each, 720 in all; `worktrees/people-ground/output/opt-test/pics/`): `pro_a.png`, `pro_b.png`
+    (a rendered look; a has a faint floor shadow), `pro_ref.png` (the painted look, `--reference-image art/people3d/base_man/style.png`;
+    base_man was itself made from a picture like it) and its `pro_ref_back/left/right.png` (made with pro_ref as the reference; they
+    match well). All clean: A-pose, nothing under the feet, no logos.
+  - The 3D runs: `output/opt-test/run-tests.mjs` (git-ignored; run from the worktree root), in order: words (text-to-3d, no golf words, no
+    ground line), pic_ref, pic_render, multiview (pic_ref + back, left, right), then pic_ref through trellis-2, tripo-v2.5, rodin-v2.5,
+    meshy and pixal3d. It waits out the cap (every 30 min), recovers a model after the CLI timeout, runs cut-plate, the rig and the render;
+    results in `output/opt-test/results.json` and `<test>/preview.png`. **RUN's 3D cap was already used up on 2026-10-24** (all
+    providers refused, "Daily user credit cap reached for threeDGen": the cap counts credits, so cheaper providers may fit more a day);
+    the runs start after the reset (about 00:15 UTC on 2026-10-25). If the runner is not running, rerun it: finished tests are skipped.
+  - pixal3d and trellis-2 take pictures only (text-to-3d refused).
+  - **Next:** compare the previews (quality, the walk, the height line), the credits each (`rundot credits --period today --group-by model`),
+    and report to the owner what works best; then the 14 and the remakes the chosen way.
 
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
 1. `make-person-3d.mjs <id> "<look>" --root <dir> --model-only`: the model from RUN (text-to-3d, an A-pose prompt around the look). It
