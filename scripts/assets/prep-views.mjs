@@ -4,7 +4,8 @@
 //    the art model delivers, then the theme-consistency worktree's and this checkout's; a version found in several is taken from the first):
 //    its <slug>-4views-v<n>/ crops and <slug>-4views-v<n>.provenance.json, whose id is the library id. The newest version with all four
 //    NE/SE/SW/NW.native.png crops and no integrationStatus "blocked" is copied to art/building-views/<slug>/, unless
-//    art/building-views/measures.json pins a version. A 'ready' version with no crops yet is cut from its sheet (<version>.png) in memory by
+//    art/building-views/measures.json pins a version. The import review's verdicts live in measures.json too: "rejected" { version: reason }
+//    keeps a version out whatever the art model marked it, "accepted" { version: note } lets in a sheet the art model parked as awaiting review. A 'ready' version with no crops yet is cut from its sheet (<version>.png) in memory by
 //    four-view-cells.mjs (the art model's cell rules) and marked cropsBy in its source.json. Without the generated folders (a fresh clone) the copies already there are used.
 // 2. Scale: each view is sized by its doorway (measures.json: a plain door's height in native px, tied to the picture's sha256) so the door
 //    stands standardDoor game px tall at the building's gauge scale (measures.json gaugeScale: its owner scale when it was first gauged, written
@@ -53,11 +54,15 @@ if (GENS.length) {
     if (!m || seen.has(d)) continue;
     seen.add(d);
     const provenance = JSON.parse(fs.readFileSync(prov, 'utf8')), id = provenance.id;
-    if (provenance.integrationStatus === 'blocked') { withhold(id, d, provenance.integrationReason ?? 'blocked'); console.log(`withheld ${id} (${d}): ${provenance.integrationReason}`); continue; }
+    // a version the import review turned down (measures.json "rejected": { version: reason }) stays out, whatever the art model marked it
+    if (measures.rejected?.[d]) { withhold(id, d, `rejected at import: ${measures.rejected[d]}`); console.log(`rejected ${id} (${d}): ${measures.rejected[d]}`); continue; }
+    // a sheet the art model parked as awaiting review that the import review checked and approved (measures.json "accepted": { version: note }) counts as 'ready'
+    const ready = provenance.integrationStatus === 'ready' || !!measures.accepted?.[d];
+    if (provenance.integrationStatus === 'blocked' && !ready) { withhold(id, d, provenance.integrationReason ?? 'blocked'); console.log(`withheld ${id} (${d}): ${provenance.integrationReason}`); continue; }
     // a reviewed ('ready') sheet with no crops yet is cut in memory by the art model's cell rules (four-view-cells.mjs)
     let crops = null;
     const missing = DIRS.filter(v => !fs.existsSync(path.join(GEN, d, `${v}.native.png`))), sheet = path.join(GEN, `${d}.png`);
-    if (missing.length && provenance.integrationStatus === 'ready' && fs.existsSync(sheet)) {
+    if (missing.length && ready && fs.existsSync(sheet)) {
       try { crops = await cropFourViews(fs.readFileSync(sheet)); }
       catch (error) { withhold(id, d, `no ${missing.join('/')} crop yet; cutting its sheet failed: ${error.message}`); console.log(`withheld ${id} (${d}): cutting its sheet failed: ${error.message}`); continue; }
     } else if (missing.length) { withhold(id, d, `no ${missing.join('/')} crop yet`); continue; }

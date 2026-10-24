@@ -69,7 +69,7 @@ test('an old dwelling is drawn as a house: its stand-in is never a tent, a garag
       assert.ok(s.cat !== 'Golf tournament' && s.cat !== 'Industry', `${it.id} is drawn as ${s.id} (${s.cat})`);
     }
   });
-  assert.ok(dwellings > 20, `${dwellings} old dwellings`);
+  assert.ok(dwellings > 10, `${dwellings} old dwellings`); // shrinks as the four-view art lands (17 after the 2026-10-24 evening import)
 });
 
 test("a baked lot (the studio's Lots presets) is drawn as itself, never as one building stretched over the lot", () => {

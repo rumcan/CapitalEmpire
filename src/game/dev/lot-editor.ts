@@ -16,7 +16,7 @@ import { spriteRect } from '../sprites';
 import { worldX, worldY } from '../iso';
 import { OWNER_SCALE, TABLE_SCALE } from '../lots/scales';
 import { maxDrawScale } from '../newart';
-import { lotPreset, lotPresets, onLotPresetsReload, setLotPresets } from '../lots/compose';
+import { lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets } from '../lots/compose';
 import { formatPresets, type LotPreset } from '../lots/presets';
 import { fourViews, ownerScaleOf, turned } from '../lots/preset-art';
 import { applyEdit, growWithin, presetToWorld, removeSprite, replacePreset, scaleOverride, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
@@ -140,7 +140,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     setLotPresets(replacePreset(lotPresets(), after));
     game.recomposeLots([lot]);
     reselect(lot, after.id, index);
-    try { await save('lot-presets.json', formatPresets(lotPresets())); say(`${what}: ${after.id} saved to lot-presets.json${after.curated ? " (curated)" : ""}; every lot drawn from it follows`); }
+    try { await save('lot-presets.json', formatPresets(lotPresets(), lotPresetsMeta())); say(`${what}: ${after.id} saved to lot-presets.json${after.curated ? " (curated)" : ""}; every lot drawn from it follows`); }
     catch (e) { say(`NOT SAVED: ${String(e)}`); }
   }
   async function presetEdit(s: Extract<Source, { kind: 'preset' }>, a: Act, dx: number, dy: number) {
@@ -270,10 +270,10 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   // a hot reload of lot-presets.json: while the editor writes, or when it is the text the editor wrote last, it is the echo of its own saves
   // (the editor holds the same or newer presets) and is ignored; any other (the studio, a hand edit) replaces the presets, every lot composes
   // again, and the selection follows its preset prop
-  const unReload = onLotPresetsReload(list => {
-    if (writing || waiting.size || formatPresets(list) === latest.get('lot-presets.json')) return;
+  const unReload = onLotPresetsReload((list, meta) => {
+    if (writing || waiting.size || formatPresets(list, meta) === latest.get('lot-presets.json')) return;
     const lot = sel?.auto?.startsWith('lot:') ? sel.auto.slice(4) : null, from = sel ? game.lotFrom.get(sel) : undefined;
-    setLotPresets(list); game.recomposeLots(lot ? [lot] : []);
+    setLotPresets(list, meta); game.recomposeLots(lot ? [lot] : []);
     if (lot && from) reselect(lot, from.preset, from.prop); else select(null);
     say('lot-presets.json changed on disk: the lots were composed again');
   });
