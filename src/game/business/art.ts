@@ -1,8 +1,7 @@
 import { BUSINESS, type BusinessId } from './catalogue';
 import type { BizDef } from './state';
 import type { LibItem, Prop } from '../types';
-import { hasLettering } from '../lots/lettering';
-import { unmirror } from '../views-library';
+import { drawnAs } from '../mirror';
 import { OWNER_SCALE } from '../lots/scales';
 
 /** The representative delivered sprite for each business's catalogue card. */
@@ -38,12 +37,11 @@ export function businessArt(def: BizDef, library: LibItem[], index: ReadonlyMap<
   const canonical = BUSINESS[def.type].footprint, flip = def.w === canonical.h && def.h === canonical.w;
   return LAYOUT[def.type].flatMap(([id, u, v, fraction], n) => {
     const front = index.get(id.includes(':') ? id : 'business:' + id); if (front === undefined) return [];
-    // a rotated parcel draws the four-view art turned (its partner view), never mirrored
-    const [tid, tflip] = unmirror(library[front]!.id, flip), turned = tflip !== flip ? index.get(tid) : undefined, item = turned ?? front;
+    // a rotated parcel draws the four-view art turned (its partner view) and any other picture unflipped: never mirrored (mirror.ts)
+    const [tid, tflip] = drawnAs(library[front]!, flip), item = index.get(tid) ?? front;
     const it = library[item], scale = fraction ? 64 * (def.w + def.h) * fraction / it.w : OWNER_SCALE[it.id] ?? 1;
     const x = def.x + (flip ? v : u) * def.w, y = def.y + (flip ? u : v) * def.h;
     const b = it.boxes[0], radius = fraction ? Math.min(def.w, def.h) * fraction * .35 : b ? Math.max(b.hx, b.hy) * scale : 2;
-    // a sign reads backwards when mirrored: lettering stays unflipped on a rotated business (its place still turns with the parcel)
-    return [{ uid: -1000000 - def.id * 100 - n, item, x, y, flip: tflip && !hasLettering(it.id, it.name), scale, x0: x - radius, y0: y - radius, x1: x + radius, y1: y + radius, auto: 'business-art' }];
+    return [{ uid: -1000000 - def.id * 100 - n, item, x, y, flip: tflip, scale, x0: x - radius, y0: y - radius, x1: x + radius, y1: y + radius, auto: 'business-art' }];
   });
 }

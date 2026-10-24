@@ -1,8 +1,10 @@
 // The four-view building art (T017: NE, SE, SW, NW, true rotations under a fixed sun) into the game. Re-run it whenever new sheets land:
-//   node scripts/assets/prep-views.mjs [generated-buildings-folder]
-// 1. Sync: for each subject in art/theme-consistency/generated/buildings (or the folder given: the art may sit in another checkout; its <slug>-4views-v<n>/ crops and <slug>-4views-v<n>.provenance.json,
-//    whose id is the library id), the newest version with all four NE/SE/SW/NW.native.png crops is copied to art/building-views/<slug>/,
-//    unless art/building-views/measures.json pins a version. Without the generated folder (a fresh clone) the copies already there are used.
+//   node scripts/assets/prep-views.mjs [generated-buildings-folder ...]
+// 1. Sync: for each subject in the generated folders (the ones given, else the main checkout's art/theme-consistency/generated/buildings, where
+//    the art model delivers, then the theme-consistency worktree's and this checkout's; a version found in several is taken from the first):
+//    its <slug>-4views-v<n>/ crops and <slug>-4views-v<n>.provenance.json, whose id is the library id. The newest version with all four
+//    NE/SE/SW/NW.native.png crops and no integrationStatus "blocked" is copied to art/building-views/<slug>/, unless
+//    art/building-views/measures.json pins a version. Without the generated folders (a fresh clone) the copies already there are used.
 // 2. Scale: each view is sized by its doorway (measures.json: a plain door's height in native px, tied to the picture's sha256) so the door
 //    stands standardDoor game px tall at the building's owner scale. A view with no clear door takes the mean scale of its measured views;
 //    a subject with none measured keeps the original sprite's width (and is reported, to be measured).
@@ -11,31 +13,46 @@
 // 4. Pack: every view at 0.6 x display size on 2048 pages with five mips (src/assets/views/views-<page>-<mip>.webp), and write
 //    src/game/views-library.ts: appendViews puts NE in place of the original sprite and SE in place of its east art (east:<id>), keeping
 //    every saved index, and appends the other views as view:<id>:se|sw|nw. Night glows are found again on the new pictures.
+// 5. Coverage: art/building-views/COVERAGE.md lists every building of the game (art/theme-consistency/inventory.json, and any library sprite
+//    of a building kind it misses) as done (its four views in the game) or missing (none generated yet, or every version withheld, and why).
+//    No building is ever mirrored (src/game/mirror.ts): a missing one is drawn as its old picture, unflipped, until its views land.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 import sharp from 'sharp';
 import { findGlows } from './find-glows.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const GEN = path.resolve(process.argv[2] ?? path.join(root, 'art/theme-consistency/generated/buildings')), STORE = path.join(root, 'art/building-views');
+const BUILDINGS = 'art/theme-consistency/generated/buildings', STORE = path.join(root, 'art/building-views');
+// the main checkout (this one, or the one a worktree belongs to): the art model delivers into its generated folder
+const main = (() => { try { return path.dirname(path.resolve(root, execSync('git rev-parse --git-common-dir', { cwd: root }).toString().trim())); } catch { return root; } })();
+const GENS = [...new Set(process.argv.length > 2 ? process.argv.slice(2).map(d => path.resolve(d))
+  : [path.join(main, BUILDINGS), path.join(main, 'worktrees/theme-consistency', BUILDINGS), path.join(root, BUILDINGS)])].filter(d => fs.existsSync(d));
 const OUT = path.join(root, 'src/assets/views'), REVIEW = path.join(root, 'output/views-review');
 const DIRS = ['NE', 'SE', 'SW', 'NW'], PAGE = 2048, GUT = 16, MIP0 = 0.6;
 const sha = buf => crypto.createHash('sha256').update(buf).digest('hex');
 const measures = JSON.parse(fs.readFileSync(path.join(STORE, 'measures.json'), 'utf8'));
 const pinned = new Map(Object.entries(measures.subjects).filter(([, s]) => s.pin).map(([id, s]) => [id, s.version]));
 
-// 1. sync the newest (or pinned) version of every subject
-if (fs.existsSync(GEN)) {
-  const best = new Map();
-  for (const d of fs.readdirSync(GEN)) {
-    const m = /^(.+)-4views-v(\d+)$/.exec(d);
-    if (!m || !DIRS.every(v => fs.existsSync(path.join(GEN, d, `${v}.native.png`))) || !fs.existsSync(path.join(GEN, `${d}.provenance.json`))) continue;
-    const id = JSON.parse(fs.readFileSync(path.join(GEN, `${d}.provenance.json`), 'utf8')).id, b = best.get(id);
-    if (pinned.has(id) ? pinned.get(id) === d : !b || b.n < +m[2]) best.set(id, { slug: m[1], version: d, n: +m[2] });
+// 1. sync the newest (or pinned) version of every subject; the versions withheld (blocked or incomplete) are kept for the coverage report
+const withheld = new Map(), withhold = (id, version, why) => { if (!withheld.has(id)) withheld.set(id, []); withheld.get(id).push(`${version}: ${why}`); };
+if (GENS.length) {
+  const best = new Map(), seen = new Set();
+  for (const GEN of GENS) for (const file of fs.readdirSync(GEN)) {
+    const m = /^(.+)-4views-v(\d+)\.provenance\.json$/.exec(file), d = m && `${m[1]}-4views-v${m[2]}`, prov = path.join(GEN, file);
+    if (!m || seen.has(d)) continue;
+    seen.add(d);
+    const provenance = JSON.parse(fs.readFileSync(prov, 'utf8')), id = provenance.id;
+    if (provenance.integrationStatus === 'blocked') { withhold(id, d, provenance.integrationReason ?? 'blocked'); console.log(`withheld ${id} (${d}): ${provenance.integrationReason}`); continue; }
+    const missing = DIRS.filter(v => !fs.existsSync(path.join(GEN, d, `${v}.native.png`)));
+    if (missing.length) { withhold(id, d, `no ${missing.join('/')} crop yet`); continue; }
+    const b = best.get(id);
+    if (pinned.has(id) ? pinned.get(id) === d : !b || b.n < +m[2]) best.set(id, { slug: m[1], version: d, n: +m[2], GEN });
   }
-  for (const [id, { slug, version }] of best) {
+  console.log(`sources: ${GENS.map(d => path.relative(root, d) || '.').join(', ')}`);
+  for (const [id, { slug, version, GEN }] of best) {
     const dir = path.join(STORE, slug), source = path.join(dir, 'source.json');
     const old = fs.existsSync(source) ? JSON.parse(fs.readFileSync(source, 'utf8')) : null, files = {};
     fs.mkdirSync(dir, { recursive: true });
@@ -58,6 +75,14 @@ for (const f of ['library', 'east-library', 'business-library', 'construction-li
 }
 const scales = fs.readFileSync(path.join(root, 'src/game/lots/scales.ts'), 'utf8');
 const owner = id => +(new RegExp(`"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}": ([0-9.]+)`).exec(scales)?.[1] ?? 1);
+// the buildings of the game: the inventory's buildings and baked lots (east:<id> is its subject's east view), and any library sprite of a
+// building kind the inventory has not seen (not one it files elsewhere or leaves out, such as the golf equipment, nor a removed id)
+const inventory = JSON.parse(fs.readFileSync(path.join(root, 'art/theme-consistency/inventory.json'), 'utf8'));
+const seenIds = new Set(['items', 'excluded', 'excludedNonSubjects', 'sourceOnly'].flatMap(k => (inventory[k] ?? []).map(x => x.id)));
+const removedIds = new Set([.../export const REMOVED_IDS[^=]*= \[([^\]]*)\]/.exec(scales)[1].matchAll(/"([^"]+)"/g)].map(m => m[1]));
+const BUILDING_KINDS = new Set(['house', 'building', 'venue', 'lot', 'business', 'gazebo', 'arcade']), subjectOf = new Map();
+for (const x of inventory.items) if (x.category === 'buildings' || x.category === 'composite-lots') subjectOf.set(x.id, x.subject ?? x.id);
+for (const [id, it] of items) if (BUILDING_KINDS.has(it.kind) && !removedIds.has(id) && !seenIds.has(id)) subjectOf.set(id, id.replace(/^east:/, ''));
 
 // 2-3. size, footprint and ground point of every view
 const subjects = [], unmeasured = [];
@@ -146,6 +171,8 @@ fs.writeFileSync(path.join(root, 'src/game/views-library.ts'), [
   })))};`,
   '/** a sprite and flip as it is drawn: the four-view art turned to its partner view, unflipped; anything else as it is */',
   'export function unmirror(id: string, flip: boolean): [string, boolean] { const t = flip ? VIEW_TURN[id] : undefined; return t ? [t, false] : [id, flip]; }',
+  '/** the buildings of the game (art/theme-consistency/inventory.json and the library sprites of a building kind): never mirrored (mirror.ts) */',
+  `export const BUILDING_IDS: ReadonlySet<string> = new Set(${JSON.stringify([...subjectOf.keys()].sort())});`,
   '/** Last of the appends: replaced sprites keep their index (saves hold it) and take the art of the new pages; the new views go at the end. */',
   'export function appendViews(library: LibItem[], pages: string[][]) {',
   '  const first = pages.length; pages.push(...PAGES);',
@@ -172,3 +199,22 @@ for (const t of tiles) { if (cx + t.w > 1600) { cx = 0; cy += ch + 8; ch = 0; } 
 await sharp({ create: { width: 1600, height: cy + ch, channels: 4, background: '#d8e0e3' } }).composite(placed).png().toFile(path.join(REVIEW, 'contact.png'));
 console.log(`Prepared ${all.length} views of ${subjects.length} buildings on ${pages.length} page(s); review: ${path.relative(root, REVIEW)}/contact.png`);
 if (unmeasured.length) console.log(`Unmeasured (kept at the original width; add door gauges to art/building-views/measures.json): ${unmeasured.join(', ')}`);
+
+// 5. coverage: every building subject, done (its views in the game) or missing (withheld versions and why, or none generated yet)
+const done = new Map(subjects.map(s => [s.id, s.version])), bySubject = new Map();
+for (const [id, subject] of subjectOf) { if (!bySubject.has(subject)) bySubject.set(subject, []); bySubject.get(subject).push(id); }
+const rows = [...bySubject].sort(([a], [b]) => a.localeCompare(b)).map(([subject, ids]) => {
+  const name = (items.get(subject) ?? items.get(ids[0]))?.name ?? '', also = ids.filter(i => i !== subject), lot = items.get(subject)?.kind === 'lot';
+  const status = done.has(subject) ? `done: ${done.get(subject)}` : withheld.has(subject) ? `missing: withheld (${withheld.get(subject).join('; ')})` : lot ? 'missing: baked lot, not in the generation plan' : 'missing: not generated yet';
+  return { subject, name: name.replace(/\|/g, '/'), also, status };
+});
+const missing = rows.filter(r => !r.status.startsWith('done'));
+fs.writeFileSync(path.join(STORE, 'COVERAGE.md'), [
+  '# Building art coverage', '',
+  'Generated by `node scripts/assets/prep-views.mjs` (re-run it when new sheets land). Every building of the game: **done** has its four generated views',
+  '(NE, SE, SW, NW) in the game; **missing** is still drawn as its old picture, and never mirrored (src/game/mirror.ts): a flipped one is drawn unflipped',
+  'until its views land, so it may face the other way but its light stays on the right.', '',
+  `**${rows.length - missing.length} done, ${missing.length} missing** of ${rows.length} building subjects (${subjectOf.size} library sprites; east:<id> is its subject's east view).`, '',
+  '| subject | name | status |', '| --- | --- | --- |',
+  ...rows.map(r => `| \`${r.subject}\`${r.also.length ? ` (+ ${r.also.map(a => `\`${a}\``).join(', ')})` : ''} | ${r.name} | ${r.status} |`), ''].join('\n'));
+console.log(`Coverage: ${rows.length - missing.length} of ${rows.length} building subjects done, ${missing.length} missing (${missing.filter(r => r.status.includes('withheld')).length} withheld); art/building-views/COVERAGE.md`);

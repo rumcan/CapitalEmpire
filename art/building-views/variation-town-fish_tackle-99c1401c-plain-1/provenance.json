@@ -1,0 +1,165 @@
+{
+  "id": "variation:town-fish_tackle-99c1401c-plain:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "town:fish_tackle",
+  "sourceSheet": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1.png",
+  "sourceSha256": "a26add7d318cfeb6ebd13c12e99d5604e6d2f4749a00191e0d7ff1ddf6a2a43c",
+  "sourceProvenanceSha256": "b211e3dcaa6aae1352c49518a50ae68544e9090813e97eabf77e6a97645de26b",
+  "references": [
+    "art/theme-consistency/exports/buildings/town-fish_tackle.configured@2x.png",
+    "art/theme-consistency/references/theme-authoritative.png"
+  ],
+  "originalProvenance": {
+    "id": "town:fish_tackle",
+    "generator": "image_gen",
+    "generated": "2026-10-23",
+    "assembly": "node scripts/assets/assemble-theme-consistency.mjs buildings town-fish_tackle",
+    "references": [
+      "art/theme-consistency/exports/buildings/town-fish_tackle.configured@2x.png",
+      "art/theme-consistency/references/theme-authoritative.png"
+    ],
+    "sourceViews": [
+      {
+        "direction": "NE",
+        "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/NE.png",
+        "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-40e16224-c788-4f6b-91e4-5897f7b57078.png",
+        "prompt": "Single isolated game sprite cutout of the exact small fishing tackle shop in image 1. Same teal siding, green-and-cream awning, fish sign, front door, display windows and roof vents. Front-right 2:1 isometric view. Warm early dusk with upper-right sun, in image 2's town style. The surrounding canvas has NO BACKGROUND and is fully transparent alpha. Output one RGBA PNG sprite."
+      },
+      {
+        "direction": "SE",
+        "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/SE.png",
+        "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-ccd90514-77bc-4b23-8460-1db2b54f38d7.png",
+        "prompt": "Single isolated game sprite cutout of the SAME teal fishing-tackle shop in image 1, viewed from its RIGHT-REAR corner after a 90° world turn. Show its right wall on image-left and reconstruct its plain back wall on image-right; the fish sign and green striped storefront awning belong only on the hidden front. Preserve the single-storey flat parapet roof, rooftop box and two metal vents, teal timber siding, warm windows, proportions and early-dusk upper-right sunlight. Image 2 provides the owner's town style. NO BACKGROUND: the surrounding canvas is fully transparent alpha. Output one RGBA PNG sprite."
+      },
+      {
+        "direction": "SW",
+        "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/SW.png",
+        "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-77566c59-558f-4ca3-9f53-494eaa56291d.png",
+        "prompt": "Single isolated game sprite cutout of the SAME small teal timber fishing-tackle shop in image 1, viewed from its BACK-LEFT corner after a half turn. Both visible walls are rear/left service walls, with plausible warm windows and a plain service door; the fish sign and green striped awning remain on the hidden opposite storefront and must not appear here. Same single-storey flat parapet roof, rooftop equipment, proportions, teal siding and early-dusk upper-right sunlight. Image 2 is only the owner's visual style. NO BACKGROUND: all surrounding canvas is transparent alpha. Output one RGBA PNG sprite."
+      },
+      {
+        "direction": "NW",
+        "file": "art/theme-consistency/generated/buildings/town-fish_tackle-singles/NW.png",
+        "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a169df-a7cf-7ff2-b46a-7a1528583f42/exec-89b20311-3401-438a-8d7d-d5fb3e7aa6e4.png",
+        "prompt": "Single isolated game sprite cutout of the SAME teal timber fishing-tackle shop in image 1, viewed from its FRONT-LEFT corner after a 270° world turn. Show its left wall on image-left and its recognizable FRONT storefront on image-right: green-and-cream striped awning, fish-shaped sign, central teal door, two bright display windows and warm lamps. Preserve the single-storey flat parapet roof, rooftop box and metal vents, proportions and dusk upper-right sunlight. Image 2 provides the owner's town style. NO BACKGROUND: all surrounding canvas is transparent alpha. Output one RGBA PNG sprite."
+      }
+    ],
+    "review": "Draft only. All four sources have alpha, but the NE source silhouette touches its bottom canvas edge and may be clipped. Visual geometry and lighting review still pending."
+  },
+  "physicalIdentityEvidence": "Same teal timber tackle shop, green/cream striped awning, oval fish sign, central glazed door and display windows. Flat parapet and roof equipment match the base identity.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1.png",
+      "sha256": "a26add7d318cfeb6ebd13c12e99d5604e6d2f4749a00191e0d7ff1ddf6a2a43c"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NE.configured.png",
+      "sha256": "c821c66468d61ca0c2c5afeec9b6be6c385c9b7cf37adc14267181d730496333"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NE.configured@2x.png",
+      "sha256": "74d8e6b9151bdbb1a1033b22e55729f1bebd54cc851b58636fdef37ca02f4380"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NE.max.png",
+      "sha256": "52a6a1cc2712c445957e5c77b0179e78cafd354ce6f655d798ebd2f19e881b4e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NE.max@2x.png",
+      "sha256": "3f3ba25333e96da71b2f9f69af29db439719e066dfbda2adb13be7f8f7e5c7a7"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NE.native.png",
+      "sha256": "5c35de50f82c3e8a4fc7af68f3e4c7f333f5bb70de83b44e0348486c12c04fa9"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NW.configured.png",
+      "sha256": "7791313851c81977c1ea8a8ca639b0d95d59af0627e5225fea3fc5105dde3d8e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NW.configured@2x.png",
+      "sha256": "66ced8cbf5afaf18419c073745fbbb8e5275865dec6dcaebd8217a8658f0efab"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NW.max.png",
+      "sha256": "24c888f59ffe9c19747613b6b03b73d3c843c95f3621d9e9d3d7536d8ad8e385"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NW.max@2x.png",
+      "sha256": "249ad5f74fb2cec4fa344b7deb616a64e704dda311c65b4666cafbc1924cca1d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/NW.native.png",
+      "sha256": "0b23ad70d40b753466d7592fe10d558579efab8c7a8d083a1c214db5935f312e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SE.configured.png",
+      "sha256": "e06823ed19a1efa68f29f8413b904dfacfca6157627fd4ffad00fa28387372eb"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SE.configured@2x.png",
+      "sha256": "6856c745250d273463dde8cc85a01702be03923389250800daa0be7a413399fd"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SE.max.png",
+      "sha256": "1b500da9e597fa4b271843fcda47bca8c401193711419dd6154c7ebe1b08dac5"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SE.max@2x.png",
+      "sha256": "58b23f5e61c295450b48a71fefe498df175a506f38d5b83d359dc32127c3b0c0"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SE.native.png",
+      "sha256": "55a4335b5b0837b857d731368d5376174bf3214ba10a2098c7b0c044195392d6"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SW.configured.png",
+      "sha256": "1e152fe21e3025249ad95acb7d370a261196f40cb5af91d2800e888805dbc0d0"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SW.configured@2x.png",
+      "sha256": "8caf02800498ff3a8ccfcc6023a356b344b7bd2e510855690658642511f02d72"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SW.max.png",
+      "sha256": "e3d9586cc5a65330828d96aa5e85e40f6039bcb2477701851ceebedec29d99a4"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SW.max@2x.png",
+      "sha256": "f79eeae5b72800d51e0e5bc7c256cc9fce387b9178391cbe18e7b738bc4e7f1c"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/town-fish_tackle-4views-v1/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-town-fish_tackle-99c1401c-plain-1-4views-v1/SW.native.png",
+      "sha256": "6aed218973586d8e47661004b2ee644effc156bf11d5eb007e3078f21391d008"
+    }
+  ]
+}

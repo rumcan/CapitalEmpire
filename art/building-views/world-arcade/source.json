@@ -1,0 +1,10 @@
+{
+ "id": "world:arcade",
+ "version": "world-arcade-4views-v1",
+ "files": {
+  "NE": "ac48c283b864bcf2ca334aea0b33c08f582369ea12734e1926e41f9e29c26e2a",
+  "SE": "14fde216282568b20d0d673a6c2330322e2518aee834982981db7b040deab71e",
+  "SW": "a08559af29bb513018943de0f6e9db0c094121c620a179a4b76f5481b7e7f341",
+  "NW": "e103056d5d071c3eaf4b4e3c1e0125cebba6e13e4323258fd0243f420ee4e615"
+ }
+}

@@ -2077,7 +2077,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/town-bus_stop-4views-v1.png",
+      "sheetSha256": "0265b943d24011599090f696ffafb5876bad918391f07249ef454f3200be20ee",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "town:firestation",
@@ -2244,7 +2255,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/town-laundromat-4views-v1.png",
+      "sheetSha256": "6eb12c297dc46a0cc70d9bd7989c79515ee2448ca43076d696afa14d159d37f2",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "town:pharmacy",
@@ -2317,7 +2339,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/town-phone_booth-4views-v1.png",
+      "sheetSha256": "a6fe3a9a0bd512a19d8ad7a2ff60006aacecfec15607fd0dda1024231bc9fd30",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "town:postoffice",
@@ -2390,7 +2423,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/town-produce_stand-4views-v1.png",
+      "sheetSha256": "97d1ba36253e0fa8494a4b0512c6f0f0b5d63ad7c7fb10ff93d7f6d2dc812ca5",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "variation:expansion-abandoned-workshop-26852883:1",
@@ -5120,7 +5164,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/world-arcade-4views-v1.png",
+      "sheetSha256": "69de0eebd8f4ed2d745c636f87287dbbf972d22b8867b993bf9749a3bf93cdeb",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "world:barn",
@@ -5146,7 +5201,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/world-barn-4views-v1.png",
+      "sheetSha256": "477774298bb9bb268d9eaa4c39f12f07d2e6faaadcbf18e9dbd5421e60a721f5",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "world:bleachers",
@@ -5508,7 +5574,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/world-primary_school-4views-v2.png",
+      "sheetSha256": "157637362f06cc6c30906efcbc24e915fa83e80e2b5291a6d2df9653e3002dba",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "world:school",
@@ -5534,7 +5611,18 @@
         "SW",
         "NW"
       ],
-      "status": "pending"
+      "status": "generated-awaiting-visual-review",
+      "sheet": "art/theme-consistency/generated/buildings/world-school-4views-v1.png",
+      "sheetSha256": "6be70d7da6b47ef9fcbf8394a241710165034be66c3f8ee972e33433e91d6336",
+      "angles": [
+        "NE",
+        "SE",
+        "SW",
+        "NW"
+      ],
+      "alphaReview": "bounds-checked-visual-review-pending",
+      "visualReview": "pending",
+      "preparedManifest": "art/theme-consistency/generated-manifest.json"
     },
     {
       "id": "world:snack_bar",
@@ -8701,11 +8789,11 @@
     "total": 305,
     "exportedRuntimeViews": 319,
     "sourceOnly": 26,
-    "generated": 54,
+    "generated": 62,
     "reviewed": 0,
-    "pending": 251,
-    "fileValidated": 54,
+    "pending": 243,
+    "fileValidated": 62,
     "alphaFlagged": 26,
-    "nativeViewsExported": 216
+    "nativeViewsExported": 248
   }
 }

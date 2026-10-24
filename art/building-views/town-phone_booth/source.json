@@ -1,0 +1,10 @@
+{
+ "id": "town:phone_booth",
+ "version": "town-phone_booth-4views-v1",
+ "files": {
+  "NE": "6f832d6041cddaafb9f459bd562903a5a635f90b8a2c0a8ed27efa093ce365d5",
+  "SE": "fcf187b3ff20dfb6d1436cf5ea523f114cd248ee07f1bd3205dc7eb10805475e",
+  "SW": "386319e98cecad58486cf73a554a02d829474e50148f8c00601335f661335bad",
+  "NW": "c109a9b529456f815f5ef7fca4cdb89c75971abe1f63e2fd1be1efef8ffb7d28"
+ }
+}

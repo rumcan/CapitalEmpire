@@ -14,6 +14,7 @@ import { LU, LV } from './town';
 import { OWNER_SCALE } from './scales';
 import { FRONTAL } from './frontal';
 import { hasLettering, EAST_FACING } from './lettering';
+import { drawnAs } from '../mirror';
 import { LOT_DECALS } from '../lot-decals';
 import { parkedCar } from '../traffic';
 import { CAR_SCALE, carFootprint, carHeading } from '../ext/car-art';
@@ -82,7 +83,9 @@ const plain = (list: string[], flip: boolean | undefined) => (flip ? list.filter
 const REAR_X = new Set(['variation:world-house_4-north-630f880a-plain:1', 'variation:ref-building-farmhouse-north-408a9ca6-plain:1', 'variation:ref-building-house-large-north-24d21776-plain:1',
   'variation:gen-house-l-shape-north-79eba705-plain:1', 'expansion:dormer-rear', 'variation:expansion-dormer-rear-55d3cd77-plain:1', 'expansion:victorian-rear',
   'variation:expansion-ranch-rear-bde86a42-plain-corner:1']);
-const faced = (id: string, flip: boolean): [string, boolean] => { if (REAR_X.has(id)) return [id, !flip]; const e = flip ? EAST_FACING[id] : undefined; return e ? [e, false] : [id, flip]; };
+const facing = (id: string, flip: boolean): [string, boolean] => { if (REAR_X.has(id)) return [id, !flip]; const e = flip ? EAST_FACING[id] : undefined; return e ? [e, false] : [id, flip]; };
+/** ...and as it is drawn, so the layout takes the drawn footprint: no building is mirrored (mirror.ts; a flipped four-view building is its partner view) */
+const faced = (id: string, flip: boolean): [string, boolean] => { const [f, k] = facing(id, flip), it = BY.get(f); return it ? drawnAs(it, k) : [f, k]; };
 
 /** ids with their plain variations in the library ('town:bakery' -> 'variation:town-bakery-<hash>-plain:1'), the ones the game has */
 const withVariations = (ids: string[]) => { const base = names(ids); return base.concat([...BY.keys()].filter(k => !FRONTAL.has(k) && base.some(b => k.startsWith(`variation:${b.replace(':', '-')}-`)))); };
@@ -522,7 +525,8 @@ for (const it of LIBRARY) {
  *  lot's slot along its street (neighbours differ), the neglected ones from decline 2; null when none fits */
 function baked(B: Build, lot: LotGeom, st: ComposeState): Composition | null {
   // a lot wider than the pictures (the house lots are 25% wider since 2026-10-22) takes the widest picture that fits its depth, centred: the
-  // same houses, with more yard either side
+  // same houses, with more yard either side. A baked picture has no turned view and is never mirrored (mirror.ts): a flipped lot is composed
+  if (B.flip) return null;
   const e = BAKED.get(`${lot.w}x${lot.d} ${B.rear ? 'rear' : 'front'}`) ?? bakedFor(lot, B.rear); if (!e) return null;
   const pool = plain(st.decline >= 2 && e[1].length ? e[1] : e[0], B.flip); if (!pool.length) return null;
   const slot = Math.round((lot.o.x * lot.u.x + lot.o.y * lot.u.y) / lot.w), street = Math.round(lot.o.x * lot.n.x + lot.o.y * lot.n.y);

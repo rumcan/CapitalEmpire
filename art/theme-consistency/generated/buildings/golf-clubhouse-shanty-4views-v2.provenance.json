@@ -7,5 +7,7 @@
     "art/theme-consistency/generated/buildings/golf-clubhouse-shanty-4views-v1.png"
   ],
   "generated": "2026-10-23",
-  "correction": "V1 opaque checkerboard; V2 alpha correction, edge halos need visual review"
+  "correction": "V1 opaque checkerboard; V2 alpha correction, edge halos need visual review",
+  "integrationStatus": "blocked",
+  "integrationReason": "Existing handover rejects edge halo and cross-cell artwork; do not register."
 }

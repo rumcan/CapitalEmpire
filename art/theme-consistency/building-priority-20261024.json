@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-24",
+  "branch": "lead/building-art-priority-20261024",
+  "generatedSubjects": [
+    "town:laundromat",
+    "town:bus_stop",
+    "town:phone_booth",
+    "town:produce_stand",
+    "world:arcade",
+    "world:barn",
+    "world:school",
+    "world:primary_school"
+  ],
+  "integratedSubjects": [
+    "town:fish_tackle",
+    "town:laundromat",
+    "town:bus_stop",
+    "town:phone_booth",
+    "world:arcade",
+    "world:barn",
+    "world:school",
+    "world:primary_school"
+  ],
+  "runtime": {
+    "buildings": 59,
+    "views": 236,
+    "atlasPages": 7,
+    "house2Version": "world-house_2-4views-v2",
+    "oldArt": "Replaced at original library IDs; historical sources preserved.",
+    "doorGauges": "All eight new integrations retain original widths until measured."
+  },
+  "inventory": {
+    "total": 305,
+    "generated": 62,
+    "pendingBuildings": 128,
+    "pendingTrees": 58,
+    "pendingVehicles": 57,
+    "nativeCrops": 248,
+    "selectedAlphaFlags": 26
+  },
+  "blockedVersions": {
+    "golf-clubhouse-shanty-4views-v2": "Existing halo/cross-cell rejection",
+    "town-firestation-4views-v1": "Confirmed NE lower corner clipped",
+    "town-produce_stand-4views-v1": "Uncertain rotation geometry",
+    "world-primary_school-4views-v1": "Replaced by pixel-preserving v2 layout"
+  },
+  "validation": {
+    "typecheck": "pass",
+    "focused": {
+      "passed": 30,
+      "failed": 0
+    },
+    "fullSerialSuite": {
+      "passed": 915,
+      "failed": 0
+    },
+    "build": "Standard minified production build passed with 6144MB Node heap",
+    "browser": {
+      "subjects": 8,
+      "facades": 32,
+      "pageErrors": 0,
+      "requestFailures": 0,
+      "httpFailures": 0,
+      "zoom": 0.3
+    },
+    "logs": "worktrees/building-art-priority/output/building-priority"
+  },
+  "generationMethod": "Built-in image_gen with owner-selected Maple Bean reference; no existing subjects regenerated.",
+  "prompts": "Exact prompts and references in generated/buildings/<slug>-4views-vN.provenance.json"
+}

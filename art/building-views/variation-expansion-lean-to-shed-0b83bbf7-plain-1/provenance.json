@@ -1,0 +1,173 @@
+{
+  "id": "variation:expansion-lean-to-shed-0b83bbf7-plain:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "expansion:lean-to-shed",
+  "sourceSheet": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1.png",
+  "sourceSha256": "0e6cd6dd59711810da2b158d266bc5b9cbeeb13571d0d446f000918af9e98b07",
+  "sourceProvenanceSha256": "0b7d82fe436ff15f9a1f668b1daa89940f2a68abe870d00495b5e46755855abc",
+  "prompt": "Subject ID: expansion:lean-to-shed. Category: buildings. Existing name: Dilapidated backyard shed.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"expansion:lean-to-shed\",\"direction\":null,\"configuredCSS\":{\"left\":-44.729279999999996,\"top\":-51.794976345634566,\"right\":44.79240599999999,\"bottom\":22.49079865436543,\"width\":89.52168599999999,\"height\":74.285775},\"normalMaxCSS\":{\"left\":-47.616,\"top\":-55.137699369936996,\"right\":47.68319999999999,\"bottom\":23.942300630063,\"width\":95.2992,\"height\":79.08},\"configuredReference\":\"art/theme-consistency/exports/buildings/expansion-lean-to-shed.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"expansion:lean-to-shed\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/expansion-lean-to-shed.configured@2x.png\",\"sha256\":\"d3bef50c994ed184b6e6cb53cc2898c50587e4f2aa00fc4101dbbd66e0772fdf\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+  "references": [
+    {
+      "role": "authoritative-theme",
+      "file": "art/theme-consistency/references/theme-authoritative.png",
+      "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+    },
+    {
+      "role": "existing-subject-identity",
+      "id": "expansion:lean-to-shed",
+      "direction": null,
+      "file": "art/theme-consistency/exports/buildings/expansion-lean-to-shed.configured@2x.png",
+      "sha256": "d3bef50c994ed184b6e6cb53cc2898c50587e4f2aa00fc4101dbbd66e0772fdf"
+    },
+    {
+      "role": "camera-rotation-guide-only",
+      "file": "art/theme-consistency/references/rotation-guide-v1.png",
+      "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+    }
+  ],
+  "originalProvenance": {
+    "id": "expansion:lean-to-shed",
+    "sheet": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1.png",
+    "source": "C:\\Users\\Francois Smit\\.codex\\generated_images\\01a15fe8-e26f-72b1-94e3-874ef3d8db8b\\exec-4f8c1c91-f882-4438-b8e1-e827d0c73747.png",
+    "prompt": "Subject ID: expansion:lean-to-shed. Category: buildings. Existing name: Dilapidated backyard shed.\n\nONE SUBJECT PER CALL. Reference image 1 is the owner's AUTHORITATIVE full Maple Bean street scene: use it for all materials, camera and visual theme. Reference image 2 is this individual building at its actual maximum-zoom configured game size: preserve that building's architecture, footprint, storeys, roof/chimney shapes, doors, window rhythm and identity; only restyle/reconstruct hidden sides. Create ONE transparent PNG sheet with exactly FOUR true 90-degree world rotations of the SAME building in row-major order NE, SE, SW, NW. Include real rear facades; never mirror a front or turn the camera. Camera fixed parallel 2:1 isometric, ground axes +/-26.565 degrees, verticals vertical. TIME: EARLY DUSK, still enough warm low side sunlight to see fine siding/brick/shingles clearly; windows and practical porch/exterior lamps already warmly lit. Not night, no moon, moonlight, black nighttime rendering or harsh overhead midday light. CRITICAL LIGHT: fixed SCREEN UPPER RIGHT in every quadrant, shadows toward SCREEN LOWER LEFT. Rotate geometry only; keep world sun fixed, right-facing planes warmer and left-facing planes cooler regardless of which facade is visible. NO HALLOWEEN whatsoever: remove pumpkins/jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky details, wreaths, Halloween signage and seasonal string-light garlands from original. Autumn leaf colours are allowed in the theme but do not attach yard trees or landscape to the building. No people, characters, cars, neighbor objects, foundation platform, lawn tile or street. Only this specified building or shelter and its integral architectural features. Preserve its actual building type; shops, factories, venues, kiosks and pavilions must remain those structures rather than becoming houses. No broad garden bed. Exactly one complete building per quadrant with at least64px transparent clearance from ALL quadrant edges; keep sizes consistent with generous centre gutters. True alpha outside silhouette, no background haze, broad cast shadow, checkerboard, captions or decorative frame. Fine detailed coherent 3D illustrated miniature style matching reference1. Native source sheet will be calibrated to the original game's size later; do not claim the sheet canvas is actual CSS size.\n\n\nONE SUBJECT PER GENERATION CALL. Image 1 is the owner-selected full Maple Bean street THEME MASTER; Later identity references show one subject; any final camera diagram is geometry guidance only, never subject art. Fixed parallel 2:1 isometric camera, ground axes +/-26.565 degrees, verticals vertical. FOUR genuine 90-degree world rotations in row-major order NE, SE, SW, NW. Keep sun fixed SCREEN UPPER RIGHT and tiny contact shadows SCREEN LOWER LEFT while geometry rotates; never mirror a front or rotate lighting with the object. EARLY DUSK, with warm low side sunlight and readable fine details, not night or moonlight and no overhead midday lighting. No people or characters. NO HALLOWEEN: no pumpkins, jack-o-lanterns, cobwebs, ghosts, bats, skulls, skeletons, spooky signs or decorative string-light garlands. Autumn foliage colours are permitted. Request a SQUARE transparent PNG sheet with strict 2x2 independent cells. Leave AT LEAST 15% of EACH quadrant's width and height clear on EVERY side of its sprite, producing generous central gutters. Shrink all four views uniformly to fit; never crop roofs, branches, wheels or shadows. Exactly one complete subject per cell, consistent physical scale across all views. True alpha outside silhouettes, no backdrop, haze, checkerboard, captions, frames, terrain tile, scene or attached unrelated props. Native generated pixels are source art, not exact registered CSS/game size.\n\nThe LAST image, identified as camera-rotation-guide-only, is a DIAGRAM of four exact quarter-turn projections. Use ONLY its geometry and visible face order to prevent duplicate angles: front+right, right+back, back+left, left+front. Do not copy the colored blocks, marker, text, palette or captions into the sprite. The owner-selected street scene remains the ONLY STYLE authority and the original subject images remain the ONLY IDENTITY authority. A full 360-degree rigid turntable must preserve the same physical chimneys, doors, windows and roof equipment. Uniformly shrink complete views to leave broad clear margins.\n\nExisting configured max-camera CSS bounds are measured references. Generated rotations require shared-density calibration and placement registration; hidden-side dimensions are estimates.\n\nMeasured existing source views: [{\"id\":\"expansion:lean-to-shed\",\"direction\":null,\"configuredCSS\":{\"left\":-44.729279999999996,\"top\":-51.794976345634566,\"right\":44.79240599999999,\"bottom\":22.49079865436543,\"width\":89.52168599999999,\"height\":74.285775},\"normalMaxCSS\":{\"left\":-47.616,\"top\":-55.137699369936996,\"right\":47.68319999999999,\"bottom\":23.942300630063,\"width\":95.2992,\"height\":79.08},\"configuredReference\":\"art/theme-consistency/exports/buildings/expansion-lean-to-shed.configured@2x.png\"}].\n\nReference roles and order: [{\"role\":\"authoritative-theme\",\"file\":\"art/theme-consistency/references/theme-authoritative.png\",\"sha256\":\"23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2\"},{\"role\":\"existing-subject-identity\",\"id\":\"expansion:lean-to-shed\",\"direction\":null,\"file\":\"art/theme-consistency/exports/buildings/expansion-lean-to-shed.configured@2x.png\",\"sha256\":\"d3bef50c994ed184b6e6cb53cc2898c50587e4f2aa00fc4101dbbd66e0772fdf\"},{\"role\":\"camera-rotation-guide-only\",\"file\":\"art/theme-consistency/references/rotation-guide-v1.png\",\"sha256\":\"8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c\"}].",
+    "references": [
+      {
+        "role": "authoritative-theme",
+        "file": "art/theme-consistency/references/theme-authoritative.png",
+        "sha256": "23338f2cf3f635ad4ec1fb18e9084f4e486d449d547bd8d22aecd250601a9db2"
+      },
+      {
+        "role": "existing-subject-identity",
+        "id": "expansion:lean-to-shed",
+        "direction": null,
+        "file": "art/theme-consistency/exports/buildings/expansion-lean-to-shed.configured@2x.png",
+        "sha256": "d3bef50c994ed184b6e6cb53cc2898c50587e4f2aa00fc4101dbbd66e0772fdf"
+      },
+      {
+        "role": "camera-rotation-guide-only",
+        "file": "art/theme-consistency/references/rotation-guide-v1.png",
+        "sha256": "8d60d56c563159d06a052d472856e067366834957936b942a749934883fd2e3c"
+      }
+    ],
+    "generator": "built-in image_gen",
+    "generatedAt": "2026-10-23T16:14:02.170Z",
+    "status": "generated-awaiting-visual-review",
+    "implementation": "Other AI handles runtime integration"
+  },
+  "physicalIdentityEvidence": "Same squat timber shed, long main gable and small lean-to roof on the same side; same door/window layout and timber cladding.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1.png",
+      "sha256": "0e6cd6dd59711810da2b158d266bc5b9cbeeb13571d0d446f000918af9e98b07"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NE.configured.png",
+      "sha256": "fb00072ac67cc2831e977e8b63a0ac7f5bc5d058fc36751138cc8794caf6f7e1"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NE.configured@2x.png",
+      "sha256": "1e3585e48661c3e125d9ea16fe6c1dff1f023c896c90c91ca1577a134d9ff7cf"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NE.max.png",
+      "sha256": "1b31554b91db8a53319d51b8a49511f367b29e9c338e032c4c4d05aa7afab819"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NE.max@2x.png",
+      "sha256": "4aad4be0431b6f055f18555651e3ad0e5b1c741a8edf2b2c76c3569fcf54f6c1"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NE.native.png",
+      "sha256": "9b2a30037ae24e81d4af8ecd5f025badd1e8dddc2f5ce7fabcb7ced379c98475"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NW.configured.png",
+      "sha256": "d0d472ff30c59ab216b372b04f0a6870519cb12e0689bd1fafbd48a59c2b119e"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NW.configured@2x.png",
+      "sha256": "b80ee5cde17b1e8c0da10a248be96253405a27e7a6de24081fd44a80fa9ad1ae"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NW.max.png",
+      "sha256": "0018da8986b82173470c75126e52e567335b41b2ffd92fd0956940727af64ed5"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NW.max@2x.png",
+      "sha256": "c4abed6f66a4846d7df48c7bec27e10255c8671a322f594ef8e0f28cd7c1e05a"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/NW.native.png",
+      "sha256": "bd561b5a42caca5bf30b5883813e9f7f845452e6d7c3fab83dd2a8ef0a88a794"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SE.configured.png",
+      "sha256": "152a5b41a24a8ab500a7a70dd79af208e40fa114533efa3a4bbaedfed5cf3d14"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SE.configured@2x.png",
+      "sha256": "ae3ce6fcaf5f1a7f8287f84edb8ede84650c002cecf9bd39c3a47176c3fcffe8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SE.max.png",
+      "sha256": "7f8d460b180fd855970ad2c1ccb9330e0b5e89cdae4a593733270d7cff3c052d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SE.max@2x.png",
+      "sha256": "84d280c44941a92144a8408c7564f52c0f375f96e4c936d165e231cdfeba6bf8"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SE.native.png",
+      "sha256": "46511012ae9d4597c33501784e5d93a9fa9a5695a64328a4773b0215546bb5e0"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SW.configured.png",
+      "sha256": "01d647ffa749446adddd35b92974b0a2457817ff893121485be8b51927b5a7ec"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SW.configured@2x.png",
+      "sha256": "5a269cd00f7cacdbd5b4b92b5d486dbfd54e6613472bde065eb4719889ff793d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SW.max.png",
+      "sha256": "25c9afbe37402d330c5984474512381bd7d808346ce15463c6fe928c0617ffed"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SW.max@2x.png",
+      "sha256": "cbdfa04b68894d0221d8baa8a0b82facee53f848496983b0771602b81e423b69"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/expansion-lean-to-shed-4views-v1/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-expansion-lean-to-shed-0b83bbf7-plain-1-4views-v1/SW.native.png",
+      "sha256": "8e535d64d22fee21f82289998af6bfa3eaaf09999e836ae2b6e732abc96c11f0"
+    }
+  ]
+}

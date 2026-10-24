@@ -1,0 +1,145 @@
+{
+  "id": "variation:world-barn-ae80f6c9-plain:1",
+  "generator": "reused-theme-art",
+  "deliveryType": "reuse-existing-four-view-art",
+  "newImageGeneration": false,
+  "sourceSubjectId": "world:barn",
+  "sourceSheet": "art/theme-consistency/generated/buildings/world-barn-4views-v1.png",
+  "sourceSha256": "477774298bb9bb268d9eaa4c39f12f07d2e6faaadcbf18e9dbd5421e60a721f5",
+  "sourceProvenanceSha256": "00c63406126c099aa39be3b429bbf2351a0b986872b504b7b49727171d3d928f",
+  "prompt": "Game sprite production, single subject in FOUR genuine 90-degree rotations on one SQUARE transparent RGBA PNG sheet. Reference1 ONLY style: warm early-dusk Maple Bean street, detailed coherent illustrated 3D miniature; reference2 original identity, preserve architecture, proportions, doors/windows/roof, do not copy Halloween. Reference3 rotation DIAGRAM only, no diagram text/colours. Strict row-major 2x2 NE front+right, SE right+back, SW back+left, NW left+front; same object, reconstruct hidden rear, never mirror front. Fixed parallel 2:1 isometric camera, verticals vertical. Sun FIXED SCREEN UPPER RIGHT in every cell, warm right-facing planes, cooler left-facing planes, contact shadows lower-left. Warm windows and exterior lamps already on, early dusk still detailed, not night. ACTUAL transparent alpha outside silhouettes: no backdrop, haze, checkerboard, terrain tile or broad shadow. At least 15% cell margin EVERY side, broad centre gutters, complete objects never clipped, consistent physical scale. No people, cars, neighbouring objects, trees, flags, pumpkins, cobwebs, bats, ghosts, Halloween decor or garlands; captions forbidden. Red timber barn, cream trim, gambrel charcoal shingle roof, broad front double cross-braced doors, small upper hayloft opening and rooster weather vane on ridge; side small warm windows, reconstruct rear smaller service doors. No hay hanging out of windows, no ivy or attached garden. Preserve red agricultural barn identity.",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/buildings/world-barn.configured@2x.png",
+    "art/theme-consistency/references/rotation-guide-v1.png"
+  ],
+  "originalProvenance": {
+    "id": "world:barn",
+    "generator": "image_gen",
+    "generated": "2026-10-24",
+    "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-ace1f1e5-3533-4c2d-abfb-4d8b5f5bbdfc.png",
+    "prompt": "Game sprite production, single subject in FOUR genuine 90-degree rotations on one SQUARE transparent RGBA PNG sheet. Reference1 ONLY style: warm early-dusk Maple Bean street, detailed coherent illustrated 3D miniature; reference2 original identity, preserve architecture, proportions, doors/windows/roof, do not copy Halloween. Reference3 rotation DIAGRAM only, no diagram text/colours. Strict row-major 2x2 NE front+right, SE right+back, SW back+left, NW left+front; same object, reconstruct hidden rear, never mirror front. Fixed parallel 2:1 isometric camera, verticals vertical. Sun FIXED SCREEN UPPER RIGHT in every cell, warm right-facing planes, cooler left-facing planes, contact shadows lower-left. Warm windows and exterior lamps already on, early dusk still detailed, not night. ACTUAL transparent alpha outside silhouettes: no backdrop, haze, checkerboard, terrain tile or broad shadow. At least 15% cell margin EVERY side, broad centre gutters, complete objects never clipped, consistent physical scale. No people, cars, neighbouring objects, trees, flags, pumpkins, cobwebs, bats, ghosts, Halloween decor or garlands; captions forbidden. Red timber barn, cream trim, gambrel charcoal shingle roof, broad front double cross-braced doors, small upper hayloft opening and rooster weather vane on ridge; side small warm windows, reconstruct rear smaller service doors. No hay hanging out of windows, no ivy or attached garden. Preserve red agricultural barn identity.",
+    "references": [
+      "art/theme-consistency/references/theme-authoritative.png",
+      "art/theme-consistency/exports/buildings/world-barn.configured@2x.png",
+      "art/theme-consistency/references/rotation-guide-v1.png"
+    ],
+    "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured.",
+    "integrationStatus": "ready",
+    "integrationReason": "Distinct front/rear views inspected; alpha and all four crop-boundary checks passed. Original-width scale pending door gauges."
+  },
+  "physicalIdentityEvidence": "Same compact red gambrel barn, white X-braced double door, small loft shutter and rooster weather vane; frontal projection introduces no additional wing/cupola.",
+  "quarterTurnOffset": 0,
+  "pixelEdits": "none; raw sheet, four native crops and existing image previews copied byte-for-byte, without repainting, recolouring, resizing or mirroring",
+  "previewPolicy": "Source preview copies are identity comparisons; target scale/calibration must be prepared using the target game ID.",
+  "integrationStatus": "ready",
+  "integrationReason": "Approved physical-identity reuse of selected existing theme artwork; copied delivery explicitly recorded, not fresh generation.",
+  "freshVisualApproval": false,
+  "copiedFiles": [
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1.png",
+      "sha256": "477774298bb9bb268d9eaa4c39f12f07d2e6faaadcbf18e9dbd5421e60a721f5"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NE.configured.png",
+      "sha256": "71f93b5bff2c6a5b2fb4ab3047221f001553426010681e011e9b26739ce45593"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NE.configured@2x.png",
+      "sha256": "77ba6c750ad591161512c98751be325fdc8f3ff76dbaf502b02467d7a5764053"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NE.max.png",
+      "sha256": "4a1f050bb02456a24c7700499a22f3ddf1ced254b43d58f6be9f1829ef673453"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NE.max@2x.png",
+      "sha256": "6cc844da334a42a2c6b754936771a33361b6842b1b0376f980452bcefd2d669d"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NE.native.png",
+      "sha256": "7d02f0c5fcc5b02578deb727e08ae3597e0a5c68171785336717781d4b402748"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NW.configured.png",
+      "sha256": "cdbe394f43d28e8bf0cc28e5a7d4e5a915bd729ea9b7c59acdd20aecd2568712"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NW.configured@2x.png",
+      "sha256": "203a9e273347f6f31282a5d8b046d69c0309c5c475414e6f3a94bbe478b35205"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NW.max.png",
+      "sha256": "fb1ed6d087f84fd20c0365fd7bfd6fed79a028fb722aee797e11bfe3f91be079"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NW.max@2x.png",
+      "sha256": "aba07b1f3b9bc6c5447c23763bad2012c02a96a9cc81842d8aafd804a5b92d44"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/NW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/NW.native.png",
+      "sha256": "2f6d421de1d8cac2420125c329704841ad1d20be409a6f925a6e78e487676294"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SE.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SE.configured.png",
+      "sha256": "5d2f8b5d87509663fe1b87d0852d0a013941f73e27fd17fd7d0fef4f40ce4a69"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SE.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SE.configured@2x.png",
+      "sha256": "727845cea6ae62028d8f6729390d5aa6a0ce3c563a33c1ab51ca791ef23da2a4"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SE.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SE.max.png",
+      "sha256": "a690b41f1f74ec2e6d9f84d1b6defaee02035a3953488e4116b2e9dd87c0b2ab"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SE.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SE.max@2x.png",
+      "sha256": "27347f6374f4c0e4327dea033069d85e84edbccb96849330a624fbca31c11055"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SE.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SE.native.png",
+      "sha256": "77493036b4d7d7e75d10d79362248a06cda28e84750c07f153591414fe7b0db0"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SW.configured.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SW.configured.png",
+      "sha256": "c5d3fc8cbb63ff79408ee9d0bfdce23cbd0b491f1a4164216ebdb5161df0abb6"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SW.configured@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SW.configured@2x.png",
+      "sha256": "d91ac887203305e518e5f45d7670b096a3e5450d0004cf4fc78683bb5d243ced"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SW.max.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SW.max.png",
+      "sha256": "4f7083e792ac0fd897d8f688c0f7f343e43491cdbe3d21da122bb1e9dc26b790"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SW.max@2x.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SW.max@2x.png",
+      "sha256": "b046345393520d32932ab7048924fd83dcd8b9b9de295254696d44409cd84152"
+    },
+    {
+      "source": "art/theme-consistency/generated/buildings/world-barn-4views-v1/SW.native.png",
+      "destination": "art/theme-consistency/generated/buildings/variation-world-barn-ae80f6c9-plain-1-4views-v1/SW.native.png",
+      "sha256": "4603911c5305e9f1746f099f536e460b04783a55e42421f47715bf6b4204b2ae"
+    }
+  ]
+}

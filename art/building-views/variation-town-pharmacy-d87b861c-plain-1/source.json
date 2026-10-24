@@ -1,0 +1,10 @@
+{
+ "id": "variation:town-pharmacy-d87b861c-plain:1",
+ "version": "variation-town-pharmacy-d87b861c-plain-1-4views-v1",
+ "files": {
+  "NE": "3f0ec1ce93afe9001456e642e6dc68ff0ea68643c7c1741f881cfc077ccbc421",
+  "SE": "5226bdae4f6f40ef4ccb442f146cc5fa46ac39c845fba3e4df4b8b8ee60d7e33",
+  "SW": "d7af845c39a93fb82445c4b70865c257412805734edb4e7ea4ac7f0915eee8be",
+  "NW": "ae53097c94959f93fd9a3764a391d07971e7533896c8e7521e2f7c73c6bc787e"
+ }
+}

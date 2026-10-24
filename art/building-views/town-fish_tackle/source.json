@@ -1,0 +1,10 @@
+{
+ "id": "town:fish_tackle",
+ "version": "town-fish_tackle-4views-v1",
+ "files": {
+  "NE": "5c35de50f82c3e8a4fc7af68f3e4c7f333f5bb70de83b44e0348486c12c04fa9",
+  "SE": "55a4335b5b0837b857d731368d5376174bf3214ba10a2098c7b0c044195392d6",
+  "SW": "6aed218973586d8e47661004b2ee644effc156bf11d5eb007e3078f21391d008",
+  "NW": "0b23ad70d40b753466d7592fe10d558579efab8c7a8d083a1c214db5935f312e"
+ }
+}

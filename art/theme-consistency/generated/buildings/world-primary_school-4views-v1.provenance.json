@@ -1,0 +1,15 @@
+{
+  "id": "world:primary_school",
+  "generator": "image_gen",
+  "generated": "2026-10-24",
+  "generatorSource": "C:/Users/RAMPAGE/.codex/generated_images/01a16c0b-bcad-7e71-a5d0-0281b98562b9/exec-3575f86d-951c-42a6-83e7-fbf908c9a738.png",
+  "prompt": "Game sprite production, single subject in FOUR genuine 90-degree rotations on one SQUARE transparent RGBA PNG sheet. Reference1 ONLY style: warm early-dusk Maple Bean street, detailed coherent illustrated 3D miniature; reference2 original identity, preserve architecture, proportions, doors/windows/roof, do not copy Halloween. Reference3 rotation DIAGRAM only, no diagram text/colours. Strict row-major 2x2 NE front+right, SE right+back, SW back+left, NW left+front; same object, reconstruct hidden rear, never mirror front. Fixed parallel 2:1 isometric camera, verticals vertical. Sun FIXED SCREEN UPPER RIGHT in every cell, warm right-facing planes, cooler left-facing planes, contact shadows lower-left. Warm windows and exterior lamps already on, early dusk still detailed, not night. ACTUAL transparent alpha outside silhouettes: no backdrop, haze, checkerboard, terrain tile or broad shadow. At least 15% cell margin EVERY side, broad centre gutters, complete objects never clipped, consistent physical scale. No people, cars, neighbouring objects, trees, flags, pumpkins, cobwebs, bats, ghosts, Halloween decor or garlands; captions forbidden. Long low single-storey primary school, cream upper walls on red-brick plinth, dark green fascia, flat navy roof, small cream bell cupola with green pyramid roof and gold finial, broad classroom windows glowing warm, centred red entrance doors with modest steps and rails. Front sign HOLLOW CREEK PRIMARY only on front, plain classroom rear. Remove ALL Halloween window decals and pumpkins; windows show ordinary empty classroom interiors. Retain modest integral foundation but omit attached garden beds.",
+  "references": [
+    "art/theme-consistency/references/theme-authoritative.png",
+    "art/theme-consistency/exports/buildings/world-primary_school.configured@2x.png",
+    "art/theme-consistency/references/rotation-guide-v1.png"
+  ],
+  "review": "Four distinct front/rear facade views inspected; original identity retained and Halloween decoration omitted. Alpha/crop boundaries checked by preparation; game scale retains original width until door gauge is measured.",
+  "integrationStatus": "blocked",
+  "integrationReason": "Equal-cell crop clips NE wing; use pixel-preserving repacked v2."
+}
