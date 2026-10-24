@@ -11,6 +11,7 @@ import { normalizeGolfSave } from '../src/game/golf/mode';
 import { GOLF_REP_START } from '../src/game/golf/start';
 import type { Rect } from '../src/game/golf/mode';
 import { NEAR, SEED_ACROSS, STRAIGHT, TOWN_WINDOW, bridgeRuns, placeRangeSite, planRangeStart, regionalRoute, type RangeStart } from '../src/game/golf/rangestart';
+import { plotOfFront, rangeLayout } from '../src/game/golf/range';
 
 const VERGE = CLASS.road!.h + CLASS.road!.walk;
 const terrains = new Map<number, Terrain>();
@@ -108,6 +109,12 @@ test('within 600 tiles of J the road is one axis-aligned run through J, and J is
     const cover = p.road.legs.filter(l => (axis === 'x' ? l.a.y === J.y && l.b.y === J.y : l.a.x === J.x && l.b.x === J.x)).flatMap(l => [along(l.a), along(l.b)]);
     assert.ok(Math.min(...cover) <= -STRAIGHT && Math.max(...cover) >= STRAIGHT, `seed ${s}: straight for 600 tiles each way`);
     assert.ok(p.road.legs.some(l => (l.a.x === J.x && l.a.y === J.y) || (l.b.x === J.x && l.b.y === J.y)), `seed ${s}: J is a vertex`);
+    // the ground legs come in pieces of at most 200 tiles straight (283 on a diagonal), joined on the lattice
+    p.road.legs.forEach((l, i) => {
+      if (p.road.kinds[i] !== SK.GROUND) return;
+      assert.ok(Math.hypot(l.b.x - l.a.x, l.b.y - l.a.y) <= 200 * Math.SQRT2 + 20 + 1e-6, `seed ${s}: leg ${i} is a short piece`);
+      if (i > 0 && p.road.kinds[i - 1] === SK.GROUND) assert.ok(l.a.x % BLOCK === 0 && l.a.y % BLOCK === 0, `seed ${s}: the join ${l.a.x},${l.a.y} is on the lattice`);
+    });
   }
 });
 
@@ -167,6 +174,18 @@ test('the plan is deterministic per seed, placeRangeSite agrees with it, and nor
   assert.deepEqual(placeRangeSite(terrain(s), s), plan(s)!.site);
   const g = normalizeGolfSave(JSON.parse(JSON.stringify(plan(s)!.save))) as unknown as { start: string; exits: Pt[] };
   assert.equal(g.start, 'range'); assert.deepEqual(g.exits, plan(s)!.road.exits);
+});
+
+test("the site agrees with the range's layout (T086): its car park is the layout's, and the front gives back the plot (the course grid's no-go)", () => {
+  for (const s of SEEDS) {
+    const p = plan(s); if (!p) continue;
+    const l = rangeLayout(p.site.rangePlot, p.site.dir);
+    assert.deepEqual(l.carpark, p.site.carpark, `seed ${s}: one car park`);
+    assert.deepEqual(plotOfFront(p.site.rangeFront, p.site.dir), p.site.rangePlot, `seed ${s}: the plot from the front`);
+    // the hut faces the road: its door is nearer the road than its centre
+    const c = { x: l.hut.rect[0] + l.hut.rect[2] / 2, y: l.hut.rect[1] + l.hut.rect[3] / 2 };
+    assert.ok(across(p, l.hut.door) < across(p, c), `seed ${s}: the hut faces the road`);
+  }
 });
 
 test('a debug picture of seeds 1-4 (output/rangestart-seeds.svg)', () => {

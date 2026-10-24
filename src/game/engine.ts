@@ -70,6 +70,8 @@ import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
 import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
 import { planGolfGame } from './golf/start';
+import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
+import { plotOfFront, rangeLayout } from './golf/range';
 import { dressCourse } from './golf/dressing';
 import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
@@ -339,6 +341,9 @@ export class Game {
   /** the dev sandbox (URL ?grow=N, ?stamp=0|1, ?money=0|1; the dev server defaults to grow 20, no stamp, money on; the bench forces the game's): the growth speed (1 = the game's),
    *  whether a new valley's towns are stamped to their residents, and unlimited money (sent to the city worker at init) */
   private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false; private sandboxUnlock = false;
+  /** how a new game starts (?start=): 'range' (the default: the county road and the driving range, plan P22), 'town' (the old start: a seeded
+   *  town, the old nine and the clubhouse) or 'valley' (the classic three towns) */
+  private startMode: 'range' | 'town' | 'valley' = 'range';
   /** a Space press that panned (held with the drag) does not also pause on release */
   private spacePanned = false;
   // fx
@@ -370,7 +375,7 @@ export class Game {
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => this.courseGridChanged(d, flush), gridAreas: () => this.gridAreaList(),
-    ownedAt: (x, y) => this.ownedAt(x, y), plans: () => this.golf?.plans ?? [], setPlans: p => { if (this.golf) { this.golf.plans = p; this.scheduleSave(); } },
+    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), plans: () => this.golf?.plans ?? [], setPlans: p => { if (this.golf) { this.golf.plans = p; this.scheduleSave(); } },
     courseLook: () => this.resendCourse() });
   /** the Paint and Course tools drive the same PaintTool */
   get paintOn() { return this.tool === 'paint' || this.tool === 'course'; }
@@ -874,6 +879,7 @@ export class Game {
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
+    this.startMode = q.get('start') === 'town' ? 'town' : q.get('start') === 'valley' ? 'valley' : 'range';
     this.stampOn = q.has('stamp') ? q.get('stamp') === '1' : !dev;
     this.sandboxMoney = q.has('money') ? q.get('money') === '1' : dev;
     // every road class, junction (the roundabout without its card), tunnel and signal tier open from the start (?unlock=0 plays the unlocks)
@@ -937,7 +943,7 @@ export class Game {
     if (read && read.status === 'none' && !read.backedUp) this.saveBlocked = true;
     let loaded: SaveV5 | null = null;
     if (opts.bench) { this.genTerrain(1); const { buildBenchmark } = await import('./bench'); buildBenchmark(this, opts.bench); }
-    else if (!save && this.newGolfGame()) { /* a new golf game: its town, drive and course are laid (see newGolfGame) */ }
+    else if (!save && this.newGame()) { /* a new golf game: the range start's road and range, or the old start's town and course (see newGame) */ }
     else if (!save || !this.load(save)) {
       // a save that read fine but failed to load: keep its bytes before the new game's autosave (T042), or never save over it
       if (save) { if (await backupTownSlot('loadfailed')) readNote = { text: 'The save could not be loaded. It is kept as a backup; a new game started.', kind: 'warn' }; else { this.saveBlocked = true; readNote = { text: 'The save could not be loaded or backed up: saving is off for this session so it is not overwritten.', kind: 'warn' }; } if (this.dead) return; }
@@ -966,6 +972,45 @@ export class Game {
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
     for (const ps of this.townTrees.values()) for (const p of ps) this.sprites.remove(p);
     this.townTrees.clear(); this.perf.townTrees = 0; this.townClump = makeNoise(this.terrain.seed ^ 0x7c1a); this.lotBoxes.clear(); this.paintBoxes.clear();
+  }
+  /** a new game by the start mode (?start=): a range start, else (or with ?start=town) the old start; true when a golf game was laid. False
+   *  (?start=valley, or no seed fits either) leaves the caller to make the classic valley */
+  private newGame(): boolean {
+    if (this.startMode === 'valley') return false;
+    return (this.startMode === 'range' && this.newRangeGame()) || this.newGolfGame();
+  }
+  /** a new range start (plan P22 2.1, golf/rangestart.ts): the first seed of up to 8 whose valley has a site. Lays the county road edge to edge
+   *  (free town road segs, bridged over water) and the range's gravel drive, places the driving range (its front is the business) and its car
+   *  park, and sets the golf state (start 'range', the exits). The camera goes to the range's hut at the street zoom and the Course tool opens.
+   *  No town streets, lots, stamp, course or clubhouse: the town grows from its seed across the road. False, with nothing laid, when no seed fits */
+  private newRangeGame(): boolean {
+    for (let k = 0; k < 8; k++) {
+      const seed = newSeed();
+      this.genTerrain(seed);
+      const s = planRangeStart(this.terrain, seed);
+      if (!s) continue;
+      const { road, site } = s;
+      this.townPts = [site.centre]; this.roadNames = new RoadNames(this.names, this.townPts);
+      this.edit.addLegs(road.legs, CLASS.road, 0, road.kinds, true);
+      this.edit.addLegs(site.drive, classOf('drive-gravel'), 0, undefined, true);
+      const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark;
+      this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
+      this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
+      this.golf = s.save; this.golf.progress = emptyProgress();
+      const [hx, hy, hw, hh] = rangeLayout(site.rangePlot, site.dir).hut.rect, cx = hx + hw / 2, cy = hy + hh / 2;
+      this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
+      this.setTool('course');
+      return true;
+    }
+    console.warn('golf: none of 8 seeds has a range start; the old start instead');
+    return false;
+  }
+  /** whether tile (x, y) lies on the driving range's plot (a range start's course keeps off it: the course grid's brushes refuse its cells) */
+  private onRangePlot(x: number, y: number): boolean {
+    const g = this.golf, d = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined;
+    if (!g || !d) return false;
+    const [rx, ry, rw, rh] = plotOfFront([d.x, d.y, d.w, d.h], g.dir);
+    return x >= rx && x < rx + rw && y >= ry && y < ry + rh;
   }
   /** a new golf game (golf/start.ts): the first seed of up to 8 whose valley has a course beside its town. Lays the town's streets (its avenue and
    *  gravel, free town roads), the gravel drive, the camera on the centre, the clubhouse and car park, the course's paints and the golf state. False,
@@ -1554,7 +1599,7 @@ export class Game {
     this.ground.invalidateAll(); this.ground.courseHeight(this.courseHeight.data, [0, 0, MAP, MAP]); this.syncParks(); this.parking.sync(); this.traffic.setBusinesses(this.bizDefs); this.syncTolls(true); this.traffic.setBusRoutes(this.busDefs);
     this.farmsUpdate(true);
     // the worker's golf state (a new game or a load of one; a classic game turns it off)
-    this.traffic.setGolf(!!this.golf, this.golf?.tier ?? 1, this.golf?.rep ?? 0, this.golfLand());
+    this.sendGolf();
     this.syncGolfProps();
     this.tagCourseHoles();
     this.setupCourseGrid(); // after the tags: an old save's golf areas move into the grid with their holes
@@ -2630,10 +2675,14 @@ export class Game {
       if (l.level >= LV.BUILDING && l.decline === 0 && T - l.since <= GAME_DAY) { this.growN[z]++; this.growTot++; }
     }
   }
-  /** the terrain of the valley for the city worker: its classes, the highway entry (the start block's centre if none) and the seed */
+  /** the golf state for the city worker: on or off, the tier, the reputation, the golf land, and a range start's start and exits */
+  private sendGolf() { const g = this.golf; this.traffic.setGolf(!!g, g?.tier ?? 1, g?.rep ?? 0, this.golfLand(), g?.start, g?.exits); }
+  /** the terrain of the valley for the city worker: its classes, the highway entry (a range start's: its map exit nearer the town; the start
+   *  block's centre if none) and the seed */
   private sendTerrain() {
-  const t = this.terrain, h = t.highway;
-  this.traffic.terrain(t.cls, h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height, this.golfMode);
+  const t = this.terrain, h = t.highway, ex = this.golf?.start === 'range' ? this.golf.exits ?? [] : [], c = this.townPts[0];
+  const near = ex.length && c ? ex.reduce((a, b) => (Math.hypot(b.x - c.x, b.y - c.y) < Math.hypot(a.x - c.x, a.y - c.y) ? b : a)) : null;
+  this.traffic.terrain(t.cls, near ? [near.x, near.y] : h.x >= 0 ? [h.x, h.y] : [t.start.x + t.start.size / 2, t.start.y + t.start.size / 2], this.seed, this.townPts.flatMap(p => [p.x, p.y]), t.height, this.golfMode);
   this.traffic.disastersOn(this.disastersEnabled);
   }
   /** the town lays a free gravel road: its legs go down like a road build, small props are cleared, and a big prop in the way skips it */
@@ -2659,7 +2708,7 @@ export class Game {
   private setBizDefs(defs: BizDef[]) {
     for (const p of this.businessProps) this.sprites.remove(p);
     for (const d of [...this.bizDefs, ...defs]) this.dropTownTrees(d.x, d.y, d.x + d.w, d.y + d.h);
-    this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium') ?? defs.find(d => d.type === 'clubhouse'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
+    this.bizDefs = defs; const s = defs.find(d => d.type === 'stadium') ?? defs.find(d => d.type === 'clubhouse') ?? defs.find(d => d.type === 'range'); this.stadiumSite = s ? siteAt(s.x, s.y, s.w, s.h) : null;
     this.businessProps = defs.flatMap(d => businessArt(d, LIBRARY, LIB_INDEX));
     for (const p of this.businessProps) this.sprites.add(p);
   }
@@ -2744,7 +2793,7 @@ export class Game {
   this.golf.tier = ye.tier;
   this.golf.rep = ye.rep;
   this.golf.poorYears = ye.poorYears;
-  this.traffic.setGolf(true, this.golf.tier, this.golf.rep, this.golfLand());
+  this.sendGolf();
   const book = computeTournamentCloseBook(ye, this.traffic.round.last.tickets ?? 0, this.courseAreaList(), this.traffic.round.last.upkeep, this.traffic.round.last.toll ?? 0);
   if (book.bizIncome > 0) {
   this.traffic.spend('business', -book.bizIncome);
@@ -3279,7 +3328,7 @@ export class Game {
   this.golf.parcels = res.parcels;
   this.golf.parcel = res.bounds;
   this.fitCourseGrid(); // the course grid holds the new land
-  this.traffic.setGolf(true, this.golf.tier, this.golf.rep, this.golfLand()); // the town keeps off the new land too
+  this.sendGolf(); // the town keeps off the new land too
   this.traffic.spend('construction', res.price);
   this.scheduleSave();
   this.toast(`Purchased ${info.landClass} block ($${res.price.toLocaleString()})`);
@@ -3524,13 +3573,13 @@ export class Game {
     this.traffic.setBudget(null, null); this.showWin = false; this.route = []; this.selected = null; this.builds = [];
   }
   newTown() {
-    this.reset(); const golf = this.newGolfGame();
+    this.reset(); const golf = this.newGame();
     if (!golf) this.genTerrain(newSeed());
     this.ground.terrain(this.terrain); this.sendTerrain();
-    if (!golf) this.seedTowns(); // a golf game laid its town in newGolfGame
+    if (!golf) this.seedTowns(); // a golf game laid its road and range (or its town) in newGame
     this.afterLoad();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
-    void this.save(); this.toast(`New valley (seed ${this.seed})`); this.emit();
+    void this.save(); this.toast(`New game (seed ${this.seed})`); this.emit();
   }
   clearTown() { this.reset(); this.sendTerrain(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
   /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed

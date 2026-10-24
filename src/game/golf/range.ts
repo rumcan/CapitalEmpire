@@ -44,6 +44,12 @@ export function plotPoint(plot: Rect, facing: 0 | 1 | 2 | 3, u: number, v: numbe
   const [px, py] = plot, [W, D] = RANGE_PLOT;
   return facing === 2 ? { x: px + u, y: py + v } : facing === 0 ? { x: px + W - u, y: py + D - v } : facing === 1 ? { x: px + v, y: py + W - u } : { x: px + D - v, y: py + u };
 }
+/** the range plot (world rect) of a range business's front (its rect, RANGE_FRONT deep from the road) for a facing: the front runs on
+ *  RANGE_PLOT[1] tiles the way the golfers hit */
+export function plotOfFront(front: Rect, facing: 0 | 1 | 2 | 3): Rect {
+  const [x, y] = front, [W, D] = RANGE_PLOT, back = D - RANGE_FRONT;
+  return facing === 2 ? [x, y, W, D] : facing === 0 ? [x, y - back, W, D] : facing === 1 ? [x, y, D, W] : [x - back, y, D, W];
+}
 /** the world rect of the frame's u0..u1 by v0..v1 */
 function plotRect(plot: Rect, f: 0 | 1 | 2 | 3, u0: number, u1: number, v0: number, v1: number): Rect {
   const a = plotPoint(plot, f, u0, v0), b = plotPoint(plot, f, u1, v1);

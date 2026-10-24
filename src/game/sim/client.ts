@@ -14,7 +14,8 @@ import { townClockFor, type TownClock } from './townclock';
 import type { DisasterNote, DisasterView } from '../city';
 import type { DisasterKind } from '../ext/disasters';
 import { LV, type LotTuple, type TownEvent } from '../lots/town';
-import type { Leg } from '../network';
+import type { Leg, Pt } from '../network';
+import { GOLF_START_MONEY } from '../golf/mode';
 import { VTYPES, type CarInfo } from './sim';
 import type { Report } from './bottlenecks';
 import type { HourStat } from '../beforeafter';
@@ -141,8 +142,11 @@ export class SimClient {
    *  and the heights (HS*HS metres, copied; the disasters read them: none gives flat ground); the town starts again. Send before the net ops. */
   terrain(cls: Uint8Array, entry: [number, number], seed: number, towns: number[] = [], height?: Float32Array, golf = false) {
   this.post({ t: 'terrain', cls, entry, seed, towns, height, golf });
+  // the town starts again: the lot mirror too, or a lot whose key the new network shares with the old one (the range start's county roads
+  // are lattice-aligned, so two games often share one) would keep the old town's state, be saved with it and come back on a load
+  this.lots.clear();
   // the worker resets the books and the career with a new valley (City.terrain): the mirror shows the fresh treasury at once
-  this.budget = { ...new Budget().toJSON(), money: golf ? START_MONEY : startMoney(towns.length > 0), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY };
+  this.budget = { ...new Budget().toJSON(), money: golf ? GOLF_START_MONEY : startMoney(towns.length > 0), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY };
   this.career = { reached: 0, won: false };
   }
   /** the towns built at once (after a new valley's net ops): each grows to pop residents; the town's lots and totals come back as a town message */
@@ -160,7 +164,7 @@ export class SimClient {
   /** the player's businesses (the full list, each time): the worker's stadium site follows (see City.setBusinesses) */
   setBusinesses(defs: BizDef[]) { this.post({ t: 'businesses', defs }); }
   /** golf mode on (with the tournament's tier and its reputation: the season ends with it) or off (see City.setGolf) */
-  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][]) { this.post({ t: 'golf', on, tier, rep, land }); this.golfOn = on; this.sendTownDay(); }
+  setGolf(on: boolean, tier: number, rep: number, land?: [number, number, number, number][], start?: 'range', exits?: Pt[]) { this.post({ t: 'golf', on, tier, rep, land, start, exits }); this.golfOn = on; this.sendTownDay(); }
   /** the town day (LEAD.md M1): in a golf game the town lives a day of townMinutes (real minutes at 1x; one sim second is one game minute)
    *  with its own commute, separate from the season; townTraffic scales its lot trips. A classic game keeps the classic day (DAY). */
   golfOn = false; townMinutes = 10; townTraffic = 1;

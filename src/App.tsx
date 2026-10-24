@@ -80,9 +80,9 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
-  /** the settings menu (Save, New town, Empty map) open under its gear */
+  /** the settings menu (Save, New game, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
-  /** the menu button waiting for its second click (New town, Empty map), or null */
+  /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
@@ -276,7 +276,7 @@ export default function App() {
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
-                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New town'}</button>
+                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
                   </div>
                 )}
@@ -418,7 +418,7 @@ export default function App() {
                 <div className="text-2xl font-bold text-red-300">Bankrupt</div>
                 <p className="mt-3 text-sm text-slate-300">The books stayed in the red for {DEBT_DAYS} days in a row.</p>
                 <div className="mt-5 flex justify-center gap-2">
-                  <button className="chip chip-on" onClick={() => game.newTown()}>New valley</button>
+                  <button className="chip chip-on" onClick={() => game.newTown()}>New game</button>
                   <button className="chip" onClick={() => setWatch(true)}>Keep watching</button>
                 </div>
               </div>

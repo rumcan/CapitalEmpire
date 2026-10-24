@@ -86,27 +86,34 @@ Pick 1 of 3 cards at each results screen, as today. The pool is in section 8.3.
 
 ---
 
-## 3. The start: one town and an old 9-hole course
+## 3. The start: one road and the driving range (plan P22)
 
-- **One town** (Maple Falls), seeded by **6R.7's rules** (the owner's 2026-10-21 decisions): one asphalt main avenue with gravel
-  branches, a fixed commercial district and a fixed industrial district, the rest residential with a few shops scattered. It
-  grows **by the player's success**, which now means the tournament's (section 8.4). About 1,000–1,500 residents at the start.
-- **The highway entry** at the map edge stays: from tier 2 most of the crowd comes from off the map through it (section 5.2).
-  More entries (a second highway, a regional road) open with the tiers.
-- **The old course, placed and painted by the game** at the new game:
-  - Site: **outside the town, surrounded by farms** (the owned parcel, section 4.4; the farms are the land it buys to grow),
-    open, mostly flat land (GROUND or PATCH tiles), its clubhouse **150–350 tiles from the town centre**, joined to a town
-    road by a short gravel or street drive, about **300 x 450 tiles** (600 x 900 m, about 54 ha) with room to grow to 18 holes
-    on at least one side. Placed like the stadium's suggested spot today (`event/site.ts`).
-  - Layout: **9 holes in a loop out and back to the clubhouse**, par 36: 2 par 3s, 5 par 4s, 2 par 5s, about 2,700 m (the
-    1968 standard nine of about 3,000 yards; Golf Course Industry). Holes are routed so each green is near the next tee.
-  - **Everything is painted**, using the same paint areas the player edits: narrow, worn fairways (the "worn" variants), small
-    greens with fringe borders, tees, rough everywhere inside the boundary, 4–6 bunkers, one pond, trees lining the holes
-    (forest sprites), and a cart path loop. The player can repaint any of it.
-  - Objects: the clubhouse, cart barn and a small car park (about 30 bays: today's car park), tee markers and flagsticks
-    (section 4.2), benches and ball washers.
-- **Start money:** $600,000 (today's $800,000 less the $200,000 stadium, which golf mode does not have).
-- The three-town valley, the stadium and the businesses stay in the code. Legacy saves load as they are (open question 7).
+The owner (2026-10-24): "The game starts with nothing but a road passing a driving range. The town grows from your driving range outward.
+No more prepainted streets for the town." The full design is [plans/P22.md](plans/P22.md); the code is `golf/rangestart.ts` (the plan),
+`golf/range.ts` (the range) and `Engine.newRangeGame`.
+
+- **The county road** (class `road`, a free town road) crosses the map edge to edge through the range's junction J. It is straight for
+  at least 600 tiles each side of J, so the town's 40-tile lattice meets it square, and each half may take one 45° bend. It crosses water
+  by at most 2 bridges. Its two map exits are saved (`golf.exits`); the exit nearer the town is the city's entry. Open edges win:
+  a road ends on a mountain edge only when the map leaves no open one on that axis (half the maps have three mountain edges).
+- **The driving range** is the player's first business: a 70 × 150 tile plot (140 × 300 m) in the road corner of the owned parcel,
+  with golfers hitting away from the road. Its 24-tile front (the `range` visit business) holds the hut, the covered mats and a 20 × 16
+  car park beside a short gravel drive from J. Until a clubhouse exists, the range front is the venue.
+- **The owned parcel** is 300 × 450 tiles (about 54 ha) on the range's side of the road, 6 tiles off the road: room for a first nine,
+  not for 18 (land is bought as before, section 4.4). The course grid covers it, and its brushes keep off the range plot.
+- **The town has a seed, not streets:** one town centre 40 tiles across the road from J. The town planner lays every street itself,
+  the first within the first game hour, and the town's roads keep off the golf land. There are no lots, no stamp, no old nine and no
+  clubhouse at minute zero. Farms line the county road away from the town and the course.
+- **The camera** starts on the range's hut at the street zoom (17%), with the Course tool open.
+- **Start money:** $600,000 (today's $800,000 less the $200,000 stadium, which golf mode does not have). The first nine is the
+  player's to build.
+- **Still to come** (P22's tickets): founding seasons and the tour's invitation (T088), the clubhouse the player places (T089), the
+  grown-town growth rules (T090, T091), the exits feeding the range (T092), through traffic (T093), the off-map tournament crowd (T094),
+  the first-minute guide (T095) and the range's look (T096).
+- **Old saves keep their towns.** A save without `golf.start` is the old start: one seeded town (one asphalt main avenue with gravel
+  branches, about 1,000 residents), the old nine placed and painted by the game 150-350 tiles from the town centre, and its clubhouse.
+  It loads and grows by today's rules. The old start stays behind `?start=town` for comparisons and tests; `?start=valley` gives the
+  classic three-town valley. Legacy (classic) saves load as they are.
 
 ---
 
