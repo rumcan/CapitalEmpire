@@ -497,6 +497,8 @@ function build(genSeed: number): Terrain {
     chokepoints.push({ kind: 'gorge', x: pts[mid].x, y: pts[mid].y, width: gorgeW[mid] });
   }
   if (bridge) chokepoints.unshift(bridge);
+  // the playable plane (owner, T025 choice 1A): the relief only shaped the rivers, creeks, woodland and chokepoints above; the map itself ships flat
+  height.fill(0);
   return { seed: genSeed, attempt: 0, height, cls, waters, mountainEdges, highway, start, towns, chokepoints };
 }
 
