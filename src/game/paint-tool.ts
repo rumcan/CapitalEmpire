@@ -67,6 +67,8 @@ function loadBrush(): Record<BrushKind, BrushSet> {
 }
 /** what the tool needs from the engine: the lot ground, redraws, saves, toasts, the css px projection of tiles (affine A: tile (x, y) is at (A[0] + x*A[2] + y*A[4], A[1] + x*A[3] + y*A[5])), and the props of a placed golf hole (returns how many were placed) */
 export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | null): void; emit(): void; save(): void; toast(text: string, kind?: 'info' | 'warn'): void; affine(out: number[]): void; placeProps(ps: PresetProp[], seed: number): number; golfMode?: () => boolean; money?: () => number; spend?: (n: number) => void; ownedLand?: (pts: number[]) => boolean; currentMonth?: () => number;
+  /** the player did something that counts toward the tool unlocks (T033) */
+  progress?(what: 'piece'): void;
   /** a plant brush dab: props from ids scattered in the circle (spaced, sized size[0]..size[1]); returns how many were placed */
   plant(ids: string[], x: number, y: number, r: number, spacing: number, size: [number, number], seed: number): number;
   /** removes the plant-brush props in the circle; returns how many */
@@ -433,7 +435,7 @@ export class PaintTool {
       this.areas.push(a); this.send(a, m);
     }
     this.applyHeightOps(p.pl.heightOps);
-    this.commit(); this.piece = null; this.refreshPiece(); this.host.save();
+    this.commit(); this.host.progress?.('piece'); this.piece = null; this.refreshPiece(); this.host.save();
   }
   /** piece mode: the planned piece as ghosts, bottom layer first (each in its surface's colour with its border band, the core dashed; red when it cannot go), the snap tick on the edge it joins, and its label */
   private drawPiece(v: PaintView) {

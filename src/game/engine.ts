@@ -84,6 +84,7 @@ import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLig
 import { unmirror } from './views-library';
 import { TREE_MIRROR } from './tree-sun';
 import { NEW_ART_ONLY, lookOf } from './newart';
+import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -300,7 +301,7 @@ export class Game {
   routeFrom: Snap | null = null; routeLast: Snap | null = null;
   // economy (the books live in the city worker: traffic.budget, see the getters by the save)
   /** the sim speed (sim s per s; 0 = paused) and the last speed above 0 (what a resume goes back to) */
-  speed = 1; private lastSpeed = 1;
+  speed = 1; private lastSpeed = 1; private lastFrame = 0;
   /** the dev sandbox (URL ?grow=N, ?stamp=0|1, ?money=0|1; the dev server defaults to grow 20, no stamp, money on; the bench forces the game's): the growth speed (1 = the game's),
    *  whether a new valley's towns are stamped to their residents, and unlimited money (sent to the city worker at init) */
   private sandboxGrow = 1; private stampOn = true; private sandboxMoney = false; private sandboxUnlock = false;
@@ -331,7 +332,7 @@ export class Game {
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
   private dragging: null | { kind: 'pan' | 'bulldoze' | 'park'; sx: number; sy: number; camX: number; camY: number; moved: boolean; build?: boolean } = null;
   /** the Paint tool: painted ground areas, its settings and the outline being drawn (docs/PAINT-TOOL.md) */
-  paint = new PaintTool({ setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, heightChanged: b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
+  paint = new PaintTool({ progress: () => this.bump('pieces'), setLotGround: (k, p) => { this.paintRev++; this.setLotGround(k, p); }, emit: () => this.emit(), save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), affine: o => this.paintAffine(o), placeProps: (ps, seed) => this.placePresetProps(ps, seed), golfMode: () => this.golfMode, money: () => this.money, spend: n => this.traffic.spend('construction', n), ownedLand: pts => !this.golf || polyInParcels(this.golf.parcels ?? [this.golf.parcel], pts), currentMonth: () => !this.golf ? 0 : this.golfMonthIndex(), plant: (ids, x, y, r, spacing, size, seed) => this.plantProps(ids, x, y, r, spacing, size, seed), unplant: (x, y, r) => this.unplantProps(x, y, r), plantPool: k => plantPool(LIBRARY, k), courseHeight: () => this.courseHeight, heightChanged: b => { this.courseHeightChanged(unionCourseBox(b, this.flattenRoadsIn(b))!); },
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins) });
   /** the Paint and Course tools drive the same PaintTool */
@@ -643,7 +644,7 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'clubhouse', x: vx, y: vy, w: vw, h: vh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
       this.paint.load(s.paints.map((a, i) => toTuple({ id: i + 1, ...a })));
-      this.golf = s.save;
+      this.golf = s.save; this.golf.progress = emptyProgress();
       for (const p of dressCourse(s.layout, seed)) {
       const i = LIB_INDEX.get(p.id);
       if (i !== undefined) {
@@ -1183,7 +1184,7 @@ export class Game {
     const id = Math.max(0, ...(this.golf.structures ?? []).map(s => s.id)) + 1;
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
-    this.golf.structures.push(placed); this.syncCourseGates();
+    this.golf.structures.push(placed); this.syncCourseGates(); this.bump('structures');
     const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? 'expansion:backyard-tent';
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
@@ -1529,7 +1530,7 @@ export class Game {
     this.edit.addLegs(parts, cls, this.lineStyle, kinds);
     if (cuts.length) { const v = this.roadValue(); this.tidyEnds(cuts.flatMap(c => [c.p0, c.p1, c.seg.a, c.seg.b])); removed += v - this.roadValue(); }
     const paid = Math.round(build - removed);
-    this.commitNetwork(true, now + dur + 150);
+    this.commitNetwork(true, now + dur + 150); this.bump('roads');
     this.builds.push({ legs: parts, cls, t0: now, dur, total, cum });
     this.traffic.spend('construction', paid);
     if (comp) this.traffic.spend('compensation', comp);
@@ -2369,7 +2370,7 @@ export class Game {
     if (!pd.park) { this.toast('Car park: no road along its sides', 'warn'); return; }
     if (pd.cost > this.money) { this.toast(`Not enough money: a car park this size costs $${pd.cost.toLocaleString()}`, 'warn'); return; }
     const id = Math.max(0, ...this.parkDefs.map(d => d.id)) + 1, bays = pd.park.bays.length;
-    this.parkDefs.push({ ...pd.def, id });
+    this.parkDefs.push({ ...pd.def, id }); this.bump('parks');
     this.dropTownTrees(pd.def.x, pd.def.y, pd.def.x + pd.def.w, pd.def.y + pd.def.h);
     this.traffic.spend('construction', pd.cost);
     this.syncParks();
@@ -2870,6 +2871,16 @@ export class Game {
     const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0);
     return r.runs * 12 + ((seasonMonth(c) - SEASON_START + 12) % 12);
   }
+  /** counts a player action toward the tool unlocks (golf mode only; saved) */
+  private bump(k: 'pieces' | 'roads' | 'parks' | 'structures') { const p = this.golf?.progress; if (!p) return; p[k]++; this.scheduleSave(); this.emit(); }
+  /** the player's progress facts (T032), null outside golf mode */
+  playerProgressFacts(): PlayerProgressFacts | null { const p = this.golf?.progress; return p ? progressFacts(p, this.traffic.round.runs) : null; }
+  /** the progressive tool visibility (T032/T033), null outside golf mode (classic and sandbox show everything) */
+  progressiveUi(): ProgressiveUiState | null { const f = this.playerProgressFacts(); return f ? computeProgressiveUiState(f) : null; }
+  /** hides a first-run hint for good (saved) */
+  dismissHint(id: string) { const p = this.golf?.progress; if (!p || p.dismissed.includes(id)) return; p.dismissed.push(id); this.scheduleSave(); this.emit(); }
+  /** the "Show all tools (Advanced)" toggle (saved) */
+  setAdvancedTools(on: boolean) { const p = this.golf?.progress; if (!p || p.advanced === on) return; p.advanced = on; this.scheduleSave(); this.emit(); }
   golfView(): GolfView | null {
   if (!this.golf) return null;
   const c = this.traffic.clockTime(performance.now()), r = this.traffic.round, tier = this.golf.tier;
@@ -3017,6 +3028,7 @@ export class Game {
       // a golf game has one town (its centre, saved); a legacy save has none of these, and keeps the valley's three
       this.golf = normalizeGolfSave(d.golf);
       this.courseHeight = loadCourseHeight(this.golf?.height); this.chSave = null;
+      if (this.golf) this.golf.progress = normalizeProgress(this.golf.progress);
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
       if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
@@ -3301,6 +3313,8 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
+    // real play seconds of a golf game while the sim runs (T033): stops at the Stage 3 mark, so the save does not churn
+    const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STAGE_3_TIME_SEC) gp.playS += pdt;
     this.applyLotQueue(); this.applyFarmQueue(); this.flushLotGround(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);

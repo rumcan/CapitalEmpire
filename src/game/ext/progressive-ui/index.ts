@@ -177,3 +177,6 @@ export function computeProgressiveUiState(facts: PlayerProgressFacts): Progressi
     activeHint: nextFirstRunHint(facts),
   };
 }
+
+/** what the player did in the golf game (T033): the saved counters and the facts T032 reads */
+export * from './progress';
