@@ -161,6 +161,13 @@ let PRESETS: LotPreset[] = parsePresets(PRESET_JSON).presets;
 export const lotPresets = (): readonly LotPreset[] => PRESETS;
 /** replaces the presets (the dev editor after a save, a hot reload of lot-presets.json); the caller composes the lots again */
 export function setLotPresets(list: LotPreset[]) { PRESETS = list; }
+/** who takes a hot reload of lot-presets.json in the dev server (the dev editor: it ignores the echo of its own saves, else sets the presets and
+ *  composes the lots again); with none, the reload replaces the presets */
+let reloadHandler: ((list: LotPreset[]) => void) | null = null;
+/** takes the hot reloads of lot-presets.json (dev server only; never in a build); returns the release */
+export function onLotPresetsReload(fn: (list: LotPreset[]) => void): () => void { reloadHandler = fn; return () => { if (reloadHandler === fn) reloadHandler = null; }; }
+// the dev server: a saved lot-presets.json (the dev editor's, the studio's or by hand) replaces the presets in place, no page reload
+if (import.meta.hot) import.meta.hot.accept('./lot-presets.json', m => { if (!m) return; const list = parsePresets(m.default).presets; if (reloadHandler) reloadHandler(list); else PRESETS = list; });
 
 /** the preset use of a lot's state: res, com (a public car park: park), tour, ind, civic; null for a lot of no use */
 export function presetUse(st: ComposeState): PresetUse | null {
