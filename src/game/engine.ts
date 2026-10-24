@@ -9,7 +9,7 @@ import { CLASS, FLAG_COST, Grid, classOf, JUNCTIONS, KEY_CLASSES, RoadNetwork, S
 import { NetEditor, applyNodeEntry, netToOps, nodeEntry, straightChain } from './netops';
 import { TIER_BADGE, flagRule, isLights, junctionCorners, slipPlan, slipsOn, type Corner } from './junctions';
 import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoint, type Snap } from './snap';
-import { STRUCT_COST, STRUCT_MAX, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
+import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { lotBatch, type LotPatch } from './ground-protocol';
@@ -715,7 +715,7 @@ export class Game {
     const f = this.footprint(it, x, y, flip, k);
     if (f.x0 < 1 || f.y0 < 1 || f.x1 > MAP - 1 || f.y1 > MAP - 1) return 'Outside the town limits';
     for (let y = Math.floor(f.y0); y < Math.ceil(f.y1); y++) for (let x = Math.floor(f.x0); x < Math.ceil(f.x1); x++) {
-      const c = this.terrain.cls[y * MAP + x]; if (c === TC.HILL || c === TC.WATER || c === TC.CREEK || c === TC.BANK) return 'Not on hills or water';
+      const c = this.terrain.cls[y * MAP + x]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return 'Not on water';
     }
     const occ = this.net.rectOcc(f.x0 + 0.08, f.y0 + 0.08, f.x1 - 0.08, f.y1 - 0.08);
     if (it.kind === 'car') { if (occ === 3) return 'Not on the median'; }
@@ -821,9 +821,10 @@ export class Game {
       if (q >= NN) this.plantTownCell(key, key % N, Math.floor(key / N)); else this.plantCell(key, key % N, Math.floor(key / N));
     }
   }
-  /** plant one forest cell as sprites (not props: no selection, bulldozing or saving) */
+  /** plant one forest cell as sprites (not props: no selection, bulldozing or saving), without the trees on or beside anything built (T025b) */
   private plantCell(key: number, ci: number, cj: number) {
-    const out = this.treeSprites(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj));
+    const { free } = this.treeClearance(ci, cj);
+    const out = this.treeSprites(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj).filter(t => free(t.x, t.y, 1)));
     this.forest.set(key, out); this.perf.forest += out.length;
   }
   /** the sprites of planted trees (not props), skipping the ones in front of a tunnel mouth */
@@ -840,8 +841,8 @@ export class Game {
     }
     return out;
   }
-  /** plant one town-tree cell as sprites: the predicates are built from the lots, roads, businesses, car parks, toll plazas, painted areas and portals near the cell */
-  private plantTownCell(key: number, ci: number, cj: number) {
+  /** what keeps trees off the ground near cell (ci, cj), for the town trees and the forest alike (T025b): the lots near the cell, and free(x, y, r): no lot, road, business, car park, toll plaza, painted area or tunnel mouth within r tiles of (x, y) */
+  private treeClearance(ci: number, cj: number): { lots: LotView[]; free: (x: number, y: number, r: number) => boolean } {
     const x0 = ci * FOREST_CELL, y0 = cj * FOREST_CELL, x1 = x0 + FOREST_CELL, y1 = y0 + FOREST_CELL, g = 30;
     const lots: LotView[] = [];
     for (const l of this.traffic.lots.values()) if (boxNear(lotBoxOf(l.o, l.u, l.n, l.w, l.d), x0, y0, x1, y1, g)) lots.push(l);
@@ -850,7 +851,6 @@ export class Game {
     const tolls: [TollDef, Seg][] = [];
     for (const d of this.tollDefs) { const s = this.tollSegs.get(d.id); if (s && boxNear(tollBox(d), x0, y0, x1, y1, g)) tolls.push([d, s]); }
     const paints = this.paint.areas.filter(a => boxNear(ptsBox(a.pts), x0, y0, x1, y1, g));
-    const near = (x: number, y: number) => { for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
     const free = (x: number, y: number, r: number) => {
       for (const l of lots) if (lotGap(l, x, y) < r) return false;
       const p = { x, y };
@@ -861,10 +861,16 @@ export class Game {
       if (paints.length) for (let k = 0; k < 9; k++) { const a = k * Math.PI / 4; if (areaAt(paints, x + (k < 8 ? Math.cos(a) * r : 0), y + (k < 8 ? Math.sin(a) * r : 0))) return false; }
       return !this.inPortal(x, y);
     };
+    return { lots, free };
+  }
+  /** plant one town-tree cell as sprites: the predicates are built from the lots, roads, businesses, car parks, toll plazas, painted areas and portals near the cell */
+  private plantTownCell(key: number, ci: number, cj: number) {
+    const { lots, free } = this.treeClearance(ci, cj);
+    const near = (x: number, y: number) => { for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
     const out = this.treeSprites(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near));
     this.townTrees.set(key, out); this.perf.townTrees += out.length;
   }
-  /** the town-tree cells whose box (30 tiles around the cell) touches the box x0 y0 x1 y1 lose their trees: plantForest plants them again */
+  /** the town-tree and forest cells whose box (30 tiles around the cell) touches the box x0 y0 x1 y1 lose their trees: plantForest plants them again (around what was built) */
   private dropTownTrees(x0: number, y0: number, x1: number, y1: number) {
     const N = MAP / FOREST_CELL, g = 30;
     for (const [k, ps] of this.townTrees) {
@@ -872,6 +878,12 @@ export class Game {
       if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, g)) continue;
       for (const p of ps) this.sprites.remove(p);
       this.perf.townTrees -= ps.length; this.townTrees.delete(k);
+    }
+    for (const [k, ps] of this.forest) {
+      const ci = k % N, cj = Math.floor(k / N);
+      if (!boxNear([x0, y0, x1, y1], ci * FOREST_CELL, cj * FOREST_CELL, (ci + 1) * FOREST_CELL, (cj + 1) * FOREST_CELL, g)) continue;
+      for (const p of ps) this.sprites.remove(p);
+      this.perf.forest -= ps.length; this.forest.delete(k);
     }
   }
   /** a lot's rectangle changed (or went): the town trees around its old and new box are dropped (a change of level alone does not move the trees) */
@@ -1487,7 +1499,7 @@ export class Game {
     }
     return false;
   }
-  /** does a road corridor of half width hw cross a hill or the river? (creeks and banks are fine: culverts, riverside roads); or a business */
+  /** does a road corridor of half width hw cross the river? (creeks and banks are fine: culverts, riverside roads); or a business */
   private blockedForRoad(legs: Leg[], hw: number): boolean {
     if (this.crossesBiz(legs, hw)) return true;
     for (const l of legs) {
@@ -1495,14 +1507,14 @@ export class Game {
       const u = mul(d, 1 / L), n = perp(u);
       for (let s = 0; s <= L; s += 0.5) for (let o = -hw; o <= hw + 1e-6; o += 0.5) {
         const x = l.a.x + u.x * s + n.x * o, y = l.a.y + u.y * s + n.y * o, c = classAt(this.terrain, x, y);
-        if (c === TC.HILL || c === TC.WATER) return true;
+        if (c === TC.WATER) return true;
       }
     }
     return false;
   }
   /** the legs split into ground, bridge and tunnel pieces, with their cost (money) and an error ('' if fine) */
   private structured(legs: Leg[]) {
-    const { legs: parts, kinds } = splitByTerrain(legs, this.cls.h + this.cls.walk, (x, y) => classAt(this.terrain, x, y));
+    const { legs: parts, kinds } = splitByTerrain(legs, this.cls.h + this.cls.walk, (x, y) => groundClass(classAt(this.terrain, x, y)));
     // a split point (a bank, a tunnel mouth) within 2 tiles of a node on the route moves on to it: just off it, it left a road piece under a tile
     for (let i = 0; i + 1 < parts.length; i++) {
       const q = parts[i]!.b, r = parts[i + 1]!.a; if (Math.hypot(q.x - r.x, q.y - r.y) > 1e-6) continue;
@@ -3196,7 +3208,7 @@ export class Game {
     for (const n of this.net.nodes.values()) { const d = (n.x - h.x) ** 2 + (n.y - h.y) ** 2; if (d < best) { best = d; target = { x: n.x, y: n.y }; } }
     const pts = highwayRoute(h, target, hw, (x, y) => classAt(t, x, y));
     const legs0: Leg[] = []; for (let i = 1; i < pts.length; i++) legs0.push({ a: pts[i - 1], b: pts[i] });
-    const { legs, kinds } = splitByTerrain(legs0, hw, (x, y) => classAt(t, x, y));
+    const { legs, kinds } = splitByTerrain(legs0, hw, (x, y) => groundClass(classAt(t, x, y)));
     for (const p of this.propsNearLegs(legs, hw)) if (!LIBRARY[p.item].big) this.removeProp(p);
     this.edit.addLegs(legs, CLASS.road, 0, kinds, true);
   }

@@ -41,7 +41,7 @@ interface Cand { A: Pt; u: Pt; L: number; start: Seg; close: Seg | null; dead: b
 const dist = (a: Pt, b: Pt) => Math.hypot(a.x - b.x, a.y - b.y);
 const paved = (s: Seg) => s.cls.id !== 'gravel';
 const isEmpty = (t: Town, l: Lot) => (t.states.get(l.key)?.level ?? LV.EMPTY) === LV.EMPTY;
-const bad = (c: number) => c === TC.HILL || c === TC.WATER || c === TC.CREEK || c === TC.BANK;
+const bad = (c: number) => c === TC.WATER || c === TC.CREEK || c === TC.BANK;
 /** does the seg pass through p (within 0.05 tiles) */
 const through = (s: Seg, p: Pt) => segDist(p, s) < 0.05;
 /** does the leg A → E touch seg s: its centre line crosses s, or an end of the leg is on s (within 0.05 tiles) */

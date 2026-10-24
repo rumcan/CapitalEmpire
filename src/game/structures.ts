@@ -23,6 +23,9 @@ function at(l: Leg, u: Pt, L: number, s: number): Pt {
 /** the shortest piece a leg is split into, tiles */
 const MIN_PIECE = 2;
 
+/** the class a road sees at a tile: woodland (TC.HILL) is flat ground since the flat map (T025), so roads cross it at ground level instead of in a tunnel */
+export function groundClass(c: number): number { return c === TC.HILL ? TC.GROUND : c; }
+
 /** split each leg where its corridor (half width hw) crosses water (bridge) or hills (tunnel); the rest stays ground */
 export function splitByTerrain(legs: Leg[], hw: number, classAt: (x: number, y: number) => number): { legs: Leg[]; kinds: SegKind[] } {
   const outLegs: Leg[] = [], kinds: SegKind[] = [];
