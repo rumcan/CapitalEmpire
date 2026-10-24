@@ -1,0 +1,13 @@
+{
+  "generationId": "6dbbc437-7555-4516-b823-c7240d6e7c42",
+  "prompt": "Tournament volunteer, a cheerful young woman in her 20s, brown ponytail, a plain kelly-green polo shirt, khaki shorts, a plain white visor, white sneakers. No logos, no lettering. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person\u0027s age, stylised hand-painted game look. No props, nothing in the hands, no logos.",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "text-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\art\\spectators\\staff_volunteer_w\\model.glb",
+  "status": "saved",
+  "sha256": "766f9d7d6903e1fe8615a67a1a7c523ee860aeaa6e02e1c85766490530599a5c",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/6dbbc437-7555-4516-b823-c7240d6e7c42/model.compressed.glb",
+  "seed": 534051269
+}

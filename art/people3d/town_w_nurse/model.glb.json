@@ -1,0 +1,13 @@
+{
+  "generationId": "d93a710f-44ca-4260-a747-a1f39ebb8fdd",
+  "prompt": "Hospital nurse in her 30s from a 1985 small American town, dark hair in a neat bun, a plain light blue scrub top and matching trousers, white shoes. No logos, no lettering, no badge. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person\u0027s age, stylised hand-painted game look. No props, nothing in the hands, no logos.",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "text-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\art\\people3d\\town_w_nurse\\model.glb",
+  "status": "saved",
+  "sha256": "4e0562d68beef24ba1dbbf0c79b97f0e6d54699574ce3844e32aadbc989bdd8c",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/d93a710f-44ca-4260-a747-a1f39ebb8fdd/model.compressed.glb",
+  "seed": 840723598
+}

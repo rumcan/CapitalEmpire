@@ -1,0 +1,13 @@
+{
+  "generationId": "94ee5466-2c0e-4219-a164-308947d68a54",
+  "prompt": "Sundress woman in her 40s at a 1985 golf tournament, a wide-brimmed straw sun hat, a light yellow sleeveless sundress to the knee, tan sandals, auburn hair. Plain clothes, no logos, no lettering. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person\u0027s age, stylised hand-painted game look. No props, nothing in the hands, no logos.",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "text-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\art\\spectators\\spec_w_sunhat_dress\\model.glb",
+  "status": "saved",
+  "sha256": "b1ea2b3bb2a1572f83782df9a46f9635b3e1fd777dbf0e232eb1fa39f4b746cf",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/94ee5466-2c0e-4219-a164-308947d68a54/model.compressed.glb",
+  "seed": 273519839
+}

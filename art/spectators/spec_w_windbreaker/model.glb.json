@@ -1,0 +1,13 @@
+{
+  "generationId": "0808da61-956c-43b7-9e38-cc5a2453c429",
+  "prompt": "Curly-haired woman in her 50s watching golf in 1985, short curly brown hair, a teal windbreaker jacket, navy slacks, white sneakers. Plain clothes, no logos, no lettering. Full body, standing upright in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing forward. Realistic proportions for the person\u0027s age, stylised hand-painted game look. No props, nothing in the hands, no logos. Nothing under the feet: no ground, no grass, no base, no stand, no golf balls.",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "text-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\art\\spectators\\spec_w_windbreaker\\model.glb",
+  "status": "saved",
+  "sha256": "08ff6d0aaafde907f224f4775839635d3e2f8f3825be222eab8c1356639c867a",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/0808da61-956c-43b7-9e38-cc5a2453c429/model.compressed.glb",
+  "seed": 331541196
+}
