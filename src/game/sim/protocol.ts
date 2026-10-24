@@ -35,7 +35,7 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   | { t: 'sandbox'; grow: number; money: boolean } | { t: 'inspect'; slot: number } | { t: 'watch'; x: number; y: number } | { t: 'round'; op: 'start' | 'now' | 'close' } | { t: 'round'; op: 'pick'; card: CardId }
   | { t: 'parks'; defs: CarParkDef[] } | { t: 'parkTest'; id: number; n: number } | { t: 'tolls'; defs: TollDef[] } | { t: 'parking'; rows: BayRowDef[]; curbs: CurbDef[]; fee: number } | { t: 'heat'; on: boolean } | { t: 'businesses'; defs: BizDef[] }
   | { t: 'buses'; defs: BusRouteDef[] } | { t: 'buyLot'; key: string } | { t: 'incidents'; on: boolean }
-  | { t: 'disastersOn'; on: boolean } | { t: 'repairDisaster'; id: number; key: string } | { t: 'forceDisaster'; kind: DisasterKind } | { t: 'golf'; on: boolean; tier: number; rep: number; /** the course, then the player's parcels */ land?: [number, number, number, number][] }
+  | { t: 'disastersOn'; on: boolean } | { t: 'repairDisaster'; id: number; key: string } | { t: 'forceDisaster'; kind: DisasterKind } | { t: 'golf'; on: boolean; tier: number; rep: number; /** the course, then the player's parcels */ land?: [number, number, number, number][]; /** a range start's (GolfSave.start, exits) */ start?: 'range'; exits?: { x: number; y: number }[] }
   /** the town day (LEAD.md M1): its length in sim seconds (Sim.dayLen) and the lot trips' density (Sim.townTraffic) */
   | { t: 'townDay'; dayLen: number; traffic: number; free: boolean }
   /** the town day's clock (T048), set on load (after townState): the worker retimes it to the normal rate */

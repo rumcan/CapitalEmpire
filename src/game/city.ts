@@ -186,7 +186,7 @@ export class City {
   /** the stadium's site (none without towns: see event/site.ts) and the event round (event/round.ts: a fresh one with each valley) */
   site: Site | null = null; round = new Round();
   /** golf mode (null: off): the tournament's tier and its reputation; the season (one game day) ends with the tournament (see startTournament) */
-  golf: { tier: number; rep: number } | null = null;
+  golf: { tier: number; rep: number; start?: 'range'; exits?: Pt[] } | null = null;
   /** the player's businesses (setBusinesses: the full list, with each one's stats; the stadium's level is its own, from its fan cars (XP), not the round's) */
   businesses: BizView[] = [];
   /** each placed business's stats by id (kept across setBusinesses while it stands; restoreBiz fills them from a save) */
@@ -260,10 +260,12 @@ export class City {
   /** the toll gates as the player placed them (setTolls' defs, the full list): their plazas are no-go ground for the town's roads (with towns) */
   private tollDefs: TollDef[] = [];
   /** the no-go zones of the town's roads (with towns, see RoadPlanCtx.blocked): the stadium site padded by 6 tiles, the other businesses padded by 2,
-   *  a car park padded by 4, within 12 tiles of a toll plaza seg, within 6 tiles of a bus stop point */
+   *  a car park padded by 4, within 12 tiles of a toll plaza seg, within 6 tiles of a bus stop point; in a range start (plan P22) the golf land
+   *  padded by 6 too (the parcel lies across the road from the town's seed; T091 extends this to every golf game) */
   private blocked = (x: number, y: number): boolean => {
     const s = this.site;
     if (s && x > s.x - 6 && x < s.x + s.w + 6 && y > s.y - 6 && y < s.y + s.h + 6) return true;
+    if (this.golf?.start === 'range') for (const [gx, gy, gw, gh] of this.golfLand) if (x > gx - 6 && x < gx + gw + 6 && y > gy - 6 && y < gy + gh + 6) return true;
     for (const b of this.businesses) if (b.type !== 'stadium' && x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true;
     for (const p of this.parkDefs) { const b = parkBox(p); if (x > b.x - 4 && x < b.x + b.w + 4 && y > b.y - 4 && y < b.y + b.h + 4) return true; }
     for (const r of this.rowDefs) { const b = rowBox(r); if (x > b.x - 2 && x < b.x + b.w + 2 && y > b.y - 2 && y < b.y + b.h + 2) return true; }
@@ -421,8 +423,9 @@ export class City {
     return true;
   }
   /** golf mode on (with the tournament's tier and its reputation) or off (null): a new valley keeps it (terrain does not touch it) */
-  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][] } | null): TownEvent[] {
-    this.golf = g ? { tier: g.tier, rep: g.rep } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
+  setGolf(g: { tier: number; rep: number; land?: [number, number, number, number][]; start?: 'range'; exits?: Pt[] } | null): TownEvent[] {
+    // a range start's start and exits (plan P22) are kept for the range-start rules that read them (T088-T094)
+    this.golf = g ? { tier: g.tier, rep: g.rep, start: g.start, exits: g.exits } : null; this.round.golf = !!g; this.golfLand = g?.land ?? [];
     // the town's lots inside the course go now (and every game hour: a loaded town's lots may come after this): the events to post
     const ev: TownEvent[] = []; this.clearCourse(ev);
     return ev;

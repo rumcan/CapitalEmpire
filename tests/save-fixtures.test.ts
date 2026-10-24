@@ -159,4 +159,30 @@ describe('save fixtures & golden tests (T043)', () => {
 
     assert.ok(sizeBytes < 2 * 1024 * 1024, `expected gzip size under 2 MB, got ${sizeBytes} bytes`);
   });
+
+  it('8. golf-v5-range-start.json (plan P22 T087: seed 1 at minute zero) -> version 5, golf.start range with its exits, only the county road and the drive as segs, the range, no lots', () => {
+    const raw = loadFixture('golf-v5-range-start.json');
+    const parsed = JSON.parse(raw);
+    const s = upgradeSave(parsed);
+    assert.ok(s, 'expected upgradeSave to accept the range start');
+    assert.equal(s.version, SAVE_VERSION);
+    assert.equal(s.seed, 1);
+    const g = normalizeGolfSave(s.golf);
+    assert.ok(g);
+    assert.equal(g.start, 'range');
+    assert.equal(g.tier, 1);
+    assert.equal(g.exits?.length, 2);
+    for (const e of g.exits!) assert.ok(e.x <= 1 || e.y <= 1 || e.x >= s.map - 2 || e.y >= s.map - 2, 'each exit is on the border');
+    assert.deepEqual(g.tees, []);
+    // only the county road (town road segs) and the range's drive
+    assert.deepEqual([...new Set(s.segs.map(q => q[4]))].sort(), ['drive-gravel', 'road']);
+    assert.ok(s.segs.every(q => q[7] === 1), 'every seg is a town seg (free, no upkeep)');
+    assert.equal(s.segs.filter(q => q[4] === 'drive-gravel').length, 1);
+    // the road runs edge to edge: its seg ends include both exits
+    const ends = s.segs.filter(q => q[4] === 'road').flatMap(q => [`${q[0]},${q[1]}`, `${q[2]},${q[3]}`]);
+    for (const e of g.exits!) assert.ok(ends.includes(`${e.x},${e.y}`), 'an exit is a road end');
+    assert.deepEqual(s.biz?.map(b => b[0]), ['range']);
+    assert.deepEqual(s.lots ?? [], []);
+    assert.equal(normalizeProgress(g.progress).pieces, 0);
+  });
 });

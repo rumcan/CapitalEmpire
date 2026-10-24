@@ -7,6 +7,7 @@ import { CLASS, SK, type Leg, type Pt, type SegKind } from '../network';
 import { classAt, TC, type Edge, type Terrain } from '../terrain';
 import { STRUCT_COST, STRUCT_MAX, groundClass, splitByTerrain, structureLengths } from '../structures';
 import { COURSE_SIZES } from './place';
+import { RANGE_FRONT, RANGE_PLOT } from './range';
 import { GOLF_REP_START } from './start';
 import type { GolfSave, Rect } from './mode';
 
@@ -16,9 +17,8 @@ export const STRAIGHT = 600;
 const BEND_STEP = 80;
 /** the most bridge runs the county road may have, and the cost (in tiles of ground road) of an end on a mountain edge */
 const MAX_BRIDGES = 2, MOUNTAIN_END = 4000;
-/** the range plot, [along the road, deep] tiles, its front (the business rect: hut, mats, car park) and its gap to the drive's centre line */
-export const SITE_RANGE: [number, number] = [70, 150];
-export const SITE_FRONT = 24, DRIVE_GAP = 2;
+/** the range plot's gap to the drive's centre line, tiles (the plot and its front: golf/range.ts RANGE_PLOT, RANGE_FRONT) */
+export const DRIVE_GAP = 2;
 /** the car park, [along the road, deep] tiles, its gap to the drive's centre line and to the road side of the front */
 const PARK: [number, number] = [20, 16], PARK_OFF = 3, PARK_IN = 2;
 /** the drive runs this far past the road side of the front (so its far end is beside the car park) */
@@ -30,6 +30,8 @@ export const TOWN_WINDOW: [number, number] = [600, 400];
 const TOWN_BUILD = 0.75;
 /** the parcel's playable share (open land or woodland, as the old course's COURSE_BUILD) */
 const PARCEL_BUILD = 0.98;
+/** the camera's zoom on a new range start: the street tier (plan 2.1.4) */
+export const RANGE_CAM_ZOOM = 0.17;
 /** the second J candidates: lattice points within this many tiles of the map centre, nearest first */
 const SCAN_REACH = 640;
 
@@ -49,7 +51,7 @@ export interface RangeSite {
   J: Pt; axis: 'x' | 'y'; side: 1 | -1; dir: 0 | 1 | 2 | 3;
   parcel: Rect; rangePlot: Rect; rangeFront: Rect; carpark: Rect; drive: Leg[]; centre: Pt;
 }
-/** the golf state of a range start (GolfSave gains `start` and `exits` in T087) */
+/** the golf state of a range start: a GolfSave with its start and exits */
 export type RangeSave = GolfSave & { start: 'range'; exits: Pt[] };
 /** a range start's plan: the county road, the site, the golf state and the camera's point (the range front's centre) */
 export interface RangeStart { road: CountyRoad; site: RangeSite; save: RangeSave; cam: Pt }
@@ -70,6 +72,25 @@ function rectOf(J: Pt, f: { s: Pt; t: Pt }, s0: number, s1: number, t0: number, 
 
 /** the edge a border point lies on (null: not on the border) */
 function edgeAt(p: Pt): Edge | null { return p.y <= 0 ? 'N' : p.y >= MAP - 1 ? 'S' : p.x <= 0 ? 'W' : p.x >= MAP - 1 ? 'E' : null; }
+/** the county road's ground legs are cut where they cross a multiple of CUT tiles (along their main axis; on the 40-tile lattice): pieces of
+ *  at most CUT tiles straight (CUT x sqrt 2 on a 45° leg), so the farms' seg-midpoint rule (ext/farms TOWN_CLEAR, EVENT_CLEAR) keeps them away
+ *  from the town seed and the course land, and the planner's corner arms at the cuts stay on the town's lattice. No cut within CUT_END of an end */
+const CUT = 200, CUT_END = 20;
+function cutLegs(legs: Leg[], kinds: SegKind[]): { legs: Leg[]; kinds: SegKind[] } {
+  const L: Leg[] = [], K: SegKind[] = [];
+  legs.forEach((l, i) => {
+    const k = kinds[i]!, dx = l.b.x - l.a.x, dy = l.b.y - l.a.y, ax = Math.abs(dx) >= Math.abs(dy), a0 = ax ? l.a.x : l.a.y, d = ax ? dx : dy;
+    let from = l.a;
+    if (k === SK.GROUND && Math.abs(d) > CUT) {
+      const sg = Math.sign(d), lo = Math.min(a0, a0 + d) + CUT_END, hi = Math.max(a0, a0 + d) - CUT_END, cuts: number[] = [];
+      for (let c = Math.ceil(lo / CUT) * CUT; c <= hi; c += CUT) cuts.push(c);
+      if (sg < 0) cuts.reverse();
+      for (const c of cuts) { const p = ax ? { x: c, y: l.a.y + dy * (c - a0) / dx } : { x: l.a.x + dx * (c - a0) / dy, y: c }; L.push({ a: from, b: p }); K.push(k); from = p; }
+    }
+    L.push({ a: from, b: l.b }); K.push(k);
+  });
+  return { legs: L, kinds: K };
+}
 /** the runs of consecutive bridge pieces */
 export function bridgeRuns(kinds: SegKind[]): number { let n = 0; for (let i = 0; i < kinds.length; i++) if (kinds[i] === SK.BRIDGE && kinds[i - 1] !== SK.BRIDGE) n++; return n; }
 
@@ -112,7 +133,8 @@ function halves(t: Terrain, J: Pt, u: Pt): Half[] {
  *  per half to the border. The cheapest pair of halves by structure cost (as highwayRoute) with at most MAX_BRIDGES bridge runs, no tunnel and no
  *  bridge over STRUCT_MAX wins; an end on a mountain edge costs MOUNTAIN_END, so open edges win wherever a route reaches them (decision: on maps
  *  with three mountain edges no edge-to-edge road has two open ends, and mountains are woodland on the flat map, so the road may run out through
- *  the woods). Its legs run from exits[0] to exits[1] and meet at J. Null when no pair fits. Deterministic. */
+ *  the woods). Its legs run from exits[0] to exits[1] and meet at J, the ground ones cut on the lattice (cutLegs). Null when no pair fits.
+ *  Deterministic. */
 export function regionalRoute(t: Terrain, J: Pt, axis: 'x' | 'y'): CountyRoad | null {
   const u = axis === 'x' ? { x: 1, y: 0 } : { x: 0, y: 1 };
   const A = halves(t, J, { x: -u.x, y: -u.y }), Bh = halves(t, J, u);
@@ -125,7 +147,7 @@ export function regionalRoute(t: Terrain, J: Pt, axis: 'x' | 'y'): CountyRoad | 
   if (!best) return null;
   const [a, b] = best;
   // the first half reversed (from its exit in to J), then the second (from J out)
-  const legs = [...a.legs.map(l => ({ a: l.b, b: l.a })).reverse(), ...b.legs], kinds = [...[...a.kinds].reverse(), ...b.kinds];
+  const { legs, kinds } = cutLegs([...a.legs.map(l => ({ a: l.b, b: l.a })).reverse(), ...b.legs], [...[...a.kinds].reverse(), ...b.kinds]);
   return { legs, kinds, exits: [a.end, b.end], edges: [a.edge, b.edge] };
 }
 
@@ -161,10 +183,10 @@ function candidates(t: Terrain): Pt[] {
  *  corridor stays off the range plot and the range's door lands on the drive), or null when a fit rule fails: the parcel PARCEL_BUILD playable, the
  *  range front, car park and drive corridor all buildable, the town window across the road TOWN_BUILD buildable, all of it SITE_MARGIN from the edges */
 function siteAt(I: ReturnType<typeof integrals>, J: Pt, axis: 'x' | 'y', side: 1 | -1, size: [number, number]): RangeSite | null {
-  const f = frameOf(axis, side), [along, deep] = size, s0 = -DRIVE_GAP - SITE_RANGE[0];
+  const f = frameOf(axis, side), [along, deep] = size, s0 = -DRIVE_GAP - RANGE_PLOT[0];
   const parcel = rectOf(J, f, s0, s0 + along, NEAR, NEAR + deep);
-  const rangePlot = rectOf(J, f, s0, -DRIVE_GAP, NEAR, NEAR + SITE_RANGE[1]);
-  const rangeFront = rectOf(J, f, s0, -DRIVE_GAP, NEAR, NEAR + SITE_FRONT);
+  const rangePlot = rectOf(J, f, s0, -DRIVE_GAP, NEAR, NEAR + RANGE_PLOT[1]);
+  const rangeFront = rectOf(J, f, s0, -DRIVE_GAP, NEAR, NEAR + RANGE_FRONT);
   const carpark = rectOf(J, f, -PARK_OFF - PARK[0], -PARK_OFF, NEAR + PARK_IN, NEAR + PARK_IN + PARK[1]);
   const corridor = rectOf(J, f, -2, 2, Math.floor(VERGE), NEAR + DRIVE_IN);
   const town = rectOf(J, f, -TOWN_WINDOW[0] / 2, TOWN_WINDOW[0] / 2, -NEAR - TOWN_WINDOW[1], -NEAR);
@@ -201,7 +223,7 @@ export function placeRangeSite(t: Terrain, seed: number): RangeSite | null { ret
 /** the door point of the range front: the middle of its side on the drive, tiles */
 function frontDoor(s: RangeSite): Pt {
   const f = frameOf(s.axis, s.side);
-  return at(s.J, f, -DRIVE_GAP, NEAR + SITE_FRONT / 2);
+  return at(s.J, f, -DRIVE_GAP, NEAR + RANGE_FRONT / 2);
 }
 
 /** a new range start on a terrain for a seed (plan 2.1): the county road, the site, the golf state (start 'range', tier 1, the starting
