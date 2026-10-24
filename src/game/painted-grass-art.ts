@@ -1,9 +1,9 @@
-import far from '../assets/ground/painted/grass-painted-8m-far-v1.png';
-import mid from '../assets/ground/painted/grass-painted-8m-mid-v1.png';
-import near from '../assets/ground/painted/grass-painted-8m-near-v1.png';
+import far from '../assets/ground/painted/grass-painted-8m-far-v3.png';
+import mid from '../assets/ground/painted/grass-painted-8m-mid-v3.png';
+import near from '../assets/ground/painted/grass-painted-8m-near-v3.png';
 import type { PaintedGrassFamily } from './painted-grass-lod';
 
-/** Functional-preview family only: v1's repeated diagonal motif was rejected for final art; replace with reviewed v2 before root delivery. */
+/** Reviewed v3 paintings: each source patch covers8m; a shared translation-only48m composite removes obvious repetition. */
 export const PAINTED_GRASS: Readonly<Record<string, PaintedGrassFamily>> = {
-  grass: { far, mid, near, worldMetres: 8 },
+  grass: { far, mid, near, sourceWorldMetres: 8 },
 };

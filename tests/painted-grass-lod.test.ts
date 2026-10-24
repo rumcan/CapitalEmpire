@@ -1,6 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { grassDetailWeights, grassFamilyKey, grassDetailSourceKey, grassFamilyPeriod, grassZoomLevels, trimPaintedSources, type PaintedGrassFamily } from '../src/game/painted-grass-lod';
+import { grassDetailWeights, grassFamilyKey, grassDetailSourceKey, grassFamilyPeriod, grassZoomLevels, trimPaintedSources, grassTranslationSeeds, PAINTED_RUNTIME_METRES, type PaintedGrassFamily } from '../src/game/painted-grass-lod';
+
+test('anti-repeat source sampling uses the same deterministic translated8m layout for every authored detail', () => {
+  const a = grassTranslationSeeds(), b = grassTranslationSeeds();
+  assert.deepEqual(a, b);
+  assert.equal(a.length, 256);
+  assert.equal(PAINTED_RUNTIME_METRES, 48);
+  for (const seed of a) {
+    assert.deepEqual(Object.keys(seed).sort(), ['phaseX', 'phaseY', 'x', 'y'], 'No rotation, reflection or variable source scale');
+    assert.ok(seed.x >= 0 && seed.x < 48 && seed.y >= 0 && seed.y < 48);
+    assert.ok(seed.phaseX >= 0 && seed.phaseX < 1 && seed.phaseY >= 0 && seed.phaseY < 1);
+  }
+  assert.equal(new Set(a.map(seed => seed.phaseX)).size, a.length, 'Source phases vary between overlapping patches');
+});
 
 test('decoded painted source LRU protects the visible batch and ordinary photo fallback', () => {
   const sources = new Map<string, number>([['old-photo-grass', 10]]);
@@ -46,8 +59,9 @@ test('authored grass detail blends continuously, bounded to two sources at every
 });
 
 test('an authored family retains its 8m footprint and invalidates every source cache on art revision', () => {
-  const family: PaintedGrassFamily = { far: 'far-v1', mid: 'mid-v1', near: 'near-v1', worldMetres: 8 };
-  assert.equal(grassFamilyPeriod(family), 4);
+  const family: PaintedGrassFamily = { far: 'far-v1', mid: 'mid-v1', near: 'near-v1', sourceWorldMetres: 8 };
+  assert.equal(family.sourceWorldMetres, 8);
+  assert.equal(grassFamilyPeriod(family), 24);
   const changed = { ...family, near: 'near-v2' };
   assert.notEqual(grassFamilyKey('grass', family), grassFamilyKey('grass', changed));
   assert.notEqual(grassDetailSourceKey('grass', family, 'far'), grassDetailSourceKey('grass', changed, 'far'));

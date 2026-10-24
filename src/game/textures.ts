@@ -3,7 +3,7 @@ import { canvas, clamp, ctx2d, fbm, smooth, type C2D, type Cnv } from './canvas2
 import { DEFAULT_MIX, mixGrass, type BaseGrassArt } from './base-grass';
 import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
 import { PAINTED_GRASS } from './painted-grass-art';
-import { grassDetailWeights, grassDetailSourceKey, grassFamilyKey, grassFamilyPeriod, trimPaintedSources } from './painted-grass-lod';
+import { grassDetailWeights, grassDetailSourceKey, grassFamilyKey, grassFamilyPeriod, trimPaintedSources, grassTranslationSeeds, PAINTED_RUNTIME_METRES, PAINTED_RUNTIME_PIXELS } from './painted-grass-lod';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -206,6 +206,27 @@ export class Textures {
   private paintedLevel = .3;
   private paintedLoads = new Map<string, Promise<void>>();
   private paintedBlends = new Map<string, Cnv[]>();
+  /** Translation-only soft-overlap mosaic. Each input remains an8m source patch; the shared runtime repeat is48m. */
+  private paintedMosaic(source: Cnv, sourceMetres: number) {
+    const size = PAINTED_RUNTIME_PIXELS, pixelsPerMetre = size / PAINTED_RUNTIME_METRES;
+    const result = canvas(size, size), g = ctx2d(result), radius = 4 * pixelsPerMetre, patchSize = Math.ceil(radius * 2) + 2;
+    const patch = canvas(patchSize, patchSize), pg = ctx2d(patch), mask = canvas(patchSize, patchSize), mg = ctx2d(mask);
+    const gradient = mg.createRadialGradient(patchSize / 2, patchSize / 2, 0, patchSize / 2, patchSize / 2, radius);
+    gradient.addColorStop(0, '#000'); gradient.addColorStop(.25, '#000'); gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    mg.fillStyle = gradient; mg.fillRect(0, 0, patchSize, patchSize);
+    const scale = sourceMetres * pixelsPerMetre / source.width;
+    const base = g.createPattern(source, 'repeat')!; base.setTransform(new DOMMatrix([scale, 0, 0, scale, 0, 0])); g.fillStyle = base; g.fillRect(0, 0, size, size);
+    const pattern = pg.createPattern(source, 'repeat')!;
+    for (const seed of grassTranslationSeeds()) {
+      pg.globalCompositeOperation = 'source-over'; pg.clearRect(0, 0, patchSize, patchSize);
+      pattern.setTransform(new DOMMatrix([scale, 0, 0, scale, -seed.phaseX * sourceMetres * pixelsPerMetre, -seed.phaseY * sourceMetres * pixelsPerMetre]));
+      pg.fillStyle = pattern; pg.fillRect(0, 0, patchSize, patchSize);
+      pg.globalCompositeOperation = 'destination-in'; pg.drawImage(mask, 0, 0);
+      const x = seed.x * pixelsPerMetre - patchSize / 2, y = seed.y * pixelsPerMetre - patchSize / 2;
+      for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) if (x + ox > -patchSize && x + ox < size && y + oy > -patchSize && y + oy < size) g.drawImage(patch, x + ox, y + oy);
+    }
+    return result;
+  }
   isPainted(variant: string) { return !!PAINTED_GRASS[variant]; }
   /** Called before baking a requested chunk; only visible families and the one/two required authored levels are decoded. */
   async preparePainted(L: number, variants: Iterable<string>) {
@@ -239,12 +260,13 @@ export class Textures {
     if (sources.some(s => !s.src)) return null;
     const key = grassFamilyKey(variant, family) + '@' + this.paintedLevel;
     let chain = this.paintedBlends.get(key);
+    if (chain) { this.paintedBlends.delete(key); this.paintedBlends.set(key, chain); }
     if (!chain) {
       const size = Math.max(...sources.map(s => s.src!.width)), image = canvas(size, size), g = ctx2d(image);
       // Opaque authored paintings blend without rotations, mirrors or hex patches; all represent the same 8m square.
       for (const [i, s] of sources.entries()) { g.globalAlpha = i ? s.weight : 1; g.drawImage(s.src!, 0, 0, size, size); }
       g.globalAlpha = 1;
-      chain = this.mipChain(image); this.paintedBlends.set(key, chain);
+      chain = this.mipChain(this.paintedMosaic(image, family.sourceWorldMetres)); this.paintedBlends.set(key, chain);
       while (this.paintedBlends.size > 6) this.paintedBlends.delete(this.paintedBlends.keys().next().value!);
     }
     const period = grassFamilyPeriod(family), want = 128 * L;

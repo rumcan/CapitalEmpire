@@ -1,11 +1,22 @@
-import { levelFor, midLevelFor, MID_BELOW } from './iso';
+import { levelFor, midLevelFor, MID_BELOW, mulberry } from './iso';
 /** Authored ground detail selection. Art level follows CSS camera zoom, independently of DPR and brush scale. */
 export function grassZoomLevels(zoom: number, dpr: number) {
   const district = zoom < MID_BELOW, pick = district ? midLevelFor : levelFor;
   return { district, artL: pick(zoom), rasterL: pick(zoom * dpr) };
 }
 export type GrassDetail = 'far' | 'mid' | 'near';
-export interface PaintedGrassFamily { far: string; mid: string; near: string; worldMetres: 8 }
+export interface PaintedGrassFamily { far: string; mid: string; near: string; sourceWorldMetres: 8 }
+export const PAINTED_RUNTIME_METRES = 48;
+export const PAINTED_RUNTIME_PIXELS = 2048;
+/** Shared source phases and world positions for every authored level; orientation and source scale never vary. */
+export function grassTranslationSeeds() {
+  const random = mulberry(627119), count = 16, step = PAINTED_RUNTIME_METRES / count;
+  return Array.from({ length: count * count }, (_, i) => ({
+    x: (i % count + .5 + (random() - .5) * .6) * step,
+    y: (Math.floor(i / count) + .5 + (random() - .5) * .6) * step,
+    phaseX: random(), phaseY: random(),
+  }));
+}
 export interface GrassDetailWeight { detail: GrassDetail; weight: number }
 export const MAX_PAINTED_SOURCES = 24;
 /** Map insertion order is the source LRU. Ordinary photos are outside this cache and never removed. */
@@ -25,6 +36,6 @@ export function grassDetailWeights(L: number): GrassDetailWeight[] {
   return candidates.filter(x => x.weight > 0);
 }
 /** A family revision changes identity when any authored image URL changes; workers never reuse stale blended art. */
-export const grassFamilyKey = (name: string, family: PaintedGrassFamily) => JSON.stringify([name, family.worldMetres, family.far, family.mid, family.near]);
+export const grassFamilyKey = (name: string, family: PaintedGrassFamily) => JSON.stringify([name, family.sourceWorldMetres, PAINTED_RUNTIME_METRES, family.far, family.mid, family.near]);
 export const grassDetailSourceKey = (name: string, family: PaintedGrassFamily, detail: GrassDetail) => '@painted:' + grassFamilyKey(name, family) + ':' + detail;
-export const grassFamilyPeriod = (family: PaintedGrassFamily) => family.worldMetres / 2;
+export const grassFamilyPeriod = (_family: PaintedGrassFamily) => PAINTED_RUNTIME_METRES / 2;
