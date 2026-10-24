@@ -119,6 +119,9 @@ export default function App() {
     // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
     // game: StrictMode mounts twice, and the first game is disposed)
     if (import.meta.env.DEV) void import('./game/dev/roadfuzz').then(m => Object.assign(window as unknown as Record<string, unknown>, { __roadFuzz: (seed?: number, steps?: number, o?: Parameters<typeof m.roadFuzz>[3]) => m.roadFuzz((window as unknown as { __game: Game }).__game, seed, steps, o), __roadReplay: (box: [number, number, number, number], log: string[], upTo?: number) => m.roadReplay((window as unknown as { __game: Game }).__game, box, log, upTo), __junctionGallery: (o?: Parameters<typeof m.junctionGallery>[1]) => m.junctionGallery((window as unknown as { __game: Game }).__game, o) }));
+    // the dev lot editor (P20 T071, dev builds only: ?dev or the I key): select, resize, move, turn, delete, add; edits kept in the lot presets
+    let lotEditorOff: (() => void) | undefined, disposed = false;
+    if (import.meta.env.DEV) void import('./game/dev/lot-editor').then(m => { if (!disposed) lotEditorOff = m.installLotEditor(g, canvas); });
     setGame(g);
     const unsub = g.subscribe(bump);
     g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));
@@ -127,7 +130,7 @@ export default function App() {
     const kd = (e: KeyboardEvent) => g.keyDown(e), ku = (e: KeyboardEvent) => g.keyUp(e);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
     const iv = window.setInterval(bump, 500);
-    return () => { unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
+    return () => { disposed = true; lotEditorOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];

@@ -54,7 +54,7 @@ import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
 import { LV, type LotTuple } from './lots/town';
-import { acrossLines, compose, fenceOnly, isCarPark, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
+import { acrossLines, compose, fenceOnly, isCarPark, pickedPreset, type ComposeState, type FenceLines, type LotGeom, type Placed } from './lots/compose';
 import { LotMap } from './lots/lots';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
@@ -1275,11 +1275,48 @@ export class Game {
     if (old) { for (const p of old) if (this.props.has(p)) { this.removeProp(p); this.perf.lotProps--; } this.lotProps.delete(key); }
     this.setLotGround(key, null);
   }
+  // ---------- the dev lot editor's hooks (P20 / T071: src/game/dev/lot-editor.ts, dev builds only)
+  /** the preset prop each lot prop drawn from a preset came from (compose Placed.from): the dev editor maps a sprite back to its preset */
+  readonly lotFrom = new WeakMap<Prop, { preset: string; prop: number }>();
+  /** a lot's geometry and state as it is composed (a staged lot's, else the town's), or null for no such lot */
+  lotOf(key: string): { g: LotGeom; st: ComposeState } | null {
+    const s = this.staged.get(key); if (s) return s;
+    const v = this.traffic.lots.get(key); if (!v) return null;
+    return { g: { o: { x: v.o[0], y: v.o[1] }, u: { x: v.u[0], y: v.u[1] }, n: { x: v.n[0], y: v.n[1] }, w: v.w, d: v.d }, st: { use: v.use, level: v.level, decline: v.decline, seed: v.seed } };
+  }
+  /** the props a lot has now */
+  propsOfLot(key: string): readonly Prop[] { return this.lotProps.get(key) ?? []; }
+  /** the key of the lot (staged, else the town's) whose rectangle holds the tile point (x, y), or null */
+  lotKeyAt(x: number, y: number): string | null {
+    for (const k of new Set([...this.staged.keys(), ...this.traffic.lots.keys()])) {
+      const at = this.lotOf(k); if (!at) continue;
+      const { o, u, n, w, d } = at.g, rx = x - o.x, ry = y - o.y, a = rx * u.x + ry * u.y, b = rx * n.x + ry * n.y;
+      if (a >= 0 && a <= w && b >= 0 && b <= d) return k;
+    }
+    return null;
+  }
+  /** composes lots again after the lot presets changed: `now` at once (the lot being edited), the others through the lot queue: with `preset`,
+   *  only the lots drawn from that preset (an edit to one preset re-bakes their ground alone), else every lot (a library size, a reload) */
+  recomposeLots(now: string[] = [], preset?: string) {
+    for (const k of now) this.applyLot(k);
+    for (const k of new Set([...this.staged.keys(), ...this.traffic.lots.keys()])) {
+      if (now.includes(k)) continue;
+      if (preset !== undefined) { const at = this.lotOf(k); if (!at || pickedPreset(at.g, at.st)?.id !== preset) continue; }
+      this.lotQueue.add(k);
+    }
+    this.flushLotGround(); this.emit();
+  }
+  /** a prop the dev editor moved, scaled or turned: its footprint, grids and sprites follow, and the game saves (player props) */
+  devPropChanged(p: Prop) { this.propChanged(p); if (!p.auto) this.scheduleSave(); this.emit(); }
   /** composes a lot and adds its props (auto 'lot:' + key: never saved, and the tools ignore them) and its ground patches */
   private placeLot(key: string, g: LotGeom, st: ComposeState) {
     this.dropLot(key);
     const c = compose(g, st), ps: Prop[] = [];
-    for (const q of c.props) { const i = LIB_INDEX.get(q.id); if (i !== undefined && !(q.street && this.inLayby(i, q))) ps.push(this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key)); }
+    for (const q of c.props) {
+      const i = LIB_INDEX.get(q.id); if (i === undefined || (q.street && this.inLayby(i, q))) continue;
+      const p = this.addProp(i, q.x, q.y, q.flip, q.scale, 'lot:' + key); ps.push(p);
+      if (q.from) this.lotFrom.set(p, q.from);
+    }
     this.lotProps.set(key, ps); this.perf.lotProps += ps.length;
     // a yard of its own only where a building stands (a big sprite that is not a car, as sendBlocks counts buildings, or a baked house lot); an
     // empty lot shows its block's grass

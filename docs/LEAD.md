@@ -85,6 +85,15 @@ tents, stands, car parks) and above all **manage the transport and roads around 
 - 2026-10-24: Design constants taken for **T051a** (featured hole ×3, the 18th green ×2 after 14:30, a quarter of an over-full spot's
   fans move every 30 minutes) and **T060a** (Traffic satisfaction 100 at ≤1.2× free flow, 0 at ≥3×; tent spend falls to 50% on the same
   scale).
+- 2026-10-24: **Plan P22: the start is one road and the driving range; the town grows outward** (the owner: "New addition to the game.
+  The game starts with nothing but a road passing a driving range. The town grows from your driving range outward. No more prepainted
+  streets for the town."). A new game lays one county road edge to edge (class `road`, two map exits) past the player's driving range (a
+  new golf visit business on a 300 x 450-tile owned parcel); no town streets, lots, old nine or clubhouse. One town centre is seeded across
+  the road and the town planner lays every street, with grown-town rules (faster, compact, paced by holes and tournament success, never
+  on the course land). Passing traffic and range visitors from both exits are the early life and money; $600,000 start money stays. No
+  tournament until tier 1's needs (9 holes, car park, a clubhouse the player places) are met. Old saves keep their towns (`golf.start`
+  missing = the old start, `?start=town` keeps it for tests). A new `range:gate` and a grown-town fixture. Decided under the owner's
+  standing rule; details and tickets T085-T098 in docs/plans/P22.md.
 
 ## 6. How to work (so anyone can continue)
 - **The live log is `docs/NOW.md`.** Before you edit, write there: the step, the branch, the files and the exact change you are about to
