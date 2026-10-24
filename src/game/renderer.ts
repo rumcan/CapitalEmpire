@@ -12,7 +12,7 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { quadBox, type LotPatch, type PatchTex } from './ground-protocol';
+import { quadBox, type CoursePatch, type CourseTex, type LotPatch, type PatchTex } from './ground-protocol';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
@@ -47,6 +47,10 @@ const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'grav
 const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
 /** a patch's polygon as a closed path (tile space), all its points in order */
 const polyPath = (pts: number[]) => { const p = new Path2D(); p.moveTo(pts[0], pts[1]); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k], pts[k + 1]); p.closePath(); return p; };
+/** adds a closed flat ring x0 y0 x1 y1 ... (tiles) to a path */
+const ringPath = (p: Path2D, pts: readonly number[]) => { if (pts.length < 6) return; p.moveTo(pts[0]!, pts[1]!); for (let k = 2; k + 1 < pts.length; k += 2) p.lineTo(pts[k]!, pts[k + 1]!); p.closePath(); };
+/** a painted area's or course chunk's place in the draw order among the painted areas */
+const paintZ = (p: LotPatch) => p.course ? p.course.z : p.paint!.z;
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
 const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += pts[2 * i] * pts[2 * j + 1] - pts[2 * j] * pts[2 * i + 1]; } return a / 2; };
 
@@ -153,8 +157,12 @@ export class GroundPainter {
     shape('creek', 0, this.planColour('water'));
     // lot ground as flat fills (before the roads, so the kerbs stay on top)
     const planFill = (t: PatchTex) => t === 'asphalt' || t === 'asphaltDark' || t === 'asphaltWorn' ? PLAN_ASPHALT : t === 'slabs' ? '#9a9184' : t === 'concrete' ? '#48443f' : this.planColour(t);
-    const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
-    for (const p of [...lotAll.filter(p => !p.paint && p.tex !== 'marks' && !(p.lawn && p.lawn.share < 1)), ...paintsP]) { ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts)); }
+    const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
+    for (const p of [...lotAll.filter(p => !p.paint && !p.course && p.tex !== 'marks' && !(p.lawn && p.lawn.share < 1)), ...paintsP]) {
+      // a course chunk: each surface's collar band and fill rings in their flat planner colours (even-odd)
+      if (p.course) { for (const l of p.course.layers) for (const [t, rings] of [...(l.collar ? [[l.collar.tex, l.collar.fill] as const] : []), [l.tex, l.fill] as const]) { if (!rings.length) continue; const path = new Path2D(); for (const q of rings) ringPath(path, q); ctx.fillStyle = this.planColour(t); ctx.fill(path, 'evenodd'); } continue; }
+      ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts));
+    }
     // the course height's shade over the painted course (T028b): over the lot and paint fills, under the roads
     if (this.courseAny) { const cs = courseShadeRGBA(this.courseShade, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25); if (cs) { const cb = this.buffer('small', cs.W, cs.H); ctx2d(cb).putImageData(new ImageData(cs.data as Uint8ClampedArray<ArrayBuffer>, cs.W, cs.H), 0, 0); ctx.setTransform(M); ctx.drawImage(cb, tx0, ty0, cs.W / 0.25, cs.H / 0.25); } }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
@@ -267,7 +275,7 @@ export class GroundPainter {
     //      a thin dark rim (paving and pads: 0.08 tiles in) or a soft edge (asphalt: 0.15 tiles in), then the bay lines.
     //      The car parks (asphalt with bay lines) are drawn again over the Paint tool's areas (1a'), so a painted area cannot hide their bays
     const all = this.lotsIn(box).filter(p => !p.top && !p.layby), tops = this.lotsIn(box).filter(p => p.top && p.lines?.length && !p.layby), laybys = this.lotsIn(box).filter(p => p.layby);
-    const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint).sort((a, b) => a.paint!.z - b.paint!.z);
+    const lawns = all.filter(p => p.lawn).sort((a, b) => a.lawn!.z - b.lawn!.z), marks = all.filter(p => p.tex === 'marks'), lots = all.filter(p => !p.paint && !p.course && !p.lawn && p.tex !== 'marks'), paints = all.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
     const isPark = (p: LotPatch) => !!p.lines?.length && p.tex !== 'field' && p.tex !== 'dirt', parks = lots.filter(isPark), rest = lots.filter(p => !isPark(p));
     /** the lot ground patches of a list: each in its surface and rim, then its lines (furrows, white and yellow bays) */
     const drawLots = (list: LotPatch[]) => {
@@ -590,6 +598,7 @@ export class GroundPainter {
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, x0, y0, img.W / res, img.H / res); g.restore();
     };
     for (const p of paints) {
+      if (p.course) { this.drawCourse(ctx, p.course, L, X0, Y0, M, Minv, box, lite); continue; }
       const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null;
       if (!look) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
       const feather = featherTiles(look, L), reach = edgeReach(look, feather), eb = edgeBox(quadBox(p.pts), box, reach);
@@ -609,6 +618,22 @@ export class GroundPainter {
         g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(rx, ry, rw, rh); g.restore();
       }
     }
+  }
+  /** a course chunk (the course grid, T078) onto ctx, under the chunk transform: each surface in draw order, its collar band then its fill
+   *  rings (even-odd), each in its texture laid in tile space (turned and scaled about the origin, as painted areas lay theirs) */
+  private drawCourse(ctx: C2D, c: CoursePatch, L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, _lite: boolean) {
+    const r = [Math.max(box[0], c.cx * c.size - 1), Math.max(box[1], c.cy * c.size - 1), Math.min(box[2], (c.cx + 1) * c.size + 1), Math.min(box[3], (c.cy + 1) * c.size + 1)];
+    if (r[2]! <= r[0]! || r[3]! <= r[1]!) return;
+    const fill = (t: CourseTex, rings: number[][]) => {
+      if (!rings.length) return;
+      const path = new Path2D(); for (const q of rings) ringPath(path, q);
+      const G = new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
+      ctx.save(); ctx.setTransform(M); ctx.clip(path, 'evenodd');
+      ctx.fillStyle = isPaintPhoto(t.tex) ? this.paintPhoto(ctx, t.tex, L, G, t.sc) : this.screenPattern(ctx, t.tex as TexName, L, X0, Y0, Minv, G);
+      ctx.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
+      ctx.restore();
+    };
+    for (const l of c.layers) { if (l.collar) fill(l.collar, l.collar.fill); fill(l, l.fill); }
   }
   /** one painted area onto ctx: its polygon filled with its texture through G (turned and scaled in tile space about the origin), an optional
    *  tone filter over the fill, an optional border band inside its edge, and a thin rim for the paved textures; soft > 0 (the feather in tiles of an area
