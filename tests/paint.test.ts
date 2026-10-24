@@ -29,8 +29,8 @@ test('rocky dirt saves keep both paintings and border styles when reloaded into 
   const reloaded = new PaintTool(host);
   reloaded.load(saved);
   assert.deepEqual(reloaded.save(), tuples.map(t => [...t, 0, 0, 0.35, '#000000'])); // the save carries a radius (0: sharp) and an untoned tone
-  assert.deepEqual(sent.get('paint:1'), [{ pts: SQUARE, tex: 'rockyDirt', paint: { s: 1.5, a: 30, b: 0.5, bt: 'rockyDirtAlt', z: 1 } }]);
-  assert.deepEqual(sent.get('paint:2'), [{ pts: L_SHAPE, tex: 'rockyDirtAlt', paint: { s: 0.5, a: -45, b: 0.25, bt: 'rockyDirt', z: 2 } }]);
+  assert.deepEqual(sent.get('paint:1'), [{ pts: SQUARE, tex: 'rockyDirt', paint: { s: 1.5, a: 30, b: 0.5, bt: 'rockyDirtAlt', z: 1, e: 'flat' } }]);
+  assert.deepEqual(sent.get('paint:2'), [{ pts: L_SHAPE, tex: 'rockyDirtAlt', paint: { s: 0.5, a: -45, b: 0.25, bt: 'rockyDirt', z: 2, e: 'flat' } }]);
 });
 
 test('polyArea: the sign follows the winding, the value is the area in tiles²', () => {
