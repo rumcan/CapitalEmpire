@@ -1,4 +1,4 @@
-import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_BELOW, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, levelFor, midLevelFor, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
+import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
@@ -14,6 +14,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
+import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
@@ -891,6 +892,16 @@ export class Game {
     try { localStorage.setItem('capitalempire.shadows', String(this.shadowStrength)); } catch { /* storage may be unavailable */ }
     this.emit();
   }
+  /** the grass (T082): 'painted', the game-art families (painted-grass-art.ts, three zoom levels), or 'photo', the grass the game had before
+   *  (base-grass.json and the presets' mixed pictures), for the base ground, the meadow, the map edge and the painted presets (the town
+   *  lawns); the gear menu's Grass, kept across reloads; window.__game.setGrassArt('photo') from the console */
+  grassArt: GrassArt = clampGrassArt(null);
+  setGrassArt(v: GrassArt) {
+    this.grassArt = clampGrassArt(v);
+    try { localStorage.setItem('capitalempire.grassArt', this.grassArt); } catch { /* storage may be unavailable */ }
+    this.ground.setGrassArt(this.grassArt);
+    this.emit();
+  }
 
   constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement) {
     this.gl = new GLRenderer(canvas);
@@ -901,6 +912,8 @@ export class Game {
     this.traffic = new SimClient();
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
+    try { this.grassArt = clampGrassArt(localStorage.getItem('capitalempire.grassArt')); } catch { /* the default, painted */ }
+    this.ground.grassArt = this.grassArt;
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
@@ -4050,6 +4063,10 @@ export class Game {
     this.perf.atlasSoft = total ? soft / total : 0;
   }
 
+  private groundTier: 'g' | 'm' | null = null;
+  private groundTarget = '';
+  private groundBlendAt = Infinity;
+  private groundBlendOtherTier = false;
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
@@ -4075,8 +4092,16 @@ export class Game {
       }
     } else {
       // ---- ground: full chunks close up, district chunks (4 x 4, lite) further out
-      const mid = z < MID_BELOW, kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H, L = mid ? midLevelFor(ze) : levelFor(ze);
+      const { district: mid, artL, rasterL: L } = grassZoomLevels(z, this.dpr), kind = mid ? 'm' : 'g', CW = mid ? MID_W : CHUNK_W, CH = mid ? MID_H : CHUNK_H;
       const i0 = Math.floor(X0 / CW), i1 = Math.floor(X1 / CW), j0 = Math.floor(Y0 / CH), j1 = Math.floor(Y1 / CH);
+      const target = kind + '@' + L + ':' + artL;
+      if (this.groundTarget !== target) { this.groundBlendOtherTier = this.groundTier !== kind; this.groundTier = kind; this.groundTarget = target; this.groundBlendAt = Infinity; }
+      if (!Number.isFinite(this.groundBlendAt)) {
+        let complete = true;
+        for (let j = j0; j <= j1 && complete; j++) for (let i = i0; i <= i1; i++) { const t = this.ground.tile(kind, i, j); if (!t.tex || t.texL !== L || t.texArtL !== artL || t.stale) { complete = false; break; } }
+        if (complete) this.groundBlendAt = now;
+      }
+      const zoomBlend = Number.isFinite(this.groundBlendAt) ? Math.max(0, Math.min(1, (now - this.groundBlendAt) / 180)) : 0;
       // a chunk not baked yet shows its piece of the planner map meanwhile
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (t.tex || t.prev) continue;
@@ -4087,9 +4112,17 @@ export class Game {
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j);
-        this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now);
+        this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
         if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); }
+        else if (zoomBlend < 1) {
+          const targetReady = t.texL === L && t.texArtL === artL, old = targetReady ? t.fadeFrom : t.tex;
+          const fallback = this.groundBlendOtherTier || !old ? this.ground.zoomFallback(kind, r, now) : [];
+          if (fallback.length) for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
+          else if (old) gl.drawChunk(old, ...r);
+          if (t.tex && targetReady && zoomBlend > 0) gl.drawChunk(t.tex, ...r, false, zoomBlend);
+          if (t.fadeFrom && Number.isFinite(this.groundBlendAt)) t.fadeStart = this.groundBlendAt;
+        }
         else if (t.tex) gl.drawChunk(t.tex, ...r);
       }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
