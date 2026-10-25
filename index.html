@@ -90,6 +90,45 @@ section.prs h2 { font: 800 18px var(--display); margin: 0 0 10px; }
 .r-alpha { --rel: var(--sky); } .r-beta { --rel: var(--sand); } .r-rc { --rel: var(--flag); }
 @media (max-width: 900px) { .releases { grid-template-columns: minmax(0, 1fr); } }
 .step b { font-weight: 600; } .step span.note { color: var(--muted); } .step a { color: inherit; }
+/* Progress and estimates: the pace, the estimates and a bar per track, above the tabs (collapsible) */
+details.progress { max-width: 1400px; margin: 0 auto 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+details.progress > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; font: 800 20px var(--display); }
+details.progress > summary::-webkit-details-marker { display: none; }
+details.progress > summary::before { content: "\25BE"; color: var(--muted); font-size: 14px; }
+details.progress:not([open]) > summary::before { content: "\25B8"; }
+details.progress > summary:focus-visible { outline: 2px solid var(--fairway); outline-offset: 4px; border-radius: 4px; }
+details.progress > summary small { font: 500 13px var(--body); color: var(--muted); }
+details.progress p.fine { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+details.progress h3 { font: 600 12px/1 var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 20px 0 10px; }
+.pace { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 12px 0 0; }
+.pace div { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+.pace span { display: block; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+.pace strong { font: 800 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.total { margin: 14px 0 0; padding: 10px 14px; border-radius: 8px; background: var(--green-soft); border-left: 4px solid var(--fairway); }
+.total strong { font: 800 18px var(--display); }
+.total p { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
+.est { width: 100%; border-collapse: collapse; margin: 0; font-size: 14px; }
+.est th { text-align: left; font: 600 12px/1 var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 0 12px 8px 0; }
+.est td { padding: 8px 12px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.est td:first-child { font-weight: 600; }
+.est td.when-est { font-weight: 600; }
+.est td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.est td.num i { font-style: normal; color: var(--muted); }
+.prog-all { display: flex; justify-content: space-between; gap: 12px; font-weight: 600; margin-bottom: 6px; }
+.bar.big { height: 10px; margin-bottom: 14px; }
+.prog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px; }
+.prog-item { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 0; }
+.prog-item b { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; font-size: 14px; }
+.prog-item b em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--fairway); }
+.prog-item .bar { margin: 6px 0 4px; }
+.prog-item small { display: block; color: var(--muted); font-size: 12px; }
+@media (max-width: 900px) { .pace { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .est thead { display: none; } .est, .est tbody, .est tr, .est td { display: block; }
+  .est tr { border-top: 1px solid var(--line); padding: 8px 0; } .est td { border: 0; padding: 1px 0; }
+  .est td[data-l]::before { content: attr(data-l) ": "; color: var(--muted); font-size: 12px; font-weight: 400; }
+}
+@media (max-width: 520px) { .pace div { padding: 8px 10px; } .pace strong { font-size: 22px; } }
 </style>
 </head>
 <body>
@@ -101,6 +140,10 @@ section.prs h2 { font: 800 18px var(--display); margin: 0 0 10px; }
     <button id="refresh" type="button">Refresh now</button>
   </div>
 </header>
+<details class="progress" id="progress" open>
+  <summary>Progress and estimates <small id="prog-asof"></small></summary>
+  <div id="prog-body"></div>
+</details>
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" id="tab-board" aria-selected="true">Board</button>
   <button type="button" role="tab" id="tab-roadmap" aria-selected="false">Roadmap</button>
@@ -133,84 +176,187 @@ const ago = iso => { const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000
 const labels = it => it.labels.map(l => typeof l === 'string' ? l : l.name);
 const colOf = it => { const L = labels(it); if (it.state === 'closed' || L.includes('status:done')) return 'done'; if (L.includes('status:in-review')) return 'review'; if (L.includes('status:in-progress')) return 'prog'; return 'open'; };
 const closes = pr => { const m = (pr.body || '').match(/(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)/i); return m ? +m[1] : 0; };
-// The roadmap: the tracks of work and their steps. A step with `done` is finished for good; any other step with a ticket id takes its
-// live status from GitHub (a merged PR titled [Tid] is done, an open one is in review, its issue's label otherwise); `planned` and
-// `dropped` steps have no ticket yet / will not be built. Edit this list as the plan changes (the leads keep it current).
+// The roadmap: the tracks of work and their steps. A step with `done` is finished for good (`issue` or `pr` link to its ticket or its merged PR);
+// any other step with a ticket id takes its live status from GitHub (a merged PR titled [Tid] is done, an open one is in review, its issue's
+// label otherwise) and shows `st` (open, prog or review: its status when the list was last reconciled) while GitHub's latest page does not hold it.
+// A step with `st` and no id is work without a ticket; a step with neither is planned and not posted yet; `dropped` steps will not be built.
+// Last reconciled with GitHub issues and merged PRs: 2026-10-25. Edit this list as the plan changes (the leads keep it current).
 const ROADMAP = [
+  { key: 'p23a', name: 'P23 Phase 1: the course-town UX', goal: 'A friendly builder: no stolen clicks, unlocks that come from the course, a chip that says what it lays, a Holes panel on the rail, readable grow-in (plan P23, Phase 1).', steps: [
+    { id: 'T116', title: 'Modes never steal a click; Esc closes menus first', done: true, issue: 210, pr: 217 },
+    { id: 'T117', title: 'Unlocks from the course, never stranded', done: true, issue: 211, pr: 218 },
+    { id: 'T118', title: 'The chip says what it lays', done: true, issue: 212, pr: 220 },
+    { id: 'T119', title: 'New hole, finished', issue: 213, st: 'open' },
+    { id: 'T120', title: 'The Holes panel and the Course group on the rail', done: true, issue: 214, pr: 227 },
+    { id: 'T121', title: 'Readable grow-in (growing holes read as growing)', done: true, issue: 215, pr: 224 },
+    { id: 'T122', title: 'Run: a road-like strip of cells', issue: 216, st: 'open' },
+  ] },
+  { key: 'p23b', name: 'P23 Phase 2: the course-town UX, next', goal: 'Planned, not posted: it builds on Phase 1, the first-minute ticket T095 and the owner\'s approved picks (plan P23, Phase 2).', steps: [
+    { title: 'One Streets tool: Cart paths, Drives and Roads as tabs', planned: true, note: 'not posted; owner pick 7' },
+    { title: 'Holes drawn like roads: click the tee, each bend, then the green', planned: true, note: 'not posted; owner pick 8' },
+    { title: 'The half-grid spotlight over a faint grid', planned: true, note: 'not posted; owner pick 5' },
+    { title: 'The season card and the slim top bar', planned: true, note: 'not posted' },
+    { title: 'The hole card: par, lengths, grow-in, checks with Fix', planned: true, note: 'not posted' },
+    { title: 'Greenkeeping as a tool on the rail', planned: true, note: 'not posted' },
+    { title: 'Land for sale: an overlay and a card with Buy', planned: true, note: 'not posted' },
+    { title: 'An accessibility and 1366 pass: UI scale, focus rings, bigger handles', planned: true, note: 'not posted' },
+    { title: 'The welcome card, the keymap, the clubhouse stopgap, ghost extras', planned: true, note: 'not posted; the card goes with T095' },
+  ] },
+  { key: 'fixes', name: 'Fixes in flight', goal: 'Fixes from the owner\'s own course tests, being built now (P21 follow-ups).', steps: [
+    { id: 'T125', title: 'Rub out clears its full size and every surface under it', issue: 225, st: 'review', note: 'PR #229' },
+    { id: 'T126', title: 'Raised and lowered ground lit like real slopes: textured highlights, soft shade, no blotches', issue: 228, st: 'prog' },
+    { id: 'T127', title: 'Raised tees and greens on sloped banks; high raises get rock faces with steps', issue: 230, st: 'prog' },
+    { id: 'T110', title: 'Textured highlights and textured shadows everywhere (the art rule)', issue: 193, st: 'open', note: 'T126 is its first piece' },
+  ] },
+  { key: 'p21', name: 'P21: the course on a 1 m grid', goal: 'Holes planned, painted and built in 1 m cells: the grid, the hole plan and wizard, 3D collars, a cell brush and a rounded course panel (plan P21).', steps: [
+    { id: 'T072', title: 'The course grid', done: true, issue: 123, pr: 133 },
+    { id: 'T073', title: 'Droplet outlines', done: true, issue: 124, pr: 134 },
+    { id: 'T074', title: 'The hole plan', done: true, issue: 127, pr: 204 },
+    { id: 'T075', title: 'Edge light and stripes', done: true, issue: 128, pr: 137 },
+    { id: 'T076', title: 'Grow-in and placement effects', done: true, issue: 129, pr: 140 },
+    { id: 'T077', title: 'The ground painter draws course chunks', done: true, issue: 136, pr: 145 },
+    { id: 'T077b', title: 'Course painting within budget: contouring off the main thread', done: true, pr: 170 },
+    { id: 'T078', title: 'The grid in the golf game', done: true, issue: 135, pr: 142 },
+    { id: 'T081', title: 'Paint cursor: a 3D surface puck, the grid and a glowing footprint', done: true, issue: 146, pr: 171 },
+    { id: 'T099', title: '3D kerb-style collars and walls on every course surface', done: true, issue: 181, pr: 201 },
+    { id: 'T100', title: 'A subtle map grid, the course half grid, and cart paths on it', done: true, issue: 183, pr: 196 },
+    { id: 'PR221', title: 'Map grid only while building or painting', done: true },
+    { id: 'T102', title: 'The New hole wizard and plan handles', done: true, issue: 186, pr: 205 },
+    { id: 'T108', title: 'Paint cursor done right: a small puck and a clean cell preview', done: true, issue: 191, pr: 196 },
+    { id: 'T109', title: 'Course building in 1 m cells', done: true, issue: 192, pr: 196 },
+    { id: 'T113', title: 'Course props draw their own pictures', done: true, issue: 197, pr: 200 },
+    { id: 'T114', title: "Stand-in buildings labelled 'Stand In for <name>'", done: true, issue: 202, pr: 203 },
+    { id: 'T123', title: 'The owner\'s painting test: wizard reset, built holes read built, Border and Shadow sliders', done: true, issue: 222, pr: 224 },
+    { id: 'T101', title: 'The cell brush, its ghost and the map animation', issue: 185, st: 'open' },
+    { id: 'T103', title: 'The course panel, rounded and animated', issue: 187, st: 'open' },
+    { id: 'T104', title: 'Stamps, and retire Pieces and Shape for course surfaces', issue: 188, st: 'open' },
+    { id: 'T105', title: 'P19 hooks', issue: 189, st: 'open', note: 'waits on P19 T068 and T070' },
+    { id: 'T106', title: 'Bench, gates and docs', issue: 190, st: 'open' },
+    { id: 'T107', title: 'The old nine as plans', issue: 184, st: 'open' },
+  ] },
+  { key: 'p22', name: 'P22: the new start, one road and the driving range', goal: 'A new game starts with one county road and your driving range; the town grows outward, off the course land (plan P22).', steps: [
+    { id: 'T083', title: 'Start with one road and your driving range (the umbrella ticket)', issue: 148, st: 'prog', note: 'closes with the last of these' },
+    { id: 'T085', title: 'The range start plan (pure)', done: true, issue: 154, pr: 173 },
+    { id: 'T086', title: 'The driving range business and its plot (pure)', done: true, issue: 155, pr: 174 },
+    { id: 'T087', title: 'New games start with the road and the range', done: true, issue: 156, pr: 175, note: 'risky' },
+    { id: 'T088', title: "Founding seasons: the tour's invitation", done: true, issue: 157, pr: 176, note: 'risky' },
+    { id: 'T089', title: 'The clubhouse, placed by the player', done: true, issue: 158, pr: 177 },
+    { id: 'T090', title: 'Grown-town lot growth', issue: 159, st: 'open', note: 'risky' },
+    { id: 'T091', title: 'Grown-town roads keep off the course', issue: 160, st: 'open', note: 'risky' },
+    { id: 'T092', title: 'The map exits feed the range', issue: 161, st: 'open' },
+    { id: 'T093', title: 'Through traffic on the county road', issue: 162, st: 'open', note: 'risky' },
+    { id: 'T094', title: 'The tournament crowd from off the map', issue: 163, st: 'open', note: 'waits on P03 T055 and T056' },
+    { id: 'T095', title: 'The first minute: camera, welcome, first tool, guide steps', issue: 164, st: 'open' },
+    { id: 'T096', title: "The range's look: ground, props and art requests", issue: 165, st: 'open' },
+    { id: 'T097', title: 'New county roads with the tiers', issue: 166, st: 'open', note: 'with P03 T057' },
+    { id: 'T098', title: 'The range gate, the grown-town fixture and the bench scenes', issue: 168, st: 'open' },
+    { id: 'T115', title: 'Range starts: buy land, consistent grow-in at every zoom, paint your own plot', done: true, issue: 207, pr: 208 },
+  ] },
+  { key: 'p19', name: 'P19: course roads and paths', goal: 'Pavement cart paths and single-lane course drives that build like roads, with golf buildings that snap to them (plan P19).', steps: [
+    { id: 'T067', title: 'The course drive: a miniature road catalogue with tiers and avenue styles', done: true, issue: 116, pr: 118 },
+    { id: 'T069a', title: 'Frontage snap maths', done: true, issue: 115, pr: 120 },
+    { id: 'T084', title: 'Course paths in the Course menu: dirt and cement slab starters, real widths', done: true, issue: 150, pr: 172 },
+    { id: 'T124', title: 'Roads stay off the course: only paths and drives on course land', done: true, issue: 223, pr: 226 },
+    { id: 'T068', title: 'The path network: cart paths as their own network', planned: true, note: 'not posted' },
+    { id: 'T069b', title: 'Golf buildings and event structures snap to drives and paths', planned: true, note: 'not posted' },
+    { id: 'T070', title: 'Course > Build > Paths: the six tools', planned: true, note: 'not posted' },
+  ] },
+  { key: 'p20', name: 'P20: lot presets and the in-game dev editor', goal: 'Every town lot comes from a curated preset the owner can tune live, instead of a runtime layout (plan P20).', steps: [
+    { id: 'T062', title: 'Lot presets: the data and the picker', done: true, issue: 114, pr: 119 },
+    { id: 'T063', title: "Freeze today's lots into presets", done: true, pr: 130 },
+    { id: 'T064', title: 'Every lot from a preset', done: true, pr: 132 },
+    { id: 'T071', title: 'In-game dev editor: edits remembered in the lot presets', done: true, pr: 139 },
+    { id: 'PR131', title: "Studio live: the owner's presets, base grass and sprite rebuild", done: true },
+    { id: 'PR151', title: "The owner's studio and dev-editor edits (24 Oct evening)", done: true },
+    { id: 'PR169', title: "The owner's preset edits", done: true },
+    { id: 'T065', title: 'The studio Lots tab on presets', planned: true, note: 'not posted; the dev editor (T071) edits presets meanwhile' },
+    { id: 'T066', title: 'Retire the baked lots: scripts, atlas pages and tests', planned: true, note: 'not posted' },
+  ] },
+  { key: 'ground', name: 'Ground and painted art', goal: 'A living, hand-painted ground that fits the GPU budget: atlases, grass at three zoom levels, and a painted look on every surface.', steps: [
+    { id: 'T080', title: 'Sprite atlases within the GPU memory budget', done: true, issue: 141, pr: 195, note: 'index.html is now 415 B; atlas 96 MB at dpr 2' },
+    { id: 'PR121', title: 'Woodland: fescue ground, every tree in the forests, every tree lit from the right', done: true },
+    { id: 'PR122', title: 'Painted surfaces: feathered edges and a sun-lit bevel', done: true },
+    { id: 'PR125', title: 'Sizes: nothing drawn above its pixels', done: true },
+    { id: 'T111', title: 'Living ground: grass variety from what stands on it, doubling as ambient occlusion', done: true, issue: 198, pr: 206 },
+    { id: 'T082', title: 'Game-art grass: hand-painted textures at three zoom levels', issue: 147, st: 'review', note: 'grass landed in PR #194; the ticket stays open' },
+    { title: 'Hand-painted art on every surface (sand, soil, paths, water)', st: 'prog', note: 'being built' },
+  ] },
   { name: 'See it before you build it', goal: 'Every build tool shows a green or red ghost and a one-line label (what, how much, or why not) before the click.', steps: [
-    { id: 'T018', title: 'Shared ghost and wireframe style', done: true },
-    { id: 'T019', title: 'Event structures and hole markers', done: true },
-    { id: 'T020', title: 'Car parks and parking rows', done: true },
-    { id: 'T021', title: 'Toll gates and bus stops', done: true },
-    { id: 'T022', title: 'Road, lane and bulldoze cursor labels', done: true },
+    { id: 'T018', title: 'Shared ghost and wireframe style', done: true, issue: 15, pr: 16 },
+    { id: 'T019', title: 'Event structures and hole markers', done: true, issue: 24, pr: 27 },
+    { id: 'T020', title: 'Car parks and parking rows', done: true, issue: 29, pr: 30 },
+    { id: 'T021', title: 'Toll gates and bus stops', done: true, issue: 35, pr: 36 },
+    { id: 'T022', title: 'Road, lane and bulldoze cursor labels', done: true, issue: 37, pr: 38 },
     { id: 'T023', title: 'Junction ghosts', dropped: true, note: 'the junction tool already shows its ring and the reason' },
-    { id: 'T024', title: 'Paint and course outlines', done: true },
+    { id: 'T024', title: 'Paint and course outlines', done: true, issue: 25, pr: 28 },
   ] },
   { name: 'SimGolf-style course building', goal: 'Click-to-place course pieces that snap together, with fat grass borders, sun-lit bevels and their props.', steps: [
-    { id: 'T029', title: 'Piece shapes, borders and bevels (maths)', done: true },
-    { id: 'T030', title: 'Course > Build > Pieces', done: true },
-    { id: 'T030b', title: 'Pieces place their props (pins, flags, reeds)', done: true },
-    { id: 'T031', title: 'Cart path piece snaps to roads', done: true },
+    { id: 'T029', title: 'Piece shapes, borders and bevels (maths)', done: true, issue: 21, pr: 23 },
+    { id: 'T030', title: 'Course > Build > Pieces', done: true, issue: 32, pr: 33 },
+    { id: 'T030b', title: 'Pieces place their props (pins, flags, reeds)', done: true, pr: 54 },
+    { id: 'T031', title: 'Cart path piece snaps to roads', done: true, pr: 56 },
     { title: 'Sprites for tee steps, rakes, rocks, waterfalls', planned: true, note: 'art side: docs/GOLF-SPRITES.md' },
   ] },
   { name: 'The land and the light', goal: 'A flat playable map with a subtle course height field, all lit by one sun at the upper right.', steps: [
-    { id: 'T025', title: 'Flat map: no mountains', done: true },
-    { id: 'T025b', title: 'Woods become buildable', issue: 39 },
-    { id: 'T034', title: 'Conifer stands from noise', issue: 41 },
-    { id: 'T026', title: 'Course height field (maths)', done: true },
-    { id: 'T027', title: 'Height data, undo, roads flatten', done: true },
-    { id: 'T027b', title: 'Height brush', done: true },
-    { id: 'T028', title: 'Course height in the hillshade', done: true },
-    { id: 'T028b', title: 'Shade over the painted course', done: true },
-    { id: 'T040', title: 'One sun at the upper right everywhere (145°)' },
+    { id: 'T025', title: 'Flat map: no mountains', done: true, issue: 26, pr: 31 },
+    { id: 'T025b', title: 'Woods become buildable', done: true, issue: 39, pr: 87 },
+    { id: 'T034', title: 'Conifer stands from noise', done: true, issue: 41, pr: 90 },
+    { id: 'T026', title: 'Course height field (maths)', done: true, issue: 18, pr: 19 },
+    { id: 'T027', title: 'Height data, undo, roads flatten', done: true, pr: 43 },
+    { id: 'T027b', title: 'Height brush', done: true, pr: 45 },
+    { id: 'T028', title: 'Course height in the hillshade', done: true, pr: 51 },
+    { id: 'T028b', title: 'Shade over the painted course', done: true, pr: 55 },
+    { id: 'T040', title: 'One sun at the upper right everywhere (145°)', done: true, pr: 84 },
   ] },
   { name: 'Easy to pick up', goal: 'A new player sees a few clear tools; more unlock in Year 1; All tools shows everything; far less clutter.', steps: [
-    { id: 'T032', title: 'Progressive unlock rules', done: true },
-    { id: 'T033a', title: 'Player progress counters', done: true },
-    { id: 'T033b', title: 'Tools unlock step by step', done: true },
-    { id: 'T035', title: 'Less clutter: Developer toggle, slim top bar', done: true },
-    { id: 'T036', title: 'Road panel tidy', done: true },
-    { id: 'T039', title: 'Which Car park / Bus / Toll controls show', issue: 60 },
-    { id: 'T041', title: 'Transport panels wired to T039' },
+    { id: 'T032', title: 'Progressive unlock rules', done: true, issue: 20, pr: 22 },
+    { id: 'T033a', title: 'Player progress counters', done: true, pr: 47 },
+    { id: 'T033b', title: 'Tools unlock step by step', done: true, pr: 49 },
+    { id: 'T035', title: 'Less clutter: Developer toggle, slim top bar', done: true, pr: 50 },
+    { id: 'T036', title: 'Road panel tidy', done: true, pr: 58 },
+    { id: 'T039', title: 'Which Car park / Bus / Toll controls show', done: true, issue: 60, pr: 96 },
+    { id: 'T041', title: 'Transport panels wired to T039', planned: true, note: 'not posted' },
   ] },
   { name: 'Slopes in play', goal: 'The course height changes how holes play and how the course is rated.', steps: [
-    { id: 'T037', title: 'Hole terrain stats', issue: 59 },
-    { id: 'T038', title: 'Slope affects quality and "plays like"' },
+    { id: 'T037', title: 'Hole terrain stats', done: true, issue: 59, pr: 62 },
+    { id: 'T038', title: 'Slope affects quality and "plays like"', done: true, pr: 83 },
   ] },
-  { name: 'Tournament day crowds (M2)', goal: 'The crowd is real people on a real clock: they set off to arrive in time, queue at the gates, follow the play round the course, eat, and drive home (plan P02, approved).', steps: [
-    { id: 'T048', title: 'The tournament day clock (1 game minute per sim second, from 05:00)' },
-    { id: 'T049', title: 'The day timeline: departures, gates, lateness, leaving' },
-    { id: 'T050', title: 'Spectators move on the timeline' },
-    { id: 'T051', title: 'Galleries follow the featured groups' },
-    { id: 'T052', title: 'Viewing and tent sales measured from the crowd' },
-    { id: 'T053', title: 'Tournament-day HUD strip; Skip to tournament at 8x' },
+  { key: 'm2', name: 'Tournament day crowds (M2)', goal: 'The crowd is real people on a real clock: they set off to arrive in time, queue at the gates, follow the play round the course, eat, and drive home (plan P02, approved).', steps: [
+    { id: 'T048', title: 'The tournament day clock (1 game minute per sim second, from 05:00)', done: true, pr: 106 },
+    { id: 'T049', title: 'The day timeline: departures, gates, lateness, leaving', done: true, issue: 97, pr: 104 },
+    { id: 'T050', title: 'Spectators move on the timeline', done: true, issue: 109, pr: 113 },
+    { id: 'T051a', title: 'Galleries follow the play: draw weights and moves', done: true, issue: 107, pr: 110 },
+    { id: 'T051b', title: 'Galleries follow the featured groups (wiring T051a)', planned: true, note: 'not posted' },
+    { id: 'T052', title: 'Viewing and tent sales measured from the crowd', planned: true, note: 'not posted' },
+    { id: 'T053', title: 'Tournament-day HUD strip; Skip to tournament at 8x', planned: true, note: 'not posted' },
   ] },
-  { name: 'Transport on the day (M3)', goal: 'The regional crowd arrives by highway; the player plans the day with closures, one-way streets and police; the results say why fans were late (plan P03, approved).', steps: [
-    { id: 'T054', title: 'Highway entry rules: crowd share by tier, car scale' },
-    { id: 'T055', title: 'Cars spawn on every inbound highway lane' },
-    { id: 'T056', title: 'City wiring and Highway labels in the results' },
-    { id: 'T057', title: 'Second and third highway entries (tiers 3 and 4)' },
-    { id: 'T058', title: 'Day plan: road closures and one-way for the day' },
-    { id: 'T059', title: 'Police at junctions and car-park entrances' },
-    { id: 'T060', title: 'Why fans were late; traffic satisfaction' },
-    { id: 'T061', title: 'Pre-day forecast' },
+  { key: 'm3', name: 'Transport on the day (M3)', goal: 'The regional crowd arrives by highway; the player plans the day with closures, one-way streets and police; the results say why fans were late (plan P03, approved).', steps: [
+    { id: 'T054', title: 'Highway entry rules: crowd share by tier, car scale', done: true, issue: 98, pr: 105 },
+    { id: 'T055', title: 'Cars spawn on every inbound highway lane', planned: true, note: 'not posted' },
+    { id: 'T056', title: 'City wiring and Highway labels in the results', planned: true, note: 'not posted' },
+    { id: 'T057', title: 'Second and third highway entries (tiers 3 and 4)', planned: true, note: 'not posted' },
+    { id: 'T058', title: 'Day plan: road closures and one-way for the day', planned: true, note: 'not posted' },
+    { id: 'T059', title: 'Police at junctions and car-park entrances', planned: true, note: 'not posted' },
+    { id: 'T060a', title: 'Why late or missed: the reason table', done: true, issue: 108, pr: 111 },
+    { id: 'T060', title: 'Why fans were late: wiring and the Traffic satisfaction line (rest of T060)', planned: true, note: 'not posted' },
+    { id: 'T061', title: 'Pre-day forecast', planned: true, note: 'not posted' },
   ] },
   { name: 'Safe saves, guided first year', goal: 'Saves never get lost between builds, and a new player is walked through Year 1 (plans P07 and P06, approved).', steps: [
-    { id: 'T042', title: 'Save migrations; an unreadable save is backed up, never overwritten' },
-    { id: 'T043', title: 'Real-save fixtures and golden tests' },
-    { id: 'T044', title: 'Build stamp; save export and import (.cesave)' },
-    { id: 'T045', title: 'Guided Year 1: step rules' },
-    { id: 'T046', title: 'Guided Year 1: facts and saved state' },
-    { id: 'T047', title: 'Guided Year 1: rings, Next, Skip tutorial' },
+    { id: 'T042', title: 'Save migrations; an unreadable save is backed up, never overwritten', done: true, pr: 89 },
+    { id: 'T043', title: 'Real-save fixtures and golden tests', done: true, issue: 91, pr: 103 },
+    { id: 'T044', title: 'Build stamp; save export and import (.cesave)', planned: true, note: 'not posted' },
+    { id: 'T045', title: 'Guided Year 1: step rules', done: true, issue: 88, pr: 102 },
+    { id: 'T046', title: 'Guided Year 1: facts and saved state', planned: true, note: 'not posted' },
+    { id: 'T047', title: 'Guided Year 1: rings, Next, Skip tutorial', planned: true, note: 'not posted' },
   ] },
-  { name: 'Art: one consistent look', goal: 'Every building regenerated with four true views, lit from the same side, never mirrored.', steps: [
+  { key: 'art', name: 'Art: one consistent look', goal: 'Every building regenerated with four true views, lit from the same side, never mirrored.', steps: [
     { id: 'PR52', title: 'Import the regenerated buildings; no mirroring', done: true, note: '68 of 204 building types' },
     { id: 'PR99', title: 'Import 15 more regenerated buildings', done: true, note: '83 of 204 building types' },
     { id: 'PR112', title: 'Old pictures never show; the import cuts reviewed sheets itself', done: true, note: '131 of 204 building types' },
     { id: 'PR143', title: 'Import 13 more four-view buildings; each sheet checked, rejects sent back to the art model', done: true, note: '144 of 204 building types' },
     { title: 'The other 60 building types', planned: true, note: '14 are baked lots outside the art plan; the rest wait on the art model (sent back or not drawn yet)' },
     { title: 'Event structures and the clubhouse with their own art', planned: true },
-    { title: 'Ship the art as separate files (the single-file build is 277 MB)', planned: true },
+    { title: 'Ship the art as separate files (the single-file build was 277 MB)', done: true, pr: 180, note: 'T080: index.html is now 415 B' },
   ] },
 ];
 // The road to 1.0: the three release gates and the planning tickets each needs (GitHub issues labelled plan + release:<rel>).
@@ -251,24 +397,71 @@ function renderReleases() {
   }).join('');
 }
 const ST_NAME = { done: 'Done', review: 'In review', prog: 'In progress', open: 'Open', planned: 'Planned', dropped: 'Dropped' };
+const issueUrl = n => `https://github.com/${REPO}/issues/${n}`, pullUrl = n => `https://github.com/${REPO}/pull/${n}`;
 /** a roadmap step's status and its link, from the step's flags or the live GitHub data */
 function stepState(s) {
-  if (s.done) return { st: 'done' }; if (s.dropped) return { st: 'dropped' };
+  if (s.done || s.dropped) { const pr = s.pr || (/^PR\d+$/.test(s.id || '') ? +s.id.slice(2) : 0); return { st: s.done ? 'done' : 'dropped', url: s.issue ? issueUrl(s.issue) : pr ? pullUrl(pr) : '' }; }
   if (s.id) {
     const tag = `[${s.id}]`, pr = items.find(it => it.pull_request && it.title.startsWith(tag));
     if (pr) return { st: pr.pull_request.merged_at ? 'done' : pr.state === 'open' ? 'review' : 'open', url: pr.html_url };
     const iss = items.find(it => !it.pull_request && (it.number === s.issue || it.title.startsWith(tag)));
     if (iss) { const c = colOf(iss); return { st: c, url: iss.html_url }; }
   }
-  return { st: 'planned' };
+  return s.st ? { st: s.st, url: s.issue ? issueUrl(s.issue) : '' } : { st: 'planned' };
+}
+/** a track's counts: its steps' states, the steps that will be built, how many are done */
+function trackCount(t) {
+  const states = t.steps.map(stepState), live = t.steps.filter(s => !s.dropped).length;
+  return { states, live, done: states.filter(x => x.st === 'done').length };
 }
 function renderRoadmap() {
   renderReleases();
   $('roadmap').innerHTML = ROADMAP.map(t => {
-    const states = t.steps.map(stepState), live = t.steps.filter(s => !s.dropped).length, done = states.filter(x => x.st === 'done').length;
+    const { states, live, done } = trackCount(t);
     return `<section class="track"><h2>${esc(t.name)}</h2><p class="goal">${esc(t.goal)}</p><div class="bar" title="${done} of ${live} done"><i style="width:${live ? Math.round(100 * done / live) : 0}%"></i></div>${t.steps.map((s, i) => { const x = states[i], label = `${s.id ? `<b>${esc(s.id)}</b> ` : ''}${esc(s.title)}`;
       return `<div class="step"><span class="st ${x.st}">${ST_NAME[x.st]}</span><span>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${label}</a>` : label}${s.note ? ` <span class="note">· ${esc(s.note)}</span>` : ''}</span></div>`; }).join('')}</section>`;
   }).join('');
+}
+// Progress and estimates (shown above the tabs). The pace and the estimates are the lead's figures, measured on the date below from GitHub's
+// merged PRs and closed tickets; they are estimates, not promises, and are re-measured by hand: edit them when the lead measures again.
+// `tracks` names the ROADMAP tracks (by `key`) whose done/total sit beside a row; the bars below come straight from the roadmap, so they stay live.
+const ESTIMATES = {
+  measured: '25 Oct 2026',
+  pace: [
+    ['37', 'PRs merged in the last 24 hours'], ['about 120', 'PRs merged in the last 48 hours'],
+    ['57', 'tickets closed since 24 Oct'], ['about 5', 'agents working in parallel'],
+  ],
+  paceNote: 'The agents pause twice a day when their usage limits run out, and wait their turn for the one heavy test run at a time that a 16 GB machine allows.',
+  rows: [
+    { name: 'P23 Phase 1', status: 'T116-T118 and T120 merged; T119 and T122 to go', est: 'about half a day to a day', tracks: ['p23a'] },
+    { name: 'Fixes in flight', status: 'Rub out, height light, tee banks, painted art on every surface', est: 'about half a day to a day', tracks: ['fixes'] },
+    { name: 'P21 remaining', status: 'T101, T103-T107; T105 waits on P19 T068/T070', est: 'about 1 to 1.5 days', tracks: ['p21'] },
+    { name: 'P22 remaining', status: 'T090-T098; T094 waits on P03 T055/T056', est: 'about 2 days', tracks: ['p22'] },
+    { name: 'P23 Phase 2', status: 'Not posted yet', est: 'about 2 days', tracks: ['p23b'] },
+    { name: 'P19 path network', status: 'T068, T069b, T070, not posted', est: 'about 1 day', tracks: ['p19'] },
+    { name: 'M2/M3 tournament day and transport leftovers', status: 'Merged: T048-T050, T051a, T054, T060a. Still open: T051b, T052, T053, T055-T059, the rest of T060, T061', est: 'about 2 days', tracks: ['m2', 'm3'] },
+    { name: 'Art', status: 'Buildings 144/204, ground art', est: 'follows the art chat\'s pace', tracks: ['art', 'ground'] },
+  ],
+  total: 'about 8 to 10 working days',
+  totalNote: 'At current speed, for everything planned today, with UX Phase 1 done within about a day. The rows overlap because the agents work in parallel, so the total is a little under their sum. On the calendar that is roughly 2 to 4 November if the agents run every day; every pause pushes it back, and every new request from the owner adds to it.',
+};
+function renderProgress() {
+  const E = ESTIMATES, counts = new Map(ROADMAP.map(t => [t.key || t.name, trackCount(t)]));
+  const sum = keys => keys.reduce((a, k) => { const c = counts.get(k); return c ? { done: a.done + c.done, live: a.live + c.live } : a; }, { done: 0, live: 0 });
+  const all = sum([...counts.keys()]), pct = (d, l) => l ? Math.round(100 * d / l) : 0;
+  $('prog-asof').textContent = `estimates, measured ${E.measured}`;
+  $('prog-body').innerHTML = `<p class="fine">These are estimates, not promises: working days of agent time at the speed measured on ${esc(E.measured)}. Steps and tickets are counted live from the Roadmap below.</p>
+<div class="pace">${E.pace.map(([n, l]) => `<div><strong>${esc(n)}</strong><span>${esc(l)}</span></div>`).join('')}</div>
+<p class="fine">${esc(E.paceNote)}</p>
+<div class="total"><strong>Everything currently planned: ${esc(E.total)}</strong> <span class="chip final">estimate</span><p>${esc(E.totalNote)}</p></div>
+<h3>Estimate to finish, by track</h3>
+<table class="est"><thead><tr><th scope="col">Track</th><th scope="col">Status</th><th scope="col">Estimate</th><th scope="col">Steps done</th></tr></thead><tbody>${E.rows.map(r => { const c = sum(r.tracks);
+  return `<tr><td>${esc(r.name)}</td><td data-l="Status">${esc(r.status)}</td><td class="when-est" data-l="Estimate">${esc(r.est)}</td><td class="num" data-l="Steps done">${c.done}<i>/${c.live}</i></td></tr>`; }).join('')}</tbody></table>
+<h3>Progress by track</h3>
+<div class="prog-all"><span>Everything on the roadmap</span><span>${all.done} of ${all.live} steps done · ${pct(all.done, all.live)}%</span></div><div class="bar big" title="${all.done} of ${all.live} done"><i style="width:${pct(all.done, all.live)}%"></i></div>
+<div class="prog-grid">${ROADMAP.map(t => { const c = counts.get(t.key || t.name), n = st => c.states.filter(x => x.st === st).length;
+  const bits = [[n('review'), 'in review'], [n('prog'), 'in progress'], [n('open'), 'open'], [n('planned'), 'planned']].filter(b => b[0]).map(b => `${b[0]} ${b[1]}`);
+  return `<div class="prog-item"><b><span>${esc(t.name)}</span><em>${c.done}/${c.live}</em></b><div class="bar" title="${c.done} of ${c.live} done"><i style="width:${pct(c.done, c.live)}%"></i></div><small>${bits.length ? esc(bits.join(' · ')) : 'All done'}</small></div>`; }).join('')}</div>`;
 }
 /** shows the Board or the Roadmap (the choice is kept in the address as #roadmap) */
 function showTab(name) {
@@ -281,7 +474,7 @@ function showTab(name) {
 $('tab-board').addEventListener('click', () => showTab('board'));
 $('tab-roadmap').addEventListener('click', () => showTab('roadmap'));
 function render() {
-  renderRoadmap();
+  renderRoadmap(); renderProgress();
   const issues = items.filter(it => !it.pull_request && labels(it).includes('arena'));
   const prs = items.filter(it => it.pull_request);
   const prFor = new Map(); for (const p of prs) { const n = closes(p); if (n && !prFor.has(n)) prFor.set(n, p); }
@@ -313,6 +506,7 @@ async function poll() {
   }
 }
 $('refresh').addEventListener('click', poll);
+renderProgress();
 if (location.hash === '#roadmap') showTab('roadmap');
 poll(); setInterval(poll, POLL_MS); setInterval(() => { if (items.length) render(); }, 30000);
 </script>
