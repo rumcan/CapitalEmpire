@@ -21,6 +21,8 @@ import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
+import { SurfaceMark } from './ui/course/SurfaceMark';
+import { BRUSH_PRESETS } from './game/paint';
 import { STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
@@ -148,6 +150,10 @@ export default function App() {
   const chip = (id: string) => !ui || (ui.visibleGolfChips as string[]).includes(id);
   /** the first-run hint (null when none or all dismissed); golf mode shows it in the bottom bar */
   const hint = ui?.activeHint ?? null;
+  /** the Course brush's words (T118): what a click does (the surface, the hole it joins or starts, the price a cell) and the state; golf mode always shows them while a surface is armed */
+  const courseHint = game?.courseHint() ?? '';
+  /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
+  const surfaceKeys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
   /** the open group's tools that the progressive unlocks show */
   const shownTools = grp ? grp.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
@@ -248,7 +254,7 @@ export default function App() {
                 <button key={m} className={`btn ${game.flowMode === m ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
               ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
-              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to (G)"><Icon name="fullscreen" size={22} /></button>
+              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to, shown while a build or paint tool is in hand (G)"><Icon name="fullscreen" size={22} /></button>
               <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
@@ -364,15 +370,26 @@ export default function App() {
             </div>
           </div>
 
-          {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): only the first-run hint, with its Got it; no bar without one */}
-          {(!gv || hint) && (
-          <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex justify-center">
+          {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it;
+              and while a course surface is armed (T118), always the Course pill: what a click lays (the surface's disc and mark, the hole it joins, the
+              price a cell, the state's words) and how to switch or stop; no bar without either */}
+          {(!gv || hint || courseHint) && (
+          <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
+            {(!gv || hint) && (
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
               {gv && hint
                 ? <><span><b>{hint.title}</b> · {hint.body}</span><button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
                 : <span>{keyed(hintFor(game))}</span>}
             </div>
+            )}
+            {gv && courseHint && (
+            <div className="flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs" data-testid="course-pill">
+              <SurfaceMark kind={game.paint.brushKind} size={24} />
+              <span className="text-slate-100">{courseHint}</span>
+              <span className="whitespace-nowrap text-slate-300">· <span className="keycap">1–{surfaceKeys}</span> switch surface · <span className="keycap">Esc</span> stop</span>
+            </div>
+            )}
           </div>
           )}
           {(game.showAccess || (dev && game.cam.z < PLANNER_Z)) && <AccessLegend game={game} />}
@@ -1460,7 +1477,7 @@ function hintFor(g: Game) {
       const h = g.laneHover, up = g.tool === 'lane', head = up ? 'UPGRADE' : 'DOWNGRADE', rev = ' · Right-click a one-way road to reverse it';
       if (!h || !h.segs.length) return `${head} — hover a straight road: its run lights up; click to take it one size ${up ? 'up (you pay the difference)' : 'down (the difference is refunded)'}` + rev;
       return (h.why || `${head} — click to make this ${h.segs.length > 1 ? 'run' : 'road'} ${h.to!.name.toLowerCase()} ${h.cost < 0 ? `(refund ${money(-h.cost)})` : `for ${money(h.cost)}`}`) + rev; }
-    case 'course': { const q = g.paint; return q.mode === 'brush' ? `COURSE (hole ${q.brushHole}, ${q.brushKind}): drag to paint · Alt-drag erases · [ ] size · 1–7 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
+    case 'course': { const q = g.paint, ch = g.courseHint(); return q.mode === 'brush' ? `${ch ? `${ch} ·` : `COURSE (hole ${q.brushHole}, ${q.brushKind}):`} drag to paint · Alt-drag erases · [ ] size · 1–7 surfaces · Ctrl+Z undo` : q.mode === 'draw' ? `COURSE (hole ${q.brushHole}, ${q.brushKind} shape): click corners, double-click or Enter closes · Esc back to the brush · Ctrl+Z undo` : q.mode === 'hole' ? `COURSE: click to place ${q.holeSlot ? 'preset ' + q.holeSlot : 'a generated hole'} · R turns · Esc back to the brush` : q.mode === 'plant' ? `COURSE (plants: ${q.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size` : 'COURSE: pick a surface (1–7) to paint'; }
     case 'bulldoze': return 'Click objects or roads to remove them (roads refund their value)';
     case 'paint': return g.paint.mode === 'draw' ? (g.paint.pts.length ? `PAINT: ${g.paint.pts.length / 2} corner(s) — click the first corner, double-click or Enter to close · Backspace undoes · Esc cancels` : 'PAINT: click the corners of a shape, or press and drag to paint an outline freehand · Tab: Draw, Pick, Erase') : g.paint.mode === 'pick' ? 'PAINT: click an area to pick it and change its look · Page Up / Down moves it over / under (Shift: to the front / back) · Delete removes it · Esc: back to Draw · Tab: the next mode' : g.paint.mode === 'hole' ? 'GOLF HOLE: click to place (tee at the click) · R turns · Esc back to Draw' : g.paint.mode === 'brush' ? `BRUSH (${g.paint.brushKind}, hole ${g.paint.brushHole}): drag to paint · Alt-drag erases · [ ] size · Esc back to Draw` : g.paint.mode === 'plant' ? `PLANT (${g.paint.plantBrush}): drag to plant · Alt-drag removes what these brushes planted · [ ] size · Esc back to Draw` : 'PAINT: click an area to erase it';
     case 'select': return g.hoverRoad ? `${g.hoverRoad} · Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze` : 'Drag to pan · scroll to zoom · WASD / arrows move the camera · R roads · J junctions · X bulldoze';

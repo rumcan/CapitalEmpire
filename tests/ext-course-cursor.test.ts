@@ -2,13 +2,15 @@
 // on the 1 m mini grid (the round brush on the nearest cell corner, the square brush of 1 to 4 cells, 2 x 2 being one town square), its edge is
 // the cells' own outline, the chip is small and beside the pointer, the pointer stays, a still frame makes nothing new, the painted cells equal
 // the footprint through the Paint tool (with the brush rules, the skipped cells and their reasons), a drag leaves no gap, and the price is
-// live. npm test (esbuild + node).
+// live. T118: the chip says what it lays: a mark per surface on the disc, the states (ready, dragging, protected, refused, erase, no change,
+// money short), no words by the disc at rest, and the hint pill's words. npm test (esbuild + node).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHIP_CSS, CourseCursor, Footprints, cellOutline, dabCells, polyFootprint, snapDab, squareStart, type CursorView, type Shape, type SpriteCanvas } from '../src/game/ext/course-cursor';
+import { CHIP_CSS, CourseCursor, Footprints, MARKS, cellOutline, dabCells, isRefusal, markOf, paintMark, polyFootprint, snapDab, squareStart, type CursorView, type MarkKind, type Shape, type SpriteCanvas } from '../src/game/ext/course-cursor';
 import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
+import { gridAreas } from '../src/game/ext/course-grid/areas';
 import { CELL as BRUSH_CELL, dab, type Mask } from '../src/game/brush';
-import { PaintTool } from '../src/game/paint-tool';
+import { LAND_WHY, PaintTool, type LandRefusal } from '../src/game/paint-tool';
 import { unitBuildCost } from '../src/game/golf/costs';
 
 const RADII = [0.5, 0.9, 1, 2, 2.3, 5, 8, 20];
@@ -38,7 +40,7 @@ function squareCells(ix: number, iy: number, n: number): number[] {
 
 /** a 2D context that does nothing and counts what it is asked to make */
 function mockCtx(canvas: { width: number; height: number }) {
-  const made = { radial: 0, linear: 0, pattern: 0 }, draws: { img: { width: number; height: number }; t: number[]; args: number[] }[] = [], texts: string[] = [];
+  const made = { radial: 0, linear: 0, pattern: 0 }, draws: { img: { width: number; height: number }; t: number[]; args: number[] }[] = [], texts: string[] = [], ops: string[] = [], sets: [string, unknown][] = [], dashes: number[][] = [];
   let t = [1, 0, 0, 1, 0, 0];
   const grad = { addColorStop() {} };
   const ctx = new Proxy({ canvas } as Record<string, unknown>, {
@@ -52,12 +54,13 @@ function mockCtx(canvas: { width: number; height: number }) {
         case 'drawImage': return (img: { width: number; height: number }, ...args: number[]) => { draws.push({ img, t: t.slice(), args }); };
         case 'measureText': return (s: string) => ({ width: s.length * 6 });
         case 'fillText': return (s: string) => { texts.push(s); };
-        default: return () => {};
+        case 'setLineDash': return (a: number[]) => { dashes.push(a.slice()); };
+        default: return () => { ops.push(p); };
       }
     },
-    set(o, p: string, v) { o[p] = v; return true; },
+    set(o, p: string, v) { o[p] = v; sets.push([p, v]); return true; },
   }) as unknown as CanvasRenderingContext2D;
-  return { ctx, made, draws, texts };
+  return { ctx, made, draws, texts, ops, sets, dashes };
 }
 /** a canvas factory of mock canvases, counting how many it made */
 function mockCanvases() {
@@ -68,16 +71,16 @@ function mockCanvases() {
 const view = (z: number, dpr = 1): CursorView => ({ ze: z * dpr, camX: 0, camY: 0, cw: 1600 * dpr, ch: 1000 * dpr, dpr });
 const HOST = { setLotGround() {}, emit() {}, save() {}, toast() {}, affine() {}, placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [] };
 /** a Paint tool on its Course brush (kind, radius r) with the cursor at (x, y): no course grid, so the round brush */
-function brushTool(kind: 'fairway' | 'green' | 'bunker' | 'water' | 'rough', r: number, x: number, y: number): PaintTool {
+function brushTool(kind: 'fairway' | 'green' | 'tee' | 'bunker' | 'water' | 'rough', r: number, x: number, y: number): PaintTool {
   const tool = new PaintTool({ ...HOST });
   tool.course = true; tool.setBrush(kind); tool.setBrushR(r); tool.cursor = { x, y };
   return tool;
 }
 /** a golf game's Paint tool on a course grid g (land east of x = ownX is not yours), and a cursor wired to it as the engine wires it */
-function golfTool(g: Grid, ownX = Infinity, money = { cash: 1e6 }) {
-  const tool = new PaintTool({ ...HOST, golfMode: () => true, grid: () => g, gridChanged() {}, ownedAt: (x: number) => x < ownX, money: () => money.cash, spend: (n: number) => { money.cash -= n; } });
+function golfTool(g: Grid, ownX = Infinity, money = { cash: 1e6 }, refusal: LandRefusal = 'off') {
+  const tool = new PaintTool({ ...HOST, golfMode: () => true, grid: () => g, gridChanged() {}, gridAreas: () => gridAreas(g), ownedAt: (x: number) => x < ownX, landWhy: (x: number) => (x < ownX ? '' : refusal), money: () => money.cash, spend: (n: number) => { money.cash -= n; } });
   tool.course = true; tool.setBrush('fairway');
-  const cur = new CourseCursor({ canvas: mockCanvases().make, why: () => tool.brushSkipWhy(), cost: () => tool.brushCellCost(), rev: () => g.rev * 64 + tool.brushHole * 2 + (tool.rubOut ? 1 : 0) });
+  const cur = new CourseCursor({ canvas: mockCanvases().make, why: () => tool.brushSkipWhy(), cost: () => tool.brushCellCost(), rev: () => g.rev * 64 + tool.brushHole * 2 + (tool.rubOut ? 1 : 0), money: () => money.cash });
   return { tool, cur, money };
 }
 /** the cells whose surface a press and release at the tool's cursor changes, as sorted world cell keys */
@@ -279,7 +282,11 @@ test('on the golf course grid the footprint is exactly the cells a click paints:
   const s = cur.feet.shape!;
   assert.ok(s.skip.length > 0 && s.cells.length > 20, 'some cells painted, some skipped');
   assert.ok(['Green stays on top', 'Not your land'].includes(s.why), `the reason: ${s.why}`);
-  assert.ok(m.texts.includes(s.why), 'the reason is shown by the chip');
+  assert.equal(s.whyKept, 'Green stays on top'); assert.equal(s.whyRefused, 'Not your land');
+  assert.equal((s.kept.length + s.refused.length), s.skip.length, 'every skipped cell is kept or refused');
+  assert.ok(m.texts.some(t => t.endsWith('not your land')), `the refusal is shown by the chip: ${m.texts.join(' | ')}`);
+  assert.ok(!m.texts.some(t => /stays on top/i.test(t)), 'the kept cells say so in the hint pill only');
+  assert.match(cur.hint, /refused: not your land$/);
   const notMine = shapeCells(s, cur.feet.ax, cur.feet.ay, true).filter(k => (k % 100000) * CELL_T >= 102);
   assert.ok(notMine.length > 0, 'the cells past the land line are among the skipped');
   // rub out: only this hole's fairway, which is what the rub changes; nothing shown in red
@@ -322,11 +329,13 @@ test('prices per cell, live: the footprint shows its cells and price, and a drag
   tool.setBrushCells(2); tool.cursor = { x: 100.3, y: 200.6 };
   cur.draw(m.ctx, v, tool, 1000);
   assert.equal(cur.feet.count, 4); assert.equal(cur.feet.price, 4 * unit);
-  assert.ok(m.texts.includes(`4 cells · $${(4 * unit).toLocaleString()}`), `the price pill: ${m.texts.join(' | ')}`);
+  assert.deepEqual(m.texts, [], 'no words by the disc at rest (T118)');
+  assert.equal(cur.hint, `Painting Fairway · starts Hole 1 · $${unit} a cell`, 'the hint pill: the surface, the hole it starts and the price a cell');
   // a drag along three town squares: 12 cells charged once each
   tool.pointerDown({ x: 100.3, y: 200.6 }, 0, 0);
   tool.pointerMove({ x: 101.3, y: 200.6 }, 0, 0); tool.pointerMove({ x: 102.4, y: 200.6 }, 0, 0);
   assert.equal(tool.strokeSpent, 12 * unit, 'the run so far');
+  assert.equal(tool.strokeCells, 12, 'the cells so far');
   tool.pointerUp(0.5);
   assert.equal(money.cash, 100000 - 12 * unit);
   // over cells already painted the price is 0
@@ -346,4 +355,209 @@ test('a stamp (an old course piece, now under Advanced): its footprint is the ce
   assert.deepEqual(shapeCells(shape, ax, ay), ref.sort((a, b) => a - b), 'the same cells as the stamp lays');
   assert.ok(shape.loops.length >= 2, 'two blobs');
   outlinesExactly(shape.loops, shape.cells, 'the stamp');
+});
+
+// ---- T118: the chip says what it lays ----
+
+/** a cursor drawn once on a fresh mock overlay; returns the mock (its texts are this frame's words by the disc) */
+function frame(cur: CourseCursor, tool: PaintTool, z = 0.3, now = 1000) {
+  const m = mockCtx({ width: 1600, height: 1000 });
+  cur.draw(m.ctx, view(z), tool, now);
+  return m;
+}
+
+test('labels by state (T118): no words by the disc at rest; only the drag total, a refusal with its reason, or money short', () => {
+  const unit = unitBuildCost('fairway', 'seed');
+  // a grid with a green in the middle; the land east of x = 102 is not yours
+  const g = makeGrid(80, 180, 80, 80);
+  paintDisc(g, 100, 200, 1.2, SURF.green, 1, 0);
+  const money = { cash: 1e6 }, { tool, cur } = golfTool(g, 102, money);
+  tool.setBrushCells(2);
+
+  // ready: the tint, no words by the disc; the hint says what a click does: the surface, the hole it joins (hole 1 has the green) and the
+  // price a cell
+  tool.cursor = { x: 90.3, y: 210.6 };
+  let m = frame(cur, tool);
+  assert.equal(cur.state.kind, 'ready'); assert.equal(cur.state.dragging, false);
+  assert.deepEqual(cur.state.label, []); assert.deepEqual(m.texts, [], 'no label at rest');
+  assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${unit} a cell`);
+  // a hole with nothing yet: the stroke starts it
+  tool.setHole(2); frame(cur, tool);
+  assert.equal(cur.hint, `Painting Fairway · starts Hole 2 · $${unit} a cell`);
+  tool.setHole(1);
+
+  // no change: the same cells once painted lay nothing new (outline only, no words by the disc)
+  clickChanges(g, tool);
+  m = frame(cur, tool);
+  assert.equal(cur.state.kind, 'nochange'); assert.deepEqual(m.texts, []);
+  assert.equal(cur.hint, 'Painting Fairway · Hole 1 · already fairway here · $0');
+
+  // protected: a round dab over the green keeps the green's cells (no words by the disc; the hint says how many and why)
+  tool.setBrushCells(0); tool.setBrushR(2); tool.cursor = { x: 99.13, y: 200.07 };
+  m = frame(cur, tool);
+  assert.equal(cur.state.kind, 'protected', `kind ${cur.state.kind}`);
+  assert.deepEqual(m.texts, []);
+  const kept = cur.feet.shape!.kept.length / 2;
+  assert.ok(kept > 0);
+  assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${unit} a cell · ${kept} cell${kept === 1 ? '' : 's'} kept: green stays on top`);
+
+  // refused: over the land line, the reason by the disc (part of the dab is laid: the count leads)
+  tool.cursor = { x: 101.6, y: 205.2 };
+  m = frame(cur, tool);
+  const ref = cur.feet.shape!.refused.length / 2;
+  assert.equal(cur.state.kind, 'refused'); assert.ok(ref > 0 && cur.feet.count > 0);
+  assert.deepEqual(cur.state.label, [`${ref} cell${ref === 1 ? '' : 's'}: not your land`]); assert.deepEqual(cur.state.bad, [true]);
+  assert.deepEqual(m.texts, cur.state.label, 'the refusal is drawn by the disc');
+  // wholly refused: the reason alone
+  tool.setBrushCells(1); tool.cursor = { x: 110.3, y: 205.2 };
+  frame(cur, tool);
+  assert.equal(cur.state.kind, 'refused'); assert.deepEqual(cur.state.label, [LAND_WHY.off]);
+
+  // the driving range's plot (#208's landWhy): its own words
+  const r = golfTool(makeGrid(80, 180, 80, 80), 102, { cash: 1e6 }, 'range');
+  r.tool.setBrushCells(1); r.tool.cursor = { x: 110.3, y: 205.2 };
+  frame(r.cur, r.tool);
+  assert.deepEqual(r.cur.state.label, ['The driving range stands here']);
+  assert.ok(isRefusal(LAND_WHY.range) && isRefusal(LAND_WHY.off) && !isRefusal('Green stays on top'));
+
+  // dragging: the run's total by the disc, gone again on release
+  tool.setBrushCells(2); tool.cursor = { x: 90.3, y: 214.6 };
+  tool.pointerDown(tool.cursor, 0, 0); cur.press(tool, false, 2000);
+  tool.pointerMove({ x: 91.3, y: 214.6 }, 0, 0); tool.cursor = { x: 91.3, y: 214.6 };
+  m = frame(cur, tool, 0.3, 2050);
+  assert.equal(cur.state.dragging, true); assert.equal(tool.strokeCells, 8);
+  assert.equal(cur.state.kind, 'ready', 'the cells the drag just laid under the pointer do not make it "no change"');
+  assert.deepEqual(cur.state.label, [`8 cells · $${(8 * unit).toLocaleString()}`]); assert.deepEqual(cur.state.bad, [false]);
+  assert.ok(m.texts.includes(cur.state.label[0]!));
+  tool.pointerUp(0.5); cur.release(2100);
+  m = frame(cur, tool, 0.3, 2200);
+  assert.equal(cur.state.dragging, false); assert.deepEqual(m.texts, [], 'no words after the drag');
+
+  // erase: the colour you get back, no words by the disc; the hint says what comes back and that nothing is refunded
+  tool.rubOut = true;
+  frame(cur, tool, 0.3, 2300);
+  assert.equal(cur.state.kind, 'erase'); assert.deepEqual(cur.state.label, []);
+  assert.equal(cur.hint, `Erasing fairway · Hole 1 · ${cur.feet.count} cells back to rough · no refund`);
+  tool.cursor = { x: 85.3, y: 216.6 }; frame(cur, tool, 0.3, 2400);
+  assert.equal(cur.state.kind, 'nochange', 'nothing of this surface to rub out'); assert.match(cur.hint, /^Erasing fairway · Hole 1 · no fairway/);
+  tool.rubOut = false;
+
+  // money short: the price in red by the disc
+  money.cash = 5; tool.cursor = { x: 85.3, y: 216.6 };
+  m = frame(cur, tool, 0.3, 2500);
+  assert.equal(cur.state.kind, 'short');
+  assert.deepEqual(cur.state.label, [`Fairway · $${4 * unit} · you have $5`]); assert.deepEqual(cur.state.bad, [true]);
+  assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${4 * unit} · you have $5`);
+  assert.deepEqual(m.texts, cur.state.label);
+
+  // off the map: no words by the disc, the hint keeps the brush's own words
+  tool.cursor = null; money.cash = 1e6;
+  m = frame(cur, tool, 0.3, 2600);
+  assert.deepEqual(cur.state.label, []); assert.deepEqual(m.texts, []); assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${unit} a cell`);
+
+  // outside a golf game (no grid rules, no price): ready, no words, no price in the hint
+  const plain = new CourseCursor({ canvas: mockCanvases().make }), bt = brushTool('green', 3, 40.2, 50.7);
+  m = frame(plain, bt);
+  assert.equal(plain.state.kind, 'ready'); assert.deepEqual(m.texts, []); assert.equal(plain.hint, 'Painting Green · starts Hole 1');
+});
+
+test('switching and stopping (T118, the owner): number keys switch the surface, and the disc and the hint follow at once; Esc drops a stroke', () => {
+  const g = makeGrid(80, 180, 80, 80), { tool, cur } = golfTool(g), key = (k: string) => tool.key({ key: k, preventDefault() {} } as KeyboardEvent);
+  tool.setBrushCells(2); tool.cursor = { x: 90.3, y: 200.6 };
+  frame(cur, tool);
+  assert.match(cur.hint, /^Painting Fairway · /);
+  const sprites = cur.stats.sprites;
+  // the keys follow BRUSH_PRESETS: 1 fairway, 2 green, 3 tee, 4 rough, 5 bunker, 6 water, 7 cart path
+  for (const [k, kind, name] of [['2', 'green', 'Green'], ['3', 'tee', 'Tee'], ['4', 'rough', 'Rough'], ['5', 'bunker', 'Bunker'], ['6', 'water', 'Water'], ['1', 'fairway', 'Fairway']] as const) {
+    assert.equal(key(k), true, `key ${k} is taken`);
+    assert.equal(tool.brushKind, kind);
+    frame(cur, tool);
+    assert.ok(cur.hint.startsWith(`Painting ${name} · `), `the hint follows key ${k}: ${cur.hint}`);
+  }
+  assert.ok(cur.stats.sprites >= sprites + 5, 'a disc (with its own mark) per surface switched to');
+  // a key mid-stroke ends that stroke (what it laid stays) and arms the new surface
+  tool.pointerDown(tool.cursor!, 0, 0);
+  assert.ok(tool.strokeCells > 0);
+  key('2');
+  assert.equal(tool.brushKind, 'green'); assert.equal(tool.strokeCells, 0, 'the stroke ended');
+  assert.ok(tool.canUndo, 'what it laid is one undo step');
+  tool.pointerUp(0.5);
+  // Esc: a stroke in hand is dropped first; with nothing in hand the key is the engine's (out to Select, T116)
+  tool.pointerDown(tool.cursor!, 0, 0);
+  assert.equal(key('Escape'), true, 'Esc drops the stroke'); assert.equal(tool.strokeCells, 0);
+  tool.pointerUp(0.5);
+  assert.equal(key('Escape'), false, 'then Esc leaves the brush to the engine');
+});
+
+test('the footprint by state (T118): refused cells hatched with a small ✕, kept cells dotted, erase dashed, no change outline only', () => {
+  const g = makeGrid(80, 180, 80, 80);
+  paintDisc(g, 100, 200, 1.2, SURF.green, 1, 0);
+  const { tool, cur } = golfTool(g, 102);
+  tool.setBrushCells(0); tool.setBrushR(2);
+  /** one frame's mock, whether the ✕'s red was used, and the dash patterns set (dots: kept cells; dashes: erase) */
+  const look = (x: number, y: number) => {
+    tool.cursor = { x, y }; const m = frame(cur, tool);
+    return { m, red: m.sets.some(([k, v]) => k === 'fillStyle' && v === '#cf3f33'), dots: m.dashes.some(a => a.length === 2 && a[0]! < 0.01), dashed: m.dashes.some(a => a.length === 2 && a[0]! >= 3) };
+  };
+  const refused = look(101.6, 205.2);
+  assert.equal(cur.state.kind, 'refused');
+  assert.ok(refused.red, 'the ✕ badge'); assert.ok(refused.m.ops.includes('clip'), 'the hatch is clipped to the refused cells');
+  const kept = look(99.13, 200.07);
+  assert.equal(cur.state.kind, 'protected'); assert.ok(kept.dots, 'kept cells dotted'); assert.ok(!kept.red, 'no ✕ where nothing is refused');
+  tool.setBrushCells(2); tool.cursor = { x: 90.3, y: 210.6 }; clickChanges(g, tool);
+  const same = look(90.3, 210.6);
+  assert.equal(cur.state.kind, 'nochange');
+  assert.ok(!same.m.ops.includes('fill'), 'outline only: no tint');
+  tool.rubOut = true;
+  const erase = look(90.3, 210.6);
+  assert.equal(cur.state.kind, 'erase'); assert.ok(erase.dashed, 'erase: a dashed edge');
+});
+
+/** a 2D context that records each call by name and each property it is given, for the marks */
+function recorder() {
+  const ops: string[] = [], sets: string[] = [];
+  const ctx = new Proxy({} as Record<string, unknown>, {
+    get(o, p: string) {
+      if (p in o) return o[p];
+      return () => { ops.push(p); return p === 'createLinearGradient' || p === 'createRadialGradient' ? { addColorStop() {} } : undefined; };
+    },
+    set(o, p: string, v) { o[p] = v; sets.push(`${p}=${String(v)}`); return true; },
+  }) as unknown as CanvasRenderingContext2D;
+  return { ctx, ops, sets };
+}
+
+test('marks by surface (T118): each of the six surfaces has its own mark, drawn on its disc', () => {
+  const SIX = ['green', 'fairway', 'tee', 'rough', 'bunker', 'water'] as const;
+  assert.deepEqual(SIX.map(markOf), ['flag', 'stripes', 'peg', 'tufts', 'grains', 'ripples']);
+  assert.equal(new Set(SIX.map(markOf)).size, 6, 'six different marks');
+  assert.equal(markOf('path'), 'lanes'); assert.equal(markOf('grass'), 'none'); assert.equal(markOf('nonsense'), 'none');
+  // each mark draws something, in one pass only (flat marks lie under the sun's rim light, standing ones on top), and no two draw alike
+  const sigs = new Map<MarkKind, string>();
+  for (const mk of new Set(Object.values(MARKS))) {
+    const flat = recorder(), stand = recorder();
+    paintMark(flat.ctx, mk, 'flat', 30, 20, 20, 10, 3, 0.3);
+    paintMark(stand.ctx, mk, 'stand', 30, 20, 20, 10, 3, 0.3);
+    const drawn = (r: { ops: string[] }) => r.ops.some(o => o === 'fill' || o === 'stroke' || o === 'fillRect');
+    if (mk === 'none') { assert.equal(flat.ops.length + stand.ops.length, 0); continue; }
+    assert.ok(drawn(flat) !== drawn(stand), `${mk}: drawn in exactly one pass`);
+    sigs.set(mk, [...flat.ops, ...stand.ops, ...flat.sets, ...stand.sets].join(','));
+  }
+  assert.equal(new Set(sigs.values()).size, sigs.size, 'no two marks draw alike');
+  // the chip sprite carries its mark: a new sprite per surface, and the flag's yellow pennant on the green's
+  const sprites: { kind: string; sets: string[] }[] = [];
+  const make = (w: number, h: number): SpriteCanvas => { const r = recorder(); sprites.push({ kind: '', sets: r.sets }); return { width: w, height: h, getContext: () => r.ctx }; };
+  const cur = new CourseCursor({ canvas: make });
+  for (const k of SIX) {
+    const n = sprites.length, tool = brushTool(k, 3, 40.2, 50.7);
+    cur.draw(mockCtx({ width: 1600, height: 1000 }).ctx, view(0.3), tool, 1000);
+    assert.equal(sprites.length, n + 2, `${k}: its own chip and shadow`);
+    sprites[n]!.kind = k;
+  }
+  assert.equal(cur.stats.sprites, 6);
+  assert.ok(sprites.find(s => s.kind === 'green')!.sets.includes('fillStyle=#ffd23f'), 'the flag on the green');
+  assert.ok(!sprites.find(s => s.kind === 'fairway')!.sets.includes('fillStyle=#ffd23f'), 'no flag on the fairway');
+  // rub out: a chip of its own (the surface you get back, its rim dashed)
+  const tool = brushTool('fairway', 3, 40.2, 50.7), before = sprites.length;
+  tool.rubOut = true; cur.draw(mockCtx({ width: 1600, height: 1000 }).ctx, view(0.3), tool, 1100);
+  assert.equal(sprites.length, before + 2, 'a rub-out chip of its own');
 });

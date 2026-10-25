@@ -104,7 +104,7 @@ import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale, standInLabel } from './new
 import { webpSource } from './atlas-gl';
 import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
-import { HALF_T, courseBuilding, loadMapGrid, saveMapGrid } from './ext/map-grid';
+import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
 import { STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
@@ -801,8 +801,12 @@ export class Game {
   private parkView: ParkOverlayView = { ctx: null as unknown as CanvasRenderingContext2D, dpr: 1, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y) };
   /** the brush's cursor (T081, T108, T109): the cells a click paints on the half grid (by the grid's brush rules, the skipped ones with their
    *  reason, the price; re-run when the grid, the hole or Rub out change), the course grid round them and the surface chip beside the pointer */
-  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0) });
+  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
+  /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
+  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
+  /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
+  private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
   private gridLayer = new MapGridLayer();
   /** the car park drag (the park tool, left button): the tile where it began and the one under the pointer (x1, y1), the rect it makes (def, id 0),
@@ -4303,7 +4307,7 @@ export class Game {
         else if (t.tex) gl.drawChunk(t.tex, ...r);
       }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
-      if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, this.showGrid, this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
+      if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
       // ---- sprites: every visible tile in one instanced draw (each instance clipped to its tile), vehicles merged in
       const vis: { i: number; j: number }[] = [];
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
@@ -4921,7 +4925,9 @@ export class Game {
     } else if (this.paintOn) {
       this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
       const v = this.cursorView; v.ze = this.cam.z * this.dpr; v.camX = this.cam.X; v.camY = this.cam.Y; v.cw = this.cw; v.ch = this.ch; v.dpr = this.dpr;
-      this.courseCursor.draw(ctx, v, this.paint, performance.now());
+      const now = performance.now();
+      this.courseCursor.draw(ctx, v, this.paint, now);
+      if (this.courseCursor.hintRev !== this.hintSeen && now - this.hintEmitAt > 100) { this.hintSeen = this.courseCursor.hintRev; this.hintEmitAt = now; this.emit(); }
     }
     else if (this.tool === 'park' && this.parking.mode !== 'rect') this.parking.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
   }

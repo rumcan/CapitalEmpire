@@ -267,7 +267,7 @@ export class PaintTool {
   private planting: { erase: boolean; last: { x: number; y: number }; n: number } | null = null;
   private plantSeed = (Date.now() % 100000) | 0;
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
-  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts; /** the square brush (T109): its size in cells (0: the round brush) and the start cell of its last square */ n: number; ix: number; iy: number; /** what the stroke has charged so far ($), and whether it ran out of money */ spent: number; broke: boolean } } | null = null;
+  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts; /** the square brush (T109): its size in cells (0: the round brush) and the start cell of its last square */ n: number; ix: number; iy: number; /** what the stroke has charged so far ($) and the cells it has laid (or rubbed out), and whether it ran out of money */ spent: number; cells: number; broke: boolean } } | null = null;
   private host: PaintHost;
   /** the engine draws the brush (and a course piece) with ext/course-cursor (T081, T108: the cells a click paints and a surface chip beside the
    *  pointer, which stays a normal pointer): the plain brush ring steps aside */
@@ -365,6 +365,8 @@ export class PaintTool {
   brushSquare(): number { return this.brushCells > 0 && this.course && !!this.courseGrid() && surfOfSurface(this.brushKind) > 0 ? this.brushCells : 0; }
   /** what the stroke in progress has charged so far ($; 0 with none) */
   get strokeSpent(): number { return this.stroke?.grid?.spent ?? 0; }
+  /** the cells the stroke in progress has laid or rubbed out so far (0 with none; the cursor's drag total, T118) */
+  get strokeCells(): number { return this.stroke?.grid?.cells ?? 0; }
   setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { ...this.brush[k], r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)) }; this.saveBrush(); this.host.emit(); }
 
   // ---------- the course look's Border and Shadow (the owner's test, 2026-10-25) ----------
@@ -591,10 +593,11 @@ export class PaintTool {
     const cost = !this.stroke!.erase && this.host.golfMode?.() ? Math.round(diffCost(d, v => unitBuildCost(SURF_SURFACE[v] ?? 'other', this.plantKind))) : 0;
     if (cost > 0 && (this.host.money?.() ?? 0) < cost) {
       applyDiff(sg.g, d, true);
-      if (!sg.broke) { sg.broke = true; this.host.toast(`Not enough money: these cells cost $${cost.toLocaleString()}`, 'warn'); }
+      if (!sg.broke) { sg.broke = true; const nm = SURF_SURFACE[sg.s] ?? 'surface'; this.host.toast(`Not enough money: ${nm[0]!.toUpperCase() + nm.slice(1)} · $${cost.toLocaleString()} · you have $${Math.round(this.host.money?.() ?? 0).toLocaleString()}`, 'warn'); }
       return;
     }
     if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; sg.spent += cost; }
+    sg.cells += d.n;
     this.gridApply(d);
   }
   /** what painting the cell centred at (x, y) with the Course brush costs right now ($; 0 when it would not change, or outside a golf game:
@@ -1078,7 +1081,7 @@ export class PaintTool {
       this.begin((erase ? 'rub out ' : 'brush ') + k);
       // the square brush (T109): n x n cells from the start cell under the pointer; else the round brush's disc
       const n = this.brushSquare(), ix = n ? squareStart(t.x, n) : 0, iy = n ? squareStart(t.y, n) : 0;
-      const grid = { g, s, month: plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, s, erase), n, ix, iy, spent: 0, broke: false };
+      const grid = { g, s, month: plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, s, erase), n, ix, iy, spent: 0, cells: 0, broke: false };
       this.stroke = { m, m0: m, r, erase, last: { x, y }, dabs: [x, y], grid };
       this.gridDab(n ? fillPolygon(g, squarePoly(ix, iy, n), s, h, grid.month, grid.opts) : paintDisc(g, x, y, r, s, h, grid.month, grid.opts));
       this.host.emit(); return;
