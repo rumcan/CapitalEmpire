@@ -39,10 +39,10 @@ test('the upgrades: their order, their costs, and what each does to the stats', 
   assert.equal(upgradeWhy(d, 'bays8', 8000), '');
   assert.equal(upgradeWhy(withUpgrade(d, 'bays8'), 'bays8', 1e9), 'Built');
   const s0 = rangeStats(d), s1 = rangeStats(all());
-  assert.deepEqual([s0.bays, s0.targets, s0.close, s0.serve, s0.extra, s0.ref, s0.appeal, s0.qMax], [4, 2, 18, 5, 0, 6, 1, 5]);
-  assert.deepEqual([s1.bays, s1.targets, s1.close, s1.serve, s1.extra, s1.ref, s1.qMax], [24, 5, 22, 1, 2, 9, 10]);
+  assert.deepEqual([s0.bays, s0.targets, s0.close, s0.serve, s0.extra, s0.ref, s0.appeal, s0.qMax], [4, 2, 18, 3, 0, 6, 1, 5]);
+  assert.deepEqual([s1.bays, s1.targets, s1.close, s1.serve, s1.extra, s1.ref, s1.qMax], [24, 5, 22, 0.8, 2, 9, 10]);
   assert.ok(Math.abs(s1.appeal - 1.6) < 1e-9);
-  assert.equal(rangeStats(withUpgrade(d, 'proshop')).serve, 3.5, 'the pro shop serves faster than the shack, the dispenser fastest');
+  assert.equal(rangeStats(withUpgrade(d, 'proshop')).serve, 2, 'the pro shop serves faster than the shack, the dispenser fastest');
   assert.equal(RANGE_UPGRADES.reduce((a, u) => a + u.cost, 0), 160000, 'the whole range costs $160,000 (plan 2.3)');
 });
 
@@ -82,7 +82,7 @@ test('the scene: inside the plot for every facing, the mats and greens follow th
       assert.equal(sc.pieces.filter(q => q.key.startsWith('board')).length, st.targets > 2 ? st.targets : 0);
       assert.equal(sc.pieces.filter(q => q.key.startsWith('light')).length, st.lights ? 8 : 0);
       assert.equal(sc.pieces.filter(q => q.key.startsWith('roof')).length, st.covered ? st.bays / 4 : 0);
-      assert.equal(sc.pieces.find(q => q.key === 'shop')!.id, st.proShop ? 'business:golf-pro-shop' : 'golf:clubhouse-shanty');
+      assert.equal(sc.pieces.find(q => q.key === 'shop')!.id, st.proShop ? 'business:golf-pro-shop' : 'expansion:lean-to-shed');
       for (const k of ['caravan', 'wash', 'braai', 'sign', 'mark1-0']) assert.ok(sc.pieces.some(q => q.key === k), `the ${k}`);
       for (const q of sc.pieces.filter(q => /fence|chainlink/.test(q.id))) {
         const run = q.key.replace(/\d+$/, ''), mates = sc.pieces.filter(m => m.key.replace(/\d+$/, '') === run);
@@ -132,7 +132,7 @@ test('a crowd bigger than the bays makes a queue at the shop and turns cars away
   assert.ok(o.r.today.lost === s.season.lost);
   // closing time (no floodlights): no one new, the queue goes, the last buckets finish, the balls are picked
   const before = s.season.golfers, after = run(s, 400, 19, busy, o.r);
-  assert.equal(s.season.golfers, before, 'nobody buys after closing');
+  assert.ok(s.season.golfers <= before + 1, 'nobody new buys after closing (a sale at the counter when it closed still finishes)');
   assert.equal(after.r.onFoot, 0, 'everyone has gone'); assert.equal(after.r.nLying, 0, 'the balls are picked');
   // with floodlights the evening plays on
   const lit = withUpgrade(defaultRangeBiz(), 'lights'); run(lit, 300, 20, busy);
@@ -142,6 +142,6 @@ test('a crowd bigger than the bays makes a queue at the shop and turns cars away
 test('a skip books the expected sales at once and clears the golfers', () => {
   const s = defaultRangeBiz(), sim = new RangeSim(3, 10), sc = rangeScene(plots[2], 2, s);
   sim.setScene(sc, [{ x: 260, y: 210, hx: 0, hy: 1 }], { x: 269, y: 210 });
-  const booked = sim.step(600, { hour: 0, day: 1 }, s, start, 600);
+  const booked = sim.step(600, { hour: 0, day: 1 }, s, start, 600); // a skip: two minutes and more at once
   assert.ok(s.season.golfers > 40 && s.season.golfers <= 44, `${s.season.golfers}`); assert.ok(Math.abs(booked - s.season.golfers * 240) < 1e-6); assert.equal(sim.onFoot, 0);
 });

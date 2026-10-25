@@ -28,7 +28,7 @@ export function SeasonReportCard({ report, onContinue }: { report: SeasonReport;
         </div>
         {report.range && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-2 text-center text-xs text-slate-300" data-testid="season-range">
-            The range: {report.range.golfers.toLocaleString()} golfers seen, {Math.round(report.range.buckets).toLocaleString()} buckets sold, {money(report.range.takings)} taken{report.range.lost > 0 ? `, ${report.range.lost.toLocaleString()} drove on at the queue` : ''}
+            The range: {Math.round(report.range.golfers).toLocaleString()} golfers seen, {Math.round(report.range.buckets).toLocaleString()} buckets sold, {money(report.range.takings)} taken{report.range.lost > 0 ? `, ${Math.round(report.range.lost).toLocaleString()} drove on at the queue` : ''}
           </div>
         )}
         <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">

@@ -27,7 +27,7 @@ const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
  *  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */
 export interface ScenePiece { key: string; id: string; x: number; y: number; q: number; scale?: number; fit?: number; label?: string }
 /** a ground patch of the scene: a world polygon (x y pairs) and its surface: a golf surface (laid with the course's own presets) or a ground texture */
-export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' }
+export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' }
 /** a target green in the scene: centre, radius and distance from the tee line (m) */
 export interface SceneTarget { x: number; y: number; r: number; m: number }
 /** the scene of a range (rangeScene) */
@@ -46,13 +46,15 @@ export interface RangeScene {
    *  toward the range (unit, world, the frame's +v) */
   J: Pt; driveEnd: Pt; roadDir: Pt; rangeSide: Pt;
   /** the distance numbers over their markers (street tier) and where the district map's "Driving Range" label stands */
-  numbers: { x: number; y: number; text: string }[]; label: Pt;
+  numbers: { x: number; y: number; text: string; low?: boolean }[]; label: Pt;
   /** the world box of the plot (x0 y0 x1 y1) */
   box: [number, number, number, number];
 }
 
-/** the view index (0 NE .. 3 NW) whose front faces the frame's -v (the road) for a facing (range.ts roadView) */
-const roadView = (f: 0 | 1 | 2 | 3): number => [0, 3, 2, 1][f]!;
+/** the view index (0 NE .. 3 NW) whose front faces the frame's -v (the road) for a facing. The four-view sheets put the front in the NE and NW
+ *  cells (art/building-views provenance: "A + B, B + C, C + D, D + A"), so the views' fronts face +y, -x, -y, +x: checked in the game on the
+ *  covered bays (T129). The road side is -v: -y, +x, +y, -x for the facings 2, 1, 0, 3, which is the view of the facing's own number */
+const roadView = (f: 0 | 1 | 2 | 3): number => f;
 /** the bay slot k's u (k 0..23, centred on U_MID) and the slots open with n bays (the middle n) */
 const slotU = (k: number) => U_MID + (k - (SLOTS - 1) / 2) * BAY_W;
 export const openSlots = (n: number): number[] => Array.from({ length: n }, (_, i) => SLOTS / 2 - n / 2 + i);
@@ -68,13 +70,14 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // ---- the ground: the mown outfield in its first cut, the tee box in its fringe, the pads and mats of the open bays, the target greens, the
   // shop's packed dirt and the caravan's dry lawn
   patches.push({ pts: quad(0.3, 69.7, 16.8, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, 24.6, 148), surf: 'fairway' });
-  patches.push({ pts: quad(TEE[0] - 0.6, TEE[1] + 0.6, TEE[2] - 0.6, TEE[3] + 0.6), surf: 'fringe' }, { pts: quad(TEE[0], TEE[1], TEE[2], TEE[3]), surf: 'tee' });
+  patches.push({ pts: quad(TEE[0] - 0.8, TEE[1] + 0.8, TEE[2] - 0.8, TEE[3] + 0.8), surf: 'firstCut' }, { pts: quad(TEE[0], TEE[1], TEE[2], TEE[3]), surf: 'tee' });
   const open = openSlots(st.bays);
+  patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
   for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
   const targets: SceneTarget[] = [];
   for (let i = 0; i < st.targets; i++) {
     const u = TARGET_U[i]!, v = STAND_V + TARGET_D[i]!, r = TARGET_R[i]!, c = P(u, v);
-    patches.push({ pts: disc(u, v, r + 1.3), surf: 'fringe' }, { pts: disc(u, v, r), surf: 'green' });
+    patches.push({ pts: disc(u, v, r + 1.3), surf: 'firstCut' }, { pts: disc(u, v, r), surf: 'green' });
     targets.push({ x: c.x, y: c.y, r, m: TARGET_D[i]! * 2 });
   }
   patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(YARD[0], YARD[1], YARD[2], YARD[3]), surf: 'grassDry' });
@@ -84,8 +87,10 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   const paths = [L(TEE[0] + 1, PATH_V, CAR_EDGE_U, PATH_V), L(COUNTER.u, PATH_V, COUNTER.u, COUNTER.v - 0.2), L(13, PATH_V, 13, YARD[3] + 0.4)];
 
   // ---- the shop (the tin-and-tarp shack, or the pro shop facing the golfers), the caravan and its fenced back yard
-  if (st.proShop) put('shop', 'business:golf-pro-shop', SHOP.u, SHOP.v, toRange, { fit: 15 });
-  else put('shop', 'golf:clubhouse-shanty', SHOP.u, SHOP.v, 0, { scale: 0.62 });
+  if (st.proShop) put('shop', 'business:golf-pro-shop', SHOP.u, SHOP.v, toRange);
+  // the tin-and-tarp shack (golf:clubhouse-shanty) has no four views yet, and a building without them is drawn as the grand clubhouse (newart.ts):
+  // the rusty lean-to shed stands in for it, turned to face the golfers
+  else put('shop', 'expansion:lean-to-shed', SHOP.u, SHOP.v, toRange, { label: 'Stand In for the tin-and-tarp pro shop' });
   put('caravan', 'expansion:pop-up-caravan', 9.5, 7.6);
   put('wash', 'expansion:washing-line', 18, 5.4); put('braai', 'expansion:barbecue', 17.6, 10.2);
   put('chair1', 'expansion:lawn-chair', 14.6, 11.2); put('chair2', 'expansion:lawn-chair', 19.8, 11.6); put('cooler', 'expansion:camping-cooler', 12.2, 11.6);
@@ -109,15 +114,15 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   for (let i = 0; i < st.targets; i++) {
     put(`flag${i}`, 'business:golf-pin-red', TARGET_U[i]!, STAND_V + TARGET_D[i]!, 0, { scale: 0.32 });
     if (st.targets > 2) {
-      put(`board${i}`, 'poi:fishing-board', TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad, { scale: 2.2, ...(i === 0 ? { label: 'Stand In for Range yardage board' } : {}) });
-      const p = P(TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1); numbers.push({ x: p.x, y: p.y, text: `${TARGET_D[i]! * 2} m` });
+      put(`board${i}`, 'poi:fishing-board', TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1, toRoad, { scale: 1.6, ...(i === 0 ? { label: 'Stand In for Range yardage board' } : {}) });
+      const p = P(TARGET_U[i]! + TARGET_R[i]! + 2.4, STAND_V + TARGET_D[i]! - 1); numbers.push({ x: p.x, y: p.y, text: `${TARGET_D[i]! * 2} m`, low: true });
     }
   }
   // ---- the covered bays over each four open bays, the floodlights, the ball dispenser
-  if (st.covered) for (let g = 0; g < open.length; g += 4) put(`roof${g}`, 'business:golf-driving-range', (slotU(open[g]!) + slotU(open[Math.min(open.length, g + 4) - 1]!)) / 2, STAND_V + 0.3, toRange, { fit: 13.5 });
+  if (st.covered) for (let g = 0; g < open.length; g += 4) put(`roof${g}`, 'business:golf-driving-range', (slotU(open[g]!) + slotU(open[Math.min(open.length, g + 4) - 1]!)) / 2, STAND_V - 1.2, toRange, { fit: 10.5 });
   if (st.lights) {
     const spots: [number, number][] = [[1.6, 26], [68.4, 26], [1.6, 60], [68.4, 60], [1.6, 100], [68.4, 100], [1.6, 140], [68.4, 140]];
-    spots.forEach(([u, v], i) => put(`light${i}`, 'world:streetlamp', u, v, 0, { scale: 2.4, ...(i === 0 ? { label: 'Stand In for Range floodlight' } : {}) }));
+    spots.forEach(([u, v], i) => put(`light${i}`, 'world:streetlamp', u, v, 0, { scale: 1, ...(i === 0 ? { label: 'Stand In for Range floodlight' } : {}) }));
   }
   if (st.dispenser) put('dispenser', 'expansion:utility-cabinet', 39.6, 12.6, 0, { label: 'Stand In for Ball dispenser' });
 
@@ -132,11 +137,11 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   };
 }
 
-/** a straight fence from frame (u0, v0) to (u1, v1) as pieces end to end: chain-link (3.36 tiles a panel at its studio size) or picket (2.75),
+/** a straight fence from frame (u0, v0) to (u1, v1) as pieces end to end: chain-link (3.36 tiles a panel at its studio size) or picket (1.7: its pictures are shorter than their boxes),
  *  each the picture of the world axis it lies along (the -x or -y picture: a fence is never turned or mirrored) */
 function fenceRun(out: ScenePiece[], P: (u: number, v: number) => Pt, key: string, u0: number, v0: number, u1: number, v1: number, kind: 'chain' | 'picket') {
   const a = P(u0, v0), b = P(u1, v1), len = Math.hypot(b.x - a.x, b.y - a.y), alongX = Math.abs(b.x - a.x) >= Math.abs(b.y - a.y);
-  const piece = kind === 'chain' ? 3.36 : 2.75, n = Math.max(1, Math.round(len / piece));
+  const piece = kind === 'chain' ? 3.36 : 1.7, n = Math.max(1, Math.round(len / piece));
   const id = kind === 'chain' ? (alongX ? 'expansion:chainlink-x' : 'expansion:chainlink-y') : (alongX ? 'world:fence_picket_x' : 'world:fence_picket_y');
   for (let i = 0; i < n; i++) { const t = (i + 0.5) / n; out.push({ key: `${key}${i}`, id, x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, q: 0 }); }
 }
@@ -145,8 +150,8 @@ function fenceRun(out: ScenePiece[], P: (u: number, v: number) => Pt, key: strin
 
 /** the stages of a visit */
 const enum S { CarIn, WalkShop, Queue, WalkBay, Hit, WalkCar, CarOut, Done }
-/** the walking speed (tiles/s: 1.5 m/s), the cars' speeds on the road, the drive and in the car park (tiles/s) */
-const WALK = 0.75, ROAD_V = 6, DRIVE_V = 3, PARK_V = 1.4;
+/** the walking speed (tiles/s: a brisk 2.4 m/s, as a sim second is more than two town minutes), the cars' speeds on the road, the drive and in the car park (tiles/s) */
+const WALK = 1.4, ROAD_V = 9, DRIVE_V = 4.5, PARK_V = 2.5;
 /** a swing's beats: address, the drive clip, the pause after; the ball leaves at the clip's impact (s) */
 const ADDRESS = 1.2, CLIP = GOLFER_CLIPS.golf_drive.times[GOLFER_CLIPS.golf_drive.n - 1]! - GOLFER_CLIPS.golf_drive.times[0]!, PAUSE = 1.3, IMPACT = 1.22;
 const SWING = ADDRESS + CLIP + PAUSE;
@@ -173,8 +178,9 @@ function along(r: Route, t: number, o: { x: number; y: number; ang: number }): b
 }
 
 /** a golfer's visit: id, the person drawn (index into the golfers), the car type, the car-park bay, the stage and its clock, its route, the bay
- *  (index into the scene's bays), the swing count and the time it queued */
-interface Visit { id: number; person: number; car: number; slot: number; stage: S; t: number; r: Route | null; bay: number; swings: number; queued: number; x: number; y: number; ang: number }
+ *  (index into the scene's bays), the swing count, the time it queued and the time its sale began (its bay is held from then: the swings fill
+ *  what is left of one town hour, so a bay takes a golfer an hour as the demand and skippedVisits count it) */
+interface Visit { id: number; person: number; car: number; slot: number; stage: S; t: number; r: Route | null; bay: number; swings: number; queued: number; served: number; x: number; y: number; ang: number }
 /** a ball in the air: from, to (tiles), launch time and flight time (s), and the arc's height (tiles) */
 interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number }
 /** what the engine sees of the sim each frame */
@@ -198,6 +204,8 @@ export class RangeSim {
   private scene: RangeScene | null = null; private slots: CarSlot[] = []; private entrance: Pt | null = null; private slotBusy: boolean[] = [];
   today: RangeToday = { golfers: 0, lost: 0, queue: 0, playing: 0 }; private day = -1;
   private draw: RangeDraw = { people: [], nPeople: 0, cars: [], nCars: 0 };
+  /** the queue limit now, and the golfers who turned back at the shop this step (counted as lost by step) */
+  private qMax = 5; private lost = 0;
   private tmp = { x: 0, y: 0, ang: 0 };
   constructor(seed: number, private golfers = 10) { this.rnd = mulberry(seed ^ 0x5eed7a); }
 
@@ -219,15 +227,16 @@ export class RangeSim {
   /** the golfers on the range now (walking to the shop, queued, at the mats or going back) */
   get onFoot(): number { let n = 0; for (const v of this.visits) if (v.stage >= S.WalkShop && v.stage <= S.WalkCar) n++; return n; }
 
-  /** dt sim seconds on (dt > 20: a skip, booked by skippedVisits and the golfers cleared). Returns the takings booked ($) */
+  /** dt sim seconds on (dt of two minutes or more: a skip, booked by skippedVisits and the golfers cleared; the host steps a long frame in pieces).
+   *  Returns the takings booked ($) */
   step(dt: number, clock: RangeClock, s: RangeBizSave, c: DemandCtx, dayLen: number): number {
     const sc = this.scene; if (!sc || dt <= 0) return 0;
     if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; }
-    const st = rangeStats(s), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen);
+    const st = rangeStats(s), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax;
     let booked = 0;
     const sell = (n: number) => { const m = n * value; s.season.golfers += n; s.total.golfers += n; s.season.buckets += n * scale; s.total.buckets += n * scale; s.season.takings += m; s.total.takings += m; this.today.golfers += n; booked += m; };
     const lose = (n: number) => { s.season.lost += n; s.total.lost += n; this.today.lost += n; };
-    if (dt > 20) {
+    if (dt >= 120) {
       const r = skippedVisits(s, c, clock.hour, dt, dayLen); sell(r.served); lose(r.lost);
       this.clear(); this.t += dt; return booked;
     }
@@ -236,7 +245,8 @@ export class RangeSim {
     // the arrivals: a Poisson stream at the hour's rate; a car turns away at a long queue or a full car park
     const rate = arrivalRate(s, c, clock.hour, dayLen, st);
     if (rate > 0 && this.rnd() < 1 - Math.exp(-rate * dt)) {
-      const waiting = this.visits.filter(v => v.stage === S.WalkShop || v.stage === S.Queue || v.stage === S.CarIn).length;
+      // the driver sees the line at the shop (a golfer who walks up to a line that grew meanwhile may still turn back: see move)
+      const waiting = this.queue.length;
       const slot = this.slotBusy.indexOf(false);
       if (waiting >= st.qMax || slot < 0 || !this.entrance) lose(1);
       else this.arrive(slot);
@@ -248,7 +258,7 @@ export class RangeSim {
     }
     if (this.serving >= 0 && (this.serveLeft -= dt) <= 0) {
       const v = this.visits.find(q => q.id === this.serving); this.serving = -1;
-      if (v) { this.queue.shift(); sell(1); this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, sc.shopJoin, sc.bays[v.bay]!.back, sc.bays[v.bay]!.stand]); }
+      if (v) { this.queue.shift(); sell(1); v.served = this.t - st.serve; this.walk(v, S.WalkBay, [{ x: v.x, y: v.y }, sc.shopJoin, sc.bays[v.bay]!.back, sc.bays[v.bay]!.stand]); }
     }
     // closing: the queue goes home (lost); patience: a golfer queued two town hours leaves
     const patience = PATIENCE_H * dayLen / 24;
@@ -257,6 +267,7 @@ export class RangeSim {
       if (!isOpen || this.t - v.queued > patience) { this.queue.splice(i, 1); lose(1); this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
     }
     for (const v of this.visits) this.move(v, dt, dayLen, sc);
+    if (this.lost) { lose(this.lost); this.lost = 0; }
     // the queue's spots: each queued golfer walks up to its place in the line
     this.queue.forEach((id, k) => { const v = this.visits.find(q => q.id === id); if (v && v.stage === S.Queue) this.toward(v, this.queueSpot(k), dt); });
     this.balls = this.balls.filter(b => { if (this.t < b.t0 + b.T) return true; this.lie(b.x1, b.y1); return false; });
@@ -276,7 +287,7 @@ export class RangeSim {
     const lane = side > 0 ? 0.9 : -0.9, from = { x: sc.J.x - d.x * side * 46 + n.x * lane, y: sc.J.y - d.y * side * 46 + n.y * lane };
     const turn = { x: sc.J.x + n.x * lane, y: sc.J.y + n.y * lane };
     const onDrive = project(e, sc.J, sc.driveEnd), back = { x: sl.x - sl.hx * 2.2, y: sl.y - sl.hy * 2.2 };
-    const v: Visit = { id: this.nextId++, person: Math.floor(this.rnd() * this.golfers), car: Math.floor(this.rnd() * 5), slot, stage: S.CarIn, t: 0, r: null, bay: -1, swings: 0, queued: 0, x: from.x, y: from.y, ang: 0 };
+    const v: Visit = { id: this.nextId++, person: Math.floor(this.rnd() * this.golfers), car: Math.floor(this.rnd() * 5), slot, stage: S.CarIn, t: 0, r: null, bay: -1, swings: 0, queued: 0, served: 0, x: from.x, y: from.y, ang: 0 };
     v.r = route([from, turn, onDrive, e, back, { x: sl.x, y: sl.y }], [ROAD_V, DRIVE_V, DRIVE_V, PARK_V, PARK_V * 0.6]);
     this.slotBusy[slot] = true; this.visits.push(v);
   }
@@ -310,8 +321,14 @@ export class RangeSim {
     v.t += dt;
     switch (v.stage) {
       case S.CarIn: if (along(v.r!, v.t, this.tmp)) { v.x = this.tmp.x; v.y = this.tmp.y; const sl = this.slots[v.slot]!; v.ang = Math.atan2(sl.hy, sl.hx); this.walk(v, S.WalkShop, [{ x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 }, sc.carEdge, sc.shopJoin, this.queueSpot(this.queue.length)]); } else { v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; } break;
-      case S.WalkShop: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.Queue; v.queued = this.t; this.queue.push(v.id); } break; }
-      case S.WalkBay: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.Hit; v.t = 0; v.swings = Math.max(3, Math.floor(dayLen / 24 / SWING)); } break; }
+      case S.WalkShop: {
+        const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang;
+        // at the shop: a line two past the limit sends the golfer back to the car (lost); else it joins the line
+        if (done && this.queue.length >= this.qMax + 2) { this.lost++; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); }
+        else if (done) { v.stage = S.Queue; v.queued = this.t; this.queue.push(v.id); }
+        break;
+      }
+      case S.WalkBay: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.Hit; v.t = 0; v.swings = Math.max(2, Math.floor((dayLen / 24 - (this.t - v.served)) / SWING)); } break; }
       case S.Hit: {
         // each swing: address, the drive (the ball leaves at impact toward a target green, scattered), the pause; the bucket's last swing ends the visit
         const k = Math.floor(v.t / SWING), lt = v.t - k * SWING, prev = v.t - dt - k * SWING;

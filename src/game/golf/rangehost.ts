@@ -34,11 +34,12 @@ export interface RangeHostCtx {
 /** the texture a scene patch is laid with: a golf surface takes the course's own preset (the brush's, the owner's studio presets), else its
  *  game texture; the rest are ground textures as they are */
 function patchTex(s: ScenePatch['surf']): LotPatch['tex'] {
+  if (s === 'concrete') return 'pad'; // the Paint tool's concrete
   if (s === 'dirt' || s === 'grassDry' || s === 'asphaltDark' || s === 'gravel') return s;
   return (surfacePreset(s) ?? SURFACE_TEX[s as GolfSurface].tex) as LotPatch['tex'];
 }
-/** the takings are booked this often (sim s), not on every sale */
-const BOOK_EVERY = 2;
+/** the takings are booked this often (sim s), not on every sale; a frame this long (sim s) is a skip */
+const BOOK_EVERY = 2, SKIP_DT = 120;
 
 export class RangeHost {
   scene: RangeScene | null = null;
@@ -66,7 +67,8 @@ export class RangeHost {
     for (const [k, p] of this.props) { const w = want.get(k); if (!w || !this.scene || !sameSpot(this.scene.pieces.find(q => q.key === k), w)) { this.ctx.removeProp(p); this.props.delete(k); } }
     for (const [k, w] of want) if (!this.props.has(k)) { const p = this.ctx.addPiece(w, 'range:' + k); if (p) this.props.set(k, p); }
     this.labels = sc.pieces.filter(p => p.label && this.props.has(p.key)).map(p => ({ p: this.props.get(p.key)!, text: p.label! }));
-    this.ctx.setGround('range:ground', sc.patches.map(p => ({ pts: p.pts, tex: patchTex(p.surf) })));
+    // laid as painted areas (the Paint tool's path, which knows the presets), in the scene's order and under anything the player paints
+    this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i } })));
     if (!this.scene) this.ctx.clearTrees(sc.box);
     if (!b.paths) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
     this.scene = sc;
@@ -84,9 +86,13 @@ export class RangeHost {
     const b = this.ctx.biz(); if (!b || !this.scene) return;
     const t = this.ctx.simT(), dt = this.lastT < 0 ? 0 : t - this.lastT; this.lastT = t;
     if (dt <= 0) return;
-    this.owed += this.sim.step(dt, this.ctx.clock(), b, this.ctx.demand(), this.ctx.dayLen());
+    // a long frame (a slow tab, 20x) is stepped in pieces of half a second, so the golfers walk on; only a skip (two minutes and more of sim
+    // time at once: Skip to season end) is booked by the expected sales and clears them
+    const clock = this.ctx.clock(), dem = this.ctx.demand(), L = this.ctx.dayLen();
+    if (dt >= SKIP_DT) this.owed += this.sim.step(dt, clock, b, dem, L);
+    else for (let left = dt; left > 1e-9; left -= 0.5) this.owed += this.sim.step(Math.min(0.5, left), clock, b, dem, L);
     this.owedT += dt;
-    if (this.owed > 0 && (this.owedT >= BOOK_EVERY || dt > 20)) { this.ctx.book(Math.round(this.owed)); this.owed = 0; this.owedT = 0; if (this.cardOpen) this.ctx.emit(); }
+    if (this.owed > 0 && (this.owedT >= BOOK_EVERY || dt >= SKIP_DT)) { this.ctx.book(Math.round(this.owed)); this.owed = 0; this.owedT = 0; if (this.cardOpen) this.ctx.emit(); }
     this.nFlying = this.sim.flying(this.flyingBuf);
   }
 
@@ -135,7 +141,7 @@ export class RangeHost {
       c.font = `700 ${px}px system-ui, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
       for (const t of sc.numbers) {
         const p = screen(t.x, t.y); if (!on(p)) continue;
-        const y = p.y - 2.6 * 32 * ze - px, tw = c.measureText(t.text).width + 8 * dpr;
+        const y = p.y - (t.low ? 1.2 : 2.6) * 32 * ze - (t.low ? 0 : px), tw = c.measureText(t.text).width + 8 * dpr;
         c.fillStyle = 'rgba(16,24,16,0.8)'; c.beginPath(); c.roundRect(p.x - tw / 2, y - px * 0.75, tw, px * 1.5, 3 * dpr); c.fill();
         c.fillStyle = '#f8fafc'; c.fillText(t.text, p.x, y + 0.5 * dpr);
       }

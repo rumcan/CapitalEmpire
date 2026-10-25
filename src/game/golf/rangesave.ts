@@ -67,7 +67,7 @@ export function rangeStats(s: RangeBizSave): RangeStats {
   const appeal = 1 + (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0);
   return {
     bays, targets: has('targets') ? 5 : 2, covered, lights, dispenser, proShop, appeal,
-    ref: PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0), extra: proShop ? 2 : 0, serve: dispenser ? 1 : proShop ? 3.5 : 5,
+    ref: PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
     open: OPEN_HOUR, close: lights ? CLOSE_LIT : CLOSE_HOUR, qMax: 4 + Math.floor(bays / 4),
   };
 }

@@ -7,12 +7,12 @@ import { Icon } from '../Icon';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
-export function RangeCard({ view, onClose, onPrice, onBuy }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void }) {
+export function RangeCard({ view, onClose, onPrice, onBuy, right = 'right-3' }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; right?: string }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
   const demandWord = pf >= 1.15 ? 'cheap: more golfers' : pf <= 0.85 ? 'dear: fewer golfers' : 'fair';
   return (
-    <div className="pointer-events-auto absolute left-3 top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur" data-testid="range-card">
+    <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="range-card">
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
         <div>
           <div className="font-semibold text-amber-200">Driving range</div>
@@ -21,9 +21,9 @@ export function RangeCard({ view, onClose, onPrice, onBuy }: { view: RangeCardVi
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
-        <Tile label="Today" value={`${today.golfers}`} sub="golfers" />
+        <Tile label="Today" value={`${Math.round(today.golfers)}`} sub="golfers" />
         <Tile label="Hitting" value={`${today.playing}/${st.bays}`} sub={`${today.queue} queued`} />
-        <Tile label="Lost" value={`${today.lost}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
+        <Tile label="Lost" value={`${Math.round(today.lost)}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
       </div>
       <div className="grid grid-cols-2 gap-1.5 text-center">
         <Tile label="Season takings" value={money(biz.season.takings)} sub={`${Math.round(biz.season.buckets).toLocaleString()} buckets`} tone="text-emerald-300" />
