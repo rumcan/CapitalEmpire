@@ -204,7 +204,7 @@ export default function App() {
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
  {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</button>}
+ {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{/* P23 4.11: under 1600 px the chip says Skip (its tooltip says the rest), so the top bar keeps one row at 1366 px */}<span className="max-[1599px]:hidden">{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span><span className="min-[1600px]:hidden">Skip</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -318,7 +318,7 @@ export default function App() {
               {shownTools.length > 1 && (
                 <div className="seg mb-3">
                   {shownTools.map(t => (
-                    <button key={t.id} className={`relative ${game.uiTool === t.id ? 'on' : ''}`} onClick={() => game.setTool(t.id)} title={t.key ? `${t.label} (${t.key})` : t.label}><Icon name={t.icon} size={16} />{t.label}{toolNew(ui, t.id) && <NewBadge className="absolute -right-1 -top-1.5" />}</button>
+                    <button key={t.id} className={game.uiTool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={t.key ? `${t.label} (${t.key})` : t.label}><Icon name={t.icon} size={16} />{t.label}{toolNew(ui, t.id) && <NewBadge />}</button>
                   ))}
                 </div>
               )}

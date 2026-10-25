@@ -267,6 +267,9 @@ const miniFits = (n: Node): boolean => n.arms.every(a => a.cls.laneCentres.lengt
 /** the props an undoable Paint or Course action added and removed */
 type PropLog = { added: Prop[]; removed: Prop[] };
 
+/** the tools' names as the rail and the panels say them (a locked tool's toast, P23 4.10) */
+const TOOL_NAME: Partial<Record<Tool, string>> = { road: 'Roads', lane: 'Upgrade', downgrade: 'Downgrade', junction: 'Junctions', bus: 'Bus routes', park: 'Car parks', toll: 'Toll gates', paint: 'Paint', course: 'Holes', path: 'Paths', buildings: 'Buildings', bulldoze: 'Bulldoze' };
+
 export class Game {
   gl: GLRenderer; ov: CanvasRenderingContext2D;
   dpr = 1; cw = 1; ch = 1; cssW = 1; cssH = 1;
@@ -794,7 +797,10 @@ export class Game {
   private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
-  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && this.paintOn && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
+  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
+  /** whether the Paint tool or Holes may lay what is in hand: Holes at stage 1 is New hole only (P23 4.2, 4.3), so outside New hole its brush,
+   *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
+  get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.mode === 'plan') return true; const ui = this.toolUi(); return !ui || ui.shapeByHand; }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
@@ -1927,7 +1933,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') this.clubPlacing = false; else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ if (this.refuseLocked(t)) return; /* P23 4.10: a locked tool says what unlocks it */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') this.clubPlacing = false; else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -2673,7 +2679,7 @@ export class Game {
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
       case 'paint': case 'course':
         if (this.clubPlacing && this.tool === 'course') { this.clubUpdate(mx, my); this.clubClick(); break; }
-        if (!this.paintOn) break; // Buildings with nothing in hand: a click lays nothing
+        if (!this.paintOn || !this.brushOpen) break; // Buildings with nothing in hand, or Holes at stage 1 outside New hole: a click lays nothing
         this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); this.courseCursor.press(this.paint, e.altKey); break;
       case 'park': {
         // the bay rows drag and the on-street click are the Parking tool's (docs/PARKING.md); the rectangle is the car park drag below
@@ -2807,7 +2813,7 @@ export class Game {
       case 'n': case 'N': this.setTool('lane'); break;
       case 'y': case 'Y': this.setTool('downgrade'); break;
       case 'v': case 'V': this.setTool('select'); break;
-      case '1': case '2': case '3': case '4': case '5': case '6': { const c = KEY_CLASSES[+e.key - 1]; if (c) { this.roadClass = c; this.setTool('road'); } break; }
+      case '1': case '2': case '3': case '4': case '5': case '6': { const c = KEY_CLASSES[+e.key - 1]; if (c && !this.refuseLocked('road')) { this.roadClass = c; this.setTool('road'); } break; }
       case '+': case '=': this.zoomAt(clamp(this.cam.z * 1.25, ZOOM_MIN, ZOOM_MAX)); break;
       case '-': case '_': this.zoomAt(clamp(this.cam.z / 1.25, ZOOM_MIN, ZOOM_MAX)); break;
       case ' ': e.preventDefault(); if (!e.repeat) this.spacePanned = false; break;
@@ -3671,6 +3677,15 @@ export class Game {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
     const f = this.playerProgressFacts();
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
+    // a tool that is not open (a save loads with the road tool in hand; Show every tool now unticked) is put down for Holes (P23 P1-E)
+    if (this.toolLock(this.uiTool)) this.setTool('course');
+  }
+  /** why tool t is not open yet under the unlocks (the rail shows it dimmed in place, P23 4.2), or null when it is open */
+  toolLock(t: Tool): string | null { return this.toolUi()?.lockedTools.find(x => x.id === t)?.why ?? null; }
+  /** a locked tool's key or pick (P23 4.10): it says what unlocks the tool and does nothing; true when t is locked */
+  private refuseLocked(t: Tool): boolean {
+    const why = this.toolLock(t); if (!why) return false;
+    this.toast(`${TOOL_NAME[t] ?? 'This tool'}: ${why}`); return true;
   }
   /** why a course path or drive is held back by the unlock stage (T117: the cement slab path until the first hole), or null when it is not */
   courseStageLock(id: ClassId): string | null { return this.toolUi()?.lockedCourseClasses.find(c => c.id === id)?.why ?? null; }
@@ -4913,7 +4928,7 @@ export class Game {
       if (gm) drawGhostHint(this.ghostView(ctx), gm.mx, gm.my, `Click removes this ${cls.name.toLowerCase()} (refunds its value)`, true);
     } else if (this.clubPlacing && this.tool === 'course') {
       const bt = this.bizType; this.bizType = 'clubhouse'; this.drawBizPreview(ctx); this.bizType = bt;
-    } else if (this.paintOn) {
+    } else if (this.paintOn && this.brushOpen) {
       this.paint.drawPreview({ ctx, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y), dpr: this.dpr, hint: (mx, my, t, b) => this.hintAt(ctx, mx, my, t, b) });
       const v = this.cursorView; v.ze = this.cam.z * this.dpr; v.camX = this.cam.X; v.camY = this.cam.Y; v.cw = this.cw; v.ch = this.ch; v.dpr = this.dpr;
       const now = performance.now();
