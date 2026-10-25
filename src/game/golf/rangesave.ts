@@ -3,7 +3,9 @@
 // the golfers are golf/rangebiz.ts.
 import { RANGE_PASS_POP } from './range';
 /** the range's upgrades (plan P24 2.3) */
-export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covered' | 'lights' | 'dispenser' | 'proshop';
+export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covered' | 'lights' | 'dispenser' | 'proshop'
+  /** the World of Golf extras (plan P24 Phase 4b, T133): the second tier of bays, the academy, the coffee kiosk, the ball picker cart */
+  | 'tier2' | 'academy' | 'kiosk' | 'picker';
 /** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($)
  *  and the upgrades' upkeep paid ($, T132) */
 export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number; upkeep: number }
@@ -18,7 +20,14 @@ export interface PracticeFacSave { open: boolean; season: PracticeCounts; total:
 /** the range business in the save (golf.range): v 1, the upgrades owned (in buying order), the bucket price ($), the season's and the lifetime
  *  counts, paths (the game has laid the range's cart paths: an old save's first load lays them), tee (T130: the game has laid the tee box into the
  *  course grid: an old save's first load lays it) and the practice facilities (T130; a save without them: none built) */
-export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean; tee?: boolean; practice: Record<PracticeId, PracticeFacSave> }
+export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean; tee?: boolean; practice: Record<PracticeId, PracticeFacSave>;
+  /** the extras' own counts (T133): the coffee kiosk's buyers and takings, the academy's lessons and fees (a save without them: zero) */
+  extras: Record<ExtraId, ExtraSave> }
+/** the extras that keep their own counts (T133): the coffee kiosk (coffees sold) and the academy (lessons given) */
+export type ExtraId = 'kiosk' | 'academy';
+export const EXTRA_IDS: readonly ExtraId[] = ['kiosk', 'academy'];
+/** an extra's season's and lifetime counts: golfers served (coffees, lessons: the customers they stand for are times the scale) and takings ($) */
+export interface ExtraSave { season: PracticeCounts; total: PracticeCounts }
 
 /** the bucket price band and the start ($) */
 export const PRICE_MIN = 3, PRICE_MAX = 12, PRICE_START = 6;
@@ -35,7 +44,7 @@ export const PROPS_APPEAL_CAP = 0.4;
 
 /** an upgrade as the range card lists it: its id, name, cost ($), its upkeep ($ a game month, T132: twelve months a season), the upgrade it needs
  *  first, what it does (one line) */
-export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; upkeep: number; needs?: RangeUpgradeId; effect: string }
+export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; upkeep: number; needs?: RangeUpgradeId | readonly RangeUpgradeId[]; effect: string }
 export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   { id: 'bays8', name: '8 hitting bays', cost: 8000, upkeep: 60, effect: 'Four more mats on the tee box: twice the golfers at once' },
   { id: 'bays12', name: '12 hitting bays', cost: 14000, upkeep: 90, needs: 'bays8', effect: 'Four more mats: a longer queue fits before cars drive on' },
@@ -45,7 +54,14 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
   { id: 'lights', name: 'Floodlights', cost: 24000, upkeep: 250, effect: 'Open till 22:00: the after-work crowd stays into the evening' },
   { id: 'dispenser', name: 'Ball dispenser', cost: 5000, upkeep: 30, effect: 'Buckets in a second: the queue at the shop clears, +5% visitors' },
   { id: 'proshop', name: 'Pro shop', cost: 45000, upkeep: 400, effect: 'The shack becomes a real pro shop: gear sales +$2 a golfer, +15% visitors' },
+  // the World of Golf extras (plan P24 Phase 4b, T133)
+  { id: 'kiosk', name: 'Coffee kiosk', cost: 9000, upkeep: 80, effect: 'A coffee kiosk by the shop: 40% of golfers buy a $3 coffee after their bucket, +3% visitors' },
+  { id: 'picker', name: 'Ball picker cart', cost: 7000, upkeep: 60, needs: 'bays8', effect: 'A cart drives the outfield in lanes after closing and picks the balls: a clean range every morning, +5% visitors' },
+  { id: 'tier2', name: 'Second tier of bays', cost: 60000, upkeep: 450, needs: ['bays12', 'covered'], effect: 'A double-deck stand over the mats: 12 more bays upstairs, the World of Golf look, +10% visitors' },
+  { id: 'academy', name: 'Golf academy', cost: 30000, upkeep: 350, needs: 'proshop', effect: 'A pro teaches on two bays: 15% of golfers take a $15 lesson, +5% visitors' },
 ];
+/** an upgrade's prerequisites, all of them needed first */
+export function needsOf(u: Pick<RangeUpgrade, 'needs'>): readonly RangeUpgradeId[] { return !u.needs ? [] : typeof u.needs === 'string' ? [u.needs] : u.needs; }
 const BY_ID = new Map(RANGE_UPGRADES.map(u => [u.id, u]));
 /** the game months in a season (one game day: golf/calendar.ts) */
 export const MONTHS_A_SEASON = 12;
@@ -54,9 +70,10 @@ export const MONTHS_A_SEASON = 12;
 export function rangeUpkeep(s: Pick<RangeBizSave, 'owned'>): number { let n = 0; for (const id of s.owned) n += BY_ID.get(id)?.upkeep ?? 0; return n; }
 
 const zero = (): RangeCounts => ({ golfers: 0, buckets: 0, lost: 0, takings: 0, upkeep: 0 });
+const noExtras = (): Record<ExtraId, ExtraSave> => ({ kiosk: { season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } }, academy: { season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } } });
 const noPractice = (): Record<PracticeId, PracticeFacSave> => ({ putting: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } }, chipping: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } } });
-/** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts, no practice facilities */
-export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice() }; }
+/** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts, no practice facilities, no extras' counts */
+export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice(), extras: noExtras() }; }
 const pos = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
 const counts = (c: unknown): RangeCounts => {
   const o = (c && typeof c === 'object' ? c : {}) as Partial<RangeCounts>;
@@ -69,19 +86,27 @@ function normalizePractice(x: unknown): Record<PracticeId, PracticeFacSave> {
   for (const id of PRACTICE_IDS) { const f = o[id]; if (f && typeof f === 'object') out[id] = { open: f.open === true, season: pc(f.season), total: pc(f.total) }; }
   return out;
 }
+/** a loaded extras record made well formed (the migration: a save from before T133 has zero counts) */
+function normalizeExtras(x: unknown): Record<ExtraId, ExtraSave> {
+  const out = noExtras(), o = (x && typeof x === 'object' ? x : {}) as Partial<Record<ExtraId, Partial<ExtraSave>>>;
+  const pc = (c: unknown): PracticeCounts => { const q = (c && typeof c === 'object' ? c : {}) as Partial<PracticeCounts>; return { golfers: pos(q.golfers), takings: pos(q.takings) }; };
+  for (const id of EXTRA_IDS) { const f = o[id]; if (f && typeof f === 'object') out[id] = { season: pc(f.season), total: pc(f.total) }; }
+  return out;
+}
 /** the season closes with the books: the range's and its practice facilities' season counts start again from zero */
 export function rangeNewSeason(s: RangeBizSave): void {
   s.season = zero();
   for (const id of PRACTICE_IDS) s.practice[id].season = { golfers: 0, takings: 0 };
+  for (const id of EXTRA_IDS) s.extras[id].season = { golfers: 0, takings: 0 };
 }
 /** a loaded golf.range made well formed (the migration: a range-start save without one gets the starting range); unknown upgrades are dropped,
  *  an upgrade whose prerequisite is missing is dropped, the price is clamped to the band */
 export function normalizeRangeBiz(x: unknown): RangeBizSave {
   if (!x || typeof x !== 'object') return defaultRangeBiz();
   const o = x as Partial<RangeBizSave>, owned: RangeUpgradeId[] = [];
-  for (const id of Array.isArray(o.owned) ? o.owned : []) { const u = BY_ID.get(id as RangeUpgradeId); if (u && !owned.includes(u.id) && (!u.needs || owned.includes(u.needs))) owned.push(u.id); }
+  for (const id of Array.isArray(o.owned) ? o.owned : []) { const u = BY_ID.get(id as RangeUpgradeId); if (u && !owned.includes(u.id) && needsOf(u).every(n => owned.includes(n))) owned.push(u.id); }
   const p = typeof o.price === 'number' && Number.isFinite(o.price) ? Math.round(o.price) : PRICE_START;
-  const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total), practice: normalizePractice(o.practice) };
+  const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total), practice: normalizePractice(o.practice), extras: normalizeExtras(o.extras) };
   if (o.paths === true) out.paths = true;
   if (o.tee === true) out.tee = true;
   return out;
@@ -96,22 +121,43 @@ export interface RangeExtras { propsAppeal?: number; /** the open practice facil
 export interface RangeStats {
   bays: number; targets: number; covered: boolean; lights: boolean; dispenser: boolean; proShop: boolean;
   appeal: number; ref: number; extra: number; serve: number; open: number; close: number; qMax: number; propsAppeal: number;
+  /** the extras (T133): the second tier (its bays are in bays: lowerBays stand on the tee box, TIER2_BAYS upstairs), the academy (two of the
+   *  lower bays are its lesson bays), the coffee kiosk, the ball picker cart */
+  tier2: boolean; academy: boolean; kiosk: boolean; picker: boolean; lowerBays: number;
 }
 export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
   const has = (id: RangeUpgradeId) => s.owned.includes(id);
-  const bays = has('bays24') ? 24 : has('bays12') ? 12 : has('bays8') ? 8 : START_BAYS;
+  const lowerBays = has('bays24') ? 24 : has('bays12') ? 12 : has('bays8') ? 8 : START_BAYS;
   const covered = has('covered'), lights = has('lights'), dispenser = has('dispenser'), proShop = has('proshop');
+  const tier2 = has('tier2'), academy = has('academy'), kiosk = has('kiosk'), picker = has('picker'), bays = lowerBays + (tier2 ? TIER2_BAYS : 0);
   // the props' term (T131): a dressed front draws more golfers and they pay more without grumbling
   const propsAppeal = Math.min(PROPS_APPEAL_CAP, Math.max(0, Number.isFinite(x.propsAppeal) ? x.propsAppeal! : 0));
   // the practice facilities' term (T130, practiceAppeal): more golfers come, the price stays
   const practice = Math.max(0, Number.isFinite(x.practiceAppeal) ? x.practiceAppeal! : 0);
-  const appeal = (1 + (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0)) * (1 + propsAppeal) * (1 + practice);
+  const own = (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0)
+    + (tier2 ? EXTRA_APPEAL.tier2 : 0) + (academy ? EXTRA_APPEAL.academy : 0) + (kiosk ? EXTRA_APPEAL.kiosk : 0) + (picker ? EXTRA_APPEAL.picker : 0);
+  const appeal = (1 + own) * (1 + propsAppeal) * (1 + practice);
   return {
     bays, targets: has('targets') ? 5 : 2, covered, lights, dispenser, proShop, appeal, propsAppeal,
     ref: (PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0)) * (1 + propsAppeal), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
-    open: OPEN_HOUR, close: lights ? CLOSE_LIT : CLOSE_HOUR, qMax: 4 + Math.floor(bays / 4),
+    open: OPEN_HOUR, close: lights ? CLOSE_LIT : CLOSE_HOUR, qMax: 4 + Math.floor(bays / 4), tier2, academy, kiosk, picker, lowerBays,
   };
 }
+/** the second tier's bays upstairs (T133), over the middle twelve of the tee box's slots */
+export const TIER2_BAYS = 12;
+/** the extras' appeal (T133): added to the upgrades' own appeal term */
+export const EXTRA_APPEAL: Readonly<Record<'tier2' | 'academy' | 'kiosk' | 'picker', number>> = { tier2: 0.1, academy: 0.05, kiosk: 0.03, picker: 0.05 };
+/** the coffee kiosk (T133): the share of golfers who buy a coffee after their bucket, its price ($, before the scale), the counter's serve time (sim s)
+ *  and the longest line a golfer joins (else it skips the coffee) */
+export const KIOSK_SHARE = 0.4, COFFEE = 3, KIOSK_SERVE = 2.5, KIOSK_QMAX = 5;
+/** the academy (T133): its lesson bays (two of the lower bays), the share of golfers who want a lesson and its price ($, on top of the bucket,
+ *  before the scale) */
+export const ACADEMY_BAYS = 2, LESSON_SHARE = 0.15, LESSON = 15;
+/** the player's home (T133): the caravan, the cottage and the house, by the range's lifetime takings ($): it grows as the business grows */
+export type HomeStage = 0 | 1 | 2;
+export const HOME_AT: readonly [number, number] = [100000, 400000];
+export const HOME_NAME: readonly [string, string, string] = ['Caravan', 'Cottage', 'House'];
+export function homeStage(s: Pick<RangeBizSave, 'total'>): HomeStage { const t = s.total.takings; return t >= HOME_AT[1] ? 2 : t >= HOME_AT[0] ? 1 : 0; }
 /** the practice facilities' appeal term (T130, plan P24 Phase 2), a fraction as T131's propsAppeal: x(1 + 0.1) for an open putting green, x(1 + 0.1)
  *  for an open chipping green with its bunker. The engine passes it in the demand context (RangeExtras.practiceAppeal), beside propsAppeal */
 export const PRACTICE_APPEAL: Readonly<Record<PracticeId, number>> = { putting: 0.1, chipping: 0.1 };
@@ -134,7 +180,7 @@ export function priceFactor(price: number, ref: number): number { return Math.mi
 export function upgradeWhy(s: RangeBizSave, id: RangeUpgradeId, money: number): string {
   const u = BY_ID.get(id); if (!u) return 'Unknown upgrade';
   if (s.owned.includes(id)) return 'Built';
-  if (u.needs && !s.owned.includes(u.needs)) return `Build ${BY_ID.get(u.needs)!.name} first`;
+  const miss = needsOf(u).find(n => !s.owned.includes(n)); if (miss) return `Build ${BY_ID.get(miss)!.name} first`;
   if (u.cost > money) return `Not enough money: it costs $${u.cost.toLocaleString()}`;
   return '';
 }
@@ -166,14 +212,18 @@ export function rangeScale(dayLen: number): number { return RANGE_SCALE_BASE * M
 /** what one golfer's visit books ($): the price plus the extra spend, times the scale */
 export function saleValue(s: RangeBizSave, dayLen: number, st = rangeStats(s)): number { return (s.price + st.extra) * rangeScale(dayLen); }
 /** the expected visits of a span the player skipped (sim s, from town hour h0): the arrivals by the hour curve, the served capped by the bays
- *  (each plays a town hour); returns golfers served and lost */
-export function skippedVisits(s: RangeBizSave, c: DemandCtx, h0: number, dt: number, dayLen: number): { served: number; lost: number } {
+ *  (each plays a town hour); returns golfers served and lost, and (T133) the academy's lessons (LESSON_SHARE of the served, capped by its two bays
+ *  an hour) and the kiosk's coffees (KIOSK_SHARE of the served) */
+export function skippedVisits(s: RangeBizSave, c: DemandCtx, h0: number, dt: number, dayLen: number): { served: number; lost: number; lessons: number; coffees: number } {
   const st = rangeStats(s, c), hourS = dayLen / 24;
-  let served = 0, lost = 0;
+  let served = 0, lost = 0, lessons = 0;
   for (let t = 0; t < dt; t += hourS) {
     const h = (h0 + t / hourS) % 24, span = Math.min(hourS, dt - t) / hourS, want = dayDemand(s, c, st) * hourWeight(h, st) / DAY_WEIGHT * span;
     const cap = hourWeight(h, st) > 0 ? st.bays * span : 0, got = Math.min(want, cap);
     served += got; lost += want - got;
+    if (st.academy) lessons += Math.min(got * LESSON_SHARE, ACADEMY_BAYS * span);
   }
-  return { served, lost };
+  return { served, lost, lessons, coffees: st.kiosk ? served * KIOSK_SHARE : 0 };
 }
+/** what the extras book ($, T133): n coffees or lessons times their price and the scale */
+export function extraValue(id: ExtraId, n: number, dayLen: number): number { return n * (id === 'kiosk' ? COFFEE : LESSON) * rangeScale(dayLen); }

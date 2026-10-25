@@ -12,7 +12,10 @@ import { shadowShape } from './shadow-shape';
 import { lookOf } from './newart';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
-export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean }
+export interface Drawable { item: number; x: number; y: number; flip: boolean; scale: number; x0: number; y0: number; x1: number; y1: number; /** a moving car (SimClient.visible): already drawn at CAR_SCALE */ moving?: boolean;
+  /** drawn this high above its spot (world px, up the screen; T133: the range's upper deck and its golfers): it keeps its footprint for the
+   *  painter's order and casts no shadow (what holds it up casts its own) */
+  lift?: number }
 /** every car is drawn this much smaller than its art, parked (props of kind car, about the middle of their footprint) and moving (SimClient.visible,
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
@@ -31,7 +34,7 @@ export function spriteRect<T extends number[] | Float32Array>(d0: Drawable, out:
   const parked = it.kind === 'car' && !d0.moving, f = parked ? CAR_SCALE : 1, k = l.scale * f, ax = l.flip ? it.w - it.ax : it.ax;
   // a parked car shrinks about the middle of its footprint, so it stays in its bay; a stand-in is drawn at its own anchor (centred on the footprint)
   const x = l.x ?? d0.x, y = l.y ?? d0.y;
-  const cx = (d0.x0 + d0.x1) / 2, cy = (d0.y0 + d0.y1) / 2, px = parked ? cx + (x - cx) * f : x, py = parked ? cy + (y - cy) * f : y, X = worldX(px, py), Y = worldY(px, py);
+  const cx = (d0.x0 + d0.x1) / 2, cy = (d0.y0 + d0.y1) / 2, px = parked ? cx + (x - cx) * f : x, py = parked ? cy + (y - cy) * f : y, X = worldX(px, py), Y = worldY(px, py) - (d0.lift ?? 0);
   const left = X - ax * k, top = Y - it.ay * k, q = it.quad;
   const qx0 = l.flip ? it.w - q[2] : q[0], qx1 = l.flip ? it.w - q[0] : q[2];
   out[o] = left + qx0 * k; out[o + 1] = top + q[1] * k; out[o + 2] = left + qx1 * k; out[o + 3] = top + q[3] * k;
@@ -51,7 +54,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
   spriteRect(d0, out, o);
   out[o + 4] = l.flip ? t[3] : t[1]; out[o + 5] = t[2]; out[o + 6] = l.flip ? t[1] : t[3]; out[o + 7] = t[4];
   // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked); a hidden one draws nothing
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
   // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0) corners
   out[o + 16] = worldX(d0.x1, d0.y1); out[o + 17] = worldY(d0.x1, d0.y1); out[o + 18] = worldX(d0.x0, d0.y1); out[o + 19] = worldX(d0.x1, d0.y0);
@@ -59,7 +62,7 @@ function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: nu
 /** the sprite's contact shadow (shadow-shape.ts): its shape from the footprint (2 m tiles, so the half extents in metres are the tile
  *  spans), a parked car's shrunk like its picture; none packs as a zero-size shape */
 function packShadow(d: Drawable, out: Float32Array, o: number, i: number, j: number) {
-  const it = LIBRARY[d.item], f = it.kind === 'car' && !d.moving ? CAR_SCALE : 1, sh = shadowShape(it, (d.x1 - d.x0) * f, (d.y1 - d.y0) * f, d.scale);
+  const it = LIBRARY[d.item], f = it.kind === 'car' && !d.moving ? CAR_SCALE : 1, sh = d.lift ? null : shadowShape(it, (d.x1 - d.x0) * f, (d.y1 - d.y0) * f, d.scale);
   const cx = sh?.atAnchor ? d.x : (d.x0 + d.x1) / 2, cy = sh?.atAnchor ? d.y : (d.y0 + d.y1) / 2;
   out[o] = worldX(cx, cy); out[o + 1] = worldY(cx, cy); out[o + 2] = sh?.hx ?? 0; out[o + 3] = sh?.hy ?? 0;
   out[o + 4] = sh?.core ?? 0; out[o + 5] = sh?.feather ?? 0; out[o + 6] = sh?.round ? 1 : 0; out[o + 7] = 0;
@@ -129,7 +132,7 @@ export class SpriteTiles {
     t.order = topoOrder(props, rects);
     const n = t.order.length; t.packed = new Float32Array(n * SPRITE_STRIDE); t.rects = new Float32Array(n * 4);
     const sh: number[] = [];
-    t.order.forEach((p, i) => { packSprite(p, t.packed, i * SPRITE_STRIDE, t.i, t.j); t.rects.set(t.packed.subarray(i * SPRITE_STRIDE, i * SPRITE_STRIDE + 4), i * 4); if (SHADOWED(LIBRARY[p.item])) sh.push(i); });
+    t.order.forEach((p, i) => { packSprite(p, t.packed, i * SPRITE_STRIDE, t.i, t.j); t.rects.set(t.packed.subarray(i * SPRITE_STRIDE, i * SPRITE_STRIDE + 4), i * 4); if (SHADOWED(LIBRARY[p.item]) && !p.lift) sh.push(i); });
     t.shadows = new Float32Array(sh.length * SHADOW_STRIDE); sh.forEach((i, k) => packShadow(t.order![i], t.shadows, k * SHADOW_STRIDE, t.i, t.j));
     t.buckets = new Map();
     for (let i = 0; i < n; i++) { const o = i * 4; for (let gx = Math.floor(t.rects[o] / BUCKET); gx <= Math.floor(t.rects[o + 2] / BUCKET); gx++) for (let gy = Math.floor(t.rects[o + 1] / BUCKET); gy <= Math.floor(t.rects[o + 3] / BUCKET); gy++) { const k = gx * 65536 + gy; let l = t.buckets.get(k); if (!l) t.buckets.set(k, (l = [])); l.push(i); } }

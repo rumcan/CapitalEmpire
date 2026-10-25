@@ -17,13 +17,13 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
         <div>
           <div className="font-semibold text-amber-200">Driving range</div>
-          <div className="text-[11px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.bays} bays · open {view.hours}</div>
+          <div className="text-[11px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.tier2 ? `${st.lowerBays} + ${st.bays - st.lowerBays} upstairs` : st.bays} bays · open {view.hours}</div>
         </div>
         <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
         <Tile label="Today" value={`${Math.round(today.golfers)}`} sub="golfers" />
-        <Tile label="Hitting" value={`${today.playing}/${st.bays}`} sub={`${today.queue} queued`} />
+        <Tile label="Hitting" value={`${today.playing}/${st.bays}`} sub={st.tier2 ? `${view.upstairs} upstairs · ${today.queue} queued` : `${today.queue} queued`} />
         <Tile label="Lost" value={`${Math.round(today.lost)}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
       </div>
       <div className="grid grid-cols-2 gap-1.5 text-center">
@@ -67,6 +67,24 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
         ))}
         <div className="text-[10px] text-slate-500">Paint them with the Green and Bunker brushes in the Practice area beside the car park. A share of the range's golfers walk over after their bucket.</div>
       </div>
+      {view.extras.some(e => e.owned) && (
+        <div className="space-y-1.5" data-testid="range-extras">
+          <div className="text-[10px] uppercase text-slate-400">Kiosk and academy</div>
+          {view.extras.filter(e => e.owned).map(e => (
+            <div key={e.id} className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2 text-xs" data-testid={`range-extra-${e.id}`}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium text-white">{e.id === 'kiosk' ? 'Coffee kiosk' : 'Golf academy'}</span>
+                <span className="text-[10px] text-slate-400">{e.today} today · {Math.round(e.season.golfers)} this season · <span className="text-emerald-300/90">{money(e.season.takings)}</span></span>
+              </div>
+              <div className="text-[11px] text-slate-400">{e.words}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-home" title="Your home beside the range grows with the range's lifetime takings">
+        <span className="text-slate-300">Your home: <span className="font-semibold text-white">{view.home.name}</span></span>
+        <span className="text-slate-500">{view.home.next ? `${view.home.next.name} at ${money(view.home.next.at)} taken (${money(view.home.total)} so far)` : `${money(view.home.total)} taken in all`}</span>
+      </div>
       <div className="space-y-1.5">
         <div className="text-[10px] uppercase text-slate-400">Upgrades</div>
         {view.upgrades.map(u => (
@@ -78,7 +96,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
               )}
             </div>
             <div className="text-[11px] text-slate-400">{u.effect}</div>
-            <div className="text-[10px] text-slate-500">Upkeep {money(u.upkeep)} a month</div>
+            <div className="text-[10px] text-slate-500">Upkeep {money(u.upkeep)} a month{view.needs[u.id].length ? ` · needs ${view.needs[u.id].join(' and ')}` : ''}</div>
             {!u.owned && u.why && u.why !== 'Built' && <div className="text-[10px] text-amber-300/80">{u.why}</div>}
           </div>
         ))}
