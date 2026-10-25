@@ -24,10 +24,10 @@ import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
-import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, ringArea, type GridArea } from './ext/course-grid/areas';
+import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans } from './ext/hole-wizard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
-import { COURSE_EDIT_REACH, COURSE_PATCH_REACH, courseChunksIn, courseGrowKey, courseKey, growStatic, type CourseLooks } from './ext/course-grid/patch';
+import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, growStatic, widestCollar, type CourseLooks } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
 import { surfacePreset } from './paint-presets';
 import { plantPoints, plantPool, type PlantBrushKind } from './plant';
@@ -78,7 +78,7 @@ import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { dressCourse } from './golf/dressing';
-import { SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
 import { parkRideNeeds } from './golf/parkride';
@@ -489,6 +489,8 @@ export class Game {
   courseGrid: CourseGrid | null = null;
   /** the course chunks on the ground, by key, with their grow key ('static': nothing grows; the month tick skips it) */
   private cgSent = new Map<string, string>();
+  /** per course chunk key, the grow month it was last baked whole at (an edit in a later month re-bakes it whole: applyChunks) */
+  private cgBaked = new Map<string, number>();
   /** the tile box whose chunks are waiting to be sent (an edit in progress), when it first changed, and when chunks last went out */
   private cgDirty: number[] | null = null;
   private cgDirtyAt = 0;
@@ -557,7 +559,8 @@ export class Game {
     const b = this.paint.brush, look = (st: { tex: string; scale: number; angle: number }) => ({ tex: st.tex, sc: st.scale, a: st.angle });
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     const surf = [undefined, look(b.rough.style), pre('fescue', 'golfFescue'), look(b.water.style), look(b.fairway.style), look(b.tee.style), look(b.bunker.style), pre('waste', 'wasteSand'), look(b.green.style)];
-    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: look(b.rough.style) } }; // the bank is laid in the rough's grass; the renderer paints its wet soil and stones (T099)
+    // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border and Shadow sliders ride along
+    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: look(b.rough.style) }, border: this.paint.courseBorders(), shadow: this.paint.courseShadows() };
   }
   /** each hole's playing line (back tee, aim points, pin) as flat tiles, for the fairway's mowing stripes */
   private holeLines(): Map<number, number[]> {
@@ -569,6 +572,21 @@ export class Game {
     }
     return out;
   }
+  private growCache: { g: CourseGrid; rev: number; now: number; v: Map<number, number> } | null = null;
+  /** the holes still growing in, each with the game month (golfMonthIndex's scale) it is grown in (T121; worked out again when the grid or
+   *  the month changes) */
+  holesGrowing(): Map<number, number> {
+    const g = this.courseGrid; if (!g || !this.golf) return new Map();
+    const now = this.growMonth(), c = this.growCache;
+    if (c?.g !== g || c.rev !== this.gaRev || c.now !== now) {
+      const v = growingHoles(g, now), bonus = now - this.golfMonthIndex();
+      for (const [h, r] of v) v.set(h, r - bonus);
+      this.growCache = { g, rev: this.gaRev, now, v };
+    }
+    return this.growCache!.v;
+  }
+  /** a hole's grow-in for the Course panel (P23 4.6): 'growing · ready Mar 1985', or '' once it is grown in */
+  holeGrowLabel(n: number): string { const r = this.holesGrowing().get(n); return r === undefined ? '' : `growing · ready ${monthIndexLabel(r)}`; }
   /** the effective game month for grow-in (the grow cards included) */
   private growMonth(): number { return this.golf ? effectiveGrowInClockMonth(this.golfMonthIndex(), this.golf.cards ?? this.traffic.round.cards) : 0; }
   /** the course grid, with both workers holding a copy of this very grid object (a new or grown grid goes to them whole first) */
@@ -582,8 +600,8 @@ export class Game {
    *  The work is the contour worker's: the patches land a few ms later, all of one job in the same frame */
   sendCourseChunks(box: readonly number[], stale = false, at = performance.now()) {
     const g = this.contourGrid(); if (!g) return;
-    const R = COURSE_EDIT_REACH + COURSE_PATCH_REACH;
-    this.queueChunks(courseChunksIn(g, box, COURSE_EDIT_REACH), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
+    const reach = courseEditReach(widestCollar(courseStyles(this.paint.courseBorders()))), R = reach + COURSE_PATCH_REACH; // a wide Border reaches further
+    this.queueChunks(courseChunksIn(g, box, reach), stale ? [box[0]! - R, box[1]! - R, box[2]! + R, box[3]! + R] : null, at);
   }
   /** chunks for the contour worker: a job now, or (one in flight) merged into the next */
   private queueChunks(chunks: readonly [number, number][], stale: number[] | null, at: number) {
@@ -599,23 +617,28 @@ export class Game {
     const w = this.cgWait, g = this.contourGrid(); if (!w || !g) return;
     this.cgWait = null; this.cgJob = true;
     const chunks: number[] = []; for (const k of w.chunks) chunks.push(Math.floor(k / 4096), k % 4096);
-    this.contour.chunks({ chunks, looks: this.courseLooks(), now: this.growMonth(), lines: [...this.holeLines()] }, (out, ms) => {
+    const now = this.growMonth();
+    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()] }, (out, ms) => {
       this.perf.courseJobMs = ms; this.perf.courseJobChunks = chunks.length / 2;
       const t0 = performance.now();
       this.cgJob = false;
-      if (this.courseGrid) this.applyChunks(out, w.stale, w.at); // a reset forgets the job (drop), a grown grid keeps its results
+      if (this.courseGrid) this.applyChunks(out, w.stale, w.at, now); // a reset forgets the job (drop), a grown grid keeps its results
       if (this.cgWait) this.runChunks();
       this.cMs += performance.now() - t0;
     });
     this.cgSentAt = performance.now();
   }
   /** a chunk job's results onto the ground: each patch (or its drop), the box it changed, its grow key; the lag after the first change */
-  private applyChunks(out: readonly CourseChunkOut[], stale: number[] | null, at: number) {
+  private applyChunks(out: readonly CourseChunkOut[], stale: number[] | null, at: number, now: number) {
     for (const o of out) {
       const key = courseKey(o.cx, o.cy);
       if (o.patch) {
+        // an edit re-bakes only its box, unless the chunk's grow-in moved on since it was last baked whole: then all of it, or the cells
+        // outside the box kept the old month's look while the grow key (now this month's) told the month tick there was nothing to redo
+        const was = this.cgSent.get(key), whole = !stale || (was !== undefined && !growStatic(was) && this.cgBaked.get(key) !== now);
         this.setLotGround(key, [o.patch]); this.cgSent.set(key, o.grow);
-        if (stale) { const b = this.lotStale.get(key); this.lotStale.set(key, b ? [Math.min(b[0], stale[0]!), Math.min(b[1], stale[1]!), Math.max(b[2], stale[2]!), Math.max(b[3], stale[3]!)] : [stale[0]!, stale[1]!, stale[2]!, stale[3]!]); }
+        if (whole) this.cgBaked.set(key, now);
+        else if (stale) { const b = this.lotStale.get(key); this.lotStale.set(key, b ? [Math.min(b[0], stale[0]!), Math.min(b[1], stale[1]!), Math.max(b[2], stale[2]!), Math.max(b[3], stale[3]!)] : [stale[0]!, stale[1]!, stale[2]!, stale[3]!]); }
       } else if (this.cgSent.has(key)) { this.setLotGround(key, null); this.cgSent.delete(key); }
     }
     this.perf.courseLagMs = performance.now() - at;
@@ -720,7 +743,7 @@ export class Game {
   private dropCourseGrid() {
     for (const k of this.cgSent.keys()) this.setLotGround(k, null);
     this.contour.drop(); this.areaWorker.drop(); this.cgJob = false; this.cgWait = null; this.gaJob = false; this.gaAgain = false; this.gaMarkers = null;
-    this.cgSent.clear(); this.cgDirty = null; this.courseGrid = null; this.gaByHole.clear(); this.gaDirty = null; this.gaRev++; this.gaList = []; this.gaVer++; this.caCache = null; this.gridSaveCache = null;
+    this.cgSent.clear(); this.cgBaked.clear(); this.cgDirty = null; this.courseGrid = null; this.gaByHole.clear(); this.gaDirty = null; this.gaRev++; this.gaList = []; this.gaVer++; this.caCache = null; this.gridSaveCache = null;
     this.contourGrid();
   }
   /** the month tick: the chunks whose grow key changed (a seeded cell reached its next quarter) are sent again (whole chunks re-bake) */
@@ -1745,6 +1768,7 @@ export class Game {
     this.syncGolfProps();
     this.tagCourseHoles();
     this.setupCourseGrid(); // after the tags: an old save's golf areas move into the grid with their holes
+    this.paint.newGame(); // the New hole wizard numbers from this game's holes (the last game's plan and number went in reset or load)
     }
     golfProps = new Map<string, Prop>();
     golfStructureProps = new Map<number, Prop>();
