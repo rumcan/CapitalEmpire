@@ -96,7 +96,8 @@ import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLig
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
 import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale } from './newart';
-import { atlasMip0 } from './sizes';
+import { webpSource } from './atlas-gl';
+import { neededLevel, type PageWant } from './atlas-pages';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -279,15 +280,16 @@ export class Game {
   ground: GroundCache;
   /** lot ground edits made since the last frame (key -> patches, or null to drop), sent as one message per frame */
   private lotPending = new Map<string, LotPatch[] | null>();
-  /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
-  pageImages: HTMLImageElement[] = [];
   /** the atlas pages at full size (mip 0), loaded on first use for the 2D previews (the business ghost), so a preview is never drawn from mip 1 */
   private pageFull = new Map<number, HTMLImageElement>();
   private pageImage0(page: number): HTMLImageElement | null {
     let im = this.pageFull.get(page); if (!im) { im = new Image(); im.src = ATLAS_PAGES[page]![0]!; this.pageFull.set(page, im); }
     return im.complete && im.naturalWidth ? im : null;
   }
-  private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
+  /** each atlas page's alpha at mip 2 (512 px), for picking a prop by its pixels */
+  private pageAlpha: ({ w: number; h: number; data: Uint8Array } | null)[] = [];
+  /** T080 atlas streaming (streamAtlas): screen px per cell this frame, the cells marked, the near cells (rebuilt every few frames) */
+  private atlasMark = new Float32Array(0); private atlasTouched: number[] = []; private atlasNear: PageWant[] = []; private atlasNearAt = -1e9;
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
@@ -370,7 +372,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -930,13 +932,21 @@ export class Game {
     if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; this.sandboxUnlock = false; }
     this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney); // before the terrain: the city worker reads its options from the first messages
     this.resize();
-    // mip 0 on every screen above 1x: at the closest zoom a dpr-1.25 screen needs 0.375 device px per display px, more than mip 1 holds (0.3), so
-    // without it every sprite drawn at its pixel limit would be stretched 1.25x (the owner, 2026-10-24: nothing painted blurry or pixelated)
-    const atlas = this.gl.loadAtlas(atlasMip0(this.dpr));
-    this.pageImages = await Promise.all(ATLAS_PAGES.map(row => new Promise<HTMLImageElement>(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(im); im.src = row[1]; })));
-    this.pageAlpha = this.pageImages.map(im => { const w = Math.max(1, im.naturalWidth >> 1), h = Math.max(1, im.naturalHeight >> 1), c = new OffscreenCanvas(w, h), g = c.getContext('2d', { willReadFrequently: true })!; g.drawImage(im, 0, 0, w, h); return { w, h, data: g.getImageData(0, 0, w, h).data }; });
+    // the atlas within GAME-PLAN's GPU budget (T080, atlas-pages.ts): a coarse mip of every page resident, the finer mips streamed per cell
+    // as the view needs them; mip 0 on every screen above 1x (sizes.ts atlasMip0: at the closest zoom a dpr-1.25 screen needs 0.375 device px
+    // per display px, more than mip 1 holds; the owner, 2026-10-24: nothing painted blurry or pixelated)
+    const atlas = this.gl.initAtlas(this.dpr, webpSource(ATLAS_PAGES));
+    // the alpha for picking, from mip 2 (the old mip-1 images halved): no page kept decoded as an image
+    this.pageAlpha = await Promise.all(ATLAS_PAGES.map(async row => {
+      try {
+        const b = await createImageBitmap(await (await fetch(row[2]!)).blob()), w = b.width, h = b.height, g = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true })!;
+        g.drawImage(b, 0, 0); b.close();
+        const rgba = g.getImageData(0, 0, w, h).data, data = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) data[i] = rgba[i * 4 + 3]!;
+        return { w, h, data };
+      } catch { return null; }
+    }));
     tick(0.3);
-    await atlas; tick(0.5); if (this.dead) return;
+    await atlas; this.perf.atlasMB = (this.gl.atlas?.bytes ?? 0) / 1048576; tick(0.5); if (this.dead) return;
     const read = opts.bench ? null : await readSave(); if (this.dead) return;
     const save = read?.save ?? null;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
@@ -2440,7 +2450,7 @@ export class Game {
       if (!a) return p;
       let u = (X - r[0]) / (r[2] - r[0]); if (p.flip) u = 1 - u;
       const v = (Y - r[1]) / (r[3] - r[1]), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
-      if (a.data[(py * a.w + px) * 4 + 3] > 20) return p;
+      if (a.data[py * a.w + px]! > 20) return p;
     }
     return null;
   }
@@ -3972,6 +3982,49 @@ export class Game {
   /** a hook for the benchmark's camera path */
   onFrame: ((now: number, dt: number) => void) | null = null;
 
+  /** T080: tell the atlas which cells this frame draws (on screen, weighted by their screen px) and which are near the view (the prepared
+   *  sprite tiles within half a screen around it, every few frames), at the mip the zoom needs; atlas-pages.ts streams them, finest wants and
+   *  most pixels first. Past the zoom where the always-resident low set suffices nothing streams. */
+  private streamAtlas(stream: Float32Array, floats: number, X0: number, Y0: number, X1: number, Y1: number) {
+    const a = this.gl.atlas; if (!a) return;
+    const P = a.plan, need = neededLevel(this.cam.z, this.dpr, P), G = P.grid, ze = this.cam.z * this.dpr;
+    if (need >= P.lowBase) { a.want([]); this.perf.atlasSoft = 0; return; }
+    if (this.atlasMark.length !== P.pages * G * G) this.atlasMark = new Float32Array(P.pages * G * G);
+    const mark = this.atlasMark, touched = this.atlasTouched; touched.length = 0;
+    const cell = (u0: number, v0: number, u1: number, v1: number, p: number, px: number) => {
+      const gx0 = Math.max(0, Math.floor(Math.min(u0, u1) * G)), gx1 = Math.min(G - 1, Math.floor(Math.max(u0, u1) * G));
+      const gy0 = Math.max(0, Math.floor(Math.min(v0, v1) * G)), gy1 = Math.min(G - 1, Math.floor(Math.max(v0, v1) * G)), share = px / ((gx1 - gx0 + 1) * (gy1 - gy0 + 1));
+      for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) { const u = (p * G + gy) * G + gx; if (mark[u] === 0) touched.push(u); mark[u] += share; }
+    };
+    for (let o = 0; o < floats; o += SPRITE_STRIDE) {
+      if (!(stream[o + 9]! > 0)) continue; // hidden
+      // the part of the picture on screen: its rect clipped to its tile and the view, in its uv rect
+      const x0 = stream[o]!, y0 = stream[o + 1]!, x1 = stream[o + 2]!, y1 = stream[o + 3]!, w = x1 - x0, h = y1 - y0;
+      const cx0 = Math.max(x0, stream[o + 12]!, X0), cy0 = Math.max(y0, stream[o + 13]!, Y0), cx1 = Math.min(x1, stream[o + 14]!, X1), cy1 = Math.min(y1, stream[o + 15]!, Y1);
+      if (cx1 <= cx0 || cy1 <= cy0 || w <= 0 || h <= 0) continue;
+      const u0 = stream[o + 4]!, v0 = stream[o + 5]!, du = stream[o + 6]! - u0, dv = stream[o + 7]! - v0;
+      cell(u0 + du * (cx0 - x0) / w, v0 + dv * (cy0 - y0) / h, u0 + du * (cx1 - x0) / w, v0 + dv * (cy1 - y0) / h, stream[o + 8]!, (cx1 - cx0) * (cy1 - cy0) * ze * ze);
+    }
+    const wants: PageWant[] = new Array(touched.length);
+    for (let i = 0; i < touched.length; i++) { const u = touched[i]!; wants[i] = { unit: u, level: need, onScreen: true, weight: mark[u]! }; mark[u] = 0; }
+    touched.length = 0;
+    // near the view, one mip coarser: the prepared tiles within half a screen around it (one more tile prepared per pass)
+    if (need + 1 >= P.lowBase) this.atlasNear = [];
+    else if (this.perf.frames - this.atlasNearAt >= 10) {
+      this.atlasNearAt = this.perf.frames; const hw = (X1 - X0) / 2, hh = (Y1 - Y0) / 2;
+      this.sprites.visit(X0 - hw, Y0 - hh, X1 + hw, Y1 + hh, (s, o) => {
+        if (!(s[o + 9]! > 0) || s[o + 2]! < X0 - hw || s[o]! > X1 + hw || s[o + 3]! < Y0 - hh || s[o + 1]! > Y1 + hh) return;
+        cell(s[o + 4]!, s[o + 5]!, s[o + 6]!, s[o + 7]!, s[o + 8]!, (s[o + 2]! - s[o]!) * (s[o + 3]! - s[o + 1]!) * ze * ze);
+      }, 1);
+      this.atlasNear = touched.map(u => { const w: PageWant = { unit: u, level: need + 1, onScreen: false, weight: mark[u]! }; mark[u] = 0; return w; });
+      touched.length = 0;
+    }
+    a.want(this.atlasNear.length ? wants.concat(this.atlasNear) : wants);
+    // the readout: the share of this frame's on-screen sprite px drawn coarser than the view needs (streaming in, or no slot left)
+    let soft = 0, total = 0; for (const w of wants) { total += w.weight!; if (a.pages.levelOf(w.unit) > need) soft += w.weight!; }
+    this.perf.atlasSoft = total ? soft / total : 0;
+  }
+
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
@@ -4024,6 +4077,7 @@ export class Game {
       const movers = tier === 'street' && this.peds.n ? cars.concat(this.pedMovers(bx0, by0, bx1, by1)) : cars;
       this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
+      this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);
       // car lights (night): lamps and beam glows of the cars in the same box, uploaded with the sprites
       const tr = this.traffic, lightOn = !!tr && cam.z >= 0.08;
       if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
@@ -4037,6 +4091,7 @@ export class Game {
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }
+    this.gl.atlas?.pump();
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);
     this.syncParkCars(now);
     this.drawOverlay(now);

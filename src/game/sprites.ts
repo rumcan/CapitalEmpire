@@ -134,6 +134,15 @@ export class SpriteTiles {
     t.buckets = new Map();
     for (let i = 0; i < n; i++) { const o = i * 4; for (let gx = Math.floor(t.rects[o] / BUCKET); gx <= Math.floor(t.rects[o + 2] / BUCKET); gx++) for (let gy = Math.floor(t.rects[o + 1] / BUCKET); gy <= Math.floor(t.rects[o + 3] / BUCKET); gy++) { const k = gx * 65536 + gy; let l = t.buckets.get(k); if (!l) t.buckets.set(k, (l = [])); l.push(i); } }
   }
+  /** every packed instance of the tiles touching a world-px box: fn(packed, offset of the instance, SPRITE_STRIDE floats). Tiles not
+   *  prepared yet are skipped, except the first `prepare` of them (T080: the atlas cells near the view, without sorting every tile there) */
+  visit(X0: number, Y0: number, X1: number, Y1: number, fn: (packed: Float32Array, o: number) => void, prepare = 0) {
+    for (let j = Math.floor(Y0 / CHUNK_H); j <= Math.floor(Y1 / CHUNK_H); j++) for (let i = Math.floor(X0 / CHUNK_W); i <= Math.floor(X1 / CHUNK_W); i++) {
+      const t = this.tiles.get(tkey(i, j)); if (!t) continue;
+      if (!t.order) { if (prepare <= 0) continue; prepare--; this.prepare(t); }
+      for (let o = 0; o < t.packed.length; o += SPRITE_STRIDE) fn(t.packed, o);
+    }
+  }
   private ensure(floats: number, shadows: number) {
     if (floats > this.stream.length) { const s = new Float32Array(Math.max(floats, this.stream.length * 2)); s.set(this.stream); this.stream = s; }
     if (shadows > this.shadowStream.length) { const s = new Float32Array(Math.max(shadows, this.shadowStream.length * 2)); s.set(this.shadowStream); this.shadowStream = s; }

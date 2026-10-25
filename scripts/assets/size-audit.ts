@@ -4,7 +4,7 @@
 //     --outfile=output/size-audit/size-audit.mjs --log-level=warning && node output/size-audit/size-audit.mjs [--json output/size-audit/audit.json]
 // The closest zoom is ZOOM_MAX (0.3 CSS px per world px): a screen of device pixel ratio dpr needs 0.3 dpr device px per display px of a sprite
 // drawn at scale 1. The atlas holds R atlas px per display px in mip 0 (its tex size over its quad) and R/2 in mip 1, which a screen at 1x uses
-// alone (gl.ts loadAtlas; engine.ts loads mip 0 on every screen above 1x). A sprite drawn at scale s is stretched 0.3 dpr s / held: above 1 (plus
+// alone (atlas-pages.ts: the finest mip a 1x screen streams; mip 0 on every screen above 1x). A sprite drawn at scale s is stretched 0.3 dpr s / held: above 1 (plus
 // the 2% rounding slack) it pixelates. Checked at dpr 1, 1.25, 1.5 and 2.
 // The draw paths (each with its own size rule, as the game has it), every one through newart.ts lookOf as sprites.ts draws it:
 //   composer   the Lot Composer over a street grid (every use, level and decline, several seeds)
