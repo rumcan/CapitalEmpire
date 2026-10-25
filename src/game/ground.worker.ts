@@ -12,6 +12,7 @@ import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-s
 import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
+import { lawnSlot, lawnTex } from './painted-surfaces';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
@@ -62,7 +63,8 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'textures': restore(tex, m.snap); texReady(); gotTextures?.(); break;
-      case 'grassArt': tex.paintedOn = m.art !== 'photo'; painter.resetPlanColours(); break;
+      case 'grassArt': tex.setPaintedOn(m.art !== 'photo'); painter.resetPlanColours(); break;
+      case 'surfaces': tex.setSurfaces(m.file); painter.resetPainted(); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
@@ -95,22 +97,24 @@ const handle = async (m: ToWorker) => {
         if (m.kind !== 'p') {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
           const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
-          const need = new Set<string>(['grass', 'meadow', 'outside']);
+          const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>();
           // the living ground's painted variant sets (T111), when their art is in the game
           if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
           for (const p of painter.lotsIn(box)) {
             need.add(p.tex);
             if (p.paint?.b) need.add(p.paint.bt);
             if (p.paint?.m) need.add(p.paint.m.t);
-            if (p.course) for (const l of p.course.layers) { need.add(l.tex); if (l.collar) need.add(l.collar.tex); }
+            if (p.course) { for (const l of p.course.layers) for (const t of [l, ...(l.collar ? [l.collar] : [])]) { need.add(t.tex); if (t.m) need.add(t.m.t); } if (p.course.walls?.length) for (const w of WALL_TEX) near.add(w); }
+            // a town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot), picked by where it lies
+            if (p.lawn && tex.paintedOn) { const k = lawnSlot(p.pts, tex.surfaces.lawns); if (k >= 0) need.add(lawnTex(k)); }
           }
           if (painter.grassStrength > 0 && !painter.grassHeat) {
             for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
               const cell = painter.grassCells.get(y * (MAP / 4) + x); if (cell) need.add(cell.material);
             }
           }
-          await tex.preparePainted(m.artL ?? m.L, need);
-        } else await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']);
+          await tex.preparePainted(m.artL ?? m.L, need, near);
+        } else { await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX]); }
         // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
         if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;

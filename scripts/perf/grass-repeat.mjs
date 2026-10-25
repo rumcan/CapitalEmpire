@@ -6,7 +6,9 @@
 //   - the brush strokes' direction: how parallel they run across the whole view (viewCoherence, spread) and r along them 12 m and 24 m on;
 // each on the ground as baked and on its detail alone (a 6 m blur subtracted, so the slow colour drift cannot hide or fake a repeat).
 // Fails (exit 1) when a painted level's r at its period, or its detail's second peak, passes LIMIT (0.2; a repeat gives 0.8 to 1). The photo grass is measured too (--photo), for the record.
-//   node scripts/perf/grass-repeat.mjs [url of a dev server, default http://127.0.0.1:5341/] [--photo] [--dpr 2] [--shots dir] [--size 2048] [--limit 0.2]
+// --families all (or a comma list of painted-families.json ids) lays each family on the open ground in turn (as painted: no tint, tone or scale)
+// and measures it at every zoom; without it, the map grass as the game has it (painted-surfaces.json).
+//   node scripts/perf/grass-repeat.mjs [url of a dev server, default http://127.0.0.1:5341/] [--photo] [--dpr 2] [--shots dir] [--size 2048] [--limit 0.2] [--families all|id,...] [--zooms 0.3,0.15]
 import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,7 +17,7 @@ import sharp from 'sharp';
 const args = process.argv.slice(2), opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const base = (args.find(a => a.startsWith('http')) ?? 'http://127.0.0.1:5341/').replace(/\/?$/, '/');
 const LOBE = 0.1, dpr = +opt('dpr', '2'), SIZE = +opt('size', '2048'), shots = opt('shots', ''), LIMIT = +opt('limit', '0.2');
-const ZOOMS = [0.3, 0.2, 0.15, 0.1, 0.075, 0.05, 0.035];
+const ZOOMS = opt('zooms', '') ? opt('zooms', '').split(',').map(Number) : [0.3, 0.2, 0.15, 0.1, 0.075, 0.05, 0.035];
 const arts = args.includes('--photo') ? ['painted', 'photo'] : ['painted'];
 
 const lumOf = async png => { const { data, info } = await sharp(png).removeAlpha().raw().toBuffer({ resolveWithObject: true }); const n = info.width * info.height, L = new Float64Array(n); for (let i = 0; i < n; i++) L[i] = 0.3 * data[i * 3] + 0.59 * data[i * 3 + 1] + 0.11 * data[i * 3 + 2]; return { L, W: info.width, H: info.height }; };
@@ -95,21 +97,24 @@ try {
   page.on('pageerror', e => console.log('[pageerror]', e.message));
   await page.goto(base + 'scripts/perf/grass-repeat.html');
   await page.waitForFunction(() => window.probeReady, null, { timeout: 180000 }); await page.evaluate(() => window.probeReady);
-  for (const art of arts) for (const zoom of ZOOMS) {
-    const res = await page.evaluate(o => window.probe(o), { zoom, dpr, art, size: SIZE });
+  const famArg = opt('families', ''), all = await page.evaluate(() => window.families);
+  const fams = !famArg ? [null] : famArg === 'all' ? all.map(f => f.id) : famArg.split(',');
+  for (const family of fams) for (const art of family ? ['painted'] : arts) for (const zoom of ZOOMS) {
+    const res = await page.evaluate(o => window.probe(o), { zoom, dpr, art, size: SIZE, look: family ? { family } : null });
     const png = Buffer.from(res.png, 'base64');
-    if (shots) { fs.mkdirSync(shots, { recursive: true }); fs.writeFileSync(path.join(shots, `repeat-${art}-${String(zoom * 1000).padStart(3, '0')}.png`), png); }
+    if (shots) { fs.mkdirSync(shots, { recursive: true }); fs.writeFileSync(path.join(shots, `repeat-${family ?? art}-${String(Math.round(zoom * 1000)).padStart(3, '0')}.png`), png); }
     const { L: lum, W, H } = await lumOf(png), L = res.L, pxPerM = 35.78 * L, hp = blur(lum, W, H, Math.max(1, Math.round(6 * pxPerM)));
     const detail = lum.map((v, i) => v - hp[i]);
-    const P = res.period, lagsAt = n => [[P * n, 0], [0, P * n], [P * n, P * n]].map(([tx, ty]) => [Math.round((tx - ty) * 64 * L), Math.round((tx + ty) * 32 * L)]);
-    const at = img => Math.max(...[1, 2].flatMap(n => lagsAt(n).map(([dx, dy]) => pearson(img, W, H, dx, dy))).filter(Number.isFinite));
+    // every level the zoom blends: its period and twice it, along both tile axes and the diagonal (a lag past the window is left out)
+    const lagsAt = (P, n) => [[P * n, 0], [0, P * n], [P * n, P * n]].map(([tx, ty]) => [Math.round((tx - ty) * 64 * L), Math.round((tx + ty) * 32 * L)]);
+    const at = img => Math.max(-1, ...res.periods.flatMap(P => [1, 2].flatMap(n => lagsAt(P, n).map(([dx, dy]) => pearson(img, W, H, dx, dy)))).filter(Number.isFinite));
     const minLag = 12 * pxPerM, pkRaw = peakSearch(lum, W, H, minLag), pkDet = peakSearch(detail, W, H, minLag);
     let sd = 0, mu = 0; for (const v of lum) mu += v / lum.length; for (const v of lum) sd += (v - mu) ** 2 / lum.length;
     // the streaks, and the autocorrelation along them 12 m and 24 m on (a streak running on across the view keeps r high there): the lag is m
     // metres along the streak on the ground, as screen px
     const st = streaks(detail, W, H, Math.max(16, Math.round(8 * pxPerM))), ang = st.streak * Math.PI / 180;
     const along = m => { const tx = Math.cos(ang) * m / 2, ty = Math.sin(ang) * m / 2; return pearson(detail, W, H, Math.round((tx - ty) * 64 * L), Math.round((tx + ty) * 32 * L)); };
-    const row = { art, zoom, artL: res.artL, L, period: art === 'painted' ? `${P * 2} m` : '-', rAtPeriod: art === 'painted' ? +at(lum).toFixed(3) : null, rAtPeriodDetail: art === 'painted' ? +at(detail).toFixed(3) : null,
+    const row = { family: family ?? '(game)', art, zoom, artL: res.artL, L, levels: res.levels, period: art === 'painted' ? res.periods.map(P => `${+(P * 2).toFixed(1)} m`).join(' + ') : '-', rAtPeriod: art === 'painted' ? +at(lum).toFixed(3) : null, rAtPeriodDetail: art === 'painted' ? +at(detail).toFixed(3) : null,
       peak: +pkRaw.r.toFixed(3), peakLag: lagTiles(pkRaw.dx, pkRaw.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', peakDetail: +pkDet.r.toFixed(3), peakDetailLag: lagTiles(pkDet.dx, pkDet.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', lobeDetail: Math.round(pkDet.lobe / pxPerM) + ' m', ...st, rAlong12m: +along(12).toFixed(3), rAlong24m: +along(24).toFixed(3), lumStd: +Math.sqrt(sd).toFixed(1), msPerChunk: res.msPerChunk };
     // the verdict: r at the blend's period (as baked and detail only) and the detail's second peak at any lag. The second peak as baked is
     // reported but not judged: the drift's 56-160 m waves give the estimate a +-0.2 noise at long lags over a window only a few waves wide

@@ -1,5 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
+import { lookChanged } from './course-look';
 import { BORDER_TEXES, BRUSH_PRESETS, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
@@ -349,9 +350,9 @@ export class PaintTool {
       let changed = false;
       for (const a of this.areas) if (a.hole === this.brushHole && a.kind === k) { Object.assign(a, this.brush[k].style); this.send(a); changed = true; }
       if (changed) this.host.save();
-      // the grid's surfaces wear the brush looks (texture, scale, angle; not the tone): its chunks are drawn again only when one of those changed
-      const st = this.brush[k].style;
-      if (this.courseGrid() && (st.tex !== was.tex || st.scale !== was.scale || st.angle !== was.angle)) this.host.courseLook?.();
+      // the grid's surfaces wear the brush looks (course-look.ts: the fill's texture, scale, angle, tone and blend, the band's texture, scale,
+      // angle and tone): its chunks are drawn again when one of those changed (throttled while a slider is dragged)
+      if (this.courseGrid() && lookChanged(this.brush[k].style, was)) this.lookSoon();
     }
     this.host.emit();
   }

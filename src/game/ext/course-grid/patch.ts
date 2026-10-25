@@ -32,7 +32,11 @@ export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water
  *  Border and Shadow, both by surface id: each surface's collar band width in metres (the Border slider; a missing one keeps BLOB_STYLE's)
  *  and the Shadow of its walls (0 none .. 1 strong; a missing one: course-walls defaultShadow, none for a green, else the hairline) */
 export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>;
-  border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[] }
+  border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[];
+  /** each surface's own collar look by surface id (the course look's Border texture, scale, angle and tone; a missing one: collar by name) */
+  band?: readonly (CourseTex | undefined)[] }
+/** a course texture's fields alone (a look may carry more) */
+const texOf = (t: CourseTex): CourseTex => ({ tex: t.tex, sc: t.sc, a: t.a, ...(t.t ? { t: t.t, ta: t.ta ?? 0, tc: t.tc ?? '#000000' } : {}), ...(t.m ? { m: { ...t.m } } : {}) });
 
 /** BLOB_STYLE with the collars at the widths of `border` (metres = cells, by surface id; clamped to the Border slider's range; a missing or
  *  bad entry keeps the default width) */
@@ -133,9 +137,9 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles);
   for (const { o, se: [fill, edges], ce } of capped) {
     const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
-    const L: CourseLayer = { s: o.surf, tex: look.tex, sc: look.sc, a: look.a, e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
+    const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
     const col = styles[o.surf]?.collar;
-    if (ce && col) { const cl = looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, tex: cl.tex, sc: cl.sc, a: cl.a, w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []) }; }
+    if (ce && col) { const cl = looks.band?.[o.surf] ?? looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, ...texOf(cl), w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []) }; }
     if (o.surf === 4 && lines?.size && o.fill.length) {
       const holes = holesIn(g, cx, cy, o.surf), st: { hole: number; line: number[] }[] = [];
       for (const h of holes) { const l = lines.get(h); if (l && l.length >= 4) st.push({ hole: h, line: l.slice() }); }

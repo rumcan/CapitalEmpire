@@ -10,6 +10,7 @@ import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
 import type { EdgeProfile } from './paint-edges';
 import type { GrassArt } from './painted-grass-lod';
+import type { SurfacesFile } from './painted-surfaces';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone filter over the fill: t 1 Multiply (darker) or 2 Lighten (screen),
@@ -17,8 +18,10 @@ import type { GrassArt } from './painted-grass-lod';
 export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string;
   /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile }
 
-/** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin) */
-export interface CourseTex { tex: string; sc: number; a: number }
+/** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin);
+ *  and the rest of the course look (the brush's style, course-look.ts): its tone (t: 1 Multiply, 2 Screen of the tint tc at strength ta) and
+ *  its blend with a second texture in soft patches (m: the texture, share s, softness f, patch size p; the painted areas' Blend with) */
+export interface CourseTex { tex: string; sc: number; a: number; t?: 1 | 2; ta?: number; tc?: string; m?: { t: string; s: number; f: number; p: number } }
 /** one surface of a course chunk (plan P21 sections 3.2 to 3.4, T078), all coordinates flat x0 y0 x1 y1 ... in tiles:
  *  (rings and polylines are Float32Arrays, so a patch posts and clones as plain memory)
  *  - `fill`: closed rings clipped to the chunk box grown by 0.1 tile (filled even-odd; neighbouring chunks overlap, so no seam shows);
@@ -102,6 +105,8 @@ export type ToWorker =
   | { t: 'textures'; snap: TexSnapshot }
   /** the game's Grass setting changed (painted or photo): every chunk is baked again */
   | { t: 'grassArt'; art: GrassArt }
+  /** which painted family each surface wears (painted-surfaces.ts): after init, and again whenever the studio saves the file */
+  | { t: 'surfaces'; file: SurfacesFile }
   | { t: 'net'; ops: NetOp[] }
   | { t: 'lamps'; pts: Float32Array }
   | { t: 'terrain'; cls: Uint8Array; height: Float32Array; waters: Waterway[] }

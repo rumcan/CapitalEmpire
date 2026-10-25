@@ -4,7 +4,8 @@
 <body>
 <!-- The no-repeat check's page (scripts/perf/grass-repeat.mjs opens it on a dev server): the game's own ground painter bakes an open, flat,
      all-grass piece of ground (no roads, lots, trees, map decals or stripes) at a camera zoom, stitched from its chunks, and hands it back as
-     a PNG. window.probe({ zoom, dpr, art: 'painted' | 'photo', x, y, size }) -->
+     a PNG. The map grass wears the look asked for (a painted family, its version and scale: painted-families.ts), else the game's own.
+     window.probe({ zoom, dpr, art: 'painted' | 'photo', x, y, size, look }) -->
 <script type="module">
 import { Textures } from '/src/game/textures.ts';
 import { GroundPainter } from '/src/game/renderer.ts';
@@ -12,8 +13,10 @@ import { RoadNetwork } from '/src/game/network.ts';
 import { GROUND_ART } from '/src/game/ground-art.ts';
 import { withBaseGrass } from '/src/game/base-grass-saved.ts';
 import { withPresets } from '/src/game/paint-presets-saved.ts';
-import { blendMetres, grassDetailWeights, grassZoomLevels } from '/src/game/painted-grass-lod.ts';
-import { PAINTED_GRASS } from '/src/game/painted-grass-art.ts';
+import { grassZoomLevels } from '/src/game/painted-grass-lod.ts';
+import { FAMILIES } from '/src/game/painted-families.ts';
+import { clampSurfaces } from '/src/game/painted-surfaces.ts';
+import { paintedSurfaces } from '/src/game/painted-surfaces-live.ts';
 import { CHUNK_H, CHUNK_W, MAP, MID_K } from '/src/game/iso.ts';
 import { HS } from '/src/game/terrain/types.ts';
 
@@ -22,9 +25,13 @@ const ready = tex.build(art);
 const painter = new GroundPainter(new Uint8Array(MAP * MAP), new RoadNetwork(), tex);
 painter.setTerrain(new Uint8Array(MAP * MAP), new Float32Array(HS * HS), []);
 painter.drawDressing = () => {}; // the map decals are not the grass texture
-window.probe = async ({ zoom, dpr = 2, art: grassArt = 'painted', x = 1024, y = 1024, size = 2048 }) => {
+window.families = FAMILIES.map(f => ({ id: f.id, kind: f.kind, legacy: !!f.legacy }));
+window.probe = async ({ zoom, dpr = 2, art: grassArt = 'painted', x = 1024, y = 1024, size = 2048, look = null }) => {
   await ready;
-  tex.configure({ ...art, grassArt }); painter.resetPlanColours();
+  tex.configure({ ...art, grassArt });
+  const file = paintedSurfaces();
+  tex.setSurfaces(look ? clampSurfaces({ ...file, surfaces: { ...file.surfaces, base: { version: null, scale: 1, tint: '#ffffff', tone: 0, ...look } } }) : file);
+  painter.resetPainted();
   const { district, artL, rasterL: L } = grassZoomLevels(zoom, dpr), k = district ? MID_K : 1, CW = CHUNK_W * k, CH = CHUNK_H * k;
   await tex.preparePainted(artL, ['grass']);
   // a size x size px window (at the chunk's bake density) centred on tile (x, y), stitched from the chunks under it
@@ -37,8 +44,9 @@ window.probe = async ({ zoom, dpr = 2, art: grassArt = 'painted', x = 1024, y = 
   }
   const ms = (performance.now() - t0) / n, blob = await out.convertToBlob({ type: 'image/png' }), buf = new Uint8Array(await blob.arrayBuffer());
   let s = ''; for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-  const period = blendMetres(PAINTED_GRASS.grass, grassDetailWeights(artL).map(w => w.detail)) / 2;
-  return { png: btoa(s), artL, L, district, period, chunks: n, msPerChunk: +ms.toFixed(1) };
+  // the periods (tiles) of the levels this zoom blends: a repeat of any of them must not show
+  const p = tex.paintedOf('grass'), periods = p ? tex.paintedWeights(p).map(w => p[w.detail].metres / 2) : [];
+  return { png: btoa(s), artL, L, district, periods, levels: p ? tex.paintedWeights(p).map(w => `${w.detail} ${Math.round(w.weight * 100)}%`).join(' + ') : 'photo', chunks: n, msPerChunk: +ms.toFixed(1) };
 };
 window.probeReady = ready.then(() => true);
 </script>

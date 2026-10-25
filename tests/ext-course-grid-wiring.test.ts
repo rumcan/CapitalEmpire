@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SURF, encodeGrid, makeGrid, paintDisc, type Grid, type GridDiff } from '../src/game/ext/course-grid';
 import { isCourseArea, loadCourseGrid, migrateAreas } from '../src/game/ext/course-grid/migrate';
-import { PaintTool, type PaintHost, type PropJournal } from '../src/game/paint-tool';
+import { LOOK_MS, PaintTool, type PaintHost, type PropJournal } from '../src/game/paint-tool';
 import { BRUSH_PRESETS, DEFAULT_STYLE, clampStyle, fromTuples, toTuple, type PaintArea, type PaintTuple } from '../src/game/paint';
 import { normalizeGolfSave, type GolfSave } from '../src/game/golf/mode';
 
@@ -88,14 +88,16 @@ test('3. rub out keeps to the current hole', () => {
   assert.deepEqual(at(60, 50), [SURF.fairway, 2], "hole 2's fairway untouched");
 });
 
-test('4. the course is re-sent only when a look (texture, scale, angle) changes, not for a tone or tint', () => {
+test('4. every look control re-sends the course (the tone, tint, blend and border too: course-look.ts), at most once per LOOK_MS while dragged', async () => {
   const { log, tool } = world();
   tool.enterCourse(); tool.setBrush('green');
-  tool.setStyle({ toneAmt: 0.5 }); tool.setStyle({ tint: '#336699' });
-  assert.equal(log.looks, 0, 'tone and tint: nothing re-sent');
-  tool.setStyle({ scale: 1.5 });
-  assert.equal(log.looks, 1, 'scale: re-sent');
+  tool.setStyle({ radius: 2 });
+  assert.equal(log.looks, 0, 'the corners are no look: nothing re-sent');
+  tool.setStyle({ tone: 1 });
+  assert.equal(log.looks, 1, 'the tone: re-sent at once');
   const other = BRUSH_PRESETS.find(b => b.kind === 'fairway')!.style.tex;
-  tool.setStyle({ tex: other }); tool.setStyle({ angle: 30 });
-  assert.equal(log.looks, 3);
+  tool.setStyle({ tint: '#336699' }); tool.setStyle({ mtex: other }); tool.setStyle({ btex: other });
+  assert.equal(log.looks, 1, 'more changes inside LOOK_MS wait');
+  await new Promise(r => setTimeout(r, LOOK_MS + 40));
+  assert.equal(log.looks, 2, 'the last one lands');
 });
