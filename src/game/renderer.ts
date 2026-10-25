@@ -1,5 +1,5 @@
 import { CHUNK_H, CHUNK_W, HH, HW, MAP, MID_K, PLAN_H, PLAN_W, mulberry, tileOf } from './iso';
-import { add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
+import { SK, add, linePath, mul, offsetPolyline, perp, roundPieces, roundedPath, sub, vlen, type BBox, type Decal, type Feature, type FxView, type LineRec, type Pt, type RoadNetwork, type SlabRun } from './network';
 import { MOSAIC_TILES, canvas, ctx2d, type C2D, type Cnv, type Textures, type TexName } from './textures';
 import { fbm, maskFrom, smooth } from './canvas2d';
 import { EAGER_PHOTO } from './grass-art';
@@ -23,8 +23,15 @@ import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRe
 import { CH_SIZE, CH_STEP, courseShadeInto } from './ext/course-height';
 import { PaintedGround } from './painted-ground';
 import { trimLru } from './painted-grass-lod';
+import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, waterTex, type Box, type RoadPiece, type WaterLine } from './living-ground';
 /** the chunks whose painted grass a worker keeps composed (about 3 MB each) */
 const COMPOSED_CHUNKS = 8;
+/** the living ground's leaf litter (T111): the chunks whose leaves a worker keeps laid out, the picture's side (px), the tiles it covers and
+ *  the leaves a square metre of it holds (the stochastic layout overlaps its soft patches about two deep, so the ground shows about twice that) */
+const LEAF_CHUNKS = 4, LEAF_PX = 1024, LEAF_PERIOD = 16, LEAF_DENSITY = 2.6;
+/** the lush variant's tint (multiplied over the grass laid over itself: deeper and greener, never a flat colour), and the warm light the derived
+ *  soil is lifted by (screen) */
+const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#5e3e1e', SOIL_WARM = '#f2d4ae';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -95,6 +102,10 @@ export class GroundPainter {
   private edgeNoise = makeNoise(7);
   /** planner colours per texture, computed once */
   private planCols = new Map<string, string>();
+  /** the living ground (T111, living-ground.ts): the casters the engine sent (fences, hedges, walls, trees, bushes, buildings), the gear menu's
+   *  Ground variety and the dev debug view of its influence maps, and the leaf litter (its picture, and the chunks laid with it) */
+  casters = new CasterStore(); living = { on: true, debug: false };
+  private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
   /** forget the planner map's colours (the Grass setting changed: the grass is another picture) */
   resetPlanColours() { this.planCols.clear(); }
   blocks: PlanBlocks = new Float32Array(0);
@@ -384,6 +395,9 @@ export class GroundPainter {
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
     // ---- 1a'''. the course height's sun-right shade over the painted course (T028b), under the car parks and roads
     if (this.courseAny) { const cs = courseShadeRGBA(this.courseShade, tx0, ty0, bw, bh, sres); if (cs) { overlay(ctx, cs, sres); ctx.setTransform(M); } }
+    // ---- 1a''''. the living ground (T111): grass variety from what stands here and its ambient occlusion, over the grass, the lots and the
+    //      painted areas, under the car parks and roads
+    if (this.living.on || this.living.debug) { this.drawLiving(ctx, L, lite, box, M, Minv, W, H, X0, Y0); ctx.setTransform(M); }
     // ---- 1a''. the car parks over the painted areas: their surface, rim and bay lines
     drawLots(parks);
     // ---- 1b. bridge decks under the road: the shadow on the water, the piers, the deck's fascia and top
@@ -608,6 +622,115 @@ export class GroundPainter {
     ctx.fillStyle = pat('outside'); ctx.fill(outside, 'evenodd');
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = Math.max(0.08, minW); ctx.strokeRect(0, 0, MAP, MAP);
     return cv;
+  }
+
+  /** the living ground (T111, living-ground.ts) over a chunk: its influence maps from the casters, roads, hard ground and water within reach,
+   *  then the variants through their masks: lush (the grass multiplied by itself, tinted), thin (the soil lightening the grass's dark gaps, so
+   *  the tufts stay), bare soil and leaf litter, or the painted variant sets (grass-lush, grass-patchy, dirt-bare, leaf-litter) when their art is
+   *  in the game; then the ambient occlusion, a cool multiply over everything (T110: the texture stays, never a flat grey). The lots' hard
+   *  ground, painted areas that are no grass, the course's managed turf and the water keep their look; the debug view shows the maps instead */
+  private drawLiving(ctx: C2D, L: number, lite: boolean, box: BBox, M: DOMMatrix, Minv: DOMMatrix, W: number, H: number, X0: number, Y0: number) {
+    const res = livingRes(L, lite), gb = livingQueryBox(box as Box, res);
+    // ---- the sources within reach: casters, roads and cart paths, hard lot ground and painted areas, water (rivers, creeks, course and painted ponds)
+    const casters = this.casters.query(gb), roads: RoadPiece[] = [], cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2, rr = Math.max(gb[2] - gb[0], gb[3] - gb[1]) / 2 + 6;
+    for (const s of this.net.segsNear({ x: cx, y: cy }, rr)) if (s.kind !== SK.TUNNEL) roads.push({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, hw: s.cls.h + s.cls.walk, cart: !!s.cls.noCars });
+    const lots = this.lotsIn([gb[0] - 2, gb[1] - 2, gb[2] + 2, gb[3] + 2]), paths: ArrayLike<number>[] = [], shores: { pts: ArrayLike<number>; ring?: boolean }[] = [];
+    for (const p of lots) {
+      if (p.course) { for (const l of p.course.layers) if (l.s === COURSE_WATER) for (const e of l.edges) shores.push({ pts: e }); continue; }
+      if (p.top || p.lawn || p.tex === 'marks' || grassyTex(p.tex)) continue;
+      if (waterTex(p.tex)) shores.push({ pts: p.pts, ring: true }); else paths.push(p.pts);
+    }
+    const waters = this.waters.filter(w => w.box[2] >= gb[0] - 4 && w.box[0] <= gb[2] + 4 && w.box[3] >= gb[1] - 4 && w.box[1] <= gb[3] + 4);
+    const rivers: WaterLine[] = waters.map(w => ({ pts: w.w.pts, bank: w.w.kind === 'river' ? 2.6 : 0.4 }));
+    const grid = influence(box, res, { casters, roads, paths, rivers, shores });
+    /** a mask (one px per sample) stretched over g through the chunk transform (bilinear), with the op */
+    const put = (g: C2D, data: Uint8ClampedArray, op: GlobalCompositeOperation) => {
+      const s = this.buffer('livingSmall', grid.w, grid.h); ctx2d(s).putImageData(new ImageData(data as Uint8ClampedArray<ArrayBuffer>, grid.w, grid.h), 0, 0);
+      g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, grid.ix0 / res, grid.iy0 / res, grid.w / res, grid.h / res); g.restore();
+    };
+    if (this.living.debug) { put(ctx, debugImage(grid), 'source-over'); return; }
+    const m = livingMasks(grid);
+    // ---- the ground the variety leaves alone: the lots' hard ground, painted areas that are no grass, the course's managed turf and its
+    //      collars (the pond's bank keeps it), the rivers' and creeks' water
+    const ex: { path: Path2D; rule: CanvasFillRule }[] = [];
+    const rings = (rs: readonly ArrayLike<number>[]) => { const q = new Path2D(); for (const r of rs) ringPath(q, r); ex.push({ path: q, rule: 'evenodd' }); };
+    for (const p of lots) {
+      if (p.course) { for (const l of p.course.layers) { if (!COURSE_GRASSY.has(l.s) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } continue; }
+      if (p.top || p.layby || p.lawn || p.tex === 'marks' || grassyTex(p.tex)) continue;
+      ex.push({ path: polyPath(p.pts), rule: 'nonzero' });
+    }
+    for (const w of waters) { const q = new Path2D(); if (waterShape(q, w.w.pts, 0, box, w.w.kind === 'creek' ? 0.35 : 1)) ex.push({ path: q, rule: 'nonzero' }); }
+    // the variants go onto a copy of the chunk when some ground is left alone (cut out at the end), else straight onto it
+    const V = ex.length ? this.buffer('living', W, H) : null, vg = V ? ctx2d(V) : ctx;
+    if (V) vg.drawImage(ctx.canvas, 0, 0);
+    const lay = (layer: Cnv, op: GlobalCompositeOperation) => { vg.save(); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = op; vg.globalAlpha = 1; vg.drawImage(layer, 0, 0); vg.restore(); };
+    const art = (id: string) => (this.tex.isPainted(id) ? this.paintedBuf(id) : null), T = 0.02;
+    /** the soil: the painted dirt-bare set, else the game's dirt (its photo when built, else the painted screen texture) */
+    const soil = (g: C2D) => {
+      const a = art('dirt-bare'); if (a) { g.drawImage(a, 0, 0); return; }
+      g.save(); g.setTransform(M); g.fillStyle = this.photoFill(g, 'dirt', L) ?? this.screenPattern(g, 'dirt', L, X0, Y0, Minv); g.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
+      // the game's dirt is a dark, grey soil: lifted warm toward the painted grass's garden earth (in proportion to itself, so its grains stay)
+      g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'screen'; g.fillStyle = SOIL_LIFT; g.fillRect(0, 0, W, H);
+      g.globalCompositeOperation = 'multiply'; g.fillStyle = SOIL_WARM; g.fillRect(0, 0, W, H); g.restore();
+    };
+    // lush: richer, denser grass along fences, walls and hedges, near water and on the verges: the grass laid over itself (its strokes' contrast
+    // and colour deepen: darker gaps, brighter tips), tinted a deeper green
+    if (m.max.lush > T) {
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-lush');
+      if (a) lg.drawImage(a, 0, 0);
+      else { lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'overlay'; lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'multiply'; lg.fillStyle = LUSH_TINT; lg.fillRect(0, 0, W, H); lg.globalCompositeOperation = 'source-over'; }
+      put(lg, m.lush, 'destination-in'); lay(lb, 'source-over');
+    }
+    // thin: patchy grass going over to soil, under trees, at doors and corners, on worn edges: the soil's colour on the grass's own strokes
+    // (dry, thin turf that keeps its texture), then the soil in the grass's dark gaps (lighten: the lit tufts stay)
+    if (m.max.thin > T) {
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-patchy');
+      if (a) lg.drawImage(a, 0, 0); else soil(lg);
+      put(lg, m.thin, 'destination-in');
+      if (a) lay(lb, 'source-over'); else { lay(lb, 'color'); lay(lb, 'lighten'); }
+    }
+    if (m.max.bare > T) { const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb); soil(lg); put(lg, m.bare, 'destination-in'); lay(lb, 'source-over'); }
+    if (!lite && m.max.litter > T) {
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('leaf-litter');
+      lg.drawImage(a ?? this.leavesOfChunk(), 0, 0);
+      put(lg, m.litter, 'destination-in'); lay(lb, 'source-over');
+    }
+    if (V) {
+      const mb = this.buffer('livingMask', W, H), mg = ctx2d(mb);
+      mg.fillStyle = '#000'; mg.fillRect(0, 0, W, H); mg.setTransform(M); mg.globalCompositeOperation = 'destination-out'; for (const e of ex) mg.fill(e.path, e.rule);
+      vg.globalCompositeOperation = 'destination-in'; vg.drawImage(mb, 0, 0); vg.globalCompositeOperation = 'source-over';
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(V, 0, 0); ctx.restore();
+    }
+    // ---- the ambient occlusion: a cool multiply over everything, the foundations and paving too
+    if (m.max.ao > 0.01) put(ctx, m.ao, 'multiply');
+  }
+  /** the leaf litter of the chunk being baked (T111): the leaf picture laid in the painted grass's stochastic layout (painted-ground.ts: soft
+   *  patches at their own phases and turns, so it never repeats), alone (transparent between the leaves); kept for the last few chunks */
+  private leavesOfChunk(): Cnv {
+    const c = this.chunkNow!, have = this.leafChunks.get(c.key);
+    if (have) { this.leafChunks.delete(c.key); this.leafChunks.set(c.key, have); return have; }
+    const out = canvas(c.W, c.H), g = ctx2d(out); g.setTransform(c.M); this.painted.compose(g, this.leafPicture(), LEAF_PERIOD, c.box, c.L, false);
+    this.leafChunks.set(c.key, out); trimLru(this.leafChunks, new Set([c.key]), LEAF_CHUNKS);
+    return out;
+  }
+  /** the leaf litter's picture (made once): the game's leaf sprites (textures.ts leaves, as the litter on the verges) scattered over a seamless
+   *  top-down square of LEAF_PERIOD tiles, each with a soft shade beside it away from the sun */
+  private leafPicture(): Cnv {
+    if (this.leafPic) return this.leafPic;
+    const S = LEAF_PX, ppm = S / (LEAF_PERIOD * 2), c = canvas(S, S), g = ctx2d(c), r = mulberry(0x1eaf5), atlas = this.tex.leaves;
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    const n = Math.round((LEAF_PERIOD * 2) ** 2 * LEAF_DENSITY);
+    for (let k = 0; k < n; k++) {
+      const x = r() * S, y = r() * S, ang = r() * Math.PI * 2, sizeM = 0.12 + r() * 0.14, [sx, sy, sw, sh] = this.tex.leafRect(this.tex.pickLeaf(r, sizeM)), size = sizeM * ppm;
+      for (const dx of [-S, 0, S]) for (const dy of [-S, 0, S]) {
+        if (x + dx < -size || x + dx > S + size || y + dy < -size || y + dy > S + size) continue;
+        g.setTransform(1, 0, 0, 1, x + dx, y + dy); g.rotate(ang); g.drawImage(atlas, sx, sy, sw, sh, -size / 2, -size / 2, size, size);
+      }
+    }
+    const out = canvas(S, S), og = ctx2d(out), k = Math.max(1, 0.03 * ppm);
+    og.drawImage(c, SHADOW_DIR[0] * k, SHADOW_DIR[1] * k); og.globalCompositeOperation = 'source-in'; og.fillStyle = 'rgba(30,22,12,0.42)'; og.fillRect(0, 0, S, S);
+    og.globalCompositeOperation = 'source-over'; og.drawImage(c, 0, 0);
+    this.leafPic = out; return out;
   }
 
   /** slab sprites along a run (tile space), stretched to 2.5 m x the sidewalk width like the builder's slab() */

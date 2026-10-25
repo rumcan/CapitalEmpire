@@ -13,6 +13,7 @@ import { unionBox, type BBox } from './network';
 import type { Waterway } from './terrain/types';
 import GroundWorker from './ground.worker?worker&inline';
 import type { GrassCellView } from './ext/grass-management';
+import { casterChange } from './living-ground';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -55,7 +56,34 @@ export class GroundCache {
   grassArt: GrassArt = GRASS_ART_DEFAULT;
   /** the Grass setting changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); }
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); }
+  /** the living ground (T111): the gear menu's Ground variety and the dev debug view of its influence maps */
+  living = { on: true, debug: false };
+  /** the living ground is baked at all (its variety, or the debug view of its maps) */
+  get livingActive() { return this.living.on || this.living.debug; }
+  /** Ground variety or its debug view changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
+  setLiving(on: boolean, debug: boolean) { if (on === this.living.on && debug === this.living.debug) return; this.living = { on, debug }; this.broadcast({ t: 'living', on, debug }); this.invalidateAll(); }
+  /** the caster records last sent, by key, and the edits waiting for the next pump (null: the key goes) */
+  private casterSent = new Map<string, Float32Array>(); private casterQueue = new Map<string, Float32Array | null>(); private casterPrefixes: string[] = [];
+  /** the living ground's casters of some keys (living-ground.ts records; an empty array drops the key): sent to the workers at the next pump,
+   *  before any chunk it asks for, and only the chunks under the records that changed are baked again */
+  casters(set: Iterable<[string, Float32Array]>) { for (const [k, r] of set) this.casterQueue.set(k, r.length ? r : null); }
+  /** every caster key starting with prefix goes (a new map: its forest and town-tree cells), without re-baking (the map's chunks are new) */
+  dropCasters(prefix: string) { for (const k of [...this.casterSent.keys()]) if (k.startsWith(prefix)) this.casterSent.delete(k); for (const k of [...this.casterQueue.keys()]) if (k.startsWith(prefix)) this.casterQueue.delete(k); this.casterPrefixes.push(prefix); }
+  /** true while caster edits wait to be sent */
+  get castersPending() { return this.casterQueue.size > 0; }
+  private flushCasters() {
+    if (!this.casterQueue.size && !this.casterPrefixes.length) return;
+    const set: [string, Float32Array][] = [], drop: string[] = [];
+    for (const [k, r] of this.casterQueue) {
+      const old = this.casterSent.get(k), box = casterChange(old, r ?? new Float32Array(0));
+      if (r) { this.casterSent.set(k, r); if (box || !old) set.push([k, r]); } else if (old) { this.casterSent.delete(k); drop.push(k); }
+      if (box && this.livingActive) this.invalidate(box, false, 0, 'gm');
+    }
+    this.casterQueue.clear();
+    const dropPrefix = this.casterPrefixes.splice(0);
+    if (set.length || drop.length || dropPrefix.length) this.broadcast({ t: 'casters', set, drop, dropPrefix });
+  }
   broadcast(m: ToWorker, transfer?: (w: number) => Transferable[]) { this.workers.forEach((wk, i) => wk.postMessage(m, transfer ? transfer(i) : [])); }
   netOps(ops: NetOp[]) { if (ops.length) this.broadcast({ t: 'net', ops }); }
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }
@@ -119,6 +147,7 @@ export class GroundCache {
   need(t: Tile, L: number, pri: number, now: number, artL = L) { t.used = now; if ((t.tex && t.texL === L && t.texArtL === artL && (!t.stale || now < t.hold)) || t.pendingL === L && t.pendingArtL === artL) return; this.want.push({ t, L, artL, pri }); }
   /** send the most urgent requests to idle workers */
   pump() {
+    this.flushCasters();
     if (!this.ready) { this.want = []; return; }
     this.want.sort((a, b) => a.pri - b.pri);
     for (const w of this.want) {

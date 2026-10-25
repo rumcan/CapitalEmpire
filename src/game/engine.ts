@@ -54,7 +54,8 @@ import { plazaEdge, plazaIslands, plazaKey, plazaLocal, plazaOutline, plazaPoint
 import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
-import { FOREST_CELL, forestCell, type ForestTree } from './forest';
+import { CONIFER_IDS, FOREST_CELL, forestCell, type ForestTree } from './forest';
+import { casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
 import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
@@ -238,6 +239,10 @@ function disasterText(n: DisasterNote): string {
     case 'unpaid': return `Repair needs ${money}: not enough money`;
   }
 }
+/** the living ground's prop caster cells (T111): CASTER_CELL tiles a side, CASTER_N a side of the map; and the reach (tiles) a chunk looks out
+ *  for casters (a big tree's canopy past its trunk) */
+const CASTER_CELL = 32, CASTER_N = MAP / CASTER_CELL, CASTER_REACH = 9;
+const casterCellOf = (x: number, y: number) => clamp(Math.floor(y / CASTER_CELL), 0, CASTER_N - 1) * CASTER_N + clamp(Math.floor(x / CASTER_CELL), 0, CASTER_N - 1);
 const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
 /** a town lot's use as the player reads it in the toasts (index LU: NONE, RES, COM, IND, TOUR, GOV) */
 const LOT_NAME = ['lot', 'residential lot', 'commercial lot', 'industrial lot', 'tourist lot', 'civic lot'];
@@ -911,6 +916,8 @@ export class Game {
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.grassArt = clampGrassArt(localStorage.getItem('capitalempire.grassArt')); } catch { /* the default, painted */ }
     this.ground.grassArt = this.grassArt;
+    try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
+    this.ground.living = { on: this.groundVariety, debug: false };
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
@@ -1013,6 +1020,7 @@ export class Game {
     this.forest.clear(); this.perf.forest = 0; this.slope = slopeField(this.terrain.height); this.clearing = makeNoise(this.terrain.seed ^ 0x5f0e);
     for (const ps of this.townTrees.values()) for (const p of ps) this.sprites.remove(p);
     this.townTrees.clear(); this.perf.townTrees = 0; this.townClump = makeNoise(this.terrain.seed ^ 0x7c1a); this.lotBoxes.clear(); this.paintBoxes.clear();
+    this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
   }
   /** a new game by the start mode (?start=): a range start, else (or with ?start=town) the old start; true when a golf game was laid. False
    *  (?start=valley, or no seed fits either) leaves the caller to make the classic valley */
@@ -1198,7 +1206,7 @@ export class Game {
     const f = this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;
-    this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p);
+    this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p); this.casterTouched(p);
     if (this.propLog) this.propLog.added.push(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);
     if (LIBRARY[item].big && LIBRARY[item].kind !== 'car') this.scheduleBlocks(isLotProp(p)); // cars are not building blocks (sendBlocks skips them)
@@ -1207,7 +1215,7 @@ export class Game {
   removeProp(p: Prop) {
     if (!this.props.delete(p)) return;
     if (this.propLog) { const k = this.propLog.added.indexOf(p); if (k >= 0) this.propLog.added.splice(k, 1); else this.propLog.removed.push(p); }
-    this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p);
+    this.propGrid.remove(p); this.sprites.remove(p); this.lampProps.delete(p); this.casterTouched(p);
     if (p.auto) this.autoByKey.delete(p.auto);
     if (this.selected === p) this.selected = null;
     if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') this.scheduleBlocks(isLotProp(p));
@@ -1238,7 +1246,7 @@ export class Game {
   private plantCell(key: number, ci: number, cj: number) {
     const { free } = this.treeClearance(ci, cj);
     const out = this.treeSprites(forestCell(this.terrain.seed, this.terrain.cls, this.terrain.height, this.slope, this.clearing, ci, cj).filter(t => free(t.x, t.y, 1)));
-    this.forest.set(key, out); this.perf.forest += out.length;
+    this.forest.set(key, out); this.perf.forest += out.length; this.ground.casters([['f:' + key, this.casterRecs(out)]]);
   }
   /** the sprites of planted trees (not props), skipping the ones in front of a tunnel mouth */
   private treeSprites(trees: ForestTree[]): Prop[] {
@@ -1283,7 +1291,7 @@ export class Game {
     const { lots, free } = this.treeClearance(ci, cj);
     const near = (x: number, y: number) => { for (const l of lots) if (lotGap(l, x, y) <= 24) return true; return false; };
     const out = this.treeSprites(townTreeCell(this.terrain.seed, this.terrain.cls, this.townClump, ci, cj, free, near));
-    this.townTrees.set(key, out); this.perf.townTrees += out.length;
+    this.townTrees.set(key, out); this.perf.townTrees += out.length; this.ground.casters([['t:' + key, this.casterRecs(out)]]);
   }
   /** the town-tree and forest cells whose box (30 tiles around the cell) touches the box x0 y0 x1 y1 lose their trees: plantForest plants them again (around what was built) */
   private dropTownTrees(x0: number, y0: number, x1: number, y1: number) {
@@ -1329,7 +1337,74 @@ export class Game {
     }
     this.portalKey = key; this.portalPts = ps;
   }
-  private propChanged(p: Prop) { const it = LIBRARY[p.item]; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, p.scale)); this.propGrid.remove(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.update(p); if (it.big) this.scheduleBlocks(); }
+  private propChanged(p: Prop) { const it = LIBRARY[p.item]; Object.assign(p, this.footprint(it, p.x, p.y, p.flip, p.scale)); this.propGrid.remove(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.update(p); this.casterTouched(p); if (it.big) this.scheduleBlocks(); }
+
+  // ---------- the living ground's casters (T111, living-ground.ts) ----------
+  /** the props' caster cells (CASTER_CELL tiles a side) whose records the ground workers have not had yet, and the cell each prop was last sent in */
+  private casterDirty = new Set<number>(); private propCasterCell = new WeakMap<Prop, number>();
+  /** a prop was placed, moved or removed: the cells it was and is in send their casters again (only the props that cast: fences, hedges,
+   *  walls, trees, bushes, buildings) */
+  private casterTouched(p: Prop) {
+    const it = LIBRARY[p.item]; if (!it || !casterKind(it)) return;
+    const was = this.propCasterCell.get(p); if (was !== undefined) this.casterDirty.add(was);
+    if (this.props.has(p)) { const c = casterCellOf((p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2); this.casterDirty.add(c); this.propCasterCell.set(p, c); } else this.propCasterCell.delete(p);
+  }
+  /** the caster records of the given things (props, or the forest's and town's tree sprites) */
+  private casterRecs(ps: Iterable<Prop>): Float32Array {
+    const out: number[] = [];
+    for (const p of ps) {
+      const it = LIBRARY[p.item]; if (!it) continue;
+      const kind = casterKind(it); if (!kind) continue;
+      let x0 = p.x0, y0 = p.y0, x1 = p.x1, y1 = p.y1;
+      // a baked lot casts from its house (its block), not from its whole lot
+      if (it.block) { const b = it.block, f = p.flip, s = p.scale / 2, hx = (f ? b.hy : b.hx) * s, hy = (f ? b.hx : b.hy) * s, cx = p.x + (f ? b.dy : b.dx) * s, cy = p.y + (f ? b.dx : b.dy) * s; x0 = cx - hx; y0 = cy - hy; x1 = cx + hx; y1 = cy + hy; }
+      const door = kind === CK.BUILDING ? doorToward(x0, y0, x1, y1, this.nearestRoad((x0 + x1) / 2, (y0 + y1) / 2, 18)) : null;
+      casterOf({ kind: it.kind, id: it.id, cat: it.cat, big: it.big, x0, y0, x1, y1, across: pxAcross((it.quad[2] - it.quad[0]) * p.scale), door, conifer: CONIFER_IDS.has(it.id) }, out);
+    }
+    return new Float32Array(out);
+  }
+  /** the nearest point on a road's centre line within r tiles of (x, y), or null */
+  private nearestRoad(x: number, y: number, r: number): { x: number; y: number } | null {
+    let best: { x: number; y: number } | null = null, bd = r * r;
+    for (const s of this.net.segsNear({ x, y }, r)) {
+      const dx = s.b.x - s.a.x, dy = s.b.y - s.a.y, l2 = dx * dx + dy * dy, t = l2 > 0 ? Math.max(0, Math.min(1, ((x - s.a.x) * dx + (y - s.a.y) * dy) / l2)) : 0, qx = s.a.x + dx * t, qy = s.a.y + dy * t, d2 = (qx - x) ** 2 + (qy - y) ** 2;
+      if (d2 < bd) { bd = d2; best = { x: qx, y: qy }; }
+    }
+    return best;
+  }
+  /** one prop cell's casters to the ground (queued; sent at the next pump, before any chunk it asks for) */
+  private flushCasterCell(c: number) {
+    this.casterDirty.delete(c);
+    const x0 = (c % CASTER_N) * CASTER_CELL, y0 = Math.floor(c / CASTER_N) * CASTER_CELL, mine: Prop[] = [];
+    for (const p of this.propGrid.query([x0, y0, x0 + CASTER_CELL, y0 + CASTER_CELL])) if (this.propCasterCell.get(p) === c) mine.push(p);
+    this.ground.casters([['p:' + c, this.casterRecs(mine)]]);
+  }
+  /** the dirty prop cells, a few milliseconds a frame (a chunk about to bake flushes its own first: casterReady) */
+  private flushCasters(budgetMs = 3) {
+    if (!this.casterDirty.size) return;
+    const t0 = performance.now();
+    for (const c of this.casterDirty) { this.flushCasterCell(c); if (performance.now() - t0 > budgetMs) break; }
+  }
+  /** a ground chunk may bake with the living ground: its prop cells are sent (sent now when dirty) and the forest and town-tree cells within reach
+   *  are planted (plantForest plants them, nearest first), so it never bakes once without its trees and again with them */
+  private casterReady(X0: number, Y0: number, X1: number, Y1: number): boolean {
+    const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = CASTER_REACH;
+    const tx0 = Math.min(a.x, b.x, c.x, d.x) - g, tx1 = Math.max(a.x, b.x, c.x, d.x) + g, ty0 = Math.min(a.y, b.y, c.y, d.y) - g, ty1 = Math.max(a.y, b.y, c.y, d.y) + g;
+    if (this.casterDirty.size) for (let cy = clamp(Math.floor(ty0 / CASTER_CELL), 0, CASTER_N - 1); cy <= clamp(Math.floor(ty1 / CASTER_CELL), 0, CASTER_N - 1); cy++) for (let cx = clamp(Math.floor(tx0 / CASTER_CELL), 0, CASTER_N - 1); cx <= clamp(Math.floor(tx1 / CASTER_CELL), 0, CASTER_N - 1); cx++) { const k = cy * CASTER_N + cx; if (this.casterDirty.has(k)) this.flushCasterCell(k); }
+    const N = MAP / FOREST_CELL;
+    for (let cj = clamp(Math.floor(ty0 / FOREST_CELL), 0, N - 1); cj <= clamp(Math.floor(ty1 / FOREST_CELL), 0, N - 1); cj++) for (let ci = clamp(Math.floor(tx0 / FOREST_CELL), 0, N - 1); ci <= clamp(Math.floor(tx1 / FOREST_CELL), 0, N - 1); ci++) {
+      const k = cj * N + ci; if (!this.forest.has(k) || !this.townTrees.has(k)) return false;
+    }
+    return true;
+  }
+  /** the living ground (T111): the gear menu's Ground variety (on by default, kept across reloads) and the dev debug view of its influence maps */
+  groundVariety = true; groundDebug = false;
+  setGroundVariety(on: boolean) {
+    this.groundVariety = on;
+    try { localStorage.setItem('capitalempire.groundVariety', on ? '1' : '0'); } catch { /* storage may be unavailable */ }
+    this.ground.setLiving(on, this.groundDebug); this.emit();
+  }
+  setGroundDebug(on: boolean) { this.groundDebug = on; this.ground.setLiving(this.groundVariety, on); this.emit(); }
   /** street lamps light the road: their reflection pools are part of the ground picture */
   syncLamps() {
     const pts = [...this.lampProps].map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));
@@ -3705,6 +3780,7 @@ export class Game {
     this.edit.clear(); this.snapshot = null;
     for (const p of [...this.props]) this.removeProp(p);
     this.sprites.clear(); this.autoByKey.clear(); this.forest.clear(); this.perf.forest = 0; this.townTrees.clear(); this.perf.townTrees = 0; this.lotBoxes.clear(); this.paintBoxes.clear();
+    this.ground.dropCasters('f:'); this.ground.dropCasters('t:');
     this.parkCars.clear(); this.parkDefs = []; this.parkBuilt = []; this.parkDrag = null; for (const k of this.parkGround) this.setLotGround(k, null); this.parkGround.clear();
     this.parking.clear(); this.extraParks = []; this.extraCarIds.clear(); this.gateProps.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
@@ -3963,7 +4039,7 @@ export class Game {
     const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STAGE_3_TIME_SEC) gp.playS += pdt;
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
-    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.flushLotGround(); this.laybyLots();
+    this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
@@ -4056,7 +4132,7 @@ export class Game {
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j);
-        this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL);
+        if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
         if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); }
         else if (zoomBlend < 1) {
@@ -4079,7 +4155,9 @@ export class Game {
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
       const movers = tier === 'street' && this.peds.n ? cars.concat(this.pedMovers(bx0, by0, bx1, by1)) : cars;
-      this.plantForest(X0, Y0, X1, Y1);
+      // with the living ground the trees plant over every chunk on screen (a chunk bakes once its trees are known: casterReady)
+      if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2); }
+      else this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
       // car lights (night): lamps and beam glows of the cars in the same box, uploaded with the sprites
       const tr = this.traffic, lightOn = !!tr && cam.z >= 0.08;

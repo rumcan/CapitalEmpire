@@ -97,6 +97,11 @@ export type ToWorker =
   /** the course height as a sub-rect of samples (i0, j0, w by h, row-major data), see GroundCache.courseHeight */
   | { t: 'course'; i0: number; j0: number; w: number; h: number; data: Float32Array }
   | { t: 'lotground'; set: [string, LotPatch[]][]; drop: string[] }
+  /** the living ground's casters (living-ground.ts, T111): each key's records (CASTER_STRIDE floats each) replace its old ones, each key in drop
+   *  loses them, and every key starting with a prefix in dropPrefix goes (a new map's forest and town trees) */
+  | { t: 'casters'; set: [string, Float32Array][]; drop: string[]; dropPrefix?: string[] }
+  /** the gear menu's Ground variety (T111) and the dev debug view of its influence maps: every chunk is baked again */
+  | { t: 'living'; on: boolean; debug: boolean }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number };
 
 export type FromWorker =
