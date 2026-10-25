@@ -107,9 +107,9 @@ export const TOOL_GROUP: Readonly<Partial<Record<UiToolId, RailGroupId>>> = Obje
   select: 'select', course: 'course', path: 'course', buildings: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
   bus: 'transport', park: 'transport', toll: 'transport', paint: 'paint', bulldoze: 'bulldoze',
 });
-/** the stage each top-bar chip shows at: the course stats from the start; skip, the pins and tees and the grass with the first hole; the Event
- *  catalogue and Land with the town */
-export const CHIP_STAGE: Readonly<Record<GolfChipId, OnboardingStage>> = Object.freeze({ courseStats: 1, skipTournament: 2, holes: 2, grass: 2, event: 3, land: 3 });
+/** the stage each top-bar chip shows at: the course stats from the start; skip and the grass with the first hole; the pins and tees, the Event
+ *  catalogue and Land with the town (as before T117, so the top bar does not grow at stage 2) */
+export const CHIP_STAGE: Readonly<Record<GolfChipId, OnboardingStage>> = Object.freeze({ courseStats: 1, skipTournament: 2, grass: 2, holes: 3, event: 3, land: 3 });
 /** the stage each course brush opens at: Shape by hand's six surfaces at stage 2 (stage 1 is New hole only); the painted cart path, which the
  *  Paths tool replaced, at stage 3 */
 export const BRUSH_STAGE: Readonly<Record<CourseBrushId, OnboardingStage>> = Object.freeze({ fairway: 2, green: 2, tee: 2, rough: 2, bunker: 2, water: 2, path: 3 });

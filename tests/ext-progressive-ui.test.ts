@@ -105,7 +105,7 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
     assert.deepEqual([...s.visibleCourseBrushes].sort(), [...SHAPE_BY_HAND].sort());
     assert.equal(s.shapeByHand, true);
     assert.deepEqual(s.lockedCourseClasses, []);
-    assert.deepEqual(s.visibleGolfChips, ['courseStats', 'skipTournament', 'holes', 'grass']);
+    assert.deepEqual(s.visibleGolfChips, ['courseStats', 'skipTournament', 'grass']);
     assert.deepEqual(s.lockedGroups.map(g => g.id), ['roads', 'junction', 'transport']);
     assert.deepEqual(s.lockedTools.map(t => t.id), ['road', 'lane', 'downgrade', 'junction', 'bus', 'park', 'toll']);
     assert.ok(s.lockedTools.every(t => t.stage === 3));
@@ -118,7 +118,7 @@ describe('the stage table (P23 4.2, T117): every "open" row', () => {
     assert.deepEqual(s.visibleTools, GOLF_TOOLS);
     assert.deepEqual(s.lockedGroups, []);
     assert.deepEqual(s.lockedTools, []);
-    assert.ok(s.visibleGolfChips.includes('event') && s.visibleGolfChips.includes('land'));
+    assert.ok(s.visibleGolfChips.includes('event') && s.visibleGolfChips.includes('land') && s.visibleGolfChips.includes('holes'));
     assert.deepEqual(s.visibleCourseBrushes.length, 7);
     assert.equal(s.stageLabel, 'Stage 3: The town');
   });
