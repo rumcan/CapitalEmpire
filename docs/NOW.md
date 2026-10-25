@@ -10,6 +10,27 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - Other worktrees remain untouched. The dirty frosty parking files are already landed through `99840d6`; local launcher changes are machine settings. Do not copy those old files onto main.
 - This integration does not start M2.5 or generate new images. The existing milestone plan below remains unchanged.
 
+## Status (2026-10-25 late, the lead after a power cut) — read this, then the handover below
+
+- **Main:** 61263c5 (after #240). 5174 runs main (auto-updater restarted after the power cut: `bash E:/ClaudeTemp/autoupdate-5174.sh`
+  in the background; the 5174 server is `.claude/launch.json` config `lead-game`). No nightly report yet (the first run is 2026-10-26 02:06).
+- **T128 merged (#234):** hand-painted art on every surface, Studio › Painted picker, Blend with and Border texture on the course, no photo
+  textures in play (`?grass=photo` dev only). **The owner: "the grass isnt good. I am getting new textures made now."** New paintings go in
+  through `scripts/assets/prep-painted-families.mjs` (art under `art/theme-consistency/generated/ground/painted-scaled/<family>-v<n>/`, the
+  families list in the script) and are mapped per surface in the studio. Left: painted Paint-tool areas have no Shadow slider (needs an
+  edge-shade model); the rough (sage long) is streaky at 30%; a dark, unbaked ground for ~24 s after a fresh start (headless Edge, dpr 2, also
+  on main before T128): worth its own ticket.
+- **The owner's new direction (2026-10-25): the range business first, then the course** ("Think Vodacom's World of Golf"; done by Opus 5.5
+  on high). Plan **P24** `docs/plans/P24-RANGE-BUSINESS.md`. **T129 merged (#240):** the ready-built range (striped outfield, tee box and
+  mats, flagged greens, yardage markers, fence, cement paths, sign), the caravan and back yard, the crappy pro shop, golfers who buy buckets and
+  hit visible balls, the queue, the range card with 8 upgrades. Follow-ups: the label glyph after "DRIVING RANGE", the onboarding pill still says
+  "Step 1: Build your first hole" in a range start (Phase 4), the car park reads P · 0/44 while range golfers are parked.
+- **Running now (Opus 5.5, high):** T130 #241 practice facilities (putting green, chipping green and bunker; branch arena/T130-practice, dev
+  port 5186) and T131 #242 the Props tool (branch arena/T131-props, port 5187). Both add appeal to `rangebiz.ts`; the second to merge resolves.
+  Then T132 (P24 Phase 4: the unlock order to the first hole, World of Golf extras).
+- **Held:** T119 #213 and T122 #216 (P23 wave B) until T130/T131 land (they share paint-tool.ts and the engine).
+- **Housekeeping done:** 7 merged agent worktrees removed (the owner approved); E: 35 GB free. Each worktree with node_modules is ~4.3 GB.
+
 ## HANDOVER (2026-10-25 evening, lead chat ended for context size) — start here
 
 **Main:** 864b910 (after #236). The owner tests on **http://localhost:5174** (dev server from `worktrees/theme-consistency`, branch
