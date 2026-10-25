@@ -65,14 +65,14 @@ export interface CollarStyle { name: 'first-cut' | 'fringe' | 'lip' | 'bank'; wi
 export interface BlobStyle { close: number; relax: number; collar?: CollarStyle }
 
 /** the default style per surface id (index 0, none, is never outlined): fairway, water and rough close by 2 cells, greens and
- * bunkers by 1, tees stay crisp; fairway, water and greens relax twice; collars per the table in plan section 3.4 */
+ * bunkers by 1, tees not at all but relax twice (a turned tee's cell staircase would stand as a saw of walls, T099; its corners round by about 1 m); fairway, water and greens relax twice; collars per the table in plan section 3.4 */
 export const BLOB_STYLE: readonly BlobStyle[] = [
   /* none */ { close: 0, relax: 0 },
   /* rough */ { close: 2, relax: 1 },
   /* fescue */ { close: 2, relax: 1 },
   /* water */ { close: 2, relax: 2, collar: { name: 'bank', width: 1, over: [NONE, ROUGH, FESCUE] } },
   /* fairway */ { close: 2, relax: 2, collar: { name: 'first-cut', width: 2, over: [NONE, ROUGH, FESCUE] } },
-  /* tee */ { close: 0, relax: 0, collar: { name: 'first-cut', width: 1, over: [NONE, ROUGH, FESCUE] } },
+  /* tee */ { close: 0, relax: 2, collar: { name: 'first-cut', width: 1, over: [NONE, ROUGH, FESCUE] } },
   /* bunker */ { close: 1, relax: 1, collar: { name: 'lip', width: 1, over: [NONE, ROUGH, FESCUE, FAIRWAY, TEE, WASTE, GREEN] } },
   /* waste */ { close: 1, relax: 1 },
   /* green */ { close: 1, relax: 2, collar: { name: 'fringe', width: 1, over: [NONE, ROUGH, FESCUE, FAIRWAY, TEE, WASTE] } },
@@ -89,7 +89,12 @@ export interface BlobBox { x0: number; y0: number; x1: number; y1: number }
  *   inside the box is one closed polyline whose last point repeats its first. The surface lies on the left of travel.
  * - `collar`: the collar band (fill rings: the dilated outline plus the surface's rings reversed, so the surface is cut out)
  *   and its outer edges, present when the surface has a collar and the band reaches the chunk */
-export interface SurfaceOutline { surf: number; fill: number[][]; edges: number[][]; collar?: { fill: number[][]; edges: number[][] } }
+export interface SurfaceOutline { surf: number; fill: number[][]; edges: number[][]; collar?: { fill: number[][]; edges: number[][] };
+  /** with chunkOutlines(..., cover): the cells the outlines were contoured from (s: the surface's, closed; c: the surface's and its collar
+   * band's, null without a collar), so a reader can tell which drawn layer covers a point (course-walls) */
+  cover?: { s: CellCover; c: CellCover | null } }
+/** a window of cells: cell (ci0 + i, cj0 + j) of the grid (global cell indices) is entry j * cw + i of occ (0/1) */
+export interface CellCover { readonly occ: Uint8Array; readonly ci0: number; readonly cj0: number; readonly cw: number; readonly ch: number }
 
 // ---- the kernel and the lattice taps ----
 
@@ -119,7 +124,7 @@ function disc(r: number): Int8Array {
 
 // ---- occupancy windows ----
 
-/** a window of cells: cell (ci0 + i, cj0 + j) of the grid is entry j * cw + i; `occ` holds 0/1 */
+/** a window of cells (CellCover, writable) */
 interface Occ { occ: Uint8Array; ci0: number; cj0: number; cw: number; ch: number }
 
 /** the grid's surface ids over a cell window, OUTSIDE where the window leaves the grid */
@@ -163,9 +168,14 @@ function erode(src: Uint8Array, cw: number, ch: number, r: number): Uint8Array {
   return out;
 }
 
-/** whether a closing of surface s may lay it over a cell of surface t: any surface drawn above it (it hides the extra), any
- * lower surface but water (a fairway's fillet never covers a pond), never a cell off the grid */
-function claimable(s: number, t: number): boolean { return t !== OUTSIDE && t !== s && (t > s || t !== WATER); }
+/** whether a closing of surface s may lay it over a cell of surface t: any surface drawn above it (it hides the extra), a lower
+ * surface only when it is flat ground (the map grass, rough, fescue, fairway), never a cell off the grid. So a fillet never covers
+ * a pond, and a green's never eats into a bunker, a tee or waste (T099: each of those has its own height and its walls stand on
+ * its own outline) */
+function claimable(s: number, t: number): boolean { return t !== OUTSIDE && t !== s && (t > s || (t <= FAIRWAY && t !== WATER)); }
+/** the droplet field of a cover at global cell coordinates (u, v) (u = (x - grid.x0) / 0.5): the point lies inside the outline
+ * contoured from it where the field is at least ISO_T (course-walls reads the drawn layers this way) */
+export function coverField(c: CellCover, u: number, v: number): number { return fieldAt(c, u, v); }
 
 /** ORs into out the 1-D closings of src along rows, columns and both diagonals: every run of at most 2r empty cells with set
  * cells at both ends is filled (a closing by a line segment of half-length r; runs touching the window edge stay open) */
@@ -478,10 +488,11 @@ function cutAt(b: BlobBox, pu: number, pv: number, du: number, dv: number, t: nu
 }
 
 /** keeps a finished stretch (leaving on side k) unless it has no length: a contour that only touches the box from outside
- * would otherwise join the box walk in the wrong place */
+ * would otherwise join the box walk in the wrong place. Its reach from its first point is measured over all of it (T099: an
+ * entry cut a hair from the next point, a contour vertex sitting on the box side, used to drop the whole stretch) */
 function addPiece(pieces: Piece[], b: BlobBox, p: number[], sIn: number, k: number): void {
   let len = 0;
-  for (let i = 2; i < p.length && len === 0; i += 2) len = Math.abs(p[i] - p[0]) + Math.abs(p[i + 1] - p[1]);
+  for (let i = 2; i < p.length && len <= 1e-12; i += 2) len = Math.max(len, Math.abs(p[i] - p[0]) + Math.abs(p[i + 1] - p[1]));
   if (len > 1e-12) pieces.push({ p, sIn, sOut: perim(b, k, p[p.length - 2], p[p.length - 1]) });
 }
 
@@ -716,8 +727,9 @@ function surfacesNear(g: Grid, box: BlobBox, pad: number): number[] {
 /** the outlines of chunk (cx, cy) of `size` tiles (box cx*size .. (cx+1)*size on each axis, in world tiles): per surface present
  * (draw order, none excluded), fill rings clipped to the box grown by FILL_GROW, edge polylines cut exactly at the box, and the
  * collar when the style has one. The field reads the global grid with a CHUNK_MARGIN-tile margin and the relax runs before the
- * cut, so neighbouring chunks' edges meet exactly. `styles` overrides BLOB_STYLE (indexed by surface id). */
-export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE): SurfaceOutline[] {
+ * cut, so neighbouring chunks' edges meet exactly. `styles` overrides BLOB_STYLE (indexed by surface id). cover: each outline also
+ * carries the cells it was contoured from (SurfaceOutline.cover). */
+export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE, cover = false): SurfaceOutline[] {
   const box: BlobBox = { x0: cx * size, y0: cy * size, x1: (cx + 1) * size, y1: (cy + 1) * size };
   let maxCollar = 0;
   for (const st of styles) if (st?.collar) maxCollar = Math.max(maxCollar, st.collar.width);
@@ -734,6 +746,7 @@ export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles
       const cfill = fillRings(g, sc.oC, sc.chainsC, gb);
       if (cfill.length) o.collar = { fill: cfill.concat(fill.map(reverseRing)), edges: edgeLines(g, sc.chainsC, cb) };
     }
+    if (cover) o.cover = { s: sc.oS, c: sc.oC };
     if (fill.length || o.collar) out.push(o);
   }
   return out;

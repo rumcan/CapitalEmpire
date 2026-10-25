@@ -537,7 +537,7 @@ export class Game {
     const b = this.paint.brush, look = (st: { tex: string; scale: number; angle: number }) => ({ tex: st.tex, sc: st.scale, a: st.angle });
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     const surf = [undefined, look(b.rough.style), pre('fescue', 'golfFescue'), look(b.water.style), look(b.fairway.style), look(b.tee.style), look(b.bunker.style), pre('waste', 'wasteSand'), look(b.green.style)];
-    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: { tex: 'rockyDirt', sc: 1, a: 0 } } };
+    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: look(b.rough.style) } }; // the bank is laid in the rough's grass; the renderer paints its wet soil and stones (T099)
   }
   /** each hole's playing line (back tee, aim points, pin) as flat tiles, for the fairway's mowing stripes */
   private holeLines(): Map<number, number[]> {
