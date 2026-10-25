@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  CASTER_STRIDE, CK, CasterStore, SHADOW_DIR, casterChange, casterOf, debugImage, doorToward, influence, livingMasks, livingQueryBox, livingRes, openNoise,
+  CASTER_STRIDE, CK, CasterStore, SHADOW_DIR, casterChange, casterOf, debugImage, doorToward, influence, livingMasks, livingQueryBox, livingRes, livingSignature, openNoise,
   pxAcross, variantFamilies, type Box, type InfluenceGrid, type LivingSources,
 } from '../src/game/living-ground';
 import { CHUNK_H, CHUNK_W, worldX, worldY } from '../src/game/iso';
@@ -128,6 +128,17 @@ test('an edit re-bakes only the chunks under what changed', () => {
   assert.ok(gone[0] > 130 && gone[2] < 150, `only round the removed tree: ${gone}`);
   const shuffled = new Float32Array([...recs.slice(CASTER_STRIDE), ...recs.slice(0, CASTER_STRIDE)]);
   assert.equal(casterChange(old, shuffled), null);
+});
+
+test('a re-bake with the same sources reuses its maps; any change to them is a new signature', () => {
+  const base = (): LivingSources => ({ casters: new Float32Array([...tree(5, 5, 2), ...fence(1, 1, 4, 1)]), roads: [{ ax: 0, ay: 9, bx: 20, by: 9, hw: 1.5 }], paths: [[2, 2, 3, 2, 3, 3]], shores: [{ pts: [8, 8, 9, 8, 9, 9], ring: true }] });
+  const s0 = livingSignature(2, base());
+  assert.equal(livingSignature(2, base()), s0, 'the same sources');
+  assert.notEqual(livingSignature(3, base()), s0, 'another density');
+  const moved = base(); moved.casters[1] = 5.1; assert.notEqual(livingSignature(2, moved), s0, 'a tree moved 20 cm');
+  const road = base(); road.roads = [{ ax: 0, ay: 9, bx: 20, by: 9, hw: 2 }]; assert.notEqual(livingSignature(2, road), s0, 'a wider road');
+  const door = new Float32Array(rec(CK.BUILDING, 1, 1, 4, 4, NaN, NaN)), door2 = new Float32Array(rec(CK.BUILDING, 1, 1, 4, 4, 2, 4));
+  assert.notEqual(livingSignature(1, { casters: door }), livingSignature(1, { casters: door2 }), 'a door added');
 });
 
 test('the caster store finds what reaches a box, and forgets keys and whole families', () => {

@@ -251,7 +251,7 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
       const q = j * w + i, gi = ix0 + i, ci = Math.floor(gi / step), fx = (gi - ci * step) / step, b0 = rowB + ci - ci0;
       const on = (coarse[b0]! * (1 - fx) + coarse[b0 + 1]! * fx) * (1 - fy) + (coarse[b0 + cw]! * (1 - fx) + coarse[b0 + cw + 1]! * fx) * fy;
       let L = lush[q]!, T = thin[q]!, B = bare[q]!, A = ao[q]!;
-      L = add(0.38 * sm(0.12, 0.6, on), L); T = add(0.32 * sm(0.2, 0.65, -on), T);
+      L = add(0.38 * sm(0.12, 0.6, on), L); T = add(0.24 * sm(0.2, 0.65, -on), T);
       if (fence) { const d = fence[q]!; if (d < BIG) { L = add(0.9 * near(0.6, 2.2, d), L); A = add(0.34 * near(0, 0.7, d), A); } }
       if (hedge) { const d = hedge[q]!; if (d < BIG) { L = add(0.92 * near(0.9, 2.8, d), L); A = add(0.42 * near(0, 1.0, d), A); } }
       if (wallL) { const d = wallL[q]!; if (d < BIG) { L = add(0.8 * near(0.7, 2.2, d), L); A = add(0.46 * near(0, 0.9, d), A); } }
@@ -268,6 +268,19 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
   return { ix0, iy0, res, w, h, lush, thin, bare, litter, ao };
 }
 
+/** a cheap signature of what a chunk's influence is made from (its sample density and sources): a re-bake whose sources did not change (a
+ *  course stroke, a lot edit elsewhere in the chunk, the course's hold re-bakes) reuses the grid and masks it made before */
+export function livingSignature(res: number, src: LivingSources): number {
+  let h = (2166136261 ^ Math.round(res * 8)) | 0;
+  const mix = (v: number) => { h = Math.imul(h ^ (Number.isFinite(v) ? Math.round(v * 1024) | 0 : 0x5bd1e995), 16777619); };
+  const c = src.casters; mix(c.length); for (let i = 0; i < c.length; i++) mix(c[i]!);
+  for (const r of src.roads ?? []) { mix(r.ax); mix(r.ay); mix(r.bx); mix(r.by); mix(r.hw); mix(r.cart ? 1 : 0); }
+  for (const p of src.paths ?? []) { mix(p.length); for (let i = 0; i < p.length; i++) mix(p[i]!); }
+  for (const w of src.rivers ?? []) { mix(w.pts.length); mix(w.bank); for (const p of w.pts) { mix(p.x); mix(p.y); mix(p.w); } }
+  for (const s of src.shores ?? []) { mix(s.pts.length); mix(s.ring ? 1 : 0); for (let i = 0; i < s.pts.length; i++) mix(s.pts[i]!); }
+  return h >>> 0;
+}
+
 /* ---- the masks the renderer lays the variants through (RGBA, one px per sample, stretched bilinear over the chunk) ---- */
 /** the lush layer's strength at full influence (the grass laid over itself and tinted: deeper, denser, more saturated) */
 export const LUSH_MAX = 0.85;
@@ -282,14 +295,16 @@ export interface LivingMasks { W: number; H: number; x0: number; y0: number; res
 export function livingMasks(g: InfluenceGrid): LivingMasks {
   const { w, h, res, ix0, iy0 } = g, n = w * h, mk = () => new Uint8ClampedArray(n * 4);
   const lush = mk(), thin = mk(), bare = mk(), litter = mk(), ao = mk(), max = { lush: 0, thin: 0, bare: 0, litter: 0, ao: 0 };
-  const fine = res >= 3 ? 1 : res >= 2 ? 0.5 : 0;
+  // the finest wave only where the samples resolve it; the broad wave never finer than about two samples (a district chunk's patches stay
+  // patches, not speckle)
+  const fine = res >= 3 ? 1 : res >= 2 ? 0.5 : 0, s1 = Math.max(1.8, 2.2 / res), s2 = Math.max(1.1, 1.6 / res);
   for (let j = 0; j < h; j++) {
     const y = (iy0 + j + 0.5) / res;
     for (let i = 0; i < w; i++) {
       const x = (ix0 + i + 0.5) / res, q = j * w + i, o = q * 4;
       // two breakup noises: a 3.6 m wave everywhere, a 1.4 m wave where the samples resolve it
-      const n1 = vnoise(x / 1.8 + 11.1, y / 1.8 - 4.2, 51), n2 = fine ? vnoise(x / 0.7 - 2.3, y / 0.7 + 7.7, 53) : 0.5, nf = n1 * (1 - 0.45 * fine) + n2 * 0.45 * fine;
-      const nb = vnoise(x / 1.1 + 5.5, y / 1.1 + 1.9, 57);
+      const n1 = vnoise(x / s1 + 11.1, y / s1 - 4.2, 51), n2 = fine ? vnoise(x / 0.7 - 2.3, y / 0.7 + 7.7, 53) : 0.5, nf = n1 * (1 - 0.45 * fine) + n2 * 0.45 * fine;
+      const nb = vnoise(x / s2 + 5.5, y / s2 + 1.9, 57);
       const L = LUSH_MAX * sm(0.05, 0.85, g.lush[q]! * (0.7 + 0.6 * nf));
       const T = sm(0.22, 0.8, g.thin[q]! + (nf - 0.5) * 0.5);
       // bare soil: the cores (trunks, doors) and, where the grass is thinnest, patches of soil between its clumps (never on the open ground's

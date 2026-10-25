@@ -23,12 +23,14 @@ import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRe
 import { CH_SIZE, CH_STEP, courseShadeInto } from './ext/course-height';
 import { PaintedGround } from './painted-ground';
 import { trimLru } from './painted-grass-lod';
-import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, waterTex, type Box, type RoadPiece, type WaterLine } from './living-ground';
+import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the chunks whose painted grass a worker keeps composed (about 3 MB each) */
 const COMPOSED_CHUNKS = 8;
 /** the living ground's leaf litter (T111): the chunks whose leaves a worker keeps laid out, the picture's side (px), the tiles it covers and
  *  the leaves a square metre of it holds (the stochastic layout overlaps its soft patches about two deep, so the ground shows about twice that) */
 const LEAF_CHUNKS = 4, LEAF_PX = 1024, LEAF_PERIOD = 16, LEAF_DENSITY = 2.6;
+/** the chunks whose influence grids and masks a worker keeps (about half a MB each) */
+const LIVING_MADE = 12;
 /** the lush variant's tint (multiplied over the grass laid over itself: deeper and greener, never a flat colour), and the warm light the derived
  *  soil is lifted by (screen) */
 const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#5e3e1e', SOIL_WARM = '#f2d4ae';
@@ -106,6 +108,8 @@ export class GroundPainter {
    *  Ground variety and the dev debug view of its influence maps, and the leaf litter (its picture, and the chunks laid with it) */
   casters = new CasterStore(); living = { on: true, debug: false };
   private leafPic: Cnv | null = null; private leafChunks = new Map<string, Cnv>();
+  /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
+  private livingMade = new Map<string, { grid: InfluenceGrid; masks: LivingMasks | null }>();
   /** forget the planner map's colours (the Grass setting changed: the grass is another picture) */
   resetPlanColours() { this.planCols.clear(); }
   blocks: PlanBlocks = new Float32Array(0);
@@ -642,14 +646,18 @@ export class GroundPainter {
     }
     const waters = this.waters.filter(w => w.box[2] >= gb[0] - 4 && w.box[0] <= gb[2] + 4 && w.box[3] >= gb[1] - 4 && w.box[1] <= gb[3] + 4);
     const rivers: WaterLine[] = waters.map(w => ({ pts: w.w.pts, bank: w.w.kind === 'river' ? 2.6 : 0.4 }));
-    const grid = influence(box, res, { casters, roads, paths, rivers, shores });
+    const src = { casters, roads, paths, rivers, shores }, ck = `${this.chunkNow!.key}:${livingSignature(res, src)}`;
+    let made = this.livingMade.get(ck);
+    if (made) { this.livingMade.delete(ck); this.livingMade.set(ck, made); }
+    else { made = { grid: influence(box, res, src), masks: null }; this.livingMade.set(ck, made); trimLru(this.livingMade, new Set([ck]), LIVING_MADE); }
+    const grid = made.grid;
     /** a mask (one px per sample) stretched over g through the chunk transform (bilinear), with the op */
     const put = (g: C2D, data: Uint8ClampedArray, op: GlobalCompositeOperation) => {
       const s = this.buffer('livingSmall', grid.w, grid.h); ctx2d(s).putImageData(new ImageData(data as Uint8ClampedArray<ArrayBuffer>, grid.w, grid.h), 0, 0);
       g.save(); g.setTransform(M); g.globalCompositeOperation = op; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.drawImage(s, grid.ix0 / res, grid.iy0 / res, grid.w / res, grid.h / res); g.restore();
     };
     if (this.living.debug) { put(ctx, debugImage(grid), 'source-over'); return; }
-    const m = livingMasks(grid);
+    const m = made.masks ??= livingMasks(grid);
     // ---- the ground the variety leaves alone: the lots' hard ground, painted areas that are no grass, the course's managed turf and its
     //      collars (the pond's bank keeps it), the rivers' and creeks' water
     const ex: { path: Path2D; rule: CanvasFillRule }[] = [];
@@ -663,15 +671,20 @@ export class GroundPainter {
     // the variants go onto a copy of the chunk when some ground is left alone (cut out at the end), else straight onto it
     const V = ex.length ? this.buffer('living', W, H) : null, vg = V ? ctx2d(V) : ctx;
     if (V) vg.drawImage(ctx.canvas, 0, 0);
-    const lay = (layer: Cnv, op: GlobalCompositeOperation) => { vg.save(); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = op; vg.globalAlpha = 1; vg.drawImage(layer, 0, 0); vg.restore(); };
+    const lay = (layer: Cnv, op: GlobalCompositeOperation, alpha = 1) => { vg.save(); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = op; vg.globalAlpha = alpha; vg.drawImage(layer, 0, 0); vg.restore(); };
     const art = (id: string) => (this.tex.isPainted(id) ? this.paintedBuf(id) : null), T = 0.02;
-    /** the soil: the painted dirt-bare set, else the game's dirt (its photo when built, else the painted screen texture) */
+    /** the soil, made once a chunk: the painted dirt-bare set, else the game's dirt (its photo when built, else the painted screen texture) */
+    let soilBuf: Cnv | null = null;
     const soil = (g: C2D) => {
-      const a = art('dirt-bare'); if (a) { g.drawImage(a, 0, 0); return; }
-      g.save(); g.setTransform(M); g.fillStyle = this.photoFill(g, 'dirt', L) ?? this.screenPattern(g, 'dirt', L, X0, Y0, Minv); g.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
-      // the game's dirt is a dark, grey soil: lifted warm toward the painted grass's garden earth (in proportion to itself, so its grains stay)
-      g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'screen'; g.fillStyle = SOIL_LIFT; g.fillRect(0, 0, W, H);
-      g.globalCompositeOperation = 'multiply'; g.fillStyle = SOIL_WARM; g.fillRect(0, 0, W, H); g.restore();
+      if (!soilBuf) soilBuf = art('dirt-bare');
+      if (!soilBuf) {
+        soilBuf = this.buffer('livingSoil', W, H); const s = ctx2d(soilBuf);
+        s.setTransform(M); s.fillStyle = this.photoFill(s, 'dirt', L) ?? this.screenPattern(s, 'dirt', L, X0, Y0, Minv); s.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
+        // the game's dirt is a dark, grey soil: lifted warm toward the painted grass's garden earth (in proportion to itself, so its grains stay)
+        s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'screen'; s.fillStyle = SOIL_LIFT; s.fillRect(0, 0, W, H);
+        s.globalCompositeOperation = 'multiply'; s.fillStyle = SOIL_WARM; s.fillRect(0, 0, W, H); s.globalCompositeOperation = 'source-over';
+      }
+      g.drawImage(soilBuf, 0, 0);
     };
     // lush: richer, denser grass along fences, walls and hedges, near water and on the verges: the grass laid over itself (its strokes' contrast
     // and colour deepen: darker gaps, brighter tips), tinted a deeper green
@@ -687,7 +700,7 @@ export class GroundPainter {
       const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-patchy');
       if (a) lg.drawImage(a, 0, 0); else soil(lg);
       put(lg, m.thin, 'destination-in');
-      if (a) lay(lb, 'source-over'); else { lay(lb, 'color'); lay(lb, 'lighten'); }
+      if (a) lay(lb, 'source-over'); else { lay(lb, 'color', 0.7); lay(lb, 'lighten'); }
     }
     if (m.max.bare > T) { const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb); soil(lg); put(lg, m.bare, 'destination-in'); lay(lb, 'source-over'); }
     if (!lite && m.max.litter > T) {
