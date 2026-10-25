@@ -14,7 +14,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
-import { grassZoomLevels } from './painted-grass-lod';
+import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
@@ -868,6 +868,16 @@ export class Game {
     try { localStorage.setItem('capitalempire.shadows', String(this.shadowStrength)); } catch { /* storage may be unavailable */ }
     this.emit();
   }
+  /** the grass (T082): 'painted', the game-art families (painted-grass-art.ts, three zoom levels), or 'photo', the grass the game had before
+   *  (base-grass.json and the presets' mixed pictures), for the base ground, the meadow, the map edge and the painted presets (the town
+   *  lawns); the gear menu's Grass, kept across reloads; window.__game.setGrassArt('photo') from the console */
+  grassArt: GrassArt = clampGrassArt(null);
+  setGrassArt(v: GrassArt) {
+    this.grassArt = clampGrassArt(v);
+    try { localStorage.setItem('capitalempire.grassArt', this.grassArt); } catch { /* storage may be unavailable */ }
+    this.ground.setGrassArt(this.grassArt);
+    this.emit();
+  }
 
   constructor(public canvas: HTMLCanvasElement, public overlay: HTMLCanvasElement) {
     this.gl = new GLRenderer(canvas);
@@ -878,6 +888,8 @@ export class Game {
     this.traffic = new SimClient();
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
+    try { this.grassArt = clampGrassArt(localStorage.getItem('capitalempire.grassArt')); } catch { /* the default, painted */ }
+    this.ground.grassArt = this.grassArt;
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);

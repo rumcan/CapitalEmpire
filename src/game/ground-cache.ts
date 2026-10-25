@@ -6,6 +6,7 @@ import { GROUND_ART } from './ground-art';
 import { CH_SIZE, CH_STEP } from './ext/course-height';
 import { withBaseGrass } from './base-grass-saved';
 import { withPresets } from './paint-presets-saved';
+import { GRASS_ART_DEFAULT, type GrassArt } from './painted-grass-lod';
 import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, type ToWorker } from './ground-protocol';
 import type { GLRenderer } from './gl';
 import { unionBox, type BBox } from './network';
@@ -48,7 +49,11 @@ export class GroundCache {
     }
   }
   terminate() { for (const w of this.workers) w.terminate(); this.workers = []; }
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = withPresets(withBaseGrass(GROUND_ART)); this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); }
+  /** the game's Grass setting (painted-grass-lod.ts GrassArt), sent with the art */
+  grassArt: GrassArt = GRASS_ART_DEFAULT;
+  /** the Grass setting changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
+  setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); }
   broadcast(m: ToWorker, transfer?: (w: number) => Transferable[]) { this.workers.forEach((wk, i) => wk.postMessage(m, transfer ? transfer(i) : [])); }
   netOps(ops: NetOp[]) { if (ops.length) this.broadcast({ t: 'net', ops }); }
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }

@@ -21,6 +21,7 @@ import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE, CH_STEP, courseShadeInto } from './ext/course-height';
+import { PaintedGround } from './painted-ground';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -79,11 +80,18 @@ const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for
 export class GroundPainter {
   /** State-driven turf overlays, separate from the owner's base grass and lawn/mowing presets. */
   grassCells = new Map<number, GrassCellView>(); grassImages = new Map<string, Cnv>(); grassStrength = 0.45; grassHeat = false; grassMowing = false;
+  /** the painted grass (painted-ground.ts): its patch pictures, the chunk being baked (its level, tile box and matrix) and the painted
+   *  textures composed for it so far (one picture per family, a copy per tint) */
+  private painted = new PaintedGround();
+  private chunkNow: { L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number } | null = null;
+  private paintedBufs = new Map<string, Cnv | null>();
   private scratch = new Map<string, Cnv>();
   /** the noise that wobbles the class edges (fixed seed) */
   private edgeNoise = makeNoise(7);
   /** planner colours per texture, computed once */
   private planCols = new Map<string, string>();
+  /** forget the planner map's colours (the Grass setting changed: the grass is another picture) */
+  resetPlanColours() { this.planCols.clear(); }
   blocks: PlanBlocks = new Float32Array(0);
   /** hillshade per height sample, and the waterways with their bboxes (grown for the shore) */
   shade: Float32Array = new Float32Array(HS * HS);
@@ -232,6 +240,7 @@ export class GroundPainter {
    *  areas lay it: the photo itself at the mip L * sx asks for (the mosaic only when the source is missing), turned and scaled by G; its flat
    *  Paint swatch while this worker has not built it (Textures.ensure) */
   private paintPhoto(g: C2D, t: string, L: number, G?: DOMMatrix, sx = 1): CanvasPattern | string {
+    const painted = this.paintedFill(g, t); if (painted) return painted;
     if (!this.tex.has(t)) return PAINT_COL.get(t) ?? '#808080';
     const src = this.tex.sourceFor(t, L * sx);
     return src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * sx), G, this.tex.periodOf(t));
@@ -239,10 +248,33 @@ export class GroundPainter {
   /** the ground photo that replaces a painted ground texture (GROUND_PHOTO), in tile space under the current transform; null when there is none
    *  or this worker has not built it (the caller paints the screen texture) */
   private photoFill(g: C2D, t: string, L: number): CanvasPattern | null {
-    if (this.tex.isPainted(t)) { const source = this.tex.sourceFor(t, L); if (source) return this.groundPattern(g, source.img, undefined, source.period); }
+    const painted = this.paintedFill(g, t); if (painted) return painted;
     const photo = GROUND_PHOTO.get(t); if (!photo || !this.tex.has(photo)) return null;
     const k = GROUND_SCALE.get(t) ?? 1;
     return this.groundPattern(g, this.tex.mosaicFor(photo, L * k), undefined, this.tex.periodOf(photo) * k);
+  }
+
+  /** a painted texture (Textures.paintedOf) as a fill for the chunk being baked, in its pixels under the chunk's matrix: the family composed
+   *  once per chunk (painted-ground.ts; never turned or scaled with an area, which would turn its painted light), a tint multiplied over a
+   *  copy; null when the texture is not painted (the Grass setting 'photo', or its pictures missing: then it is laid as its photo) */
+  private paintedFill(g: C2D, t: string): CanvasPattern | null {
+    const c = this.chunkNow, buf = c && this.paintedBuf(t); if (!c || !buf) return null;
+    const p = g.createPattern(buf, 'no-repeat')!; p.setTransform(c.Minv); return p;
+  }
+  private paintedBuf(t: string): Cnv | null {
+    const c = this.chunkNow!, p = this.tex.paintedOf(t); if (!p) return null;
+    const key = p.tint ? p.tint + ':' + p.id : p.id;
+    if (this.paintedBufs.has(key)) return this.paintedBufs.get(key)!;
+    let out: Cnv | null = null;
+    if (p.tint) {
+      const base = this.paintedBuf(p.id);
+      if (base) { out = this.buffer('painted:' + key, c.W, c.H); const g = ctx2d(out); g.drawImage(base, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = p.tint; g.fillRect(0, 0, c.W, c.H); g.globalCompositeOperation = 'source-over'; }
+    } else {
+      const src = this.tex.sourceFor(p.id, c.L);
+      if (src) { out = this.buffer('painted:' + key, c.W, c.H); const g = ctx2d(out); g.setTransform(c.M); this.painted.compose(g, src.img, src.period, c.box, c.L); g.setTransform(1, 0, 0, 1, 0, 0); }
+    }
+    this.paintedBufs.set(key, out);
+    return out;
   }
 
   /** one ground chunk (CHUNK_W x CHUNK_H world px) at cache level L: the full-quality bake. lite = a district chunk
@@ -256,6 +288,7 @@ export class GroundPainter {
     const pats = new Map<TexName, CanvasPattern>();
     const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.photoFill(ctx, n, L) ?? this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
     const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
+    this.chunkNow = { L, box, M, Minv, W, H }; this.paintedBufs.clear();
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
     const paint = (g: C2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
     const ring = (g: C2D, f: Feature, extra: number) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + extra; g.stroke(f.path); } else { g.lineWidth = extra; g.stroke(f.path); } };
@@ -617,7 +650,7 @@ export class GroundPainter {
       if (lw.share >= 1) {
         const src = this.tex.sourceFor(p.tex, L);
         ctx.save(); ctx.setTransform(M); ctx.clip(path);
-        ctx.fillStyle = src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(p.tex, L), G, this.tex.periodOf(p.tex));
+        ctx.fillStyle = this.paintedFill(ctx, p.tex) ?? (src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(p.tex, L), G, this.tex.periodOf(p.tex)));
         ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.restore();
       } else this.drawBlend(ctx, { s: 1, a: lw.a, b: 0, bt: 'kerb', z: 0, m: { t: p.tex, s: lw.share, f: lw.soft, p: lw.patch } } as NonNullable<LotPatch['paint']>, G, path, r, L, X0, Y0, M, Minv);
     }
@@ -627,7 +660,7 @@ export class GroundPainter {
     // the scratch layer's context is reused chunk after chunk: its clip is saved and restored, or the clips would add up
     g.save(); g.setTransform(M); g.clip(path);
     let style: CanvasPattern | string = PAINT_COL.get(t) ?? '#808080';
-    if (isPaintPhoto(t)) { if (this.tex.has(t)) { const src = this.tex.sourceFor(t, L * st.s); style = src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t)); } }
+    if (isPaintPhoto(t)) { const painted = this.paintedFill(g, t); if (painted) style = painted; else if (this.tex.has(t)) { const src = this.tex.sourceFor(t, L * st.s); style = src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t)); } }
     else if (t === 'asphaltDark' || t === 'lotAsphalt') style = this.groundPattern(g, this.tex.mosaicFor(t === 'lotAsphalt' ? 'lot' : 'base', L * st.s), G);
     else if (this.tex.image(t as TexName, L)) style = this.screenPattern(g, t as TexName, L, X0, Y0, Minv, G);
     g.fillStyle = style; g.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]);
@@ -878,9 +911,9 @@ export class GroundPainter {
         ctx.clip();
         if (this.grassHeat) { ctx.globalAlpha = 0.5; ctx.fillStyle = `hsl(${Math.round(v.health * v.coverage * 120)},75%,45%)`; ctx.fillRect(x, y, 4, 4); }
         else {
-          const picture = this.grassImages.get(v.material), authored = this.tex.isPainted(v.material) ? this.tex.sourceFor(v.material, _L) : null;
+          const picture = this.grassImages.get(v.material), authored = this.paintedFill(ctx, v.material);
           ctx.globalAlpha = this.grassStrength;
-          if (authored) { ctx.fillStyle = this.groundPattern(ctx, authored.img, undefined, authored.period); ctx.fillRect(x, y, 4, 4); }
+          if (authored) { ctx.fillStyle = authored; ctx.fillRect(x, y, 4, 4); }
           else if (picture) { ctx.fillStyle = this.groundPattern(ctx, picture, undefined, 8); ctx.fillRect(x, y, 4, 4); }
           else { // Graceful condition tint until this exact generated material is installed.
             const stress = Math.max(1 - v.health, 1 - v.coverage); ctx.globalAlpha *= stress;
