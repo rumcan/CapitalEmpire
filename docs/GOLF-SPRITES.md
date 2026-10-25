@@ -188,3 +188,17 @@ autumn dusk, no lettering in the art unless said.
 | Gas bottle and plastic garden chairs (`golf:yard-gas-bottle`, `golf:yard-plastic-chair`) | 0.5 / 1 | the striped lawn chair | a dented grey LPG gas bottle on a braai stand; a white plastic garden chair | P2 |
 | Ball-picker cart (`golf:range-picker`, 8 facings) | 2.5 x 1.5 | none (Phase 4) | a small utility cart with a caged cab towing a gang of ball-picking discs | P2 |
 | Divot-scarred range tee (texture) | 16 m | the tee turf | listed in section 6 | P1 |
+
+## Props kit (plan P24 Phase 3, T131: art requests)
+The Props tool (`golf/decor.ts DECOR`) shows these as labelled stand-ins ("Stand In for ..." on the card and once per kind on the map); each
+goes in by replacing its item's `id` (and dropping its `standIn`). Four views where it says so (NE, SE, SW, NW as the building sheets: the front
+in NE and NW), sun at the upper right, shadows at 145°, early autumn dusk, no lettering, never drawn to be mirrored.
+| Sprite (id to use) | Footprint (m) / height | Stand-in today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Bronze golfer statue (`golf:prop-golfer-statue`, four views) | 1.5 x 1.5 / 3 | `expansion:coin-horse-ride` | a bronze golfer at the top of his follow-through on a square dressed-stone plinth with a plain bronze plaque | P1 |
+| Stone pillar (`golf:prop-stone-pillar`) | 0.8 x 0.8 / 2.2 | `world:grave_2` | a square sandstone gate pillar with a moulded cap and a stone ball finial, a little lichen at the foot | P1 |
+| Club flag pole (`golf:prop-flag-pole`) | 0.5 x 0.5 / 8 | `business:golf-pin-red` (scaled up) | a tall white aluminium flag pole on a concrete foot, a dark green club flag with a small gold crest lifting in the breeze | P1 |
+| Flower bed (`golf:prop-flower-bed`) | 3 x 1.5 / 0.5 | `world:bush_2` | a raised bed edged in brick, massed red and yellow annuals with a clipped box edge, dark mulch between | P1 |
+| Tiered garden fountain, small (`golf:prop-fountain-small`, four views) | 2 x 2 / 1.8 | none (the plaza fountain is real art) | a two-tier cast-stone fountain in a round basin, water spilling from the top bowl, wet stone darker | P2 |
+| Stone entrance arch (`golf:prop-entrance-arch`, four views) | 5 x 1 / 4 | none (the ivy garden arch is real art) | a dressed-stone arch on two pillars over a path, a blank stone keystone, low hedges either side | P2 |
+| Classical urn on plinth (`golf:prop-urn`) | 0.8 x 0.8 / 1.6 | none | a stone urn on a square plinth spilling trailing ivy and white petunias | P2 |

@@ -689,6 +689,12 @@ export class PaintTool {
   }
   /** the grid surface id a painted area lays (its brush kind, else its texture's golf surface; 0: none, it stays a painted area) */
   private static surfOf(a: { kind?: BrushKind; tex: PaintArea['tex'] }): number { return surfOfSurface(a.kind ?? surfaceOfTex(a.tex)); }
+  /** an outside action as one undo step (the Props tool, T131): run changes props (inside the prop journal) and returns what it spent ($, below 0
+   *  for a refund); undo takes its props back and its money with them */
+  step(label: string, run: () => number) {
+    this.begin(label);
+    try { const spent = run(); if (this.tx) this.tx.spent += spent; } finally { this.commit(); }
+  }
   /** whether there is a step to undo / redo (the panel's buttons) */
   get canUndo() { return this.undos.length > 0 && !this.tx; }
   get canRedo() { return this.redos.length > 0 && !this.tx; }

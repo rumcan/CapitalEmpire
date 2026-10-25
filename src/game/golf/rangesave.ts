@@ -20,6 +20,8 @@ export const START_BAYS = 4;
 export const OPEN_HOUR = 7, CLOSE_HOUR = 18, CLOSE_LIT = 22;
 /** the demand's rate: golfers a town day per resident or passing driver (pop) at appeal 1 and the reference price (plan 2.2) */
 export const DEMAND_RATE = 0.0183;
+/** the most appeal the player's props add to the range (plan P24 Phase 3, T131: golf/decor.ts decorAppeal) */
+export const PROPS_APPEAL_CAP = 0.4;
 
 /** an upgrade as the range card lists it: its id, name, cost ($), the upgrade it needs first, what it does (one line) */
 export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; needs?: RangeUpgradeId; effect: string }
@@ -54,20 +56,26 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   return out;
 }
 
+/** the range's appeal terms from outside its save, worked out by the engine from the map: propsAppeal, the props near the shop and the mats
+ *  (T131, golf/decor.ts decorAppeal: 0..PROPS_APPEAL_CAP) */
+export interface RangeExtras { propsAppeal?: number }
 /** what the range is now (plan 2.3): bays, target greens, the upgrades as flags, appeal (x visitors), the reference price ($), the extra spend a
- *  golfer ($), the counter's serve time (sim s), the opening hours and the queue at which cars drive on */
+ *  golfer ($), the counter's serve time (sim s), the opening hours and the queue at which cars drive on; propsAppeal, the props' term (a
+ *  fraction: x (1 + propsAppeal) on the appeal and the fair price) */
 export interface RangeStats {
   bays: number; targets: number; covered: boolean; lights: boolean; dispenser: boolean; proShop: boolean;
-  appeal: number; ref: number; extra: number; serve: number; open: number; close: number; qMax: number;
+  appeal: number; ref: number; extra: number; serve: number; open: number; close: number; qMax: number; propsAppeal: number;
 }
-export function rangeStats(s: RangeBizSave): RangeStats {
+export function rangeStats(s: RangeBizSave, x: RangeExtras = {}): RangeStats {
   const has = (id: RangeUpgradeId) => s.owned.includes(id);
   const bays = has('bays24') ? 24 : has('bays12') ? 12 : has('bays8') ? 8 : START_BAYS;
   const covered = has('covered'), lights = has('lights'), dispenser = has('dispenser'), proShop = has('proshop');
-  const appeal = 1 + (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0);
+  // the props' term (T131): a dressed front draws more golfers and they pay more without grumbling
+  const propsAppeal = Math.min(PROPS_APPEAL_CAP, Math.max(0, Number.isFinite(x.propsAppeal) ? x.propsAppeal! : 0));
+  const appeal = (1 + (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0)) * (1 + propsAppeal);
   return {
-    bays, targets: has('targets') ? 5 : 2, covered, lights, dispenser, proShop, appeal,
-    ref: PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
+    bays, targets: has('targets') ? 5 : 2, covered, lights, dispenser, proShop, appeal, propsAppeal,
+    ref: (PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0)) * (1 + propsAppeal), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
     open: OPEN_HOUR, close: lights ? CLOSE_LIT : CLOSE_HOUR, qMax: 4 + Math.floor(bays / 4),
   };
 }
@@ -93,15 +101,15 @@ export function hourWeight(h: number, st: Pick<RangeStats, 'open' | 'close'>): n
 }
 /** the sum of the hour curve over the unlit day (07:00-18:00): the demand is said per such day */
 const DAY_WEIGHT = 2 * 0.7 + 3 * 0.9 + 2 * 1.1 + 2 * 0.9 + 2 * 1.5;
-/** who the range draws from: the tier (the pass-pop), the map exits, the town's residents */
-export interface DemandCtx { tier: number; exits: number; residents: number }
+/** who the range draws from: the tier (the pass-pop), the map exits, the town's residents; and the appeal terms from the map (RangeExtras) */
+export interface DemandCtx extends RangeExtras { tier: number; exits: number; residents: number }
 /** the golfers a town day of 07:00-18:00 wants (plan 2.2): DEMAND_RATE x (pass-pop x exits + residents) x appeal x the price factor */
-export function dayDemand(s: RangeBizSave, c: DemandCtx, st = rangeStats(s)): number {
+export function dayDemand(s: RangeBizSave, c: DemandCtx, st = rangeStats(s, c)): number {
   const pop = RANGE_PASS_POP(c.tier) * Math.max(1, c.exits) + Math.max(0, c.residents);
   return DEMAND_RATE * pop * st.appeal * priceFactor(s.price, st.ref);
 }
 /** the arrival rate at town hour h, golfers per sim second, on a town day of dayLen sim s */
-export function arrivalRate(s: RangeBizSave, c: DemandCtx, h: number, dayLen: number, st = rangeStats(s)): number {
+export function arrivalRate(s: RangeBizSave, c: DemandCtx, h: number, dayLen: number, st = rangeStats(s, c)): number {
   return dayDemand(s, c, st) * hourWeight(h, st) / DAY_WEIGHT / (dayLen / 24);
 }
 /** the customers one golfer you see stands for (plan D4): RANGE_SCALE_BASE at a 600 s town day, in step with the day length */
@@ -111,7 +119,7 @@ export function saleValue(s: RangeBizSave, dayLen: number, st = rangeStats(s)): 
 /** the expected visits of a span the player skipped (sim s, from town hour h0): the arrivals by the hour curve, the served capped by the bays
  *  (each plays a town hour); returns golfers served and lost */
 export function skippedVisits(s: RangeBizSave, c: DemandCtx, h0: number, dt: number, dayLen: number): { served: number; lost: number } {
-  const st = rangeStats(s), hourS = dayLen / 24;
+  const st = rangeStats(s, c), hourS = dayLen / 24;
   let served = 0, lost = 0;
   for (let t = 0; t < dt; t += hourS) {
     const h = (h0 + t / hourS) % 24, span = Math.min(hourS, dt - t) / hourS, want = dayDemand(s, c, st) * hourWeight(h, st) / DAY_WEIGHT * span;
