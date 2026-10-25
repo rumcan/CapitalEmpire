@@ -97,6 +97,7 @@ import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
 import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale } from './newart';
 import { webpSource } from './atlas-gl';
+import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
@@ -935,7 +936,9 @@ export class Game {
     // the atlas within GAME-PLAN's GPU budget (T080, atlas-pages.ts): a coarse mip of every page resident, the finer mips streamed per cell
     // as the view needs them; mip 0 on every screen above 1x (sizes.ts atlasMip0: at the closest zoom a dpr-1.25 screen needs 0.375 device px
     // per display px, more than mip 1 holds; the owner, 2026-10-24: nothing painted blurry or pixelated)
-    const atlas = this.gl.initAtlas(this.dpr, webpSource(ATLAS_PAGES));
+    // the pages as GPU blocks (BC7 / ASTC / ETC2, transcoded from the build's KTX2) where the build has them and the GPU takes one, else RGBA8
+    const ktx = ktx2Built() ? pickFormat(this.gl.gl) : null;
+    const atlas = this.gl.initAtlas(this.dpr, ktx ? [ktx2Source(ATLAS_PAGES, ktx), webpSource(ATLAS_PAGES)] : [webpSource(ATLAS_PAGES)]);
     // the alpha for picking, from mip 2 (the old mip-1 images halved): no page kept decoded as an image
     this.pageAlpha = await Promise.all(ATLAS_PAGES.map(async row => {
       try {
