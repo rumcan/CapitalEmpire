@@ -125,7 +125,7 @@ standing clap loop; this one stands, claps, sits: the sheet takes one clap from 
 `Sitting_Clap` 354 (small claps low over the lap). The frames were picked from dense test renders (`output/crowd-test`, git-ignored) and are in
 the cast's `clipRender`: clap 1.50/1.60/1.70/1.76 s (a loop: together, opening, apart, closing), cheer 0.33 to 1.24 s in 6 (dip, arms up,
 down; `--once`), sit 0.3/1.0 (`--seated`), sit_clap 1.00/1.05/1.12/1.22 (a loop, `--seated`). Every spectator from base_man or base_woman has
-`clips: [clap, cheer, sit, sit_clap]` (13; the kids, from base_kid, have no crowd clips yet: base_kid is not rigged on Meshy). The json `loop`
+`clips: [clap, cheer, sit, sit_clap]` (13), and from 2026-10-25 14:30 UTC the two child spectators too: base_kid was rigged on Meshy the same way (remesh 60,000, rig at 1.38 m) and has the same four clips (sit from Chair_Sit_Idle_M 33; 22 Meshy credits, **18 left**); a test kid (output/kid-test) showed the adult frame times read right on the child. The json `loop`
 is now true unless `--once` (it was false whenever `--times` was given). Seated sheets carry `seatHeightMetres` and `seat` for the grandstand.
 
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
