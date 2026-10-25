@@ -1,6 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
 import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
-import { galleryPeople, queuePeople, teeGolfer, walkerPeople, type CrowdPerson } from './crowdview';
+import { galleryPeople, hash, queuePeople, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
@@ -89,8 +89,9 @@ import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
 import { adjacentBlockPrice, buyAdjacentBlock, COURSE_LAND_MSG, LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
-import type { CourseArea, CourseLayout } from './golf/types';
-import { deriveHoles, validateMarkerPlacement } from './golf/holes';
+import type { CourseArea, CourseLayout, GolfSurface } from './golf/types';
+import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
+import { PlayView, makeCourseView, makeField, playRound, teeTimes, type CourseView, type RoundPlan } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
@@ -172,6 +173,11 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
   d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
   d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
 }
+/** the golfer art (indices into GOLFER_PEOPLE) of a tag: the men's ids carry _m, the women's _w; with none of its own, a sex gets all the art */
+const golferArt = (tag: string): number[] => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
+const GOLFER_ART: Record<'m' | 'w', number[]> = { m: golferArt('_m'), w: golferArt('_w') };
+/** the day's golf round (docs/GOLF-PLAY.md P2): its plan, course view and playback, the tournament's key (the round's count), and each golfer's art index */
+interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[] }
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
@@ -404,6 +410,8 @@ export class Game {
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
   /** the crowd's movers (crowdMovers) and its scratch people: the spectators, the golfers */
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
+  /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
+  private play: GolfPlay | null = null; private playTried = -1;
   /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
   grass = new GrassManagement(); grassPanel = false; grassHeat = false; grassRadius = 12; grassArea = false; grassDose = 1; grassAngle = 0;
   grassAction: GrassAction | null = null; grassTarget: Pt | null = null;
@@ -3576,6 +3584,19 @@ export class Game {
     }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
+  /** the golf balls of the day (docs/GOLF-PLAY.md P2) at the street tier: each in the air raised by its height (1 m = HH * ze px, half a tile's screen
+   *  height) over a soft shadow on the ground, or at rest; a white ball with a dark rim. Culled to the view */
+  private drawBalls(ctx: CanvasRenderingContext2D) {
+    const pl = this.play; if (!pl || this.cam.z < DISTRICT_Z) return;
+    const B = pl.pv.balls, dpr = this.dpr, ze = this.cam.z * dpr, cw = this.cw, ch = this.ch, r = Math.max(1.5, 0.06 * HH * 2 * ze);
+    ctx.lineWidth = dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
+    for (let i = 0; i < B.length; i++) {
+      const b = B[i]!, c = this.screen(b.x, b.y);
+      if (c.x < -r || c.y < -r || c.x > cw + r || c.y > ch + r) continue;
+      if (b.h > 0) { ctx.fillStyle = 'rgba(2,6,23,0.35)'; ctx.beginPath(); ctx.ellipse(c.x, c.y, 1.5 * r, 0.7 * r, 0, 0, Math.PI * 2); ctx.fill(); }
+      ctx.beginPath(); ctx.arc(c.x, c.y - b.h * HH * ze, r, 0, Math.PI * 2); ctx.fillStyle = '#f8fafc'; ctx.fill(); ctx.stroke();
+    }
+  }
   /** the bus tool's preview at the cursor: once the first stop is picked, a line from it to the plan (white dashed) and the plan's stop; the label: the reason,
    *  the lot stop's car park, or the doors stop's cost (red when short of the money) */
   private drawBusPreview(ctx: CanvasRenderingContext2D) {
@@ -4189,20 +4210,19 @@ export class Game {
     return out;
   }
 
-  /** the crowd as movers in a tile box (the street tier, with the townspeople): each gallery spot's fans (and a tee's stand-in golfer), each queue at a
-   *  stop or gate (its block 1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D
-   *  frame (crowdview.ts; `now` in seconds). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the reach of its people.
-   *  Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
+  /** the crowd as movers in a tile box (the street tier, with the townspeople): each gallery spot's fans, each queue at a stop or gate (its block
+   *  1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D frame (crowdview.ts;
+   *  `now` in seconds), then the golfers of the day (playMovers). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the
+   *  reach of its people. Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
   private crowdMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
-    const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople, T = this.crowdGolfers;
-    const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length, nG = GOLFER_PEOPLE.length;
+    const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople;
+    const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length;
     let m = 0;
     for (let i = 0; i + 7 < G.length; i += 8) {
       const x = G[i]!, y = G[i + 1]!;
       if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
       const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
-      if (G[i + 3] === 1 && teeGolfer(G, i, spot, now, nG, T)) crowdDrawable(out, m++, T[0]!);
     }
     for (let i = 0; i + 5 < W.length; i += 6) {
       const x = W[i]!, y = W[i + 1]!;
@@ -4220,8 +4240,48 @@ export class Game {
       const k = queuePeople(sx + ux * 1.5, sy + uy * 1.5, sx, sy, q, r, now, nS, P);
       for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
     }
+    m = this.playMovers(out, m, X0, Y0, X1, Y1);
     out.length = m;
     return out;
+  }
+  /** the golfers of the day (docs/GOLF-PLAY.md P2) in the box, from mover m on: each person of the playback (PlayView.people) as a golfer of his art
+   *  (group 1: person = the art's index for his sex and look; the row and frame come from the view), culled to the box. Reuses one scratch person;
+   *  returns the next mover index */
+  private playMovers(out: Drawable[], m: number, X0: number, Y0: number, X1: number, Y1: number): number {
+    const pl = this.play; if (!pl) return m;
+    const P = pl.pv.people, t = this.crowdGolfers[0] ?? (this.crowdGolfers[0] = { x: 0, y: 0, group: 1, person: 0, row: 0, frame: 0 });
+    for (let j = 0; j < P.length; j++) {
+      const p = P[j]!;
+      if (p.x < X0 || p.x > X1 || p.y < Y0 || p.y > Y1) continue;
+      t.x = p.x; t.y = p.y; t.person = pl.art[p.golfer]!; t.row = p.row; t.frame = p.frame;
+      crowdDrawable(out, m++, t);
+    }
+    return m;
+  }
+  /** the golf round on the tournament day (docs/GOLF-PLAY.md P2), each frame in golf mode. It is built once per tournament, while its round is live
+   *  (the surge, and the eval after kick-off, so a reload in the eval finds it too), keyed by the round's count (runs: the same after a reload, new for
+   *  each tournament), and then played back at the town clock's minute of the day (the tournament day runs at 1 game minute per sim second). Dropped
+   *  when the round is free, or when there is no golf */
+  private updatePlay(now: number) {
+    const tr = this.traffic, r = tr?.round;
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; return; }
+    if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlay(r.runs); }
+    if (this.play) this.play.pv.update(townTimeOf(tr.town, tr.simTime(now)).dayMin, now / 1000);
+  }
+  /** the round of a tournament key (see updatePlay): the course's played holes (the course grid's surface where it is painted, else the painted
+   *  areas), the field at the tier, its tee times and the round, all from a seed of the map's seed and the key. Null with no holes to play */
+  private buildPlay(key: number): GolfPlay | null {
+    const g = this.golf; if (!g) return null;
+    const areas = this.courseAreaList(), grid = this.courseGrid;
+    const surfAt = (x: number, y: number): GolfSurface | null => {
+      const i = grid ? cellAt(grid, x, y) : -1, s = i >= 0 ? SURF_SURFACE[grid!.surf[i]!] : null;
+      return s ?? surfaceAt(areas, x, y);
+    };
+    const view = makeCourseView(deriveHoles(areas, g.tees, g.pins, g.aims), surfAt);
+    if (!view.holes.length) return null;
+    const seed = Math.floor(hash(this.seed, key) * 4294967296), golfers = makeField(g.tier, seed);
+    const plan = playRound(view, golfers, teeTimes(golfers, seed), seed);
+    return { plan, view, pv: new PlayView(plan, view), key, art: golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!) };
   }
 
   // ---------- main loop ----------
@@ -4325,6 +4385,8 @@ export class Game {
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
+    // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
+    this.updatePlay(now);
     gl.begin({ X: cam.X, Y: cam.Y, ze, cw: this.cw, ch: this.ch }, [0.106, 0.157, 0.086]);
     const X0 = cam.X - this.cw / 2 / ze, Y0 = cam.Y - this.ch / 2 / ze, X1 = cam.X + this.cw / 2 / ze, Y1 = cam.Y + this.ch / 2 / ze;
     const dist = (cx: number, cy: number) => Math.hypot(cx - cam.X, cy - cam.Y) * ze;
@@ -4698,6 +4760,7 @@ export class Game {
     this.drawBuses(ctx);
     this.drawGalleries(ctx);
     this.drawWalkers(ctx);
+    this.drawBalls(ctx);
     if (this.grassPanel) {
       const s = this.grassScope();
       if (s) {

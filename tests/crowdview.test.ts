@@ -1,9 +1,9 @@
 // The crowd's people (docs/PEOPLE-IN-GAME.md): src/game/crowdview.ts, the seeded hash, the clips' frames, the spectators on a gallery, the queues,
-// the walking parties and the stand-in tee golfer. Pure TS: no DOM.
+// the walking parties. Pure TS: no DOM.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clipFrame, galleryPeople, golferRow, hash, queuePeople, rowToward, teeGolfer, walkerPeople, type CrowdPerson } from '../src/game/crowdview';
-import { GOLFER_CLIPS, SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE } from '../src/game/library';
+import { clipFrame, galleryPeople, golferRow, hash, queuePeople, rowToward, walkerPeople, type CrowdPerson } from '../src/game/crowdview';
+import { SPECTATOR_CLIPS, SPECTATOR_FRAMES, SPECTATOR_PEOPLE } from '../src/game/library';
 
 const PEOPLE = SPECTATOR_PEOPLE.length;
 /** a gallery buffer with one spot: x, y, fans, kind, fx, fy, ax, ay */
@@ -108,30 +108,6 @@ test('walkerPeople: min(n, 3) people side by side across the heading, facing it,
   assert.ok(Math.abs(out[2]!.y - out[0]!.y - 0.8) < 1e-9, 'three people 0.4 tiles apart');
   walkerPeople(W(3, 10, 10), 0, 4, 1, PEOPLE, out);
   assert.equal(out[0]!.row, 0, 'no heading: the diagonal toward the screen bottom');
-});
-
-test('teeGolfer: none for a green, a tee with no fans, or no golfers; one pro on a tee with fans, aiming at the pin, on his cycle', () => {
-  const out: CrowdPerson[] = [], drive = GOLFER_CLIPS.golf_drive;
-  // the spot at (-2, -3), the tee at (0, 0), the pin at (0, 50)
-  const buf = (kind: number, fans: number) => Float32Array.of(-2, -3, fans, kind, 0, 0, 0, 50);
-  assert.equal(teeGolfer(buf(0, 30), 0, 1, 0, 3, out), 0, 'a green');
-  assert.equal(teeGolfer(buf(1, 0), 0, 1, 0, 3, out), 0, 'a tee with no fans');
-  assert.equal(teeGolfer(buf(1, 30), 0, 1, 0, 0, out), 0, 'no golfers');
-  assert.equal(teeGolfer(buf(1, 30), 0, 1, 0, 3, out), 1);
-  const g = out[0]!;
-  assert.deepEqual([g.x, g.y, g.group], [0, 0, 1], 'at the tee');
-  assert.ok(g.person >= 0 && g.person < 3, `golfer ${g.person}`);
-  assert.equal(g.row, 3, 'the pin is down-left on screen: turned clockwise, the golfer faces NW');
-  // the cycle: offset by the spot (hash(1, 5) * 30), so the time now that lands on local time lt
-  const off = hash(1, 5) * 30, at = (lt: number) => ((lt - off) % 30 + 30) % 30;
-  teeGolfer(buf(1, 30), 0, 1, at(0.5), 3, out);
-  assert.equal(out[0]!.frame, drive.start, 'the address: the first frame of the swing');
-  teeGolfer(buf(1, 30), 0, 1, at(3.2), 3, out);
-  assert.equal(out[0]!.frame, drive.start + 4, 'the swing, at its 1.2 s');
-  teeGolfer(buf(1, 30), 0, 1, at(5.5), 3, out);
-  assert.equal(out[0]!.frame, drive.start + drive.n - 1, 'the finish held');
-  teeGolfer(buf(1, 30), 0, 1, at(20), 3, out);
-  assert.equal(out[0]!.frame, GOLFER_CLIPS.idle.start, 'then idle');
 });
 
 test('queuePeople: min(count, 24) idle people in a grid centred on the point, each facing it; none with no people', () => {
