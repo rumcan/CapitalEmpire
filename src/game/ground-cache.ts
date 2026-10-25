@@ -161,6 +161,9 @@ export class GroundCache {
     if (!this.ready) { this.want = []; return; }
     this.want.sort((a, b) => a.pri - b.pri);
     for (const w of this.want) {
+      // asked for twice this frame (the planner piece under several chunks): sent once, at its most urgent (T134: the copies filled every
+      // worker's slots at a fresh start)
+      if (w.t.pendingL === w.L && w.t.pendingArtL === w.artL) continue;
       let best = -1; for (let i = 0; i < this.workers.length; i++) if (this.isReady[i] && this.inflight[i] < 2 && (best < 0 || this.inflight[i] < this.inflight[best])) best = i;
       if (best < 0) break;
       const id = this.nextId++; w.t.pendingL = w.L; w.t.pendingArtL = w.artL; this.inflight[best]++;

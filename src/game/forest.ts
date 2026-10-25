@@ -1,11 +1,19 @@
 // Forest planting on the hills: pure TypeScript (no DOM, no library import), so the tests can run it in Node.
-import { MAP, mulberry } from './iso';
+import { MAP, mulberry, tileOf } from './iso';
 import { fbm, hash2, smoothstep, type Noise } from './terrain/noise';
 import { TC, sampleField } from './terrain/types';
 import { OWNER_SCALE } from './lots/scales';
 
 /** tiles per forest cell: the engine plants the trees of one cell at a time, as the camera reaches it */
 export const FOREST_CELL = 64;
+/** how far past the view (tiles) the engine plants the forest and town-tree cells: a tree standing just outside it shows */
+export const FOREST_VIEW_MARGIN = 8;
+/** the forest (and town-tree) cells under the world px box X0 Y0 X1 Y1 grown by g tiles, clamped to the map: ci0, cj0, ci1, cj1 */
+export function forestCellRange(X0: number, Y0: number, X1: number, Y1: number, g: number): [number, number, number, number] {
+  const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), N = MAP / FOREST_CELL;
+  const cl = (v: number) => Math.min(N - 1, Math.max(0, Math.floor(v / FOREST_CELL)));
+  return [cl(Math.min(a.x, b.x, c.x, d.x) - g), cl(Math.min(a.y, b.y, c.y, d.y) - g), cl(Math.max(a.x, b.x, c.x, d.x) + g), cl(Math.max(a.y, b.y, c.y, d.y) + g)];
+}
 /** one species of the tree pools: its library ids (the four views of a generated tree, the foliage stages of a capital tree, the numbered
  *  pictures of an old one), dealt evenly; w, its share among the species of its pool; dead, a dead snag (the woods only, never the town) */
 export interface TreeSpecies { name: string; ids: readonly string[]; w: number; dead?: true }

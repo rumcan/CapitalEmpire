@@ -15,6 +15,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
+import { chunkLayers } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
 import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
@@ -64,8 +65,8 @@ import { plazaEdge, plazaIslands, plazaKey, plazaLocal, plazaOutline, plazaPoint
 import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
 import { slopeField } from './terrain-paint';
-import { CONIFER_IDS, FOREST_CELL, forestCell, type ForestTree } from './forest';
-import { casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
+import { CONIFER_IDS, FOREST_CELL, FOREST_VIEW_MARGIN, forestCell, forestCellRange, type ForestTree } from './forest';
+import { CHUNK_CASTER_REACH, LIVING_PLANT_MARGIN, casterKind, casterOf, doorToward, pxAcross, CK } from './living-ground';
 import { townTreeCell } from './towntrees';
 import type { BendMode, LibItem, LineStyle, Prop, Tool } from './types';
 import { LK, LaneGraph, laneAt, laneOff } from './sim/lanes';
@@ -249,8 +250,8 @@ function disasterText(n: DisasterNote): string {
   }
 }
 /** the living ground's prop caster cells (T111): CASTER_CELL tiles a side, CASTER_N a side of the map; and the reach (tiles) a chunk looks out
- *  for casters (a big tree's canopy past its trunk) */
-const CASTER_CELL = 32, CASTER_N = MAP / CASTER_CELL, CASTER_REACH = 9;
+ *  for casters (a big tree's canopy past its trunk; living-ground.ts) */
+const CASTER_CELL = 32, CASTER_N = MAP / CASTER_CELL, CASTER_REACH = CHUNK_CASTER_REACH;
 const casterCellOf = (x: number, y: number) => clamp(Math.floor(y / CASTER_CELL), 0, CASTER_N - 1) * CASTER_N + clamp(Math.floor(x / CASTER_CELL), 0, CASTER_N - 1);
 const BUILDING_KINDS: Record<string, number> = { house: 0, shop: 1, venue: 1, arcade: 1, landmark: 4, barn: 3 };
 /** a town lot's use as the player reads it in the toasts (index LU: NONE, RES, COM, IND, TOUR, GOV) */
@@ -1402,12 +1403,10 @@ export class Game {
     if (LIBRARY[p.item].big && LIBRARY[p.item].kind !== 'car') this.scheduleBlocks(isLotProp(p));
   }
   /** after moving, flipping or scaling a prop */
-  /** plant the forest and town-tree cells near the view (world px rectangle): nearest to the view centre first, at most two cells per frame (forest and town together).
-   *  A town cell has key + N * N (N cells a side) */
-  private plantForest(X0: number, Y0: number, X1: number, Y1: number) {
-    const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = 8, N = MAP / FOREST_CELL, NN = N * N;
-    const ci0 = clamp(Math.floor((Math.min(a.x, b.x, c.x, d.x) - g) / FOREST_CELL), 0, N - 1), ci1 = clamp(Math.floor((Math.max(a.x, b.x, c.x, d.x) + g) / FOREST_CELL), 0, N - 1);
-    const cj0 = clamp(Math.floor((Math.min(a.y, b.y, c.y, d.y) - g) / FOREST_CELL), 0, N - 1), cj1 = clamp(Math.floor((Math.max(a.y, b.y, c.y, d.y) + g) / FOREST_CELL), 0, N - 1);
+  /** plant the forest and town-tree cells near the view (world px rectangle, grown by g tiles): nearest to the view centre first, at most two
+   *  cells per frame (forest and town together). A town cell has key + N * N (N cells a side) */
+  private plantForest(X0: number, Y0: number, X1: number, Y1: number, g = FOREST_VIEW_MARGIN) {
+    const N = MAP / FOREST_CELL, NN = N * N, [ci0, cj0, ci1, cj1] = forestCellRange(X0, Y0, X1, Y1, g);
     let todo: number[] | null = null;
     for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) {
       const key = cj * N + ci;
@@ -1570,15 +1569,14 @@ export class Game {
     for (const c of this.casterDirty) { this.flushCasterCell(c); if (performance.now() - t0 > budgetMs) break; }
   }
   /** a ground chunk may bake with the living ground: its prop cells are sent (sent now when dirty) and the forest and town-tree cells within reach
-   *  are planted (plantForest plants them, nearest first), so it never bakes once without its trees and again with them */
+   *  are planted (plantForest plants them, nearest first, as far out as this reach: LIVING_PLANT_MARGIN), so it never bakes once without its
+   *  trees and again with them */
   private casterReady(X0: number, Y0: number, X1: number, Y1: number): boolean {
     const a = tileOf(X0, Y0), b = tileOf(X1, Y0), c = tileOf(X0, Y1), d = tileOf(X1, Y1), g = CASTER_REACH;
     const tx0 = Math.min(a.x, b.x, c.x, d.x) - g, tx1 = Math.max(a.x, b.x, c.x, d.x) + g, ty0 = Math.min(a.y, b.y, c.y, d.y) - g, ty1 = Math.max(a.y, b.y, c.y, d.y) + g;
     if (this.casterDirty.size) for (let cy = clamp(Math.floor(ty0 / CASTER_CELL), 0, CASTER_N - 1); cy <= clamp(Math.floor(ty1 / CASTER_CELL), 0, CASTER_N - 1); cy++) for (let cx = clamp(Math.floor(tx0 / CASTER_CELL), 0, CASTER_N - 1); cx <= clamp(Math.floor(tx1 / CASTER_CELL), 0, CASTER_N - 1); cx++) { const k = cy * CASTER_N + cx; if (this.casterDirty.has(k)) this.flushCasterCell(k); }
-    const N = MAP / FOREST_CELL;
-    for (let cj = clamp(Math.floor(ty0 / FOREST_CELL), 0, N - 1); cj <= clamp(Math.floor(ty1 / FOREST_CELL), 0, N - 1); cj++) for (let ci = clamp(Math.floor(tx0 / FOREST_CELL), 0, N - 1); ci <= clamp(Math.floor(tx1 / FOREST_CELL), 0, N - 1); ci++) {
-      const k = cj * N + ci; if (!this.forest.has(k) || !this.townTrees.has(k)) return false;
-    }
+    const N = MAP / FOREST_CELL, [ci0, cj0, ci1, cj1] = forestCellRange(X0, Y0, X1, Y1, g);
+    for (let cj = cj0; cj <= cj1; cj++) for (let ci = ci0; ci <= ci1; ci++) { const k = cj * N + ci; if (!this.forest.has(k) || !this.townTrees.has(k)) return false; }
     return true;
   }
   /** the living ground (T111): the gear menu's Ground variety (on by default, kept across reloads) and the dev debug view of its influence maps */
@@ -4526,11 +4524,12 @@ export class Game {
         if (complete) this.groundBlendAt = now;
       }
       const zoomBlend = Number.isFinite(this.groundBlendAt) ? Math.max(0, Math.min(1, (now - this.groundBlendAt) / 180)) : 0;
-      // a chunk not baked yet shows its piece of the planner map meanwhile
+      // a chunk not baked yet shows its piece of the planner map meanwhile, asked for before any chunk (one planner bake covers 8 x 8 chunks:
+      // after a jump or a fresh start the view is low-detail ground at once, never the clear colour; T134)
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
         const t = this.ground.tile(kind, i, j); if (t.tex || t.prev) continue;
         const X = i * CW, Y = j * CH, pi = Math.floor(X / PLAN_W), pj = Math.floor(Y / PLAN_H), p = this.ground.tile('p', pi, pj);
-        this.ground.need(p, pL, 1e6 + dist(X, Y), now);
+        this.ground.need(p, pL, dist(X, Y) - 1e6, now);
         if (p.tex) gl.drawChunk(p.tex, X, Y, X + CW, Y + CH, false, 1, [(X - pi * PLAN_W) / PLAN_W, (Y - pj * PLAN_H) / PLAN_H, (X + CW - pi * PLAN_W) / PLAN_W, (Y + CH - pj * PLAN_H) / PLAN_H]);
       }
       const mask = this.revealMask(now); if (mask) gl.setMask(mask);
@@ -4538,16 +4537,16 @@ export class Game {
         const t = this.ground.tile(kind, i, j);
         if (!this.ground.livingActive || this.casterReady(i * CW, j * CH, (i + 1) * CW, (j + 1) * CH)) this.ground.need(t, L, dist((i + 0.5) * CW, (j + 0.5) * CH), now, artL);
         const r = [i * CW, j * CH, (i + 1) * CW, (j + 1) * CH] as const;
-        if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); }
-        else if (zoomBlend < 1) {
-          const targetReady = t.texL === L && t.texArtL === artL, old = targetReady ? t.fadeFrom : t.tex;
-          const fallback = this.groundBlendOtherTier || !old ? this.ground.zoomFallback(kind, r, now) : [];
-          if (fallback.length) for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
-          else if (old) gl.drawChunk(old, ...r);
-          if (t.tex && targetReady && zoomBlend > 0) gl.drawChunk(t.tex, ...r, false, zoomBlend);
-          if (t.fadeFrom && Number.isFinite(this.groundBlendAt)) t.fadeStart = this.groundBlendAt;
-        }
-        else if (t.tex) gl.drawChunk(t.tex, ...r);
+        if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); continue; }
+        // its picture (ground-layers.ts): while the zoom crossfade waits for the whole view, an older picture, or its new one when it has none
+        // (a chunk that came into view: it drew nothing, the clear colour, until the last chunk on screen was baked, T134), the other tier's
+        // pictures over it, and its new picture fading in
+        const lay = chunkLayers(t, L, artL, zoomBlend, this.groundBlendOtherTier);
+        if (lay.base) gl.drawChunk(lay.base, ...r);
+        const fallback = lay.fallback ? this.ground.zoomFallback(kind, r, now) : [];
+        for (const picture of fallback) gl.drawChunk(picture.tex, ...picture.rect, false, 1, picture.uv);
+        if (lay.top && (lay.top !== lay.base || fallback.length)) gl.drawChunk(lay.top, ...r, false, lay.topAlpha);
+        if (zoomBlend < 1 && t.fadeFrom && Number.isFinite(this.groundBlendAt)) t.fadeStart = this.groundBlendAt;
       }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
       if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
@@ -4560,8 +4559,9 @@ export class Game {
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
       const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1)) : cars;
-      // with the living ground the trees plant over every chunk on screen (a chunk bakes once its trees are known: casterReady)
-      if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2); }
+      // with the living ground the trees plant over every chunk on screen and as far out as a chunk's caster reach (a chunk bakes once its trees
+      // are known: casterReady; a cell one tile short of that left an edge chunk unbaked for ever, T134)
+      if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2, LIVING_PLANT_MARGIN); }
       else this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
       this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);
