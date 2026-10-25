@@ -97,7 +97,7 @@ const WALL_STEPS = 24, WALL_LIGHT_SPAN = 0.1;
  *  runs up the screen: a line there would stand as a vertical glitch) */
 const WALL_LINE_FACING = 0.2;
 /** the shade colour every course shadow multiplies in (cool, so shade reads as sky light, T110) and the warm tint of the textured shines */
-const SHADE_TINT = 'rgb(112,120,152)', SHINE_TINT = 'rgb(255,232,176)';
+const SHADE_TINT = 'rgb(112,120,152)', SHINE_TINT = 'rgb(255,232,176)', RIM_TINT = 'rgb(236,234,214)';
 /** a lit top edge (courseRims): its gap inside the edge, the width of its light and its soft ramp in, tiles (0.2 m, 0.44 m, 0.12 m) */
 const RIM_GAP = 0.1, RIM_W = 0.22, RIM_RAMP = 0.06;
 /** the wall art's shade per band in full shade (multiplied over the art: 1 is the art as painted), the top band being painted */
@@ -996,7 +996,7 @@ export class GroundPainter {
     g.globalCompositeOperation = 'destination-out';
     for (const [w, a] of [[RIM_GAP + RIM_RAMP, 0.5], [RIM_GAP, 1]] as const) { g.strokeStyle = `rgba(0,0,0,${a})`; g.lineWidth = Math.max(px, 2 * w); for (const q of steps) g.stroke(q); }
     g.restore();
-    this.shine(ctx, box, SHINE_TINT, 2.4, m => { m.setTransform(1, 0, 0, 1, 0, 0); m.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); });
+    this.shine(ctx, box, RIM_TINT, 0.8, m => { m.setTransform(1, 0, 0, 1, 0, 0); m.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); });
   }
   /** a shine laid on ctx inside a mask, textured by the ground under it (the owner's rule T110): the light added is the ground's own colour
    *  squared (so it lands on its mid-tones and highlights and leaves its dark gaps dark) times a warm tint and k, through the mask's alpha.
