@@ -2,7 +2,7 @@ import type { Game } from '../../game/engine';
 
 const STEPS = ['Click the tee', 'Click the green', 'Drag the handles, then Build'] as const;
 
-/** the New hole wizard's panel (T102, plan P21 3.3 A), shown in the Course panel while the plan mode is on: the hole and the step, the
+/** the New hole wizard's card (T102, plan P21 3.3 A), on top of the Holes panel in New hole's place while the plan mode is on (P23 4.3): the hole and the step, the
  *  live par, length and price, and Build, Cancel, Delete and Done. The map shows the ghost (exactly the cells a Build lays), the handles,
  *  the gold Build pill and the label beside the pointer. Self-contained: it reads and drives game.paint (the plan mode) only */
 export function HoleWizardPanel({ game }: { game: Game }) {
@@ -12,7 +12,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
   const step = w.step === 'tee' ? 0 : w.step === 'green' ? 1 : 2;
   const cur = p.brushHole, canEdit = w.step === 'tee' && p.hasPlan(cur);
   return (
-    <div className="mt-2 rounded border border-amber-400/40 p-2">
+    <div className="wizard-card" data-primary="wizard">
       <div className="flex flex-wrap items-baseline gap-2">
         <span className="text-xs font-semibold text-amber-200">{w.base ? `Edit hole ${w.hole}` : `New hole ${w.hole}`}</span>
         <span className="text-[11px] text-slate-400">{`${step + 1}/3 · ${STEPS[step]}`}</span>

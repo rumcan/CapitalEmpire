@@ -21,6 +21,10 @@ import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
+import { BuildingsPanel } from './ui/course/BuildingsPanel';
+import { MyLooksCard } from './ui/course/MyLooks';
+import { Rail, NewBadge } from './ui/Rail';
+import { railEntries, railItemOf, toolNew } from './ui/rail-items';
 import { SurfaceMark } from './ui/course/SurfaceMark';
 import { BRUSH_PRESETS } from './game/paint';
 import { STRUCTURES } from './game/golf/tents';
@@ -39,28 +43,6 @@ import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
-/** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
-const GROUPS: { id: string; label: string; icon: IconName; tools: { id: Tool; label: string; key: string; icon: IconName }[] }[] = [
-  { id: 'select', label: 'Select', icon: 'compass', tools: [{ id: 'select', label: 'Select / Pan', key: 'V', icon: 'compass' }] },
-  { id: 'roads', label: 'Roads', icon: 'road', tools: [
-    { id: 'road', label: 'Build', key: 'R', icon: 'road' },
-    { id: 'lane', label: 'Upgrade', key: 'N', icon: 'up' },
-    { id: 'downgrade', label: 'Downgrade', key: 'Y', icon: 'down' },
-  ] },
-  { id: 'paint', label: 'Paint', icon: 'terrain', tools: [{ id: 'paint', label: 'Paint', key: 'A', icon: 'terrain' }] },
-  // Paths & drives (T084): the course's cart paths and drives, built the road way (the road tool in its course scope: game.uiTool)
-  { id: 'course', label: 'Course', icon: 'trophy', tools: [{ id: 'course', label: 'Course', key: 'C', icon: 'trophy' }, { id: 'path', label: 'Paths & drives', key: '', icon: 'road' }] },
-  { id: 'junction', label: 'Junctions', icon: 'junction', tools: [{ id: 'junction', label: 'Junctions', key: 'J', icon: 'junction' }] },
-  { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
-  { id: 'transport', label: 'Transport', icon: 'bus', tools: [
-    { id: 'bus', label: 'Bus route', key: 'U', icon: 'bus' },
-    { id: 'park', label: 'Car park', key: 'P', icon: 'pin' },
-    { id: 'toll', label: 'Toll gate', key: 'T', icon: 'swap' },
-  ] },
-  { id: 'business', label: 'Buildings', icon: 'buildings', tools: [{ id: 'business', label: 'Business', key: 'M', icon: 'buildings' }] },
-];
-/** the rail group a tool belongs to ('' for none) */
-const groupOf = (t: Tool) => GROUPS.find(g => g.tools.some(x => x.id === t))?.id ?? '';
 /** the hint's key words, drawn as keycaps */
 const KEY_WORDS = /\b(Esc|Tab|Enter|Shift|Backspace|Space|Delete)\b/;
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -90,14 +72,18 @@ export default function App() {
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
-  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, stats: !!courseStats }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : setCourseStats(null)) }; });
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : setCourseStats(null)) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
   const setDev = (v: boolean) => { devRef.current = v; setDevState(v); try { localStorage.setItem(DEV_KEY, v ? '1' : '0'); } catch { /* storage may be unavailable */ } };
   useEffect(() => { const f3 = (e: KeyboardEvent) => { if (e.key === 'F3') { e.preventDefault(); setDev(!devRef.current); } }; window.addEventListener('keydown', f3); return () => window.removeEventListener('keydown', f3); }, []);
-  /** the last tool picked in each rail group, so a group's tab returns to it */
+  /** the last tool picked in each rail item, so an item returns to it */
   const last = useRef<Record<string, Tool>>({});
+  /** Holes > More options > My looks (P23 decision 3): the surface style editor's card beside the Holes panel; Esc closes it first */
+  const [looks, setLooks] = useState(false);
+  const looksOpen = looks && game?.uiTool === 'course';
+  useEffect(() => { if (!looksOpen && looks) setLooks(false); }, [looksOpen, looks]);
   /** the bankrupt overlay's 'Keep watching' (cleared once the city is no longer bankrupt) */
   const [watch, setWatch] = useState(false);
   /** the top bar wraps to two rows on narrow windows (how wide depends on its content): --hud-top follows its bottom, and the rail and the
@@ -139,9 +125,9 @@ export default function App() {
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
-  // the road tool opened from the Course menu shows as its Paths & drives (uiTool 'path', T084)
-  const gid = game ? groupOf(game.uiTool) : '', grp = GROUPS.find(g => g.id === gid);
-  if (game) last.current[gid] = game.uiTool;
+  // the rail item of the tool in hand (the road tool on the course is Paths, the course tool's clubhouse scope Buildings: game.uiTool)
+  const item = game ? railItemOf(game.uiTool) : undefined;
+  if (game && item) last.current[item.id] = game.uiTool;
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
   const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
   /** the tool visibility in force (T033 progressive unlocks; null shows everything) */
@@ -154,8 +140,8 @@ export default function App() {
   const courseHint = game?.courseHint() ?? '';
   /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
   const surfaceKeys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
-  /** the open group's tools that the progressive unlocks show */
-  const shownTools = grp ? grp.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
+  /** the open item's tools that the progressive unlocks show (the segmented row of Roads and Transport) */
+  const shownTools = item ? item.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
   /** the top bar's money figure (a button: it opens the budget) */
   const treasury = (g: Game) => <Stat icon="bank" label="Treasury" value={g.unlimited ? '∞' : money(g.money)} tone={g.money < 0 ? 'text-red-300' : 'text-emerald-300'} sub={debtDays ? `bankrupt in ${DEBT_DAYS - debtDays} days` : undefined} subTone="text-red-300" onClick={() => { g.panel = g.panel === 'budget' ? null : 'budget'; g.emit(); }} />;
@@ -175,7 +161,7 @@ export default function App() {
       <canvas
         ref={overlayRef}
         className="absolute inset-0 h-full w-full touch-none"
-        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : (game?.tool === 'paint' || game?.tool === 'course') ? game.paint.cursorStyle : 'crosshair' }}
+        style={{ cursor: game?.tool === 'select' ? (game.hoverProp ? 'pointer' : 'grab') : game?.paintOn ? game.paint.cursorStyle : 'crosshair' }}
         onPointerDown={e => game?.pointerDown(e.nativeEvent)}
         onPointerMove={e => game?.pointerMove(e.nativeEvent)}
         onPointerUp={() => game?.pointerUp()}
@@ -218,7 +204,7 @@ export default function App() {
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
  {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</button>}
+ {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{/* P23 4.11: under 1600 px the chip says Skip (its tooltip says the rest), so the top bar keeps one row at 1366 px */}<span className="max-[1599px]:hidden">{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span><span className="min-[1600px]:hidden">Skip</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -326,19 +312,13 @@ export default function App() {
           </div>
 
           <div className="absolute left-3 top-[var(--hud-top,5.75rem)] z-20 flex items-start gap-2">
-            <div className="glass flex flex-col gap-1 p-1.5">
-              {(game.golfMode ? GROUPS.filter(g => g.id !== 'business' && (!ui || (ui.visibleGroups as string[]).includes(g.id))) : GROUPS).map(g => (
-                <button key={g.id} onClick={() => game.setTool(last.current[g.id] ?? g.tools[0]!.id)} title={g.label} className={`rail-tab ${gid === g.id ? 'rail-tab-on' : ''}`}>
-                  <Icon name={g.icon} size={30} />
-                  <span>{g.label}</span>
-                </button>
-              ))}
-            </div>
-            <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3">
+            {/* P23 P1-E: the same places from minute zero; a tool not open yet stays dimmed in place with what unlocks it, a new one says NEW */}
+            <Rail entries={railEntries(ui, game.golfMode, game.uiTool)} onPick={r => game.setTool(last.current[r.id] ?? r.tools[0]!.id)} onLocked={(r, why) => game.toast(`${r.label}: ${why}`)} />
+            <div className="glass w-[330px] max-h-[calc(100vh-var(--hud-top,5.75rem)-8.25rem)] overflow-y-auto p-3" data-tool={game.uiTool}>
               {shownTools.length > 1 && (
                 <div className="seg mb-3">
                   {shownTools.map(t => (
-                    <button key={t.id} className={game.uiTool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={t.key ? `${t.label} (${t.key})` : t.label}><Icon name={t.icon} size={16} />{t.label}</button>
+                    <button key={t.id} className={game.uiTool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={t.key ? `${t.label} (${t.key})` : t.label}><Icon name={t.icon} size={16} />{t.label}{toolNew(ui, t.id) && <NewBadge />}</button>
                   ))}
                 </div>
               )}
@@ -361,13 +341,15 @@ export default function App() {
                 </Panel>
               )}
               {game.tool === 'paint' && <PaintPanel game={game} />}
-              {game.tool === 'course' && <CoursePanel game={game} />}
+              {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
+              {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
               {game.tool === 'bus' && <BusPanel game={game} />}
               {game.tool === 'select' && <SelectPanel game={game} />}
             </div>
+            {looksOpen && <MyLooksCard game={game} onClose={() => setLooks(false)} />}
           </div>
 
           {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it;
@@ -946,7 +928,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
   const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
   const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
-    <Panel title={course ? 'Paths & drives' : 'Road Construction'} icon="road" desc={course ? 'Lay cart paths and drives the way roads are built: click to start, click again for each bend or stop. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.'}>
+    <Panel title={course ? 'Paths' : 'Road Construction'} icon={course ? 'sidewalk' : 'road'} desc={course ? 'The streets of your course town: cart paths and drives, laid the way roads are built. Click to start, click again for each bend or stop. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.'}>
       <div className="mt-2 flex flex-col gap-2">
         {families.map(f => { const ex = isOpen(f.id); return (
           <div key={f.id}>

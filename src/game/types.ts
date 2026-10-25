@@ -50,8 +50,10 @@ export interface Prop {
   plant?: 1;
 }
 
-/** path: the Course menu's Paths & drives (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course') */
-export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path';
+/** path: the rail's Paths (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course');
+ *  buildings: the rail's Buildings (plan P23 P1-E), the course tool in its buildings scope, which places the clubhouse (setTool turns it into
+ *  'course' with courseScope 'buildings') */
+export type Tool = 'select' | 'road' | 'junction' | 'bulldoze' | 'park' | 'toll' | 'bus' | 'lane' | 'downgrade' | 'business' | 'paint' | 'course' | 'path' | 'buildings';
 export type LineStyle = 0 | 1 | 2; // 0 dashed single, 1 double solid, 2 none
 export type BendMode = 90 | 45;
 
