@@ -81,7 +81,7 @@ test('2. the trees a stroke clears are in its undo step, even when the last chun
 test('3. rub out keeps to the current hole', () => {
   const { g, tool } = world();
   paintDisc(g, 50, 50, 4, SURF.fairway, 1, 0); paintDisc(g, 58, 50, 4, SURF.fairway, 2, 0);
-  tool.enterCourse(); tool.setBrush('fairway'); tool.setHole(1); tool.rubOut = true; tool.setBrushR(10);
+  tool.enterCourse(); tool.setBrush('fairway'); tool.setHole(1); tool.rubOut = true; tool.setBrushCells(0); tool.setBrushR(10); // the round brush (Advanced, T109)
   tool.pointerDown({ x: 54, y: 50 }, 0, 0); tool.pointerUp(0.5);
   const at = (x: number, y: number) => { const i = Math.floor(y / 0.5) * g.w + Math.floor(x / 0.5); return [g.surf[i], g.hole[i]]; };
   assert.deepEqual(at(48, 50), [SURF.rough, 1], "hole 1's fairway rubbed to rough");

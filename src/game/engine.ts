@@ -99,6 +99,8 @@ import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale } from './newart';
 import { webpSource } from './atlas-gl';
 import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
+import { HALF_T, courseBuilding, loadMapGrid, saveMapGrid } from './ext/map-grid';
+import { MapGridLayer } from './ext/map-grid/layer';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
@@ -143,6 +145,8 @@ const PD_FILL: string[] = Array.from({ length: PD_BINS }, (_, b) => {
 export const LOS_COL: Record<string, string> = { A: '#3ddc84', B: '#3ddc84', C: '#ffd23f', D: '#ff8c1a', E: '#ff3b3b', F: '#ff3b3b' };
 /** a fresh random map seed (Math.random is fine here: the generator itself is seeded) */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0 || 1;
+/** the browser's localStorage, or null where it is unavailable */
+const storageOf = (): Storage | null => { try { return typeof localStorage === 'undefined' ? null : localStorage; } catch { return null; } };
 /** a filled disc of radius r at (x, y) in device px (the overlay's identity transform), colour col */
 function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, col: string) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); }
 /** a bus stop's marker at (x, y) in device px: a rounded amber square of half side 6 px with a white B */
@@ -309,7 +313,22 @@ export class Game {
   selectedJunction: Node | null = null;
   /** the year seen last frame (0: none yet): a signal tier's year coming in toasts (see yearCheck) */
   private seenYear = 0;
-  selected: Prop | null = null; showGrid = false; showLanes = false; showLots = false;
+  selected: Prop | null = null; showLanes = false; showLots = false;
+  /** the map grid (T100, ext/map-grid): the 2 m tiles as a subtle iso grid at all times, an evaluation option (G, the view toolbar, Settings;
+   *  on in dev builds, off in production until the owner decides; remembered). Set it with setShowGrid */
+  showGrid = false;
+  setShowGrid(on: boolean) { this.showGrid = on; saveMapGrid(storageOf(), on); this.emit(); }
+  /** a course building tool is on (T100): the Course menu's tools, Paths & drives, an event structure being placed; the course half grid shows */
+  get courseBuilding() { return courseBuilding(this.tool, this.roadScope, this.eventTool && !!this.eventStructurePending); }
+  /** the course land the half grid covers (the course and its parcels; none outside a golf game: the whole view), into a reused list */
+  private gridLandBuf: [number, number, number, number][] = [];
+  private gridLand(): readonly [number, number, number, number][] {
+    const g = this.golf, out = this.gridLandBuf; out.length = 0;
+    if (g) { out.push(g.course); if (g.parcels) for (const r of g.parcels) out.push(r); else out.push(g.parcel); }
+    return out;
+  }
+  /** the road tool's grid step in tiles (T100): the course half grid (1 m) for Paths & drives, the map's 2 m lattice for town roads */
+  roadStep() { return this.roadScope === 'course' ? HALF_T : 1; }
   /** the access overlay (key O): zones with built lots shaded by access; always on at the planner tier (below PLANNER_Z) */
   showAccess = false;
   /** the access overlay's growth state per zone, refreshed at most once a second (growthNow): the lots started within the last game day (growN), the lots declining (declN), and the totals */
@@ -743,10 +762,12 @@ export class Game {
   private gateProps = new Map<string, Prop>();
   /** the overlay's view of this engine (its canvas is set each frame; reused, so the render loop allocates nothing) */
   private parkView: ParkOverlayView = { ctx: null as unknown as CanvasRenderingContext2D, dpr: 1, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y) };
-  /** the Course brush's cursor (T081): the surface puck, the course grid and the glowing footprint (the cells a dab paints, by the grid's
-   *  brush rules; re-run when the grid, the hole or Rub out change); and its camera view (reused) */
-  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), refuse: () => this.paint.brushSkip(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0) });
+  /** the brush's cursor (T081, T108, T109): the cells a click paints on the half grid (by the grid's brush rules, the skipped ones with their
+   *  reason, the price; re-run when the grid, the hole or Rub out change), the course grid round them and the surface chip beside the pointer */
+  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0) });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
+  /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
+  private gridLayer = new MapGridLayer();
   /** the car park drag (the park tool, left button): the tile where it began and the one under the pointer (x1, y1), the rect it makes (def, id 0),
    *  its built park (null if not valid), the verdict (why: the reason it cannot be built, '' if it can) and the cost; mx, my: the cursor (CSS px) */
   private parkDrag: null | { x0: number; y0: number; x1: number; y1: number; def: CarParkDef; park: CarPark | null; why: string; cost: number; mx: number; my: number } = null;
@@ -884,6 +905,7 @@ export class Game {
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
     try { const c = localStorage.getItem('capitalempire.cast'); if (c) this.cast = clampCast(JSON.parse(c)); } catch { /* cast-shadow.json */ }
+    this.showGrid = loadMapGrid(storageOf(), import.meta.env.DEV, location.search);
     // the dev sandbox options (see sandboxGrow): the URL, else the defaults of the dev server or the build
     const q = new URLSearchParams(location.search), dev = import.meta.env.DEV;
     this.sandboxGrow = Number(q.get('grow') ?? (dev ? 20 : 1)) || 1;
@@ -1792,7 +1814,7 @@ export class Game {
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
-  private cursorSnap(): Snap | null { return this.hover ? snapPoint(this.net, this.hover, this.snapRadius()) : null; }
+  private cursorSnap(): Snap | null { return this.hover ? snapPoint(this.net, this.hover, this.snapRadius(), this.roadStep()) : null; }
   /** why the preview route cannot be built ('' when it can): see checkLegs */
   routeBlock(legs: Leg[] = this.previewLegs()): string {
     if (!legs.length) return '';
@@ -1811,7 +1833,7 @@ export class Game {
     const dx = p.x - from.x, dy = p.y - from.y, ax = Math.abs(dx), ay = Math.abs(dy);
     if (!ax && !ay) return [];
     if (straight) {
-      const k = Math.round((ax + ay) / 2);
+      const st = this.roadStep(), k = Math.round((ax + ay) / 2 / st) * st;
       if (ax >= 2.4 * ay || ay >= 2.4 * ax) return [{ a: from, b: ax >= ay ? { x: p.x, y: from.y } : { x: from.x, y: p.y } }];
       return [{ a: from, b: { x: from.x + Math.sign(dx) * k, y: from.y + Math.sign(dy) * k } }];
     }
@@ -1878,7 +1900,7 @@ export class Game {
     return { n: hit.length, comp: hit.reduce((s, v) => s + compensation(v), 0) };
   }
   private roadClick(mx: number, my: number) {
-    let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius());
+    let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
     if (!this.route.length) { this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
@@ -2644,7 +2666,7 @@ export class Game {
       case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
       case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
       case 'Delete': this.deleteSelected(); break;
-      case 'g': case 'G': this.showGrid = !this.showGrid; this.emit(); break;
+      case 'g': case 'G': this.setShowGrid(!this.showGrid); break;
       case 'l': case 'L': this.showLanes = !this.showLanes; this.emit(); break;
       case 'k': case 'K': this.showLots = !this.showLots; this.emit(); break;
       case 'o': case 'O': this.showAccess = !this.showAccess; this.emit(); break;
@@ -4070,6 +4092,8 @@ export class Game {
         if (t.prev && now < t.prevUntil) { gl.drawChunk(t.prev, ...r); if (t.tex && t.tex !== t.prev && mask) gl.drawChunk(t.tex, ...r, true); }
         else if (t.tex) gl.drawChunk(t.tex, ...r);
       }
+      // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
+      if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, this.showGrid, this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
       // ---- sprites: every visible tile in one instanced draw (each instance clipped to its tile), vehicles merged in
       const vis: { i: number; j: number }[] = [];
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });
@@ -4365,13 +4389,6 @@ export class Game {
   private drawOverlay(now: number) {
     const ctx = this.ov, ze = this.cam.z * this.dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cw, this.ch);
-    if (this.showGrid && this.cam.z > 0.12) {
-      const c0 = tileOf(this.cam.X - this.cw / 2 / ze, this.cam.Y), c1 = tileOf(this.cam.X + this.cw / 2 / ze, this.cam.Y), top = tileOf(this.cam.X, this.cam.Y - this.ch / 2 / ze), bot = tileOf(this.cam.X, this.cam.Y + this.ch / 2 / ze);
-      const x0 = clamp(Math.floor(Math.min(c0.x, top.x)), 0, MAP), x1 = clamp(Math.ceil(Math.max(c1.x, bot.x)), 0, MAP), y0 = clamp(Math.floor(Math.min(c1.y, top.y)), 0, MAP), y1 = clamp(Math.ceil(Math.max(c0.y, bot.y)), 0, MAP);
-      this.setIso(ctx); ctx.beginPath();
-      for (let x = x0; x <= x1; x++) { ctx.moveTo(x, y0); ctx.lineTo(x, y1); } for (let y = y0; y <= y1; y++) { ctx.moveTo(x0, y); ctx.lineTo(x1, y); }
-      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; ctx.stroke();
-    }
     if (this.showLanes && this.cam.z > 0.12) this.drawLanes(ctx);
     if (this.showLots && this.cam.z > 0.06) this.drawLots(ctx);
     if (this.showAccess || this.cam.z < PLANNER_Z) this.drawAccess(ctx);

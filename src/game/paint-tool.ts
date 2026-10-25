@@ -12,7 +12,8 @@ import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
-import { applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { CELL_T, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
@@ -59,6 +60,9 @@ type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kin
 const BRUSH_KEY = 'capitalempire.brushPresets';
 /** the brush radius range in tiles */
 const BR_MIN = 0.5, BR_MAX = 20;
+/** the square brush's size, remembered (T109): 1 to 4 cells, 0 the round brush */
+const CELLS_KEY = 'capitalempire.brushCells';
+function loadCells(): number { try { const n = Number(localStorage.getItem(CELLS_KEY) ?? 1); return Number.isInteger(n) && n >= 0 && n <= 4 ? n : 1; } catch { return 1; } }
 /** the brush presets: BRUSH_PRESETS, each replaced by its saved edit (a missing or bad save keeps the defaults; no storage keeps them too) */
 function loadBrush(): Record<BrushKind, BrushSet> {
   const out = {} as Record<BrushKind, BrushSet>;
@@ -228,9 +232,10 @@ export class PaintTool {
   private planting: { erase: boolean; last: { x: number; y: number }; n: number } | null = null;
   private plantSeed = (Date.now() % 100000) | 0;
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
-  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts } } | null = null;
+  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts; /** the square brush (T109): its size in cells (0: the round brush) and the start cell of its last square */ n: number; ix: number; iy: number; /** what the stroke has charged so far ($), and whether it ran out of money */ spent: number; broke: boolean } } | null = null;
   private host: PaintHost;
-  /** the engine draws the brush (and a course piece) as a 3D surface puck (T081, ext/course-cursor): the OS cursor and the plain brush ring step aside */
+  /** the engine draws the brush (and a course piece) with ext/course-cursor (T081, T108: the cells a click paints and a surface chip beside the
+   *  pointer, which stays a normal pointer): the plain brush ring steps aside */
   puckCursor = false;
 
   constructor(host: PaintHost) { this.host = host; }
@@ -295,6 +300,14 @@ export class PaintTool {
   }
 
   /** brush mode: sets a kind's radius (tiles, 0.5 to 20) and remembers it */
+  /** the Course brush on the course grid (T109): a square of brushCells x brushCells mini-grid cells (1 m each; 1 the default, 2 one town
+   *  square, 3, 4), or the round brush of the surface's radius (0; under Advanced) */
+  brushCells: number = loadCells();
+  setBrushCells(n: number) { this.brushCells = n > 0 ? Math.min(SQUARE_SIZES[SQUARE_SIZES.length - 1]!, Math.max(1, Math.round(n))) : 0; try { localStorage.setItem(CELLS_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } this.host.emit(); }
+  /** the square brush's size in cells when it is the one that paints (the Course brush on a course grid surface), else 0 (the round brush) */
+  brushSquare(): number { return this.brushCells > 0 && this.course && !!this.courseGrid() && surfOfSurface(this.brushKind) > 0 ? this.brushCells : 0; }
+  /** what the stroke in progress has charged so far ($; 0 with none) */
+  get strokeSpent(): number { return this.stroke?.grid?.spent ?? 0; }
   setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)), style: this.brush[k].style }; this.saveBrush(); this.host.emit(); }
 
   /** writes the brush presets to localStorage (a storage that is missing or full is skipped) */
@@ -307,7 +320,7 @@ export class PaintTool {
   setShape(kind: BrushKind) { this.mode = 'draw'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
   /** the Course tool opens (the engine calls it): coming from Paint, or from Pick or Erase, it starts on the current surface's brush */
   /** the Course tool opens on its Pieces method in golf mode (T035); classic keeps the brush */
-  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw')) { if (this.host.golfMode?.()) this.setPiece(this.pieceArch); else this.setBrush(this.brushKind); } }
+  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw')) this.setBrush(this.brushKind); } // the brush is the way to build (T109); the pieces are stamps under Advanced
   /** the Paint tool opens: the golf brush, the Shape method and the hole presets are the Course tool's, so they fall back to Draw */
   enterPaint() { const was = this.course; this.course = false; if (this.mode === 'brush' || this.mode === 'hole' || this.mode === 'piece' || this.mode === 'height' || (was && this.mode === 'draw')) this.setMode('draw'); }
   /** the hole numbers that have painted areas */
@@ -375,6 +388,26 @@ export class PaintTool {
   private courseGrid(): Grid | null { return this.course && this.host.golfMode?.() ? this.host.grid?.() ?? null : null; }
   /** keeps a grid change in the open action and tells the engine (its chunks are sent within SEND_MS) */
   private gridApply(d: GridDiff) { if (!d.n) return; this.tx?.gd.push(d); this.host.gridChanged?.(d, false); }
+  /** a brush dab's cells on the grid (T109): in a golf game each cell it lays costs its surface's price (1 m² a cell; a rub out is free); a
+   *  dab the treasury cannot pay is taken back (one toast a stroke) */
+  private gridDab(d: GridDiff) {
+    const sg = this.stroke?.grid; if (!d.n || !sg) return;
+    const cost = !this.stroke!.erase && this.host.golfMode?.() ? Math.round(diffCost(d, v => unitBuildCost(SURF_SURFACE[v] ?? 'other', this.plantKind))) : 0;
+    if (cost > 0 && (this.host.money?.() ?? 0) < cost) {
+      applyDiff(sg.g, d, true);
+      if (!sg.broke) { sg.broke = true; this.host.toast(`Not enough money: these cells cost $${cost.toLocaleString()}`, 'warn'); }
+      return;
+    }
+    if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; sg.spent += cost; }
+    this.gridApply(d);
+  }
+  /** what painting the cell centred at (x, y) with the Course brush costs right now ($; 0 when it would not change, or outside a golf game:
+   *  null), for the cursor's live price (T109) */
+  brushCellCost(): ((x: number, y: number) => number) | null {
+    const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s || this.rubOut || !this.host.golfMode?.()) return null;
+    const h = this.brushHole, unit = unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind);
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || g.surf[i]! > s ? 0 : unit; };
+  }
   /** the brush rules on grid g for surface s: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did), owned
    *  cells only, and a rub out takes only cells of its own surface on the current hole (as the old per-hole brush areas did) */
   private gridOpts(g: Grid, s: number, erase: boolean): PaintOpts {
@@ -389,6 +422,18 @@ export class PaintTool {
     const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
     const o = this.gridOpts(g, s, this.rubOut);
     return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (o.allow ? !o.allow(i) : false) || (!o.rub && o.over === 'below' && g.surf[i]! > s); };
+  }
+  /** why a Course brush dab would skip the cell at (x, y) right now ('' when it paints it; T108's footprint shows the reason), by the same rules
+   *  as brushSkip; null when the brush paints areas */
+  brushSkipWhy(): ((x: number, y: number) => string) | null {
+    const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
+    const own = this.host.ownedAt, h = this.brushHole, erase = this.rubOut;
+    return (x, y) => {
+      const i = cellAt(g, x, y); if (i < 0) return 'Off the course land';
+      if (erase) return g.surf[i] !== s || g.hole[i] !== h ? 'Another surface or hole' : '';
+      if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return 'Not your land'; }
+      const top = g.surf[i]!, nm = SURF_SURFACE[top]; return top > s ? `${nm ? nm[0]!.toUpperCase() + nm.slice(1) : 'A higher surface'} stays on top` : '';
+    };
   }
   /** fills polygon pts (tiles) into grid g as surface s for hole h (the brush rules): the cells that change are charged (1 m² each at the
    *  surface's price; golf mode) and kept in the open action; false, with the toast and nothing changed, when the treasury cannot pay */
@@ -604,7 +649,6 @@ export class PaintTool {
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
-    if (this.puckCursor && (this.mode === 'brush' || this.mode === 'piece')) return 'none';
     if (this.drag) return 'grabbing';
     const g = this.hoverH;
     if (!g || !this.selected) return 'crosshair';
@@ -658,9 +702,18 @@ export class PaintTool {
     if (this.mode === 'height') { const h = this.heighting; if (h && t && Math.hypot(t.x - h.last.x, t.y - h.last.y) >= Math.max(0.5, this.heightR * 0.3)) { h.last = { x: t.x, y: t.y }; this.heightDabAt(t); } return; }
     if (this.mode === 'brush') {
       const s = this.stroke; if (!s || !t) return;
-      if (s.grid) this.gridApply(paintStroke(s.grid.g, s.last.x, s.last.y, t.x, t.y, s.r, s.grid.s, this.brushHole, s.grid.month, s.grid.opts));
-      else brushStroke(s.m, s.last.x, s.last.y, t.x, t.y, s.r, s.erase);
-      s.last.x = t.x; s.last.y = t.y; s.dabs.push(t.x, t.y); return;
+      // the square brush (T109): a square at every cell step from the last one to the one under the pointer (no gaps)
+      const sg = s.grid;
+      if (sg && sg.n) {
+        const jx = squareStart(t.x, sg.n), jy = squareStart(t.y, sg.n); if (jx === sg.ix && jy === sg.iy) return;
+        squareRun(sg.ix, sg.iy, jx, jy, (ix, iy) => this.gridDab(fillPolygon(sg.g, squarePoly(ix, iy, sg.n), sg.s, this.brushHole, sg.month, sg.opts)));
+        sg.ix = jx; sg.iy = jy; s.dabs.push(t.x, t.y); return;
+      }
+      // dabs on the half grid (T108): a move inside the same cell paints nothing new
+      const x = snapDab(t.x), y = snapDab(t.y); if (x === s.last.x && y === s.last.y) return;
+      if (sg) this.gridDab(paintStroke(sg.g, s.last.x, s.last.y, x, y, s.r, sg.s, this.brushHole, sg.month, sg.opts, CELL_T));
+      else brushStroke(s.m, s.last.x, s.last.y, x, y, s.r, s.erase, CELL_T);
+      s.last.x = x; s.last.y = y; s.dabs.push(x, y); return;
     }
     if (this.mode === 'plant') {
       // a dab every half radius along the drag (each dab only adds where the spacing allows, so going over a spot again fills it in)
@@ -802,20 +855,24 @@ export class PaintTool {
   /** brush mode: a press starts a stroke (Alt or Rub out erases): the mask holds this hole's cells of the kind (their outlines filled), and one dab lays at the press */
   private strokeStart(t: { x: number; y: number }, alt: boolean) {
     const k = this.brushKind, h = this.brushHole, r = this.brush[k].r, m: Mask = new Set(), erase = this.rubOut || alt;
+    // the dab lands on the half grid's nearest cell corner (T108), where the cursor's footprint shows it
+    const x = snapDab(t.x), y = snapDab(t.y);
     // on the course grid (T078) every dab paints the cells (a cart path still paints areas)
     const g = this.courseGrid(), s = g ? surfOfSurface(k) : 0;
     if (g && s) {
       this.begin((erase ? 'rub out ' : 'brush ') + k);
-      const grid = { g, s, month: plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, s, erase) };
-      this.stroke = { m, m0: m, r, erase, last: { x: t.x, y: t.y }, dabs: [t.x, t.y], grid };
-      this.gridApply(paintDisc(g, t.x, t.y, r, s, h, grid.month, grid.opts));
+      // the square brush (T109): n x n cells from the start cell under the pointer; else the round brush's disc
+      const n = this.brushSquare(), ix = n ? squareStart(t.x, n) : 0, iy = n ? squareStart(t.y, n) : 0;
+      const grid = { g, s, month: plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, s, erase), n, ix, iy, spent: 0, broke: false };
+      this.stroke = { m, m0: m, r, erase, last: { x, y }, dabs: [x, y], grid };
+      this.gridDab(n ? fillPolygon(g, squarePoly(ix, iy, n), s, h, grid.month, grid.opts) : paintDisc(g, x, y, r, s, h, grid.month, grid.opts));
       this.host.emit(); return;
     }
     for (const a of this.areas) if (a.hole === h && a.kind === k) fillPoly(m, this.outlineOf(a));
     const m0: Mask = new Set(m);
-    dab(m, t.x, t.y, r, erase);
+    dab(m, x, y, r, erase);
     this.begin((erase ? 'rub out ' : 'brush ') + k);
-    this.stroke = { m, m0, r, erase, last: { x: t.x, y: t.y }, dabs: [t.x, t.y] };
+    this.stroke = { m, m0, r, erase, last: { x, y }, dabs: [x, y] };
     this.host.emit();
   }
 
@@ -823,7 +880,9 @@ export class PaintTool {
   private strokeEnd() {
     const s = this.stroke; if (!s) return;
     this.stroke = null;
-    if (s.grid) { this.commit(); this.host.save(); this.host.emit(); return; } // the grid's cells changed dab by dab (one undo step)
+    // the grid's cells changed dab by dab (one undo step); a stroke that laid cells counts as a course piece built (T109: the brush is the way
+    // to build now, so the progress the guide and the stages read follows it)
+    if (s.grid) { const laid = !s.erase && !!this.tx?.gd.some(d => d.n > 0); this.commit(); if (laid) this.host.progress?.('piece'); this.host.save(); this.host.emit(); return; }
     // a stroke that changed no cell (rubbing out where nothing is) keeps the areas as they are (re-tracing would re-smooth them)
     if (s.m.size === s.m0.size) { let same = true; for (const c of s.m) if (!s.m0.has(c)) { same = false; break; } if (same) { this.commit(); this.host.emit(); return; } }
     const k = this.brushKind, h = this.brushHole, style = this.brush[k].style;
@@ -924,7 +983,9 @@ export class PaintTool {
       case '[': case ']':
         if (this.mode === 'height') { this.setHeight({ r: this.heightR + (e.key === ']' ? 1 : -1) }); return true; }
         if (this.mode === 'plant') { this.setPlantSet({ r: this.plant[this.plantBrush].r + (e.key === ']' ? 1 : -1) }); return true; }
-        if (this.mode !== 'brush') return false; this.setBrushR(this.brush[this.brushKind].r + (e.key === ']' ? 1 : -1)); break;
+        if (this.mode !== 'brush') return false;
+        if (this.brushSquare()) { this.setBrushCells(this.brushCells + (e.key === ']' ? 1 : -1)); break; } // the square sizes 1 to 4 cells (T109)
+        this.setBrushR(this.brush[this.brushKind].r + (e.key === ']' ? 1 : -1)); break;
       case 'Delete': {
         if (!this.selected) return false;
         const a = this.selectedArea(), g = this.hoverH;

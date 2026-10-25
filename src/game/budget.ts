@@ -27,7 +27,7 @@ export const PROPERTY: number[][] = [
   [0, 0], // GOV
 ];
 /** land value by frontage class (unknown classes count as 1) */
-export const CLASS_VALUE: Record<string, number> = { gravel: 0.7, lane: 0.9, street: 1, road: 1.1, avenue: 1.25, arterial: 1.25, boulevard: 1.4, six: 1.25, grand: 1.4, divided: 1.1, 'drive-gravel': 0.4, drive: 0.8, 'drive-avenue': 1.4, 'cart-dirt': 0.3, 'cart-slab': 0.35, cart: 0.4 };
+export const CLASS_VALUE: Record<string, number> = { gravel: 0.7, lane: 0.9, street: 1, road: 1.1, avenue: 1.25, arterial: 1.25, boulevard: 1.4, six: 1.25, grand: 1.4, divided: 1.1, 'drive-gravel': 0.4, drive: 0.8, 'drive-avenue': 1.4, 'cart-walk': 0.25, 'cart-dirt': 0.3, 'cart-slab': 0.35, cart: 0.4 };
 /** the share of the tax kept by decline (0 ok, 1 shabby, 2 boarded, 3 derelict) */
 export const DECLINE_VALUE = [1, 0.7, 0.3, 0];
 /** compensation paid when a lot is cleared, $ by use (index LU) and level (BUILDING, BUILT, UPGRADED) */

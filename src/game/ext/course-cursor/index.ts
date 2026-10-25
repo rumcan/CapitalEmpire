@@ -1,23 +1,22 @@
-// The Course tool's paint cursor (T081; plan P21 section 3.5). The owner, 2026-10-24: "I want a 3d puck shape that looks exactly like the
-// fairway or rough you are drawing to become your cursor when painting golf course items. It should be showing you what size it is about to
-// draw on the map with a grid on the map and 3d rounded iso square as a transparent glowing wireframe, showing you where you are painting
-// when you click."
-// Three layers on the engine's 2D overlay, all at map scale, while the Course brush is on:
-// - the grid: P21's course grid (1 m cells, ext/course-grid's lattice) faintly round the cursor, fading out with distance, thinning out
-//   to 2 m lines and then hiding as the zoom goes out;
-// - the footprint: the cells one dab paints (course-grid's own paintDisc, on a scratch grid), contoured as P21's droplets (course-blobs'
-//   blobOutlines, the brush surface's style) and drawn as a slightly raised rounded prism in a transparent glowing wireframe (bottom and top
-//   outlines, vertical edges at the rounded corners) that pulses, flashes on a click and hands over to course-fx's splash;
-// - the puck: an iso disc of the brush's radius with a short wall, its top face laid with the ground painter's own photo at its period,
-//   scale and angle, its tone and its border band, lit by the one sun at the upper right (a light rim up right, shade down left, the cast
-//   shadow at 145°). It eases to the mouse, bobs while it hovers and squashes on a click.
-// Speed: the puck and its contact shadow are sprites cached per look, size bucket (6%) and dpr; a footprint shape is contoured once and kept
-// (LRU) by its cells relative to the cell under the cursor; the grid's fade is one cached gradient. A frame where the cursor did not move
-// allocates nothing; a cursor move re-runs the dab (a few small typed arrays) and contours only a shape not seen before.
+// The Course tool's paint cursor (T081, redone in T108; plan P21 section 3.5). The owner, 2026-10-25: "being able to see what that texture you
+// have created will look like on a miniature round disc next to your cursor while it shows you where you are about to add a modular piece of
+// fairway is important ... the 3d puck of texture should be smaller and to the side of your cursor and the highly wireframe should just show a
+// transparent part you are adding on the grid if you clicked there ... it should align to the mini grid on the course."
+// Drawn on the engine's 2D overlay (device px) while the brush or a course piece is in hand; the pointer stays the normal pointer:
+// - the footprint: exactly the cells a click paints (course-grid's own paintDisc on a scratch grid, with the brush rules), the dab centred on
+//   the half grid's nearest cell corner (snap.ts; the Paint tool paints there too), so it moves cell by cell and never jitters inside a cell;
+//   a soft translucent tint of the surface with a thin crisp edge along the cells' outline (cell edges: it sits on the 1 m half grid), drawn
+//   as paths at device pixels; the cells a click would skip (off your land, a surface that stays on top) in muted red, the reason by the chip;
+// - the course grid's lines a little brighter round the dab (over the half grid the map grid layer draws);
+// - the chip: a small 3D disc (CHIP_CSS px) of the surface about to be painted, beside the pointer at its lower right like a tooltip, laid
+//   with the ground painter's own photo, its tone and its side wall, lit by the one sun at the upper right, with a soft shadow; it eases after
+//   the pointer, bobs a little and squashes on a click, which also splashes lightly on the map.
+// Speed: the chip and its shadow are sprites cached per look and dpr (the chip's size never changes with the zoom); a footprint is worked out
+// once per cell the dab sits on and its outline once per shape (LRU, by its cells relative to the anchor cell); the grid's fade is one cached
+// gradient. A frame where the pointer stays in its cell allocates nothing.
 // Pure geometry and canvas calls (the canvas factory and the photo source come in), importable from node tests. Units: tiles of 2 m for
 // the map, device px on screen.
 import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../course-grid';
-import { blobOutlines, type BlobStyle } from '../course-blobs';
 import { spawnSplash, stepSplash, type SplashKind, type SplashParticle } from '../course-fx';
 import { HH, HW } from '../../iso';
 import { CAST, castShear } from '../../cast-shadow';
@@ -26,15 +25,18 @@ import { BORDER_TEXES, BORDER_W, roundCorners, type PaintArea } from '../../pain
 import { surfOfSurface } from '../course-grid/areas';
 import { surfaceOfTex } from '../../golf/costs';
 import type { PaintTool } from '../../paint-tool';
+import { snapDab, squarePoly, squareStart } from './snap';
+
+export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'cursor' | 'piece'>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent'>;
 /** the camera, filled in by the engine each frame (one object, reused): device px per world px (ze = zoom x dpr), the world px at the
  *  overlay's centre (camX, camY), the overlay's size in device px (cw, ch) and the dpr */
 export interface CursorView { ze: number; camX: number; camY: number; cw: number; ch: number; dpr: number }
-/** the look a puck takes from a brush style (the painted area's own fields) */
+/** the look a chip takes from a brush style (the painted area's own fields) */
 export type PuckStyle = Pick<PaintArea, 'tex' | 'scale' | 'angle' | 'border' | 'btex' | 'tone' | 'toneAmt' | 'tint' | 'bscale' | 'bangle'>;
 /** a photo for a texture at a wanted px a tile: the picture and the tiles one repeat covers (null: not loaded, or no photo) */
 export interface CursorTexture { pick(tex: string, pxPerTile: number): { img: CanvasImageSource & { width: number }; period: number } | null; rev(): number }
@@ -42,13 +44,21 @@ export interface CursorTexture { pick(tex: string, pxPerTile: number): { img: Ca
 export interface SpriteCanvas { width: number; height: number; getContext(id: '2d'): CanvasRenderingContext2D | null }
 /** the cells a dab skips, by a cell centre in tiles */
 export type Refuse = (x: number, y: number) => boolean;
+/** why a dab skips the cell centred at (x, y) in tiles ('' when it paints it) */
+export type SkipWhy = (x: number, y: number) => string;
+/** what painting the cell centred at (x, y) costs ($; 0 when it would not change) */
+export type CellCost = (x: number, y: number) => number;
 /** what the cursor is given: a canvas factory (default: a DOM canvas), the photo source (default: swatch colours only), and for the golf
- *  game's course grid (T078): refuse, asked once per new footprint, gives the cells a dab skips right now (PaintTool.brushSkip; null when
- *  the brush paints areas instead), and rev, a number that changes whenever those could (the grid's revision, the hole, Rub out) */
+ *  game's course grid (T078): why, asked once per new footprint, gives why a dab skips a cell right now (PaintTool.brushSkipWhy; null when the
+ *  brush paints areas instead), or refuse, the same as a yes or no (PaintTool.brushSkip); cost, each cell's price for the live price (T109,
+ *  PaintTool.brushCellCost; null outside a golf game); and rev, a number that changes whenever those could (the grid's revision, the hole,
+ *  Rub out) */
 export interface CursorEnv {
   canvas?: (w: number, h: number) => SpriteCanvas;
   texture?: CursorTexture | null;
+  why?: (() => SkipWhy | null) | null;
   refuse?: (() => Refuse | null) | null;
+  cost?: (() => CellCost | null) | null;
   rev?: () => number;
 }
 
@@ -61,30 +71,27 @@ export const MIXED_PERIOD = 12;
 const ISO_PERP = (2 * HW * HH) / Math.hypot(HW, HH);
 /** screen px along a tile axis per world px of zoom */
 const TILE_AXIS = Math.hypot(HW, HH);
-/** cells of margin round a dab on the scratch grid: room for the droplet field, closing and relax (course-blobs) */
-const PAD_CELLS = 8;
-/** a dab of this many cells or more contours at most every CONTOUR_GAP_MS while the cursor moves (Footprints.at) */
-const BIG_CELLS = 1500, CONTOUR_GAP_MS = 45;
-/** footprint shapes kept, and puck sprites kept */
+/** footprint shapes kept, and chip sprites kept */
 const SHAPE_CACHE = 48, SPRITE_CACHE = 12;
-/** a new puck sprite every 6% of size; the largest sprite half-width in device px (bigger pucks scale it up) */
-const BUCKET = Math.log(1.06), RX_CAP = 900;
-/** the puck eases to the cursor at this rate (1/s); its hover height eases at these rates (1/s) when pressed and when released */
-const EASE = 22, PRESS_EASE = 40, LIFT_EASE = 12;
-/** the pulse (the hover breathing, P21 3.5: 1.4 s) and the bob (1.6 s) periods, ms */
-const PULSE_MS = 1400, BOB_MS = 1600;
-/** the click flash, the ripple (P21 3.5: 0.5x to 1.6x the radius in 300 ms) and a splash burst's life, ms */
-const FLASH_MS = 380, RIPPLE_MS = 300, BURST_MS = 650;
+/** the chip: its width in css px at every zoom, its top face's ground size in tiles (the photo reads as it does on the map at about 20%
+ *  zoom), and its centre's offset from the pointer in css px (to the lower right, clear of the arrow, like a tooltip) */
+export const CHIP_CSS = 40;
+const CHIP_R = CHIP_CSS / 2 / (SQ2 * HW * 0.2);
+const CHIP_DX = 36, CHIP_DY = 30;
+/** the chip eases to its place at this rate (1/s); its hover eases at these rates (1/s) when pressed and when released */
+const EASE = 26, PRESS_EASE = 40, LIFT_EASE = 12;
+/** the bob (1.6 s) period, ms */
+const BOB_MS = 1600;
+/** the click flash, the ripple (0.5x to 1.6x the radius in 300 ms) and a splash burst's life, ms */
+const FLASH_MS = 320, RIPPLE_MS = 300, BURST_MS = 600;
 /** at most this many splash bursts live at once */
-const MAX_BURSTS = 10;
-/** the radius in tiles of the puck that rides with a course piece (the piece's own outline shows its size) */
-const PIECE_PUCK_R = 1.5;
+const MAX_BURSTS = 8;
 /** the cast shadow's shear (a point h px up falls h * (sx, sy) away on the ground) */
 const SHEAR = castShear(CAST);
 /** the screen direction toward the sun (opposite the shadows) */
 const SUN_X = -Math.cos((CAST.angle * Math.PI) / 180), SUN_Y = -Math.sin((CAST.angle * Math.PI) / 180);
 
-/** a brush's colours and materials: the wireframe's glow and core line, the puck's wall, the splash and the course surface it paints */
+/** a brush's colours and materials: the footprint's edge (core) and tint (fill), the chip's wall, the splash and the course surface it paints */
 interface Look { glow: string; core: string; fill: string; wall: 'turf' | 'sand' | 'water' | 'soil'; splash: SplashKind; surf: number }
 const LOOKS: Readonly<Record<string, Look>> = {
   fairway: { glow: '#b9f26a', core: '#f4ffde', fill: '#9fdc5a', wall: 'turf', splash: 'dirt', surf: SURF.fairway },
@@ -98,10 +105,10 @@ const LOOKS: Readonly<Record<string, Look>> = {
   path: { glow: '#ffcf9a', core: '#fff2e2', fill: '#e8b884', wall: 'soil', splash: 'dirt', surf: 0 },
 };
 const ERASE: Look = { glow: '#ff7a6b', core: '#ffe5df', fill: '#ff6a5a', wall: 'soil', splash: 'dirt', surf: 0 };
-/** the footprint's droplet style: P21's metaball field and iso level (lone cells round, neighbours flowing together) without the closing
- *  and relax a painted surface gets, so the wireframe never takes in a cell the dab skips (closing fills notches) nor leaves out one it
- *  paints (relax smooths a lone tip cell away) */
-const FOOT_STYLE: BlobStyle = { close: 0, relax: 0 };
+/** the skipped cells' muted red: tint and edge */
+const SKIP_FILL = '#c8604f', SKIP_EDGE = '#f0a090';
+/** the footprint's tint and edge strengths, and the dark line under the edge that keeps it crisp on a light surface */
+const TINT_A = 0.26, SKIP_A = 0.22, EDGE_A = 0.9, UNDER = 'rgba(12,18,8,0.42)';
 /** each Paint texture's swatch colour (the flat fill while a photo loads) */
 const SWATCH = new Map<string, string>(BORDER_TEXES.map(t => [t.id, t.col]));
 
@@ -111,188 +118,169 @@ const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 /** 0 at a, 1 at b, smooth between */
 function smooth(a: number, b: number, v: number): number { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
 
-/** the puck's screen half-axes in device px for a brush of radius r tiles at ze device px per world px: a circle on the ground is an ellipse
- *  sqrt(2) HW r ze wide and half as tall (the iso view) */
+/** a brush circle's screen half-axes in device px for a brush of radius r tiles at ze device px per world px: a circle on the ground is an
+ *  ellipse sqrt(2) HW r ze wide and half as tall (the iso view); the click's ripple is this size */
 export function puckAxes(r: number, ze: number): { rx: number; ry: number } {
   return { rx: r * SQ2 * HW * ze, ry: r * SQ2 * HH * ze };
 }
 
-/** Chaikin's corner cutting on a closed ring (x, y pairs): every corner becomes two points a quarter along its edges */
-function chaikin(p: number[]): number[] {
-  const n = p.length >> 1, out: number[] = new Array(n * 4);
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n, ax = p[2 * i]!, ay = p[2 * i + 1]!, bx = p[2 * j]!, by = p[2 * j + 1]!;
-    out[4 * i] = 0.75 * ax + 0.25 * bx; out[4 * i + 1] = 0.75 * ay + 0.25 * by;
-    out[4 * i + 2] = 0.25 * ax + 0.75 * bx; out[4 * i + 3] = 0.25 * ay + 0.75 * by;
-  }
-  return out;
-}
-
 // ---- the footprint ----
 
-/** one dab's footprint shape, relative to the cell that holds the brush centre (its anchor) */
+/** one dab's footprint, relative to the cell that holds the dab's centre (its anchor) */
 export interface Shape {
-  /** the covered cells as (dx, dy) pairs of cells from the anchor cell */
+  /** the cells a click paints, as (dx, dy) pairs of cells from the anchor cell */
   cells: Int16Array;
-  /** the droplet outline rings, closed (the last point joins the first), as (x, y) pairs in tiles from the anchor cell's corner */
-  rings: Float32Array[];
-  /** per ring: +1 for an outer ring, -1 for a hole */
-  sign: Int8Array;
-  /** per ring: the points with the least and the most screen x, and the most and the least screen y (the prism's vertical edges) */
-  ext: Int32Array[];
-  /** per ring: 1 where the segment from point i to the next faces the viewer (its outward normal points down the screen) */
-  front: Uint8Array[];
-  /** the hash of the cells and the outline style */
+  /** the cells inside the brush a click skips (off your land, a surface on top), as (dx, dy) pairs */
+  skip: Int16Array;
+  /** the outline of the painted cells along their edges: closed loops of (x, y) pairs in tiles from the anchor cell's corner */
+  loops: Float32Array[];
+  /** the skipped cells' outline loops */
+  skipLoops: Float32Array[];
+  /** why most of the skipped cells are skipped ('' when none are) */
+  why: string;
+  /** the hash of the cells, the skipped cells and their reasons */
   hash: number;
+}
+
+/** the reasons a dab skips cells, by a small number (0: none) */
+const REASONS: string[] = [''];
+const REASON_ID = new Map<string, number>([['', 0]]);
+function reasonId(w: string): number {
+  let id = REASON_ID.get(w);
+  if (id === undefined) { id = REASONS.length < 255 ? REASONS.length : 254; if (id === REASONS.length) { REASONS.push(w); REASON_ID.set(w, id); } }
+  return id;
+}
+
+/** the outline of a set of cells ((dx, dy) pairs) along the cell edges: closed loops of (x, y) pairs in tiles from cell (0, 0)'s corner, each
+ *  edge between a cell in the set and one outside it used once, straight runs merged into one segment; cells that touch only at a corner
+ *  are joined there (one loop through the corner, which fills and strokes the same) */
+export function cellOutline(cells: Int16Array): Float32Array[] {
+  const n = cells.length >> 1; if (!n) return [];
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < cells.length; i += 2) { const x = cells[i]!, y = cells[i + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  // the cells on a grid with a free border, and each vertex's (at most two) outgoing edges, clockwise round each cell (y down)
+  const W = x1 - x0 + 3, H = y1 - y0 + 3, occ = new Uint8Array(W * H), VW = W + 1, out = new Int32Array(VW * (H + 1) * 2).fill(-1);
+  for (let i = 0; i < cells.length; i += 2) occ[(cells[i + 1]! - y0 + 1) * W + cells[i]! - x0 + 1] = 1;
+  const add = (a: number, b: number) => { const k = 2 * a; if (out[k] < 0) out[k] = b; else out[k + 1] = b; };
+  let edges = 0;
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    if (!occ[y * W + x]) continue;
+    const tl = y * VW + x, tr = tl + 1, bl = tl + VW, br = bl + 1;
+    if (!occ[(y - 1) * W + x]) { add(tl, tr); edges++; }
+    if (!occ[y * W + x + 1]) { add(tr, br); edges++; }
+    if (!occ[(y + 1) * W + x]) { add(br, bl); edges++; }
+    if (!occ[y * W + x - 1]) { add(bl, tl); edges++; }
+  }
+  const loops: Float32Array[] = [], pts: number[] = [];
+  const take = (v: number): number => { const k = 2 * v; let b = out[k + 1]; if (b >= 0) { out[k + 1] = -1; return b; } b = out[k]; out[k] = -1; return b; };
+  for (let s = 0; s < out.length >> 1 && edges > 0; s++) while (out[2 * s] >= 0 || out[2 * s + 1] >= 0) {
+    pts.length = 0;
+    let v = s;
+    do {
+      const w = take(v); edges--;
+      const vx = v % VW, vy = (v - vx) / VW, wx = w % VW, wy = (w - wx) / VW, m = pts.length;
+      // a straight run goes on: the last point moves instead of a new one
+      if (m >= 4 && (pts[m - 2]! - pts[m - 4]!) * (wy - vy) === (pts[m - 1]! - pts[m - 3]!) * (wx - vx) && (pts[m - 2]! - pts[m - 4]!) * (wx - vx) + (pts[m - 1]! - pts[m - 3]!) * (wy - vy) > 0) { pts[m - 2] = wx; pts[m - 1] = wy; }
+      else { if (!m) pts.push(vx, vy); pts.push(wx, wy); }
+      v = w;
+    } while (v !== s && (out[2 * v] >= 0 || out[2 * v + 1] >= 0));
+    // the loop is closed: its last point is its first (drop it), and a straight run through the start joins up
+    let m = pts.length;
+    if (m >= 4 && pts[m - 2] === pts[0] && pts[m - 1] === pts[1]) { pts.length = m - 2; m -= 2; }
+    if (m >= 6) {
+      const ax = pts[m - 2]!, ay = pts[m - 1]!, bx = pts[0]!, by = pts[1]!, cx = pts[2]!, cy = pts[3]!;
+      if ((bx - ax) * (cy - by) === (by - ay) * (cx - bx)) { pts.splice(0, 2); m -= 2; }
+    }
+    const f = new Float32Array(m);
+    for (let i = 0; i < m; i += 2) { f[i] = (pts[i]! - 1 + x0) * CELL_T; f[i + 1] = (pts[i + 1]! - 1 + y0) * CELL_T; }
+    loops.push(f);
+  }
+  return loops;
 }
 
 /** the scratch grid a dab is painted on: placed round the anchor cell each time, re-made only when the radius needs a bigger one */
 class DabPad {
+  /** the scratch grid of the last run, and the round brush's own (re-made when the radius needs a bigger one) */
   g: Grid | null = null;
+  private disc: Grid | null = null;
   private m = -1;
   /** the cell under (x, y) */
   ax = 0; ay = 0;
+  /** the cells the last run skipped (scratch-grid indices) and each one's reason, nSkip long */
+  skipIdx = new Uint32Array(256); skipWhy = new Uint8Array(256); nSkip = 0;
   /** paints a dab of radius r at (x, y) with course-grid's paintDisc and returns the changed cells (the dab: every cell starts empty) as
-   *  scratch-grid indices; refuse leaves a cell out (its centre in tiles) */
-  run(x: number, y: number, r: number, refuse?: Refuse | null): { idx: Uint32Array; n: number } {
-    const ax = Math.floor(x / CELL_T), ay = Math.floor(y / CELL_T), m = Math.ceil(r / CELL_T) + PAD_CELLS;
-    let g = this.g;
-    if (!g || this.m !== m) { g = this.g = makeGrid(0, 0, 2 * m + 1, 2 * m + 1); this.m = m; } else g.surf.fill(0);
-    g.x0 = (ax - m) * CELL_T; g.y0 = (ay - m) * CELL_T; this.ax = ax; this.ay = ay;
-    const w = g.w, x0 = g.x0, y0 = g.y0;
-    const opts = refuse ? { allow: (i: number) => { const cx = i % w, cy = (i - cx) / w; return !refuse(x0 + (cx + 0.5) * CELL_T, y0 + (cy + 0.5) * CELL_T); } } : {};
-    const d = paintDisc(g, x, y, r, 1, 0, 0, opts);
+   *  scratch-grid indices; why leaves a cell out (its centre in tiles), recorded with its reason */
+  run(x: number, y: number, r: number, why?: SkipWhy | null): { idx: Uint32Array; n: number } {
+    const ax = Math.floor(x / CELL_T), ay = Math.floor(y / CELL_T), m = Math.ceil(r / CELL_T) + 2;
+    let g = this.disc;
+    if (!g || this.m !== m) { g = this.disc = makeGrid(0, 0, 2 * m + 1, 2 * m + 1); this.m = m; } else g.surf.fill(0);
+    g.x0 = (ax - m) * CELL_T; g.y0 = (ay - m) * CELL_T; this.ax = ax; this.ay = ay; this.nSkip = 0; this.lastM = m; this.g = g;
+    const d = paintDisc(g, x, y, r, 1, 0, 0, this.opts(g, why));
     return { idx: d.idx, n: d.n };
   }
+  /** the scratch grid of the square brush, and the margin in cells round the anchor of the last run */
+  private gs: Grid | null = null; private gsN = -1; private lastM = 0;
+  /** lays the square brush's n x n cells from start cell (ix, iy) (its anchor) with course-grid's fillPolygon, as run() does a disc */
+  runSquare(ix: number, iy: number, n: number, why?: SkipWhy | null): { idx: Uint32Array; n: number } {
+    let g = this.gs;
+    if (!g || this.gsN !== n) { g = this.gs = makeGrid(0, 0, n + 4, n + 4); this.gsN = n; } else g.surf.fill(0);
+    g.x0 = (ix - 2) * CELL_T; g.y0 = (iy - 2) * CELL_T; this.ax = ix; this.ay = iy; this.nSkip = 0; this.lastM = 2; this.g = g;
+    const d = fillPolygon(g, squarePoly(ix, iy, n), 1, 0, 0, this.opts(g, why));
+    return { idx: d.idx, n: d.n };
+  }
+  /** the brush rules as course-grid options on scratch grid g: why leaves a cell out, recorded with its reason */
+  private opts(g: Grid, why?: SkipWhy | null) {
+    if (!why) return {};
+    const w = g.w, x0 = g.x0, y0 = g.y0;
+    return { allow: (i: number) => {
+      const cx = i % w, cy = (i - cx) / w, r0 = why(x0 + (cx + 0.5) * CELL_T, y0 + (cy + 0.5) * CELL_T);
+      if (!r0) return true;
+      if (this.nSkip === this.skipIdx.length) { const a = new Uint32Array(this.nSkip * 2), b = new Uint8Array(this.nSkip * 2); a.set(this.skipIdx); b.set(this.skipWhy); this.skipIdx = a; this.skipWhy = b; }
+      this.skipIdx[this.nSkip] = i; this.skipWhy[this.nSkip++] = reasonId(r0);
+      return false;
+    } };
+  }
   /** the margin in cells round the anchor */
-  get margin() { return this.m; }
+  get margin() { return this.lastM; }
 }
 
 const PAD = new DabPad();
 /** the cells a brush dab of radius r tiles at tile (x, y) paints, by course-grid's own paintDisc: (cx, cy) pairs of world cell indices
  *  (cell (cx, cy) spans tiles cx * CELL_T to (cx + 1) * CELL_T, as every course grid, whose origin sits on that lattice) */
 export function dabCells(x: number, y: number, r: number, refuse?: Refuse | null): Int32Array {
-  const { idx, n } = PAD.run(x, y, r, refuse), g = PAD.g!, out = new Int32Array(2 * n), ox = Math.round(g.x0 / CELL_T), oy = Math.round(g.y0 / CELL_T);
+  const { idx, n } = PAD.run(x, y, r, refuse ? (a, b) => (refuse(a, b) ? 'skip' : '') : null), g = PAD.g!, out = new Int32Array(2 * n), ox = Math.round(g.x0 / CELL_T), oy = Math.round(g.y0 / CELL_T);
   for (let k = 0; k < n; k++) { const i = idx[k]!, cx = i % g.w; out[2 * k] = ox + cx; out[2 * k + 1] = oy + (i - cx) / g.w; }
   return out;
 }
 
-/** a closed ring (x, y pairs) resampled every h tiles along its length */
-function resample(p: number[], h: number): number[] {
-  const n = p.length >> 1, out: number[] = [];
-  let carry = 0;
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n, ax = p[2 * i]!, ay = p[2 * i + 1]!, dx = p[2 * j]! - ax, dy = p[2 * j + 1]! - ay, len = Math.hypot(dx, dy);
-    let t = carry;
-    for (; t < len; t += h) out.push(ax + (dx * t) / len, ay + (dy * t) / len);
-    carry = t - len;
+/** a shape from its cells and skipped cells (with their reason ids): the outlines, the main reason */
+function makeShape(cells: Int16Array, skip: Int16Array, why: Uint8Array | null, hash: number): Shape {
+  let best = 0;
+  if (why && why.length) {
+    const count = new Uint32Array(256);
+    for (let i = 0; i < why.length; i++) count[why[i]!]++;
+    for (let k = 1; k < 256; k++) if (count[k]! > count[best]!) best = k;
   }
-  return out;
-}
-/** a closed ring smoothed along its length by a Gaussian of sigma tiles (it calms the staircase waves of a round dab's cells without
- *  moving a straight run), a point every 0.1 tile up to about 1400 points */
-function smoothRing(p: number[], sigma: number): number[] {
-  const h = 0.05, q = resample(p, h), n = q.length >> 1, s = sigma / h, R = Math.min(Math.ceil(3 * s), (n >> 1) - 1);
-  if (R < 1) return p;
-  const w = new Float64Array(R + 1); let sum = 0;
-  for (let k = 0; k <= R; k++) { w[k] = Math.exp(-(k * k) / (2 * s * s)); sum += k ? 2 * w[k]! : w[k]!; }
-  const step = Math.max(2, Math.ceil(n / 1400)), out: number[] = [];
-  for (let i = 0; i < n; i += step) {
-    let x = w[0]! * q[2 * i]!, y = w[0]! * q[2 * i + 1]!;
-    for (let k = 1; k <= R; k++) { const a = (i + k) % n, b = (i - k + n) % n; x += w[k]! * (q[2 * a]! + q[2 * b]!); y += w[k]! * (q[2 * a + 1]! + q[2 * b + 1]!); }
-    out.push(x / sum, y / sum);
-  }
-  return out;
-}
-/** whether the rings hold exactly the cells ((dx, dy) from the anchor; rings in tiles from its corner): every cell on the edge of the dab
- *  has its centre inside, and every cell touching the dab from outside has its centre outside */
-function holdsExactly(rings: readonly number[][], cells: Int16Array): boolean {
-  const K = (dx: number, dy: number) => (dy + 4096) * 8192 + dx + 4096, have = new Set<number>(), out = new Set<number>();
-  let r0 = Infinity, r1 = -Infinity;
-  for (let i = 0; i < cells.length; i += 2) { have.add(K(cells[i]!, cells[i + 1]!)); r0 = Math.min(r0, cells[i + 1]! - 1); r1 = Math.max(r1, cells[i + 1]! + 1); }
-  // where the rings cross each row of cell centres (y = (row + 0.5) cells), as insideRings counts them
-  const cross: number[][] = [];
-  for (let r = r0; r <= r1; r++) cross.push([]);
-  for (const p of rings) for (let i = 0, n = p.length >> 1, j = n - 1; i < n; j = i++) {
-    const xi = p[2 * i]!, yi = p[2 * i + 1]!, xj = p[2 * j]!, yj = p[2 * j + 1]!, lo = Math.min(yi, yj), hi = Math.max(yi, yj);
-    for (let r = Math.max(r0, Math.ceil(lo / CELL_T - 0.5)); r <= r1 && (r + 0.5) * CELL_T < hi; r++) {
-      const yc = (r + 0.5) * CELL_T; if (yc < lo) continue;
-      cross[r - r0]!.push(xi + ((xj - xi) * (yc - yi)) / (yj - yi));
-    }
-  }
-  const insideRow = (x: number, r: number) => { const c = cross[r - r0]; let k = false; if (c) for (const v of c) if (x < v) k = !k; return k; };
-  for (let i = 0; i < cells.length; i += 2) {
-    const cx = cells[i]!, cy = cells[i + 1]!;
-    let edge = false;
-    for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
-      const k = K(cx + ox, cy + oy);
-      if (have.has(k)) continue;
-      edge = true;
-      if (out.has(k)) continue;
-      out.add(k);
-      if (insideRow((cx + ox + 0.5) * CELL_T, cy + oy)) return false;
-    }
-    if (edge && !insideRow((cx + 0.5) * CELL_T, cy)) return false;
-  }
-  return true;
-}
-
-/** the droplet outline of the cells (surface 1) on scratch grid g, as a Shape relative to the anchor cell (ax, ay): P21's droplet contour,
- *  then smoothed along its length to calm the staircase waves of a round dab, as long as it still holds exactly those cells (else less
- *  smoothing, else the droplet contour itself, rounded by corner cutting) */
-function contour(g: Grid, ax: number, ay: number, cells: Int16Array, hash: number, style: BlobStyle): Shape {
-  const box = { x0: g.x0, y0: g.y0, x1: g.x0 + g.w * CELL_T, y1: g.y0 + g.h * CELL_T };
-  const ox = ax * CELL_T, oy = ay * CELL_T, rings: Float32Array[] = [], ext: Int32Array[] = [], front: Uint8Array[] = [], signs: number[] = [];
-  const raws: number[][] = [];
-  for (const raw of blobOutlines(g, 1, box, style)) {
-    if (raw.length < 6) continue;
-    const rel: number[] = new Array(raw.length);
-    for (let i = 0; i < raw.length; i += 2) { rel[i] = raw[i]! - ox; rel[i + 1] = raw[i + 1]! - oy; }
-    raws.push(rel);
-  }
-  const nc = cells.length >> 1;
-  let shaped = raws.map(r => chaikin(chaikin(r)));
-  for (const sigma of nc >= 30 ? [0.25, 0.14] : nc >= 12 ? [0.14] : []) {
-    const sm = raws.map(r => smoothRing(r, sigma));
-    if (holdsExactly(sm, cells)) { shaped = sm; break; }
-  }
-  for (const ring of shaped) {
-    const p = Float32Array.from(ring), n = p.length >> 1;
-    // the ring's turn on the map (outer rings run counter-clockwise: a positive area with x east and y south) and on screen
-    let a = 0, as = 0, iMinX = 0, iMaxX = 0, iMaxY = 0, iMinY = 0;
-    for (let i = 0; i < n; i++) {
-      const j = (i + 1) % n, x = p[2 * i]!, y = p[2 * i + 1]!, x1 = p[2 * j]!, y1 = p[2 * j + 1]!;
-      a += x * y1 - x1 * y;
-      as += (x - y) * (x1 + y1) - (x1 - y1) * (x + y);
-      const sx = x - y, sy = x + y;
-      if (sx < p[2 * iMinX]! - p[2 * iMinX + 1]!) iMinX = i; if (sx > p[2 * iMaxX]! - p[2 * iMaxX + 1]!) iMaxX = i;
-      if (sy > p[2 * iMaxY]! + p[2 * iMaxY + 1]!) iMaxY = i; if (sy < p[2 * iMinY]! + p[2 * iMinY + 1]!) iMinY = i;
-    }
-    // a segment faces the viewer when its outward normal points down the screen: moving left on screen for a positive screen area
-    const f = new Uint8Array(n);
-    for (let i = 0; i < n; i++) { const j = (i + 1) % n, dX = (p[2 * j]! - p[2 * j + 1]!) - (p[2 * i]! - p[2 * i + 1]!); f[i] = (as > 0 ? dX < 0 : dX > 0) ? 1 : 0; }
-    rings.push(p); ext.push(Int32Array.of(iMinX, iMaxX, iMaxY, iMinY)); front.push(f); signs.push(a > 0 ? 1 : -1);
-  }
-  return { cells, rings, sign: Int8Array.from(signs), ext, front, hash };
+  return { cells, skip, loops: cellOutline(cells), skipLoops: cellOutline(skip), why: REASONS[best] ?? '', hash };
 }
 
 /** the footprint of polygons (a course piece's layers, x y pairs in tiles, rounded as they are laid): the cells course-grid's fillPolygon
- *  fills for them (their centres inside), outlined like a dab's; ax, ay is the anchor cell the shape is relative to */
+ *  fills for them (their centres inside), outlined along their edges; ax, ay is the anchor cell the shape is relative to */
 export function polyFootprint(polys: readonly number[][]): { shape: Shape; ax: number; ay: number } {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const P of polys) for (let i = 0; i < P.length; i += 2) { x0 = Math.min(x0, P[i]!); x1 = Math.max(x1, P[i]!); y0 = Math.min(y0, P[i + 1]!); y1 = Math.max(y1, P[i + 1]!); }
   if (!(x1 >= x0)) x0 = x1 = y0 = y1 = 0;
-  const ax = Math.floor(x0 / CELL_T), ay = Math.floor(y0 / CELL_T), m = PAD_CELLS;
+  const ax = Math.floor(x0 / CELL_T), ay = Math.floor(y0 / CELL_T), m = 2;
   const g = makeGrid((ax - m) * CELL_T, (ay - m) * CELL_T, Math.ceil((x1 - x0) / CELL_T) + 2 * m + 2, Math.ceil((y1 - y0) / CELL_T) + 2 * m + 2);
   for (const P of polys) { const pts: { x: number; y: number }[] = []; for (let i = 0; i < P.length; i += 2) pts.push({ x: P[i]!, y: P[i + 1]! }); fillPolygon(g, pts, 1, 0, 0); }
   const list: number[] = [];
   let h = 2166136261;
   for (let i = 0; i < g.surf.length; i++) if (g.surf[i]) { const cx = i % g.w, dx = cx - m, dy = (i - cx) / g.w - m; list.push(dx, dy); h = Math.imul(h ^ ((dx & 0xffff) | (dy << 16)), 16777619); }
-  const cells = Int16Array.from(list);
-  return { shape: contour(g, ax, ay, cells, h, FOOT_STYLE), ax, ay };
+  return { shape: makeShape(Int16Array.from(list), new Int16Array(0), null, h), ax, ay };
 }
 
-/** the footprints of dabs, cached: the cells of the dab at the cursor (exactly paintDisc's) and their outline, kept per shape */
+/** the footprints of dabs, cached: the cells of the dab at the cursor (exactly paintDisc's, with the brush rules), the cells it skips, and
+ *  their outlines, kept per shape */
 export class Footprints {
   private pad = new DabPad();
   private shapes = new Map<number, Shape>();
@@ -300,57 +288,65 @@ export class Footprints {
   /** the shape at the last call and the world cell of its anchor */
   shape: Shape | null = null;
   ax = 0; ay = 0;
-  /** counters for the tests: dabs run and outlines contoured */
+  /** counters for the tests: dabs run and outlines made */
   dabs = 0; contours = 0;
-  /** whether the last dab ran on the course grid's rules (refuse gave a function): its collars lie outside the cells */
+  /** whether the last dab ran on the course grid's rules (why or refuse gave a function) */
   grid = false;
-  /** when the last outline was contoured (ms; the frame clock the cursor passes in) */
-  private contourAt = -1e9;
-  /** the footprint of a dab of radius r at (x, y) for surface surf: re-runs the dab only when the inputs changed (rev: see CursorEnv),
-   *  asking refuse then for the cells it skips, and contours only a shape it has not kept. With the frame clock now, a big dab (BIG_CELLS
-   *  or more) contours at most every CONTOUR_GAP_MS while the cursor moves: in between, the last outline moves with the dab's anchor and
-   *  the next frame tries again, so the outline is exact again as soon as the cursor rests */
-  at(x: number, y: number, r: number, surf: number, refuse?: (() => Refuse | null) | null, rev = 0, now?: number): Shape {
+  /** what a click on the last footprint costs ($; -1: no price, outside a golf game) and how many cells it paints */
+  price = -1; count = 0;
+  /** the footprint of a dab for surface surf: the round brush's disc of radius r at (x, y), or with square n > 0 (T109) the n x n cells the
+   *  square brush lays with the pointer at (x, y); re-runs the dab only when the inputs changed (rev: see CursorEnv), asking why (or refuse)
+   *  then for the cells it skips and cost for their price, and outlines only a shape it has not kept */
+  at(x: number, y: number, r: number, surf: number, why?: (() => SkipWhy | null) | null, rev = 0, refuse?: (() => Refuse | null) | null, square = 0, cost?: (() => CellCost | null) | null): Shape {
+    if (square > 0) { x = squareStart(x, square); y = squareStart(y, square); r = -square; }
     if (this.shape && x === this.kx && y === this.ky && r === this.kr && surf === this.ks && rev === this.krev) return this.shape;
-    const prev = this.shape && r === this.kr && surf === this.ks ? this.shape : null;
     this.kx = x; this.ky = y; this.kr = r; this.ks = surf; this.krev = rev; this.dabs++;
-    const skip = refuse?.() ?? null; this.grid = !!skip;
-    const { idx, n } = this.pad.run(x, y, r, skip), g = this.pad.g!, m = this.pad.margin;
-    const cells = new Int16Array(2 * n);
+    let test = why?.() ?? null;
+    if (!test) { const rf = refuse?.() ?? null; if (rf) test = (a, b) => (rf(a, b) ? 'Skipped' : ''); }
+    this.grid = !!test;
+    const pad = this.pad, { idx, n } = square > 0 ? pad.runSquare(x, y, square, test) : pad.run(x, y, r, test), g = pad.g!, m = pad.margin, ns = pad.nSkip;
+    // the price: each painted cell's cost (by its world centre)
+    const cc = cost?.() ?? null;
+    this.count = n; this.price = cc ? 0 : -1;
+    if (cc) for (let k = 0; k < n; k++) { const i = idx[k]!, cx = i % g.w; this.price += cc(g.x0 + (cx + 0.5) * CELL_T, g.y0 + ((i - cx) / g.w + 0.5) * CELL_T); }
+    const cells = new Int16Array(2 * n), skip = new Int16Array(2 * ns), sw = new Uint8Array(ns);
     let h = 2166136261 ^ (surf * 97 + n);
     for (let k = 0; k < n; k++) {
       const i = idx[k]!, cx = i % g.w, dx = cx - m, dy = (i - cx) / g.w - m;
       cells[2 * k] = dx; cells[2 * k + 1] = dy;
       h = Math.imul(h ^ ((dx & 0xffff) | (dy << 16)), 16777619);
     }
-    this.ax = this.pad.ax; this.ay = this.pad.ay;
+    h = Math.imul(h ^ (ns + 0x9e37), 16777619);
+    for (let k = 0; k < ns; k++) {
+      const i = pad.skipIdx[k]!, cx = i % g.w, dx = cx - m, dy = (i - cx) / g.w - m;
+      skip[2 * k] = dx; skip[2 * k + 1] = dy; sw[k] = pad.skipWhy[k]!;
+      h = Math.imul(h ^ ((dx & 0xffff) | (dy << 16)) ^ (sw[k]! << 24), 16777619);
+    }
+    this.ax = pad.ax; this.ay = pad.ay;
     let s = this.shapes.get(h);
-    if (s && !sameCells(s.cells, cells)) s = undefined;
+    if (s && !(same(s.cells, cells) && same(s.skip, skip))) s = undefined;
     if (s) { this.shapes.delete(h); this.shapes.set(h, s); }
-    else if (prev && now !== undefined && n >= BIG_CELLS && now - this.contourAt < CONTOUR_GAP_MS) { this.kx = NaN; return prev; }
     else {
-      s = contour(g, this.pad.ax, this.pad.ay, cells, h, FOOT_STYLE); this.contours++; if (now !== undefined) this.contourAt = now;
+      s = makeShape(cells, skip, sw, h); this.contours++;
       this.shapes.set(h, s);
       if (this.shapes.size > SHAPE_CACHE) this.shapes.delete(this.shapes.keys().next().value!);
     }
     return (this.shape = s);
   }
 }
-function sameCells(a: Int16Array, b: Int16Array): boolean {
+function same(a: Int16Array, b: Int16Array): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
   return true;
 }
 
-// ---- the puck sprite ----
+// ---- the chip sprite (the 3D surface disc, T081's puck art) ----
 
 /** a cached puck: the sprite (top face centre at (pad + rx, pad + ry), the wall below it), its contact shadow, and the sizes it was drawn at */
 interface Sprite { key: string; c: SpriteCanvas; sh: SpriteCanvas; rx: number; ry: number; thick: number; pad: number }
 
 /** the wall's thickness for a puck ry device px tall */
 const thickOf = (ry: number, d: number) => clamp(0.3 * ry, 4 * d, 15 * d);
-/** the puck's rest hover height (device px) */
-const hoverOf = (ry: number, d: number) => clamp(0.24 * ry, 3 * d, 9 * d);
 
 const rgba = (c: readonly number[], a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
@@ -474,22 +470,24 @@ function paintShadow(g: CanvasRenderingContext2D, rx: number, ry: number) {
   g.setTransform(1, 0, 0, 1, 0, 0);
 }
 
+
 // ---- the cursor ----
 
 /** a splash: where (tiles), when, the brush radius (tiles), course-fx's particles (their flight in css px), where each starts on the
  *  dab's rim (unit circle, x y pairs), and whether it ripples */
 interface Burst { x: number; y: number; t0: number; r: number; parts: SplashParticle[]; rim: Float32Array; ring: boolean; col: string }
 
-/** the Course brush's cursor: the grid, the glowing footprint and the surface puck, drawn on the engine's overlay each frame */
+/** the brush's cursor: the footprint of the cells a click paints, the course grid round it and the surface chip beside the pointer, drawn
+ *  on the engine's overlay each frame */
 export class CourseCursor {
   /** the footprint cache (the tests read it) */
   readonly feet = new Footprints();
-  /** counters for the tests: puck sprites painted, gradients made */
+  /** counters for the tests: chip sprites painted, gradients made */
   readonly stats = { sprites: 0, gradients: 0 };
-  /** the puck's last drawn half-axes and centre on the ground, device px (the tests read them) */
+  /** the chip's last drawn half-axes and the centre of its top face, device px, and whether it was drawn (the tests read them) */
   readonly last = { rx: 0, ry: 0, x: 0, y: 0, shown: false };
   private env: CursorEnv;
-  /** the eased puck position (tiles), whether it is on screen, its eased hover height (device px) and opacity */
+  /** the chip's eased place (device px), whether it has one yet, its eased hover height (device px) and opacity */
   private px = 0; private py = 0; private have = false; private hov = 0; private alpha = 1;
   /** the last frame time (ms), the last press and release (ms), a press in progress and whether it rubs out */
   private t = 0; private pressAt = -1e9; private releaseAt = -1e9; private pressed = false; private pressErase = false;
@@ -497,14 +495,15 @@ export class CourseCursor {
   private trailX = 0; private trailY = 0;
   private bursts: Burst[] = [];
   private seed = 1;
-  /** the screen points of a ring (device px), grown when a ring needs more */
+  /** the screen points of the outline loops (device px), grown when a shape needs more, and each loop's start */
   private scr = new Float32Array(512);
+  private offs = new Int32Array(16);
   /** the grid's fade: one radial gradient in tile space, made again only when its radius changes */
   private grad: CanvasGradient | null = null; private gradR = -1;
-  /** the puck sprites (LRU) and the one in use */
+  /** the chip sprites (LRU) and the one in use */
   private sprites = new Map<string, Sprite>();
   private spr: Sprite | null = null;
-  private sk = { kind: '', st: null as PuckStyle | null, erase: false, band: true, r: NaN, b: NaN, d: 0, rev: -1, tex: '', scale: 0, angle: 0, border: -1, btex: '', tone: -1 };
+  private sk = { kind: '', st: null as PuckStyle | null, erase: false, band: true, d: 0, rev: -1, tex: '', scale: 0, angle: 0, border: -1, btex: '', tone: -1 };
 
   constructor(env: CursorEnv = {}) { this.env = env; }
 
@@ -520,14 +519,15 @@ export class CourseCursor {
     }
     if (tool.mode !== 'brush') return;
     this.pressed = true; this.pressAt = now; this.pressErase = tool.rubOut || alt;
-    const r = tool.brush[tool.brushKind].r;
-    this.splash(c.x, c.y, r, this.pressErase ? ERASE : LOOKS[tool.brushKind] ?? LOOKS.fairway!, now, true);
-    this.trailX = c.x; this.trailY = c.y;
+    const n = tool.brushSquare(), r = n ? (n * CELL_T) / 2 : tool.brush[tool.brushKind].r;
+    const x = n ? (squareStart(c.x, n) + n / 2) * CELL_T : snapDab(c.x), y = n ? (squareStart(c.y, n) + n / 2) * CELL_T : snapDab(c.y);
+    this.splash(x, y, r, this.pressErase ? ERASE : LOOKS[tool.brushKind] ?? LOOKS.fairway!, now, true);
+    this.trailX = x; this.trailY = y;
   }
-  /** the press ends: the puck springs back up */
+  /** the press ends: the chip springs back up */
   release(now = performance.now()) { if (this.pressed) { this.pressed = false; this.releaseAt = now; } }
 
-  /** draws the cursor for this frame; true when the puck is shown (the OS cursor can hide) */
+  /** draws the cursor for this frame; true when the chip is shown */
   draw(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, now: number): boolean {
     const dt = this.t ? clamp((now - this.t) / 1000, 0, 0.1) : 0; this.t = now;
     const c = tool.cursor;
@@ -540,48 +540,44 @@ export class CourseCursor {
     return shown;
   }
 
-  /** this frame's motion (see motion()): the squash, the pulse and flash, the wireframe's glow, the puck's rest hover, wall and prism height */
-  private mo = { sx: 1, sy: 1, pulse: 0, flash: 0, glowA: 0, rest: 0, thick: 0, hp: 0 };
-  /** the puck eases to (cx, cy), bobs, sinks while pressed, squashes after a press and springs after a release; the wireframe pulses and
-   *  flashes (a puck ry device px tall) */
-  private motion(cx: number, cy: number, ry: number, d: number, now: number, dt: number) {
-    const m = this.mo, rest = hoverOf(ry, d), thick = thickOf(ry, d);
-    if (!this.have) { this.px = cx; this.py = cy; this.have = true; this.hov = rest; this.alpha = 0.96; }
-    else { const k = 1 - Math.exp(-dt * EASE); this.px += (cx - this.px) * k; this.py += (cy - this.py) * k; }
-    const target = this.pressed ? 0.6 * d : rest + 1.8 * d * Math.sin((now * 2 * Math.PI) / BOB_MS);
+  /** this frame's motion: the squash, the flash, the chip's rest hover and wall */
+  private mo = { sx: 1, sy: 1, flash: 0, rest: 0, thick: 0 };
+  /** the chip eases to (gx, gy) (device px), bobs, sinks while pressed, squashes after a press and springs after a release */
+  private motion(gx: number, gy: number, ry: number, d: number, now: number, dt: number) {
+    const m = this.mo, rest = 3 * d, thick = thickOf(ry, d);
+    if (!this.have) { this.px = gx; this.py = gy; this.have = true; this.hov = rest; this.alpha = 1; }
+    else { const k = 1 - Math.exp(-dt * EASE); this.px += (gx - this.px) * k; this.py += (gy - this.py) * k; }
+    const target = this.pressed ? 0.5 * d : rest + 1.2 * d * Math.sin((now * 2 * Math.PI) / BOB_MS);
     this.hov += (target - this.hov) * (1 - Math.exp(-dt * (this.pressed ? PRESS_EASE : LIFT_EASE)));
-    this.alpha += ((this.pressed ? 0.55 : 0.96) - this.alpha) * (1 - Math.exp(-dt * 14));
+    this.alpha += ((this.pressed ? 0.75 : 1) - this.alpha) * (1 - Math.exp(-dt * 14));
     const tp = now - this.pressAt, tr = now - this.releaseAt;
-    const q = (tp < 700 ? Math.exp(-tp / 130) * Math.cos((tp * 2 * Math.PI) / 280) : 0) * 0.2 - (tr < 600 ? Math.exp(-tr / 110) * Math.cos((tr * 2 * Math.PI) / 240) : 0) * 0.1;
+    const q = (tp < 700 ? Math.exp(-tp / 130) * Math.cos((tp * 2 * Math.PI) / 280) : 0) * 0.16 - (tr < 600 ? Math.exp(-tr / 110) * Math.cos((tr * 2 * Math.PI) / 240) : 0) * 0.08;
     m.sx = 1 + 0.8 * q; m.sy = 1 - q;
-    m.pulse = 0.5 + 0.5 * Math.sin((now * 2 * Math.PI) / PULSE_MS); m.flash = tp < FLASH_MS ? (1 - tp / FLASH_MS) * (1 - tp / FLASH_MS) : 0;
-    m.glowA = 0.6 + 0.3 * m.pulse; m.rest = rest; m.thick = thick;
-    m.hp = (rest + 2 * d + thick + 4 * d) * (1 + 0.05 * m.pulse);
+    m.flash = tp < FLASH_MS ? (1 - tp / FLASH_MS) * (1 - tp / FLASH_MS) : 0;
+    m.rest = rest; m.thick = thick;
   }
 
-  /** the grid, the footprint and the puck for the brush at tile (cx, cy) */
+  /** the footprint, the grid and the chip for the brush with the pointer at tile (cx, cy): the dab sits on the half grid's nearest corner */
   private drawBrush(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
     const set = tool.brush[tool.brushKind], r = set.r, st = set.style, erase = this.pressed ? this.pressErase : tool.rubOut;
-    const base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, look = erase ? ERASE : base, d = v.dpr;
-    const { rx, ry } = puckAxesInto(this.last, r, v.ze);
-    this.motion(cx, cy, ry, d, now, dt);
-    // the grid round the cursor, then the footprint (the dab's cells at the cursor) as a prism round the puck
-    this.drawGrid(ctx, v, cx, cy, r);
-    const fp = this.feet.at(cx, cy, r, base.surf, this.env.refuse, this.env.rev?.() ?? 0, now);
-    const ps = this.project(fp, this.feet.ax * CELL_T, this.feet.ay * CELL_T, v);
-    this.prismBack(ctx, fp, ps, look, d);
-    this.puck(ctx, v, tool.brushKind, st, erase, !this.feet.grid, r, rx, ry, d);
-    this.prismFront(ctx, fp, ps, look, d);
-    // a stroke in progress splashes as it travels
-    if (this.pressed && Math.hypot(cx - this.trailX, cy - this.trailY) > Math.max(1.2, 0.9 * r)) { this.splash(cx, cy, r, look, now, false); this.trailX = cx; this.trailY = cy; }
+    const base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, look = erase ? ERASE : base, d = v.dpr, n = tool.brushSquare();
+    // the dab's middle and size: the square brush's n x n cells (T109), or the round brush on the nearest cell corner (T108)
+    const x = n ? (squareStart(cx, n) + n / 2) * CELL_T : snapDab(cx), y = n ? (squareStart(cy, n) + n / 2) * CELL_T : snapDab(cy), size = n ? (n * CELL_T) / 2 : r;
+    this.drawGrid(ctx, v, x, y, size);
+    const f = this.feet, fp = f.at(n ? cx : x, n ? cy : y, r, base.surf, this.env.why, this.env.rev?.() ?? 0, this.env.refuse, n, this.env.cost);
+    this.footprint(ctx, fp, f.ax * CELL_T, f.ay * CELL_T, v, look, !erase);
+    const spent = tool.strokeSpent;
+    this.chip(ctx, v, cx, cy, tool.brushKind, st, erase, !f.grid, d, now, dt, erase ? '' : fp.skip.length ? fp.why : '', this.priceText(f.count, f.price, this.pressed, spent));
+    // a stroke in progress splashes lightly as it travels
+    if (this.pressed && Math.hypot(x - this.trailX, y - this.trailY) > Math.max(1.5, size)) { this.splash(x, y, size, look, now, false); this.trailX = x; this.trailY = y; }
     return true;
   }
 
   /** the course piece in hand: the Paint tool's plan it was made for, the footprint of its golf layers (anchor cell ax, ay), its core
    *  surface (kind, look), and its middle and half size in tiles (the splash) */
   private piece: { plan: unknown; shape: Shape; ax: number; ay: number; kind: string; look: Look; cx: number; cy: number; r: number } | null = null;
-  /** a course piece in hand (the plan is rebuilt when it moves): the cells its golf layers fill as the same glowing prism (red where it
-   *  cannot go), and a small puck of its core surface at the cursor */
+  /** a course piece in hand (the plan is rebuilt when it moves): the cells its golf layers fill, tinted like a dab's footprint (red with the
+   *  reason where it cannot go), and the chip of its core surface beside the pointer */
   private drawPiece(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
     const plan = tool.piece!;
     let pc = this.piece;
@@ -594,58 +590,106 @@ export class CourseCursor {
       const kind = core?.kind ?? 'fairway', any = polys.length > 0;
       pc = this.piece = { plan, shape: f.shape, ax: f.ax, ay: f.ay, kind, look: LOOKS[kind] ?? LOOKS.fairway!, cx: any ? (x0 + x1) / 2 : cx, cy: any ? (y0 + y1) / 2 : cy, r: any ? 0.5 * Math.min(x1 - x0, y1 - y0) : 1 };
     }
-    const look = plan.why ? ERASE : pc.look, d = v.dpr, r = PIECE_PUCK_R, { rx, ry } = puckAxesInto(this.last, r, v.ze);
-    this.motion(cx, cy, ry, d, now, dt);
-    const ps = this.project(pc.shape, pc.ax * CELL_T, pc.ay * CELL_T, v);
-    this.prismBack(ctx, pc.shape, ps, look, d);
+    const bad = !!plan.why, d = v.dpr;
+    if (bad) this.skipTint(ctx, pc.shape.loops, pc.ax * CELL_T, pc.ay * CELL_T, v);
+    else this.footprint(ctx, pc.shape, pc.ax * CELL_T, pc.ay * CELL_T, v, pc.look, false);
     const set = (tool.brush as Record<string, { style: PuckStyle } | undefined>)[pc.kind];
-    if (set) this.puck(ctx, v, pc.kind, set.style, !!plan.why, false, r, rx, ry, d);
-    this.prismFront(ctx, pc.shape, ps, look, d);
+    if (set) this.chip(ctx, v, cx, cy, pc.kind, set.style, bad, false, d, now, dt, bad ? plan.why ?? '' : '', '');
     return true;
   }
 
-  /** the footprint prism's ground: the cells faintly in the surface's colour (bright in the flash), the outline on the ground, and the back
-   *  vertical edge (the puck hides it) */
-  private prismBack(ctx: CanvasRenderingContext2D, fp: Shape, ps: Float32Array, look: Look, d: number) {
-    const m = this.mo;
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    this.ringsPath(ctx, fp, ps, 0, true);
-    ctx.fillStyle = m.flash > 0 ? look.core : look.fill; ctx.globalAlpha = 0.1 + 0.08 * m.pulse + 0.4 * m.flash; ctx.fill('evenodd');
-    this.glow(ctx, look, m.glowA * 0.85 + m.flash, d);
-    ctx.beginPath(); this.verticals(ctx, fp, ps, m.hp, 3); this.glow(ctx, look, m.glowA * 0.4, d);
+  /** the footprint: the painted cells' soft tint and crisp edge, and (skips) the skipped cells in muted red; the outline is the cells' own
+   *  edges, projected to device px each frame (no bitmap: never pixelated) */
+  private footprint(ctx: CanvasRenderingContext2D, fp: Shape, ox: number, oy: number, v: CursorView, look: Look, skips: boolean) {
+    const m = this.mo, d = v.dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
+    if (skips && fp.skipLoops.length) this.skipTint(ctx, fp.skipLoops, ox, oy, v);
+    if (!fp.loops.length) return;
+    this.loopsPath(ctx, fp.loops, ox, oy, v);
+    ctx.fillStyle = m.flash > 0 ? look.core : look.fill; ctx.globalAlpha = TINT_A + 0.3 * m.flash; ctx.fill('evenodd');
+    this.edge(ctx, look.core, d);
   }
-  /** the glass in front of the puck: the front walls' faint sheet, the top outline, the side and front vertical edges */
-  private prismFront(ctx: CanvasRenderingContext2D, fp: Shape, ps: Float32Array, look: Look, d: number) {
-    const m = this.mo, lift = m.hp * (1 + 0.06 * m.flash);
-    ctx.beginPath(); this.walls(ctx, fp, ps, lift);
-    ctx.fillStyle = look.glow; ctx.globalAlpha = 0.07 + 0.05 * m.pulse + 0.25 * m.flash; ctx.fill();
-    this.ringsPath(ctx, fp, ps, lift, false); this.glow(ctx, look, m.glowA + m.flash, d);
-    ctx.beginPath(); this.verticals(ctx, fp, ps, lift, 0); this.verticals(ctx, fp, ps, lift, 1); this.verticals(ctx, fp, ps, lift, 2);
-    this.glow(ctx, look, (m.glowA + m.flash) * 0.85, d);
+  /** cells drawn in the skipped look: a muted red tint and edge */
+  private skipTint(ctx: CanvasRenderingContext2D, loops: Float32Array[], ox: number, oy: number, v: CursorView) {
+    if (!loops.length) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.loopsPath(ctx, loops, ox, oy, v);
+    ctx.fillStyle = SKIP_FILL; ctx.globalAlpha = SKIP_A; ctx.fill('evenodd');
+    this.edge(ctx, SKIP_EDGE, v.dpr);
+  }
+  /** strokes the current path as the footprint's edge: a dark line under a light one, a css px wide */
+  private edge(ctx: CanvasRenderingContext2D, col: string, d: number) {
+    ctx.strokeStyle = UNDER; ctx.globalAlpha = 1; ctx.lineWidth = 2.2 * d; ctx.stroke();
+    ctx.strokeStyle = col; ctx.globalAlpha = EDGE_A; ctx.lineWidth = d; ctx.stroke();
     ctx.globalAlpha = 1;
   }
-  /** the puck at its eased spot: its contact shadow, then the sprite squashed about its foot; too small to read as a puck, a little glowing
-   *  ring marks the cursor instead */
-  private puck(ctx: CanvasRenderingContext2D, v: CursorView, kind: string, st: PuckStyle, erase: boolean, band: boolean, r: number, rx: number, ry: number, d: number) {
-    const m = this.mo, ze = v.ze;
-    const gx = ((this.px - this.py) * HW - v.camX) * ze + v.cw / 2, gy = ((this.px + this.py) * HH - v.camY) * ze + v.ch / 2;
-    this.last.x = gx; this.last.y = gy;
-    if (rx >= 6 * d) {
-      const sp = this.sprite(kind, st, erase, band, r, rx, d), k = rx / sp.rx;
-      const h = this.hov + m.thick * 0.5, shx = gx + SHEAR.sx * h, shy = gy + SHEAR.sy * h, grow = 1 + (0.3 * this.hov) / Math.max(ry, 1);
-      const sw = sp.sh.width * k * grow * m.sx, shh = sp.sh.height * k * grow;
-      ctx.globalAlpha = CAST.strength * (0.95 - 0.3 * clamp(this.hov / (m.rest + 2 * d), 0, 1));
-      ctx.drawImage(sp.sh as CanvasImageSource, shx - sw / 2, shy - shh / 2, sw, shh);
-      ctx.globalAlpha = this.alpha;
-      ctx.setTransform(m.sx * k, 0, 0, m.sy * k, gx, gy - this.hov);
-      ctx.drawImage(sp.c as CanvasImageSource, -(sp.pad + sp.rx), -(sp.pad + sp.ry + sp.thick));
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-    } else {
-      const look = erase ? ERASE : LOOKS[kind] ?? LOOKS.fairway!;
-      ctx.beginPath(); ctx.ellipse(gx, gy, 7 * d, 3.5 * d, 0, 0, Math.PI * 2); this.glow(ctx, look, m.glowA + m.flash, d);
-      ctx.beginPath(); ctx.arc(gx, gy, 1.6 * d, 0, Math.PI * 2); ctx.fillStyle = look.core; ctx.globalAlpha = 0.95; ctx.fill();
+  /** the loops (tiles from (ox, oy)) as one new path in device px, into the reused buffer */
+  private loopsPath(ctx: CanvasRenderingContext2D, loops: Float32Array[], ox: number, oy: number, v: CursorView) {
+    let total = 0;
+    for (const p of loops) total += p.length;
+    if (total > this.scr.length) this.scr = new Float32Array(Math.max(total, this.scr.length * 2));
+    if (loops.length + 1 > this.offs.length) this.offs = new Int32Array(loops.length * 2 + 2);
+    const s = this.scr, ze = v.ze, ex = v.cw / 2 - v.camX * ze, ey = v.ch / 2 - v.camY * ze;
+    ctx.beginPath();
+    let o = 0;
+    for (let i = 0; i < loops.length; i++) {
+      const p = loops[i]!; this.offs[i] = o;
+      for (let j = 0; j < p.length; j += 2) {
+        const x = p[j]! + ox, y = p[j + 1]! + oy, X = (x - y) * HW * ze + ex, Y = (x + y) * HH * ze + ey;
+        s[o + j] = X; s[o + j + 1] = Y;
+        if (j) ctx.lineTo(X, Y); else ctx.moveTo(X, Y);
+      }
+      ctx.closePath();
+      o += p.length;
     }
-    ctx.globalAlpha = 1;
+    this.offs[loops.length] = o;
+  }
+
+  /** the chip beside the pointer at tile (cx, cy): its contact shadow, then the sprite squashed about its foot, and under it the reason the
+   *  click skips cells (why, '' for none) */
+  private chip(ctx: CanvasRenderingContext2D, v: CursorView, cx: number, cy: number, kind: string, st: PuckStyle, erase: boolean, band: boolean, d: number, now: number, dt: number, why: string, price: string) {
+    const ze = v.ze, rx = (CHIP_CSS / 2) * d, ry = rx * (HH / HW);
+    const mx = ((cx - cy) * HW - v.camX) * ze + v.cw / 2, my = ((cx + cy) * HH - v.camY) * ze + v.ch / 2;
+    // to the lower right of the pointer; flipped to its left or above it near the screen's edges
+    const gx = mx + (mx + (CHIP_DX + CHIP_CSS) * d > v.cw ? -CHIP_DX : CHIP_DX) * d, gy = my + (my + (CHIP_DY + CHIP_CSS) * d > v.ch ? -CHIP_DY : CHIP_DY) * d;
+    this.motion(gx, gy, ry, d, now, dt);
+    const m = this.mo, x = Math.round(this.px), y = Math.round(this.py);
+    this.last.rx = rx; this.last.ry = ry; this.last.x = x; this.last.y = y;
+    const sp = this.sprite(kind, st, erase, band, d);
+    const h = this.hov + m.thick * 0.5, shx = x + SHEAR.sx * h, shy = y + SHEAR.sy * h;
+    const sw = sp.sh.width * m.sx, shh = sp.sh.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = CAST.strength * 0.85;
+    ctx.drawImage(sp.sh as CanvasImageSource, shx - sw / 2, shy - shh / 2, sw, shh);
+    ctx.globalAlpha = this.alpha;
+    ctx.setTransform(m.sx, 0, 0, m.sy, x, y - Math.round(this.hov));
+    ctx.drawImage(sp.c as CanvasImageSource, -(sp.pad + sp.rx), -(sp.pad + sp.ry + sp.thick));
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+    let ly = y + ry + m.thick + 7 * d;
+    if (price) { this.label(ctx, 0, price, x, ly, d, '#f4f1e6'); ly += 20 * d; }
+    if (why) this.label(ctx, 1, why, x, ly, d, '#ffd5cc');
+  }
+  /** the price pill's text: the cells a click paints and what they cost (or, while dragging, what the run has cost so far); cached, so a
+   *  still frame makes no new string */
+  private priceKey = ''; private priceStr = '';
+  private priceText(count: number, price: number, pressed: boolean, spent: number): string {
+    const k = pressed ? `r${spent}` : `${count}|${price}`;
+    if (k !== this.priceKey) {
+      this.priceKey = k;
+      this.priceStr = pressed ? (price < 0 ? '' : `Run $${spent.toLocaleString()}`) : count ? `${count} cell${count === 1 ? '' : 's'}${price < 0 ? '' : ` · $${price.toLocaleString()}`}` : '';
+    }
+    return this.priceStr;
+  }
+  /** a small dark pill with a text (the price, or the reason a click skips cells), centred under the chip; slot 0 or 1 keeps its measure */
+  private labelText = ['', '']; private labelW = [0, 0]; private labelD = 0;
+  private label(ctx: CanvasRenderingContext2D, slot: 0 | 1, text: string, x: number, y: number, d: number, col: string) {
+    ctx.font = `600 ${Math.round(11 * d)}px system-ui, sans-serif`;
+    if (d !== this.labelD) { this.labelD = d; this.labelText[0] = this.labelText[1] = ''; }
+    if (text !== this.labelText[slot]) { this.labelText[slot] = text; this.labelW[slot] = ctx.measureText(text).width; }
+    const w = this.labelW[slot]! + 12 * d, h = 17 * d, x0 = Math.round(x - w / 2), y0 = Math.round(y);
+    ctx.fillStyle = 'rgba(22,20,24,0.82)'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x0, y0, w, h, h / 2); else ctx.rect(x0, y0, w, h); ctx.fill();
+    ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x0 + w / 2, y0 + h / 2 + 0.5 * d);
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
 
   /** the course grid's lines round (cx, cy): 2 m lines and the 1 m lines between them, faded out with distance by a radial gradient in
@@ -665,7 +709,7 @@ export class CourseCursor {
     ctx.strokeStyle = this.grad; ctx.lineWidth = v.dpr / (ze * ISO_PERP); ctx.lineCap = 'butt';
     const k0x = Math.ceil((cx - R) / CELL_T), k1x = Math.floor((cx + R) / CELL_T), k0y = Math.ceil((cy - R) / CELL_T), k1y = Math.floor((cy + R) / CELL_T);
     for (let odd = 0, many = k1x - k0x > 140; odd < 2; odd++) {
-      const a = odd ? (many ? 0 : 0.3 * aCell) : 0.5 * aTile;
+      const a = odd ? (many ? 0 : 0.22 * aCell) : 0.36 * aTile;
       if (a < 0.01) continue;
       ctx.beginPath();
       for (let k = k0x; k <= k1x; k++) { if ((k & 1) !== odd) continue; const dx = k * CELL_T - cx, h = Math.sqrt(Math.max(0, R * R - dx * dx)); ctx.moveTo(dx, -h); ctx.lineTo(dx, h); }
@@ -675,88 +719,19 @@ export class CourseCursor {
     ctx.globalAlpha = 1; ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
-  /** the footprint's rings on screen (device px), into the reused buffer: ring i's points start at the returned offsets */
-  private offs = new Int32Array(16);
-  private project(fp: Shape, ox: number, oy: number, v: CursorView): Float32Array {
-    let total = 0;
-    for (const p of fp.rings) total += p.length;
-    if (total > this.scr.length) this.scr = new Float32Array(Math.max(total, this.scr.length * 2));
-    if (fp.rings.length + 1 > this.offs.length) this.offs = new Int32Array(fp.rings.length * 2 + 2);
-    const s = this.scr, ze = v.ze, ex = v.cw / 2 - v.camX * ze, ey = v.ch / 2 - v.camY * ze;
-    let o = 0;
-    for (let i = 0; i < fp.rings.length; i++) {
-      const p = fp.rings[i]!; this.offs[i] = o;
-      for (let j = 0; j < p.length; j += 2) { const x = p[j]! + ox, y = p[j + 1]! + oy; s[o + j] = (x - y) * HW * ze + ex; s[o + j + 1] = (x + y) * HH * ze + ey; }
-      o += p.length;
-    }
-    this.offs[fp.rings.length] = o;
-    return s;
-  }
-  /** adds the rings (lifted lift px; holes too when holes) to a new path, leaving out points within a px of the last one drawn */
-  private ringsPath(ctx: CanvasRenderingContext2D, fp: Shape, s: Float32Array, lift: number, holes: boolean) {
-    ctx.beginPath();
-    for (let i = 0; i < fp.rings.length; i++) {
-      if (!holes && fp.sign[i]! < 0) continue;
-      const o = this.offs[i]!, e = this.offs[i + 1]!;
-      let lx = s[o]!, ly = s[o + 1]!;
-      ctx.moveTo(lx, ly - lift);
-      for (let j = o + 2; j < e; j += 2) { const x = s[j]!, y = s[j + 1]!; if ((x - lx) * (x - lx) + (y - ly) * (y - ly) < 1) continue; ctx.lineTo(x, y - lift); lx = x; ly = y; }
-      ctx.closePath();
-    }
-  }
-  /** adds the vertical edges of the outer rings at extreme e (0 left, 1 right, 2 front, 3 back), from the ground up lift px */
-  private verticals(ctx: CanvasRenderingContext2D, fp: Shape, s: Float32Array, lift: number, e: number) {
-    for (let i = 0; i < fp.rings.length; i++) {
-      if (fp.sign[i]! < 0) continue;
-      const j = this.offs[i]! + 2 * fp.ext[i]![e]!;
-      ctx.moveTo(s[j]!, s[j + 1]!); ctx.lineTo(s[j]!, s[j + 1]! - lift);
-    }
-  }
-  /** adds the front walls of the outer rings: each run of segments facing the viewer as one sheet, along the ground and back along the top
-   *  (lift px up) */
-  private walls(ctx: CanvasRenderingContext2D, fp: Shape, s: Float32Array, lift: number) {
-    for (let i = 0; i < fp.rings.length; i++) {
-      if (fp.sign[i]! < 0) continue;
-      const o = this.offs[i]!, n = (this.offs[i + 1]! - o) >> 1, f = fp.front[i]!;
-      // start just after a segment that faces away, so no run wraps past the start
-      let st = 0;
-      for (let k = 0; k < n; k++) if (!f[k]) { st = (k + 1) % n; break; }
-      for (let k = 0; k < n;) {
-        if (!f[(st + k) % n]) { k++; continue; }
-        let e = k; while (e < n && f[(st + e) % n]) e++;
-        let q = o + 2 * ((st + k) % n); ctx.moveTo(s[q]!, s[q + 1]!);
-        for (let j = k + 1; j <= e; j++) { q = o + 2 * ((st + j) % n); ctx.lineTo(s[q]!, s[q + 1]!); }
-        for (let j = e; j >= k; j--) { q = o + 2 * ((st + j) % n); ctx.lineTo(s[q]!, s[q + 1]! - lift); }
-        ctx.closePath();
-        k = e;
-      }
-    }
-  }
-  /** strokes the current path as a soft glow: two wide faint passes in the glow colour, then a bright core line added on top */
-  private glow(ctx: CanvasRenderingContext2D, look: Look, a: number, d: number) {
-    const al = clamp(a, 0, 1.4);
-    ctx.strokeStyle = look.glow;
-    ctx.globalAlpha = clamp(al * 0.14, 0, 1); ctx.lineWidth = 7 * d; ctx.stroke();
-    ctx.globalAlpha = clamp(al * 0.3, 0, 1); ctx.lineWidth = 3.4 * d; ctx.stroke();
-    ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = look.core;
-    ctx.globalAlpha = clamp(al * 0.75, 0, 1); ctx.lineWidth = 1.3 * d; ctx.stroke();
-    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-  }
-
-  /** the puck sprite for this look (band: with its border band) of a brush of r tiles drawn rx device px across, from the cache, painted
-   *  when missing */
-  private sprite(kind: string, st: PuckStyle, erase: boolean, band: boolean, r: number, rx: number, d: number): Sprite {
-    const b = Math.round(Math.log(Math.max(rx, 1)) / BUCKET), rev = this.env.texture?.rev() ?? 0, k = this.sk;
-    if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.band === band && k.r === r && k.b === b && k.d === d && k.rev === rev
+  /** the chip sprite for this look (band: with its border band) at this dpr, from the cache, painted when missing */
+  private sprite(kind: string, st: PuckStyle, erase: boolean, band: boolean, d: number): Sprite {
+    const rev = this.env.texture?.rev() ?? 0, k = this.sk;
+    if (this.spr && k.kind === kind && k.st === st && k.erase === erase && k.band === band && k.d === d && k.rev === rev
       && k.tex === st.tex && k.scale === st.scale && k.angle === st.angle && k.border === st.border && k.btex === st.btex && k.tone === st.tone) return this.spr;
-    Object.assign(k, { kind, st, erase, band, r, b, d, rev, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
-    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${r}|${b}|${d}|${rev}`;
+    Object.assign(k, { kind, st, erase, band, d, rev, tex: st.tex, scale: st.scale, angle: st.angle, border: st.border, btex: st.btex, tone: st.tone });
+    const key = `${kind}|${st.tex}|${st.scale}|${st.angle}|${st.border}|${st.btex}|${st.bscale}|${st.bangle}|${st.tone}|${st.toneAmt}|${st.tint}|${erase ? 1 : 0}|${band ? 1 : 0}|${d}|${rev}`;
     let sp = this.sprites.get(key);
     if (sp) { this.sprites.delete(key); this.sprites.set(key, sp); return (this.spr = sp); }
-    const sr = Math.min(RX_CAP, Math.exp(b * BUCKET)), sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2);
+    const sr = (CHIP_CSS / 2) * d, sry = sr * (HH / HW), thick = thickOf(sry, d), pad = Math.ceil(3 * d + 2);
     const make = this.env.canvas ?? domCanvas;
     const c = make(Math.ceil(2 * sr + 2 * pad), Math.ceil(2 * sry + thick + 2 * pad)), g = c.getContext('2d');
-    if (g) paintPuck(g, st, kind, erase, band, r, sr, sry, thick, pad, d, this.env.texture);
+    if (g) paintPuck(g, st, kind, erase, band, CHIP_R, sr, sry, thick, pad, d, this.env.texture);
     const sh = make(Math.ceil(2 * sr * 1.3 + 4), Math.ceil(2 * sry * 1.3 + 4)), gs = sh.getContext('2d');
     if (gs) paintShadow(gs, sr, sry);
     sp = { key, c, sh, rx: sr, ry: sry, thick, pad };
@@ -770,7 +745,7 @@ export class CourseCursor {
   private splash(x: number, y: number, r: number, look: Look, now: number, ring: boolean) {
     if (this.bursts.length >= MAX_BURSTS) this.bursts.shift();
     // course-fx throws each particle out along the direction it starts in; it starts here on the dab's rim instead (the dirt flies out
-    // from under the puck's edge), so its offset becomes a point on the unit rim and the flight starts from there
+    // from the footprint's edge), so its offset becomes a point on the unit rim and the flight starts from there
     const parts = spawnSplash(this.seed++, 0, 0, 1, look.splash), rim = new Float32Array(parts.length * 2);
     for (let i = 0; i < parts.length; i++) {
       const p = parts[i]!, a = Math.atan2(2 * p.y, p.x);
@@ -778,10 +753,11 @@ export class CourseCursor {
     }
     this.bursts.push({ x, y, t0: now, r, parts, rim, ring, col: look.core });
   }
-  /** steps and draws the live splashes; drops the finished ones in place */
+  /** steps and draws the live splashes (light: half strength); drops the finished ones in place */
   private drawBursts(ctx: CanvasRenderingContext2D, v: CursorView, now: number, dt: number) {
     const ze = v.ze, d = v.dpr, B = this.bursts;
     let j = 0;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     for (let i = 0; i < B.length; i++) {
       const b = B[i]!, t = now - b.t0;
       if (t > BURST_MS) continue;
@@ -792,13 +768,13 @@ export class CourseCursor {
       if (b.ring && t < RIPPLE_MS) {
         const u = t / RIPPLE_MS, e = 1 - (1 - u) * (1 - u) * (1 - u), sc = 0.5 + 1.1 * e;
         ctx.beginPath(); ctx.ellipse(gx, gy, rx * sc, ry * sc, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = b.col; ctx.globalAlpha = 0.75 * (1 - u) * (1 - u); ctx.lineWidth = (2.6 - 1.6 * u) * d; ctx.stroke();
+        ctx.strokeStyle = b.col; ctx.globalAlpha = 0.45 * (1 - u) * (1 - u); ctx.lineWidth = (2 - 1.2 * u) * d; ctx.stroke();
       }
       for (let n = 0; n < b.parts.length; n++) {
         const p = b.parts[n]!;
         if (p.dead) continue;
-        ctx.globalAlpha = clamp(p.lifeMs / p.maxLifeMs, 0, 1); ctx.fillStyle = p.color;
-        ctx.beginPath(); ctx.arc(gx + b.rim[2 * n]! * rx + p.x * k, gy + b.rim[2 * n + 1]! * ry + p.y * k, p.size * k * 0.7, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 0.6 * clamp(p.lifeMs / p.maxLifeMs, 0, 1); ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(gx + b.rim[2 * n]! * rx + p.x * k, gy + b.rim[2 * n + 1]! * ry + p.y * k, p.size * k * 0.6, 0, Math.PI * 2); ctx.fill();
       }
     }
     B.length = j;
@@ -806,9 +782,5 @@ export class CourseCursor {
   }
 }
 
-/** puckAxes into a reused object (the draw path allocates nothing) */
-function puckAxesInto(o: { rx: number; ry: number }, r: number, ze: number): { rx: number; ry: number } {
-  o.rx = r * SQ2 * HW * ze; o.ry = r * SQ2 * HH * ze; return o;
-}
 /** a DOM canvas (the default sprite canvas) */
 function domCanvas(w: number, h: number): SpriteCanvas { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
