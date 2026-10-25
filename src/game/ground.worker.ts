@@ -12,7 +12,7 @@ import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-s
 import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
-import { lawnSlot, lawnTex } from './painted-surfaces';
+import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
@@ -98,7 +98,7 @@ const handle = async (m: ToWorker) => {
         if (m.kind !== 'p') {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
           const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
-          const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>();
+          const need = new Set<string>(['grass', 'meadow', 'outside', WOODLAND_TEX, WOODLAND, 'dirt', 'bank', 'creek', 'water', 'growSoil']), near = new Set<string>();
           // the living ground's painted variant sets (T111), when their art is in the game
           if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
           for (const p of painter.lotsIn(box)) {
@@ -115,7 +115,7 @@ const handle = async (m: ToWorker) => {
             }
           }
           await tex.preparePainted(m.artL ?? m.L, need, near);
-        } else { await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX]); }
+        } else { await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']); await tex.preparePlanner(['grass', 'meadow', WOODLAND_TEX, WOODLAND]); }
         // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
         if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;

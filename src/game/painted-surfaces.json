@@ -21,6 +21,7 @@
   "bank": { "family": "underground-earth", "version": "v1", "scale": 0.5, "tint": "#8aa0e0", "tone": -0.15 },
   "river": { "family": "water-pond", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.05 },
   "field": { "family": "underground-earth", "version": "v2", "scale": 0.5, "tint": "#9aa8f0", "tone": -0.1 },
+  "woodland": { "family": "sage-long", "version": null, "scale": 1, "tint": "#d0c0a0", "tone": -0.2 },
   "outside": { "family": "sage-medium", "version": null, "scale": 1, "tint": "#8c8c86", "tone": 0 },
   "lawn": { "family": "emerald-short", "version": null, "scale": 0.75, "tint": "#ffffff", "tone": 0 },
   "lush": { "family": "emerald-long", "version": null, "scale": 1, "tint": "#ffffff", "tone": -0.15 },

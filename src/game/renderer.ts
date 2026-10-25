@@ -25,7 +25,7 @@ import { CH_SIZE } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
-import { lawnSlot, lawnTex } from './painted-surfaces';
+import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
 import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
 /** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
@@ -315,6 +315,9 @@ export class GroundPainter {
 
   /** the planner colour of a texture: its mean RGB at the planner mip, 20% desaturated and lifted 5% (cached). It never depends on what this worker has built
    *  (every worker must plan the same colour): a lazy photo with no planner mip of its own uses its Paint swatch */
+  /** the woodland floor's texture: its painted look when it has one (T128: its own surface, so a forest on the planner map need not wear the
+   *  course's fescue), else the course's Fescue */
+  private woodlandTex(): string { return this.tex.isPainted(WOODLAND) ? WOODLAND : WOODLAND_TEX; }
   private planColour(name: string): string {
     let c = this.planCols.get(name);
     if (!c) {
@@ -345,7 +348,7 @@ export class GroundPainter {
     // meadow and forest in 4 x 4 tile blocks (the planner never shows finer detail)
     const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1), byType = new Map<number, Path2D>();
     for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (t !== TC.PATCH && t !== TC.HILL) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
-    for (const [t, p] of byType) { ctx.fillStyle = planTex(t === TC.PATCH ? 'meadow' : WOODLAND_TEX); ctx.fill(p); }
+    for (const [t, p] of byType) { ctx.fillStyle = planTex(t === TC.PATCH ? 'meadow' : this.woodlandTex()); ctx.fill(p); }
     // bare rock on the steep faces, as a flat colour (before the river banks, so they read on top)
     const ra = rockAlpha(this.slope, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.edgeNoise);
     if (ra) { const rb = this.buffer('small', ra.W, ra.H), rg = ctx2d(rb); rg.putImageData(new ImageData(ra.data as Uint8ClampedArray<ArrayBuffer>, ra.W, ra.H), 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = this.planColour('rock'); rg.fillRect(0, 0, ra.W, ra.H); rg.globalCompositeOperation = 'source-over'; ctx.setTransform(M); ctx.drawImage(rb, tx0, ty0, ra.W / 0.25, ra.H / 0.25); }
@@ -591,8 +594,9 @@ export class GroundPainter {
     const water = (g: C2D): CanvasPattern | string => this.photoFill(g, 'water', L) ?? this.screenPattern(g, 'water', L, X0, Y0, Minv);
     const cres = lite ? 1 : 4;
     const meadow = classAlpha(this.terrain, TC.PATCH, tx0, ty0, bw, bh, cres, this.edgeNoise); if (meadow) layer('meadow', g => overlay(g, meadow, cres));
-    // the woodland floor in the course's Fescue (terrain-paint.ts WOODLAND_TEX), laid in tile space at scale 1 like a painted course area
-    const woods = classAlpha(this.terrain, TC.HILL, tx0, ty0, bw, bh, cres, this.edgeNoise); if (woods) layer('meadow', g => overlay(g, woods, cres), g => this.paintPhoto(g, WOODLAND_TEX, L));
+    // the woodland floor: its painted look (painted-surfaces.ts WOODLAND, T128), else the course's Fescue (terrain-paint.ts WOODLAND_TEX), laid
+    // in tile space at scale 1 like a painted course area
+    const woods = classAlpha(this.terrain, TC.HILL, tx0, ty0, bw, bh, cres, this.edgeNoise); if (woods) layer('meadow', g => overlay(g, woods, cres), g => this.paintPhoto(g, this.woodlandTex(), L));
     const ra = rockAlpha(this.slope, tx0, ty0, bw, bh, cres, this.edgeNoise); if (ra) layer('rock', g => overlay(g, ra, cres));
     const near = this.waters.filter(w => vis(w.box)), rivers = near.filter(w => w.w.kind === 'river'), creeks = near.filter(w => w.w.kind === 'creek');
     /** a feathered waterway mask: 4 nested shapes from extra + f down to extra - f (tiles), each adding a quarter of the alpha */

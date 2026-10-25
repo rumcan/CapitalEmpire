@@ -6,6 +6,9 @@ import { clampLook, DEFAULT_LOOK, familyById, type PaintedKind, type PaintedLook
  *  surfaces): a family and version, scale, tint and tone per surface; the running dev game takes a saved file at once (painted-surfaces-live.ts).
  *  The game's Grass setting 'photo' lays the photo textures as before. Pure: importable from node tests. */
 
+/** the woodland floor's texture id when the painted art is on (renderer.ts lays it under the forests; with the photo grass the floor is the
+ *  course's Fescue, terrain-paint.ts WOODLAND_TEX) */
+export const WOODLAND = 'woodland';
 export type SurfaceGroup = 'Golf' | 'Map' | 'Town' | 'Living ground' | 'Course walls';
 /** a surface the studio lists by its plain name: the textures it stands for (a photo texture id, or a preset's golf surface), its group and the
  *  families that fit it (the picker shows those first) */
@@ -18,7 +21,7 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'tee', name: 'Tee', group: 'Golf', tex: ['golfTee'], kinds: ['grass'] },
   { key: 'sod', name: 'Sod (fresh turf)', group: 'Golf', tex: ['golfSod'], kinds: ['grass'] },
   { key: 'rough', name: 'Rough', group: 'Golf', tex: ['golfRough'], kinds: ['grass'] },
-  { key: 'fescue', name: 'Fescue (and the woodland floor)', group: 'Golf', tex: ['golfFescue'], kinds: ['grass'] },
+  { key: 'fescue', name: 'Fescue', group: 'Golf', tex: ['golfFescue'], kinds: ['grass'] },
   { key: 'bunker', name: 'Bunker sand', group: 'Golf', tex: ['bunkerSand'], kinds: ['sand'] },
   { key: 'waste', name: 'Waste area sand', group: 'Golf', tex: ['wasteSand'], kinds: ['sand'] },
   { key: 'water', name: 'Pond water', group: 'Golf', tex: ['waterDark', 'waterDeep', 'waterClear'], kinds: ['water'] },
@@ -31,6 +34,7 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'bank', name: 'River banks and creek beds', group: 'Map', tex: ['bank', 'creek'], kinds: ['cut', 'sand'] },
   { key: 'river', name: 'River and creek water', group: 'Map', tex: ['water'], kinds: ['water'] },
   { key: 'field', name: 'Farm fields', group: 'Map', tex: ['field'], kinds: ['cut', 'grass'] },
+  { key: 'woodland', name: 'Woodland floor (under the trees; the forests on the planner map)', group: 'Map', tex: [WOODLAND], kinds: ['grass', 'cut'] },
   { key: 'outside', name: 'Outside the map', group: 'Map', tex: ['outside'], kinds: ['grass'] },
   { key: 'lawn', name: 'Lawn (the Paint tool\'s lawn textures)', group: 'Town', tex: ['lawnLush', 'lawnClover'], kinds: ['grass'] },
   { key: 'lush', name: 'Lush grass (along fences, walls and water)', group: 'Living ground', tex: ['grass-lush'], kinds: ['grass'] },

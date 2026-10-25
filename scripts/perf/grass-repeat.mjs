@@ -134,5 +134,15 @@ try {
   }
 } finally { await browser.close(); }
 fs.mkdirSync('output/bench', { recursive: true }); fs.writeFileSync('output/bench/grass-repeat.json', JSON.stringify(rows, null, 1));
+// the summary: per family (or the game's own ground), the worst judged value over every zoom (a peak at a level's period as baked and on the
+// detail, r there on the detail, the detail's second peak at any lag) and where it was, beside r at the period as baked (reported, not judged)
+const judged = r => Math.max(r.peakAtPeriod ?? -1, r.peakAtPeriodDetail ?? -1, r.rAtPeriodDetail ?? -1, r.peakDetail);
+const summary = [...new Set(rows.map(r => `${r.family}|${r.art}`))].map(k => {
+  const rs = rows.filter(r => `${r.family}|${r.art}` === k), w = rs.reduce((a, b) => (judged(b) > judged(a) ? b : a));
+  return { family: rs[0].family, art: rs[0].art, zooms: rs.length, worst: +judged(w).toFixed(3), atZoom: w.zoom, peakAtPeriod: w.peakAtPeriod, peakAtPeriodDetail: w.peakAtPeriodDetail, rAtPeriodDetail: w.rAtPeriodDetail, peakDetail: w.peakDetail, rAtPeriodMax: Math.max(...rs.map(r => r.rAtPeriod ?? -1)), verdict: rs.some(r => r.verdict !== 'ok') ? 'REPEATS' : 'ok' };
+});
+fs.writeFileSync('output/bench/grass-repeat-summary.json', JSON.stringify(summary, null, 1));
+console.log('\nfamily                 art      worst  at zoom  (peak@P, peak@P detail, r@P detail, 2nd peak detail)  r@P as baked (max)  verdict');
+for (const s of summary) console.log(`${s.family.padEnd(22)} ${s.art.padEnd(8)} ${String(s.worst).padStart(6)}  ${String(s.atZoom).padStart(6)}   (${s.peakAtPeriod}, ${s.peakAtPeriodDetail}, ${s.rAtPeriodDetail}, ${s.peakDetail})  ${s.rAtPeriodMax}  ${s.verdict}`);
 console.log(failed ? `FAIL: a painted level repeats (r > ${LIMIT})` : `ok: no painted level repeats (every r <= ${LIMIT})`);
 process.exit(failed ? 1 : 0);

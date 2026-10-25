@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { clampLook, coversMap, crossovers, FAMILIES, familyById, familyVersions, familyWeights, LEVEL_NAMES, lookColour, lookKey, nativeZoom, resolveFamily } from '../src/game/painted-families';
-import { clampSurfaces, lawnSlot, lawnTex, lookOfTex, SURFACES, surfaceOfTex } from '../src/game/painted-surfaces';
+import { clampSurfaces, lawnSlot, lawnTex, lookOfTex, SURFACES, surfaceOfTex, WOODLAND } from '../src/game/painted-surfaces';
 import { grassDetailWeights } from '../src/game/painted-grass-lod';
 import { BLEND_WAVES, blendAlpha, blendNoise } from '../src/game/painted-grass-lod';
 import { courseBandOf, courseTexOf, lookChanged } from '../src/game/course-look';
@@ -103,6 +103,8 @@ test('a texture finds its look: photo ids, presets by their golf surface (fescue
   assert.equal(lookOfTex(lawnTex(0), f), f.lawns[0]); assert.equal(lookOfTex(lawnTex(99), f), null);
   assert.equal(lookOfTex('asphalt', f), null, 'no painted asphalt yet: it keeps its photo');
   assert.equal(surfaceOfTex('golfFescue'), 'fescue');
+  // the woodland floor is a surface of its own (T128: a forest on the planner map need not wear the course's fescue)
+  assert.equal(lookOfTex(WOODLAND, f), f.surfaces.woodland); assert.equal(surfaceOfTex(WOODLAND), 'woodland');
   // every preset of the game is painted (none left on its photo mix)
   for (const p of PRESETS) assert.ok(lookOfTex('preset:' + p.id, f, PRESETS), p.id);
 });
