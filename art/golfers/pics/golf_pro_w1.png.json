@@ -1,0 +1,14 @@
+{
+  "generationId": "b6a1504f-92c7-4beb-82da-14ba9f8ac266",
+  "prompt": "Full-body character for a 3D model: blonde woman touring pro in her 20s, hair in a short ponytail, a plain pink short-sleeved polo shirt, white knee-length culottes, a plain white visor, a white golf glove on the left hand, white golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 626104953,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/3f019a63-3f90-4387-8be2-ba9a52008716.png",
+  "requestPrompt": "Full-body character for a 3D model: blonde woman touring pro in her 20s, hair in a short ponytail, a plain pink short-sleeved polo shirt, white knee-length culottes, a plain white visor, a white golf glove on the left hand, white golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\golfers\\pics\\golf_pro_w1.png",
+  "status": "saved",
+  "sha256": "8435d4aa4ad72da550ea9d6ebdbf90d2f0fb905a129c8dd3f4679aa661538fd4"
+}

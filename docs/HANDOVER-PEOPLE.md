@@ -16,6 +16,118 @@ clips, the wayward-ball scene, the quality bar, the traps). This file is the sta
   the teens, the kids at the tournament, the vendor, the two pros, ...).
 - **Nothing is running.** The retry loop was stopped on purpose (it was spending the daily cap on bad models).
 
+## 1b. Update 2026-10-24 07:30 UTC (the next AI): a free rescue of the plates, waiting on the owner
+- **New: `scripts/assets/people3d/cut-plate.mjs <in.glb> <out.glb>`** cuts a fused ground plate off a RUN model, locally, no credits.
+  It finds the plate's flat top from the height profile (a spike of upward-facing area low down: plates 0.13 to 0.67 of the height
+  squared, good people 0.002), cuts every triangle at or below it and drops what that sets loose (balls, clubs). Controls: `--margin`
+  (cut height above the found top, default 0.004 of the height), `--top` (set the plate top by hand), `--clear` (also cut clubs or balls
+  fused beside a shoe), `--flat` (the plate threshold), `--keep` (loose-piece size). On a good model it says "no ground plate found" and
+  writes nothing. It also drops the plate's unused vertices (left in, they made the render read "2.10 units tall").
+- **Tried on all 11 bad people** (`worktrees/people-ground/output/cut-test/<id>/`, git-ignored; then rig-local-person.mjs and the render as
+  usual): 10 had a plate and came out clean, at 1.64 to 1.71 units tall. Contact sheets: `output/cut-test/rescued-a.png`, `rescued-b.png`.
+  - Clean: spec_m_dad, spec_m_sun_hat, spec_m_young_cap, staff_caddie_m, town_m_elder, town_w_shopper, spec_w_older_cardigan; spec_m_plaid
+    (a small green chest emblem on the sweater).
+  - spec_w_young_shorts: plate gone, but the hands meet in front of the crotch (3B) and a small chest emblem.
+  - staff_marshal_w: plate gone, but a navy leg web between the feet in the side and back walk frames and a white speck by the visor
+    (the rig transfer, not the cut).
+  - staff_security_m: **no plate**; it was bad for a police-style badge, chest tag and arm patches (the no-logo rule). Remake or keep: the
+    owner's call.
+- **Why the plates got worse:** 2 of the first 13 models had a plate (plaid, security); after the "Nothing under the feet: no ground, no
+  grass, ... no golf balls" line went into the pose prompt, 11 of 11 did, the two townspeople with no golf words too. The negation names
+  the things the generator then makes.
+- **The options put to the owner (2026-10-24), none chosen yet:** 1. the rescue (free; also as an automatic step in make-cast.mjs so a
+  plate never costs a remake); 2. words (drop "golf" and the negation line, about 1,000 credits a model); 3. picture first (RUN image,
+  about 130 credits, then image-to-3d, about 1,000); 4. another 3D provider (price unknown). They can be combined.
+- **Credits (2026-10-24 04:48 UTC):** balance 63,493. hunyuan3d-v3.1-pro averages 986 a model (1,013 today); gemini-3.1-flash-image-preview
+  131 an image, gemini-3.1-flash-lite-image 88. `RUNDOT_BETA_FEATURES=1 rundot credits --group-by model` (or `--period today`) shows it.
+  11 models were made since 00:00 UTC today, so about 2 are left before the daily cap resets (about 00:15 UTC).
+- **2026-10-24 10:20 UTC, the owner: "spend as many RUN credits as you want. so what works best".** A head-to-head test is running:
+  one person (`staff_pro_m2`, the young golf pro: the golf-heavy look) made every way, each rigged and rendered the same.
+  - Pictures made (RUN images, 120 credits each, 720 in all; `worktrees/people-ground/output/opt-test/pics/`): `pro_a.png`, `pro_b.png`
+    (a rendered look; a has a faint floor shadow), `pro_ref.png` (the painted look, `--reference-image art/people3d/base_man/style.png`;
+    base_man was itself made from a picture like it) and its `pro_ref_back/left/right.png` (made with pro_ref as the reference; they
+    match well). All clean: A-pose, nothing under the feet, no logos.
+  - The 3D runs: `output/opt-test/run-tests.mjs` (git-ignored; run from the worktree root), in order: words (text-to-3d, no golf words, no
+    ground line), pic_ref, pic_render, multiview (pic_ref + back, left, right), then pic_ref through trellis-2, tripo-v2.5, rodin-v2.5,
+    meshy and pixal3d. It waits out the cap (every 30 min), recovers a model after the CLI timeout, runs cut-plate, the rig and the render;
+    results in `output/opt-test/results.json` and `<test>/preview.png`. **RUN's 3D cap was already used up on 2026-10-24** (all
+    providers refused, "Daily user credit cap reached for threeDGen": the cap counts credits, so cheaper providers may fit more a day);
+    the runs start after the reset (about 00:15 UTC on 2026-10-25). If the runner is not running, rerun it: finished tests are skipped.
+  - pixal3d and trellis-2 take pictures only (text-to-3d refused).
+  - **Next:** compare the previews (quality, the walk, the height line), the credits each (`rundot credits --period today --group-by model`),
+    and report to the owner what works best; then the 14 and the remakes the chosen way.
+
+## 1c. Update 2026-10-24 13:00 UTC: golfers that swing, the rescue taken, the batch picture-first
+The owner: *"see if you can create some more. some golfers would be nice"*, then *"we need golfers who are swinging golf clubs"*.
+Decisions taken (the owner pre-approves the lead's recommendation; recorded here):
+1. **The rescue is in.** The 7 clean rescued people are now cast members (the cut model, sheet and preview copied from
+   `output/cut-test/`; `receipt.json` has the original look and model URL and a `plateCut` note): spectators `spec_m_dad`, `spec_m_sun_hat`,
+   `spec_m_young_cap`, `spec_w_older_cardigan`; staff `staff_caddie_m`; townspeople `town_m_elder`, `town_w_shopper`. **17 good people now.**
+   Not taken (remade instead, below): `spec_m_plaid` (chest emblem), `spec_w_young_shorts` (hands), `staff_marshal_w` (leg web),
+   `staff_security_m` (badges).
+2. **The plate cut is automatic** in `make-cast.mjs` (cut-plate.mjs after every model). The cut model is `model-cut.glb`, git-ignored (about
+   18 MB uncompressed; remade free from `model.glb`, which stays RUN's 2 MB original in git); `rig-local-person.mjs` uses it when it is there.
+   The negation line ("Nothing under the feet ...") is gone from the pose prompt (it named what RUN then made).
+3. **Picture first for the golfers and the 4 remakes:** an A-pose picture with RUN's image generator (`make-pictures.mjs`, the painted
+   style of `base_man/style.png`, about 120 credits; images are not under the 3D cap), then image-to-3d. Golf words in a text prompt are what
+   brought the plates. The pictures: `art/golfers/pics/`, `art/spectators/pics/` (with their `.json`: prompt, seed, generation id).
+4. **The golfers, `art/golfers/`** (role `golfer`, sheets prefixed `golfer:`): 10 in `art/people-cast.json`, first in the batch: 6 pros
+   (`golf_pro_m1..m4`, `golf_pro_w1`, `golf_pro_w2`; the old `staff_pro_m1/m2` became `golf_pro_m1/m2`, m2's picture is the head-to-head's
+   `pro_ref.png`) and 4 club players (`golf_am_m1..m3`, `golf_am_w1`).
+5. **The swing: Meshy's `golf_drive`** (RUN's animation service is Meshy's library: its walk is Meshy's `Casual_Walk`; the full list, 680
+   clips, is public at `https://api.meshy.ai/web/public/animations/resources`; golf_drive is id 323: address, backswing, top, through, a held
+   finish, about 3 s). It is made **once per base** (`base_man`, `base_woman`) with `animate-3d --input <base>/rigged.glb` (about 480
+   credits, under the same daily 3D cap) and moved onto each golfer by `rig-local-person.mjs --clips walk,idle,golf_drive`, like the walk.
+   `make-cast.mjs` does all of it from the cast's `clips` field.
+6. **The club is drawn by the renderer** (`render-person-3d.mjs --prop club`): a 1985 persimmon driver (steel shaft, black grip, brown wooden
+   head) set in the hands every frame. It is calibrated at the clip's address (the hands' lowest point in its first 35%): the head resting
+   on the ground in front, held in the lead (left) hand's frame from then on. The swing sheet `golf_drive.webp/.json` (12 frames, once
+   through; 400 px wide frames so the club fits) has `prop`, `addressSecs` and `shot` (right-handed: the ball flies 90 degrees to the
+   golfer's left of the row's facing). Its rows face by the body at address, not the clip's average.
+7. Other crowd clips Meshy has (for SPECTATOR-ART 3b/3b+, not made yet): `Sitting_Clap` 354, `Cheer_with_Both_Hands_Up` 298,
+   `Victory_Cheer` 59, `Chair_Sit_Idle_M` 33 / `_F` 32, `Seated_Fist_Pump` 304, `Stand_Clap_and_Sit_Down` 299, `Headache_Relief` 316 (a
+   groan), `RunFast` 16, `Quick_Walk` 115, `Wave_One_Hand` 290. No putt, no standing clap: those need hand keys or another source.
+
+**State at the hand-over:** RUN's 3D cap was used up for 2026-10-24 (it resets about 00:15 UTC); the batch loop runs and waits for it
+(`output/people-cast.log`): first the two base swing clips, then the 10 golfers, the 4 remakes, the rest. **Next:** look at every new
+`preview.png` and `preview-golf_drive.png` (the club in the hands at address, at the top, at the finish; no clipping at the frame edges), then
+the studio People tab and the game wiring. The head-to-head test (1b) waits behind the batch; the golfers already show picture-first at scale.
+
+**Update 2026-10-25 04:50 UTC.** After the cap reset the loop made **14 models from their pictures, all clean** (no ground plate on any;
+"model 1.65 to 1.68 units tall"; 14,182 credits): the 10 golfers and the 4 remakes (`spec_m_plaid`, `staff_security_m`,
+`spec_w_young_shorts`, `staff_marshal_w`: no emblem, no badges, no leg web, the hands fine). **Picture first works; use it for the
+rest.** All 10 golfers have their walk and idle sheets (`output/golfers-lineup.png` shows them side by side): **31 good people now.**
+**The swing did not come:** RUN's `animate-3d --input` knows only `idle, walk, run, jump` ("Invalid animation 'golf_drive'", and
+'323'), so item 5 above was wrong: RUN takes Meshy's walk, not its whole library. `make-cast.mjs` now makes a person with walk and idle
+when the base lacks an extra clip, and adds the clip's sheet on a later run once `art/people3d/<base>/anim_<clip>.glb` exists (from
+anywhere). The swing's sources, for the owner: **Mixamo** (free with an Adobe sign-in: "Golf Drive", putts and the whole crowd list,
+motion-captured; the owner downloads the FBX files, then a local retarget onto base_man: its bones are Mixamo's apart from the spine and
+neck names, `Spine02/Spine01/Spine/neck` for `Spine/Spine1/Spine2/Neck`), **a hand-keyed swing** on base_man's skeleton (free, now; 6 or 7
+key poses), or **Meshy's own API** (the owner's Meshy key; golf_drive is its id 323). The club (`--prop club`) waits for whichever clip comes.
+
+**Update 2026-10-25 05:50 UTC: the swing, from Meshy's own API.** The owner has a Meshy account (90 credits) and gave the key; it is in
+`~/.meshy/api-key` on the owner's PC (outside the repo; `MESHY_API_KEY` also works). `scripts/assets/people3d/meshy-base-clip.mjs <base>
+<clip>=<action id> --model <plain glb> --remesh 60000` rigs a base on Meshy and saves each library action as `art/people3d/<base>/anim_<clip>.glb`
+(task ids in that base's `meshy.json`; the rig is reused for more clips while Meshy keeps the task). What it took: RUN's model file failed
+Meshy's pose estimation (Draco, WebP, a Z-up root), so `plain-glb.mjs` writes a plain copy facing +Z; its 500,000 triangles were then
+"not a single, well-formed humanoid", so Meshy remeshes it to 60,000 first (the rig only carries the clip: every person keeps its own mesh
+and texture through rig-local-person.mjs). Cost: remesh, rig and one action about 13 Meshy credits per base; base_man and base_woman done,
+**64 Meshy credits left**. More of the 680 library actions (the crowd: clap, cheer, sit; section 1c item 7) cost about 3 each on the same rig.
+The swing sheet uses chosen moments, not even steps (`render-person-3d.mjs --times`; in the cast's `clipRender`): address 0, takeaway 0.5,
+halfway 0.75, top 1.0, downswing 1.18, delivery 1.22, **impact 1.255**, release 1.3, follow-through 1.38, high finish 1.5, finish 1.65, held
+finish 2.0 s (the json lists them as `times`). Two render fixes on the way: a prop clip renders at 2x supersampling, and a clip render no
+longer sends the idle file (three of a golfer's 28 MB files in one call closed the page).
+
+**Update 2026-10-25 13:40 UTC: the crowd clips** (the owner: clapping, cheering, sitting, seated clap). Made on Meshy for base_man and
+base_woman on the rigs above (3 credits each, 24 in all; **40 Meshy credits left**; each clip file is stripped of its unused textures by `strip-glb-images.mjs`, 13 to 4 MB, the sheets byte-identical): `clap` = `Stand_Clap_and_Sit_Down` 299 (Meshy has no
+standing clap loop; this one stands, claps, sits: the sheet takes one clap from the standing part), `cheer` = `Cheer_with_Both_Hands_Up` 298
+(a one-shot), `sit` = `Chair_Sit_Idle_M` 33 / `_F` 32 (only its first 1.5 s is upright; after that it hunches forward), `sit_clap` =
+`Sitting_Clap` 354 (small claps low over the lap). The frames were picked from dense test renders (`output/crowd-test`, git-ignored) and are in
+the cast's `clipRender`: clap 1.50/1.60/1.70/1.76 s (a loop: together, opening, apart, closing), cheer 0.33 to 1.24 s in 6 (dip, arms up,
+down; `--once`), sit 0.3/1.0 (`--seated`), sit_clap 1.00/1.05/1.12/1.22 (a loop, `--seated`). Every spectator from base_man or base_woman has
+`clips: [clap, cheer, sit, sit_clap]` (13), and from 2026-10-25 14:30 UTC the two child spectators too: base_kid was rigged on Meshy the same way (remesh 60,000, rig at 1.38 m) and has the same four clips (sit from Chair_Sit_Idle_M 33; 22 Meshy credits, **18 left**); a test kid (output/kid-test) showed the adult frame times read right on the child. The json `loop`
+is now true unless `--once` (it was false whenever `--times` was given). Seated sheets carry `seatHeightMetres` and `seat` for the grandstand.
+
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
 1. `make-person-3d.mjs <id> "<look>" --root <dir> --model-only`: the model from RUN (text-to-3d, an A-pose prompt around the look). It
    checks RUN's library first (never pays twice), and when the CLI gives up after 600 s it waits for the model in the library.
@@ -39,7 +151,8 @@ of them, the owner chooses; never pre-pick):
    under them; `rundot generate image`, which takes a real `--negative-prompt` for "ground, grass, golf ball"; see `scripts/assets/gen-golf.mjs`), check it, then
    `make-person-3d.mjs --image <png>` (image-to-3d). More control over the look too; costs an image plus the model.
 3. **Another provider:** `rundot game generate-3d --help` lists pixal3d, trellis-2, meshy, tripo-v2.5, rodin-v2.5; untested here.
-Check each new person at once: the render log's "model N units tall" (1.66 to 1.68 is right) and its `preview.png`.
+4. **Rescue (2026-10-24, free):** cut the plate off locally, `cut-plate.mjs` (section 1b). Fixed 10 of the 11 bad models.
+Check each new person at once: the render log's "model N units tall" (1.66 to 1.68 is right; rescued women came out at 1.69 to 1.71) and its `preview.png`.
 
 **B. Hands in front of the crotch on some models.** The owner's hands and arms settings were chosen on `spec_m_polo_visor`; on some
 other models (the young woman in shorts, the caddie) the hands meet in front of the body. Give `art/people-cast.json` a per-person

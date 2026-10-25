@@ -1,0 +1,26 @@
+{
+  "remeshTaskId": "01a1717d-3d9a-71f3-86f5-939b7885450d",
+  "rigTaskId": "01a1717f-2de6-7313-a24a-760fb7eaac0e",
+  "clips": {
+    "golf_drive": {
+      "actionId": 323,
+      "taskId": "01a17180-1485-77ba-b3c0-9177aa77540b"
+    },
+    "clap": {
+      "actionId": 299,
+      "taskId": "01a1733a-396e-74da-8f49-f3a69ae119f1"
+    },
+    "cheer": {
+      "actionId": 298,
+      "taskId": "01a1733a-c82e-7034-99a8-28b03f300aea"
+    },
+    "sit": {
+      "actionId": 33,
+      "taskId": "01a1733b-2f87-7792-a52d-222284b88e7e"
+    },
+    "sit_clap": {
+      "actionId": 354,
+      "taskId": "01a1733b-c0fb-76bd-a3c0-29324502e87d"
+    }
+  }
+}

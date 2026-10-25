@@ -1,0 +1,40 @@
+{
+  "id": "golfer:golf_am_m3",
+  "name": "golf_am_m3 (3D template)",
+  "size": "adult",
+  "heightMetres": 1.75,
+  "frameWidth": 160,
+  "frameHeight": 268,
+  "anchor": {
+    "x": 80,
+    "y": 258
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "walk6",
+    "walk7",
+    "walk8"
+  ],
+  "walkFps": 5.7,
+  "mirrored": {},
+  "source": "art/golfers/golf_am_m3",
+  "clips": {
+    "walk": "Armature|Casual_Walk|baselayer 4.20s, stride 1.40s, body turned -1 deg",
+    "idle": "Armature|Idle|baselayer"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "id": "spectator:spec_w_visor_pastel:sit",
+  "name": "spec_w_visor_pastel sit",
+  "clip": "sit",
+  "heightMetres": 1.66,
+  "frameWidth": 160,
+  "frameHeight": 257,
+  "anchor": {
+    "x": 80,
+    "y": 247
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "sit1",
+    "sit2"
+  ],
+  "fps": 0.2,
+  "loop": true,
+  "times": [
+    0.3,
+    1
+  ],
+  "source": "art/spectators/spec_w_visor_pastel",
+  "clips": {
+    "sit": "Armature|Chair_Sit_Idle_F|baselayer 11.37s, stride 10.04s, body turned -1 deg"
+  },
+  "seatHeightMetres": 0.68,
+  "seat": {
+    "x": 80,
+    "y": 171
+  }
+}

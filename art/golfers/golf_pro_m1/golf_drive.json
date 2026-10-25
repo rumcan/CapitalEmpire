@@ -1,0 +1,59 @@
+{
+  "id": "golfer:golf_pro_m1:golf_drive",
+  "name": "golf_pro_m1 golf_drive",
+  "clip": "golf_drive",
+  "heightMetres": 1.83,
+  "frameWidth": 400,
+  "frameHeight": 451,
+  "anchor": {
+    "x": 200,
+    "y": 371
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "golf_drive1",
+    "golf_drive2",
+    "golf_drive3",
+    "golf_drive4",
+    "golf_drive5",
+    "golf_drive6",
+    "golf_drive7",
+    "golf_drive8",
+    "golf_drive9",
+    "golf_drive10",
+    "golf_drive11",
+    "golf_drive12"
+  ],
+  "fps": 3.9,
+  "loop": false,
+  "times": [
+    0,
+    0.5,
+    0.75,
+    1,
+    1.18,
+    1.22,
+    1.255,
+    1.3,
+    1.38,
+    1.5,
+    1.65,
+    2
+  ],
+  "source": "art/golfers/golf_pro_m1",
+  "clips": {
+    "golf_drive": "Armature|golf_drive|baselayer 3.10s, stride 1.09s, body turned -7 deg"
+  },
+  "prop": "club",
+  "addressSecs": 0,
+  "shot": "right-handed: the ball flies 90 degrees to the golfer's left of the row's facing (row S, the golfer facing the viewer: toward screen right)"
+}

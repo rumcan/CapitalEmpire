@@ -1295,10 +1295,10 @@ export class City {
     const z = new Array<number>(this.round.crowd.length).fill(0);
     return { fans: z, atStop: z.slice(), onBus: z.slice(), atGate: z.slice() };
   }
-  /** the walkers as the frame sends them: 4 floats per group (x, y in tiles, n fans, stage) */
+  /** the walkers as the frame sends them: 6 floats per group (x, y in tiles, n fans, stage, tx, ty: the group's target) */
   walkBuf(): Float32Array {
-    const W = this.crowd?.walkers ?? [], out = new Float32Array(4 * W.length);
-    W.forEach((g, i) => { out[4 * i] = g.x; out[4 * i + 1] = g.y; out[4 * i + 2] = g.n; out[4 * i + 3] = g.stage; });
+    const W = this.crowd?.walkers ?? [], out = new Float32Array(6 * W.length);
+    W.forEach((g, i) => { const o = 6 * i; out[o] = g.x; out[o + 1] = g.y; out[o + 2] = g.n; out[o + 3] = g.stage; out[o + 4] = g.tx; out[o + 5] = g.ty; });
     return out;
   }
   /** the lot stops as the frame sends them: 4 floats per active route with a lot stop (x, y in tiles, the fans waiting, the route index) */
@@ -1313,11 +1313,11 @@ export class City {
     this.gates.forEach((g, i) => { const o = out.length + 4 * i; all[o] = g.x; all[o + 1] = g.y; all[o + 2] = this.crowd?.atGate(i) ?? 0; all[o + 3] = -1 - i; });
     return all;
   }
-  /** the galleries as the frame sends them (LEAD.md M2.2): 4 floats a spot (x, y in tiles, the fans standing there, the kind: 0 green, 1 tee,
-   *  2 stand, 3 tent) */
+  /** the galleries as the frame sends them (LEAD.md M2.2): 8 floats a spot (x, y in tiles, the fans standing there, the kind: 0 green, 1 tee,
+   *  2 stand, 3 tent; fx, fy: what the fans face; ax, ay: where play aims) */
   galleryBuf(): Float32Array {
-    const K = { green: 0, tee: 1, stand: 2, tent: 3 } as const, out = new Float32Array(4 * this.spots.length);
-    this.spots.forEach((s, i) => { out[4 * i] = s.x; out[4 * i + 1] = s.y; out[4 * i + 2] = this.crowd?.gallery[i] ?? 0; out[4 * i + 3] = K[s.kind]; });
+    const K = { green: 0, tee: 1, stand: 2, tent: 3 } as const, out = new Float32Array(8 * this.spots.length);
+    this.spots.forEach((s, i) => { const o = 8 * i; out[o] = s.x; out[o + 1] = s.y; out[o + 2] = this.crowd?.gallery[i] ?? 0; out[o + 3] = K[s.kind]; out[o + 4] = s.fx; out[o + 5] = s.fy; out[o + 6] = s.ax; out[o + 7] = s.ay; });
     return out;
   }
   /** the round from a save (see Round.from): any surge under way is dropped with its party cars */

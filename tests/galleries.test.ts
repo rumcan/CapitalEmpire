@@ -14,12 +14,19 @@ test('galleries: a green spot beside each green, off the line of play; a tee spo
   assert.ok(t1.y < 0 && t1.x < 0, JSON.stringify(t1));
   assert.ok(g2.weight > g1.weight && g2.cap > g1.cap, 'the last hole');
   assert.equal(s.length, 4);
+  // the fans: a green faces its pin; a tee's focus is the tee and its aim the pin
+  assert.deepEqual([g1.fx, g1.fy, g1.ax, g1.ay], [0, 50, 0, 50], 'a green faces its pin');
+  assert.deepEqual([t1.fx, t1.fy, t1.ax, t1.ay], [0, 0, 0, 50], "a tee's focus is the tee, its aim the pin");
 });
 
 test('galleries: grandstands by their seats, tents in front of them; other structures are not spots', () => {
   const s = gallerySpots([], [], [{ id: 1, typeId: 'standS', x: 10, y: 10, mode: 'rent' }, { id: 2, typeId: 'foodTent', x: 30, y: 30, mode: 'rent' }, { id: 3, typeId: 'gate', x: 50, y: 50, mode: 'rent' }] as never);
   assert.deepEqual(s.map(q => q.kind), ['stand', 'tent']);
   assert.equal(s[0]!.cap, 200); assert.ok(s[1]!.y > 34, 'in front of the tent');
+  // a grandstand's fans look one tile toward +x +y (aim at the same point); a tent's look back at its centre, behind its front spot
+  const st = s[0]!, tn = s[1]!;
+  assert.ok(Math.abs(st.fx - st.x - 0.7071) < 1e-9 && Math.abs(st.fy - st.y - 0.7071) < 1e-9 && st.ax === st.fx && st.ay === st.fy, JSON.stringify(st));
+  assert.ok(tn.fx === tn.ax && tn.fy === tn.ay && tn.fy < tn.y, JSON.stringify(tn));
 });
 
 test('galleries: a party picks by weight, a full spot pulls nothing, all full: the least full', () => {
