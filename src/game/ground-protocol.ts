@@ -9,6 +9,7 @@ import type { Waterway } from './terrain/types';
 import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
 import type { EdgeProfile } from './paint-edges';
+import type { GrassArt } from './painted-grass-lod';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone filter over the fill: t 1 Multiply (darker) or 2 Lighten (screen),
@@ -95,8 +96,10 @@ export type NetOp =
 export type TileKind = 'g' | 'm' | 'p';
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
-  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
+  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
   | { t: 'textures'; snap: TexSnapshot }
+  /** the game's Grass setting changed (painted or photo): every chunk is baked again */
+  | { t: 'grassArt'; art: GrassArt }
   | { t: 'net'; ops: NetOp[] }
   | { t: 'lamps'; pts: Float32Array }
   | { t: 'terrain'; cls: Uint8Array; height: Float32Array; waters: Waterway[] }
@@ -104,11 +107,11 @@ export type ToWorker =
   /** the course height as a sub-rect of samples (i0, j0, w by h, row-major data), see GroundCache.courseHeight */
   | { t: 'course'; i0: number; j0: number; w: number; h: number; data: Float32Array }
   | { t: 'lotground'; set: [string, LotPatch[]][]; drop: string[] }
-  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number };
+  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number };
 
 export type FromWorker =
   | { t: 'ready'; ms: number }
   | { t: 'texpack'; snaps: TexSnapshot[] }
-  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; bmp: ImageBitmap; ms: number }
+  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; bmp: ImageBitmap; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };

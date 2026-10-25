@@ -1,0 +1,30 @@
+{
+  "id": "ground:grass-painted-8m",
+  "detailLevel": "far",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-5785a12a-e8f4-4fdf-bb0e-100147ace2f4.png",
+  "prompt": "Paint a simple low-contrast warm green grass ground tile matching ONLY the broad flat painted turf in the provided crop. 1024x1024px square opaquePNG. Farthest zoom version. About95%calmflatgreenpaint, justsoftsubtleirregularbroadbrushstrokes with a very restrained2-3% lightnessdifference. No grass blades or tufts. No stripes, diagonal bands, ripples, waves or repetitive arranged shapes. No bushes, leaves, flowers, soil, objects, vignette, highlights atedges or frame. Directlyaboveorthographictopdown, no perspective. Uniformaveragebrightnessacrossthewholeimage. Subtlelocalupper-rightlight/lower-leftshade only; no castshadow. Seamlessperiodictexture: oppositeedgeswrapcontinuouslytop-bottomandleft-rightwithnoedgevaluejump. Represents8x8metres. Keepitsmacroshapeslowcontrastso4x4repetitionisnotobvious. HandpaintedBlizzardWorldofWarcraftgroundart, smoothbroadconfidentpaint, no photographicgrain. Copycrop's softness andgrassgreen, do notcopyits mowingbands.",
+  "references": [
+    {
+      "role": "exact-owner-short-grass-style-crop",
+      "file": "art/theme-consistency/generated/ground/grass-owner-green-style-crop.png",
+      "original": "worktrees/theme-consistency/art/reference/grass-style-blizzard-20261024.webp",
+      "extraction": {
+        "left": 300,
+        "top": 280,
+        "width": 550,
+        "height": 220
+      }
+    }
+  ],
+  "metresPerRepeat": [
+    8,
+    8
+  ],
+  "requestedPixels": [
+    1024,
+    1024
+  ],
+  "selected": false,
+  "review": "Awaitingcalmerart/seam/gamecheck."
+}

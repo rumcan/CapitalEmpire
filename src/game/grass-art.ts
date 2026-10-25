@@ -43,7 +43,8 @@ export type GrassTex = 'lawnLush' | 'lawnWorn' | 'lawnClover' | 'golfGreen' | 'g
 /** a photo texture: tex = the texture's name (a Paint id; 'pad' is the Paint tool's Concrete); src = the seamless photo at its native size;
  *  mix = the metres the photo covers when hex-mixed so it never visibly repeats (0 = a plain tile, its period tiles, or the mixed period when no tiles);
  *  px = the mosaic's pixels per tile when mixed (optional, default 160; 128 saves memory); tiles = a plain tile's period in tiles (optional, default 12 = MOSAIC_TILES) */
-export interface PhotoTexEntry { tex: string; src: string; mix: number; px?: number; tiles?: number }
+export interface PhotoTexEntry { tex: string; src: string; mix: number; px?: number; tiles?: number;
+  /** an owner's preset set to a painted family (paint-presets.ts PaintPreset painted): the game lays that family instead of src */ painted?: string }
 
 /** the photo textures, laid in tile space like the asphalt mosaic so the mowing stripes and the paving follow the paint area's angle and scale */
 export const PHOTO_TEX: PhotoTexEntry[] = [
