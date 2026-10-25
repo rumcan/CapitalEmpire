@@ -17,7 +17,7 @@ type CourseTab = 'build' | 'presets' | 'plants' | 'buildings';
 export function CoursePanel({ game }: { game: Game }) {
   const p = game.paint, n = p.brushHole, br = p.brush[p.brushKind], name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   const ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k), fine = (k: string) => !ui || (ui.visibleFineControls as string[]).includes(k);
-  // T109: building works in 1 m mini-grid cells; the round brush and the big stamps (the old pieces) sit under Advanced (the all-tools toggle)
+  // T109: building works in 1 m mini-grid cells; the round brush and the big stamps (the old pieces) sit under Advanced (Settings > Show every tool now)
   const adv = !ui || ui.advancedMode, sq = p.brushSquare(), cells = p.brushCells;
   // T117: stage 1 is New hole only; Shape by hand (the surfaces and methods), Presets and Plants open with the first hole (P23 4.2)
   const shape = !ui || ui.shapeByHand;

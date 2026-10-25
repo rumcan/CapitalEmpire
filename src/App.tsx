@@ -984,7 +984,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
           </div>
         </div>
       )}
-      {/* T036: the fine tuning rows sit under All tools (advanced); their hotkeys (Q, E, Tab) work from the engine either way */}
+      {/* T036: the fine tuning rows sit under Settings > Show every tool now (advanced); their hotkeys (Q, E, Tab) work from the engine either way */}
       {adv && <>
         <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
         <div className="mt-2 flex items-center gap-1 text-xs">
