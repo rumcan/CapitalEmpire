@@ -18,7 +18,7 @@ import { mulberry } from '../src/game/iso';
 
 /** a test spot at the origin */
 function spot(kind: GalleryKind, hole: number, weight: number, cap = 200): GallerySpot {
-  return { x: 0, y: 0, kind, weight, cap, hole };
+  return { x: 0, y: 0, kind, weight, cap, hole, fx: 0, fy: 0, ax: 0, ay: 0 };
 }
 
 describe('gallery draw and moves (T051a)', () => {
@@ -105,7 +105,7 @@ describe('gallery draw and moves (T051a)', () => {
         const hole = kind === 'stand' || kind === 'tent' ? 0 : 1 + Math.floor(rng() * holes);
         const weight = rng() * 5;
         const cap = 50 + Math.floor(rng() * 451);
-        spots.push({ x: 0, y: 0, kind, weight, cap, hole });
+        spots.push({ x: 0, y: 0, kind, weight, cap, hole, fx: 0, fy: 0, ax: 0, ay: 0 });
         fill.push(Math.floor(rng() * 301));
       }
       const before = fill.reduce((a, b) => a + b, 0);

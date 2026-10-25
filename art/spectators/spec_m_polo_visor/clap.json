@@ -1,0 +1,40 @@
+{
+  "id": "spectator:spec_m_polo_visor:clap",
+  "name": "spec_m_polo_visor clap",
+  "clip": "clap",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "clap1",
+    "clap2",
+    "clap3",
+    "clap4"
+  ],
+  "fps": 1,
+  "loop": true,
+  "times": [
+    1.5,
+    1.6,
+    1.7,
+    1.76
+  ],
+  "source": "art/spectators/spec_m_polo_visor",
+  "clips": {
+    "clap": "Armature|Stand_Clap_and_Sit_Down|baselayer 4.20s, stride 3.97s, body turned 0 deg"
+  }
+}

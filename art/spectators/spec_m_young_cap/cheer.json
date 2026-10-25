@@ -1,0 +1,44 @@
+{
+  "id": "spectator:spec_m_young_cap:cheer",
+  "name": "spec_m_young_cap cheer",
+  "clip": "cheer",
+  "heightMetres": 1.82,
+  "frameWidth": 160,
+  "frameHeight": 277,
+  "anchor": {
+    "x": 80,
+    "y": 267
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "cheer1",
+    "cheer2",
+    "cheer3",
+    "cheer4",
+    "cheer5",
+    "cheer6"
+  ],
+  "fps": 3.2,
+  "loop": false,
+  "times": [
+    0.33,
+    0.58,
+    0.74,
+    0.9,
+    1.07,
+    1.24
+  ],
+  "source": "art/spectators/spec_m_young_cap",
+  "clips": {
+    "cheer": "Armature|Cheer_with_Both_Hands_Up|baselayer 1.90s, stride 1.81s, body turned -7 deg"
+  }
+}

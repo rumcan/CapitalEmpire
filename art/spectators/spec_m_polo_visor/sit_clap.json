@@ -1,0 +1,45 @@
+{
+  "id": "spectator:spec_m_polo_visor:sit_clap",
+  "name": "spec_m_polo_visor sit_clap",
+  "clip": "sit_clap",
+  "heightMetres": 1.8,
+  "frameWidth": 160,
+  "frameHeight": 275,
+  "anchor": {
+    "x": 80,
+    "y": 265
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "sit_clap1",
+    "sit_clap2",
+    "sit_clap3",
+    "sit_clap4"
+  ],
+  "fps": 1.2,
+  "loop": true,
+  "times": [
+    1,
+    1.05,
+    1.12,
+    1.22
+  ],
+  "source": "art/spectators/spec_m_polo_visor",
+  "clips": {
+    "sit_clap": "Armature|Sitting_Clap|baselayer 3.37s, stride 3.30s, body turned 2 deg"
+  },
+  "seatHeightMetres": 0.66,
+  "seat": {
+    "x": 80,
+    "y": 192
+  }
+}

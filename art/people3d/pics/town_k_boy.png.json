@@ -1,0 +1,14 @@
+{
+  "generationId": "15a4ac89-3836-4f08-b102-87062350d7ef",
+  "prompt": "Full-body character for a 3D model: nine-year-old boy from a 1985 small American town, a striped t-shirt, blue jeans, sneakers, messy hair. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 243475045,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/a59fbe13-b17a-4c6f-8e2a-e2d434b55581.png",
+  "requestPrompt": "Full-body character for a 3D model: nine-year-old boy from a 1985 small American town, a striped t-shirt, blue jeans, sneakers, messy hair. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\people3d\\pics\\town_k_boy.png",
+  "status": "saved",
+  "sha256": "85cb55a7ca3b71451440c631e9fcb9f71228d6b082855ac2dfccd4a8e023fafa"
+}

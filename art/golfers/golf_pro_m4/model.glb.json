@@ -1,0 +1,12 @@
+{
+  "generationId": "01c1b425-b4c8-4198-bda8-e32bcf9c471a",
+  "provider": "hunyuan3d-v3.1-pro",
+  "mode": "image-to-3d",
+  "quality": "standard",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\golfers\\golf_pro_m4\\model.glb",
+  "status": "saved",
+  "sha256": "e06abd694a4272fe8cc30933b91100c9a65ea4c0e387d40b94bdb5e31d0cde52",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/01c1b425-b4c8-4198-bda8-e32bcf9c471a/model.compressed.glb",
+  "seed": 44653488
+}

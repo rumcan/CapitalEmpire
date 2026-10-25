@@ -20,7 +20,7 @@ import type { DisasterNote, DisasterView } from '../city';
 import type { DisasterKind } from '../ext/disasters';
 import type { TownClock } from './townclock';
 
-/** what the worker measured, sent with every frame (walkers and stops: while a surge or its eval is on: the walking fan groups, 4 floats each (x, y in tiles, fans, stage),
+/** what the worker measured, sent with every frame (walkers and stops: while a surge or its eval is on: the walking fan groups, 6 floats each (x, y in tiles, fans, stage, tx, ty),
  *  and the lot stops, 4 floats each (x, y in tiles, the fans waiting, the route index)); skipping: a fast-forward is running (simT is then the last frame's, not extrapolated);
  *  clock: the game clock, s (simT + the clock's shift); frozen: the clock is frozen (it does not move while simT does) */
 export interface SimStats { active: number; target: number; lanes: number; stepMs: number; tickMs: number; maxTickMs: number; graphMs: number; respawned: number; simT: number; skipping: boolean; clock: number; frozen: boolean; round: RoundView; parks: ParkView[]; /** the town day's clock (T048, see townclock.ts) */ town: TownClock }
@@ -51,7 +51,7 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
  *  the books (after a day closes, or after a budget message: the save, the career's save, the game day now, and the ledger of the day that just closed, if any);
  *  the milestones a step newly reached (in order; their grants are paid) and whether the city won, when a game hour's start brought either */
 /** worker to main thread: the disasters, when they changed (active: the one under way; notes: the transitions and repairs since the last such message) */
-export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats; sig: Float32Array; inc: Float32Array; walkers?: Float32Array; stops?: Float32Array; /** the galleries' standing crowds: 4 floats a spot (x, y, fans, kind index) */ gallery?: Float32Array } | { t: 'disasters'; active: DisasterView[]; notes: DisasterNote[] } |{ t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
+export type FromSim = { t: 'frame'; cap: number; buf: Float32Array; stats: SimStats; sig: Float32Array; inc: Float32Array; walkers?: Float32Array; stops?: Float32Array; /** the galleries' standing crowds: 8 floats a spot (x, y, fans, kind index, fx, fy, ax, ay) */ gallery?: Float32Array } | { t: 'disasters'; active: DisasterView[]; notes: DisasterNote[] } |{ t: 'lots'; added: LotRec[]; removed: string[] } | { t: 'town'; events: TownEvent[]; pop: number; jobs: number; built: number; access: Float32Array } | { t: 'grow'; legs: number[] } | { t: 'log'; message: string } | { t: 'error'; message: string }
   | { t: 'budget'; save: BudgetSave; career: CareerSave; day: number; ledger: Ledger | null } | { t: 'milestone'; newly: Milestone[]; won: boolean } | { t: 'report'; report: Report; hours: HourStat[] }
   | { t: 'car'; info: CarInfo | null } | { t: 'watch'; node: [number, number] | null; n: number; lines: Float32Array } | { t: 'site'; site: Site | null }
   | { t: 'biz'; list: BizView[] }

@@ -1,0 +1,40 @@
+{
+  "id": "spectator:spec_m_sun_hat:clap",
+  "name": "spec_m_sun_hat clap",
+  "clip": "clap",
+  "heightMetres": 1.72,
+  "frameWidth": 160,
+  "frameHeight": 265,
+  "anchor": {
+    "x": 80,
+    "y": 255
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "clap1",
+    "clap2",
+    "clap3",
+    "clap4"
+  ],
+  "fps": 1,
+  "loop": true,
+  "times": [
+    1.5,
+    1.6,
+    1.7,
+    1.76
+  ],
+  "source": "art/spectators/spec_m_sun_hat",
+  "clips": {
+    "clap": "Armature|Stand_Clap_and_Sit_Down|baselayer 4.20s, stride 3.97s, body turned 0 deg"
+  }
+}
