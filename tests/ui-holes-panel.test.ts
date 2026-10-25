@@ -88,6 +88,17 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
     assert.match(h, /✗<\/span>Pin on the green/);
   });
 
+  it('Shape by hand: Brush | Run (T122, P23 4.5) and Erase as its own toggle', () => {
+    const stage2 = { facts: { playableHoles: 2, stageReached: 2 as const }, holes };
+    let h = render(fakeGame(stage2));
+    assert.match(h, /role="group" aria-label="Brush or Run" data-method="brush"><button class="chip chip-on" aria-pressed="true"[^>]*>Brush<\/button><button class="chip " aria-pressed="false" title="Run: lay a strip of Fairway as wide as the size, like a road[^"]*"[^>]*>Run<\/button><\/div>/);
+    assert.match(h, /aria-pressed="false" title="Erase takes the top surface under the brush[^"]*"[^>]*>Erase</);
+    const g = fakeGame(stage2); (g.paint as unknown as { brushRun: boolean }).brushRun = true;
+    h = render(g);
+    assert.match(h, /data-method="run"><button class="chip " aria-pressed="false"[^>]*>Brush<\/button><button class="chip chip-on" aria-pressed="true"[^>]*>Run<\/button>/);
+    assert.match(h, /title="Erase takes the top surface under the run/);
+  });
+
   it('holeState: ✓ ready, ◔ growing with its month, ! needs attention first', () => {
     assert.deepEqual(holeState(ready(1, 4, 300), null), { kind: 'ready', icon: '✓', word: 'ready' });
     assert.deepEqual(holeState(ready(1, 4, 300), { growing: true, ready: 'Mar 1985' }), { kind: 'growing', icon: '◔', word: 'growing, ready Mar 1985' });

@@ -73,7 +73,7 @@ function SizeGlyph({ k }: { k: number }) {
 function ShapeByHand({ game }: { game: Game }) {
   const p = game.paint, ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k);
   const keys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (brushOk(b.kind) ? i + 1 : 0)));
-  const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece';
+  const brush = p.mode === 'brush', cells = p.brushCells, armed = brush || p.mode === 'draw' || p.mode === 'piece', run = brush && !!p.brushRun && cells > 0;
   const name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   return (
     <section data-section="shape" className="mt-3">
@@ -99,8 +99,12 @@ function ShapeByHand({ game }: { game: Game }) {
         ))}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <button className={`chip ${brush && !p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && !p.rubOut} title={`Paint ${name} for hole ${p.brushHole}: click a cell, drag a run`} onClick={() => { p.rubOut = false; if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Brush</button>
-        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title="Erase takes the top surface under the brush (hold Alt for a moment); no refund" onClick={() => { p.rubOut = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Erase</button>
+        {/* Brush | Run (T122, P23 4.5): the brush paints where you click and drag; Run lays a strip like a road, from click to click */}
+        <div className="flex items-center gap-1.5" role="group" aria-label="Brush or Run" data-method={run ? 'run' : 'brush'}>
+          <button className={`chip ${brush && !run ? 'chip-on' : ''}`} aria-pressed={brush && !run} title={`Paint ${name} for hole ${p.brushHole}: click a cell, drag a run`} onClick={() => p.setBrushRun(false)}>Brush</button>
+          {game.golfMode && <button className={`chip ${run ? 'chip-on' : ''}`} aria-pressed={run} title={`Run: lay a strip of ${name} as wide as the size, like a road: click a start, click each bend, then double-click, Enter or right-click. Shift keeps a leg straight`} onClick={() => p.setBrushRun(true)}>Run</button>}
+        </div>
+        <button className={`chip ${brush && p.rubOut ? 'chip-on' : ''}`} aria-pressed={brush && p.rubOut} title={`Erase takes the top surface under the ${run ? 'run' : 'brush'} (hold Alt for a moment while brushing); no refund`} onClick={() => { p.rubOut = !(brush && p.rubOut); if (!brush) p.setBrush(p.brushKind); else game.emit(); }}>Erase</button>
       </div>
       {!game.golfMode && brush && <div className="sub-line mt-1.5">{`Click paints ${name} for hole ${p.brushHole}; drag paints a run. Alt-drag or Erase rubs out. [ ] size.`}</div>}
     </section>

@@ -103,6 +103,14 @@ export function fillPolygon(g: Grid, pts: Pt[], s: number, hole: number, month: 
   return finish(g, a);
 }
 
+/** paints the first n cells of idx (cell indices of g; T122's Run: the cells of a strip, each once) with the same rules as paintDisc, as one
+ *  diff. The grid is changed in place. */
+export function paintCells(g: Grid, idx: ArrayLike<number>, n: number, s: number, hole: number, month: number, opts: PaintOpts = {}): GridDiff {
+  const a = newAcc(g.x0, g.y0, g.w, n), len = g.w * g.h;
+  for (let k = 0; k < n; k++) { const i = idx[k]!; if (i >= 0 && i < len) brush(g, a, i, s, hole, month, opts); }
+  return finish(g, a);
+}
+
 /** applies a diff to g: undo true restores each cell's before values, false sets its after values (redo). A diff made on another geometry (the grid grew) lands on the cells at the same tiles; cells g does not cover are skipped. Bumps rev. */
 export function applyDiff(g: Grid, d: GridDiff, undo: boolean): void {
   const cs = undo ? d.c0 : d.c1;
