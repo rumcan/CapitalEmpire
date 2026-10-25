@@ -1,0 +1,14 @@
+{
+  "generationId": "6b1b9aed-86e6-4a34-974d-c2b52dbb0271",
+  "prompt": "Full-body character for a 3D model: grey-haired grandfather in his 60s, a plain yellow V-neck sweater over a plain white collared shirt, green plaid trousers, brown loafers. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1418211022,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/55494b7c-98eb-437c-9095-8a5ed5d4fb27.png",
+  "requestPrompt": "Full-body character for a 3D model: grey-haired grandfather in his 60s, a plain yellow V-neck sweater over a plain white collared shirt, green plaid trousers, brown loafers. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\spectators\\pics\\spec_m_plaid.png",
+  "status": "saved",
+  "sha256": "ebc1ece9031c65cdb64329b851ba91f61256861e7b2f1da583551beaf726cc7d"
+}

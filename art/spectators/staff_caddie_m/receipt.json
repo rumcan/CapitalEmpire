@@ -1,0 +1,10 @@
+{
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/b8735042-03b4-437c-996e-2afcc13b8f71/model.compressed.glb",
+  "look": "Tour caddie, a fit man in his 30s, a plain white caddie bib over a navy polo shirt, khaki shorts, a plain white cap, white sneakers. No logos, no lettering, no number on the bib",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  },
+  "plateCut": "RUN fused a ground plate to the feet; cut off locally by cut-plate.mjs (2026-10-24)"
+}

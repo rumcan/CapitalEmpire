@@ -1,0 +1,14 @@
+{
+  "generationId": "25b6a36b-d95e-48b7-a804-079c40f4f5c2",
+  "prompt": "Full-body character for a 3D model: a young touring pro golfer in his 20s, slim, a plain yellow short-sleeved polo shirt, navy trousers, a plain white visor, white golf shoes. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1056538519,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/c2ad7a78-b465-43a7-b0ce-481ed877eadf.png",
+  "requestPrompt": "Full-body character for a 3D model: a young touring pro golfer in his 20s, slim, a plain yellow short-sleeved polo shirt, navy trousers, a plain white visor, white golf shoes. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "output/opt-test/pics/pro_ref.png",
+  "status": "saved",
+  "sha256": "a0eab9ac6d3a02d780b6de8d99678c59340dd1f806454099fd5fc42178205cf9"
+}

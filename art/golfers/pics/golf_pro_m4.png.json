@@ -1,0 +1,14 @@
+{
+  "generationId": "7beb3697-6f6f-4de7-b3fa-97d0173cf2be",
+  "prompt": "Full-body character for a 3D model: tall Black touring pro in his 30s, lean, short black hair, a plain navy short-sleeved polo shirt, light grey trousers, a plain white baseball cap, a white golf glove on the left hand, black golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1903265242,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/380e59ac-13ad-43b4-87bf-832a74a78679.png",
+  "requestPrompt": "Full-body character for a 3D model: tall Black touring pro in his 30s, lean, short black hair, a plain navy short-sleeved polo shirt, light grey trousers, a plain white baseball cap, a white golf glove on the left hand, black golf shoes. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\golfers\\pics\\golf_pro_m4.png",
+  "status": "saved",
+  "sha256": "64e810f2a6313c0dd1328e89b2d187c7b9ee0aa65232955289302c43fa40ec63"
+}

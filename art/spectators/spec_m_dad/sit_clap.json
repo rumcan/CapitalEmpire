@@ -1,0 +1,45 @@
+{
+  "id": "spectator:spec_m_dad:sit_clap",
+  "name": "spec_m_dad sit_clap",
+  "clip": "sit_clap",
+  "heightMetres": 1.78,
+  "frameWidth": 160,
+  "frameHeight": 272,
+  "anchor": {
+    "x": 80,
+    "y": 262
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "sit_clap1",
+    "sit_clap2",
+    "sit_clap3",
+    "sit_clap4"
+  ],
+  "fps": 1.2,
+  "loop": true,
+  "times": [
+    1,
+    1.05,
+    1.12,
+    1.22
+  ],
+  "source": "art/spectators/spec_m_dad",
+  "clips": {
+    "sit_clap": "Armature|Sitting_Clap|baselayer 3.37s, stride 3.30s, body turned 2 deg"
+  },
+  "seatHeightMetres": 0.65,
+  "seat": {
+    "x": 80,
+    "y": 190
+  }
+}

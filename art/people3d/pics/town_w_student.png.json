@@ -1,0 +1,14 @@
+{
+  "generationId": "13e5b627-620e-481f-8199-ccc1620dd3cb",
+  "prompt": "Full-body character for a 3D model: college student in her late teens from a 1985 small American town, an oversized denim jacket, a white t-shirt, jeans, white sneakers, big curly hair. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 1389527299,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/c197e740-d622-46a9-a753-f0944b1862b1.png",
+  "requestPrompt": "Full-body character for a 3D model: college student in her late teens from a 1985 small American town, an oversized denim jacket, a white t-shirt, jeans, white sneakers, big curly hair. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\people3d\\pics\\town_w_student.png",
+  "status": "saved",
+  "sha256": "eb5466af7f70551b74df6e60d1590c01a970191a3198159230a2f57687a16aec"
+}
