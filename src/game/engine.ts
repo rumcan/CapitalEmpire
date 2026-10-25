@@ -74,6 +74,7 @@ import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
 import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
+import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
@@ -965,6 +966,8 @@ export class Game {
     this.ground.grassArt = this.grassArt;
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
     this.ground.living = { on: this.groundVariety, debug: false };
+    try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
+    this.ground.slopeLight = this.slopeLight;
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
@@ -1462,6 +1465,13 @@ export class Game {
     this.ground.setLiving(on, this.groundDebug); this.emit();
   }
   setGroundDebug(on: boolean) { this.groundDebug = on; this.ground.setLiving(this.groundVariety, on); this.emit(); }
+  /** the course height light's strength (T126): the gear menu's Slope light, 0 (off) to 2 (kept across reloads), else light.json's */
+  slopeLight = HEIGHT_LIGHT_STRENGTH;
+  setSlopeLight(v: number) {
+    this.slopeLight = clampHeightLight(v);
+    try { localStorage.setItem('capitalempire.slopeLight', String(this.slopeLight)); } catch { /* storage may be unavailable */ }
+    this.ground.setSlopeLight(this.slopeLight); this.emit();
+  }
   /** street lamps light the road: their reflection pools are part of the ground picture */
   syncLamps() {
     const pts = [...this.lampProps].map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));

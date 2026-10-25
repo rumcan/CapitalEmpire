@@ -4,6 +4,7 @@
 import { CHUNK_H, CHUNK_W, MID_H, MID_W, PLAN_H, PLAN_W, PLAN_K } from './iso';
 import { GROUND_ART } from './ground-art';
 import { CH_SIZE, CH_STEP } from './ext/course-height';
+import { HEIGHT_LIGHT_REACH, HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { withBaseGrass } from './base-grass-saved';
 import { withPresets } from './paint-presets-saved';
 import { GRASS_ART_DEFAULT, type GrassArt } from './painted-grass-lod';
@@ -56,7 +57,11 @@ export class GroundCache {
   grassArt: GrassArt = GRASS_ART_DEFAULT;
   /** the Grass setting changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); }
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); }
+  /** the course height light's strength (T126): light.json's, or the gear menu's Slope light */
+  slopeLight = HEIGHT_LIGHT_STRENGTH;
+  /** the Slope light changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
+  setSlopeLight(v: number) { const s = clampHeightLight(v); if (s === this.slopeLight) return; this.slopeLight = s; this.broadcast({ t: 'slopeLight', strength: s }); this.invalidateAll(); }
   /** the living ground (T111): the gear menu's Ground variety and the dev debug view of its influence maps */
   living = { on: true, debug: false };
   /** the living ground is baked at all (its variety, or the debug view of its maps) */
@@ -89,14 +94,15 @@ export class GroundCache {
   lamps(pts: Float32Array) { this.broadcast({ t: 'lamps', pts }); }
   terrain(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { this.broadcast({ t: 'terrain', cls: t.cls, height: t.height, waters: t.waters }); }
   blocks(data: Float32Array) { this.broadcast({ t: 'blocks', data }); }
-  /** the course height in tile box b (whole samples, clamped) goes to every worker, and the ground there re-bakes (the old bake shows until then) */
+  /** the course height in tile box b (whole samples, clamped) goes to every worker, and the ground its light reaches re-bakes (the old bake
+   *  shows until then): the light at a point depends on the heights up to HEIGHT_LIGHT_REACH tiles away (T126) */
   courseHeight(field: Float32Array, b: [number, number, number, number]) {
     const i0 = Math.max(0, Math.floor(b[0] / CH_STEP) - 1), i1 = Math.min(CH_SIZE - 1, Math.ceil(b[2] / CH_STEP) + 1);
     const j0 = Math.max(0, Math.floor(b[1] / CH_STEP) - 1), j1 = Math.min(CH_SIZE - 1, Math.ceil(b[3] / CH_STEP) + 1);
     const w = i1 - i0 + 1, h = j1 - j0 + 1, data = new Float32Array(w * h);
     for (let j = 0; j < h; j++) data.set(field.subarray((j0 + j) * CH_SIZE + i0, (j0 + j) * CH_SIZE + i1 + 1), j * w);
     this.broadcast({ t: 'course', i0, j0, w, h, data });
-    this.invalidate([b[0] - 4, b[1] - 4, b[2] + 4, b[3] + 4], true);
+    const r = HEIGHT_LIGHT_REACH; this.invalidate([b[0] - r, b[1] - r, b[2] + r, b[3] + r], true);
   }
   /** Changed turf cells invalidate only the chunks that touch them, retaining the old bake until replacement. */
   grass(cells: GrassCellView[], strength: number, heat: boolean, mowing = false) {
