@@ -19,6 +19,8 @@ export function CoursePanel({ game }: { game: Game }) {
   const ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k), fine = (k: string) => !ui || (ui.visibleFineControls as string[]).includes(k);
   // T109: building works in 1 m mini-grid cells; the round brush and the big stamps (the old pieces) sit under Advanced (the all-tools toggle)
   const adv = !ui || ui.advancedMode, sq = p.brushSquare(), cells = p.brushCells;
+  // T117: stage 1 is New hole only; Shape by hand (the surfaces and methods), Presets and Plants open with the first hole (P23 4.2)
+  const shape = !ui || ui.shapeByHand;
   const tab: CourseTab = game.clubPlacing ? 'buildings' : p.mode === 'hole' ? 'presets' : p.mode === 'plant' ? 'plants' : 'build';
   const help = p.mode === 'height'
     ? `Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} per m³.` : ''}`
@@ -42,11 +44,14 @@ export function CoursePanel({ game }: { game: Game }) {
       <HoleInspector game={game} />
       <div className="mt-2 flex flex-wrap gap-1">
         <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setBrush(p.brushKind); }}>Build</button>
-        <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setMode('hole'); }}>Presets</button>
-        <button className={`chip ${tab === 'plants' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setPlant(p.plantBrush); }}>Plants</button>
+        {shape && <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setMode('hole'); }}>Presets</button>}
+        {shape && <button className={`chip ${tab === 'plants' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setPlant(p.plantBrush); }}>Plants</button>}
         {game.golfMode && <button className={`chip ${tab === 'buildings' ? 'chip-on' : ''}`} onClick={() => game.placeClubhouse(true)}>Buildings</button>}
       </div>
-      {tab === 'build' && p.mode !== 'plan' && (
+      {tab === 'build' && p.mode !== 'plan' && !shape && (
+        <div className="mt-2 text-xs text-slate-300">+ New hole plans the whole hole for you: click a tee, then a green, and Build. Shape by hand (1 m cells) opens after your first hole.</div>
+      )}
+      {tab === 'build' && p.mode !== 'plan' && shape && (
         <>
           <div className="mt-2 text-[11px] text-slate-400">Surface (keys 1–7)</div>
           <div className="flex flex-wrap gap-1">

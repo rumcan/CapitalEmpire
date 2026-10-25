@@ -212,7 +212,6 @@ export default function App() {
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
  {chip('event') && <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
  {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</button>}
-                  {game.playerProgressFacts() && <button className={`chip ${ui?.advancedMode || !ui ? 'chip-on' : ''}`} onClick={() => { game.setAdvancedTools(!(ui?.advancedMode)); bump(); }} title={ui ? ui.stageLabel : 'All tools'}><Icon name="up" size={16} />All tools</button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -255,6 +254,13 @@ export default function App() {
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
+                    {/* T117: the unlocks' Settings switch (was the top bar's All tools chip): every tool and fine control now, whatever the stage */}
+                    {game.playerProgressFacts() && (
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title={ui ? `Tools open as your course grows (${ui.stageLabel}). Tick to show every tool and fine control now` : 'The dev sandbox shows every tool (?unlock=0 plays the unlocks)'}>
+                        <input type="checkbox" checked={!ui || ui.advancedMode} disabled={!ui} onChange={e => { game.setAdvancedTools(e.target.checked); bump(); }} />
+                        Show every tool now
+                      </label>
+                    )}
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
@@ -933,8 +939,9 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
               <Icon name={ex ? 'up' : 'down'} size={12} />
             </button>
             {ex && types.filter(t => t.family === f.id).map(t => {
-              // a locked card: a course drive shows its golf tier, a town class the career milestone that unlocks it (greyed either way)
-              const c = CLASS[t.id]!, open = game.classOpen(t.id), tier = courseTierNeeded(t.id), lk = open ? null : unlockOf('class', t.id), lock = open ? null : tier !== null ? `🔒 Tier ${tier}` : lk ? lockText(lk.pop) : '🔒', on = game.cls.base === t.id;
+              // a locked card: a course path held back by the unlock stage says so (T117), a course drive shows its tour level, a town class the
+              // career milestone that unlocks it (greyed either way)
+              const c = CLASS[t.id]!, open = game.classOpen(t.id), tier = courseTierNeeded(t.id), lk = open ? null : unlockOf('class', t.id), lock = open ? null : game.courseStageLock(t.id) ? '🔒 First hole' : tier !== null ? `🔒 Tour level ${tier}` : lk ? lockText(lk.pop) : '🔒', on = game.cls.base === t.id;
               return (
                 <div key={`${f.id}-${t.id}`}>
                   <button className={`card mb-1 ${on ? 'card-on' : ''} ${lock ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
