@@ -25,6 +25,7 @@ import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans } from './ext/hole-wizard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
@@ -74,6 +75,7 @@ import type { DisasterNote } from './city';
 import type { DisasterKind } from './ext/disasters';
 import { normalizeGolfSave, type GolfSave, type GolfView } from './golf/mode';
 import { createCourseHeightField, flattenCourseCorridor, loadCourseHeight, saveCourseHeight, unionBox as unionCourseBox, type CourseHeightField, type CourseHeightSaveChunk, type CourseTileBox } from './ext/course-height';
+import { HEIGHT_LIGHT_STRENGTH, clampHeightLight } from './ext/course-height/light';
 import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
@@ -564,8 +566,31 @@ export class Game {
     const b = this.paint.brush, look = (st: { tex: string; scale: number; angle: number }) => ({ tex: st.tex, sc: st.scale, a: st.angle });
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     const surf = [undefined, look(b.rough.style), pre('fescue', 'golfFescue'), look(b.water.style), look(b.fairway.style), look(b.tee.style), look(b.bunker.style), pre('waste', 'wasteSand'), look(b.green.style)];
-    // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border and Shadow sliders ride along
-    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: look(b.rough.style) }, border: this.paint.courseBorders(), shadow: this.paint.courseShadows() };
+    // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border, Shadow and Height sliders ride along
+    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: look(b.rough.style) }, border: this.paint.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights() };
+  }
+  private cpCache: { ver: number; g: CourseGrid; segs: number[] } | null = null;
+  /** the cart paths and drives near the course grid as flat segments ax, ay, bx, by (tiles): the tees' stairs face the nearest (T127) */
+  private coursePaths(): number[] {
+    const g = this.courseGrid; if (!g) return [];
+    if (this.cpCache && this.cpCache.ver === this.net.version && this.cpCache.g === g) return this.cpCache.segs;
+    const R = STAIR_REACH, x0 = g.x0 - R, y0 = g.y0 - R, x1 = g.x0 + g.w * CELL_T + R, y1 = g.y0 + g.h * CELL_T + R, segs: number[] = [];
+    for (const sg of this.net.segs) {
+      if (sg.cls.family !== 'cart' && sg.cls.family !== 'course') continue;
+      if (Math.max(sg.a.x, sg.b.x) < x0 || Math.min(sg.a.x, sg.b.x) > x1 || Math.max(sg.a.y, sg.b.y) < y0 || Math.min(sg.a.y, sg.b.y) > y1) continue;
+      segs.push(sg.a.x, sg.a.y, sg.b.x, sg.b.y);
+    }
+    this.cpCache = { ver: this.net.version, g, segs };
+    return segs;
+  }
+  /** the roads changed in box: the tees within a stair's reach turn their stairs to the paths as they now are (T127) */
+  private courseRoadsChanged(d: readonly number[]) {
+    const g = this.courseGrid; if (!g || !this.golf) return;
+    const R = STAIR_REACH, box = [d[0]! - R, d[1]! - R, d[2]! + R, d[3]! + R];
+    const i0 = Math.max(0, Math.floor((box[0]! - g.x0) / CELL_T)), i1 = Math.min(g.w, Math.ceil((box[2]! - g.x0) / CELL_T)), j0 = Math.max(0, Math.floor((box[1]! - g.y0) / CELL_T)), j1 = Math.min(g.h, Math.ceil((box[3]! - g.y0) / CELL_T));
+    let tee = false;
+    for (let j = j0; j < j1 && !tee; j++) for (let i = i0, k = j * g.w + i0; i < i1; i++, k++) if (g.surf[k] === SURF.tee) { tee = true; break; }
+    if (tee) this.sendCourseChunks(box);
   }
   /** each hole's playing line (back tee, aim points, pin) as flat tiles, for the fairway's mowing stripes */
   private holeLines(): Map<number, number[]> {
@@ -623,7 +648,7 @@ export class Game {
     this.cgWait = null; this.cgJob = true;
     const chunks: number[] = []; for (const k of w.chunks) chunks.push(Math.floor(k / 4096), k % 4096);
     const now = this.growMonth();
-    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()] }, (out, ms) => {
+    this.contour.chunks({ chunks, looks: this.courseLooks(), now, lines: [...this.holeLines()], paths: this.coursePaths() }, (out, ms) => {
       this.perf.courseJobMs = ms; this.perf.courseJobChunks = chunks.length / 2;
       const t0 = performance.now();
       this.cgJob = false;
@@ -965,6 +990,8 @@ export class Game {
     this.ground.grassArt = this.grassArt;
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
     this.ground.living = { on: this.groundVariety, debug: false };
+    try { const v = parseFloat(localStorage.getItem('capitalempire.slopeLight') ?? ''); if (Number.isFinite(v)) this.slopeLight = clampHeightLight(v); } catch { /* light.json's */ }
+    this.ground.slopeLight = this.slopeLight;
     try { const n = localStorage.getItem('capitalempire.night'); if (n) this.night = clampNight(JSON.parse(n)); } catch { /* the defaults */ }
     try { const d = JSON.parse(localStorage.getItem('capitalempire.townday') ?? 'null'); if (d && typeof d === 'object') this.townDay = { minutes: Math.min(30, Math.max(0.5, +d.minutes || 10)), traffic: Math.min(4, Math.max(0, Number.isFinite(+d.traffic) ? +d.traffic : 1)) }; } catch { /* the defaults */ }
     this.traffic.setTownDay(this.townDay.minutes, this.townDay.traffic);
@@ -1462,6 +1489,13 @@ export class Game {
     this.ground.setLiving(on, this.groundDebug); this.emit();
   }
   setGroundDebug(on: boolean) { this.groundDebug = on; this.ground.setLiving(this.groundVariety, on); this.emit(); }
+  /** the course height light's strength (T126): the gear menu's Slope light, 0 (off) to 2 (kept across reloads), else light.json's */
+  slopeLight = HEIGHT_LIGHT_STRENGTH;
+  setSlopeLight(v: number) {
+    this.slopeLight = clampHeightLight(v);
+    try { localStorage.setItem('capitalempire.slopeLight', String(this.slopeLight)); } catch { /* storage may be unavailable */ }
+    this.ground.setSlopeLight(this.slopeLight); this.emit();
+  }
   /** street lamps light the road: their reflection pools are part of the ground picture */
   syncLamps() {
     const pts = [...this.lampProps].map(p => ({ x: (p.x0 + p.x1) / 2, y: (p.y0 + p.y1) / 2 }));
@@ -1748,7 +1782,7 @@ export class Game {
     const ops = this.edit.commit(); this.lanes.update(this.net);
     this.ground.netOps(ops); this.traffic.netOps(ops);
     if (this.net.lastDirty) { const d = this.net.lastDirty; this.ground.invalidate([d[0] - 2, d[1] - 2, d[2] + 2, d[3] + 2], keepPrev, until); this.dropTownTrees(d[0], d[1], d[2], d[3]); }
-    if (this.net.lastDirty) { const hb = this.flattenRoadsIn(this.net.lastDirty); if (hb) this.courseHeightChanged(hb); }
+    if (this.net.lastDirty) { const hb = this.flattenRoadsIn(this.net.lastDirty); if (hb) this.courseHeightChanged(hb); this.courseRoadsChanged(this.net.lastDirty); }
     this.syncAutoProps(this.net.autoAdded, this.net.autoRemoved); this.syncPortals(); this.farmsUpdate(); this.scheduleBlockLawns();
     this.syncLamps(); if (this.parkDefs.length) this.syncParks(); this.parking.sync(); if (this.tollDefs.length) this.syncTolls(); if (this.busDefs.length) this.traffic.setBusRoutes(this.busDefs);
     this.scheduleSave(); this.emit();
