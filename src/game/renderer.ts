@@ -11,7 +11,7 @@ import { layOnGround } from './base-grass';
 import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
-import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
+import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type PatchTex } from './ground-protocol';
 import { DRAW_ORDER, SUN_DIR, WALL_DROP, WALL_SHADOW, WALL_TEX, faceLight, isOverlay, layerCode } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
@@ -21,7 +21,8 @@ import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
-import { CH_SIZE, CH_STEP, courseShadeInto } from './ext/course-height';
+import { CH_SIZE } from './ext/course-height';
+import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround } from './painted-ground';
 import { trimLru } from './painted-grass-lod';
 import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
@@ -181,8 +182,10 @@ export class GroundPainter {
   shade: Float32Array = new Float32Array(HS * HS);
   /** slope magnitude per height sample (bare rock on the steep faces) */
   slope: Float32Array = new Float32Array(HS * HS);
-  /** the course height (T027) and its sun-right shade, CH_SIZE² samples; any: some height is not 0 */
-  courseH = new Float32Array(CH_SIZE * CH_SIZE); courseShade = new Float32Array(CH_SIZE * CH_SIZE); courseAny = false;
+  /** the course height (T027), CH_SIZE² samples; any: some height is not 0. Its light is baked per chunk (heightLight, T126) */
+  courseH = new Float32Array(CH_SIZE * CH_SIZE); courseAny = false;
+  /** the course height light's strength (T126): light.json's, or the gear menu's Slope light (0 = off) */
+  slopeLight = HEIGHT_LIGHT_STRENGTH;
   waters: { w: Waterway; box: BBox }[] = [];
   /** lot ground patches by lot key, and a grid (LOT_CELL tiles) of the patches they cover, keyed by cell */
   lotPatches = new Map<string, LotPatch[]>();
@@ -192,10 +195,9 @@ export class GroundPainter {
   private isoPics = new WeakMap<Cnv, Cnv>();
   /** take a new terrain: classes, height samples and waterways */
   setTerrain(cls: Uint8Array, height: Float32Array, waters: Waterway[]) { this.terrain.set(cls); this.shade = shadeField(height); this.slope = slopeField(height); this.waters = waters.map(w => ({ w, box: waterBox(w.pts, 4) })); }
-  /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in, and its shade redone with a one-sample margin */
+  /** a sub-rect of the course height from the main thread (samples i0.., j0.., w by h, row-major): copied in (the chunks it lights re-bake) */
   setCourse(i0: number, j0: number, w: number, h: number, data: Float32Array) {
     for (let j = 0; j < h; j++) this.courseH.set(data.subarray(j * w, (j + 1) * w), (j0 + j) * CH_SIZE + i0);
-    courseShadeInto(this.courseH, this.courseShade, [i0 * CH_STEP, j0 * CH_STEP, (i0 + w) * CH_STEP, (j0 + h) * CH_STEP]);
     this.courseAny ||= data.some(v => v !== 0);
   }
   /** apply lot ground edits: each key in `set` replaces its patches, each key in `drop` loses them */
@@ -276,8 +278,8 @@ export class GroundPainter {
       if (p.course) { for (const l of p.course.layers) for (const [t, rings] of [...(l.collar ? [[l.collar.tex, l.collar.fill] as const] : []), [l.tex, l.fill] as const]) { if (!rings.length) continue; const path = new Path2D(); for (const q of rings) ringPath(path, q); ctx.fillStyle = this.planColour(t); ctx.fill(path, 'evenodd'); } this.planSeeded(ctx, p.course); continue; }
       ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts));
     }
-    // the course height's shade over the painted course (T028b): over the lot and paint fills, under the roads
-    if (this.courseAny) { const cs = courseShadeRGBA(this.courseShade, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25); if (cs) { const cb = this.buffer('small', cs.W, cs.H); ctx2d(cb).putImageData(new ImageData(cs.data as Uint8ClampedArray<ArrayBuffer>, cs.W, cs.H), 0, 0); ctx.setTransform(M); ctx.drawImage(cb, tx0, ty0, cs.W / 0.25, cs.H / 0.25); } }
+    // the course height's light over the painted course (T028b, T126): over the lot and paint fills, under the roads
+    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, 0.25); if (hl) this.heightLight(ctx, hl, M, W, H, L); ctx.setTransform(M); }
     const v = this.net.view(box), minW = 1.2 / (TILE_PX * L);
     const fill = (list: Feature[], col: string) => { ctx.strokeStyle = ctx.fillStyle = col; ctx.lineJoin = 'round'; for (const f of list) { ctx.lineCap = f.cap; if (f.kind === 'stroke') { ctx.lineWidth = Math.max(minW, f.w); ctx.stroke(f.path); } else ctx.fill(f.path); } };
     fill(v.walkF.filter(f => f.tex !== 'turf'), '#9a9184');
@@ -292,6 +294,58 @@ export class GroundPainter {
     for (let k = 0; k + 4 < b.length; k += 5) { if (b[k + 2] < tx0 || b[k] > tx1 || b[k + 3] < ty0 || b[k + 1] > ty1) continue; ctx.fillStyle = PLAN_BLOCK_COLOURS[b[k + 4] | 0] ?? PLAN_BLOCK_COLOURS[0]; ctx.fillRect(b[k], b[k + 1], b[k + 2] - b[k], b[k + 3] - b[k + 1]); }
     ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = Math.max(0.3, minW); ctx.strokeRect(0, 0, MAP, MAP);
     return cv;
+  }
+
+  /** the course height's light (T126, ext/course-height/light.ts) on the W x H chunk ctx draws at cache level L, whose tile to pixel matrix
+   *  is M, from its light grid g. All of it is canvas compositing on the GPU over the pixels the light touches, never a read-back (which
+   *  would stall the bake until the GPU caught up: 50-150 ms a chunk):
+   *  - the shade: the grid's shade picture multiplied in (a cool tint; the texture stays);
+   *  - the luminance masks (HL_MASK): the texels' luminance (a grey 'luminosity' copy) over its neighbourhood's mean (a blur of it, its edges
+   *    grown so the chunk's border has a neighbourhood too): q = L / mean by 'color-dodge' over 1 − mean; the lift's mask clamp(2 (q − 0.45))
+   *    by 'lighten' then 'difference' with a grey, doubled; the highlight's, clamp(4 (q − 1)), from max(0, L − mean) / mean, doubled twice;
+   *  - the lift: the texels times their mask times the lift picture, added ('lighter'): c × (1 + gain × mask);
+   *  - the highlight: its mask times the warm highlight picture, screened over ('screen') */
+  private heightLight(ctx: C2D, g: HeightLightGrid, M: DOMMatrix, W: number, H: number, L: number) {
+    const s = this.slopeLight; if (!(s > 0)) return;
+    const r = heightLightRect(g, M, W, H); if (!r) return;
+    const [x0, y0, x1, y1] = r, rw = x1 - x0, rh = y1 - y0, src = ctx.canvas as Cnv, pics = heightLightPictures(g, s);
+    /** a picture of the grid stretched over the rect (bilinear between the light points) onto g2, through M shifted to the rect */
+    const stretch = (g2: C2D, name: string, data: Uint8ClampedArray) => {
+      const p = this.buffer(name, g.w, g.h); ctx2d(p).putImageData(new ImageData(data as Uint8ClampedArray<ArrayBuffer>, g.w, g.h), 0, 0);
+      g2.setTransform(M.a, M.b, M.c, M.d, M.e - x0, M.f - y0); g2.imageSmoothingEnabled = true; g2.drawImage(p, g.x0, g.y0, g.w / g.res, g.h / g.res); g2.setTransform(1, 0, 0, 1, 0, 0);
+    };
+    /** a rect-sized buffer, filled with `fill` (opaque) or a copy of the chunk's rect */
+    const rect = (name: string, fill: string | null) => { const b = this.buffer(name, rw, rh), bg = ctx2d(b); if (fill) { bg.fillStyle = fill; bg.fillRect(0, 0, rw, rh); } else bg.drawImage(src, x0, y0, rw, rh, 0, 0, rw, rh); return { b, bg }; };
+    const op = (g2: C2D, o: GlobalCompositeOperation, draw: () => void) => { g2.globalCompositeOperation = o; draw(); g2.globalCompositeOperation = 'source-over'; };
+    // the shade, straight onto the chunk (the picture is white where nothing is shaded)
+    const sh = rect('hlShade', '#fff'); stretch(sh.bg, 'hlShadePic', pics.shade);
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(sh.b, x0, y0); ctx.restore();
+    // the luminance, its neighbourhood's mean (a Gaussian, on a copy grown by P px so the edges have one) and 1 − mean
+    const lum = rect('hlLum', '#808080'); op(lum.bg, 'luminosity', () => lum.bg.drawImage(src, x0, y0, rw, rh, 0, 0, rw, rh));
+    const sig = Math.max(1.5, LUMA_SIGMA_PER_L * L), P = Math.ceil(3 * sig) + 1;
+    const pad = this.buffer('hlPad', rw + 2 * P, rh + 2 * P), pg = ctx2d(pad); pg.imageSmoothingEnabled = true; pg.drawImage(lum.b, 0, 0, rw + 2 * P, rh + 2 * P); pg.drawImage(lum.b, P, P);
+    const mean = this.buffer('hlMean', rw + 2 * P, rh + 2 * P), mg = ctx2d(mean); mg.filter = `blur(${sig.toFixed(1)}px)`; mg.drawImage(pad, 0, 0); mg.filter = 'none';
+    const inv = rect('hlInv', '#fff'); op(inv.bg, 'difference', () => inv.bg.drawImage(mean, -P, -P));
+    // the lift's mask: q = min(1, L / mean), then clamp(2 (q − 0.45))
+    const grey = (v: number) => { const c = Math.round(v * 255); return `rgb(${c},${c},${c})`; };
+    const ml = rect('hlLiftMask', null); ml.bg.drawImage(lum.b, 0, 0);
+    op(ml.bg, 'color-dodge', () => ml.bg.drawImage(inv.b, 0, 0));
+    ml.bg.fillStyle = grey(HL_MASK.liftLo); op(ml.bg, 'lighten', () => ml.bg.fillRect(0, 0, rw, rh)); op(ml.bg, 'difference', () => ml.bg.fillRect(0, 0, rw, rh));
+    for (let k = HL_MASK.liftK; k > 1; k /= 2) op(ml.bg, 'lighter', () => ml.bg.drawImage(ml.b, 0, 0));
+    // the highlight's mask: max(0, L − mean) / mean = q − 1, then clamp(4 (q − 1))
+    const ms = rect('hlSpecMask', null); ms.bg.drawImage(lum.b, 0, 0);
+    op(ms.bg, 'lighten', () => ms.bg.drawImage(mean, -P, -P)); op(ms.bg, 'difference', () => ms.bg.drawImage(mean, -P, -P));
+    op(ms.bg, 'color-dodge', () => ms.bg.drawImage(inv.b, 0, 0));
+    for (let k = HL_MASK.specK; k > 1; k /= 2) op(ms.bg, 'lighter', () => ms.bg.drawImage(ms.b, 0, 0));
+    // the lift: c × mask × gain, added; then the highlight: mask × warm colour, screened (both pictures black where there is no light)
+    const lift = rect('hlLift', null), gain = rect('hlGain', '#000'); stretch(gain.bg, 'hlLiftPic', pics.lift);
+    op(lift.bg, 'multiply', () => { lift.bg.drawImage(ml.b, 0, 0); lift.bg.drawImage(gain.b, 0, 0); });
+    const warm = rect('hlGain', '#000'); stretch(warm.bg, 'hlSpecPic', pics.spec);
+    op(ms.bg, 'multiply', () => ms.bg.drawImage(warm.b, 0, 0));
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(lift.b, x0, y0);
+    ctx.globalCompositeOperation = 'screen'; ctx.drawImage(ms.b, x0, y0);
+    ctx.restore();
   }
 
   /** a top-down texture as it lies on the ground in the 2:1 view: the picture at half its height (exactly half, so each pixel is the mean of
@@ -461,8 +515,9 @@ export class GroundPainter {
     if (marks.length) { this.drawMarks(ctx, marks, L, M, box); ctx.setTransform(M); }
     // ---- 1a'. painted areas (the Paint tool) in id order: over the lot ground, under the bridges and roads
     if (paints.length) { this.drawPaints(ctx, paints, L, X0, Y0, M, Minv, box, lite); ctx.setTransform(M); }
-    // ---- 1a'''. the course height's sun-right shade over the painted course (T028b), under the car parks and roads
-    if (this.courseAny) { const cs = courseShadeRGBA(this.courseShade, tx0, ty0, bw, bh, sres); if (cs) { overlay(ctx, cs, sres); ctx.setTransform(M); } }
+    // ---- 1a'''. the course height's light (T028b, T126): its slopes lit by the sun at the upper right and shaded away from it, its steep rises'
+    //      cast shadows and its hollows' occlusion, over the grass, the lots and the painted course, under the living ground, car parks and roads
+    if (this.courseAny && this.slopeLight > 0) { const hl = heightLightGrid(this.courseH, box, lite ? 1 : 2); if (hl) this.heightLight(ctx, hl, M, W, H, L); ctx.setTransform(M); }
     // ---- 1a''''. the living ground (T111): grass variety from what stands here and its ambient occlusion, over the grass, the lots and the
     //      painted areas, under the car parks and roads
     if (this.living.on || this.living.debug) { this.drawLiving(ctx, L, lite, box, M, Minv, W, H, X0, Y0); ctx.setTransform(M); }

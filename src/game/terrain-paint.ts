@@ -58,19 +58,9 @@ export function shadeRGBA(shade: Float32Array, x0: number, y0: number, w: number
   return { data, W, H };
 }
 
-/** an RGBA overlay of the course height's shade alone (the same colours as shadeRGBA) over tiles [x0, x0+w) x [y0, y0+h) at res px per tile; null when nothing in the box is shaded (flat), so the caller can skip it */
-export function courseShadeRGBA(course: Float32Array, x0: number, y0: number, w: number, h: number, res: number): { data: Uint8ClampedArray; W: number; H: number } | null {
-  const W = Math.max(1, Math.ceil(w * res)), H = Math.max(1, Math.ceil(h * res));
-  const data = new Uint8ClampedArray(W * H * 4);
-  let any = false;
-  for (let v = 0; v < H; v++) for (let u = 0; u < W; u++) {
-    const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, k = (v * W + u) * 4;
-    if (tx < 0 || ty < 0 || tx >= MAP || ty >= MAP) continue; // off the map: no shade (clamped samples would streak)
-    shadePixel(data, k, sampleCourseGrid(course, tx, ty));
-    if (data[k + 3]! > 0) any = true;
-  }
-  return any ? { data, W, H } : null;
-}
+// The course height's own light (the Height tool's mounds and hollows) is not a flat overlay any more (T126): ext/course-height/light.ts and
+// renderer.ts heightLight composite it into the ground chunks, so its shade keeps the texture and its light lands on the texture's mid-tones
+// and lit tips, never in its dark gaps.
 
 /** one 3-tap box blur pass over a gw x gh grid, along x (dx=1) or y (dx=0), clamped at the edges */
 function boxPass(src: Float32Array, dst: Float32Array, gw: number, gh: number, horiz: boolean) {

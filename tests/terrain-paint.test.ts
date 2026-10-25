@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import { MAP } from '../src/game/iso';
 import { HS, TC, type WaterPoint } from '../src/game/terrain/types';
 import { makeNoise } from '../src/game/terrain/noise';
-import { CH_SIZE, courseShadeInto } from '../src/game/ext/course-height';
-import { shadeField, shadeRGBA, courseShadeRGBA, classAlpha, rockAlpha, waterShape, waterBox, woodlandTex, WOODLAND_TEX, type PathSink } from '../src/game/terrain-paint';
+import { CH_SIZE } from '../src/game/ext/course-height';
+import { shadeField, shadeRGBA, classAlpha, rockAlpha, waterShape, waterBox, woodlandTex, WOODLAND_TEX, type PathSink } from '../src/game/terrain-paint';
 import fs from 'node:fs';
 import { PRESETS, surfacePreset } from '../src/game/paint-presets';
 import { PAINT_TEXES, isPaintPhoto } from '../src/game/paint';
@@ -99,23 +99,6 @@ test('waterShape: arcs and quads, every quad winds the same way as the arcs', ()
 test('waterBox: the points grown by half the widest water plus pad', () => {
   const pts: WaterPoint[] = [{ x: 0, y: 0, w: 4 }, { x: 10, y: 5, w: 6 }];
   assert.deepEqual(waterBox(pts, 1), [-4, -4, 14, 9]);
-});
-
-test('courseShadeRGBA: null on an all-zero course (flat)', () => {
-  assert.equal(courseShadeRGBA(new Float32Array(CH_SIZE * CH_SIZE), 100, 100, 4, 4, 1), null);
-});
-
-test('courseShadeRGBA: shaded over a raised bump, null far from it', () => {
-  const h = new Float32Array(CH_SIZE * CH_SIZE);
-  for (let j = 0; j < CH_SIZE; j++) for (let i = 0; i < CH_SIZE; i++) h[j * CH_SIZE + i] = 1.5 * Math.exp(-((i - 250) ** 2 + (j - 250) ** 2) / (2 * 8 * 8));
-  const shade = new Float32Array(CH_SIZE * CH_SIZE);
-  courseShadeInto(h, shade, [470, 470, 530, 530]);
-  const over = courseShadeRGBA(shade, 480, 480, 40, 40, 1);
-  assert.ok(over, 'a box over the bump is shaded');
-  let alphaMax = 0;
-  for (let k = 3; k < over.data.length; k += 4) alphaMax = Math.max(alphaMax, over.data[k]!);
-  assert.ok(alphaMax > 0, 'some pixel has alpha > 0');
-  assert.equal(courseShadeRGBA(shade, 100, 100, 40, 40, 1), null);
 });
 
 test("the woodland floor paints with the Fescue: the preset for the course's fescue surface, else the owner's Fescue preset, else the old fescue photo", () => {
