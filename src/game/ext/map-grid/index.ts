@@ -20,15 +20,18 @@ import { TW } from '../../iso';
 export const MAP_GRID_KEY = 'capitalempire.mapGrid';
 /** a storage the setting reads and writes (localStorage fits; the tests pass a map) */
 export interface GridStore { getItem(k: string): string | null; setItem(k: string, v: string): void }
-/** whether the map grid starts on: the URL's ?grid=1 or ?grid=0 (the benchmark, a quick look), else the stored choice, else on in dev builds
- *  and off in production (the owner judges it in dev first) */
-export function loadMapGrid(store: GridStore | null, dev: boolean, query = ''): boolean {
+/** whether the map grid setting starts on: the URL's ?grid=1 or ?grid=0 (the benchmark, a quick look), else the stored choice, else on.
+ *  The grid only shows while a build or paint tool is in hand (gridShown; the owner, 2026-10-25: "only have the game grid when you are
+ *  in a paint or build mode"), so it is on by default everywhere; `dev` is kept for callers and tests */
+export function loadMapGrid(store: GridStore | null, _dev: boolean, query = ''): boolean {
   const q = new URLSearchParams(query).get('grid');
   if (q === '1' || q === '0') return q === '1';
   let v: string | null = null;
   try { v = store?.getItem(MAP_GRID_KEY) ?? null; } catch { /* storage may be unavailable */ }
-  return v === '1' ? true : v === '0' ? false : dev;
+  return v === '1' ? true : v === '0' ? false : true;
 }
+/** whether the map grid is drawn now: the setting is on and a build or paint tool is in hand (never in Select, where you look and inspect) */
+export function gridShown(on: boolean, tool: string): boolean { return on && tool !== 'select'; }
 /** remembers the map grid choice */
 export function saveMapGrid(store: GridStore | null, on: boolean): void {
   try { store?.setItem(MAP_GRID_KEY, on ? '1' : '0'); } catch { /* storage may be unavailable */ }
