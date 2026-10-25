@@ -1075,8 +1075,16 @@ export class GroundPainter {
     const wallsOver = new Map<number, CourseWall[]>(), banksAt = new Map<number, CourseWall[]>(), rimsOn = new Map<number, CourseRim[]>(), allWalls = cs.flatMap(c => c.walls ?? []);
     const rankOf = (code: number) => DRAW_ORDER.indexOf(code), firstOf = (s: number) => DRAW_ORDER.find(c => c >> 1 === s) ?? -1;
     const push = <T>(m: Map<number, T[]>, k: number, v: T) => { const l = m.get(k); if (l) l.push(v); else m.set(k, [v]); };
+    /** whether a run's face (and its shadow) can reach this ground chunk's box: a bank's or a rock face's runs elsewhere in the course
+     *  chunks are skipped (they are many small shapes: stones, steps) */
+    const near = (w: CourseWall) => {
+      const p = w.p; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, dh = 0;
+      for (let i = 0; i + 2 < p.length; i += 3) { const x = p[i]!, y = p[i + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (p[i + 2]! > dh) dh = p[i + 2]!; }
+      const g = dh * ((w.r ?? 0) + WALL_DROP + 1) + 0.3; // the foot (out and down), a cast shadow, the stairs' flight
+      return x1 + g >= r[0]! && x0 - g <= r[2]! && y1 + g >= r[1]! && y0 - g <= r[3]!;
+    };
     for (const c of cs) {
-      for (const w of c.walls ?? []) { const at = w.f ? firstOf(w.hs ?? 0) : -1; if (at >= 0 && (w.lo === 0 || rankOf(w.lo) < rankOf(at))) push(banksAt, at, w); else push(wallsOver, w.lo, w); }
+      for (const w of c.walls ?? []) { if (w.f && !near(w)) continue; const at = w.f ? firstOf(w.hs ?? 0) : -1; if (at >= 0 && (w.lo === 0 || rankOf(w.lo) < rankOf(at))) push(banksAt, at, w); else push(wallsOver, w.lo, w); }
       for (const q of c.rims ?? []) push(rimsOn, q.hi, q);
     }
     // the tees' stairs, each once (every chunk a tee touches carries them)
@@ -1105,7 +1113,7 @@ export class GroundPainter {
       if (wl.length) this.courseWalls(ctx, wl, L, M, Minv, X0, Y0, lite, clip, shadeOf);
       // a tee's rock runs on down its cut face into a bunker (T127): the face's top share, the tee's height above the rough, in rock
       const lip = -(SURF_HEIGHT[SURF.bunker] ?? 0);
-      for (const w of wl) if (w.m === WallMat.Sand && w.hs === SURF.tee) {
+      for (const w of wl) if (w.m === WallMat.Sand && w.hs === SURF.tee && near(w)) {
         const q = Float32Array.from(w.p); for (let i = 2; i < q.length; i += 3) q[i] = Math.max(0, q[i]! - lip);
         if (q.some((v, i) => i % 3 === 2 && v > 0.05)) bk.push({ p: q, lo: w.lo, m: WallMat.Turf, hs: SURF.tee, f: FaceForm.Rock, r: 0 });
       }

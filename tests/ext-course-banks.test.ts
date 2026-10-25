@@ -174,9 +174,9 @@ test('7. the Height slider in the Paint tool: per raised surface, clamped, remem
   const g = makeGrid(0, 0, 200, 200), st = { looks: 0 };
   const host: PaintHost = {
     setLotGround() {}, emit() {}, save() {}, toast() {}, affine: o => { o[0] = 0; o[1] = 0; o[2] = 32; o[3] = 0; o[4] = 0; o[5] = 32; },
-    placeProps: () => 0, golfMode: () => true, currentMonth: () => 0, money: () => 1e7, spend() {},
+    placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [], golfMode: () => true, currentMonth: () => 0, money: () => 1e7, spend() {},
     grid: () => g, gridChanged() {}, changed() {}, ownedAt: () => true, courseLook: () => { st.looks++; },
-  } as PaintHost;
+  };
   const tool = new PaintTool(host);
   tool.enterCourse();
   assert.equal(tool.surfaceHeight('tee'), SURF_HEIGHT[TEE], 'the tee starts at the default 0.6 m');
