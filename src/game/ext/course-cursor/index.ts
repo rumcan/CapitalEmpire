@@ -21,6 +21,9 @@
 // - words: none by the disc at rest; only the drag total ("6 cells · $12"), a refusal with its reason, or money short sit beside it. The
 //   hint pill (CourseCursor.hint) says what a click does ("Painting Fairway · Hole 1 · $2 a cell", or "starts Hole 2" when that hole has
 //   nothing yet), then the state's words; the App adds the switch and stop keys (1–7, Esc) and the same disc mark (ui/course/SurfaceMark).
+// T125: Rub out takes every course surface under the brush back to rough (grass for the rough brush): the dashed footprint is exactly the
+//   cells it takes back, the cells the land refuses (off your land, the driving range) are hatched as when painting, and the pill reads
+//   "Rub out · 16 cells back to rough".
 // Speed: the chip and its shadow are sprites cached per look and dpr (the chip's size never changes with the zoom); a footprint is worked out
 // once per cell the dab sits on and its outline once per shape (LRU, by its cells relative to the anchor cell); the grid's fade is one cached
 // gradient. A frame where the pointer stays in its cell allocates nothing.
@@ -42,7 +45,7 @@ export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles'>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles'>;
 /** the camera, filled in by the engine each frame (one object, reused): device px per world px (ze = zoom x dpr), the world px at the
  *  overlay's centre (camX, camY), the overlay's size in device px (cw, ch) and the dpr */
 export interface CursorView { ze: number; camX: number; camY: number; cw: number; ch: number; dpr: number }
@@ -794,7 +797,7 @@ export class CourseCursor {
   }
 
   /** the words' inputs at their last build (the words are built again only when one changes, so a still frame makes no string) */
-  private wk = { kind: '', drag: false, erase: false, brush: '', mode: '', hole: 0, fresh: false, unit: 0, n: 0, kept: 0, ref: 0, whyK: '', whyR: '', price: 0, money: 0, cells: 0, spent: 0 };
+  private wk = { kind: '', drag: false, erase: false, brush: '', mode: '', hole: 0, fresh: false, unit: 0, n: 0, kept: 0, ref: 0, whyK: '', whyR: '', price: 0, money: 0, cells: 0, spent: 0, grid: false, only: false };
   /** the state's words: the hint pill (what a click does: "Painting Fairway · Hole 1 · $2 a cell", or "starts Hole 2" when that hole has
    *  nothing yet, then the state's words) and the lines beside the disc (only the drag total, a refusal with its reason, or money short);
    *  n: the cells a click lays (-1: unknown), kept and ref: the cells it keeps and refuses with their main reasons, price: what it costs ($;
@@ -803,14 +806,17 @@ export class CourseCursor {
     const brush = tool.brushKind, mode = tool.mode, hole = tool.brushHole, surf = LOOKS[brush]?.surf ?? 0, fresh = surf > 0 && this.isNewHole(tool);
     const unit = this.golf && !erase && surf > 0 ? unitBuildCost(SURF_SURFACE[surf] ?? 'other', tool.plantKind) : -1;
     const cells = drag ? tool.strokeCells : 0, spent = drag ? Math.round(tool.strokeSpent) : 0, m = kind === 'short' ? Math.round(money) : 0;
+    const grid = this.feet.grid, only = !!tool.rubHoleOnly;
     const w = this.wk;
     if (w.kind === kind && w.drag === drag && w.erase === erase && w.brush === brush && w.mode === mode && w.hole === hole && w.fresh === fresh && w.unit === unit && w.n === n && w.kept === kept
-      && w.ref === ref && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.cells === cells && w.spent === spent) return;
-    w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.mode = mode; w.hole = hole; w.fresh = fresh; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent;
+      && w.ref === ref && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.cells === cells && w.spent === spent && w.grid === grid && w.only === only) return;
+    w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.mode = mode; w.hole = hole; w.fresh = fresh; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent; w.grid = grid; w.only = only;
     const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
     // the hole a click joins: a cart path belongs to no hole; a hole with nothing yet is started by the stroke
     const joins = surf > 0 ? (fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
-    const base = `${verb} ${name}${joins}${unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
+    // a rub out on the course grid (T125) takes every course surface under it back to rough (grass for the rough brush), whatever the brush
+    const rub = erase && grid && surf > 0, rubBase = `Rub out${only ? ` · Hole ${hole} only` : ''}`;
+    const base = rub ? rubBase : `${verb} ${name}${joins}${unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
     s.label.length = 0; s.bad.length = 0;
     // the drag total: the cells the stroke has laid and what they cost
     if (drag && cells > 0) { s.label.push(erase ? `${cellsOf(cells)} back to ${back}` : this.golf ? `${cellsOf(cells)} · ${money$(spent)}` : cellsOf(cells)); s.bad.push(false); }
@@ -818,13 +824,14 @@ export class CourseCursor {
     switch (kind) {
       case 'protected': hint = `${base} · ${cellsOf(kept)} kept: ${lower(whyK)}`; break;
       case 'refused': hint = `${base} · ${cellsOf(ref)} refused: ${lower(whyR)}`; break;
-      case 'nochange': hint = erase ? `Erasing ${lower(name)} · Hole ${hole} · no ${lower(name)} of this hole here` : `${verb} ${name}${joins} · already ${lower(name)} here${this.golf ? ' · $0' : ''}`; break;
-      case 'erase': hint = `Erasing ${lower(name)}${surf > 0 ? ` · Hole ${hole}` : ''}${n >= 0 ? ` · ${cellsOf(n)}` : ''}${surf > 0 ? ` back to ${back}` : ''}${this.golf ? ' · no refund' : ''}`; break;
+      case 'nochange': hint = rub ? `${rubBase} · nothing to rub out here` : `${verb} ${name}${joins} · already ${lower(name)} here${this.golf ? ' · $0' : ''}`; break;
+      case 'erase': hint = rub ? `${rubBase} · ${n >= 0 ? `${cellsOf(n)} ` : ''}back to ${back}${this.golf ? ' · no refund' : ''}`
+        : `Erasing ${lower(name)}${surf > 0 ? ` · Hole ${hole}` : ''}${n >= 0 ? ` · ${cellsOf(n)}` : ''}${surf > 0 ? ` back to ${back}` : ''}${this.golf ? ' · no refund' : ''}`; break;
       case 'short': hint = `${verb} ${name}${joins} · ${money$(price)} · you have ${money$(m)}`; break;
     }
     // a refusal with its reason, or money short, by the disc
     if (kind === 'short') { s.label.push(`${name} · ${money$(price)} · you have ${money$(m)}`); s.bad.push(true); }
-    else if (ref > 0 && !erase) { s.label.push(n > 0 ? `${cellsOf(ref)}: ${lower(whyR)}` : whyR); s.bad.push(true); }
+    else if (ref > 0) { s.label.push(n > 0 ? `${cellsOf(ref)}: ${lower(whyR)}` : whyR); s.bad.push(true); }
     this.setHint(hint);
   }
 
@@ -853,15 +860,16 @@ export class CourseCursor {
     // the dab's middle and size: the square brush's n x n cells (T109), or the round brush on the nearest cell corner (T108)
     const x = n ? (squareStart(cx, n) + n / 2) * CELL_T : snapDab(cx), y = n ? (squareStart(cy, n) + n / 2) * CELL_T : snapDab(cy), size = n ? (n * CELL_T) / 2 : r;
     this.drawGrid(ctx, v, x, y, size);
-    const f = this.feet, fp = f.at(n ? cx : x, n ? cy : y, r, base.surf, this.env.why, this.env.rev?.() ?? 0, this.env.refuse, n, this.env.cost);
+    const f = this.feet, fp = f.at(n ? cx : x, n ? cy : y, r, base.surf, this.env.why, (this.env.rev?.() ?? 0) * 2 + (tool.rubHoleOnly ? 1 : 0), this.env.refuse, n, this.env.cost);
     if (f.grid && !erase) this.golf = f.price >= 0;
-    // on the course grid a rub out gives back rough (plain grass for rough): the footprint and the chip show what you get back
+    // on the course grid a rub out gives back rough (plain grass for rough): the footprint and the chip show what you get back; its cells are
+    // exactly the ones it takes back (T125: every course surface), and the cells the land rules refuse show as refused, as when painting
     const grid = f.grid, look = erase ? (grid ? backLook(tool.brushKind) : base) : base;
-    const nKept = grid && !erase ? fp.kept.length >> 1 : 0, nRef = grid && !erase ? fp.refused.length >> 1 : 0, price = f.price >= 0 ? Math.round(f.price) : -1;
+    const nKept = grid && !erase ? fp.kept.length >> 1 : 0, nRef = grid ? fp.refused.length >> 1 : 0, price = f.price >= 0 ? Math.round(f.price) : -1;
     const money = this.env.money?.() ?? Infinity;
     let kind: CursorStateKind;
     if (!grid) kind = erase ? 'erase' : 'ready';
-    else if (erase) kind = f.count ? 'erase' : 'nochange';
+    else if (erase) kind = f.count ? 'erase' : nRef ? 'refused' : 'nochange';
     else if (price > 0 && money < price) kind = 'short';
     else if (nRef) kind = 'refused';
     else if (!f.fresh && !nKept && !this.pressed) kind = 'nochange'; // a drag lays the cells under the pointer itself: still "as ready"
@@ -930,8 +938,8 @@ export class CourseCursor {
       if (kind !== 'nochange') { ctx.fillStyle = m.flash > 0 ? look.core : look.fill; ctx.globalAlpha = TINT_A + 0.3 * m.flash; ctx.fill('evenodd'); }
       this.edge(ctx, look.core, d, erase ? D.dashed : D.none, kind === 'nochange' ? 0.7 : EDGE_A);
     }
-    if (!grid || erase) return;
-    if (fp.keptLoops.length) {
+    if (!grid) return;
+    if (!erase && fp.keptLoops.length) {
       // protected: the cells a higher surface keeps, dotted
       this.loopsPath(ctx, fp.keptLoops, ox, oy, v);
       ctx.lineCap = 'round'; ctx.setLineDash(D.dot);

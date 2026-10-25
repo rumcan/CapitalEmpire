@@ -767,13 +767,14 @@ export function planChanges(
   return acc.done();
 }
 
-/** a growing diff (typed arrays, doubled when full) */
+/** a growing diff (typed arrays, doubled when full); every cell it writes loses its carve flag (T125: laying a hole over a rubbed-out cell
+ *  paints it again) */
 class DiffAcc {
   n = 0;
-  idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array;
+  idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array; c0: Uint8Array;
   constructor(readonly g: Grid, cap: number) {
     this.idx = new Uint32Array(cap); this.s0 = new Uint8Array(cap); this.h0 = new Uint8Array(cap); this.m0 = new Uint16Array(cap);
-    this.s1 = new Uint8Array(cap); this.h1 = new Uint8Array(cap); this.m1 = new Uint16Array(cap);
+    this.s1 = new Uint8Array(cap); this.h1 = new Uint8Array(cap); this.m1 = new Uint16Array(cap); this.c0 = new Uint8Array(cap);
   }
   push(i: number, s0: number, h0: number, m0: number, s1: number, h1: number, m1: number): void {
     if (this.n === this.idx.length) {
@@ -781,10 +782,10 @@ class DiffAcc {
       const grow = <T extends Uint32Array | Uint16Array | Uint8Array>(a: T, b: T): T => { b.set(a); return b; };
       this.idx = grow(this.idx, new Uint32Array(c)); this.s0 = grow(this.s0, new Uint8Array(c)); this.h0 = grow(this.h0, new Uint8Array(c));
       this.m0 = grow(this.m0, new Uint16Array(c)); this.s1 = grow(this.s1, new Uint8Array(c)); this.h1 = grow(this.h1, new Uint8Array(c));
-      this.m1 = grow(this.m1, new Uint16Array(c));
+      this.m1 = grow(this.m1, new Uint16Array(c)); this.c0 = grow(this.c0, new Uint8Array(c));
     }
     const k = this.n++;
-    this.idx[k] = i; this.s0[k] = s0; this.h0[k] = h0; this.m0[k] = m0; this.s1[k] = s1; this.h1[k] = h1; this.m1[k] = m1;
+    this.idx[k] = i; this.s0[k] = s0; this.h0[k] = h0; this.m0[k] = m0; this.s1[k] = s1; this.h1[k] = h1; this.m1[k] = m1; this.c0[k] = this.g.carve?.[i] ?? 0;
   }
   /** the diff, its arrays cut to length */
   done(): GridDiff {
@@ -792,7 +793,7 @@ class DiffAcc {
     return {
       x0: g.x0, y0: g.y0, w: g.w, n,
       idx: this.idx.slice(0, n), s0: this.s0.slice(0, n), h0: this.h0.slice(0, n), m0: this.m0.slice(0, n),
-      s1: this.s1.slice(0, n), h1: this.h1.slice(0, n), m1: this.m1.slice(0, n),
+      s1: this.s1.slice(0, n), h1: this.h1.slice(0, n), m1: this.m1.slice(0, n), c0: this.c0.slice(0, n), c1: new Uint8Array(n),
     };
   }
 }
@@ -817,7 +818,7 @@ export function planClear(g: Grid, plan: HolePlan, hole: number, allow?: (i: num
   return {
     x0: g.x0, y0: g.y0, w: g.w, n,
     idx: Uint32Array.from(idx), s0: Uint8Array.from(s0), h0: new Uint8Array(n).fill(hole), m0: Uint16Array.from(m0),
-    s1: new Uint8Array(n), h1: new Uint8Array(n), m1: new Uint16Array(n),
+    s1: new Uint8Array(n), h1: new Uint8Array(n), m1: new Uint16Array(n), c0: Uint8Array.from(idx, i => g.carve?.[i] ?? 0), c1: new Uint8Array(n),
   };
 }
 
@@ -838,6 +839,7 @@ export function planDiff(
   for (let k = 0; k < d.n; k++) {
     const i = d.idx[k]!;
     g.surf[i] = d.s1[k]!; g.hole[i] = d.h1[k]!; g.month[i] = d.m1[k]!;
+    if (g.carve) g.carve[i] = 0;
   }
   g.rev++;
   return d;
