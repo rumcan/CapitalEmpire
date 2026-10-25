@@ -15,7 +15,7 @@ import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shade
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type PatchTex } from './ground-protocol';
 import { DRAW_ORDER, SUN_DIR, WALL_DROP, WALL_SHADOW, WALL_TEX, faceLight, isOverlay, layerCode } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
-import { SURF_GROW_MONTHS } from './ext/course-fx';
+import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
@@ -273,7 +273,7 @@ export class GroundPainter {
     const lotAll = this.lotsIn(box).filter(p => !p.top), paintsP = lotAll.filter(p => p.paint || p.course).sort((a, b) => paintZ(a) - paintZ(b));
     for (const p of [...lotAll.filter(p => !p.paint && !p.course && p.tex !== 'marks' && !(p.lawn && p.lawn.share < 1)), ...paintsP]) {
       // a course chunk: each surface's collar band and fill rings in their flat planner colours (even-odd)
-      if (p.course) { for (const l of p.course.layers) for (const [t, rings] of [...(l.collar ? [[l.collar.tex, l.collar.fill] as const] : []), [l.tex, l.fill] as const]) { if (!rings.length) continue; const path = new Path2D(); for (const q of rings) ringPath(path, q); ctx.fillStyle = this.planColour(t); ctx.fill(path, 'evenodd'); } continue; }
+      if (p.course) { for (const l of p.course.layers) for (const [t, rings] of [...(l.collar ? [[l.collar.tex, l.collar.fill] as const] : []), [l.tex, l.fill] as const]) { if (!rings.length) continue; const path = new Path2D(); for (const q of rings) ringPath(path, q); ctx.fillStyle = this.planColour(t); ctx.fill(path, 'evenodd'); } this.planSeeded(ctx, p.course); continue; }
       ctx.fillStyle = planFill(p.tex); ctx.fill(polyPath(p.pts));
     }
     // the course height's shade over the painted course (T028b): over the lot and paint fills, under the roads
@@ -863,6 +863,8 @@ export class GroundPainter {
   private blendMasks = new Map<string, Cnv>();
   /** the course dirt's stage image (courseDirt), kept between chunks */
   private dirtImg: ImageData | null = null;
+  /** the young grass's pattern squares by surface id and px a tile (sproutPattern) */
+  private sprouts = new Map<number, Cnv>();
   /** a tileable mask of soft patches (the map grass's mix: B where the low-frequency noise is past 1 - share, blended over +-soft) */
   private blendMask(share: number, soft: number) {
     const key = `${share.toFixed(2)},${soft.toFixed(2)}`; let m = this.blendMasks.get(key);
@@ -945,14 +947,15 @@ export class GroundPainter {
    *  - a collar band: its outward feather (its soft runs only), its fill (a pond's bank then its wet soil and stones), its lit top edges;
    *  - a surface, its top: 1. a sunken surface's floor shade (paint-edges' field images, light from the upper right); 2. its outward
    *    feather: its soft runs stroked in its own texture at FEATHER_STEPS widths, widest first (a linear fade, unclipped; the fill covers the
-   *    inner half); 3. its fill: the rings, even-odd; 4. the dirt of seeded cells through the growth mask times the soft-patch noise
+   *    inner half); 3. its fill: the rings, even-odd; 4. the dirt of seeded cells and their young grass through the growth mask x the soft-patch noise
    *    (COURSE_DIRT); 5. the floor shade's light and dark rims; 6. its joint runs: a crisp mowing line where it meets its own collar (the
    *    kerb's joint); 7. its lit top edges (courseRims: a soft painted light along its edges whose step faces the sun at the upper right);
    *    8. last on its top, the mowing stripes (courseStripes, clipped to its rings: COURSE_STRIPES, off until T075 lands);
    *  - then the walls hanging over that layer (courseWalls), so every layer drawn later covers them where it overlaps and no wall crosses a
    *    later surface; the walls over the map grass go first of all.
    *  Edges that are walls or hidden under a later layer get no feather: they stay crisp, as a kerb's edge. No dark outline stroke. A district
-   *  (lite) chunk draws the fills, the collar fills and the walls in their light steps only (no feathers, shades, bands, edges or stripes) */
+   *  (lite) chunk draws the fills, the collar fills, the grow-in (the ground's state, never left out) and the walls in their light steps only
+   *  (no feathers, shades, bands, edges or stripes) */
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     /** a course texture as a fill style on g: the photo or preset in tile space (turned and scaled about the origin), else the screen texture */
@@ -1039,7 +1042,7 @@ export class GroundPainter {
         for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'source-over');                    // 1
         if (!lite) for (const { l } of ls) feather(l, l.soft ?? l.edges, f);                     // 2
         for (const { l } of ls) fill(l, l.fill);                                                   // 3
-        if (!lite && COURSE_DIRT && (SURF_GROW_MONTHS[s] ?? 0) > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4
+        if (COURSE_DIRT) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4: every tier, the grow-in is the ground's state (P23 D5.1)
         for (const q of ims) {                                                                     // 5
           // the light as a shine textured by the sand under it (T110: on its mid-tones and highlights only), the shade multiplied
           const im = q.im.light;
@@ -1275,23 +1278,63 @@ export class GroundPainter {
    *  top at the end, the only pattern allowed to repeat. Clip them to the layer's own rings (l.fill, even-odd): its top, never across the
    *  walls, which are drawn after this over the layers they hang over */
   private courseStripes(_ctx: C2D, _l: CourseLayer, _L: number, _M: DOMMatrix) { /* T075: light and dark bands along l.stripes, clipped to l.fill */ }
-  /** step 6 of a course layer: the soil over its seeded cells while they grow in (P21 3.4). The chunk's growth mask (1 px per cell, alpha =
-   *  1 - the grass share in quarters) is split by stage; each stage's cells take the dirt through the soft-patch noise (blendMask, the
-   *  same noise for every stage, so the grass comes in as patches that spread), inside the layer's rings */
+  /** a grow stage's cells of a course chunk as an alpha mask (1 px per cell; one ImageData kept and reused, chunk after chunk) on the 'small'
+   *  buffer */
+  private growStageMask(c: CoursePatch, d: GrowDraw): Cnv {
+    const n = Math.round(c.size / 0.5), grow = c.grow!, a = d.alpha;
+    const img = this.dirtImg?.width === n ? this.dirtImg : (this.dirtImg = new ImageData(n, n)), data = img.data;
+    for (let i = 0; i < n * n; i++) data[4 * i + 3] = grow[i] === a ? 255 : 0;
+    const m = this.buffer('small', n, n); ctx2d(m).putImageData(img, 0, 0);
+    return m;
+  }
+  /** the planner map's grow-in over a course chunk's flat fills (ctx in tile space): each seeded stage's cells in its surface's soil and
+   *  young grass mixed (seedColour), fading by stage as the grass comes in; the same stages the street and district chunks draw (growDraws) */
+  private planSeeded(ctx: C2D, c: CoursePatch) {
+    for (const d of growDraws(c)) {
+      const l = c.layers.find(q => q.s === d.s); if (!l) continue;
+      const clip = new Path2D(); for (const q of l.fill) ringPath(clip, q);
+      const m = this.growStageMask(c, d), mg = ctx2d(m);
+      mg.globalCompositeOperation = 'source-in'; mg.fillStyle = seedColour(d.look, this.planColour(DIRT_TEX)); mg.fillRect(0, 0, m.width, m.height);
+      ctx.save(); ctx.clip(clip, 'evenodd'); ctx.globalAlpha = d.alpha / 255; ctx.imageSmoothingEnabled = true; ctx.drawImage(m, c.cx * c.size, c.cy * c.size, c.size, c.size); ctx.restore();
+    }
+  }
+  /** a surface's young grass as a pattern on g at cache level L (course-fx/seed.ts seedSprouts: one SPROUT_PERIOD square, its sprouts
+   *  wrapped round its edges so it tiles), laid in tile space. The square is drawn at the chunk's own px a tile (sproutRes), so a district
+   *  chunk's sprouts are antialiased into the same mean colour a close chunk shows, never thinned out by a minified pattern */
+  private sproutPattern(g: C2D, d: GrowDraw, L: number): CanvasPattern | null {
+    const ppt = sproutRes(TILE_PX * L), key = d.s * 64 + ppt;
+    let cv = this.sprouts.get(key);
+    if (!cv) {
+      const P = SPROUT_PERIOD, S = P * ppt; cv = canvas(S, S); const sg = ctx2d(cv);
+      sg.scale(ppt, ppt); sg.lineCap = 'round';
+      for (const p of seedSprouts(d.look, d.s * 7919)) {
+        const dx = Math.cos(p.a) * p.len / 2, dy = Math.sin(p.a) * p.len / 2, rx = Math.abs(dx) + p.wid, ry = Math.abs(dy) + p.wid;
+        sg.strokeStyle = p.col; sg.lineWidth = p.wid;
+        // drawn again a period over where it crosses the square's edge
+        const xs = [0, ...(p.x - rx < 0 ? [P] : []), ...(p.x + rx > P ? [-P] : [])], ys = [0, ...(p.y - ry < 0 ? [P] : []), ...(p.y + ry > P ? [-P] : [])];
+        for (const ox of xs) for (const oy of ys) { sg.beginPath(); sg.moveTo(p.x + ox - dx, p.y + oy - dy); sg.lineTo(p.x + ox + dx, p.y + oy + dy); sg.stroke(); }
+      }
+      this.sprouts.set(key, cv);
+    }
+    const pat = g.createPattern(cv, 'repeat'); pat?.setTransform(new DOMMatrix().scaleSelf(1 / ppt, 1 / ppt));
+    return pat;
+  }
+  /** step 6 of a course layer: the soil over its seeded cells while they grow in (P21 3.4), with the surface's young grass coming up in it
+   *  (P23 D5.2: a seeded green, tee, fairway and rough each read as what they will be), on every zoom tier (growDraws: the same month looks
+   *  the same at every zoom, D5.1). The chunk's growth mask (1 px per cell, alpha = 1 - the grass share in quarters) is split by stage;
+   *  each stage's cells take the soil and sprouts through the soft-patch noise (blendMask, the same noise for every stage, so the grass comes
+   *  in as patches that spread), inside the layer's rings */
   private courseDirt(ctx: C2D, c: CoursePatch, l: CourseLayer, L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, r: number[]) {
-    const n = Math.round(c.size / 0.5), grow = c.grow!; if (grow.length !== n * n || !l.fill.length) return;
+    const draws = growDraws(c).filter(d => d.s === l.s); if (!draws.length) return;
     const clip = new Path2D(); for (const q of l.fill) ringPath(clip, q);
-    for (let st = 0; st < 4; st++) {
-      const a = Math.round(255 * (1 - st / 4)); let any = false;
-      for (let i = 0; i < n * n; i++) if (grow[i] === a) { any = true; break; }
-      if (!any) continue;
-      // the stage's cells as an alpha image (one ImageData kept and reused, chunk after chunk)
-      const img = this.dirtImg?.width === n ? this.dirtImg : (this.dirtImg = new ImageData(n, n)), data = img.data;
-      for (let i = 0; i < n * n; i++) data[4 * i + 3] = grow[i] === a ? 255 : 0;
-      const m = this.buffer('small', n, n); ctx2d(m).putImageData(img, 0, 0);
+    for (const d of draws) {
+      const st = d.stage, m = this.growStageMask(c, d);
       const b = this.buffer('courseDirt', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b);
       g.save(); g.setTransform(M); g.clip(clip, 'evenodd');
       g.fillStyle = isPaintPhoto(DIRT_TEX) ? this.paintPhoto(g, DIRT_TEX, L) : this.screenPattern(g, DIRT_TEX as TexName, L, X0, Y0, Minv); g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
+      // the young grass over the soil
+      const sp = this.sproutPattern(g, d, L);
+      if (sp) { g.fillStyle = sp; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }
       g.globalCompositeOperation = 'destination-in'; g.imageSmoothingEnabled = true; g.drawImage(m, c.cx * c.size, c.cy * c.size, c.size, c.size);
       if (st > 0) { const mask = this.blendMask(1 - st / 4, 0.12), mp = g.createPattern(mask, 'repeat')!; mp.setTransform(new DOMMatrix().scaleSelf(24 / mask.width, 24 / mask.width)); g.fillStyle = mp; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }
       g.restore();

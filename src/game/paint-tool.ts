@@ -50,6 +50,11 @@ function loadPlant(): Record<PlantBrushKind, PlantSet> {
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height' | 'plan';
 /** the golf holes a course has (the Course tool's hole strip) */
 export const HOLE_COUNT = 18;
+/** why the course cannot take a cell of your land (PaintHost.landWhy): the brush footprint's reason, and the New hole wizard's place for a
+ *  refused tee or green ("The tee is on the driving range") */
+export type LandRefusal = 'off' | 'range';
+export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here' };
+export const LAND_WHERE: Readonly<Record<LandRefusal, string>> = { off: 'off your land', range: 'on the driving range' };
 /** the studio's 18 preset holes (src/game/golf/hole-presets.json; null: an empty slot) */
 const STORED: (StoredHole | null)[] = Array.from({ length: HOLE_COUNT }, (_, i) => ((HOLE_PRESETS as { holes?: (StoredHole | null)[] }).holes?.[i] ?? null));
 /** the props an action added and removed (the engine's journal; opaque here), for undo */
@@ -118,6 +123,9 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   gridAreas?(): readonly GridArea[];
   /** whether tile (x, y) is on the golf game's owned land (the grid's cells outside it are never painted) */
   ownedAt?(x: number, y: number): boolean;
+  /** why the course cannot take tile (x, y) where ownedAt says no: 'off' your land, or the driving range's own plot ('range'); '' (or
+   *  missing) where it can. Only the refusal's words read it */
+  landWhy?(x: number, y: number): LandRefusal | '';
   /** the golf game's hole plans (save tuples) and their setter: undo and redo carry them */
   plans?(): unknown[];
   setPlans?(p: unknown[]): void;
@@ -254,6 +262,7 @@ export class PaintTool {
     grid: () => this.courseGrid(),
     plans: () => decodePlans(this.host.plans?.()),
     allow: i => { const g = this.host.grid?.(), own = this.host.ownedAt; if (!g || !own) return true; const c = cellCentre(g, i); return own(c.x, c.y); },
+    whereAt: (x, y) => LAND_WHERE[this.host.landWhy?.(x, y) || 'off'],
     month: () => plantMonth(this.plantKind, this.host.currentMonth?.()),
     price: s => (this.host.golfMode?.() ? unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind) : 0),
     money: () => (this.host.golfMode?.() ? this.host.money?.() ?? 0 : Infinity),
@@ -543,7 +552,7 @@ export class PaintTool {
     return (x, y) => {
       const i = cellAt(g, x, y); if (i < 0) return 'Off the course land';
       if (erase) return g.surf[i] !== s || g.hole[i] !== h ? 'Another surface or hole' : '';
-      if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return 'Not your land'; }
+      if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return LAND_WHY[this.host.landWhy?.(c.x, c.y) || 'off']; }
       const top = g.surf[i]!, nm = SURF_SURFACE[top]; return top > s ? `${nm ? nm[0]!.toUpperCase() + nm.slice(1) : 'A higher surface'} stays on top` : '';
     };
   }
