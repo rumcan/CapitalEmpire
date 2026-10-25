@@ -42,6 +42,21 @@ scratchpad (it lives on C:). Worktrees go under `E:\Repos\CapitalEmpire\.claude\
 this already); temp and bulky files under `E:\ClaudeTemp`; the npm cache is `E:\npm-cache`. Remove your worktree
 (`git worktree remove`) once its PR is merged. D: and E: have room; check `df -h /c /d /e` before anything big.
 
+## Stop what you started when you are done (the owner, 2026-10-25)
+
+Every AI (lead, coders, runners, art and other sessions) stops its own background work the moment it no longer needs it, and before
+it reports back. This includes:
+- dev servers (`npm run dev`, `vite`, `vite preview`, static servers) and the `npm`/`cmd` and `esbuild --service` processes behind them;
+- `node --test`, builds, gates, the bench and headless browsers;
+- watch loops, and anything you started with `run_in_background` or a preview tool.
+Never leave a server idling for later.
+- **The owner's own servers** (the game on 5174 and the studio on 5191, from `worktrees/theme-consistency`) are theirs: leave them alone
+  unless they say otherwise.
+- **Before your final report:** list what you started, check nothing of yours is still listening (PowerShell
+  `Get-NetTCPConnection -State Listen` on your port, `Get-CimInstance Win32_Process -Filter "Name='node.exe'"`), and say in the
+  report that it is stopped.
+- **Finished worktrees** go too (`git worktree remove`) once their PR is merged.
+
 ## Project facts
 
 - **The game is a golf events manager** (the owner's pivot, 2026-10-21): the design is `docs/GOLF-PLAN.md`, the art list
