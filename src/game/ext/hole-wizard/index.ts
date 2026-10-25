@@ -92,6 +92,9 @@ export interface WizardHost {
   plans(): readonly HolePlan[];
   /** whether the plan may lay grid cell i (owned land, not the range plot); missing = every cell */
   allow?(i: number): boolean;
+  /** where a tee or green at tile (x, y) that allow refuses stands, for Build's reason ("The tee is <where>"): 'off your land' (the default)
+   *  or 'on the driving range' */
+  whereAt?(x: number, y: number): string;
   /** the month value new cells get (course-grid/areas plantMonth) */
   month(): number;
   /** what a cell of surface s costs ($) */
@@ -384,8 +387,9 @@ export class HoleWizard {
   check(): { ok: boolean; why: string; ghost: WizardGhost | null } {
     const gh = this.step === 'shape' ? this.ghost() : null;
     if (!gh) return { ok: false, why: this.step === 'shape' ? 'No course here' : 'Click the tee, then the green', ghost: null };
-    if (!gh.teeOk) return { ok: false, why: 'The tee is off your land', ghost: gh };
-    if (!gh.greenOk) return { ok: false, why: 'The green is off your land', ghost: gh };
+    const where = (p: Pt | undefined) => (p && this.host.whereAt?.(p.x, p.y)) || 'off your land';
+    if (!gh.teeOk) return { ok: false, why: `The tee is ${where(this.plan?.tee)}`, ghost: gh };
+    if (!gh.greenOk) return { ok: false, why: `The green is ${where(this.plan?.green)}`, ghost: gh };
     const money = this.host.money();
     if (gh.cost > money) return { ok: false, why: `Not enough money: $${gh.cost.toLocaleString()} (you have $${Math.round(money).toLocaleString()})`, ghost: gh };
     if (!gh.diff.n && !this.dirty) return { ok: false, why: 'Nothing to change', ghost: gh };

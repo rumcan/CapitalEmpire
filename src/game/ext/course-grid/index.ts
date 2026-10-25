@@ -150,6 +150,25 @@ export function growGrid(g: Grid, x0: number, y0: number, w: number, h: number):
   return ng;
 }
 
+/** the grid box a golf game's land needs (land: tile rects [x, y, w, h], the course and its parcels), grown to hold extra (a tile box x0, y0,
+ *  x1, y1: painted areas a migration lays in), as x0, y0 (tiles) and w, h (cells): the bounds plus pad tiles, kept on the map (0..map); null
+ *  with no land */
+export function landGridBox(land: readonly (readonly number[])[], pad: number, map: number, extra?: readonly number[] | null): [number, number, number, number] | null {
+  if (!land.length) return null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y, w, h] of land) { x0 = Math.min(x0, x!); y0 = Math.min(y0, y!); x1 = Math.max(x1, x! + w!); y1 = Math.max(y1, y! + h!); }
+  if (extra) { x0 = Math.min(x0, extra[0]!); y0 = Math.min(y0, extra[1]!); x1 = Math.max(x1, extra[2]!); y1 = Math.max(y1, extra[3]!); }
+  x0 = Math.max(0, Math.floor(x0 - pad)); y0 = Math.max(0, Math.floor(y0 - pad)); x1 = Math.min(map, Math.ceil(x1 + pad)); y1 = Math.min(map, Math.ceil(y1 + pad));
+  return [x0, y0, Math.round((x1 - x0) / CELL_T), Math.round((y1 - y0) / CELL_T)];
+}
+/** grid g grown (growGrid) to also hold box b (x0, y0 tiles, w, h cells: landGridBox), or null when g already holds it (bought land inside
+ *  the grid's margin) */
+export function fitGrid(g: Grid, b: readonly [number, number, number, number]): Grid | null {
+  const x0 = Math.min(g.x0, b[0]), y0 = Math.min(g.y0, b[1]), x1 = Math.max(g.x0 + g.w * CELL_T, b[0] + b[2] * CELL_T), y1 = Math.max(g.y0 + g.h * CELL_T, b[1] + b[3] * CELL_T);
+  if (x0 === g.x0 && y0 === g.y0 && x1 === g.x0 + g.w * CELL_T && y1 === g.y0 + g.h * CELL_T) return null;
+  return growGrid(g, x0, y0, Math.round((x1 - x0) / CELL_T), Math.round((y1 - y0) / CELL_T));
+}
+
 /** the save of a grid (see GridSave): a few tens of kB for a full course, since most cells repeat their neighbour */
 export function encodeGrid(g: Grid): GridSave {
   return { v: 1, x0: g.x0, y0: g.y0, w: g.w, h: g.h, s: rle(g.surf), hl: rle(g.hole), m: rle(g.month) };

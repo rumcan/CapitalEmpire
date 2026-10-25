@@ -112,6 +112,44 @@ export function isAdjacentBlock(parcels: readonly Rect[], candidate: Rect): bool
   return false;
 }
 
+/** the side of a block of land for sale, tiles (80 m) */
+export const LAND_BLOCK = 40;
+
+/** the length (tiles) of the boundary two non-overlapping Rects share (0: apart, or touching at a corner only) */
+export function sharedEdge(a: Rect, b: Rect): number {
+  if (!validRect(a) || !validRect(b) || rectsOverlap(a, b)) return 0;
+  if (a[0] + a[2] === b[0] || b[0] + b[2] === a[0]) return Math.max(0, Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1]));
+  if (a[1] + a[3] === b[1] || b[1] + b[3] === a[1]) return Math.max(0, Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0]));
+  return 0;
+}
+
+/** the block for sale under tile point (x, y): a size x size block holding the point that touches the owned land along an edge and overlaps
+ *  none of it (isAdjacentBlock), inside the map (0..map); null when there is none. The blocks line up with the owned land itself: the
+ *  candidates sit on lattices anchored on every owned rect's edges (a range start's parcel lies off the map's 40-tile lattice, so blocks on
+ *  that lattice never touch it), then on the map's own lattice (old saves' blocks); the one sharing the longest edge with the owned land
+ *  wins, ties going to the earlier anchor (the first parcel's edges first) */
+export function blockAt(parcels: readonly Rect[], x: number, y: number, size = LAND_BLOCK, map = Infinity): Rect | null {
+  const ax: number[] = [], ay: number[] = [];
+  for (const r of parcels) if (validRect(r)) { ax.push(r[0], r[0] + r[2]); ay.push(r[1], r[1] + r[3]); }
+  if (!ax.length) return null;
+  ax.push(0); ay.push(0);
+  const snap = (v: number, a: number) => a + Math.floor((v - a) / size) * size;
+  let best: Rect | null = null, most = 0;
+  for (const a of ax) for (const b of ay) {
+    const c: Rect = [snap(x, a), snap(y, b), size, size];
+    if (c[0] < 0 || c[1] < 0 || c[0] + size > map || c[1] + size > map || !isAdjacentBlock(parcels, c)) continue;
+    let len = 0; for (const r of parcels) len += sharedEdge(r, c);
+    if (len > most) { best = c; most = len; }
+  }
+  return best;
+}
+
+/** whether a block holds water (unbuildable land), by isWater(x, y) on every step-th tile of it (the engine's land class samples so) */
+export function blockOnWater(r: Rect, isWater: (x: number, y: number) => boolean, step = 4): boolean {
+  for (let y = r[1]; y < r[1] + r[3]; y += step) for (let x = r[0]; x < r[0] + r[2]; x += step) if (isWater(x, y)) return true;
+  return false;
+}
+
 /** exact union area in m² of a list of Rects (overlapping rects are not double-counted) */
 export function parcelsAreaSqm(parcels: readonly Rect[]): number {
   const valid = parcels.filter(validRect);

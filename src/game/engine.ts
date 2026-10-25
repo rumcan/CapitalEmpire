@@ -22,7 +22,7 @@ import { PaintTool } from './paint-tool';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
-import { CELL_T, SURF, cellAt, diffBox, encodeGrid, growGrid, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
+import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, ringArea, type GridArea } from './ext/course-grid/areas';
 import { aimsFromPlans, decodePlans } from './ext/hole-wizard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
@@ -83,7 +83,7 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
-import { adjacentBlockPrice, buyAdjacentBlock, isAdjacentBlock, polyInParcels, type ParcelLandClass } from './golf/parcels';
+import { adjacentBlockPrice, buyAdjacentBlock, LAND_BLOCK, blockAt, blockOnWater, polyInParcels, type ParcelLandClass } from './golf/parcels';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
@@ -408,7 +408,9 @@ export class Game {
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => this.courseGridChanged(d, flush), gridAreas: () => this.gridAreaList(),
-    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
+    // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
+    // the course's; the brush's footprint and the wizard say which refusal it is
+    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     courseLook: () => this.resendCourse() });
   /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
    *  playing lines run through them (no dogleg warning) */
@@ -516,22 +518,14 @@ export class Game {
   ownedAt(x: number, y: number): boolean { for (const [rx, ry, rw, rh] of this.golfLand()) if (x >= rx && x < rx + rw && y >= ry && y < ry + rh) return true; return false; }
   /** the grid box the golf land needs, grown to hold extra (a tile box: the painted areas a migration lays in), as x0, y0 (tiles) and w, h
    *  (cells): the bounds plus COURSE_GRID_PAD, on the map */
-  private courseGridBox(extra?: readonly number[] | null): [number, number, number, number] | null {
-    const land = this.golfLand(); if (!land.length) return null;
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const [x, y, w, h] of land) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + w); y1 = Math.max(y1, y + h); }
-    if (extra) { x0 = Math.min(x0, extra[0]!); y0 = Math.min(y0, extra[1]!); x1 = Math.max(x1, extra[2]!); y1 = Math.max(y1, extra[3]!); }
-    x0 = Math.max(0, Math.floor(x0 - COURSE_GRID_PAD)); y0 = Math.max(0, Math.floor(y0 - COURSE_GRID_PAD)); x1 = Math.min(MAP, Math.ceil(x1 + COURSE_GRID_PAD)); y1 = Math.min(MAP, Math.ceil(y1 + COURSE_GRID_PAD));
-    return [x0, y0, Math.round((x1 - x0) / CELL_T), Math.round((y1 - y0) / CELL_T)];
-  }
+  private courseGridBox(extra?: readonly number[] | null): [number, number, number, number] | null { return landGridBox(this.golfLand(), COURSE_GRID_PAD, MAP, extra); }
   /** grows the grid to hold the golf land (land was bought) and extra; a new grid when there is none. Undo diffs made on the old box still apply */
   private fitCourseGrid(extra?: readonly number[] | null) {
     const b = this.courseGridBox(extra); if (!b) return;
     const g = this.courseGrid;
     if (!g) { this.courseGrid = makeGrid(b[0], b[1], b[2], b[3]); return; }
-    const x0 = Math.min(g.x0, b[0]), y0 = Math.min(g.y0, b[1]), x1 = Math.max(g.x0 + g.w * CELL_T, b[0] + b[2] * CELL_T), y1 = Math.max(g.y0 + g.h * CELL_T, b[1] + b[3] * CELL_T);
-    if (x0 === g.x0 && y0 === g.y0 && x1 === g.x0 + g.w * CELL_T && y1 === g.y0 + g.h * CELL_T) return;
-    this.courseGrid = growGrid(g, x0, y0, Math.round((x1 - x0) / CELL_T), Math.round((y1 - y0) / CELL_T));
+    const ng = fitGrid(g, b); if (!ng) return;
+    this.courseGrid = ng;
     this.gaDirty = null; this.gaRev++;
   }
   /** a golf game's grid after a load or a new game (afterLoad): the saved grid, else a new one with the golf-surface painted areas laid into it
@@ -2606,10 +2600,9 @@ export class Game {
   this.ghostMouse = { mx, my };
   this.hover = this.tileAt(mx, my);
   if (this.landMode && this.golf && this.hover) {
-  const bx = Math.floor(this.hover.x / 40) * 40, by = Math.floor(this.hover.y / 40) * 40;
-  const cand: [number, number, number, number] = [bx, by, 40, 40];
-  const parcels = this.golf.parcels ?? [this.golf.parcel];
-  if (isAdjacentBlock(parcels, cand)) {
+  // the block under the pointer, lined up with the owned land (a range start's parcel is off the map's 40-tile lattice: golf/parcels.ts blockAt)
+  const cand = blockAt(this.golf.parcels ?? [this.golf.parcel], this.hover.x, this.hover.y, LAND_BLOCK, MAP);
+  if (cand) {
   const info = this.blockLandClass(cand);
   const price = adjacentBlockPrice({ rect: cand, ...info, townPop: this.traffic.pop });
   this.landHover = { rect: cand, price, landClass: info.landClass };
@@ -3480,11 +3473,7 @@ export class Game {
   }
   private blockLandClass(r: [number, number, number, number]): { landClass: ParcelLandClass; houses: number; buildings: number } {
   const [bx, by, bw, bh] = r;
-  for (let y = by; y < by + bh; y += 4) {
-  for (let x = bx; x < bx + bw; x += 4) {
-  if (x >= 0 && x < MAP && y >= 0 && y < MAP && this.terrain.cls[y * MAP + x] === TC.WATER) return { landClass: 'unbuildable', houses: 0, buildings: 0 };
-  }
-  }
+  if (blockOnWater(r, (x, y) => x >= 0 && x < MAP && y >= 0 && y < MAP && this.terrain.cls[y * MAP + x] === TC.WATER)) return { landClass: 'unbuildable', houses: 0, buildings: 0 };
   let houses = 0, buildings = 0, com = false, ind = false;
   for (const l of this.traffic.lots.values()) {
   if (l.level >= 1 && l.o[0] >= bx && l.o[0] < bx + bw && l.o[1] >= by && l.o[1] < by + bh) {
