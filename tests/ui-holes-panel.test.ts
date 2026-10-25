@@ -24,7 +24,7 @@ function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[];
   const ui = computeProgressiveUiState(facts(o.facts));
   const paint = {
     mode: o.mode ?? 'brush', brushHole: o.current ?? 1, brushKind: 'fairway', brushCells: 2, rubOut: false, plantKind: 'seed',
-    canUndo: true, canRedo: false, undoLabel: 'build hole 1', redoLabel: '',
+    canUndo: true, canRedo: false, undoLabel: 'build hole 1', redoLabel: '', topUndo: 'build hole 1', topRedo: '', planNumbers: () => [{ n: 2, label: 'Hole 2' }],
     brush: { fairway: { r: 5, style: { tex: 'preset:fairway' } } }, heightMode: 'raise', pieceArch: 'tee-box',
     hasPlan: () => false, nextFreeHole: () => 2,
     wizard: { step: 'tee', base: null, hole: 2, plan: null },

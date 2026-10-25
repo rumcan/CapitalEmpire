@@ -1,41 +1,134 @@
 import type { Game } from '../../game/engine';
+import { SURF } from '../../game/ext/course-grid';
+import { SURF_SURFACE } from '../../game/ext/course-grid/areas';
+import { aboutMoney, planShape, type WizCheck } from '../../game/ext/hole-wizard';
+import { growInMonths } from '../../game/golf/costs';
 
-const STEPS = ['Click the tee', 'Click the green', 'Drag the handles, then Build'] as const;
+const STEPS = ['Tee', 'Green', 'Shape'] as const;
+/** what each step asks for, under the steps */
+const ASK: readonly string[] = ['Click a tee: the camera then frames 450 m round it. Click a built hole\'s line to edit its plan.', 'Click the green, 60 m or more from the tee. Esc moves the tee again.'];
+/** the price split's rows (P23 4.3): the surfaces a plan lays, in the card's order */
+const SPLIT: readonly [number, string][] = [[SURF.fairway, 'Fairway'], [SURF.green, 'Green'], [SURF.tee, 'Tee'], [SURF.rough, 'Rough']];
+/** yards in a metre */
+const YD = 1.0936;
+const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
-/** the New hole wizard's card (T102, plan P21 3.3 A), on top of the Holes panel in New hole's place while the plan mode is on (P23 4.3): the hole and the step, the
- *  live par, length and price, and Build, Cancel, Delete and Done. The map shows the ghost (exactly the cells a Build lays), the handles,
- *  the gold Build pill and the label beside the pointer. Self-contained: it reads and drives game.paint (the plan mode) only */
+/** the New hole wizard's card (T102, finished in T119: plan P23 4.3 and 4.4), on top of the Holes panel in New hole's place while the plan
+ *  mode is on: the hole and its number (Number ▾ offers the free ones), the steps, Build · $X and Cancel on top, par and length, the price
+ *  split, Seed (the default) or Sod with what each does to the season, the money line, the check table with its fixes, and the keys. The
+ *  map shows the ghost, the handles, the gold Build pill and the label beside the pointer. Self-contained: it reads and drives game.paint */
 export function HoleWizardPanel({ game }: { game: Game }) {
   const p = game.paint, w = p.wizard;
   const gh = w.step !== 'tee' && w.plan ? w.ghost() : null;
   const c = w.step === 'shape' ? w.check() : null;
+  const checks = w.step === 'shape' ? w.checks() : [];
   const step = w.step === 'tee' ? 0 : w.step === 'green' ? 1 : 2;
   const cur = p.brushHole, canEdit = w.step === 'tee' && p.hasPlan(cur);
+  const nums = w.base ? [] : p.planNumbers();
   return (
     <div className="wizard-card" data-primary="wizard">
-      <div className="flex flex-wrap items-baseline gap-2">
-        <span className="text-xs font-semibold text-amber-200">{w.base ? `Edit hole ${w.hole}` : `New hole ${w.hole}`}</span>
-        <span className="text-[11px] text-slate-400">{`${step + 1}/3 · ${STEPS[step]}`}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="wiz-title">{w.base ? `Edit hole ${w.hole}` : `New hole ${w.hole}`}</span>
+        {nums.length > 1 && (
+          <label className="wiz-num" title="The hole's number: a free one, or after your last hole">
+            <span className="sr-only">Number</span>
+            <select value={w.hole} onChange={e => p.setPlanHole(+e.target.value)}>
+              {nums.map(o => <option key={o.n} value={o.n}>{o.label}</option>)}
+            </select>
+          </label>
+        )}
       </div>
-      {gh && (
-        <div className="mt-1 text-[11px] text-slate-200">
-          {`Par ${gh.info.par} · ${gh.info.lengthM} m · $${gh.cost.toLocaleString()}`}
-          {gh.refused ? <span className="text-slate-400">{` · ${gh.refused.toLocaleString()} cells left out`}</span> : null}
+      <ol className="wiz-steps" aria-label="Steps">
+        {STEPS.map((s, i) => (
+          <li key={s} className={i < step ? 'wiz-done' : i === step ? 'wiz-now' : ''} aria-current={i === step ? 'step' : undefined}>{i < step ? `✓ ${s}` : `${i + 1} ${s}`}</li>
+        ))}
+      </ol>
+      {w.step === 'shape' && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <button className="pill-gold wiz-build" disabled={!c?.ok} title={c?.ok ? 'Build the hole (Enter, or the gold pill by the green)' : c?.why} onClick={() => p.buildPlan()}>
+            <span className="min-w-0 flex-1">{c?.ok && gh ? `Build · ${money(gh.cost)}` : 'Build'}</span><kbd>Enter</kbd>
+          </button>
+          <button className="chip" title="Drop this plan (Esc steps back one stage)" onClick={() => p.cancelPlan()}>Cancel</button>
         </div>
       )}
-      {c && !c.ok && c.why !== 'Nothing to change' && <div className="mt-0.5 text-[11px] text-red-300">{c.why}</div>}
-      <div className="mt-1 flex flex-wrap gap-1">
-        {w.step === 'shape' && <button className={`chip ${c?.ok ? 'chip-on' : 'opacity-40'}`} disabled={!c?.ok} title="Enter, or the gold pill by the green" onClick={() => p.buildPlan()}>Build</button>}
-        {w.step !== 'tee' && <button className="chip" title="Esc" onClick={() => p.cancelPlan()}>Cancel</button>}
+      {w.step !== 'shape' && <p className="sub-line mt-1.5">{ASK[step]}</p>}
+      {gh && <Stats game={game} />}
+      {gh && <Planting game={game} />}
+      {checks.length > 0 && <Checks game={game} rows={checks} />}
+      {w.step === 'shape' && (
+        <p className="wiz-keys">Drag the line to bend it · amber handles widen · <kbd>R</kbd> turns the green · <kbd>[</kbd> <kbd>]</kbd> size it · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes a drag · <kbd>Esc</kbd> steps back</p>
+      )}
+      <div className="mt-1.5 flex flex-wrap gap-1">
         {w.base && w.step === 'shape' && <button className="chip" title="Clears the hole's planned cells (your touch-ups stay); undo brings it back" onClick={() => p.deletePlan()}>Delete hole</button>}
         {canEdit && <button className="chip" onClick={() => p.editPlan(cur)}>{`Edit hole ${cur}`}</button>}
         <button className="chip" title="Back to the brush" onClick={() => p.setBrush(p.brushKind)}>Done</button>
       </div>
-      <div className="mt-1 text-[10px] leading-snug text-slate-500">
-        {w.step === 'shape'
-          ? 'Drag the line (or a +) to bend it, up to 3 bends; amber handles set the width; drag the tee or green to move them. R turns the green, [ ] sizes it; right-click a bend to take it out.'
-          : 'Everything snaps to the 1 m grid. Click a built hole\'s line to edit its plan.'}
-      </div>
     </div>
+  );
+}
+
+/** par, length and shape, and the price split by surface */
+function Stats({ game }: { game: Game }) {
+  const w = game.paint.wizard, gh = w.ghost(), pl = w.plan; if (!gh || !pl) return null;
+  const split = w.split(), rest = [...split].filter(([s]) => !SPLIT.some(([q]) => q === s)).reduce((a, [, v]) => a + v.cost, 0);
+  return (
+    <div className="wiz-stats">
+      <div className="wiz-par">{`Par ${gh.info.par} · ${gh.info.lengthM} m`}</div>
+      <div className="sub-line">{`${Math.round(gh.info.lengthM * YD)} yd · ${planShape(pl)}`}{gh.refused ? ` · ${gh.refused.toLocaleString()} m² left out` : ''}</div>
+      {w.step === 'shape' && (
+        <dl className="wiz-split">
+          {SPLIT.map(([s, name]) => {
+            const v = split.get(s); if (!v) return null;
+            return <div key={s}><dt>{s === SURF.green || s === SURF.tee ? `${name} · ${v.cells.toLocaleString()} m²` : name}</dt><dd>{money(v.cost)}</dd></div>;
+          })}
+          {rest > 0 && <div><dt>Other</dt><dd>{money(rest)}</dd></div>}
+        </dl>
+      )}
+    </div>
+  );
+}
+
+/** Seed (the default) or Sod (P23 4.4): both prices, what Sod does to the season, and the money line */
+function Planting({ game }: { game: Game }) {
+  const p = game.paint, w = p.wizard, k = w.costs(); if (!k) return null;
+  const sod = p.plantKind === 'sod', cost = sod ? k.sod : k.seed, have = game.money;
+  const ratio = k.seed > 0 ? (k.sod / k.seed).toFixed(1) : '1';
+  const months = [...w.split().keys()].map(s => { const g = SURF_SURFACE[s]; return g ? growInMonths(g, 'seed') : 0; }).filter(m => m > 0);
+  const lo = months.length ? Math.min(...months) : 0, hi = months.length ? Math.max(...months) : 0, grow = lo === hi ? `${lo} months` : `${lo}–${hi} months`;
+  const pick = (kind: 'seed' | 'sod') => { p.plantKind = kind; game.emit(); };
+  return (
+    <section className="mt-2" aria-label="Planting">
+      <h4 className="sub-head">Planting</h4>
+      <div className="wiz-plant" role="group" aria-label="Seed or Sod">
+        <button className={`chip ${!sod ? 'chip-on' : ''}`} aria-pressed={!sod} title="Seed: the cheap way; the grass grows in" onClick={() => pick('seed')}>{`Seed · ${money(k.seed)}`}</button>
+        <button className={`chip ${sod ? 'chip-on' : ''}`} aria-pressed={sod} title="Sod: rolls of grown turf, playable at once" onClick={() => pick('sod')}>{`Sod · ${money(k.sod)}`}</button>
+      </div>
+      <p className="sub-line mt-1">
+        {sod
+          ? `Sod: ready now, ${ratio} times the price of Seed; nine holes like this would cost about ${aboutMoney(9 * k.sod)}.`
+          : `Seed: playable in ${grow}. Sod is ready now but costs ${ratio} times as much: nine holes like this would cost about ${aboutMoney(9 * k.sod)}.`}
+      </p>
+      <p className="wiz-money">{`Nine holes like this: about ${aboutMoney(9 * cost)} · you have `}<b className={have >= cost ? 'text-emerald-300' : 'text-red-300'}>{aboutMoney(have)}</b></p>
+    </section>
+  );
+}
+
+/** the check table (P23 4.4): blocks in red, warnings in amber, passed checks ticked; each with its fix */
+function Checks({ game, rows }: { game: Game; rows: WizCheck[] }) {
+  const p = game.paint;
+  return (
+    <section className="mt-2" aria-label="Checks">
+      <h4 className="sub-head">Checks</h4>
+      <ul className="wiz-checks">
+        {rows.map(r => (
+          <li key={r.id} data-check={r.id} className={`wiz-${r.kind}`}>
+            <span className="wiz-mark" aria-hidden>{r.kind === 'block' ? '✕' : r.kind === 'warn' ? '!' : '✓'}</span>
+            <span className="min-w-0 flex-1">{r.kind === 'block' ? <span className="sr-only">Blocks Build: </span> : r.kind === 'warn' ? <span className="sr-only">Warning: </span> : null}{r.text}</span>
+            {r.fix === 'seed' && <button className="chip" onClick={() => { p.plantKind = 'seed'; game.emit(); }}>Use Seed</button>}
+            {r.show && r.kind !== 'ok' && <button className="chip" onClick={() => p.showMe(r.show!)}>Show me</button>}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

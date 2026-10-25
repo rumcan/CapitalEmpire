@@ -220,7 +220,7 @@ test('3. in a range start your parcel paints outside the range\'s plot; the plot
   assert.ok(tool.setPlan());
   const down = (x: number, y: number) => { tool.pointerDown({ x, y }, x * 16, y * 16); tool.pointerUp(0.5); };
   down(40, 60); down(40, 160);
-  assert.equal(tool.wizard.check().why, 'The tee is on the driving range');
+  assert.equal(tool.wizard.check().why, 'The tee is on the driving range: golfers hit here');
   tool.cancelPlan();
   assert.ok(tool.setPlan());
   down(100, 30); down(100, 160);

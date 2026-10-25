@@ -54,11 +54,10 @@ function loadPlant(): Record<PlantBrushKind, PlantSet> {
 export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height' | 'plan';
 /** the golf holes a course has (the Course tool's hole strip) */
 export const HOLE_COUNT = 18;
-/** why the course cannot take a cell of your land (PaintHost.landWhy): the brush footprint's reason, and the New hole wizard's place for a
- *  refused tee or green ("The tee is on the driving range") */
+/** why the course cannot take a cell of your land (PaintHost.landWhy): the brush footprint's reason, and the New hole wizard's for a
+ *  refused tee or green and the cells it leaves out (ext/hole-wizard says it in its own words) */
 export type LandRefusal = 'off' | 'range';
 export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here' };
-export const LAND_WHERE: Readonly<Record<LandRefusal, string>> = { off: 'off your land', range: 'on the driving range' };
 /** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
 export const RUB_WHY = { nothing: 'Nothing to rub out', hole: 'Another hole' } as const;
 /** the studio's 18 preset holes (src/game/golf/hole-presets.json; null: an empty slot) */
@@ -152,6 +151,17 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   setPlans?(p: unknown[]): void;
   /** hole n's pin (the New hole wizard's walk label), if it has one */
   pinOf?(hole: number): { x: number; y: number } | null;
+  /** New hole (P23 4.4, T119): the camera frames tiles pts beside the panel (after the tee and the green clicks, and Show me); zoomIn false
+   *  only eases out */
+  fitView?(pts: { x: number; y: number }[], zoomIn: boolean): void;
+  /** the practice area's box (tiles x0 y0 x1 y1; a range start), whose cells hold no hole (P24 D24); null: none */
+  practiceBox?(): readonly [number, number, number, number] | null;
+  /** the box round the golf game's land (tiles x0 y0 x1 y1): New hole's tee framing keeps to it */
+  landBox?(): readonly [number, number, number, number] | null;
+  /** the public roads near a box (tiles), with their names: New hole's road-across warning */
+  publicRoads?(box: readonly [number, number, number, number]): { ax: number; ay: number; bx: number; by: number; name: string }[];
+  /** the holes as lines from tee to pin: New hole's too-close warning */
+  holeLines?(): { hole: number; line: { x: number; y: number }[] }[];
   /** a course surface's look (a brush style) changed: the grid's chunks are drawn again in it */
   courseLook?(): void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
@@ -286,11 +296,17 @@ export class PaintTool {
     grid: () => this.courseGrid(),
     plans: () => decodePlans(this.host.plans?.()),
     allow: i => { const g = this.host.grid?.(), own = this.host.ownedAt; if (!g || !own) return true; const c = cellCentre(g, i); return own(c.x, c.y); },
-    whereAt: (x, y) => LAND_WHERE[this.host.landWhy?.(x, y) || 'off'],
+    landWhy: (x, y) => this.host.landWhy?.(x, y) || 'off',
     month: () => plantMonth(this.plantKind, this.host.currentMonth?.()),
     price: s => (this.host.golfMode?.() ? unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind) : 0),
+    priceAs: (s, sod) => (this.host.golfMode?.() ? unitBuildCost(SURF_SURFACE[s] ?? 'other', sod ? 'sod' : 'seed') : 0),
+    sod: () => this.plantKind === 'sod',
     money: () => (this.host.golfMode?.() ? this.host.money?.() ?? 0 : Infinity),
     pinOf: n => this.host.pinOf?.(n) ?? null,
+    practiceBox: () => this.host.practiceBox?.() ?? null,
+    landBox: () => this.host.landBox?.() ?? null,
+    roads: b => this.host.publicRoads?.(b) ?? [],
+    holeLines: () => this.host.holeLines?.() ?? [],
   });
   private pill: { x: number; y: number; w: number; h: number } | null = null;
   /** when plan mode last told the panel (ms; drags tell it at most every 150 ms) */
@@ -525,15 +541,15 @@ export class PaintTool {
     const A = this.A; this.host.affine(A);
     return (x, y) => ({ x: A[0]! + x * A[2]! + y * A[4]!, y: A[1]! + x * A[3]! + y * A[5]! });
   }
-  /** plan mode's keys: Enter builds, Esc drops the plan on screen (then leaves plan mode), R / Shift+R turn the green, [ ] size it,
-   *  Delete or Backspace over a bend takes it out */
+  /** plan mode's keys: Enter builds, Esc steps back one stage (P23 4.4: shaping → the green step, the tee kept → the tee step → out of
+   *  New hole, the panel staying), R / Shift+R turn the green, [ ] size it, Delete or Backspace over a bend takes it out */
   private planKey(e: KeyboardEvent): boolean {
     const w = this.wizard;
     switch (e.key) {
       case 'Enter': if (w.step !== 'shape') return false; this.buildPlan(); return true;
       case 'Escape':
-        if (w.step === 'tee') { this.setBrush(this.brushKind); return true; }
-        w.start(w.base ? this.nextFreeHole() || w.hole : w.hole); break;
+        if (w.back(this.nextFreeHole() || w.hole) === 'out') { this.setBrush(this.brushKind); return true; }
+        this.pill = null; break;
       case 'r': case 'R': if (w.step !== 'shape') return false; w.turnGreen(e.shiftKey ? -15 : 15); break;
       case '[': case ']': if (w.step !== 'shape') return false; w.sizeGreen(e.key === ']' ? GREEN_STEP : -GREEN_STEP); break;
       case 'Delete': case 'Backspace': if (w.hover?.k !== 'bend' || !w.removeBend(w.hover.i)) return false; break;
@@ -547,7 +563,50 @@ export class PaintTool {
     if (w.step === 'shape' && p && mx >= p.x && mx <= p.x + p.w && my >= p.y && my <= p.y + p.h) { this.buildPlan(); return; }
     const r = w.press(t, mx, my, this.toCss());
     if (r === 'open') this.brushHole = w.hole;
+    // the camera frames 450 m round the tee, then the plan (P23 4.4)
+    if (r === 'tee') this.host.fitView?.(w.teeView(), false);
+    if (r === 'green') this.host.fitView?.(w.planView(), true);
     if (r) this.host.emit();
+  }
+  /** Ctrl+Z on the course (P23 4.10): in New hole its own clicks and drags first; while it has something on screen never the course's
+   *  steps (Ctrl+Z takes back a drag, not the last hole); else the course's last step */
+  undoTop(): void {
+    if (this.mode === 'plan' && this.course) {
+      const w = this.wizard;
+      if (w.undo()) { this.pill = null; this.host.emit(); return; }
+      if (w.busy) { this.host.toast('Nothing more to take back in this plan: Esc steps back', 'info'); return; }
+    }
+    this.undo();
+  }
+  /** Ctrl+Y on the course: New hole's undone clicks and drags first, else the course's */
+  redoTop(): void {
+    if (this.mode === 'plan' && this.course) {
+      const w = this.wizard;
+      if (w.redo()) { this.pill = null; this.host.emit(); return; }
+      if (w.busy) return;
+    }
+    this.redo();
+  }
+  /** what Ctrl+Z / Ctrl+Y would take back or do again on the course ('' none), for the Holes panel's ↶ ↷ (P23 4.3) */
+  get topUndo(): string { if (this.mode === 'plan' && this.course) { const w = this.wizard; if (w.undoLabel || w.busy) return w.undoLabel; } return this.undoLabel; }
+  get topRedo(): string { if (this.mode === 'plan' && this.course) { const w = this.wizard; if (w.redoLabel || w.busy) return w.redoLabel; } return this.redoLabel; }
+  /** the numbers New hole offers (P23 4.4: "Number ▾"): the free numbers up to the highest in use, then the one after it; label as shown */
+  planNumbers(): { n: number; label: string }[] {
+    const used = this.usedHoles(), max = Math.max(0, ...used), out: { n: number; label: string }[] = [];
+    for (let n = 1; n <= Math.min(max, HOLE_COUNT); n++) if (!used.has(n)) out.push({ n, label: `Hole ${n}` });
+    if (max < HOLE_COUNT) out.push({ n: max + 1, label: max ? `After ${max}: hole ${max + 1}` : 'Hole 1' });
+    return out;
+  }
+  /** New hole takes number n (a free one) */
+  setPlanHole(n: number): void {
+    const w = this.wizard; if (this.mode !== 'plan' || w.base || this.usedHoles().has(n) || n < 1 || n > HOLE_COUNT) return;
+    w.renumber(n); this.host.emit();
+  }
+  /** a check's Show me (P23 4.4): the camera frames its points with 40 m round each */
+  showMe(pts: { x: number; y: number }[]): void {
+    if (!pts.length) return;
+    const r = 20, out = pts.flatMap(p => [{ x: p.x - r, y: p.y - r }, { x: p.x + r, y: p.y + r }]);
+    this.host.fitView?.(out, true);
   }
   /** the hole numbers that have painted areas */
   usedHoles(): Set<number> { const out = new Set<number>(); for (const a of this.areas) if (a.hole) out.add(a.hole); for (const a of this.host.gridAreas?.() ?? []) if (a.hole) out.add(a.hole); for (const p of this.wizard.plans()) out.add(p.hole); return out; }
@@ -711,7 +770,7 @@ export class PaintTool {
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
     if (u.spent) this.host.spend?.(-u.spent);
     this.host.changed?.();
-    if (this.mode === 'plan') this.wizard.start(this.nextFreeHole() || this.wizard.hole); // the plans changed under the wizard
+    if (this.mode === 'plan') this.wizard.plansChanged(this.nextFreeHole(), n => this.usedHoles().has(n)); // the plans changed under the wizard
     this.redos.push(u); this.host.save(); this.host.toast(`Undone: ${u.label}`); this.host.emit();
   }
   /** redoes the last undone action */
@@ -724,7 +783,7 @@ export class PaintTool {
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
     if (u.spent) this.host.spend?.(u.spent);
     this.host.changed?.();
-    if (this.mode === 'plan') this.wizard.start(this.nextFreeHole() || this.wizard.hole);
+    if (this.mode === 'plan') this.wizard.plansChanged(this.nextFreeHole(), n => this.usedHoles().has(n));
     this.undos.push(u); this.host.save(); this.host.toast(`Redone: ${u.label}`); this.host.emit();
   }
 
@@ -1229,8 +1288,8 @@ export class PaintTool {
   key(e: KeyboardEvent): boolean {
     if ((e.ctrlKey || e.metaKey) && !e.altKey) {
       const k = e.key.toLowerCase();
-      if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.undo(); return true; }
-      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.redo(); return true; }
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); this.undoTop(); return true; }
+      if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); this.redoTop(); return true; }
       if (this.selected && (e.code === 'BracketRight' || e.code === 'BracketLeft')) { e.preventDefault(); const f = e.code === 'BracketRight'; this.moveLayer(e.shiftKey ? (f ? 'front' : 'back') : f ? 1 : -1); return true; }
       return false;
     }

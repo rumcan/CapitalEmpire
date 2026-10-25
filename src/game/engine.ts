@@ -34,7 +34,7 @@ import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, growingHoles, ringArea, type GridArea } from './ext/course-grid/areas';
-import { aimsFromPlans, decodePlans } from './ext/hole-wizard';
+import { aimsFromPlans, decodePlans, frameView, type FreeRect } from './ext/hole-wizard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_PATCH_REACH, courseChunksIn, courseEditReach, courseGrowKey, courseKey, courseStyles, growStatic, widestCollar, type CourseLooks } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
@@ -117,6 +117,8 @@ import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './e
 import { MapGridLayer } from './ext/map-grid/layer';
 import { STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
+/** New hole's camera framing eases this long at most (ms; P23 4.4) */
+const CAM_EASE_MS = 400;
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
 /** what the lights' upgrades cost, by the tier they reach (index = tier: 0 fixed-time is free, 1 actuated, 2 adaptive) */
@@ -493,6 +495,11 @@ export class Game {
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
     ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
+    // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
+    fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
+    landBox: () => { const L = this.golf ? this.golfLand() : []; if (!L.length) return null; return [Math.min(...L.map(r => r[0])), Math.min(...L.map(r => r[1])), Math.max(...L.map(r => r[0] + r[2])), Math.max(...L.map(r => r[1] + r[3]))]; },
+    publicRoads: b => [...this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2 + 4)].filter(s => s.kind !== SK.TUNNEL && !isCourseClass(s.cls.id)).map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, name: this.roadNameOfSeg(s) })),
+    holeLines: () => { const g = this.golf; if (!g) return []; return g.pins.flatMap(p => { const t = g.tees.find(q => q.hole === p.hole && q.kind === 'back') ?? g.tees.find(q => q.hole === p.hole); return t ? [{ hole: p.hole, line: [{ x: t.x, y: t.y }, { x: p.x, y: p.y }] }] : []; }); },
     courseLook: () => this.resendCourse() });
   /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
    *  playing lines run through them (no dogleg warning) */
@@ -2755,6 +2762,7 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
+  this.camEase = null; // a press takes the camera back from New hole's framing (P23 4.4)
   // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
   const side = this.tool === 'select';
   if (side && this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
@@ -2891,7 +2899,40 @@ export class Game {
     const f = Math.exp(-e.deltaY * 0.0014);
     this.zoomAt(clamp(this.cam.z * f, ZOOM_MIN, ZOOM_MAX), e.offsetX, e.offsetY);
   }
+  /** the camera easing to a framing (New hole, P23 4.4): from, to, its start (ms) and length; any drag, wheel, zoom or key pan drops it */
+  private camEase: { a: Camera; b: Camera; t0: number; ms: number } | null = null;
+  /** the camera frames tiles pts in the free map beside the panel (New hole's tee and green clicks, a check's Show me): it eases there in
+   *  CAM_EASE_MS at most, or jumps under reduced motion; zoomIn false only eases out */
+  fitView(pts: { x: number; y: number }[], zoomIn: boolean) {
+    const to = frameView(pts, this.freeRect(), this.cssW, this.cssH, this.cam, zoomIn, ZOOM_MIN, ZOOM_MAX);
+    if (!to) return;
+    const c = this.cam;
+    if (Math.abs(to.z - c.z) < c.z * 0.01 && Math.abs(to.X - c.X) * c.z < 2 && Math.abs(to.Y - c.Y) * c.z < 2) return;
+    let reduce = false; try { reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
+    if (reduce) { this.camEase = null; this.cam = { X: to.X, Y: to.Y, z: to.z }; this.clampCam(); this.emit(); return; }
+    this.camEase = { a: { ...c }, b: { X: to.X, Y: to.Y, z: to.z }, t0: performance.now(), ms: CAM_EASE_MS };
+  }
+  /** the free map beside the tool panel, below the top bar and above the hint pill (css px over the map), where New hole frames what it
+   *  shows */
+  private freeRect(): FreeRect {
+    let l = 0, t = 0;
+    try {
+      const c = this.overlay.getBoundingClientRect(), p = typeof document !== 'undefined' ? document.querySelector('[data-tool]')?.getBoundingClientRect() : null;
+      if (p && p.width > 0) { l = Math.max(0, p.right - c.left); t = Math.max(0, p.top - c.top); }
+    } catch { /* no layout (a test) */ }
+    return { l: l + 8, t: t + 8, r: this.cssW - 8, b: this.cssH - 56 };
+  }
+  /** the camera's ease, once a frame: an ease out in X, Y and the zoom (the zoom in log steps, so it reads even) */
+  private stepCamEase(now: number) {
+    const e = this.camEase; if (!e) return;
+    const u = Math.min(1, Math.max(0, (now - e.t0) / e.ms)), k = 1 - (1 - u) ** 3;
+    this.cam.X = e.a.X + (e.b.X - e.a.X) * k; this.cam.Y = e.a.Y + (e.b.Y - e.a.Y) * k;
+    this.cam.z = Math.exp(Math.log(e.a.z) + (Math.log(e.b.z) - Math.log(e.a.z)) * k);
+    this.clampCam();
+    if (u >= 1) { this.camEase = null; this.emit(); }
+  }
   zoomAt(z: number, mx = this.cssW / 2, my = this.cssH / 2) {
+    this.camEase = null;
     const wx = this.cam.X + (mx - this.cssW / 2) / this.cam.z, wy = this.cam.Y + (my - this.cssH / 2) / this.cam.z;
     this.cam.z = z;
     this.cam.X = wx - (mx - this.cssW / 2) / z; this.cam.Y = wy - (my - this.cssH / 2) / z; this.clampCam(); this.emit();
@@ -2899,12 +2940,14 @@ export class Game {
   clampCam() { this.cam.X = clamp(this.cam.X, -MAP * HW, MAP * HW); this.cam.Y = clamp(this.cam.Y, 0, MAP * HH * 2); }
   /** centres the camera on tile (x, y), zooms in to at least 0.2 (a closer zoom stays), shows the flow and pulses a ring there */
   jumpTo(x: number, y: number) {
+    this.camEase = null;
     if (this.cam.z < 0.2) this.cam.z = 0.2;
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam();
     this.focus = { x, y, t: performance.now() }; this.setFlow(true); this.emit();
   }
   /** centres the camera on tile (x, y) as it is (the minimap, the town chip); a zoom z, when given, replaces the camera's (clamped) */
   lookAt(x: number, y: number, z?: number) {
+    this.camEase = null;
     if (z !== undefined) this.cam.z = clamp(z, ZOOM_MIN, ZOOM_MAX);
     this.cam.X = worldX(x, y); this.cam.Y = worldY(x, y); this.clampCam(); this.emit();
   }
@@ -4336,7 +4379,8 @@ export class Game {
     const sp = 900 / this.cam.z * dt; let kx = 0, ky = 0;
     if (this.keys.has('ArrowLeft') || this.keys.has('a') || this.keys.has('A')) kx -= 1; if (this.keys.has('ArrowRight') || this.keys.has('d') || this.keys.has('D')) kx += 1;
     if (this.keys.has('ArrowUp') || this.keys.has('w') || this.keys.has('W')) ky -= 1; if (this.keys.has('ArrowDown') || this.keys.has('s') || this.keys.has('S')) ky += 1;
-    if (kx || ky) { this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
+    if (kx || ky) { this.camEase = null; this.cam.X += kx * sp * 0.6; this.cam.Y += ky * sp * 0.6; this.clampCam(); }
+    else this.stepCamEase(now);
     this.onFrame?.(now, dt);
     for (const b of this.builds) {
       const front = this.revealFront(b, now); if (front >= b.total) continue;

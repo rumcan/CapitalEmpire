@@ -1,12 +1,15 @@
 /** The New hole wizard and plan handles (T102, plan P21 3.3 A): a plan from two clicks, handle edits (a bend, a width), the ghost's price
  * before the click, Build as the planDiff of the ghost with one undo step, hand touch-ups kept on an edit, delete, refused cells, and
- * golf.aims written from the plans (pure, Node: the wizard alone and the Paint tool's plan mode with a stand-in host). */
+ * golf.aims written from the plans. T119 (P23 4.4) finishes it: the wizard's own undo (clicks and drags first, never the last hole), the Esc
+ * stages, every row of the check table (blocks, warnings, the fixes; the practice area of P24 D24), Seed and Sod, the money line, the
+ * number picker, and the camera's framing (pure, Node: the wizard alone and the Paint tool's plan mode with a stand-in host). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SURF, cellAt, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
 import { gridAreas } from '../src/game/ext/course-grid/areas';
 import { centreLine, decodePlan, planDiff, type HolePlan } from '../src/game/ext/hole-plan';
-import { HoleWizard, aimsFromPlans, decodePlans, newPlan, snapPt, withWidthAt, type WizardHost } from '../src/game/ext/hole-wizard';
+import { HoleWizard, NO_CHANGES, TEE_VIEW_M, aboutMoney, aimsFromPlans, decodePlans, frameView, newPlan, planShape, snapPt, withWidthAt, type WizardHost } from '../src/game/ext/hole-wizard';
+import { worldX, worldY } from '../src/game/iso';
 import { PaintTool, type PaintHost } from '../src/game/paint-tool';
 import { deriveHoles } from '../src/game/golf/holes';
 import type { AimPoint } from '../src/game/golf/types';
@@ -215,4 +218,220 @@ test('9. speed: a drag step (re-plan and ghost) of a 3-bend hole stays within a 
   console.log(`hole-wizard drag step: ${ms.toFixed(2)} ms (re-plan + ghost, 3 bends, ${w.ghost()!.info.lengthM} m, ${w.ghost()!.diff.n} cells)`);
   // the target is 4 ms (the bench); the suite only catches a real slowdown
   assert.ok(ms < 30, `drag step ${ms} ms`);
+});
+
+// ---------- T119: New hole, finished (P23 4.4) ----------
+
+/** a key press for the Paint tool (with Ctrl when ctrl) */
+const key = (k: string, ctrl = false, shift = false) => ({ key: k, code: '', ctrlKey: ctrl, metaKey: false, altKey: false, shiftKey: shift, preventDefault() {} }) as unknown as KeyboardEvent;
+/** a range start's golf game for the Paint tool (a 500 x 700 tile grid): your land x < 300, the driving range's plot 300 <= x < 400, not yours beyond; the practice
+ *  area's box, the public roads and the money as given; fitView records each camera framing */
+function golf(o: { practice?: [number, number, number, number]; land?: [number, number, number, number]; roads?: { ax: number; ay: number; bx: number; by: number; name: string }[]; money?: number } = {}) {
+  const g = makeGrid(0, 0, 1000, 1400);
+  const st = { money: o.money ?? 5_000_000, plans: [] as unknown[], aims: [] as AimPoint[], toasts: [] as string[], fits: [] as { pts: { x: number; y: number }[]; zoomIn: boolean }[] };
+  const host: PaintHost = {
+    setLotGround() {}, emit() {}, save() {}, toast: t => { st.toasts.push(t); }, affine: o2 => { o2[0] = 0; o2[1] = 0; o2[2] = PX; o2[3] = 0; o2[4] = 0; o2[5] = PX; },
+    placeProps: () => 0, plant: () => 0, unplant: () => 0, plantPool: () => [],
+    golfMode: () => true, currentMonth: () => 2, money: () => st.money, spend: n => { st.money -= n; },
+    grid: () => g, gridChanged() {}, ownedAt: x => x < 300, landWhy: x => (x < 300 ? '' : x < 400 ? 'range' : 'off'), plans: () => st.plans,
+    setPlans: p => { const before = decodePlans(st.plans); st.plans = p; st.aims = aimsFromPlans(st.aims, before, decodePlans(p)); },
+    fitView: (pts, zoomIn) => { st.fits.push({ pts, zoomIn }); },
+    practiceBox: () => o.practice ?? null, publicRoads: () => o.roads ?? [], landBox: () => o.land ?? null,
+  };
+  const tool = new PaintTool(host); tool.enterCourse();
+  const down = (x: number, y: number) => { tool.pointerDown({ x, y }, x * PX, y * PX); tool.pointerUp(0.5); };
+  const drag = (from: { x: number; y: number }, to: { x: number; y: number }) => { tool.pointerDown(from, from.x * PX, from.y * PX); tool.pointerMove(to, to.x * PX, to.y * PX); tool.pointerUp(0.5); };
+  const plan = (a: [number, number], b: [number, number]) => { assert.ok(tool.setPlan()); down(...a); down(...b); assert.equal(tool.wizard.step, 'shape'); };
+  return { g, st, tool, w: tool.wizard, down, drag, plan };
+}
+const rows = (w: HoleWizard) => w.checks().map(r => `${r.kind}:${r.id}`);
+const row = (w: HoleWizard, id: string) => w.checks().find(r => r.id === id);
+
+test('10. the wizard\'s own undo: Ctrl+Z takes back the drag, then the green, then the tee; only then the course\'s last step (the last hole)', () => {
+  const { st, tool, w, down, drag, plan } = golf();
+  plan([40, 120], [230, 120]); assert.ok(tool.buildPlan(), 'hole 1 built');
+  assert.ok(tool.setPlan()); assert.equal(w.hole, 2);
+  down(40, 260); down(230, 260);
+  const gr = w.handles().find(h => h.k === 'green')!, g0 = { ...w.plan!.green };
+  drag(gr, { x: gr.x + 10, y: gr.y + 4 });
+  assert.notDeepEqual(w.plan!.green, g0, 'the green moved');
+  assert.equal(tool.topUndo, 'move the green', 'the ↶ tooltip names the drag');
+  tool.key(key('z', true));
+  assert.deepEqual(w.plan!.green, g0, 'Ctrl+Z: the drag is taken back');
+  assert.equal(w.step, 'shape');
+  tool.key(key('y', true)); assert.notDeepEqual(w.plan!.green, g0, 'Ctrl+Y: the drag again');
+  tool.key(key('z', true)); tool.key(key('z', true));
+  assert.equal(w.step, 'green', 'then the green click'); assert.deepEqual(w.tee, snapPt({ x: 40, y: 260 }), 'the tee stays');
+  tool.key(key('z', true));
+  assert.equal(w.step, 'tee', 'then the tee click'); assert.equal(w.tee, null);
+  assert.equal(decodePlans(st.plans).length, 1, 'hole 1 is still built');
+  tool.key(key('y', true)); assert.equal(w.step, 'green', 'Ctrl+Y puts the tee back'); tool.key(key('z', true));
+  // nothing of New hole left on screen: Ctrl+Z is the course's again, and takes back hole 1's build
+  assert.equal(tool.topUndo, 'build hole 1');
+  tool.key(key('z', true));
+  assert.equal(decodePlans(st.plans).length, 0, 'the course\'s undo: hole 1 is taken back');
+  assert.equal(w.hole, 1, 'the wizard waits for the first free number');
+  // an edit open with nothing changed yet: Ctrl+Z never reaches the course's steps
+  tool.redo(); assert.ok(tool.editPlan(1));
+  tool.key(key('z', true));
+  assert.equal(decodePlans(st.plans).length, 1, 'the built hole stays');
+  assert.match(st.toasts.at(-1)!, /Esc steps back/);
+});
+
+test('10b. the Props tool\'s steps stay on the course\'s undo while New hole is open; a course undo keeps a new plan on screen', () => {
+  const { st, tool, w, plan } = golf();
+  plan([40, 120], [230, 120]);
+  const money0 = st.money;
+  tool.step('place a bench', () => { st.money -= 150; return 150; }); // as golf/propstool.ts does through PaintTool.step
+  assert.equal(st.money, money0 - 150);
+  tool.undo(); // the Props tool's Ctrl+Z (its ctx.undo is PaintTool.undo)
+  assert.equal(st.money, money0, 'the bench is refunded');
+  assert.equal(w.step, 'shape', 'the plan on screen stays'); assert.ok(w.plan);
+  tool.redo(); assert.equal(st.money, money0 - 150);
+});
+
+test('11. Esc steps back one stage: a drag in hand is dropped, shaping goes back to the green (the tee stays), then the tee, then out of New hole', () => {
+  const { tool, w, down } = golf();
+  assert.ok(tool.setPlan()); down(40, 120); down(230, 120);
+  // a tee dragged in the shape step: Esc in the middle of the drag puts it back
+  const t = w.handles().find(h => h.k === 'tee')!, t0 = { ...w.plan!.tee };
+  tool.pointerDown(t, t.x * PX, t.y * PX); tool.pointerMove({ x: t.x - 6, y: t.y }, (t.x - 6) * PX, t.y * PX);
+  assert.notDeepEqual(w.plan!.tee, t0);
+  assert.equal(tool.key(key('Escape')), true); assert.deepEqual(w.plan!.tee, t0, 'Esc drops the drag in hand'); assert.equal(w.step, 'shape');
+  tool.pointerUp(0.5);
+  // move the tee for real, then Esc: back to the green step with the moved tee
+  tool.pointerDown(t, t.x * PX, t.y * PX); tool.pointerMove({ x: t.x - 6, y: t.y }, (t.x - 6) * PX, t.y * PX); tool.pointerUp(0.5);
+  const moved = { ...w.plan!.tee };
+  assert.equal(tool.key(key('Escape')), true);
+  assert.equal(w.step, 'green'); assert.deepEqual(w.tee, moved, 'the tee stays where it was dragged'); assert.equal(tool.mode, 'plan');
+  assert.equal(tool.key(key('Escape')), true);
+  assert.equal(w.step, 'tee'); assert.equal(w.tee, null); assert.equal(w.hole, 1, 'the same number');
+  assert.equal(tool.key(key('Escape')), true);
+  assert.equal(tool.mode, 'brush', 'out of New hole: the Holes panel stays, nothing planned');
+  assert.equal(tool.key(key('Escape')), false, 'the next Esc is the engine\'s (out to Select)');
+});
+
+test('12. the check table\'s blocks: off your land, the driving range, the practice area, the money (Seed as the fix), no changes', () => {
+  const { tool, w, plan } = golf({ practice: [100, 200, 140, 240] });
+  plan([40, 120], [450, 120]);
+  assert.equal(w.check().why, 'The green is off your land'); assert.equal(w.check().at, 'green');
+  assert.equal(rows(w)[0], 'block:land'); assert.deepEqual(row(w, 'land')!.show, [w.plan!.green], 'Show me goes to the green');
+  tool.cancelPlan(); plan([40, 120], [350, 120]);
+  assert.equal(w.check().why, 'The green is on the driving range: golfers hit here'); assert.equal(rows(w)[0], 'block:range');
+  tool.cancelPlan(); plan([40, 220], [120, 220]);
+  assert.equal(w.check().why, 'The green is on the practice area: golfers practise there'); assert.equal(rows(w)[0], 'block:practice');
+  tool.cancelPlan(); plan([120, 220], [210, 220]);
+  assert.equal(w.check().why, 'The tee is on the practice area: golfers practise there');
+  // money: Sod costs more than the treasury; the fix is Seed, which fits
+  tool.cancelPlan(); plan([40, 120], [230, 120]);
+  const k = w.costs()!;
+  assert.ok(k.sod > 3 * k.seed, `sod $${k.sod} vs seed $${k.seed}`);
+  const g2 = golf({ money: Math.round((k.seed + k.sod) / 2) });
+  g2.tool.plantKind = 'sod'; g2.plan([40, 120], [230, 120]);
+  const m = row(g2.w, 'money')!;
+  assert.equal(m.kind, 'block'); assert.equal(m.fix, 'seed'); assert.match(m.text, /^Not enough money: \$[\d,]+ \(you have \$[\d,]+\)$/);
+  g2.tool.plantKind = 'seed';
+  assert.equal(g2.w.check().ok, true, 'Seed fits the treasury');
+  // an edit that changes nothing
+  assert.ok(g2.tool.buildPlan()); assert.ok(g2.tool.editPlan(1));
+  assert.equal(g2.w.check().why, NO_CHANGES); assert.equal(rows(g2.w)[0], 'block:same');
+});
+
+test('13. the check table\'s warnings: cells left out (by why), too close, a long walk, a road across, the practice area; and the checks passed', () => {
+  const { tool, w, plan } = golf({ practice: [120, 100, 160, 140], roads: [{ ax: 200, ay: 0, bx: 200, by: 600, name: 'Maple Ave' }] });
+  plan([40, 120], [230, 120]);
+  assert.equal(w.check().ok, true, 'warnings never block Build');
+  const p = row(w, 'practice-cells')!;
+  assert.equal(p.text, 'Crosses the practice area: those cells stay practice'); assert.equal(p.kind, 'warn');
+  assert.ok(w.ghost()!.practice > 500, `${w.ghost()!.practice} cells on the practice area`);
+  assert.equal(row(w, 'road')!.text, 'Crosses Maple Ave: carts need a crossing');
+  assert.ok(Math.abs(row(w, 'road')!.show![0]!.x - 200) < 0.01, 'Show me goes to the crossing');
+  assert.deepEqual(rows(w).filter(r => r.startsWith('ok')), ['ok:ok-land', 'ok:ok-near'], 'passed: land and no hole near (there is a road)');
+  assert.ok(tool.buildPlan());
+  // hole 2 beside hole 1 (40 m apart) and far from its green, its green by the driving range
+  plan([40, 140], [290, 140]);
+  assert.equal(row(w, 'near')!.text, '40 m from hole 1\'s line: golfers there are in range');
+  const g1 = w.plans()[0]!.green, walk = Math.round(Math.hypot(w.plan!.tee.x - g1.x, w.plan!.tee.y - g1.y) * 2);
+  assert.equal(row(w, 'walk')!.text, `${walk} m walk from hole 1's green`);
+  const left = row(w, 'left')!;
+  assert.match(left.text, /^[\d,]+ m² left out: (the driving range|hole 1) [\d,]+ m², (the driving range|hole 1) [\d,]+ m²$/, left.text);
+  assert.equal(w.ghost()!.refused, Number(left.text.split(' ')[0]!.replace(/,/g, '')), 'a cell is 1 m²');
+  assert.equal(left.show!.length, 2, 'Show me frames the cells left out');
+  // a hole away from the others passes them all
+  const far = golf(); far.plan([40, 300], [230, 300]);
+  assert.deepEqual(rows(far.w), ['ok:ok-land', 'ok:ok-road', 'ok:ok-near']);
+});
+
+test('14. Seed and Sod: both prices from the same cells, the split by surface adds up to the price, and the money line\'s words', () => {
+  const { tool, w, plan } = golf();
+  plan([40, 120], [230, 120]);
+  const k = w.costs()!, gh = w.ghost()!;
+  assert.equal(k.seed, gh.cost, 'Seed is the default');
+  const split = w.split(); let sum = 0; for (const v of split.values()) sum += v.cost;
+  assert.ok(Math.abs(sum - gh.cost) <= split.size, `split $${sum} vs $${gh.cost}`);
+  assert.ok((split.get(SURF.green)?.cells ?? 0) > 300 && (split.get(SURF.tee)?.cells ?? 0) > 100);
+  tool.plantKind = 'sod';
+  assert.equal(w.ghost()!.cost, k.sod, 'with Sod the price is the Sod price');
+  assert.equal(aboutMoney(282_400), '$282k'); assert.equal(aboutMoney(1_210_500), '$1.2M'); assert.equal(aboutMoney(950), '$950');
+  assert.equal(aboutMoney(999_700), '$1.0M'); assert.equal(aboutMoney(Infinity), 'unlimited');
+});
+
+test('15. numbers: New hole offers the free numbers up to the last one and "after" it; the hole is built under the number picked', () => {
+  const { st, tool, w, plan, down } = golf();
+  plan([40, 120], [230, 120]); tool.buildPlan();
+  plan([40, 300], [230, 300]); tool.buildPlan();
+  plan([40, 480], [230, 480]); tool.buildPlan();
+  assert.deepEqual(tool.planNumbers().map(o => o.n), [4]);
+  // hole 2 taken out: 2 is free, and after 3 comes 4
+  assert.ok(tool.editPlan(2)); assert.ok(tool.deletePlan());
+  assert.ok(tool.setPlan());
+  assert.equal(w.hole, 2, 'New hole 2: the first free number');
+  assert.deepEqual(tool.planNumbers(), [{ n: 2, label: 'Hole 2' }, { n: 4, label: 'After 3: hole 4' }]);
+  tool.setPlanHole(3); assert.equal(w.hole, 2, 'a number in use is refused');
+  tool.setPlanHole(4); assert.equal(w.hole, 4);
+  down(40, 560); down(230, 560);
+  assert.equal(w.plan!.hole, 4);
+  tool.key(key('Escape')); tool.key(key('Escape')); assert.equal(w.hole, 4, 'Esc keeps the number');
+  down(40, 560); down(230, 560);
+  assert.ok(tool.buildPlan());
+  assert.deepEqual(decodePlans(st.plans).map(p => p.hole), [1, 3, 4]);
+});
+
+test('16. the camera: after the tee it eases out to 450 m round the tee (kept to your land), after the green it fits the plan, beside the panel', () => {
+  const { st, w, down, tool } = golf();
+  assert.ok(tool.setPlan());
+  down(100, 150);
+  assert.equal(st.fits.length, 1); assert.equal(st.fits[0]!.zoomIn, false, 'the tee only eases out');
+  const r = Math.max(...st.fits[0]!.pts.map(p => Math.hypot(p.x - w.tee!.x, p.y - w.tee!.y)));
+  assert.ok(Math.abs(r * 2 - TEE_VIEW_M) < 1, `everything within ${TEE_VIEW_M} m of the tee`);
+  // with your land's box, the circle keeps to it (the green can only go on your land)
+  const fenced = golf({ land: [60, 100, 300, 400] });
+  assert.ok(fenced.tool.setPlan()); fenced.down(100, 150);
+  for (const p of fenced.st.fits[0]!.pts) assert.ok(p.x >= 60 && p.x <= 300 && p.y >= 100 && p.y <= 400, `(${p.x}, ${p.y}) on the land's box`);
+  assert.ok(fenced.st.fits[0]!.pts.some(p => p.x === 300) && fenced.st.fits[0]!.pts.some(p => p.y === 100));
+  down(250, 150);
+  assert.equal(st.fits.length, 2); assert.equal(st.fits[1]!.zoomIn, true, 'the plan is fitted, closer or farther');
+  const xs = st.fits[1]!.pts.map(p => p.x);
+  assert.ok(Math.min(...xs) <= w.plan!.tee.x && Math.max(...xs) >= w.plan!.green.x, 'the plan\'s tee and green are in the frame');
+  // the framing itself: at 1600 x 1000 with the panel on the left 400 px, the circle fills the free map and stays in it
+  const free = { l: 400, t: 90, r: 1600, b: 1000 }, cam = { X: 0, Y: 0, z: 0.3 };
+  const v = frameView(st.fits[0]!.pts, free, 1600, 1000, cam, false, 0.006, 0.3)!;
+  const sx = (p: { x: number; y: number }) => (worldX(p.x, p.y) - v.X) * v.z + 800, sy = (p: { x: number; y: number }) => (worldY(p.x, p.y) - v.Y) * v.z + 500;
+  for (const p of st.fits[0]!.pts) assert.ok(sx(p) >= free.l && sx(p) <= free.r && sy(p) >= free.t && sy(p) <= free.b, `(${sx(p)}, ${sy(p)}) in the free map`);
+  assert.ok(v.z > 0.02 && v.z < 0.04, `zoom ${v.z}`);
+  const small = frameView(st.fits[0]!.pts, { l: 400, t: 90, r: 1366, b: 768 }, 1366, 768, cam, false, 0.006, 0.3)!;
+  console.log(`New hole tee framing: ${(v.z * 100).toFixed(1)}% at 1600 x 1000, ${(small.z * 100).toFixed(1)}% at 1366 x 768 (panel 400 px)`);
+  // already farther out with the circle in view: the camera stays
+  const outCam = { X: worldX(100.25, 150.25) - (1000 - 800) / 0.02, Y: worldY(100.25, 150.25) - (545 - 500) / 0.02, z: 0.02 };
+  assert.deepEqual(frameView(st.fits[0]!.pts, free, 1600, 1000, outCam, false, 0.006, 0.3), outCam);
+});
+
+test('17. planShape: straight, a dogleg left or right as the golfer sees it, two bends', () => {
+  const p = (b: { x: number; y: number }[]) => newPlan(1, { x: 0, y: 0 }, { x: 200, y: 0 }, b);
+  assert.equal(planShape(p([])), 'straight');
+  assert.equal(planShape(p([{ x: 100, y: 3 }])), 'straight', 'a few degrees is straight');
+  // heading east (+x) with y running down the map, a bend to +y and back is a left turn at the bend
+  assert.equal(planShape(p([{ x: 100, y: 40 }])), 'dogleg left');
+  assert.equal(planShape(p([{ x: 100, y: -40 }])), 'dogleg right');
+  assert.equal(planShape(p([{ x: 60, y: 30 }, { x: 140, y: -30 }])), 'double dogleg');
 });

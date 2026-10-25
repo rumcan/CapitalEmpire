@@ -30,11 +30,13 @@ export const lookName = (tex: string) => plainName(PAINT_TEXES.find(t => t.id ==
 export function CoursePanel({ game, looks = false, onLooks }: { game: Game; looks?: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, ui = game.toolUi();
   const shape = !ui || ui.shapeByHand, plan = p.mode === 'plan';
+  // ↶ ↷ name what they take back (P23 4.3); in New hole its own clicks and drags come first (P23 4.4, T119)
+  const un = p.topUndo, re = p.topRedo;
   return (
     <div className="tp" data-panel="holes">
       <ToolHead icon="trophy" title="Holes" desc="Each hole is a park: build it, then shape it">
-        <button className="round-btn" disabled={!p.canUndo} aria-label={p.canUndo ? `Undo ${p.undoLabel}` : 'Nothing to undo'} title={p.canUndo ? `Undo: ${p.undoLabel} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undo()}>↶</button>
-        <button className="round-btn" disabled={!p.canRedo} aria-label={p.canRedo ? `Redo ${p.redoLabel}` : 'Nothing to redo'} title={p.canRedo ? `Redo: ${p.redoLabel} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redo()}>↷</button>
+        <button className="round-btn" disabled={!un} aria-label={un ? `Undo ${un}` : 'Nothing to undo'} title={un ? `Undo: ${un} (Ctrl+Z)` : 'Nothing to undo'} onClick={() => p.undoTop()}>↶</button>
+        <button className="round-btn" disabled={!re} aria-label={re ? `Redo ${re}` : 'Nothing to redo'} title={re ? `Redo: ${re} (Ctrl+Y)` : 'Nothing to redo'} onClick={() => p.redoTop()}>↷</button>
       </ToolHead>
       {plan ? <HoleWizardPanel game={game} /> : (
         <button className="pill-gold" data-primary="new-hole" title="Click the tee, then the green: the whole hole is planned, ready to shape and build" onClick={() => newHole(game)}>
