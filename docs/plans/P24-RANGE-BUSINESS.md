@@ -55,10 +55,10 @@ range ... that means existing paths and tee boxes and distance markers etc."
 ### 2.1 The opening scene (range starts only, `golf.start === 'range'`)
 The plot's own frame (u along the road 0..70, v away from it 0..150, the drive beside u = 70) turns with the range's facing, never
 mirrored (`range.ts plotPoint`). Everything is derived from the save's range state (`golf.range`), so an upgrade re-lays it.
-- **Ground** (lot-ground patches `range:*`, in the course's own textures: the surface presets the course brush paints with): the
+- **Ground** (one ground key `range:ground` of painted areas, in the course's own textures: the surface presets the course brush paints with): the
   outfield v 17..149 is fairway (the preset with its mowing stripes) inside a first-cut band; the tee box v 18..24 runs the width of the
-  24 future bays (tee turf with a fringe edge); each open bay is a dark rubber pad with a green mat; target greens are green discs in
-  fringe collars; the shack's yard is packed dirt, the caravan's yard dry lawn.
+  24 future bays (tee turf with a fringe edge); a concrete hitting deck runs under the open bays, each a dark rubber pad with a green mat;
+  target greens (50 to 240 m) are green discs in first-cut collars; the shack's yard is packed dirt, the caravan's yard dry lawn.
 - **Paths** (real cement-slab cart paths, network segs laid once with the range): the car park's edge → along the back of the mats the
   full width of the tee box, and a spur to the shack's counter. They are the course's paths: walkable, renamable, extendable later.
 - **Props** (auto props `range:*`, re-made from the state, never saved): the shack (or the pro shop), the caravan and yard decor inside a
@@ -74,11 +74,12 @@ mirrored (`range.ts plotPoint`). Everything is derived from the save's range sta
   an after-work peak 16:00-19:00, the evening 19:00-22:00 with floodlights). Closed hours draw nobody; golfers still playing at closing
   finish their bucket.
 - **The visit:** the car drives in off the county road along the drive into a free car-park bay (parked while its golfer plays); the
-  golfer walks the path to the shack and queues (FIFO); the counter serves one at a time (shack 5 s, pro shop 3.5 s, dispenser 1 s) and
-  only when a mat is free; the golfer walks to the mat, plays one town hour (about 6 swings shown, each ball an arc to a target green
-  with scatter, landing and lying there until the range closes), walks back and drives off.
-- **Lost customers:** a car turns away when the queue is at `4 + bays / 4`, or no car-park bay is free; a golfer waiting more than two
-  town hours leaves. The card shows today's lost count; the queue is visible at the shack.
+  golfer walks the path to the shack and queues (FIFO); the counter serves one at a time (shack 3 s, pro shop 2 s, dispenser 0.8 s) and
+  only when a mat is free; the bay is held for one town hour from the sale (the walk to it and two or more swings, each ball an arc to a
+  target green with scatter, landing and lying there until the range closes); then the golfer walks back and drives off. Walking and
+  driving are brisk (a sim second is more than two town minutes).
+- **Lost customers:** a car turns away when the line at the shop is at `4 + bays / 4`, or no car-park bay is free; a golfer who walks up
+  to a line two past that turns back; a golfer waiting more than two town hours leaves. The card shows today's lost count; the queue is visible at the shack.
 - **Cost:** at most about 60 golfers, 40 cars and 800 lying balls; the people are movers like the crowd, the balls one 2D path at the
   street tier, nothing at district zoom. The worker's own range visit cars are switched off in range starts (they would book the money
   twice and vanish at the door).
@@ -98,8 +99,8 @@ mirrored (`range.ts plotPoint`). Everything is derived from the save's range sta
 | Target greens & yardage boards | $6,000 | appeal +25% | 2 → 5 greens, flags, boards at each |
 | Covered bays | $18,000 | appeal +15%, ref price +$2 | a covered-bay building over each four bays |
 | Floodlights | $24,000 | open till 22:00 (hours 11 → 15, the evening draw) | 8 floodlights, lit at night |
-| Ball dispenser | $5,000 | serve 1 s (the queue clears), appeal +5% | a dispenser by the shop |
-| Pro shop | $45,000 (the clubhouse's price) | +$2 spend a golfer (gear), appeal +15%, serve 3.5 s | the shack becomes the pro shop |
+| Ball dispenser | $5,000 | serve 0.8 s (the queue clears: the shack's counter limits 8 bays and more), appeal +5% | a dispenser by the shop |
+| Pro shop | $45,000 (the clubhouse's price) | +$2 spend a golfer (gear), appeal +15%, serve 2 s | the shack becomes the pro shop |
 
 - **Start** (tier 1, 2 exits: pop 3,000): about 55 golfers a town day want 44 bay-hours; about 100 are served a season: **about $24,000
   gross, $22,000 net** (P22's year-1 target was $18,000).
@@ -123,17 +124,19 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 | D2 | The worker's range visit cars? | Off in range starts: they booked $120 a car that no one saw and vanished at the door. |
 | D3 | Which clock? | The town day (the HUD clock, night): opening hours and floodlights mean something there. |
 | D4 | How many customers is a golfer? | 40 at the default day, scaled by the day length; said on the card. |
-| D5 | Range ground: course grid or ground patches? | Ground patches in the course's own presets; the course grid stays the player's (no hole counts, upkeep or stats from the range). Phase 2 lays practice greens in the grid. |
+| D5 | Range ground: course grid or ground patches? | Painted-area ground patches in the course's own presets; the course grid stays the player's (no hole counts, upkeep or stats from the range). Phase 2 lays practice greens in the grid. |
 | D6 | Paths | Real cement-slab cart paths in the network, laid once by the game. |
 | D7 | Tee boxes | A tee-turf strip with a fringe edge and rubber pads under the mats; T127's raised tee banks are course-grid only, so they wait for Phase 2. |
 | D8 | Starting size | 4 open mats, 2 target greens (50 m, 100 m), no floodlights, no cover; the whole plot already mown and fenced. |
 | D9 | Price band | $3-$12, $6 to start, elasticity 1.5. |
 | D10 | Upkeep of upgrades | None in Phase 1 (one number less to balance); Phase 4 revisits. |
 | D11 | Lost customers | A car turns away at a queue of 4 + bays/4 or a full car park; a golfer leaves after two town hours queued. |
-| D12 | Missing art | Labelled stand-ins (floodlight: street lamp; yardage board and distance marker: chalkboard and post sign; dispenser: utility cabinet; sign: blank leaderboard); tee markers wait for `golf:tee-marker`. Requests in GOLF-SPRITES.md. |
+| D12 | Missing art | Labelled stand-ins (the shack: the rusty lean-to shed, since the shanty has no four views and would be drawn as the grand clubhouse; floodlight: street lamp; yardage board and distance marker: chalkboard and post sign; dispenser: utility cabinet; sign: blank leaderboard); tee markers wait for `golf:tee-marker`. Requests in GOLF-SPRITES.md. |
 | D13 | Rain and covered bays | No live weather on the town day yet: covered bays raise appeal and price; rain play comes with live weather. |
 | D14 | Where the range card opens | Clicking the range (shop, mats, yard) with the select tool, and the top bar's Range chip. |
 | D15 | Ball clearing | Balls lie until the range closes and are gone by morning; the picker cart is Phase 4. |
+| D16 | The first minute | A new range game's town day starts at 06:30, so the first car turns in within the first minute. |
+| D17 | Which way the four-view art faces | By the sheets' fronts (front in NE and NW: +y, -x, -y, +x), checked in game on the covered bays; `lots/preset-art.ts` documents +y, +x, -y, -x, which the lead may want to check for the lots. |
 
 ## 4. Phases and tickets
 
