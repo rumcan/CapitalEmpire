@@ -133,8 +133,9 @@ function drawRipple(v: WizardView, w: HoleWizard, now: number, reduced: boolean)
       }
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (!any) continue;
-      const mid = (a0 + a1) / 2 / RIPPLE_POP_MS, alpha = reduced ? 0.5 * (1 - mid) : mid < 0.2 ? 0.95 : 0.95 * (1 - (mid - 0.2) / 0.8);
-      ctx.globalAlpha = alpha; ctx.fillStyle = band === 0 && !reduced ? look.edge : look.fill; ctx.fill(); ctx.globalAlpha = 1;
+      // a soft flash in the surface's colour that fades as the ground's own cells bake in under it
+      const mid = (a0 + a1) / 2 / RIPPLE_POP_MS, alpha = reduced ? 0.4 * (1 - mid) : 0.7 * (1 - mid);
+      ctx.globalAlpha = alpha; ctx.fillStyle = look.fill; ctx.fill(); ctx.globalAlpha = 1;
     }
   }
   return true;
