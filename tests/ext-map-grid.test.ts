@@ -3,7 +3,7 @@
 // Headless: npm test (no DOM, no GL; the shader's maths are mirrored by alphaAt).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { HALF_T, LOOK, MAP_GRID_KEY, MAP_T, MAX_LAND, alphaAt, courseBuilding, frameDraws, gridFade, gridFrame, landAt, lineFrac, loadMapGrid, packLand, saveMapGrid, tilesPerPx, type GridFrame } from '../src/game/ext/map-grid/index.js';
+import { HALF_T, LOOK, MAP_GRID_KEY, MAP_T, MAX_LAND, alphaAt, courseBuilding, frameDraws, gridFade, gridFrame, gridShown, landAt, lineFrac, loadMapGrid, packLand, saveMapGrid, tilesPerPx, type GridFrame } from '../src/game/ext/map-grid/index.js';
 import { CELL_T } from '../src/game/ext/course-grid/index.js';
 import { CLASS, RoadNetwork, classOf, type ClassId, type Leg, type Pt } from '../src/game/network';
 import { NetEditor } from '../src/game/netops';
@@ -80,7 +80,7 @@ test('the grid fades with the zoom: full close up, faint at the district tier, g
 test('the map grid setting: on in dev builds, off in production, remembered, ?grid= wins', () => {
   const store = new Map<string, string>(), s = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) };
   assert.equal(loadMapGrid(s, true), true, 'dev: on by default');
-  assert.equal(loadMapGrid(s, false), false, 'production: off by default');
+  assert.equal(loadMapGrid(s, false), true, 'production: on by default too (it only shows while building)');
   saveMapGrid(s, false);
   assert.equal(store.get(MAP_GRID_KEY), '0');
   assert.equal(loadMapGrid(s, true), false, 'turned off in dev stays off after a reload');
@@ -91,7 +91,7 @@ test('the map grid setting: on in dev builds, off in production, remembered, ?gr
   // no storage, or a storage that throws: the default
   assert.equal(loadMapGrid(null, true), true);
   const bad = { getItem: () => { throw new Error('denied'); }, setItem: () => { throw new Error('denied'); } };
-  assert.equal(loadMapGrid(bad, false), false); assert.doesNotThrow(() => saveMapGrid(bad, true));
+  assert.equal(loadMapGrid(bad, false), true); assert.doesNotThrow(() => saveMapGrid(bad, true));
 });
 
 test('the half grid shows while a course building tool is on, and only then', () => {
@@ -209,4 +209,10 @@ test('the camera maths the shader uses: the tile under a screen point inverts wo
     const X = worldX(x, y), Y = worldY(x, y), a = X / 64, b = Y / 32;
     assert.ok(near((a + b) / 2, x) && near((b - a) / 2, y));
   }
+});
+
+test('the map grid shows only while a build or paint tool is in hand, never in Select (the owner, 2026-10-25)', () => {
+  for (const t of ['road', 'junction', 'bulldoze', 'paint', 'course', 'path', 'business', 'park', 'bus', 'toll', 'lane', 'downgrade']) assert.equal(gridShown(true, t), true, t);
+  assert.equal(gridShown(true, 'select'), false);
+  assert.equal(gridShown(false, 'road'), false, 'the setting off hides it everywhere');
 });

@@ -10,6 +10,8 @@ import { ToolHead } from '../ToolHead';
 import { SurfaceMark } from './SurfaceMark';
 import { HoleStrip, newHole } from './HoleStrip';
 import { HoleWizardPanel } from './HoleWizard';
+import { CourseEdges } from './CourseEdges';
+import { GRID_KINDS } from '../../game/paint-tool';
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -111,7 +113,8 @@ function Sub({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** More options (P23 4.3): one collapsed drawer in labelled sections, remembered for the session: Shapes (Lasso, Round, Stamps), Look (My
- *  looks: each surface's look and the style editor, decision 3), Planting (Seed or Sod), and Hole · plants · ground (saved holes, editing a
+ *  looks: each surface's look and the style editor, decision 3), Edges (T123's Border and Shadow of the surface in the brush), Planting
+ *  (Seed or Sod), and Hole · plants · ground (saved holes, editing a
  *  planned hole, the plant brushes, the ground's height). While one of its tools is in hand it stays open; closing it puts that tool down */
 function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onLooks?: (open: boolean) => void }) {
   const p = game.paint, ui = game.toolUi(), fine = (k: string) => !ui || (ui.visibleFineControls as string[]).includes(k);
@@ -162,6 +165,11 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
             )}
             {(p.mode === 'draw' || p.mode === 'piece') && <div className="sub-line mt-1.5">{help}</div>}
           </Sub>
+          {GRID_KINDS.includes(p.brushKind) && p.mode !== 'height' && p.mode !== 'plant' && p.mode !== 'hole' && (
+            <Sub title="Edges">
+              <CourseEdges game={game} />
+            </Sub>
+          )}
           <Sub title="Look">
             <div className="flex items-center justify-between gap-2">
               <span>My looks</span>

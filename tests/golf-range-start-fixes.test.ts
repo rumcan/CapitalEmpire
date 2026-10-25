@@ -152,7 +152,7 @@ test('2a. a patch\'s grow look is the same for close and district (lite) chunks 
   // growDraws for either: it reads the patch's month mask and nothing of the zoom)
   const forClose = coursePatch(g, 1, 1, LOOKS, 2)!, forDistrict = coursePatch(g, 1, 1, LOOKS, 2)!;
   assert.deepEqual(growDraws(forClose.course!), growDraws(forDistrict.course!));
-  assert.deepEqual(drawn(forClose).map(k => k.split(':').slice(0, 2).join(':')), ['1:0', '4:0', '5:0', '8:0'], 'just seeded: rough, fairway, tee and green all at stage 0; sand never grows');
+  assert.deepEqual(drawn(forClose).map(k => k.split(':').slice(0, 2).join(':')), ['1:1', '4:1', '5:1', '8:1'], 'just seeded: rough, fairway, tee and green all at a quarter grass (T121); sand never grows');
   assert.deepEqual(drawn(coursePatch(g, 1, 1, LOOKS, 2.2)), drawn(forClose), 'within a stage the look holds');
   // 1.5 months on: the rough (2 months) three quarters grown, the fairway and tee (3) half, the green (6) a quarter
   const later = growDraws(coursePatch(g, 1, 1, LOOKS, 3.5)!.course!);

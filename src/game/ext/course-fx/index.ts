@@ -16,6 +16,14 @@ export function growStage(share: number): number {
   return Math.min(4, Math.max(0, Math.round(share * 4)));
 }
 
+/** the grow stage a seeded cell shows `share` (0..1) of the way through its grow-in (P23 4.6, T121: readable grow-in): sprouts from day one, a
+ *  quarter grass (stage 1) for the first third, half (2) and three quarters (3) for the next thirds, full grass (stage 4) only when the
+ *  grow-in is done, so a just built fairway, tee or green already reads as one and never as bare soil */
+export function seededStage(share: number): number {
+  if (share >= 1) return 4;
+  return 1 + Math.min(2, Math.floor(3 * Math.max(0, share)));
+}
+
 /** grow-in duration in months for each course surface id (P21 section 3.4 & GOLF-PLAN 4.1) */
 export const SURF_GROW_MONTHS: Readonly<Record<number, number>> = {
   [SURF.none]: 0,
@@ -31,7 +39,8 @@ export const SURF_GROW_MONTHS: Readonly<Record<number, number>> = {
 
 /**
  * calculates a chunk's growth mask: a Uint8Array of one byte per cell (row-major).
- * alpha = round(255 * (1 - stage/4)). Sod and zero-grow-in surfaces give 0.
+ * alpha = round(255 * (1 - stage/4)), the stage by seededStage (a seeded cell starts at a quarter grass: 191, never 255). Sod, established
+ * cells and zero-grow-in surfaces give 0.
  *
  * g: global course grid.
  * cx, cy: the chunk's index (its box starts at tile cx * size, cy * size).
@@ -80,7 +89,7 @@ export function growMask(
       const plantedMonth = g.month[idx]!;
       const elapsed = Math.max(0, nowMonth - plantedMonth);
       const share = Math.min(1, elapsed / totalMonths);
-      const stage = growStage(share);
+      const stage = seededStage(share);
 
       // alpha = round(255 * (1 - stage / 4))
       const alpha = Math.round(255 * (1 - stage / 4));

@@ -10,9 +10,6 @@ import type { Game } from '../src/game/engine';
 import type { HoleView } from '../src/game/golf/holeview';
 import { CoursePanel } from '../src/ui/course/CoursePanel';
 import { holeState } from '../src/ui/course/HoleStrip';
-import { holeGrowth, holeReadyMonths, monthIndexLabel } from '../src/game/ext/course-fx/hole-grow';
-import { MONTH_BASE } from '../src/game/ext/course-grid/areas';
-import { SURF, makeGrid } from '../src/game/ext/course-grid';
 import { plainName } from '../src/PaintPanel';
 
 const facts = (over: Partial<PlayerProgressFacts> = {}): PlayerProgressFacts => ({
@@ -22,7 +19,7 @@ const emptyView = (n: number): HoleView => ({ n, started: false, par: 0, lengthM
 const ready = (n: number, par: 3 | 4 | 5, lengthM: number): HoleView => ({ n, started: true, par, lengthM, memberLengthM: lengthM, checks: [{ label: 'Green painted', ok: true }], warnings: [], ok: true, virtual: false });
 
 /** a stand-in golf game at the stage these facts give, with these holes (views by number) and grow-ins */
-function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[]; growing?: Record<number, string>; mode?: string; current?: number } = {}): Game {
+function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[]; growing?: Record<number, number>; mode?: string; current?: number } = {}): Game {
   const views = Array.from({ length: 18 }, (_, i) => o.holes?.find(h => h.n === i + 1) ?? emptyView(i + 1));
   const ui = computeProgressiveUiState(facts(o.facts));
   const paint = {
@@ -34,7 +31,7 @@ function fakeGame(o: { facts?: Partial<PlayerProgressFacts>; holes?: HoleView[];
   };
   return {
     golfMode: true, paint, toolUi: () => ui, courseHoleViews: () => views,
-    holeGrowthOf: (n: number) => (o.growing?.[n] ? { growing: true, readyMonth: 0, ready: o.growing[n]! } : { growing: false, readyMonth: 0, ready: '' }),
+    holesGrowing: () => new Map(Object.entries(o.growing ?? {}).map(([n, m]) => [+n, m])),
   } as unknown as Game;
 }
 const render = (g: Game) => renderToStaticMarkup(createElement(CoursePanel, { game: g }));
@@ -69,7 +66,7 @@ describe('the Holes panel at stage 1 renders New hole only (P23 4.3)', () => {
 describe('the Holes panel after hole 1 (stage 2)', () => {
   const holes = [ready(1, 4, 342), ready(2, 3, 150), { ...ready(3, 5, 480), ok: false, checks: [{ label: 'Pin on the green', ok: false }] }];
   it('New hole stays on top; your holes as badges with icons; the current hole\'s status line; Shape by hand; More options collapsed', () => {
-    const h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, growing: { 2: 'Mar 1985' } }));
+    const h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, growing: { 2: 6 } }));
     assert.ok(h.indexOf('data-primary="new-hole"') < h.indexOf('data-section="holes"'), 'New hole is on top');
     assert.match(h, /<button data-hole="1"[^>]*class="hole-badge hole-ready hole-badge-on"[^>]*><span class="hole-icon" aria-hidden="true">✓<\/span>1/);
     assert.match(h, /<button data-hole="2"[^>]*class="hole-badge hole-growing[^"]*"[^>]*><span class="hole-icon" aria-hidden="true">◔<\/span>2/);
@@ -84,7 +81,7 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
   });
 
   it('a growing hole\'s status says when it is ready; a hole that needs attention says what it misses', () => {
-    let h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, growing: { 2: 'Mar 1985' }, current: 2 }));
+    let h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, growing: { 2: 6 }, current: 2 }));
     assert.match(h, /Hole 2 · par 3 · 150 m · growing, ready Mar 1985/);
     h = render(fakeGame({ facts: { playableHoles: 2, stageReached: 2 }, holes, current: 3 }));
     assert.match(h, /Hole 3 · par 5 · 480 m · needs attention/);
@@ -95,28 +92,6 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
     assert.deepEqual(holeState(ready(1, 4, 300), null), { kind: 'ready', icon: '✓', word: 'ready' });
     assert.deepEqual(holeState(ready(1, 4, 300), { growing: true, ready: 'Mar 1985' }), { kind: 'growing', icon: '◔', word: 'growing, ready Mar 1985' });
     assert.equal(holeState({ ...ready(1, 4, 300), ok: false }, { growing: true, ready: 'Mar 1985' }).kind, 'attn');
-  });
-});
-
-describe('a hole\'s grow-in (P23 4.6: "growing · ready Mar 1985")', () => {
-  it('the hole is ready when its slowest seeded cell is grown; sod and established cells grow nothing', () => {
-    const g = makeGrid(0, 0, 4, 1);
-    g.surf.set([SURF.fairway, SURF.green, SURF.fairway, SURF.green]);
-    g.hole.set([1, 1, 2, 2]);
-    g.month.set([MONTH_BASE + 2, MONTH_BASE + 2, 0, 0]); // hole 1 seeded in month 2, hole 2 established (sod)
-    const r = holeReadyMonths(g);
-    assert.equal(r.get(1), MONTH_BASE + 2 + 6, 'the green takes 6 months');
-    assert.equal(r.has(2), false);
-    assert.deepEqual(holeGrowth(r.get(1), 3, 3), { growing: true, readyMonth: 8 });
-    assert.deepEqual(holeGrowth(r.get(1), 8, 8), { growing: false, readyMonth: 8 });
-    assert.deepEqual(holeGrowth(r.get(1), 4, 3), { growing: true, readyMonth: 7 }, 'a grow card\'s month ahead brings it a month nearer');
-    assert.deepEqual(holeGrowth(undefined, 3, 3), { growing: false, readyMonth: 3 });
-  });
-
-  it('month indices read as the top bar does: the first season starts in Sep 1984', () => {
-    assert.equal(monthIndexLabel(0), 'Sep 1984');
-    assert.equal(monthIndexLabel(6), 'Mar 1985');
-    assert.equal(monthIndexLabel(12), 'Sep 1985');
   });
 });
 

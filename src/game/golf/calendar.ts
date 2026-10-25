@@ -30,6 +30,8 @@ export function seasonMonth(clock: number): number { return (monthOf(inDay(clock
 export function seasonYear(clock: number, runs: number): number { return yearOf(runs) - (seasonMonth(clock) >= SEASON_START ? 1 : 0); }
 /** "Mar 1985": the month and the calendar year of a clock value in season `runs` */
 export function seasonLabel(clock: number, runs: number): string { return `${MONTH_NAMES[seasonMonth(clock)]} ${seasonYear(clock, runs)}`; }
+/** a game month index (0 = September of the first season, as the engine's golfMonthIndex) as 'Mar 1985' */
+export function monthIndexLabel(idx: number): string { const k = SEASON_START + Math.round(idx); return `${MONTH_NAMES[((k % 12) + 12) % 12]} ${START_YEAR - 1 + Math.floor(k / 12)}`; }
 /** the months left until the tournament (the end of the day), 0..12, fractional */
 export function monthsLeft(clock: number): number { return (SEASON_LEN - inDay(clock)) / MONTH_LEN; }
 

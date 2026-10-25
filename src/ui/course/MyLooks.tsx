@@ -53,10 +53,10 @@ export function MyLooksCard({ game, onClose }: { game: Game; onClose: () => void
         <LookDisc kind={kind} tex={s.tex} scale={s.scale} angle={s.angle} tone={grid ? 0 : s.tone} toneAmt={s.toneAmt} tint={s.tint} />
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 font-semibold"><SurfaceMark kind={kind} size={20} />{lookName(s.tex)}</div>
-          <div className="sub-line mt-0.5 leading-snug">{`${grid ? `Every ${name.toLowerCase()} on your course` : `Every ${name.toLowerCase()} you paint`} wears it; the disc at the pointer shows it. Pick another surface for its look.`}</div>
+          <div className="sub-line mt-0.5 leading-snug">{`${grid ? `Every ${name.toLowerCase()} on your course` : `Every ${name.toLowerCase()} you paint`} wears it; the disc at the pointer shows it.${grid ? ' Its border and shadow: More options › Edges.' : ''} Pick another surface for its look.`}</div>
         </div>
       </div>
-      <StyleEditor game={game} grid={grid} />
+      <StyleEditor game={game} gridOnly={grid} />
     </section>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Game } from '../../game/engine';
 import type { HoleView } from '../../game/golf/holeview';
 import { HOLE_COUNT } from '../../game/paint-tool';
+import { monthIndexLabel } from '../../game/golf/calendar';
 
 /** New hole: the plan mode (golf: click a tee, then a green; T102) or, in a classic game, the next free hole to paint by hand */
 export function newHole(game: Game) {
@@ -23,11 +24,13 @@ export function holeState(v: HoleView, growth: { growing: boolean; ready: string
  *  paint by hand); one status line under them for the current hole ("Hole 1 · par 4 · 342 m · growing, ready Mar 1985") and, when it needs
  *  attention, what it is missing */
 export function HoleStrip({ game }: { game: Game }) {
-  const p = game.paint, views = game.courseHoleViews(), cur = p.brushHole, cv = views[cur - 1];
+  const p = game.paint, views = game.courseHoleViews(), cur = p.brushHole, cv = views[cur - 1], growing = game.holesGrowing();
+  /** a hole's grow-in (T121: the game month its last seeded cell is grown in), or null once it is grown in */
+  const growth = (n: number) => { const r = growing.get(n); return r === undefined ? null : { growing: true, ready: monthIndexLabel(r) }; };
   const [menu, setMenu] = useState(false);
   const built = views.filter(v => v.started), scored = views.filter(v => v.par > 0);
   const totalPar = scored.reduce((s, v) => s + v.par, 0), totalM = scored.reduce((s, v) => s + v.lengthM, 0);
-  const curState = cv?.started ? holeState(cv, game.holeGrowthOf(cur)) : null;
+  const curState = cv?.started ? holeState(cv, growth(cur)) : null;
   const empty = () => { const f = p.nextFreeHole(); if (!f) { game.toast(`All ${HOLE_COUNT} holes are in use`, 'warn'); return; } game.goToHole(f); p.setBrush(p.brushKind); };
   const pick = (f: () => void) => () => { setMenu(false); f(); };
   const missing = cv?.started && !cv.ok ? [...cv.checks.filter(c => !c.ok).map(c => c.label), ...cv.warnings].slice(0, 3) : [];
@@ -36,7 +39,7 @@ export function HoleStrip({ game }: { game: Game }) {
       <div className="sec-head"><h3 className="label-caps">Your holes</h3>{scored.length > 1 && <span className="sec-note">{`${scored.length} holes · par ${totalPar} · ${totalM} m`}</span>}</div>
       <div className="flex flex-wrap items-center gap-1.5">
         {built.map(v => {
-          const st = holeState(v, game.holeGrowthOf(v.n)), on = cur === v.n;
+          const st = holeState(v, growth(v.n)), on = cur === v.n;
           return (
             <button key={v.n} data-hole={v.n} aria-pressed={on} className={`hole-badge hole-${st.kind} ${on ? 'hole-badge-on' : ''}`} title={`Hole ${v.n}${v.par ? ` · par ${v.par} · ${v.lengthM} m` : ''} · ${st.word}`} onClick={() => game.goToHole(v.n)}>
               <span className="hole-icon" aria-hidden>{st.icon}</span>{v.n}
