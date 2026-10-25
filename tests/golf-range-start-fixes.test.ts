@@ -8,7 +8,8 @@ import { MAP } from '../src/game/iso';
 import { TC, generateTerrain, type Terrain } from '../src/game/terrain';
 import type { Rect } from '../src/game/golf/mode';
 import { planRangeStart, type RangeStart } from '../src/game/golf/rangestart';
-import { LAND_BLOCK, blockAt, blockOnWater, buyAdjacentBlock, isAdjacentBlock, sharedEdge } from '../src/game/golf/parcels';
+import { LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, buyAdjacentBlock, isAdjacentBlock, sharedEdge, type LandRoad } from '../src/game/golf/parcels';
+import { CLASS, SK } from '../src/game/network';
 import { SURF, cellAt, cellCentre, fitGrid, landGridBox, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
 import { plantMonth } from '../src/game/ext/course-grid/areas';
 import { coursePatch, type CourseLooks } from '../src/game/ext/course-grid/patch';
@@ -25,11 +26,11 @@ type Side = 'N' | 'S' | 'E' | 'W';
 /** the side of a range start's parcel on the road: the course lies away from it (dir 0 north: the road is on the south side) */
 const roadSide = (dir: number): Side => (['S', 'W', 'N', 'E'] as const)[dir]!;
 /** the blocks for sale found by probing a band 0..40 tiles off one side of rect r (as the pointer would), unbuildable (water) ones dropped */
-function blocksOff(parcels: readonly Rect[], r: Rect, side: Side, t: Terrain): Rect[] {
+function blocksOff(parcels: readonly Rect[], r: Rect, side: Side, t: Terrain, refuse?: (b: Rect) => boolean): Rect[] {
   const [px, py, pw, ph] = r, out = new Map<string, Rect>();
   for (let d = 0.5; d < LAND_BLOCK; d += 3) for (let s = 0.5; s < (side === 'N' || side === 'S' ? pw : ph); s += 5) {
     const x = side === 'W' ? px - d : side === 'E' ? px + pw + d : px + s, y = side === 'N' ? py - d : side === 'S' ? py + ph + d : py + s;
-    const b = blockAt(parcels, x, y, LAND_BLOCK, MAP);
+    const b = blockAt(parcels, x, y, LAND_BLOCK, MAP, refuse);
     if (b && !blockOnWater(b, wet(t))) out.set(b.join(','), b);
   }
   return [...out.values()];
@@ -98,6 +99,36 @@ test('1c. old saves: a parcel on the map lattice and its bought blocks get the s
   assert.equal(blockAt([parcel], 200, 200), null);
   assert.equal(blockAt([[0, 0, 100, 100]], 120, 50, LAND_BLOCK, 110), null, 'a block past the map edge');
   assert.equal(blockAt([], 10, 10), null);
+});
+
+test('1d. a public road stays public: no block for sale in a range start covers a road tile; the course grows on the other three sides', () => {
+  // the check itself: a road crossing a block, its verge reaching in, beside it, and a diagonal one
+  const road: LandRoad[] = [{ ax: 0, ay: 100, bx: 400, by: 100, hw: 3.75 }];
+  assert.equal(blockOnRoad([100, 60, 40, 40], road), true, 'the road along its edge');
+  assert.equal(blockOnRoad([100, 80, 40, 40], road), true, 'the road across it');
+  assert.equal(blockOnRoad([100, 103, 40, 40], road), true, 'its verge reaches in');
+  assert.equal(blockOnRoad([100, 104, 40, 40], road), false, 'beside it');
+  assert.equal(blockOnRoad([100, 160, 40, 40], [{ ax: 0, ay: 0, bx: 300, by: 300, hw: 2 }]), false);
+  assert.equal(blockOnRoad([150, 120, 40, 40], [{ ax: 0, ay: 0, bx: 300, by: 300, hw: 2 }]), true);
+  let checked = 0;
+  for (const seed of [1, 2, 3, 4]) {
+    const p = plan(seed); if (!p) continue;
+    const t = terrains.get(seed)!, parcel = p.save.parcel, parcels = [parcel];
+    // the county road's tiles: every leg but a tunnel, at the road's half width and walk (the range's gravel drive is the course's own)
+    const roads: LandRoad[] = p.road.legs.filter((_, i) => p.road.kinds[i] !== SK.TUNNEL).map(l => ({ ax: l.a.x, ay: l.a.y, bx: l.b.x, by: l.b.y, hw: CLASS.road!.h + CLASS.road!.walk }));
+    const refuse = (b: Rect) => blockOnRoad(b, roads);
+    for (const side of ['N', 'S', 'E', 'W'] as const) {
+      const bs = blocksOff(parcels, parcel, side, t, refuse);
+      for (const b of bs) assert.equal(blockOnRoad(b, roads), false, `seed ${seed} ${side}: ${b} takes no road tile`);
+      if (side === roadSide(p.save.dir)) {
+        // the road side: the blocks that touch the parcel there all take the road, so none is for sale
+        const unchecked = blocksOff(parcels, parcel, side, t);
+        assert.ok(unchecked.length > 0 && unchecked.every(refuse), `seed ${seed}: the road-side blocks would all take the road`);
+        assert.equal(bs.length, 0, `seed ${seed}: nothing for sale across the road from the parcel`);
+      } else { assert.ok(bs.length >= 1, `seed ${seed}: the ${side} side still has land for sale`); checked++; }
+    }
+  }
+  assert.ok(checked >= 9, `checked ${checked} open sides`);
 });
 
 // ---------- 2. the grow-in: one state for every zoom tier, each surface its own young grass ----------

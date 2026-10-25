@@ -123,12 +123,41 @@ export function sharedEdge(a: Rect, b: Rect): number {
   return 0;
 }
 
+/** a road piece for the land check: its centre line (tiles) and its half width with its walk (tiles) */
+export interface LandRoad { ax: number; ay: number; bx: number; by: number; hw: number }
+/** whether segment a-b crosses or lies in rect r (Liang-Barsky clipping) */
+function segHitsRect(r: Rect, ax: number, ay: number, bx: number, by: number): boolean {
+  let t0 = 0, t1 = 1;
+  const dx = bx - ax, dy = by - ay, p = [-dx, dx, -dy, dy], q = [ax - r[0], r[0] + r[2] - ax, ay - r[1], r[1] + r[3] - ay];
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === 0) { if (q[i]! < 0) return false; continue; }
+    const t = q[i]! / p[i]!;
+    if (p[i]! < 0) { if (t > t1) return false; if (t > t0) t0 = t; } else { if (t < t0) return false; if (t < t1) t1 = t; }
+  }
+  return true;
+}
+/** the distance (tiles) from point (x, y) to segment a-b */
+function distToSeg(x: number, y: number, ax: number, ay: number, bx: number, by: number): number {
+  const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+  return Math.hypot(x - ax - t * dx, y - ay - t * dy);
+}
+/** whether any road's tiles (its centre line widened by its half width and walk) reach into block r: the block would take a public road */
+export function blockOnRoad(r: Rect, roads: readonly LandRoad[]): boolean {
+  const x1 = r[0] + r[2], y1 = r[1] + r[3], toRect = (x: number, y: number) => Math.hypot(Math.max(r[0] - x, 0, x - x1), Math.max(r[1] - y, 0, y - y1));
+  for (const s of roads) {
+    if (segHitsRect(r, s.ax, s.ay, s.bx, s.by)) return true;
+    const d = Math.min(toRect(s.ax, s.ay), toRect(s.bx, s.by), distToSeg(r[0], r[1], s.ax, s.ay, s.bx, s.by), distToSeg(x1, r[1], s.ax, s.ay, s.bx, s.by), distToSeg(r[0], y1, s.ax, s.ay, s.bx, s.by), distToSeg(x1, y1, s.ax, s.ay, s.bx, s.by));
+    if (d < s.hw) return true;
+  }
+  return false;
+}
+
 /** the block for sale under tile point (x, y): a size x size block holding the point that touches the owned land along an edge and overlaps
- *  none of it (isAdjacentBlock), inside the map (0..map); null when there is none. The blocks line up with the owned land itself: the
- *  candidates sit on lattices anchored on every owned rect's edges (a range start's parcel lies off the map's 40-tile lattice, so blocks on
- *  that lattice never touch it), then on the map's own lattice (old saves' blocks); the one sharing the longest edge with the owned land
- *  wins, ties going to the earlier anchor (the first parcel's edges first) */
-export function blockAt(parcels: readonly Rect[], x: number, y: number, size = LAND_BLOCK, map = Infinity): Rect | null {
+ *  none of it (isAdjacentBlock), inside the map (0..map), and not refused (refuse: a block that would take a public road); null when there
+ *  is none. The blocks line up with the owned land itself: the candidates sit on lattices anchored on every owned rect's edges (a range
+ *  start's parcel lies off the map's 40-tile lattice, so blocks on that lattice never touch it), then on the map's own lattice (old saves'
+ *  blocks); the one sharing the longest edge with the owned land wins, ties going to the earlier anchor (the first parcel's edges first) */
+export function blockAt(parcels: readonly Rect[], x: number, y: number, size = LAND_BLOCK, map = Infinity, refuse?: (r: Rect) => boolean): Rect | null {
   const ax: number[] = [], ay: number[] = [];
   for (const r of parcels) if (validRect(r)) { ax.push(r[0], r[0] + r[2]); ay.push(r[1], r[1] + r[3]); }
   if (!ax.length) return null;
@@ -139,7 +168,7 @@ export function blockAt(parcels: readonly Rect[], x: number, y: number, size = L
     const c: Rect = [snap(x, a), snap(y, b), size, size];
     if (c[0] < 0 || c[1] < 0 || c[0] + size > map || c[1] + size > map || !isAdjacentBlock(parcels, c)) continue;
     let len = 0; for (const r of parcels) len += sharedEdge(r, c);
-    if (len > most) { best = c; most = len; }
+    if (len > most && !refuse?.(c)) { best = c; most = len; }
   }
   return best;
 }

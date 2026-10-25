@@ -84,7 +84,7 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
-import { adjacentBlockPrice, buyAdjacentBlock, LAND_BLOCK, blockAt, blockOnWater, polyInParcels, type ParcelLandClass } from './golf/parcels';
+import { adjacentBlockPrice, buyAdjacentBlock, LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
@@ -2676,7 +2676,8 @@ export class Game {
   this.hover = this.tileAt(mx, my);
   if (this.landMode && this.golf && this.hover) {
   // the block under the pointer, lined up with the owned land (a range start's parcel is off the map's 40-tile lattice: golf/parcels.ts blockAt)
-  const cand = blockAt(this.golf.parcels ?? [this.golf.parcel], this.hover.x, this.hover.y, LAND_BLOCK, MAP);
+  // a public road stays public: no block that would take its tiles (the course grows on the other sides, or beyond the road)
+  const cand = blockAt(this.golf.parcels ?? [this.golf.parcel], this.hover.x, this.hover.y, LAND_BLOCK, MAP, r => this.blockOnPublicRoad(r));
   if (cand) {
   const info = this.blockLandClass(cand);
   const price = adjacentBlockPrice({ rect: cand, ...info, townPop: this.traffic.pop });
@@ -3566,8 +3567,17 @@ export class Game {
   }
   return { landClass: 'open', houses: 0, buildings: 0 };
   }
+  /** whether block r would take a public road's tiles (any road but the course's own drives and cart paths; a tunnel runs under the land) */
+  private blockOnPublicRoad(r: [number, number, number, number]): boolean {
+    const roads: LandRoad[] = [];
+    for (const s of this.net.segsNear({ x: r[0] + r[2] / 2, y: r[1] + r[3] / 2 }, Math.hypot(r[2], r[3]) / 2 + 12)) {
+      if (s.kind !== SK.TUNNEL && !isCourseClass(s.cls.id)) roads.push({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, hw: s.cls.h + s.cls.walk });
+    }
+    return blockOnRoad(r, roads);
+  }
   buyLandBlock(r: [number, number, number, number]) {
   if (!this.golf) return;
+  if (this.blockOnPublicRoad(r)) { this.toast('A public road runs here: it stays public', 'warn'); return; }
   const parcels = this.golf.parcels ?? [this.golf.parcel];
   const info = this.blockLandClass(r);
   const res = buyAdjacentBlock(parcels, { rect: r, ...info, townPop: this.traffic.pop }, this.money);
