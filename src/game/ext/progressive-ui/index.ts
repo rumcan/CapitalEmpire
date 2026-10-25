@@ -140,7 +140,7 @@ export const FIRST_RUN_HINTS: readonly FirstRunHint[] = [
     id: 'hint-build-first-hole',
     stage: 1,
     title: 'Step 1: Build your first hole',
-    body: 'Open Course (C), press + New hole, click a tee, then a green, and Build.',
+    body: 'Open Holes (C), press New hole, click a tee, then a green, and Build.',
     targetTool: 'course',
   },
   {
@@ -171,7 +171,7 @@ export const STUCK_HINT: FirstRunHint = Object.freeze({
   id: 'hint-stuck-new-hole',
   stage: 2,
   title: 'Need a hand? Start with New hole',
-  body: 'Open Course (C), press + New hole, click a tee, then a green: the whole hole is planned for you. Shape by hand and Paint are open too.',
+  body: 'Open Holes (C), press New hole, click a tee, then a green: the whole hole is planned for you. Shape by hand and Paint are open too.',
   targetTool: 'course',
 });
 
