@@ -82,7 +82,7 @@ test('3. planting months and grow-in', () => {
   const g = makeGrid(0, 0, 128, 128);
   paintDisc(g, 20, 20, 6, SURF.green, 1, plantMonth('seed', 10)); paintDisc(g, 44, 20, 6, SURF.green, 1, 0); paintDisc(g, 20, 44, 6, SURF.bunker, 1, plantMonth('seed', 10));
   const cell = (x: number, y: number) => y * 2 * 128 + x * 2;
-  assert.equal(courseGrow(g, 0, 0, 10)![cell(20, 20)], 255, 'just seeded: all dirt');
+  assert.equal(courseGrow(g, 0, 0, 10)![cell(20, 20)], 191, 'just seeded: young grass, a quarter grass already (T121)');
   assert.equal(courseGrow(g, 0, 0, 13)![cell(20, 20)], 128, 'half way');
   assert.equal(courseGrow(g, 0, 0, 10)![cell(44, 20)], 0, 'established (month 0)');
   assert.equal(courseGrow(g, 0, 0, 10)![cell(20, 44)], 0, 'sand has no grow-in');
@@ -145,7 +145,7 @@ test('6. a course chunk patch: its layers in draw order, the collar, the mowing 
   assert.equal(gr.collar?.n, 'fringe'); assert.equal(gr.collar?.tex, 'golfFringe'); assert.equal(fw.collar?.n, 'first-cut');
   assert.deepEqual(fw.stripes, [{ hole: 5, line: [60, 80, 115, 80] }]);
   assert.ok(fw.fill.length >= 1 && fw.edges.length >= 1);
-  // growing: the fairway was seeded in month 2 (3 months to grow in): dirt everywhere at first, then quarters
+  // growing: the fairway was seeded in month 2 (3 months to grow in): a quarter grass at first (T121), then half, three quarters, full
   assert.ok(p.course.grow && p.course.grow.length === (S / 0.5) ** 2);
   const k0 = courseGrowKey(g, 1, 1, 2), k0b = courseGrowKey(g, 1, 1, 2.2), k1 = courseGrowKey(g, 1, 1, 3), k5 = courseGrowKey(g, 1, 1, 5);
   assert.equal(k0, k0b, 'within a stage the key holds');
@@ -153,7 +153,7 @@ test('6. a course chunk patch: its layers in draw order, the collar, the mowing 
   assert.ok(growStatic(k5), 'grown in'); assert.equal(courseGrow(g, 1, 1, 5), null);
   assert.equal(courseGrowKey(g, 1, 1, 2, p.course.grow), k0, 'the key from the patch mask is the same');
   const i = ((80 - 64) * 2 + 1) * (S * 2) + (80 - 64) * 2 + 1;
-  assert.equal(courseGrow(g, 1, 1, 2)![i], 255); assert.ok(courseGrow(g, 1, 1, 3)![i]! > 0 && courseGrow(g, 1, 1, 3)![i]! < 255);
+  assert.equal(courseGrow(g, 1, 1, 2)![i], 191); assert.ok(courseGrow(g, 1, 1, 3)![i]! > 0 && courseGrow(g, 1, 1, 3)![i]! < 191);
   // the rings travel as Float32Arrays (a postMessage copies memory, not numbers one by one)
   assert.ok(fw.fill[0] instanceof Float32Array && fw.edges[0] instanceof Float32Array);
   // an empty chunk has no patch

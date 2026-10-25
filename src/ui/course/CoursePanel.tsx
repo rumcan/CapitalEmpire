@@ -9,6 +9,8 @@ import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
 import { HoleStrip } from './HoleStrip';
 import { HoleInspector } from './HoleInspector';
 import { HoleWizardPanel } from './HoleWizard';
+import { CourseEdges } from './CourseEdges';
+import { GRID_KINDS } from '../../game/paint-tool';
 
 type CourseTab = 'build' | 'presets' | 'plants' | 'buildings';
 
@@ -113,6 +115,8 @@ export function CoursePanel({ game }: { game: Game }) {
               </div>
             </>
           )}
+          {/* the course look's Border and Shadow for the surface in the brush: in Fine tuning's Border (where the old buttons were), else here */}
+          {!fine('customStyle') && p.mode !== 'height' && GRID_KINDS.includes(p.brushKind) && <CourseEdges game={game} />}
           <div className="mt-1 text-xs text-slate-300">{help}</div>
           {/* T035: the planting method and the surface style sit under Advanced (the all-tools toggle); without them new areas use seed planting and the preset style */}
           {fine('customStyle') && (

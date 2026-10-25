@@ -21,7 +21,7 @@ import { spawnSplash, stepSplash, type SplashKind, type SplashParticle } from '.
 import { HH, HW } from '../../iso';
 import { CAST, castShear } from '../../cast-shadow';
 import { DARK_RGB, LIGHT_RGB, SHADOW_RGB, edgeProfileOf, type EdgeProfile } from '../../paint-edges';
-import { BORDER_TEXES, BORDER_W, roundCorners, type PaintArea } from '../../paint';
+import { BORDER_TEXES, borderW, roundCorners, type PaintArea } from '../../paint';
 import { surfOfSurface } from '../course-grid/areas';
 import { surfaceOfTex } from '../../golf/costs';
 import type { PaintTool } from '../../paint-tool';
@@ -413,7 +413,7 @@ function paintPuck(g: CanvasRenderingContext2D, st: PuckStyle, kind: string, era
   if (st.tone) { g.globalCompositeOperation = st.tone === 1 ? 'multiply' : 'screen'; g.globalAlpha = st.toneAmt; g.fillStyle = st.tint; g.fillRect(-R, -R, 2 * R, 2 * R); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; }
   // the border band of a painted area (first cut round a fairway, fringe round a green), the painter's width held to a third of the puck so
   // the surface reads; on the course grid the collars are laid outside the cells (course-blobs), so the puck is the surface alone
-  const bw = withBand && st.border > 0 ? Math.min(BORDER_W[st.border]!, 0.34 * R) : 0;
+  const bw = withBand && st.border > 0 ? Math.min(borderW(st.border), 0.34 * R) : 0;
   if (bw > 0 && st.btex !== 'kerb') {
     g.strokeStyle = fillOf(st.btex, st.bscale, st.bangle);
     g.lineWidth = 2 * bw; g.stroke();
