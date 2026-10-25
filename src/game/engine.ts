@@ -104,7 +104,7 @@ import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale, standInLabel } from './new
 import { webpSource } from './atlas-gl';
 import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
-import { HALF_T, courseBuilding, loadMapGrid, saveMapGrid } from './ext/map-grid';
+import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
 import { STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
@@ -4283,7 +4283,7 @@ export class Game {
         else if (t.tex) gl.drawChunk(t.tex, ...r);
       }
       // ---- the map grid and the course half grid (T100): over the ground and its paint, hidden on the roads, under every shadow and sprite
-      if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, this.showGrid, this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
+      if (this.gridLayer.draw(gl.gl, gl.view, z, this.dpr, gridShown(this.showGrid, this.tool), this.courseBuilding, this.gridLand(), this.net)) gl.stats.draws++;
       // ---- sprites: every visible tile in one instanced draw (each instance clipped to its tile), vehicles merged in
       const vis: { i: number; j: number }[] = [];
       for (let j = Math.floor(Y0 / SPR_H); j <= Math.floor(Y1 / SPR_H); j++) for (let i = Math.floor(X0 / SPR_W); i <= Math.floor(X1 / SPR_W); i++) vis.push({ i, j });

@@ -254,7 +254,7 @@ export default function App() {
                 <button key={m} className={`btn ${game.flowMode === m ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
               ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
-              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to (G)"><Icon name="fullscreen" size={22} /></button>
+              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to, shown while a build or paint tool is in hand (G)"><Icon name="fullscreen" size={22} /></button>
               <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
