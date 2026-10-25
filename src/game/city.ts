@@ -1441,7 +1441,9 @@ export class City {
    *  more catchment (no lot: they start at the entry's kerb), drawn by the tourism businesses and the casino only. Needs the town centres and a visit
    *  business; sets visitDay */
   private planVisits(): void {
-    const K = this.centres.length, list = this.businesses.filter(b => BUSINESS[b.type].kind === 'visit');
+    // a range start's driving range is the main thread's (golf/rangebiz.ts RangeSim, plan P24 D2): its golfers drive in and pay there, so the
+    // worker plans no range cars (they would book the money twice and vanish at the door)
+    const K = this.centres.length, list = this.businesses.filter(b => BUSINESS[b.type].kind === 'visit' && !(b.type === 'range' && this.golf?.start === 'range'));
     if (!K || !list.length) return;
     const dayStart = Math.floor(this.sim.clock / GAME_DAY) * GAME_DAY;
     const homes: VisitHome[][] = [], pops: number[] = [], from: number[] = [];

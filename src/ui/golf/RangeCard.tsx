@@ -1,0 +1,68 @@
+// The range card (plan P24 Phase 1, T129): the driving range as a business. Today's golfers, the queue and the lost; the season's takings; the
+// bucket price with what it does to the visitors; the upgrades, each with its cost, its effect and a Build button. Opened by clicking the range
+// with the select tool, or the top bar's Range chip; the map changes the moment an upgrade is built.
+import type { RangeCardView } from '../../game/golf/rangehost';
+import { PRICE_MAX, PRICE_MIN, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
+import { Icon } from '../Icon';
+
+const money = (n: number) => '$' + Math.round(n).toLocaleString();
+
+export function RangeCard({ view, onClose, onPrice, onBuy, right = 'right-3' }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; right?: string }) {
+  const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
+  const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
+  const demandWord = pf >= 1.15 ? 'cheap: more golfers' : pf <= 0.85 ? 'dear: fewer golfers' : 'fair';
+  return (
+    <div className={`pointer-events-auto absolute ${right} top-[var(--hud-top,6rem)] z-20 max-h-[78vh] w-[340px] space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`} data-testid="range-card">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div>
+          <div className="font-semibold text-amber-200">Driving range</div>
+          <div className="text-[11px] text-slate-400">{st.proShop ? 'Pro shop' : 'The shack (a crappy pro shop)'} · {st.bays} bays · open {view.hours}</div>
+        </div>
+        <button className="btn-icon" onClick={onClose} title="Close"><Icon name="close" size={18} /></button>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 text-center">
+        <Tile label="Today" value={`${Math.round(today.golfers)}`} sub="golfers" />
+        <Tile label="Hitting" value={`${today.playing}/${st.bays}`} sub={`${today.queue} queued`} />
+        <Tile label="Lost" value={`${Math.round(today.lost)}`} sub="drove on" tone={today.lost > 0 ? 'text-rose-300' : 'text-white'} />
+      </div>
+      <div className="grid grid-cols-2 gap-1.5 text-center">
+        <Tile label="Season takings" value={money(biz.season.takings)} sub={`${Math.round(biz.season.buckets).toLocaleString()} buckets`} tone="text-emerald-300" />
+        <Tile label="Demand a day" value={`${want}`} sub={`room for ${cap}`} />
+      </div>
+      <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
+        <div className="mb-1 flex items-center justify-between"><span className="text-[10px] uppercase text-slate-400">Bucket price</span><span className="text-slate-400">{demandWord}</span></div>
+        <div className="flex items-center gap-2">
+          <button className="chip" disabled={biz.price <= PRICE_MIN} onClick={() => onPrice(biz.price - 1)} title="Cheaper">−</button>
+          <span className="min-w-[3rem] text-center text-base font-bold text-white">{money(biz.price)}</span>
+          <button className="chip" disabled={biz.price >= PRICE_MAX} onClick={() => onPrice(biz.price + 1)} title="Dearer">+</button>
+          <span className="text-[11px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
+        </div>
+        <div className="mt-1 text-[10px] text-slate-500">Each golfer you see stands for {scale} customers over the season.</div>
+      </div>
+      <div className="space-y-1.5">
+        <div className="text-[10px] uppercase text-slate-400">Upgrades</div>
+        {view.upgrades.map(u => (
+          <div key={u.id} className={`rounded-lg border p-2 text-xs ${u.owned ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium text-white">{u.name}</span>
+              {u.owned ? <span className="text-emerald-300">Built</span> : (
+                <button className="chip disabled:opacity-40" disabled={!!u.why} title={u.why || `Build for ${money(u.cost)}`} onClick={() => onBuy(u.id)} data-testid={`range-buy-${u.id}`}>Build {money(u.cost)}</button>
+              )}
+            </div>
+            <div className="text-[11px] text-slate-400">{u.effect}</div>
+            {!u.owned && u.why && u.why !== 'Built' && <div className="text-[10px] text-amber-300/80">{u.why}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+function Tile({ label, value, sub, tone = 'text-white' }: { label: string; value: string; sub: string; tone?: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-1.5">
+      <div className="text-[10px] uppercase text-slate-400">{label}</div>
+      <div className={`text-sm font-bold ${tone}`}>{value}</div>
+      <div className="text-[10px] text-slate-500">{sub}</div>
+    </div>
+  );
+}

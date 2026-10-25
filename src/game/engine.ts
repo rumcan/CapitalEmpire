@@ -23,7 +23,11 @@ import { PaintTool } from './paint-tool';
 import { courseBandOf, courseTexOf } from './course-look';
 import { escapeLadder, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
-import { OWNER_SCALE } from './lots/scales';
+import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
+import { turned } from './lots/preset-art';
+import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
+import { RangeHost } from './golf/rangehost';
+import { defaultRangeBiz, rangeScene, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
@@ -123,7 +127,7 @@ const GAME_DAY = 1440, GAME_HOUR = 60;
 /** a range start's founding season as its season card shows it (plan P22 2.5.3): the season's year, the season's business takings ($: the range,
  *  and the clubhouse once placed), the residents, the invitation checklist at the season's end, and whether the tour had invited the player (too
  *  late for this season) */
-export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean }
+export interface SeasonReport { year: number; takings: number; residents: number; check: InviteCheck; invited: boolean; /** the range business's season (P24, T129) */ range?: RangeCounts }
 /** the most townspeople walking at once */
 const PED_MAX = 3000;
 /** the sim speeds the time controls offer (sim s per s); 0 is paused */
@@ -368,6 +372,41 @@ export class Game {
   panel: 'budget' | 'bottlenecks' | null = null;
   /** the win's modal (App): set once when the career is won, cleared by its 'Keep building' */
   showWin = false;
+  /** the range business on the map (range starts, plan P24, T129: golf/rangehost.ts): its scene, its golfers, its card */
+  readonly range = new RangeHost({
+    biz: () => (this.golf?.start === 'range' ? (this.golf.range ??= defaultRangeBiz()) : null),
+    plot: () => { const g = this.golf, d = g?.start === 'range' ? this.bizDefs.find(b => b.type === 'range') : undefined; return g && d ? { rect: plotOfFront([d.x, d.y, d.w, d.h], g.dir), facing: g.dir } : null; },
+    carPark: () => this.rangeCarPark(),
+    addPiece: (p, key) => {
+      const t = turned(p.id, p.q), item = LIB_INDEX.get(t.id); if (item === undefined) return null;
+      // the studio's size wins; never past the pixels its atlas holds (sizes.ts), so the footprint and shadow match what is drawn
+      const it = LIBRARY[item]!, scale = Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, STUDIO_SCALE[it.id] ?? (p.fit ? 64 * p.fit / it.w : p.scale ?? OWNER_SCALE[it.id] ?? 1));
+      return this.addProp(item, p.x, p.y, t.flip, scale, key);
+    },
+    removeProp: p => this.removeProp(p), setGround: (k, p) => this.setLotGround(k, p),
+    layPaths: legs => { this.edit.addLegs(legs, classOf('cart-slab'), 0, undefined, true); this.commitNetwork(); },
+    clearTrees: b => this.dropTownTrees(b[0], b[1], b[2], b[3]),
+    money: () => this.money, spend: n => this.traffic.spend('construction', n), book: n => this.traffic.spend('business', -n),
+    demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop }),
+    dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
+    clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
+    save: () => this.scheduleSave(), toast: (t, k) => this.toast(t, k), emit: () => this.emit(),
+  }, 0x7a29);
+  /** the range's car park (the one on the range plot) as the range's golfers park in it: its bays and entrance, cached per built park */
+  private rangeCarPark(): { bays: { x: number; y: number; hx: number; hy: number }[]; entrance: Pt } | null {
+    const k = this.parkDefs.findIndex(d => this.onRangePlot(d.x + d.w / 2, d.y + d.h / 2)), pk = k >= 0 ? this.parkBuilt[k] : null;
+    if (!pk || !pk.entrances.length || !pk.bays.length) return null;
+    if (this.rangePk?.pk !== pk) this.rangePk = { pk, v: { bays: pk.bays.map(b => ({ x: b.x, y: b.y, hx: b.hx, hy: b.hy })), entrance: pk.entrances[0]! } };
+    return this.rangePk.v;
+  }
+  private rangePk: { pk: CarPark; v: { bays: { x: number; y: number; hx: number; hy: number }[]; entrance: Pt } } | null = null;
+  /** a new range game's town day starts at 06:30 (P24 D16), so the first golfers turn in within the first minute */
+  private rangeMorning() { if (this.golf?.start === 'range') this.traffic.setTownClock({ t0: this.traffic.simTime(performance.now()), m0: 390, rate: 1440 / this.traffic.dayLen }); }
+  /** the range card (null: closed, or not a range start) */
+  rangeCard() { return this.range.cardOpen ? this.range.view() : null; }
+  openRangeCard(open = !this.range.cardOpen) { this.range.cardOpen = open && !!this.range.view(); this.emit(); }
+  buyRangeUpgrade(id: RangeUpgradeId) { this.range.buy(id); }
+  setRangePrice(price: number) { this.range.setPrice(price); }
   /** the before / after snapshot (the bottlenecks panel): the game hour it was taken at, the window before (null: no traffic on record yet), and the next rush, [start, end] in absolute game hours */
   snapshot: { at: number; before: Window | null; after: [number, number] } | null = null;
   /** a ring pulsed for 4 s where the camera jumped (see jumpTo): the tile and the time (performance.now, ms) */
@@ -1018,6 +1057,8 @@ export class Game {
     this.traffic.onLotsMoved = (keys) => { for (const k of keys) this.lotQueue.add(k); };
     this.traffic.onLedger = (l) => {
       this.foundingSeasonEnd(l);
+      // the range business's season closes with the books (P24, T129): the season card read it, the next season counts from zero
+      if (this.golf?.range) this.golf.range.season = { golfers: 0, buckets: 0, lost: 0, takings: 0 };
       if (this.bankrupt && this.traffic.budget.debtDays === DEBT_DAYS) { this.setSpeed(0); this.toast('Bankrupt: the town is out of money', 'warn'); }
       else if (this.bankrupt) { /* already bankrupt: the player keeps watching */ }
       else if (l.money < 0 && !this.traffic.unlimited) this.toast(`In the red: bankrupt in ${DEBT_DAYS - this.traffic.budget.debtDays} days unless the books recover`, 'warn');
@@ -1095,6 +1136,7 @@ export class Game {
     this.sendTerrain(); this.afterLoad();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     if (loaded) { this.traffic.townState(loaded.lots ?? [], loaded.simT ?? 0, loaded.budget, loaded.money, loaded.career, loaded.shift ?? 0, loaded.round, loaded.bizStats); this.traffic.setTownClock(loaded.townClock ?? townClockFor(this.traffic.dayLen)); }
+    else this.rangeMorning();
     if (opts.bench) console.log('[bench] after load', Math.round(performance.now() - tl), 'ms');
     await new Promise<void>(res => { const wait = () => (this.ground.ready || this.dead ? res() : setTimeout(wait, 30)); wait(); });
     if (this.dead) return;
@@ -1137,6 +1179,8 @@ export class Game {
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
       this.golf = s.save; this.golf.progress = emptyProgress();
+      // the range business (P24, T129): the starting range, and its cement cart paths laid with the road (the rest of its scene follows the frame)
+      this.golf.range = defaultRangeBiz(); this.edit.addLegs(rangeScene(site.rangePlot, site.dir, this.golf.range).paths, classOf('cart-slab'), 0, undefined, true); this.golf.range.paths = true;
       const [hx, hy, hw, hh] = rangeLayout(site.rangePlot, site.dir).hut.rect, cx = hx + hw / 2, cy = hy + hh / 2;
       this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
       this.setTool('course');
@@ -1364,7 +1408,9 @@ export class Game {
     for (const d of this.tollDefs) { const s = this.tollSegs.get(d.id); if (s && boxNear(tollBox(d), x0, y0, x1, y1, g)) tolls.push([d, s]); }
     const paints = this.paint.areas.filter(a => boxNear(ptsBox(a.pts), x0, y0, x1, y1, g));
     const cg = this.courseGrid, grid = !!cg && boxNear([cg.x0, cg.y0, cg.x0 + cg.w * CELL_T, cg.y0 + cg.h * CELL_T], x0, y0, x1, y1, g);
+    const rb = this.range.scene?.box; // the driving range's plot keeps clear of trees (P24, T129)
     const free = (x: number, y: number, r: number) => {
+      if (rb && x > rb[0] - r && x < rb[2] + r && y > rb[1] - r && y < rb[3] + r) return false;
       for (const l of lots) if (lotGap(l, x, y) < r) return false;
       const p = { x, y };
       for (const s of this.net.segsNear(p, r + 16)) if (segDist(p, s) < s.cls.h + s.cls.walk + r + 0.5) return false;
@@ -2560,7 +2606,7 @@ export class Game {
     if (tournamentDue(g.invited?.at, boundary)) return;
     const year = yearOf(this.seasonsDone());
     g.founding = (g.founding ?? 0) + 1;
-    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited };
+    this.seasonReport = { year, takings: l.business, residents: this.traffic.pop, check: this.inviteCheck()!, invited: !!g.invited, ...(g.range ? { range: { ...g.range.season } } : {}) };
     this.scheduleSave();
   }
   private yearCheck() {
@@ -2718,7 +2764,9 @@ export class Game {
         const car = this.cam.z >= DISTRICT_Z ? this.carAt(mx, my) : -1;
         if (car >= 0) { this.inspectCar(car); return; }
         if (this.cam.z >= DISTRICT_Z && this.repairAt(mx, my)) return;
-        const p = this.propAt(mx, my);
+        const p = this.propAt(mx, my), tl = this.tileAt(mx, my);
+        // the range's own props and its front open the range card (P24, T129)
+        if (p?.auto?.startsWith('range:') || (!p && this.range.hit(tl.x, tl.y))) { this.openRangeCard(true); return; }
         if (p) { this.selected = p; this.emit(); return; }
         this.selected = null; this.emit();
         if (this.showFlow) { const t = this.tileAt(mx, my); this.traffic.watchAt(t.x, t.y); this.emit(); }
@@ -3949,7 +3997,7 @@ export class Game {
     this.parking.clear(); this.extraParks = []; this.extraCarIds.clear(); this.gateProps.clear();
     this.tollDefs = []; this.tollSegs.clear(); this.tollHover = null; for (const k of this.tollGround) this.setLotGround(k, null); this.tollGround.clear();
     this.busDefs = []; this.busPick = null; this.busHover = null; this.paint.clear(); this.dropCourseGrid();
-    this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear();
+    this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.landHover = null; this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
     this.setBizDefs([]); this.bizHover = null; this.bizOpenSeen = null;
@@ -3967,7 +4015,7 @@ export class Game {
     if (!golf) this.genTerrain(newSeed());
     this.ground.terrain(this.terrain); this.sendTerrain();
     if (!golf) this.seedTowns(); // a golf game laid its road and range (or its town) in newGame
-    this.afterLoad();
+    this.afterLoad(); this.rangeMorning();
     if (this.stampPending) { this.stampPending = false; this.traffic.stamp(TOWN_POP); this.scheduleSave(); }
     void this.save(); this.toast(`New game (seed ${this.seed})`); this.emit();
   }
@@ -4263,6 +4311,7 @@ export class Game {
     for (const p of this.particles) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 0.8 * dt; p.r += 0.6 * dt; }
     this.particles = this.particles.filter(p => p.age < p.life);
     this.traffic?.update(now);
+    if (this.golf?.start === 'range') { this.range.sync(); this.range.step(); }
     this.updatePeds(dt);
     this.updateGrass();
     // the followed car: the camera centres on its interpolated place (the info itself comes at 10 Hz)
@@ -4397,7 +4446,7 @@ export class Game {
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
-      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000)) : cars;
+      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000), this.range.movers_(bx0, by0, bx1, by1)) : cars;
       // with the living ground the trees plant over every chunk on screen (a chunk bakes once its trees are known: casterReady)
       if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2); }
       else this.plantForest(X0, Y0, X1, Y1);
@@ -4705,6 +4754,7 @@ export class Game {
     this.drawBuses(ctx);
     this.drawGalleries(ctx);
     this.drawWalkers(ctx);
+    if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch); }
     if (this.grassPanel) {
       const s = this.grassScope();
       if (s) {
@@ -4847,11 +4897,12 @@ export class Game {
     ctx.save(); ctx.globalAlpha = fade; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = this.siFont;
     for (const p of this.siHits) this.standInPill(ctx, p, ze);
     for (const p of this.businessProps) this.standInPill(ctx, p, ze);
+    for (const l of this.range.labels) this.standInPill(ctx, l.p, ze, l.text);
     ctx.restore();
   }
   /** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen */
-  private standInPill(ctx: CanvasRenderingContext2D, p: Prop, ze: number) {
-    const label = standInLabel(p.item); if (label === null) return;
+  private standInPill(ctx: CanvasRenderingContext2D, p: Prop, ze: number, text?: string) {
+    const label = text ?? standInLabel(p.item); if (label === null) return;
     let w11 = this.siW.get(label);
     if (w11 === undefined) { ctx.font = '600 11px system-ui, sans-serif'; w11 = ctx.measureText(label).width; this.siW.set(label, w11); ctx.font = this.siFont; }
     const r = spriteRect(p, this.siRect), s = this.siPx / 11, w = w11 * s + 12 * s, h = 17 * s;

@@ -41,6 +41,7 @@ import { CourseStatsPanel } from './ui/CourseStatsPanel';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
+import { RangeCard } from './ui/golf/RangeCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the hint's key words, drawn as keycaps */
@@ -198,6 +199,7 @@ export default function App() {
                 <>
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} title="The driving range: golfers, takings, bucket price and upgrades" data-testid="range-chip"><Icon name="income" size={16} />Range</button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="The tour's invitation: the first tournament is held at the end of the season it names">The Club Championship: end of {fv.due ? 'this' : 'next'} season</span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
                   {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>}
@@ -425,6 +427,7 @@ export default function App() {
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
+          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} />; })()}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />

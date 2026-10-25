@@ -170,3 +170,21 @@ so 1024 px is plenty (section 1).
 
 ## Course piece props (T030b)
 - Still missing: tee steps, a bunker rake, a pond waterfall, pond rocks, and pond reeds (reeds use the roadside ornamental grass for now). They plug into `PIECE_PROP_SPRITE` in `src/game/ext/course-pieces/index.ts` (a sprite id, or `null` until the art exists).
+
+## The range business kit (plan P24 Phase 1, T129: art requests)
+The opening range (`golf/rangebiz.ts rangeScene`) stands these in with labelled stand-ins ("Stand In for ..."); each goes in by its id in
+`rangeScene`. Four views (NE, SE, SW, NW as the building sheets: the front in NE and NW), sun at the upper right, shadows at 145°, early
+autumn dusk, no lettering in the art unless said.
+| Sprite (id to use) | Footprint (m) / height | Stand-in today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Tin-and-tarp shack, four views (`golf:clubhouse-shanty` views) | 12 x 8 / 4 | `expansion:lean-to-shed` | the existing shanty picture (rusty corrugated tin, blue tarp roof patch, plank walls, a serving hatch with a counter, a crate of range balls) turned to four views | P1 |
+| Range floodlight (`golf:range-floodlight`) | 1 x 1 / 12 | `world:streetlamp` | a tall galvanised floodlight mast with a bank of four rectangular lamps angled down the range, a concrete foot | P1 |
+| Range yardage board (`golf:range-yardage-board`) | 2 x 0.5 / 2.5 | `poi:fishing-board` | a white painted board on two posts with a blank face for the game's number, a green trim | P1 |
+| Range distance marker post (`golf:range-distance-post`) | 0.5 x 0.5 / 1.5 | `ce:parking-sign` | a short white-and-red striped post with a blank plate on top | P1 |
+| Ball dispenser (`golf:range-ball-dispenser`) | 1.5 x 1 / 2 | `expansion:utility-cabinet` | a green metal range-ball dispenser with a coin slot, a chute and a wire bucket under it, a few balls on the ground | P1 |
+| "Driving Range" road sign (`golf:range-sign`) | 4 x 0.5 / 3 | `golf:leaderboard` | a weathered roadside sign on two timber posts, white board with a red golf flag motif, the lettering DRIVING RANGE | P1 |
+| Hitting bay divider (`golf:range-bay-divider`) | 1.5 x 0.2 / 1.2 | none (the mats stand open) | a low green timber divider between two hitting mats, a club rack on it | P2 |
+| Range tee markers (`golf:tee-marker`, already requested) | 0.3 | none | the single red timber tee marker of T111 | P1 |
+| Gas bottle and plastic garden chairs (`golf:yard-gas-bottle`, `golf:yard-plastic-chair`) | 0.5 / 1 | the striped lawn chair | a dented grey LPG gas bottle on a braai stand; a white plastic garden chair | P2 |
+| Ball-picker cart (`golf:range-picker`, 8 facings) | 2.5 x 1.5 | none (Phase 4) | a small utility cart with a caged cab towing a gang of ball-picking discs | P2 |
+| Divot-scarred range tee (texture) | 16 m | the tee turf | listed in section 6 | P1 |
