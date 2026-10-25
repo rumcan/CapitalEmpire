@@ -385,7 +385,7 @@ export class Game {
       const t = turned(p.id, p.q), item = LIB_INDEX.get(t.id); if (item === undefined) return null;
       // the studio's size wins; never past the pixels its atlas holds (sizes.ts), so the footprint and shadow match what is drawn
       const it = LIBRARY[item]!, scale = Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, STUDIO_SCALE[it.id] ?? (p.fit ? 64 * p.fit / it.w : p.scale ?? OWNER_SCALE[it.id] ?? 1));
-      return this.addProp(item, p.x, p.y, t.flip, scale, key);
+      return this.addProp(item, p.x, p.y, t.flip, scale, key, p.lift || p.foot ? { lift: p.lift, foot: p.foot } : undefined);
     },
     removeProp: p => this.removeProp(p), setGround: (k, p) => this.setLotGround(k, p),
     layPaths: legs => { this.edit.addLegs(legs, classOf('cart-slab'), 0, undefined, true); this.commitNetwork(); },
@@ -1379,14 +1379,17 @@ export class Game {
     for (const p of [...this.propGrid.query([x - r, y - r, x + r, y + r])]) if (p.plant && (p.x - x) ** 2 + (p.y - y) ** 2 <= r * r) { this.removeProp(p); n++; }
     if (n) this.scheduleSave(); return n;
   }
-  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string): Prop {
+  /** o (T133, the range's scene): lift, drawn this high above its spot (world px); foot, its footprint (world tiles x0 y0 x1 y1) in place of its
+   *  library boxes' (business art's boxes are 1 x 1 placeholders, too small for the painter's order of what stands round it) */
+  addProp(item: number, x: number, y: number, flip: boolean, scale: number, auto?: string, o?: { lift?: number; foot?: readonly [number, number, number, number] }): Prop {
     // no building is ever mirrored (mirror.ts): a flip draws the four-view art turned (its partner view), any other building unflipped
     const [id, f0] = drawnAs(LIBRARY[item]!, flip); if (id !== LIBRARY[item]!.id) item = LIB_INDEX.get(id) ?? item; flip = f0;
     // no tree is mirrored at random: the sun comes from the right, so a tree is drawn mirrored only when its art is lit from the left (tree-sun.ts)
     if (LIBRARY[item]!.kind === 'tree') flip = TREE_MIRROR.has(LIBRARY[item]!.id);
-    const f = this.footprint(LIBRARY[item], x, y, flip, scale);
+    const f = o?.foot ? { x0: o.foot[0], y0: o.foot[1], x1: o.foot[2], y1: o.foot[3] } : this.footprint(LIBRARY[item], x, y, flip, scale);
     const p: Prop = { uid: this.nextUid++, item, x, y, flip, scale, ...f };
     if (auto) p.auto = auto;
+    if (o?.lift) p.lift = o.lift; // drawn above its spot (T133: the range's upper deck)
     this.props.add(p); this.propGrid.add(p, [p.x0, p.y0, p.x1, p.y1]); this.sprites.add(p); this.casterTouched(p);
     if (this.propLog) this.propLog.added.push(p);
     if (LIBRARY[item].kind === 'lamp') this.lampProps.add(p);

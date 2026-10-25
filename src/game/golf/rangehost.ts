@@ -16,6 +16,7 @@ import { RangeSim, rangeScene, rangeStats, upgradeWhy, withPrice, withUpgrade, R
 import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
 import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
 import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
+import { COFFEE, EXTRA_IDS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, needsOf, type HomeStage } from './rangesave';
 
 /** what the host needs of the engine */
 export interface RangeHostCtx {
@@ -71,6 +72,8 @@ export class RangeHost {
   /** the scene's auto props by key, and its stand-in labels (prop, text) */
   private props = new Map<string, Prop>(); labels: { p: Prop; text: string }[] = [];
   private key = ''; private lastT = -1; private owed = 0; private owedT = 0;
+  /** the home's stage laid now (T133; -1: none yet since the load) */
+  private home: HomeStage | -1 = -1;
   private movers: Drawable[] = []; private carDraw: Drawable[] = [];
   /** the balls in the air (x y h triples) */
   readonly flyingBuf = new Float32Array(3 * 160); nFlying = 0;
@@ -84,10 +87,15 @@ export class RangeHost {
   /** the scene laid again when the range's state, its plot or its car park changed (cheap to call every frame: a key compares them) */
   sync(force = false): void {
     const b = this.ctx.biz(), pl = this.ctx.plot(), cp = this.ctx.carPark();
-    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}` : '';
+    // the home's stage (T133) re-lays the yard as the lifetime takings grow
+    const home = b ? homeStage(b) : 0;
+    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.bays.length : -1}:${home}` : '';
     if (!force && key === this.key) return;
     this.key = key;
     if (!b || !pl) { this.drop(); return; }
+    // the player moved house (T133): toasted once, never on a load
+    if (this.home >= 0 && home > this.home) this.ctx.toast(`You moved into the ${HOME_NAME[home].toLowerCase()}: the range has taken $${HOME_AT[home - 1]!.toLocaleString()}`, 'good');
+    this.home = home;
     const sc = rangeScene(pl.rect, pl.facing, b);
     // the props: kept where the key and picture stay, the rest made again
     const want = new Map(sc.pieces.map(p => [p.key, p]));
@@ -107,7 +115,7 @@ export class RangeHost {
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);
     for (const p of this.cups.values()) this.ctx.removeProp(p);
-    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.scene = null; this.key = ''; this.lastT = -1; this.paidMonth = -1; this.sim.clear();
+    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.scene = null; this.key = ''; this.lastT = -1; this.paidMonth = -1; this.home = -1; this.sim.clear();
     this.practice = null; this.scanG = null; this.scanRev = -1; this.sim.setPractice(null);
     this.ctx.setGround('range:ground', null);
   }
@@ -153,6 +161,8 @@ export class RangeHost {
       const p = d.people[k]!; if (p.x < x0 || p.x > x1 || p.y < y0 || p.y > y1) continue;
       const m = this.mover(out.length);
       m.item = GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame; m.x = p.x; m.y = p.y; m.flip = false; m.scale = 1; m.moving = false;
+      // on the upper deck (T133): drawn up there, its footprint (the painter's order) kept on its bay
+      m.lift = p.lift;
       m.x0 = p.x - 0.12; m.y0 = p.y - 0.12; m.x1 = p.x + 0.12; m.y1 = p.y + 0.12; out.push(m);
     }
     for (let k = 0; k < d.nCars; k++) {
@@ -193,6 +203,17 @@ export class RangeHost {
         const y = p.y - (t.low ? 1.2 : 2.6) * 32 * ze - (t.low ? 0 : px), tw = c.measureText(t.text).width + 8 * dpr;
         c.fillStyle = 'rgba(16,24,16,0.8)'; c.beginPath(); c.roundRect(p.x - tw / 2, y - px * 0.75, tw, px * 1.5, 3 * dpr); c.fill();
         c.fillStyle = '#f8fafc'; c.fillText(t.text, p.x, y + 0.5 * dpr);
+      }
+      // the ball picker cart's stand-in pill (T133: the eight-way wagon stands in for it)
+      const pk = this.sim.view().picker;
+      if (pk) {
+        const q = screen(pk.x, pk.y);
+        if (on(q)) {
+          const t = 'Stand In for Ball picker cart', fp = Math.round(dpr * 10);
+          c.font = `600 ${fp}px system-ui, sans-serif`; const tw = c.measureText(t).width + 10 * dpr, y = q.y - 40 * dpr;
+          c.fillStyle = 'rgba(15,23,42,0.78)'; c.beginPath(); c.roundRect(q.x - tw / 2, y - fp * 0.8, tw, fp * 1.6, 6 * dpr); c.fill();
+          c.fillStyle = '#fde68a'; c.fillText(t, q.x, y + 0.5 * dpr);
+        }
       }
       c.textAlign = 'start'; c.textBaseline = 'alphabetic';
     } else if (zoom >= 0.03) {
@@ -326,6 +347,12 @@ export class RangeHost {
       practiceAppeal: practiceAppeal(b), fee: PRACTICE_FEE, feeEach: PRACTICE_FEE * rangeScale(this.ctx.dayLen()),
       // the upgrades' upkeep (T132): a game month now, and paid this season
       upkeep: rangeUpkeep(b), upkeepSeason: b.season.upkeep,
+      // the World of Golf extras (T133): what needs what, the kiosk's and the academy's season, the home and its next step
+      needs: Object.fromEntries(RANGE_UPGRADES.map(u => [u.id, needsOf(u).map(n => RANGE_UPGRADES.find(q => q.id === n)!.name)])) as Record<RangeUpgradeId, string[]>,
+      extras: EXTRA_IDS.map(id => ({ id, owned: b.owned.includes(id), season: b.extras[id].season, today: id === 'kiosk' ? this.sim.today.coffees : this.sim.today.lessons,
+        words: id === 'kiosk' ? `${Math.round(KIOSK_SHARE * 100)}% of golfers buy a $${COFFEE} coffee · ${this.sim.today.kioskQueue} in line` : `${Math.round(LESSON_SHARE * 100)}% of golfers take a $${LESSON} lesson on the academy's two bays` })),
+      home: { stage: homeStage(b), name: HOME_NAME[homeStage(b)], next: homeStage(b) < 2 ? { name: HOME_NAME[homeStage(b) + 1]!, at: HOME_AT[homeStage(b) as 0 | 1] } : null, total: b.total.takings },
+      upstairs: this.sim.today.upstairs,
     };
   }
 }

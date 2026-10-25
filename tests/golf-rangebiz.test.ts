@@ -32,7 +32,7 @@ test('a new range: 4 bays, $6, nothing bought, no counts; the save normalizes an
 });
 
 test('the upgrades: their order, their costs, and what each does to the stats', () => {
-  assert.equal(RANGE_UPGRADES.length, 8);
+  assert.equal(RANGE_UPGRADES.length, 12, 'the eight of Phase 1 and the four World of Golf extras (T133: golf-range-extras.test.ts)');
   const d = defaultRangeBiz();
   assert.equal(upgradeWhy(d, 'bays12', 1e9), 'Build 8 hitting bays first');
   assert.match(upgradeWhy(d, 'proshop', 1000), /Not enough money/);
@@ -43,7 +43,7 @@ test('the upgrades: their order, their costs, and what each does to the stats', 
   assert.deepEqual([s1.bays, s1.targets, s1.close, s1.serve, s1.extra, s1.ref, s1.qMax], [24, 5, 22, 0.8, 2, 9, 10]);
   assert.ok(Math.abs(s1.appeal - 1.6) < 1e-9);
   assert.equal(rangeStats(withUpgrade(d, 'proshop')).serve, 2, 'the pro shop serves faster than the shack, the dispenser fastest');
-  assert.equal(RANGE_UPGRADES.reduce((a, u) => a + u.cost, 0), 160000, 'the whole range costs $160,000 (plan 2.3)');
+  assert.equal(RANGE_UPGRADES.filter(u => ALL.includes(u.id)).reduce((a, u) => a + u.cost, 0), 160000, 'the Phase 1 range costs $160,000 (plan 2.3)');
 });
 
 test('the demand: 0.0183 per pass-pop and resident a day at the start, falling with the price, zero when closed, the evening only under lights', () => {

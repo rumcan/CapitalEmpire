@@ -50,6 +50,8 @@ export interface Prop {
   plant?: 1;
   /** placed by the Props tool (T131): its catalogue key (golf/decor.ts); saved as the tuple's 7th element (the 6th is then 0) */
   decor?: string;
+  /** drawn this high above its spot (world px; T133: the range's upper deck, an auto prop, never saved): sprites.ts Drawable.lift */
+  lift?: number;
 }
 
 /** path: the rail's Paths (T084), the road tool on the course's cart paths and drives (setTool turns it into 'road' with roadScope 'course');
