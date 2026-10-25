@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
@@ -60,9 +60,53 @@ function devSave(): Plugin {
   };
 }
 
+/** T080: the atlas pages as KTX2 (Basis UASTC) next to their WebP in the production build, for atlas-ktx2.ts to transcode to BC7 / ASTC / ETC2 at
+ *  load: every atlas page level (library.ts ATLAS_PAGES) the bundle emits gets a sibling with the same name and a .ktx2 extension. The encoding
+ *  is cached by the WebP's sha256 (scripts/assets/atlas-ktx2.mjs: shared by the clone's worktrees, so only a changed page encodes again). If it
+ *  fails the build goes on without them and the game uses the WebP pages. ATLAS_KTX2=0 turns it off. */
+const KTX2_ON = process.env.ATLAS_KTX2 !== "0";
+function atlasKtx2(): Plugin {
+  interface Ktx2Script {
+    atlasPageSources(root: string): Promise<string[][]>;
+    encodeAtlasPages(items: { key: string; source: Buffer }[], o?: { log?: (m: string) => void }): Promise<Map<string, Buffer>>;
+  }
+  let script: Ktx2Script | null = null, sources = new Set<string>();
+  const rel = (file: string) => path.relative(__dirname, file).split("\\").join("/");
+  return {
+    name: "capitalempire-atlas-ktx2",
+    apply: "build",
+    // a page level small enough to inline (a sparse page's 128 px mip) would become a data: URL with no file to sit beside: never inline them
+    config: () => ({ build: { assetsInlineLimit: (file: string) => (sources.has(rel(file)) ? false : undefined) } }),
+    async buildStart() {
+      if (!KTX2_ON) return;
+      const t0 = Date.now();
+      // the real file (a dynamic import Vite does not bundle into the config), so its worker threads and cache paths resolve from scripts/assets
+      script = (await import(pathToFileURL(path.join(__dirname, "scripts/assets/atlas-ktx2.mjs")).href)) as Ktx2Script;
+      sources = new Set((await script.atlasPageSources(__dirname)).flat());
+      console.log(`atlas KTX2: ${sources.size} page levels listed in ${Date.now() - t0} ms`);
+    },
+    async generateBundle(_out, bundle) {
+      if (!script) return;
+      const t0 = Date.now(), items: { key: string; source: Buffer }[] = [];
+      for (const a of Object.values(bundle)) {
+        if (a.type !== "asset" || !a.fileName.endsWith(".webp")) continue;
+        if ((a.originalFileNames ?? []).some(n => sources.has(n.split("\\").join("/")))) items.push({ key: a.fileName, source: Buffer.from(a.source as Uint8Array) });
+      }
+      if (items.length !== sources.size) this.warn(`atlas KTX2: ${items.length} of the ${sources.size} page levels found in the bundle`);
+      try {
+        const out = await script.encodeAtlasPages(items, { log: (m: string) => console.log(m) });
+        for (const [fileName, source] of out) this.emitFile({ type: "asset", fileName: fileName.replace(/\.webp$/, ".ktx2"), source });
+        console.log(`atlas KTX2: ${out.size} files in ${Date.now() - t0} ms`);
+      } catch (e) { this.warn(`atlas KTX2 skipped, the game will use the WebP pages: ${String(e)}`); }
+    },
+  };
+}
+
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss(), devSave()],
+export default defineConfig(({ command }) => ({
+  plugins: [react(), tailwindcss(), devSave(), atlasKtx2()],
+  // the KTX2 atlas pages exist in a production build only: the dev server always shows the WebP pages, fresh as the art is edited
+  define: { __ATLAS_KTX2__: JSON.stringify(command === "build" && KTX2_ON) },
   // T080: the build is index.html plus hashed files next to it (dist/assets: the code, the workers, every atlas, view and ground picture), not one
   // inlined file: the single-file build had grown to 324 MB, took 4-11 minutes and ran out of memory. './' keeps every URL relative to the page, so
   // dist/ works from any folder of any static server (vite preview, a plain server, a sub-path such as GitHub Pages); the workers are files too
@@ -76,4 +120,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
-});
+}));

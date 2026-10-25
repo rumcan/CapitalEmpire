@@ -3,14 +3,14 @@
 // the sprite shaders), the fetch and decode of page levels, and the uploads, a few per frame.
 import { AtlasPages, atlasBudget, planAtlas, slotRect, type AtlasPlan, type PageLoad, type PageWant, type TierPlan } from './atlas-pages';
 
-/** a GPU texture format the atlas pages upload as */
-export interface GpuFormat { name: 'rgba8' | 'bc7' | 'astc' | 'etc2'; internal: number; bpp: number; compressed: boolean }
+/** a GPU texture format the atlas pages upload as (bpp: bytes per texel; clear: a transparent 4 x 4 block of a block format) */
+export interface GpuFormat { name: 'rgba8' | 'bc7' | 'astc' | 'etc2'; internal: number; bpp: number; compressed: boolean; clear?: Uint8Array }
 export const RGBA8_FORMAT: GpuFormat = { name: 'rgba8', internal: 0x8058 /* RGBA8 */, bpp: 4, compressed: false };
 
 /** one level of one page, decoded for upload: a premultiplied ImageBitmap (RGBA8), or compressed blocks (rows of 4 x 4 blocks, top down) */
 export interface LevelData { width: number; height: number; bitmap?: ImageBitmap; blocks?: Uint8Array; close(): void }
 /** where the page levels come from */
-export interface AtlasSource { format: GpuFormat; level(page: number, level: number): Promise<LevelData> }
+export interface AtlasSource { format: GpuFormat; level(page: number, level: number): Promise<LevelData>; dispose?(): void }
 
 /** the WebP pages (one URL per page and mip), decoded premultiplied for RGBA8 */
 export function webpSource(pages: string[][]): AtlasSource {
@@ -27,7 +27,7 @@ export function webpSource(pages: string[][]): AtlasSource {
 /** decoded page levels kept a little while, so the cells of one page-level share a single fetch and decode */
 const KEEP_LEVELS = 6;
 /** decodes in flight at once */
-const DECODES = 3;
+const DECODES = 4;
 /** cell loads in flight at once (they share decodes) */
 const LOADS = 96;
 /** texels uploaded per frame at most (about 8 MB of RGBA8; at least one load always goes) */
@@ -55,9 +55,9 @@ export class AtlasGL {
     gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R32I, P.grid * P.grid, P.pages);
     for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    // the widest strip of border that can fall outside a page (zeros: the page's own gutter is transparent)
-    const widest = Math.max(1, ...P.tiers.map(t => t.slot * t.border)) * source.format.bpp;
-    this.zero = new Uint8Array(widest);
+    // the widest strip of border that can fall outside a page: transparent (the page's own gutter is), zeros or the format's clear block
+    const widest = Math.ceil(Math.max(16, ...P.tiers.map(t => t.slot * t.border * source.format.bpp)) / 16) * 16;
+    this.zero = new Uint8Array(widest); if (source.format.clear) for (let o = 0; o < widest; o += 16) this.zero.set(source.format.clear, o);
     this.flushLookup();
   }
 
@@ -68,8 +68,18 @@ export class AtlasGL {
     const plan = planAtlas({ pages: o.pages, size: o.size, levels: o.levels, bpp: fmt.bpp, budget: atlasBudget(o.dpr) * fmt.bpp, finest: o.finest, maxLayers });
     const a = new AtlasGL(gl, o.source, plan);
     await a.loadLow();
+    // a compressed source missing pages (a build without its KTX2 files) is no use: the caller falls back to the WebP pages
+    if (a.stats.failed && fmt.compressed) { a.dispose(); throw new Error(`atlas: ${a.stats.failed} ${fmt.name} page levels failed to load`); }
     return a;
   }
+  /** free the textures and the source's workers */
+  dispose() {
+    const gl = this.gl; for (const t of [this.low, ...this.tiers]) gl.deleteTexture(t); gl.deleteTexture(this.cells);
+    for (const l of this.levels.values()) l.data?.close(); this.levels.clear(); this.ready = [];
+    this.source.dispose?.();
+  }
+  /** the GPU format the pages are in */
+  get format() { return this.source.format.name; }
 
   private array(internal: number, size: number, levels: number, layers: number) {
     const gl = this.gl, t = gl.createTexture()!; gl.bindTexture(gl.TEXTURE_2D_ARRAY, t);
@@ -117,7 +127,7 @@ export class AtlasGL {
     const gl = this.gl, f = this.source.format; if (w <= 0 || h <= 0) return;
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);
     const bytes = f.compressed ? Math.ceil(w / 4) * Math.ceil(h / 4) * f.bpp * 16 : w * h * 4;
-    if (bytes > this.zero.length) this.zero = new Uint8Array(bytes);
+    if (bytes > this.zero.length) { this.zero = new Uint8Array(bytes); if (f.clear) for (let o = 0; o < bytes; o += 16) this.zero.set(f.clear, o); }
     const z = this.zero.subarray(0, bytes);
     if (f.compressed) gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, mip, x, y, layer, w, h, 1, f.internal, z);
     else gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, mip, x, y, layer, w, h, 1, gl.RGBA, gl.UNSIGNED_BYTE, z);

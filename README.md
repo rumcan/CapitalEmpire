@@ -23,6 +23,7 @@ Open http://localhost:5173/. Add `?bench` for the 4 km benchmark city (`?bench=0
 | `npm run typecheck` | TypeScript check |
 | `npm run assets:ground` | Rebuild `src/assets/ground/` and `src/game/ground-art.ts` from the town builder's ground art |
 | `npm run assets:sprites` | Rebuild the sprite atlas (`src/assets/atlas/`) and `src/game/library.ts` |
+| `node scripts/assets/atlas-ktx2.mjs [--quality] [--prune]` | Warm (or prune) the cache of KTX2 atlas pages the build encodes (`ATLAS_KTX2=0 npm run build` skips them; the game then uses the WebP pages) |
 | `node scripts/perf/bench.mjs [--size 1] [--dpr 1] [--shots]` | Runs the benchmark in headless Edge on the real GPU; results and screenshots in `output/bench/` |
 
 The asset scripts read from a TrickOrTreat checkout next to this repo (`TOT_REPO` overrides the path) and fall back to
