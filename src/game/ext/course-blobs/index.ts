@@ -57,8 +57,9 @@ const PROJ_ITERS = 2, PROJ_STEP = 0.25, PROJ_EPS = 1e-4;
 
 // ---- styles (sections 3.2 and 3.4) ----
 
-/** an automatic collar: a band `width` cells wide around the surface, laid only over cells whose surface is in `over`
- * (first cut around fairways and tees, fringe around greens, a rough lip around bunkers, a bank around water) */
+/** an automatic collar: a band `width` cells wide around the surface (any width from a hairline up: a fraction of a cell lays the next ring of
+ * cells at a partial weight, collarWeight, so the outline moves out smoothly), laid only over cells whose surface is in `over` (first cut
+ * around fairways and tees, fringe around greens, a rough lip around bunkers, a bank around water) */
 export interface CollarStyle { name: 'first-cut' | 'fringe' | 'lip' | 'bank'; width: number; over: readonly number[] }
 /** how a surface's outline is shaped: `close` is the closing radius in cells (bigger fillets in inner corners and narrow
  * gaps), `relax` the number of Taubin passes (0..2; calmer staircase waves), `collar` the automatic collar if any */
@@ -93,8 +94,9 @@ export interface SurfaceOutline { surf: number; fill: number[][]; edges: number[
   /** with chunkOutlines(..., cover): the cells the outlines were contoured from (s: the surface's, closed; c: the surface's and its collar
    * band's, null without a collar), so a reader can tell which drawn layer covers a point (course-walls) */
   cover?: { s: CellCover; c: CellCover | null } }
-/** a window of cells: cell (ci0 + i, cj0 + j) of the grid (global cell indices) is entry j * cw + i of occ (0/1) */
-export interface CellCover { readonly occ: Uint8Array; readonly ci0: number; readonly cj0: number; readonly cw: number; readonly ch: number }
+/** a window of cells: cell (ci0 + i, cj0 + j) of the grid (global cell indices) is entry j * cw + i of occ (0 empty, 1 full, 2 a partial cell
+ * of weight pw: a collar's outer ring when its width is not a whole number of cells) */
+export interface CellCover { readonly occ: Uint8Array; readonly ci0: number; readonly cj0: number; readonly cw: number; readonly ch: number; readonly pw?: number }
 
 // ---- the kernel and the lattice taps ----
 
@@ -125,7 +127,45 @@ function disc(r: number): Int8Array {
 // ---- occupancy windows ----
 
 /** a window of cells (CellCover, writable) */
-interface Occ { occ: Uint8Array; ci0: number; cj0: number; cw: number; ch: number }
+interface Occ { occ: Uint8Array; ci0: number; cj0: number; cw: number; ch: number; pw?: number }
+
+// ---- fractional collar widths ----
+
+/** the iso-line's offset (cells) past a straight edge of full cells when the next column of cells has weight a (the field averaged along the
+ * edge): 0 at a = 0, one cell at a = 1, rising smoothly between */
+function edgeOffset(a: number): number {
+  const at = (x: number) => {
+    let s = 0;
+    for (let k = 0; k < 8; k++) {
+      const y = (k + 0.5) / 8;
+      for (let i = -3; i <= 0; i++) { const w = i < 0 ? 1 : a; if (w) for (let j = -2; j <= 2; j++) s += w * kern((x - (i + 0.5)) ** 2 + (y - (j + 0.5)) ** 2); }
+    }
+    return s / 8;
+  };
+  let lo = -0.5, hi = 1.6;
+  for (let it = 0; it < 32; it++) { const m = (lo + hi) / 2; if (at(m) >= ISO_T) lo = m; else hi = m; }
+  return lo;
+}
+/** edgeOffset sampled at weights k / 32 (made on first use) */
+let OFFSETS: Float64Array | null = null;
+/** the weight a collar's outer ring of cells takes so the band reaches `frac` (0..1) of the way to the next whole cell: edgeOffset inverted,
+ * so the width a player sets is the width drawn. 0 and 1 give exactly the whole-cell collars */
+export function collarWeight(frac: number): number {
+  if (frac <= 0) return 0;
+  if (frac >= 1) return 1;
+  if (!OFFSETS) { OFFSETS = new Float64Array(33); for (let k = 0; k <= 32; k++) OFFSETS[k] = edgeOffset(k / 32); }
+  const o = OFFSETS, t = o[0]! + frac * (o[32]! - o[0]!);
+  let k = 0; while (k < 31 && o[k + 1]! < t) k++;
+  const a = o[k]!, b = o[k + 1]!;
+  return (k + (b > a ? (t - a) / (b - a) : 0)) / 32;
+}
+/** a collar's width split into its whole cells and the weight of the partial ring past them (0: none) */
+function collarRings(width: number): { whole: number; part: number } {
+  const w = Math.max(0, width), whole = Math.floor(w + 1e-9), f = w - whole;
+  return f > 1e-3 ? { whole, part: collarWeight(f) } : { whole, part: 0 };
+}
+/** the most cells a collar of this width reaches past its surface */
+export const collarReach = (width: number) => { const r = collarRings(width); return r.whole + (r.part > 0 ? 1 : 0); };
 
 /** the grid's surface ids over a cell window, OUTSIDE where the window leaves the grid */
 function readSurf(g: Grid, ci0: number, cj0: number, cw: number, ch: number): Uint8Array {
@@ -134,6 +174,18 @@ function readSurf(g: Grid, ci0: number, cj0: number, cw: number, ch: number): Ui
   for (let j = j0; j < j1; j++) {
     const src = j * g.w, dst = (j - cj0) * cw - ci0;
     for (let i = i0; i < i1; i++) out[dst + i] = g.surf[src + i];
+  }
+  return out;
+}
+/** the carved cells over a cell window (T125: cells the player rubbed out that still hold the base, course-grid isCarved): 1 there, else 0;
+ *  null when the window has none (the usual case: nothing to leave out) */
+function readCarve(g: Grid, ci0: number, cj0: number, cw: number, ch: number): Uint8Array | null {
+  const cv = g.carve; if (!cv) return null;
+  let out: Uint8Array | null = null;
+  const i0 = Math.max(0, ci0), i1 = Math.min(g.w, ci0 + cw), j0 = Math.max(0, cj0), j1 = Math.min(g.h, cj0 + ch);
+  for (let j = j0; j < j1; j++) {
+    const src = j * g.w, dst = (j - cj0) * cw - ci0;
+    for (let i = i0; i < i1; i++) if (cv[src + i] && g.surf[src + i]! <= ROUGH) (out ??= new Uint8Array(cw * ch))[dst + i] = 1;
   }
   return out;
 }
@@ -205,11 +257,11 @@ function lineClose(src: Uint8Array, cw: number, ch: number, r: number, out: Uint
 /** the closing used for droplet fillets: the union of the closing by a disc of radius r (rounds inner corners, fills gaps
  * between facing edges up to 2r cells) and the closings by line segments of half-length 1 (joins a dotted row of cells with
  * gaps up to 2; longer lines would bar across the gaps between separate strokes), an algebraic closing. Added cells must be
- * claimable by surface s. */
-function closeCells(occ: Uint8Array, sw: Uint8Array, s: number, cw: number, ch: number, r: number): Uint8Array {
+ * claimable by surface s, and never carved (cv, T125: what the player rubbed out stays open, at its full size) */
+function closeCells(occ: Uint8Array, sw: Uint8Array, s: number, cw: number, ch: number, r: number, cv: Uint8Array | null = null): Uint8Array {
   const cl = erode(dilate(occ, cw, ch, r), cw, ch, r);
   lineClose(occ, cw, ch, 1, cl);
-  for (let i = 0; i < cl.length; i++) cl[i] = occ[i] || (cl[i] && claimable(s, sw[i])) ? 1 : 0;
+  for (let i = 0; i < cl.length; i++) cl[i] = occ[i] || (cl[i] && claimable(s, sw[i]) && !cv?.[i]) ? 1 : 0;
   return cl;
 }
 
@@ -239,11 +291,12 @@ function fieldGrad(o: Occ, u: number, v: number): void {
   for (let j = j0; j <= j1; j++) {
     const dy = v - (j + 0.5), row = (j - o.cj0) * o.cw - o.ci0;
     for (let i = i0; i <= i1; i++) {
-      if (!o.occ[row + i]) continue;
+      const ov = o.occ[row + i];
+      if (!ov) continue;
       const dx = u - (i + 0.5), q = (dx * dx + dy * dy) / KR2;
       if (q >= 1) continue;
-      const r = 1 - q, r2 = r * r, c = (-6 * r2) / KR2;
-      f += r2 * r; gu += c * dx; gv += c * dy;
+      const r = 1 - q, r2 = r * r, wt = ov === 1 ? 1 : o.pw ?? 1, c = (-6 * r2 * wt) / KR2;
+      f += wt * r2 * r; gu += c * dx; gv += c * dy;
     }
   }
   FG[0] = f; FG[1] = gu; FG[2] = gv;
@@ -316,15 +369,16 @@ function contour(o: Occ, L: Lat, keep: BlobBox | null): Chain[] {
   for (let cj = cj0; cj <= cj1; cj++) {
     const row = (cj - o.cj0) * o.cw - o.ci0, bc = 2 * cj + 1 - b0;
     for (let ci = ci0; ci <= ci1; ci++) {
-      if (!o.occ[row + ci]) continue;
-      const ac = 2 * ci + 1 - a0;
+      const ov = o.occ[row + ci];
+      if (!ov) continue;
+      const ac = 2 * ci + 1 - a0, wt = ov === 1 ? 1 : o.pw ?? 1; // a partial cell (a collar's outer ring) splats at its weight
       if (ac >= 2 && ac < na - 2 && bc >= 2 && bc < nb - 2) {
         const base = bc * na + ac;
-        for (let k = 0; k < K; k++) F[base + SPLAT_DB[k] * na + SPLAT_DA[k]] += SPLAT_W[k];
+        for (let k = 0; k < K; k++) F[base + SPLAT_DB[k] * na + SPLAT_DA[k]] += SPLAT_W[k] * wt;
       } else {
         for (let k = 0; k < K; k++) {
           const a = ac + SPLAT_DA[k], b = bc + SPLAT_DB[k];
-          if (a >= 0 && b >= 0 && a < na && b < nb) F[b * na + a] += SPLAT_W[k];
+          if (a >= 0 && b >= 0 && a < na && b < nb) F[b * na + a] += SPLAT_W[k] * wt;
         }
       }
     }
@@ -638,13 +692,14 @@ function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withColl
   const b0 = Math.floor((box.y0 - CHUNK_MARGIN - g.y0) / LATTICE), b1 = Math.ceil((box.y1 + CHUNK_MARGIN - g.y0) / LATTICE);
   const L: Lat = { a0, b0, na: a1 - a0 + 1, nb: b1 - b0 + 1 };
   const col = withCollar ? st.collar : undefined;
-  const close = Math.max(0, Math.round(st.close)), cw0 = col ? Math.max(0, Math.round(col.width)) : 0;
+  const rings = col ? collarRings(col.width) : { whole: 0, part: 0 };
+  const close = Math.max(0, Math.round(st.close)), cw0 = rings.whole + (rings.part > 0 ? 1 : 0);
   const pad = 3 + 2 * close + cw0;
   const ci0 = (a0 >> 1) - pad, cj0 = (b0 >> 1) - pad, cw = (a1 >> 1) + pad + 1 - ci0, ch = (b1 >> 1) + pad + 1 - cj0;
-  const sw = readSurf(g, ci0, cj0, cw, ch), n = cw * ch;
+  const sw = readSurf(g, ci0, cj0, cw, ch), cv = readCarve(g, ci0, cj0, cw, ch), n = cw * ch;
   let occ: Uint8Array = new Uint8Array(n);
   for (let i = 0; i < n; i++) occ[i] = sw[i] === s ? 1 : 0;
-  if (close > 0) occ = closeCells(occ, sw, s, cw, ch, close);
+  if (close > 0) occ = closeCells(occ, sw, s, cw, ch, close, cv);
   const keep = cellBox(g, { x0: box.x0 - 1, y0: box.y0 - 1, x1: box.x1 + 1, y1: box.y1 + 1 });
   const oS: Occ = { occ, ci0, cj0, cw, ch };
   const chains = contour(oS, L, keep);
@@ -653,9 +708,15 @@ function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withColl
   if (col) {
     const over = new Uint8Array(256);
     for (const t of col.over) over[t] = 1;
-    const dl = dilate(occ, cw, ch, cw0), cc = new Uint8Array(n);
-    for (let i = 0; i < n; i++) cc[i] = occ[i] || (dl[i] && over[sw[i]]) ? 1 : 0;
-    oC = { occ: cc, ci0, cj0, cw, ch };
+    const dl = dilate(occ, cw, ch, rings.whole), cc = new Uint8Array(n);
+    // the collar band never lies on a carved cell (T125): a rubbed-out gap shows as the base it went back to
+    for (let i = 0; i < n; i++) cc[i] = occ[i] || (dl[i] && over[sw[i]] && !cv?.[i]) ? 1 : 0;
+    if (rings.part > 0) {
+      // the ring past the whole cells, at the weight that puts the outline at the width asked for
+      const d2 = dilate(occ, cw, ch, rings.whole + 1);
+      for (let i = 0; i < n; i++) if (!cc[i] && d2[i] && over[sw[i]] && !cv?.[i]) cc[i] = 2;
+    }
+    oC = rings.part > 0 ? { occ: cc, ci0, cj0, cw, ch, pw: rings.part } : { occ: cc, ci0, cj0, cw, ch };
     chainsC = contour(oC, L, keep);
     for (const c of chainsC) relaxChain(c, st.relax);
   }
@@ -669,17 +730,17 @@ function reverseRing(p: number[]): number[] {
   return out;
 }
 
-/** fill rings over box (cells) from chains, simplified, in tiles */
-function fillRings(g: Grid, o: Occ, chains: readonly Chain[], b: BlobBox): number[][] {
-  const tol = SIMPLIFY_TOL / CELL, { pieces, inner } = clip(chains, b), out: number[][] = [];
+/** fill rings over box (cells) from chains, simplified (at tolT tiles), in tiles */
+function fillRings(g: Grid, o: Occ, chains: readonly Chain[], b: BlobBox, tolT = SIMPLIFY_TOL): number[][] {
+  const tol = tolT / CELL, { pieces, inner } = clip(chains, b), out: number[][] = [];
   for (const r of assemble(pieces, b, fieldAt(o, b.x0, b.y0) >= ISO_T)) { const d = dpRing(r, tol); if (d.length >= 6) out.push(toTiles(g, d)); }
   for (const c of inner) { const d = c.simple ? c.p : dpRing(c.p, tol); if (d.length >= 6) out.push(toTiles(g, d)); }
   return out;
 }
 
-/** edge polylines over box (cells) from chains, simplified, in tiles; whole rings close on their first point */
-function edgeLines(g: Grid, chains: readonly Chain[], b: BlobBox): number[][] {
-  const tol = SIMPLIFY_TOL / CELL, { pieces, inner } = clip(chains, b), out: number[][] = [];
+/** edge polylines over box (cells) from chains, simplified (at tolT tiles), in tiles; whole rings close on their first point */
+function edgeLines(g: Grid, chains: readonly Chain[], b: BlobBox, tolT = SIMPLIFY_TOL): number[][] {
+  const tol = tolT / CELL, { pieces, inner } = clip(chains, b), out: number[][] = [];
   for (const pc of pieces) {
     if (pc.p.length < 4) continue;
     let d = dpOpen(pc.p, tol);
@@ -699,9 +760,9 @@ function edgeLines(g: Grid, chains: readonly Chain[], b: BlobBox): number[][] {
   return out;
 }
 
-/** simplifies, once, the closed rings wholly inside box (cells): their fill ring and their edge are the same ring */
-function presimplify(chains: readonly Chain[], b: BlobBox): void {
-  const tol = SIMPLIFY_TOL / CELL;
+/** simplifies (at tolT tiles), once, the closed rings wholly inside box (cells): their fill ring and their edge are the same ring */
+function presimplify(chains: readonly Chain[], b: BlobBox, tolT = SIMPLIFY_TOL): void {
+  const tol = tolT / CELL;
   for (const c of chains) {
     if (!c.closed) continue;
     const p = c.p;
@@ -732,19 +793,21 @@ function surfacesNear(g: Grid, box: BlobBox, pad: number): number[] {
 export function chunkOutlines(g: Grid, cx: number, cy: number, size = 64, styles: readonly BlobStyle[] = BLOB_STYLE, cover = false): SurfaceOutline[] {
   const box: BlobBox = { x0: cx * size, y0: cy * size, x1: (cx + 1) * size, y1: (cy + 1) * size };
   let maxCollar = 0;
-  for (const st of styles) if (st?.collar) maxCollar = Math.max(maxCollar, st.collar.width);
+  for (const st of styles) if (st?.collar) maxCollar = Math.max(maxCollar, collarReach(st.collar.width));
   const out: SurfaceOutline[] = [];
   const cb = cellBox(g, box), gb = cellBox(g, { x0: box.x0 - FILL_GROW, y0: box.y0 - FILL_GROW, x1: box.x1 + FILL_GROW, y1: box.y1 + FILL_GROW });
   for (const s of surfacesNear(g, box, 3 + maxCollar)) {
     const st = styles[s] ?? { close: 0, relax: 0 };
     const sc = surfaceChains(g, s, st, box, true);
-    presimplify(sc.chains, cb);
-    const fill = fillRings(g, sc.oS, sc.chains, gb), edges = edgeLines(g, sc.chains, cb);
+    // a thin collar (under 0.4 m) is simplified finer, with its surface, so the band keeps its width all round instead of breaking up
+    const tol = st.collar ? Math.min(SIMPLIFY_TOL, Math.max(0.004, 0.2 * st.collar.width * CELL)) : SIMPLIFY_TOL;
+    presimplify(sc.chains, cb, tol);
+    const fill = fillRings(g, sc.oS, sc.chains, gb, tol), edges = edgeLines(g, sc.chains, cb, tol);
     const o: SurfaceOutline = { surf: s, fill, edges };
     if (sc.oC) {
-      presimplify(sc.chainsC, cb);
-      const cfill = fillRings(g, sc.oC, sc.chainsC, gb);
-      if (cfill.length) o.collar = { fill: cfill.concat(fill.map(reverseRing)), edges: edgeLines(g, sc.chainsC, cb) };
+      presimplify(sc.chainsC, cb, tol);
+      const cfill = fillRings(g, sc.oC, sc.chainsC, gb, tol);
+      if (cfill.length) o.collar = { fill: cfill.concat(fill.map(reverseRing)), edges: edgeLines(g, sc.chainsC, cb, tol) };
     }
     if (cover) o.cover = { s: sc.oS, c: sc.oC };
     if (fill.length || o.collar) out.push(o);

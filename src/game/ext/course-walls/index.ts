@@ -22,7 +22,7 @@ import { CELL_T, SURF, type Grid } from '../course-grid';
 import { BLOB_STYLE, ISO_T, coverField, type BlobStyle, type CellCover, type SurfaceOutline } from '../course-blobs';
 import { SUN_TILE_DIR } from '../course-height';
 
-const { water: WATER, bunker: BUNKER } = SURF;
+const { water: WATER, bunker: BUNKER, green: GREEN } = SURF;
 /** the number of surface ids (0..8) */
 const N_SURF = Object.keys(SURF).length;
 
@@ -39,6 +39,32 @@ export const WALL_PX_PER_M = 80;
 export const WALL_DROP = WALL_PX_PER_M / (2 * 32);
 /** a wall's cast shadow per metre of height, tiles along the shadows' direction (the sun about 46° up, with the walls' stretch) */
 export const WALL_SHADOW = 0.9;
+/** the Shadow slider's hairline (the owner's test, 2026-10-25: "the shadow under the fairway or whatever you paint is a bit too strong make
+ *  it hairline"): 0 is no shadow at all, this a thin soft contact line, 1 the strong cast shadow T099 drew */
+export const SHADOW_HAIRLINE = 0.15;
+/** the Shadow by default: the hairline */
+export const DEFAULT_SHADOW = SHADOW_HAIRLINE;
+/** each surface's Shadow by default: a green none at all (the owner, 2026-10-25: "no shadows under greens please"), every other the hairline */
+export const defaultShadow = (s: number) => (s === GREEN ? 0 : SHADOW_HAIRLINE);
+/** how the walls' shadows are drawn at Shadow s (0 none, SHADOW_HAIRLINE a hairline, 1 strong; T110: every part multiplied in the cool shade
+ *  colour, so the ground keeps its texture): the cast shadow's length per metre of drop (tiles) and alpha, and the contact shade along the
+ *  foot as a soft wide stroke and a tight dark line (widths in tiles, with their least widths in screen px, and alphas). From none to the
+ *  hairline the hairline's strokes fade in; the hairline is a thin soft contact line with a faint short cast, not a broad dark band; from
+ *  there to 1 they widen and darken to the full cast shadow and contact shade */
+export interface WallShade { cast: number; castA: number; soft: number; softPx: number; softA: number; line: number; linePx: number; lineA: number }
+export function wallShade(s: number = DEFAULT_SHADOW): WallShade {
+  const v = Math.min(1, Math.max(0, Number.isFinite(s) ? s : DEFAULT_SHADOW));
+  const fade = Math.min(1, v / SHADOW_HAIRLINE), t = Math.max(0, (v - SHADOW_HAIRLINE) / (1 - SHADOW_HAIRLINE)), mix = (a: number, b: number) => a + (b - a) * t;
+  return { cast: WALL_SHADOW * mix(0.15, 1), castA: fade * mix(0.14, 0.34), soft: mix(0.03, 0.12), softPx: mix(1, 3), softA: fade * mix(0.28, 0.45), line: mix(0.012, 0.05), linePx: mix(0.6, 1.5), lineA: fade * mix(0.4, 0.8) };
+}
+/** whose Shadow a wall takes: a bunker's or a pond's cut face (it drops into the sand or the water) the bunker's or the pond's, any other the
+ *  raised surface on its higher side (a green's, a tee's or a fairway's bank) */
+export const shadowOwner = (w: { m: WallMat; hs: number }) => (w.m === WallMat.Sand ? BUNKER : w.m === WallMat.Water ? WATER : w.hs);
+/** how tall a green's grassy bank is drawn, as a share of a wall's height (the owner, 2026-10-25: a green reads crisp, its raised edge only a
+ *  hairline lit edge and a very slim face, never outlined in dark) */
+export const GREEN_FACE = 0.4;
+/** the share of its height a wall's face is drawn at: a green's bank over turf slim (GREEN_FACE), every other face whole */
+export const faceScale = (w: { m: WallMat; hs: number }) => (w.hs === GREEN && w.m === WallMat.Turf ? GREEN_FACE : 1);
 
 /** a drawn layer's code: 2 s for surface s's fill, 2 s + 1 for its collar band; 0 is the map grass under the course */
 export const layerCode = (s: number, collar: boolean) => 2 * s + (collar ? 1 : 0);
@@ -86,7 +112,9 @@ export const wallMat = (lo: number): WallMat => (lo === layerCode(BUNKER, false)
 /** one wall run: the top edge as flat x, y, dh triples (tiles, tiles, metres: the drop below that point, > 0), the higher side on the left of
  *  travel, so the face's normal (from high to low) is the right-hand normal (dy, -dx) and looks toward the camera all along; lo: the layer
  *  code it hangs over (the renderer draws it right after that layer, so later layers cover it where they overlap); m: its WallMat */
-export interface WallRun { p: number[]; lo: number; m: WallMat }
+export interface WallRun { p: number[]; lo: number; m: WallMat;
+  /** the surface id on its higher side (0 the map grass): a green's bank is drawn slim and takes the green's Shadow (faceScale, shadowOwner) */
+  hs: number }
 /** one lit top edge: a height step whose face (from high to low) turns toward the sun at the upper right (a raised green's upper right
  *  edges, a bunker's near rim), as flat x, y pairs (tiles), the higher side on the left; hi: the layer code of the higher side, whose top
  *  the renderer lights along it */
@@ -231,7 +259,7 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
         const keys = (c: Cls, lo: number, hi: number) => {
           const wall = c === Cls.WallOut || c === Cls.WallIn, sgn = c === Cls.WallOut ? 1 : -1;
           qRim.push(wall && sgn * sunF > RIM_SUN ? 1 + 2 * hi + (sgn < 0 ? 1 : 0) : 0);
-          qMain.push(c === Cls.Hidden || (wall && sgn * camF <= 0) ? 0 : 1 + c * 64 + (wall ? lo : 0));
+          qMain.push(c === Cls.Hidden || (wall && sgn * camF <= 0) ? 0 : 1 + c * 64 + (wall ? lo + 512 * (hi >> 1) : 0)); // a wall keyed by its lower layer and higher surface
         };
         qx.push(x0); qy.push(y0); qd.push(pd[a]!);
         let cc = pc[a]! as Cls, cl = pl[a]!, ch = ph[a]!, cd = pd[a]!;
@@ -261,7 +289,7 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
       if (!closed) { qx.push(X(m - 1)); qy.push(Y(m - 1)); qd.push(pd[m - 1]!); }
       const np = qx.length, QX = (i: number) => qx[i % np]!, QY = (i: number) => qy[i % np]!, QD = (i: number) => qd[i % np]!;
       groupRuns(Int32Array.from(qMain), closed, (k0, len) => {
-        const key = qMain[k0 % qMain.length]! - 1, c = Math.floor(key / 64) as Cls, lo = key % 64;
+        const key = qMain[k0 % qMain.length]! - 1, hs = Math.floor(key / 512), c = Math.floor((key % 512) / 64) as Cls, lo = key % 64;
         const pts: number[] = [];
         for (let q = 0; q <= len; q++) pts.push(QX(k0 + q), QY(k0 + q));
         if (c === Cls.Soft) { er.soft.push(pts); return; }
@@ -275,7 +303,7 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
         if (p[2]! < 0.5 * p[5]!) p[2] = p[5]!;
         if (p[last]! < 0.5 * p[last - 3]!) p[last] = p[last - 3]!;
         if (sign < 0) reverse(p, 3);
-        walls.push({ p, lo, m: wallMat(lo) });
+        walls.push({ p, lo, m: wallMat(lo), hs });
       });
       groupRuns(Int32Array.from(qRim), closed, (k0, len) => {
         const key = qRim[k0 % qRim.length]! - 1, hi = key >> 1, p: number[] = [];

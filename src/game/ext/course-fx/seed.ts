@@ -12,13 +12,15 @@ import { SURF_GROW_MONTHS } from './index';
 export interface SeedLook { cols: readonly string[]; cover: number; len: number; wid: number; rows: number }
 
 /** the young grass by surface id: the green fine, dense and emerald; the tee dense and yellow-green; the fairway in drill rows; the rough
- *  sparse, coarse dark tufts; the fescue sparse straw-gold wisps */
+ *  sparse, coarse dark tufts; the fescue sparse straw-gold wisps. The playing surfaces come up thick enough to read green from day one
+ *  (T121, the owner's test 2026-10-25: a just built hole read as brown soil): their sprouts cover about two thirds of the soil (fairway) to
+ *  four fifths (green), over the quarter of real grass a seeded cell starts with (course-fx seededStage) */
 export const SEED_LOOKS: Readonly<Record<number, SeedLook>> = {
   [SURF.rough]: { cols: ['#4e6a2c', '#5a7834', '#43602a'], cover: 0.24, len: 0.7, wid: 0.18, rows: 0 },
   [SURF.fescue]: { cols: ['#b9a75e', '#c8b870', '#a8964f'], cover: 0.24, len: 0.8, wid: 0.15, rows: 0 },
-  [SURF.fairway]: { cols: ['#6c9f3a', '#7aae44', '#5f9034'], cover: 0.42, len: 0.36, wid: 0.09, rows: 0.5 },
-  [SURF.tee]: { cols: ['#a3c24c', '#b2cf5a', '#93b343'], cover: 0.62, len: 0.22, wid: 0.1, rows: 0 },
-  [SURF.green]: { cols: ['#3f9b4b', '#4cab57', '#348b40', '#2a7535'], cover: 0.8, len: 0.18, wid: 0.09, rows: 0 },
+  [SURF.fairway]: { cols: ['#6c9f3a', '#7aae44', '#5f9034'], cover: 1.15, len: 0.36, wid: 0.09, rows: 0.2 },
+  [SURF.tee]: { cols: ['#a3c24c', '#b2cf5a', '#93b343'], cover: 1.2, len: 0.22, wid: 0.1, rows: 0 },
+  [SURF.green]: { cols: ['#3f9b4b', '#4cab57', '#348b40', '#2a7535'], cover: 1.4, len: 0.18, wid: 0.09, rows: 0 },
 };
 /** the share of the soil a look's sprouts cover (0..1): their area (round ends included) as a share, less their overlaps (scattered at random) */
 export const seedShare = (look: SeedLook) => 1 - Math.exp(-look.cover * (1 + Math.PI * look.wid / (4 * look.len)));
@@ -60,7 +62,8 @@ export function seedSprouts(look: SeedLook, seed = 1): Sprout[] {
   const P = SPROUT_PERIOD, rnd = mulberry(seed >>> 0 || 1), n = Math.round(look.cover * P * P / (look.len * look.wid)), out: Sprout[] = [];
   const rowsN = look.rows > 0 ? Math.max(1, Math.round(P / look.rows)) : 0, gap = rowsN ? P / rowsN : 0;
   for (let k = 0; k < n; k++) {
-    const x = rnd() * P, y = rowsN ? (Math.floor(rnd() * rowsN) + 0.5) * gap + (rnd() - 0.5) * look.wid * 1.5 : rnd() * P;
+    // drill rows: each sprout near its row (spread over most of the gap, so the rows read without bare soil stripes between them)
+    const x = rnd() * P, y = rowsN ? (Math.floor(rnd() * rowsN) + 0.5) * gap + (rnd() - 0.5) * Math.max(look.wid * 1.5, gap * 0.6) : rnd() * P;
     const a = rowsN ? (rnd() - 0.5) * 0.5 : rnd() * Math.PI, f = 0.7 + 0.6 * rnd();
     out.push({ x, y: (y + P) % P, a, len: look.len * f, wid: look.wid * (0.8 + 0.4 * rnd()), col: look.cols[Math.floor(rnd() * look.cols.length)]! });
   }

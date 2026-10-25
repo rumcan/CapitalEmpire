@@ -1,6 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
-import { BORDER_TEXES, BORDER_W, BRUSH_PRESETS, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { BORDER_TEXES, BRUSH_PRESETS, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
@@ -12,7 +12,10 @@ import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
-import { CELL_T, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { BLOB_STYLE } from './ext/course-blobs';
+import { BORDER_MAX_M, BORDER_MIN_M } from './ext/course-grid/patch';
+import { defaultShadow } from './ext/course-walls';
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
@@ -55,6 +58,8 @@ export const HOLE_COUNT = 18;
 export type LandRefusal = 'off' | 'range';
 export const LAND_WHY: Readonly<Record<LandRefusal, string>> = { off: 'Not your land', range: 'The driving range stands here' };
 export const LAND_WHERE: Readonly<Record<LandRefusal, string>> = { off: 'off your land', range: 'on the driving range' };
+/** why Rub out leaves a cell as it is when the land rules let it (T125): nothing above the base there, or (rubHoleOnly) another hole's cell */
+export const RUB_WHY = { nothing: 'Nothing to rub out', hole: 'Another hole' } as const;
 /** the studio's 18 preset holes (src/game/golf/hole-presets.json; null: an empty slot) */
 const STORED: (StoredHole | null)[] = Array.from({ length: HOLE_COUNT }, (_, i) => ((HOLE_PRESETS as { holes?: (StoredHole | null)[] }).holes?.[i] ?? null));
 /** the props an action added and removed (the engine's journal; opaque here), for undo */
@@ -68,8 +73,19 @@ interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: Pr
 const UNDO_MAX = 100;
 /** the most course-grid cells the undo steps keep in all (13 bytes a cell: about 26 MB); the oldest steps go first */
 const UNDO_CELLS = 2_000_000;
-/** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
-type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> };
+/** a brush preset's editable settings: the brush radius (tiles), the area style it paints and, for a surface with a collar on the course
+ *  grid, the collar band's width in metres (bw: the Border slider) and its walls' shadow (sh: the Shadow slider, 0 none .. 1 strong); absent:
+ *  the defaults (BLOB_STYLE's band, course-walls defaultShadow) */
+type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number };
+/** the brush kinds whose course-grid surface has a collar band (the Border slider's surfaces), with their surface ids and the band's name */
+export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }>> = {
+  fairway: { s: SURF.fairway, band: 'first cut' }, tee: { s: SURF.tee, band: 'first cut' }, green: { s: SURF.green, band: 'fringe' },
+  bunker: { s: SURF.bunker, band: 'lip' }, water: { s: SURF.water, band: 'bank' },
+};
+/** the brush kinds that paint the course grid (the old painted-area border does nothing for them) */
+export const GRID_KINDS: readonly BrushKind[] = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water'];
+/** the least ms between two re-draws of the course while a Border or Shadow slider is dragged (the last value always lands) */
+export const LOOK_MS = 120;
 /** the localStorage key of the edited brush presets */
 const BRUSH_KEY = 'capitalempire.brushPresets';
 /** the brush radius range in tiles */
@@ -85,7 +101,9 @@ function loadBrush(): Record<BrushKind, BrushSet> {
     const saved = JSON.parse(localStorage.getItem(BRUSH_KEY) ?? 'null') as Partial<Record<BrushKind, { r?: number; style?: Partial<BrushSet['style']> }>> | null;
     if (saved && typeof saved === 'object') for (const p of BRUSH_PRESETS) {
       const s = saved[p.kind]; if (!s || typeof s !== 'object') continue;
-      out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }) };
+      const { bw, sh } = s as { bw?: unknown; sh?: unknown };
+      out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }),
+        ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, bw)) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}) };
     }
   } catch { /* no storage or a bad save: the defaults */ }
   return out;
@@ -231,6 +249,9 @@ export class PaintTool {
   brushKind: BrushKind = 'fairway';
   brushHole = 1;
   rubOut = false;
+  /** Rub out on the course grid (T125): off (the default), it takes every course surface under the brush whatever its hole; on, only the
+   *  current hole's cells (for holes that touch) */
+  rubHoleOnly = false;
   /** seed (grows in) or sod: how a golf area painted now is planted */
   plantKind: PlantKind = 'seed';
   brush: Record<BrushKind, BrushSet> = loadBrush();
@@ -251,7 +272,7 @@ export class PaintTool {
   private planting: { erase: boolean; last: { x: number; y: number }; n: number } | null = null;
   private plantSeed = (Date.now() % 100000) | 0;
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
-  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts; /** the square brush (T109): its size in cells (0: the round brush) and the start cell of its last square */ n: number; ix: number; iy: number; /** what the stroke has charged so far ($) and the cells it has laid (or rubbed out), and whether it ran out of money */ spent: number; cells: number; broke: boolean } } | null = null;
+  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, hole, month value and brush rules each dab paints the cells with (the mask is unused; a rub out lays the base with no hole, T125) */ grid?: { g: Grid; s: number; h: number; month: number; opts: PaintOpts; /** the square brush (T109): its size in cells (0: the round brush) and the start cell of its last square */ n: number; ix: number; iy: number; /** what the stroke has charged so far ($) and the cells it has laid (or rubbed out), and whether it ran out of money */ spent: number; cells: number; broke: boolean } } | null = null;
   private host: PaintHost;
   /** the engine draws the brush (and a course piece) with ext/course-cursor (T081, T108: the cells a click paints and a surface chip beside the
    *  pointer, which stays a normal pointer): the plain brush ring steps aside */
@@ -275,7 +296,7 @@ export class PaintTool {
   constructor(host: PaintHost) { this.host = host; }
 
   /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
-  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}), ...edgeOf(a) } }; }
+  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: borderW(a.border), bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}), ...edgeOf(a) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {
@@ -288,7 +309,7 @@ export class PaintTool {
   send(a: PaintArea, currentMonth?: number) { const m = currentMonth === undefined || isAreaMature(a, currentMonth); this.host.setLotGround('paint:' + a.id, [PaintTool.patch(a, m)]); }
 
   /** replaces the areas with the save tuples (none: clears) and sends their patches */
-  load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.undos = []; this.redos = []; this.tx = null; this.hj = new CourseHeightJournal(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
+  load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
 
   /** takes out the areas pred picks (their ground goes; T078's load moves the golf surfaces into the course grid), in paint order, and
    *  clears the undo steps (they name the old areas); returns them */
@@ -303,7 +324,14 @@ export class PaintTool {
   clear() {
     for (const a of this.areas) this.host.setLotGround('paint:' + a.id, null);
     this.areas = []; this.pts = []; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null; this.nextId = 1; this.lasso = false; this.down = null; this.stroke = null;
+    // a new game or a load: the last game's undo steps (they name its cells and areas), its current hole and the New hole wizard's plan and
+    // number go too (the owner's test, 2026-10-25); newGame() numbers the wizard from the new game's holes once they are in
+    this.undos = []; this.redos = []; this.tx = null; this.hj = new CourseHeightJournal(); this.pinHint = undefined;
+    this.brushHole = 1; this.pill = null; this.wizard.reset(1);
   }
+  /** a new game or a load is in (the engine's afterLoad, after the course grid and the plans): the New hole wizard waits for the tee of the
+   *  game's first free hole number (1 in a new game) */
+  newGame() { this.wizard.reset(this.nextFreeHole() || 1); this.pill = null; this.host.emit(); }
 
   /** the areas as save tuples */
   save(): PaintTuple[] { return this.areas.map(a => toTuple(a)); }
@@ -322,7 +350,7 @@ export class PaintTool {
       // the brush preset takes the change (the Course tool's Shape method paints with it too), and the areas of this hole and kind re-style at once
       const k = this.brushKind;
       const was = this.brush[k].style;
-      this.brush[k] = { r: this.brush[k].r, style: { ...this.style } }; this.saveBrush();
+      this.brush[k] = { ...this.brush[k], style: { ...this.style } }; this.saveBrush();
       let changed = false;
       for (const a of this.areas) if (a.hole === this.brushHole && a.kind === k) { Object.assign(a, this.brush[k].style); this.send(a); changed = true; }
       if (changed) this.host.save();
@@ -344,7 +372,59 @@ export class PaintTool {
   get strokeSpent(): number { return this.stroke?.grid?.spent ?? 0; }
   /** the cells the stroke in progress has laid or rubbed out so far (0 with none; the cursor's drag total, T118) */
   get strokeCells(): number { return this.stroke?.grid?.cells ?? 0; }
-  setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)), style: this.brush[k].style }; this.saveBrush(); this.host.emit(); }
+  setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { ...this.brush[k], r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)) }; this.saveBrush(); this.host.emit(); }
+
+  // ---------- the course look's Border and Shadow (the owner's test, 2026-10-25) ----------
+  /** the collar band's width in metres of a brush kind's course-grid surface (the Border slider: the green's fringe, the fairway's and tee's
+   *  first cut, the bunker's lip, the pond's bank), or null when the kind has none */
+  courseBorder(kind: BrushKind = this.brushKind): number | null {
+    const b = BORDER_KINDS[kind]; if (!b) return null;
+    return this.brush[kind].bw ?? BLOB_STYLE[b.s]!.collar!.width;
+  }
+  /** sets a kind's collar band width (metres, BORDER_MIN_M hairline .. BORDER_MAX_M), remembered with its brush look; the course is drawn
+   *  again (throttled while the slider is dragged) */
+  setCourseBorder(m: number, kind: BrushKind = this.brushKind) {
+    if (!BORDER_KINDS[kind] || !Number.isFinite(m)) return;
+    const w = Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, m));
+    if (w === this.courseBorder(kind)) return;
+    this.brush[kind] = { ...this.brush[kind], bw: w }; this.saveBrush();
+    this.lookSoon(); this.host.emit();
+  }
+  /** the collar widths set with the Border slider, by surface id (the engine's CourseLooks.border; unset ones are left out) */
+  courseBorders(): (number | undefined)[] {
+    const out: (number | undefined)[] = [];
+    for (const k of Object.keys(BORDER_KINDS) as BrushKind[]) { const bw = this.brush[k].bw; if (bw !== undefined) out[BORDER_KINDS[k]!.s] = bw; }
+    return out;
+  }
+  /** the Shadow of a brush kind's walls (the course look, by surface: the cast shadow and contact shade, 0 none .. SHADOW_HAIRLINE a hairline ..
+   *  1 strong, ext/course-walls wallShade; by default none under a green, the hairline elsewhere), or null for a kind with no walls of its own */
+  courseShadow(kind: BrushKind = this.brushKind): number | null {
+    const b = BORDER_KINDS[kind]; if (!b) return null;
+    return this.brush[kind].sh ?? defaultShadow(b.s);
+  }
+  /** sets a kind's Shadow (0..1), remembered with its brush look; the course is drawn again (throttled while the slider is dragged) */
+  setCourseShadow(v: number, kind: BrushKind = this.brushKind) {
+    if (!BORDER_KINDS[kind] || !Number.isFinite(v)) return;
+    const s = Math.min(1, Math.max(0, v)); if (s === this.courseShadow(kind)) return;
+    this.brush[kind] = { ...this.brush[kind], sh: s }; this.saveBrush();
+    this.lookSoon(); this.host.emit();
+  }
+  /** the Shadows set with the slider, by surface id (the engine's CourseLooks.shadow; unset ones are left out: their defaults) */
+  courseShadows(): (number | undefined)[] {
+    const out: (number | undefined)[] = [];
+    for (const k of Object.keys(BORDER_KINDS) as BrushKind[]) { const sh = this.brush[k].sh; if (sh !== undefined) out[BORDER_KINDS[k]!.s] = sh; }
+    return out;
+  }
+  private lookAt = -Infinity;
+  private lookTimer: ReturnType<typeof setTimeout> | null = null;
+  /** the course look changed: the grid's chunks are contoured and drawn again (the contour worker's queue merges what comes while a job
+   *  runs), at most every LOOK_MS, the last change always landing */
+  private lookSoon() {
+    if (!this.host.grid?.()) return;
+    const now = Date.now(), wait = LOOK_MS - (now - this.lookAt);
+    if (wait <= 0) { this.lookAt = now; this.host.courseLook?.(); return; }
+    this.lookTimer ??= setTimeout(() => { this.lookTimer = null; this.lookAt = Date.now(); this.host.courseLook?.(); }, wait);
+  }
 
   /** writes the brush presets to localStorage (a storage that is missing or full is skipped) */
   private saveBrush() { try { localStorage.setItem(BRUSH_KEY, JSON.stringify(this.brush)); } catch { /* storage may be unavailable */ } }
@@ -532,29 +612,45 @@ export class PaintTool {
     const h = this.brushHole, unit = unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind);
     return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || g.surf[i]! > s ? 0 : unit; };
   }
-  /** the brush rules on grid g for surface s: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did), owned
-   *  cells only, and a rub out takes only cells of its own surface on the current hole (as the old per-hole brush areas did) */
-  private gridOpts(g: Grid, s: number, erase: boolean): PaintOpts {
+  /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did) and owned
+   *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them, carved: no 'below', no course-grid rub) */
+  private gridOpts(g: Grid, erase: boolean): PaintOpts {
+    if (erase) { const why = this.rubWhy(g); return { allow: i => !why(i), carve: true }; } // carved: the drawn course leaves the gap open
     const own = this.host.ownedAt;
-    const h = this.brushHole;
-    return { over: 'below', rub: erase, allow: i => { if (erase && (g.surf[i] !== s || g.hole[i] !== h)) return false; if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
+    return { over: 'below', allow: i => { if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
+  }
+  /** what Rub out gives back on the course grid (T125): rough, or the land's own grass (none) when the brush in hand is rough itself */
+  private rubBase(): number { return this.brushKind === 'rough' ? SURF.none : SURF.rough; }
+  /** why Rub out leaves cell i of grid g as it is ('' when it takes the cell back to the base, with no hole; T125, the owner: "should be
+   *  able to rub out everything below it not just the fairway"): the land rules first, as painting (off your land, the driving range's
+   *  plot: refusals), then nothing above the base there (rough, or the land's own grass), then with rubHoleOnly another hole's cell. Every
+   *  course surface goes (fairway, green, tee, bunker, water, waste, fescue; their first cut and fringe are automatic collars); a cell
+   *  already at the base is left alone, so a drag never rubs through it */
+  private rubWhy(g: Grid): (i: number) => string {
+    const own = this.host.ownedAt, base = this.rubBase(), h = this.brushHole, only = this.rubHoleOnly;
+    return i => {
+      if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return LAND_WHY[this.host.landWhy?.(c.x, c.y) || 'off']; }
+      if (g.surf[i]! <= base) return RUB_WHY.nothing;
+      return only && g.hole[i] !== h ? RUB_WHY.hole : '';
+    };
   }
   /** the course-grid cells a Course brush dab would skip right now (T081's footprint), by a cell centre in tiles: outside the grid, else
-   *  the brush rules above (off your land, a higher surface it slides past, for a rub out another surface or hole); null when the brush
-   *  paints areas (a cart path, a classic game) */
+   *  the brush rules above (off your land, a higher surface it slides past; for a rub out rubWhy's); null when the brush paints areas (a
+   *  cart path, a classic game) */
   brushSkip(): ((x: number, y: number) => boolean) | null {
     const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
-    const o = this.gridOpts(g, s, this.rubOut);
-    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (o.allow ? !o.allow(i) : false) || (!o.rub && o.over === 'below' && g.surf[i]! > s); };
+    if (this.rubOut) { const why = this.rubWhy(g); return (x, y) => { const i = cellAt(g, x, y); return i < 0 || !!why(i); }; }
+    const o = this.gridOpts(g, false);
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (o.allow ? !o.allow(i) : false) || (o.over === 'below' && g.surf[i]! > s); };
   }
   /** why a Course brush dab would skip the cell at (x, y) right now ('' when it paints it; T108's footprint shows the reason), by the same rules
    *  as brushSkip; null when the brush paints areas */
   brushSkipWhy(): ((x: number, y: number) => string) | null {
     const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
-    const own = this.host.ownedAt, h = this.brushHole, erase = this.rubOut;
+    const own = this.host.ownedAt, rub = this.rubOut ? this.rubWhy(g) : null;
     return (x, y) => {
       const i = cellAt(g, x, y); if (i < 0) return 'Off the course land';
-      if (erase) return g.surf[i] !== s || g.hole[i] !== h ? 'Another surface or hole' : '';
+      if (rub) return rub(i);
       if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return LAND_WHY[this.host.landWhy?.(c.x, c.y) || 'off']; }
       const top = g.surf[i]!, nm = SURF_SURFACE[top]; return top > s ? `${nm ? nm[0]!.toUpperCase() + nm.slice(1) : 'A higher surface'} stays on top` : '';
     };
@@ -562,7 +658,7 @@ export class PaintTool {
   /** fills polygon pts (tiles) into grid g as surface s for hole h (the brush rules): the cells that change are charged (1 m² each at the
    *  surface's price; golf mode) and kept in the open action; false, with the toast and nothing changed, when the treasury cannot pay */
   private gridFill(g: Grid, pts: number[], s: number, h: number): boolean {
-    const d = fillPolygon(g, toXY(pts), s, h, plantMonth(this.plantKind, this.host.currentMonth?.()), this.gridOpts(g, s, false));
+    const d = fillPolygon(g, toXY(pts), s, h, plantMonth(this.plantKind, this.host.currentMonth?.()), this.gridOpts(g, false));
     const cost = this.host.golfMode?.() ? Math.round(diffCost(d, v => unitBuildCost(SURF_SURFACE[v] ?? 'other', this.plantKind))) : 0, money = this.host.money?.() ?? 0;
     if (cost > 0 && money < cost) { applyDiff(g, d, true); this.host.toast(`Not enough money: this costs $${cost.toLocaleString()} (treasury: $${Math.round(money).toLocaleString()})`, 'warn'); return false; }
     if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; }
@@ -573,6 +669,9 @@ export class PaintTool {
   /** whether there is a step to undo / redo (the panel's buttons) */
   get canUndo() { return this.undos.length > 0 && !this.tx; }
   get canRedo() { return this.redos.length > 0 && !this.tx; }
+  /** what an undo / redo would take back or do again ('' when there is none), for the Holes panel's tooltips (P23 4.3) */
+  get undoLabel() { return this.canUndo ? this.undos[this.undos.length - 1]!.label : ''; }
+  get redoLabel() { return this.canRedo ? this.redos[this.redos.length - 1]!.label : ''; }
   /** undoes the last action: its areas go back, its props are taken away or put back, its money is refunded */
   undo() {
     if (this.tx) return;
@@ -729,7 +828,7 @@ export class PaintTool {
       // (fringe, first cut) are automatic now and are dropped; a cart path stays a painted area
       if (grid) {
         const gs = PaintTool.surfOf(s), sf = s.kind ?? surfaceOfTex(s.tex);
-        if (gs) { const d = fillPolygon(grid, toXY(roundCorners(s.pts, s.radius)), gs, s.hole ?? pl0(p), plantMonth(this.plantKind, m), this.gridOpts(grid, gs, false)); this.gridApply(d); continue; }
+        if (gs) { const d = fillPolygon(grid, toXY(roundCorners(s.pts, s.radius)), gs, s.hole ?? pl0(p), plantMonth(this.plantKind, m), this.gridOpts(grid, false)); this.gridApply(d); continue; }
         if (sf === 'fringe' || sf === 'firstCut') continue;
       }
       const id = this.nextId++;
@@ -749,7 +848,7 @@ export class PaintTool {
   private drawPiece(v: PaintView) {
     const p = this.piece; if (!p) return;
     const status = p.why ? 'invalid' : 'valid';
-    for (const a of p.areas) drawGhostPoly(v, a.pts, status, { fillColor: p.why ? undefined : rgba(TEX_COL.get(a.tex) ?? '#888888', 0.45), dashed: !!a.kind, borderWidthTiles: a.border > 0 ? BORDER_W[a.border]! : 0, borderColor: rgba(BTEX_COL.get(a.btex) ?? '#888888', 0.7) });
+    for (const a of p.areas) drawGhostPoly(v, a.pts, status, { fillColor: p.why ? undefined : rgba(TEX_COL.get(a.tex) ?? '#888888', 0.45), dashed: !!a.kind, borderWidthTiles: a.border > 0 ? borderW(a.border) : 0, borderColor: rgba(BTEX_COL.get(a.btex) ?? '#888888', 0.7) });
     const pl = p.pl;
     if (pl.snapPt && pl.snapNormal) drawGhostSnap(v, { x: pl.snapPt.x, y: pl.snapPt.y, kind: 'edge', nx: pl.snapNormal.x, ny: pl.snapNormal.y, halfSpan: 2 });
     const name = PIECE_BUTTONS.find(q => q.arch === this.pieceArch)?.name ?? 'Piece';
@@ -848,12 +947,12 @@ export class PaintTool {
       const sg = s.grid;
       if (sg && sg.n) {
         const jx = squareStart(t.x, sg.n), jy = squareStart(t.y, sg.n); if (jx === sg.ix && jy === sg.iy) return;
-        squareRun(sg.ix, sg.iy, jx, jy, (ix, iy) => this.gridDab(fillPolygon(sg.g, squarePoly(ix, iy, sg.n), sg.s, this.brushHole, sg.month, sg.opts)));
+        squareRun(sg.ix, sg.iy, jx, jy, (ix, iy) => this.gridDab(fillPolygon(sg.g, squarePoly(ix, iy, sg.n), sg.s, sg.h, sg.month, sg.opts)));
         sg.ix = jx; sg.iy = jy; s.dabs.push(t.x, t.y); return;
       }
       // dabs on the half grid (T108): a move inside the same cell paints nothing new
       const x = snapDab(t.x), y = snapDab(t.y); if (x === s.last.x && y === s.last.y) return;
-      if (sg) this.gridDab(paintStroke(sg.g, s.last.x, s.last.y, x, y, s.r, sg.s, this.brushHole, sg.month, sg.opts, CELL_T));
+      if (sg) this.gridDab(paintStroke(sg.g, s.last.x, s.last.y, x, y, s.r, sg.s, sg.h, sg.month, sg.opts, CELL_T));
       else brushStroke(s.m, s.last.x, s.last.y, x, y, s.r, s.erase, CELL_T);
       s.last.x = x; s.last.y = y; s.dabs.push(x, y); return;
     }
@@ -1003,12 +1102,13 @@ export class PaintTool {
     // on the course grid (T078) every dab paints the cells (a cart path still paints areas)
     const g = this.courseGrid(), s = g ? surfOfSurface(k) : 0;
     if (g && s) {
-      this.begin((erase ? 'rub out ' : 'brush ') + k);
-      // the square brush (T109): n x n cells from the start cell under the pointer; else the round brush's disc
+      this.begin(erase ? 'rub out' : 'brush ' + k);
+      // the square brush (T109): n x n cells from the start cell under the pointer; else the round brush's disc. Both lay and rub out the
+      // same cells: a rub out (T125) lays the base (rough, or the land's own grass) with no hole, established, over every cell rubWhy lets it
       const n = this.brushSquare(), ix = n ? squareStart(t.x, n) : 0, iy = n ? squareStart(t.y, n) : 0;
-      const grid = { g, s, month: plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, s, erase), n, ix, iy, spent: 0, cells: 0, broke: false };
+      const grid = { g, s: erase ? this.rubBase() : s, h: erase ? 0 : h, month: erase ? 0 : plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, erase), n, ix, iy, spent: 0, cells: 0, broke: false };
       this.stroke = { m, m0: m, r, erase, last: { x, y }, dabs: [x, y], grid };
-      this.gridDab(n ? fillPolygon(g, squarePoly(ix, iy, n), s, h, grid.month, grid.opts) : paintDisc(g, x, y, r, s, h, grid.month, grid.opts));
+      this.gridDab(n ? fillPolygon(g, squarePoly(ix, iy, n), grid.s, grid.h, grid.month, grid.opts) : paintDisc(g, x, y, r, grid.s, grid.h, grid.month, grid.opts));
       this.host.emit(); return;
     }
     for (const a of this.areas) if (a.hole === h && a.kind === k) fillPoly(m, this.outlineOf(a));
@@ -1193,7 +1293,7 @@ export class PaintTool {
       const why = P.length >= 6 ? this.outlineWhy(P) : '', bad = why !== '';
       if (P.length >= 6) {
         // the shared ghost (T024): texture-tinted fill, the collar band clipped inside, the dashed wireframe; red with the reason when it cannot be placed
-        drawGhostPoly(v, P, bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : rgba(TEX_COL.get(this.style.tex) ?? '#888888', 0.5), borderWidthTiles: this.style.border > 0 ? BORDER_W[this.style.border]! : 0, borderColor: rgba(BTEX_COL.get(this.style.btex) ?? '#888888', 0.75) });
+        drawGhostPoly(v, P, bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : rgba(TEX_COL.get(this.style.tex) ?? '#888888', 0.5), borderWidthTiles: this.style.border > 0 ? borderW(this.style.border) : 0, borderColor: rgba(BTEX_COL.get(this.style.btex) ?? '#888888', 0.75) });
       } else {
         // two corners: the first edge, dashed
         v.setIso(ctx); ctx.beginPath(); trace(ctx, P, false); ctx.setTransform(1, 0, 0, 1, 0, 0);

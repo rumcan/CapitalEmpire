@@ -202,6 +202,14 @@ export class HoleWizard {
     this.step = 'tee'; this.hole = hole; this.plan = null; this.base = null; this.tee = null;
     this.hover = null; this.drag = null; this.lineHole = 0; this.turnOff = 0;
   }
+  /** a new game or a load (the owner's test, 2026-10-25: the last game's "New hole 10" and its plan stayed on screen): everything the
+   *  wizard held goes (the plan, the built plan being edited, the ripple, the pointer, the cached ghost, handles and geometries) and it
+   *  waits for the tee of hole `hole` (the game's first free number) */
+  reset(hole = 1): void {
+    this.start(hole);
+    this.ripple = null; this.cursor = null;
+    this.ghostKey = ''; this.ghostVal = null; this.baseKey = ''; this.baseR = null; this.handleKey = ''; this.handleVal = []; this.geoms.clear();
+  }
   /** opens a built plan for editing (its handles back) */
   open(plan: HolePlan): void {
     this.start(plan.hole);
