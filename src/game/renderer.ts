@@ -138,13 +138,11 @@ const BANK_SHADE = 0.95, BANK_SUN = 0.8;
 const ROCK_EARTH: readonly (readonly number[])[] = [[92, 78, 62], [196, 174, 138]], ROCK_STONE: readonly (readonly number[])[] = [[100, 96, 88], [232, 224, 206]];
 /** the rock's stones: one where the top edge crosses a lattice line every STONE_GAP tiles (x or y, the segment's longer way: a place on the
  *  map, the same in every chunk, never a repeating tile), in rows down the face, STONE_PX world px across (zoom 1), STONE_SKIP left out */
-const STONE_GAP = 0.13, STONE_PX = 9, STONE_SKIP = 0.14;
+const STONE_GAP = 0.14, STONE_PX = 9.5, STONE_SKIP = 0.14;
 /** the stairs' treads and risers, in full shade and in full sun: stone on a rock face; in a grass bank, timber sleepers for risers and worn
  *  earth for treads */
 const STEP_STONE = { tread: [[140, 132, 118], [232, 224, 204]], riser: [[70, 64, 58], [160, 150, 132]] } as const;
 const STEP_TIMBER = { tread: [[118, 100, 74], [204, 184, 146]], riser: [[58, 40, 26], [122, 88, 56]] } as const;
-/** a screen offset (world px at zoom 1: x right, y down) as a tile offset (the iso projection's inverse: x - y = sx / HW, x + y = sy / HH) */
-const scrTile = (sx: number, sy: number): [number, number] => [sx / 128 + sy / 64, sy / 64 - sx / 128];
 const rgb = (c: readonly number[]) => `rgb(${Math.round(c[0]!)},${Math.round(c[1]!)},${Math.round(c[2]!)})`;
 const mixRGB = (a: readonly number[], b: readonly number[], t: number) => [a[0]! + (b[0]! - a[0]!) * t, a[1]! + (b[1]! - a[1]!) * t, a[2]! + (b[2]! - a[2]!) * t];
 /** a wall run's points (x, y, drop triples, tiles and metres): each one's normal (the mean of its segments' (dy, -dx)) and its drop on the
@@ -1114,8 +1112,13 @@ export class GroundPainter {
       // a tee's rock runs on down its cut face into a bunker (T127): the face's top share, the tee's height above the rough, in rock
       const lip = -(SURF_HEIGHT[SURF.bunker] ?? 0);
       for (const w of wl) if (w.m === WallMat.Sand && w.hs === SURF.tee && near(w)) {
-        const q = Float32Array.from(w.p); for (let i = 2; i < q.length; i += 3) q[i] = Math.max(0, q[i]! - lip);
-        if (q.some((v, i) => i % 3 === 2 && v > 0.05)) bk.push({ p: q, lo: w.lo, m: WallMat.Turf, hs: SURF.tee, f: FaceForm.Rock, r: 0 });
+        let band = this.rockBands.get(w);
+        if (band === undefined) {
+          const q = Float32Array.from(w.p); for (let i = 2; i < q.length; i += 3) q[i] = Math.max(0, q[i]! - lip);
+          band = q.some((v, i) => i % 3 === 2 && v > 0.05) ? { p: q, lo: w.lo, m: WallMat.Turf, hs: SURF.tee, f: FaceForm.Rock, r: 0 } : null;
+          this.rockBands.set(w, band);
+        }
+        if (band) bk.push(band);
       }
       if (bk.length) { const draw = banks(bk); ctx.save(); if (clip) { ctx.setTransform(M); ctx.clip(clip); } draw(); ctx.restore(); }
     };
@@ -1371,44 +1374,9 @@ export class GroundPainter {
           sp.closePath();
         }
       }
-      // the stones: where the top edge crosses a lattice line (the segment's longer way), in rows down the face below the grass lip
-      for (let i = 0; i + 1 < n; i++) {
-        const x0 = p[3 * i]!, y0 = p[3 * i + 1]!, ddx = p[3 * i + 3]! - x0, ddy = p[3 * i + 4]! - y0, sl = Math.hypot(ddx, ddy); if (sl < 1e-6) continue;
-        const ax = Math.abs(ddx) >= Math.abs(ddy) ? 0 : 1, a0 = ax ? y0 : x0, a1 = ax ? y0 + ddy : x0 + ddx;
-        for (let q = Math.ceil(Math.min(a0, a1) / STONE_GAP), q1 = Math.floor(Math.max(a0, a1) / STONE_GAP); q <= q1; q++) {
-          const t = (q * STONE_GAP - a0) / (a1 - a0); if (t < 0 || t >= 1) continue;
-          const cx = x0 + t * ddx, cy = y0 + t * ddy, salt = ax * 7919 + Math.round((ax ? cx : cy) / STONE_GAP) * 104729;
-          const fx = ox[i]! + t * (ox[i + 1]! - ox[i]!), fy = oy[i]! + t * (oy[i + 1]! - oy[i]!), li = lb[i]! + t * (lb[i + 1]! - lb[i]!);
-          const faceLen = Math.hypot((fx - fy) * HW, (fx + fy) * HH), rows = Math.max(1, Math.round(faceLen / (2 * STONE_PX)));
-          for (let j = 0; j < rows; j++) {
-            const h = (s: number) => hash01(q * 37 + j, salt + s);
-            if (h(1) < STONE_SKIP) continue;
-            const d = 0.16 + 0.8 * Math.min(1, Math.max(0, (j + 0.5 + 0.6 * (h(2) - 0.5)) / rows)), along = (h(3) - 0.5) * 0.5 * STONE_GAP;
-            const sx0 = cx + d * fx + along * ddx / sl, sy0 = cy + d * fy + along * ddy / sl, rad = STONE_PX * (0.6 + 0.7 * h(4)) * (0.8 + 0.2 * d), rot = h(5) * Math.PI;
-            const tone = Math.max(0, Math.min(5, Math.round(((li - BANK_B0) / (BANK_B1 - BANK_B0)) * 5 + (h(6) - 0.5) * 1.6)));
-            const shape = (path: Path2D, s: number, ox2: number, oy2: number) => {
-              for (let v = 0; v < 7; v++) {
-                const an = rot + (v / 7) * Math.PI * 2, rr = rad * s * (0.74 + 0.26 * h(10 + v)), [tx, ty] = scrTile(ox2 + Math.cos(an) * rr * 1.25, oy2 + Math.sin(an) * rr * 0.8);
-                if (v) path.lineTo(sx0 + tx, sy0 + ty); else path.moveTo(sx0 + tx, sy0 + ty);
-              }
-              path.closePath();
-            };
-            shape(G.stoneShade, 1.12, -0.18 * rad, 0.3 * rad);
-            shape(G.stones[tone]!, 1, 0, 0);
-            shape(G.lights[Math.min(2, Math.floor(tone / 2))]!, 0.55, 0.22 * rad, -0.3 * rad);
-          }
-        }
-        // grass tufts hanging over the crest, one where the edge crosses a finer lattice line, some left out
-        for (let q = Math.ceil(Math.min(a0, a1) / 0.035), q1 = Math.floor(Math.max(a0, a1) / 0.035); q <= q1; q++) {
-          const t = (q * 0.035 - a0) / (a1 - a0); if (t < 0 || t >= 1) continue;
-          const cx = x0 + t * ddx, cy = y0 + t * ddy, salt = ax * 6007 + Math.round((ax ? cx : cy) / 0.035) * 7727;
-          if (hash01(q, salt) < 0.3) continue;
-          const fx = ox[i]! + t * (ox[i + 1]! - ox[i]!), fy = oy[i]! + t * (oy[i + 1]! - oy[i]!), ln = BANK_BANDS[1]! * (0.7 + 1.1 * hash01(q, salt + 2) ** 2), lean = (hash01(q, salt + 3) - 0.5) * 0.04;
-          const tf = G.tufts[hash01(q, salt + 5) < 0.6 ? 0 : 1]!; tf.moveTo(cx, cy); tf.lineTo(cx + ln * fx + lean, cy + ln * fy - lean);
-          // and a few at the foot, growing up out of the ground in front of the rock (a soft toe)
-          if (hash01(q, salt + 7) < 0.45) { const up = 0.06 + 0.08 * hash01(q, salt + 8); G.tufts[2]!.moveTo(cx + fx, cy + fy); G.tufts[2]!.lineTo(cx + (1 - up) * fx - lean, cy + (1 - up) * fy + lean); }
-        }
-      }
+      // the stones and the turf's tufts: built once per run (tile space: the same at every zoom) and kept with it (rockDetail)
+      const rd = this.rockDetail(w, ox, oy, lb);
+      rd.stones.forEach((q, t) => G.stones[t]!.addPath(q)); rd.lights.forEach((q, t) => G.lights[t]!.addPath(q)); G.stoneShade.addPath(rd.shade); rd.tufts.forEach((q, t) => G.tufts[t]!.addPath(q));
       if (hs === SURF.tee) this.bankStairs(G, w, nx, ny, stairs, k);
     }
     const shine = (G: Group, paint: (g: C2D) => void) => {
@@ -1494,6 +1462,61 @@ export class GroundPainter {
         }
       }
     };
+  }
+  /** each rock run's stones and tufts (courseBanks), kept with the run (a chunk patch's runs live as long as the patch) and made again only
+   *  when its feet move (a neighbouring run's end, which its ends share, came or went) */
+  private rockCache = new WeakMap<CourseWall, { key: string; stones: Path2D[]; lights: Path2D[]; shade: Path2D; tufts: Path2D[] }>();
+  /** a tee's cut faces into bunkers as rock bands (drawCourses), one object per wall so its rockDetail is kept too */
+  private rockBands = new WeakMap<CourseWall, CourseWall | null>();
+  /** a rock run's stones: one where its top edge crosses a lattice line (the segment's longer way, every STONE_GAP tiles: a place on the
+   *  map, the same in every chunk), in rows down the face below the grass lip, each a painted six-sided stone (STONE_PX across, turned and
+   *  sized by a hash of its place) in one of six tones by the slope's light, with a lit cap toward the upper right and a soft shade at its
+   *  lower left; and the turf's tufts hanging over the crest and growing at the foot, on a finer lattice */
+  private rockDetail(w: CourseWall, ox: ArrayLike<number>, oy: ArrayLike<number>, lb: ArrayLike<number>) {
+    const p = w.p, n = p.length / 3, key = `${ox[0]},${oy[0]},${ox[n - 1]},${oy[n - 1]}`;
+    const was = this.rockCache.get(w); if (was && was.key === key) return was;
+    const out = { key, stones: Array.from({ length: 6 }, () => new Path2D()), lights: [new Path2D(), new Path2D(), new Path2D()], shade: new Path2D(), tufts: [new Path2D(), new Path2D(), new Path2D()] };
+    const cs = new Float64Array(6), sn = new Float64Array(6), rr = new Float64Array(6);
+    for (let i = 0; i + 1 < n; i++) {
+      const x0 = p[3 * i]!, y0 = p[3 * i + 1]!, ddx = p[3 * i + 3]! - x0, ddy = p[3 * i + 4]! - y0, sl = Math.hypot(ddx, ddy); if (sl < 1e-6) continue;
+      const ax = Math.abs(ddx) >= Math.abs(ddy) ? 0 : 1, a0 = ax ? y0 : x0, a1 = ax ? y0 + ddy : x0 + ddx;
+      for (let q = Math.ceil(Math.min(a0, a1) / STONE_GAP), q1 = Math.floor(Math.max(a0, a1) / STONE_GAP); q <= q1; q++) {
+        const t = (q * STONE_GAP - a0) / (a1 - a0); if (t < 0 || t >= 1) continue;
+        const cx = x0 + t * ddx, cy = y0 + t * ddy, salt = ax * 7919 + Math.round((ax ? cx : cy) / STONE_GAP) * 104729;
+        const fx = ox[i]! + t * (ox[i + 1]! - ox[i]!), fy = oy[i]! + t * (oy[i + 1]! - oy[i]!), li = lb[i]! + t * (lb[i + 1]! - lb[i]!);
+        const faceLen = Math.hypot((fx - fy) * HW, (fx + fy) * HH), rows = Math.max(1, Math.round(faceLen / (2 * STONE_PX)));
+        for (let j = 0; j < rows; j++) {
+          const hk = q * 37 + j;
+          if (hash01(hk, salt + 1) < STONE_SKIP) continue;
+          const d = 0.16 + 0.8 * Math.min(1, Math.max(0, (j + 0.5 + 0.6 * (hash01(hk, salt + 2) - 0.5)) / rows)), along = (hash01(hk, salt + 3) - 0.5) * 0.5 * STONE_GAP;
+          const sx0 = cx + d * fx + along * ddx / sl, sy0 = cy + d * fy + along * ddy / sl, rad = STONE_PX * (0.6 + 0.7 * hash01(hk, salt + 4)) * (0.8 + 0.2 * d), rot = hash01(hk, salt + 5) * Math.PI;
+          const tone = Math.max(0, Math.min(5, Math.round(((li - BANK_B0) / (BANK_B1 - BANK_B0)) * 5 + (hash01(hk, salt + 6) - 0.5) * 1.6)));
+          for (let v = 0; v < 6; v++) { const an = rot + v * (Math.PI / 3); cs[v] = Math.cos(an) * 1.25; sn[v] = Math.sin(an) * 0.8; rr[v] = rad * (0.74 + 0.26 * hash01(hk, salt + 10 + v)); }
+          // a shape at scale k offset (screen px) by (u, w): its screen points turned to tiles (x - y = sx / HW, x + y = sy / HH)
+          const shape = (path: Path2D, k: number, u: number, wv: number) => {
+            for (let v = 0; v < 6; v++) {
+              const ssx = u + cs[v]! * rr[v]! * k, ssy = wv + sn[v]! * rr[v]! * k, tx = sx0 + ssx / 128 + ssy / 64, ty = sy0 + ssy / 64 - ssx / 128;
+              if (v) path.lineTo(tx, ty); else path.moveTo(tx, ty);
+            }
+            path.closePath();
+          };
+          shape(out.shade, 1.12, -0.18 * rad, 0.3 * rad);
+          shape(out.stones[tone]!, 1, 0, 0);
+          shape(out.lights[Math.min(2, Math.floor(tone / 2))]!, 0.55, 0.22 * rad, -0.3 * rad);
+        }
+      }
+      // grass tufts hanging over the crest, one where the edge crosses a finer lattice line, some left out; a few at the foot growing up
+      for (let q = Math.ceil(Math.min(a0, a1) / 0.035), q1 = Math.floor(Math.max(a0, a1) / 0.035); q <= q1; q++) {
+        const t = (q * 0.035 - a0) / (a1 - a0); if (t < 0 || t >= 1) continue;
+        const cx = x0 + t * ddx, cy = y0 + t * ddy, salt = ax * 6007 + Math.round((ax ? cx : cy) / 0.035) * 7727;
+        if (hash01(q, salt) < 0.3) continue;
+        const fx = ox[i]! + t * (ox[i + 1]! - ox[i]!), fy = oy[i]! + t * (oy[i + 1]! - oy[i]!), ln = BANK_BANDS[1]! * (0.7 + 1.1 * hash01(q, salt + 2) ** 2), lean = (hash01(q, salt + 3) - 0.5) * 0.04;
+        const tf = out.tufts[hash01(q, salt + 5) < 0.6 ? 0 : 1]!; tf.moveTo(cx, cy); tf.lineTo(cx + ln * fx + lean, cy + ln * fy - lean);
+        if (hash01(q, salt + 7) < 0.45) { const up = 0.06 + 0.08 * hash01(q, salt + 8); out.tufts[2]!.moveTo(cx + fx, cy + fy); out.tufts[2]!.lineTo(cx + (1 - up) * fx - lean, cy + (1 - up) * fy + lean); }
+      }
+    }
+    this.rockCache.set(w, out);
+    return out;
   }
   /** a tee's stairs cut into one of its bank or rock runs (courseBanks): for each stair (Stair) whose stretch of the side this run crosses
    *  (the run's points within the stretch along the side, on that side), the run's top edge there clipped exactly at the stretch's ends (on
