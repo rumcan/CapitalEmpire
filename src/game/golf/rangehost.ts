@@ -13,6 +13,9 @@ import { surfacePreset } from '../paint-presets';
 import { SURFACE_TEX } from './paintcourse';
 import type { GolfSurface } from './types';
 import { RangeSim, rangeScene, rangeStats, upgradeWhy, withPrice, withUpgrade, RANGE_UPGRADES, type CarSlot, type DemandCtx, type RangeBizSave, type RangeClock, type RangeScene, type RangeUpgradeId, type ScenePatch, type ScenePiece } from './rangebiz';
+import { CELL_T, type Grid, type GridDiff } from '../ext/course-grid';
+import { inPractice, practiceWords, scanPractice, type PracticeScan, type PracticeState } from './practice';
+import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, type PracticeId } from './rangesave';
 
 /** what the host needs of the engine */
 export interface RangeHostCtx {
@@ -29,6 +32,8 @@ export interface RangeHostCtx {
   /** the demand's inputs, the town day's length (sim s), the sim's time (s) and the town clock */
   demand(): DemandCtx; dayLen(): number; simT(): number; clock(): RangeClock;
   save(): void; toast(text: string, kind: 'good' | 'info' | 'warn'): void; emit(): void;
+  /** the course grid (null: none yet), and the tee box laid into it as tee cells of no hole (world polygon; T130): false while there is no grid */
+  grid(): Grid | null; layTee(pts: number[]): boolean;
 }
 
 /** the texture a scene patch is laid with: a golf surface takes the course's own preset (the brush's, the owner's studio presets), else its
@@ -40,6 +45,10 @@ function patchTex(s: ScenePatch['surf']): LotPatch['tex'] {
 }
 /** the takings are booked this often (sim s), not on every sale; a frame this long (sim s) is a skip */
 const BOOK_EVERY = 2, SKIP_DT = 120;
+/** the practice area is read again at most this often (frames) while the grid changes (T130) */
+const SCAN_FRAMES = 6;
+/** the practice facilities' names (T130) */
+export const PRACTICE_NAME: Readonly<Record<PracticeId, string>> = { putting: 'Putting green', chipping: 'Chipping green and bunker' };
 
 export class RangeHost {
   scene: RangeScene | null = null;
@@ -52,6 +61,9 @@ export class RangeHost {
   readonly flyingBuf = new Float32Array(3 * 160); nFlying = 0;
   /** the range card is open */
   cardOpen = false;
+  /** the practice facilities as the course grid holds them (T130; null: not read yet), the grid and its rev when read, frames since, and the
+   *  practice greens' cup flags (auto props by key) */
+  practice: PracticeScan | null = null; private scanG: Grid | null = null; private scanRev = -1; private scanAgo = 0; private cups = new Map<string, Prop>(); private cupKey = '';
   constructor(private ctx: RangeHostCtx, seed: number) { this.sim = new RangeSim(seed, GOLFER_PEOPLE.length); }
 
   /** the scene laid again when the range's state, its plot or its car park changed (cheap to call every frame: a key compares them) */
@@ -69,7 +81,7 @@ export class RangeHost {
     this.labels = sc.pieces.filter(p => p.label && this.props.has(p.key)).map(p => ({ p: this.props.get(p.key)!, text: p.label! }));
     // laid as painted areas (the Paint tool's path, which knows the presets), in the scene's order and under anything the player paints
     this.ctx.setGround('range:ground', sc.patches.map((p, i) => ({ pts: p.pts, tex: patchTex(p.surf), paint: { s: 1, a: 0, b: 0, bt: 'kerb', z: -1e6 + i } })));
-    if (!this.scene) this.ctx.clearTrees(sc.box);
+    if (!this.scene) { this.ctx.clearTrees(sc.box); this.ctx.clearTrees(sc.practice.box); }
     if (!b.paths) { this.ctx.layPaths(sc.paths); b.paths = true; this.ctx.save(); }
     this.scene = sc;
     this.sim.setScene(sc, cp?.bays ?? [], cp?.entrance ?? null);
@@ -77,13 +89,18 @@ export class RangeHost {
   /** everything off the map (a new game, a load, not a range start) */
   drop(): void {
     for (const p of this.props.values()) this.ctx.removeProp(p);
-    this.props.clear(); this.labels = []; this.scene = null; this.key = ''; this.lastT = -1; this.sim.clear();
+    for (const p of this.cups.values()) this.ctx.removeProp(p);
+    this.props.clear(); this.cups.clear(); this.cupKey = ''; this.labels = []; this.scene = null; this.key = ''; this.lastT = -1; this.sim.clear();
+    this.practice = null; this.scanG = null; this.scanRev = -1; this.sim.setPractice(null);
     this.ctx.setGround('range:ground', null);
   }
 
   /** once a frame: the golfers move on by the sim time since the last frame, and their takings are booked every BOOK_EVERY sim s */
   step(): void {
     const b = this.ctx.biz(); if (!b || !this.scene) return;
+    // the tee box into the course grid once (a new game, an old save's first load: T130), then the practice area read as it changes
+    if (!b.tee && this.ctx.layTee(this.scene.teeBox)) { b.tee = true; this.ctx.save(); }
+    this.scanPractice(b);
     const t = this.ctx.simT(), dt = this.lastT < 0 ? 0 : t - this.lastT; this.lastT = t;
     if (dt <= 0) return;
     // a long frame (a slow tab, 20x) is stepped in pieces of half a second, so the golfers walk on; only a skip (two minutes and more of sim
@@ -125,6 +142,7 @@ export class RangeHost {
   drawOver(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, ze: number, zoom: number, dpr: number, w: number, h: number): void {
     const sc = this.scene; if (!sc) return;
     const on = (p: { x: number; y: number }, m = 40) => p.x > -m && p.y > -m && p.x < w + m && p.y < h + m;
+    this.drawPractice(c, screen, zoom, dpr, on);
     if (zoom >= 0.12) {
       const r = Math.max(0.9 * dpr, 0.09 * 64 * ze), L = this.sim.lying, n = this.sim.nLying;
       c.fillStyle = 'rgba(255,255,255,0.92)'; c.beginPath();
@@ -155,6 +173,90 @@ export class RangeHost {
     }
   }
 
+  // ---- the practice facilities (T130)
+  /** reads the practice area when the grid changed (at most every SCAN_FRAMES frames): the facilities' states, the save's open flags (the appeal
+   *  follows them; a facility that opens is toasted), the golfers' spots and the cup flags */
+  private scanPractice(b: RangeBizSave): void {
+    const g = this.ctx.grid(), sc = this.scene; if (!g || !sc) return;
+    this.scanAgo++;
+    if (g === this.scanG && g.rev === this.scanRev) return;
+    if (this.practice && this.scanAgo < SCAN_FRAMES) return;
+    this.scanG = g; this.scanRev = g.rev; this.scanAgo = 0;
+    const p = scanPractice(g, sc.practice.box); this.practice = p; this.sim.setPractice(p);
+    let changed = false;
+    for (const id of PRACTICE_IDS) {
+      const open = p[id].state === 'open', f = b.practice[id]; if (f.open === open) continue;
+      f.open = open; changed = true;
+      if (open) this.ctx.toast(`${PRACTICE_NAME[id]} open: +${Math.round(PRACTICE_APPEAL[id] * 100)}% visitors, $${PRACTICE_FEE} a golfer who uses it`, 'good');
+    }
+    if (changed) { this.ctx.save(); this.ctx.emit(); } else if (this.cardOpen) this.ctx.emit();
+    // the cup flags: three on the putting green, one on the chipping green, once each is open
+    const want: ScenePiece[] = [];
+    for (const id of PRACTICE_IDS) if (p[id].state === 'open') p[id].cups.forEach((c, i) => want.push({ key: `practice-${id}${i}`, id: 'business:golf-pin-red', x: c.x, y: c.y, q: 0, scale: id === 'putting' ? 0.2 : 0.26 }));
+    const key = want.map(w => `${w.key}@${w.x},${w.y}`).join('|'); if (key === this.cupKey) return;
+    this.cupKey = key;
+    for (const pr of this.cups.values()) this.ctx.removeProp(pr);
+    this.cups.clear();
+    for (const w of want) { const pr = this.ctx.addPiece(w, 'range:' + w.key); if (pr) this.cups.set(w.key, pr); }
+  }
+  /** the cells a course edit laid in the practice area hold no hole (T130: practice facilities are not holes): set in the grid and in the diff, so
+   *  undo and redo keep them so */
+  practiceCells(g: Grid | null, d: GridDiff | null): void {
+    const sc = this.scene; if (!g || !d || !sc || !this.ctx.biz()) return;
+    const [bx0, by0, bx1, by1] = sc.practice.box;
+    for (let k = 0; k < d.n; k++) {
+      if (!d.h1[k]) continue;
+      const i = d.idx[k]!, cx = i % d.w, cy = (i - cx) / d.w, x = d.x0 + (cx + 0.5) * CELL_T, y = d.y0 + (cy + 0.5) * CELL_T;
+      if (x < bx0 || x >= bx1 || y < by0 || y >= by1) continue;
+      d.h1[k] = 0; const j = Math.floor((x - g.x0) / CELL_T) + Math.floor((y - g.y0) / CELL_T) * g.w; if (j >= 0 && j < g.hole.length) g.hole[j] = 0;
+    }
+  }
+  /** the course pill's words for tile (x, y) (CursorEnv.zone): the practice area lays no hole */
+  zoneAt(x: number, y: number): string { const sc = this.scene; return sc && this.ctx.biz() && inPractice(sc.practice, x, y) ? 'practice area (no hole)' : ''; }
+  /** the practice facilities as the unlocks and hints read them (null: not a range start) */
+  practiceFacts(): { putting: PracticeState; chipping: PracticeState } | null {
+    if (!this.ctx.biz() || !this.scene) return null;
+    const p = this.practice, b = this.ctx.biz()!;
+    return { putting: p?.putting.state ?? (b.practice.putting.open ? 'open' : 'none'), chipping: p?.chipping.state ?? (b.practice.chipping.open ? 'open' : 'none') };
+  }
+  /** where the practice area is (its middle) and the brush that builds the next facility there (the hint's Show me) */
+  practiceTarget(): { x: number; y: number; brush: 'green' | 'bunker' } | null {
+    const sc = this.scene; if (!sc) return null;
+    const f = this.practiceFacts(), c = this.practice?.chipping;
+    return { ...sc.practice.label, brush: f && f.putting === 'open' && c && c.state === 'nobunker' ? 'bunker' : 'green' };
+  }
+
+  /** the practice area (T130): until something is built there a faint dashed outline with its "Practice area" label (brighter while the hint
+   *  points at it: hint), and at the street tier the stand-in pills of the practice strokes once golfers use a facility */
+  hint = false;
+  private drawPractice(c: CanvasRenderingContext2D, screen: (x: number, y: number) => { x: number; y: number }, zoom: number, dpr: number, on: (p: { x: number; y: number }, m?: number) => boolean): void {
+    const sc = this.scene!, pa = sc.practice, p = this.practice;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (zoom >= 0.03 && !(p ? p.built : this.ctx.biz()?.practice.putting.open)) {
+      const pulse = this.hint ? 0.55 + 0.35 * Math.sin(performance.now() / 260) : 0.4;
+      c.beginPath();
+      for (let i = 0; i < pa.pts.length; i += 2) { const q = screen(pa.pts[i]!, pa.pts[i + 1]!); if (i) c.lineTo(q.x, q.y); else c.moveTo(q.x, q.y); }
+      c.closePath(); c.fillStyle = `rgba(236,252,203,${(0.06 * pulse).toFixed(3)})`; c.fill();
+      c.setLineDash([7 * dpr, 6 * dpr]); c.lineWidth = 1.6 * dpr; c.strokeStyle = `rgba(236,252,203,${pulse.toFixed(3)})`; c.stroke(); c.setLineDash([]);
+      const q = screen(pa.label.x, pa.label.y);
+      if (on(q, 200)) {
+        const px = Math.round(dpr * 13);
+        c.font = `700 ${px}px system-ui, sans-serif`; c.lineWidth = 3 * dpr; c.strokeStyle = 'rgba(10,30,10,0.85)'; c.strokeText('Practice area', q.x, q.y); c.fillStyle = '#ecfccb'; c.fillText('Practice area', q.x, q.y);
+        if (zoom >= 0.12) { c.font = `600 ${Math.round(px * 0.8)}px system-ui, sans-serif`; const t = 'Paint a putting green here'; c.strokeText(t, q.x, q.y + px * 1.3); c.fillStyle = '#d9f99d'; c.fillText(t, q.x, q.y + px * 1.3); }
+      }
+    }
+    // the stand-in pills of the strokes (the 3D golfers have no putting or chipping clip yet: GOLF-SPRITES)
+    if (zoom >= 0.12 && p) for (const id of PRACTICE_IDS) {
+      const f = p[id]; if (f.state !== 'open' || !f.centre || !this.sim.practiceToday[id]) continue;
+      const q = screen(f.centre.x, f.centre.y); if (!on(q)) continue;
+      const t = id === 'putting' ? 'Stand In for golfer putting clip' : 'Stand In for golfer chipping clip', px = Math.round(dpr * 10);
+      c.font = `600 ${px}px system-ui, sans-serif`; const tw = c.measureText(t).width + 10 * dpr, y = q.y - 34 * dpr;
+      c.fillStyle = 'rgba(15,23,42,0.78)'; c.beginPath(); c.roundRect(q.x - tw / 2, y - px * 0.8, tw, px * 1.6, 6 * dpr); c.fill();
+      c.fillStyle = '#fde68a'; c.fillText(t, q.x, y + 0.5 * dpr);
+    }
+    c.textAlign = 'start'; c.textBaseline = 'alphabetic';
+  }
+
   // ---- the range card's actions
   /** buys upgrade id (pays, re-lays the scene, saves); false with the reason toasted when it cannot */
   buy(id: RangeUpgradeId): boolean {
@@ -173,7 +275,7 @@ export class RangeHost {
     const [rx, ry, rw, rh] = pl.rect, f = pl.facing;
     // the front: the 26 tiles of the plot on the road side (the frame's v 0..26), turned with the facing
     const fr: Rect = f === 2 ? [rx, ry, rw, 26] : f === 0 ? [rx, ry + rh - 26, rw, 26] : f === 1 ? [rx, ry, 26, rh] : [rx + rw - 26, ry, 26, rh];
-    return x >= fr[0] && x < fr[0] + fr[2] && y >= fr[1] && y < fr[1] + fr[3];
+    return (x >= fr[0] && x < fr[0] + fr[2] && y >= fr[1] && y < fr[1] + fr[3]) || inPractice(this.scene.practice, x, y);
   }
   /** the range as the card shows it */
   view() {
@@ -183,6 +285,12 @@ export class RangeHost {
       biz: b, stats: st, today: this.sim.today, hours: `${String(st.open).padStart(2, '0')}:00-${st.close}:00`,
       upgrades: RANGE_UPGRADES.map(u => ({ ...u, why: upgradeWhy(b, u.id, money), owned: b.owned.includes(u.id) })),
       demand: dem, dayLen: this.ctx.dayLen(),
+      // the practice facilities (T130): each with its state's words, its appeal, its fee and today's and the season's golfers and takings
+      practice: PRACTICE_IDS.map(id => {
+        const f = this.practice?.[id] ?? { id, state: (b.practice[id].open ? 'open' : 'none') as PracticeState, m2: 0, need: 0 }, s = b.practice[id];
+        return { id, name: PRACTICE_NAME[id], state: f.state, words: practiceWords(f), appeal: PRACTICE_APPEAL[id], today: this.sim.practiceToday[id], golfers: s.season.golfers, takings: s.season.takings };
+      }),
+      practiceAppeal: practiceAppeal(b), fee: PRACTICE_FEE, feeEach: PRACTICE_FEE * rangeScale(this.ctx.dayLen()),
     };
   }
 }

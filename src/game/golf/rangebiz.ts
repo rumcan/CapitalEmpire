@@ -12,6 +12,8 @@ import { NEAR } from './rangestart';
 import { GOLFER_CLIPS } from '../library';
 import { clipFrame, golferRow, hash, rowToward, type CrowdPerson } from '../crowdview';
 import { mulberry } from '../iso';
+import { practiceArea, type PracticeArea, type PracticeScan } from './practice';
+import { PRACTICE_FEE, PRACTICE_IDS, PRACTICE_SHARE, practiceUsers, type PracticeId } from './rangesave';
 
 // ---------------------------------------------------------------- the scene
 
@@ -22,6 +24,8 @@ const SHOP = { u: 34, v: 8.5 }, COUNTER = { u: 34, v: 13.4 }, QUEUE_V = 14.5, CA
 const TARGET_D = [25, 50, 75, 100, 120], TARGET_U = [28, 44, 32, 40, 36], TARGET_R = [3, 4, 4, 5, 4];
 /** the far fence (v), the side fences (u) */
 const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
+/** the land's grass the outfield leaves round the tee box (tiles): room for the raised tee's face at the Height slider's top (T127, T130) */
+const TEE_GAP = 2.6;
 
 /** a prop of the scene: its key (stable while it stays), library id, world point, quarter turns from the picture's base view (preset-art turned),
  *  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */
@@ -34,6 +38,10 @@ export interface SceneTarget { x: number; y: number; r: number; m: number }
 export interface RangeScene {
   facing: 0 | 1 | 2 | 3;
   pieces: ScenePiece[]; patches: ScenePatch[];
+  /** the tee box (a world polygon, x y pairs): the game lays it into the course grid as tee cells of no hole, so T127's tee banks raise it (T130) */
+  teeBox: number[];
+  /** the practice area beside the range (T130, golf/practice.ts) */
+  practice: PracticeArea;
   /** the range's cart paths (cement slab), world legs: laid once (golf.range.paths) */
   paths: { a: Pt; b: Pt }[];
   /** every open bay: where its golfer stands, and the path point behind it */
@@ -67,10 +75,11 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   const pieces: ScenePiece[] = [], patches: ScenePatch[] = [];
   const put = (key: string, id: string, u: number, v: number, q = 0, o: Partial<ScenePiece> = {}) => { const p = P(u, v); pieces.push({ key, id, x: p.x, y: p.y, q, ...o }); };
 
-  // ---- the ground: the mown outfield in its first cut, the tee box in its fringe, the pads and mats of the open bays, the target greens, the
-  // shop's packed dirt and the caravan's dry lawn
-  patches.push({ pts: quad(0.3, 69.7, 16.8, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, 24.6, 148), surf: 'fairway' });
-  patches.push({ pts: quad(TEE[0] - 0.8, TEE[1] + 0.8, TEE[2] - 0.8, TEE[3] + 0.8), surf: 'firstCut' }, { pts: quad(TEE[0], TEE[1], TEE[2], TEE[3]), surf: 'tee' });
+  // ---- the ground: the mown outfield in its first cut beyond the tee box (the tee box and its own first-cut collar are the course grid's, T130:
+  // painted areas draw over the course, so the outfield keeps TEE_GAP tiles off it, where the raised tee's bank or rock face hangs down onto the
+  // land's grass), the pads and mats of the open bays on their concrete deck (over the tee box), the target greens, the shop's packed dirt and
+  // the caravan's dry lawn
+  patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'fairway' });
   const open = openSlots(st.bays);
   patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
   for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
@@ -130,7 +139,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   const o = P(0, 0), du = P(1, 0), dv = P(0, 1), c0 = P(0, 0), c1 = P(RANGE_PLOT[0], RANGE_PLOT[1]);
   const q0 = P(COUNTER.u, COUNTER.v), q1 = P(COUNTER.u + 0.8, COUNTER.v);
   return {
-    facing, pieces, patches, paths, bays, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets,
+    facing, pieces, patches, teeBox: quad(TEE[0], TEE[1], TEE[2], TEE[3]), practice: practiceArea(plot, facing), paths, bays, aim: { x: dv.x - o.x, y: dv.y - o.y }, targets,
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
     J: P(RANGE_PLOT[0] + 2, -NEAR), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
     numbers, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
@@ -149,7 +158,7 @@ function fenceRun(out: ScenePiece[], P: (u: number, v: number) => Pt, key: strin
 // ---------------------------------------------------------------- the golfers
 
 /** the stages of a visit */
-const enum S { CarIn, WalkShop, Queue, WalkBay, Hit, WalkCar, CarOut, Done }
+const enum S { CarIn, WalkShop, Queue, WalkBay, Hit, WalkPractice, Practice, WalkCar, CarOut, Done }
 /** the walking speed (tiles/s: a brisk 2.4 m/s, as a sim second is more than two town minutes), the cars' speeds on the road, the drive and in the car park (tiles/s) */
 const WALK = 1.4, ROAD_V = 9, DRIVE_V = 4.5, PARK_V = 2.5;
 /** a swing's beats: address, the drive clip, the pause after; the ball leaves at the clip's impact (s) */
@@ -157,6 +166,9 @@ const ADDRESS = 1.2, CLIP = GOLFER_CLIPS.golf_drive.times[GOLFER_CLIPS.golf_driv
 const SWING = ADDRESS + CLIP + PAUSE;
 /** the most balls lying on the range, and of golfers queued patiently (town hours) */
 const LYING_MAX = 800, PATIENCE_H = 2;
+/** the practice facilities (T130): a golfer practises this long (town hours); a putt's beats (address, the stroke, the ball leaving at PUTT_HIT,
+ *  the next putt after PUTT_T) and a chip's (the drive clip as the stand-in swing: SWING) */
+const PRACTICE_H = 0.45, PUTT_ADDR = 1.3, PUTT_STROKE = 0.55, PUTT_HIT = 1.6, PUTT_T = 3.6;
 
 /** a car-park bay a range car parks in: its point and heading (unit), and the park's entrance */
 export interface CarSlot { x: number; y: number; hx: number; hy: number }
@@ -180,9 +192,12 @@ function along(r: Route, t: number, o: { x: number; y: number; ang: number }): b
 /** a golfer's visit: id, the person drawn (index into the golfers), the car type, the car-park bay, the stage and its clock, its route, the bay
  *  (index into the scene's bays), the swing count, the time it queued and the time its sale began (its bay is held from then: the swings fill
  *  what is left of one town hour, so a bay takes a golfer an hour as the demand and skippedVisits count it) */
-interface Visit { id: number; person: number; car: number; slot: number; stage: S; t: number; r: Route | null; bay: number; swings: number; queued: number; served: number; x: number; y: number; ang: number }
-/** a ball in the air: from, to (tiles), launch time and flight time (s), and the arc's height (tiles) */
-interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number }
+interface Visit { id: number; person: number; car: number; slot: number; stage: S; t: number; r: Route | null; bay: number; swings: number; queued: number; served: number; x: number; y: number; ang: number;
+  /** the practice facility it walks to or plays (T130), its spot there (index into the facility's stands) and the cup it aims at */
+  fac?: PracticeId; spot?: number; aim?: Pt }
+/** a ball in the air: from, to (tiles), launch time and flight time (s), and the arc's height (tiles); roll: a putt rolling on the green (it slows
+ *  to the cup and is holed or picked up: it never lies) */
+interface Ball { x0: number; y0: number; x1: number; y1: number; t0: number; T: number; h: number; roll?: boolean }
 /** what the engine sees of the sim each frame */
 export interface RangeDraw {
   /** the golfers on foot (walking, queued, hitting) as crowd people (group 1) */
@@ -207,6 +222,11 @@ export class RangeSim {
   /** the queue limit now, and the golfers who turned back at the shop this step (counted as lost by step) */
   private qMax = 5; private lost = 0;
   private tmp = { x: 0, y: 0, ang: 0 };
+  /** the practice facilities as the course grid holds them (T130: null, none read yet), each spot taken or free, and the golfers who began to
+   *  practise this step (their fees are booked by step) */
+  private practice: PracticeScan | null = null; private spotBusy: Record<PracticeId, boolean[]> = { putting: [], chipping: [] }; private used: PracticeId[] = [];
+  /** today's golfers at each practice facility */
+  practiceToday: Record<PracticeId, number> = { putting: 0, chipping: 0 };
   constructor(seed: number, private golfers = 10) { this.rnd = mulberry(seed ^ 0x5eed7a); }
 
   /** the scene and the car park (its bays and entrance; none: no car park, no visitors): a new scene keeps the golfers, whose bays it keeps */
@@ -218,10 +238,26 @@ export class RangeSim {
     for (const v of this.visits) if (v.bay >= nb && v.stage >= S.WalkBay && v.stage <= S.Hit) this.leave(v);
     this.slotBusy = slots.map((_, i) => this.visits.some(v => v.slot === i && v.stage !== S.Done));
   }
-  /** the balls in the air now: each one's point and height (tiles), written into out as x y h triples; returns how many */
+  /** the practice facilities as the course grid holds them now (T130): a golfer at a facility that closed, or at a spot that went, walks back */
+  setPractice(p: PracticeScan | null): void {
+    this.practice = p;
+    for (const id of PRACTICE_IDS) {
+      const f = p?.[id], n = f && f.state === 'open' ? f.stands.length : 0, busy = this.spotBusy[id];
+      busy.length = n; for (let i = 0; i < n; i++) busy[i] = false;
+      for (const v of this.visits) {
+        if (v.fac !== id || (v.stage !== S.WalkPractice && v.stage !== S.Practice)) continue;
+        if (v.spot! < n) busy[v.spot!] = true; else this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y }));
+      }
+    }
+  }
+  /** the balls in the air (or rolling on a practice green) now: each one's point and height (tiles), written into out as x y h triples; returns how many */
   flying(out: Float32Array): number {
     let n = 0;
-    for (const b of this.balls) { const k = (this.t - b.t0) / b.T; if (k < 0 || k > 1 || 3 * n + 2 >= out.length) continue; out[3 * n] = b.x0 + (b.x1 - b.x0) * k; out[3 * n + 1] = b.y0 + (b.y1 - b.y0) * k; out[3 * n + 2] = 4 * b.h * k * (1 - k); n++; }
+    for (const b of this.balls) {
+      const k0 = (this.t - b.t0) / b.T; if (k0 < 0 || k0 > 1 || 3 * n + 2 >= out.length) continue;
+      const k = b.roll ? 1 - (1 - k0) * (1 - k0) : k0;
+      out[3 * n] = b.x0 + (b.x1 - b.x0) * k; out[3 * n + 1] = b.y0 + (b.y1 - b.y0) * k; out[3 * n + 2] = b.roll ? 0 : 4 * b.h * k * (1 - k); n++;
+    }
     return n;
   }
   /** the golfers on the range now (walking to the shop, queued, at the mats or going back) */
@@ -231,13 +267,19 @@ export class RangeSim {
    *  Returns the takings booked ($) */
   step(dt: number, clock: RangeClock, s: RangeBizSave, c: DemandCtx, dayLen: number): number {
     const sc = this.scene; if (!sc || dt <= 0) return 0;
-    if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; }
+    if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; this.practiceToday.putting = 0; this.practiceToday.chipping = 0; }
     const st = rangeStats(s, c), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax;
     let booked = 0;
     const sell = (n: number) => { const m = n * value; s.season.golfers += n; s.total.golfers += n; s.season.buckets += n * scale; s.total.buckets += n * scale; s.season.takings += m; s.total.takings += m; this.today.golfers += n; booked += m; };
     const lose = (n: number) => { s.season.lost += n; s.total.lost += n; this.today.lost += n; };
+    // a practice facility's fees (T130): the business takings, as the buckets
+    const fee = (id: PracticeId, n: number) => {
+      const m = n * PRACTICE_FEE * scale, f = s.practice?.[id]; if (!f || n <= 0) return;
+      f.season.golfers += n; f.total.golfers += n; f.season.takings += m; f.total.takings += m; s.season.takings += m; s.total.takings += m; booked += m;
+    };
     if (dt >= 120) {
       const r = skippedVisits(s, c, clock.hour, dt, dayLen); sell(r.served); lose(r.lost);
+      const u = practiceUsers(s, r.served); for (const id of PRACTICE_IDS) fee(id, u[id]);
       this.clear(); this.t += dt; return booked;
     }
     this.t += dt;
@@ -268,9 +310,11 @@ export class RangeSim {
     }
     for (const v of this.visits) this.move(v, dt, dayLen, sc);
     if (this.lost) { lose(this.lost); this.lost = 0; }
+    for (const id of this.used) { fee(id, 1); this.practiceToday[id]++; }
+    this.used.length = 0;
     // the queue's spots: each queued golfer walks up to its place in the line
     this.queue.forEach((id, k) => { const v = this.visits.find(q => q.id === id); if (v && v.stage === S.Queue) this.toward(v, this.queueSpot(k), dt); });
-    this.balls = this.balls.filter(b => { if (this.t < b.t0 + b.T) return true; this.lie(b.x1, b.y1); return false; });
+    this.balls = this.balls.filter(b => { if (this.t < b.t0 + b.T) return true; if (!b.roll) this.lie(b.x1, b.y1); return false; });
     this.visits = this.visits.filter(v => v.stage !== S.Done);
     // the balls are picked once the range is closed and empty (the picker cart is Phase 4)
     if (!isOpen && !this.visits.some(v => v.stage === S.Hit)) this.nLying = 0;
@@ -278,7 +322,7 @@ export class RangeSim {
     return booked;
   }
   /** no golfers, cars or balls (a skip, a new game) */
-  clear(): void { this.visits = []; this.queue = []; this.balls = []; this.serving = -1; this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); }
+  clear(): void { this.visits = []; this.queue = []; this.balls = []; this.serving = -1; this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0; }
 
   /** a car turns in off the county road from either side, along the drive and into car-park bay `slot` */
   private arrive(slot: number): void {
@@ -298,10 +342,28 @@ export class RangeSim {
     const out = { x: sc.J.x + n.x * lane, y: sc.J.y + n.y * lane }, away = { x: sc.J.x + d.x * side * 46 + n.x * lane, y: sc.J.y + d.y * side * 46 + n.y * lane };
     return route([{ x: sl.x, y: sl.y }, back, e, onDrive, out, away], [PARK_V * 0.6, PARK_V, DRIVE_V, DRIVE_V, ROAD_V]);
   }
-  /** the golfer's walk from p back to its car: along the path to the car park's edge, then to its bay's side */
+  /** the golfer's walk from p back to its car: along the path to the car park's edge, then to its bay's side; from a practice facility (T130) out
+   *  of the practice area and round the back of the car park */
   private toCar(v: Visit, p: Pt): Pt[] {
-    const sc = this.scene!, sl = this.slots[v.slot]!;
-    return [p, ...(v.stage === S.Hit || v.stage === S.WalkBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, { x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 }];
+    const sc = this.scene!, sl = this.slots[v.slot]!, side = { x: sl.x + sl.hy * 1.2, y: sl.y - sl.hx * 1.2 };
+    if (v.fac && (v.stage === S.WalkPractice || v.stage === S.Practice)) return [p, sc.practice.entry, sc.practice.behind, side];
+    return [p, ...(v.stage === S.Hit || v.stage === S.WalkBay ? [sc.bays[v.bay]!.back] : [sc.shopJoin]), sc.carEdge, side];
+  }
+  /** after its bucket (T130): a share of the golfers walk over to an open practice facility with a free spot (the putting green first, then the
+   *  chipping green); true when this one does */
+  private toPractice(v: Visit, sc: RangeScene): boolean {
+    const p = this.practice; if (!p) return false;
+    for (const id of PRACTICE_IDS) {
+      const f = p[id]; if (f.state !== 'open' || !f.stands.length) continue;
+      if (this.rnd() >= PRACTICE_SHARE[id]) continue;
+      const spot = this.spotBusy[id].indexOf(false); if (spot < 0) continue;
+      this.spotBusy[id][spot] = true; this.bayBusy[v.bay] = false;
+      const stand = f.stands[spot]!, cups = f.cups, aim = cups.length ? cups[Math.floor(this.rnd() * cups.length)]! : f.centre!;
+      this.walk(v, S.WalkPractice, [{ x: v.x, y: v.y }, sc.bays[v.bay]!.back, sc.carEdge, sc.practice.behind, sc.practice.entry, stand]);
+      v.fac = id; v.spot = spot; v.aim = aim; v.bay = -1;
+      return true;
+    }
+    return false;
   }
   private walk(v: Visit, stage: S, pts: Pt[]): void { v.stage = stage; v.t = 0; v.r = route(pts, [WALK]); }
   /** the visit's golfer done with its bucket (or its bay gone): it walks back to its car */
@@ -332,13 +394,34 @@ export class RangeSim {
       case S.Hit: {
         // each swing: address, the drive (the ball leaves at impact toward a target green, scattered), the pause; the bucket's last swing ends the visit
         const k = Math.floor(v.t / SWING), lt = v.t - k * SWING, prev = v.t - dt - k * SWING;
-        if (k >= v.swings) { this.leave(v); break; }
+        if (k >= v.swings) { if (!this.toPractice(v, sc)) this.leave(v); break; }
         if (prev < ADDRESS + IMPACT && lt >= ADDRESS + IMPACT) this.launch(v, sc);
+        break;
+      }
+      case S.WalkPractice: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.Practice; v.t = 0; this.used.push(v.fac!); } break; }
+      case S.Practice: {
+        // putts (a short stroke, the ball rolling to the cup) or chips (the swing, a low arc onto the green) until its time is up
+        const putt = v.fac === 'putting', T = putt ? PUTT_T : SWING, hit = putt ? PUTT_HIT : ADDRESS + IMPACT, k = Math.floor(v.t / T), lt = v.t - k * T, prev = v.t - dt - k * T;
+        if (v.t >= PRACTICE_H * dayLen / 24 && lt > hit + 1.2) { this.spotBusy[v.fac!][v.spot!] = false; this.walk(v, S.WalkCar, this.toCar(v, { x: v.x, y: v.y })); break; }
+        if (prev < hit && lt >= hit) this.practiseShot(v, putt);
         break;
       }
       case S.WalkCar: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.CarOut; v.t = 0; v.r = this.outRoute(v); } break; }
       case S.CarOut: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (v.t > 1.5 && this.slotBusy[v.slot]) this.slotBusy[v.slot] = false; if (done) v.stage = S.Done; break; }
       default: break;
+    }
+  }
+  /** a practice shot from v toward its cup (T130): a putt rolls there (most drop, the rest stop short or run past), a chip flies a low arc and
+   *  lands about the cup */
+  private practiseShot(v: Visit, putt: boolean): void {
+    const a = v.aim; if (!a) return;
+    const dx = a.x - v.x, dy = a.y - v.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+    if (putt) {
+      const len = L * (0.85 + 0.25 * this.rnd()), side = (this.rnd() - 0.5) * 0.35;
+      this.balls.push({ x0: v.x + ux * 0.25, y0: v.y + uy * 0.25, x1: v.x + ux * len - uy * side, y1: v.y + uy * len + ux * side, t0: this.t, T: 1.1 + len / 2.5, h: 0, roll: true });
+    } else {
+      const len = L * (0.8 + 0.35 * this.rnd()), side = (this.rnd() - 0.5) * L * 0.25;
+      this.balls.push({ x0: v.x + ux * 0.3, y0: v.y + uy * 0.3, x1: v.x + ux * len - uy * side, y1: v.y + uy * len + ux * side, t0: this.t, T: 0.8 + len / 10, h: 1 + len * 0.18 });
     }
   }
   /** a ball from v's bay toward one of the targets (a golfer's aim: nearer greens more often), scattered across and along the line */
@@ -368,6 +451,12 @@ export class RangeSim {
         const k = Math.floor(v.t / SWING), lt = v.t - k * SWING;
         p.row = golferRow(sc.aim.x, sc.aim.y);
         p.frame = lt < ADDRESS ? G.golf_drive.start : lt < ADDRESS + CLIP ? clipFrame(G.golf_drive, G.golf_drive.times[0]! + lt - ADDRESS) : G.idle.start;
+      } else if (v.stage === S.Practice && v.aim) {
+        // at a practice facility, facing the cup: a putt is the drive clip's address, its takeaway and its impact frame (a stand-in until the
+        // putting clip, GOLF-SPRITES), a chip the whole drive clip (a stand-in until the chipping clip)
+        p.row = golferRow(v.aim.x - v.x, v.aim.y - v.y);
+        if (v.fac === 'putting') { const lt = v.t % PUTT_T, D = G.golf_drive; p.frame = lt < PUTT_ADDR ? D.start : lt < PUTT_ADDR + PUTT_STROKE * 0.5 ? D.start + 1 : lt < PUTT_ADDR + PUTT_STROKE + 0.6 ? D.start + 5 : G.idle.start; }
+        else { const lt = v.t % SWING; p.frame = lt < ADDRESS ? G.golf_drive.start : lt < ADDRESS + CLIP ? clipFrame(G.golf_drive, G.golf_drive.times[0]! + lt - ADDRESS) : G.idle.start; }
       } else if (v.stage === S.Queue && this.atSpot(v)) {
         // the head faces the shop's counter (toward the road), the rest of the line faces up it
         const head = this.queue[0] === v.id;

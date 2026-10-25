@@ -142,6 +142,13 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 | D20 | Where props count | Within 15 tiles of the shop or any open mat, each prop once; capped at +40% of appeal; the same factor on the fair price. Cheap plants reach the cap for about $2,000: Phase 4 may add upkeep or diminishing returns. |
 | D21 | The props' undo | The course tools' undo stack (`PaintTool.step`): one step per place, move, turn or sale; the money goes back with it. |
 | D22 | Missing props art | Labelled stand-ins: golfer statue = the coin-operated horse ride, stone pillar = the plain stone obelisk (`world:grave_2`), flag pole = the red flagstick scaled up, flower bed = `world:bush_2`. Requests in GOLF-SPRITES.md "Props kit". |
+| D23 | Where the practice area is (T130) | Across the drive from the car park (frame u 75..111, v 2..36): the plot's free corners by the shop are 6 to 8 tiles wide, too small for a putting green and a chipping green; this is the land next to the car park and the shop, owned from the start. |
+| D24 | Practice cells and holes (T130) | Every cell laid in the practice area holds hole 0, whatever the brush's hole: the markers never place a pin there and no hole counts it. A New hole planned across the area loses those cells to practice. |
+| D25 | Which green is which (T130) | The biggest green with no bunker within 6 m is the putting green; the biggest with 20 m² of bunker is the chipping green; with no bunker yet the second green is the chipping green waiting for its bunker. Fringe = the 2 m round the green (its automatic collar). |
+| D26 | The practice appeal (T130) | A fraction in `RangeExtras` (`practiceAppeal`, from the save's open flags), multiplied in beside `propsAppeal`; unlike the props it leaves the fair price alone. |
+| D27 | The brushes at stage 1 (T130) | A range start opens Shape by hand with Green and Bunker from stage 1, to paint the practice greens; the rest open with the stages as before. |
+| D28 | The practice strokes (T130) | No putt or chip clip yet: a putt is the drive clip's address, takeaway and impact frames, a chip the whole drive clip, each labelled "Stand In for golfer putting/chipping clip"; requests in GOLF-SPRITES.md. |
+| D29 | The tee box in the grid (T130) | Laid past the brush rules (the plot stays the range's: the player cannot paint or rub it out); its upkeep is the course's (tee turf), and the outfield's patches are cut round it so the grid's raised tee shows. |
 
 ## 4. Phases and tickets
 
@@ -155,12 +162,32 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
   the sim (arrive, queue, play, leave, turn away, money).
 - **Done when:** a new range game shows the scene at 30%, 15% and district zoom, golfers hit balls, a queue forms, upgrades change the map.
 
-### Phase 2, T130: practice facilities (the teaching ramp)
-- A practice area beside the range (the plot's free corner by the shop and the land next to it) where the player **paints** a putting
-  green (green + fringe, at least 300 m²), then a chipping green with a practice bunker, with the course brush on the 1 m grid; the
-  progressive-ui hint pill teaches the brush ("Paint a putting green: drag the Green brush here").
-- Each adds appeal (+10% putting, +10% chipping) and a small fee ($2 a golfer who uses it; a share of the range's golfers walk over
-  after their bucket). The range's tee box moves into the course grid so T127's tee banks raise it.
+### Phase 2, T130 (#241): practice facilities, the teaching ramp (built)
+- **The practice area** (`golf/practice.ts`): the owned land across the drive from the range's car park, frame u 75..111, v 2..36 (72 x 68 m,
+  turned with the facing like the plot). Trees keep off it. Until something is painted there it carries a faint dashed outline, a "Practice
+  area" label and "Paint a putting green here" (street tier; the label alone at district zoom); the outline pulses while its hint is up.
+  Clicking it with Select opens the range card.
+- **Painted with the course brush** on the 1 m grid. Cells laid there hold **no hole** (`RangeHost.practiceCells` zeroes them in the grid and
+  in the brush's diff, so undo and redo keep it): no hole counts them, no pins or tee markers are placed, no hole stats. The course pill says
+  "practice area (no hole)" there. They are ordinary course cells, so their build price and their upkeep follow GOLF-PLAN's surface costs.
+- **What counts** (`scanPractice`, read again a few frames after the grid changes): the green blobs in the area, each with its fringe (the
+  cells within 2 m); the **putting green** is the biggest green with no bunker beside it, open at 300 m² (green + fringe); the **chipping
+  green** is the biggest green with at least 20 m² of bunker within 6 m of it, open at 200 m². States: none, too small ("Too small: 180 of
+  300 m²"), no bunker ("Add a practice bunker beside it"), open. An open putting green gets three cup flags, the chipping green one.
+- **Each pays:** appeal x1.1 each (`practiceAppeal`, a fraction in `RangeExtras` beside T131's `propsAppeal`; it does not raise the fair
+  price) and $2 a golfer who uses it, times the scale, booked with the buckets as business takings (the range's season takings include it).
+  After their bucket 35% of the golfers walk to the putting green and, of the rest, 30% to the chipping green (when open and a spot is free:
+  six spots putting, up to five chipping, two of them in the bunker); each practises 0.45 of a town hour, then walks back to the car. Putts
+  roll to a cup (they never lie), chips fly a low arc onto the green and lie until closing. A skip books the expected fees.
+- **The hints** (progressive-ui `PRACTICE_HINTS`): in a range start, before the first hole, "Paint a putting green" and then "Now a chipping
+  green and a bunker"; each has **Show me** (the camera on the area at 30% with the Green brush, or the Bunker brush once only the bunker is
+  missing) and Got it. In a range start the Green and Bunker brushes (Shape by hand) are open from stage 1.
+- **The tee box is the course grid's** (D7 done): the game lays it once as tee cells of no hole (`golf.range.tee`; an old save lays it on its
+  first load), so T127's tee banks and the Height slider raise it. The outfield's painted patches leave it open (painted areas draw over the
+  course); the concrete deck, the pads and mats stay painted areas on top, as in Phase 1.
+- **The range card** lists both facilities: state, its words, +10%, the fee, today's and the season's golfers and takings, and Show area.
+- **Save:** `golf.range.practice` (each facility: open, season and lifetime golfers and takings) and `golf.range.tee`; a save without them
+  loads with none built. A new season zeroes the season counts (`rangeNewSeason`).
 
 ### Phase 3, T131 (#242): the Props tool (built)
 - **The tool:** Props on the rail's Course group after Buildings (key Z; golf games only; open from stage 1 until Phase 4 sets the unlock

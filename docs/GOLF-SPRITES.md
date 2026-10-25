@@ -189,6 +189,18 @@ autumn dusk, no lettering in the art unless said.
 | Ball-picker cart (`golf:range-picker`, 8 facings) | 2.5 x 1.5 | none (Phase 4) | a small utility cart with a caged cab towing a gang of ball-picking discs | P2 |
 | Divot-scarred range tee (texture) | 16 m | the tee turf | listed in section 6 | P1 |
 
+## Practice facilities (plan P24 Phase 2, T130: art requests)
+The practice greens the player paints (`golf/practice.ts`, golfers in `golf/rangebiz.ts RangeSim`) stand these in; the stroke clips go into the
+3D golfer sheets (`library.ts GOLFER_CLIPS`, the eight facings, as `golf_drive`) and replace the frames `RangeSim.view` picks today. Sun at the
+upper right, shadows at 145°, never mirrored.
+| Sprite (id to use) | Footprint (m) / height | Stand-in today | Prompt (short) | P |
+| --- | --- | --- | --- | --- |
+| Putting stroke clip (`golf_putt`, the 3D golfers' 8 facings) | 1 / 1.8 | the drive clip's address, takeaway and impact frames ("Stand In for golfer putting clip" over the green) | a golfer bent over a putter, a short pendulum stroke back and through, head still, holding the finish; 8 frames | P1 |
+| Chipping stroke clip (`golf_chip`, 8 facings) | 1 / 1.8 | the whole drive clip ("Stand In for golfer chipping clip") | a half swing with a wedge, hands to hip height, a short follow-through, from grass and from sand (a little spray); 10 frames | P1 |
+| Practice green cup flag (`golf:practice-flag`) | 0.2 / 0.9 | `business:golf-pin-red` at 0.2 scale | a short practice-green flagstick, a small yellow triangular pennant, a white cup liner showing at its foot | P2 |
+| Putting green sign (`golf:practice-sign`) | 1 x 0.2 / 1 | none | a small dark green timber sign on one post, the lettering PRACTICE GREEN in white | P2 |
+| Range ball basket (`golf:practice-balls`) | 0.4 / 0.3 | none | a wire basket of white range balls on the grass, a few spilled | P2 |
+
 ## Props kit (plan P24 Phase 3, T131: art requests)
 The Props tool (`golf/decor.ts DECOR`) shows these as labelled stand-ins ("Stand In for ..." on the card and once per kind on the map); each
 goes in by replacing its item's `id` (and dropping its `standIn`). Four views where it says so (NE, SE, SW, NW as the building sheets: the front
