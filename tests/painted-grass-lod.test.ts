@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  blendMetres, clampGrassArt, grassDetailWeights, grassPatches, grassTone, grassTranslationSeeds, grassZoomLevels, patchPhase, patchRadius, trimLru,
-  GRASS_ART_DEFAULT, PATCH_PHASES, PATCH_SPACING, TONE_WAVES, type PaintedFamily,
+  blendMetres, clampGrassArt, grassDetailWeights, grassPatches, grassTone, grassTranslationSeeds, grassZoomLevels, patchAngle, patchPhase, patchRadius, trimLru,
+  GRASS_ART_DEFAULT, PATCH_ANGLES, PATCH_PHASES, PATCH_SPACING, PATCH_SPRITES, TONE_WAVES, type PaintedFamily,
 } from '../src/game/painted-grass-lod';
 import { clampPreset, PRESETS } from '../src/game/paint-presets';
 
@@ -70,14 +70,30 @@ test('neighbouring chunks lay the same patches, in the same order, where they me
   // every patch that reaches across the shared edge (x = 31) is in both, and they come in the same order
   const shared = (q: { x: number; r?: number }) => Math.abs(q.x - 31) < R;
   assert.deepEqual(a.filter(shared).map(keyOf), b.filter(shared).map(keyOf));
-  assert.ok(a.every(q => q.k >= 0 && q.k < PATCH_PHASES && Number.isInteger(q.k)));
+  assert.ok(a.every(q => q.k >= 0 && q.k < PATCH_SPRITES && Number.isInteger(q.k)));
   // coverage: the nearest centre is never further than 0.75 R (the patch mask is still at least half opaque there)
   let worst = 0;
   for (let y = A[1]; y <= A[3]; y += .5) for (let x = A[0]; x <= A[2]; x += .5) worst = Math.max(worst, Math.min(...a.map(q => Math.hypot(q.x - x, q.y - y))));
   assert.ok(worst < .75 * R, `worst gap ${(worst / R).toFixed(2)} R`);
   assert.ok(PATCH_SPACING < 1);
-  // the phases differ: no two of them show the blend at the same offset
-  assert.equal(new Set(Array.from({ length: PATCH_PHASES }, (_, k) => patchPhase(k).join())).size, PATCH_PHASES);
+  // the sprites differ: no two of them show the blend at the same offset
+  assert.equal(new Set(Array.from({ length: PATCH_SPRITES }, (_, k) => patchPhase(k).join())).size, PATCH_SPRITES);
+});
+
+test('the strokes swing: patches turn by at most 36 degrees (the light stays upper right), every turn is used everywhere', () => {
+  assert.equal(PATCH_SPRITES, PATCH_ANGLES.length * PATCH_PHASES);
+  assert.ok(PATCH_ANGLES.every(a => Math.abs(a) < 45), 'the sun stays in the upper right quadrant (45 +- 36 degrees)');
+  const R = patchRadius(24), ps = grassPatches([0, 0, 600, 600], R), turn = (q: { k: number }) => patchAngle(q.k), count = new Map<number, number>();
+  for (const q of ps) count.set(turn(q), (count.get(turn(q)) ?? 0) + 1);
+  assert.equal(count.size, PATCH_ANGLES.length, 'every turn shows somewhere');
+  for (const [a, n] of count) assert.ok(Math.abs(n / ps.length - 1 / PATCH_ANGLES.length) < 0.05, `turn ${a} is used (${(100 * n / ps.length).toFixed(0)}%)`);
+  // no stretch of ground keeps one direction: every 3 R square holds two turns or more, and nearly all of them three or more
+  let rich = 0, squares = 0;
+  for (let y = 0; y + 3 * R <= 600; y += 3 * R) for (let x = 0; x + 3 * R <= 600; x += 3 * R) {
+    const here = new Set(ps.filter(q => q.x >= x && q.x < x + 3 * R && q.y >= y && q.y < y + 3 * R).map(turn));
+    assert.ok(here.size >= 2, `turns ${[...here].join()} at ${x},${y}`); squares++; if (here.size >= 3) rich++;
+  }
+  assert.ok(rich / squares > 0.95, `${(100 * rich / squares).toFixed(1)}% of 3 R squares hold three turns or more`);
 });
 
 /** Pearson r between a field and itself shifted by (dx, dy) samples */
@@ -89,19 +105,22 @@ function pearson(f: Float64Array, W: number, H: number, dx: number, dy: number) 
   return ab / Math.sqrt(aa * bb);
 }
 test('no repeat: a periodic picture laid in the stochastic layout has no correlation at its period (the photo way repeats exactly)', () => {
-  // a blend of period P tiles: smooth random shapes, sampled one per tile; laid as painted-ground.ts lays it (phase 0 under everything, then
+  // a blend of period P tiles: smooth random shapes, sampled one per tile; laid as painted-ground.ts lays it (its mean under everything, then
   // each patch in order through its soft mask: opaque to 35% of the radius, half at 70%, clear at the rim)
   const P = 24, src = new Float64Array(P * P), rnd = (() => { let s = 7; return () => ((s = Math.imul(s ^ (s >>> 15), 2246822519) + 1 | 0) >>> 0) / 4294967296; })();
   const raw = Array.from({ length: P * P }, rnd);
   for (let y = 0; y < P; y++) for (let x = 0; x < P; x++) { let s = 0; for (let j = -2; j <= 2; j++) for (let i = -2; i <= 2; i++) s += raw[((y + j + P) % P) * P + (x + i + P) % P]!; src[y * P + x] = s; }
   const at = (u: number, v: number) => src[(((Math.floor(v) % P) + P) % P) * P + ((Math.floor(u) % P) + P) % P]!;
   const S = 10 * P, R = patchRadius(P), layout = new Float64Array(S * S), plain = new Float64Array(S * S), mask = (d: number) => d < .35 ? 1 : d < .7 ? 1 - (d - .35) / .35 * .5 : d < 1 ? .5 * (1 - (d - .7) / .3) : 0;
-  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) plain[y * S + x] = layout[y * S + x] = at(x, y);
+  let mean = 0; for (const v of src) mean += v / src.length;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { plain[y * S + x] = at(x, y); layout[y * S + x] = mean; }
   for (const q of grassPatches([0, 0, S, S], R)) {
     const [u, v] = patchPhase(q.k);
     for (let y = Math.max(0, Math.floor(q.y - R)); y < Math.min(S, Math.ceil(q.y + R)); y++) for (let x = Math.max(0, Math.floor(q.x - R)); x < Math.min(S, Math.ceil(q.x + R)); x++) {
       const a = mask(Math.hypot(x + .5 - q.x, y + .5 - q.y) / R); if (!a) continue;
-      const o = y * S + x; layout[o] = layout[o]! * (1 - a) + a * at(x - q.x + R + u * P, y - q.y + R + v * P);
+      // a sprite shows the blend turned about its centre: texture = phase + turn^-1 (point - centre) (painted-ground.ts patchSet)
+      const t = -patchAngle(q.k) * Math.PI / 180, ex = x + .5 - q.x, ey = y + .5 - q.y, o = y * S + x;
+      layout[o] = layout[o]! * (1 - a) + a * at(Math.cos(t) * ex - Math.sin(t) * ey + u * P, Math.sin(t) * ex + Math.cos(t) * ey + v * P);
     }
   }
   for (const [dx, dy] of [[P, 0], [0, P], [P, P], [2 * P, 0], [0, 2 * P]] as const) {

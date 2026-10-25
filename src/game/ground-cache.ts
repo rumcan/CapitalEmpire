@@ -42,6 +42,8 @@ export class GroundCache {
   uploadsThisSecond = 0; uploadMsPerSecond = 0; private upCount = 0; private upMs = 0; private upT = 0;
   /** GPU pixel budget for baked chunks (RGBA, so x4 bytes) */
   budgetPx = 48e6;
+  /** the baked pictures' pixels on the GPU at the last evict (chunks, their zoom crossfade and build reveal pictures), and the most so far */
+  residentPx = 0; peakPx = 0;
   constructor(public gl: GLRenderer, workers = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 4) - 2))) {
     for (let w = 0; w < workers; w++) {
       const wk = new GroundWorker(); wk.onmessage = (e: MessageEvent<FromWorker>) => this.onMessage(w, e.data);
@@ -153,7 +155,8 @@ export class GroundCache {
   }
   /** drop the least recently used pictures above the pixel budget */
   evict(now: number) {
-    let px = 0; for (const t of this.tiles.values()) px += (t.tex ? t.px : 0) + t.fadePx;
+    let px = 0, held = 0; for (const t of this.tiles.values()) { px += (t.tex ? t.px : 0) + t.fadePx; if (t.prev && t.prev !== t.tex) held += t.px; }
+    this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     if (px <= this.budgetPx) return;
     const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now && t.kind !== 'p').sort((a, b) => a.used - b.used);
     for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }

@@ -63,21 +63,27 @@ export function trimLru<T>(map: Map<string, T>, protectedKeys: ReadonlySet<strin
 
 const hash2 = (x: number, y: number, s: number) => { let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(s, 2246822519); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
 
-/* ---- the stochastic layout (painted-ground.ts): how a chunk lays a family's blend so that no tile period shows at any zoom. The blend is
- *  periodic; the ground shows it in soft round patches, each a window of the blend at its own phase, centred on a jittered hex lattice in world
- *  space. Two points one period apart come from different patches with unrelated phases, so nothing repeats (the owner, 2026-10-25: "If we
- *  ever see a repeating pattern something is wrong"). Translations only: no turns or mirrors, so the painted light stays upper right. ---- */
-/** the distinct phases (pre-cut patch pictures) a family's blend is shown at */
-export const PATCH_PHASES = 12;
+/* ---- the stochastic layout (painted-ground.ts): how a chunk lays a family's blend so that no tile period and no constant streak shows at any
+ *  zoom (the owner, 2026-10-25: "If we ever see a repeating pattern something is wrong"; the mowing stripes are the one exception, an overlay
+ *  laid last). The blend is periodic and its brush strokes all lie one way; the ground shows it in soft round patches, each a window of the
+ *  blend at its own phase and turned by a small angle, centred on a jittered hex lattice in world space. Two points one period apart come from
+ *  different patches with unrelated phases, so nothing repeats; each patch takes one of four turns at random, so the strokes swing from patch
+ *  to patch (blending at the soft edges) instead of running in parallel across the whole view. No mirrors, and turns of at most 36 degrees:
+ *  the painted light stays in the upper right quadrant (the sun at 45 +- 36 degrees). ---- */
+/** the turns a patch may be laid at, degrees */
+export const PATCH_ANGLES: readonly number[] = [-36, -12, 12, 36];
+/** the phases per turn, and the pre-cut patch pictures (sprite k: turn floor(k / PATCH_PHASES), its own phase) */
+export const PATCH_PHASES = 3, PATCH_SPRITES = PATCH_ANGLES.length * PATCH_PHASES;
 /** a patch's radius in tiles for a blend of this period (tiles): a quarter of it, so the painting's broad shapes stay whole in a patch (the far
  *  level's soft colour fields too) and a patch never shows the blend twice */
 export const patchRadius = (period: number) => period / 4;
 /** the lattice spacing over the radius (every point is well inside a patch) and the jitter of a centre over the spacing (so the lattice itself
  *  never shows as a cadence) */
-export const PATCH_SPACING = 0.75, PATCH_JITTER = 0.5;
-/** phase k's offset into the blend, in periods (0..1 each way) */
+export const PATCH_SPACING = 0.7, PATCH_JITTER = 0.5;
+/** sprite k's offset into the blend, in periods (0..1 each way), and its turn in degrees */
 export const patchPhase = (k: number): [number, number] => [hash2(k, 0, 17), hash2(k, 0, 19)];
-/** the patches over a tile box (x0, y0, x1, y1), centres and phases, for patch radius R (tiles): deterministic per lattice cell and in the
+export const patchAngle = (k: number) => PATCH_ANGLES[Math.floor(k / PATCH_PHASES)]!;
+/** the patches over a tile box (x0, y0, x1, y1), centres and sprites, for patch radius R (tiles): deterministic per lattice cell and in the
  *  same order everywhere, so the chunks that share a patch draw it alike and no seam shows between them */
 export function grassPatches(box: readonly [number, number, number, number], R: number): { x: number; y: number; k: number }[] {
   const d = R * PATCH_SPACING, rowH = d * Math.sqrt(3) / 2, out: { x: number; y: number; k: number }[] = [];
@@ -87,7 +93,7 @@ export function grassPatches(box: readonly [number, number, number, number], R: 
     for (let i = i0; i <= i1; i++) {
       const x = (i + off + (hash2(i, j, 7) - 0.5) * PATCH_JITTER) * d, y = (j + (hash2(i, j, 11) - 0.5) * PATCH_JITTER) * rowH;
       if (x + R < box[0] || x - R > box[2] || y + R < box[1] || y - R > box[3]) continue;
-      out.push({ x, y, k: Math.floor(hash2(i, j, 13) * PATCH_PHASES) });
+      out.push({ x, y, k: Math.floor(hash2(i, j, 29) * PATCH_ANGLES.length) * PATCH_PHASES + Math.floor(hash2(i, j, 13) * PATCH_PHASES) });
     }
   }
   return out;

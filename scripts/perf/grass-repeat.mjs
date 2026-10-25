@@ -3,6 +3,7 @@
 // from 30% to the district view, and this measures its luminance autocorrelation (Pearson r between the ground and itself shifted by a lag):
 //   - r at the painted blend's period and twice it, along both tile axes and the diagonal (a repeat there shows as r near 1);
 //   - the highest r outside the autocorrelation's central lobe (a second peak at any lag past 12 m: a repeat at any period is found);
+//   - the brush strokes' direction: how parallel they run across the whole view (viewCoherence, spread) and r along them 12 m and 24 m on;
 // each on the ground as baked and on its detail alone (a 6 m blur subtracted, so the slow colour drift cannot hide or fake a repeat).
 // Fails (exit 1) when a painted level's r at its period, or its detail's second peak, passes LIMIT (0.2; a repeat gives 0.8 to 1). The photo grass is measured too (--photo), for the record.
 //   node scripts/perf/grass-repeat.mjs [url of a dev server, default http://127.0.0.1:5341/] [--photo] [--dpr 2] [--shots dir] [--size 2048] [--limit 0.2]
@@ -64,6 +65,26 @@ function peakSearch(a, W, H, minLag, F = 4) {
   for (let y = -hh; y < hh; y++) for (let x = -hw; x < hw; x++) { if (lobe[idx(x, y)]) { reach = Math.max(reach, Math.hypot(x, y) * F); continue; } const r = rAt(x, y); if (r > best) { best = r; bx = x * F; by = y * F; } }
   return { r: best, dx: bx, dy: by, lobe: reach };
 }
+/** the strokes' direction (the owner, 2026-10-25: parallel streaks across the whole view read as a pattern), measured on the ground itself
+ *  (top-down, in tile space): on screen every ground texture is squashed 2:1 by the iso view, which flattens any direction towards the
+ *  horizontal, so the screen gradients are taken back to tile space first (g_tile = A^T g_screen, A = the tile-to-screen matrix). Per block of
+ *  B px, the gradient structure tensor; streak = the direction along the strokes on the ground (degrees, 0 = along tile x, 90 = along tile y),
+ *  blockCoherence = how strongly a block is streaked (0..1), viewCoherence = how parallel the streaks are over the whole view (1 = every block
+ *  the same way), spread = the coherence-weighted circular spread of the blocks' directions (degrees) */
+function streaks(a, W, H, B) {
+  let C = 0, Sn = 0, cw = 0, Jxx = 0, Jyy = 0, Jxy = 0, nb = 0, cs = 0;
+  for (let by = 0; by + B <= H - 1; by += B) for (let bx = 0; bx + B <= W - 1; bx += B) {
+    let xx = 0, yy = 0, xy = 0;
+    for (let y = Math.max(1, by); y < by + B; y++) for (let x = Math.max(1, bx); x < bx + B; x++) {
+      const sx = a[y * W + x + 1] - a[y * W + x - 1], sy = a[(y + 1) * W + x] - a[(y - 1) * W + x], gx = 64 * sx + 32 * sy, gy = -64 * sx + 32 * sy;
+      xx += gx * gx; yy += gy * gy; xy += gx * gy;
+    }
+    const c = Math.sqrt((xx - yy) ** 2 + 4 * xy * xy) / (xx + yy || 1), phi = 0.5 * Math.atan2(2 * xy, xx - yy);
+    C += c * Math.cos(2 * phi); Sn += c * Math.sin(2 * phi); cw += c; Jxx += xx; Jyy += yy; Jxy += xy; nb++; cs += c;
+  }
+  const Rbar = Math.sqrt(C * C + Sn * Sn) / (cw || 1), streak = ((0.5 * Math.atan2(Sn, C)) * 180 / Math.PI + 90 + 180) % 180;
+  return { streak: +streak.toFixed(1), blockCoherence: +(cs / nb).toFixed(3), viewCoherence: +(Math.sqrt((Jxx - Jyy) ** 2 + 4 * Jxy * Jxy) / (Jxx + Jyy)).toFixed(3), spread: +(Math.sqrt(-2 * Math.log(Math.max(1e-9, Rbar))) / 2 * 180 / Math.PI).toFixed(1) };
+}
 /** an image lag (px at level L) as tiles along the tile axes */
 const lagTiles = (dx, dy, L) => { const X = dx / L, Y = dy / L; return [(X / 64 + Y / 32) / 2, (Y / 32 - X / 64) / 2]; };
 
@@ -84,8 +105,12 @@ try {
     const at = img => Math.max(...[1, 2].flatMap(n => lagsAt(n).map(([dx, dy]) => pearson(img, W, H, dx, dy))).filter(Number.isFinite));
     const minLag = 12 * pxPerM, pkRaw = peakSearch(lum, W, H, minLag), pkDet = peakSearch(detail, W, H, minLag);
     let sd = 0, mu = 0; for (const v of lum) mu += v / lum.length; for (const v of lum) sd += (v - mu) ** 2 / lum.length;
+    // the streaks, and the autocorrelation along them 12 m and 24 m on (a streak running on across the view keeps r high there): the lag is m
+    // metres along the streak on the ground, as screen px
+    const st = streaks(detail, W, H, Math.max(16, Math.round(8 * pxPerM))), ang = st.streak * Math.PI / 180;
+    const along = m => { const tx = Math.cos(ang) * m / 2, ty = Math.sin(ang) * m / 2; return pearson(detail, W, H, Math.round((tx - ty) * 64 * L), Math.round((tx + ty) * 32 * L)); };
     const row = { art, zoom, artL: res.artL, L, period: art === 'painted' ? `${P * 2} m` : '-', rAtPeriod: art === 'painted' ? +at(lum).toFixed(3) : null, rAtPeriodDetail: art === 'painted' ? +at(detail).toFixed(3) : null,
-      peak: +pkRaw.r.toFixed(3), peakLag: lagTiles(pkRaw.dx, pkRaw.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', peakDetail: +pkDet.r.toFixed(3), peakDetailLag: lagTiles(pkDet.dx, pkDet.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', lobeDetail: Math.round(pkDet.lobe / pxPerM) + ' m', lumStd: +Math.sqrt(sd).toFixed(1), msPerChunk: res.msPerChunk };
+      peak: +pkRaw.r.toFixed(3), peakLag: lagTiles(pkRaw.dx, pkRaw.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', peakDetail: +pkDet.r.toFixed(3), peakDetailLag: lagTiles(pkDet.dx, pkDet.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', lobeDetail: Math.round(pkDet.lobe / pxPerM) + ' m', ...st, rAlong12m: +along(12).toFixed(3), rAlong24m: +along(24).toFixed(3), lumStd: +Math.sqrt(sd).toFixed(1), msPerChunk: res.msPerChunk };
     // the verdict: r at the blend's period (as baked and detail only) and the detail's second peak at any lag. The second peak as baked is
     // reported but not judged: the drift's 56-160 m waves give the estimate a +-0.2 noise at long lags over a window only a few waves wide
     const worst = Math.max(row.rAtPeriod ?? -1, row.rAtPeriodDetail ?? -1, row.peakDetail);

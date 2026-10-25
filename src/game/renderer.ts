@@ -644,15 +644,18 @@ export class GroundPainter {
   /** the lawns of a chunk (lawns.ts): each in its texture (a preset, turned by its angle), all of the patch or through the soft-patch mask (drawBlend) */
   private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox) {
     for (const p of lawns) {
+      // with the painted grass on, every town lawn is painted: its preset's own painted set, else the base grass's (T082; the golf surfaces
+      // that also serve as lawns keep their pictures on the course); with the Grass setting 'photo', the preset's picture as before
+      const t = this.tex.isPainted(p.tex) || !this.tex.isPainted('grass') ? p.tex : 'grass';
       const lw = p.lawn!, pb = quadBox(p.pts), r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
-      if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(p.tex)) continue;
+      if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(t)) continue;
       const path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, lw.a);
       if (lw.share >= 1) {
-        const src = this.tex.sourceFor(p.tex, L);
+        const painted = this.paintedFill(ctx, t), src = painted ? null : this.tex.sourceFor(t, L);
         ctx.save(); ctx.setTransform(M); ctx.clip(path);
-        ctx.fillStyle = this.paintedFill(ctx, p.tex) ?? (src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(p.tex, L), G, this.tex.periodOf(p.tex)));
+        ctx.fillStyle = painted ?? (src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L), G, this.tex.periodOf(t)));
         ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.restore();
-      } else this.drawBlend(ctx, { s: 1, a: lw.a, b: 0, bt: 'kerb', z: 0, m: { t: p.tex, s: lw.share, f: lw.soft, p: lw.patch } } as NonNullable<LotPatch['paint']>, G, path, r, L, X0, Y0, M, Minv);
+      } else this.drawBlend(ctx, { s: 1, a: lw.a, b: 0, bt: 'kerb', z: 0, m: { t, s: lw.share, f: lw.soft, p: lw.patch } } as NonNullable<LotPatch['paint']>, G, path, r, L, X0, Y0, M, Minv);
     }
   }
   private drawBlend(ctx: C2D, st: NonNullable<LotPatch['paint']>, G: DOMMatrix, path: Path2D, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix) {
