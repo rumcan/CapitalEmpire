@@ -10,6 +10,80 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - Other worktrees remain untouched. The dirty frosty parking files are already landed through `99840d6`; local launcher changes are machine settings. Do not copy those old files onto main.
 - This integration does not start M2.5 or generate new images. The existing milestone plan below remains unchanged.
 
+## HANDOVER (2026-10-25 evening, lead chat ended for context size) — start here
+
+**Main:** 864b910 (after #236). The owner tests on **http://localhost:5174** (dev server from `worktrees/theme-consistency`, branch
+lead/live; never edit that checkout by hand). The studio runs on 5191 when started (`.claude/launch.json` config `studio`).
+
+**How the lead works now (all owner rules; also in CLAUDE.md and the lead's memory):**
+- Delegate code to agents (general-purpose with worktree isolation for real tickets; haiku-coder or haiku-runner for small
+  jobs). Every brief says: never write to C:; E:/ClaudeTemp and E:/npm-cache; one heavy run at a time; never touch 5174/5191;
+  **stop every server and process you started** before reporting; never commit lot-presets.json or scale-overrides.json
+  changes it didn't make; merge origin/main before the PR.
+- **Testing (#232):** coders run typecheck plus their own and neighbouring tests only. The lead merges on that plus a review,
+  after checking the PR contains origin/main. **Nightly** scheduled task "CapitalEmpire nightly regression" (~02:00, runs while
+  the desktop app is open) runs the full suite, build and gates in `.claude/worktrees/nightly`, writes
+  `E:/ClaudeTemp/nightly/<date>.md`, and opens a `[nightly]` issue on real failures: **read it each morning and fix those first**.
+- **5174 auto-update:** a background loop pulls each merge into 5174 within a minute (hot reload). It dies with the chat:
+  restart it with `bash E:/ClaudeTemp/autoupdate-5174.sh` (run in the background; log `E:/ClaudeTemp/autoupdate-5174.log`).
+- The owner pre-approves the lead's recommended decisions (state them in chat). The lead may merge reviewed PRs. Push or
+  publish the job board (gh-pages) when asked.
+- **Art rules:** sun at the upper right, shadows at 145°; no visible repeating texture (mowing stripes excepted, drawn last on top);
+  highlights masked by the texture and inset from edges, shadows a cool multiply keeping texture (T110); **no old photo
+  textures visible anywhere** (the owner, 2026-10-25); stand-ins labelled "Stand In for <name>".
+
+**Open work, in priority order:**
+1. **T128 (#233, PR #234): hand-painted art on every surface and preset.** The agent stopped at a usage limit; its work is pushed
+   (branch arena/T128-painted-everywhere, WIP commit 208da52). Start a new agent on that branch to finish it:
+   - map every surface to the families in `art/theme-consistency/generated/ground/new-painted-spatial-scales-20261025.json`
+     (painted-scaled/, coverage near 40 m, mid 320 m, far 4096 m);
+   - remove the gear menu's Painted/Photo toggle (keep a dev-only `?grass=photo`); no photo textures in the pickers;
+   - make **Blend with** and the **border texture** work for course surfaces, or hide them;
+   - give the studio a family picker for every surface (the owner fixes the mappings there);
+   - list paved surfaces without painted art as art requests;
+   - review the screenshots, then merge.
+2. **P23 Phase 1 wave B** (docs/plans/P23-UX.md 6.1): **T119 (#213) New hole, finished** (camera framing, own undo, build checks
+   with Fix, Seed default) and **T122 (#216) Run** (a road-like strip of cells next to Brush in the Holes panel).
+3. **Known bugs:**
+   - a new game starts in the wrong month (the clock carries over, e.g. Jul 1985 instead of Sep 1984);
+   - the "growing · ready" text belongs in the status line and hint pill (App.tsx);
+   - the top bar wraps at stage 3 with the invitation pill;
+   - painted areas have no Shadow slider;
+   - the fringe shows an olive ring (texture);
+   - T099's sliver where a green, a pond and the rough meet.
+4. **T110 (#193) rest of the game:** paint-edges rims, the road kerb highlight, water glints, prop and tree shadows. Height light
+   (T126 #235), walls (T099) and tee banks (T127 #236) already follow it. T075 stripes: wire `stripeBands` as the **last** layer on
+   top of mown surfaces.
+5. **Post P23 Phase 2** tickets, with the owner's approved picks: keep today's keys; Paint stays on the rail; the style editor in
+   Holes › More options › My looks (done in T120); keep the right-click rule; the half-grid spotlight over a faint grid; the map
+   grid only while building (done, #221); **one Streets tool** with tabs Cart paths · Drives · Roads; **holes drawn like a road**;
+   course homes grow along drives. Also season and hole cards, greenkeeping, land, and an accessibility and 1366 pass.
+6. **The rest:**
+   - P22 remaining T090-T098 (T094 waits on P03 T055/T056);
+   - P21 T101, T103-T107;
+   - P19 T068/T069b/T070, not posted;
+   - M2/M3 tournament day and transport leftovers;
+   - T112 (sharp 0.35 bump).
+7. **Art:**
+   - buildings 144 of 204: the art chat generates; integrate as in PR #143;
+   - ground prompts in docs/art/GRASS-PROMPTS.md (17-20 are the living-ground variants) and docs/art/WALL-PROMPTS.md.
+
+**Merged today (for orientation):**
+- **Course:** T099 3D collars (#201); T100/T108/T109 grids, the cursor and 1-cell building (#196); T102 the New hole wizard
+  and T074 the hole plan (#204/#205); T113 course props (#200); T114 stand-in labels (#203); T123 wizard reset, grow-in,
+  Border and Shadow sliders (#224); T124 roads off the course (#226); T125 rub out with carve (#229); T126 height light (#235);
+  T127 tee banks, rock and stairs (#236).
+- **Ground and art:** T082 painted grass (#194); T111 living ground (#206); #143 13 buildings.
+- **Performance:** T080 art as separate files and compressed GPU pages (#180/#182/#195).
+- **Plans:** P22 (#173-#177); T115 range-start fixes (#208); P23 plan (#209).
+- **UX Phase 1:** T116-T118 and T120 (#217, #218, #220, #227).
+- **Job board:** live and reconciled (#231): 86 of 141 steps, about 8-10 working days for the planned tracks.
+
+**Housekeeping:**
+- Remove merged agent worktrees under `.claude/worktrees` (keep `agent-acd6950cf3042c7c6` and `agent-af505db199879b80d`: the
+  runner worktrees, with node_modules) and `nightly`.
+- E: had about 58 GB free.
+
 ## Current step
 - **The new lead's board** (2026-10-24, LEAD.md section 5). Open tickets: GitHub issues `arena` + `status:open`.
 - **M2.5 (P02):** T048 and T050 landed (the tournament day clock; the movers on the timeline). Next on the city.ts / event chain: T051b (galleries follow the play, wiring T051a), T052 (viewing and tents from the movers), T053 (the tournament-day strip).
