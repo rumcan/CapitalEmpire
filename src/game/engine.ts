@@ -19,6 +19,7 @@ import { lotBatch, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
+import { escapeLadder, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
@@ -1745,12 +1746,7 @@ export class Game {
     golfStructureProps = new Map<number, Prop>();
     eventTool = false;
     eventStructurePending: { typeId: string; mode: 'rent' | 'buy' } | null = null;
-    toggleEventTool() {
-    if (!this.golfMode) return;
-    this.eventTool = !this.eventTool;
-    if (!this.eventTool) this.eventStructurePending = null;
-    this.emit();
-    }
+    toggleEventTool() { this.toggleSideMode('eventTool'); }
     setPendingStructure(typeId: string, mode: 'rent' | 'buy') {
     this.eventStructurePending = { typeId, mode };
     const def = STRUCTURE[typeId];
@@ -1812,12 +1808,7 @@ export class Game {
     }
     holesTool = false;
     selectedGolfMarker: { hole: number; kind: 'pin' | 'back' | 'middle' | 'forward'; x: number; y: number } | null = null;
-    toggleHolesTool() {
-    if (!this.golfMode) return;
-    this.holesTool = !this.holesTool;
-    if (!this.holesTool) this.selectedGolfMarker = null;
-    this.emit();
-    }
+    toggleHolesTool() { this.toggleSideMode('holesTool'); }
     selectGolfMarker(hole: number, kind: 'pin' | 'back' | 'middle' | 'forward') {
     if (!this.golf) return;
     const pt = kind === 'pin' ? this.golf.pins.find(p => p.hole === hole) : this.golf.tees.find(t => t.hole === hole && t.kind === kind);
@@ -1919,7 +1910,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (t === 'road') this.setRoadScope(scope); if (t !== 'course') this.clubPlacing = false; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t !== 'course') this.clubPlacing = false; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -2608,17 +2599,19 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
-  if (this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
-  if (this.landMode && this.landHover && e.button === 0) {
+  // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
+  const side = this.tool === 'select';
+  if (side && this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
+  if (side && this.landMode && this.landHover && e.button === 0) {
   this.buyLandBlock(this.landHover.rect);
   return;
   }
   this.overlay.setPointerCapture(e.pointerId);
-    if (this.eventTool && this.eventStructurePending && this.golf && this.hover && e.button === 0) {  
+    if (side && this.eventTool && this.eventStructurePending && this.golf && this.hover && e.button === 0) {  
  this.placeEventStructure({ typeId: this.eventStructurePending.typeId, mode: this.eventStructurePending.mode, x: Math.round(this.hover.x), y: Math.round(this.hover.y) });  
  return;  
  }  
- if (this.holesTool && this.golf && this.hover && e.button === 0) {
+ if (side && this.holesTool && this.golf && this.hover && e.button === 0) {
     if (this.selectedGolfMarker) {
     this.moveGolfMarker(this.selectedGolfMarker.hole, this.selectedGolfMarker.kind, this.hover.x, this.hover.y);
     return;
@@ -2758,20 +2751,19 @@ export class Game {
   /** shows or hides the parking demand overlay (the Car park panel) and keeps the worker's heat on with it; callers emit */
   setParkDemand(on: boolean) { this.showParkDemand = on; this.traffic.heatOn(on || this.showFlow); }
   keyDown(e: KeyboardEvent) {
-    const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    const el = e.target as HTMLInputElement | null, tag = el?.tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA';
+    // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
+    // focused text box keeps Esc from the tool
+    if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
+    if (typing) return;
     this.keys.add(e.key);
-    if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R' || e.key === 'Escape')) {
-      if (e.key === 'Escape') this.placeClubhouse(false); else { this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit(); }
+    if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R')) {
+      this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit();
       return;
     }
     if (this.paintOn && this.paint.key(e)) return;
     if (this.tool === 'park' && this.parking.key(e)) return;
     switch (e.key) {
-      case 'Escape':
-        if (this.tool === 'junction' && (this.selectedJunction || this.brush !== 'select')) { if (this.selectedJunction) this.selectedJunction = null; else this.brush = 'select'; this.emit(); break; }
-        if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); break; }
-        if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); break; }
-        if (this.route.length) this.cancelRoute(); else { this.selected = null; this.emit(); } break;
       case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
       case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
       case 'Delete': this.deleteSelected(); break;
@@ -2806,6 +2798,38 @@ export class Game {
       case 'h': case 'H': this.skipToRush(); break;
       case 'Tab': if (this.tool === 'junction') { e.preventDefault(); if (!e.repeat) this.flipJunction(e.shiftKey ? -1 : 1); } else if (this.tool === 'road') { e.preventDefault(); if (!e.repeat) this.flipVariant(e.shiftKey ? -1 : 1); } break;
     }
+  }
+  /** the App's own menus and cards for Esc (Help, the gear menu, Course stats): which are open, and closing one (the App sets it) */
+  uiCards: { open(): Partial<Record<EscCard, boolean>>; close(c: EscCard): void } | null = null;
+  /** the Esc ladder's rungs (tool-modes.ts): the open cards (the App's, the Event catalogue, the Grass panel, the Budget or Bottlenecks
+   *  card), the tool's own step (with a text box focused, Esc stops there: the tool keeps what is in hand), and Select */
+  private escRungs(e: KeyboardEvent, textBox: boolean): EscLadder {
+    return {
+      open: () => ({ ...this.uiCards?.open(), event: this.eventTool, grass: this.grassPanel, panel: !!this.panel }),
+      close: c => {
+        if (c === 'event') this.toggleSideMode('eventTool'); else if (c === 'grass') this.toggleSideMode('grassPanel');
+        else { if (c === 'panel') this.panel = null; else this.uiCards?.close(c); this.emit(); }
+      },
+      hand: () => textBox || this.escHand(e),
+      tool: () => this.tool,
+      select: () => this.setTool('select'),
+    };
+  }
+  /** Esc's tool rung: the tool steps back one stage or drops what is in hand (the clubhouse, the brush's stroke or outline, a bay row, the
+   *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);
+   *  true when it did (else Esc puts the tool down for Select) */
+  private escHand(e: KeyboardEvent): boolean {
+    if (this.clubPlacing && this.tool === 'course') { this.placeClubhouse(false); return true; }
+    if (this.paintOn && this.paint.key(e)) return true;
+    if (this.tool === 'park' && this.parking.key(e)) return true;
+    if (this.tool === 'junction' && (this.selectedJunction || this.brush !== 'select')) { if (this.selectedJunction) this.selectedJunction = null; else this.brush = 'select'; this.emit(); return true; }
+    if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); return true; }
+    if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); return true; }
+    if (this.route.length) { this.cancelRoute(); return true; }
+    if (this.selected) { this.selected = null; this.emit(); return true; }
+    if (this.selectedGolfMarker) { this.selectedGolfMarker = null; this.emit(); return true; }
+    if (this.landMode || this.holesTool) { this.toggleSideMode(this.landMode ? 'landMode' : 'holesTool'); return true; }
+    return false;
   }
   keyUp(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName;
@@ -3541,11 +3565,22 @@ export class Game {
   get golfMode(): boolean { return this.golf !== null; }
   landMode = false;
   landHover: { rect: [number, number, number, number]; price: number; landClass: ParcelLandClass } | null = null;
-  toggleLandMode() {
-  if (!this.golfMode) return;
-  this.landMode = !this.landMode;
+  toggleLandMode() { this.toggleSideMode('landMode'); }
+  /** the Grass panel's button: opens the panel (in Select) or closes it */
+  toggleGrassPanel() { this.toggleSideMode('grassPanel'); }
+  /** opens side mode k (the Grass panel, Land, Holes, Event) and closes the others, or closes k: opening one switches to Select and picking a
+   *  build tool closes them (setTool), so a side mode never takes a build tool's click (P23 P1-A, tool-modes.ts). Land, Holes and Event are golf only */
+  toggleSideMode(k: SideMode) {
+  if (k !== 'grassPanel' && !this.golfMode) return;
+  const on = switchSideMode(this, k); this.tidySideModes();
+  if (on) this.setTool('select'); else this.emit();
+  }
+  /** what a closed side mode leaves behind: the land block under the pointer, the picked pin or tee, the structure in hand, the armed grass care */
+  private tidySideModes() {
   if (!this.landMode) this.landHover = null;
-  this.emit();
+  if (!this.holesTool) this.selectedGolfMarker = null;
+  if (!this.eventTool) this.eventStructurePending = null;
+  if (!this.grassPanel) this.grassAction = null;
   }
   private blockLandClass(r: [number, number, number, number]): { landClass: ParcelLandClass; houses: number; buildings: number } {
   const [bx, by, bw, bh] = r;
