@@ -808,24 +808,34 @@ export class GroundPainter {
     const V = ex.length ? this.buffer('living', W, H) : null, vg = V ? ctx2d(V) : ctx;
     if (V) vg.drawImage(ctx.canvas, 0, 0);
     const lay = (layer: Cnv, op: GlobalCompositeOperation, alpha = 1) => { vg.save(); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = op; vg.globalAlpha = alpha; vg.drawImage(layer, 0, 0); vg.restore(); };
-    const art = (id: string) => (this.tex.isPainted(id) ? this.paintedBuf(id) : null), T = 0.02;
+    // a painted variant is composed only over the part of the chunk its mask reaches (T128: the lush, patchy and soil looks)
+    const maskBox = (a: Uint8ClampedArray): BBox | undefined => {
+      let i0 = Infinity, j0 = Infinity, i1 = -Infinity, j1 = -Infinity;
+      for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (a[(j * m.W + i) * 4 + 3]! > 5) { if (i < i0) i0 = i; if (i > i1) i1 = i; if (j < j0) j0 = j; if (j > j1) j1 = j; }
+      return i0 === Infinity ? undefined : [m.x0 + i0 / m.res - 1, m.y0 + j0 / m.res - 1, m.x0 + (i1 + 1) / m.res + 1, m.y0 + (j1 + 1) / m.res + 1];
+    };
+    const art = (id: string, need?: BBox) => (this.tex.isPainted(id) ? this.paintedBuf(id, need) : null), T = 0.02;
+    const both = (a?: BBox, b?: BBox): BBox | undefined => (a && b ? [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])] : a ?? b);
+    const soilBox = both(m.max.thin > T ? maskBox(m.thin) : undefined, m.max.bare > T ? maskBox(m.bare) : undefined);
     /** the soil, made once a chunk: the painted dirt-bare set, else the game's dirt (its photo when built, else the painted screen texture) */
     let soilBuf: Cnv | null = null;
     const soil = (g: C2D) => {
       if (!soilBuf) soilBuf = art('dirt-bare');
       if (!soilBuf) {
         soilBuf = this.buffer('livingSoil', W, H); const s = ctx2d(soilBuf);
-        s.setTransform(M); s.fillStyle = this.photoFill(s, 'dirt', L) ?? this.screenPattern(s, 'dirt', L, X0, Y0, Minv); s.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
-        // the game's dirt is a dark, grey soil: lifted warm toward the painted grass's garden earth (in proportion to itself, so its grains stay)
-        s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'screen'; s.fillStyle = SOIL_LIFT; s.fillRect(0, 0, W, H);
-        s.globalCompositeOperation = 'multiply'; s.fillStyle = SOIL_WARM; s.fillRect(0, 0, W, H); s.globalCompositeOperation = 'source-over';
+        s.setTransform(M); const pd = this.paintedFill(s, 'dirt', soilBox);
+        s.fillStyle = pd ?? this.photoFill(s, 'dirt', L) ?? this.screenPattern(s, 'dirt', L, X0, Y0, Minv); s.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
+        // the game's dirt is a dark, grey soil: lifted warm toward the painted grass's garden earth (in proportion to itself, so its grains
+        // stay); the painted soil (painted-surfaces.ts dirt) is laid as its look has it
+        if (!pd) { s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'screen'; s.fillStyle = SOIL_LIFT; s.fillRect(0, 0, W, H);
+          s.globalCompositeOperation = 'multiply'; s.fillStyle = SOIL_WARM; s.fillRect(0, 0, W, H); s.globalCompositeOperation = 'source-over'; }
       }
       g.drawImage(soilBuf, 0, 0);
     };
     // lush: richer, denser grass along fences, walls and hedges, near water and on the verges: the grass laid over itself (its strokes' contrast
     // and colour deepen: darker gaps, brighter tips), tinted a deeper green
     if (m.max.lush > T) {
-      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-lush');
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-lush', maskBox(m.lush));
       if (a) lg.drawImage(a, 0, 0);
       else { lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'overlay'; lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'multiply'; lg.fillStyle = LUSH_TINT; lg.fillRect(0, 0, W, H); lg.globalCompositeOperation = 'source-over'; }
       put(lg, m.lush, 'destination-in'); lay(lb, 'source-over');
@@ -833,7 +843,7 @@ export class GroundPainter {
     // thin: patchy grass going over to soil, under trees, at doors and corners, on worn edges: the soil's colour on the grass's own strokes
     // (dry, thin turf that keeps its texture), then the soil in the grass's dark gaps (lighten: the lit tufts stay)
     if (m.max.thin > T) {
-      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-patchy');
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-patchy', maskBox(m.thin));
       if (a) lg.drawImage(a, 0, 0); else soil(lg);
       put(lg, m.thin, 'destination-in');
       if (a) lay(lb, 'source-over'); else { lay(lb, 'color', 0.7); lay(lb, 'lighten'); }

@@ -5,13 +5,15 @@ import { SURFACE_TINT } from '../../game/ext/course-cursor';
 import { StyleEditor } from '../../PaintPanel';
 import { SurfaceMark } from './SurfaceMark';
 import { lookName } from './CoursePanel';
+import { paintedSwatch } from '../../game/painted-surfaces-live';
 
 // the owner's presets' baked pictures, by preset id (Vite fills the glob in when it builds; under plain node there is none: the disc then
 // shows the surface's colour)
 const PICS: Record<string, string> = (() => { try { return import.meta.glob('../../assets/ground/preset-*.webp', { eager: true, query: '?url', import: 'default' }) as Record<string, string>; } catch { return {}; } })();
 
-/** a texture's picture (an owner's preset, else a Paint photo), or '' for one drawn as a colour */
+/** a texture's picture (its painted look's near painting, else an owner's preset, else a Paint photo), or '' for one drawn as a colour */
 function picOf(tex: string): string {
+  const p = paintedSwatch(tex); if (p?.img) return p.img;
   if (tex.startsWith('preset:')) return PICS[`../../assets/ground/preset-${tex.slice(7)}.webp`] ?? '';
   return PHOTO_TEX.find(t => t.tex === tex)?.src ?? '';
 }

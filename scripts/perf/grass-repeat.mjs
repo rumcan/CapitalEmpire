@@ -108,17 +108,27 @@ try {
     // every level the zoom blends: its period and twice it, along both tile axes and the diagonal (a lag past the window is left out)
     const lagsAt = (P, n) => [[P * n, 0], [0, P * n], [P * n, P * n]].map(([tx, ty]) => [Math.round((tx - ty) * 64 * L), Math.round((tx + ty) * 32 * L)]);
     const at = img => Math.max(-1, ...res.periods.flatMap(P => [1, 2].flatMap(n => lagsAt(P, n).map(([dx, dy]) => pearson(img, W, H, dx, dy)))).filter(Number.isFinite));
+    // a peak at the period: r there above the mean of r half a period either side (a tile repeat makes r jump at its period; the broad soft
+    // colour of a coarser level blended in keeps r high at every short lag, falling, which is no repeat: T128, the 320 m mid painting makes
+    // r at the 40 m near period 0.3 to 0.5 as baked while its detail stays near 0)
+    const peakAt = img => Math.max(-1, ...res.periods.flatMap(P => [1, 2].flatMap(n => [0, 1, 2].map(d => {
+      // only lags within a third of the window (two thirds of it overlap): past that the estimate swings by +-0.2 (run --size 3072 to test
+      // the 320 m mid painting's period in the district view)
+      const r = q => { const [dx, dy] = lagsAt(P, q)[d]; return Math.abs(dx) <= W / 3 && Math.abs(dy) <= H / 3 ? pearson(img, W, H, dx, dy) : NaN; }, c = r(n), a = r(n - 0.5), b = r(n + 0.5);
+      const side = [a, b].filter(Number.isFinite); return Number.isFinite(c) && side.length ? c - side.reduce((s, v) => s + v, 0) / side.length : NaN;
+    }))).filter(Number.isFinite));
     const minLag = 12 * pxPerM, pkRaw = peakSearch(lum, W, H, minLag), pkDet = peakSearch(detail, W, H, minLag);
     let sd = 0, mu = 0; for (const v of lum) mu += v / lum.length; for (const v of lum) sd += (v - mu) ** 2 / lum.length;
     // the streaks, and the autocorrelation along them 12 m and 24 m on (a streak running on across the view keeps r high there): the lag is m
     // metres along the streak on the ground, as screen px
     const st = streaks(detail, W, H, Math.max(16, Math.round(8 * pxPerM))), ang = st.streak * Math.PI / 180;
     const along = m => { const tx = Math.cos(ang) * m / 2, ty = Math.sin(ang) * m / 2; return pearson(detail, W, H, Math.round((tx - ty) * 64 * L), Math.round((tx + ty) * 32 * L)); };
-    const row = { family: family ?? '(game)', art, zoom, artL: res.artL, L, levels: res.levels, period: art === 'painted' ? res.periods.map(P => `${+(P * 2).toFixed(1)} m`).join(' + ') : '-', rAtPeriod: art === 'painted' ? +at(lum).toFixed(3) : null, rAtPeriodDetail: art === 'painted' ? +at(detail).toFixed(3) : null,
+    const row = { family: family ?? '(game)', art, zoom, artL: res.artL, L, levels: res.levels, period: art === 'painted' ? res.periods.map(P => `${+(P * 2).toFixed(1)} m`).join(' + ') : '-', rAtPeriod: art === 'painted' ? +at(lum).toFixed(3) : null, rAtPeriodDetail: art === 'painted' ? +at(detail).toFixed(3) : null, peakAtPeriod: art === 'painted' ? +peakAt(lum).toFixed(3) : null, peakAtPeriodDetail: art === 'painted' ? +peakAt(detail).toFixed(3) : null,
       peak: +pkRaw.r.toFixed(3), peakLag: lagTiles(pkRaw.dx, pkRaw.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', peakDetail: +pkDet.r.toFixed(3), peakDetailLag: lagTiles(pkDet.dx, pkDet.dy, L).map(v => +(v * 2).toFixed(1)).join(',') + ' m', lobeDetail: Math.round(pkDet.lobe / pxPerM) + ' m', ...st, rAlong12m: +along(12).toFixed(3), rAlong24m: +along(24).toFixed(3), lumStd: +Math.sqrt(sd).toFixed(1), msPerChunk: res.msPerChunk };
-    // the verdict: r at the blend's period (as baked and detail only) and the detail's second peak at any lag. The second peak as baked is
-    // reported but not judged: the drift's 56-160 m waves give the estimate a +-0.2 noise at long lags over a window only a few waves wide
-    const worst = Math.max(row.rAtPeriod ?? -1, row.rAtPeriodDetail ?? -1, row.peakDetail);
+    // the verdict: a peak at a level's period (as baked and detail only), r there on the detail, and the detail's second peak at any lag. r at
+    // the period as baked and its second peak are reported but not judged: a coarser level's soft colour fields and the drift's 56-160 m waves
+    // keep r high at short lags and give it a +-0.2 noise at long ones over a window only a few waves wide
+    const worst = Math.max(row.peakAtPeriod ?? -1, row.peakAtPeriodDetail ?? -1, row.rAtPeriodDetail ?? -1, row.peakDetail);
     row.verdict = worst > LIMIT ? 'REPEATS' : 'ok'; if (art === 'painted' && worst > LIMIT) failed = true;
     rows.push(row); console.log(JSON.stringify(row));
   }

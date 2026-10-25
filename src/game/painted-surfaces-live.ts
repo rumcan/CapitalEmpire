@@ -21,4 +21,11 @@ export function paintedSwatch(tex: string): { col: string; img: string | null } 
   const f = resolveFamily(look); if (!f) return null;
   return { col: lookColour(f.near.mean, look), img: paintedUrl(f.near.file) };
 }
+/** a texture's near painting as its look lays it (the course cursor's puck): its URL, the tiles one repeat covers, the tint and tone, and a key
+ *  for the look; null when no surface's look covers it */
+export function paintedNear(tex: string): { key: string; src: string; period: number; tint: string; tone: number } | null {
+  const look = lookOfTex(tex, current, PRESETS); if (!look) return null;
+  const f = resolveFamily(look), src = f && paintedUrl(f.near.file); if (!f || !src) return null;
+  return { key: `painted:${f.near.file}|${f.near.metres}|${look.tint}|${look.tone}`, src, period: f.near.metres / 2, tint: look.tint, tone: look.tone };
+}
 if (import.meta.hot) import.meta.hot.accept('./painted-surfaces.json', mod => { if (mod) setPaintedSurfaces((mod as { default?: unknown }).default ?? mod); });

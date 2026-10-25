@@ -5,6 +5,7 @@
 import { withPresets } from '../../paint-presets-saved';
 import { PHOTO_SIZE, PHOTO_TEX, type PhotoTexEntry } from '../../grass-art';
 import { MIXED_PERIOD, type CursorTexture } from './index';
+import { paintedNear } from '../../painted-surfaces-live';
 
 /** a photo's source period in tiles, as textures.ts photoSrcPeriod (the period the Paint areas lay the photo itself over) */
 const srcPeriod = (p: PhotoTexEntry) => (p.mix > 0 ? (p.mix * PHOTO_SIZE) / 2 : p.tiles ?? MIXED_PERIOD);
@@ -26,7 +27,8 @@ interface Loaded { mips: HTMLCanvasElement[]; period: number }
 export function browserCursorTexture(): CursorTexture {
   const done = new Map<string, Loaded>(), busy = new Set<string>();
   let rev = 0;
-  const load = (tex: string, e: PhotoTexEntry) => {
+  /** e: the photo, or the painted look's near painting (T128: the puck shows the painted art, tinted and toned as its look has it) */
+  const load = (tex: string, e: { src: string; period: number; tint?: string; tone?: number }) => {
     busy.add(tex);
     const img = new Image();
     img.decoding = 'async';
@@ -36,19 +38,23 @@ export function browserCursorTexture(): CursorTexture {
       for (;;) {
         const c = document.createElement('canvas'); c.width = w; c.height = h;
         const g = c.getContext('2d')!; g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, w, h);
+        if (!mips.length && e.tint && e.tint !== '#ffffff') { g.globalCompositeOperation = 'multiply'; g.fillStyle = e.tint; g.fillRect(0, 0, w, h); }
+        if (!mips.length && e.tone && e.tone < 0) { const v = Math.round(255 * (1 + e.tone)); g.globalCompositeOperation = 'multiply'; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(0, 0, w, h); }
+        else if (!mips.length && e.tone && e.tone > 0) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = e.tone; g.drawImage(img, 0, 0, w, h); }
+        g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
         mips.push(c); src = c;
         if (w <= 64 || h <= 64) break;
         w = Math.max(1, w >> 1); h = Math.max(1, h >> 1);
       }
-      done.set(tex, { mips, period: srcPeriod(e) }); busy.delete(tex); rev++;
+      done.set(tex, { mips, period: e.period }); busy.delete(tex); rev++;
     };
     img.onerror = () => { busy.delete(tex); };
     img.src = e.src;
   };
   return {
     pick(tex, pxPerTile) {
-      const l = done.get(tex);
-      if (!l) { const e = ENTRIES.get(tex); if (e && !busy.has(tex)) load(tex, e); return null; }
+      const pn = paintedNear(tex), key = pn?.key ?? tex, l = done.get(key);
+      if (!l) { const e = ENTRIES.get(tex), src = pn ?? (e ? { src: e.src, period: srcPeriod(e) } : null); if (src && !busy.has(key)) load(key, src); return null; }
       let img = l.mips[0]!;
       for (const m of l.mips) { if (m.width / l.period >= pxPerTile) img = m; else break; }
       return { img, period: l.period };

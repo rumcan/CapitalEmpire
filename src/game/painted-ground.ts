@@ -10,7 +10,7 @@ type Box = readonly [number, number, number, number];
 /** the sample step of the drift's picture, tiles (its shortest wave is 28 tiles, so 4 is smooth after the bilinear stretch) */
 const TONE_STEP = 4;
 /** the bytes of patch pictures a worker keeps (one set per painting, patch size and density; the least recently used go first) */
-export const SPRITE_BYTES = 64 << 20;
+export const SPRITE_BYTES = 128 << 20;
 /** one level as a chunk lays it: its painting (pic gives the mip with at least that many px across), the tiles one repeat covers, its weight in
  *  the crossfade, and whether it covers the whole map (laid once, aligned to the map) */
 export interface LayLevel { pic: (px: number) => Cnv | null; period: number; weight: number; map: boolean }
