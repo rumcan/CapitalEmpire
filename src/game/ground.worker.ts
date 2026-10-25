@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 // A ground worker: holds its own copy of the road network, terrain and ground textures and bakes chunks on request.
-import { MAP, CHUNK_W, CHUNK_H, MID_K } from './iso';
+import { MAP, CHUNK_W, CHUNK_H, MID_K, PLAN_LEVELS } from './iso';
 import { RoadNetwork } from './network';
 import type { FromWorker, ToWorker } from './ground-protocol';
 import { applyOps } from './netops';
@@ -10,6 +10,7 @@ import { EAGER_PHOTO } from './grass-art';
 import { isPaintPhoto } from './paint';
 import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
 import { WOODLAND_TEX } from './terrain-paint';
+import { WALL_TEX } from './ext/course-walls';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
@@ -18,6 +19,7 @@ const painter = new GroundPainter(terrain, net, tex);
 const grassAssets = import.meta.glob('../assets/ground/grass-management/**/*.{webp,png}', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 const grassLoads = new Set<string>();
 const loadGrass = async (id: string) => {
+  if (tex.isPainted(id)) return; // A registered condition family uses the same authored zoom path, not the legacy single image.
   if (grassLoads.has(id)) return;
   const path = Object.keys(grassAssets).find(p => p.endsWith('/' + id + '.webp') || p.endsWith('/' + id + '.png'));
   if (!path) return;
@@ -59,6 +61,7 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'textures': restore(tex, m.snap); texReady(); gotTextures?.(); break;
+      case 'grassArt': tex.paintedOn = m.art !== 'photo'; painter.resetPlanColours(); break;
       case 'net': { const t0 = performance.now(); applyOps(net, m.ops); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `net ops ${m.ops.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'lamps': { const t0 = performance.now(), pts = []; for (let i = 0; i + 1 < m.pts.length; i += 2) pts.push({ x: m.pts[i], y: m.pts[i + 1] }); net.setLamps(pts); const ms = performance.now() - t0; if (ms > 50) post({ t: 'log', message: `lamps ${pts.length} in ${ms.toFixed(0)} ms` }); break; }
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
@@ -67,9 +70,11 @@ const handle = async (m: ToWorker) => {
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
         const need = new Set<string>();
-        for (const [, ps] of m.set) for (const p of ps) if (p.lawn && isPaintPhoto(p.tex) && !EAGER_PHOTO.has(p.tex) && !tex.has(p.tex)) need.add(p.tex); else if (p.paint) for (const t of [p.tex, ...(p.paint.b > 0 ? [p.paint.bt] : []), ...(p.paint.m ? [p.paint.m.t] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
+        for (const [, ps] of m.set) for (const p of ps) if (p.lawn && isPaintPhoto(p.tex) && !EAGER_PHOTO.has(p.tex) && !tex.built(p.tex)) need.add(p.tex); else if (p.paint) for (const t of [p.tex, ...(p.paint.b > 0 ? [p.paint.bt] : []), ...(p.paint.m ? [p.paint.m.t] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
         // a course chunk's surfaces and collars (T078)
-        for (const [, ps] of m.set) for (const p of ps) if (p.course) for (const l of p.course.layers) for (const t of [l.tex, ...(l.collar ? [l.collar.tex] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
+        for (const [, ps] of m.set) for (const p of ps) if (p.course) for (const l of p.course.layers) for (const t of [l.tex, ...(l.collar ? [l.collar.tex] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
+        // and the wall art its walls wear (T099 WALL_TEX slots; nothing until a slot is registered in grass-art PHOTO_TEX)
+        for (const [, ps] of m.set) for (const p of ps) if (p.course?.walls?.length) for (const t of WALL_TEX) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.built(t)) need.add(t);
         await Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
         painter.setLotGround(m.set, m.drop);
         break;
@@ -77,6 +82,25 @@ const handle = async (m: ToWorker) => {
       case 'paint': {
         await hasTextures;
         if (m.kind !== 'p') await (woods ??= tex.ensure(WOODLAND_TEX).catch(err => post({ t: 'error', message: String(err) })));
+        // the painted grass pictures this chunk needs at its art level (painted-grass-lod.ts): the base grass and its tints, and every texture
+        // its lots, lawns, painted areas, course surfaces and managed turf use (a painted preset among them); never all of them
+        if (m.kind !== 'p') {
+          const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
+          const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
+          const need = new Set<string>(['grass', 'meadow', 'outside']);
+          for (const p of painter.lotsIn(box)) {
+            need.add(p.tex);
+            if (p.paint?.b) need.add(p.paint.bt);
+            if (p.paint?.m) need.add(p.paint.m.t);
+            if (p.course) for (const l of p.course.layers) { need.add(l.tex); if (l.collar) need.add(l.collar.tex); }
+          }
+          if (painter.grassStrength > 0 && !painter.grassHeat) {
+            for (let y = Math.max(0, Math.floor(box[1] / 4)); y < Math.min(MAP / 4, Math.ceil(box[3] / 4)); y++) for (let x = Math.max(0, Math.floor(box[0] / 4)); x < Math.min(MAP / 4, Math.ceil(box[2] / 4)); x++) {
+              const cell = painter.grassCells.get(y * (MAP / 4) + x); if (cell) need.add(cell.material);
+            }
+          }
+          await tex.preparePainted(m.artL ?? m.L, need);
+        } else await tex.preparePainted(PLAN_LEVELS[PLAN_LEVELS.length - 1], ['grass', 'meadow', 'outside']);
         // Decode only artwork used by the requested visible chunk, never all registered course/town cells.
         if (m.kind !== 'p' && painter.grassStrength > 0 && !painter.grassHeat) {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
@@ -90,7 +114,7 @@ const handle = async (m: ToWorker) => {
         const t0 = performance.now();
         const cv = m.kind === 'p' ? painter.paintPlan(m.i, m.j, m.L) : painter.paint(m.i, m.j, m.L, m.kind === 'm');
         const bmp = cv.transferToImageBitmap();
-        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, bmp, ms: performance.now() - t0 }, [bmp]);
+        post({ t: 'tile', id: m.id, kind: m.kind, i: m.i, j: m.j, L: m.L, artL: m.artL ?? m.L, bmp, ms: performance.now() - t0 }, [bmp]);
         break;
       }
     }

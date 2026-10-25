@@ -1,0 +1,94 @@
+{
+  "id": "grass",
+  "family": "grass",
+  "condition": "base",
+  "detailLevel": "mid",
+  "version": "v1",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-7ccb76dd-f32f-4a84-b8d8-275310ccff30.png",
+  "generatorSourceSha256": "6d8311a786645f4d540afd54b47f61bbb2fc8ba5b723f72ef510db72559f0aae",
+  "prompt": "Hand-paintedBlizzard/WorldofWarcraft/Hearthstone grass ground material matchingtheprovidedSHORTTURFCROPstyle exactly: warmnaturalgreen, BROADSMOOTHCONFIDENTbrushstrokes, softvaluegradients. MEDIUMzoomdetail: broadflatpaintedturffieldswithsparsecompactstrokegroups, subtle6%valuevariation, noindividualblades. 1024x1024squareopaquePNG directlyabovetopdownorthographiccovering8x8metres. About85-90%calmcontinuousgreenpaint, remaininglocalsoftbrushdefinition. No tufts arrangedasrosettes, nostripes/diagonalbands/herringbone/waves. VarybrushorientationirregularlywithoutchanginglocalSUNUPPERRIGHTandsoftshadeLOWERLEFT. Uniformoverallbrightness/colour acrossalltile. No castshadows,vignette,spotlights,horizon,perspective,frame,text,objects,bareground,flowersorleaves. Genuinelyseamlessperiodic: formsandvaluescrossleft/rightandtop/bottomwithoutseams, allcornerscontinuouslyjoin; unobtrusive4x4tiling. Singlematerialonlynotpreview. Copycrop'squietgreenpaint, NOT the diagonal mowingbands orpattern inits scene.",
+  "promptSha256": "6768145379290461a181e6fb0f96726cdd660b027767e48a7a56acfb9373f8eb",
+  "references": [
+    {
+      "role": "exact-owner-short-turf-style-crop",
+      "file": "art/theme-consistency/generated/ground/grass-owner-green-style-crop.png",
+      "original": "worktrees/theme-consistency/art/reference/grass-style-blizzard-20261024.webp",
+      "extraction": {
+        "left": 300,
+        "top": 280,
+        "width": 550,
+        "height": 220
+      },
+      "sha256": "b9bfa35507492af473d8197ba7fecff4e5ddf730850fcb2642a14cb15669d419"
+    }
+  ],
+  "metresPerRepeat": [
+    8,
+    8
+  ],
+  "requestedPixels": [
+    1024,
+    1024
+  ],
+  "raw": {
+    "file": "art/theme-consistency/generated/ground/painted-lod/grass-lod-v1/mid.raw.png",
+    "sha256": "6d8311a786645f4d540afd54b47f61bbb2fc8ba5b723f72ef510db72559f0aae",
+    "actualDimensions": [
+      1254,
+      1254
+    ]
+  },
+  "preparationState": "exported-awaiting-review",
+  "integrationStatus": "ready",
+  "integrationReason": "Agent visual/game review accepted the exact owner-short-turf painted style, three authored detail levels and tested far/mid/near runtime rendering. Authored source repeats8m; runtime uses48m translation-only soft overlap with no rotations/mirrors to suppress visible8m cadence. Sources remain approximately tileable (edge RGB error about4-5), not certified mathematically seamless. Independent updated runtime review accepted no obvious grid/hex pattern in inspected views; fixture scale capture remains separate.",
+  "ownerApproved": false,
+  "processing": "Only aspect-preserving resample to1024squarePNG; no edge repair, painting, recolouring, rotation or mirroring.",
+  "testOnly": false,
+  "final": {
+    "file": "art/theme-consistency/generated/ground/painted-lod/grass-lod-v1/mid.png",
+    "sha256": "5d24c806e3d367d35cbb797e4120771c81fc3d623e9bc2720b2e7d3ab86b33a7",
+    "dimensions": [
+      1024,
+      1024
+    ],
+    "fullyOpaque": true,
+    "nonopaquePixels": 0,
+    "meanRgb": [
+      114.7200517654419,
+      143.93337726593018,
+      14.669163703918457
+    ],
+    "rgbStandardDeviation": [
+      13.360880700124284,
+      11.857586221496945,
+      3.033168786817421
+    ],
+    "seamDiagnostics": {
+      "leftRightMeanAbsoluteRgbDifference": 4.9931640625,
+      "topBottomMeanAbsoluteRgbDifference": 5.258138020833333,
+      "policy": "Read-only diagnostic, not a seamlessness or visual approval claim."
+    }
+  },
+  "resampling": {
+    "method": "lanczos3 aspect-preserving square resample only",
+    "upscaled": false,
+    "nativeDetailClaim": "Actual generator dimensions retained; export size does not imply new generated detail."
+  },
+  "agentReview": {
+    "state": "agent-visual-and-game-reviewed",
+    "sourceArtRevision": "v3",
+    "review": "output/building-priority/painted-grass-v3-independent-review.json",
+    "verification": "output/building-priority/first-grass-verified.json",
+    "sourceMetresPerRepeat": [
+      8,
+      8
+    ],
+    "runtimeCompositeMetresPerRepeat": [
+      48,
+      48
+    ],
+    "exactSeamlessClaim": false,
+    "ownerApproved": false
+  }
+}

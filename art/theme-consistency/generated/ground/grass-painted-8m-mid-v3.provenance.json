@@ -1,0 +1,30 @@
+{
+  "id": "ground:grass-painted-8m",
+  "detailLevel": "mid",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-7ccb76dd-f32f-4a84-b8d8-275310ccff30.png",
+  "prompt": "Hand-paintedBlizzard/WorldofWarcraft/Hearthstone grass ground material matchingtheprovidedSHORTTURFCROPstyle exactly: warmnaturalgreen, BROADSMOOTHCONFIDENTbrushstrokes, softvaluegradients. MEDIUMzoomdetail: broadflatpaintedturffieldswithsparsecompactstrokegroups, subtle6%valuevariation, noindividualblades. 1024x1024squareopaquePNG directlyabovetopdownorthographiccovering8x8metres. About85-90%calmcontinuousgreenpaint, remaininglocalsoftbrushdefinition. No tufts arrangedasrosettes, nostripes/diagonalbands/herringbone/waves. VarybrushorientationirregularlywithoutchanginglocalSUNUPPERRIGHTandsoftshadeLOWERLEFT. Uniformoverallbrightness/colour acrossalltile. No castshadows,vignette,spotlights,horizon,perspective,frame,text,objects,bareground,flowersorleaves. Genuinelyseamlessperiodic: formsandvaluescrossleft/rightandtop/bottomwithoutseams, allcornerscontinuouslyjoin; unobtrusive4x4tiling. Singlematerialonlynotpreview. Copycrop'squietgreenpaint, NOT the diagonal mowingbands orpattern inits scene.",
+  "references": [
+    {
+      "role": "exact-owner-short-turf-style-crop",
+      "file": "art/theme-consistency/generated/ground/grass-owner-green-style-crop.png",
+      "original": "worktrees/theme-consistency/art/reference/grass-style-blizzard-20261024.webp",
+      "extraction": {
+        "left": 300,
+        "top": 280,
+        "width": 550,
+        "height": 220
+      }
+    }
+  ],
+  "metresPerRepeat": [
+    8,
+    8
+  ],
+  "requestedPixels": [
+    1024,
+    1024
+  ],
+  "selected": false,
+  "review": "Awaitingtiling/lowcontrastfamily/gamezoom review."
+}
