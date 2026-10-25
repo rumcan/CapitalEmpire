@@ -1,0 +1,23 @@
+{
+  "id": "ground:grass-painted-8m",
+  "detailLevel": "near",
+  "generator": "image_gen",
+  "generatorSource": "C:\\Users\\RAMPAGE\\.codex\\generated_images\\01a16c0b-bcad-7e71-a5d0-0281b98562b9\\exec-4c7e17e0-a076-4cb9-af14-27cfc2706fb5.png",
+  "prompt": "EDIT TARGET inputimage is the MID-distance version of one hand-painted stylized grass material. Make its NEAR-distance ART DETAIL version. NOT just a blur/rescale. Preserve broad calm painted masses but add a sparse layer of deliberate chunky short grass tuft strokes inside them, softly bevelled handpainted forms. More brush definition thanMID without photographicnoise, fineblade-bybladegrass, tinycloverorleaves. Avoidbusypointydabs; staystylized. CRUCIAL SAME macrodistribution/location of all lighter/darker green patches, SAME average warmyellowgreenpalette, SAME scale8x8metres, SAME overallbrightness and SAME lightSCREENUPPERRIGHT onalllocalforms/lowerleftshade. It must seamlessly blend into MID onzoomswithoutcolour/layoutjump. 1024x1024squareopaquePNG DIRECTLYABOVEorthographictopdown, nogroundperspective/horizon. SEAMLESS periodic inbothdirections: everybrushformcrossingLEFTcontinuesRIGHT, TOPcontinuesBOTTOM; allcornersjoin. No visibletileseamsor edge bands; no obvious repeatingstripe/diamond/rosettepattern. NOspotlight/vignette/castshadow/objects/rocks/flowers/paths/golfoutline/frame/text/labels. Output ONLY the single near materialtile.",
+  "references": [
+    {
+      "role": "edit-target-mid-distance-family-master",
+      "file": "art/theme-consistency/generated/ground/grass-painted-8m-mid-v1.png"
+    }
+  ],
+  "metresPerRepeat": [
+    8,
+    8
+  ],
+  "requestedPixels": [
+    1024,
+    1024
+  ],
+  "selected": false,
+  "review": "Awaiting familycolour/lighting/actualtilewrap/scaledpreview andexact1024export checks."
+}

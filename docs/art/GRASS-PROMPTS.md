@@ -3,6 +3,18 @@
 The owner, 2026-10-24: "We want Blizzard Entertainment style textures." Reference picture:
 `art/reference/grass-style-blizzard-20261024.webp` (a green with two bunkers). Attach it to every request.
 
+## How the game lays a set (T082 integration, 2026-10-25)
+- **Scale:** each image at its own pixels at its zoom level: close over 48 m, mid over 96 m, far over 192 m (1024 px each), crossfading
+  between levels. The first set (`art/theme-consistency/generated/ground/painted-lod/grass-lod-v1`, painted as "8 m") is laid this way: at
+  8 m every brush stroke was gone at the closest zoom and the grass read as flat lime.
+- **No repeat, ever:** the game never shows a tile's period. It lays each image in soft round patches at random offsets, each turned by up
+  to 36 degrees. So: paint light that still reads as upper right after a 36-degree turn, keep no single stroke direction strong across the
+  whole tile (it shows as parallel streaks), and paint no stripes (the game adds mowing stripes on top, last).
+- **Colour:** `scripts/assets/prep-painted-grass.mjs` makes the three levels one mean colour and grades them towards the style reference
+  (HSL saturation about 68%, stroke contrast x1.2); any light or shade it adds follows the light rule (T110): light in proportion to the
+  texture's own luminance, shade a cool multiply.
+- **Check:** `node scripts/perf/grass-repeat.mjs` (on a dev server) bakes open ground at every zoom and fails when a period shows.
+
 ## How to use
 1. Attach the reference picture.
 2. Paste the **STYLE** block, then the **ZOOM LEVELS** block, then **one** surface block.

@@ -1,0 +1,337 @@
+{
+  "date": "2026-10-24",
+  "branch": "lead/painted-grass-lod-20261024",
+  "status": "runtime-ready",
+  "familiesReady": 1,
+  "familiesTotal": 95,
+  "registeredRuntimeIds": [
+    "grass"
+  ],
+  "ordinaryTurfIds": 15,
+  "managedConditionIds": 80,
+  "sourceWorldMetres": 8,
+  "runtimeRepeatMetres": 48,
+  "runtimeRepeatTiles": 24,
+  "runtimeCompositePixels": 2048,
+  "sourcePixelEdits": "none; exact PNG byte copies",
+  "mixing": "Deterministic jittered positions and source-phase translations shared by all authored detail levels. Fixed positive scale; no rotation, mirror, grain or colour repaint. Broad soft alpha overlap.",
+  "selected": [
+    {
+      "id": "grass",
+      "detail": "far",
+      "source": "art/theme-consistency/generated/ground/grass-painted-8m-far-v3.png",
+      "runtime": "src/assets/ground/painted/grass-painted-8m-far-v3.png",
+      "sha256": "7634710f712f01ff4be0121932592f81038634a5bdacdf1f545702d879a12fd8"
+    },
+    {
+      "id": "grass",
+      "detail": "mid",
+      "source": "art/theme-consistency/generated/ground/grass-painted-8m-mid-v3.png",
+      "runtime": "src/assets/ground/painted/grass-painted-8m-mid-v3.png",
+      "sha256": "5d24c806e3d367d35cbb797e4120771c81fc3d623e9bc2720b2e7d3ab86b33a7"
+    },
+    {
+      "id": "grass",
+      "detail": "near",
+      "source": "art/theme-consistency/generated/ground/grass-painted-8m-near-v3.png",
+      "runtime": "src/assets/ground/painted/grass-painted-8m-near-v3.png",
+      "sha256": "5e01830646aa019a4df6f4a4868b5503571ed47c36ffcd76eafc8072ca8cdfd0"
+    }
+  ],
+  "visualReview": {
+    "parent": "approved",
+    "independent": "approved",
+    "report": "output/building-priority/painted-grass-v3-independent-review.json",
+    "noObviousDiamondHexGridOrGhostedStamp": true,
+    "buildingScaleFixture": "output/painted-grass/context-near.png",
+    "limitations": [
+      "Source edges are approximately seamless; no mathematical edge equality claimed.",
+      "48m runtime composition is periodic; no obvious repetition observed at reviewed camera scales.",
+      "Remaining94families still use their existing artwork until all3newlevels are reviewed."
+    ]
+  },
+  "checks": {
+    "typecheck": "passed",
+    "focused": "36/36",
+    "browser": {
+      "pageErrors": [],
+      "requestFailures": [],
+      "httpFailures": [],
+      "captures": [
+        {
+          "name": "far",
+          "z": 0.055,
+          "before": {
+            "baked": 41,
+            "busy": 0,
+            "errors": []
+          },
+          "after": {
+            "baked": 41,
+            "busy": 0,
+            "errors": []
+          }
+        },
+        {
+          "name": "mid",
+          "z": 0.14,
+          "before": {
+            "baked": 107,
+            "busy": 0,
+            "errors": []
+          },
+          "after": {
+            "baked": 107,
+            "busy": 0,
+            "errors": []
+          }
+        },
+        {
+          "name": "near",
+          "z": 0.3,
+          "before": {
+            "baked": 127,
+            "busy": 0,
+            "errors": []
+          },
+          "after": {
+            "baked": 127,
+            "busy": 0,
+            "errors": []
+          }
+        }
+      ],
+      "sourceRequests": [
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png?import",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-mid-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-near-v3.png",
+        "http://127.0.0.1:5198/src/assets/ground/painted/grass-painted-8m-far-v3.png"
+      ],
+      "textureContract": {
+        "decodedCounts": [
+          1,
+          1,
+          2,
+          3
+        ],
+        "periods": [
+          24,
+          24,
+          24,
+          24,
+          24,
+          24
+        ],
+        "mosaicMs": [
+          8.5,
+          4.699999988079071,
+          6.599999964237213
+        ],
+        "farSample": [
+          107,
+          138,
+          15,
+          255
+        ],
+        "midSample": [
+          107,
+          140,
+          15,
+          255
+        ],
+        "nearSample": [
+          109,
+          144,
+          15,
+          255
+        ],
+        "otherPhotoStillUnbuilt": true,
+        "sourceCap": 24,
+        "evictedSourceReloaded": true,
+        "existingTierFallback": {
+          "uv": [
+            0.25,
+            0.25,
+            0.5,
+            0.5
+          ],
+          "noNewTilesDuringFallback": true
+        },
+        "authoredLevelCacheIdentity": true
+      },
+      "transitions": [
+        {
+          "from": 0.099,
+          "to": 0.101,
+          "draws": {
+            "partial": 1100,
+            "croppedFallback": 2499,
+            "maxFrameAlphaSpread": 0,
+            "frame": []
+          }
+        },
+        {
+          "from": 0.149,
+          "to": 0.151,
+          "draws": {
+            "partial": 490,
+            "croppedFallback": 0,
+            "maxFrameAlphaSpread": 0,
+            "frame": []
+          }
+        },
+        {
+          "from": 0.199,
+          "to": 0.201,
+          "draws": {
+            "partial": 360,
+            "croppedFallback": 0,
+            "maxFrameAlphaSpread": 0,
+            "frame": []
+          }
+        }
+      ]
+    },
+    "dpr": [
+      {
+        "dpr": 1,
+        "zoom": 0.14,
+        "busy": 0,
+        "errors": [],
+        "visibleLevels": [
+          [
+            0.15,
+            0.15
+          ]
+        ],
+        "pageErrors": []
+      },
+      {
+        "dpr": 2,
+        "zoom": 0.14,
+        "busy": 0,
+        "errors": [],
+        "visibleLevels": [
+          [
+            0.3,
+            0.15
+          ]
+        ],
+        "pageErrors": []
+      }
+    ],
+    "benchmark": {
+      "before": {
+        "Count": 7,
+        "Sum": 453033984
+      },
+      "after": {
+        "Count": 7,
+        "Sum": 536588288
+      },
+      "workingSetIncreaseMiB": 79.68359375,
+      "note": "Isolated single Textures instance with6authored blends,3sources. Windows process working-set sums include shared pages andGPUdriver overhead; not unique resident memory or VRAM. Times force a canvas pixel read after composition/mips.",
+      "results": [
+        {
+          "artL": 0.035,
+          "decodeMs": 62.69999998807907,
+          "compositeAndMipsForcedReadMs": 101.69999998807907,
+          "pixels": [
+            2048,
+            2048
+          ],
+          "periodTiles": 24
+        },
+        {
+          "artL": 0.14,
+          "decodeMs": 60.89999997615814,
+          "compositeAndMipsForcedReadMs": 26.19999998807907,
+          "pixels": [
+            2048,
+            2048
+          ],
+          "periodTiles": 24
+        },
+        {
+          "artL": 0.3,
+          "decodeMs": 59.30000001192093,
+          "compositeAndMipsForcedReadMs": 23.69999998807907,
+          "pixels": [
+            2048,
+            2048
+          ],
+          "periodTiles": 24
+        },
+        {
+          "artL": 0.1,
+          "decodeMs": 0,
+          "compositeAndMipsForcedReadMs": 21.900000035762787,
+          "pixels": [
+            2048,
+            2048
+          ],
+          "periodTiles": 24
+        },
+        {
+          "artL": 0.2,
+          "decodeMs": 0.09999996423721313,
+          "compositeAndMipsForcedReadMs": 22,
+          "pixels": [
+            2048,
+            2048
+          ],
+          "periodTiles": 24
+        },
+        {
+          "artL": 0.25,
+          "decodeMs": 0,
+          "compositeAndMipsForcedReadMs": 22.19999998807907,
+          "pixels": [
+            2048,
+            2048
+          ],
+          "periodTiles": 24
+        }
+      ],
+      "sources": 3,
+      "blendChains": 6
+    },
+    "buildingContext": {
+      "fixture": {
+        "anchor": {
+          "x": 1024,
+          "y": 1024
+        },
+        "ids": [
+          "world:house_0",
+          "world:house_2"
+        ]
+      },
+      "errors": [],
+      "grassErrors": []
+    }
+  },
+  "memory": "Decoded sourceLRU24, protects whole current visible batch;6blended mipchains LRU; ordinary photos not evicted.",
+  "productionBuild": "Pending larger priority grass batch; no new dist claimed."
+}
