@@ -13,7 +13,7 @@ import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type PatchTex } from './ground-protocol';
-import { DRAW_ORDER, GREEN_FACE, SUN_DIR, WALL_DROP, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, wallShade, type WallShade } from './ext/course-walls';
+import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
@@ -124,6 +124,26 @@ const RIM_GAP = 0.1, RIM_W = 0.22, RIM_RAMP = 0.06;
 const WALL_ART_SHADE = [1, 0.5, 0.38];
 /** a wall's drop eases from nothing (its face side-on to the camera) to full when its face turns this much toward the camera (cosine) */
 const WALL_SIDE_ON = 0.3;
+// ---- the raised surfaces' banks and rock faces (T127, courseBanks) ----
+/** a bank's bands down its face (fractions from the crest to the foot) and the share of the slope's light each takes: it ramps in over the
+ *  crest and out over the toe, so neither edge reads as a line (the owner: "an angled slope to a flat top not a hard 3d edge"); a rock face
+ *  keeps its first band in the top's grass (the turf rolling over the crest) */
+const BANK_BANDS = [0, 0.1, 0.22, 0.78, 0.9, 1], BANK_WEIGHT = [0.3, 0.7, 1, 0.75, 0.4], ROCK_WEIGHT = [0, 0.85, 1, 1, 0.9];
+/** a grass bank's texture fades out over its toe in these steps (fraction from, alpha) */
+const BANK_TOE: readonly (readonly [number, number])[] = [[0.84, 0.66], [0.92, 0.33]];
+/** a bank's light steps: its slope light (course-walls slopeLight: 1 is flat ground) from BANK_B0 to BANK_B1, in BANK_STEPS steps */
+const BANK_STEPS = 16, BANK_B0 = 0.3, BANK_B1 = 1.7;
+/** how strongly a grass bank turned from the sun is shaded (a cool multiply) and one turned to it lit (a textured shine), T110 */
+const BANK_SHADE = 0.95, BANK_SUN = 0.8;
+/** the rock's painted earth and its stones, in full shade and in full sun (a stone's own shade varies a little round them) */
+const ROCK_EARTH: readonly (readonly number[])[] = [[92, 78, 62], [196, 174, 138]], ROCK_STONE: readonly (readonly number[])[] = [[100, 96, 88], [232, 224, 206]];
+/** the rock's stones: one where the top edge crosses a lattice line every STONE_GAP tiles (x or y, the segment's longer way: a place on the
+ *  map, the same in every chunk, never a repeating tile), in rows down the face, STONE_PX world px across (zoom 1), STONE_SKIP left out */
+const STONE_GAP = 0.14, STONE_PX = 9.5, STONE_SKIP = 0.14;
+/** the stairs' treads and risers, in full shade and in full sun: stone on a rock face; in a grass bank, timber sleepers for risers and worn
+ *  earth for treads */
+const STEP_STONE = { tread: [[140, 132, 118], [232, 224, 204]], riser: [[70, 64, 58], [160, 150, 132]] } as const;
+const STEP_TIMBER = { tread: [[118, 100, 74], [204, 184, 146]], riser: [[58, 40, 26], [122, 88, 56]] } as const;
 const rgb = (c: readonly number[]) => `rgb(${Math.round(c[0]!)},${Math.round(c[1]!)},${Math.round(c[2]!)})`;
 const mixRGB = (a: readonly number[], b: readonly number[], t: number) => [a[0]! + (b[0]! - a[0]!) * t, a[1]! + (b[1]! - a[1]!) * t, a[2]! + (b[2]! - a[2]!) * t];
 /** a wall run's points (x, y, drop triples, tiles and metres): each one's normal (the mean of its segments' (dy, -dx)) and its drop on the
@@ -142,14 +162,57 @@ function wallPoints(p: ArrayLike<number>, k = 1): { t: Float64Array; nx: Float64
   }
   return { t, nx, ny };
 }
-/** the faces of some walls as one path (tiles): each the top edge along and its foot back */
-function wallFaces(ws: readonly CourseWall[]): Path2D {
-  const path = new Path2D();
+/** a bank run's points (T127; ext/course-walls FaceForm Bank or Rock, run r tiles a metre): each one's normal (the mean of its segments'
+ *  (dy, -dx)) and its foot's offset from the top edge, tiles: out along the normal by the bank's width (r times the drop) and down the screen
+ *  by the drop (WALL_DROP a metre, times k, the face's share of its height). Every value at a point comes from the point and its segments, so
+ *  a run cut at a chunk border gives the same foot on both sides of the cut. No side-on easing: a sloped face shows round to its silhouette,
+ *  where it turns edge-on by itself */
+function bankPoints(p: ArrayLike<number>, r: number, k = 1, ends?: ReadonlyMap<string, readonly number[]>): { ox: Float64Array; oy: Float64Array; nx: Float64Array; ny: Float64Array } {
+  const n = p.length / 3, ox = new Float64Array(n), oy = new Float64Array(n), nx = new Float64Array(n), ny = new Float64Array(n);
+  for (let i = 0; i + 1 < n; i++) {
+    const dx = p[3 * i + 3]! - p[3 * i]!, dy = p[3 * i + 4]! - p[3 * i + 1]!, l = Math.hypot(dx, dy) || 1;
+    nx[i] += dy / l; ny[i] += -dx / l; nx[i + 1] += dy / l; ny[i + 1] += -dx / l;
+  }
+  // a run's ends that meet another run's end (endNormals) take their shared normal, so the two feet meet too (a chunk cut: the same normal on
+  // both sides already; a kink where one layer's edge hands over to another's: no wedge of ground left between the faces)
+  if (ends) for (const i of [0, n - 1]) { const e = ends.get(endKey(p[3 * i]!, p[3 * i + 1]!)); if (e) { nx[i] = e[0]!; ny[i] = e[1]!; } }
+  for (let i = 0; i < n; i++) {
+    const l = Math.hypot(nx[i]!, ny[i]!) || 1; nx[i] /= l; ny[i] /= l;
+    const dh = p[3 * i + 2]!, w = r * dh, ease = r > 0 ? 1 : Math.max(0, Math.min(1, (nx[i]! + ny[i]!) * Math.SQRT1_2 / WALL_SIDE_ON)), t = dh * WALL_DROP * k * (r > 0 ? 1 : ease * ease * (3 - 2 * ease));
+    ox[i] = nx[i]! * w + t; oy[i] = ny[i]! * w + t;
+  }
+  return { ox, oy, nx, ny };
+}
+/** a run end's place as a key (ends a few microtiles apart are one place) */
+const endKey = (x: number, y: number) => `${Math.round(x * 4096)},${Math.round(y * 4096)}`;
+/** the shared normal at every place where two or more runs end (the mean of their end segments' normals): bankPoints' ends */
+function endNormals(ws: readonly CourseWall[]): Map<string, number[]> {
+  const acc = new Map<string, number[]>();
   for (const w of ws) {
     const p = w.p, n = p.length / 3; if (n < 2) continue;
-    const { t } = wallPoints(p, faceScale({ m: w.m as WallMat, hs: w.hs ?? 0 }));
+    for (const [i, j] of [[0, 1], [n - 1, n - 2]] as const) {
+      const a = i < j ? i : j, b = i < j ? j : i, dx = p[3 * b]! - p[3 * a]!, dy = p[3 * b + 1]! - p[3 * a + 1]!, l = Math.hypot(dx, dy) || 1;
+      const k = endKey(p[3 * i]!, p[3 * i + 1]!), v = acc.get(k); if (v) { v[0] += dy / l; v[1] += -dx / l; v[2]!++; } else acc.set(k, [dy / l, -dx / l, 1]);
+    }
+  }
+  for (const [k, v] of acc) if (v[2]! < 2) acc.delete(k);
+  return acc;
+}
+/** a wall run's foot offsets (tiles): a wall's straight down the screen (wallPoints), a bank's out and down (bankPoints) */
+function footOffsets(w: CourseWall, ends?: ReadonlyMap<string, readonly number[]>): { ox: ArrayLike<number>; oy: ArrayLike<number> } {
+  const k = faceScale({ m: w.m as WallMat, hs: w.hs ?? 0 });
+  if (w.f) return bankPoints(w.p, w.r ?? 0, k, ends);
+  const { t } = wallPoints(w.p, k);
+  return { ox: t, oy: t };
+}
+/** the faces of some walls (and banks) as one path (tiles): each the top edge along and its foot back */
+function wallFaces(ws: readonly CourseWall[]): Path2D {
+  const path = new Path2D(), ends = endNormals(ws.filter(w => w.f));
+  for (const w of ws) {
+    const p = w.p, n = p.length / 3; if (n < 2) continue;
+    const { ox, oy } = footOffsets(w, ends);
     path.moveTo(p[0]!, p[1]!); for (let i = 1; i < n; i++) path.lineTo(p[3 * i]!, p[3 * i + 1]!);
-    for (let i = n - 1; i >= 0; i--) path.lineTo(p[3 * i]! + t[i]!, p[3 * i + 1]! + t[i]!);
+    for (let i = n - 1; i >= 0; i--) path.lineTo(p[3 * i]! + ox[i]!, p[3 * i + 1]! + oy[i]!);
     path.closePath();
   }
   return path;
@@ -1058,12 +1121,37 @@ export class GroundPainter {
     };
     const flatF = featherTiles(EDGE_LOOKS.flat!, L), px = 1 / (TILE_PX * L);
     const layers = (s: number) => { const out: { c: CoursePatch; l: CourseLayer }[] = []; for (const c of cs) for (const l of c.layers) if (l.s === s) out.push({ c, l }); return out; };
-    // the walls by the layer they hang over, the lit top edges by the layer they light
-    const wallsOver = new Map<number, CourseWall[]>(), rimsOn = new Map<number, CourseRim[]>(), allWalls = cs.flatMap(c => c.walls ?? []);
+    // the walls by the layer they hang over, the lit top edges by the layer they light. A raised surface's bank or rock face (T127) is drawn
+    // just before that surface's first layer instead, over every flat layer drawn so far (one bank spans the rough and the fairway alike)
+    // and kept off the ponds' and bunkers' fills (banksKept); one hanging over a layer drawn after its surface (a tee's bank over a green)
+    // goes with that layer's walls
+    const wallsOver = new Map<number, CourseWall[]>(), banksAt = new Map<number, CourseWall[]>(), rimsOn = new Map<number, CourseRim[]>(), allWalls = cs.flatMap(c => c.walls ?? []);
+    const rankOf = (code: number) => DRAW_ORDER.indexOf(code), firstOf = (s: number) => DRAW_ORDER.find(c => c >> 1 === s) ?? -1;
+    const push = <T>(m: Map<number, T[]>, k: number, v: T) => { const l = m.get(k); if (l) l.push(v); else m.set(k, [v]); };
+    /** whether a run's face (and its shadow) can reach this ground chunk's box: a bank's or a rock face's runs elsewhere in the course
+     *  chunks are skipped (they are many small shapes: stones, steps) */
+    const near = (w: CourseWall) => {
+      const p = w.p; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, dh = 0;
+      for (let i = 0; i + 2 < p.length; i += 3) { const x = p[i]!, y = p[i + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (p[i + 2]! > dh) dh = p[i + 2]!; }
+      const g = dh * ((w.r ?? 0) + WALL_DROP + 1) + 0.3; // the foot (out and down), a cast shadow, the stairs' flight
+      return x1 + g >= r[0]! && x0 - g <= r[2]! && y1 + g >= r[1]! && y0 - g <= r[3]!;
+    };
     for (const c of cs) {
-      for (const w of c.walls ?? []) { const l = wallsOver.get(w.lo); if (l) l.push(w); else wallsOver.set(w.lo, [w]); }
-      for (const q of c.rims ?? []) { const l = rimsOn.get(q.hi); if (l) l.push(q); else rimsOn.set(q.hi, [q]); }
+      for (const w of c.walls ?? []) { if (w.f && !near(w)) continue; const at = w.f ? firstOf(w.hs ?? 0) : -1; if (at >= 0 && (w.lo === 0 || rankOf(w.lo) < rankOf(at))) push(banksAt, at, w); else push(wallsOver, w.lo, w); }
+      for (const q of c.rims ?? []) push(rimsOn, q.hi, q);
     }
+    // the tees' stairs, each once (every chunk a tee touches carries them)
+    const stairMap = new Map<string, Stair>();
+    for (const c of cs) for (let q = 0, st = c.st ?? []; q + 4 < st.length; q += 5) stairMap.set(`${st[q]},${st[q + 1]},${st[q + 2]},${st[q + 3]}`, { x: st[q]!, y: st[q + 1]!, nx: st[q + 2]!, ny: st[q + 3]!, half: st[q + 4]! });
+    const stairs = [...stairMap.values()];
+    /** a bank's grass: the first cut (a tee's own collar; round a green too: the green and its fringe sit on top, the bank below is the
+     *  first cut), else the rough's, else the surface's own collar or look */
+    const grassOf = (s: number): CourseTex | null => {
+      for (const c of cs) for (const l of c.layers) if (l.collar?.n === 'first-cut' && (l.s === s || s === SURF.green)) return l.collar;
+      for (const c of cs) for (const l of c.layers) if (l.s === SURF.rough) return l;
+      for (const c of cs) for (const l of c.layers) if (l.s === s) return l.collar ?? l;
+      return null;
+    };
     /** the rings a layer is drawn with, all chunks', as one even-odd path: a surface's fill, a collar's band */
     const ringsOfCode = (code: number) => { const p = new Path2D(); for (const { l } of layers(code >> 1)) for (const q of (code & 1 ? l.collar?.fill : l.fill) ?? []) ringPath(p, q); return p; };
     /** the walls hanging over layer lo, clipped to it (a wall never pokes past the ground it stands on: a bunker's far wall stops at the sand's
@@ -1071,12 +1159,47 @@ export class GroundPainter {
     // the course look's Shadow by surface (every chunk carries the same; by default none for a green, a hairline for the rest)
     const shs = cs.find(c => c.sh)?.sh, shades = new Map<number, WallShade>();
     const shadeOf = (s: number) => { let v = shades.get(s); if (!v) shades.set(s, v = wallShade(shs?.[s] ?? defaultShadow(s))); return v; };
-    const walls = (lo: number) => { const ws = wallsOver.get(lo); if (ws) this.courseWalls(ctx, ws, L, M, Minv, X0, Y0, lite, lo ? ringsOfCode(lo) : null, shadeOf); };
+    const banks = (ws: readonly CourseWall[]) => this.courseBanks(ctx, ws, L, M, Minv, X0, Y0, lite, shadeOf, grassOf, stairs, style);
+    const walls = (lo: number) => {
+      const ws = wallsOver.get(lo); if (!ws) return;
+      const clip = lo ? ringsOfCode(lo) : null, wl = ws.filter(w => !w.f), bk = ws.filter(w => w.f);
+      if (wl.length) this.courseWalls(ctx, wl, L, M, Minv, X0, Y0, lite, clip, shadeOf);
+      // a tee's rock runs on down its cut face into a bunker (T127): the face's top share, the tee's height above the rough, in rock
+      const lip = -(SURF_HEIGHT[SURF.bunker] ?? 0);
+      for (const w of wl) if (w.m === WallMat.Sand && w.hs === SURF.tee && near(w)) {
+        let band = this.rockBands.get(w);
+        if (band === undefined) {
+          const q = Float32Array.from(w.p); for (let i = 2; i < q.length; i += 3) q[i] = Math.max(0, q[i]! - lip);
+          band = q.some((v, i) => i % 3 === 2 && v > 0.05) ? { p: q, lo: w.lo, m: WallMat.Turf, hs: SURF.tee, f: FaceForm.Rock, r: 0 } : null;
+          this.rockBands.set(w, band);
+        }
+        if (band) bk.push(band);
+      }
+      if (bk.length) { const draw = banks(bk); ctx.save(); if (clip) { ctx.setTransform(M); ctx.clip(clip); } draw(); ctx.restore(); }
+    };
+    /** the banks drawn before layer `code` (its surface's first), kept off the fills of the ponds and bunkers drawn before it: one pass
+     *  outside the boxes of the chunks that have such fills, and one in each of those boxes with its own fills cut out (one chunk's rings
+     *  never overlap each other, so even-odd cuts them exactly; across chunks the 0.1-tile overlaps would not) */
+    const banksKept = (ws: readonly CourseWall[], code: number) => {
+      const draw = banks(ws), big = new Path2D(); big.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
+      const cut = [SURF.water, SURF.bunker].filter(s => rankOf(layerCode(s, false)) < rankOf(code));
+      const per = cs.map(c => ({ c, ls: c.layers.filter(l => cut.includes(l.s as 3 | 6) && l.fill.length) })).filter(q => q.ls.length);
+      const boxOf = (c: CoursePatch, p: Path2D) => p.rect(c.cx * c.size, c.cy * c.size, c.size, c.size);
+      ctx.save(); ctx.setTransform(M);
+      if (per.length) { const p = new Path2D(big); for (const q of per) boxOf(q.c, p); ctx.clip(p, 'evenodd'); }
+      draw(); ctx.restore();
+      for (const { c, ls } of per) {
+        ctx.save(); ctx.setTransform(M); const b = new Path2D(); boxOf(c, b); ctx.clip(b);
+        for (const l of ls) { const e = new Path2D(big); for (const q of l.fill) ringPath(e, q); ctx.clip(e, 'evenodd'); }
+        draw(); ctx.restore();
+      }
+    };
     /** the lit top edges on layer hi, clipped to it (a green's a hairline: its raised edge reads by a thin light, the owner 2026-10-25) */
     const rims = (hi: number) => { const rs = rimsOn.get(hi); if (rs && !lite) this.courseRims(ctx, rs, L, M, hi ? ringsOfCode(hi) : null, hi >> 1 === SURF.green ? 0.35 : 1); };
     walls(0); rims(0);
     for (const code of DRAW_ORDER) {
-      const s = code >> 1, ls = layers(s);
+      const s = code >> 1, ls = layers(s), bk = banksAt.get(code);
+      if (bk) banksKept(bk, code);
       if (code & 1) {
         // a lip or bank lies on the ground under it and takes no part in the walls (course-walls isOverlay): kept off every wall face
         const over = isOverlay(code) && allWalls.length > 0;
@@ -1241,6 +1364,270 @@ export class GroundPainter {
         ctx.save(); ctx.setTransform(M); ctx.fillStyle = rgb(mixRGB(look.bands[0]![0], look.bands[0]![1], 0.25)); ctx.fill(bases[0]!);
         for (let b = 0; b < NB; b++) { const band = look.bands[0]!; ctx.fillStyle = rgb(mixRGB(band[0], band[1], b / (NB - 1))); ctx.fill(bands[b]!); }
         ctx.restore();
+      }
+    }
+  }
+  /** the bank and rock faces of raised surfaces (T127, the owner 2026-10-25: "this T box should have a angled slope to a flat top not a hard
+   *  3d edge ... if we are going that strong with raised ones the sides textures would be rocky with built in steps to the top"; "make the tee
+   *  higher like as high as bunkers are deep and add stairs"). Each run (ext/course-walls FaceForm Bank or Rock) slopes from its top edge to
+   *  a foot out along its normal by the bank's width and down the screen by its drop (bankPoints), all chunks' runs at once. Returns the
+   *  painter, called once per clip pass (the geometry is built once):
+   *  - a **grass bank** (a low tee, every green) in its surface's collar grass (grassOf: a tee's first cut, a green's fringe; tile space, so it
+   *    runs on from the top without a seam), lit by the slope's normal against the sun at the upper right (slopeLight, BANK_STEPS steps) as
+   *    the light rule asks (T110): turned away, a cool multiply; turned to the sun, a textured shine (the grass's own colour squared, so its
+   *    dark gaps stay dark); the light ramps in over the crest and out over the toe (BANK_WEIGHT) and the grass fades out over the toe
+   *    (BANK_TOE), so neither edge is a line, and no dark face or contact shade;
+   *  - **rock** (a tee from ROCK_FROM up): the top's grass rolling over the crest with tufts hanging down, then painted earth lit by the
+   *    slope (its art slot wallRock or the earth's wallTurf once registered, else the rocky dirt laid softly over it), stones set in it
+   *    (hashed from where they are: never a repeating tile), each lit from the upper right with a soft shade at its lower left, the contact
+   *    shade at the foot and, past the sun's angle, a short cast shadow (the tee's Shadow);
+   *  - the **stairs** of a tee (Stair: its side's stretch on the 1 m grid), cut into the face of the run that crosses that stretch: risers
+   *    straight down the screen and treads out along the side's normal, stone on rock, timber in a bank, each step lit as a face or as flat
+   *    ground, the treads' noses catching the light; their tops are the run's own top edge and their foot its foot, so they sit in the face.
+   *  Lite (district): each face in its light steps only */
+  private courseBanks(ctx: C2D, ws: readonly CourseWall[], L: number, M: DOMMatrix, Minv: DOMMatrix, X0: number, Y0: number, lite: boolean, shadeOf: (s: number) => WallShade, grassOf: (s: number) => CourseTex | null, stairs: readonly Stair[], style: (g: C2D, t: CourseTex) => string | CanvasPattern): () => void {
+    const px = 1 / (TILE_PX * L), NB = BANK_STEPS, NQ = BANK_BANDS.length - 1, sx = -SUN_DIR.x, sy = -SUN_DIR.y;
+    const binOf = (b: number) => Math.max(0, Math.min(NB - 1, Math.round(((b - BANK_B0) / (BANK_B1 - BANK_B0)) * (NB - 1))));
+    const bOfBin = (k: number) => BANK_B0 + (BANK_B1 - BANK_B0) * (k / (NB - 1));
+    type Group = { f: FaceForm; hs: number; face: Path2D; bands: Path2D[]; upper: Path2D; toe: Path2D[]; crest: Path2D; body: Path2D; foot: Path2D; shadow: Path2D[]; shade: boolean;
+      stoneShade: Path2D; stones: Path2D[]; lights: Path2D[]; tufts: Path2D[]; sides: Path2D[]; treads: Path2D[]; risers: Path2D[]; noses: Path2D; cheeks: Path2D; timber: boolean; stairs: boolean };
+    const groups = new Map<number, Group>(), ends = endNormals(ws);
+    for (const w of ws) {
+      const p = w.p, n = p.length / 3; if (n < 2 || !w.f) continue;
+      const hs = w.hs ?? 0, f = w.f as FaceForm, key = f * 16 + hs, r = w.r ?? 0, k = faceScale({ m: w.m as WallMat, hs }), ratio = 2 * r;
+      let G = groups.get(key);
+      if (!G) groups.set(key, G = { f, hs, face: new Path2D(), bands: Array.from({ length: NQ * NB }, () => new Path2D()), upper: new Path2D(), toe: BANK_TOE.map(() => new Path2D()), crest: new Path2D(), body: new Path2D(), foot: new Path2D(), shadow: [new Path2D(), new Path2D(), new Path2D()], shade: false,
+        stoneShade: new Path2D(), stones: Array.from({ length: 6 }, () => new Path2D()), lights: [new Path2D(), new Path2D(), new Path2D()], tufts: [new Path2D(), new Path2D(), new Path2D()], sides: Array.from({ length: 4 }, () => new Path2D()), treads: Array.from({ length: 4 }, () => new Path2D()), risers: Array.from({ length: 4 }, () => new Path2D()), noses: new Path2D(), cheeks: new Path2D(), timber: f === FaceForm.Bank, stairs: false });
+      const { ox, oy, nx, ny } = bankPoints(p, r, k, ends), lb = new Float64Array(n);
+      for (let i = 0; i < n; i++) lb[i] = slopeLight(nx[i]!, ny[i]!, ratio);
+      const X = (i: number, d: number) => p[3 * i]! + d * ox[i]!, Y = (i: number, d: number) => p[3 * i + 1]! + d * oy[i]!;
+      const strip = (path: Path2D, d0: number, d1: number) => { path.moveTo(X(0, d0), Y(0, d0)); for (let i = 1; i < n; i++) path.lineTo(X(i, d0), Y(i, d0)); for (let i = n - 1; i >= 0; i--) path.lineTo(X(i, d1), Y(i, d1)); path.closePath(); };
+      strip(G.face, 0, 1); strip(G.crest, 0, BANK_BANDS[1]!); strip(G.body, BANK_BANDS[1]!, 1); strip(G.upper, 0, BANK_TOE[0]![0]);
+      BANK_TOE.forEach(([d0], q) => strip(G.toe[q]!, d0, q + 1 < BANK_TOE.length ? BANK_TOE[q + 1]![0] : 1));
+      // the bands, a stretch at a time, each in the light mixed at its middle
+      for (let i = 0; i + 1 < n; i++) {
+        const len = Math.hypot(p[3 * i + 3]! - p[3 * i]!, p[3 * i + 4]! - p[3 * i + 1]!), m = lite ? 1 : Math.max(1, Math.ceil(len / WALL_LIGHT_SPAN));
+        for (let j = 0; j < m; j++) {
+          const a = j / m, b = (j + 1) / m, bin = binOf(lb[i]! + (lb[i + 1]! - lb[i]!) * (a + b) / 2);
+          const P = (t: number, d: number): [number, number] => [X(i, d) + (X(i + 1, d) - X(i, d)) * t, Y(i, d) + (Y(i + 1, d) - Y(i, d)) * t];
+          for (let q = 0; q < NQ; q++) {
+            const d0 = BANK_BANDS[q]!, d1 = BANK_BANDS[q + 1]!, path = G.bands[q * NB + bin]!, [ax, ay] = P(a, d0), [bx, by] = P(b, d0), [cx, cy] = P(b, d1), [dx, dy] = P(a, d1);
+            path.moveTo(ax, ay); path.lineTo(bx, by); path.lineTo(cx, cy); path.lineTo(dx, dy); path.closePath();
+          }
+        }
+      }
+      if (lite || f !== FaceForm.Rock) { if (!lite && hs === SURF.tee) this.bankStairs(G, w, nx, ny, stairs, k); continue; }
+      // rock: the foot (contact shade) and the cast shadow of a face steeper than the sun (a run under about 1 m a metre), turned from it
+      G.foot.moveTo(X(0, 1), Y(0, 1)); for (let i = 1; i < n; i++) G.foot.lineTo(X(i, 1), Y(i, 1));
+      const steep = r > 0 ? Math.max(0, Math.min(1, (0.97 - ratio) / 0.97)) : 0; // (a rock band on a wall: none)
+      if (steep > 0) {
+        G.shade = true;
+        for (let s = 0; s < 3; s++) {
+          const sp = G.shadow[s]!, kk = (1 - s / 3) * steep;
+          sp.moveTo(X(0, 1), Y(0, 1)); for (let i = 1; i < n; i++) sp.lineTo(X(i, 1), Y(i, 1));
+          for (let i = n - 1; i >= 0; i--) { const d = p[3 * i + 2]! * kk * Math.max(0, -(nx[i]! * SUN_DIR.x + ny[i]! * SUN_DIR.y)); sp.lineTo(X(i, 1) + sx * d, Y(i, 1) + sy * d); }
+          sp.closePath();
+        }
+      }
+      // the stones and the turf's tufts: built once per run (tile space: the same at every zoom) and kept with it (rockDetail)
+      const rd = this.rockDetail(w, ox, oy, lb);
+      rd.stones.forEach((q, t) => G.stones[t]!.addPath(q)); rd.lights.forEach((q, t) => G.lights[t]!.addPath(q)); G.stoneShade.addPath(rd.shade); rd.tufts.forEach((q, t) => G.tufts[t]!.addPath(q));
+      if (hs === SURF.tee) this.bankStairs(G, w, nx, ny, stairs, k);
+    }
+    const shine = (G: Group, paint: (g: C2D) => void) => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const w of ws) if ((w.f as FaceForm) === G.f && (w.hs ?? 0) === G.hs) { const { ox, oy } = footOffsets(w); for (let i = 0; i < w.p.length / 3; i++) { const x = w.p[3 * i]!, y = w.p[3 * i + 1]!; x0 = Math.min(x0, x, x + ox[i]!); x1 = Math.max(x1, x, x + ox[i]!); y0 = Math.min(y0, y, y + oy[i]!); y1 = Math.max(y1, y, y + oy[i]!); } }
+      if (x1 < x0) return;
+      const box = this.cacheBox(M, x0, y0, x1, y1, ctx); if (!box) return;
+      const B = this.buffer('bankMask', ctx.canvas.width, ctx.canvas.height), g = ctx2d(B);
+      g.save(); g.setTransform(M); paint(g); g.restore();
+      this.shine(ctx, box, SHINE_TINT, 1, m => { m.setTransform(1, 0, 0, 1, 0, 0); m.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); });
+    };
+    return () => {
+      for (const G of groups.values()) {
+        const rock = G.f === FaceForm.Rock, weight = rock ? ROCK_WEIGHT : BANK_WEIGHT, grass = grassOf(G.hs), sh = shadeOf(G.hs);
+        ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        if (lite) {
+          // the light steps only: grass or earth, mixed by the slope's light
+          const pair = rock ? ROCK_EARTH : [[70, 104, 52], [150, 190, 104]] as const;
+          for (let b = 0; b < NB; b++) { ctx.fillStyle = rgb(mixRGB(pair[0]!, pair[1]!, b / (NB - 1))); for (let q = 0; q < NQ; q++) ctx.fill(G.bands[q * NB + b]!); }
+          ctx.restore(); continue;
+        }
+        // rock: the cast shadow and the contact shade first, on the ground (multiplied in the cool shade: the ground keeps its texture)
+        if (rock) {
+          ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = SHADE_TINT; ctx.strokeStyle = SHADE_TINT;
+          if (G.shade && sh.castA > 0) { ctx.globalAlpha = Math.min(1, sh.castA * 1.6); for (const sp of G.shadow) ctx.fill(sp); }
+          if (sh.softA + sh.lineA > 0) { ctx.globalAlpha = sh.softA; ctx.lineWidth = Math.max(sh.softPx * px, sh.soft); ctx.stroke(G.foot); ctx.globalAlpha = sh.lineA * 0.8; ctx.lineWidth = Math.max(sh.linePx * px, sh.line); ctx.stroke(G.foot); }
+          ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+        }
+        // the grass: a bank's whole face (fading out over the toe), a rock face's crest
+        const gs = grass ? style(ctx, grass) : 'rgb(96,136,70)';
+        ctx.fillStyle = gs;
+        if (rock) ctx.fill(G.crest);
+        else {
+          ctx.fill(G.upper);
+          BANK_TOE.forEach(([, a], q) => { ctx.globalAlpha = a; ctx.fill(G.toe[q]!); }); ctx.globalAlpha = 1;
+        }
+        if (rock) {
+          // the painted earth in its light steps, its texture, the stones, then the texture once more over all of it (never a flat face)
+          for (let b = 0; b < NB; b++) {
+            const lt = Math.max(0, Math.min(1, (bOfBin(b) - BANK_B0) / (BANK_B1 - BANK_B0)));
+            for (let q = 1; q < NQ; q++) { ctx.fillStyle = rgb(mixRGB(ROCK_EARTH[0]!, ROCK_EARTH[1]!, lt * weight[q]! + 0.5 * (1 - weight[q]!)).map(v => v * (q === NQ - 1 ? 0.95 : 1))); ctx.fill(G.bands[q * NB + b]!); }
+          }
+          const art = this.wallArt(ctx, 'wallRock', L, Minv, X0, Y0) ?? this.wallArt(ctx, WALL_TEX[WallMat.Turf]!, L, Minv, X0, Y0);
+          if (art) { ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.75; ctx.fillStyle = art; ctx.fill(G.body); }
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+          ctx.save(); ctx.clip(G.body);
+          ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.55; ctx.fillStyle = SHADE_TINT; ctx.fill(G.stoneShade);
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+          G.stones.forEach((sp, t) => { ctx.fillStyle = rgb(mixRGB(ROCK_STONE[0]!, ROCK_STONE[1]!, t / 5)); ctx.fill(sp); });
+          G.lights.forEach((lp, t) => { ctx.fillStyle = `rgba(250,244,226,${(0.18 + 0.22 * t).toFixed(2)})`; ctx.fill(lp); });
+          if (this.tex.image('rockyDirt', L)) { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = art ? 0.35 : 0.7; ctx.fillStyle = this.screenPattern(ctx, 'rockyDirt', L, X0, Y0, Minv); ctx.fill(G.body); }
+          ctx.restore();
+          // the turf's tufts over the crest
+          ctx.lineWidth = Math.max(px, 0.02);
+          ctx.strokeStyle = 'rgba(46,74,30,0.9)'; ctx.stroke(G.tufts[0]!); ctx.strokeStyle = 'rgba(84,118,50,0.8)'; ctx.stroke(G.tufts[1]!); ctx.strokeStyle = 'rgba(70,96,40,0.85)'; ctx.stroke(G.tufts[2]!);
+        } else {
+          // a grass bank's light: turned away, a cool multiply; turned to the sun, a textured shine (shine, after this restore)
+          ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = SHADE_TINT;
+          for (let b = 0; b < NB; b++) {
+            const dark = 1 - bOfBin(b); if (dark <= 0.01) continue;
+            for (let q = 0; q < NQ; q++) { ctx.globalAlpha = Math.min(1, dark * weight[q]! * BANK_SHADE); ctx.fill(G.bands[q * NB + b]!); }
+          }
+          ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+        }
+        ctx.restore();
+        if (!rock) shine(G, g => {
+          g.fillStyle = '#fff';
+          for (let b = 0; b < NB; b++) { const lit = bOfBin(b) - 1; if (lit <= 0.01) continue; for (let q = 0; q < NQ; q++) { g.globalAlpha = Math.min(1, lit * weight[q]! * BANK_SUN); g.fill(G.bands[q * NB + b]!); } }
+        });
+        // the stairs, cut into the face
+        if (G.stairs) {
+          const look = G.timber ? STEP_TIMBER : STEP_STONE, flat = (1 - BANK_B0) / (BANK_B1 - BANK_B0);
+          ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+          G.sides.forEach((rp, t) => { ctx.fillStyle = rgb(mixRGB(look.riser[0], look.riser[1], t / 3)); ctx.fill(rp); });
+          G.risers.forEach((rp, t) => { ctx.fillStyle = rgb(mixRGB(look.riser[0], look.riser[1], t / 3)); ctx.fill(rp); });
+          G.treads.forEach((tp, t) => { ctx.fillStyle = rgb(mixRGB(look.tread[0], look.tread[1], Math.min(1, flat + 0.12 * (t - 1.5)))); ctx.fill(tp); });
+          const soil = this.paintPhoto(ctx, 'dirt', L);
+          if (typeof soil !== 'string') { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.45; ctx.fillStyle = soil; for (const q of [...G.sides, ...G.treads, ...G.risers]) ctx.fill(q); }
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+          ctx.strokeStyle = G.timber ? 'rgba(236,206,160,0.6)' : 'rgba(252,248,232,0.7)'; ctx.lineWidth = Math.max(px, 0.012); ctx.stroke(G.noses);
+          ctx.globalCompositeOperation = 'multiply'; ctx.strokeStyle = SHADE_TINT; ctx.globalAlpha = 0.8; ctx.lineWidth = Math.max(1.2 * px, 0.018); ctx.stroke(G.cheeks);
+          ctx.restore();
+        }
+      }
+    };
+  }
+  /** each rock run's stones and tufts (courseBanks), kept with the run (a chunk patch's runs live as long as the patch) and made again only
+   *  when its feet move (a neighbouring run's end, which its ends share, came or went) */
+  private rockCache = new WeakMap<CourseWall, { key: string; stones: Path2D[]; lights: Path2D[]; shade: Path2D; tufts: Path2D[] }>();
+  /** a tee's cut faces into bunkers as rock bands (drawCourses), one object per wall so its rockDetail is kept too */
+  private rockBands = new WeakMap<CourseWall, CourseWall | null>();
+  /** a rock run's stones: one where its top edge crosses a lattice line (the segment's longer way, every STONE_GAP tiles: a place on the
+   *  map, the same in every chunk), in rows down the face below the grass lip, each a painted six-sided stone (STONE_PX across, turned and
+   *  sized by a hash of its place) in one of six tones by the slope's light, with a lit cap toward the upper right and a soft shade at its
+   *  lower left; and the turf's tufts hanging over the crest and growing at the foot, on a finer lattice */
+  private rockDetail(w: CourseWall, ox: ArrayLike<number>, oy: ArrayLike<number>, lb: ArrayLike<number>) {
+    const p = w.p, n = p.length / 3, key = `${ox[0]},${oy[0]},${ox[n - 1]},${oy[n - 1]}`;
+    const was = this.rockCache.get(w); if (was && was.key === key) return was;
+    const out = { key, stones: Array.from({ length: 6 }, () => new Path2D()), lights: [new Path2D(), new Path2D(), new Path2D()], shade: new Path2D(), tufts: [new Path2D(), new Path2D(), new Path2D()] };
+    const cs = new Float64Array(6), sn = new Float64Array(6), rr = new Float64Array(6);
+    for (let i = 0; i + 1 < n; i++) {
+      const x0 = p[3 * i]!, y0 = p[3 * i + 1]!, ddx = p[3 * i + 3]! - x0, ddy = p[3 * i + 4]! - y0, sl = Math.hypot(ddx, ddy); if (sl < 1e-6) continue;
+      const ax = Math.abs(ddx) >= Math.abs(ddy) ? 0 : 1, a0 = ax ? y0 : x0, a1 = ax ? y0 + ddy : x0 + ddx;
+      for (let q = Math.ceil(Math.min(a0, a1) / STONE_GAP), q1 = Math.floor(Math.max(a0, a1) / STONE_GAP); q <= q1; q++) {
+        const t = (q * STONE_GAP - a0) / (a1 - a0); if (t < 0 || t >= 1) continue;
+        const cx = x0 + t * ddx, cy = y0 + t * ddy, salt = ax * 7919 + Math.round((ax ? cx : cy) / STONE_GAP) * 104729;
+        const fx = ox[i]! + t * (ox[i + 1]! - ox[i]!), fy = oy[i]! + t * (oy[i + 1]! - oy[i]!), li = lb[i]! + t * (lb[i + 1]! - lb[i]!);
+        const faceLen = Math.hypot((fx - fy) * HW, (fx + fy) * HH), rows = Math.max(1, Math.round(faceLen / (2 * STONE_PX)));
+        for (let j = 0; j < rows; j++) {
+          const hk = q * 37 + j;
+          if (hash01(hk, salt + 1) < STONE_SKIP) continue;
+          const d = 0.16 + 0.8 * Math.min(1, Math.max(0, (j + 0.5 + 0.6 * (hash01(hk, salt + 2) - 0.5)) / rows)), along = (hash01(hk, salt + 3) - 0.5) * 0.5 * STONE_GAP;
+          const sx0 = cx + d * fx + along * ddx / sl, sy0 = cy + d * fy + along * ddy / sl, rad = STONE_PX * (0.6 + 0.7 * hash01(hk, salt + 4)) * (0.8 + 0.2 * d), rot = hash01(hk, salt + 5) * Math.PI;
+          const tone = Math.max(0, Math.min(5, Math.round(((li - BANK_B0) / (BANK_B1 - BANK_B0)) * 5 + (hash01(hk, salt + 6) - 0.5) * 1.6)));
+          for (let v = 0; v < 6; v++) { const an = rot + v * (Math.PI / 3); cs[v] = Math.cos(an) * 1.25; sn[v] = Math.sin(an) * 0.8; rr[v] = rad * (0.74 + 0.26 * hash01(hk, salt + 10 + v)); }
+          // a shape at scale k offset (screen px) by (u, w): its screen points turned to tiles (x - y = sx / HW, x + y = sy / HH)
+          const shape = (path: Path2D, k: number, u: number, wv: number) => {
+            for (let v = 0; v < 6; v++) {
+              const ssx = u + cs[v]! * rr[v]! * k, ssy = wv + sn[v]! * rr[v]! * k, tx = sx0 + ssx / 128 + ssy / 64, ty = sy0 + ssy / 64 - ssx / 128;
+              if (v) path.lineTo(tx, ty); else path.moveTo(tx, ty);
+            }
+            path.closePath();
+          };
+          shape(out.shade, 1.12, -0.18 * rad, 0.3 * rad);
+          shape(out.stones[tone]!, 1, 0, 0);
+          shape(out.lights[Math.min(2, Math.floor(tone / 2))]!, 0.55, 0.22 * rad, -0.3 * rad);
+        }
+      }
+      // grass tufts hanging over the crest, one where the edge crosses a finer lattice line, some left out; a few at the foot growing up
+      for (let q = Math.ceil(Math.min(a0, a1) / 0.035), q1 = Math.floor(Math.max(a0, a1) / 0.035); q <= q1; q++) {
+        const t = (q * 0.035 - a0) / (a1 - a0); if (t < 0 || t >= 1) continue;
+        const cx = x0 + t * ddx, cy = y0 + t * ddy, salt = ax * 6007 + Math.round((ax ? cx : cy) / 0.035) * 7727;
+        if (hash01(q, salt) < 0.3) continue;
+        const fx = ox[i]! + t * (ox[i + 1]! - ox[i]!), fy = oy[i]! + t * (oy[i + 1]! - oy[i]!), ln = BANK_BANDS[1]! * (0.7 + 1.1 * hash01(q, salt + 2) ** 2), lean = (hash01(q, salt + 3) - 0.5) * 0.04;
+        const tf = out.tufts[hash01(q, salt + 5) < 0.6 ? 0 : 1]!; tf.moveTo(cx, cy); tf.lineTo(cx + ln * fx + lean, cy + ln * fy - lean);
+        if (hash01(q, salt + 7) < 0.45) { const up = 0.06 + 0.08 * hash01(q, salt + 8); out.tufts[2]!.moveTo(cx + fx, cy + fy); out.tufts[2]!.lineTo(cx + (1 - up) * fx - lean, cy + (1 - up) * fy + lean); }
+      }
+    }
+    this.rockCache.set(w, out);
+    return out;
+  }
+  /** a tee's stairs cut into one of its bank or rock runs (courseBanks): for each stair (Stair) whose stretch of the side this run crosses
+   *  (the run's points within the stretch along the side, on that side), the run's top edge there clipped exactly at the stretch's ends (on
+   *  cell lines: the same cut in every chunk) and, per step, a riser straight down the screen (lit as a face turned the side's way: four
+   *  light steps) and a tread out along the side's normal (lit as flat ground), so the steps end at the face's own foot; the cheeks (the
+   *  stairs' zigzag ends) and the treads' noses as lines */
+  private bankStairs(G: { sides: Path2D[]; treads: Path2D[]; risers: Path2D[]; noses: Path2D; cheeks: Path2D; stairs: boolean }, w: CourseWall, nx: ArrayLike<number>, ny: ArrayLike<number>, stairs: readonly Stair[], k: number) {
+    const p = w.p, n = p.length / 3, r = w.r ?? 0;
+    for (const s of stairs) {
+      const alongX = s.ny !== 0, c = alongX ? s.x : s.y, perp = alongX ? s.y : s.x, lo = c - s.half, hi = c + s.half;
+      // the run's top edge within the stretch: x, y, drop (a straight side; the first stretch of it found)
+      const q: number[] = [];
+      for (let i = 0; i + 1 < n; i++) {
+        const x0 = p[3 * i]!, y0 = p[3 * i + 1]!, x1 = p[3 * i + 3]!, y1 = p[3 * i + 4]!;
+        if (Math.abs((alongX ? y0 : x0) - perp) > 0.75 || Math.abs((alongX ? y1 : x1) - perp) > 0.75) continue;
+        if ((nx[i]! + nx[i + 1]!) * s.nx + (ny[i]! + ny[i + 1]!) * s.ny < 1) continue; // the run's face turned the side's way (mean cosine > 0.5)
+        const a0 = alongX ? x0 : y0, a1 = alongX ? x1 : y1; if (Math.abs(a1 - a0) < 1e-9) continue;
+        let ta = (lo - a0) / (a1 - a0), tb = (hi - a0) / (a1 - a0); if (ta > tb) [ta, tb] = [tb, ta];
+        ta = Math.max(0, ta); tb = Math.min(1, tb); if (tb <= ta) continue;
+        const at = (t: number) => [x0 + t * (x1 - x0), y0 + t * (y1 - y0), p[3 * i + 2]! + t * (p[3 * i + 5]! - p[3 * i + 2]!)];
+        const A = at(ta), B = at(tb), L = q.length;
+        if (!L || Math.hypot(q[L - 3]! - A[0]!, q[L - 2]! - A[1]!) > 1e-6) { if (L) break; q.push(...A); }
+        q.push(...B);
+      }
+      const m = q.length / 3; if (m < 2) continue;
+      let dh = 0; for (let j = 0; j < m; j++) dh += q[3 * j + 2]!; dh /= m;
+      const N = stairSteps(dh), riserLit = Math.min(3, Math.round(3 * faceLight(s.nx, s.ny))), tread = N * STAIR_TREAD * 0.5;
+      G.stairs = true;
+      // a point of the flight: d out along the side (a fraction of the flight's run: N treads, or the face's own width if that is wider) and
+      // e down (a fraction of the drop)
+      const run = (j: number) => Math.max(r * q[3 * j + 2]!, tread);
+      const P = (j: number, d: number, e: number): [number, number] => { const h = q[3 * j + 2]!, wd = run(j), t = h * WALL_DROP * k; return [q[3 * j]! + d * s.nx * wd + e * t, q[3 * j + 1]! + d * s.ny * wd + e * t]; };
+      const quad = (path: Path2D, j: number, d0: number, e0: number, d1: number, e1: number) => {
+        const a = P(j, d0, e0), b = P(j + 1, d0, e0), cc = P(j + 1, d1, e1), dd = P(j, d1, e1);
+        path.moveTo(a[0], a[1]); path.lineTo(b[0], b[1]); path.lineTo(cc[0], cc[1]); path.lineTo(dd[0], dd[1]); path.closePath();
+      };
+      for (let st = 0; st < N; st++) {
+        const f0 = st / N, f1 = (st + 1) / N;
+        for (let j = 0; j + 1 < m; j++) {
+          quad(G.risers[riserLit]!, j, f0, f0, f0, f1);            // the riser: straight down the screen
+          quad(G.treads[Math.min(3, st % 2 ? 1 : 2)]!, j, f0, f1, f1, f1); // the tread: out along the side, a little variety step to step
+        }
+        // its nose: the tread's front edge (where the next riser drops), catching the light
+        const a = P(0, f1, f1); G.noses.moveTo(a[0], a[1]); for (let j = 1; j < m; j++) { const b = P(j, f1, f1); G.noses.lineTo(b[0], b[1]); }
+      }
+      // the flight's ends: each end's zigzag as a line (the cheek), and the side of the flight where it stands out from the face (the zigzag
+      // down to the ground and back along the face's own slope), lit as a face turned along the side
+      for (const j of [0, m - 1]) {
+        const a = P(j, 0, 0); G.cheeks.moveTo(a[0], a[1]);
+        for (let st = 0; st < N; st++) { const f0 = st / N, f1 = (st + 1) / N, b = P(j, f0, f1), c2 = P(j, f1, f1); G.cheeks.lineTo(b[0], b[1]); G.cheeks.lineTo(c2[0], c2[1]); }
+        const tx = q[3 * (m - 1)]! - q[0]!, ty = q[3 * (m - 1) + 1]! - q[1]!, tl = Math.hypot(tx, ty) || 1, sg = j ? 1 : -1;
+        const side = G.sides[Math.min(3, Math.round(3 * faceLight(sg * tx / tl, sg * ty / tl)))]!, fr = r * q[3 * j + 2]! / run(j); // the face's width as a share of the flight's
+        side.moveTo(a[0], a[1]);
+        for (let st = 0; st < N; st++) { const f0 = st / N, f1 = (st + 1) / N, b = P(j, f0, f1), c2 = P(j, f1, f1); side.lineTo(b[0], b[1]); side.lineTo(c2[0], c2[1]); }
+        for (let e = 1; e >= 0; e -= 0.25) { const b = P(j, fr * e, e); side.lineTo(b[0], b[1]); }
+        side.closePath();
       }
     }
   }

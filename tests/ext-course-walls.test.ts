@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { BLOB_STYLE, chunkOutlines } from '../src/game/ext/course-blobs/index.js';
 import { makeGrid, fillPolygon, SURF } from '../src/game/ext/course-grid/index.js';
 import type { Grid } from '../src/game/ext/course-grid/index.js';
-import { DRAW_ORDER, LayerStack, SURF_HEIGHT, WallMat, chunkWalls, collarAfter, coversOf, faceLight, layerCode, type ChunkWalls, type WallRun } from '../src/game/ext/course-walls/index.js';
+import { DRAW_ORDER, FaceForm, GREEN_BANK_RATIO, LayerStack, SURF_HEIGHT, WallMat, chunkWalls, collarAfter, coversOf, faceLight, layerCode, type ChunkWalls, type WallRun } from '../src/game/ext/course-walls/index.js';
 
 const { rough: ROUGH, fescue: FESCUE, water: WATER, fairway: FAIRWAY, tee: TEE, bunker: BUNKER, green: GREEN } = SURF;
 const code = layerCode;
@@ -49,19 +49,20 @@ test('1. the draw order and the heights', () => {
   assert.ok(faceLight(-0.17, -0.99) > 0.95 && faceLight(0.17, 0.99) < 0.05, 'a face toward the upper right is lit, one toward the lower left in shade');
 });
 
-test('2. a raised green: walls only on its edges facing the camera, over the rough, as tall as the green above it', () => {
+test('2. a raised green: a gentle grass bank (T127), over the rough, as tall as the green above it, showing all round', () => {
   const g = base(); blob(g, GREEN, 32, 32, 7, 5);
   const { walls: ws, runs } = walls(g);
   assert.ok(ws.length > 0, 'it has walls');
   for (const w of ws) {
     assert.equal(w.lo, code(ROUGH, false), 'it hangs over the rough (the fringe is on the platform)');
     assert.equal(w.m, WallMat.Turf);
-    assert.ok(facing(w) > 0, `the face looks toward the camera (${facing(w).toFixed(2)})`);
-    for (const p of pts(w)) assert.ok(p.x + p.y > 64 - 3, `on the camera's side of the green (x + y = ${(p.x + p.y).toFixed(1)})`);
+    assert.equal(w.f, FaceForm.Bank, 'a grass bank, never a hard wall');
+    assert.ok(Math.abs(w.r - GREEN_BANK_RATIO / 2) < 1e-9, `its run: ${GREEN_BANK_RATIO} m a metre (${w.r})`);
     for (const p of inner(w)) assert.ok(Math.abs(p.dh - SURF_HEIGHT[GREEN]!) < 1e-6, `as tall as the green above the rough (${p.dh})`);
   }
-  // the camera-facing half of a 7 x 5 tile ellipse plus its 0.5-tile fringe is about half its perimeter
-  const L = length(ws); assert.ok(L > 12 && L < 26, `the walls run along about half the platform (${L.toFixed(1)} tiles)`);
+  // a gentle bank's foot lies farther out than its drop reaches down the screen, so it faces the camera all round the platform (a wall
+  // showed only on the camera-facing half): about the whole perimeter of a 7 x 5 tile ellipse plus its 0.5-tile fringe (about 41 tiles)
+  const L = length(ws); assert.ok(L > 30, `the bank runs right round the platform (${L.toFixed(1)} tiles)`);
   // the green meets its fringe in a joint, never a wall; the fringe's far edges are crisp (no feather), its near edges walls
   assert.ok((runs.get(code(GREEN, false))?.joint.length ?? 0) > 0, 'green and fringe meet in a joint line');
   assert.equal(runs.get(code(GREEN, false))?.soft.length ?? 0, 0, 'no feathered green edge');

@@ -38,7 +38,9 @@ export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill
 /** a course wall (ext/course-walls WallRun, T099): its top edge as x, y, drop triples (tiles, tiles, metres), the higher side on the left so the
  *  face looks along the right-hand normal toward the camera; lo: the layer code it hangs over (2 s a surface's fill, 2 s + 1 its collar, 0 the
  *  map grass), drawn just after that layer; m: its material (0 turf, 1 sand, 2 water) */
-export interface CourseWall { p: Float32Array; lo: number; m: number; /** the surface id on its higher side (absent: 0) */ hs?: number }
+export interface CourseWall { p: Float32Array; lo: number; m: number; /** the surface id on its higher side (absent: 0) */ hs?: number;
+  /** its form (T127, ext/course-walls FaceForm: absent or 0 a wall, 1 a grass bank, 2 rock) and run (tiles of ground per metre of drop) */
+  f?: number; r?: number }
 /** a lit top edge (ext/course-walls RimRun, T099): a height step whose face turns to the sun at the upper right, as x, y pairs (tiles), the
  *  higher side on the left; hi: the layer code of the higher side, whose top is lit along it */
 export interface CourseRim { p: Float32Array; hi: number }
@@ -47,7 +49,10 @@ export interface CourseRim { p: Float32Array; hi: number }
  *  grass share in quarters): the dirt that shows through while seeded cells grow in; absent when nothing in the chunk grows), and z, its
  *  place among the painted areas (0: under every painted area); sh, the course look's Shadow by surface id (0 none .. 1 strong; absent:
  *  ext/course-walls defaultShadow, none for a green and the hairline for the rest; a wall takes its shadowOwner's) */
-export interface CoursePatch { cx: number; cy: number; size: number; layers: CourseLayer[]; walls?: CourseWall[]; rims?: CourseRim[]; grow?: Uint8Array; sh?: number[]; z: number }
+export interface CoursePatch { cx: number; cy: number; size: number; layers: CourseLayer[]; walls?: CourseWall[]; rims?: CourseRim[]; grow?: Uint8Array; sh?: number[];
+  /** the stairs of the tees within reach (T127, ext/course-walls Stair), five numbers each: x, y (the middle of the stairs' top), nx, ny (the
+   *  side's outward axis), half (half its width along the side), tiles */
+  st?: number[]; z: number }
 
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
 export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
