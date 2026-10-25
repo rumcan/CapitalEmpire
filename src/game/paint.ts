@@ -7,8 +7,9 @@ import { PRESETS, presetTex, surfacePreset } from './paint-presets';
 export type PaintTex = 'paving' | 'slabs' | 'pad' | 'asphalt' | 'asphaltDark' | 'asphaltWorn' | 'lotAsphalt' | 'roadgravel' | 'gravel' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'field' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | `preset:${string}`;
 /** a border's texture: any fill texture, or the kerb */
 export type BorderTex = PaintTex | 'kerb';
-/** the border width: 0 none, 1 small, 2 medium, 3 large (BORDER_W, in tiles) */
-export type BorderSize = 0 | 1 | 2 | 3;
+/** the border width as a step on a continuous scale (the owner, 2026-10-25: "should be a slider"): 0 none, 1 small, 2 medium, 3 large (the
+ *  old buttons, BORDER_W), anything between, up to BORDER_STEP_MAX (huge); borderW gives the width in tiles */
+export type BorderSize = number;
 /** a painted ground area: a closed polygon of tiles, filled with one texture, with an optional border band inside its edge, corners rounded by radius (tiles, 0 sharp),
  *  and a tone filter over the fill: tone 0 none, 1 Multiply (darker), 2 Lighten (screen); toneAmt its strength (0..1); tint its colour ('#rrggbb');
  *  the border band has its own scale, angle, tone, strength and tint (bscale, bangle, btone, btoneAmt, btint), by default the fill's scale and angle with no tone;
@@ -92,8 +93,24 @@ export const MENU_TEXES = PAINT_TEXES.filter(t => t.id.startsWith('preset:'));
 export const BORDER_MENU: { id: BorderTex; name: string; col: string }[] = [{ id: 'kerb', name: 'Kerb', col: '#f0dfbe' }, ...MENU_TEXES];
 /** true for a texture laid in tile space (a photo of grass-art.ts PHOTO_TEX or an owner's preset), not a screen-space painting */
 export const isPaintPhoto = (t: string) => t.startsWith('preset:') || isPhotoTex(t);
-/** the border width in tiles, by BorderSize */
+/** the border width in tiles at the old whole steps (none, small, medium, large) */
 export const BORDER_W = [0, 0.25, 0.5, 1];
+/** the largest border step: a band 4 tiles (8 m) wide */
+export const BORDER_STEP_MAX = 6;
+/** a border step's width in tiles: through the old steps (BORDER_W: 0, 0.25, 0.5, 1 tile), straight between them, then a tile more a step
+ *  up to BORDER_STEP_MAX (so old saves draw as they did, and a fraction of step 1 is a hairline) */
+export function borderW(b: number): number {
+  const v = Math.min(BORDER_STEP_MAX, Math.max(0, Number.isFinite(b) ? b : 0));
+  if (v >= 3) return 1 + (v - 3);
+  const k = Math.floor(v), f = v - k;
+  return BORDER_W[k]! + (k < 3 ? (BORDER_W[k + 1]! - BORDER_W[k]!) * f : 0);
+}
+/** the border step whose width is w tiles (borderW inverted) */
+export function borderStep(w: number): number {
+  const v = Math.max(0, Number.isFinite(w) ? w : 0);
+  if (v >= 1) return Math.min(BORDER_STEP_MAX, 3 + (v - 1));
+  return v >= 0.5 ? 2 + (v - 0.5) / 0.5 : v / 0.25;
+}
 /** the most corners an area may have */
 export const MAX_PTS = 200;
 /** the largest bounding box side in tiles (256 tiles = 512 m) */
@@ -263,7 +280,7 @@ export function clampStyle<T extends Omit<PaintArea, 'id' | 'pts'>>(st: T): T {
     tex: TEX_IDS.has(s.tex) ? s.tex : 'paving',
     scale: Math.min(SCALE_MAX, Math.max(SCALE_MIN, fin(s.scale, 1))),
     angle: wrapAngle(fin(s.angle, 0)),
-    border: Math.min(3, Math.max(0, Math.round(fin(s.border, 0)))) as BorderSize,
+    border: Math.round(Math.min(BORDER_STEP_MAX, Math.max(0, fin(s.border, 0))) * 1000) / 1000,
     btex: BTEX_IDS.has(s.btex) ? s.btex : 'kerb',
     radius: Math.min(RADIUS_MAX, Math.max(0, fin(s.radius, 0))),
     tone,

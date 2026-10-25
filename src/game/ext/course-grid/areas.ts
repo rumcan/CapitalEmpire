@@ -19,6 +19,19 @@ export function plantMonth(kind: 'seed' | 'sod' | undefined, month: number | und
   return kind === 'seed' && month !== undefined && Number.isFinite(month) ? Math.min(65535, Math.max(1, Math.round(month) + MONTH_BASE)) : 0;
 }
 // (the grow-in itself, stages, masks and chunk keys, is T076's ext/course-fx: pass it now + MONTH_BASE)
+/** the holes still growing in at the effective game month `now` (grow cards included), each with the effective month its last seeded cell
+ *  is grown in (T121, P23 4.6: the hole card's "growing · ready Mar 1985"); a hole whose cells are all grown in (or sod, or established)
+ *  is left out. A cell is grown in when now + MONTH_BASE reaches its month value plus its surface's grow-in months, as course-fx growMask */
+export function growingHoles(g: Grid, now: number): Map<number, number> {
+  const out = new Map<number, number>(), t = now + MONTH_BASE, { surf, hole, month } = g;
+  for (let i = 0; i < surf.length; i++) {
+    const m = month[i]!; if (!m) continue;
+    const h = hole[i]!, n = SURF_GROW_MONTHS[surf[i]!] ?? 0; if (!h || n <= 0) continue;
+    const ready = m + n; if (ready > t && ready > (out.get(h) ?? -1)) out.set(h, ready);
+  }
+  for (const [h, r] of out) out.set(h, r - MONTH_BASE);
+  return out;
+}
 
 // ---- surfaces ----
 

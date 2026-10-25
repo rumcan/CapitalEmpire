@@ -11,7 +11,7 @@ import {
 } from '../src/game/ext/course-fx';
 import { makeGrid, paintDisc, SURF } from '../src/game/ext/course-grid';
 
-test('1. A fairway seeded at month 0 is stage 0, 2 (month 1.5), 4 (month 3)', () => {
+test('1. A fairway seeded at month 0 is stage 0, 2 (month 1.5), 4 (month 3); its mask shows a quarter grass from day one (T121)', () => {
   // Fairway has 3 months grow-in duration
   // At month 0: elapsed = 0 -> share = 0 / 3 = 0.0 -> stage 0
   const stage0 = growStage(0 / 3);
@@ -26,7 +26,7 @@ test('1. A fairway seeded at month 0 is stage 0, 2 (month 1.5), 4 (month 3)', ()
   assert.equal(stage4, 4, `month 3 should be stage 4, got ${stage4}`);
 
   // Verify growMask alpha values correspond: round(255 * (1 - stage / 4))
-  // stage 0 -> 255
+  // just seeded -> stage 1 (T121: a quarter grass from day one) -> 191
   // stage 2 -> 128
   // stage 4 -> 0
   const g = makeGrid(0, 0, 128, 128);
@@ -38,7 +38,7 @@ test('1. A fairway seeded at month 0 is stage 0, 2 (month 1.5), 4 (month 3)', ()
 
   // find a cell inside the painted fairway
   const cellIdx = 32 * 128 + 32; // x = 16, y = 16 tiles
-  assert.equal(mask0[cellIdx], 255, 'stage 0 alpha must be 255 (full dirt)');
+  assert.equal(mask0[cellIdx], 191, 'just seeded: a quarter grass, alpha 191, never bare soil (T121)');
   assert.equal(mask1_5[cellIdx], 128, 'stage 2 alpha must be 128 (half grass)');
   assert.equal(mask3[cellIdx], 0, 'stage 4 alpha must be 0 (full grass)');
 });

@@ -2,8 +2,9 @@ import { useState, type ReactNode } from 'react';
 import rockyDirt from './assets/ground/rocky-dirt.webp';
 import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
-import { BORDER_MENU, BORDER_W, MENU_TEXES, RADIUS_MAX, edgeAngle, type BorderSize } from './game/paint';
-import type { PaintMode } from './game/paint-tool';
+import { BORDER_MENU, MENU_TEXES, RADIUS_MAX, borderW, edgeAngle } from './game/paint';
+import { BORDER_STEPS, CourseEdges, borderLabel, paintBorderAt, paintBorderPos } from './ui/course/CourseEdges';
+import { GRID_KINDS, type PaintMode } from './game/paint-tool';
 import { areaBuildCost } from './game/golf/costs';
 import { LIBRARY } from './game/library';
 import { PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
@@ -14,7 +15,6 @@ const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
 /** a texture's swatch style (the colour, or the dirt picture over it) */
 export const swatch = (t: { id: string; col: string }) => ({ backgroundColor: t.col, backgroundImage: DIRT_SWATCHES[t.id] ? `url(${DIRT_SWATCHES[t.id]})` : undefined, backgroundSize: 'cover' });
 const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
-const BORDERS = ['None', 'Small', 'Medium', 'Large'];
 const TONES: { id: 0 | 1 | 2; label: string }[] = [{ id: 0, label: 'None' }, { id: 1, label: 'Darker' }, { id: 2, label: 'Lighter' }];
 /** the style change for a tone chip: switching to Lighter turns a black tint white, to Darker a white tint black (other tints are kept) */
 const toneStyle =(tone: 0 | 1 | 2, tint: string) => ({ tone, tint: tone === 2 && tint === '#000000' ? '#ffffff' : tone === 1 && tint === '#ffffff' ? '#000000' : tint });
@@ -121,6 +121,8 @@ function Section({ id, title, children, open: dflt = true }: { id: string; title
 /** the style editor: the fill's texture, scale, angle, corners, tone and border (and the border's own), the snap setting, and the area count and cost */
 export function StyleEditor({ game }: { game: Game }) {
   const p = game.paint, s = p.style;
+  // a course surface's border is its collar band on the course grid (the course look); any other is the painted area's
+  const grid = p.course && GRID_KINDS.includes(p.brushKind) && !p.selected;
   const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
   // the border follows the fill's scale and angle until either is set (the renderer draws it that way), so show the fill's values then
@@ -197,11 +199,17 @@ export function StyleEditor({ game }: { game: Game }) {
         </>
       )}
       </Section>
+      {/* the owner (2026-10-25): "should be a slider". One continuous Border, a hairline to huge: a course surface's collar band (its course look,
+          with its Shadow right under it), or a painted area's border (the old None, Small, Medium and Large are points on it) */}
       <Section id="border" title="Border">
-      <div className="flex flex-wrap gap-1">
-        {BORDERS.map((n, i) => <button key={n} className={`chip ${s.border === i ? 'chip-on' : ''}`} title={`${BORDER_W[i]! * 2} m`} onClick={() => p.setStyle({ border: i as BorderSize })}>{n}</button>)}
-      </div>
-      {s.border > 0 && (
+      {grid ? <CourseEdges game={game} /> : (
+        <div className="flex items-center gap-2 text-[11px] text-slate-400" title="The border band inside the area's edge: none, a hairline, up to 8 m">
+          <span className="w-12 shrink-0">Border</span>
+          <input type="range" aria-label="Border width" min={0} max={BORDER_STEPS} step={1} value={paintBorderPos(s.border)} onChange={e => p.setStyle({ border: paintBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
+          <span className="w-16 text-right text-xs text-slate-200">{s.border > 0 ? borderLabel(2 * borderW(s.border)) : 'none'}</span>
+        </div>
+      )}
+      {!grid && s.border > 0 && (
         <>
           <div className="mt-2 text-[11px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">

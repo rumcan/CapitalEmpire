@@ -3,12 +3,12 @@
 // collars, the fairway's mowing lines and the growth mask; plus the chunk walk and the grow key the month tick compares.
 // Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m; cells of 1 m (0.5 tile); months are game month indices.
 import { CELL_T, type Grid } from './index';
-import { BLOB_STYLE, CHUNK_MARGIN, chunkOutlines } from '../course-blobs';
+import { BLOB_STYLE, CHUNK_MARGIN, chunkOutlines, collarReach, type BlobStyle } from '../course-blobs';
 import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
 import { growMask } from '../course-fx';
-import { chunkWalls, coversOf, layerCode } from '../course-walls';
+import { chunkWalls, coversOf, defaultShadow, layerCode } from '../course-walls';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
@@ -16,14 +16,36 @@ export const COURSE_CHUNK = 64;
  *  tiles: the patch's pts box is the chunk box grown by this, so the ground index finds it (and its edges, for the neighbours' rims) from
  *  a neighbouring ground chunk, and an edit re-bakes that far */
 export const COURSE_PATCH_REACH = 3;
-/** how far past an edited box a chunk's outlines can change, tiles: the field's margin plus the widest collar and closing */
-export const COURSE_EDIT_REACH = CHUNK_MARGIN + 2;
+/** how far past an edited box a chunk's outlines can change, tiles, with collars at most maxCollar cells wide: the field's margin plus the
+ *  closing (2 cells) and the widest collar (at least the default 2) */
+export const courseEditReach = (maxCollar = 2) => CHUNK_MARGIN + (2 + Math.max(2, Math.ceil(maxCollar - 1e-9))) * CELL_T;
+/** how far past an edited box a chunk's outlines can change with the default collars, tiles */
+export const COURSE_EDIT_REACH = courseEditReach();
+/** the Border slider's range (the owner's test, 2026-10-25: "a slider to make the border huge if you want or hairline if you want"): a
+ *  collar band's width in metres (= cells), from a hairline to several metres */
+export const BORDER_MIN_M = 0.1, BORDER_MAX_M = 8;
 
 /** each surface id's edge profile (paint-edges.ts): greens and tees raised, fairways turf, bunkers sunken, water, the rest flat */
 export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water', 'turf', 'raised', 'sunken', 'flat', 'raised'];
 
-/** the textures a course chunk lays: per surface id (index 1..8; a missing one is not drawn) and per collar */
-export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>> }
+/** the textures a course chunk lays: per surface id (index 1..8; a missing one is not drawn) and per collar; with the course look's
+ *  Border and Shadow, both by surface id: each surface's collar band width in metres (the Border slider; a missing one keeps BLOB_STYLE's)
+ *  and the Shadow of its walls (0 none .. 1 strong; a missing one: course-walls defaultShadow, none for a green, else the hairline) */
+export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>;
+  border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[] }
+
+/** BLOB_STYLE with the collars at the widths of `border` (metres = cells, by surface id; clamped to the Border slider's range; a missing or
+ *  bad entry keeps the default width) */
+export function courseStyles(border?: readonly (number | undefined)[]): readonly BlobStyle[] {
+  if (!border?.length) return BLOB_STYLE;
+  return BLOB_STYLE.map((st, s) => {
+    const w = border[s];
+    if (!st.collar || w === undefined || !Number.isFinite(w)) return st;
+    return { ...st, collar: { ...st.collar, width: Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, w)) } };
+  });
+}
+/** the widest collar of a style table, cells (the edit reach) */
+export const widestCollar = (styles: readonly BlobStyle[]) => styles.reduce((m, st) => Math.max(m, st.collar ? collarReach(st.collar.width) : 0), 0);
 
 /** the chunks (cx, cy) of the grid's extent that a tile box grown by pad touches, row by row */
 export function courseChunksIn(g: Grid, box: readonly number[], pad = 0): [number, number][] {
@@ -105,15 +127,15 @@ const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.
  *  centre lines (lines: per hole, flat tiles) of the holes whose fairway cells lie in or near the chunk, and the growth mask rides along
  *  when something grows (now: the effective game month) */
 export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>): LotPatch | null {
-  const S = COURSE_CHUNK, outs = chunkOutlines(g, cx, cy, S, BLOB_STYLE, true).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
+  const S = COURSE_CHUNK, styles = courseStyles(looks.border), outs = chunkOutlines(g, cx, cy, S, styles, true).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
   // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
   const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
-  const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs));
+  const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles);
   for (const { o, se: [fill, edges], ce } of capped) {
     const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
     const L: CourseLayer = { s: o.surf, tex: look.tex, sc: look.sc, a: look.a, e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
-    const col = BLOB_STYLE[o.surf]?.collar;
-    if (ce && col) { const cl = looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, tex: cl.tex, sc: cl.sc, a: cl.a, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []) }; }
+    const col = styles[o.surf]?.collar;
+    if (ce && col) { const cl = looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, tex: cl.tex, sc: cl.sc, a: cl.a, w: col.width * CELL_T, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []) }; }
     if (o.surf === 4 && lines?.size && o.fill.length) {
       const holes = holesIn(g, cx, cy, o.surf), st: { hole: number; line: number[] }[] = [];
       for (const h of holes) { const l = lines.get(h); if (l && l.length >= 4) st.push({ hole: h, line: l.slice() }); }
@@ -124,8 +146,9 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   if (!layers.length) return null;
   const R = COURSE_PATCH_REACH, x0 = cx * S - R, y0 = cy * S - R, x1 = (cx + 1) * S + R, y1 = (cy + 1) * S + R;
   const grow = courseGrow(g, cx, cy, now);
-  const walls = cw.walls.map(w => ({ p: Float32Array.from(w.p), lo: w.lo, m: w.m })), rims = cw.rims.map(r => ({ p: Float32Array.from(r.p), hi: r.hi }));
-  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), z: 0 } };
+  const walls = cw.walls.map(w => ({ p: Float32Array.from(w.p), lo: w.lo, m: w.m, hs: w.hs })), rims = cw.rims.map(r => ({ p: Float32Array.from(r.p), hi: r.hi }));
+  const sh = looks.shadow?.length ? { sh: Array.from({ length: 9 }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
+  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, z: 0 } };
 }
 
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
