@@ -1092,7 +1092,8 @@ export class PaintTool {
     if (this.mode === 'draw' && this.pts.length >= 6) this.finish(false);
   }
 
-  /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc cancels or deselects (hole mode: back to Draw), R turns the hole (hole mode), [ and ] size the brush (brush mode), Delete removes the hovered corner of the selected area, else the selected area) */
+  /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc drops what is in hand (false with nothing in hand: the
+   *  engine then puts the tool down for Select), R turns the hole (hole mode), [ and ] size the brush (brush mode), Delete removes the hovered corner of the selected area, else the selected area) */
   key(e: KeyboardEvent): boolean {
     if ((e.ctrlKey || e.metaKey) && !e.altKey) {
       const k = e.key.toLowerCase();
@@ -1115,12 +1116,18 @@ export class PaintTool {
       if (this.mode === 'draw') this.setShape(b.kind); else this.setBrush(b.kind);
       return true;
     }
-    if (this.course && e.key === 'Escape' && (this.mode === 'hole' || this.mode === 'plant' || (this.mode === 'draw' && !this.pts.length && !this.selected))) { this.setBrush(this.brushKind); return true; }
+    // Esc on the course (P23 4.10): a hole stamp, the plants or the height brush in hand goes back to the brush; the brush drops the stroke in
+    // hand; with nothing in hand (the brush, or Shape with no corners) Esc is the engine's, out to Select, so Brush and Shape never flip
+    if (this.course && e.key === 'Escape') {
+      if (this.mode === 'hole' || this.mode === 'plant' || this.mode === 'height') { this.setBrush(this.brushKind); return true; }
+      if (this.mode === 'brush') { if (!this.stroke && !this.selected) return false; this.cancel(); this.selected = 0; this.hoverH = null; this.host.emit(); return true; }
+    }
     switch (e.key) {
       case 'Enter': if (!this.pts.length) return false; this.finish(false); break;
       case 'Backspace': if (this.mode !== 'draw' || !this.pts.length) return false; this.pts.length -= 2; break;
-      // Esc: out of a mode back to Draw; in Draw, the outline, then the selection (Pick and Erase with nothing picked go back to Draw too)
-      case 'Escape': if (this.mode === 'hole' || this.mode === 'brush' || this.mode === 'plant') { this.setMode('draw'); return true; } if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else if (!this.course && (this.mode === 'pick' || this.mode === 'erase')) { this.setMode('draw'); return true; } else return false; break;
+      // Esc: out of a mode back to Draw (Paint); in Draw, the outline, then the selection (Pick and Erase with nothing picked go back to Draw too);
+      // with nothing in hand it is the engine's (out to Select)
+      case 'Escape': if (!this.course && (this.mode === 'hole' || this.mode === 'brush' || this.mode === 'plant')) { this.setMode('draw'); return true; } if (this.pts.length) this.cancel(); else if (this.selected) { this.selected = 0; this.hoverH = null; } else if (!this.course && (this.mode === 'pick' || this.mode === 'erase')) { this.setMode('draw'); return true; } else return false; break;
       // Tab (Paint): Draw, Pick and Erase in turn
       case 'Tab': if (this.course || !(this.mode === 'draw' || this.mode === 'pick' || this.mode === 'erase')) return false; e.preventDefault(); this.setMode(this.mode === 'draw' ? 'pick' : this.mode === 'pick' ? 'erase' : 'draw'); return true;
       case 'r': case 'R': if (this.mode !== 'hole') return false; this.holeDir = ((this.holeDir + 1) % 4) as 0 | 1 | 2 | 3; break;
