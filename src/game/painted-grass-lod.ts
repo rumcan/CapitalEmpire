@@ -113,7 +113,13 @@ export function grassTone(x: number, y: number) {
   const n = valueNoise(x / TONE_WAVES[0], y / TONE_WAVES[0], 1) * 0.65 + valueNoise(x / TONE_WAVES[1] + 17.3, y / TONE_WAVES[1] - 5.1, 2) * 0.35;
   return Math.max(-1, Math.min(1, (n - 0.5) * 2.6));
 }
-/** how far the drift pulls the grass towards its warm or cool colour at full tone (an alpha) */
-export const TONE_STRENGTH = 0.09;
-export const TONE_WARM: readonly [number, number, number] = [222, 212, 96];
-export const TONE_COOL: readonly [number, number, number] = [36, 84, 40];
+/** the drift at full tone, as the owner's light rule has it (T110, #193): its light is the grass's own colour times TONE_LIGHT added (each
+ *  channel brightened in proportion to itself: light lands on the lit strokes and mid-tones, the dark gaps stay dark, no flat wash); its shade a
+ *  multiply by TONE_SHADE (cool, darker, keeping every stroke) */
+export const TONE_LIGHT: readonly [number, number, number] = [0.11, 0.09, 0.02];
+export const TONE_SHADE: readonly [number, number, number] = [0.86, 0.9, 0.98];
+/** the shade's multiply and the light's gain at tone t (-1..1), per channel: [multiply, add-gain] */
+export function toneOps(t: number): { mul: [number, number, number]; gain: [number, number, number] } {
+  const s = Math.max(0, -t), l = Math.max(0, t);
+  return { mul: [0, 1, 2].map(k => 1 - s * (1 - TONE_SHADE[k]!)) as [number, number, number], gain: [0, 1, 2].map(k => l * TONE_LIGHT[k]!) as [number, number, number] };
+}

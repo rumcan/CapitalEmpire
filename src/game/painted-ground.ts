@@ -3,7 +3,7 @@
  *  value drift over it. Composed once per chunk into a chunk-sized picture; the base ground, the lawns, the meadow and the painted areas all
  *  fill from it, so they line up and no tile period shows anywhere. Runs in the ground workers (OffscreenCanvas). */
 import { canvas, ctx2d, type C2D, type Cnv } from './canvas2d';
-import { PATCH_SPRITES, TONE_COOL, TONE_STRENGTH, TONE_WARM, grassPatches, grassTone, patchAngle, patchPhase, patchRadius, trimLru } from './painted-grass-lod';
+import { PATCH_SPRITES, grassPatches, grassTone, patchAngle, patchPhase, patchRadius, toneOps, trimLru } from './painted-grass-lod';
 
 type Box = readonly [number, number, number, number];
 /** the sample step of the drift's picture, tiles (its shortest wave is 28 tiles, so 4 is smooth after the bilinear stretch) */
@@ -53,19 +53,28 @@ export class PaintedGround {
     g.fillStyle = this.meanOf(img); g.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
     const set = this.patchSet(img, period, R, spp);
     for (const q of grassPatches(box, R)) g.drawImage(set[q.k]!, q.x - R, q.y - R, 2 * R, 2 * R);
-    drawTone(g, box);
+    this.drawTone(g, box);
   }
-}
-
-/** the world-space drift (painted-grass-lod.ts grassTone) over tile box `box` of g (transform: tile space): warm and lighter where the tone is
- *  up, cool and darker where it is down, at most TONE_STRENGTH; sampled every TONE_STEP tiles on the world grid, so chunks agree at their seams */
-export function drawTone(g: C2D, box: Box) {
-  const x0 = (Math.floor(box[0] / TONE_STEP) - 2) * TONE_STEP, y0 = (Math.floor(box[1] / TONE_STEP) - 2) * TONE_STEP;
-  const w = Math.ceil((box[2] - x0) / TONE_STEP) + 3, h = Math.ceil((box[3] - y0) / TONE_STEP) + 3, small = canvas(w, h), sg = ctx2d(small), d = sg.createImageData(w, h), D = d.data;
-  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-    const t = grassTone(x0 + (i + 0.5) * TONE_STEP, y0 + (j + 0.5) * TONE_STEP), c = t >= 0 ? TONE_WARM : TONE_COOL, o = (j * w + i) * 4;
-    D[o] = c[0]; D[o + 1] = c[1]; D[o + 2] = c[2]; D[o + 3] = Math.round(Math.abs(t) * TONE_STRENGTH * 255);
+  private lit: Cnv | null = null;
+  /** the world-space drift (painted-grass-lod.ts grassTone, toneOps) over tile box `box` of g (transform: tile space), sampled every TONE_STEP
+   *  tiles on the world grid so chunks agree at their seams: the shade multiplied in, then the light as the grass times its gain, added
+   *  (canvas 'lighter'), so it only lifts what is already lit (T110) */
+  private drawTone(g: C2D, box: Box) {
+    const x0 = (Math.floor(box[0] / TONE_STEP) - 2) * TONE_STEP, y0 = (Math.floor(box[1] / TONE_STEP) - 2) * TONE_STEP;
+    const w = Math.ceil((box[2] - x0) / TONE_STEP) + 3, h = Math.ceil((box[3] - y0) / TONE_STEP) + 3;
+    const shade = canvas(w, h), light = canvas(w, h), sd = ctx2d(shade).createImageData(w, h), ld = ctx2d(light).createImageData(w, h);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const { mul, gain } = toneOps(grassTone(x0 + (i + 0.5) * TONE_STEP, y0 + (j + 0.5) * TONE_STEP)), o = (j * w + i) * 4;
+      for (let k = 0; k < 3; k++) { sd.data[o + k] = Math.round(mul[k]! * 255); ld.data[o + k] = Math.round(gain[k]! * 255); }
+      sd.data[o + 3] = ld.data[o + 3] = 255;
+    }
+    ctx2d(shade).putImageData(sd, 0, 0); ctx2d(light).putImageData(ld, 0, 0);
+    const M = g.getTransform(), W = g.canvas.width, H = g.canvas.height, stretch = (c: C2D, img: Cnv) => { c.imageSmoothingEnabled = true; c.drawImage(img, x0, y0, w * TONE_STEP, h * TONE_STEP); };
+    // the light: a copy of the grass times the gain picture, added back
+    if (!this.lit || this.lit.width !== W || this.lit.height !== H) this.lit = canvas(W, H);
+    const lg = ctx2d(this.lit); lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'copy'; lg.drawImage(g.canvas, 0, 0);
+    lg.setTransform(M); lg.globalCompositeOperation = 'multiply'; stretch(lg, light);
+    g.save(); g.globalCompositeOperation = 'multiply'; stretch(g, shade);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'lighter'; g.drawImage(this.lit, 0, 0); g.restore();
   }
-  sg.putImageData(d, 0, 0);
-  g.save(); g.imageSmoothingEnabled = true; g.drawImage(small, x0, y0, w * TONE_STEP, h * TONE_STEP); g.restore();
 }

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   blendMetres, clampGrassArt, grassDetailWeights, grassPatches, grassTone, grassTranslationSeeds, grassZoomLevels, patchAngle, patchPhase, patchRadius, trimLru,
-  GRASS_ART_DEFAULT, PATCH_ANGLES, PATCH_PHASES, PATCH_SPACING, PATCH_SPRITES, TONE_WAVES, type PaintedFamily,
+  GRASS_ART_DEFAULT, PATCH_ANGLES, PATCH_PHASES, PATCH_SPACING, PATCH_SPRITES, TONE_WAVES, toneOps, type PaintedFamily,
 } from '../src/game/painted-grass-lod';
 import { clampPreset, PRESETS } from '../src/game/paint-presets';
 
@@ -138,6 +138,18 @@ test('the hue and value drift is smooth, bounded and does not repeat', () => {
   assert.ok(step < .25, 'two tiles apart it barely changes');
   // past one wave of its longest octave it no longer correlates (value noise has no period); sampled every 2 tiles
   for (const lag of [TONE_WAVES[0], 2 * TONE_WAVES[0], 3 * TONE_WAVES[0]]) { const r = pearson(f, N, N, lag / 2, 0); assert.ok(Math.abs(r) < .3, `drift r at ${lag} tiles = ${r.toFixed(3)}`); }
+});
+
+test('the drift lights and shades by the owner\'s light rule (T110): light in proportion to the grass itself, shade a cool multiply', () => {
+  assert.deepEqual(toneOps(0), { mul: [1, 1, 1], gain: [0, 0, 0] });
+  const lit = toneOps(1), shaded = toneOps(-1);
+  assert.deepEqual(lit.mul, [1, 1, 1], 'light never darkens');
+  assert.ok(lit.gain.every(v => v > 0 && v < 0.2) && lit.gain[0] >= lit.gain[2], 'a warm lift, added as the grass times this gain: a black gap stays black');
+  // a dark gap and a lit stroke: the lit one gains more (masked by its own luminance), the gap almost nothing
+  const lift = (c: number) => c * lit.gain[1];
+  assert.ok(lift(200) > 4 * lift(40));
+  assert.deepEqual(shaded.gain, [0, 0, 0], 'shade never adds light');
+  assert.ok(shaded.mul.every(v => v < 1 && v > 0.8) && shaded.mul[2] > shaded.mul[0], 'a cool darkening multiply (blue kept most)');
 });
 
 test('the Grass setting and the presets\' Painted set', () => {

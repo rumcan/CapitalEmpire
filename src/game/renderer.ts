@@ -22,6 +22,9 @@ import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE, CH_STEP, courseShadeInto } from './ext/course-height';
 import { PaintedGround } from './painted-ground';
+import { trimLru } from './painted-grass-lod';
+/** the chunks whose painted grass a worker keeps composed (about 3 MB each) */
+const COMPOSED_CHUNKS = 8;
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -83,8 +86,10 @@ export class GroundPainter {
   /** the painted grass (painted-ground.ts): its patch pictures, the chunk being baked (its level, tile box and matrix) and the painted
    *  textures composed for it so far (one picture per family, a copy per tint) */
   private painted = new PaintedGround();
-  private chunkNow: { L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number } | null = null;
+  private chunkNow: { key: string; L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number } | null = null;
   private paintedBufs = new Map<string, Cnv | null>();
+  /** the painted grass composed for the last few chunks (an LRU), by chunk, level, family and art level */
+  private composed = new Map<string, Cnv>();
   private scratch = new Map<string, Cnv>();
   /** the noise that wobbles the class edges (fixed seed) */
   private edgeNoise = makeNoise(7);
@@ -270,8 +275,17 @@ export class GroundPainter {
       const base = this.paintedBuf(p.id);
       if (base) { out = this.buffer('painted:' + key, c.W, c.H); const g = ctx2d(out); g.drawImage(base, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = p.tint; g.fillRect(0, 0, c.W, c.H); g.globalCompositeOperation = 'source-over'; }
     } else {
-      const src = this.tex.sourceFor(p.id, c.L);
-      if (src) { out = this.buffer('painted:' + key, c.W, c.H); const g = ctx2d(out); g.setTransform(c.M); this.painted.compose(g, src.img, src.period, c.box, c.L); g.setTransform(1, 0, 0, 1, 0, 0); }
+      // the composition depends only on where the chunk is, its level and the art level, never on its roads or lots: an edited chunk (a road,
+      // a lot, every send of a course stroke) is baked again over the one it composed before
+      const ck = `${c.key}:${p.id}@${this.tex.paintedArtLevel}`, have = this.composed.get(ck);
+      if (have) { this.composed.delete(ck); this.composed.set(ck, have); out = have; }
+      else {
+        const src = this.tex.sourceFor(p.id, c.L);
+        if (src) {
+          out = canvas(c.W, c.H); const g = ctx2d(out); g.setTransform(c.M); this.painted.compose(g, src.img, src.period, c.box, c.L); g.setTransform(1, 0, 0, 1, 0, 0);
+          this.composed.set(ck, out); trimLru(this.composed, new Set([ck]), COMPOSED_CHUNKS);
+        }
+      }
     }
     this.paintedBufs.set(key, out);
     return out;
@@ -288,7 +302,7 @@ export class GroundPainter {
     const pats = new Map<TexName, CanvasPattern>();
     const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.photoFill(ctx, n, L) ?? this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
     const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
-    this.chunkNow = { L, box, M, Minv, W, H }; this.paintedBufs.clear();
+    this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.paintedBufs.clear();
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
     const paint = (g: C2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
     const ring = (g: C2D, f: Feature, extra: number) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + extra; g.stroke(f.path); } else { g.lineWidth = extra; g.stroke(f.path); } };

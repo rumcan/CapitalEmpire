@@ -207,6 +207,8 @@ export class Textures {
   private paintedPics = new Map<string, Cnv>();
   private paintedLoads = new Map<string, Promise<void>>();
   private paintedLevel = .3;
+  /** the art level the next bake is for (set by preparePainted) */
+  get paintedArtLevel() { return this.paintedLevel; }
   private paintedChains = new Map<string, Cnv[]>();
   /** presets laid with a painted family instead of their baked picture (the studio's Painted set, PaintPreset painted), by texture id */
   private paintedAlias = new Map<string, string>();
