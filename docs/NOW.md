@@ -31,15 +31,18 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - **T130 merged (#245):** the practice area across the drive from the range's car park; the player paints a putting green (300 m²) and a
   chipping green with a bunker with the course brush; cells held at hole 0; +10% appeal and $2 a golfer each; putters and chippers drawn;
   hints with Show me; the range's tee box laid into the course grid (T127 banks raise it). Plan decisions D18-D29 in P24.
-- **Running now:** T119 #213 New hole finished (branch arena/T119-new-hole, port 5188; in a range start New hole is not armed at the start,
-  and the practice area and range plot get check rows) and T122 #216 Run (branch arena/T122-run, port 5189). Both edit paint-tool.ts; the
-  second to merge resolves.
-- **Next: T132 (P24 Phase 4)** after T119: the unlock order (range card → practice after the first upgrade → Props after the putting green →
-  New hole, a par-3 first), the onboarding pill (still "Step 1: Build your first hole" in a range start), World of Golf extras (second tier,
-  academy, kiosk, ball picker, caravan → house), upkeep. Fold in: the props balance (about $2,000 of grasses reaches the +40% cap), the target
-  greens and outfield stripes reading fainter since the painted ground (the range must stay clearly a range), the label glyph after
-  "DRIVING RANGE", the car park's P · 0/44 with range golfers parked, the Select panel's library names for decor props.
-- **Housekeeping done:** 7 merged agent worktrees removed (the owner approved); E: 35 GB free. Each worktree with node_modules is ~4.3 GB.
+- **T122 merged (#247):** Run (Holes › Shape by hand › Brush | Run | Erase; `ext/course-cursor/run.ts`; a 200 m run 0.28 ms).
+- **T119 merged (#248):** New hole finished (its own undo, the Esc ladder, the 4.4 check table with practice-area rows, Seed default and the
+  money line, the number picker, the camera fit; `TEE_VIEW_M` = a 450 m radius, kept by the lead so a par-5 green is in view).
+- **Running now: T132 #249 (P24 Phase 4a, Opus 5.5 high, branch arena/T132-range-to-course, port 5186):** the unlock order (range card →
+  practice after the first upgrade → Props after the putting green → New hole at $20k a season or season 2, a par-3 first), the onboarding
+  pill, props diminishing returns, upgrade upkeep, the range's greens and stripes clear again after the painted ground, the label glyph, the
+  car park counter, decor names in Select. **Then T133 (Phase 4b):** World of Golf extras (second tier, academy, coffee kiosk, ball picker,
+  caravan → house).
+- **Open bug for a ticket:** dark, unbaked ground patches after a fresh start or a camera jump (seen in T128 and T119 screenshots, headless
+  Edge, dpr 2; also on main before T128). Debug it as the lead (unknown cause).
+- **Housekeeping:** each agent worktree with node_modules is ~4.3 GB. E: fell to 4.5 GB free on 2026-10-26 ~00:30; the lead removed this
+  session's six merged worktrees (T119, T122, T128, T129/NOW, T130, T131). Remove each agent's worktree as soon as its PR merges.
 
 ## HANDOVER (2026-10-25 evening, lead chat ended for context size) — start here
 
