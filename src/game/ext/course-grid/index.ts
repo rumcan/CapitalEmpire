@@ -57,13 +57,18 @@ export function paintDisc(g: Grid, x: number, y: number, r: number, s: number, h
   return finish(g, a);
 }
 
-/** a brush stroke: dabs (see paintDisc) along the segment from (ax, ay) to (bx, by), at most r/3 apart, with both ends included; the grid is changed in place and the result is one merged diff. Units: tiles. */
-export function paintStroke(g: Grid, ax: number, ay: number, bx: number, by: number, r: number, s: number, hole: number, month: number, opts: PaintOpts = {}): GridDiff {
+/** a brush stroke: dabs (see paintDisc) along the segment from (ax, ay) to (bx, by), at most r/3 apart, with both ends included; with snap > 0
+ *  (T108: the Paint brush on the half grid) each dab's centre is rounded to a multiple of snap and a dab on the same spot as the one before is
+ *  left out; the grid is changed in place and the result is one merged diff. Units: tiles. */
+export function paintStroke(g: Grid, ax: number, ay: number, bx: number, by: number, r: number, s: number, hole: number, month: number, opts: PaintOpts = {}, snap = 0): GridDiff {
   const len = Math.hypot(bx - ax, by - ay), n = r > 0 ? Math.max(1, Math.ceil(len / (r / 3))) : 1;
   const parts: GridDiff[] = [];
+  let px = NaN, py = NaN;
   for (let k = 0; k <= n; k++) {
     const t = k / n;
-    parts.push(paintDisc(g, ax + (bx - ax) * t, ay + (by - ay) * t, r, s, hole, month, opts));
+    let x = ax + (bx - ax) * t, y = ay + (by - ay) * t;
+    if (snap > 0) { x = Math.round(x / snap) * snap; y = Math.round(y / snap) * snap; if (x === px && y === py) continue; px = x; py = y; }
+    parts.push(paintDisc(g, x, y, r, s, hole, month, opts));
   }
   return mergeAll(parts);
 }

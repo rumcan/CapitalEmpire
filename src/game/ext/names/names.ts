@@ -84,7 +84,7 @@ function stemOf(name: string): string {
 }
 
 /** the display suffix of each named class; the numbered classes (road, arterial, highway) format their own */
-const SUFFIX: Partial<Record<RoadCls, string>> = { gravel: 'Lane', lane: 'Lane', street: 'Street', avenue: 'Avenue', boulevard: 'Boulevard', 'drive-gravel': 'Drive', drive: 'Drive', 'drive-avenue': 'Drive', 'cart-dirt': 'Path', 'cart-slab': 'Path', cart: 'Path' };
+const SUFFIX: Partial<Record<RoadCls, string>> = { gravel: 'Lane', lane: 'Lane', street: 'Street', avenue: 'Avenue', boulevard: 'Boulevard', 'drive-gravel': 'Drive', drive: 'Drive', 'drive-avenue': 'Drive', 'cart-walk': 'Walk', 'cart-dirt': 'Path', 'cart-slab': 'Path', cart: 'Path' };
 /** the class ids and their aliases road() accepts (case-insensitive); an unknown class is a street */
 const ALIAS: Record<string, RoadCls> = {
   gravel: 'gravel', dirt: 'gravel', unpaved: 'gravel', lane: 'lane', ln: 'lane', alley: 'lane', court: 'lane', ct: 'lane',
@@ -94,7 +94,7 @@ const ALIAS: Record<string, RoadCls> = {
   // the golf course's drives (P19): a variant maps to its type's id, so all the drives take the Drive suffix
   'drive-gravel': 'drive-gravel', drive: 'drive', 'drive.tr': 'drive', 'drive-avenue': 'drive-avenue', 'drive-avenue.gr': 'drive-avenue', 'drive-avenue.gd': 'drive-avenue',
   // the course's cart paths (T084): the Path suffix
-  'cart-dirt': 'cart-dirt', 'cart-slab': 'cart-slab', cart: 'cart',
+  'cart-walk': 'cart-walk', 'cart-dirt': 'cart-dirt', 'cart-slab': 'cart-slab', cart: 'cart',
 };
 /** the RoadCls of a class string the caller passes (an engine ClassId, 'highway', or an alias) */
 const normCls = (cls: string): RoadCls => ALIAS[clean(cls).toLowerCase()] ?? 'street';

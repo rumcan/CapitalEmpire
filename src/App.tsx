@@ -248,13 +248,17 @@ export default function App() {
                 <button key={m} className={`btn ${game.flowMode === m ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
               ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
-              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)"><Icon name="fullscreen" size={22} /></button>
+              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to (G)"><Icon name="fullscreen" size={22} /></button>
               <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => { game.grassPanel = !game.grassPanel; game.grassAction = null; game.emit(); }} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
+                      <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
+                      Map grid (G)
+                    </label>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
@@ -308,7 +312,7 @@ export default function App() {
               {game.uiTool === 'road' && <RoadPanel game={game} scope="town" />}
               {game.uiTool === 'path' && <RoadPanel game={game} scope="course" />}
               {game.tool === 'lane' && (
-                <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. On the course: dirt path → cement slabs → paved cart path; gravel drive → paved → avenue. You pay only the difference.">
+                <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. On the course: walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue. You pay only the difference.">
                   <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
                 </Panel>
               )}
@@ -876,7 +880,7 @@ const ROAD_FAMILIES: { id: Family; label: string; desc: string }[] = [
 ];
 /** the course's headers (the Course menu's Paths & drives, T084): its cart paths, then its drives */
 const COURSE_FAMILIES_UI: { id: Family; label: string; desc: string }[] = [
-  { id: 'cart', label: 'Cart paths', desc: 'Carts and walkers: start as dirt or cement slabs, upgrade to paved' },
+  { id: 'cart', label: 'Cart paths', desc: 'Walkers and carts: a walking path, dirt or cement slabs to start, upgrade to paved; on the 1 m half grid' },
   { id: 'course', label: 'Course drives', desc: 'Cars, one lane: start as gravel, upgrade to paved and avenue' },
 ];
 /** the variant chip labels, by a variant's flags joined with dots ('' is the plain type) */
@@ -898,7 +902,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
   const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
   const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
-    <Panel title={course ? 'Paths & drives' : 'Road Construction'} icon="road" desc={course ? 'Lay cart paths and drives the way roads are built: click to start, click again for each bend or stop. Points snap to junctions, paths, roads and the grid.' : 'Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.'}>
+    <Panel title={course ? 'Paths & drives' : 'Road Construction'} icon="road" desc={course ? 'Lay cart paths and drives the way roads are built: click to start, click again for each bend or stop. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.'}>
       <div className="mt-2 flex flex-col gap-2">
         {families.map(f => { const ex = isOpen(f.id); return (
           <div key={f.id}>
@@ -945,7 +949,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
       {/* T084: the course's ladders; the Upgrade and Downgrade tools step a path or drive along them (they are the Roads menu's, for every road) */}
       {course && (
         <div className="mt-2 rounded-lg bg-white/5 p-2 text-[11px] text-slate-300">
-          <div>Upgrade a path or drive one step (you pay only the difference): dirt path → cement slabs → paved cart path; gravel drive → paved → avenue.</div>
+          <div>Upgrade a path or drive one step (you pay only the difference): walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue.</div>
           <div className="mt-1 flex flex-wrap gap-1">
             <button className="chip" onClick={() => game.setTool('lane')} title="Upgrade tool (N)"><Icon name="up" size={14} />Upgrade</button>
             <button className="chip" onClick={() => game.setTool('downgrade')} title="Downgrade tool (Y)"><Icon name="down" size={14} />Downgrade</button>
