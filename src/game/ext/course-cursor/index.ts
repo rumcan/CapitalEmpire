@@ -123,6 +123,8 @@ const EASE = 26, PRESS_EASE = 40, LIFT_EASE = 12;
 const BOB_MS = 1600;
 /** the click flash, the ripple (0.5x to 1.6x the radius in 300 ms) and a splash burst's life, ms */
 const FLASH_MS = 320, RIPPLE_MS = 300, BURST_MS = 600;
+/** how often (ms) the cursor asks again whether the brush's hole is still new (the grid's areas arrive from a worker) */
+const HOLE_RECHECK_MS = 400;
 /** at most this many splash bursts live at once */
 const MAX_BURSTS = 8;
 /** the cast shadow's shear (a point h px up falls h * (sx, sy) away on the ground) */
@@ -850,10 +852,12 @@ export class CourseCursor {
   }
   private setHint(h: string) { if (h !== this.hint) { this.hint = h; this.hintRev++; } }
   /** whether the brush's hole has nothing yet (a stroke starts it), worked out again only when the grid, the hole or Rub out change (rev) */
-  private holeRev = NaN; private holeNew = false;
+  private holeRev = NaN; private holeNew = false; private holeAt = -Infinity;
   private isNewHole(tool: CursorTool): boolean {
     const rv = (this.env.rev?.() ?? 0) * 32 + tool.brushHole;
-    if (rv !== this.holeRev) { this.holeRev = rv; this.holeNew = !tool.usedHoles().has(tool.brushHole); }
+    // the engine's grid areas come back from a worker after the grid changed (T122: a run that starts a hole said "starts Hole 1" after it):
+    // a hole still new is asked again at most every HOLE_RECHECK_MS
+    if (rv !== this.holeRev || (this.holeNew && this.t - this.holeAt > HOLE_RECHECK_MS)) { this.holeRev = rv; this.holeAt = this.t; this.holeNew = !tool.usedHoles().has(tool.brushHole); }
     return this.holeNew;
   }
 

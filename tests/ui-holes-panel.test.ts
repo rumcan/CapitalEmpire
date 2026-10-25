@@ -89,7 +89,7 @@ describe('the Holes panel after hole 1 (stage 2)', () => {
   });
 
   it('Shape by hand: Brush | Run (T122, P23 4.5) and Erase as its own toggle', () => {
-    const stage2 = { facts: { playableHoles: 2, stageReached: 2 }, holes };
+    const stage2 = { facts: { playableHoles: 2, stageReached: 2 as const }, holes };
     let h = render(fakeGame(stage2));
     assert.match(h, /role="group" aria-label="Brush or Run" data-method="brush"><button class="chip chip-on" aria-pressed="true"[^>]*>Brush<\/button><button class="chip " aria-pressed="false" title="Run: lay a strip of Fairway as wide as the size, like a road[^"]*"[^>]*>Run<\/button><\/div>/);
     assert.match(h, /aria-pressed="false" title="Erase takes the top surface under the brush[^"]*"[^>]*>Erase</);
