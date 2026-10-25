@@ -11,12 +11,19 @@ import type { CourseArea, CourseLayout } from './types';
 export const PIN_RED_ID = 'business:golf-pin-red';
 /** yellow flagstick for the final (9th or 18th) hole (src/game/business-library.ts line 66, w=206, h=476) */
 export const PIN_YELLOW_ID = 'business:golf-pin-yellow';
-/** back (championship) tee marker prop (src/game/business-library.ts line 66, w=211, h=429) */
-export const TEE_BACK_ID = 'business:golf-pin-red-equipment';
-/** middle (member) tee marker prop (src/game/business-library.ts line 66, w=362, h=480) */
-export const TEE_MIDDLE_ID = 'business:golf-bag-trolley';
-/** forward tee marker prop (src/game/business-library.ts line 66, w=206, h=476) */
-export const TEE_FORWARD_ID = 'business:golf-pin-yellow';
+/** the tee marker's picture: not in the library yet (T111: the art exists, art/grass-management/budget-props/single-red-timber-tee-marker-4views.png,
+ *  and waits for its import under this id). Until then a tee marker is placed with no prop (the engine skips an id the library lacks), never with a
+ *  stand-in: the flagsticks and the bag trolley that stood in were a pin on the tee and a trolley */
+export const TEE_MARKER_ID = 'golf:tee-marker';
+/** back (championship), middle (member) and forward tee marker props: one picture for now */
+export const TEE_BACK_ID = TEE_MARKER_ID;
+export const TEE_MIDDLE_ID = TEE_MARKER_ID;
+export const TEE_FORWARD_ID = TEE_MARKER_ID;
+/** the pictures that stood in for the tee markers before T111 (back, middle, forward): a save's prop of one of them on a tee is removed on load */
+export const OLD_TEE_IDS: readonly string[] = ['business:golf-pin-red-equipment', 'business:golf-bag-trolley', 'business:golf-pin-yellow'];
+/** the map scale of each marker's prop, the same wherever it is placed (dressing, the marker fit, a move, a preset's flag): the flagstick about
+ *  2.2 m tall beside a 1.7 m walker, the tee markers a little smaller (at scale 1 a flagstick was drawn 6 m tall) */
+export const MARKER_SCALE = { pin: 0.32, back: 0.22, middle: 0.2, forward: 0.18 } as const;
 /** tee-side bench with course map (src/game/business-library.ts line 66, w=562, h=494; never flipped per owner's lettering rule) */
 export const BENCH_ID = 'business:golf-bench-course-map';
 
@@ -134,15 +141,14 @@ export function dressCourse(layout: CourseLayout, seed: number): DressedProp[] {
       x: pin.x,
       y: pin.y,
       flip: false,
-      scale: 0.32,
+      scale: MARKER_SCALE.pin,
     });
   }
 
   // 2. Tee markers at back, middle, and forward tees (never flipped)
   for (const tee of layout.tees) {
     const id = tee.kind === 'back' ? TEE_BACK_ID : tee.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
-    const scale = tee.kind === 'back' ? 0.22 : tee.kind === 'middle' ? 0.2 : 0.18;
-    props.push({ id, x: tee.x, y: tee.y, flip: false, scale });
+    props.push({ id, x: tee.x, y: tee.y, flip: false, scale: MARKER_SCALE[tee.kind] });
   }
 
   // 3. Benches beside each hole's back tee (offset 4.5 tiles perpendicular to the hole's initial line; flip: false per lettering rule)
