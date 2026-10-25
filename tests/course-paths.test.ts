@@ -16,7 +16,7 @@ import { snapFrontage, snapSegOf } from '../src/game/ext/frontage-snap/index.js'
 const leg = (ax: number, ay: number, bx: number, by: number): Leg => ({ a: { x: ax, y: ay }, b: { x: bx, y: by } });
 /** a class's surface width in metres (h is the half width in tiles of 2 m) */
 const widthM = (id: ClassId) => 2 * CLASS[id]!.h * 2;
-const CARTS = ['cart-dirt', 'cart-slab', 'cart'] as const;
+const CARTS = ['cart-walk', 'cart-dirt', 'cart-slab', 'cart'] as const;
 const DRIVES = ['drive-gravel', 'drive', 'drive-avenue'] as const;
 /** a committed network of the given legs per class */
 function netOf(...parts: [ClassId, Leg[]][]): RoadNetwork {
@@ -26,18 +26,19 @@ function netOf(...parts: [ClassId, Leg[]][]): RoadNetwork {
   return e.net;
 }
 
-test('the cart paths: dirt 2 m, cement slabs 2.5 m, paved 3 m; the single-lane drives stay 4 m', () => {
+test('the cart paths: walking 1.2 m (T100), dirt 2 m, cement slabs 2.5 m, paved 3 m; the single-lane drives stay 4 m', () => {
+  assert.ok(Math.abs(widthM('cart-walk') - 1.2) < 1e-9);
   assert.equal(widthM('cart-dirt'), 2);
   assert.equal(widthM('cart-slab'), 2.5);
   assert.equal(widthM('cart'), 3);
   for (const id of ['drive-gravel', 'drive']) { const w = widthM(id); assert.ok(w >= 3.5 && w <= 4, `${id}: ${w} m`); }
   // each path reads in its description at its real width, and is wider than the one below it on the ladder
   for (const id of CARTS) assert.ok(CLASS[id]!.desc.includes(`${widthM(id)} m`), `${id}: ${CLASS[id]!.desc}`);
-  assert.ok(widthM('cart-dirt') < widthM('cart-slab') && widthM('cart-slab') < widthM('cart') && widthM('cart') < widthM('drive'));
+  assert.ok(widthM('cart-walk') < widthM('cart-dirt') && widthM('cart-dirt') < widthM('cart-slab') && widthM('cart-slab') < widthM('cart') && widthM('cart') < widthM('drive'));
 });
 
 test('the cart paths are carts and walkers only: no lanes, no lots, no lamps, a turf verge, their own surfaces', () => {
-  const surface: Record<string, string> = { 'cart-dirt': 'dirt', 'cart-slab': 'cement', cart: 'asphalt' };
+  const surface: Record<string, string> = { 'cart-walk': 'dirt', 'cart-dirt': 'dirt', 'cart-slab': 'cement', cart: 'asphalt' };
   for (const id of CARTS) {
     const c = CLASS[id]!;
     assert.equal(c.family, 'cart', id); assert.equal(c.base, id, id); assert.deepEqual(c.flags, [], id);
@@ -52,10 +53,10 @@ test('the cart paths are carts and walkers only: no lanes, no lots, no lamps, a 
   for (const t of TYPES) if (classOf(t.id).family !== 'cart') { assert.ok(!classOf(t.id).noCars, t.id); assert.ok(classOf(t.id).laneCentres.length > 0, t.id); }
 });
 
-test('the cart path ladder: dirt -> cement slabs -> paved, and back down; each step costs more; never into a drive or a town road', () => {
-  assert.equal(WIDER['cart-dirt'], 'cart-slab'); assert.equal(WIDER['cart-slab'], 'cart'); assert.equal(WIDER.cart, undefined);
-  assert.equal(NARROWER.cart, 'cart-slab'); assert.equal(NARROWER['cart-slab'], 'cart-dirt'); assert.equal(NARROWER['cart-dirt'], undefined);
-  assert.ok(CLASS['cart-dirt']!.cost < CLASS['cart-slab']!.cost && CLASS['cart-slab']!.cost < CLASS.cart!.cost);
+test('the cart path ladder: walking -> dirt -> cement slabs -> paved, and back down; each step costs more; never into a drive or a town road', () => {
+  assert.equal(WIDER['cart-walk'], 'cart-dirt'); assert.equal(WIDER['cart-dirt'], 'cart-slab'); assert.equal(WIDER['cart-slab'], 'cart'); assert.equal(WIDER.cart, undefined);
+  assert.equal(NARROWER.cart, 'cart-slab'); assert.equal(NARROWER['cart-slab'], 'cart-dirt'); assert.equal(NARROWER['cart-dirt'], 'cart-walk'); assert.equal(NARROWER['cart-walk'], undefined);
+  assert.ok(CLASS['cart-walk']!.cost < CLASS['cart-dirt']!.cost && CLASS['cart-dirt']!.cost < CLASS['cart-slab']!.cost && CLASS['cart-slab']!.cost < CLASS.cart!.cost);
   for (const [from, to] of [...Object.entries(WIDER), ...Object.entries(NARROWER)]) assert.equal(classOf(from).family === 'cart', classOf(to!).family === 'cart', `${from} -> ${to}`);
 });
 
@@ -68,7 +69,7 @@ test('the starters are cheap: a 300 m loop of dirt or cement slabs costs a fract
 });
 
 test('golf tiers: both starter paths from tier 1, the paved cart path from tier 2; the drives keep theirs', () => {
-  assert.equal(courseTierNeeded('cart-dirt'), 1); assert.equal(courseTierNeeded('cart-slab'), 1); assert.equal(courseTierNeeded('cart'), 2);
+  assert.equal(courseTierNeeded('cart-walk'), 1); assert.equal(courseTierNeeded('cart-dirt'), 1); assert.equal(courseTierNeeded('cart-slab'), 1); assert.equal(courseTierNeeded('cart'), 2);
   assert.equal(courseTierNeeded('drive-gravel'), 1); assert.equal(courseTierNeeded('drive'), 2); assert.equal(courseTierNeeded('drive-avenue.gd'), 3);
   assert.equal(courseClassOpen('cart-dirt', 1), true); assert.equal(courseClassOpen('cart-slab', 1), true);
   assert.equal(courseClassOpen('cart', 1), false); assert.equal(courseClassOpen('cart', 2), true);
@@ -165,6 +166,7 @@ test('the paint: cement slabs a joint across the full width every 3 m, dirt two 
   assert.deepEqual(dirt.lines.filter(l => l.color === DIRT_RUT).map(l => Math.abs(l.offset)), [0.25, 0.25]);
   assert.equal(dirt.lines.filter(l => l.color === DIRT_GRASS && l.offset === 0).length, 1, 'a centre grass strip');
   assert.equal(fx('cart').lines.length, 0, 'the paved cart path is plain asphalt');
+  assert.equal(fx('cart-walk').lines.length, 0, 'the walking path: packed earth, no wheel ruts (T100)');
   for (const id of CARTS) assert.equal(fx(id).decals.length, 0, `${id}: no manholes, drains, oil or patches`);
 });
 
