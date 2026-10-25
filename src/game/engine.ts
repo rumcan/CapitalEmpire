@@ -3473,7 +3473,7 @@ export class Game {
     if (!walkSheet) { walkSheet = new Image(); walkSheet.src = walkersUrl; }
     const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y, sprites = this.cam.z >= 0.08, h = 0.9 * HH * 2 * ze, sheet = walkSheet;
     ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
-    for (let i = 0; i + 3 < G.length; i += 4) {
+    for (let i = 0; i + 7 < G.length; i += 8) {
       const x = G[i]!, y = G[i + 1]!, n = Math.round(G[i + 2]!); if (n <= 0) continue;
       const c = this.screen(x, y); if (c.x < -200 || c.y < -200 || c.x > cw + 200 || c.y > ch + 200) continue;
       if (!sprites) { ctx.fillStyle = 'rgba(134,239,172,0.85)'; ctx.beginPath(); ctx.arc(c.x, c.y, Math.min(10, 2 + Math.sqrt(n) / 3) * dpr, 0, Math.PI * 2); ctx.fill(); continue; }
@@ -3512,12 +3512,12 @@ export class Game {
     }
     if (!sprites) {
       ctx.fillStyle = '#ffbe3c';
-      for (let i = 0; i + 3 < W.length; i += 4) {
+      for (let i = 0; i + 5 < W.length; i += 6) {
         const px = (worldX(W[i]!, W[i + 1]!) - X0) * ze + cw / 2, py = (worldY(W[i]!, W[i + 1]!) - Y0) * ze + ch / 2;
         if (px >= -2 * dpr && px <= cw + 2 * dpr && py >= -2 * dpr && py <= ch + 2 * dpr) ctx.fillRect(px - dpr, py - dpr, 2 * dpr, 2 * dpr);
       }
-    } else for (let i = 0; i + 3 < W.length; i += 4) {
-      const x = W[i]!, y = W[i + 1]!, k = Math.min(3, Math.round(W[i + 2]!)), idx = i >> 2, frame = Math.floor(tick + idx) % 4;
+    } else for (let i = 0; i + 5 < W.length; i += 6) {
+      const x = W[i]!, y = W[i + 1]!, k = Math.min(3, Math.round(W[i + 2]!)), idx = i / 6, frame = Math.floor(tick + idx) % 4;
       for (let j = 0; j < k; j++) walkerSprite(ctx, sheet, x + (j - (k - 1) / 2) * 0.4, y, idx % 3, frame, ze, X0, Y0, cw, ch, h);
     }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
@@ -4084,7 +4084,7 @@ export class Game {
         this.grassPedOut[i] = out ? 1 : 0; this.grassPedX[i] = x; this.grassPedY[i] = y;
       }
       // Event frame groups have no stable visitor id: local occupancy is usable without inventing trajectories between groups.
-      for (const fans of [this.traffic.walkers, this.traffic.stops, this.traffic.gallery]) for (let k = 0; k + 3 < fans.length; k += 4) if (fans[k + 2] > 0 && this.grassHere(fans[k], fans[k + 1])) this.grass.traffic(fans[k], fans[k + 1], fans[k], fans[k + 1], fans[k + 2] * 0.05 * elapsed, 'foot');
+      for (const [fans, st] of [[this.traffic.walkers, 6], [this.traffic.stops, 4], [this.traffic.gallery, 8]] as const) for (let k = 0; k + st <= fans.length; k += st) if (fans[k + 2] > 0 && this.grassHere(fans[k], fans[k + 1])) this.grass.traffic(fans[k], fans[k + 1], fans[k], fans[k + 1], fans[k + 2] * 0.05 * elapsed, 'foot');
       const tr = this.traffic;
       if (this.grassCarAlive.length < tr.n) { this.grassCarX = new Float32Array(tr.n); this.grassCarY = new Float32Array(tr.n); this.grassCarAlive = new Uint8Array(tr.n); }
       for (let i = 0; i < tr.n; i++) {

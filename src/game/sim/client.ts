@@ -96,10 +96,10 @@ export class SimClient {
   onBiz?: () => void;
   /** the car parks' counts as the worker last sent them (with each frame; see ParkView) */
   parks: ParkView[] = [];
-  /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (4 floats each: x, y in
-   *  tiles, fans, stage; stage 0 to a lot stop, 1 to a door) and the lot stops (4 floats each: x, y in tiles, the fans waiting, the route index) */
+  /** the shuttle crowd as the worker last sent it, with each frame of a surge and its eval (empty otherwise): the walking fan groups (6 floats each: x, y in
+   *  tiles, fans, stage, tx, ty (the target); stage 0 to a lot stop, 1 to a door) and the lot stops (4 floats each: x, y in tiles, the fans waiting, the route index) */
   walkers: Float32Array = NO_FLOATS; stops: Float32Array = NO_FLOATS;
-  /** the galleries' standing crowds (LEAD.md M2.2): 4 floats a spot (x, y, fans, kind) */
+  /** the galleries' standing crowds (LEAD.md M2.2): 8 floats a spot (x, y, fans, kind, fx, fy, ax, ay) */
   gallery: Float32Array = NO_FLOATS;
   /** the active traffic incidents as the worker last sent them (with each frame): 3 floats each, x and y (tiles) and kind (1 crash, 0 breakdown) */
   incidents: Float32Array = NO_FLOATS;

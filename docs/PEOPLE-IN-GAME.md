@@ -46,8 +46,8 @@ gains `fx, fy, ax, ay`.
 ## How a crowd looks (crowdview.ts, pure and tested)
 - A spot shows min(fans, 60) people (a grandstand: min(fans, 90)), each with a seeded person, place and time offset (hash of spot index
   and slot), so crowds never move in step and a spot keeps its people from frame to frame.
-- Green, tee, tent: standing rows across the line to the focus, 0.55 tiles apart, rows 0.6 tiles apart, front row 1.5 tiles from the spot's
-  point toward the focus, jitter 0.12 tiles; everyone faces the focus. Each fan idles, now and then claps for 2 to 4 s (the clap loop) and
+- Green, tee, tent: standing rows across the line to the focus, 0.55 tiles apart, rows 0.6 tiles apart stepping back from the focus, the front row at the spot's
+  point (the gallery's front, already off the line of play), jitter 0.12 tiles; everyone faces the focus. Each fan idles, now and then claps for 2 to 4 s (the clap loop) and
   rarely cheers (the one-shot), on a seeded schedule.
 - Grandstand: seated rows (the `sit` loop, now and then `sit_clap`), facing `fx, fy`, each row drawn a step higher (the stand's tiers).
 - Queues: standing, idle, facing the stop or gate. Walking parties: min(n, 3) side by side across the heading, the walk frames by time.

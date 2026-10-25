@@ -6,8 +6,9 @@ import { STRUCTURE } from './tents';
 import { structureRect, type PlacedEventStructure } from './eventtool';
 
 export type GalleryKind = 'green' | 'tee' | 'stand' | 'tent';
-/** a spot: its point (tiles), kind, pull, room (fans) and hole (0 for a structure) */
-export interface GallerySpot { x: number; y: number; kind: GalleryKind; weight: number; cap: number; hole: number }
+/** a spot: its point (tiles), kind, pull, room (fans) and hole (0 for a structure); fx, fy: what its fans face (the pin of a green, the tee, a
+ *  grandstand's point a tile toward the screen's bottom, a tent's centre); ax, ay: where play aims (the pin for a green or a tee, else fx, fy) */
+export interface GallerySpot { x: number; y: number; kind: GalleryKind; weight: number; cap: number; hole: number; fx: number; fy: number; ax: number; ay: number }
 
 /** the pulls and rooms: a green's gallery (the last hole's pulls most), a tee's, a grandstand's (by its seats), a tent's (by its rate) */
 export const GALLERY = { green: { weight: 3, cap: 400, off: 7 }, lastGreen: { weight: 5, cap: 800 }, tee: { weight: 1.5, cap: 150, back: 3, off: 4 }, standPerWeight: 80, tentWeight: 1, tentFront: 3 };
@@ -22,14 +23,16 @@ export function gallerySpots(tees: readonly { hole: number; x: number; y: number
     let ux = 0.7071, uy = 0.7071;
     if (t) { const dx = p.x - t.x, dy = p.y - t.y, L = Math.hypot(dx, dy); if (L > 1e-6) { ux = dx / L; uy = dy / L; } }
     const nx = -uy, ny = ux, G = p.hole === last ? { ...GALLERY.green, ...GALLERY.lastGreen } : GALLERY.green;
-    out.push({ x: p.x + nx * GALLERY.green.off, y: p.y + ny * GALLERY.green.off, kind: 'green', weight: G.weight, cap: G.cap, hole: p.hole });
-    if (t) out.push({ x: t.x - ux * GALLERY.tee.back + nx * GALLERY.tee.off, y: t.y - uy * GALLERY.tee.back + ny * GALLERY.tee.off, kind: 'tee', weight: GALLERY.tee.weight, cap: GALLERY.tee.cap, hole: p.hole });
+    out.push({ x: p.x + nx * GALLERY.green.off, y: p.y + ny * GALLERY.green.off, kind: 'green', weight: G.weight, cap: G.cap, hole: p.hole, fx: p.x, fy: p.y, ax: p.x, ay: p.y });
+    if (t) out.push({ x: t.x - ux * GALLERY.tee.back + nx * GALLERY.tee.off, y: t.y - uy * GALLERY.tee.back + ny * GALLERY.tee.off, kind: 'tee', weight: GALLERY.tee.weight, cap: GALLERY.tee.cap, hole: p.hole, fx: t.x, fy: t.y, ax: p.x, ay: p.y });
   }
   for (const s of structures) {
     const def = STRUCTURE[s.typeId]; if (!def) continue;
     const [x, y, w, h] = structureRect(s);
-    if (def.kind === 'grandstand') out.push({ x: x + w / 2, y: y + h / 2, kind: 'stand', weight: def.capacity / GALLERY.standPerWeight, cap: def.capacity, hole: 0 });
-    else if (TENT_KINDS.has(def.kind)) out.push({ x: x + w / 2, y: y + h + GALLERY.tentFront, kind: 'tent', weight: GALLERY.tentWeight, cap: Math.max(20, Math.round(def.capacity / 2)), hole: 0 });
+    // a grandstand's fans look a tile toward the screen's bottom; a tent's look at its centre (its spot is in front)
+    const cx = x + w / 2, cy = y + h / 2;
+    if (def.kind === 'grandstand') { const fx = cx + 0.7071, fy = cy + 0.7071; out.push({ x: cx, y: cy, kind: 'stand', weight: def.capacity / GALLERY.standPerWeight, cap: def.capacity, hole: 0, fx, fy, ax: fx, ay: fy }); }
+    else if (TENT_KINDS.has(def.kind)) out.push({ x: cx, y: y + h + GALLERY.tentFront, kind: 'tent', weight: GALLERY.tentWeight, cap: Math.max(20, Math.round(def.capacity / 2)), hole: 0, fx: cx, fy: cy, ax: cx, ay: cy });
   }
   return out;
 }
