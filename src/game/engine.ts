@@ -1,5 +1,6 @@
 import { CHUNK_H, CHUNK_W, DISTRICT_Z, HH, HW, MAP, MID_H, MID_W, PLANNER_Z, PLAN_H, PLAN_W, SPR_H, SPR_W, ZOOM_MAX, ZOOM_MIN, clamp, planLevelFor, tileOf, worldX, worldY, mulberry } from './iso';
-import { ATLAS_PAGES, LIBRARY, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { ATLAS_PAGES, GOLFER_BASE, GOLFER_FRAMES, GOLFER_PEOPLE, LIBRARY, SPECTATOR_BASE, SPECTATOR_FRAMES, SPECTATOR_PEOPLE, WALKER_BASE, WALKER_PEOPLE, WALK_DIRS, WALK_FRAMES } from './library';
+import { galleryPeople, queuePeople, teeGolfer, walkerPeople, type CrowdPerson } from './crowdview';
 import { FACING_ROW, Pedestrians, sidewalks, type Door, type WalkerView } from './ext/pedestrians';
 import { GrassManagement, grassSurface, type GrassAction, type GrassCellView, type GrassScope, type GrassSettings } from './ext/grass-management';
 import { drawGhostBlueprint, drawGhostHint, drawGhostPoly, drawGhostRing, ghostStatus, type GhostBlueprint, type GhostView } from './ext/ghost-preview';
@@ -51,7 +52,6 @@ import { businessArt } from './business/art';
 import { BAY_D, BAY_W, BOOTH_W, BUS_ROUTE_COST, BUS_SEATS, CARDS, DECK_SEATS, PD_CELL, PLAZA_LEN, START_BOOTHS, START_BUSES, TOLL_BASE_COST, TOLL_BOOTH_COST, tollPrice, type CardId } from './event/config';
 import { Round, SIGNAL_TIER_YEAR, SPEED_TIER_YEAR, signalTierOpen, speedTierOpen } from './event/round';
 import type { BusRouteDef } from './event/bus';
-import walkersUrl from '../assets/characters/walkers.png';
 import { plazaEdge, plazaIslands, plazaKey, plazaLocal, plazaOutline, plazaPoint, plazaQuads, type TollDef } from './event/toll';
 import { buildPark, parkCost, parkValid, type CarPark, type CarParkDef, type ParkView } from './event/carpark';
 import { TC, classAt, generateTerrain, makeNoise, type Noise, type Terrain } from './terrain';
@@ -163,14 +163,12 @@ function busStop(ctx: CanvasRenderingContext2D, x: number, y: number, dpr: numbe
 }
 /** the distance, tiles, from point p to the rect (x, y, w, h): 0 inside it */
 function rectDist(p: Pt, x: number, y: number, w: number, h: number): number { return Math.hypot(Math.max(x - p.x, 0, p.x - x - w), Math.max(y - p.y, 0, p.y - y - h)); }
-/** the walkers' sheet: 12 cells of 32 px in one row (hero h, frame f in cell 4h + f), made on first use (the overlay) */
-let walkSheet: HTMLImageElement | null = null;
-/** one walker drawn from the sheet: cell (hero, frame), its feet at tile (x, y), h device px tall; the projection as screen() (ze, X0, Y0 the camera's scale
- *  and centre, cw, ch the view in device px); off the view it is skipped */
-function walkerSprite(ctx: CanvasRenderingContext2D, sheet: HTMLImageElement, x: number, y: number, hero: number, frame: number, ze: number, X0: number, Y0: number, cw: number, ch: number, h: number) {
-  const px = (worldX(x, y) - X0) * ze + cw / 2, py = (worldY(x, y) - Y0) * ze + ch / 2;
-  if (px < -h || px > cw + h || py < -h || py > ch + h) return;
-  ctx.drawImage(sheet, (4 * hero + frame) * 32, 0, 32, 32, px - h / 2, py - h, h, h);
+/** a crowd person (crowdview.ts) as the mover out[k], made on first use and then reused: its 3D frame in the library (group 0 the spectators, 1 the
+ *  golfers), at its point, unflipped, with the townspeople's 0.24-tile footprint */
+function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
+  const d = out[k] ?? (out[k] = { item: 0, x: 0, y: 0, flip: false, scale: 1, x0: 0, y0: 0, x1: 0, y1: 0, moving: false });
+  d.item = p.group ? GOLFER_BASE + (p.person * WALK_DIRS.length + p.row) * GOLFER_FRAMES + p.frame : SPECTATOR_BASE + (p.person * WALK_DIRS.length + p.row) * SPECTATOR_FRAMES + p.frame;
+  d.x = p.x; d.y = p.y; d.x0 = p.x - 0.12; d.y0 = p.y - 0.12; d.x1 = p.x + 0.12; d.y1 = p.y + 0.12;
 }
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
@@ -397,6 +395,8 @@ export class Game {
    *  built lots (at most PED_MAX), walking in real time while the game runs; drawn at the Street tier as movers */
   private peds = new Pedestrians(0x70656473, Math.max(1, WALKER_PEOPLE.length), PED_MAX, WALK_FRAMES - 1); private pedNet = -1; private pedTick = 0; private pedLots = -1;
   private pedView: WalkerView[] = []; private pedDraw: Drawable[] = [];
+  /** the crowd's movers (crowdMovers) and its scratch people: the spectators, the golfers */
+  private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
   /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
   grass = new GrassManagement(); grassPanel = false; grassHeat = false; grassRadius = 12; grassArea = false; grassDose = 1; grassAngle = 0;
   grassAction: GrassAction | null = null; grassTarget: Pt | null = null;
@@ -3466,59 +3466,42 @@ export class Game {
     }
     for (const d of this.busDefs) { const a = this.screen(d.sx, d.sy), b = this.screen(d.dx, d.dy); busStop(ctx, a.x, a.y, dpr); busStop(ctx, b.x, b.y, dpr); }
   }
-  /** the galleries' standing crowds (LEAD.md M2.2): each spot's fans as up to 48 standing walkers in rings round its point (0.75 tiles
-   *  apart, the rings 0.9 tiles out each), with the count (`n watching`) at a closer zoom; below zoom 0.08 a green dot sized by the crowd */
+  /** the galleries' crowds (LEAD.md M2.2): below the street tier each spot is a green dot sized by its fans; at the street tier the fans are the
+   *  3D spectators (crowdMovers), drawn in the sprite layer, so this 2D layer adds no dot there. At zoom 0.2 and closer the count (`n watching`)
+   *  sits above the spot, a walker's height (h) up. Culled to the view */
   private drawGalleries(ctx: CanvasRenderingContext2D) {
     const G = this.traffic.gallery; if (!G.length) return;
-    if (!walkSheet) { walkSheet = new Image(); walkSheet.src = walkersUrl; }
-    const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y, sprites = this.cam.z >= 0.08, h = 0.9 * HH * 2 * ze, sheet = walkSheet;
+    const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, dots = this.cam.z < DISTRICT_Z, h = 0.9 * HH * 2 * ze;
     ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
     for (let i = 0; i + 7 < G.length; i += 8) {
       const x = G[i]!, y = G[i + 1]!, n = Math.round(G[i + 2]!); if (n <= 0) continue;
       const c = this.screen(x, y); if (c.x < -200 || c.y < -200 || c.x > cw + 200 || c.y > ch + 200) continue;
-      if (!sprites) { ctx.fillStyle = 'rgba(134,239,172,0.85)'; ctx.beginPath(); ctx.arc(c.x, c.y, Math.min(10, 2 + Math.sqrt(n) / 3) * dpr, 0, Math.PI * 2); ctx.fill(); continue; }
-      // rings of standing fans: 6 on the first, 12 on the next, 18 on the third ..., each fan a quarter turn of the walk cycle apart in hero
-      for (let k = 0, ring = 1, onRing = 0, per = 6, m = Math.min(48, Math.ceil(n / 2)); k < m; k++) {
-        const a = (onRing / per) * Math.PI * 2 + ring * 0.37, r = ring * 0.9;
-        walkerSprite(ctx, sheet, x + Math.cos(a) * r, y + Math.sin(a) * r, (k + i) % 3, 0, ze, X0, Y0, cw, ch, h);
-        if (++onRing >= per) { ring++; onRing = 0; per = 6 * ring; }
-      }
+      if (dots) { ctx.fillStyle = 'rgba(134,239,172,0.85)'; ctx.beginPath(); ctx.arc(c.x, c.y, Math.min(10, 2 + Math.sqrt(n) / 3) * dpr, 0, Math.PI * 2); ctx.fill(); }
       if (this.cam.z >= 0.2) { const t = `${n} watching`, ty = c.y - h * 1.6; ctx.strokeText(t, c.x, ty); ctx.fillStyle = '#bbf7d0'; ctx.fillText(t, c.x, ty); }
     }
   }
-  /** the shuttle crowd on the map (during a surge and its eval): each lot stop's queue as up to 24 walkers in a 4 x 6 grid 0.7 tiles apart, 1.5 tiles behind the
-   *  kerb (toward the stop's car park), with the count (`n waiting`); each walking group as min(n, 3) walkers 0.4 tiles apart, feet at the tile, the walk cycle
-   *  of hero (group % 3), a frame each 180 ms; below zoom 0.08 each group is a 2 px amber dot. Culled to the view */
-  private drawWalkers(ctx: CanvasRenderingContext2D, now: number) {
+  /** the shuttle crowd on the map (during a surge and its eval): each stop's and gate's queue with its count (`n waiting`, above the stop). The
+   *  queues' people and the walking parties are 3D movers at the street tier (crowdMovers), so they have no 2D drawing there; below the street tier
+   *  each walking party is a 2 px amber dot. Culled to the view */
+  private drawWalkers(ctx: CanvasRenderingContext2D) {
     const W = this.traffic.walkers, S = this.traffic.stops;
     if (!W.length && !S.length) return;
-    if (!walkSheet) { walkSheet = new Image(); walkSheet.src = walkersUrl; }
     const dpr = this.dpr, ze = this.cam.z * this.dpr, cw = this.cw, ch = this.ch, X0 = this.cam.X, Y0 = this.cam.Y;
-    // never taller than the sheet's 32 px cells (no walker drawn past its pixels at the closest zoom)
-    const sprites = this.cam.z >= 0.08, h = Math.min(32, 0.9 * HH * 2 * ze), tick = now / 180, sheet = walkSheet;
     ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)';
     for (let i = 0; i + 3 < S.length; i += 4) {
-      const sx = S[i]!, sy = S[i + 1]!, q = Math.round(S[i + 2]!), r = S[i + 3]!;
-      const def = this.busDefs[r], park = def ? this.parkDefs.find(p => p.id === def.park) : undefined;
-      let ux = 0, uy = 1;
-      if (park) { const cx = park.x + park.w / 2 - sx, cy = park.y + park.h / 2 - sy, L = Math.hypot(cx, cy); if (L > 0) { ux = cx / L; uy = cy / L; } }
-      const bx = sx + ux * 1.5, by = sy + uy * 1.5;
-      for (let g = 0, nq = sprites ? Math.min(24, q) : 0; g < nq; g++) walkerSprite(ctx, sheet, bx + ((g & 3) - 1.5) * 0.7, by + ((g >> 2) - 2.5) * 0.7, ((r % 3) + 3) % 3, Math.floor(tick + g) % 4, ze, X0, Y0, cw, ch, h);
+      const sx = S[i]!, sy = S[i + 1]!, q = Math.round(S[i + 2]!);
       if (q > 0) {
         const px = (worldX(sx, sy) - X0) * ze + cw / 2, py = (worldY(sx, sy) - Y0) * ze + ch / 2, label = `${q} waiting`;
         ctx.strokeText(label, px, py - 16 * dpr); ctx.fillStyle = '#f8fafc'; ctx.fillText(label, px, py - 16 * dpr);
       }
     }
-    if (!sprites) {
+    if (this.cam.z < DISTRICT_Z) {
       ctx.fillStyle = '#ffbe3c';
       for (let i = 0; i + 5 < W.length; i += 6) {
         const px = (worldX(W[i]!, W[i + 1]!) - X0) * ze + cw / 2, py = (worldY(W[i]!, W[i + 1]!) - Y0) * ze + ch / 2;
         if (px >= -2 * dpr && px <= cw + 2 * dpr && py >= -2 * dpr && py <= ch + 2 * dpr) ctx.fillRect(px - dpr, py - dpr, 2 * dpr, 2 * dpr);
       }
-    } else for (let i = 0; i + 5 < W.length; i += 6) {
-      const x = W[i]!, y = W[i + 1]!, k = Math.min(3, Math.round(W[i + 2]!)), idx = i / 6, frame = Math.floor(tick + idx) % 4;
-      for (let j = 0; j < k; j++) walkerSprite(ctx, sheet, x + (j - (k - 1) / 2) * 0.4, y, idx % 3, frame, ze, X0, Y0, cw, ch, h);
     }
     ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
   }
@@ -4126,6 +4109,41 @@ export class Game {
     return out;
   }
 
+  /** the crowd as movers in a tile box (the street tier, with the townspeople): each gallery spot's fans (and a tee's stand-in golfer), each queue at a
+   *  stop or gate (its block 1.5 tiles behind the kerb toward the stop's car park, as drawWalkers had it) and each walking party, every person its 3D
+   *  frame (crowdview.ts; `now` in seconds). A spot, a party or a queue is culled by its point to the box padded by 4 tiles, the reach of its people.
+   *  Reused Drawables and scratch people: no allocation per frame once the crowd is warm */
+  private crowdMovers(x0: number, y0: number, x1: number, y1: number, now: number): Drawable[] {
+    const G = this.traffic.gallery, W = this.traffic.walkers, S = this.traffic.stops, out = this.crowdDraw, P = this.crowdPeople, T = this.crowdGolfers;
+    const X0 = x0 - 4, Y0 = y0 - 4, X1 = x1 + 4, Y1 = y1 + 4, nS = SPECTATOR_PEOPLE.length, nG = GOLFER_PEOPLE.length;
+    let m = 0;
+    for (let i = 0; i + 7 < G.length; i += 8) {
+      const x = G[i]!, y = G[i + 1]!;
+      if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
+      const spot = i / 8, k = galleryPeople(G, i, spot, now, nS, P);
+      for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
+      if (G[i + 3] === 1 && teeGolfer(G, i, spot, now, nG, T)) crowdDrawable(out, m++, T[0]!);
+    }
+    for (let i = 0; i + 5 < W.length; i += 6) {
+      const x = W[i]!, y = W[i + 1]!;
+      if (x < X0 || x > X1 || y < Y0 || y > Y1) continue;
+      const k = walkerPeople(W, i, i / 6, now, nS, P);
+      for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
+    }
+    for (let i = 0; i + 3 < S.length; i += 4) {
+      const sx = S[i]!, sy = S[i + 1]!, q = Math.round(S[i + 2]!), r = S[i + 3]!;
+      if (q <= 0 || sx < X0 || sx > X1 || sy < Y0 || sy > Y1) continue;
+      // the queue's block: 1.5 tiles behind the kerb toward the stop's car park (the tile direction (0, 1) with no car park, as a gate has)
+      const def = this.busDefs[r];
+      let ux = 0, uy = 1;
+      if (def) for (const p of this.parkDefs) if (p.id === def.park) { const cx = p.x + p.w / 2 - sx, cy = p.y + p.h / 2 - sy, L = Math.hypot(cx, cy); if (L > 0) { ux = cx / L; uy = cy / L; } break; }
+      const k = queuePeople(sx + ux * 1.5, sy + uy * 1.5, sx, sy, q, r, now, nS, P);
+      for (let j = 0; j < k; j++) crowdDrawable(out, m++, P[j]!);
+    }
+    out.length = m;
+    return out;
+  }
+
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
@@ -4291,7 +4309,8 @@ export class Game {
       // cars in tunnels are not drawn (the sim client skips them)
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
       const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1) : [];
-      const movers = tier === 'street' && this.peds.n ? cars.concat(this.pedMovers(bx0, by0, bx1, by1)) : cars;
+      // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
+      const movers = tier === 'street' ? cars.concat(this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], this.crowdMovers(bx0, by0, bx1, by1, now / 1000)) : cars;
       // with the living ground the trees plant over every chunk on screen (a chunk bakes once its trees are known: casterReady)
       if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2); }
       else this.plantForest(X0, Y0, X1, Y1);
@@ -4598,7 +4617,7 @@ export class Game {
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
     this.drawGalleries(ctx);
-    this.drawWalkers(ctx, now);
+    this.drawWalkers(ctx);
     if (this.grassPanel) {
       const s = this.grassScope();
       if (s) {
