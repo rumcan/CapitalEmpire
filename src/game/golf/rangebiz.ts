@@ -30,8 +30,11 @@ const TEE_GAP = 2.6;
 /** a prop of the scene: its key (stable while it stays), library id, world point, quarter turns from the picture's base view (preset-art turned),
  *  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */
 export interface ScenePiece { key: string; id: string; x: number; y: number; q: number; scale?: number; fit?: number; label?: string }
-/** a ground patch of the scene: a world polygon (x y pairs) and its surface: a golf surface (laid with the course's own presets) or a ground texture */
-export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' }
+/** a ground patch of the scene: a world polygon (x y pairs) and its surface: a golf surface (laid with the course's own presets), the range's own
+ *  presets (T132: 'outfield', the mown outfield with its stripes, and 'target', a target green: rangehost.ts patchTex) or a ground texture; edge:
+ *  its outline's profile (paint-edges.ts: a target green is raised, its collars feathered; absent: crisp); mow: its mowing stripes are laid on
+ *  top (the outfield) */
+export interface ScenePatch { pts: number[]; surf: 'fairway' | 'firstCut' | 'tee' | 'fringe' | 'green' | 'rough' | 'dirt' | 'grassDry' | 'asphaltDark' | 'gravel' | 'concrete' | 'outfield' | 'target'; edge?: 'raised' | 'flat'; mow?: true }
 /** a target green in the scene: centre, radius and distance from the tee line (m) */
 export interface SceneTarget { x: number; y: number; r: number; m: number }
 /** the scene of a range (rangeScene) */
@@ -57,6 +60,8 @@ export interface RangeScene {
   numbers: { x: number; y: number; text: string; low?: boolean }[]; label: Pt;
   /** the world box of the plot (x0 y0 x1 y1) */
   box: [number, number, number, number];
+  /** where the outfield's mowing stripes start (world: the tee end of the outfield, its middle) */
+  mowFrom: Pt;
 }
 
 /** the view index (0 NE .. 3 NW) whose front faces the frame's -v (the road) for a facing. The four-view sheets put the front in the NE and NW
@@ -79,14 +84,16 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   // painted areas draw over the course, so the outfield keeps TEE_GAP tiles off it, where the raised tee's bank or rock face hangs down onto the
   // land's grass), the pads and mats of the open bays on their concrete deck (over the tee box), the target greens, the shop's packed dirt and
   // the caravan's dry lawn
-  patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'fairway' });
+  // the outfield is the range's own preset with its mowing stripes laid on top (T132: they read at every zoom, across the line of play)
+  patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'outfield', mow: true });
   const open = openSlots(st.bays);
   patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
   for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
   const targets: SceneTarget[] = [];
   for (let i = 0; i < st.targets; i++) {
     const u = TARGET_U[i]!, v = STAND_V + TARGET_D[i]!, r = TARGET_R[i]!, c = P(u, v);
-    patches.push({ pts: disc(u, v, r + 1.3), surf: 'firstCut' }, { pts: disc(u, v, r), surf: 'green' });
+    // a target green reads as a green (T132): a first-cut collar and a fringe ring round the range's own green preset, raised with its sun-lit edge
+    patches.push({ pts: disc(u, v, r + 1.8, 32), surf: 'firstCut', edge: 'flat' }, { pts: disc(u, v, r + 0.8, 32), surf: 'fringe' }, { pts: disc(u, v, r, 32), surf: 'target', edge: 'raised' });
     targets.push({ x: c.x, y: c.y, r, m: TARGET_D[i]! * 2 });
   }
   patches.push({ pts: quad(28, 41, 3, 15.4), surf: 'dirt' }, { pts: quad(YARD[0], YARD[1], YARD[2], YARD[3]), surf: 'grassDry' });
@@ -143,6 +150,7 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
     counter: q0, queueStep: { x: q1.x - q0.x, y: q1.y - q0.y }, queueAt: P(COUNTER.u + 0.8, QUEUE_V), shopJoin: P(COUNTER.u, PATH_V), carEdge: P(CAR_EDGE_U, PATH_V),
     J: P(RANGE_PLOT[0] + 2, -NEAR), driveEnd: P(RANGE_PLOT[0] + 2, 16), roadDir: { x: du.x - o.x, y: du.y - o.y }, rangeSide: { x: dv.x - o.x, y: dv.y - o.y },
     numbers, label: P(35, 60), box: [Math.min(c0.x, c1.x), Math.min(c0.y, c1.y), Math.max(c0.x, c1.x), Math.max(c0.y, c1.y)],
+    mowFrom: P(U_MID, TEE[3] + TEE_GAP + 0.6),
   };
 }
 
@@ -154,6 +162,14 @@ function fenceRun(out: ScenePiece[], P: (u: number, v: number) => Pt, key: strin
   const id = kind === 'chain' ? (alongX ? 'expansion:chainlink-x' : 'expansion:chainlink-y') : (alongX ? 'world:fence_picket_x' : 'world:fence_picket_y');
   for (let i = 0; i < n; i++) { const t = (i + 0.5) / n; out.push({ key: `${key}${i}`, id, x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, q: 0 }); }
 }
+
+/** the range's name plate on the map in a range start (T132): its name and bays, plain capitals (the worker's business level, "L1", meant nothing
+ *  there); below RANGE_LABEL_Z the range's own "Driving Range" map label stands instead */
+export function rangeMapLabel(bays: number): string { return `DRIVING RANGE · ${bays} BAYS`; }
+export const RANGE_LABEL_Z = 0.12;
+/** the car park's label (T132): the worker's parked cars and the range's own (its golfers' cars are the range sim's, which the worker never
+ *  sees), at most the bays */
+export function parkLabel(worker: number, range: number, bays: number): string { return `P · ${Math.min(bays, Math.max(0, worker) + Math.max(0, range))}/${bays}`; }
 
 // ---------------------------------------------------------------- the golfers
 
@@ -322,6 +338,9 @@ export class RangeSim {
     return booked;
   }
   /** no golfers, cars or balls (a skip, a new game) */
+  /** the range's cars standing in the car park now (their golfers out on the range, the practice area or the walk back: T132, the car park's
+   *  P · parked/bays counts them) */
+  parked(): number { let n = 0; for (const v of this.visits) if (v.stage > S.CarIn && v.stage < S.CarOut) n++; return n; }
   clear(): void { this.visits = []; this.queue = []; this.balls = []; this.serving = -1; this.nLying = 0; this.bayBusy.fill(false); this.slotBusy.fill(false); this.spotBusy.putting.fill(false); this.spotBusy.chipping.fill(false); this.used.length = 0; }
 
   /** a car turns in off the county road from either side, along the drive and into car-park bay `slot` */
@@ -407,7 +426,9 @@ export class RangeSim {
         break;
       }
       case S.WalkCar: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (done) { v.stage = S.CarOut; v.t = 0; v.r = this.outRoute(v); } break; }
-      case S.CarOut: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (v.t > 1.5 && this.slotBusy[v.slot]) this.slotBusy[v.slot] = false; if (done) v.stage = S.Done; break; }
+      // the bay is freed once, as the car pulls out (T132: it was freed again on every step of the drive out, so the next car's bay went free
+      // under it and later cars piled into the same bay)
+      case S.CarOut: { const done = along(v.r!, v.t, this.tmp); v.x = this.tmp.x; v.y = this.tmp.y; v.ang = this.tmp.ang; if (v.t > 1.5 && v.slot >= 0) { this.slotBusy[v.slot] = false; v.slot = -1; } if (done) v.stage = S.Done; break; }
       default: break;
     }
   }

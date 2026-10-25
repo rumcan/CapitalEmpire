@@ -157,6 +157,10 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   fitView?(pts: { x: number; y: number }[], zoomIn: boolean): void;
   /** the practice area's box (tiles x0 y0 x1 y1; a range start), whose cells hold no hole (P24 D24); null: none */
   practiceBox?(): readonly [number, number, number, number] | null;
+  /** why New hole is not open yet (a range start's ramp, P24 Phase 4a: the range card comes first), or null when it is */
+  planLock?(): string | null;
+  /** the length (m) New hole suggests for the hole it starts (a range start's first hole: a par-3), or 0: the player's click sets it */
+  suggestM?(): number;
   /** the box round the golf game's land (tiles x0 y0 x1 y1): New hole's tee framing keeps to it */
   landBox?(): readonly [number, number, number, number] | null;
   /** the public roads near a box (tiles), with their names: New hole's road-across warning */
@@ -554,10 +558,11 @@ export class PaintTool {
    *  (a classic game) or every hole is in use */
   setPlan(n?: number): boolean {
     if (!this.course || !this.host.golfMode?.() || !this.host.grid?.()) { this.host.toast('The hole wizard builds on a golf course', 'warn'); return false; }
+    const lock = this.host.planLock?.(); if (lock) { this.host.toast(`New hole: ${lock}`, 'info'); return false; }
     const h = n ?? this.nextFreeHole();
     if (!h) { this.host.toast(`All ${HOLE_COUNT} holes are in use: delete one first`, 'warn'); return false; }
     this.mode = 'plan'; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.pill = null;
-    this.wizard.start(h); this.host.emit(); return true;
+    this.wizard.start(h); this.wizard.suggestM = this.host.suggestM?.() ?? 0; this.host.emit(); return true;
   }
   /** whether hole n has a built plan */
   hasPlan(n: number): boolean { return !!this.wizard.planOf(n); }
@@ -584,6 +589,7 @@ export class PaintTool {
     this.commit();
     this.brushHole = hole;
     w.built(typeof performance !== 'undefined' ? performance.now() : 0, this.nextFreeHole());
+    w.suggestM = 0; // the par-3 suggestion is the first hole's only (T132)
     this.pill = null;
     this.host.save();
     this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}`);

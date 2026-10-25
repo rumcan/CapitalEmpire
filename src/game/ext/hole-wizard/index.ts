@@ -80,6 +80,15 @@ export const snapPt = (p: Pt): Pt => ({ x: snapCell(p.x), y: snapCell(p.y) });
 /** the swell seed a new plan for a hole gets (deterministic, never 0) */
 export const planSeed = (hole: number) => hole * 101 + 7;
 
+/** the green of a hole of suggested length m (metres) from tee toward the pointer at t, on the cell grid; null while the pointer is on the tee
+ *  (no way to aim) */
+export function suggestedGreen(tee: Pt, t: Pt, m: number): Pt | null {
+  const dx = t.x - tee.x, dy = t.y - tee.y, d = Math.hypot(dx, dy);
+  if (d < 1) return null;
+  const k = m / 2 / d; // 1 tile = 2 m
+  return snapPt({ x: tee.x + dx * k, y: tee.y + dy * k });
+}
+
 /** a new plan from two clicks: the defaults by par (hole-plan defaultPlan) with the hole's swell seed */
 export function newPlan(hole: number, tee: Pt, green: Pt, bends: Pt[] = []): HolePlan {
   const p = defaultPlan(hole, tee, green, bends);
@@ -231,6 +240,9 @@ export class HoleWizard {
   ripple: Ripple | null = null;
   /** the pointer (tiles), for the labels */
   cursor: Pt | null = null;
+  /** the hole's suggested length (m; T132: a range start's first hole is a par-3 of FIRST_PAR3_M): the green step places the green that far
+   *  from the tee toward the pointer; 0 (the default, and after Any length) the pointer places it. PaintTool.setPlan sets it from its host */
+  suggestM = 0;
   private ghostKey = '';
   private ghostVal: WizardGhost | null = null;
   private baseKey = '';
@@ -295,10 +307,12 @@ export class HoleWizard {
     if (this.step === 'green') { if (t) this.followGreen(t); return; }
     this.hover = this.pick(mx, my, toScreen);
   }
-  /** the green step: the live plan follows the pointer at tile t (none while the green would be nearer the tee than MIN_HOLE_M) */
+  /** the green step: the live plan follows the pointer at tile t (none while the green would be nearer the tee than MIN_HOLE_M); with a
+   *  suggested length (suggestM: a range start's first hole, a par-3) the pointer only aims it: the green sits suggestM from the tee that way */
   private followGreen(t: Pt): void {
     if (!this.tee) return;
-    const p = snapPt(t);
+    const p = this.suggestM > 0 ? suggestedGreen(this.tee, t, this.suggestM) : snapPt(t);
+    if (!p) { this.plan = null; return; }
     if (Math.hypot(p.x - this.tee.x, p.y - this.tee.y) * 2 < MIN_HOLE_M) { this.plan = null; return; }
     if (!this.plan || this.plan.green.x !== p.x || this.plan.green.y !== p.y) this.plan = newPlan(this.hole, this.tee, p);
   }

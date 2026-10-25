@@ -1,5 +1,5 @@
 import type { Game } from '../../game/engine';
-import { DECOR, DECOR_GROUPS, PROPS_APPEAL_RADIUS, appealText, sellBack, type DecorItem } from '../../game/golf/decor';
+import { DECOR, DECOR_GROUPS, PROPS_APPEAL_RADIUS, PROPS_DECAY, appealText, sellBack, type DecorItem } from '../../game/golf/decor';
 import { PROPS_APPEAL_CAP } from '../../game/golf/rangesave';
 import { LIBRARY } from '../../game/library';
 import { Thumb } from '../Thumb';
@@ -18,7 +18,7 @@ export function PropsPanel({ game }: { game: Game }) {
       {range && (
         <div className="mb-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5" data-testid="props-appeal">
           <div className="flex items-baseline justify-between gap-2"><span>Appeal from props</span><span className="font-semibold text-emerald-300">{appealText(appeal)} <span className="font-normal text-slate-400">of {appealText(PROPS_APPEAL_CAP)}</span></span></div>
-          <div className="sub-line leading-snug">Props within {PROPS_APPEAL_RADIUS} tiles of the shop or the mats bring more golfers, who pay more.</div>
+          <div className="sub-line leading-snug">Props within {PROPS_APPEAL_RADIUS} tiles of the shop or the mats bring more golfers, who pay more. Each more of a kind counts {Math.round(PROPS_DECAY * 100)}% of the one before: mix plants, water, a statue and seats.</div>
         </div>
       )}
       {sel && (

@@ -29,7 +29,7 @@ import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
 import { RangeHost } from './golf/rangehost';
 import { PropsTool } from './golf/propstool';
 import { DECOR_BY_KEY, propTuple, sellBack, tupleMarks } from './golf/decor';
-import { defaultRangeBiz, practiceAppeal, rangeNewSeason, rangeScene, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
+import { RANGE_LABEL_Z, defaultRangeBiz, parkLabel, practiceAppeal, rangeMapLabel, rangeNewSeason, rangeScene, rangeStats, type RangeCounts, type RangeUpgradeId } from './golf/rangebiz';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fillPolygon, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { STAIR_REACH } from './ext/course-walls';
@@ -115,7 +115,7 @@ import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, courseBuilding, gridShown, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
-import { STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { FIRST_PAR3_M, RAMP_TOAST, RANGE_CARD_SEEN, STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, nextFirstRunHint, normalizeProgress, progressFacts, rampLock, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** New hole's camera framing eases this long at most (ms; P23 4.4) */
 const CAM_EASE_MS = 400;
@@ -391,6 +391,7 @@ export class Game {
     layPaths: legs => { this.edit.addLegs(legs, classOf('cart-slab'), 0, undefined, true); this.commitNetwork(); },
     clearTrees: b => this.dropTownTrees(b[0], b[1], b[2], b[3]),
     money: () => this.money, spend: n => this.traffic.spend('construction', n), book: n => this.traffic.spend('business', -n),
+    month: () => this.golfMonthIndex(), payUpkeep: n => this.traffic.spend('upkeep', n),
     demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
@@ -413,7 +414,12 @@ export class Game {
   private rangeMorning() { if (this.golf?.start === 'range') this.traffic.setTownClock({ t0: this.traffic.simTime(performance.now()), m0: 390, rate: 1440 / this.traffic.dayLen }); }
   /** the range card (null: closed, or not a range start) */
   rangeCard() { return this.range.cardOpen ? this.range.view() : null; }
-  openRangeCard(open = !this.range.cardOpen) { this.range.cardOpen = open && !!this.range.view(); this.emit(); }
+  openRangeCard(open = !this.range.cardOpen) {
+    this.range.cardOpen = open && !!this.range.view();
+    // the ramp's first hint moves on once the card has been seen (T132)
+    const p = this.golf?.progress; if (this.range.cardOpen && p && !p.seen.includes(RANGE_CARD_SEEN)) { p.seen.push(RANGE_CARD_SEEN); this.scheduleSave(); }
+    this.emit();
+  }
   buyRangeUpgrade(id: RangeUpgradeId) { this.range.buy(id); }
   setRangePrice(price: number) { this.range.setPrice(price); }
   /** the Props tool (plan P24 Phase 3, T131: golf/propstool.ts): the decor the player places, moves, turns and sells; its appeal feeds the range */
@@ -497,6 +503,9 @@ export class Game {
     ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), landWhy: (x, y) => (this.onRangePlot(x, y) ? 'range' : this.ownedAt(x, y) ? '' : 'off'), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     // New hole (P23 4.4, T119): the camera framing, the practice area (P24 D24), and what its warnings measure against
     fitView: (pts, zoomIn) => this.fitView(pts, zoomIn), practiceBox: () => (this.golf?.start === 'range' ? this.range.scene?.practice.box ?? null : null),
+    // a range start's ramp (P24 Phase 4a, T132): New hole waits for the range, and the first hole is suggested as a par-3
+    planLock: () => this.toolUi()?.newHoleLock ?? null,
+    suggestM: () => (this.golf?.start === 'range' && !(this.golf.plans ?? []).length && !this.courseHoleViews().some(h => h.par > 0) ? FIRST_PAR3_M : 0),
     landBox: () => { const L = this.golf ? this.golfLand() : []; if (!L.length) return null; return [Math.min(...L.map(r => r[0])), Math.min(...L.map(r => r[1])), Math.max(...L.map(r => r[0] + r[2])), Math.max(...L.map(r => r[1] + r[3]))]; },
     publicRoads: b => [...this.net.segsNear({ x: (b[0] + b[2]) / 2, y: (b[1] + b[3]) / 2 }, Math.hypot(b[2] - b[0], b[3] - b[1]) / 2 + 4)].filter(s => s.kind !== SK.TUNNEL && !isCourseClass(s.cls.id)).map(s => ({ ax: s.a.x, ay: s.a.y, bx: s.b.x, by: s.b.y, name: this.roadNameOfSeg(s) })),
     holeLines: () => { const g = this.golf; if (!g) return []; return g.pins.flatMap(p => { const t = g.tees.find(q => q.hole === p.hole && q.kind === 'back') ?? g.tees.find(q => q.hole === p.hole); return t ? [{ hole: p.hole, line: [{ x: t.x, y: t.y }, { x: p.x, y: p.y }] }] : []; }); },
@@ -1214,12 +1223,13 @@ export class Game {
       const [fx, fy, fw, fh] = site.rangeFront, [px, py, pw, ph] = site.carpark;
       this.setBizDefs([{ id: 1, type: 'range', x: fx, y: fy, w: fw, h: fh }]);
       this.parkDefs = [{ id: 1, x: px, y: py, w: pw, h: ph }];
-      this.golf = s.save; this.golf.progress = emptyProgress();
+      // the ramp from the range to the first hole starts at the range card (P24 Phase 4a, T132)
+      this.golf = s.save; this.golf.progress = { ...emptyProgress(), ramp: 0 };
       // the range business (P24, T129): the starting range, and its cement cart paths laid with the road (the rest of its scene follows the frame)
       this.golf.range = defaultRangeBiz(); this.edit.addLegs(rangeScene(site.rangePlot, site.dir, this.golf.range).paths, classOf('cart-slab'), 0, undefined, true); this.golf.range.paths = true;
       const [hx, hy, hw, hh] = rangeLayout(site.rangePlot, site.dir).hut.rect, cx = hx + hw / 2, cy = hy + hh / 2;
       this.cam.X = worldX(cx, cy); this.cam.Y = worldY(cx, cy); this.cam.z = RANGE_CAM_ZOOM;
-      this.setTool('course');
+      this.setTool(this.toolLock('course') ? 'select' : 'course'); // the range card first: Holes opens with the first upgrade (T132)
       return true;
     }
     console.warn('golf: none of 8 seeds has a range start; the old start instead');
@@ -3438,7 +3448,8 @@ export class Game {
         disc(ctx, b.x, b.y, 4 * dpr, '#ffbe3c');
       }
       const parked = this.traffic.parks.find(q => q.id === d.id)?.parked ?? 0, c = this.screen(d.x + d.w / 2, d.y + d.h / 2);
-      const label = `P · ${parked}/${pk ? pk.bays.length : 0}`;
+      // the range's car park also holds the range sim's cars, which the worker never sees (T132)
+      const label = parkLabel(parked, pk && pk === this.rangePk?.pk ? this.range.sim.parked() : 0, pk ? pk.bays.length : 0);
       ctx.font = `bold ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
@@ -3834,8 +3845,10 @@ export class Game {
   /** the player's progress facts (T032; T117: the unlocks read the course: its holes with a par, the seasons played and the tour's invitation),
    *  null outside golf mode */
   playerProgressFacts(): PlayerProgressFacts | null {
-    const g = this.golf, p = g?.progress;
-    const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited }) : null;
+    const g = this.golf, p = g?.progress, b = g?.start === 'range' ? g.range : undefined;
+    // a range start's ramp (P24 Phase 4a, T132): the upgrades bought, the season's takings, and a prop placed near the range
+    const range = b ? { upgrades: b.owned.length, seasonTakings: b.season.takings, propsPlaced: this.decor.appeal() > 0 } : undefined;
+    const f = p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited, range }) : null;
     const pr = f && this.range.practiceFacts(); if (f && pr) f.practice = pr; // a range start's practice facilities (T130): their hints and brushes
     return f;
   }
@@ -3844,11 +3857,27 @@ export class Game {
    *  opened (its NEW badge goes) */
   private progressCheck() {
     const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
-    const f = this.playerProgressFacts();
+    const f = this.playerProgressFacts(), was = p.ramp;
     if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
+    if (was !== undefined && p.ramp !== undefined && p.ramp > was) this.toast(RAMP_TOAST[p.ramp]!, 'good'); // a ramp step opens (T132)
     this.range.hint = !!f && !!nextFirstRunHint(f)?.id.startsWith('hint-practice'); // the practice area's outline brightens while its hint is up
-    // a tool that is not open (a save loads with the road tool in hand; Show every tool now unticked) is put down for Holes (P23 P1-E)
-    if (this.toolLock(this.uiTool)) this.setTool('course');
+    this.range.practiceLocked = !!f && rampLock(f, 'course') !== null; // until the first upgrade the practice area says what opens it
+    // a tool that is not open (a save loads with the road tool in hand; Show every tool now unticked) is put down for Holes (P23 P1-E), or for
+    // Select while Holes waits for a range start's first upgrade (T132)
+    if (this.toolLock(this.uiTool)) this.setTool(this.toolLock('course') ? 'select' : 'course');
+  }
+  /** a hint's Show me (T130, T132): the camera on the spot it means and its tool in hand */
+  showHint(id: string) {
+    const sc = this.range.scene;
+    if (id.startsWith('hint-practice')) { this.showPracticeArea(); return; }
+    if ((id === 'hint-range-open' || id === 'hint-range-upgrade') && sc) { this.lookAt(sc.counter.x, sc.counter.y, RANGE_CAM_ZOOM); this.setTool('select'); this.openRangeCard(true); return; }
+    if (id === 'hint-range-props' && sc) { this.lookAt(sc.counter.x, sc.counter.y, 0.3); this.setTool('props'); return; }
+    if (id === 'hint-range-first-hole') {
+      // the land beyond the range's plot and practice area: the middle of your land's box, at a zoom that shows a par-3
+      const L = this.golf ? this.golfLand() : [];
+      if (L.length) { const x0 = Math.min(...L.map(r => r[0])), y0 = Math.min(...L.map(r => r[1])), x1 = Math.max(...L.map(r => r[0] + r[2])), y1 = Math.max(...L.map(r => r[1] + r[3])); this.lookAt((x0 + x1) / 2, (y0 + y1) / 2, 0.12); }
+      this.setTool('course'); this.paint.setPlan(); this.emit();
+    }
   }
   /** why tool t is not open yet under the unlocks (the rail shows it dimmed in place, P23 4.2), or null when it is open */
   toolLock(t: Tool): string | null { return this.toolUi()?.lockedTools.find(x => x.id === t)?.why ?? null; }
@@ -4928,7 +4957,9 @@ export class Game {
 
   /** Stadium label; the planner retains a footprint while detail tiers use the sorted artwork. */
   private drawStadium(ctx: CanvasRenderingContext2D) {
-    const s = this.site; if (!s) return;
+    // only a real stadium (T132: the site falls back to a golf game's clubhouse or range, and its "STADIUM · L1" was drawn under the range's own
+    // label at the same spot: the stray glyph after "DRIVING RANGE")
+    const s = this.site; if (!s || !this.bizDefs.some(d => d.type === 'stadium')) return;
     if (this.cam.z < PLANNER_Z) this.drawSite(ctx, s, 'rgba(150,160,175,0.55)');
     const dpr = this.dpr, c = this.screen(s.c.x, s.c.y), label = `STADIUM · L${this.traffic.round.level}`;
     ctx.font = `bold ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -4956,9 +4987,14 @@ export class Game {
     const dpr = this.dpr;
     for (const d of this.bizDefs) {
       if (d.type === 'stadium') continue;
-      const B = BUSINESS[d.type], c = this.screen(d.x + d.w / 2, d.y + d.h / 2), label = `${B.name.toUpperCase()} · L${this.traffic.biz.find(v => v.id === d.id)?.level ?? 1}`;
+      // a range start's range (T132): its own name plate ("DRIVING RANGE · 4 BAYS", the worker's level means nothing there) on a dark plate, so
+      // the land's dashed edge never runs through its letters; at district zoom the range's own "Driving Range" label stands in its place
+      const range = d.type === 'range' && this.golf?.start === 'range' && this.golf.range;
+      if (range && this.cam.z < RANGE_LABEL_Z) continue;
+      const B = BUSINESS[d.type], c0 = this.screen(d.x + d.w / 2, d.y + d.h / 2), c = range ? { x: c0.x, y: c0.y + 16 * dpr } : c0, label = range ? rangeMapLabel(rangeStats(range).bays) : `${B.name.toUpperCase()} · L${this.traffic.biz.find(v => v.id === d.id)?.level ?? 1}`;
       if (this.cam.z < PLANNER_Z) this.drawBizRect(ctx, d.x, d.y, d.w, d.h, FAMILY_FILL[B.family]);
       ctx.font = `bold ${11 * dpr}px ui-sans-serif, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      if (range) { const w = ctx.measureText(label).width + 12 * dpr; ctx.fillStyle = 'rgba(2,6,23,0.82)'; ctx.beginPath(); ctx.roundRect(c.x - w / 2, c.y - 9 * dpr, w, 18 * dpr, 5 * dpr); ctx.fill(); }
       ctx.lineJoin = 'round'; ctx.lineWidth = 3 * dpr; ctx.strokeStyle = 'rgba(2,6,23,0.9)'; ctx.strokeText(label, c.x, c.y);
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
       ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';

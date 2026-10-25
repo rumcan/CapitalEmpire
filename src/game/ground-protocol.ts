@@ -16,7 +16,13 @@ import type { SurfacesFile } from './painted-surfaces';
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone filter over the fill: t 1 Multiply (darker) or 2 Lighten (screen),
  *  ta its strength (0..1), tc its tint ('#rrggbb'); absent when the area has no tone */
 export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string;
-  /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile }
+  /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile;
+  /** mowing stripes laid last on its top (T132, the driving range's outfield; the T075 rule: stripes over the surface, never baked under it), from a
+   *  preset's Stripes: bands w tiles wide alternating (light first) along the unit (ux, uy) from (ox, oy) in tiles; l / k how much lighter /
+   *  darker, lc / dc the colours washed in, t the tint, f the soft edge (0 hard .. 1 a smooth wave) */
+  mw?: MowStripes }
+/** a painted area's mowing stripes (PatchPaint.mw) */
+export interface MowStripes { ux: number; uy: number; ox: number; oy: number; w: number; l: number; k: number; lc: string; dc: string; t: number; f: number }
 
 /** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin);
  *  and the rest of the course look (the brush's style, course-look.ts): its tone (t: 1 Multiply, 2 Screen of the tint tc at strength ta) and

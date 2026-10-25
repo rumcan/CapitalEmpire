@@ -33,6 +33,7 @@ import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
 import { computeTournamentCloseBook } from './game/golf/yearend';
 import { formatMultiDayStatus } from './game/golf/multiday';
+import { decorInfo } from './game/golf/decor';
 import { Icon, type IconName } from './ui/Icon';
 import { NightPanel } from './ui/NightPanel';
 import { RoadThumb } from './ui/RoadThumb';
@@ -364,7 +365,7 @@ export default function App() {
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
               {gv && hint
-                ? <><span><b>{hint.title}</b> · {hint.body}</span>{hint.id.startsWith('hint-practice') && <button className="chip chip-on" data-testid="hint-show-practice" onClick={() => { game.showPracticeArea(); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
+                ? <><span data-testid="hint-text"><b>{hint.title}</b> · {hint.body}</span>{hint.show && <button className="chip chip-on" data-testid={hint.id.startsWith('hint-practice') ? 'hint-show-practice' : 'hint-show'} onClick={() => { game.showHint(hint.id); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
                 : <span>{keyed(hintFor(game))}</span>}
             </div>
             )}
@@ -1436,6 +1437,19 @@ function SelectPanel({ game }: { game: Game }) {
   const p = game.selected;
   if (!p) return (<Panel title="Select"><p className="text-xs text-slate-300">Click an object to select it. Drag empty ground (or hold the right mouse button anywhere) to pan; scroll to zoom.</p></Panel>);
   const it = LIBRARY[p.item];
+  // a Props tool prop (T131) shows its catalogue name, its group and what selling it gives back (T132), not the library picture's name
+  const d = decorInfo(p.decor);
+  if (d) return (
+    <Panel title="Selected">
+      <div className="flex items-center gap-2" data-testid="select-decor">
+        <Thumb it={it} size={56} />
+        <div><div className="text-sm font-semibold">{d.name}</div><div className="text-[11px] text-slate-400">{d.group} · bought for {money(d.price)} · sells for {money(d.sell)}{d.standIn ? ` · Stand In for ${d.standIn}` : ''}</div></div>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1">
+        <button className="chip bg-red-500/70 text-white" onClick={() => game.deleteSelected()}>{`Sell for ${money(d.sell)} (Del)`}</button>
+      </div>
+    </Panel>
+  );
   return (
     <Panel title="Selected">
       <div className="flex items-center gap-2">

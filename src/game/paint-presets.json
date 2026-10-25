@@ -441,6 +441,106 @@
    },
    "lawn": true,
    "painted": "grass"
+  },
+  {
+   "id": "range-outfield",
+   "name": "Range outfield",
+   "surface": null,
+   "size": 32.5,
+   "col": "#53741f",
+   "a": {
+    "src": "src/assets/ground/paint-photo-golf-fringe.webp",
+    "scale": 1.1,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.14,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/paint-photo-fairway.webp",
+    "scale": 4.4,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 1.13,
+    "contrast": 1.06,
+    "sat": 0.83,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.5,
+    "soft": 0.24,
+    "patch": 0.25,
+    "tone": 0.35,
+    "warm": 0.3,
+    "angle": 51,
+    "tilt": 0.5
+   },
+   "stripes": {
+    "on": true,
+    "dir": "x",
+    "width": 6,
+    "light": 0.08,
+    "dark": 0.1,
+    "lightCol": "#c8e07c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.2,
+    "soft": 0.25
+   },
+   "lawn": false,
+   "painted": null,
+   "pic": "fairway"
+  },
+  {
+   "id": "range-green",
+   "name": "Range target green",
+   "surface": null,
+   "size": 33.5,
+   "col": "#3a550b",
+   "a": {
+    "src": "src/assets/ground/paint-photo-fairway.webp",
+    "scale": 6.55,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.86,
+    "contrast": 1,
+    "sat": 1,
+    "hue": 0
+   },
+   "b": {
+    "src": "src/assets/ground/grass-capital-backyard.webp",
+    "scale": 1.05,
+    "tint": "#808080",
+    "tintAmt": 0,
+    "bright": 0.85,
+    "contrast": 1.09,
+    "sat": 1.15,
+    "hue": 0
+   },
+   "mix": {
+    "share": 0.62,
+    "soft": 0.27,
+    "patch": 1.1,
+    "tone": 0.4,
+    "warm": 0,
+    "angle": 0,
+    "tilt": 0.5
+   },
+   "stripes": {
+    "on": false,
+    "dir": "x",
+    "width": 3,
+    "light": 0.12,
+    "dark": 0.12,
+    "lightCol": "#b4d46c",
+    "darkCol": "#2e5a1c",
+    "tint": 0.25,
+    "soft": 0.3
+   },
+   "lawn": false,
+   "painted": null,
+   "pic": "golf-green"
   }
  ],
  "blocks": null,

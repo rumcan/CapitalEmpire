@@ -4,8 +4,9 @@
 import { RANGE_PASS_POP } from './range';
 /** the range's upgrades (plan P24 2.3) */
 export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covered' | 'lights' | 'dispenser' | 'proshop';
-/** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($) */
-export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number }
+/** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($)
+ *  and the upgrades' upkeep paid ($, T132) */
+export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number; upkeep: number }
 /** the practice facilities the player paints beside the range (plan P24 Phase 2, T130): the putting green, and the chipping green with its bunker */
 export type PracticeId = 'putting' | 'chipping';
 export const PRACTICE_IDS: readonly PracticeId[] = ['putting', 'chipping'];
@@ -32,28 +33,34 @@ export const DEMAND_RATE = 0.0183;
 /** the most appeal the player's props add to the range (plan P24 Phase 3, T131: golf/decor.ts decorAppeal) */
 export const PROPS_APPEAL_CAP = 0.4;
 
-/** an upgrade as the range card lists it: its id, name, cost ($), the upgrade it needs first, what it does (one line) */
-export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; needs?: RangeUpgradeId; effect: string }
+/** an upgrade as the range card lists it: its id, name, cost ($), its upkeep ($ a game month, T132: twelve months a season), the upgrade it needs
+ *  first, what it does (one line) */
+export interface RangeUpgrade { id: RangeUpgradeId; name: string; cost: number; upkeep: number; needs?: RangeUpgradeId; effect: string }
 export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
-  { id: 'bays8', name: '8 hitting bays', cost: 8000, effect: 'Four more mats on the tee box: twice the golfers at once' },
-  { id: 'bays12', name: '12 hitting bays', cost: 14000, needs: 'bays8', effect: 'Four more mats: a longer queue fits before cars drive on' },
-  { id: 'bays24', name: '24 hitting bays', cost: 40000, needs: 'bays12', effect: 'The whole tee box in mats' },
-  { id: 'targets', name: 'Target greens and yardage boards', cost: 6000, effect: 'Five target greens with flags and boards: +25% visitors' },
-  { id: 'covered', name: 'Covered bays', cost: 18000, effect: 'A roof over the mats: +15% visitors, golfers pay $2 more without grumbling' },
-  { id: 'lights', name: 'Floodlights', cost: 24000, effect: 'Open till 22:00: the after-work crowd stays into the evening' },
-  { id: 'dispenser', name: 'Ball dispenser', cost: 5000, effect: 'Buckets in a second: the queue at the shop clears, +5% visitors' },
-  { id: 'proshop', name: 'Pro shop', cost: 45000, effect: 'The shack becomes a real pro shop: gear sales +$2 a golfer, +15% visitors' },
+  { id: 'bays8', name: '8 hitting bays', cost: 8000, upkeep: 60, effect: 'Four more mats on the tee box: twice the golfers at once' },
+  { id: 'bays12', name: '12 hitting bays', cost: 14000, upkeep: 90, needs: 'bays8', effect: 'Four more mats: a longer queue fits before cars drive on' },
+  { id: 'bays24', name: '24 hitting bays', cost: 40000, upkeep: 300, needs: 'bays12', effect: 'The whole tee box in mats' },
+  { id: 'targets', name: 'Target greens and yardage boards', cost: 6000, upkeep: 40, effect: 'Five target greens with flags and boards: +25% visitors' },
+  { id: 'covered', name: 'Covered bays', cost: 18000, upkeep: 120, effect: 'A roof over the mats: +15% visitors, golfers pay $2 more without grumbling' },
+  { id: 'lights', name: 'Floodlights', cost: 24000, upkeep: 250, effect: 'Open till 22:00: the after-work crowd stays into the evening' },
+  { id: 'dispenser', name: 'Ball dispenser', cost: 5000, upkeep: 30, effect: 'Buckets in a second: the queue at the shop clears, +5% visitors' },
+  { id: 'proshop', name: 'Pro shop', cost: 45000, upkeep: 400, effect: 'The shack becomes a real pro shop: gear sales +$2 a golfer, +15% visitors' },
 ];
 const BY_ID = new Map(RANGE_UPGRADES.map(u => [u.id, u]));
+/** the game months in a season (one game day: golf/calendar.ts) */
+export const MONTHS_A_SEASON = 12;
+/** the upgrades' upkeep the range pays each game month ($, T132; booked as upkeep in the ledger). The range's own $2,000 a season stays the
+ *  worker's business upkeep */
+export function rangeUpkeep(s: Pick<RangeBizSave, 'owned'>): number { let n = 0; for (const id of s.owned) n += BY_ID.get(id)?.upkeep ?? 0; return n; }
 
-const zero = (): RangeCounts => ({ golfers: 0, buckets: 0, lost: 0, takings: 0 });
+const zero = (): RangeCounts => ({ golfers: 0, buckets: 0, lost: 0, takings: 0, upkeep: 0 });
 const noPractice = (): Record<PracticeId, PracticeFacSave> => ({ putting: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } }, chipping: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } } });
 /** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts, no practice facilities */
 export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice() }; }
 const pos = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
 const counts = (c: unknown): RangeCounts => {
   const o = (c && typeof c === 'object' ? c : {}) as Partial<RangeCounts>;
-  return { golfers: pos(o.golfers), buckets: pos(o.buckets), lost: pos(o.lost), takings: pos(o.takings) };
+  return { golfers: pos(o.golfers), buckets: pos(o.buckets), lost: pos(o.lost), takings: pos(o.takings), upkeep: pos(o.upkeep) };
 };
 /** a loaded practice record made well formed (the migration: a save from before T130 has none built) */
 function normalizePractice(x: unknown): Record<PracticeId, PracticeFacSave> {
