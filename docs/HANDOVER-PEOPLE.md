@@ -147,3 +147,5 @@ spending RUN credits and make one person before a batch. Ask before downloading 
 Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; git here needs
 `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*`. Other sessions work in this repo too: add only your own files
 (`git status` shows theirs), never revert theirs. The code side (the game, M2.5 next) is LEAD.md and NOW.md, not this file.
+
+- 2026-10-25 check: after the cap reset the loop made 10 golfer models (golf_pro_m1-4, w1-2, golf_am_m1-3, w1), but every `golf_drive` base clip FAILED: RUN rejects animation id 323 ("Invalid animation. Supported: idle, walk, run, jump"). RUN no longer exposes golf_drive; no swing sheets exist, the club prop is untested. Needs an owner decision (another clip source or local swing). Credits today: 10,130 (hunyuan3d-v3.1-pro, 10 calls).
