@@ -4,7 +4,8 @@ import rockyDirtAlt from './assets/ground/rocky-dirt-alt.webp';
 import type { Game } from './game/engine';
 import { BORDER_MENU, MENU_TEXES, RADIUS_MAX, borderW, edgeAngle } from './game/paint';
 import { BORDER_STEPS, CourseEdges, borderLabel, paintBorderAt, paintBorderPos } from './ui/course/CourseEdges';
-import { GRID_KINDS, type PaintMode } from './game/paint-tool';
+import { BORDER_KINDS, GRID_KINDS, type PaintMode } from './game/paint-tool';
+import { paintedSwatch } from './game/painted-surfaces-live';
 import { areaBuildCost } from './game/golf/costs';
 import { LIBRARY } from './game/library';
 import { PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from './game/plant';
@@ -12,8 +13,14 @@ import { Thumb } from './ui/Thumb';
 
 const MODES: { id: PaintMode; label: string }[] = [{ id: 'draw', label: 'Draw' }, { id: 'pick', label: 'Pick' }, { id: 'erase', label: 'Erase' }];
 const DIRT_SWATCHES: Record<string, string> = { rockyDirt, rockyDirtAlt };
-/** a texture's swatch style (the colour, or the dirt picture over it) */
-export const swatch = (t: { id: string; col: string }) => ({ backgroundColor: t.col, backgroundImage: DIRT_SWATCHES[t.id] ? `url(${DIRT_SWATCHES[t.id]})` : undefined, backgroundSize: 'cover' });
+/** a texture's swatch style: its painted look (its colour and near painting, painted-surfaces-live.ts), else the colour, or the dirt picture over it */
+export const swatch = (t: { id: string; col: string }) => {
+  const p = paintedSwatch(t.id);
+  if (p) return { backgroundColor: p.col, backgroundImage: p.img ? `url(${p.img})` : undefined, backgroundSize: '400%', backgroundPosition: 'center' };
+  return { backgroundColor: t.col, backgroundImage: DIRT_SWATCHES[t.id] ? `url(${DIRT_SWATCHES[t.id]})` : undefined, backgroundSize: 'cover' };
+};
+/** whether a texture is laid with its painted look in this game (its angle then does nothing: a painted look is never turned, its light stays upper right) */
+const paintedTex = (game: Game, id: string) => game.grassArt === 'painted' && !!paintedSwatch(id);
 const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
 /** a texture's plain name for the menus (P23 P1-E): the owner's preset names as saved in the studio ("Golf - Green", "Path_worn", "sand",
  *  "First Cut") read as words ("Green", "Worn path", "Sand", "First cut"): a "Golf -" prefix goes, underscores become spaces, a trailing
@@ -128,12 +135,15 @@ function Section({ id, title, children, open: dflt = true }: { id: string; title
 }
 
 /** the style editor: the fill's texture, scale, angle, corners, tone and border (and the border's own), the snap setting, and the area count and cost.
- *  gridOnly (Holes > My looks on a golf course's 1 m grid, P23 P1-E): only what the grid's cells wear, the texture, its size and its angle (the
- *  grid draws no blend, tone or corners; its Border and Shadow are Holes > More options > Edges) */
+ *  gridOnly (Holes > My looks on a golf course's 1 m grid, P23 P1-E): what the grid's cells wear (T128: the texture, its size and angle, its tone
+ *  and blend, and its collar band's width, shadow, texture, size, angle and tone), without the painted areas' layer, corners and cost */
 export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?: boolean }) {
   const p = game.paint, s = p.style;
-  // a course surface's border is its collar band on the course grid (the course look); any other is the painted area's
-  const grid = p.course && GRID_KINDS.includes(p.brushKind) && !p.selected;
+  // a course surface's border is its collar band on the course grid (the course look); any other is the painted area's. Every control shown
+  // works on both (course-look.ts: the fill's texture, scale, angle, tone and blend, the band's texture, scale, angle and tone); the ones that
+  // cannot (a grid surface's corners, the kerb as its band, a painted look's angle) are left out
+  const grid = (gridOnly || p.course) && GRID_KINDS.includes(p.brushKind) && !p.selected, band = grid && !!BORDER_KINDS[p.brushKind];
+  const fillPainted = paintedTex(game, s.tex), bandPainted = paintedTex(game, s.btex);
   const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
   // the border follows the fill's scale and angle until either is set (the renderer draws it that way), so show the fill's values then
@@ -151,13 +161,12 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         </div>
         <div className="text-[10px] text-slate-500">Page Up / Down, Shift for front / back (or Ctrl+] / Ctrl+[)</div>
       </Section>)}
-      <Section id="texture" title={gridOnly ? 'Texture' : 'Texture and blend'}>
+      <Section id="texture" title="Texture and blend">
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
         {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
         {!MENU_TEXES.length && <div className="text-[11px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
       </div>
-      {!gridOnly && <>
       <div className="mt-2 text-[11px] text-slate-400">Blend with</div>
       <div className="flex flex-wrap gap-1">
         <button className={`chip ${!s.mtex ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: undefined })}>None</button>
@@ -174,9 +183,8 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           ))}
         </>
       )}
-      </>}
       </Section>
-      <Section id="look" title={gridOnly ? 'Size and angle' : 'Size, angle and colour'}>
+      <Section id="look" title="Size, angle and colour">
       <div className="mt-2 text-[11px] text-slate-400">Scale</div>
       <div className="flex items-center gap-1">
         <button className="btn" onClick={() => p.setStyle({ scale: s.scale / 1.25 })}>−</button>
@@ -184,6 +192,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         <button className="btn" onClick={() => p.setStyle({ scale: s.scale * 1.25 })}>+</button>
         <button className="btn" onClick={() => p.setStyle({ scale: 1 })}>Reset</button>
       </div>
+      {!fillPainted && (<>
       <div className="mt-2 text-[11px] text-slate-400">Angle</div>
       <div className="flex items-center gap-2">
         <input type="range" min={-90} max={90} step={5} value={s.angle} onChange={e => p.setStyle({ angle: +e.target.value })} className="flex-1" />
@@ -194,7 +203,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
         <button className={`chip ${s.angle === 45 ? 'chip-on' : ''}`} onClick={() => p.setStyle({ angle: 45 })}>45°</button>
         <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => p.setStyle({ angle: edgeAngle(pts) })}>Along first edge</button>
       </div>
-      {!gridOnly && <>
+      </>)}
       <div className="mt-2 text-[11px] text-slate-400">Tone</div>
       <div className="flex flex-wrap gap-1">
         {TONES.map(t => <button key={t.id} className={`chip ${s.tone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle(toneStyle(t.id, s.tint))}>{t.label}</button>)}
@@ -212,11 +221,10 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           </div>
         </>
       )}
-      </>}
       </Section>
       {/* the owner (2026-10-25): "should be a slider". One continuous Border, a hairline to huge: a course surface's collar band (its course look,
           with its Shadow right under it), or a painted area's border (the old None, Small, Medium and Large are points on it) */}
-      {!gridOnly && <Section id="border" title="Border">
+      <Section id="border" title="Border">
       {grid ? <CourseEdges game={game} /> : (
         <div className="flex items-center gap-2 text-[11px] text-slate-400" title="The border band inside the area's edge: none, a hairline, up to 8 m">
           <span className="w-12 shrink-0">Border</span>
@@ -224,11 +232,11 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           <span className="w-16 text-right text-xs text-slate-200">{s.border > 0 ? borderLabel(2 * borderW(s.border)) : 'none'}</span>
         </div>
       )}
-      {!grid && s.border > 0 && (
+      {(grid ? band : s.border > 0) && (
         <>
           <div className="mt-2 text-[11px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">
-            {BORDER_MENU.map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
+            {BORDER_MENU.filter(t => !grid || t.id !== 'kerb').map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
           </div>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
             Border scale and angle
@@ -240,6 +248,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
             <button className="btn" onClick={() => bOwn({ bscale: bScale * 1.25 })}>+</button>
             <button className="btn" onClick={() => bOwn({ bscale: 1 })}>Reset</button>
           </div>
+          {!bandPainted && (<>
           <div className="flex items-center gap-2">
             <input type="range" min={-90} max={90} step={5} value={bAngle} onChange={e => bOwn({ bangle: +e.target.value })} className="flex-1" />
             <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(bAngle)}°`}</span>
@@ -249,6 +258,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
             <button className={`chip ${!bFollow && s.bangle === 45 ? 'chip-on' : ''}`} onClick={() => bOwn({ bangle: 45 })}>45°</button>
             <button className="chip disabled:opacity-40" disabled={pts.length < 4} onClick={() => bOwn({ bangle: edgeAngle(pts) })}>Along first edge</button>
           </div>
+          </>)}
           <div className="mt-2 text-[11px] text-slate-400">Border tone</div>
           <div className="flex flex-wrap gap-1">
             {TONES.map(t => <button key={t.id} className={`chip ${s.btone === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btone: t.id, btint: toneStyle(t.id, s.btint).tint })}>{t.label}</button>)}
@@ -268,13 +278,15 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           )}
         </>
       )}
-      </Section>}
-      {!gridOnly && <Section id="shape" title="Corners and grid" open={false}>
+      </Section>
+      {!gridOnly && <Section id="shape" title={grid ? 'Grid' : 'Corners and grid'} open={false}>
+      {!grid && (<>
       <div className="mt-2 text-[11px] text-slate-400">Corners</div>
       <div className="flex items-center gap-2">
         <input type="range" min={0} max={RADIUS_MAX} step={0.25} value={s.radius} onChange={e => p.setStyle({ radius: +e.target.value })} className="flex-1" />
         <span className="w-14 text-right text-xs text-slate-200">{s.radius === 0 ? 'Sharp' : `${s.radius * 2} m`}</span>
       </div>
+      </>)}
       <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
       <input type="checkbox" checked={p.snap} onChange={e => { p.snap = e.target.checked; game.emit(); }} />
       Snap corners to the grid

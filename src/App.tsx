@@ -273,12 +273,6 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
-                    <div className="flex items-center gap-2 px-2 py-2 text-sm" title="The grass on the open ground, the meadows and the town lawns: Painted, the game-art grass with a picture for each zoom level (T082), or Photo, the photo grass the game had before (the studio's base grass and texture presets)">
-                      <span className="w-16 shrink-0">Grass</span>
-                      {(['painted', 'photo'] as const).map(a => (
-                        <button key={a} className={`btn flex-1 ${game.grassArt === a ? 'on' : ''}`} onClick={() => { game.setGrassArt(a); bump(); }}>{a === 'painted' ? 'Painted' : 'Photo'}</button>
-                      ))}
-                    </div>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="The grass grows where it would: darker, bushier grass along fences, walls, hedges and water, patchy grass with bare dirt and leaves under trees, worn ground at doors and path edges, and soft shade at the foot of everything (T111)">
                       <input type="checkbox" checked={game.groundVariety} onChange={e => { game.setGroundVariety(e.target.checked); bump(); }} />
                       Ground variety

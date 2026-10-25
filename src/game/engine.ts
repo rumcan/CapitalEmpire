@@ -16,10 +16,11 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
-import { lotBatch, type LotPatch } from './ground-protocol';
+import { lotBatch, type CourseTex, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
+import { courseBandOf, courseTexOf } from './course-look';
 import { escapeLadder, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE, STUDIO_SCALE } from './lots/scales';
@@ -600,13 +601,19 @@ export class Game {
     this.resendCourse();
     this.syncCourseMarkers(undefined, true);
   }
-  /** the textures the grid's surfaces wear: the Course brushes' looks (texture, scale, angle), the course presets for fescue and waste and the collars */
+  /** the textures the grid's surfaces wear: the Course brushes' looks (texture, scale, angle, tone and Blend with: course-look.ts), the course
+   *  presets for fescue and waste and the collars, each surface's own collar band (its Border texture, scale, angle and tone) */
   private courseLooks(): CourseLooks {
-    const b = this.paint.brush, look = (st: { tex: string; scale: number; angle: number }) => ({ tex: st.tex, sc: st.scale, a: st.angle });
+    const b = this.paint.brush, look = courseTexOf;
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     const surf = [undefined, look(b.rough.style), pre('fescue', 'golfFescue'), look(b.water.style), look(b.fairway.style), look(b.tee.style), look(b.bunker.style), pre('waste', 'wasteSand'), look(b.green.style)];
     // the bank is laid in the rough's grass (the renderer paints its wet soil and stones, T099); the Border, Shadow and Height sliders ride along
-    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: look(b.rough.style) }, border: this.paint.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights() };
+    const rough = { tex: b.rough.style.tex, sc: b.rough.style.scale, a: b.rough.style.angle };
+    const collar = { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: rough, bank: rough };
+    const band: (CourseTex | undefined)[] = [];
+    band[SURF.fairway] = courseBandOf('fairway', b.fairway.style, collar['first-cut']); band[SURF.tee] = courseBandOf('tee', b.tee.style, collar['first-cut']);
+    band[SURF.green] = courseBandOf('green', b.green.style, collar.fringe); band[SURF.bunker] = courseBandOf('bunker', b.bunker.style, collar.lip); band[SURF.water] = courseBandOf('water', b.water.style, collar.bank);
+    return { surf, collar, band, border: this.paint.courseBorders(), shadow: this.paint.courseShadows(), height: this.paint.surfaceHeights() };
   }
   private cpCache: { ver: number; g: CourseGrid; segs: number[] } | null = null;
   /** the cart paths and drives near the course grid as flat segments ax, ay, bx, by (tiles): the tees' stairs face the nearest (T127) */
@@ -1004,13 +1011,12 @@ export class Game {
     try { localStorage.setItem('capitalempire.shadows', String(this.shadowStrength)); } catch { /* storage may be unavailable */ }
     this.emit();
   }
-  /** the grass (T082): 'painted', the game-art families (painted-grass-art.ts, three zoom levels), or 'photo', the grass the game had before
-   *  (base-grass.json and the presets' mixed pictures), for the base ground, the meadow, the map edge and the painted presets (the town
-   *  lawns); the gear menu's Grass, kept across reloads; window.__game.setGrassArt('photo') from the console */
+  /** the ground art: 'painted', the hand-painted families on every surface (painted-surfaces.ts; the owner, 2026-10-25: "i dont want to see
+   *  old textures anymore"), always; 'photo', the photo and procedural textures the game had before, only for comparisons on the dev server
+   *  (?grass=photo, or window.__game.setGrassArt('photo') from the console); nothing the player sees offers it, and nothing remembers it */
   grassArt: GrassArt = clampGrassArt(null);
   setGrassArt(v: GrassArt) {
     this.grassArt = clampGrassArt(v);
-    try { localStorage.setItem('capitalempire.grassArt', this.grassArt); } catch { /* storage may be unavailable */ }
     this.ground.setGrassArt(this.grassArt);
     this.emit();
   }
@@ -1025,7 +1031,8 @@ export class Game {
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
     try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
-    try { this.grassArt = clampGrassArt(localStorage.getItem('capitalempire.grassArt')); } catch { /* the default, painted */ }
+    try { localStorage.removeItem('capitalempire.grassArt'); } catch { /* the old gear menu's Grass setting: gone, the painted art always */ }
+    this.grassArt = import.meta.env.DEV && new URLSearchParams(location.search).get('grass') === 'photo' ? 'photo' : 'painted';
     this.ground.grassArt = this.grassArt;
     try { this.groundVariety = localStorage.getItem('capitalempire.groundVariety') !== '0'; } catch { /* the default, on */ }
     this.ground.living = { on: this.groundVariety, debug: false };
