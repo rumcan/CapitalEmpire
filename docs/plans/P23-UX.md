@@ -37,8 +37,10 @@ joined by cart paths and streets; the surface preview chip sits small beside the
 
 ## 1. Decisions for the owner
 
-One line each: the question, the options, and my pick in bold. Until you answer, the game keeps today's behaviour; Phase 1 does not
-depend on any of them. Pictures: decision 5 in `P23-ux/v2-m9-grid-options.webp`; decisions 2 and 3 in `v2-m8-rail-stages.webp` and
+**Approved by the owner, 2026-10-25: all nine picks in bold below** ("Approved. Merge the P23 plan, take your recommended picks for
+the 9 decisions, and start Phase 1 wave A now."). Phase 2 tickets build on them.
+
+One line each: the question, the options, and my pick in bold. Phase 1 does not depend on any of them. Pictures: decision 5 in `P23-ux/v2-m9-grid-options.webp`; decisions 2 and 3 in `v2-m8-rail-stages.webp` and
 `v2-m4-more.webp`; decision 8 against today's in `t02-wizard-today.webp`.
 
 1. **Keys:** **keep today's** (P car park, B bottlenecks, N upgrade, T toll, U bus, A Paint) / move to the rail's letters. (Also: A
