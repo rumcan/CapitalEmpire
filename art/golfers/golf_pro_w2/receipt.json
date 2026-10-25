@@ -1,0 +1,10 @@
+{
+  "image": "art/golfers/pics/golf_pro_w2.png",
+  "look": "Dark-haired woman pro in her 30s, a short bob, olive skin, a plain teal short-sleeved polo shirt, a navy knee-length golf skirt, white ankle socks, white golf shoes, a white golf glove on the left hand",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/8efd9114-d4f7-4296-b71a-b2473f0b29e1/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

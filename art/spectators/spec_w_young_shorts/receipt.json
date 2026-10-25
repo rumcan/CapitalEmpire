@@ -1,0 +1,10 @@
+{
+  "image": "art/spectators/pics/spec_w_young_shorts.png",
+  "look": "Athletic young woman in her 20s, a brown ponytail, a plain white t-shirt, red athletic shorts, white ankle socks, white sneakers",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/fb51b4ef-1a55-4aa4-948d-47d34aa9cd24/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

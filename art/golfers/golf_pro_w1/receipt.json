@@ -1,0 +1,10 @@
+{
+  "image": "art/golfers/pics/golf_pro_w1.png",
+  "look": "Blonde woman touring pro in her 20s, hair in a short ponytail, a plain pink short-sleeved polo shirt, white knee-length culottes, a plain white visor, a white golf glove on the left hand, white golf shoes",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/b4508965-38d7-4fc7-ad0d-b28278cfb8ab/model.compressed.glb",
+  "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_woman",
+    "idle": "base_woman"
+  }
+}

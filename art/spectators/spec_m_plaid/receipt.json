@@ -1,0 +1,10 @@
+{
+  "image": "art/spectators/pics/spec_m_plaid.png",
+  "look": "Grey-haired grandfather in his 60s, a plain yellow V-neck sweater over a plain white collared shirt, green plaid trousers, brown loafers",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/697ea05a-5b18-4d89-aafd-7339ea626770/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}

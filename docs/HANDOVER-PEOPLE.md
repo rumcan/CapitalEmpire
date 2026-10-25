@@ -93,6 +93,18 @@ Decisions taken (the owner pre-approves the lead's recommendation; recorded here
 `preview.png` and `preview-golf_drive.png` (the club in the hands at address, at the top, at the finish; no clipping at the frame edges), then
 the studio People tab and the game wiring. The head-to-head test (1b) waits behind the batch; the golfers already show picture-first at scale.
 
+**Update 2026-10-25 04:50 UTC.** After the cap reset the loop made **14 models from their pictures, all clean** (no ground plate on any;
+"model 1.65 to 1.68 units tall"; 14,182 credits): the 10 golfers and the 4 remakes (`spec_m_plaid`, `staff_security_m`,
+`spec_w_young_shorts`, `staff_marshal_w`: no emblem, no badges, no leg web, the hands fine). **Picture first works; use it for the
+rest.** All 10 golfers have their walk and idle sheets (`output/golfers-lineup.png` shows them side by side): **31 good people now.**
+**The swing did not come:** RUN's `animate-3d --input` knows only `idle, walk, run, jump` ("Invalid animation 'golf_drive'", and
+'323'), so item 5 above was wrong: RUN takes Meshy's walk, not its whole library. `make-cast.mjs` now makes a person with walk and idle
+when the base lacks an extra clip, and adds the clip's sheet on a later run once `art/people3d/<base>/anim_<clip>.glb` exists (from
+anywhere). The swing's sources, for the owner: **Mixamo** (free with an Adobe sign-in: "Golf Drive", putts and the whole crowd list,
+motion-captured; the owner downloads the FBX files, then a local retarget onto base_man: its bones are Mixamo's apart from the spine and
+neck names, `Spine02/Spine01/Spine/neck` for `Spine/Spine1/Spine2/Neck`), **a hand-keyed swing** on base_man's skeleton (free, now; 6 or 7
+key poses), or **Meshy's own API** (the owner's Meshy key; golf_drive is its id 323). The club (`--prop club`) waits for whichever clip comes.
+
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
 1. `make-person-3d.mjs <id> "<look>" --root <dir> --model-only`: the model from RUN (text-to-3d, an A-pose prompt around the look). It
    checks RUN's library first (never pays twice), and when the CLI gives up after 600 s it waits for the model in the library.
@@ -147,5 +159,3 @@ spending RUN credits and make one person before a batch. Ask before downloading 
 Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; git here needs
 `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*`. Other sessions work in this repo too: add only your own files
 (`git status` shows theirs), never revert theirs. The code side (the game, M2.5 next) is LEAD.md and NOW.md, not this file.
-
-- 2026-10-25 check: after the cap reset the loop made 10 golfer models (golf_pro_m1-4, w1-2, golf_am_m1-3, w1), but every `golf_drive` base clip FAILED: RUN rejects animation id 323 ("Invalid animation. Supported: idle, walk, run, jump"). RUN no longer exposes golf_drive; no swing sheets exist, the club prop is untested. Needs an owner decision (another clip source or local swing). Credits today: 10,130 (hunyuan3d-v3.1-pro, 10 calls).

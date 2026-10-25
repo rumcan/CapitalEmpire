@@ -82,18 +82,37 @@ function cutPlate(p, dir) {
   log(`${p.id}: plate cut (${r.last})`);
 }
 
+/** a base has the clip (art/people3d/<base>/anim_<clip>.glb), or RUN makes it now: tried once per base and clip in a run. RUN's animate-3d
+ *  --input knows only idle, walk, run and jump (2026-10-25: "Invalid animation", for golf_drive too), so a clip like the swing waits for a
+ *  file put there by other means; the cap stops the batch at the end (exit 3) so the loop tries again later */
+const tried = new Map();
+let clipCapped = false;
+function baseReady(base, clip) {
+  if (fs.existsSync(path.join(root, 'art/people3d', base, `anim_${clip}.glb`))) return true;
+  const key = `${base}/${clip}`;
+  if (!tried.has(key)) {
+    const b = baseClip(base, clip);
+    if (b.capped) clipCapped = true;
+    if (!b.ok) log(`${base}: no ${clip} clip yet (${b.capped ? "RUN's cap" : b.out}); walk and idle meanwhile`);
+    tried.set(key, !!b.ok);
+  }
+  return tried.get(key);
+}
+
 let made = 0;
-person: for (const p of cast.people) {
+for (const p of cast.people) {
   if (only && !only.includes(p.id)) continue;
   if (made >= limit) break;
   const dir = path.join(root, p.root, p.id), has = f => fs.existsSync(path.join(dir, f));
   const extra = [...new Set(p.clips ?? [])], render = { ...cast.render, ...p.render };
+  // the extra clips the base has (or RUN can make for it now); one it has not waits, and the person is made with walk and idle meanwhile
+  const ready = extra.filter(c => renderOnly ? has(`anim_${c}.glb`) : baseReady(p.from, c));
   // the template sheet (sheet.json) and each extra clip's sheet (<clip>.json): a rerun makes only what is missing
-  const template = renderOnly || !has('sheet.json'), sheets = extra.filter(c => renderOnly || !has(`${c}.json`));
+  const template = renderOnly || !has('sheet.json'), sheets = ready.filter(c => renderOnly || !has(`${c}.json`));
   if (!template && !sheets.length) continue;
   if (renderOnly && !has('anim_walk.glb')) continue;
   // the rig again when an extra clip's animation is missing (free: it rewrites them all)
-  const rig = !renderOnly && (!has('anim_walk.glb') || extra.some(c => !has(`anim_${c}.glb`)));
+  const rig = !renderOnly && (!has('anim_walk.glb') || ready.some(c => !has(`anim_${c}.glb`)));
   log(`${p.id}: start (${p.role}, ${p.root})`);
   if (!renderOnly && !has('model.glb')) {
     // a picture makes the model (image-to-3d); a picture not made yet skips the person
@@ -110,13 +129,7 @@ person: for (const p of cast.people) {
   }
   if (!renderOnly && !has('anim_walk.glb')) cutPlate(p, dir);
   if (rig) {
-    // the extra clips the base lacks, made by RUN once per base before the rig moves them on
-    for (const clip of extra) {
-      const b = baseClip(p.from, clip);
-      if (b.capped) { log(`${p.id}: RUN rate limit, batch stopped`); process.exit(3); }
-      if (!b.ok) { log(`${p.from}: clip ${clip} FAILED: ${b.out}`); continue person; }
-    }
-    const r = run('rig-local-person.mjs', [p.id, '--from', p.from, '--root', p.root, '--clips', [...new Set(['walk', 'idle', ...extra])].join(',')]);
+    const r = run('rig-local-person.mjs', [p.id, '--from', p.from, '--root', p.root, '--clips', [...new Set(['walk', 'idle', ...ready])].join(',')]);
     if (!r.ok) { log(`${p.id}: rig FAILED: ${r.out}`); continue; }
     log(`${p.id}: rig ok (from ${p.from})`);
   }
@@ -133,3 +146,4 @@ person: for (const p of cast.people) {
   made++;
 }
 log(`batch over: ${made} made`);
+if (clipCapped) process.exit(3);

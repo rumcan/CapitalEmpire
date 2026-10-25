@@ -1,0 +1,10 @@
+{
+  "image": "art/golfers/pics/golf_pro_m4.png",
+  "look": "Tall Black touring pro in his 30s, lean, short black hair, a plain navy short-sleeved polo shirt, light grey trousers, a plain white baseball cap, a white golf glove on the left hand, black golf shoes",
+  "modelUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/threedgen/AFjPSjQH9kbcCl57sgO3/01c1b425-b4c8-4198-bda8-e32bcf9c471a/model.compressed.glb",
+  "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
+  "clipsFrom": {
+    "walk": "base_man",
+    "idle": "base_man"
+  }
+}
