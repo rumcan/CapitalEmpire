@@ -205,9 +205,21 @@ export function defaultPlan(
   return base;
 }
 
-/** centripetal Catmull-Rom spline through tee, bends and green, sampled every 1 m (0.5 tile) */
+let lineKey = '';
+let lineVal: Pt[] = [];
+/** centripetal Catmull-Rom spline through tee, bends and green, sampled every 1 m (0.5 tile); the last line is kept (a re-plan asks
+ *  for the same control points twice: defaultPlan, then planGeom) */
 export function centreLine(plan: HolePlan): Pt[] {
   const ctrl = [plan.tee, ...plan.bends, plan.green];
+  let key = '';
+  for (const p of ctrl) key += `${p.x},${p.y};`;
+  if (key !== lineKey) { lineVal = lineThrough(ctrl, plan.green); lineKey = key; }
+  return lineVal.slice();
+}
+
+/** the centre line through the control points (see centreLine) */
+function lineThrough(ctrl: Pt[], greenPt: Pt): Pt[] {
+  const plan = { green: greenPt };
   if (ctrl.length === 2) {
     // straight line
     const p0 = ctrl[0]!;
@@ -256,7 +268,7 @@ export function centreLine(plan: HolePlan): Pt[] {
     const t3 = t2 + d23;
 
     const segDistTiles = ptDist(p1, p2);
-    const segSteps = Math.max(4, Math.ceil(segDistTiles / 0.1));
+    const segSteps = Math.max(4, Math.ceil(segDistTiles / 0.25));
 
     for (let step = 0; step < segSteps; step++) {
       const t = t1 + (step / segSteps) * (t2 - t1);
@@ -635,7 +647,9 @@ export function rasterPlanBox(
 
   // 1. the rough corridor: discs along the line (no folds on a hairpin; round ends behind the tee and past the green)
   const rough = new Spans(g, cx0, cy0, w, h);
-  for (let i = 0; i < n; i++) rough.disc(line[i]!.x, line[i]!.y, cr[i]!);
+  // every other sample (2 m apart: a 30 m disc's edge sags under 2 cm between two of them) and the last one
+  for (let i = 0; i < n; i += 2) rough.disc(line[i]!.x, line[i]!.y, Math.max(cr[i]!, cr[Math.min(n - 1, i + 1)]!));
+  if ((n - 1) % 2) rough.disc(line[n - 1]!.x, line[n - 1]!.y, cr[n - 1]!);
   rough.write(out, SURF.rough, allow);
 
   // 2. the fairway: quads between consecutive samples that both carry fairway
@@ -684,13 +698,6 @@ export function rasterPlan(
   return map;
 }
 
-/** the surface a raster puts at grid cell (cx, cy), 0 outside it */
-function rasterAt(r: PlanRaster | null, cx: number, cy: number): number {
-  if (!r) return 0;
-  const x = cx - r.cx0, y = cy - r.cy0;
-  return x >= 0 && y >= 0 && x < r.w && y < r.h ? r.s[y * r.w + x]! : 0;
-}
-
 /** surfaces a plan never overwrites or clears: the player's own water, bunkers and waste */
 function playerSurf(s: number): boolean {
   return s === SURF.water || s === SURF.bunker || s === SURF.waste;
@@ -704,8 +711,9 @@ function playerSurf(s: number): boolean {
  * - a cell in the new footprint takes the new surface if it still holds the old plan's surface for this hole, or else if its
  *   surface is lower or equal ('below'); a cell whose surface stays and only joins the hole keeps its planted month;
  * - other holes' cells and the player's water, bunkers and waste never change.
- * The old and new rasters may be passed in when the caller has them. Months are the grid's stored values (course-grid/areas
- * plantMonth).
+ * A cell allow refuses is never changed. The old and new rasters (made without allow) may be passed in when the caller has them;
+ * skipped(i, why, s) hears of each new-footprint cell left out because allow refused it ('land') or it is another hole's ('hole'),
+ * with the surface the plan wanted there. Months are the grid's stored values (course-grid/areas plantMonth).
  */
 export function planChanges(
   g: Grid,
@@ -715,39 +723,99 @@ export function planChanges(
   month: number,
   allow?: (i: number) => boolean,
   rasters?: { old?: PlanRaster | null; next?: PlanRaster },
+  skipped?: (i: number, why: 'land' | 'hole', s: number) => void,
 ): GridDiff {
-  const nr = rasters?.next ?? rasterPlanBox(nextPlan, g, allow, planGeom(nextPlan));
-  const or = oldPlan ? (rasters?.old ?? rasterPlanBox(oldPlan, g, allow, planGeom(oldPlan))) : null;
+  const nr = rasters?.next ?? rasterPlanBox(nextPlan, g, undefined, planGeom(nextPlan));
+  const or = oldPlan ? (rasters?.old ?? rasterPlanBox(oldPlan, g, undefined, planGeom(oldPlan))) : null;
   // the union of the two boxes
   let bx0 = nr.cx0, by0 = nr.cy0, bx1 = nr.cx0 + nr.w - 1, by1 = nr.cy0 + nr.h - 1;
   if (or && or.w && or.h) {
     bx0 = Math.min(bx0, or.cx0); by0 = Math.min(by0, or.cy0);
     bx1 = Math.max(bx1, or.cx0 + or.w - 1); by1 = Math.max(by1, or.cy0 + or.h - 1);
   }
-  const idx: number[] = [], s0: number[] = [], h0: number[] = [], m0: number[] = [], s1: number[] = [], h1: number[] = [], m1: number[] = [];
+  const acc = new DiffAcc(g, 4096);
+  const ns = nr.s, nw = nr.w, nx0 = nr.cx0, nx1 = nr.cx0 + nr.w - 1;
+  const os = or?.s, ow = or?.w ?? 0, ox0 = or?.cx0 ?? 0, ox1 = or ? or.cx0 + or.w - 1 : -1;
+  const gs = g.surf, gh = g.hole, gm = g.month;
   for (let cy = by0; cy <= by1; cy++) {
+    // this row's offsets into each raster (-1: the row is outside it)
+    const nRow = cy - nr.cy0, nb = nRow >= 0 && nRow < nr.h ? nRow * nw - nx0 : -1;
+    const oRow = or ? cy - or.cy0 : -1, ob = or && oRow >= 0 && oRow < or.h ? oRow * ow - ox0 : -1;
+    const row = cy * g.w;
     for (let cx = bx0; cx <= bx1; cx++) {
-      const nv = rasterAt(nr, cx, cy), ov = rasterAt(or, cx, cy);
+      const nv = nb >= 0 && cx >= nx0 && cx <= nx1 ? ns[nb + cx]! : 0;
+      const ov = ob >= 0 && cx >= ox0 && cx <= ox1 ? os![ob + cx]! : 0;
       if (nv === ov) continue;
-      const i = cy * g.w + cx, cs = g.surf[i]!, ch = g.hole[i]!, cm = g.month[i]!;
+      const i = row + cx, cs = gs[i]!, ch = gh[i]!;
+      if (allow && !allow(i)) { if (nv) skipped?.(i, 'land', nv); continue; }
       if (nv === 0) {
         // left the footprint: clear it if it still holds the old plan's surface for this hole
-        if (cs === ov && ch === hole && !playerSurf(cs)) { idx.push(i); s0.push(cs); h0.push(ch); m0.push(cm); s1.push(SURF.none); h1.push(0); m1.push(0); }
+        if (cs === ov && ch === hole && !playerSurf(cs)) acc.push(i, cs, ch, gm[i]!, SURF.none, 0, 0);
         continue;
       }
-      if (ch !== 0 && ch !== hole) continue;
+      if (ch !== 0 && ch !== hole) { skipped?.(i, 'hole', nv); continue; }
       if (playerSurf(cs)) continue;
       const holdsOld = ov !== 0 && ch === hole && cs === ov;
       if (!holdsOld && cs > nv) continue;
       if (cs === nv && ch === hole) continue;
-      idx.push(i); s0.push(cs); h0.push(ch); m0.push(cm); s1.push(nv); h1.push(hole); m1.push(cs === nv ? cm : month);
+      const cm = gm[i]!;
+      acc.push(i, cs, ch, cm, nv, hole, cs === nv ? cm : month);
+    }
+  }
+  return acc.done();
+}
+
+/** a growing diff (typed arrays, doubled when full) */
+class DiffAcc {
+  n = 0;
+  idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array;
+  constructor(readonly g: Grid, cap: number) {
+    this.idx = new Uint32Array(cap); this.s0 = new Uint8Array(cap); this.h0 = new Uint8Array(cap); this.m0 = new Uint16Array(cap);
+    this.s1 = new Uint8Array(cap); this.h1 = new Uint8Array(cap); this.m1 = new Uint16Array(cap);
+  }
+  push(i: number, s0: number, h0: number, m0: number, s1: number, h1: number, m1: number): void {
+    if (this.n === this.idx.length) {
+      const c = this.n * 2;
+      const grow = <T extends Uint32Array | Uint16Array | Uint8Array>(a: T, b: T): T => { b.set(a); return b; };
+      this.idx = grow(this.idx, new Uint32Array(c)); this.s0 = grow(this.s0, new Uint8Array(c)); this.h0 = grow(this.h0, new Uint8Array(c));
+      this.m0 = grow(this.m0, new Uint16Array(c)); this.s1 = grow(this.s1, new Uint8Array(c)); this.h1 = grow(this.h1, new Uint8Array(c));
+      this.m1 = grow(this.m1, new Uint16Array(c));
+    }
+    const k = this.n++;
+    this.idx[k] = i; this.s0[k] = s0; this.h0[k] = h0; this.m0[k] = m0; this.s1[k] = s1; this.h1[k] = h1; this.m1[k] = m1;
+  }
+  /** the diff, its arrays cut to length */
+  done(): GridDiff {
+    const n = this.n, g = this.g;
+    return {
+      x0: g.x0, y0: g.y0, w: g.w, n,
+      idx: this.idx.slice(0, n), s0: this.s0.slice(0, n), h0: this.h0.slice(0, n), m0: this.m0.slice(0, n),
+      s1: this.s1.slice(0, n), h1: this.h1.slice(0, n), m1: this.m1.slice(0, n),
+    };
+  }
+}
+
+/**
+ * the cells deleting a plan would change on g, without changing g: every footprint cell that still holds the plan's surface for this
+ * hole goes back to none (hole 0, month 0); the player's touch-ups, other holes and the player's water, bunkers and waste stay.
+ */
+export function planClear(g: Grid, plan: HolePlan, hole: number, allow?: (i: number) => boolean): GridDiff {
+  const r = rasterPlanBox(plan, g, undefined, planGeom(plan));
+  const idx: number[] = [], s0: number[] = [], m0: number[] = [];
+  for (let y = 0; y < r.h; y++) {
+    for (let x = 0; x < r.w; x++) {
+      const v = r.s[y * r.w + x]!;
+      if (!v) continue;
+      const i = (r.cy0 + y) * g.w + r.cx0 + x;
+      if (g.surf[i] !== v || g.hole[i] !== hole || playerSurf(v) || (allow && !allow(i))) continue;
+      idx.push(i); s0.push(v); m0.push(g.month[i]!);
     }
   }
   const n = idx.length;
   return {
     x0: g.x0, y0: g.y0, w: g.w, n,
-    idx: Uint32Array.from(idx), s0: Uint8Array.from(s0), h0: Uint8Array.from(h0), m0: Uint16Array.from(m0),
-    s1: Uint8Array.from(s1), h1: Uint8Array.from(h1), m1: Uint16Array.from(m1),
+    idx: Uint32Array.from(idx), s0: Uint8Array.from(s0), h0: new Uint8Array(n).fill(hole), m0: Uint16Array.from(m0),
+    s1: new Uint8Array(n), h1: new Uint8Array(n), m1: new Uint16Array(n),
   };
 }
 
@@ -784,8 +852,7 @@ export function planAims(plan: HolePlan): AimPoint[] {
 }
 
 /** computes length, par, and approximate area per surface in m² */
-export function planInfo(plan: HolePlan): PlanInfo {
-  const geom = geomOf(plan);
+export function planInfo(plan: HolePlan, geom: PlanGeom = geomOf(plan)): PlanInfo {
   const lengthM = Math.round(geom.lengthM);
   const par = parFromLength(lengthM);
   const greenM2 = plan.greenM2;
@@ -815,8 +882,7 @@ function sampleAt(geom: PlanGeom, s: number): number {
 
 /** computes interactive plan handles: tee, green, bends, a left and right handle on the drawn fairway edges for each width
  *  handle, and a '+' point at the middle (along the line) of each leg while there are fewer than 3 bends */
-export function planHandles(plan: HolePlan): PlanHandles {
-  const geom = geomOf(plan);
+export function planHandles(plan: HolePlan, geom: PlanGeom = geomOf(plan)): PlanHandles {
   const widths: PlanHandles['widths'] = [];
   for (const h of geom.widths) {
     const i = sampleAt(geom, h.s), pt = geom.line[i]!, si = geom.s[i]!;

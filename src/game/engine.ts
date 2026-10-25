@@ -24,6 +24,7 @@ import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, growGrid, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, ringArea, type GridArea } from './ext/course-grid/areas';
+import { aimsFromPlans, decodePlans } from './ext/hole-wizard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_EDIT_REACH, COURSE_PATCH_REACH, courseChunksIn, courseGrowKey, courseKey, growStatic, type CourseLooks } from './ext/course-grid/patch';
 import { CourseContour, type CourseChunkOut } from './course-contour';
@@ -396,8 +397,16 @@ export class Game {
     journal: { begin: () => { this.propLog = { added: [], removed: [] }; }, end: () => { const j = this.propLog; this.propLog = null; return j && (j.added.length || j.removed.length) ? j : null; }, undo: j => this.swapProps(j as PropLog, true), redo: j => this.swapProps(j as PropLog, false) },
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => this.courseGridChanged(d, flush), gridAreas: () => this.gridAreaList(),
-    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), plans: () => this.golf?.plans ?? [], setPlans: p => { if (this.golf) { this.golf.plans = p; this.scheduleSave(); } },
+    ownedAt: (x, y) => this.ownedAt(x, y) && !this.onRangePlot(x, y), plans: () => this.golf?.plans ?? [], setPlans: p => this.setGolfPlans(p), pinOf: n => this.golf?.pins.find(q => q.hole === n) ?? null,
     courseLook: () => this.resendCourse() });
+  /** the hole plans change (a wizard build, edit or delete, or their undo and redo; T102): golf.aims follow the plans' bends, so the holes'
+   *  playing lines run through them (no dogleg warning) */
+  private setGolfPlans(p: unknown[]) {
+    const g = this.golf; if (!g) return;
+    const before = decodePlans(g.plans);
+    g.plans = p; g.aims = aimsFromPlans(g.aims ?? [], before, decodePlans(p));
+    this.scheduleSave();
+  }
   /** the Paint and Course tools drive the same PaintTool */
   get paintOn() { return this.tool === 'paint' || this.tool === 'course'; }
   /** the Course tool's hole strip: makes hole n current and moves the camera to its areas (when it has any) */

@@ -25,7 +25,7 @@ export function HoleStrip({ game }: { game: Game }) {
           );
         })}
       </div>
-      <button className="chip mt-1" onClick={() => { const f = p.nextFreeHole(); if (f) game.goToHole(f); else game.toast(`All ${HOLE_COUNT} holes have areas`, 'warn'); }}>+ New hole</button>
+      <button className={`chip mt-1 ${p.mode === 'plan' && !p.wizard.base ? 'chip-on' : ''}`} title={game.golfMode ? 'Click the tee, then the green: the whole hole is planned, ready to shape and build' : undefined} onClick={() => { if (game.golfMode) { p.setPlan(); return; } const f = p.nextFreeHole(); if (f) game.goToHole(f); else game.toast(`All ${HOLE_COUNT} holes have areas`, 'warn'); }}>+ New hole</button>
     </div>
   );
 }
