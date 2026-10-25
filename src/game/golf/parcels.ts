@@ -152,6 +152,36 @@ export function blockOnRoad(r: Rect, roads: readonly LandRoad[]): boolean {
   return false;
 }
 
+/** the road tool's reason for a town road over the course land (T124, the owner: "you should not be allowed to paint normal roads on the course
+ *  only paths and drives") */
+export const COURSE_LAND_MSG = 'Course land: build cart paths and drives with Course › Paths & drives';
+/** how deep (tiles) a road's corridor must reach into the land to count as on it: a corridor that only touches the land's edge (a road
+ *  ending square on the boundary, a road along the outside of it) is off the land */
+const LAND_EPS = 0.01;
+/** whether the corridor of leg a-b (its centre line widened by hw either side, square at the ends: a road ending at the land's edge stops
+ *  there) overlaps rect r by more than LAND_EPS: the separating axis test on the rect's two axes and the corridor's two (exact, no sampling) */
+function legInRect(r: Rect, ax: number, ay: number, bx: number, by: number, hw: number): boolean {
+  if (!validRect(r)) return false;
+  const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy); if (L < 1e-9) return false;
+  const ux = dx / L, uy = dy / L, nx = -uy, ny = ux, ex = r[2] / 2, ey = r[3] / 2, hl = L / 2;
+  const cx = (ax + bx) / 2 - (r[0] + ex), cy = (ay + by) / 2 - (r[1] + ey);
+  const apart = (d: number, ra: number, rb: number) => Math.abs(d) >= ra + rb - LAND_EPS;
+  return !(apart(cx, Math.abs(ux) * hl + Math.abs(nx) * hw, ex) || apart(cy, Math.abs(uy) * hl + Math.abs(ny) * hw, ey) ||
+    apart(cx * ux + cy * uy, hl, ex * Math.abs(ux) + ey * Math.abs(uy)) || apart(cx * nx + cy * ny, hw, ex * Math.abs(nx) + ey * Math.abs(ny)));
+}
+/** whether any leg's corridor (half width hw, tiles) reaches into the land (rects; overlapping or touching rects are one piece of land: a
+ *  corridor on the union overlaps one of them) */
+export function legsOnLand(land: readonly Rect[], legs: readonly { a: { x: number; y: number }; b: { x: number; y: number } }[], hw: number): boolean {
+  for (const l of legs) for (const r of land) if (legInRect(r, l.a.x, l.a.y, l.b.x, l.b.y, hw)) return true;
+  return false;
+}
+/** whether tile point (x, y) lies inside the land, not on its edge (a point on the edge, where a town road may meet a course drive, is
+ *  not; the seam between two touching rects is inside): the land holds a small square around the point */
+export function pointInLand(land: readonly Rect[], x: number, y: number): boolean {
+  const e = 2 * LAND_EPS;
+  return inParcels(land, x - e, y - e) && inParcels(land, x + e, y - e) && inParcels(land, x - e, y + e) && inParcels(land, x + e, y + e);
+}
+
 /** the block for sale under tile point (x, y): a size x size block holding the point that touches the owned land along an edge and overlaps
  *  none of it (isAdjacentBlock), inside the map (0..map), and not refused (refuse: a block that would take a public road); null when there
  *  is none. The blocks line up with the owned land itself: the candidates sit on lattices anchored on every owned rect's edges (a range

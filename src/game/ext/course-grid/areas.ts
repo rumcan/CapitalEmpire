@@ -2,7 +2,7 @@
 // blob per surface and hole (the automatic collars included), so deriveHoles, holeViews, markerPlan, tagByHole, courseQuality and the
 // costs keep their inputs; `rasterAreas` lays old golf-surface paint areas into the grid (the load migration); and the planting month
 // each cell stores. Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m for every coordinate; cells of 1 m (0.5 tile).
-import { CELL_T, SURF, fillPolygon, type Grid, type GridDiff, mergeDiffs } from './index';
+import { CELL_T, SURF, fillPolygon, isCarved, type Grid, type GridDiff, mergeDiffs } from './index';
 import { BLOB_STYLE, blobOutlines, type CollarStyle } from '../course-blobs';
 import type { CourseArea, GolfSurface } from '../../golf/types';
 import type { PaintTex } from '../../paint';
@@ -19,6 +19,19 @@ export function plantMonth(kind: 'seed' | 'sod' | undefined, month: number | und
   return kind === 'seed' && month !== undefined && Number.isFinite(month) ? Math.min(65535, Math.max(1, Math.round(month) + MONTH_BASE)) : 0;
 }
 // (the grow-in itself, stages, masks and chunk keys, is T076's ext/course-fx: pass it now + MONTH_BASE)
+/** the holes still growing in at the effective game month `now` (grow cards included), each with the effective month its last seeded cell
+ *  is grown in (T121, P23 4.6: the hole card's "growing · ready Mar 1985"); a hole whose cells are all grown in (or sod, or established)
+ *  is left out. A cell is grown in when now + MONTH_BASE reaches its month value plus its surface's grow-in months, as course-fx growMask */
+export function growingHoles(g: Grid, now: number): Map<number, number> {
+  const out = new Map<number, number>(), t = now + MONTH_BASE, { surf, hole, month } = g;
+  for (let i = 0; i < surf.length; i++) {
+    const m = month[i]!; if (!m) continue;
+    const h = hole[i]!, n = SURF_GROW_MONTHS[surf[i]!] ?? 0; if (!h || n <= 0) continue;
+    const ready = m + n; if (ready > t && ready > (out.get(h) ?? -1)) out.set(h, ready);
+  }
+  for (const [h, r] of out) out.set(h, r - MONTH_BASE);
+  return out;
+}
 
 // ---- surfaces ----
 
@@ -147,15 +160,16 @@ export function mergeMany(list: readonly GridDiff[]): GridDiff | null {
  *  holes marked 255 (course-blobs' outside: never claimed by a closing, so two holes' fairways stay apart) */
 function window(g: Grid, c0: number, r0: number, c1: number, r1: number, s: number, h: number): Grid {
   c0 = Math.max(0, c0); r0 = Math.max(0, r0); c1 = Math.min(g.w - 1, c1); r1 = Math.min(g.h - 1, r1);
-  const w = c1 - c0 + 1, hh = r1 - r0 + 1, surf = new Uint8Array(w * hh), hole = new Uint8Array(w * hh);
+  const w = c1 - c0 + 1, hh = r1 - r0 + 1, surf = new Uint8Array(w * hh), hole = new Uint8Array(w * hh), cv = g.carve, carve = new Uint8Array(w * hh);
   for (let j = 0; j < hh; j++) {
     const src = (r0 + j) * g.w + c0, dst = j * w;
     for (let i = 0; i < w; i++) {
       const t = g.surf[src + i]!, th = g.hole[src + i]!;
-      surf[dst + i] = t === s && th !== h ? 255 : t; hole[dst + i] = th;
+      surf[dst + i] = t === s && th !== h ? 255 : t; hole[dst + i] = th; if (cv) carve[dst + i] = cv[src + i]!;
     }
   }
-  return { x0: g.x0 + c0 * CELL_T, y0: g.y0 + r0 * CELL_T, w, h: hh, surf, hole, month: new Uint16Array(w * hh), rev: 0 };
+  // the carve flags come along (T125): the closing and the collar leave a rubbed-out gap open, as the drawn chunks do
+  return { x0: g.x0 + c0 * CELL_T, y0: g.y0 + r0 * CELL_T, w, h: hh, surf, hole, month: new Uint16Array(w * hh), rev: 0, carve };
 }
 
 /** the collar window of a surface window: s on the surface's cells and on the cells within the collar's width of them whose surface it
@@ -169,7 +183,7 @@ function collarWindow(w: Grid, s: number, col: CollarStyle): Grid {
       if (dx * dx + dy * dy > rr) continue;
       const x = i + dx, y = j + dy; if (x < 0 || y < 0 || x >= w.w || y >= w.h) continue;
       const q = y * w.w + x, t = w.surf[q]!;
-      if (t === s || over[t]) out[q] = s;
+      if (t === s || (over[t] && !isCarved(w, q))) out[q] = s;
     }
   }
   return { ...w, surf: out };
