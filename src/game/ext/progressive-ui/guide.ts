@@ -1,4 +1,6 @@
-// The guided Year 1 (P06/T045): the 7 steps, what completes each, and what each points at. Pure TS, no DOM.
+// The guided Year 1 (P06/T045): the 7 steps, what completes each, and what each points at; and the stuck player's offer of New hole (P23 T117).
+// Pure TS, no DOM. index.ts re-exports this file, so its import from './index' is read inside function bodies only.
+import { STUCK_PLAY_SEC } from './index';
 
 /** the facts the guide reads: the player's counters (T033a), placed course pieces by kind, tournaments run, and the guide's saved state */
 export interface GuideFacts {
@@ -7,6 +9,12 @@ export interface GuideFacts {
   kinds: Partial<Record<string, number>>;
   /** tournaments finished (the round's runs) */
   runs: number;
+  /** the course's holes with a par (T117: a hole built with New hole counts; missing = 0) */
+  holes?: number;
+  /** the seasons played, founding ones included (T117: the stuck player's offer; missing = 0) */
+  seasons?: number;
+  /** real play seconds (T117: the stuck player's offer; missing = 0) */
+  playS?: number;
   /** 'on' while the guide runs, 'off' once skipped, finished, or for a returning player */
   tutorial: 'on' | 'off';
   /** the step the player is on (1..7; the guide never moves backwards) */
@@ -36,7 +44,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     id: 'guide-hole',
     n: 2,
     title: 'Lay out a new hole',
-    body: 'Open Course and place a tee, a fairway, and a green to build a hole.',
+    body: 'Open Course and press + New hole: click a tee, then a green, and Build.',
     done: 'auto',
     target: { ui: 'rail-course', map: 'newHoleSpot' },
   },
@@ -88,7 +96,7 @@ export function stepMet(n: number, f: GuideFacts): boolean {
     case 1:
       return false;
     case 2:
-      return (f.kinds?.tee ?? 0) >= 1 && (f.kinds?.fairway ?? 0) >= 1 && (f.kinds?.green ?? 0) >= 1;
+      return (f.holes ?? 0) >= 1 || ((f.kinds?.tee ?? 0) >= 1 && (f.kinds?.fairway ?? 0) >= 1 && (f.kinds?.green ?? 0) >= 1);
     case 3:
       return (f.kinds?.path ?? 0) >= 1 || f.roads >= 1;
     case 4:
@@ -130,6 +138,25 @@ export function guideNext(f: GuideFacts): number {
 /** the state after Skip tutorial */
 export function guideSkip(): { tutorial: 'off' } {
   return { tutorial: 'off' };
+}
+
+/** the stuck player's offer (P23 4.2): New hole, pointing at the Course tool and a good spot */
+export const GUIDE_STUCK: GuideStep = Object.freeze({
+  id: 'guide-stuck',
+  n: 2,
+  title: 'Need a hand with your first hole?',
+  body: 'Open Course and press + New hole: click a tee, then a green, and the whole hole is planned for you. Build when it looks right.',
+  done: 'auto',
+  target: Object.freeze({ ui: 'rail-course', map: 'newHoleSpot' }),
+});
+
+/** the step the guide shows: guideStep's; or, when the guide is off (skipped or finished) and the player is stuck (no hole after one season or
+ *  STUCK_PLAY_SEC of play: the same fallback that opens stage 2), the offer of New hole; else null */
+export function guideShown(f: GuideFacts): GuideStep | null {
+  const s = guideStep(f);
+  if (s) return s;
+  const stuck = !stepMet(2, f) && ((f.seasons ?? 0) >= 1 || (f.playS ?? 0) >= STUCK_PLAY_SEC);
+  return stuck ? GUIDE_STUCK : null;
 }
 
 /** the old first-run hint ids each step replaces (their dismissals count as that step already seen): step 2 'hint-build-first-hole', step 4 'hint-connect-road-and-park', step 5 'hint-place-gate-and-tents', step 7 'hint-traffic-and-advanced' */

@@ -106,7 +106,7 @@ import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, courseBuilding, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
-import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -3639,15 +3639,29 @@ export class Game {
   }
   /** counts a player action toward the tool unlocks (golf mode only; saved) */
   private bump(k: 'pieces' | 'roads' | 'parks' | 'structures') { const p = this.golf?.progress; if (!p) return; p[k]++; this.scheduleSave(); this.emit(); }
-  /** the player's progress facts (T032), null outside golf mode */
-  playerProgressFacts(): PlayerProgressFacts | null { const p = this.golf?.progress; return p ? progressFacts(p, this.traffic.round.runs) : null; }
+  /** the player's progress facts (T032; T117: the unlocks read the course: its holes with a par, the seasons played and the tour's invitation),
+   *  null outside golf mode */
+  playerProgressFacts(): PlayerProgressFacts | null {
+    const g = this.golf, p = g?.progress;
+    return p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited }) : null;
+  }
+  private progTick = 0;
+  /** keeps the saved progress in step (T117, about 6 times a second): the unlock stage reached (it never falls) and the tool in hand counted as
+   *  opened (its NEW badge goes) */
+  private progressCheck() {
+    const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
+    const f = this.playerProgressFacts();
+    if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
+  }
+  /** why a course path or drive is held back by the unlock stage (T117: the cement slab path until the first hole), or null when it is not */
+  courseStageLock(id: ClassId): string | null { return this.toolUi()?.lockedCourseClasses.find(c => c.id === id)?.why ?? null; }
   /** the progressive tool visibility (T032/T033), null outside golf mode (classic and sandbox show everything) */
   progressiveUi(): ProgressiveUiState | null { const f = this.playerProgressFacts(); return f ? computeProgressiveUiState(f) : null; }
   /** the tool visibility in force (T033): null shows everything (classic games, and the dev sandbox's unlock-all) */
   toolUi(): ProgressiveUiState | null { return this.unlockAll ? null : this.progressiveUi(); }
   /** hides a first-run hint for good (saved) */
   dismissHint(id: string) { const p = this.golf?.progress; if (!p || p.dismissed.includes(id)) return; p.dismissed.push(id); this.scheduleSave(); this.emit(); }
-  /** the "Show all tools (Advanced)" toggle (saved) */
+  /** Settings > "Show every tool now" (saved) */
   setAdvancedTools(on: boolean) { const p = this.golf?.progress; if (!p || p.advanced === on) return; p.advanced = on; this.scheduleSave(); this.emit(); }
   golfView(): GolfView | null {
   if (!this.golf) return null;
@@ -3714,9 +3728,10 @@ export class Game {
     this.toast('Skipping to the tournament… (8× for the day)');
   }
   /** a road class is open to build: every class in event mode, else as the Career unlocks it. A course path or drive (P19) is open only in a golf
-   *  game, at its tier (golf.tier: courseRoadOpen); the dev sandbox's unlock-all (sandboxUnlock: the dev server, or ?unlock=1) opens every tier (T084) */
+   *  game, at its tier (golf.tier: courseRoadOpen) and its unlock stage (T117: courseStageLock); the dev sandbox's unlock-all (sandboxUnlock: the
+   *  dev server, or ?unlock=1) opens every tier (T084) */
   classOpen(id: ClassId): boolean {
-    if (isCourseClass(id)) return courseRoadOpen(id, this.golf ? this.golf.tier : null, this.sandboxUnlock);
+    if (isCourseClass(id)) return courseRoadOpen(id, this.golf ? this.golf.tier : null, this.sandboxUnlock) && !this.courseStageLock(id);
     return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached);
   }
   /** the road tool's scope (T084): entering the other scope swaps the picked class for the one last picked there (a town class under Roads, a
@@ -3726,11 +3741,12 @@ export class Game {
     this.roadScope = scope;
     if (isCourseClass(this.roadClass) !== course) { this.scopeClass[course ? 'town' : 'course'] = this.roadClass; this.roadClass = this.scopeClass[scope]; }
   }
-  /** why a road class is not open (classOpen is false): a course drive's golf tier (P19; outside golf it is only on golf courses), else the career
-   *  milestone that unlocks it; a town class no milestone lists gets a plain note */
+  /** why a road class is not open (classOpen is false): a course path's unlock stage (T117), a course drive's tour level (P19; outside golf it is
+   *  only on golf courses), else the career milestone that unlocks it; a town class no milestone lists gets a plain note */
   classLockWhy(id: ClassId): string {
-    const c = classOf(id), tier = courseTierNeeded(id);
-    if (tier !== null) return this.golf ? `${c.name} opens at golf tier ${tier}` : `${c.name} is only on golf courses`;
+    const c = classOf(id), tier = courseTierNeeded(id), stage = this.courseStageLock(id);
+    if (stage) return `${c.name}: ${stage.toLowerCase()}`;
+    if (tier !== null) return this.golf ? `${c.name} opens at Tour level ${tier}` : `${c.name} is only on golf courses`;
     const lk = unlockOf('class', id);
     return lk ? `${c.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})` : `${c.name} is not open yet`;
   }
@@ -4109,15 +4125,15 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
-    // real play seconds of a golf game while the sim runs (T033): stops at the Stage 3 mark, so the save does not churn
-    const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STAGE_3_TIME_SEC) gp.playS += pdt;
+    // real play seconds of a golf game while the sim runs (T033): stops at the stuck player's mark (T117: 20 minutes), so the save does not churn
+    const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STUCK_PLAY_SEC) gp.playS += pdt;
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
     this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
-    this.yearCheck(); this.foundingCheck();
+    this.yearCheck(); this.foundingCheck(); this.progressCheck();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();

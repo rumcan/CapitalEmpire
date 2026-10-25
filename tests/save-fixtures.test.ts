@@ -90,7 +90,7 @@ describe('save fixtures & golden tests (T043)', () => {
     assert.equal(h.data.every(v => v === 0), true);
 
     const p = normalizeProgress(parsed.golf.progress);
-    assert.ok(p.playS >= 600, 'expected playS >= 600 for experienced player default');
+    assert.equal(p.stage, 3, 'an old save opens at stage 3 with every tool (T117; was the 10-minute playS default)');
   });
 
   it('5. golf-v5-height-progress.json -> loadCourseHeight has non-zero sample near (600, 600) and (1400, 900); saveCourseHeight deep-equals fixture height; normalizeProgress keeps counters', () => {
@@ -113,6 +113,7 @@ describe('save fixtures & golden tests (T043)', () => {
     assert.equal(p.parks, 1);
     assert.equal(p.structures, 1);
     assert.deepEqual(p.dismissed, ['hint-build-first-hole']);
+    assert.equal(p.stage, 3, 'a progress saved before T117 keeps every tool');
   });
 
   it('6. future-v99.json -> upgradeSave returns null, readSave returns future with backup slot holding same bytes', async () => {
