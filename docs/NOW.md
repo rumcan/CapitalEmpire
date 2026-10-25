@@ -25,10 +25,20 @@ Update this file **before** each edit and after each sub-step. If you are pickin
   mats, flagged greens, yardage markers, fence, cement paths, sign), the caravan and back yard, the crappy pro shop, golfers who buy buckets and
   hit visible balls, the queue, the range card with 8 upgrades. Follow-ups: the label glyph after "DRIVING RANGE", the onboarding pill still says
   "Step 1: Build your first hole" in a range start (Phase 4), the car park reads P · 0/44 while range golfers are parked.
-- **Running now (Opus 5.5, high):** T130 #241 practice facilities (putting green, chipping green and bunker; branch arena/T130-practice, dev
-  port 5186) and T131 #242 the Props tool (branch arena/T131-props, port 5187). Both add appeal to `rangebiz.ts`; the second to merge resolves.
-  Then T132 (P24 Phase 4: the unlock order to the first hole, World of Golf extras).
-- **Held:** T119 #213 and T122 #216 (P23 wave B) until T130/T131 land (they share paint-tool.ts and the engine).
+- **T131 merged (#244):** the Props tool (key Z, `golf/decor.ts`, `golf/propstool.ts`, `ui/course/PropsPanel.tsx`): plants, fountain,
+  well, statue, pillars, arch, benches, lamps, flag pole; place, turn, move, sell (half back), one undo step each (`PaintTool.step`); appeal
+  `RangeExtras.propsAppeal` within 15 tiles of the shop or mats, capped at +40%.
+- **T130 merged (#245):** the practice area across the drive from the range's car park; the player paints a putting green (300 m²) and a
+  chipping green with a bunker with the course brush; cells held at hole 0; +10% appeal and $2 a golfer each; putters and chippers drawn;
+  hints with Show me; the range's tee box laid into the course grid (T127 banks raise it). Plan decisions D18-D29 in P24.
+- **Running now:** T119 #213 New hole finished (branch arena/T119-new-hole, port 5188; in a range start New hole is not armed at the start,
+  and the practice area and range plot get check rows) and T122 #216 Run (branch arena/T122-run, port 5189). Both edit paint-tool.ts; the
+  second to merge resolves.
+- **Next: T132 (P24 Phase 4)** after T119: the unlock order (range card → practice after the first upgrade → Props after the putting green →
+  New hole, a par-3 first), the onboarding pill (still "Step 1: Build your first hole" in a range start), World of Golf extras (second tier,
+  academy, kiosk, ball picker, caravan → house), upkeep. Fold in: the props balance (about $2,000 of grasses reaches the +40% cap), the target
+  greens and outfield stripes reading fainter since the painted ground (the range must stay clearly a range), the label glyph after
+  "DRIVING RANGE", the car park's P · 0/44 with range golfers parked, the Select panel's library names for decor props.
 - **Housekeeping done:** 7 merged agent worktrees removed (the owner approved); E: 35 GB free. Each worktree with node_modules is ~4.3 GB.
 
 ## HANDOVER (2026-10-25 evening, lead chat ended for context size) — start here
