@@ -2,7 +2,8 @@
 // bucket price with what it does to the visitors; the upgrades, each with its cost, its effect and a Build button. Opened by clicking the range
 // with the select tool, or the top bar's Range chip; the map changes the moment an upgrade is built.
 import type { RangeCardView } from '../../game/golf/rangehost';
-import { PRICE_MAX, PRICE_MIN, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
+import { PRICE_MAX, PRICE_MIN, PROPS_APPEAL_CAP, dayDemand, priceFactor, rangeScale } from '../../game/golf/rangesave';
+import { appealText } from '../../game/golf/decor';
 import { Icon } from '../Icon';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -38,6 +39,9 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
           <span className="text-[11px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
         </div>
         <div className="mt-1 text-[10px] text-slate-500">Each golfer you see stands for {scale} customers over the season.</div>
+      </div>
+      <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-props-appeal" title="Props within 15 tiles of the shop or the mats (the Props tool): more golfers, and a higher fair price">
+        <span className="text-slate-300">Appeal from props: <span className={st.propsAppeal > 0 ? 'font-semibold text-emerald-300' : 'text-white'}>{appealText(st.propsAppeal)}</span> <span className="text-slate-500">(of {appealText(PROPS_APPEAL_CAP)})</span></span>
       </div>
       <div className="space-y-1.5" data-testid="range-practice">
         <div className="flex items-center justify-between text-[10px] uppercase text-slate-400">

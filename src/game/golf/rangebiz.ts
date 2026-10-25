@@ -267,7 +267,7 @@ export class RangeSim {
   step(dt: number, clock: RangeClock, s: RangeBizSave, c: DemandCtx, dayLen: number): number {
     const sc = this.scene; if (!sc || dt <= 0) return 0;
     if (clock.day !== this.day) { this.day = clock.day; this.today.golfers = 0; this.today.lost = 0; this.practiceToday.putting = 0; this.practiceToday.chipping = 0; }
-    const st = rangeStats(s), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax;
+    const st = rangeStats(s, c), value = saleValue(s, dayLen, st), scale = rangeScale(dayLen); this.qMax = st.qMax;
     let booked = 0;
     const sell = (n: number) => { const m = n * value; s.season.golfers += n; s.total.golfers += n; s.season.buckets += n * scale; s.total.buckets += n * scale; s.season.takings += m; s.total.takings += m; this.today.golfers += n; booked += m; };
     const lose = (n: number) => { s.season.lost += n; s.total.lost += n; this.today.lost += n; };

@@ -89,9 +89,12 @@ test('the chipping green needs its bunker beside it; the putting green is the gr
 
 test('appeal and fees: +10% visitors for each open facility, $2 a golfer who uses it', () => {
   const d = defaultRangeBiz(), base = rangeStats(d).appeal;
-  assert.equal(practiceAppeal(d), 1);
-  d.practice.putting.open = true; assert.ok(Math.abs(rangeStats(d).appeal - base * 1.1) < 1e-9);
-  d.practice.chipping.open = true; assert.ok(Math.abs(rangeStats(d).appeal - base * 1.21) < 1e-9);
+  assert.equal(practiceAppeal(d), 0);
+  d.practice.putting.open = true; assert.ok(Math.abs(practiceAppeal(d) - 0.1) < 1e-9); assert.ok(Math.abs(rangeStats(d, { practiceAppeal: practiceAppeal(d) }).appeal - base * 1.1) < 1e-9);
+  d.practice.chipping.open = true; assert.ok(Math.abs(rangeStats(d, { practiceAppeal: practiceAppeal(d) }).appeal - base * 1.21) < 1e-9);
+  // beside the props' term (T131) in the same RangeExtras: both multiply in; only the props raise the fair price
+  const st = rangeStats(d, { propsAppeal: 0.2, practiceAppeal: practiceAppeal(d) });
+  assert.ok(Math.abs(st.appeal - base * 1.2 * 1.21) < 1e-9); assert.ok(Math.abs(st.ref - rangeStats(d, { propsAppeal: 0.2 }).ref) < 1e-9);
   assert.equal(PRACTICE_FEE, 2);
   const u = practiceUsers(d, 100); assert.ok(u.putting > 0 && u.chipping > 0 && u.putting + u.chipping < 100);
   assert.deepEqual(practiceUsers(defaultRangeBiz(), 100), { putting: 0, chipping: 0 });

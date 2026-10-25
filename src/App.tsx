@@ -22,6 +22,7 @@ import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
+import { PropsPanel } from './ui/course/PropsPanel';
 import { MyLooksCard } from './ui/course/MyLooks';
 import { Rail, NewBadge } from './ui/Rail';
 import { railEntries, railItemOf, toolNew } from './ui/rail-items';
@@ -344,6 +345,7 @@ export default function App() {
               {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
               {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
+              {game.tool === 'props' && <PropsPanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
