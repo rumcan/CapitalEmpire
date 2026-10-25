@@ -140,6 +140,9 @@ test('path points snap to the 1 m half grid; town roads keep the 2 m lattice', (
   const s = snapPoint(e.net, { x: 130.3, y: 100.6 }, 2, HALF_T);
   assert.equal(s.kind, 'road'); assert.equal(s.p.y, 100);
   assert.equal(snapPoint(e.net, { x: 160.4, y: 100.2 }, 2, HALF_T).kind, 'end');
+  // on the half grid a T on a road lands on the grid along it (so the next grid point meets it square); town roads keep the projection
+  assert.deepEqual(snapPoint(e.net, { x: 130.3, y: 100.6 }, 2, HALF_T).p, { x: 130.5, y: 100 });
+  assert.deepEqual(snapPoint(e.net, { x: 130.3, y: 100.6 }, 2).p, { x: 130.3, y: 100 });
 });
 
 test('a cart path on the half grid builds like a road: it T-joins a street and a drive, crosses a path, and bends', () => {

@@ -73,6 +73,9 @@ export function snapPoint(net: RoadNetwork, p: Pt, rTiles: number, step = 1): Sn
   let seg: Seg | null = null, rd = Infinity, road: Pt = p;
   for (const s of segs) { const r = projectOn(s, p); if (r.d <= wide(s) && r.d < rd) { rd = r.d; seg = s; road = r.q; } }
   if (seg) {
+    // on the half grid (T100: a course path), the point along the road is the grid point's: a T on an axis-aligned road lands on the grid, so
+    // the path's next point on the grid meets it square (the cursor's own projection left a sliver of a leg, refused)
+    if (step < 1) road = projectOn(seg, { x: snapTo(p.x, step), y: snapTo(p.y, step) }).q;
     const near = dist(seg.a, road) <= dist(seg.b, road) ? seg.a : seg.b;
     if (dist(near, road) < MIN_SEP) return nodeSnap(near);
     return { p: road, kind: 'road', seg };
