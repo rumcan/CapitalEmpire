@@ -146,6 +146,44 @@ Surface: damp lakeside ground. Dark wet sand and mud with a soft sheen, small sm
 Cooler colours than the dirt.
 ```
 
+## Living ground variants (T111)
+
+The living ground lays these over the grass where they would grow: lush grass along fences, walls, hedges and water; patchy grass,
+bare dirt and leaf litter under trees, at doors and on worn path edges (`src/game/living-ground.ts`). Until these sets exist the game
+derives them from the painted grass and the dirt. Make each as the **3 images** of the ZOOM LEVELS block, at the same scale, palette
+family and brightness as the lawn set, so a variant blends into the grass around it without a seam.
+
+**Where they go:** `src/assets/ground/painted/<name>-<close|mid|far>-v<n>.webp` (or `.png`), for example
+`grass-lush-close-v1.webp`. The game finds them by name; a set is used once all three levels are there, the highest `v<n>` wins. Keep the
+source PNGs and the prompt in `art/ground-painted/` as above.
+
+**17. grass-lush (the strip the mower cannot reach)**
+```
+Surface: lush, overgrown lawn grass, like the lawn but a shade darker and deeper green, denser and longer: bushy clumps (16-28 px)
+with darker blue-green gaps and a few taller blades leaning over, a few clover leaves. Same light as the lawn (upper right). No flowers,
+no stripes, no dirt.
+```
+
+**18. grass-patchy (thin grass in the shade of trees, at doors and path edges)**
+```
+Surface: thin, patchy lawn grass in the shade: sparse soft grass clumps (8-16 px), a little paler and yellower than the lawn, with warm
+brown soil showing between them in irregular little gaps (about a third of the tile), a few fallen leaves. The grass reads as the same
+lawn, only thinner. No paths, no stripes.
+```
+
+**19. dirt-bare (worn, packed soil under a tree or at a door)**
+```
+Surface: bare, packed garden soil, worn smooth: warm medium brown with soft clods and a few small pebbles (3-6 px), faint darker
+damp patches, a very few tiny grass sprouts and roots. Calm and even. Not muddy, no footprints, no leaves.
+```
+
+**20. leaf-litter (fallen leaves on soil under broadleaf trees)**
+```
+Surface: fallen autumn leaves on soil under a tree: overlapping painted leaves (each 6-14 px) in warm orange, rust, gold and brown, a
+few green ones, dark soil peeking through the gaps, soft shade under the leaves on their lower-left side. Even density over the whole
+tile, no bare corner, no pile.
+```
+
 ## Extra sheets (transparent background; replace the tiling lines in STYLE)
 
 For these, paste STYLE but replace its "SEAMLESS, TILEABLE square texture" paragraph with "on a fully transparent

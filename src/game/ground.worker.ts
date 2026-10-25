@@ -10,6 +10,7 @@ import { EAGER_PHOTO } from './grass-art';
 import { isPaintPhoto } from './paint';
 import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
 import { WOODLAND_TEX } from './terrain-paint';
+import { VARIANT_IDS } from './living-ground';
 import { WALL_TEX } from './ext/course-walls';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
@@ -67,6 +68,13 @@ const handle = async (m: ToWorker) => {
       case 'terrain': painter.setTerrain(m.cls, m.height, m.waters); break;
       case 'blocks': painter.blocks = m.data; break;
       case 'course': painter.setCourse(m.i0, m.j0, m.w, m.h, m.data); break;
+      case 'casters': {
+        for (const p of m.dropPrefix ?? []) painter.casters.dropPrefix(p);
+        for (const k of m.drop) painter.casters.drop(k);
+        for (const [k, recs] of m.set) painter.casters.set(k, recs);
+        break;
+      }
+      case 'living': painter.living = { on: m.on, debug: m.debug }; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
         const need = new Set<string>();
@@ -88,6 +96,8 @@ const handle = async (m: ToWorker) => {
           const k = m.kind === 'm' ? MID_K : 1, w = CHUNK_W * k, h = CHUNK_H * k;
           const box = GroundPainter.tileBox(m.i * w, m.j * h, (m.i + 1) * w, (m.j + 1) * h);
           const need = new Set<string>(['grass', 'meadow', 'outside']);
+          // the living ground's painted variant sets (T111), when their art is in the game
+          if (painter.living.on && !painter.living.debug) for (const v of VARIANT_IDS) if (tex.isPainted(v)) need.add(v);
           for (const p of painter.lotsIn(box)) {
             need.add(p.tex);
             if (p.paint?.b) need.add(p.paint.bt);
