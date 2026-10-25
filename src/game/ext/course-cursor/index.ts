@@ -39,13 +39,14 @@ import { SURF_SURFACE, surfOfSurface } from '../course-grid/areas';
 import { surfaceOfTex, unitBuildCost } from '../../golf/costs';
 import { LAND_WHY, type PaintTool } from '../../paint-tool';
 import { snapDab, squarePoly, squareStart } from './snap';
+import { runCells, runLength } from './run';
 
 export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles'>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'rubHoleOnly' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles' | 'runOn' | 'runPath' | 'runPts'>;
 /** the camera, filled in by the engine each frame (one object, reused): device px per world px (ze = zoom x dpr), the world px at the
  *  overlay's centre (camX, camY), the overlay's size in device px (cw, ch) and the dpr */
 export interface CursorView { ze: number; camX: number; camY: number; cw: number; ch: number; dpr: number }
@@ -200,49 +201,65 @@ function reasonId(w: string): number {
   return id;
 }
 
+/** a cell box bigger than this (cells) keeps its outline's cells and edges in maps instead of arrays over the box (T122: a long diagonal run's
+ *  box is far bigger than its cells) */
+const SPARSE_AREA = 1 << 15;
 /** the outline of a set of cells ((dx, dy) pairs) along the cell edges: closed loops of (x, y) pairs in tiles from cell (0, 0)'s corner, each
  *  edge between a cell in the set and one outside it used once, straight runs merged into one segment; cells that touch only at a corner
- *  are joined there (one loop through the corner, which fills and strokes the same) */
-export function cellOutline(cells: Int16Array): Float32Array[] {
+ *  are joined there (one loop through the corner, which fills and strokes the same). sparse: keep the cells and edges in maps (the same
+ *  loops; default: when the cells' box is over SPARSE_AREA) */
+export function cellOutline(cells: Int16Array, sparse?: boolean): Float32Array[] {
   const n = cells.length >> 1; if (!n) return [];
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (let i = 0; i < cells.length; i += 2) { const x = cells[i]!, y = cells[i + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   // the cells on a grid with a free border, and each vertex's (at most two) outgoing edges, clockwise round each cell (y down)
-  const W = x1 - x0 + 3, H = y1 - y0 + 3, occ = new Uint8Array(W * H), VW = W + 1, out = new Int32Array(VW * (H + 1) * 2).fill(-1);
-  for (let i = 0; i < cells.length; i += 2) occ[(cells[i + 1]! - y0 + 1) * W + cells[i]! - x0 + 1] = 1;
-  const add = (a: number, b: number) => { const k = 2 * a; if (out[k] < 0) out[k] = b; else out[k + 1] = b; };
+  const W = x1 - x0 + 3, H = y1 - y0 + 3, VW = W + 1, big = sparse ?? W * H > SPARSE_AREA;
+  const occ = big ? null : new Uint8Array(W * H), occS = big ? new Set<number>() : null;
+  const out = big ? null : new Int32Array(VW * (H + 1) * 2).fill(-1), outM = big ? new Map<number, number>() : null, verts: number[] = [];
+  const at = (k: number): number => (out ? out[k]! : outM!.get(k) ?? -1);
+  const set = (k: number, v: number) => { if (out) out[k] = v; else if (v < 0) outM!.delete(k); else outM!.set(k, v); };
+  const has = (k: number) => (occ ? occ[k] === 1 : occS!.has(k));
+  const keys: number[] = [];
+  for (let i = 0; i < cells.length; i += 2) { const k = (cells[i + 1]! - y0 + 1) * W + cells[i]! - x0 + 1; if (occ) occ[k] = 1; else if (!occS!.has(k)) { occS!.add(k); keys.push(k); } }
+  const add = (a: number, b: number) => { const k = 2 * a; if (at(k) < 0) { set(k, b); if (!out) verts.push(a); } else set(k + 1, b); };
   let edges = 0;
-  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-    if (!occ[y * W + x]) continue;
-    const tl = y * VW + x, tr = tl + 1, bl = tl + VW, br = bl + 1;
-    if (!occ[(y - 1) * W + x]) { add(tl, tr); edges++; }
-    if (!occ[y * W + x + 1]) { add(tr, br); edges++; }
-    if (!occ[(y + 1) * W + x]) { add(br, bl); edges++; }
-    if (!occ[y * W + x - 1]) { add(bl, tl); edges++; }
-  }
+  const edgesOf = (y: number, x: number) => {
+    const c = y * W + x, tl = y * VW + x, tr = tl + 1, bl = tl + VW, br = bl + 1;
+    if (!has(c - W)) { add(tl, tr); edges++; }
+    if (!has(c + 1)) { add(tr, br); edges++; }
+    if (!has(c + W)) { add(br, bl); edges++; }
+    if (!has(c - 1)) { add(bl, tl); edges++; }
+  };
+  // the cells in row order (the loops start at the same vertices either way)
+  if (occ) { for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (occ[y * W + x]) edgesOf(y, x); }
+  else { keys.sort((a, b) => a - b); for (const k of keys) { const x = k % W; edgesOf((k - x) / W, x); } verts.sort((a, b) => a - b); }
   const loops: Float32Array[] = [], pts: number[] = [];
-  const take = (v: number): number => { const k = 2 * v; let b = out[k + 1]; if (b >= 0) { out[k + 1] = -1; return b; } b = out[k]; out[k] = -1; return b; };
-  for (let s = 0; s < out.length >> 1 && edges > 0; s++) while (out[2 * s] >= 0 || out[2 * s + 1] >= 0) {
-    pts.length = 0;
-    let v = s;
-    do {
-      const w = take(v); edges--;
-      const vx = v % VW, vy = (v - vx) / VW, wx = w % VW, wy = (w - wx) / VW, m = pts.length;
-      // a straight run goes on: the last point moves instead of a new one
-      if (m >= 4 && (pts[m - 2]! - pts[m - 4]!) * (wy - vy) === (pts[m - 1]! - pts[m - 3]!) * (wx - vx) && (pts[m - 2]! - pts[m - 4]!) * (wx - vx) + (pts[m - 1]! - pts[m - 3]!) * (wy - vy) > 0) { pts[m - 2] = wx; pts[m - 1] = wy; }
-      else { if (!m) pts.push(vx, vy); pts.push(wx, wy); }
-      v = w;
-    } while (v !== s && (out[2 * v] >= 0 || out[2 * v + 1] >= 0));
-    // the loop is closed: its last point is its first (drop it), and a straight run through the start joins up
-    let m = pts.length;
-    if (m >= 4 && pts[m - 2] === pts[0] && pts[m - 1] === pts[1]) { pts.length = m - 2; m -= 2; }
-    if (m >= 6) {
-      const ax = pts[m - 2]!, ay = pts[m - 1]!, bx = pts[0]!, by = pts[1]!, cx = pts[2]!, cy = pts[3]!;
-      if ((bx - ax) * (cy - by) === (by - ay) * (cx - bx)) { pts.splice(0, 2); m -= 2; }
+  const take = (v: number): number => { const k = 2 * v; let b = at(k + 1); if (b >= 0) { set(k + 1, -1); return b; } b = at(k); set(k, -1); return b; };
+  const starts = out ? out.length >> 1 : verts.length;
+  for (let q = 0; q < starts && edges > 0; q++) {
+    const s = out ? q : verts[q]!;
+    while (at(2 * s) >= 0 || at(2 * s + 1) >= 0) {
+      pts.length = 0;
+      let v = s;
+      do {
+        const w = take(v); edges--;
+        const vx = v % VW, vy = (v - vx) / VW, wx = w % VW, wy = (w - wx) / VW, m = pts.length;
+        // a straight run goes on: the last point moves instead of a new one
+        if (m >= 4 && (pts[m - 2]! - pts[m - 4]!) * (wy - vy) === (pts[m - 1]! - pts[m - 3]!) * (wx - vx) && (pts[m - 2]! - pts[m - 4]!) * (wx - vx) + (pts[m - 1]! - pts[m - 3]!) * (wy - vy) > 0) { pts[m - 2] = wx; pts[m - 1] = wy; }
+        else { if (!m) pts.push(vx, vy); pts.push(wx, wy); }
+        v = w;
+      } while (v !== s && (at(2 * v) >= 0 || at(2 * v + 1) >= 0));
+      // the loop is closed: its last point is its first (drop it), and a straight run through the start joins up
+      let m = pts.length;
+      if (m >= 4 && pts[m - 2] === pts[0] && pts[m - 1] === pts[1]) { pts.length = m - 2; m -= 2; }
+      if (m >= 6) {
+        const ax = pts[m - 2]!, ay = pts[m - 1]!, bx = pts[0]!, by = pts[1]!, cx = pts[2]!, cy = pts[3]!;
+        if ((bx - ax) * (cy - by) === (by - ay) * (cx - bx)) { pts.splice(0, 2); m -= 2; }
+      }
+      const f = new Float32Array(m);
+      for (let i = 0; i < m; i += 2) { f[i] = (pts[i]! - 1 + x0) * CELL_T; f[i + 1] = (pts[i + 1]! - 1 + y0) * CELL_T; }
+      loops.push(f);
     }
-    const f = new Float32Array(m);
-    for (let i = 0; i < m; i += 2) { f[i] = (pts[i]! - 1 + x0) * CELL_T; f[i + 1] = (pts[i + 1]! - 1 + y0) * CELL_T; }
-    loops.push(f);
   }
   return loops;
 }
@@ -403,6 +420,41 @@ function same(a: Int16Array, b: Int16Array): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
   return true;
+}
+
+/** a run's footprint (T122): the cells run.ts's runCells lays along a path (the bends' middles, then where the next click lands; tiles) with
+ *  the n-cell square brush, split by the brush rules into the cells it paints and the ones it skips, priced, as Footprints does a dab; worked
+ *  out again only when the path, the size, the surface or rev change. The shape is relative to the run's top left cell (ax, ay) */
+export class RunFootprint {
+  shape: Shape | null = null;
+  ax = 0; ay = 0;
+  /** as Footprints: whether the course grid's rules ran, the price ($; -1: none), the cells it paints and how many of them it changes */
+  grid = false; price = -1; count = 0; fresh = 0;
+  /** footprints worked out (the tests read it) */
+  runs = 0;
+  private kp: number[] = []; private kn = -1; private ks = -1; private krev = -1;
+  at(path: readonly number[], n: number, surf: number, why?: (() => SkipWhy | null) | null, rev = 0, refuse?: (() => Refuse | null) | null, cost?: (() => CellCost | null) | null): Shape {
+    const kp = this.kp;
+    if (this.shape && n === this.kn && surf === this.ks && rev === this.krev && path.length === kp.length && path.every((v, i) => v === kp[i])) return this.shape;
+    kp.length = 0; for (const v of path) kp.push(v);
+    this.kn = n; this.ks = surf; this.krev = rev; this.runs++;
+    let test = why?.() ?? null;
+    if (!test) { const rf = refuse?.() ?? null; if (rf) test = (a, b) => (rf(a, b) ? 'Skipped' : ''); }
+    this.grid = !!test;
+    const cells = runCells(path, n), cc = cost?.() ?? null;
+    let ax = 0, ay = 0;
+    if (cells.length) { ax = Infinity; ay = Infinity; for (let k = 0; k < cells.length; k += 2) { if (cells[k]! < ax) ax = cells[k]!; if (cells[k + 1]! < ay) ay = cells[k + 1]!; } }
+    const paint: number[] = [], skip: number[] = [], sw: number[] = [];
+    let price = cc ? 0 : -1, fresh = 0, h = 2166136261 ^ (surf * 97 + n);
+    for (let k = 0; k < cells.length; k += 2) {
+      const cx = cells[k]!, cy = cells[k + 1]!, x = (cx + 0.5) * CELL_T, y = (cy + 0.5) * CELL_T, dx = cx - ax, dy = cy - ay, r = test ? test(x, y) : '';
+      if (r) { const id = reasonId(r); skip.push(dx, dy); sw.push(id); h = Math.imul(h ^ ((dx & 0xffff) | (dy << 16)) ^ (id << 24), 16777619); continue; }
+      paint.push(dx, dy); h = Math.imul(h ^ ((dx & 0xffff) | (dy << 16)), 16777619);
+      if (cc) { const p = cc(x, y); price += p; if (p > 0) fresh++; }
+    }
+    this.ax = ax; this.ay = ay; this.price = price; this.count = paint.length >> 1; this.fresh = cc ? fresh : this.count;
+    return (this.shape = makeShape(Int16Array.from(paint), Int16Array.from(skip), Uint8Array.from(sw), h));
+  }
 }
 
 // ---- the chip sprite (the 3D surface disc, T081's puck art) ----
@@ -714,6 +766,8 @@ const backLook = (kind: string): Look => (kind === 'rough' ? GRASS : LOOKS.rough
 export class CourseCursor {
   /** the footprint cache (the tests read it) */
   readonly feet = new Footprints();
+  /** Run's footprint (T122; the tests read it) */
+  readonly runFeet = new RunFootprint();
   /** counters for the tests: chip sprites painted, gradients made */
   readonly stats = { sprites: 0, gradients: 0 };
   /** the chip's last drawn half-axes and the centre of its top face, device px, and whether it was drawn (the tests read them) */
@@ -762,9 +816,11 @@ export class CourseCursor {
       return;
     }
     if (tool.mode !== 'brush') return;
-    this.pressed = true; this.pressAt = now; this.pressErase = tool.rubOut || alt;
+    // Run (T122): the click laid a bend (Shift may have moved it off the pointer) and a run follows the Erase toggle only
+    const P = tool.runOn() ? tool.runPts : null, k = P ? P.length : 0;
+    this.pressed = true; this.pressAt = now; this.pressErase = tool.rubOut || (alt && !P);
     const n = tool.brushSquare(), r = n ? (n * CELL_T) / 2 : tool.brush[tool.brushKind].r;
-    const x = n ? (squareStart(c.x, n) + n / 2) * CELL_T : snapDab(c.x), y = n ? (squareStart(c.y, n) + n / 2) * CELL_T : snapDab(c.y);
+    const x = k ? P![k - 2]! : n ? (squareStart(c.x, n) + n / 2) * CELL_T : snapDab(c.x), y = k ? P![k - 1]! : n ? (squareStart(c.y, n) + n / 2) * CELL_T : snapDab(c.y);
     this.splash(x, y, r, this.pressErase ? backLook(tool.brushKind) : LOOKS[tool.brushKind] ?? LOOKS.fairway!, now, true);
     this.trailX = x; this.trailY = y;
   }
@@ -776,7 +832,7 @@ export class CourseCursor {
     const dt = this.t ? clamp((now - this.t) / 1000, 0, 0.1) : 0; this.t = now;
     const c = tool.cursor;
     let shown = false;
-    if (tool.mode === 'brush' && c) shown = this.drawBrush(ctx, v, tool, c.x, c.y, now, dt);
+    if (tool.mode === 'brush' && c) shown = tool.runOn() ? this.drawRun(ctx, v, tool, c.x, c.y, now, dt) : this.drawBrush(ctx, v, tool, c.x, c.y, now, dt);
     else if (tool.mode === 'piece' && c && tool.piece) shown = this.drawPiece(ctx, v, tool, c.x, c.y, now, dt);
     else { this.have = false; this.pressed = false; this.atRest(tool); }
     this.drawBursts(ctx, v, now, dt);
@@ -788,7 +844,8 @@ export class CourseCursor {
   private atRest(tool: CursorTool) {
     const s = this.state; s.kind = 'ready'; s.dragging = false;
     this.zoneNow = '';
-    if (tool.mode === 'brush' || tool.mode === 'draw') this.words(tool, tool.rubOut && tool.mode === 'brush' ? 'erase' : 'ready', false, tool.rubOut && tool.mode === 'brush', -1, 0, 0, '', '', -1, 0);
+    if (tool.mode === 'brush' && tool.runOn()) this.runWords(tool, tool.rubOut ? 'erase' : 'ready', tool.runPts.length > 0, tool.rubOut, -1, 0, 0, '', '', -1, 0, runLength(tool.runPts, tool.brushSquare()), 0);
+    else if (tool.mode === 'brush' || tool.mode === 'draw') this.words(tool, tool.rubOut && tool.mode === 'brush' ? 'erase' : 'ready', false, tool.rubOut && tool.mode === 'brush', -1, 0, 0, '', '', -1, 0);
     else { s.label.length = 0; s.bad.length = 0; this.setHint(''); }
   }
   private setHint(h: string) { if (h !== this.hint) { this.hint = h; this.hintRev++; } }
@@ -898,6 +955,88 @@ export class CourseCursor {
     if (back !== 'grass') return rough;
     if (this.backFrom !== rough || !this.backSt) { this.backFrom = rough; this.backSt = { ...rough, tex: 'grass', border: 0, tone: 0 }; }
     return this.backSt;
+  }
+
+  /** Run (T122, plan P23 4.5): the strip a finished run lays from its first bend to where the next click lands (the brush's tint, edge and
+   *  states, worked out once per change of the path), the line through its bends with a dot on each, the grid round the pointer and the
+   *  chip; the state follows from the strip as the brush's from its dab; the words carry the run's length, cells and price */
+  private drawRun(ctx: CanvasRenderingContext2D, v: CursorView, tool: CursorTool, cx: number, cy: number, now: number, dt: number): boolean {
+    const n = tool.brushSquare(), path = tool.runPath(), k = path.length;
+    if (k < 2) return this.drawBrush(ctx, v, tool, cx, cy, now, dt);
+    const st = tool.brush[tool.brushKind].style, erase = tool.rubOut, base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, active = tool.runPts.length > 0;
+    const ex = path[k - 2]!, ey = path[k - 1]!;
+    this.zoneNow = this.env.zone?.(ex, ey) ?? '';
+    this.drawGrid(ctx, v, ex, ey, (n * CELL_T) / 2);
+    const f = this.runFeet, fp = f.at(path, n, base.surf, this.env.why, (this.env.rev?.() ?? 0) * 2 + (tool.rubHoleOnly ? 1 : 0), this.env.refuse, this.env.cost);
+    if (f.grid && !erase) this.golf = f.price >= 0;
+    const grid = f.grid, look = erase && grid ? backLook(tool.brushKind) : base;
+    const nKept = grid && !erase ? fp.kept.length >> 1 : 0, nRef = grid ? fp.refused.length >> 1 : 0, price = f.price >= 0 ? Math.round(f.price) : -1;
+    const money = this.env.money?.() ?? Infinity;
+    let kind: CursorStateKind;
+    if (!grid) kind = erase ? 'erase' : 'ready';
+    else if (erase) kind = f.count ? 'erase' : nRef ? 'refused' : 'nochange';
+    else if (price > 0 && money < price) kind = 'short';
+    else if (nRef) kind = 'refused';
+    else if (!f.fresh && !nKept) kind = 'nochange';
+    else if (nKept) kind = 'protected';
+    else kind = 'ready';
+    const s = this.state; s.kind = kind; s.dragging = active;
+    this.runWords(tool, kind, active, erase, grid ? f.count : -1, nKept, nRef, nKept ? fp.whyKept : '', nRef ? fp.whyRefused : '', price, money, runLength(path, n), f.fresh);
+    this.footprint(ctx, fp, f.ax * CELL_T, f.ay * CELL_T, v, look, kind, erase, grid);
+    if (active) this.runLine(ctx, v, path, tool.runPts.length >> 1, look);
+    const ck = erase && grid ? backKind(tool.brushKind) : tool.brushKind;
+    this.chip(ctx, v, cx, cy, ck, erase && grid ? this.backStyle(tool, ck) : st, erase, !grid, d, now, dt);
+    return true;
+  }
+  /** the run's line through its bends (path, tiles; the first placed of them are bends, the last point where the next click lands): a thin
+   *  light line on a dark one, a dot on each bend (the start a little bigger), a ring where the next click lands; the same size at every zoom */
+  private runLine(ctx: CanvasRenderingContext2D, v: CursorView, path: readonly number[], placed: number, look: Look) {
+    const d = v.dpr, ze = v.ze, ex = v.cw / 2 - v.camX * ze, ey = v.ch / 2 - v.camY * ze, X = (i: number) => (path[i]! - path[i + 1]!) * HW * ze + ex, Y = (i: number) => (path[i]! + path[i + 1]!) * HH * ze + ey;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let i = 0; i < path.length; i += 2) { if (i) ctx.lineTo(X(i), Y(i)); else ctx.moveTo(X(i), Y(i)); }
+    ctx.strokeStyle = UNDER; ctx.globalAlpha = 0.8; ctx.lineWidth = 3 * d; ctx.stroke();
+    ctx.strokeStyle = look.core; ctx.globalAlpha = 0.95; ctx.lineWidth = 1.2 * d; ctx.stroke();
+    ctx.globalAlpha = 1;
+    for (let b = 0; 2 * b < path.length; b++) {
+      const x = X(2 * b), y = Y(2 * b), bend = b < placed;
+      ctx.beginPath(); ctx.arc(x, y, (b ? 3.4 : 4.4) * d, 0, Math.PI * 2);
+      if (bend) { ctx.fillStyle = look.core; ctx.fill(); ctx.strokeStyle = UNDER; ctx.lineWidth = 1.4 * d; ctx.stroke(); }
+      else { ctx.strokeStyle = UNDER; ctx.lineWidth = 3 * d; ctx.stroke(); ctx.strokeStyle = look.core; ctx.lineWidth = 1.4 * d; ctx.stroke(); }
+    }
+    ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
+  }
+  /** the run's words' inputs at their last build (a still frame makes no string) */
+  private rw = { kind: '', active: false, erase: false, brush: '', hole: 0, fresh: false, unit: 0, n: 0, kept: 0, ref: 0, whyK: '', whyR: '', price: 0, money: 0, len: 0, nf: 0, grid: false, only: false, zone: '' };
+  /** Run's words (T122): the hint pill says what a click does ("Run Fairway · Hole 1 · $2 a cell · click a start", then with bends "· 40 m"
+   *  and how to finish), then the state's words as the brush's; beside the disc while a run is drawn, its total ("40 m · 80 cells · $160"),
+   *  a refusal with its reason, or money short. n: the cells it paints (-1: unknown), nf: how many of them change, len: its length (m) */
+  private runWords(tool: CursorTool, kind: CursorStateKind, active: boolean, erase: boolean, n: number, kept: number, ref: number, whyK: string, whyR: string, price: number, money: number, len: number, nf: number) {
+    const brush = tool.brushKind, hole = tool.brushHole, surf = LOOKS[brush]?.surf ?? 0, fresh = surf > 0 && this.isNewHole(tool);
+    const unit = this.golf && !erase && surf > 0 ? unitBuildCost(SURF_SURFACE[surf] ?? 'other', tool.plantKind) : -1, m = kind === 'short' ? Math.round(money) : 0;
+    const grid = this.runFeet.grid, only = !!tool.rubHoleOnly, zone = this.zoneNow, w = this.rw;
+    if (w.kind === kind && w.active === active && w.erase === erase && w.brush === brush && w.hole === hole && w.fresh === fresh && w.unit === unit && w.n === n && w.kept === kept && w.ref === ref
+      && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.len === len && w.nf === nf && w.grid === grid && w.only === only && w.zone === zone) return;
+    Object.assign(w, { kind, active, erase, brush, hole, fresh, unit, n, kept, ref, whyK, whyR, price, money: m, len, nf, grid, only, zone });
+    const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
+    const joins = surf > 0 ? (zone ? ` · ${zone}` : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '';
+    const rub = erase && grid && surf > 0, head = rub ? `Run · rub out${only ? ` · Hole ${hole} only` : ''}` : `Run ${name}${joins}`;
+    const tail = active ? ' · click each bend · double-click, Enter or right-click finishes' : ' · click a start';
+    const long = active ? ` · ${len} m` : '';
+    let hint = `${head}${long}${!rub && unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
+    switch (kind) {
+      case 'protected': hint += ` · ${cellsOf(kept)} kept: ${lower(whyK)}`; break;
+      case 'refused': hint += ` · ${cellsOf(ref)} refused: ${lower(whyR)}`; break;
+      case 'nochange': hint = rub ? `${head}${long} · nothing to rub out here` : `${head}${long} · already ${lower(name)} here${this.golf ? ' · $0' : ''}`; break;
+      case 'erase': if (rub) hint = `${head}${long} · ${n >= 0 ? `${cellsOf(n)} ` : ''}back to ${back}${this.golf ? ' · no refund' : ''}`; break;
+      case 'short': hint = `${head} · ${money$(price)} · you have ${money$(m)}`; break;
+    }
+    s.label.length = 0; s.bad.length = 0;
+    // the run's total by the disc while it is drawn
+    if (active && n >= 0) { s.label.push(rub ? `${len} m · ${cellsOf(n)} back to ${back}` : this.golf ? `${len} m · ${cellsOf(nf)} · ${money$(price)}` : `${len} m · ${cellsOf(n)}`); s.bad.push(false); }
+    if (kind === 'short') { s.label.push(`${name} · ${money$(price)} · you have ${money$(m)}`); s.bad.push(true); }
+    else if (ref > 0) { s.label.push(n > 0 ? `${cellsOf(ref)}: ${lower(whyR)}` : whyR); s.bad.push(true); }
+    this.setHint(hint + tail);
   }
 
   /** the course piece in hand: the Paint tool's plan it was made for, the footprint of its golf layers (anchor cell ax, ay), its core
