@@ -44,7 +44,7 @@ export const GUIDE: readonly GuideStep[] = Object.freeze([
     id: 'guide-hole',
     n: 2,
     title: 'Lay out a new hole',
-    body: 'Open Course and press + New hole: click a tee, then a green, and Build.',
+    body: 'Open Holes and press New hole: click a tee, then a green, and Build.',
     done: 'auto',
     target: { ui: 'rail-course', map: 'newHoleSpot' },
   },
@@ -145,7 +145,7 @@ export const GUIDE_STUCK: GuideStep = Object.freeze({
   id: 'guide-stuck',
   n: 2,
   title: 'Need a hand with your first hole?',
-  body: 'Open Course and press + New hole: click a tee, then a green, and the whole hole is planned for you. Build when it looks right.',
+  body: 'Open Holes and press New hole: click a tee, then a green, and the whole hole is planned for you. Build when it looks right.',
   done: 'auto',
   target: Object.freeze({ ui: 'rail-course', map: 'newHoleSpot' }),
 });

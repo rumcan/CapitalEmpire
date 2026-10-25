@@ -177,6 +177,18 @@ function readSurf(g: Grid, ci0: number, cj0: number, cw: number, ch: number): Ui
   }
   return out;
 }
+/** the carved cells over a cell window (T125: cells the player rubbed out that still hold the base, course-grid isCarved): 1 there, else 0;
+ *  null when the window has none (the usual case: nothing to leave out) */
+function readCarve(g: Grid, ci0: number, cj0: number, cw: number, ch: number): Uint8Array | null {
+  const cv = g.carve; if (!cv) return null;
+  let out: Uint8Array | null = null;
+  const i0 = Math.max(0, ci0), i1 = Math.min(g.w, ci0 + cw), j0 = Math.max(0, cj0), j1 = Math.min(g.h, cj0 + ch);
+  for (let j = j0; j < j1; j++) {
+    const src = j * g.w, dst = (j - cj0) * cw - ci0;
+    for (let i = i0; i < i1; i++) if (cv[src + i] && g.surf[src + i]! <= ROUGH) (out ??= new Uint8Array(cw * ch))[dst + i] = 1;
+  }
+  return out;
+}
 
 /** cells set in src, grown by a disc of radius r (cells beyond the window count as empty) */
 function dilate(src: Uint8Array, cw: number, ch: number, r: number): Uint8Array {
@@ -245,11 +257,11 @@ function lineClose(src: Uint8Array, cw: number, ch: number, r: number, out: Uint
 /** the closing used for droplet fillets: the union of the closing by a disc of radius r (rounds inner corners, fills gaps
  * between facing edges up to 2r cells) and the closings by line segments of half-length 1 (joins a dotted row of cells with
  * gaps up to 2; longer lines would bar across the gaps between separate strokes), an algebraic closing. Added cells must be
- * claimable by surface s. */
-function closeCells(occ: Uint8Array, sw: Uint8Array, s: number, cw: number, ch: number, r: number): Uint8Array {
+ * claimable by surface s, and never carved (cv, T125: what the player rubbed out stays open, at its full size) */
+function closeCells(occ: Uint8Array, sw: Uint8Array, s: number, cw: number, ch: number, r: number, cv: Uint8Array | null = null): Uint8Array {
   const cl = erode(dilate(occ, cw, ch, r), cw, ch, r);
   lineClose(occ, cw, ch, 1, cl);
-  for (let i = 0; i < cl.length; i++) cl[i] = occ[i] || (cl[i] && claimable(s, sw[i])) ? 1 : 0;
+  for (let i = 0; i < cl.length; i++) cl[i] = occ[i] || (cl[i] && claimable(s, sw[i]) && !cv?.[i]) ? 1 : 0;
   return cl;
 }
 
@@ -684,10 +696,10 @@ function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withColl
   const close = Math.max(0, Math.round(st.close)), cw0 = rings.whole + (rings.part > 0 ? 1 : 0);
   const pad = 3 + 2 * close + cw0;
   const ci0 = (a0 >> 1) - pad, cj0 = (b0 >> 1) - pad, cw = (a1 >> 1) + pad + 1 - ci0, ch = (b1 >> 1) + pad + 1 - cj0;
-  const sw = readSurf(g, ci0, cj0, cw, ch), n = cw * ch;
+  const sw = readSurf(g, ci0, cj0, cw, ch), cv = readCarve(g, ci0, cj0, cw, ch), n = cw * ch;
   let occ: Uint8Array = new Uint8Array(n);
   for (let i = 0; i < n; i++) occ[i] = sw[i] === s ? 1 : 0;
-  if (close > 0) occ = closeCells(occ, sw, s, cw, ch, close);
+  if (close > 0) occ = closeCells(occ, sw, s, cw, ch, close, cv);
   const keep = cellBox(g, { x0: box.x0 - 1, y0: box.y0 - 1, x1: box.x1 + 1, y1: box.y1 + 1 });
   const oS: Occ = { occ, ci0, cj0, cw, ch };
   const chains = contour(oS, L, keep);
@@ -697,11 +709,12 @@ function surfaceChains(g: Grid, s: number, st: BlobStyle, box: BlobBox, withColl
     const over = new Uint8Array(256);
     for (const t of col.over) over[t] = 1;
     const dl = dilate(occ, cw, ch, rings.whole), cc = new Uint8Array(n);
-    for (let i = 0; i < n; i++) cc[i] = occ[i] || (dl[i] && over[sw[i]]) ? 1 : 0;
+    // the collar band never lies on a carved cell (T125): a rubbed-out gap shows as the base it went back to
+    for (let i = 0; i < n; i++) cc[i] = occ[i] || (dl[i] && over[sw[i]] && !cv?.[i]) ? 1 : 0;
     if (rings.part > 0) {
       // the ring past the whole cells, at the weight that puts the outline at the width asked for
       const d2 = dilate(occ, cw, ch, rings.whole + 1);
-      for (let i = 0; i < n; i++) if (!cc[i] && d2[i] && over[sw[i]]) cc[i] = 2;
+      for (let i = 0; i < n; i++) if (!cc[i] && d2[i] && over[sw[i]] && !cv?.[i]) cc[i] = 2;
     }
     oC = rings.part > 0 ? { occ: cc, ci0, cj0, cw, ch, pw: rings.part } : { occ: cc, ci0, cj0, cw, ch };
     chainsC = contour(oC, L, keep);

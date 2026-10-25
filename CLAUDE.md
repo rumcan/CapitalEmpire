@@ -28,9 +28,15 @@ who owns which files and how to land work on main without clashing is in `docs/S
 - **Slow checks run on the LAN worker PC** (`scripts/worker/run.sh "<command>"`; setup in `docs/PROGRESS.md`). The
   worker clone is read-only: never commit or push from it.
 - **Since 2026-10-24 the Claude sessions run ON the worker PC** (PiskriekDesk, 192.168.0.5): there is no `cworker`
-  here, so `scripts/worker/run.sh` only applies from the old dev PC. Coders run typecheck and their own test files;
-  the leads run the full suite, builds, gates and the bench locally, **one heavy run at a time across all sessions**
+  here, so `scripts/worker/run.sh` only applies from the old dev PC. **One heavy run at a time across all sessions**
   (16 GB RAM: check no other `vite build` / `node --test` is running first).
+- **Testing during the day: your own code only; the full regression runs at night** (the owner, 2026-10-25, to speed up
+  development). A coder runs typecheck plus the test files for the code it touched (and their neighbours), and nothing
+  wider: no full `npm test`, no build, no gates, no bench, unless its ticket is about speed or the build. The lead merges a
+  PR on a clean typecheck, those tests passing and a review, after merging main into it. Every night a scheduled task
+  ("CapitalEmpire nightly regression", about 02:00) runs the full suite, typecheck, the build and the headless gates on
+  main in `.claude/worktrees/nightly`, writes `E:/ClaudeTemp/nightly/<date>.md`, and opens one `[nightly]` issue for a
+  real failure, naming the PRs merged since the last green night. Fix `[nightly]` issues first the next day.
 - **Update `docs/PROGRESS.md`** after every verified step: status table, numbers, decisions, next steps.
 - **Commit locally after each verified step** (message ends with the Co-Authored-By line). Push only when the owner
   says so.

@@ -119,6 +119,8 @@ export type ToWorker =
   | { t: 'casters'; set: [string, Float32Array][]; drop: string[]; dropPrefix?: string[] }
   /** the gear menu's Ground variety (T111) and the dev debug view of its influence maps: every chunk is baked again */
   | { t: 'living'; on: boolean; debug: boolean }
+  /** the course height light's strength (T126: the gear menu's Slope light, 0 = off): every chunk is baked again */
+  | { t: 'slopeLight'; strength: number }
   | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number };
 
 export type FromWorker =
