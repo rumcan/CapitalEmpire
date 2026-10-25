@@ -4,7 +4,6 @@ import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
 import { checkDevRequest, checkDevSave, devSavePath } from "./src/game/dev/dev-save";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -63,7 +62,13 @@ function devSave(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), viteSingleFile(), devSave()],
+  plugins: [react(), tailwindcss(), devSave()],
+  // T080: the build is index.html plus hashed files next to it (dist/assets: the code, the workers, every atlas, view and ground picture), not one
+  // inlined file: the single-file build had grown to 324 MB, took 4-11 minutes and ran out of memory. './' keeps every URL relative to the page, so
+  // dist/ works from any folder of any static server (vite preview, a plain server, a sub-path such as GitHub Pages); the workers are files too
+  // (?worker, not ?worker&inline: a blob worker cannot resolve the relative URLs of the pictures it fetches)
+  base: "./",
+  build: { reportCompressedSize: false },
   // output/ holds benchmark screenshots and a browser profile whose locked files crash the watcher
   server: { watch: { ignored: ['**/output/**', '**/ref/**', '**/dist/**'] } },
   resolve: {

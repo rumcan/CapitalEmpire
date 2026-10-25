@@ -1,6 +1,6 @@
 // The main thread's side of the traffic simulation: it posts edits and settings to the sim worker, keeps the last two
 // frames, and interpolates the cars between them so they move smoothly at 60 fps while the sim runs at 10 Hz.
-import SimWorker from './sim.worker?worker&inline';
+import SimWorker from './sim.worker?worker';
 import type { GallerySpot } from '../golf/galleries';
 import type { NetOp } from '../ground-protocol';
 import { CAR_SCALE, type Drawable } from '../sprites';
