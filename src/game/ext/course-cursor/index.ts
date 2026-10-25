@@ -848,7 +848,7 @@ export class CourseCursor {
     else if (erase) kind = f.count ? 'erase' : 'nochange';
     else if (price > 0 && money < price) kind = 'short';
     else if (nRef) kind = 'refused';
-    else if (!f.fresh && !nKept) kind = 'nochange';
+    else if (!f.fresh && !nKept && !this.pressed) kind = 'nochange'; // a drag lays the cells under the pointer itself: still "as ready"
     else if (nKept) kind = 'protected';
     else kind = 'ready';
     const s = this.state; s.kind = kind; s.dragging = this.pressed;

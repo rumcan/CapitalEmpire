@@ -420,6 +420,7 @@ test('labels by state (T118): no words by the disc at rest; only the drag total,
   tool.pointerMove({ x: 91.3, y: 214.6 }, 0, 0); tool.cursor = { x: 91.3, y: 214.6 };
   m = frame(cur, tool, 0.3, 2050);
   assert.equal(cur.state.dragging, true); assert.equal(tool.strokeCells, 8);
+  assert.equal(cur.state.kind, 'ready', 'the cells the drag just laid under the pointer do not make it "no change"');
   assert.deepEqual(cur.state.label, [`8 cells · $${(8 * unit).toLocaleString()}`]); assert.deepEqual(cur.state.bad, [false]);
   assert.ok(m.texts.includes(cur.state.label[0]!));
   tool.pointerUp(0.5); cur.release(2100);
