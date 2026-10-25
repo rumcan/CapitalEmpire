@@ -91,7 +91,7 @@ import { adjacentBlockPrice, buyAdjacentBlock, COURSE_LAND_MSG, LAND_BLOCK, bloc
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout, GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
-import { PlayView, boardRows, championLine, makeCourseView, makeField, playRound, standings, teeTimes, type BoardRow, type CourseView, type RoundPlan } from './golf/play';
+import { PlayView, boardRows, championLine, makeCourseView, makeField, playRound, stateAt, standings, teeTimes, type BoardRow, type CourseView, type RoundPlan } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
@@ -209,6 +209,8 @@ const PLAYING_SURFACES: ReadonlySet<string> = new Set(['fairway', 'firstCut', 'f
 const COURSE_GRID_PAD = 32;
 /** the least time between two sends of the course chunks during a stroke, ms (paint-tool.ts SEND_MS) */
 const COURSE_SEND_MS = 100;
+/** the least time between two workings-out of the featured holes (the crowd follows the play, docs/GOLF-PLAY.md decision 6), real ms */
+const FEATURED_EVERY_MS = 2000;
 /** a course area as the golf rules read it (deriveHoles, holeViews, markerPlan, the stats, the upkeep): its surface, hole, a texture that
  *  reads back as the surface, and its planting */
 type CourseAreaRec = CourseArea & { hole?: number; tex: PaintTex };
@@ -417,6 +419,8 @@ export class Game {
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
   /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
   private play: GolfPlay | null = null; private playTried = -1;
+  /** the featured holes last sent to the city (featuredHoles; the City's set mirrors it) and the real ms they were last worked out at */
+  private featured: number[] = []; private featuredAt = -Infinity;
   /** the leaderboard (playBoard), recomputed at most every 250 ms: the play it is for, the time, and the board */
   private boardCache: { play: GolfPlay; at: number; board: PlayBoard } | null = null;
   /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
@@ -4271,13 +4275,36 @@ export class Game {
    *  when the round is free, or when there is no golf */
   private updatePlay(now: number) {
     const tr = this.traffic, r = tr?.round;
-    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; return; }
+    if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; this.clearFeatured(); return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlay(r.runs); }
-    if (!this.play) return;
-    this.play.pv.update(townTimeOf(tr.town, tr.simTime(now)).dayMin, now / 1000);
+    if (!this.play) { this.clearFeatured(); return; }
+    const minute = townTimeOf(tr.town, tr.simTime(now)).dayMin;
+    this.play.pv.update(minute, now / 1000);
+    // the crowd follows the play (docs/GOLF-PLAY.md decision 6): the featured holes are worked out at most every FEATURED_EVERY_MS and sent when they change
+    if (now - this.featuredAt >= FEATURED_EVERY_MS) { this.featuredAt = now; this.sendFeatured(this.featuredHoles(this.play, minute)); }
     // the champion is toasted once, the first time the board has one (its line is the board's)
     if (!this.play.told) { const b = this.playBoard(); if (b?.champion) { this.play.told = true; this.toast(`${b.champion} — ${b.event}`, 'good'); } }
   }
+  /** the holes the crowd follows at a game minute (docs/GOLF-PLAY.md decision 6), sorted, no repeats: the holes the last three groups are on (the marquee
+   *  groups tee off last) and the holes of the top three of the standings, among the golfers who have teed off and are not done. A golfer's hole is its
+   *  PlayHole.n (a 9-hole course's second nine repeats its numbers, as do the spots' holes) */
+  private featuredHoles(pl: GolfPlay, minute: number): number[] {
+    const { plan, view } = pl, st = stateAt(plan, view, minute), holes = new Set<number>();
+    const out = (id: number) => plan.done[id]! > minute;
+    const add = (id: number) => { const s = st.find(q => q.golfer === id), h = s ? view.holes[s.hole] : undefined; if (h) holes.add(h.n); };
+    for (const gr of plan.groups.slice(-3)) if (minute >= gr.tee) for (const id of gr.players) if (out(id)) add(id);
+    let top = 0;
+    for (const s of standings(plan, view, minute)) { if (!out(s.golfer)) continue; add(s.golfer); if (++top === 3) break; }
+    return [...holes].sort((a, b) => a - b);
+  }
+  /** the featured holes to the city when they differ from the last sent (the city's set is replaced whole: see SimClient.setFeatured) */
+  private sendFeatured(holes: number[]) {
+    const f = this.featured;
+    if (holes.length === f.length && holes.every((h, i) => h === f[i])) return;
+    this.featured = holes; this.traffic.setFeatured(holes);
+  }
+  /** no play: the city follows no golfers (the featured holes cleared, sent once when they were set) */
+  private clearFeatured() { if (this.featured.length) this.sendFeatured([]); }
   /** the day's leaderboard (docs/GOLF-PLAY.md decision 8; the panel and the eval line read it): null with no play. The minute, the rows (boardRows: the
    *  top 8 and the owner's row below them, the owner the one golfer marked owner), the champion's line once everyone is done, done, and the tournament's
    *  name. Recomputed at most every 250 ms */

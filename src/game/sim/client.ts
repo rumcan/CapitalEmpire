@@ -174,6 +174,8 @@ export class SimClient {
   town: TownClock = townClockFor(1440);
   /** the galleries' spots (LEAD.md M2.2): sent with the gates, and when the holes change */
   setSpots(spots: GallerySpot[]) { this.post({ t: 'spots', spots }); }
+  /** the golf play's featured holes (docs/GOLF-PLAY.md decision 6): the crowd's spots on these holes draw more; [] none (see City.setFeatured) */
+  setFeatured(holes: number[]) { this.post({ t: 'featured', holes }); }
   /** the course's gates (LEAD.md M2.1): sent whenever the placed gate structures change */
   setGates(gates: { x: number; y: number; lanes: number }[]) { this.post({ t: 'gates', gates }); }
   setTownDay(minutes: number, traffic: number) { this.townMinutes = minutes; this.townTraffic = traffic; this.sendTownDay(); }

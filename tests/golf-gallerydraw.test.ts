@@ -125,4 +125,31 @@ describe('gallery draw and moves (T051a)', () => {
     }
     assert.ok(moved > 0, 'the seeded cases should produce at least one move');
   });
+
+  it('8. a featured set (the golf play\'s holes) replaces the stand-in: its tees and greens draw FEATURED_BUMP more at any minute, the others not; a stand is never featured', () => {
+    const featured = new Set([2]);
+    // the stand-in at 07:30 is hole 1; the set's hole 2 gets the bump instead
+    assert.equal(featuredHole(450, 9), 1);
+    assert.equal(spotDraw(spot('tee', 1, 1.5), 450, 9, featured), 1.5, 'hole 1 is not in the set');
+    assert.equal(spotDraw(spot('tee', 2, 1.5), 450, 9, featured), 1.5 * (1 + FEATURED_BUMP));
+    assert.equal(spotDraw(spot('green', 2, 3), 1000, 9, featured), 3 * (1 + FEATURED_BUMP), 'at any minute');
+    assert.equal(spotDraw(spot('green', 1, 3), 1000, 9, featured), 3);
+    assert.equal(spotDraw(spot('green', 5, 3), 480, 9, new Set([2, 5])), 3 * (1 + FEATURED_BUMP), 'several holes');
+    assert.equal(spotDraw(spot('green', 1, 3), 450, 9, new Set()), 3, 'an empty set: no featured hole');
+    assert.equal(spotDraw(spot('stand', 2, 4), 480, 9, featured), 4);
+  });
+
+  it('9. with a featured set the fans move toward its holes: the move goes to the featured green, not the stand-in\'s; the total is kept', () => {
+    // three greens on a 3-hole course at 08:00: all 300 fans are on hole 1's green, so it is over its share
+    const spots = [spot('green', 1, 3, 400), spot('green', 2, 3, 400), spot('green', 3, 3, 400)];
+    const fill = [300, 0, 0], feat = new Set([3]);
+    assert.deepEqual(fairShares(spots, 480, 3, 300, feat), [60, 60, 180]);
+    const moves = relocate(spots, fill, 480, 3, feat);
+    assert.deepEqual(moves, [{ from: 0, to: 2, n: 75 }], 'toward hole 3, the featured green');
+    const cur = [...fill];
+    for (const mv of moves) { cur[mv.from]! -= mv.n; cur[mv.to]! += mv.n; }
+    assert.deepEqual(cur, [225, 0, 75]);
+    // without the set, the stand-in (hole 1 at 08:00 on three holes) has the bump and the fans go to hole 2's green (a tie with hole 3 goes to the lower index)
+    assert.deepEqual(relocate(spots, fill, 480, 3), [{ from: 0, to: 1, n: 75 }]);
+  });
 });

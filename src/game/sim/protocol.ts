@@ -43,7 +43,9 @@ export type ToSim = { t: 'net'; ops: NetOp[] } | { t: 'terrain'; cls: Uint8Array
   /** the course's gates (LEAD.md M2.1): each gate's point (tiles) and its lanes (golf: the placed gate structures) */
   | { t: 'gates'; gates: { x: number; y: number; lanes: number }[] }
   /** the galleries (LEAD.md M2.2): the spots the admitted fans stand at (golf/galleries.ts) */
-  | { t: 'spots'; spots: GallerySpot[] };
+  | { t: 'spots'; spots: GallerySpot[] }
+  /** the golf play's featured holes (docs/GOLF-PLAY.md decision 6): the spots on these holes draw more; [] none (see City.setFeatured) */
+  | { t: 'featured'; holes: number[] };
 /** (golf: the golf mode on, with the tournament's tier and its reputation (the season ends with it: see City.setGolf), or off; parking: the bay rows and on-street runs as the player drew them (the full lists) and the fee per parked car ($); disastersOn: the natural disasters on or off (off by default; off lifts their closures); repairDisaster: the player pays the repair of the quake closure key of disaster id) */
 /** (buses: the shuttle routes as the player drew them (the full list, each time: the worker resolves their stops); heat: the congestion heat map on or off (off by default: nothing is posted then); report: a request for the bottleneck report now; the worker also sends one each game hour; inspect: the car in slot is inspected, a car message with every frame, -1 stops;
  *  watch: the junction within 4 tiles of (x, y) is watched for the routes through it, x < 0 stops; businesses: the player's businesses (the full list: see City.setBusinesses); biz (in townState): the businesses' saved stats) */
