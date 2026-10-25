@@ -1,0 +1,14 @@
+{
+  "generationId": "80def099-5752-47a7-b1fa-d270b9e75f61",
+  "prompt": "Full-body character for a 3D model: food stand vendor, a man in his 40s, a white apron over a red-and-white striped short-sleeved shirt, a white paper hat, dark trousers. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "model": "gemini-3.1-flash-image-preview",
+  "seed": 2144534556,
+  "imageUrl": "https://storage.googleapis.com/venus-app-a037a.firebasestorage.app/h5-imagegen/AFjPSjQH9kbcCl57sgO3/7r4388nXCvVG192gWNl54tkeGPz2/3397c381-a5e6-4b97-a50f-7c4a69e425be.png",
+  "requestPrompt": "Full-body character for a 3D model: food stand vendor, a man in his 40s, a white apron over a red-and-white striped short-sleeved shirt, a white paper hat, dark trousers. Plain clothes with no logos, lettering or emblems. Standing in a neutral A-pose, both arms 45 degrees away from the body, hands open and empty, feet slightly apart, facing the viewer straight on, the whole body visible from head to toe. Match the painted style of the reference character. Plain flat light grey background, nothing else in the picture.",
+  "requestModel": "gemini-3.1-flash-image-preview",
+  "aspectRatio": "2:3",
+  "gameId": "AFjPSjQH9kbcCl57sgO3",
+  "outputPath": "E:\\Repos\\CapitalEmpire\\worktrees\\people-ground\\art\\spectators\\pics\\staff_vendor_m.png",
+  "status": "saved",
+  "sha256": "868a1ed834b96546d67f04e5a0e7b4e486d254159780a0a5b153677144e75fa9"
+}
