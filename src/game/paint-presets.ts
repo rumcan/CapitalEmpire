@@ -24,6 +24,9 @@ export interface PaintPreset {
   stripes: Stripes;
   /** the town's lawns may use it (lawns.ts: each lot's yard, the road blocks' grass); the owner's switch in the studio */
   lawn: boolean;
+  /** the painted set it is laid with instead of its mixed picture (painted-grass-art.ts PAINTED_GRASS, e.g. 'grass': three zoom levels), or
+   *  null: its picture, as the studio baked it. The game's Grass setting 'photo' lays the picture whatever this says (T082) */
+  painted: string | null;
 }
 /** the surfaces that are not grass: a preset for one of them is never a lawn unless the owner says so */
 const NOT_GRASS = new Set(['bunker', 'waste', 'water', 'path']);
@@ -70,13 +73,15 @@ export const presetSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9
 export const presetTex = (id: string) => `preset:${id}` as const;
 const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
 
+/** a painted set's id ([a-z0-9-], the game ignores one it does not have), or null */
+export const clampPainted = (v: unknown): string | null => (typeof v === 'string' && /^[a-z0-9-]{1,40}$/.test(v) ? v : null);
 /** a preset with every value held to its range, or null when it has no usable name or pictures */
 export function clampPreset(p: Partial<PaintPreset> | null | undefined): PaintPreset | null {
   if (!p || typeof p.name !== 'string' || !p.name.trim() || typeof p.a?.src !== 'string' || typeof p.b?.src !== 'string') return null;
   const name = p.name.trim().slice(0, 40), id = presetSlug(typeof p.id === 'string' && p.id ? p.id : name); if (!id) return null;
   const surface = (PRESET_SURFACES as readonly string[]).includes(p.surface as string) ? (p.surface as PresetSurface) : null;
   const size = clamp(typeof p.size === 'number' && Number.isFinite(p.size) ? p.size : 8, PRESET_SIZE[0], PRESET_SIZE[1]);
-  return { id, name, surface, size, col: typeof p.col === 'string' && /^#[0-9a-f]{6}$/i.test(p.col) ? p.col : '#55602a', a: clampSide(p.a), b: clampSide(p.b), mix: clampMix(p.mix ?? {}), stripes: clampStripes(p.stripes), lawn: typeof p.lawn === 'boolean' ? p.lawn : !NOT_GRASS.has(surface ?? '') };
+  return { id, name, surface, size, col: typeof p.col === 'string' && /^#[0-9a-f]{6}$/i.test(p.col) ? p.col : '#55602a', a: clampSide(p.a), b: clampSide(p.b), mix: clampMix(p.mix ?? {}), stripes: clampStripes(p.stripes), lawn: typeof p.lawn === 'boolean' ? p.lawn : !NOT_GRASS.has(surface ?? ''), painted: clampPainted(p.painted) };
 }
 /** the file with its presets checked: bad ones dropped, a repeated id kept once (the first) */
 export function clampPresets(f: Partial<PresetsFile> | null | undefined): PresetsFile {

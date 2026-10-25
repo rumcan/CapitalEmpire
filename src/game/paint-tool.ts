@@ -12,6 +12,10 @@ import { edgeProfileOf } from './paint-edges';
 import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceHeightOp, type SnapPiecePlacement, type SnapTargetRoad } from './ext/course-snap';
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
+import { CELL_T, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
+import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
+import { unitBuildCost } from './golf/costs';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -43,16 +47,22 @@ const STORED: (StoredHole | null)[] = Array.from({ length: HOLE_COUNT }, (_, i) 
 export interface PropJournal { added: unknown[]; removed: unknown[] }
 /** the areas at one moment, for undo: each area's id and save tuple (and the tuple as text, to compare), and the next id */
 interface AreaSnap { ids: number[]; ts: PaintTuple[]; keys: string[]; nextId: number }
-/** an undoable action: the areas before and after it, the props it added or removed, the money it spent, and the course height blocks it changed (T027) */
-interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: PropJournal | null; spent: number; height: CourseHeightStep | null }
+/** an undoable action: the areas before and after it, the props it added or removed, the money it spent, the course height blocks it changed (T027),
+ *  the course grid cells it changed (T078: one merged diff) and the hole plans before and after it (as JSON; null when they did not change) */
+interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: PropJournal | null; spent: number; height: CourseHeightStep | null; grid: GridDiff | null; plans: { before: string; after: string } | null }
 /** the most undo steps kept */
 const UNDO_MAX = 100;
+/** the most course-grid cells the undo steps keep in all (13 bytes a cell: about 26 MB); the oldest steps go first */
+const UNDO_CELLS = 2_000_000;
 /** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
 type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> };
 /** the localStorage key of the edited brush presets */
 const BRUSH_KEY = 'capitalempire.brushPresets';
 /** the brush radius range in tiles */
 const BR_MIN = 0.5, BR_MAX = 20;
+/** the square brush's size, remembered (T109): 1 to 4 cells, 0 the round brush */
+const CELLS_KEY = 'capitalempire.brushCells';
+function loadCells(): number { try { const n = Number(localStorage.getItem(CELLS_KEY) ?? 1); return Number.isInteger(n) && n >= 0 && n <= 4 ? n : 1; } catch { return 1; } }
 /** the brush presets: BRUSH_PRESETS, each replaced by its saved edit (a missing or bad save keeps the defaults; no storage keeps them too) */
 function loadBrush(): Record<BrushKind, BrushSet> {
   const out = {} as Record<BrushKind, BrushSet>;
@@ -89,7 +99,21 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   heightChanged?(box: CourseTileBox): void;
   /** the areas changed (an undo step was made, undone or redone): the engine re-fits the holes' pins and tee markers; pins: where a placed
    *  preset's flag stands, by hole (the pin goes there when it is on the green) */
-  changed?(pins?: Map<number, { x: number; y: number }>): void }
+  changed?(pins?: Map<number, { x: number; y: number }>): void;
+  /** the golf game's course grid (T078; null in a classic game, which keeps painting course areas): the Course tool's golf surfaces paint
+   *  into it, and its undo steps carry the cells they changed */
+  grid?(): Grid | null;
+  /** the grid changed by d (null: nothing new); flush: send the touched chunks now (else at most every SEND_MS) */
+  gridChanged?(d: GridDiff | null, flush: boolean): void;
+  /** the grid's course areas (gridAreas, cached by the engine): the holes in use, a hole's box and the pieces' snap targets */
+  gridAreas?(): readonly GridArea[];
+  /** whether tile (x, y) is on the golf game's owned land (the grid's cells outside it are never painted) */
+  ownedAt?(x: number, y: number): boolean;
+  /** the golf game's hole plans (save tuples) and their setter: undo and redo carry them */
+  plans?(): unknown[];
+  setPlans?(p: unknown[]): void;
+  /** a course surface's look (a brush style) changed: the grid's chunks are drawn again in it */
+  courseLook?(): void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
 const GHOST_FILL: Record<string, string> = { golfGreen: 'rgba(120,200,120,0.35)', golfFairway: 'rgba(150,210,120,0.25)', waterDark: 'rgba(70,120,200,0.35)', bunkerSand: 'rgba(230,210,150,0.4)' };
 /** what the preview needs to draw (the engine's overlay helpers) */
@@ -123,6 +147,11 @@ function trace(ctx: CanvasRenderingContext2D, pts: number[], closed: boolean) {
   ctx.moveTo(pts[0]!, pts[1]!); for (let i = 1; i < n; i++) ctx.lineTo(pts[2 * i]!, pts[2 * i + 1]!);
   if (closed) ctx.closePath();
 }
+
+/** a flat outline x0 y0 x1 y1 ... as points */
+function toXY(pts: readonly number[]): { x: number; y: number }[] { const out: { x: number; y: number }[] = []; for (let k = 0; k + 1 < pts.length; k += 2) out.push({ x: pts[k]!, y: pts[k + 1]! }); return out; }
+/** the hole a planned piece is laid for */
+const pl0 = (p: { pl: SnapPiecePlacement }) => p.pl.hole;
 
 /** writes the css px of tile (x, y) under the affine A into slot s of out */
 function put(out: number[], s: number, A: number[], x: number, y: number) { out[2 * s] = A[0]! + x * A[2]! + y * A[4]!; out[2 * s + 1] = A[1]! + x * A[3]! + y * A[5]!; }
@@ -174,7 +203,7 @@ export class PaintTool {
   /** undo and redo (Ctrl+Z, Ctrl+Y): the steps, and the action in progress (its depth: nested begins join one step) */
   private undos: UndoStep[] = [];
   private redos: UndoStep[] = [];
-  private tx: { before: AreaSnap; spent: number; depth: number; label: string } | null = null;
+  private tx: { before: AreaSnap; spent: number; depth: number; label: string; gd: GridDiff[]; plans: string } | null = null;
   /** the course height blocks the action in progress touches, for undo (T027) */
   private hj = new CourseHeightJournal();
   /** the flag of the preset being placed (golf mode): the pin's spot for its hole, handed to the engine when the step commits */
@@ -203,8 +232,11 @@ export class PaintTool {
   private planting: { erase: boolean; last: { x: number; y: number }; n: number } | null = null;
   private plantSeed = (Date.now() % 100000) | 0;
   /** brush mode: the stroke in progress, or null: its mask of this hole's cells of the kind, the radius, whether it erases, the last tile, and the dabs (x y pairs) for the preview */
-  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[] } | null = null;
+  private stroke: { m: Mask; m0: Mask; r: number; erase: boolean; last: { x: number; y: number }; dabs: number[]; /** on the course grid (T078): the surface id, month value and brush rules each dab paints the cells with (the mask is unused) */ grid?: { g: Grid; s: number; month: number; opts: PaintOpts; /** the square brush (T109): its size in cells (0: the round brush) and the start cell of its last square */ n: number; ix: number; iy: number; /** what the stroke has charged so far ($), and whether it ran out of money */ spent: number; broke: boolean } } | null = null;
   private host: PaintHost;
+  /** the engine draws the brush (and a course piece) with ext/course-cursor (T081, T108: the cells a click paints and a surface chip beside the
+   *  pointer, which stays a normal pointer): the plain brush ring steps aside */
+  puckCursor = false;
 
   constructor(host: PaintHost) { this.host = host; }
 
@@ -224,6 +256,15 @@ export class PaintTool {
   /** replaces the areas with the save tuples (none: clears) and sends their patches */
   load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.undos = []; this.redos = []; this.tx = null; this.hj = new CourseHeightJournal(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
 
+  /** takes out the areas pred picks (their ground goes; T078's load moves the golf surfaces into the course grid), in paint order, and
+   *  clears the undo steps (they name the old areas); returns them */
+  takeAreas(pred: (a: PaintArea) => boolean): PaintArea[] {
+    const out = this.areas.filter(pred); if (!out.length) return out;
+    const gone = new Set(out);
+    for (const a of out) this.host.setLotGround('paint:' + a.id, null);
+    this.areas = this.areas.filter(a => !gone.has(a)); this.undos = []; this.redos = []; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null;
+    return out.sort((a, b) => drawZ(a) - drawZ(b));
+  }
   /** removes every area from the ground and resets the drawing and selection (the style and mode stay) */
   clear() {
     for (const a of this.areas) this.host.setLotGround('paint:' + a.id, null);
@@ -246,15 +287,27 @@ export class PaintTool {
     if (this.mode === 'brush' || (this.course && this.mode === 'draw')) {
       // the brush preset takes the change (the Course tool's Shape method paints with it too), and the areas of this hole and kind re-style at once
       const k = this.brushKind;
+      const was = this.brush[k].style;
       this.brush[k] = { r: this.brush[k].r, style: { ...this.style } }; this.saveBrush();
       let changed = false;
       for (const a of this.areas) if (a.hole === this.brushHole && a.kind === k) { Object.assign(a, this.brush[k].style); this.send(a); changed = true; }
       if (changed) this.host.save();
+      // the grid's surfaces wear the brush looks (texture, scale, angle; not the tone): its chunks are drawn again only when one of those changed
+      const st = this.brush[k].style;
+      if (this.courseGrid() && (st.tex !== was.tex || st.scale !== was.scale || st.angle !== was.angle)) this.host.courseLook?.();
     }
     this.host.emit();
   }
 
   /** brush mode: sets a kind's radius (tiles, 0.5 to 20) and remembers it */
+  /** the Course brush on the course grid (T109): a square of brushCells x brushCells mini-grid cells (1 m each; 1 the default, 2 one town
+   *  square, 3, 4), or the round brush of the surface's radius (0; under Advanced) */
+  brushCells: number = loadCells();
+  setBrushCells(n: number) { this.brushCells = n > 0 ? Math.min(SQUARE_SIZES[SQUARE_SIZES.length - 1]!, Math.max(1, Math.round(n))) : 0; try { localStorage.setItem(CELLS_KEY, String(this.brushCells)); } catch { /* storage may be unavailable */ } this.host.emit(); }
+  /** the square brush's size in cells when it is the one that paints (the Course brush on a course grid surface), else 0 (the round brush) */
+  brushSquare(): number { return this.brushCells > 0 && this.course && !!this.courseGrid() && surfOfSurface(this.brushKind) > 0 ? this.brushCells : 0; }
+  /** what the stroke in progress has charged so far ($; 0 with none) */
+  get strokeSpent(): number { return this.stroke?.grid?.spent ?? 0; }
   setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)), style: this.brush[k].style }; this.saveBrush(); this.host.emit(); }
 
   /** writes the brush presets to localStorage (a storage that is missing or full is skipped) */
@@ -267,17 +320,17 @@ export class PaintTool {
   setShape(kind: BrushKind) { this.mode = 'draw'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
   /** the Course tool opens (the engine calls it): coming from Paint, or from Pick or Erase, it starts on the current surface's brush */
   /** the Course tool opens on its Pieces method in golf mode (T035); classic keeps the brush */
-  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw')) { if (this.host.golfMode?.()) this.setPiece(this.pieceArch); else this.setBrush(this.brushKind); } }
+  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw')) this.setBrush(this.brushKind); } // the brush is the way to build (T109); the pieces are stamps under Advanced
   /** the Paint tool opens: the golf brush, the Shape method and the hole presets are the Course tool's, so they fall back to Draw */
   enterPaint() { const was = this.course; this.course = false; if (this.mode === 'brush' || this.mode === 'hole' || this.mode === 'piece' || this.mode === 'height' || (was && this.mode === 'draw')) this.setMode('draw'); }
   /** the hole numbers that have painted areas */
-  usedHoles(): Set<number> { const out = new Set<number>(); for (const a of this.areas) if (a.hole) out.add(a.hole); return out; }
+  usedHoles(): Set<number> { const out = new Set<number>(); for (const a of this.areas) if (a.hole) out.add(a.hole); for (const a of this.host.gridAreas?.() ?? []) if (a.hole) out.add(a.hole); return out; }
   /** the lowest hole number (1..18) with no areas, or 0 when every hole has some */
   nextFreeHole(): number { const u = this.usedHoles(); for (let n = 1; n <= HOLE_COUNT; n++) if (!u.has(n)) return n; return 0; }
   /** a hole's bounding box [x0, y0, x1, y1] over its areas, or null when it has none */
   holeBox(n: number): [number, number, number, number] | null {
     let b: [number, number, number, number] | null = null;
-    for (const a of this.areas) if (a.hole === n) { const q = polyBox(a.pts); b = b ? [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[2]), Math.max(b[3], q[3])] : [q[0], q[1], q[2], q[3]]; }
+    for (const a of [...this.areas, ...(this.host.gridAreas?.() ?? [])]) if (a.hole === n) { const q = polyBox(a.pts); b = b ? [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[2]), Math.max(b[3], q[3])] : [q[0], q[1], q[2], q[3]]; }
     return b;
   }
   /** makes hole n (1..18) the current hole: the brush, the shapes and a placed preset go to it */
@@ -290,16 +343,24 @@ export class PaintTool {
   /** the areas now, for undo */
   private snapshot(): AreaSnap { const ts = this.areas.map(a => toTuple(a)); return { ids: this.areas.map(a => a.id), ts, keys: ts.map(t => JSON.stringify(t)), nextId: this.nextId }; }
   /** starts an undoable action (a nested begin joins the open one) */
-  private begin(label: string) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label }; this.host.journal?.begin(); this.hj.begin(); }
+  private begin(label: string) { if (this.tx) { this.tx.depth++; return; } this.tx = { before: this.snapshot(), spent: 0, depth: 1, label, gd: [], plans: this.plansKey() }; this.host.journal?.begin(); this.hj.begin(); }
+  /** the hole plans as text (undo compares and restores them) */
+  private plansKey(): string { return JSON.stringify(this.host.plans?.() ?? []); }
   /** ends an undoable action: it becomes an undo step when it changed the areas or the props, or spent money (the redo steps are dropped) */
   private commit() {
     const t = this.tx; if (!t || --t.depth > 0) return;
     this.tx = null;
+    // the action's last chunks go out first, inside the prop journal: the trees they clear off new playing surfaces come back on undo
+    if (t.gd.length) this.host.gridChanged?.(null, true);
     const props = this.host.journal?.end() ?? null, after = this.snapshot();
     const f = this.host.courseHeight?.() ?? null, height = f ? this.hj.end(f) : null; if (!f) this.hj.drop();
     const same = after.keys.length === t.before.keys.length && after.keys.every((k, i) => k === t.before.keys[i]); // a stroke that changed nothing re-made the same areas under new ids
-    if (!props && !t.spent && same && !height) return;
-    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    const gd = mergeMany(t.gd), grid = gd && gd.n ? gd : null, pk = this.plansKey(), plans = pk !== t.plans ? { before: t.plans, after: pk } : null;
+    if (!props && !t.spent && same && !height && !grid && !plans) return;
+    this.undos.push({ label: t.label, before: t.before, after, props, spent: t.spent, height, grid, plans }); if (this.undos.length > UNDO_MAX) this.undos.shift();
+    // a few big grid steps (a whole preset hole, a long stroke) can outweigh a hundred small ones: the steps are capped by their cells too
+    let cells = 0; for (const u of this.undos) cells += u.grid?.n ?? 0;
+    while (cells > UNDO_CELLS && this.undos.length > 1) cells -= this.undos.shift()!.grid?.n ?? 0;
     this.redos = [];
     const hint = this.pinHint; this.pinHint = undefined; this.host.changed?.(hint);
   }
@@ -317,6 +378,74 @@ export class PaintTool {
     this.areas = out; this.nextId = s.nextId;
     this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null; this.stroke = null; this.planting = null; this.heighting = null; this.pts = []; this.lasso = false; this.down = null;
   }
+  /** an undo step's grid cells and hole plans go back (undo) or forward (redo); the touched chunks are sent at once */
+  private gridStep(u: UndoStep, undo: boolean) {
+    const g = this.host.grid?.();
+    if (u.grid && g) { applyDiff(g, u.grid, undo); this.host.gridChanged?.(u.grid, true); }
+    if (u.plans && this.host.setPlans) { try { this.host.setPlans(JSON.parse(undo ? u.plans.before : u.plans.after) as unknown[]); } catch { /* the text is our own JSON */ } }
+  }
+  /** the course grid the Course tool paints a golf surface into: the golf game's grid (null: course areas are painted, as in a classic game) */
+  private courseGrid(): Grid | null { return this.course && this.host.golfMode?.() ? this.host.grid?.() ?? null : null; }
+  /** keeps a grid change in the open action and tells the engine (its chunks are sent within SEND_MS) */
+  private gridApply(d: GridDiff) { if (!d.n) return; this.tx?.gd.push(d); this.host.gridChanged?.(d, false); }
+  /** a brush dab's cells on the grid (T109): in a golf game each cell it lays costs its surface's price (1 m² a cell; a rub out is free); a
+   *  dab the treasury cannot pay is taken back (one toast a stroke) */
+  private gridDab(d: GridDiff) {
+    const sg = this.stroke?.grid; if (!d.n || !sg) return;
+    const cost = !this.stroke!.erase && this.host.golfMode?.() ? Math.round(diffCost(d, v => unitBuildCost(SURF_SURFACE[v] ?? 'other', this.plantKind))) : 0;
+    if (cost > 0 && (this.host.money?.() ?? 0) < cost) {
+      applyDiff(sg.g, d, true);
+      if (!sg.broke) { sg.broke = true; this.host.toast(`Not enough money: these cells cost $${cost.toLocaleString()}`, 'warn'); }
+      return;
+    }
+    if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; sg.spent += cost; }
+    this.gridApply(d);
+  }
+  /** what painting the cell centred at (x, y) with the Course brush costs right now ($; 0 when it would not change, or outside a golf game:
+   *  null), for the cursor's live price (T109) */
+  brushCellCost(): ((x: number, y: number) => number) | null {
+    const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s || this.rubOut || !this.host.golfMode?.()) return null;
+    const h = this.brushHole, unit = unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind);
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || g.surf[i]! > s ? 0 : unit; };
+  }
+  /** the brush rules on grid g for surface s: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did), owned
+   *  cells only, and a rub out takes only cells of its own surface on the current hole (as the old per-hole brush areas did) */
+  private gridOpts(g: Grid, s: number, erase: boolean): PaintOpts {
+    const own = this.host.ownedAt;
+    const h = this.brushHole;
+    return { over: 'below', rub: erase, allow: i => { if (erase && (g.surf[i] !== s || g.hole[i] !== h)) return false; if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
+  }
+  /** the course-grid cells a Course brush dab would skip right now (T081's footprint), by a cell centre in tiles: outside the grid, else
+   *  the brush rules above (off your land, a higher surface it slides past, for a rub out another surface or hole); null when the brush
+   *  paints areas (a cart path, a classic game) */
+  brushSkip(): ((x: number, y: number) => boolean) | null {
+    const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
+    const o = this.gridOpts(g, s, this.rubOut);
+    return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (o.allow ? !o.allow(i) : false) || (!o.rub && o.over === 'below' && g.surf[i]! > s); };
+  }
+  /** why a Course brush dab would skip the cell at (x, y) right now ('' when it paints it; T108's footprint shows the reason), by the same rules
+   *  as brushSkip; null when the brush paints areas */
+  brushSkipWhy(): ((x: number, y: number) => string) | null {
+    const g = this.courseGrid(), s = g ? surfOfSurface(this.brushKind) : 0; if (!g || !s) return null;
+    const own = this.host.ownedAt, h = this.brushHole, erase = this.rubOut;
+    return (x, y) => {
+      const i = cellAt(g, x, y); if (i < 0) return 'Off the course land';
+      if (erase) return g.surf[i] !== s || g.hole[i] !== h ? 'Another surface or hole' : '';
+      if (own) { const c = cellCentre(g, i); if (!own(c.x, c.y)) return 'Not your land'; }
+      const top = g.surf[i]!, nm = SURF_SURFACE[top]; return top > s ? `${nm ? nm[0]!.toUpperCase() + nm.slice(1) : 'A higher surface'} stays on top` : '';
+    };
+  }
+  /** fills polygon pts (tiles) into grid g as surface s for hole h (the brush rules): the cells that change are charged (1 m² each at the
+   *  surface's price; golf mode) and kept in the open action; false, with the toast and nothing changed, when the treasury cannot pay */
+  private gridFill(g: Grid, pts: number[], s: number, h: number): boolean {
+    const d = fillPolygon(g, toXY(pts), s, h, plantMonth(this.plantKind, this.host.currentMonth?.()), this.gridOpts(g, s, false));
+    const cost = this.host.golfMode?.() ? Math.round(diffCost(d, v => unitBuildCost(SURF_SURFACE[v] ?? 'other', this.plantKind))) : 0, money = this.host.money?.() ?? 0;
+    if (cost > 0 && money < cost) { applyDiff(g, d, true); this.host.toast(`Not enough money: this costs $${cost.toLocaleString()} (treasury: $${Math.round(money).toLocaleString()})`, 'warn'); return false; }
+    if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; }
+    this.gridApply(d); return true;
+  }
+  /** the grid surface id a painted area lays (its brush kind, else its texture's golf surface; 0: none, it stays a painted area) */
+  private static surfOf(a: { kind?: BrushKind; tex: PaintArea['tex'] }): number { return surfOfSurface(a.kind ?? surfaceOfTex(a.tex)); }
   /** whether there is a step to undo / redo (the panel's buttons) */
   get canUndo() { return this.undos.length > 0 && !this.tx; }
   get canRedo() { return this.redos.length > 0 && !this.tx; }
@@ -325,6 +454,7 @@ export class PaintTool {
     if (this.tx) return;
     const u = this.undos.pop(); if (!u) return;
     this.restore(u.before);
+    this.gridStep(u, true);
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'before'); if (b) this.host.heightChanged?.(b); }
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
     if (u.spent) this.host.spend?.(-u.spent);
@@ -336,6 +466,7 @@ export class PaintTool {
     if (this.tx) return;
     const u = this.redos.pop(); if (!u) return;
     this.restore(u.after);
+    this.gridStep(u, false);
     const f = this.host.courseHeight?.(); if (u.height && f) { const b = this.hj.apply(f, u.height, 'after'); if (b) this.host.heightChanged?.(b); }
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
     if (u.spent) this.host.spend?.(u.spent);
@@ -375,16 +506,37 @@ export class PaintTool {
   private refreshPiece() { this.piece = this.cursor ? this.pieceAt(this.cursor) : null; this.host.emit(); }
   /** piece mode: the plan for the piece in hand at tile t: its placement (snapped to the touching course piece unless snapping is off), the areas it lays, why it cannot go ('' if it can) and its cost (golf mode) */
   private pieceAt(t: { x: number; y: number }): NonNullable<PaintTool['piece']> {
-    const key = `${this.pieceArch}|${Math.round(t.x * 4)}|${Math.round(t.y * 4)}|${this.pieceAngle}|${this.pieceScale}|${this.pieceSnap}|${this.brushHole}|${this.areas.length}|${this.nextId}|${this.plantKind}|${this.host.courseHeight?.()?.rev ?? 0}|${this.host.roadRev?.() ?? 0}`;
+    const key = `${this.pieceArch}|${Math.round(t.x * 4)}|${Math.round(t.y * 4)}|${this.pieceAngle}|${this.pieceScale}|${this.pieceSnap}|${this.brushHole}|${this.areas.length}|${this.nextId}|${this.plantKind}|${this.host.courseHeight?.()?.rev ?? 0}|${this.host.roadRev?.() ?? 0}|${this.courseGrid()?.rev ?? 0}`;
     if (this.piece?.key === key) return this.piece;
     const b = PIECE_BUTTONS.find(q => q.arch === this.pieceArch) ?? PIECE_BUTTONS[2]!, golf = !!this.host.golfMode?.();
     // a cart path snaps to the road kerbs near it (T031); the other pieces do not look at the roads
     const roads = b.kind === 'path' && this.pieceSnap ? this.host.roadsNear?.(t.x, t.y, 12) : undefined;
-    const pl = computeSnapPiecePlacement({ kind: b.kind, archetype: b.arch, cursor: t, angleDeg: this.pieceAngle, scale: this.pieceScale, snapEnabled: this.pieceSnap, defaultHole: this.brushHole, areas: snapTargets(this.areas), roads });
+    const pl = computeSnapPiecePlacement({ kind: b.kind, archetype: b.arch, cursor: t, angleDeg: this.pieceAngle, scale: this.pieceScale, snapEnabled: this.pieceSnap, defaultHole: this.brushHole, areas: snapTargets(this.snapAreas()), roads });
     const areas = pieceAreas(pl);
     // a snapped cart path's join apron sits on the road's verge, which may lie outside the course land: only the piece's own layers must be on owned land (the apron is still laid and priced)
     const landAreas = b.kind === 'path' ? areas.filter((_, i) => pl.layers[i]?.role !== 'join-apron') : areas;
-    return { key, pl, areas, why: pieceWhy(landAreas, golf ? this.host.ownedLand : undefined), cost: golf ? pieceCost(areas, this.plantKind) + this.earthworkCost(pl.heightOps) : 0 };
+    return { key, pl, areas, why: pieceWhy(landAreas, golf ? this.host.ownedLand : undefined), cost: golf ? this.piecePrice(areas) + this.earthworkCost(pl.heightOps) : 0 };
+  }
+  /** what a piece can snap to: the painted areas and, on the course grid, its blobs (outer rings; their texture says their kind; no collars) */
+  private snapAreas(): (Pick<PaintArea, 'id' | 'pts' | 'kind' | 'hole'> & { tex?: string; order?: number })[] {
+    const grid = this.courseGrid() ? this.host.gridAreas?.() ?? [] : [];
+    return grid.length ? [...this.areas, ...grid.filter(a => !a.collar).map(a => ({ id: a.id, pts: a.outer, hole: a.hole || undefined, tex: a.tex }))] : this.areas;
+  }
+  /** the price of a piece's areas (golf mode): on the course grid, its golf surfaces by the cells they would change (1 m² each, as the
+   *  Shape method charges; the collar layers it drops cost nothing: collars are automatic), its other layers (a cart path) by their
+   *  painted area; without a grid, every layer by its area (pieceCost) */
+  private piecePrice(areas: readonly Omit<PaintArea, 'id'>[]): number {
+    const g = this.courseGrid(); if (!g) return pieceCost(areas, this.plantKind);
+    const own = this.host.ownedAt, rest: Omit<PaintArea, 'id'>[] = [];
+    let cost = 0;
+    for (const a of areas) {
+      const gs = PaintTool.surfOf(a), sf = a.kind ?? surfaceOfTex(a.tex);
+      if (!gs) { if (sf !== 'fringe' && sf !== 'firstCut') rest.push(a); continue; }
+      let n = 0;
+      polyCells(g, roundCorners(a.pts, a.radius), (i, x, y) => { if (g.surf[i]! < gs && (!own || own(x, y))) n++; });
+      cost += n * unitBuildCost(SURF_SURFACE[gs] ?? 'other', this.plantKind);
+    }
+    return Math.round(cost + (rest.length ? pieceCost(rest, this.plantKind) : 0));
   }
   /** applies a placed piece's height ops to the course height field (journaled for undo); the engine is told the changed box */
   private applyHeightOps(ops: readonly CoursePieceHeightOp[]) {
@@ -445,8 +597,15 @@ export class PaintTool {
     }
     this.begin('place ' + this.pieceArch);
     if (p.cost) { this.host.spend?.(p.cost); this.tx!.spent += p.cost; }
-    const m = this.host.currentMonth?.() ?? 0, core = p.areas.find(a => a.kind);
+    const m = this.host.currentMonth?.() ?? 0, core = p.areas.find(a => a.kind), grid = this.courseGrid();
     for (const s of p.areas) {
+      // on the course grid (T078) a golf surface's layer is laid into the cells (rounded as drawn) for the piece's hole; its collar layers
+      // (fringe, first cut) are automatic now and are dropped; a cart path stays a painted area
+      if (grid) {
+        const gs = PaintTool.surfOf(s), sf = s.kind ?? surfaceOfTex(s.tex);
+        if (gs) { const d = fillPolygon(grid, toXY(roundCorners(s.pts, s.radius)), gs, s.hole ?? pl0(p), plantMonth(this.plantKind, m), this.gridOpts(grid, gs, false)); this.gridApply(d); continue; }
+        if (sf === 'fringe' || sf === 'firstCut') continue;
+      }
       const id = this.nextId++;
       // the piece's core takes the remembered look of its surface (the brush style every area of that kind on the hole follows: texture, angle,
       // tone and border look), keeping its own corner radius: a placed piece and a brush stroke of the same surface match (the owner, 2026-10-24)
@@ -541,7 +700,21 @@ export class PaintTool {
     if (this.drag) { this.dragTo(t, shift); return; }
     if (this.mode === 'piece') { this.piece = t ? this.pieceAt(t) : null; return; }
     if (this.mode === 'height') { const h = this.heighting; if (h && t && Math.hypot(t.x - h.last.x, t.y - h.last.y) >= Math.max(0.5, this.heightR * 0.3)) { h.last = { x: t.x, y: t.y }; this.heightDabAt(t); } return; }
-    if (this.mode === 'brush') { const s = this.stroke; if (s && t) { brushStroke(s.m, s.last.x, s.last.y, t.x, t.y, s.r, s.erase); s.last.x = t.x; s.last.y = t.y; s.dabs.push(t.x, t.y); } return; }
+    if (this.mode === 'brush') {
+      const s = this.stroke; if (!s || !t) return;
+      // the square brush (T109): a square at every cell step from the last one to the one under the pointer (no gaps)
+      const sg = s.grid;
+      if (sg && sg.n) {
+        const jx = squareStart(t.x, sg.n), jy = squareStart(t.y, sg.n); if (jx === sg.ix && jy === sg.iy) return;
+        squareRun(sg.ix, sg.iy, jx, jy, (ix, iy) => this.gridDab(fillPolygon(sg.g, squarePoly(ix, iy, sg.n), sg.s, this.brushHole, sg.month, sg.opts)));
+        sg.ix = jx; sg.iy = jy; s.dabs.push(t.x, t.y); return;
+      }
+      // dabs on the half grid (T108): a move inside the same cell paints nothing new
+      const x = snapDab(t.x), y = snapDab(t.y); if (x === s.last.x && y === s.last.y) return;
+      if (sg) this.gridDab(paintStroke(sg.g, s.last.x, s.last.y, x, y, s.r, sg.s, this.brushHole, sg.month, sg.opts, CELL_T));
+      else brushStroke(s.m, s.last.x, s.last.y, x, y, s.r, s.erase, CELL_T);
+      s.last.x = x; s.last.y = y; s.dabs.push(x, y); return;
+    }
     if (this.mode === 'plant') {
       // a dab every half radius along the drag (each dab only adds where the spacing allows, so going over a spot again fills it in)
       const pl = this.planting; if (!pl || !t) return;
@@ -592,6 +765,14 @@ export class PaintTool {
   if (this.course) this.style = { ...this.brush[this.brushKind].style };
   const why = checkArea(this.pts);
   if (why) { this.host.toast(why, 'warn'); if (fromLasso) this.cancel(); this.host.emit(); return; }
+  // the Shape method on the course grid (T078): the outline's cells take the surface for the current hole (only the cells that change are charged)
+  const grid = this.courseGrid(), gs = grid ? surfOfSurface(this.brushKind) : 0;
+  if (grid && gs) {
+    if (this.host.ownedLand && !this.host.ownedLand(this.pts)) { this.host.toast('Cannot paint outside owned course land: area must be fully inside owned parcels', 'warn'); if (fromLasso) this.cancel(); this.host.emit(); return; }
+    this.begin('shape ' + this.brushKind);
+    this.gridFill(grid, roundCorners(this.pts, this.style.radius), gs, this.brushHole);
+    this.cancel(); this.commit(); this.host.save(); this.host.emit(); return;
+  }
   let paid = 0;
   if (this.host.golfMode?.()) {
   if (this.host.ownedLand && !this.host.ownedLand(this.pts)) {
@@ -648,7 +829,17 @@ export class PaintTool {
     const hole = !this.course ? 0 : this.usedHoles().has(this.brushHole) ? this.nextFreeHole() : this.brushHole;
     if (this.course && !hole) { this.host.toast(`All ${HOLE_COUNT} holes have areas: erase one first`, 'warn'); return; }
     this.begin(this.holeSlot ? `preset ${this.holeSlot}` : 'golf hole');
-    for (const a of p.areas) { const k = a.kind ?? kindOfTex(a.tex); const b: PaintArea = { id: this.nextId++, ...a, ...(hole ? { hole, ...(k ? { kind: k } : {}) } : {}) }; this.areas.push(b); this.send(b); }
+    const grid = this.courseGrid(), own = this.host.ownedAt, month = plantMonth(this.plantKind, this.host.currentMonth?.());
+    for (const a of p.areas) {
+      // on the course grid (T078) the preset's golf surfaces are laid into the cells in its paint order (a later one over an earlier one, owned
+      // land only); its fringe and first-cut bands are automatic collars now
+      if (grid) {
+        const gs = PaintTool.surfOf(a), sf = a.kind ?? surfaceOfTex(a.tex);
+        if (gs) { this.gridApply(fillPolygon(grid, toXY(roundCorners(a.pts, a.radius)), gs, hole, month, own ? { allow: i => { const c = cellCentre(grid, i); return own(c.x, c.y); } } : {})); continue; }
+        if (sf === 'fringe' || sf === 'firstCut') continue;
+      }
+      const k = a.kind ?? kindOfTex(a.tex); const b: PaintArea = { id: this.nextId++, ...a, ...(hole ? { hole, ...(k ? { kind: k } : {}) } : {}) }; this.areas.push(b); this.send(b);
+    }
     this.host.save();
     // a golf game's holes have their own pin: the preset's flag only says where it goes
     const flag = hole && this.host.golfMode?.() ? p.props.find(q => q.kind === 'flag') : undefined;
@@ -664,11 +855,24 @@ export class PaintTool {
   /** brush mode: a press starts a stroke (Alt or Rub out erases): the mask holds this hole's cells of the kind (their outlines filled), and one dab lays at the press */
   private strokeStart(t: { x: number; y: number }, alt: boolean) {
     const k = this.brushKind, h = this.brushHole, r = this.brush[k].r, m: Mask = new Set(), erase = this.rubOut || alt;
+    // the dab lands on the half grid's nearest cell corner (T108), where the cursor's footprint shows it
+    const x = snapDab(t.x), y = snapDab(t.y);
+    // on the course grid (T078) every dab paints the cells (a cart path still paints areas)
+    const g = this.courseGrid(), s = g ? surfOfSurface(k) : 0;
+    if (g && s) {
+      this.begin((erase ? 'rub out ' : 'brush ') + k);
+      // the square brush (T109): n x n cells from the start cell under the pointer; else the round brush's disc
+      const n = this.brushSquare(), ix = n ? squareStart(t.x, n) : 0, iy = n ? squareStart(t.y, n) : 0;
+      const grid = { g, s, month: plantMonth(this.plantKind, this.host.currentMonth?.()), opts: this.gridOpts(g, s, erase), n, ix, iy, spent: 0, broke: false };
+      this.stroke = { m, m0: m, r, erase, last: { x, y }, dabs: [x, y], grid };
+      this.gridDab(n ? fillPolygon(g, squarePoly(ix, iy, n), s, h, grid.month, grid.opts) : paintDisc(g, x, y, r, s, h, grid.month, grid.opts));
+      this.host.emit(); return;
+    }
     for (const a of this.areas) if (a.hole === h && a.kind === k) fillPoly(m, this.outlineOf(a));
     const m0: Mask = new Set(m);
-    dab(m, t.x, t.y, r, erase);
+    dab(m, x, y, r, erase);
     this.begin((erase ? 'rub out ' : 'brush ') + k);
-    this.stroke = { m, m0, r, erase, last: { x: t.x, y: t.y }, dabs: [t.x, t.y] };
+    this.stroke = { m, m0, r, erase, last: { x, y }, dabs: [x, y] };
     this.host.emit();
   }
 
@@ -676,6 +880,9 @@ export class PaintTool {
   private strokeEnd() {
     const s = this.stroke; if (!s) return;
     this.stroke = null;
+    // the grid's cells changed dab by dab (one undo step); a stroke that laid cells counts as a course piece built (T109: the brush is the way
+    // to build now, so the progress the guide and the stages read follows it)
+    if (s.grid) { const laid = !s.erase && !!this.tx?.gd.some(d => d.n > 0); this.commit(); if (laid) this.host.progress?.('piece'); this.host.save(); this.host.emit(); return; }
     // a stroke that changed no cell (rubbing out where nothing is) keeps the areas as they are (re-tracing would re-smooth them)
     if (s.m.size === s.m0.size) { let same = true; for (const c of s.m) if (!s.m0.has(c)) { same = false; break; } if (same) { this.commit(); this.host.emit(); return; } }
     const k = this.brushKind, h = this.brushHole, style = this.brush[k].style;
@@ -702,7 +909,7 @@ export class PaintTool {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = erase ? 'rgba(240,80,60,0.35)' : rgba(TEX_COL.get(this.brush[this.brushKind].style.tex) ?? '#888888', 0.35); ctx.fill();
     }
-    if (!c) return;
+    if (!c || this.puckCursor) return;
     v.setIso(ctx); ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.strokeStyle = erase ? '#f87171' : '#ffffff'; ctx.lineWidth = 1.5 * d; ctx.stroke();
   }
@@ -776,7 +983,9 @@ export class PaintTool {
       case '[': case ']':
         if (this.mode === 'height') { this.setHeight({ r: this.heightR + (e.key === ']' ? 1 : -1) }); return true; }
         if (this.mode === 'plant') { this.setPlantSet({ r: this.plant[this.plantBrush].r + (e.key === ']' ? 1 : -1) }); return true; }
-        if (this.mode !== 'brush') return false; this.setBrushR(this.brush[this.brushKind].r + (e.key === ']' ? 1 : -1)); break;
+        if (this.mode !== 'brush') return false;
+        if (this.brushSquare()) { this.setBrushCells(this.brushCells + (e.key === ']' ? 1 : -1)); break; } // the square sizes 1 to 4 cells (T109)
+        this.setBrushR(this.brush[this.brushKind].r + (e.key === ']' ? 1 : -1)); break;
       case 'Delete': {
         if (!this.selected) return false;
         const a = this.selectedArea(), g = this.hoverH;

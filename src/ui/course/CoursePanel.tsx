@@ -2,22 +2,29 @@ import type { Game } from '../../game/engine';
 import { BRUSH_PRESETS, PAINT_TEXES } from '../../game/paint';
 import { PLANT_KINDS } from '../../game/plant';
 import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
+import { SQUARE_SIZES } from '../../game/ext/course-cursor/snap';
 import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
+import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
 import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
 import { HoleStrip } from './HoleStrip';
 import { HoleInspector } from './HoleInspector';
 
-type CourseTab = 'build' | 'presets' | 'plants';
+type CourseTab = 'build' | 'presets' | 'plants' | 'buildings';
 
-/** the Course tool's panel: the current hole with undo and redo, then three tabs: Build (the surfaces and their style), Presets (the 1-18 holes) and Plants (docs/COURSE-BUILDER.md, C1) */
+/** the Course tool's panel: the current hole with undo and redo, then the tabs: Build (the surfaces and their style), Presets (the 1-18 holes) and Plants
+ *  (docs/COURSE-BUILDER.md, C1), and in a golf game Buildings (the clubhouse the player places, plan P22 T089) */
 export function CoursePanel({ game }: { game: Game }) {
   const p = game.paint, n = p.brushHole, br = p.brush[p.brushKind], name = BRUSH_PRESETS.find(b => b.kind === p.brushKind)?.name ?? '';
   const ui = game.toolUi(), brushOk = (k: string) => !ui || (ui.visibleCourseBrushes as string[]).includes(k), fine = (k: string) => !ui || (ui.visibleFineControls as string[]).includes(k);
-  const tab: CourseTab = p.mode === 'hole' ? 'presets' : p.mode === 'plant' ? 'plants' : 'build';
+  // T109: building works in 1 m mini-grid cells; the round brush and the big stamps (the old pieces) sit under Advanced (the all-tools toggle)
+  const adv = !ui || ui.advancedMode, sq = p.brushSquare(), cells = p.brushCells;
+  const tab: CourseTab = game.clubPlacing ? 'buildings' : p.mode === 'hole' ? 'presets' : p.mode === 'plant' ? 'plants' : 'build';
   const help = p.mode === 'height'
     ? `Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} per m³.` : ''}`
     : p.mode === 'piece'
     ? `Click to lay a ${PIECE_BUTTONS.find(b => b.arch === p.pieceArch)?.name ?? 'piece'} for hole ${n}. It snaps to the end or edge of the course piece it touches and dresses its own borders. R turns it, [ ] sizes it.`
+    : p.mode === 'brush' && sq
+    ? `Click paints ${sq === 1 ? 'one 1 m cell' : `${sq} x ${sq} cells`} of ${name} for hole ${n} on the mini grid (a town square is 2 x 2); drag paints a run. Cells of the same surface join up. Alt-drag or Rub out erases. [ ] size.`
     : p.mode === 'brush'
     ? `Drag to paint ${name} for hole ${n}; strokes of the same surface on a hole join into one area. Alt-drag or Rub out erases. [ ] size.`
     : `Click corners (or press and drag) to lay ${name} for hole ${n}; double-click or Enter closes. Pick the shape to edit it with its handles.`;
@@ -32,9 +39,10 @@ export function CoursePanel({ game }: { game: Game }) {
       <HoleStrip game={game} />
       <HoleInspector game={game} />
       <div className="mt-2 flex flex-wrap gap-1">
-        <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => p.setBrush(p.brushKind)}>Build</button>
-        <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => p.setMode('hole')}>Presets</button>
-        <button className={`chip ${tab === 'plants' ? 'chip-on' : ''}`} onClick={() => p.setPlant(p.plantBrush)}>Plants</button>
+        <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setBrush(p.brushKind); }}>Build</button>
+        <button className={`chip ${tab === 'presets' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setMode('hole'); }}>Presets</button>
+        <button className={`chip ${tab === 'plants' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setPlant(p.plantBrush); }}>Plants</button>
+        {game.golfMode && <button className={`chip ${tab === 'buildings' ? 'chip-on' : ''}`} onClick={() => game.placeClubhouse(true)}>Buildings</button>}
       </div>
       {tab === 'build' && (
         <>
@@ -44,18 +52,24 @@ export function CoursePanel({ game }: { game: Game }) {
           </div>
           <div className="mt-2 text-[11px] text-slate-400">Method</div>
           <div className="flex flex-wrap gap-1">
-            <button className={`chip ${p.mode === 'piece' ? 'chip-on' : ''}`} onClick={() => p.setPiece(p.pieceArch)}>Pieces</button>
             <button className={`chip ${p.mode === 'brush' ? 'chip-on' : ''}`} onClick={() => p.setBrush(p.brushKind)}>Brush</button>
             <button className={`chip ${p.mode === 'draw' ? 'chip-on' : ''}`} onClick={() => p.setShape(p.brushKind)}>Shape</button>
             {fine('heightBrush') && <button className={`chip ${p.mode === 'height' ? 'chip-on' : ''}`} onClick={() => p.setHeight()}>Height</button>}
+            {(adv || p.mode === 'piece') && <button className={`chip ${p.mode === 'piece' ? 'chip-on' : ''}`} title="Advanced: the big ready-made shapes (pear fairway, kidney green, pond...), stamped on the mini grid" onClick={() => p.setPiece(p.pieceArch)}>Stamps</button>}
           </div>
           {p.mode === 'brush' && (
             <>
-              <div className="mt-2 text-[11px] text-slate-400">Brush size</div>
-              <div className="flex items-center gap-2">
-                <input type="range" min={0.5} max={20} step={0.5} value={br.r} onChange={e => p.setBrushR(+e.target.value)} className="flex-1" />
-                <span className="w-16 text-right text-xs text-slate-200">{`${br.r} tiles`}</span>
+              <div className="mt-2 text-[11px] text-slate-400">Brush size (1 m mini-grid cells)</div>
+              <div className="flex flex-wrap gap-1">
+                {SQUARE_SIZES.map(k => <button key={k} className={`chip ${cells === k ? 'chip-on' : ''}`} title={k === 2 ? 'One town square (a road tile)' : `${k * k} cells, ${k} m a side`} onClick={() => p.setBrushCells(k)}>{k === 1 ? '1 cell' : k === 2 ? '2 x 2 (town square)' : `${k} x ${k}`}</button>)}
+                {adv && <button className={`chip ${cells === 0 ? 'chip-on' : ''}`} title="Advanced: a round brush in tiles" onClick={() => p.setBrushCells(0)}>Round</button>}
               </div>
+              {cells === 0 && (
+                <div className="flex items-center gap-2">
+                  <input type="range" min={0.5} max={20} step={0.5} value={br.r} onChange={e => p.setBrushR(+e.target.value)} className="flex-1" />
+                  <span className="w-16 text-right text-xs text-slate-200">{`${br.r} tiles`}</span>
+                </div>
+              )}
               <div className="mt-1 flex flex-wrap gap-1">
                 <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
               </div>
@@ -63,7 +77,7 @@ export function CoursePanel({ game }: { game: Game }) {
           )}
           {p.mode === 'piece' && (
             <>
-              <div className="mt-2 text-[11px] text-slate-400">Piece</div>
+              <div className="mt-2 text-[11px] text-slate-400">Stamps (Advanced)</div>
               <div className="flex flex-wrap gap-1">
                 {PIECE_BUTTONS.filter(b => brushOk(b.kind)).map(b => <button key={b.arch} className={`chip ${p.pieceArch === b.arch ? 'chip-on' : ''}`} onClick={() => p.setPiece(b.arch)}>{b.name}</button>)}
               </div>
@@ -123,6 +137,16 @@ export function CoursePanel({ game }: { game: Game }) {
           </div>
         </>
       )}
+      {tab === 'buildings' && (() => {
+        const built = game.bizDefs.some(d => d.type === 'clubhouse'), B = BUSINESS.clubhouse;
+        return (
+          <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-2 text-xs">
+            <div className="flex items-center justify-between"><span className="font-semibold text-slate-100">Clubhouse</span><span className="text-amber-200">{built ? '✓ Built' : `$${CLUBHOUSE_RANGE_COST.toLocaleString()}`}</span></div>
+            <div className="mt-1 text-slate-400">{`${B.footprint.w} × ${B.footprint.h} tiles · one only. The course's front door: green fees start, the tournament's crowd heads here, and the tour needs it before it invites you.`}</div>
+            <div className="mt-1 text-slate-300">{built ? 'Your clubhouse stands: there is one only.' : 'Click beside a drive on your land (its front snaps to the drive); R turns it, Esc stops.'}</div>
+          </div>
+        );
+      })()}
       {tab === 'plants' && (
         <>
           <div className="mt-2 flex flex-wrap gap-1">

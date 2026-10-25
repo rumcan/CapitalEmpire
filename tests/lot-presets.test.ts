@@ -2,7 +2,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { LV } from '../src/game/lots/town';
-import { BUCKET, bucketOf, stateOf, presetsFor, streetHash, pickPreset, fitPreset, parsePresets } from '../src/game/lots/presets';
+import { BUCKET, bucketOf, stateOf, presetsFor, streetHash, pickPreset, fitPreset, parsePresets, formatPresets } from '../src/game/lots/presets';
 import type { LotPreset, PresetProp, PresetPatch, Fitted } from '../src/game/lots/presets';
 
 /** a test preset of a use and state at w x d tiles, with the given props and patches */
@@ -87,6 +87,21 @@ describe('lot presets (T062)', () => {
     assert.deepEqual(qf.patches[0]?.pts, [8.5, 13.5, 9, 5], 'the point pushed past the edge is clamped to 9');
   });
 
+  it('5b. fitPreset moves a patch\'s lines like its points (T064) and tells each kept prop\'s index in the preset', () => {
+    const p = preset('l', 'park', 'built', 10, 16, [
+      { id: 'a', x: 2, y: 3, scale: 1, view: 0 }, { id: 'b', x: 9.5, y: 15.5, scale: 1, view: 0 }, { id: 'c', x: 4, y: 7, scale: 1, view: 2 },
+    ], [{ kind: 'lot', tex: 'asphalt', pts: [0, 8, 10, 8, 10, 16, 0, 16], lines: [2, 8, 2, 11, 8, 8, 8, 11] }]);
+    const f = fitPreset(p, 12, 14);
+    // y 8 is on the far half (>= 16 / 2): it moves with the back line, 2 tiles in; x 8 moves with the right side, 2 out
+    assert.deepEqual(f.patches[0]?.lines, [2, 6, 2, 9, 10, 6, 10, 9]);
+    assert.deepEqual(f.from, [0, 1, 2]);
+    // 4 x 6: c (near half, y 7) falls past the back line; b moves with the far corner and stays
+    const g = fitPreset(p, 4, 6);
+    assert.deepEqual(g.props.map(q => q.id), ['a', 'b']);
+    assert.deepEqual(g.from, [0, 1]);
+    assert.equal(g.dropped, 1);
+  });
+
   it('6. parsePresets keeps a valid entry and skips the ones with no props or a view of 5, counting them invalid', () => {
     const good = { id: 'ok', use: 'res', state: 'built', w: 10, d: 15, props: [{ id: 'tree', x: 1, y: 2, scale: 1, view: 0 }], patches: [{ kind: 'lot', tex: 'grass', pts: [0, 0, 10, 0, 10, 15] }] };
     const noProps = { id: 'bad1', use: 'res', state: 'built', w: 10, d: 15, patches: [] };
@@ -97,5 +112,18 @@ describe('lot presets (T062)', () => {
     assert.equal(r.invalid, 2);
     assert.deepEqual(r.presets[0], good);
     assert.deepEqual(parsePresets('nope'), { presets: [], invalid: 0 });
+  });
+
+  it('7. the file header ({ meta: { notes } }) is read as meta, neither a preset nor invalid, and formatPresets writes it first', () => {
+    const good = { id: 'ok', use: 'res', state: 'built', w: 10, d: 15, props: [], patches: [] };
+    const r = parsePresets([{ meta: { notes: ['2026-10-24: frozen'] } }, good]);
+    assert.deepEqual(r, { presets: [good], invalid: 0, meta: { notes: ['2026-10-24: frozen'] } });
+    // a header with anything else, or notes that are not strings, is an invalid entry
+    assert.equal(parsePresets([{ meta: { notes: [3] } }, good]).invalid, 1);
+    assert.equal(parsePresets([{ meta: { notes: [] }, id: 'x' }, good]).invalid, 1);
+    const text = formatPresets([good as LotPreset], { notes: ['a', 'b "quoted"'] });
+    assert.ok(text.startsWith('[\n{"meta":{"notes":[\n"a",\n"b \\"quoted\\""\n]}},\n{"id":"ok"'), text.slice(0, 80));
+    assert.deepEqual(parsePresets(JSON.parse(text)), { presets: [good], invalid: 0, meta: { notes: ['a', 'b "quoted"'] } });
+    assert.equal(formatPresets([good as LotPreset]), '[\n{"id":"ok","use":"res","state":"built","w":10,"d":15,"props":[],"patches":[]}\n]\n', 'no header without meta');
   });
 });

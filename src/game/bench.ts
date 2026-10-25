@@ -5,6 +5,13 @@ import type { Game } from './engine';
 import { MAP, PLANNER_Z, mulberry, worldX, worldY } from './iso';
 import { LIBRARY } from './library';
 import { benchLayout, benchNetwork, M0 } from './bench-net';
+import { makeGrid } from './ext/course-grid';
+import { rasterAreas } from './ext/course-grid/areas';
+import { courseChunksIn } from './ext/course-grid/patch';
+import { generateOldNine } from './golf/coursegen';
+import { courseAreas } from './golf/paintcourse';
+import { surfaceOfTex } from './golf/costs';
+import { roundCorners } from './paint';
 
 export const BENCH_CARS = 10000;
 
@@ -49,9 +56,24 @@ export function buildBenchmark(g: Game, size = 1) {
   g.setTraffic(BENCH_CARS);
   const mid = (M0 + last) / 2 + 3;
   g.cam = { X: worldX(mid, mid), Y: worldY(mid, mid), z: 0.3 };
+  // ?bench&course=1 (bench.mjs --course): a course on screen (T077): the old nine laid into a course grid under the tour's start
+  const qs = new URLSearchParams(location.search), course = qs.get('course') === '1' ? benchCourse(g, mid) : 0, send = Number(qs.get('courseSend'));
+  if (send > 0) g.courseSendMs = send; // ?courseSend=ms (bench.mjs --courseSend): the least time between two chunk sends while painting
+  const hold = Number(qs.get('courseHold')); if (qs.has('courseHold') && hold >= 0) g.ground.courseHoldMs = hold; // ?courseHold=ms: the re-bake hold
+  if (course) console.log('[bench] course', course, 'chunks');
   const info = { heap: mem() as unknown as number, segs: g.net.segs.size, nodes: g.net.nodes.size, props: g.props.size, lamps, buildNetMs: Math.round(tNet - t0), buildPropsMs: Math.round(tProps - tNet) };
   console.log('[bench] built', info);
-  startTour(g, info);
+  startTour(g, course ? { ...info, course: { x: mid, y: mid } } : info);
+}
+
+/** the benchmark's course: the generated old nine on a 300 x 450 tile site centred on tile (mid, mid), its golf areas laid into a course
+ *  grid (established turf, no holes) and every chunk sent, with no golf game; returns how many chunks were sent */
+function benchCourse(g: Game, mid: number): number {
+  const site = { x0: Math.round(mid - 150), y0: Math.round(mid - 225), x1: Math.round(mid + 150), y1: Math.round(mid + 225) };
+  const grid = makeGrid(site.x0 - 32, site.y0 - 32, (site.x1 - site.x0 + 64) * 2, (site.y1 - site.y0 + 64) * 2);
+  rasterAreas(grid, courseAreas(generateOldNine(site, 1)).map(a => ({ pts: roundCorners(a.pts, a.radius), surface: surfaceOfTex(a.tex), month: 0 })));
+  g.courseGrid = grid; g.resendCourse();
+  return courseChunksIn(grid, [grid.x0, grid.y0, grid.x0 + grid.w * 0.5, grid.y0 + grid.h * 0.5]).length; // the chunks asked for (they land from the course worker)
 }
 
 interface Stage { name: string; z: number; vx: number; vy: number; secs: number }
@@ -64,7 +86,7 @@ const STAGES: Stage[] = [
   { name: 'planner whole map', z: 0.0065, vx: 0, vy: 0, secs: 5 },
 ];
 
-function startTour(g: Game, info: Record<string, number>) {
+function startTour(g: Game, info: Record<string, unknown>) {
   const results: Record<string, unknown>[] = [];
   let s = 0, t = -2, frames: number[] = [], cpu: number[] = [], inst = 0, draws = 0, upload = 0, up = 0;
   /** the sim worker's tick time: the max per stage, and the average and max over the whole tour */
@@ -89,11 +111,46 @@ function startTour(g: Game, info: Record<string, number>) {
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY;
       if (s >= STAGES.length) {
         g.onFrame = null;
-        const out = { ...info, cars: BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
-        (window as unknown as { __bench: unknown }).__bench = out;
-        console.log('[bench] results', JSON.stringify(out, null, 1));
-        g.toast('Benchmark finished: results in the console', 'good');
+        if (info.course) { paintStage(g, info.course as { x: number; y: number }, r => { results.push(r); finish(); }); return; }
+        finish();
       }
+    }
+  };
+  function finish() {
+    const out = { ...info, cars: BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
+    (window as unknown as { __bench: unknown }).__bench = out;
+    console.log('[bench] results', JSON.stringify(out, null, 1));
+    g.toast('Benchmark finished: results in the console', 'good');
+  }
+}
+
+/** the scripted paint stroke (T077b, with ?course=1): 6 s at 30% over the course, a 3-tile green dab every frame moving 0.5 tile along a
+ *  zigzag (so every dab changes cells), then 2 s to settle. Per frame: the dab's own ms, the course work on the main thread (the dab, the
+ *  chunk sends and replies: perf.courseMs) plus the lot ground's flush to the workers, the frame's cpu; per send, its lag after the first
+ *  change it carries; and the ground bakes it caused (count and mean worker ms) */
+function paintStage(g: Game, at: { x: number; y: number }, done: (r: Record<string, unknown>) => void) {
+  g.cam = { X: worldX(at.x, at.y), Y: worldY(at.x, at.y), z: 0.3 };
+  let t = -2, x = at.x - 24, y = at.y - 12, dir = 1, row = 0, lastLag = -1;
+  const dab: number[] = [], main: number[] = [], cpu: number[] = [], lag: number[] = [], frame: number[] = [], job: number[] = [], b0 = { n: 0, ms: 0 };
+  let lastJob = g.perf.courseJobMs, lastNow = 0, ups = 0, upMs = 0, t1 = 0, upMsMouse = -1;
+  const stats = (a: number[]) => { const s = [...a].sort((p, q) => p - q), q = (p: number) => s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; return { avg: +(a.reduce((p, v) => p + v, 0) / Math.max(1, a.length)).toFixed(2), p95: +q(0.95).toFixed(2), max: +(s[s.length - 1] ?? 0).toFixed(2) }; };
+  g.onFrame = (now, dt) => {
+    t += dt;
+    if (t < 0) return;
+    if (!b0.n && !b0.ms) { b0.n = g.ground.baked || 1e-9; b0.ms = g.ground.bakeMs; }
+    if (t < 6) {
+      const nx = x + 0.5 * dir, t0 = performance.now(), n = g.courseDab(x, y, nx, y, 3, 8), tb = performance.now();
+      if (n) dab.push(tb - t0);
+      x = nx; if (Math.abs(x - at.x) > 24) { dir = -dir; row++; y = at.y - 12 + row * 4; }
+    } else if (upMsMouse < 0) { const tm = performance.now(); g.gridAreaList(); upMsMouse = performance.now() - tm; } // the mouse-up: the holes' areas asked for again
+    main.push(g.perf.courseMs + g.perf.lotFlushMs); cpu.push(g.perf.cpuMs); if (lastNow) frame.push(now - lastNow); lastNow = now;
+    if (g.perf.courseJobMs !== lastJob) { lastJob = g.perf.courseJobMs; job.push(lastJob); }
+    if (performance.now() - t1 > 1000) { t1 = performance.now(); ups += g.ground.uploadsThisSecond; upMs += g.ground.uploadMsPerSecond; }
+    if (g.perf.courseLagMs !== lastLag) { const first = lastLag < 0; lastLag = g.perf.courseLagMs; if (!first) lag.push(lastLag); } // (the first value is the last send before the stage)
+    if (t >= 8) {
+      g.onFrame = null;
+      const bakes = g.ground.baked - Math.floor(b0.n);
+      done({ stage: 'course paint 30%', mouseUpMs: +upMsMouse.toFixed(2), areasJobMs: +g.perf.areasJobMs.toFixed(1), areasApplyMs: +g.perf.areasApplyMs.toFixed(2), dabs: dab.length, fps: +(1000 / (frame.reduce((p, v) => p + v, 0) / Math.max(1, frame.length))).toFixed(1), frameMs: stats(frame), dabMs: stats(dab), courseMainMsPerFrame: stats(main), cpuMs: stats(cpu), sends: lag.length, sendLagMs: stats(lag), workerJobMs: stats(job), uploadsPerSec: +(ups / 8).toFixed(1), uploadMsPerSec: +(upMs / 8).toFixed(1), groundBakes: bakes, avgBakeMs: +((g.ground.bakeMs - b0.ms) / Math.max(1, bakes)).toFixed(1) });
     }
   };
 }

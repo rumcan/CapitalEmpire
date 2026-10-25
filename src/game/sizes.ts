@@ -20,7 +20,7 @@ export function atlasRes(it: LibItem): number {
 export function pixelLimit(it: LibItem): number { return atlasRes(it) / ATLAS_MIP0; }
 
 /** does a screen of device pixel ratio dpr need the atlas's mip 0: at the closest zoom it needs ZOOM_MAX x dpr device px per display px of a
- *  sprite at scale 1, more than mip 1 holds (half of ATLAS_MIP0, which ZOOM_MAX at 1x needs exactly) at any dpr above 1 (gl.ts loadAtlas) */
+ *  sprite at scale 1, more than mip 1 holds (half of ATLAS_MIP0, which ZOOM_MAX at 1x needs exactly) at any dpr above 1 (atlas-pages.ts planAtlas: the finest mip it streams) */
 export const atlasMip0 = (dpr: number): boolean => dpr > 1;
 
 /** pixelLimit of every library item, by index (library.ts appends every library before it exports, so LIBRARY is complete here) */

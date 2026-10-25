@@ -3,7 +3,7 @@ import { FLOW_COLS, Game, HEAT_COLS, HIST_RAMP, LOS_COL, SPEEDS, UPGRADE_COST } 
 import { ROW_BAY_COST, rowLots } from './game/event/rows';
 import { LIBRARY } from './game/library';
 import { type Tool } from './game/types';
-import { CLASS, CLASSES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, SLIP_CORNER_COST, SPEED_BONUS_KMH, TYPES, VARIANTS, courseTierNeeded, speedOf, type Family, type Node } from './game/network';
+import { CLASS, CLASSES, COURSE_TYPES, FLAG_COST, JUNCTIONS, KEY_CLASSES, RING_LANE_COST, ROAD_TYPES, SLIP_CORNER_COST, SPEED_BONUS_KMH, VARIANTS, courseTierNeeded, speedOf, type Family, type Node } from './game/network';
 import { SIGNAL_TIER_YEAR, SPEED_TIER_YEAR } from './game/event/round';
 import { GREEN_CAP, MIN_GREEN } from './game/sim/signals';
 import { isLights, junctionCorners, slipRule } from './game/junctions';
@@ -34,6 +34,7 @@ import { Minimap } from './ui/Minimap';
 import { CourseStatsPanel } from './ui/CourseStatsPanel';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
+import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the rail's groups, each with its tools (the segmented row at the top of the panel when a group has more than one) */
@@ -45,7 +46,8 @@ const GROUPS: { id: string; label: string; icon: IconName; tools: { id: Tool; la
     { id: 'downgrade', label: 'Downgrade', key: 'Y', icon: 'down' },
   ] },
   { id: 'paint', label: 'Paint', icon: 'terrain', tools: [{ id: 'paint', label: 'Paint', key: 'A', icon: 'terrain' }] },
-  { id: 'course', label: 'Course', icon: 'trophy', tools: [{ id: 'course', label: 'Course', key: 'C', icon: 'trophy' }] },
+  // Paths & drives (T084): the course's cart paths and drives, built the road way (the road tool in its course scope: game.uiTool)
+  { id: 'course', label: 'Course', icon: 'trophy', tools: [{ id: 'course', label: 'Course', key: 'C', icon: 'trophy' }, { id: 'path', label: 'Paths & drives', key: '', icon: 'road' }] },
   { id: 'junction', label: 'Junctions', icon: 'junction', tools: [{ id: 'junction', label: 'Junctions', key: 'J', icon: 'junction' }] },
   { id: 'bulldoze', label: 'Bulldoze', icon: 'bulldozer', tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'X', icon: 'bulldozer' }] },
   { id: 'transport', label: 'Transport', icon: 'bus', tools: [
@@ -79,9 +81,9 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const [help, setHelp] = useState(false);
-  /** the settings menu (Save, New town, Empty map) open under its gear */
+  /** the settings menu (Save, New game, Empty map) open under its gear */
   const [menu, setMenu] = useState(false);
-  /** the menu button waiting for its second click (New town, Empty map), or null */
+  /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
@@ -118,6 +120,9 @@ export default function App() {
     // the road builder's stress test (dev only): __roadFuzz(seed, steps) drives the road tools at random and reports what broke (on the live
     // game: StrictMode mounts twice, and the first game is disposed)
     if (import.meta.env.DEV) void import('./game/dev/roadfuzz').then(m => Object.assign(window as unknown as Record<string, unknown>, { __roadFuzz: (seed?: number, steps?: number, o?: Parameters<typeof m.roadFuzz>[3]) => m.roadFuzz((window as unknown as { __game: Game }).__game, seed, steps, o), __roadReplay: (box: [number, number, number, number], log: string[], upTo?: number) => m.roadReplay((window as unknown as { __game: Game }).__game, box, log, upTo), __junctionGallery: (o?: Parameters<typeof m.junctionGallery>[1]) => m.junctionGallery((window as unknown as { __game: Game }).__game, o) }));
+    // the dev lot editor (P20 T071, dev builds only: ?dev or the I key): select, resize, move, turn, delete, add; edits kept in the lot presets
+    let lotEditorOff: (() => void) | undefined, disposed = false;
+    if (import.meta.env.DEV) void import('./game/dev/lot-editor').then(m => { if (!disposed) lotEditorOff = m.installLotEditor(g, canvas); });
     setGame(g);
     const unsub = g.subscribe(bump);
     g.init({ bench: new URLSearchParams(location.search).has('bench') ? +(new URLSearchParams(location.search).get('bench') || 1) || 1 : 0 }).catch(e => setFatal(String(e)));
@@ -126,15 +131,16 @@ export default function App() {
     const kd = (e: KeyboardEvent) => g.keyDown(e), ku = (e: KeyboardEvent) => g.keyUp(e);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
     const iv = window.setInterval(bump, 500);
-    return () => { unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
+    return () => { disposed = true; lotEditorOff?.(); unsub(); g.destroy(); canvas.removeEventListener('wheel', wheel); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); clearInterval(iv); };
   }, []);
 
   const toasts = game ? game.toasts.filter(t => performance.now() - t.t < 4000) : [];
   const net = game?.ledger?.net ?? 0, debtDays = game?.traffic.budget.debtDays ?? 0;
-  const gid = game ? groupOf(game.tool) : '', grp = GROUPS.find(g => g.id === gid);
-  if (game) last.current[gid] = game.tool;
+  // the road tool opened from the Course menu shows as its Paths & drives (uiTool 'path', T084)
+  const gid = game ? groupOf(game.uiTool) : '', grp = GROUPS.find(g => g.id === gid);
+  if (game) last.current[gid] = game.uiTool;
   /** the golf HUD's view (null outside golf mode): the top bar's tier and month */
-  const gv = game?.golfMode ? game.golfView() : null;
+  const gv = game?.golfMode ? game.golfView() : null, fv = game?.golfMode ? game.foundingView() : null;
   /** the tool visibility in force (T033 progressive unlocks; null shows everything) */
   const ui = game?.toolUi() ?? null;
   /** whether a golf top-bar chip is shown under the progressive unlocks */
@@ -198,13 +204,14 @@ export default function App() {
               {gv ? (
                 <>
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
-                  <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to the tournament`} />
+                  <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="The tour's invitation: the first tournament is held at the end of the season it names">The Club Championship: end of {fv.due ? 'this' : 'next'} season</span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
                   {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>}
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
  {chip('event') && <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title="Skip to the tournament (end of August)"><Icon name="skip" size={16} />Skip to tournament</button>}
+ {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</button>}
                   {game.playerProgressFacts() && <button className={`chip ${ui?.advancedMode || !ui ? 'chip-on' : ''}`} onClick={() => { game.setAdvancedTools(!(ui?.advancedMode)); bump(); }} title={ui ? ui.stageLabel : 'All tools'}><Icon name="up" size={16} />All tools</button>}
                 </>
               ) : game.eventMode
@@ -241,13 +248,17 @@ export default function App() {
                 <button key={m} className={`btn ${game.flowMode === m ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
               ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
-              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.showGrid = !game.showGrid; bump(); }} title="Toggle tile grid (G)"><Icon name="fullscreen" size={22} /></button>
+              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to (G)"><Icon name="fullscreen" size={22} /></button>
               <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => { game.grassPanel = !game.grassPanel; game.grassAction = null; game.emit(); }} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
+                      <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
+                      Map grid (G)
+                    </label>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
@@ -257,6 +268,12 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
+                    <div className="flex items-center gap-2 px-2 py-2 text-sm" title="The grass on the open ground, the meadows and the town lawns: Painted, the game-art grass with a picture for each zoom level (T082), or Photo, the photo grass the game had before (the studio's base grass and texture presets)">
+                      <span className="w-16 shrink-0">Grass</span>
+                      {(['painted', 'photo'] as const).map(a => (
+                        <button key={a} className={`btn flex-1 ${game.grassArt === a ? 'on' : ''}`} onClick={() => { game.setGrassArt(a); bump(); }}>{a === 'painted' ? 'Painted' : 'Photo'}</button>
+                      ))}
+                    </div>
                     <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" title="Every tree, building, prop and car throws its silhouette onto the ground away from the sun (the baked house lots have theirs baked in, from cast-shadow.json)">
                       <input type="checkbox" checked={game.cast.on} onChange={e => { game.setCast({ on: e.target.checked }); bump(); }} />
                       Cast shadows
@@ -271,7 +288,7 @@ export default function App() {
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
-                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New town'}</button>
+                    <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
                   </div>
                 )}
@@ -294,13 +311,14 @@ export default function App() {
               {shownTools.length > 1 && (
                 <div className="seg mb-3">
                   {shownTools.map(t => (
-                    <button key={t.id} className={game.tool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={`${t.label} (${t.key})`}><Icon name={t.icon} size={16} />{t.label}</button>
+                    <button key={t.id} className={game.uiTool === t.id ? 'on' : ''} onClick={() => game.setTool(t.id)} title={t.key ? `${t.label} (${t.key})` : t.label}><Icon name={t.icon} size={16} />{t.label}</button>
                   ))}
                 </div>
               )}
-              {game.tool === 'road' && <RoadPanel game={game} />}
+              {game.uiTool === 'road' && <RoadPanel game={game} scope="town" />}
+              {game.uiTool === 'path' && <RoadPanel game={game} scope="course" />}
               {game.tool === 'lane' && (
-                <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. You pay only the difference.">
+                <Panel title="Upgrade roads" icon="up" desc="Click a straight run of road to take it one size up: gravel → street → road → arterial → six-lane; avenue → boulevard → grand. On the course: walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue. You pay only the difference.">
                   <p className="text-xs text-slate-300">Right-click a one-way road to reverse it.</p>
                 </Panel>
               )}
@@ -387,6 +405,7 @@ export default function App() {
           )}
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
+          {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />
@@ -412,7 +431,7 @@ export default function App() {
                 <div className="text-2xl font-bold text-red-300">Bankrupt</div>
                 <p className="mt-3 text-sm text-slate-300">The books stayed in the red for {DEBT_DAYS} days in a row.</p>
                 <div className="mt-5 flex justify-center gap-2">
-                  <button className="chip chip-on" onClick={() => game.newTown()}>New valley</button>
+                  <button className="chip chip-on" onClick={() => game.newTown()}>New game</button>
                   <button className="chip" onClick={() => setWatch(true)}>Keep watching</button>
                 </div>
               </div>
@@ -604,7 +623,7 @@ function EvalScreen({ game }: { game: Game }) {
  if (!last) return null;
  const pct = Math.round(last.rate * 100), delta = last.prevRate === null ? null : pct - Math.round(last.prevRate * 100);
  const ye = golf ? game.golfYearEnd(last) : null;
- const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.paint.areas, last.upkeep, last.toll ?? 0) : null;
+ const book = ye ? computeTournamentCloseBook(ye, last.tickets ?? 0, game.courseAreaList(), last.upkeep, last.toll ?? 0) : null;
  return (
  <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4">
  <div className="pointer-events-auto max-h-full w-[560px] max-w-full space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-200 shadow-2xl backdrop-blur">
@@ -858,34 +877,40 @@ function Panel({ title, children, icon, desc }: { title: string; children: React
   );
 }
 
-/** the road tool's size headers, in order */
+/** the road tool's size headers, in order: the town's (the Roads panel) */
 const ROAD_FAMILIES: { id: Family; label: string; desc: string }[] = [
   { id: 'small', label: 'Small', desc: 'For residential areas and low traffic.' },
   { id: 'medium', label: 'Medium', desc: 'For higher traffic and main routes.' },
   { id: 'large', label: 'Large', desc: 'For major connections and high density.' },
   { id: 'rural', label: 'Rural', desc: 'Between the towns: shoulders, no sidewalks.' },
-  // the golf course's drives (P19): listed in golf games only (RoadPanel filters it out otherwise)
-  { id: 'course', label: 'Course', desc: 'Drives on the golf course: start as gravel, upgrade to paved and avenue' },
+];
+/** the course's headers (the Course menu's Paths & drives, T084): its cart paths, then its drives */
+const COURSE_FAMILIES_UI: { id: Family; label: string; desc: string }[] = [
+  { id: 'cart', label: 'Cart paths', desc: 'Walkers and carts: a walking path, dirt or cement slabs to start, upgrade to paved; on the 1 m half grid' },
+  { id: 'course', label: 'Course drives', desc: 'Cars, one lane: start as gravel, upgrade to paved and avenue' },
 ];
 /** the variant chip labels, by a variant's flags joined with dots ('' is the plain type) */
 const VARIANT_LABEL: Record<string, string> = { '': 'Plain', tr: 'Trees', gr: 'Grass median', gd: 'Garden median', tl: 'Turn lane', 'tl.tr': 'Turn lane + trees', ow: 'One-way', 'ow.tr': 'One-way + trees' };
 /** the variant chip icons, by the same flags */
 const VARIANT_ICON: Record<string, IconName> = { '': 'road', tr: 'trees', gr: 'forest', tl: 'swap', 'tl.tr': 'swap', ow: 'oneway', 'ow.tr': 'oneway' };
 
-function RoadPanel({ game }: { game: Game }) {
+/** the road tool's panel: the town's roads (scope town: the Roads menu) or the course's cart paths and drives (scope course: the Course menu's
+ *  Paths & drives, T084); the same drawing, snapping and pricing either way */
+function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
+  const course = scope === 'course', families = course ? COURSE_FAMILIES_UI : ROAD_FAMILIES, types = course ? COURSE_TYPES : ROAD_TYPES;
   const legs = game.previewLegs(), block = game.routeBlock(legs);
   const len = game.net.legsLength(legs);
   const cost = game.routeCost(), comp = game.routeCompensation();
   const cls = game.cls, ui = game.toolUi(), adv = !ui || ui.advancedMode;
   /** the family the picked type lives in, and its name (shown on a collapsed header) */
-  const curType = TYPES.find(t => t.id === game.cls.base), curFam = curType?.family, curName = curType ? CLASS[curType.id]!.name : '';
+  const curType = types.find(t => t.id === game.cls.base), curFam = curType?.family, curName = curType ? CLASS[curType.id]!.name : '';
   /** the open family: null = the picked type's family (the default), 'none' = all collapsed, else the family the player opened */
   const [openFam, setOpenFam] = useState<Family | 'none' | null>(null);
   const isOpen = (f: Family) => openFam === null ? f === curFam : openFam === f;
   return (
-    <Panel title="Road Construction" icon="road" desc="Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.">
+    <Panel title={course ? 'Paths & drives' : 'Road Construction'} icon="road" desc={course ? 'Lay cart paths and drives the way roads are built: click to start, click again for each bend or stop. Points snap to junctions, paths, roads and the 1 m half grid of the course.' : 'Draw a connected route: click to start, click again for each bend or stop. Points snap to junctions, roads and the grid; crossings become junctions.'}>
       <div className="mt-2 flex flex-col gap-2">
-        {ROAD_FAMILIES.filter(f => f.id !== 'course' || game.golfMode).map(f => { const ex = isOpen(f.id); return (
+        {families.map(f => { const ex = isOpen(f.id); return (
           <div key={f.id}>
             <button className="mb-1 flex w-full items-baseline gap-2 text-left" onClick={() => setOpenFam(ex ? 'none' : f.id)} aria-expanded={ex}>
               <span className="label-caps">{f.label}</span>
@@ -893,7 +918,7 @@ function RoadPanel({ game }: { game: Game }) {
               {!ex && f.id === curFam && <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{curName}</span>}
               <Icon name={ex ? 'up' : 'down'} size={12} />
             </button>
-            {ex && TYPES.filter(t => t.family === f.id).map(t => {
+            {ex && types.filter(t => t.family === f.id).map(t => {
               // a locked card: a course drive shows its golf tier, a town class the career milestone that unlocks it (greyed either way)
               const c = CLASS[t.id]!, open = game.classOpen(t.id), tier = courseTierNeeded(t.id), lk = open ? null : unlockOf('class', t.id), lock = open ? null : tier !== null ? `🔒 Tier ${tier}` : lk ? lockText(lk.pop) : '🔒', on = game.cls.base === t.id;
               return (
@@ -903,7 +928,7 @@ function RoadPanel({ game }: { game: Game }) {
                       <RoadThumb cls={c} w={84} h={36} />
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-semibold text-slate-100">{c.name}</div>
-                        <div className="text-[10px] text-[var(--muted)]">{[...c.desc.split(' · ').filter(p => /\d/.test(p)), `${Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h`].join(' · ')}</div>
+                        <div className="text-[10px] text-[var(--muted)]">{[...c.desc.split(' · ').filter(p => /\d/.test(p)), c.noCars ? 'carts & walkers' : `${Math.round(speedOf(c, game.net.speedTier) * 3.6)} km/h`].join(' · ')}</div>
                       </div>
                       <span className="shrink-0 text-xs font-semibold text-[var(--gold)]">{lock ?? `${money(c.cost)} / 2 m`}</span>
                     </div>
@@ -927,6 +952,16 @@ function RoadPanel({ game }: { game: Game }) {
           </div>
         ); })}
       </div>
+      {/* T084: the course's ladders; the Upgrade and Downgrade tools step a path or drive along them (they are the Roads menu's, for every road) */}
+      {course && (
+        <div className="mt-2 rounded-lg bg-white/5 p-2 text-[11px] text-slate-300">
+          <div>Upgrade a path or drive one step (you pay only the difference): walking path → dirt path → cement slabs → paved cart path; gravel drive → paved → avenue.</div>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <button className="chip" onClick={() => game.setTool('lane')} title="Upgrade tool (N)"><Icon name="up" size={14} />Upgrade</button>
+            <button className="chip" onClick={() => game.setTool('downgrade')} title="Downgrade tool (Y)"><Icon name="down" size={14} />Downgrade</button>
+          </div>
+        </div>
+      )}
       {/* T036: the fine tuning rows sit under All tools (advanced); their hotkeys (Q, E, Tab) work from the engine either way */}
       {adv && <>
         <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
@@ -940,10 +975,10 @@ function RoadPanel({ game }: { game: Game }) {
           <button className={`chip ${game.replaceMode ? 'chip-on' : ''}`} onClick={() => { game.replaceMode = !game.replaceMode; game.emit(); }} title="E toggles">{game.replaceMode ? 'On' : 'Off'}</button>
           <span className="ml-auto text-[10px] text-slate-500">Roads in the way are bulldozed</span>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-1 text-xs">
+        {!course && <div className="mt-2 flex flex-wrap items-center gap-1 text-xs">
           <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Speed limits</span>
           {([0, 1, 2, 3] as const).map(t => { const open = t <= game.speedTierMax(); return <button key={t} className={`chip ${game.net.speedTier === t ? 'chip-on' : ''} ${open ? '' : 'opacity-50'}`} onClick={() => game.setSpeedTier(t)} title={open ? (t ? `Every road +${SPEED_BONUS_KMH[t]} km/h (up to 140)` : 'Each road its own limit') : `From ${SPEED_TIER_YEAR[t]}`}>{t ? `+${SPEED_BONUS_KMH[t]}` : 'Standard'}</button>; })}
-        </div>
+        </div>}
         {cls.centre === 'style' && (
           <div className="mt-2 flex items-center gap-1">
             <span className="mr-1 text-[10px] uppercase tracking-wider text-slate-400">Centre line</span>

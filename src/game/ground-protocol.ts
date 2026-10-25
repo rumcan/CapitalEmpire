@@ -9,6 +9,7 @@ import type { Waterway } from './terrain/types';
 import type { BBox } from './network';
 import type { GrassCellView } from './ext/grass-management';
 import type { EdgeProfile } from './paint-edges';
+import type { GrassArt } from './painted-grass-lod';
 
 /** a painted area's look (the Paint tool, docs/PAINT-TOOL.md): texture scale s, angle a (degrees, tile space, about the map origin), border width b (tiles, 0 = none),
  *  border texture bt (a patch texture or 'kerb'), draw order z (the area's id); the optional tone filter over the fill: t 1 Multiply (darker) or 2 Lighten (screen),
@@ -16,12 +17,45 @@ import type { EdgeProfile } from './paint-edges';
 export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string;
   /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile }
 
+/** a texture as a course layer lays it: the texture (a paint texture or preset), its scale and angle (degrees, tile space about the origin) */
+export interface CourseTex { tex: string; sc: number; a: number }
+/** one surface of a course chunk (plan P21 sections 3.2 to 3.4, T078), all coordinates flat x0 y0 x1 y1 ... in tiles:
+ *  (rings and polylines are Float32Arrays, so a patch posts and clones as plain memory)
+ *  - `fill`: closed rings clipped to the chunk box grown by 0.1 tile (filled even-odd; neighbouring chunks overlap, so no seam shows);
+ *  - `edges`: open polylines on the true boundary only (the surface on the left of travel), cut exactly at the chunk box and never along
+ *    it; a ring wholly inside the chunk is one closed polyline (last point = first). The feather, rims and shade follow these;
+ *  - `e`: how its edge is drawn (paint-edges.ts profile: raised green and tee, turf fairway, sunken bunker, water, flat rough and fescue);
+ *  - `collar`: its automatic collar (first cut, fringe, the bunker's grass lip, the pond's bank): band rings (even-odd: the surface is
+ *    cut out) and the band's outer edges, in its own texture;
+ *  - `stripes`: on the fairway, each hole's centre line (tee, aim points, pin) for the mowing stripes (T075), for the holes whose
+ *    fairway cells reach this chunk */
+export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: Float32Array[]; edges: Float32Array[];
+  /** its edges sorted by the heights on their sides (ext/course-walls, T099): soft (feathered) and joint (a crisp mowing line against its own
+   *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
+  soft?: Float32Array[]; joint?: Float32Array[];
+  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[] }; stripes?: { hole: number; line: number[] }[] }
+/** a course wall (ext/course-walls WallRun, T099): its top edge as x, y, drop triples (tiles, tiles, metres), the higher side on the left so the
+ *  face looks along the right-hand normal toward the camera; lo: the layer code it hangs over (2 s a surface's fill, 2 s + 1 its collar, 0 the
+ *  map grass), drawn just after that layer; m: its material (0 turf, 1 sand, 2 water) */
+export interface CourseWall { p: Float32Array; lo: number; m: number }
+/** a lit top edge (ext/course-walls RimRun, T099): a height step whose face turns to the sun at the upper right, as x, y pairs (tiles), the
+ *  higher side on the left; hi: the layer code of the higher side, whose top is lit along it */
+export interface CourseRim { p: Float32Array; hi: number }
+/** a course chunk's ground (key cg:<cx>:<cy>; plan P21 section 3.8): its 64-tile chunk (cx, cy, size in tiles), its surfaces in draw
+ *  order (rough 1 .. green 8), the growth mask (1 byte per 1 m cell over the chunk box, size * 2 square, row-major; alpha 255 x (1 - the
+ *  grass share in quarters): the dirt that shows through while seeded cells grow in; absent when nothing in the chunk grows), and z, its
+ *  place among the painted areas (0: under every painted area) */
+export interface CoursePatch { cx: number; cy: number; size: number; layers: CourseLayer[]; walls?: CourseWall[]; rims?: CourseRim[]; grow?: Uint8Array; z: number }
+
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
 export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;
   /** tex 'marks' (nothing filled; pts only bound it): flat decals (lot-decals.ts), five numbers each: index, x, y (tiles, the decal's centre), scale (negative: mirrored), alpha */
   marks?: number[]; paint?: PatchPaint; /** a lawn (lawns.ts): the texture (a preset) laid under the lots' own ground, turned by a (degrees), over share of the
    *  patch in soft patches (1: all of it; soft: the patches' edge, patch: their size, 1 = 24 tiles a period); z: blocks 0 under lots 1 */ lawn?: { a: number; share: number; soft: number; patch: number; z: number }; /** markings over the road (on-street parking): only its lines are drawn, white, with the road's own markings */ top?: boolean; /** the colour of its lines (parking bays; absent: worn off-white) */ lineCol?: 'yellow';
-  /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean }
+  /** an on-street parking lay-by cut into the sidewalk: drawn after the roads, over the sidewalk and the kerb, with its own kerb on the outer side */ layby?: boolean;
+  /** a course chunk (the course grid, T078): drawn with the painted areas (by its z) from its layers; pts is its chunk box grown by
+   *  COURSE_PATCH_REACH (the index and the stale box: its feathers and shadows reach past the chunk), tex is unused ('grass') */
+  course?: CoursePatch }
 /** the surface of a ground patch */
 export type PatchTex = LotPatch['tex'];
 
@@ -62,8 +96,10 @@ export type NetOp =
 export type TileKind = 'g' | 'm' | 'p';
 export type ToWorker =
   | { t: 'grass'; cells: GrassCellView[]; strength: number; heat: boolean; mowing: boolean }
-  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
+  | { t: 'init'; art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }; terrain: Uint8Array; height: Float32Array; waters: Waterway[]; build: boolean; peers: number }
   | { t: 'textures'; snap: TexSnapshot }
+  /** the game's Grass setting changed (painted or photo): every chunk is baked again */
+  | { t: 'grassArt'; art: GrassArt }
   | { t: 'net'; ops: NetOp[] }
   | { t: 'lamps'; pts: Float32Array }
   | { t: 'terrain'; cls: Uint8Array; height: Float32Array; waters: Waterway[] }
@@ -71,11 +107,11 @@ export type ToWorker =
   /** the course height as a sub-rect of samples (i0, j0, w by h, row-major data), see GroundCache.courseHeight */
   | { t: 'course'; i0: number; j0: number; w: number; h: number; data: Float32Array }
   | { t: 'lotground'; set: [string, LotPatch[]][]; drop: string[] }
-  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number };
+  | { t: 'paint'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number };
 
 export type FromWorker =
   | { t: 'ready'; ms: number }
   | { t: 'texpack'; snaps: TexSnapshot[] }
-  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; bmp: ImageBitmap; ms: number }
+  | { t: 'tile'; id: number; kind: TileKind; i: number; j: number; L: number; artL?: number; bmp: ImageBitmap; ms: number }
   | { t: 'error'; message: string }
   | { t: 'log'; message: string };

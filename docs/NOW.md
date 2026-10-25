@@ -14,20 +14,24 @@ Update this file **before** each edit and after each sub-step. If you are pickin
 - **The new lead's board** (2026-10-24, LEAD.md section 5). Open tickets: GitHub issues `arena` + `status:open`.
 - **M2.5 (P02):** T048 and T050 landed (the tournament day clock; the movers on the timeline). Next on the city.ts / event chain: T051b (galleries follow the play, wiring T051a), T052 (viewing and tents from the movers), T053 (the tournament-day strip).
 - **P03:** T055/T056 after that chain (surge.ts / city.ts are single-owner).
-- **P19:** T067 (course drive) merged; T069a (frontage snap) in progress; then T068 (path network), T069b, T070.
-- **P20 (2026-10-24 evening):** T063 #130, T064 #132, T071 #139 (in-game dev editor) up to date with main; being re-frozen after #125 and #143
-  (curated 14 lots unchanged) and reviewed; then the lead runs the full suite and merges them in order.
-- **P21 (the course grid):** T072 #133, T073 #134 (droplet outlines) and T076 #140 (grow-in, splash) merged. T078 (the grid in the game) then
-  T077 (the painter draws course chunks) in progress with a lead-coder agent. Flash's T075 #137 (edge light, stripes) and T074 #138 (hole plan)
-  sent back with blocking review findings (posted on the PRs).
-- **Sizes (#125, merged cd94dce):** nothing on any draw path is drawn past its native pixels (size-audit: 0 of 1405 pictures over 278k draws, dpr 1
-  to 2; mip 0 now loads on every screen above 1x). No sharper sources exist for the 5 capped buildings and the business art: art requests in #125.
-  GPU memory: atlases 1050 MB at dpr 2 (budget 96 MB): T080 #141 (compressed pages, residency, separate asset files), queued after the art import.
-- **Art (#143, merged 64a1c9b):** 13 more four-view buildings, 144 of 204; 17 sheets rejected with reasons (measures.json `rejected`, COVERAGE.md);
-  `accepted` lets in sheets the art chat parked as awaiting review. Still wrong in the game: world:house_2 v2 (NW repeats NE). The roadmap card
-  (tools/jobboard/index.html) is updated; the live site serves a hand copy on gh-pages.
-- **Housekeeping:** merged worktrees removed (E: had 3.8 GB free, now about 50 GB). The course-blobs speed test fails the full suite only past 30 ms
-  (target 15 ms alone, best 8.5 ms): parallel test files slowed it to 15.6 ms.
+- **P22 (the new start, plan merged #153):** T085 #173, T086 #174, T087 #175, T088 #176 (founding seasons, the tour's invitation) and T089 #177
+  (the player-placed clubhouse) merged (2026-10-24 night). A new game: one county road, the driving range, the town seeded across the road and
+  growing outward, off the course land; `?start=town` keeps the old start; old saves keep their towns. Next: T094 (off-map tournament crowd: today
+  only 37% arrive before tee-off; needs P03 T055/T056), T095 (first minute; needs P21's hole wizard and cell brush tickets), T090/T091 (grown-town
+  growth; roads off the course in every golf game: rerun town:gate and towns:gate), T092/T093 (exits and through traffic), T096 (range look, the
+  clubhouse's four-way facing), T097, T098 (range:gate, grown-town fixture).
+- **P21 (the course grid), all on main:** T072, T073 #134, T076 #140, T078 #142, T077 #145, T077b #170 (contouring in workers: a dab about 1 ms of
+  main thread), T081 #171 (the 3D surface puck cursor, grid and glowing footprint). Flash's T075 #137 (edge light, stripes) and T074 #138 (hole plan)
+  wait on their review findings. Re-contouring only changed surfaces needs a per-surface entry point in course-blobs.
+- **P19:** T067 merged; T084 #172 (course paths in the Course menu: dirt 2 m $8, cement slab 2.5 m $20, paved 3 m $45 per 2 m, dev unlock).
+  Cart paths are lane-less roads in the main network until T068 (their own network) moves them. T069a, T068, T069b, T070 next.
+- **P20 (lot presets), all on main:** #130, #132, #139 (the in-game dev editor, `?dev` or I). The owner edits presets live on 5174; commit their
+  saves (lot-presets.json, scale-overrides.json, studio atlas pages) as "owner edits" PRs (#151, #169). Compose digests pin at TABLE_SCALE.
+- **Sizes (#125):** nothing drawn past its native pixels on any path. GPU memory 1050 MB at dpr 2 (budget 96 MB), and the single-file build is
+  324 MB with about 1 GB of RAM to spare: T080 #141 (compressed pages, residency, separate asset files) is next in priority after the art settles.
+- **Art:** #143 (144 of 204 four-view buildings). Game-art grass: T082 #147, the prompt sheet docs/art/GRASS-PROMPTS.md (three zoom images per
+  surface, each shown at its own pixels: close 21 px/m = 48 m per 1024 px tile, mid 96 m, far 192 m); the owner is generating textures.
+- **Housekeeping:** remove merged worktrees (E: about 58 GB free). Runner worktrees: .claude/worktrees/agent-acd6950cf3042c7c6 and agent-af505db199879b80d.
 
 ## Findings: what a golf tournament day simulates today (2026-10-23)
 - **Start:** `City.startTournament` (city.ts) at the season's end: the crowd is `spectatorDemand(tier, rep)` (day 1's share, less the

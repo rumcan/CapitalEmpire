@@ -265,7 +265,21 @@ const GROUND_SRC = [
   { group: 'Grass care', dir: 'src/assets/ground/grass-management', re: /\.(webp|png|jpg)$/i },
   { group: 'Grass care decals', dir: 'src/assets/ground/grass-management/decals', re: /\.(webp|png|jpg)$/i },
   { group: 'Grass photos', dir: 'art/grass-photo', re: /\.(webp|png|jpg)$/i },
+  // the painted grass (T082): each set's three zoom levels (painted-grass-art.ts), shown with the presets that use them
+  { group: 'Painted grass', dir: 'src/assets/ground/painted', re: /\.(webp|png|jpg)$/i },
 ];
+/** the painted sets (src/game/painted-grass-art.ts PAINTED_GRASS): id and its three levels (picture, metres one repeat covers), read from its
+ *  imports and entries; a preset's Painted set picks one, and the game lays it instead of the preset's mix */
+const PAINTED_ART = path.join(ROOT, 'src/game/painted-grass-art.ts');
+function paintedSets() {
+  try {
+    const src = fs.readFileSync(PAINTED_ART, 'utf8'), file = new Map(), out = [];
+    for (const m of src.matchAll(/^import (\w+) from '\.\.\/assets\/ground\/painted\/([^']+)';/gm)) file.set(m[1], 'src/assets/ground/painted/' + m[2]);
+    for (const m of src.matchAll(/^\s+([\w-]+): \{ near: \{ src: (\w+), metres: ([\d.]+) \}, mid: \{ src: (\w+), metres: ([\d.]+) \}, far: \{ src: (\w+), metres: ([\d.]+) \}/gm))
+      out.push({ id: m[1], levels: [['near', m[2], m[3]], ['mid', m[4], m[5]], ['far', m[6], m[7]]].map(([level, v, metres]) => ({ level, src: file.get(v), metres: +metres })) });
+    return out;
+  } catch { return []; }
+}
 function groundSources() {
   const out = [];
   for (const g of GROUND_SRC) {
@@ -416,7 +430,7 @@ http.createServer(async (req, res) => {
       const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
       return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX }, decals: readDecals() });
     }
-    if (req.method === 'GET' && P === '/api/presets') return json({ ...readPresets(), surfaces: GL.PRESET_SURFACES, size: GL.PRESET_SIZE });
+    if (req.method === 'GET' && P === '/api/presets') return json({ ...readPresets(), surfaces: GL.PRESET_SURFACES, size: GL.PRESET_SIZE, painted: paintedSets() });
     if (req.method === 'POST' && P === '/api/preset') {
       // { preset, png: the baked seamless picture (base64), replaces: the id it was saved under before (a rename) }
       const { preset, png, replaces } = await body(req), p = GL.clampPreset(preset);
