@@ -147,3 +147,24 @@ export function thumbItem(it: LibItem): LibItem {
   const s = standIn(it, 0, 0, own(it));
   return (s === undefined ? undefined : LIBRARY[s]) ?? it;
 }
+
+/** a library item's plain name for a label: its display name without a variation or view suffix or a note in brackets ('Church — variation 1'
+ *  is 'Church', 'Starter clubhouse (a tin and tarp shack)' is 'Starter clubhouse'), else its id tidied ('town:fire_station' is 'Fire station') */
+export function plainName(it: Pick<LibItem, 'id' | 'name'>): string {
+  const name = (it.name ?? '').replace(/\s*\([^)]*\)\s*$/, '').replace(/(\s+—\s+(variation \d+|[A-Z] (south|north) view|(side|front|rear|corner) view))+$/i, '').trim();
+  if (name) return name;
+  // the id's last part (a variation's ':1' dropped), less its hash and plain/north tail: 'variation:world-church-44e76535-plain:1' is 'world church'
+  const id = it.id.replace(/:\d+$/, ''), raw = id.slice(id.lastIndexOf(':') + 1).replace(/-[0-9a-f]{8}\b.*$/, '').replace(/[-_]+/g, ' ').trim() || it.id;
+  return raw[0]!.toUpperCase() + raw.slice(1);
+}
+/** the label over a stand-in (the owner, 2026-10-25: "if stand ins are required add a little text above it that says 'Stand In for Church'"):
+ *  'Stand In for <its plain name>' for an item drawn as a stand-in (a building of the art inventory waiting for its four views, with a new-art
+ *  building of its family to stand in), null for anything drawn as itself (new art, props, cars, trees) or not drawn at all. Cached per item, so
+ *  the map overlay allocates nothing for it */
+const LABEL: (string | null | undefined)[] = [];
+export function standInLabel(item: number): string | null {
+  let s = LABEL[item]; if (s !== undefined) return s;
+  const it = LIBRARY[item];
+  s = it && SWAP[item] && it.kind !== 'tree' && standIn(it, 0, 0, own(it)) !== undefined ? `Stand In for ${plainName(it)}` : null;
+  LABEL[item] = s; return s;
+}

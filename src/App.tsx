@@ -259,6 +259,10 @@ export default function App() {
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
                     </label>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A small label over each building drawn as a stand-in (another building of its kind) until its own art arrives: Stand In for Church">
+                      <input type="checkbox" checked={game.showStandIns} onChange={e => { game.setShowStandIns(e.target.checked); bump(); }} />
+                      Show stand-in labels
+                    </label>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Floods, storms, landslides, wildfires and earthquakes close roads now and then">
                       <input type="checkbox" checked={game.disastersEnabled} onChange={e => { game.setDisasters(e.target.checked); bump(); }} />
                       Natural disasters
