@@ -1,6 +1,7 @@
 // The new-art pictures (the owner, 2026-10-24: "remove all the old ones from showing until it was replaced"). By default no building is drawn
 // with its old picture: a building whose four new views are not in the game yet is drawn as the new-art building of its family nearest in size,
-// on the same footprint (a building with no stand-in at all is not drawn). Trees keep their art. The URL flags:
+// on the same footprint (a building with no stand-in at all is not drawn). Only the buildings of the art inventory are swapped: props (the golf
+// flagsticks and benches, carts, boats) keep their own pictures. Trees keep their art. The URL flags:
 //   ?newart: the preview: buildings AND trees are drawn as new art (the owner, 2026-10-23: "see what the game looks like with only the new corrected images").
 //   ?oldart: the old pictures of the buildings without their four views, for comparison only.
 // Only the picture changes: the props keep their ids, footprints, collisions and saves, so none of this alters a game.
@@ -10,7 +11,7 @@
 //   above what the atlas holds): it is drawn at its limit instead. Only the drawing: the footprint, collisions and saves keep the prop's scale.
 import { LIBRARY } from './library';
 import { isBuilding } from './mirror';
-import { VIEW_ART, unmirror } from './views-library';
+import { BUILDING_IDS, VIEW_ART, unmirror } from './views-library';
 import { OWNER_SCALE } from './lots/scales';
 import { CAR_SCALE } from './ext/car-art';
 import { PIXEL_LIMIT, PIXEL_SLACK } from './sizes';
@@ -32,14 +33,25 @@ const isNew = (id: string) => VIEW_ART.has(id) || id.startsWith('view:') || id.s
 /** a baked lot (kind 'lot': a whole house lot as one picture, the studio's Lots presets) is never swapped for a building: it is baked from the
  *  library's current art (the studio's Rebuild), and one building stretched over a whole lot would not be a house lot */
 const BAKED_LOT = (it: LibItem) => it.kind === 'lot';
+/** a building of the art inventory (views-library.ts BUILDING_IDS, art/building-views/COVERAGE.md): the pictures that get four views, so the only
+ *  ones a stand-in replaces until theirs land. The props and vehicles packed with the business art (flagsticks, the bag trolley, the course-map
+ *  bench, carts, buses, taxis, the bass boat, the dock props) and its course pieces (pond, bunker, footbridge) are kind 'business' too, so
+ *  mirror.ts never mirrors them, but they are no buildings: drawn as themselves (T111: every pin, tee marker and bench of a course was drawn as a
+ *  casino, a taxi depot or a tackle shop) */
+const inInventory = (it: LibItem) => BUILDING_IDS.has(it.id) || VIEW_ART.has(it.id);
 /** outbuildings (garages, sheds, yard buildings) stand in only for each other */
 const OUTBUILDING = /garage|shed|carport|outhouse|lean-to|glasshouse|greenhouse|swingset|kennel|coop|shelter/;
+/** the families a library category gets wrong: the starter clubhouse (a tin shack, filed under Golf tournament with the grandstands, tents and
+ *  leaderboards) is a clubhouse, drawn as the clubhouse until its own four views land (T111: Grandstand S stood in for it) */
+const FAMILY: Record<string, string> = { 'golf:clubhouse-shanty': 'clubhouse', 'business:golf-clubhouse': 'clubhouse' };
 /** the family a picture can stand in for, so a house is only ever drawn as a house (the owner, 2026-10-24: tents and industrial garages turned up on
- *  house lots): trees; dwellings and outbuildings (the house categories and the yard buildings); business art; every other building by its library
- *  category (golf tournament, industry, shops and services, landmarks, street furniture, parking). A baked lot has none (never swapped) */
+ *  house lots): trees; dwellings and outbuildings (the house categories and the yard buildings); the clubhouse; business art; every other building by
+ *  its library category (golf tournament, industry, shops and services, landmarks, street furniture, parking). None for a baked lot (never swapped)
+ *  and for a picture outside the art inventory (a prop: drawn as itself) */
 export function standInFamily(it: LibItem): string | null {
   if (it.kind === 'tree') return 'tree';
-  if (!isBuilding(it) || BAKED_LOT(it)) return null;
+  if (!isBuilding(it) || BAKED_LOT(it) || !inInventory(it)) return null;
+  const f = FAMILY[it.id]; if (f) return f;
   if (it.kind === 'business') return 'business';
   if (it.kind === 'house' || it.cat === 'Houses' || it.cat === 'More houses' || it.cat === 'Yard') return it.cat === 'Yard' || OUTBUILDING.test(it.id) ? 'outbuilding' : 'dwelling';
   return `cat:${it.cat || it.kind}`;
@@ -88,8 +100,9 @@ function centred(n: LibItem, flip: boolean, k: number, d: { x0?: number; y0?: nu
   return { x: (d.x0 + d.x1) / 2 - (x0 + x1) / 2, y: (d.y0 + d.y1) / 2 - (y0 + y1) / 2 };
 }
 
-/** which items are drawn as a stand-in (the flags above): an old tree with ?newart, an old building by default (or with ?newart) */
-const swaps = (it: LibItem) => !isNew(it.id) && (it.kind === 'tree' ? NEW_ART_ONLY : isBuilding(it) && !BAKED_LOT(it) && (NEW_BUILDINGS_ONLY || NEW_ART_ONLY));
+/** which items are drawn as a stand-in (the flags above): an old tree with ?newart, an old building of the art inventory by default (or with
+ *  ?newart); never a prop */
+const swaps = (it: LibItem) => !isNew(it.id) && (it.kind === 'tree' ? NEW_ART_ONLY : isBuilding(it) && inInventory(it) && !BAKED_LOT(it) && (NEW_BUILDINGS_ONLY || NEW_ART_ONLY));
 const SWAP = LIBRARY.map(swaps);
 
 const CAR = LIBRARY.map(it => it.kind === 'car');

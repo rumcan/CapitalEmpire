@@ -88,7 +88,8 @@ import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
-import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
+import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
+import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
@@ -207,14 +208,6 @@ export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 /** a garden median's plants (P19): the beds' flowers and shrubs (lots/compose.ts FLOWERS and the bushes it scatters), picked by the prop's index */
 const AUTO_GARDEN = ['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'world:bush_2'];
-const STRUCTURE_SPRITE: Record<string, string> = {  
- foodTent: 'golf:food-tent', drinksTent: 'expansion:backyard-tent', kiosk: 'business:fishing-rental-kiosk', foodTruck: 'town:produce_stand',  
- merchTent: 'expansion:backyard-tent', merchPavilion: 'business:golf-halfway-pavilion', chalet: 'business:golf-halfway-pavilion', village: 'business:golf-halfway-pavilion',  
- standS: 'golf:grandstand-s', standM: 'business:golf-bench-course-map', standL: 'business:golf-bench-course-map', leaderboard: 'golf:leaderboard',  
- holeBoard: 'poi:fishing-board', screen: 'poi:movie-display', tvTower: 'world:watertower', broadcast: 'business:golf-cart-garage', media: 'business:golf-clubhouse',  
- gate: 'ce:parking-entry', toilets: 'golf:toilet-block', firstAid: 'expansion:backyard-tent', info: 'ce:parking-kiosk', rideshare: 'town:produce_stand',  
- coach: 'business:golf-cart-garage', hotel: 'business:golf-clubhouse', interchange: 'ce:parking-entry', rangeStand: 'business:golf-bench-course-map', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',  
-};
 /** a golf structure's sprite scale: its picture fitted to the structure's footprint (tiles, turned when rotated), then the owner's size for
  *  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for; a smaller one keeps
  *  its own size (the entrance gate stood in by a 0.8-tile boom gate was drawn 7.8x) until the structure has its own art. */
@@ -443,7 +436,7 @@ export class Game {
     const g = this.golf!; this.removeGolfMarker(hole, kind);
     const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
     const item = LIB_INDEX.get(sprId);
-    if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, 1));
+    if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, MARKER_SCALE[kind]));
     if (kind === 'pin') g.pins.push({ hole, x, y, auto: true }); else g.tees.push({ hole, kind, x, y, auto: true });
   }
   /** removes a pin or tee marker and its prop (if there is one) */
@@ -1158,7 +1151,7 @@ export class Game {
   placePresetProps(ps: PresetProp[], seed: number): number {
     const trees = LIBRARY.flatMap((it, i) => it.kind === 'tree' && !/dead/.test(it.id) ? [i] : []), bushes = LIBRARY.flatMap((it, i) => it.kind === 'bush' ? [i] : []);
     const flowers = ['town:hydrangea', 'town:fern', 'town:ornamental_grass'].flatMap(id => LIB_INDEX.get(id) ?? []);
-    const flag = LIB_INDEX.get('golf:flagstick') ?? LIB_INDEX.get('business:golf-pin-red');
+    const flag = LIB_INDEX.get(PIN_RED_ID);
     const rnd = mulberry(seed * 7919); let n = 0;
     for (const q of ps) {
       if (q.id !== undefined) {
@@ -1170,7 +1163,7 @@ export class Game {
       const pool = q.kind === 'tree' ? trees : q.kind === 'bush' ? bushes : q.kind === 'flower' ? flowers : flag === undefined ? [] : [flag];
       if (!pool.length) continue;
       const i = pool[Math.floor(rnd() * pool.length)]!, flip = q.kind === 'flag' ? false : rnd() < 0.5;
-      const scale = (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (q.kind === 'flag' ? 1 : 0.9 + 0.2 * rnd());
+      const scale = q.kind === 'flag' ? OWNER_SCALE[LIBRARY[i]!.id] ?? MARKER_SCALE.pin : (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (0.9 + 0.2 * rnd());
       if (this.canPlace(LIBRARY[i]!, q.x, q.y, flip, scale)) continue;
       this.addProp(i, q.x, q.y, flip, scale); n++;
     }
@@ -1698,7 +1691,7 @@ export class Game {
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
     this.golf.structures.push(placed); this.syncCourseGates(); this.bump('structures');
-    const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? 'expansion:backyard-tent';
+    const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? FALLBACK_STRUCTURE_SPRITE;
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
     // the sprite sits on the middle of the structure's rectangle (x, y is its corner)
@@ -1766,24 +1759,37 @@ export class Game {
     if (p.item === item && Math.hypot(p.x - pin.x, p.y - pin.y) < 2) { this.golfProps.set(key, p); break; }
     }
     }
-    for (const tee of this.golf.tees ?? []) {
+    // the pictures that stood in for the tee markers before T111 (a flagstick, the bag trolley): a save's prop of one on a tee goes (never a pin's)
+    const oldTee = new Set(OLD_TEE_IDS.flatMap(id => LIB_INDEX.get(id) ?? [])), pinProps = new Set(this.golfProps.values()), tees = this.golf.tees ?? [];
+    for (const p of [...this.props]) if (oldTee.has(p.item) && !pinProps.has(p) && tees.some(t => Math.hypot(p.x - t.x, p.y - t.y) < 2)) this.removeProp(p);
+    for (const tee of tees) {
     const key = `tee:${tee.hole}:${tee.kind}`;
     const id = tee.kind === 'back' ? TEE_BACK_ID : tee.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
     const item = LIB_INDEX.get(id);
+    if (item === undefined) continue; // no tee marker picture yet (golf/dressing.ts TEE_MARKER_ID)
     for (const p of this.props) {
     if (p.item === item && Math.hypot(p.x - tee.x, p.y - tee.y) < 2) { this.golfProps.set(key, p); break; }
     }
     }
+    // a save keeps the size a marker was placed at (the marker fit placed them at scale 1, a flagstick drawn 6 m tall): refit them to MARKER_SCALE
+    for (const [key, p] of this.golfProps) {
+    const s = MARKER_SCALE[(key.startsWith('pin:') ? 'pin' : key.slice(key.lastIndexOf(':') + 1)) as keyof typeof MARKER_SCALE];
+    if (s !== undefined && Math.abs(p.scale - s) > 1e-6) { p.scale = s; this.propChanged(p); }
+    }
     const claimed = new Set<Prop>();
     for (const s of this.golf.structures ?? []) {
-    const sprId = STRUCTURE_SPRITE[s.typeId] ?? 'expansion:backyard-tent';
+    const sprId = STRUCTURE_SPRITE[s.typeId] ?? FALLBACK_STRUCTURE_SPRITE;
     const item = LIB_INDEX.get(sprId);
     if (item === undefined) continue;
     let found: Prop | undefined;
     const [rx, ry, rw, rh] = structureRect(s), cx = rx + rw / 2, cy = ry + rh / 2;
+    const at = (p: Prop) => Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2;
     for (const p of this.props) {
-    if (!claimed.has(p) && p.item === item && (Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2)) { found = p; break; }
+    if (!claimed.has(p) && p.item === item && at(p)) { found = p; break; }
     }
+    // a save's prop of the picture this structure had before T111 (STRUCTURE_SPRITE_OLD) goes: today's picture is placed instead
+    const old = LIB_INDEX.get(STRUCTURE_SPRITE_OLD[s.typeId] ?? '');
+    if (!found && old !== undefined) for (const p of this.props) if (!claimed.has(p) && p.item === old && at(p)) { this.removeProp(p); break; }
     const scale = structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated));
     if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), scale);
     else if (Math.abs(found.scale - scale) > 1e-6) { found.scale = scale; this.propChanged(found); } // a save keeps the size it was drawn at: refit it to today's rule
@@ -1805,7 +1811,7 @@ export class Game {
     const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : (kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID);
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
-    const newProp = this.addProp(item, x, y, false, 1);
+    const newProp = this.addProp(item, x, y, false, MARKER_SCALE[kind]);
     this.golfProps.set(key, newProp);
     }
     if (kind === 'pin') {
