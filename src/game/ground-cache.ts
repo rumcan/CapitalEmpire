@@ -195,12 +195,13 @@ export class GroundCache {
     const u1 = performance.now(); this.upCount++; this.upMs += u1 - u0;
     if (u1 - this.upT > 1000) { this.uploadsThisSecond = this.upCount; this.uploadMsPerSecond = this.upMs; this.upCount = 0; this.upMs = 0; this.upT = u1; }
   }
-  /** drop the least recently used pictures above the pixel budget */
+  /** drop the least recently used pictures above the pixel budget (planner pieces too: one is asked for first whenever a chunk on screen has
+   *  no picture, so each new place the camera goes keeps one, T134; one not drawn for a while is baked again in a millisecond or two) */
   evict(now: number) {
     let px = 0, held = 0; for (const t of this.tiles.values()) { px += (t.tex ? t.px : 0) + t.fadePx; if (t.prev && t.prev !== t.tex) held += t.px; }
     this.residentPx = px + held; this.peakPx = Math.max(this.peakPx, this.residentPx);
     if (px <= this.budgetPx) return;
-    const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now && t.kind !== 'p').sort((a, b) => a.used - b.used);
+    const old = [...this.tiles.values()].filter(t => t.tex && t.used !== now).sort((a, b) => a.used - b.used);
     for (const t of old) { if (px <= this.budgetPx * 0.8) break; px -= t.px + t.fadePx; this.gl.deleteTexture(t.tex!); t.tex = null; if (t.prev) { this.gl.deleteTexture(t.prev); t.prev = null; } if (t.fadeFrom) { this.gl.deleteTexture(t.fadeFrom); t.fadeFrom = null; t.fadePx = 0; } }
   }
   /** release reveal pictures whose animation is over */
