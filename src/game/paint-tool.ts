@@ -16,6 +16,9 @@ import { CELL_T, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
+import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, withPlan, withoutPlan } from './ext/hole-wizard';
+import { drawWizard } from './ext/hole-wizard/draw';
+import { planClear } from './ext/hole-plan';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
 export function isAreaMature(a: PaintArea, currentMonth: number): boolean {  
  if (!a.plantKind || a.plantKind === 'sod') return true;  
@@ -26,6 +29,12 @@ export function isAreaMature(a: PaintArea, currentMonth: number): boolean {
  const planted = a.plantedMonth ?? 0;  
  const elapsed = Math.max(0, currentMonth - planted);  
  return elapsed >= needed;
+}
+/** whether the player asked the OS for reduced motion (the wizard's ripple then only fades; P21 3.5) */
+let reducedMQ: MediaQueryList | null | undefined;
+function reducedMotion(): boolean {
+  if (reducedMQ === undefined) { try { reducedMQ = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null; } catch { reducedMQ = null; } }
+  return !!reducedMQ?.matches;
 }
 /** the localStorage key of the edited plant brushes */
 const PLANT_KEY = 'capitalempire.plantBrushes';
@@ -38,7 +47,7 @@ function loadPlant(): Record<PlantBrushKind, PlantSet> {
   return out;
 }
 
-export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height';
+export type PaintMode = 'draw' | 'pick' | 'erase' | 'hole' | 'brush' | 'plant' | 'piece' | 'height' | 'plan';
 /** the golf holes a course has (the Course tool's hole strip) */
 export const HOLE_COUNT = 18;
 /** the studio's 18 preset holes (src/game/golf/hole-presets.json; null: an empty slot) */
@@ -112,6 +121,8 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   /** the golf game's hole plans (save tuples) and their setter: undo and redo carry them */
   plans?(): unknown[];
   setPlans?(p: unknown[]): void;
+  /** hole n's pin (the New hole wizard's walk label), if it has one */
+  pinOf?(hole: number): { x: number; y: number } | null;
   /** a course surface's look (a brush style) changed: the grid's chunks are drawn again in it */
   courseLook?(): void }
 /** the ghost's fill by texture (the hole preview): the green, fairway, water and sand; other areas are only outlined */
@@ -238,6 +249,20 @@ export class PaintTool {
    *  pointer, which stays a normal pointer): the plain brush ring steps aside */
   puckCursor = false;
 
+  /** the New hole wizard (T102): the plan mode's state (ext/hole-wizard); the gold Build pill's box on screen (css px) */
+  readonly wizard = new HoleWizard({
+    grid: () => this.courseGrid(),
+    plans: () => decodePlans(this.host.plans?.()),
+    allow: i => { const g = this.host.grid?.(), own = this.host.ownedAt; if (!g || !own) return true; const c = cellCentre(g, i); return own(c.x, c.y); },
+    month: () => plantMonth(this.plantKind, this.host.currentMonth?.()),
+    price: s => (this.host.golfMode?.() ? unitBuildCost(SURF_SURFACE[s] ?? 'other', this.plantKind) : 0),
+    money: () => (this.host.golfMode?.() ? this.host.money?.() ?? 0 : Infinity),
+    pinOf: n => this.host.pinOf?.(n) ?? null,
+  });
+  private pill: { x: number; y: number; w: number; h: number } | null = null;
+  /** when plan mode last told the panel (ms; drags tell it at most every 150 ms) */
+  private planEmit = 0;
+
   constructor(host: PaintHost) { this.host = host; }
 
   /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
@@ -320,11 +345,98 @@ export class PaintTool {
   setShape(kind: BrushKind) { this.mode = 'draw'; this.brushKind = kind; this.style = { ...this.brush[kind].style }; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.host.emit(); }
   /** the Course tool opens (the engine calls it): coming from Paint, or from Pick or Erase, it starts on the current surface's brush */
   /** the Course tool opens on its Pieces method in golf mode (T035); classic keeps the brush */
-  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw')) this.setBrush(this.brushKind); } // the brush is the way to build (T109); the pieces are stamps under Advanced
+  enterCourse() { const was = this.course; this.course = true; if (!was || !(this.mode === 'brush' || this.mode === 'hole' || this.mode === 'plant' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'draw' || this.mode === 'plan')) this.setBrush(this.brushKind); } // the brush is the way to build (T109); the pieces are stamps under Advanced
   /** the Paint tool opens: the golf brush, the Shape method and the hole presets are the Course tool's, so they fall back to Draw */
-  enterPaint() { const was = this.course; this.course = false; if (this.mode === 'brush' || this.mode === 'hole' || this.mode === 'piece' || this.mode === 'height' || (was && this.mode === 'draw')) this.setMode('draw'); }
+  enterPaint() { const was = this.course; this.course = false; if (this.mode === 'brush' || this.mode === 'hole' || this.mode === 'piece' || this.mode === 'height' || this.mode === 'plan' || (was && this.mode === 'draw')) this.setMode('draw'); }
+
+  // ---------- the New hole wizard (plan P21 3.3 A, T102) ----------
+  /** plan mode: the New hole wizard for hole n (default: the next free hole number); false with a toast when there is no course grid
+   *  (a classic game) or every hole is in use */
+  setPlan(n?: number): boolean {
+    if (!this.course || !this.host.golfMode?.() || !this.host.grid?.()) { this.host.toast('The hole wizard builds on a golf course', 'warn'); return false; }
+    const h = n ?? this.nextFreeHole();
+    if (!h) { this.host.toast(`All ${HOLE_COUNT} holes are in use: delete one first`, 'warn'); return false; }
+    this.mode = 'plan'; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.pill = null;
+    this.wizard.start(h); this.host.emit(); return true;
+  }
+  /** whether hole n has a built plan */
+  hasPlan(n: number): boolean { return !!this.wizard.planOf(n); }
+  /** opens hole n's plan with its handles (plan mode); false when it has none */
+  editPlan(n: number): boolean {
+    const p = this.wizard.planOf(n); if (!p || !this.course || !this.courseGrid()) return false;
+    this.mode = 'plan'; this.cancel(); this.selected = 0; this.hover = 0; this.hoverH = null; this.pill = null;
+    this.wizard.open(p); this.brushHole = n; this.host.emit(); return true;
+  }
+  /** Build (the gold pill or Enter): lays the plan's cells exactly as the ghost shows them, saves the plan (golf.aims follow it), charges
+   *  the cells that change, all as one undo step; then the ripple plays and the wizard waits for the next hole's tee */
+  buildPlan(): boolean {
+    const w = this.wizard, g = this.courseGrid(), plan = w.plan;
+    if (!g || w.step !== 'shape' || !plan) return false;
+    const c = w.check(), gh = c.ghost;
+    if (!c.ok || !gh) { this.host.toast(c.why, 'warn'); return false; }
+    const hole = plan.hole, editing = !!w.base;
+    this.begin(editing ? `edit hole ${hole}` : `build hole ${hole}`);
+    applyDiff(g, gh.diff, false);
+    this.gridApply(gh.diff);
+    this.host.setPlans?.(encodePlans(withPlan(decodePlans(this.host.plans?.()), plan)));
+    if (gh.cost > 0) { this.host.spend?.(gh.cost); if (this.tx) this.tx.spent += gh.cost; }
+    this.pinHint = new Map([[hole, { x: plan.green.x, y: plan.green.y }]]);
+    this.commit();
+    this.brushHole = hole;
+    w.built(typeof performance !== 'undefined' ? performance.now() : 0, this.nextFreeHole());
+    this.pill = null;
+    this.host.save();
+    this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}`);
+    this.host.emit(); return true;
+  }
+  /** deletes the plan being edited and its cells (those still as the plan laid them; your touch-ups stay), as one undo step (no refund) */
+  deletePlan(): boolean {
+    const w = this.wizard, g = this.courseGrid(), base = w.base;
+    if (!g || !base) return false;
+    const hole = base.hole, own = this.host.ownedAt;
+    this.begin(`delete hole ${hole}`);
+    const d = planClear(g, base, hole, own ? i => { const c = cellCentre(g, i); return own(c.x, c.y); } : undefined);
+    applyDiff(g, d, false);
+    this.gridApply(d);
+    this.host.setPlans?.(encodePlans(withoutPlan(decodePlans(this.host.plans?.()), hole)));
+    this.commit();
+    w.start(this.nextFreeHole() || hole); this.pill = null;
+    this.host.save(); this.host.toast(`Hole ${hole} deleted: ${d.n.toLocaleString()} cells cleared`);
+    this.host.emit(); return true;
+  }
+  /** drops the plan on screen (Cancel, as Esc): the wizard waits for a tee again (a new hole keeps its number) */
+  cancelPlan(): void { const w = this.wizard; w.start(w.base ? this.nextFreeHole() || w.hole : w.hole); this.pill = null; this.host.emit(); }
+  /** the wizard's tile to css px mapping (the overlay's projection) */
+  private toCss(): (x: number, y: number) => { x: number; y: number } {
+    const A = this.A; this.host.affine(A);
+    return (x, y) => ({ x: A[0]! + x * A[2]! + y * A[4]!, y: A[1]! + x * A[3]! + y * A[5]! });
+  }
+  /** plan mode's keys: Enter builds, Esc drops the plan on screen (then leaves plan mode), R / Shift+R turn the green, [ ] size it,
+   *  Delete or Backspace over a bend takes it out */
+  private planKey(e: KeyboardEvent): boolean {
+    const w = this.wizard;
+    switch (e.key) {
+      case 'Enter': if (w.step !== 'shape') return false; this.buildPlan(); return true;
+      case 'Escape':
+        if (w.step === 'tee') { this.setBrush(this.brushKind); return true; }
+        w.start(w.base ? this.nextFreeHole() || w.hole : w.hole); break;
+      case 'r': case 'R': if (w.step !== 'shape') return false; w.turnGreen(e.shiftKey ? -15 : 15); break;
+      case '[': case ']': if (w.step !== 'shape') return false; w.sizeGreen(e.key === ']' ? GREEN_STEP : -GREEN_STEP); break;
+      case 'Delete': case 'Backspace': if (w.hover?.k !== 'bend' || !w.removeBend(w.hover.i)) return false; break;
+      default: return false;
+    }
+    this.host.emit(); return true;
+  }
+  /** plan mode's press: the Build pill, else the wizard's step (the tee, the green, a handle; a plan's line opens it) */
+  private planDown(t: { x: number; y: number }, mx: number, my: number) {
+    const p = this.pill, w = this.wizard;
+    if (w.step === 'shape' && p && mx >= p.x && mx <= p.x + p.w && my >= p.y && my <= p.y + p.h) { this.buildPlan(); return; }
+    const r = w.press(t, mx, my, this.toCss());
+    if (r === 'open') this.brushHole = w.hole;
+    if (r) this.host.emit();
+  }
   /** the hole numbers that have painted areas */
-  usedHoles(): Set<number> { const out = new Set<number>(); for (const a of this.areas) if (a.hole) out.add(a.hole); for (const a of this.host.gridAreas?.() ?? []) if (a.hole) out.add(a.hole); return out; }
+  usedHoles(): Set<number> { const out = new Set<number>(); for (const a of this.areas) if (a.hole) out.add(a.hole); for (const a of this.host.gridAreas?.() ?? []) if (a.hole) out.add(a.hole); for (const p of this.wizard.plans()) out.add(p.hole); return out; }
   /** the lowest hole number (1..18) with no areas, or 0 when every hole has some */
   nextFreeHole(): number { const u = this.usedHoles(); for (let n = 1; n <= HOLE_COUNT; n++) if (!u.has(n)) return n; return 0; }
   /** a hole's bounding box [x0, y0, x1, y1] over its areas, or null when it has none */
@@ -459,6 +571,7 @@ export class PaintTool {
     if (u.props && this.host.journal) u.props = this.host.journal.undo(u.props);
     if (u.spent) this.host.spend?.(-u.spent);
     this.host.changed?.();
+    if (this.mode === 'plan') this.wizard.start(this.nextFreeHole() || this.wizard.hole); // the plans changed under the wizard
     this.redos.push(u); this.host.save(); this.host.toast(`Undone: ${u.label}`); this.host.emit();
   }
   /** redoes the last undone action */
@@ -471,6 +584,7 @@ export class PaintTool {
     if (u.props && this.host.journal) u.props = this.host.journal.redo(u.props);
     if (u.spent) this.host.spend?.(u.spent);
     this.host.changed?.();
+    if (this.mode === 'plan') this.wizard.start(this.nextFreeHole() || this.wizard.hole);
     this.undos.push(u); this.host.save(); this.host.toast(`Redone: ${u.label}`); this.host.emit();
   }
 
@@ -649,6 +763,7 @@ export class PaintTool {
 
   /** the cursor over the overlay: a grab while dragging, a handle's own cursor over it, else the crosshair */
   get cursorStyle(): string {
+    if (this.mode === 'plan') { const w = this.wizard; return w.drag ? 'grabbing' : w.hover ? (w.hover.k === 'line' || w.hover.k === 'add' ? 'copy' : 'grab') : w.lineHole ? 'pointer' : 'crosshair'; }
     if (this.drag) return 'grabbing';
     const g = this.hoverH;
     if (!g || !this.selected) return 'crosshair';
@@ -665,6 +780,7 @@ export class PaintTool {
 
   /** a press on tile t (css px mx, my): a handle of the selected area starts a drag; else draw waits for the release (a click or a lasso) and deselects; pick selects the area under it; erase removes it */
   pointerDown(t: { x: number; y: number }, mx: number, my: number, alt = false) {
+    if (this.mode === 'plan') { this.planDown(t, mx, my); return; }
     const sel = this.selectedArea();
     if (sel) { const g = this.grabAt(sel, t, mx, my); if (g) { this.startDrag(sel, g, t); this.host.emit(); return; } }
     if (this.mode === 'hole') { this.placeHoleAt(t); return; }
@@ -688,6 +804,12 @@ export class PaintTool {
 
   /** a right press (draw, pick) on a corner of the selected area removes that corner and returns true; otherwise false (the press pans) */
   secondary(t: { x: number; y: number }, mx: number, my: number): boolean {
+    if (this.mode === 'plan') {
+      // a right click on a bend takes it out (plan mode); elsewhere the press pans
+      const h = this.wizard.step === 'shape' ? this.wizard.pick(mx, my, this.toCss()) : null;
+      if (h?.k === 'bend' && this.wizard.removeBend(h.i)) { this.host.emit(); return true; }
+      return false;
+    }
     const sel = this.selectedArea();
     const g = sel ? this.grabAt(sel, t, mx, my) : null;
     if (!sel || g?.k !== 'corner') return false;
@@ -697,6 +819,14 @@ export class PaintTool {
   /** a move over tile t (null off the map), with shift (rotate in 15° steps, scale uniform): a drag follows the pointer; else the handle under it is highlighted, and the lasso is drawn or the area under the pointer hovered */
   pointerMove(t: { x: number; y: number } | null, mx: number, my: number, shift = false) {
     this.cursor = t; this.mouse = { mx, my };
+    if (this.mode === 'plan') {
+      const w = this.wizard, was = w.drag ? null : w.hover;
+      w.move(t, mx, my, this.toCss());
+      // the panel follows a drag at most every 150 ms (the map's ghost and label follow every frame)
+      const now = typeof performance !== 'undefined' ? performance.now() : 0;
+      if ((w.drag && now - this.planEmit > 150) || (!w.drag && (was?.k !== w.hover?.k || was?.i !== w.hover?.i))) { this.planEmit = now; this.host.emit(); }
+      return;
+    }
     if (this.drag) { this.dragTo(t, shift); return; }
     if (this.mode === 'piece') { this.piece = t ? this.pieceAt(t) : null; return; }
     if (this.mode === 'height') { const h = this.heighting; if (h && t && Math.hypot(t.x - h.last.x, t.y - h.last.y) >= Math.max(0.5, this.heightR * 0.3)) { h.last = { x: t.x, y: t.y }; this.heightDabAt(t); } return; }
@@ -738,6 +868,7 @@ export class PaintTool {
 
   /** the release: a handle drag ends; in draw, a lasso is simplified and closed, and a press without a drag is a click that adds a corner (tol: the close distance in tiles) */
   pointerUp(tol: number) {
+    if (this.mode === 'plan') { if (this.wizard.drag) { this.wizard.release(); this.host.emit(); } return; }
     if (this.drag) { this.dragEnd(); return; }
     if (this.mode === 'brush') { this.strokeEnd(); return; }
     if (this.mode === 'height') { if (this.heighting) { this.heighting = null; this.commit(); this.host.save(); } this.host.emit(); return; }
@@ -947,7 +1078,10 @@ export class PaintTool {
   }
 
   /** a double click closes the outline being drawn (draw, 3 or more corners) */
-  doubleClick() { if (this.mode === 'draw' && this.pts.length >= 6) this.finish(false); }
+  doubleClick() {
+    if (this.mode === 'plan') { const h = this.wizard.hover; if (h?.k === 'bend' && this.wizard.removeBend(h.i)) { this.wizard.release(); this.host.emit(); } return; }
+    if (this.mode === 'draw' && this.pts.length >= 6) this.finish(false);
+  }
 
   /** a key press: true when the tool used it (Enter closes, Backspace undoes a corner, Esc cancels or deselects (hole mode: back to Draw), R turns the hole (hole mode), [ and ] size the brush (brush mode), Delete removes the hovered corner of the selected area, else the selected area) */
   key(e: KeyboardEvent): boolean {
@@ -958,6 +1092,7 @@ export class PaintTool {
       if (this.selected && (e.code === 'BracketRight' || e.code === 'BracketLeft')) { e.preventDefault(); const f = e.code === 'BracketRight'; this.moveLayer(e.shiftKey ? (f ? 'front' : 'back') : f ? 1 : -1); return true; }
       return false;
     }
+    if (this.mode === 'plan') return this.planKey(e);
     if (this.selected && (e.key === 'PageUp' || e.key === 'PageDown')) {
       e.preventDefault(); const f = e.key === 'PageUp'; this.moveLayer(e.shiftKey ? (f ? 'front' : 'back') : f ? 1 : -1); return true;
     }
@@ -1008,6 +1143,7 @@ export class PaintTool {
 
   /** the overlay preview: the outline being drawn (draw); the selected area, shaded, with its handles (draw and pick); a drag's candidate that cannot be applied, in red; the hovered area (pick and erase) */
   drawPreview(v: PaintView) {
+    if (this.mode === 'plan') { this.pill = drawWizard(v, this.wizard, this.mouse, typeof performance !== 'undefined' ? performance.now() : 0, reducedMotion()); return; }
     if (this.mode === 'piece') { this.drawPiece(v); return; }
     if (this.mode === 'height') { this.drawHeight(v); return; }
     if (this.mode === 'draw') this.drawOutline(v);
