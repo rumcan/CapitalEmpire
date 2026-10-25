@@ -1,0 +1,10 @@
+{
+  "remeshTaskId": "01a17189-ea63-7295-a6d0-fac0d3c0de1c",
+  "rigTaskId": "01a1718b-7309-74cd-8b62-70d8d02b436c",
+  "clips": {
+    "golf_drive": {
+      "actionId": 323,
+      "taskId": "01a1718c-571b-723b-b9b4-61fff54ea2f7"
+    }
+  }
+}

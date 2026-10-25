@@ -241,9 +241,10 @@ LEAD.md).
 - 2026-10-24 13:00 UTC: **golfers that swing, 7 rescued people in, the batch picture-first** (details: `docs/HANDOVER-PEOPLE.md` 1c). The
   animation names are Meshy's library (RUN's provider; the public list: `https://api.meshy.ai/web/public/animations/resources`): `golf_drive`
   (323) for the golfers; for the crowd `Sitting_Clap` 354, `Cheer_with_Both_Hands_Up` 298, `Victory_Cheer` 59, `Chair_Sit_Idle_M` 33 /
-  `_F` 32, `Seated_Fist_Pump` 304, `Headache_Relief` 316, `RunFast` 16. `animate-3d --input <base>/rigged.glb --source-sha256 <hash>` works
-  where `--rig-id` is refused (the old rig ids: "Provider rejected"); it is under the same daily 3D cap. A clip is made once on a base and
-  moved onto everyone by `rig-local-person.mjs --clips`.
+  `_F` 32, `Seated_Fist_Pump` 304, `Headache_Relief` 316, `RunFast` 16. **RUN does not pass them on:** its `animate-3d --input` knows only
+  idle, walk, run and jump (2026-10-25). They come from **Meshy's own API** with the owner's key: `meshy-base-clip.mjs <base>
+  <clip>=<action id> ...` (about 3 Meshy credits an action once the base is rigged there; HANDOVER-PEOPLE 1c). A clip is made once on a base
+  and moved onto everyone by `rig-local-person.mjs --clips`.
 - 2026-10-24 10:20 UTC: the owner cleared the spending and asked what works best: a test of every option on one person (`staff_pro_m2`)
   is set up and waits for RUN's 3D cap to reset (about 00:15 UTC). Details and how to rerun: `docs/HANDOVER-PEOPLE.md` 1b.
 - 2026-10-24 07:30 UTC: **a free rescue for the fused ground plates:** `scripts/assets/people3d/cut-plate.mjs` cuts the plate off a RUN

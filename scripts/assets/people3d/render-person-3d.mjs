@@ -28,7 +28,8 @@ const tot = process.env.TOT_REPO || path.resolve(root, '../TrickOrTreat');
 const id = process.argv[2], arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? +process.argv[i + 1] : d; };
 const sarg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; }, flag = k => process.argv.includes(k);
 if (!id) throw new Error('Usage: node scripts/assets/people3d/render-person-3d.mjs <id> [--height m] [--walk n] [--root dir] [--clip name [--frames n] [--stride] [--once] [--seated]] [--prop club]');
-const ROOT_DIR = sarg('--root', 'art/people3d'), CLIP = sarg('--clip', null), FRAMES = arg('--frames', 4), STRIDE = flag('--stride'), ONCE = flag('--once'), SEATED = flag('--seated');
+const ROOT_DIR = sarg('--root', 'art/people3d'), CLIP = sarg('--clip', null), TIMES = sarg('--times', null)?.split(',').map(Number) ?? null, FRAMES = TIMES ? TIMES.length : arg('--frames', 4), STRIDE = flag('--stride'), ONCE = flag('--once'), SEATED = flag('--seated');
+// --times a,b,...: the clip's frames at these seconds (a swing: the fast downswing and impact fall between evenly spaced frames)
 // --hand-twist a (the left a, the right -a) or l,r (each hand its own)
 const TWIST_ARG = sarg('--hand-twist', '0').split(',').map(Number), TWIST = TWIST_ARG.length > 1 ? TWIST_ARG : [TWIST_ARG[0], -TWIST_ARG[0]];
 const ARMS_IN = arg('--arms-in', 0);
@@ -37,7 +38,8 @@ const PROP = sarg('--prop', null);
 if (PROP && PROP !== 'club') throw new Error(`--prop ${PROP}: only club is known`);
 const PREFIX = path.basename(ROOT_DIR) === 'spectators' ? 'spectator' : path.basename(ROOT_DIR) === 'golfers' ? 'golfer' : 'person:3d';
 /** the art scale of the people sheets (px per metre), the person's height, the walk frames, supersampling; the frame (px) and the feet in it */
-const ART_PPM = 128, HEIGHT = arg('--height', 1.78), WALK = arg('--walk', 8), SS = 3;
+// supersampling: 2 for a prop's big frames (96 of them at 3x held as PNGs crashed the page, 2026-10-25)
+const ART_PPM = 128, HEIGHT = arg('--height', 1.78), WALK = arg('--walk', 8), SS = PROP ? 2 : 3;
 // a prop needs room round the person: the club reaches over the head and out to the sides, and at address its head lies on the ground about
 // a metre in front, which the 30-degree camera draws up to 64 px below the feet
 const FW = PROP ? 400 : 160, FH = Math.ceil((HEIGHT + (PROP ? 0.8 : 0)) * ART_PPM + 44 + (PROP ? 70 : 0)), AX = FW / 2, AY = FH - (PROP ? 80 : 10);
@@ -171,7 +173,7 @@ window.render = async (walkB64, idleB64, o) => {
   // the frames of a facing: the template (idle, then WALK frames of a stride), or a clip's FRAMES (over a stride, or evenly over the clip)
   const cols = o.CLIP ? o.FRAMES : o.WALK + 1, dur = walk.duration;
   const timeOf = f => !o.CLIP ? (f === 0 ? start : (start + ((f - 1) / o.WALK) * period) % dur)
-    : o.STRIDE ? (start + (f / o.FRAMES) * period) % dur : o.ONCE ? dur * f / Math.max(1, o.FRAMES - 1) * 0.999 : dur * f / o.FRAMES;
+    : o.TIMES ? Math.min(o.TIMES[f], dur * 0.999) : o.STRIDE ? (start + (f / o.FRAMES) * period) % dur : o.ONCE ? dur * f / Math.max(1, o.FRAMES - 1) * 0.999 : dur * f / o.FRAMES;
   for (const d of o.ROWS) {
     // screen direction phi; on the ground a screen step is twice as long along the depth axis (2:1)
     const phi = o.SCREEN[d] * Math.PI / 180, yaw = Math.atan2(Math.cos(phi), 2 * Math.sin(phi)) - yaw0;
@@ -205,7 +207,8 @@ try {
   });
   await page.goto('http://people3d.local/');
   await page.waitForFunction(() => window.ready, null, { timeout: 60000 });
-  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN, CLIP, FRAMES, STRIDE, ONCE, TWIST, ARMS_IN, PROP, clipB64: clipFile ? await b64(clipFile) : null }]);
+  // a clip never uses the idle file: left out, as the files go in base64 (three of a golfer's 28 MB files closed the page, 2026-10-25)
+  const out = await page.evaluate(([w, i, o]) => window.render(w, i, o), [await b64(walkFile), idleFile && !CLIP ? await b64(idleFile) : null, { FW, FH, AY, SS, ART_PPM, HEIGHT, WALK, ROWS, SCREEN, CLIP, FRAMES, STRIDE, ONCE, TIMES, TWIST, ARMS_IN, PROP, clipB64: clipFile ? await b64(clipFile) : null }]);
   if (problems.length) throw new Error(problems.join('\n'));
   const PER = CLIP ? FRAMES : WALK + 1, names = CLIP ? Array.from({ length: FRAMES }, (_, k) => `${CLIP}${k + 1}`) : ['idle', ...Array.from({ length: WALK }, (_, k) => `walk${k + 1}`)];
   const base = CLIP ?? 'sheet', previewName = CLIP ? `preview-${CLIP}.png` : 'preview.png', clear = { r: 0, g: 0, b: 0, alpha: 0 }, png = url => Buffer.from(url.split(',')[1], 'base64'), cells = [];
@@ -221,7 +224,7 @@ try {
   const walkSecs = out.period;
   const meta = CLIP
     ? { id: `${PREFIX}:${id}:${CLIP}`, name: `${id} ${CLIP}`, clip: CLIP, heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY }, directions: ROWS, frames: names,
-        fps: Math.round(FRAMES / ((STRIDE ? out.period : out.clipSecs) || 1) * 10) / 10, loop: !ONCE, source: `${ROOT_DIR}/${id}`, clips: { [CLIP]: out.walk },
+        fps: Math.round(FRAMES / ((STRIDE ? out.period : out.clipSecs) || 1) * 10) / 10, loop: !ONCE && !TIMES, ...(TIMES ? { times: TIMES } : {}), source: `${ROOT_DIR}/${id}`, clips: { [CLIP]: out.walk },
         ...(SEATED ? { seatHeightMetres: Math.round(out.hipY * 100) / 100, seat: { x: AX, y: Math.round(AY - out.hipY * Math.cos(Math.PI / 6) * ART_PPM) } } : {}),
         ...(PROP ? { prop: PROP, addressSecs: Math.round(out.tc * 100) / 100, shot: 'right-handed: the ball flies 90 degrees to the golfer\'s left of the row\'s facing (row S, the golfer facing the viewer: toward screen right)' } : {}) }
     : { id: `${PREFIX}:${id}`, name: `${id} (3D template)`, size: 'adult', heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY },

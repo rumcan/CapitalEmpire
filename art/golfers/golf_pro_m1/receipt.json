@@ -5,6 +5,7 @@
   "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
   "clipsFrom": {
     "walk": "base_man",
-    "idle": "base_man"
+    "idle": "base_man",
+    "golf_drive": "base_man"
   }
 }

@@ -105,6 +105,19 @@ motion-captured; the owner downloads the FBX files, then a local retarget onto b
 neck names, `Spine02/Spine01/Spine/neck` for `Spine/Spine1/Spine2/Neck`), **a hand-keyed swing** on base_man's skeleton (free, now; 6 or 7
 key poses), or **Meshy's own API** (the owner's Meshy key; golf_drive is its id 323). The club (`--prop club`) waits for whichever clip comes.
 
+**Update 2026-10-25 05:50 UTC: the swing, from Meshy's own API.** The owner has a Meshy account (90 credits) and gave the key; it is in
+`~/.meshy/api-key` on the owner's PC (outside the repo; `MESHY_API_KEY` also works). `scripts/assets/people3d/meshy-base-clip.mjs <base>
+<clip>=<action id> --model <plain glb> --remesh 60000` rigs a base on Meshy and saves each library action as `art/people3d/<base>/anim_<clip>.glb`
+(task ids in that base's `meshy.json`; the rig is reused for more clips while Meshy keeps the task). What it took: RUN's model file failed
+Meshy's pose estimation (Draco, WebP, a Z-up root), so `plain-glb.mjs` writes a plain copy facing +Z; its 500,000 triangles were then
+"not a single, well-formed humanoid", so Meshy remeshes it to 60,000 first (the rig only carries the clip: every person keeps its own mesh
+and texture through rig-local-person.mjs). Cost: remesh, rig and one action about 13 Meshy credits per base; base_man and base_woman done,
+**64 Meshy credits left**. More of the 680 library actions (the crowd: clap, cheer, sit; section 1c item 7) cost about 3 each on the same rig.
+The swing sheet uses chosen moments, not even steps (`render-person-3d.mjs --times`; in the cast's `clipRender`): address 0, takeaway 0.5,
+halfway 0.75, top 1.0, downswing 1.18, delivery 1.22, **impact 1.255**, release 1.3, follow-through 1.38, high finish 1.5, finish 1.65, held
+finish 2.0 s (the json lists them as `times`). Two render fixes on the way: a prop clip renders at 2x supersampling, and a clip render no
+longer sends the idle file (three of a golfer's 28 MB files in one call closed the page).
+
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
 1. `make-person-3d.mjs <id> "<look>" --root <dir> --model-only`: the model from RUN (text-to-3d, an A-pose prompt around the look). It
    checks RUN's library first (never pays twice), and when the CLI gives up after 600 s it waits for the model in the library.

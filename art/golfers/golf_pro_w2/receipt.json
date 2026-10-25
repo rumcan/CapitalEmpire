@@ -5,6 +5,7 @@
   "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
   "clipsFrom": {
     "walk": "base_woman",
-    "idle": "base_woman"
+    "idle": "base_woman",
+    "golf_drive": "base_woman"
   }
 }
