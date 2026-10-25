@@ -30,12 +30,22 @@ export interface CourseTex { tex: string; sc: number; a: number }
  *  - `stripes`: on the fairway, each hole's centre line (tee, aim points, pin) for the mowing stripes (T075), for the holes whose
  *    fairway cells reach this chunk */
 export interface CourseLayer extends CourseTex { s: number; e: EdgeProfile; fill: Float32Array[]; edges: Float32Array[];
-  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; fill: Float32Array[]; edges: Float32Array[] }; stripes?: { hole: number; line: number[] }[] }
+  /** its edges sorted by the heights on their sides (ext/course-walls, T099): soft (feathered) and joint (a crisp mowing line against its own
+   *  collar) runs; the rest of its edges are walls (CoursePatch.walls) or hidden under a later layer, drawn crisp. Absent: feather all edges */
+  soft?: Float32Array[]; joint?: Float32Array[];
+  collar?: CourseTex & { n: 'first-cut' | 'fringe' | 'lip' | 'bank'; fill: Float32Array[]; edges: Float32Array[]; soft?: Float32Array[] }; stripes?: { hole: number; line: number[] }[] }
+/** a course wall (ext/course-walls WallRun, T099): its top edge as x, y, drop triples (tiles, tiles, metres), the higher side on the left so the
+ *  face looks along the right-hand normal toward the camera; lo: the layer code it hangs over (2 s a surface's fill, 2 s + 1 its collar, 0 the
+ *  map grass), drawn just after that layer; m: its material (0 turf, 1 sand, 2 water) */
+export interface CourseWall { p: Float32Array; lo: number; m: number }
+/** a lit top edge (ext/course-walls RimRun, T099): a height step whose face turns to the sun at the upper right, as x, y pairs (tiles), the
+ *  higher side on the left; hi: the layer code of the higher side, whose top is lit along it */
+export interface CourseRim { p: Float32Array; hi: number }
 /** a course chunk's ground (key cg:<cx>:<cy>; plan P21 section 3.8): its 64-tile chunk (cx, cy, size in tiles), its surfaces in draw
  *  order (rough 1 .. green 8), the growth mask (1 byte per 1 m cell over the chunk box, size * 2 square, row-major; alpha 255 x (1 - the
  *  grass share in quarters): the dirt that shows through while seeded cells grow in; absent when nothing in the chunk grows), and z, its
  *  place among the painted areas (0: under every painted area) */
-export interface CoursePatch { cx: number; cy: number; size: number; layers: CourseLayer[]; grow?: Uint8Array; z: number }
+export interface CoursePatch { cx: number; cy: number; size: number; layers: CourseLayer[]; walls?: CourseWall[]; rims?: CourseRim[]; grow?: Uint8Array; z: number }
 
 /** a ground patch: a polygon (lots: an oriented quad; painted areas: any simple polygon) in tile space, and its surface */
 export interface LotPatch { pts: number[] /* x0 y0 x1 y1 ... (tiles, in order) */; tex: 'paving' | 'pad' | 'concrete' | 'asphalt' | 'lotAsphalt' | 'dirt' | 'rockyDirt' | 'rockyDirtAlt' | 'gravel' | 'field' | 'slabs' | 'asphaltDark' | 'asphaltWorn' | 'roadgravel' | 'grass' | 'bunkerSand' | 'wasteSand' | 'pineStraw' | 'barkMulch' | 'spectatorPath' | 'woodChips' | 'grassDry' | 'asphaltPatched' | 'chipSeal' | 'concreteStained' | 'concreteCracked' | 'concreteOld' | 'concreteWeathered' | 'waterDark' | 'waterDeep' | 'waterClear' | GrassTex | 'marks' | `preset:${string}`; lines?: number[] /* parking bay lines: x0 y0 x1 y1 ... (tiles) */;

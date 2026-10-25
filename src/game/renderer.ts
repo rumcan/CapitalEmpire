@@ -12,8 +12,9 @@ import savedDecals from './map-decals.json';
 import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, courseShadeRGBA, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
-import { quadBox, type CourseLayer, type CoursePatch, type CourseTex, type LotPatch, type PatchTex } from './ground-protocol';
-import { BLOB_STYLE } from './ext/course-blobs';
+import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type PatchTex } from './ground-protocol';
+import { DRAW_ORDER, SUN_DIR, WALL_DROP, WALL_SHADOW, WALL_TEX, faceLight, isOverlay, layerCode } from './ext/course-walls';
+import { SURF } from './ext/course-grid';
 import { SURF_GROW_MONTHS } from './ext/course-fx';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
@@ -82,9 +83,72 @@ const COURSE_DIRT = true;
 const FEATHER_STEPS = 4;
 /** the soil seeded course cells show while they grow in (plan P21 3.4; a seeded-soil photo is in the art queue) */
 const DIRT_TEX = 'dirt';
-/** the surface after whose fill the collar of surface s is drawn: s itself (the collar goes just before it) unless the collar lies over a
- *  higher surface (the bunker's grass lip over a green), then the highest one it lies over */
-function collarAfter(s: number): number { let m = s; for (const t of BLOB_STYLE[s]?.collar?.over ?? []) if (t > m && t < 255) m = t; return m; }
+/** a course wall's painted look (T099, the hand-painted game-art style of T082; flat painted tones, never a repeating tile): three tone bands
+ *  down the face (top, middle, foot) as the kerb face has, each a colour in full shade and in full sun (RGB; a face's colour is the mix by
+ *  how much it faces the sun at the upper right), the bands' bottoms as fractions of the face, and the tufts at the top edge (grass over a bunker's lip and a green's bank, roots on a pond's bank): their colour,
+ *  how far down the face they hang (a fraction of the face plus tiles), how far apart along the screen (tiles of x - y) and how many are
+ *  left out, each one's length, lean and place hashed from where it is */
+interface WallLook {
+  bands: readonly (readonly [readonly number[], readonly number[]])[]; cuts: readonly number[];
+  tuft: { col: readonly number[]; a: number; frac: number; len: number; gap: number; skip: number; w: number };
+}
+const WALL_LOOKS: readonly WallLook[] = [
+  // turf: a raised green's or tee's bank like a kerb of sod: a bright cut grass lip, the grass face, dark earth at the foot
+  { bands: [[[74, 104, 40], [186, 214, 104]], [[50, 74, 30], [132, 162, 68]], [[44, 40, 24], [118, 104, 62]]], cuts: [0.22, 0.7, 1],
+    tuft: { col: [44, 74, 26], a: 0.85, frac: 0.2, len: 0.015, gap: 0.035, skip: 0.3, w: 0.024 } },
+  // sand: a bunker's cut face: a dark band of roots and soil under the lip, brown earth, then the sand sliding down to the floor
+  { bands: [[[44, 36, 20], [108, 90, 52]], [[86, 66, 40], [182, 146, 98]], [[148, 130, 96], [236, 216, 170]]], cuts: [0.16, 0.46, 1],
+    tuft: { col: [54, 84, 30], a: 0.95, frac: 0.14, len: 0.03, gap: 0.03, skip: 0.25, w: 0.03 } },
+  // water: a pond's wet bank: dark earth going darker and greener down to the water line, a few roots at the top
+  { bands: [[[52, 44, 30], [132, 114, 82]], [[34, 30, 22], [92, 78, 58]], [[20, 28, 28], [54, 70, 64]]], cuts: [0.24, 0.62, 1],
+    tuft: { col: [44, 54, 28], a: 0.8, frac: 0.22, len: 0.02, gap: 0.06, skip: 0.55, w: 0.026 } },
+];
+/** how many light steps a wall face is drawn in (each step one path per band) and the longest stretch of an edge given one light, tiles
+ *  (the light is mixed between an edge's points, so a curved wall turns smoothly from sun to shade) */
+const WALL_STEPS = 24, WALL_LIGHT_SPAN = 0.1;
+/** the edge lines (lit top, tufts, contact shade, water line) leave out a face turned less than this toward the camera (a sliver where an edge
+ *  runs up the screen: a line there would stand as a vertical glitch) */
+const WALL_LINE_FACING = 0.2;
+/** the shade colour every course shadow multiplies in (cool, so shade reads as sky light, T110) and the warm tint of the textured shines */
+const SHADE_TINT = 'rgb(112,120,152)', SHINE_TINT = 'rgb(255,232,176)', RIM_TINT = 'rgb(236,234,214)';
+/** a lit top edge (courseRims): its gap inside the edge, the width of its light and its soft ramp in, tiles (0.2 m, 0.44 m, 0.12 m) */
+const RIM_GAP = 0.1, RIM_W = 0.22, RIM_RAMP = 0.06;
+/** the wall art's shade per band in full shade (multiplied over the art: 1 is the art as painted), the top band being painted */
+const WALL_ART_SHADE = [1, 0.5, 0.38];
+/** a wall's drop eases from nothing (its face side-on to the camera) to full when its face turns this much toward the camera (cosine) */
+const WALL_SIDE_ON = 0.3;
+const rgb = (c: readonly number[]) => `rgb(${Math.round(c[0]!)},${Math.round(c[1]!)},${Math.round(c[2]!)})`;
+const mixRGB = (a: readonly number[], b: readonly number[], t: number) => [a[0]! + (b[0]! - a[0]!) * t, a[1]! + (b[1]! - a[1]!) * t, a[2]! + (b[2]! - a[2]!) * t];
+/** a wall run's points (x, y, drop triples, tiles and metres): each one's normal (the mean of its segments' (dy, -dx)) and its drop on the
+ *  ground plane, tiles along (1, 1). The drop eases to nothing where the face turns side-on to the camera (an edge running up the screen),
+ *  so a wall's end folds in instead of standing as a sliver and a concave notch shows no spikes */
+function wallPoints(p: ArrayLike<number>): { t: Float64Array; nx: Float64Array; ny: Float64Array } {
+  const n = p.length / 3, t = new Float64Array(n), nx = new Float64Array(n), ny = new Float64Array(n);
+  for (let i = 0; i + 1 < n; i++) {
+    const dx = p[3 * i + 3]! - p[3 * i]!, dy = p[3 * i + 4]! - p[3 * i + 1]!, l = Math.hypot(dx, dy) || 1;
+    nx[i] += dy / l; ny[i] += -dx / l; nx[i + 1] += dy / l; ny[i + 1] += -dx / l;
+  }
+  for (let i = 0; i < n; i++) {
+    const l = Math.hypot(nx[i]!, ny[i]!) || 1; nx[i] /= l; ny[i] /= l;
+    const f = Math.max(0, Math.min(1, (nx[i]! + ny[i]!) * Math.SQRT1_2 / WALL_SIDE_ON));
+    t[i] = p[3 * i + 2]! * WALL_DROP * f * f * (3 - 2 * f);
+  }
+  return { t, nx, ny };
+}
+/** the faces of some walls as one path (tiles): each the top edge along and its foot back */
+function wallFaces(ws: readonly CourseWall[]): Path2D {
+  const path = new Path2D();
+  for (const w of ws) {
+    const p = w.p, n = p.length / 3; if (n < 2) continue;
+    const { t } = wallPoints(p);
+    path.moveTo(p[0]!, p[1]!); for (let i = 1; i < n; i++) path.lineTo(p[3 * i]!, p[3 * i + 1]!);
+    for (let i = n - 1; i >= 0; i--) path.lineTo(p[3 * i]! + t[i]!, p[3 * i + 1]! + t[i]!);
+    path.closePath();
+  }
+  return path;
+}
+/** a 0..1 hash of an integer and a salt (the tufts: the same on both sides of a chunk border, never a repeating tile) */
+const hash01 = (k: number, salt: number) => { let h = Math.imul(k ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(salt + 0x632be5ab, 0xc2b2ae35); h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; return (h >>> 0) / 4294967296; };
 /** signed shoelace area of a polygon (tile space): positive when its points run counter-clockwise on the axes */
 const signedArea = (pts: number[]) => { let a = 0; const n = pts.length / 2; for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += pts[2 * i] * pts[2 * j + 1] - pts[2 * j] * pts[2 * i + 1]; } return a / 2; };
 
@@ -859,19 +923,20 @@ export class GroundPainter {
       }
     }
   }
-  /** the course chunks of a ground chunk (the course grid; plan P21 sections 3.4 and 3.8, T077), under the chunk transform, surface by
-   *  surface in draw order (rough 1 .. green 8) across every chunk, each surface in seven steps:
-   *  1. its drop shadow on the ground outside (raised surfaces; paint-edges' cast shadow, laid after its collar so the collar does not hide it);
-   *  2. its collar: the band's outward feather, then its fill (a collar laid over a higher surface, the bunker's lip over a green, goes
-   *     after that surface instead);
-   *  3. its outward feather: the edge polylines stroked in its own texture at FEATHER_STEPS widths, widest first (a linear fade out to the
-   *     feather, unclipped; the fill covers the inner half);
-   *  4. its fill: the rings, even-odd;
-   *  5. the mowing stripes (COURSE_STRIPES, off until T075 lands);
-   *  6. the dirt of seeded cells through the growth mask times the soft-patch noise (COURSE_DIRT);
-   *  7. its light rim and shade (paint-edges' images, light from the upper right; a sunken bunker inverted), inside its rings.
-   *  No dark outline stroke. A district (lite) chunk draws only the collar fills and the fills. The field steps (1, 7) are made per chunk
-   *  over its own box only, from its own edges and its neighbours' (so a seam is lit as one curve and nothing is drawn twice) */
+  /** the course chunks of a ground chunk (the course grid; plan P21 sections 3.4 and 3.8, T077; the walls T099), under the chunk transform,
+   *  layer by layer in DRAW_ORDER (course-walls: rough 1 .. green 8, each surface's collar band just before it, the bunker's lip after the
+   *  green) across every chunk:
+   *  - a collar band: its outward feather (its soft runs only), its fill (a pond's bank then its wet soil and stones), its lit top edges;
+   *  - a surface, its top: 1. a sunken surface's floor shade (paint-edges' field images, light from the upper right); 2. its outward
+   *    feather: its soft runs stroked in its own texture at FEATHER_STEPS widths, widest first (a linear fade, unclipped; the fill covers the
+   *    inner half); 3. its fill: the rings, even-odd; 4. the dirt of seeded cells through the growth mask times the soft-patch noise
+   *    (COURSE_DIRT); 5. the floor shade's light and dark rims; 6. its joint runs: a crisp mowing line where it meets its own collar (the
+   *    kerb's joint); 7. its lit top edges (courseRims: a soft painted light along its edges whose step faces the sun at the upper right);
+   *    8. last on its top, the mowing stripes (courseStripes, clipped to its rings: COURSE_STRIPES, off until T075 lands);
+   *  - then the walls hanging over that layer (courseWalls), so every layer drawn later covers them where it overlaps and no wall crosses a
+   *    later surface; the walls over the map grass go first of all.
+   *  Edges that are walls or hidden under a later layer get no feather: they stay crisp, as a kerb's edge. No dark outline stroke. A district
+   *  (lite) chunk draws the fills, the collar fills and the walls in their light steps only (no feathers, shades, bands, edges or stripes) */
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
     /** a course texture as a fill style on g: the photo or preset in tile space (turned and scaled about the origin), else the screen texture */
@@ -880,15 +945,13 @@ export class GroundPainter {
       return isPaintPhoto(t.tex) ? this.paintPhoto(g, t.tex, L, G, t.sc) : this.screenPattern(g, t.tex as TexName, L, X0, Y0, Minv, G);
     };
     const ringsOf = (rings: readonly ArrayLike<number>[]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
-    /** step 4: rings filled even-odd in t */
+    /** rings filled even-odd in t */
     const fill = (t: CourseTex, rings: readonly ArrayLike<number>[]) => {
       if (!rings.length) return;
       ctx.save(); ctx.setTransform(M); ctx.clip(ringsOf(rings), 'evenodd'); ctx.fillStyle = style(ctx, t); ctx.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); ctx.restore();
     };
-    /** steps 2 and 3: the edge polylines stroked in t, FEATHER_STEPS strokes from 2f wide down, alpha 1 / (n - k): out to f tiles past the
-     *  edge the coverage falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
-    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number) => {
-      if (!lines.length || f <= 0) return;
+    /** polylines (a closed one repeats its first point) as one path */
+    const linesOf = (lines: readonly ArrayLike<number>[]) => {
       const p = new Path2D();
       for (const q of lines) {
         const m = q.length; if (m < 4) continue;
@@ -896,7 +959,13 @@ export class GroundPainter {
         p.moveTo(q[0]!, q[1]!); for (let k = 2; k + 1 < (ring ? m - 2 : m); k += 2) p.lineTo(q[k]!, q[k + 1]!);
         if (ring) p.closePath();
       }
-      const n = FEATHER_STEPS;
+      return p;
+    };
+    /** soft edge polylines stroked in t, FEATHER_STEPS strokes from 2f wide down, alpha 1 / (n - k): out to f tiles past the edge the coverage
+     *  falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
+    const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number) => {
+      if (!lines.length || f <= 0) return;
+      const p = linesOf(lines), n = FEATHER_STEPS;
       ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt'; ctx.strokeStyle = style(ctx, t);
       for (let k = 0; k < n; k++) { ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); }
       ctx.restore();
@@ -907,23 +976,40 @@ export class GroundPainter {
       const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
       ctx.save(); ctx.setTransform(M); ctx.globalCompositeOperation = op; ctx.imageSmoothingEnabled = true; ctx.drawImage(s, x0, y0, img.W / res, img.H / res); ctx.restore();
     };
-    const flatF = featherTiles(EDGE_LOOKS.flat!, L);
-    /** step 2 for the layers of surface s: the collar's feather and fill */
-    const collars = (ls: { c: CoursePatch; l: CourseLayer }[]) => {
-      if (!lite) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.edges, flatF);
-      for (const { l } of ls) if (l.collar) fill(l.collar, l.collar.fill);
-    };
+    const flatF = featherTiles(EDGE_LOOKS.flat!, L), px = 1 / (TILE_PX * L);
     const layers = (s: number) => { const out: { c: CoursePatch; l: CourseLayer }[] = []; for (const c of cs) for (const l of c.layers) if (l.s === s) out.push({ c, l }); return out; };
-    for (let s = 1; s <= 8; s++) {
-      const ls = layers(s);
-      if (ls.length) {
-        if (collarAfter(s) === s) collars(ls);
-        const look = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = look ? featherTiles(look, L) : flatF;
-        // the field images (steps 1 and 7) of each chunk over its own box within this ground chunk
+    // the walls by the layer they hang over, the lit top edges by the layer they light
+    const wallsOver = new Map<number, CourseWall[]>(), rimsOn = new Map<number, CourseRim[]>(), allWalls = cs.flatMap(c => c.walls ?? []);
+    for (const c of cs) {
+      for (const w of c.walls ?? []) { const l = wallsOver.get(w.lo); if (l) l.push(w); else wallsOver.set(w.lo, [w]); }
+      for (const q of c.rims ?? []) { const l = rimsOn.get(q.hi); if (l) l.push(q); else rimsOn.set(q.hi, [q]); }
+    }
+    /** the rings a layer is drawn with, all chunks', as one even-odd path: a surface's fill, a collar's band */
+    const ringsOfCode = (code: number) => { const p = new Path2D(); for (const { l } of layers(code >> 1)) for (const q of (code & 1 ? l.collar?.fill : l.fill) ?? []) ringPath(p, q); return p; };
+    /** the walls hanging over layer lo, clipped to it (a wall never pokes past the ground it stands on: a bunker's far wall stops at the sand's
+     *  near edge, an island's wall at the water); over the map grass unclipped (every course layer is drawn after them) */
+    const walls = (lo: number) => { const ws = wallsOver.get(lo); if (ws) this.courseWalls(ctx, ws, L, M, Minv, X0, Y0, lite, lo ? ringsOfCode(lo) : null); };
+    /** the lit top edges on layer hi, clipped to it */
+    const rims = (hi: number) => { const rs = rimsOn.get(hi); if (rs && !lite) this.courseRims(ctx, rs, L, M, hi ? ringsOfCode(hi) : null); };
+    walls(0); rims(0);
+    for (const code of DRAW_ORDER) {
+      const s = code >> 1, ls = layers(s);
+      if (code & 1) {
+        // a lip or bank lies on the ground under it and takes no part in the walls (course-walls isOverlay): kept off every wall face
+        const over = isOverlay(code) && allWalls.length > 0;
+        if (over) { const keep = new Path2D(); keep.rect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); keep.addPath(wallFaces(allWalls)); ctx.save(); ctx.setTransform(M); ctx.clip(keep, 'evenodd'); }
+        if (!lite) for (const { l } of ls) if (l.collar) feather(l.collar, l.collar.soft ?? l.collar.edges, flatF);
+        for (const { l } of ls) if (l.collar) fill(l.collar, l.collar.fill);
+        // a pond's bank: wet soil fading out from the water's edge into the grass, and a few stones
+        if (!lite && code === layerCode(SURF.water, true)) this.courseBank(ctx, ls.flatMap(q => q.l.edges), ringsOfCode(code), L, M);
+        if (over) ctx.restore();
+        rims(code);
+      } else if (ls.length) {
+        // the profile's feather width; the light and shade fields only for a sunken surface's floor (raised edges are walls now)
+        const prof = EDGE_LOOKS[ls[0]!.l.e] ?? null, f = prof ? featherTiles(prof, L) : flatF, look = prof?.sunken ? prof : null;
         const ims: { im: ReturnType<typeof courseImages>; x0: number; y0: number }[] = [];
-        if (!lite && look && (look.light > 0 || look.dark > 0 || look.shadow > 0)) {
-          // every chunk here, with or without this surface, takes the field over its own box from all the surface's edges within reach: a
-          // shadow cast across a chunk border lands in the next chunk (whose rings, if it has none of the surface, are empty: no rims)
+        if (!lite && look) {
+          // every chunk here takes the field over its own box from all the surface's edges within reach (so a seam is lit as one curve)
           const reach = edgeReach(look, f), all = ls.flatMap(q => q.l.edges);
           let ex0 = Infinity, ey0 = Infinity, ex1 = -Infinity, ey1 = -Infinity;
           for (const e of all) for (let k = 0; k + 1 < e.length; k += 2) { const x = e[k]!, y = e[k + 1]!; if (x < ex0) ex0 = x; if (x > ex1) ex1 = x; if (y < ey0) ey0 = y; if (y > ey1) ey1 = y; }
@@ -935,18 +1021,243 @@ export class GroundPainter {
           }
         }
         for (const q of ims) put(q.im.shadow, q.x0, q.y0, 'source-over');                    // 1
-        if (!lite) for (const { l } of ls) feather(l, l.edges, f);                                 // 3
-        for (const { l } of ls) fill(l, l.fill);                                                   // 4
-        if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 5
-        if (!lite && COURSE_DIRT && (SURF_GROW_MONTHS[s] ?? 0) > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 6
-        for (const q of ims) { put(q.im.light, q.x0, q.y0, 'screen'); put(q.im.dark, q.x0, q.y0, 'multiply'); } // 7
+        if (!lite) for (const { l } of ls) feather(l, l.soft ?? l.edges, f);                     // 2
+        for (const { l } of ls) fill(l, l.fill);                                                   // 3
+        if (!lite && COURSE_DIRT && (SURF_GROW_MONTHS[s] ?? 0) > 0) for (const { c, l } of ls) if (c.grow) this.courseDirt(ctx, c, l, L, X0, Y0, M, Minv, r); // 4
+        for (const q of ims) {                                                                     // 5
+          // the light as a shine textured by the sand under it (T110: on its mid-tones and highlights only), the shade multiplied
+          const im = q.im.light;
+          if (im) this.shine(ctx, this.cacheBox(M, q.x0, q.y0, q.x0 + im.W / res, q.y0 + im.H / res, ctx), SHINE_TINT, 1.6, g => {
+            const sm = this.buffer('small', im.W, im.H); ctx2d(sm).putImageData(new ImageData(im.data as Uint8ClampedArray<ArrayBuffer>, im.W, im.H), 0, 0);
+            g.setTransform(M); g.imageSmoothingEnabled = true; g.drawImage(sm, q.x0, q.y0, im.W / res, im.H / res);
+          });
+          put(q.im.dark, q.x0, q.y0, 'multiply');
+        }
+        if (!lite) {                                                                               // 6
+          const joints = ls.flatMap(q => q.l.joint ?? []);
+          if (joints.length) { ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.globalCompositeOperation = 'multiply'; ctx.strokeStyle = 'rgba(64,84,70,0.75)'; ctx.lineWidth = Math.max(1.2 * px, 0.035); ctx.stroke(linesOf(joints)); ctx.restore(); }
+        }
+        rims(code);                                                                                // 7
+        if (!lite && COURSE_STRIPES) for (const { l } of ls) this.courseStripes(ctx, l, L, M);      // 8
       }
-      // the collars laid over this surface (the bunker's grass lip over a green) go on top of it
-      for (let t = 1; t < s; t++) if (collarAfter(t) === s) collars(layers(t));
+      walls(code);
     }
   }
-  /** step 5 of a course layer, the mowing stripes along each hole's centre line (P21 3.4): the hook for T075's stripeBands, drawn only
-   *  when COURSE_STRIPES is on (off until T075 lands and is wired here) */
+  /** the walls hanging over one layer (T099; ext/course-walls WallRun: each run's top edge with its drop, the higher side on the left, the
+   *  face looking along the right-hand normal toward the camera), all chunks' at once so a run cut at a chunk border is one shape. A face
+   *  hangs straight down the screen from its edge, WALL_DROP tiles per metre along the tile direction (1, 1) (the top stays where the grid
+   *  has it, so sprites and cursors line up), clipped to the layer it hangs over (clip: its rings; null over the map grass). In order: the
+   *  shadow it casts on the ground past its foot (faces turned from the sun at the upper right: falling at 145°, as long as the drop) and a
+   *  tight contact shade along the foot, both multiplied in a cool shade so the ground keeps its texture (T110); the face in its material's
+   *  three bands (WALL_LOOKS), its light mixed along the edge between its points' normals against the sun (WALL_STEPS steps), its body in the
+   *  material's wall art once that slot is registered (wallArt, shaded by the steps), else painted with the soil photo laid softly over it;
+   *  the tufts hanging from the top edge. Lite: the face's middle band in its light steps only */
+  private courseWalls(ctx: C2D, ws: readonly CourseWall[], L: number, M: DOMMatrix, Minv: DOMMatrix, X0: number, Y0: number, lite: boolean, clip: Path2D | null) {
+    const px = 1 / (TILE_PX * L), NB = WALL_STEPS, sx = -SUN_DIR.x, sy = -SUN_DIR.y; // a cache px in tiles; the shadows' direction (tiles)
+    for (let m = 0; m < WALL_LOOKS.length; m++) {
+      const look = WALL_LOOKS[m]!, runs = ws.filter(w => w.m === m); if (!runs.length) continue;
+      const nb = lite ? 1 : look.bands.length, bases = Array.from({ length: nb }, () => new Path2D()), bands = Array.from({ length: nb * NB }, () => new Path2D());
+      const shadow = [new Path2D(), new Path2D(), new Path2D()], foot = new Path2D(), tufts = [new Path2D(), new Path2D()];
+      const T = look.tuft;
+      let shade = false;
+      for (const w of runs) {
+        const p = w.p, n = p.length / 3; if (n < 2) continue;
+        // per point: its drop (tiles along (1, 1)) and, from its normal, its light and how much it turns from the sun
+        const { t, nx: pnx, ny: pny } = wallPoints(p), lit = new Float64Array(n), away = new Float64Array(n);
+        for (let i = 0; i < n; i++) { lit[i] = faceLight(pnx[i]!, pny[i]!); away[i] = Math.max(0, -(pnx[i]! * SUN_DIR.x + pny[i]! * SUN_DIR.y)); }
+        // each band's strip whole (under its light steps: no hairlines between them)
+        for (let q = 0, f0 = 0; q < nb; q++) {
+          const f1 = lite ? 1 : look.cuts[q]!, bp = bases[q]!;
+          bp.moveTo(p[0]! + f0 * t[0]!, p[1]! + f0 * t[0]!); for (let i = 1; i < n; i++) bp.lineTo(p[3 * i]! + f0 * t[i]!, p[3 * i + 1]! + f0 * t[i]!);
+          for (let i = n - 1; i >= 0; i--) bp.lineTo(p[3 * i]! + f1 * t[i]!, p[3 * i + 1]! + f1 * t[i]!);
+          bp.closePath(); f0 = f1;
+        }
+        for (let i = 0; i + 1 < n; i++) {
+          const x0 = p[3 * i]!, y0 = p[3 * i + 1]!, x1 = p[3 * i + 3]!, y1 = p[3 * i + 4]!, t0 = t[i]!, t1 = t[i + 1]!, len = Math.hypot(x1 - x0, y1 - y0);
+          const k = lite ? 1 : Math.max(1, Math.ceil(len / WALL_LIGHT_SPAN)), lines = (y1 - y0 - (x1 - x0)) * Math.SQRT1_2 / (len || 1) >= WALL_LINE_FACING; // (dy - dx) / len: the face toward the camera
+          // the bands, a stretch at a time, each stretch in the light mixed at its middle
+          for (let j = 0; j < k; j++) {
+            const a = j / k, b = (j + 1) / k, li = lit[i]! + (lit[i + 1]! - lit[i]!) * (a + b) / 2, bin = Math.round(li * (NB - 1));
+            const xa = x0 + (x1 - x0) * a, ya = y0 + (y1 - y0) * a, ta = t0 + (t1 - t0) * a, xb = x0 + (x1 - x0) * b, yb = y0 + (y1 - y0) * b, tb = t0 + (t1 - t0) * b;
+            let f0 = 0;
+            for (let q = 0; q < nb; q++) {
+              const f1 = lite ? 1 : look.cuts[q]!, path = bands[q * NB + bin]!;
+              path.moveTo(xa + f0 * ta, ya + f0 * ta); path.lineTo(xb + f0 * tb, yb + f0 * tb); path.lineTo(xb + f1 * tb, yb + f1 * tb); path.lineTo(xa + f1 * ta, ya + f1 * ta); path.closePath();
+              f0 = f1;
+            }
+          }
+          if (lite) continue;
+          // the tufts: one wherever the edge crosses a line x - y = (k + jitter) * gap (a place on the screen, the same in every chunk), some
+          // left out; each one's length, lean and shade hashed from k
+          const u0 = x0 - y0, u1 = x1 - y1;
+          if (lines) { foot.moveTo(x0 + t0, y0 + t0); foot.lineTo(x1 + t1, y1 + t1); }
+          if (lines && Math.abs(u1 - u0) > 1e-9) for (let q = Math.ceil(Math.min(u0, u1) / T.gap - 0.5), q1 = Math.floor(Math.max(u0, u1) / T.gap + 0.5); q <= q1; q++) {
+            if (hash01(q, m + 3) < T.skip) continue;
+            const u = (q + 0.8 * (hash01(q, m) - 0.5)) * T.gap, f = (u - u0) / (u1 - u0); if (f < 0 || f >= 1) continue;
+            const X = x0 + f * (x1 - x0), Y = y0 + f * (y1 - y0), d = t0 + f * (t1 - t0), h = hash01(q, m + 7), len = (T.frac * d + T.len) * (0.35 + 1.1 * h * h), lean = (hash01(q, m + 13) - 0.5) * 0.6 * len;
+            const tf = tufts[hash01(q, m + 17) < 0.5 ? 0 : 1]!; tf.moveTo(X - 0.004, Y - 0.004); tf.lineTo(X + len + lean, Y + len - lean);
+          }
+        }
+        if (lite) continue;
+        // the cast shadow: from the foot along the shadows' direction, as long as the drop times how much the face turns from the sun, in three
+        // nested lengths (a soft end)
+        if (away.some(a => a > 0.02)) {
+          shade = true;
+          for (let k = 0; k < 3; k++) {
+            const sh = shadow[k]!, kk = (1 - k / 3) * WALL_SHADOW;
+            sh.moveTo(p[0]! + t[0]!, p[1]! + t[0]!); for (let i = 1; i < n; i++) sh.lineTo(p[3 * i]! + t[i]!, p[3 * i + 1]! + t[i]!);
+            for (let i = n - 1; i >= 0; i--) { const d = p[3 * i + 2]! * kk * away[i]!; sh.lineTo(p[3 * i]! + t[i]! + sx * d, p[3 * i + 1]! + t[i]! + sy * d); }
+            sh.closePath();
+          }
+        }
+      }
+      ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      if (clip) ctx.clip(clip);
+      // the cast shadow and the contact shade darken and keep the ground's texture (T110): multiplied in a cool shade colour, the shadow in three
+      // nested lengths (a penumbra that softens away from the wall), the contact shade tight and dark along the foot (the wall sits into the ground)
+      ctx.globalCompositeOperation = 'multiply';
+      if (shade) { ctx.fillStyle = SHADE_TINT; ctx.globalAlpha = 0.34; for (const sh of shadow) ctx.fill(sh); ctx.globalAlpha = 1; }
+      if (!lite) { ctx.strokeStyle = SHADE_TINT; ctx.globalAlpha = 0.45; ctx.lineWidth = Math.max(3 * px, 0.12); ctx.stroke(foot); ctx.globalAlpha = 0.8; ctx.lineWidth = Math.max(1.5 * px, 0.05); ctx.stroke(foot); ctx.globalAlpha = 1; }
+      ctx.globalCompositeOperation = 'source-over';
+      // the face: each band's strip in a mid tone first (no hairlines between the steps), then each band in each light step
+      for (let q = 0; q < nb; q++) { const band = look.bands[lite ? 1 : q]!; ctx.fillStyle = rgb(mixRGB(band[0], band[1], 0.25)); ctx.fill(bases[q]!); }
+      const art = lite ? null : this.wallArt(ctx, WALL_TEX[m]!, L, Minv, X0, Y0);
+      for (let q = 0; q < nb; q++) {
+        if (art && q > 0) {
+          // the art's own colours for the body, shaded by the light steps (multiplied: its texture stays), darker toward the foot
+          ctx.fillStyle = art; ctx.fill(bases[q]!);
+          ctx.globalCompositeOperation = 'multiply';
+          for (let b = 0; b < NB; b++) { const v = Math.round(255 * (WALL_ART_SHADE[q]! + (1 - WALL_ART_SHADE[q]!) * (b / (NB - 1)))); ctx.fillStyle = `rgb(${v},${v},${Math.min(255, v + 12)})`; ctx.fill(bands[q * NB + b]!); }
+          ctx.globalCompositeOperation = 'source-over';
+          continue;
+        }
+        for (let b = 0; b < NB; b++) { const band = look.bands[lite ? 1 : q]!; ctx.fillStyle = rgb(mixRGB(band[0], band[1], b / (NB - 1))); ctx.fill(bands[q * NB + b]!); }
+      }
+      if (!lite && !art) {
+        // the placeholder's texture until the wall art lands: the soil photo laid softly over the painted body (never a flat face)
+        const soil = this.paintPhoto(ctx, 'dirt', L);
+        if (typeof soil !== 'string') { ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.6; ctx.fillStyle = soil; for (let q = 1; q < nb; q++) ctx.fill(bases[q]!); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+      }
+      if (!lite) {
+        ctx.lineWidth = Math.max(px, T.w);
+        ctx.strokeStyle = `rgba(${T.col.join(',')},${T.a})`; ctx.stroke(tufts[0]!);
+        ctx.strokeStyle = `rgba(${T.col.map(v => Math.round(v * 1.35)).join(',')},${(T.a * 0.8).toFixed(2)})`; ctx.stroke(tufts[1]!);
+      }
+      ctx.restore();
+      if (clip && !lite) {
+        // the top band once more, unclipped: its top is the higher layer's own edge, exact (the clip runs along that edge and would leave a
+        // hairline of the ground under it)
+        ctx.save(); ctx.setTransform(M); ctx.fillStyle = rgb(mixRGB(look.bands[0]![0], look.bands[0]![1], 0.25)); ctx.fill(bases[0]!);
+        for (let b = 0; b < NB; b++) { const band = look.bands[0]!; ctx.fillStyle = rgb(mixRGB(band[0], band[1], b / (NB - 1))); ctx.fill(bands[b]!); }
+        ctx.restore();
+      }
+    }
+  }
+  /** the lit top edges on one layer (T099; ext/course-walls RimRun: a height step whose face turns to the sun at the upper right, the higher
+   *  side on the left), as the owner's light rule asks (T110): a band of light a small gap inside the edge (RIM_GAP, ramped in), on the higher
+   *  top only (clipped to it), as strong as the face turns to the sun, and textured by the ground under it (shine: on its mid-tones and
+   *  highlights, never its dark gaps). So a raised green or tee catches the light along its upper right edges and a bunker's near rim along
+   *  its lip, as the kerb's top catches it */
+  private courseRims(ctx: C2D, rs: readonly CourseRim[], L: number, M: DOMMatrix, clip: Path2D | null) {
+    const px = 1 / (TILE_PX * L), steps = [new Path2D(), new Path2D(), new Path2D()];
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const r of rs) {
+      const p = r.p;
+      for (let i = 0; i + 3 < p.length; i += 2) {
+        const dx = p[i + 2]! - p[i]!, dy = p[i + 3]! - p[i + 1]!, l = Math.hypot(dx, dy); if (l < 1e-6) continue;
+        const sun = (dy * SUN_DIR.x - dx * SUN_DIR.y) / l, k = sun > 0.66 ? 2 : sun > 0.38 ? 1 : 0, q = steps[k]!; // the face (dy, -dx) against the sun
+        q.moveTo(p[i]!, p[i + 1]!); q.lineTo(p[i + 2]!, p[i + 3]!);
+        x0 = Math.min(x0, p[i]!, p[i + 2]!); x1 = Math.max(x1, p[i]!, p[i + 2]!); y0 = Math.min(y0, p[i + 1]!, p[i + 3]!); y1 = Math.max(y1, p[i + 1]!, p[i + 3]!);
+      }
+    }
+    if (x1 < x0) return;
+    const R = RIM_GAP + RIM_W + 0.05, box = this.cacheBox(M, x0 - R, y0 - R, x1 + R, y1 + R, ctx); if (!box) return;
+    // the band's alpha in its own buffer: strokes about the edge (brightest just inside the gap, fading inward), the gap cut out with a soft
+    // ramp, clipped to the higher top
+    const B = this.buffer('rimMask', ctx.canvas.width, ctx.canvas.height), g = ctx2d(B);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(box[0], box[1], box[2], box[3]); g.setTransform(M); if (clip) g.clip(clip);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    for (let k = 0; k < 3; k++) for (const [w, a] of [[RIM_GAP + RIM_W, 0.5], [RIM_GAP + 0.55 * RIM_W, 0.5]] as const) {
+      g.strokeStyle = `rgba(255,255,255,${(a * (0.4 + 0.3 * k)).toFixed(3)})`; g.lineWidth = Math.max(2 * px, 2 * w); g.stroke(steps[k]!);
+    }
+    g.globalCompositeOperation = 'destination-out';
+    for (const [w, a] of [[RIM_GAP + RIM_RAMP, 0.5], [RIM_GAP, 1]] as const) { g.strokeStyle = `rgba(0,0,0,${a})`; g.lineWidth = Math.max(px, 2 * w); for (const q of steps) g.stroke(q); }
+    g.restore();
+    this.shine(ctx, box, RIM_TINT, 0.8, m => { m.setTransform(1, 0, 0, 1, 0, 0); m.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); });
+  }
+  /** a shine laid on ctx inside a mask, textured by the ground under it (the owner's rule T110): the light added is the ground's own colour
+   *  squared (so it lands on its mid-tones and highlights and leaves its dark gaps dark) times a warm tint and k, through the mask's alpha.
+   *  box: the cache px rect to work in; mask draws the shine's alpha into the buffer (destination-in), under whatever transform it sets */
+  private shine(ctx: C2D, box: [number, number, number, number] | null, tint: string, k: number, mask: (g: C2D) => void) {
+    if (!box) return;
+    const [x, y, w, h] = box, A = this.buffer('shine', ctx.canvas.width, ctx.canvas.height), a = ctx2d(A);
+    a.save(); a.setTransform(1, 0, 0, 1, 0, 0);
+    a.globalCompositeOperation = 'copy'; a.drawImage(ctx.canvas as CanvasImageSource, x, y, w, h, x, y, w, h);
+    a.globalCompositeOperation = 'multiply'; a.drawImage(A as CanvasImageSource, x, y, w, h, x, y, w, h); a.fillStyle = tint; a.fillRect(x, y, w, h);
+    a.globalCompositeOperation = 'destination-in'; mask(a);
+    a.restore();
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter';
+    for (let left = k; left > 0.01; left -= 1) { ctx.globalAlpha = Math.min(1, left); ctx.drawImage(A as CanvasImageSource, x, y, w, h, x, y, w, h); }
+    ctx.restore();
+  }
+  /** a tile box as a whole-px rect of ctx's canvas through M (null when it misses the canvas) */
+  private cacheBox(M: DOMMatrix, x0: number, y0: number, x1: number, y1: number, ctx: C2D): [number, number, number, number] | null {
+    let sx0 = Infinity, sy0 = Infinity, sx1 = -Infinity, sy1 = -Infinity;
+    for (const [x, y] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]] as const) { const X = M.a * x + M.c * y + M.e, Y = M.b * x + M.d * y + M.f; sx0 = Math.min(sx0, X); sx1 = Math.max(sx1, X); sy0 = Math.min(sy0, Y); sy1 = Math.max(sy1, Y); }
+    const rx = Math.max(0, Math.floor(sx0) - 1), ry = Math.max(0, Math.floor(sy0) - 1), rw = Math.min(ctx.canvas.width, Math.ceil(sx1) + 1) - rx, rh = Math.min(ctx.canvas.height, Math.ceil(sy1) + 1) - ry;
+    return rw > 0 && rh > 0 ? [rx, ry, rw, rh] : null;
+  }
+  /** a wall material's art (its slot in course-walls WALL_TEX, a grass-art PHOTO_TEX entry) as a fill laid in screen space at the walls'
+   *  scale, WALL_PX_PER_M x 0.6 art px per metre of wall (one art px a cache px at the closest zoom, smaller further out, never enlarged),
+   *  anchored to the world so chunks meet; null until the art is registered and built (the painted placeholder draws instead) */
+  private wallArt(g: C2D, slot: string, L: number, Minv: DOMMatrix, X0: number, Y0: number): CanvasPattern | null {
+    if (!this.tex.has(slot)) return null;
+    const full = this.tex.sourceFor(slot, 99); if (!full) return null;
+    const want = full.img.width * Math.min(1, L / 0.6), src = this.tex.sourceFor(slot, want / (128 * full.period)) ?? full;
+    const k = (full.img.width / src.img.width) * (L / 0.6), pat = g.createPattern(src.img, 'repeat'); if (!pat) return null;
+    pat.setTransform(Minv.multiply(new DOMMatrix([k, 0, 0, k, -X0 * L, -Y0 * L])));
+    return pat;
+  }
+  /** a pond's bank (its collar band, laid in the rough's grass): wet soil darkening toward the water, stroked from the water's edges in
+   *  nested widths and clipped to the band, and a few stones half sunk in it, each placed where the edge crosses a tile line (x or y a whole
+   *  number of STONE_GAP tiles: a place on the map, the same in every chunk), kept or left out, sized and turned by a hash of that place */
+  private courseBank(ctx: C2D, edges: readonly ArrayLike<number>[], band: Path2D, L: number, M: DOMMatrix) {
+    if (!edges.length) return;
+    const px = 1 / (TILE_PX * L), wet = new Path2D(), stones: number[] = [], STONE_GAP = 0.17;
+    for (const e of edges) {
+      if (e.length < 4) continue;
+      wet.moveTo(e[0]!, e[1]!); for (let k = 2; k + 1 < e.length; k += 2) wet.lineTo(e[k]!, e[k + 1]!);
+      for (let k = 0; k + 3 < e.length; k += 2) {
+        const x0 = e[k]!, y0 = e[k + 1]!, x1 = e[k + 2]!, y1 = e[k + 3]!, l = Math.hypot(x1 - x0, y1 - y0); if (l < 1e-6) continue;
+        const nx = (y1 - y0) / l, ny = -(x1 - x0) / l; // out of the water, into the bank
+        for (const axis of [0, 1]) {
+          const a0 = axis ? y0 : x0, a1 = axis ? y1 : x1; if (Math.abs(a1 - a0) < 1e-9) continue;
+          for (let q = Math.ceil(Math.min(a0, a1) / STONE_GAP), q1 = Math.floor(Math.max(a0, a1) / STONE_GAP); q <= q1; q++) {
+            const f = (q * STONE_GAP - a0) / (a1 - a0); if (f < 0 || f >= 1) continue;
+            const salt = axis * 7919 + Math.round((axis ? x0 + f * (x1 - x0) : y0 + f * (y1 - y0)) / STONE_GAP) * 104729; // the crossing's place
+            if (hash01(q, salt) > 0.16) continue;
+            const d = 0.06 + 0.22 * hash01(q, salt + 3), r = 0.03 + 0.045 * hash01(q, salt + 5);
+            stones.push(x0 + f * (x1 - x0) + nx * d, y0 + f * (y1 - y0) + ny * d, r, hash01(q, salt + 9));
+          }
+        }
+      }
+    }
+    ctx.save(); ctx.setTransform(M); ctx.clip(band); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (const [w, c] of [[0.62, 'rgba(92,70,42,0.22)'], [0.42, 'rgba(78,58,36,0.3)'], [0.24, 'rgba(62,46,30,0.38)'], [0.1, 'rgba(44,34,24,0.5)']] as const) { ctx.strokeStyle = c; ctx.lineWidth = Math.max(2 * px, w); ctx.stroke(wet); }
+    // the stones: a dark body, a lit face toward the sun at the upper right
+    const body = new Path2D(), lit = new Path2D();
+    for (let i = 0; i < stones.length; i += 4) {
+      const x = stones[i]!, y = stones[i + 1]!, r = stones[i + 2]!, a = stones[i + 3]! * Math.PI;
+      body.moveTo(x + r, y); body.ellipse(x, y, r, r * 0.72, a, 0, 2 * Math.PI);
+      const lx = x + SUN_DIR.x * r * 0.3, ly = y + SUN_DIR.y * r * 0.3; lit.moveTo(lx + r * 0.55, ly); lit.ellipse(lx, ly, r * 0.55, r * 0.4, a, 0, 2 * Math.PI);
+    }
+    ctx.fillStyle = 'rgb(86,80,70)'; ctx.fill(body); ctx.fillStyle = 'rgba(196,188,164,0.85)'; ctx.fill(lit);
+    ctx.restore();
+  }
+  /** the last step on a mown surface's top (drawCourses step 7), the mowing stripes along each hole's centre line (P21 3.4): the hook for
+   *  T075's stripeBands, drawn only when COURSE_STRIPES is on (off until T075 lands and is wired here). The owner's rule: the stripes go on
+   *  top at the end, the only pattern allowed to repeat. Clip them to the layer's own rings (l.fill, even-odd): its top, never across the
+   *  walls, which are drawn after this over the layers they hang over */
   private courseStripes(_ctx: C2D, _l: CourseLayer, _L: number, _M: DOMMatrix) { /* T075: light and dark bands along l.stripes, clipped to l.fill */ }
   /** step 6 of a course layer: the soil over its seeded cells while they grow in (P21 3.4). The chunk's growth mask (1 px per cell, alpha =
    *  1 - the grass share in quarters) is split by stage; each stage's cells take the dirt through the soft-patch noise (blendMask, the

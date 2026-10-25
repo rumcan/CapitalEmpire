@@ -89,7 +89,8 @@ import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
-import { PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
+import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
+import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
 import { STRUCTURE } from './golf/tents';
 import { gallerySpots } from './golf/galleries';
@@ -97,8 +98,10 @@ import { invitedFacts, tierInfo, tournamentDue, type InviteCheck, type Need } fr
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
-import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale } from './newart';
-import { atlasMip0 } from './sizes';
+import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale, standInLabel } from './newart';
+import { webpSource } from './atlas-gl';
+import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
+import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, courseBuilding, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
 import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
@@ -206,14 +209,9 @@ export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 /** a garden median's plants (P19): the beds' flowers and shrubs (lots/compose.ts FLOWERS and the bushes it scatters), picked by the prop's index */
 const AUTO_GARDEN = ['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'world:bush_2'];
-const STRUCTURE_SPRITE: Record<string, string> = {  
- foodTent: 'golf:food-tent', drinksTent: 'expansion:backyard-tent', kiosk: 'business:fishing-rental-kiosk', foodTruck: 'town:produce_stand',  
- merchTent: 'expansion:backyard-tent', merchPavilion: 'business:golf-halfway-pavilion', chalet: 'business:golf-halfway-pavilion', village: 'business:golf-halfway-pavilion',  
- standS: 'golf:grandstand-s', standM: 'business:golf-bench-course-map', standL: 'business:golf-bench-course-map', leaderboard: 'golf:leaderboard',  
- holeBoard: 'poi:fishing-board', screen: 'poi:movie-display', tvTower: 'world:watertower', broadcast: 'business:golf-cart-garage', media: 'business:golf-clubhouse',  
- gate: 'ce:parking-entry', toilets: 'golf:toilet-block', firstAid: 'expansion:backyard-tent', info: 'ce:parking-kiosk', rideshare: 'town:produce_stand',  
- coach: 'business:golf-cart-garage', hotel: 'business:golf-clubhouse', interchange: 'ce:parking-entry', rangeStand: 'business:golf-bench-course-map', sponsorDisplay: 'poi:movie-display', helipad: 'business:golf-halfway-pavilion',  
-};
+/** the stand-in labels (T114) fade out between these zooms (gone below 8%, whole from 12%: the district view stays clear), and the view's query
+ *  reaches this far below the screen (world px) for the tall pictures whose anchors lie under it */
+const STANDIN_FADE = [0.08, 0.12] as const, STANDIN_REACH = 1200;
 /** a golf structure's sprite scale: its picture fitted to the structure's footprint (tiles, turned when rotated), then the owner's size for
  *  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for; a smaller one keeps
  *  its own size (the entrance gate stood in by a 0.8-tile boom gate was drawn 7.8x) until the structure has its own art. */
@@ -289,15 +287,16 @@ export class Game {
   ground: GroundCache;
   /** lot ground edits made since the last frame (key -> patches, or null to drop), sent as one message per frame */
   private lotPending = new Map<string, LotPatch[] | null>();
-  /** the atlas pages (mip 1) as images, for the 2D overlay and picking */
-  pageImages: HTMLImageElement[] = [];
   /** the atlas pages at full size (mip 0), loaded on first use for the 2D previews (the business ghost), so a preview is never drawn from mip 1 */
   private pageFull = new Map<number, HTMLImageElement>();
   private pageImage0(page: number): HTMLImageElement | null {
     let im = this.pageFull.get(page); if (!im) { im = new Image(); im.src = ATLAS_PAGES[page]![0]!; this.pageFull.set(page, im); }
     return im.complete && im.naturalWidth ? im : null;
   }
-  private pageAlpha: { w: number; h: number; data: Uint8ClampedArray }[] = [];
+  /** each atlas page's alpha at mip 2 (512 px), for picking a prop by its pixels */
+  private pageAlpha: ({ w: number; h: number; data: Uint8Array } | null)[] = [];
+  /** T080 atlas streaming (streamAtlas): screen px per cell this frame, the cells marked, the near cells (rebuilt every few frames) */
+  private atlasMark = new Float32Array(0); private atlasTouched: number[] = []; private atlasNear: PageWant[] = []; private atlasNearAt = -1e9;
   ready = false; loadProgress = 0;
   // tools
   tool: Tool = 'road'; roadClass: ClassId = 'street'; bendMode: BendMode = 90; lineStyle: LineStyle = 0;
@@ -321,6 +320,14 @@ export class Game {
    *  on in dev builds, off in production until the owner decides; remembered). Set it with setShowGrid */
   showGrid = false;
   setShowGrid(on: boolean) { this.showGrid = on; saveMapGrid(storageOf(), on); this.emit(); }
+  /** the stand-in labels (T114, newart.ts standInLabel): "Stand In for Church" over each building drawn as a stand-in until its own art lands; on
+   *  by default (the owner wants to see them), remembered. Set it with setShowStandIns */
+  showStandIns = true;
+  setShowStandIns(on: boolean) {
+    this.showStandIns = on;
+    try { localStorage.setItem('capitalempire.standins', String(on)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
   /** a course building tool is on (T100): the Course menu's tools, Paths & drives, an event structure being placed; the course half grid shows */
   get courseBuilding() { return courseBuilding(this.tool, this.roadScope, this.eventTool && !!this.eventStructurePending); }
   /** the course land the half grid covers (the course and its parcels; none outside a golf game: the whole view), into a reused list */
@@ -395,7 +402,7 @@ export class Game {
   private grassVisible = false;
   private grassPedX = new Float32Array(PED_MAX); private grassPedY = new Float32Array(PED_MAX); private grassPedOut = new Uint8Array(PED_MAX);
   private grassCarX = new Float32Array(0); private grassCarY = new Float32Array(0); private grassCarAlive = new Uint8Array(0);
-  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0 };
+  perf = { fps: 0, frameMs: 0, cpuMs: 0, drawMs: 0, /** main-thread ms this frame: the course chunks' work, the lot ground's flush to the workers, and the last course send's lag after its first change */ courseMs: 0, lotFlushMs: 0, courseLagMs: 0, /** the last course chunk job: its worker ms and chunks; the last areas job: its worker ms and the main ms of taking its areas in */ courseJobMs: 0, courseJobChunks: 0, areasJobMs: 0, areasApplyMs: 0, instances: 0, draws: 0, chunksPending: 0, uploadKB: 0, frames: 0, tier: 'street' as 'street' | 'district' | 'planner', forest: 0, townTrees: 0, simActive: 0, simTickMs: 0, simMaxTickMs: 0, pop: 0, jobs: 0, built: 0, lotProps: 0, /** T080: the atlas's GPU MB (fixed by its plan) and the share of this frame's on-screen sprite px drawn coarser than the zoom needs (streaming in) */ atlasMB: 0, atlasSoft: 0 };
   private frameTimes: number[] = [];
   // input
   /** a drag in progress; build: a right-button press in the road tool (released without moving, it builds the route, as Enter) */
@@ -445,7 +452,7 @@ export class Game {
     const g = this.golf!; this.removeGolfMarker(hole, kind);
     const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
     const item = LIB_INDEX.get(sprId);
-    if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, 1));
+    if (item !== undefined) this.golfProps.set(kind === 'pin' ? 'pin:' + hole : `tee:${hole}:${kind}`, this.addProp(item, x, y, false, MARKER_SCALE[kind]));
     if (kind === 'pin') g.pins.push({ hole, x, y, auto: true }); else g.tees.push({ hole, kind, x, y, auto: true });
   }
   /** removes a pin or tee marker and its prop (if there is one) */
@@ -546,7 +553,7 @@ export class Game {
     const b = this.paint.brush, look = (st: { tex: string; scale: number; angle: number }) => ({ tex: st.tex, sc: st.scale, a: st.angle });
     const pre = (s: string, old: string) => ({ tex: surfacePreset(s) ?? old, sc: 1, a: 0 });
     const surf = [undefined, look(b.rough.style), pre('fescue', 'golfFescue'), look(b.water.style), look(b.fairway.style), look(b.tee.style), look(b.bunker.style), pre('waste', 'wasteSand'), look(b.green.style)];
-    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: { tex: 'rockyDirt', sc: 1, a: 0 } } };
+    return { surf, collar: { 'first-cut': pre('firstCut', 'golfFirstCut'), fringe: pre('fringe', 'golfFringe'), lip: look(b.rough.style), bank: look(b.rough.style) } }; // the bank is laid in the rough's grass; the renderer paints its wet soil and stones (T099)
   }
   /** each hole's playing line (back tee, aim points, pin) as flat tiles, for the fairway's mowing stripes */
   private holeLines(): Map<number, number[]> {
@@ -913,6 +920,7 @@ export class Game {
     this.ground = new GroundCache(this.gl);
     this.traffic = new SimClient();
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
+    try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.grassArt = clampGrassArt(localStorage.getItem('capitalempire.grassArt')); } catch { /* the default, painted */ }
     this.ground.grassArt = this.grassArt;
@@ -972,13 +980,23 @@ export class Game {
     if (opts.bench) { this.sandboxGrow = 1; this.stampOn = true; this.sandboxMoney = false; this.sandboxUnlock = false; }
     this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney); // before the terrain: the city worker reads its options from the first messages
     this.resize();
-    // mip 0 on every screen above 1x: at the closest zoom a dpr-1.25 screen needs 0.375 device px per display px, more than mip 1 holds (0.3), so
-    // without it every sprite drawn at its pixel limit would be stretched 1.25x (the owner, 2026-10-24: nothing painted blurry or pixelated)
-    const atlas = this.gl.loadAtlas(atlasMip0(this.dpr));
-    this.pageImages = await Promise.all(ATLAS_PAGES.map(row => new Promise<HTMLImageElement>(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(im); im.src = row[1]; })));
-    this.pageAlpha = this.pageImages.map(im => { const w = Math.max(1, im.naturalWidth >> 1), h = Math.max(1, im.naturalHeight >> 1), c = new OffscreenCanvas(w, h), g = c.getContext('2d', { willReadFrequently: true })!; g.drawImage(im, 0, 0, w, h); return { w, h, data: g.getImageData(0, 0, w, h).data }; });
+    // the atlas within GAME-PLAN's GPU budget (T080, atlas-pages.ts): a coarse mip of every page resident, the finer mips streamed per cell
+    // as the view needs them; mip 0 on every screen above 1x (sizes.ts atlasMip0: at the closest zoom a dpr-1.25 screen needs 0.375 device px
+    // per display px, more than mip 1 holds; the owner, 2026-10-24: nothing painted blurry or pixelated)
+    // the pages as GPU blocks (BC7 / ASTC / ETC2, transcoded from the build's KTX2) where the build has them and the GPU takes one, else RGBA8
+    const ktx = ktx2Built() ? pickFormat(this.gl.gl) : null;
+    const atlas = this.gl.initAtlas(this.dpr, ktx ? [ktx2Source(ATLAS_PAGES, ktx), webpSource(ATLAS_PAGES)] : [webpSource(ATLAS_PAGES)]);
+    // the alpha for picking, from mip 2 (the old mip-1 images halved): no page kept decoded as an image
+    this.pageAlpha = await Promise.all(ATLAS_PAGES.map(async row => {
+      try {
+        const b = await createImageBitmap(await (await fetch(row[2]!)).blob()), w = b.width, h = b.height, g = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true })!;
+        g.drawImage(b, 0, 0); b.close();
+        const rgba = g.getImageData(0, 0, w, h).data, data = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) data[i] = rgba[i * 4 + 3]!;
+        return { w, h, data };
+      } catch { return null; }
+    }));
     tick(0.3);
-    await atlas; tick(0.5); if (this.dead) return;
+    await atlas; this.perf.atlasMB = (this.gl.atlas?.bytes ?? 0) / 1048576; tick(0.5); if (this.dead) return;
     const read = opts.bench ? null : await readSave(); if (this.dead) return;
     const save = read?.save ?? null;
     // T042: an unreadable save is kept as a backup (then a new game starts); if the backup failed, the slot is never written over
@@ -1153,7 +1171,7 @@ export class Game {
   placePresetProps(ps: PresetProp[], seed: number): number {
     const trees = LIBRARY.flatMap((it, i) => it.kind === 'tree' && !/dead/.test(it.id) ? [i] : []), bushes = LIBRARY.flatMap((it, i) => it.kind === 'bush' ? [i] : []);
     const flowers = ['town:hydrangea', 'town:fern', 'town:ornamental_grass'].flatMap(id => LIB_INDEX.get(id) ?? []);
-    const flag = LIB_INDEX.get('golf:flagstick') ?? LIB_INDEX.get('business:golf-pin-red');
+    const flag = LIB_INDEX.get(PIN_RED_ID);
     const rnd = mulberry(seed * 7919); let n = 0;
     for (const q of ps) {
       if (q.id !== undefined) {
@@ -1165,7 +1183,7 @@ export class Game {
       const pool = q.kind === 'tree' ? trees : q.kind === 'bush' ? bushes : q.kind === 'flower' ? flowers : flag === undefined ? [] : [flag];
       if (!pool.length) continue;
       const i = pool[Math.floor(rnd() * pool.length)]!, flip = q.kind === 'flag' ? false : rnd() < 0.5;
-      const scale = (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (q.kind === 'flag' ? 1 : 0.9 + 0.2 * rnd());
+      const scale = q.kind === 'flag' ? OWNER_SCALE[LIBRARY[i]!.id] ?? MARKER_SCALE.pin : (OWNER_SCALE[LIBRARY[i]!.id] ?? 1) * (0.9 + 0.2 * rnd());
       if (this.canPlace(LIBRARY[i]!, q.x, q.y, flip, scale)) continue;
       this.addProp(i, q.x, q.y, flip, scale); n++;
     }
@@ -1760,7 +1778,7 @@ export class Game {
     const placed: PlacedEventStructure = { id, ...candidate };
     if (!this.golf.structures) this.golf.structures = [];
     this.golf.structures.push(placed); this.syncCourseGates(); this.bump('structures');
-    const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? 'expansion:backyard-tent';
+    const sprId = STRUCTURE_SPRITE[candidate.typeId] ?? FALLBACK_STRUCTURE_SPRITE;
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
     // the sprite sits on the middle of the structure's rectangle (x, y is its corner)
@@ -1828,24 +1846,37 @@ export class Game {
     if (p.item === item && Math.hypot(p.x - pin.x, p.y - pin.y) < 2) { this.golfProps.set(key, p); break; }
     }
     }
-    for (const tee of this.golf.tees ?? []) {
+    // the pictures that stood in for the tee markers before T111 (a flagstick, the bag trolley): a save's prop of one on a tee goes (never a pin's)
+    const oldTee = new Set(OLD_TEE_IDS.flatMap(id => LIB_INDEX.get(id) ?? [])), pinProps = new Set(this.golfProps.values()), tees = this.golf.tees ?? [];
+    for (const p of [...this.props]) if (oldTee.has(p.item) && !pinProps.has(p) && tees.some(t => Math.hypot(p.x - t.x, p.y - t.y) < 2)) this.removeProp(p);
+    for (const tee of tees) {
     const key = `tee:${tee.hole}:${tee.kind}`;
     const id = tee.kind === 'back' ? TEE_BACK_ID : tee.kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID;
     const item = LIB_INDEX.get(id);
+    if (item === undefined) continue; // no tee marker picture yet (golf/dressing.ts TEE_MARKER_ID)
     for (const p of this.props) {
     if (p.item === item && Math.hypot(p.x - tee.x, p.y - tee.y) < 2) { this.golfProps.set(key, p); break; }
     }
     }
+    // a save keeps the size a marker was placed at (the marker fit placed them at scale 1, a flagstick drawn 6 m tall): refit them to MARKER_SCALE
+    for (const [key, p] of this.golfProps) {
+    const s = MARKER_SCALE[(key.startsWith('pin:') ? 'pin' : key.slice(key.lastIndexOf(':') + 1)) as keyof typeof MARKER_SCALE];
+    if (s !== undefined && Math.abs(p.scale - s) > 1e-6) { p.scale = s; this.propChanged(p); }
+    }
     const claimed = new Set<Prop>();
     for (const s of this.golf.structures ?? []) {
-    const sprId = STRUCTURE_SPRITE[s.typeId] ?? 'expansion:backyard-tent';
+    const sprId = STRUCTURE_SPRITE[s.typeId] ?? FALLBACK_STRUCTURE_SPRITE;
     const item = LIB_INDEX.get(sprId);
     if (item === undefined) continue;
     let found: Prop | undefined;
     const [rx, ry, rw, rh] = structureRect(s), cx = rx + rw / 2, cy = ry + rh / 2;
+    const at = (p: Prop) => Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2;
     for (const p of this.props) {
-    if (!claimed.has(p) && p.item === item && (Math.hypot(p.x - cx, p.y - cy) < 2 || Math.hypot(p.x - s.x, p.y - s.y) < 2)) { found = p; break; }
+    if (!claimed.has(p) && p.item === item && at(p)) { found = p; break; }
     }
+    // a save's prop of the picture this structure had before T111 (STRUCTURE_SPRITE_OLD) goes: today's picture is placed instead
+    const old = LIB_INDEX.get(STRUCTURE_SPRITE_OLD[s.typeId] ?? '');
+    if (!found && old !== undefined) for (const p of this.props) if (!claimed.has(p) && p.item === old && at(p)) { this.removeProp(p); break; }
     const scale = structureScale(s.typeId, LIBRARY[item]!, Boolean(s.rotated));
     if (!found) found = this.addProp(item, cx, cy, Boolean(s.rotated), scale);
     else if (Math.abs(found.scale - scale) > 1e-6) { found.scale = scale; this.propChanged(found); } // a save keeps the size it was drawn at: refit it to today's rule
@@ -1867,7 +1898,7 @@ export class Game {
     const sprId = kind === 'pin' ? (hole === 9 ? PIN_YELLOW_ID : PIN_RED_ID) : (kind === 'back' ? TEE_BACK_ID : kind === 'middle' ? TEE_MIDDLE_ID : TEE_FORWARD_ID);
     const item = LIB_INDEX.get(sprId);
     if (item !== undefined) {
-    const newProp = this.addProp(item, x, y, false, 1);
+    const newProp = this.addProp(item, x, y, false, MARKER_SCALE[kind]);
     this.golfProps.set(key, newProp);
     }
     if (kind === 'pin') {
@@ -2550,7 +2581,7 @@ export class Game {
       if (!a) return p;
       let u = (X - r[0]) / (r[2] - r[0]); if (p.flip) u = 1 - u;
       const v = (Y - r[1]) / (r[3] - r[1]), px = clamp(Math.floor((u0 + (u1 - u0) * u) * a.w), 0, a.w - 1), py = clamp(Math.floor((v0 + (v1 - v0) * v) * a.h), 0, a.h - 1);
-      if (a.data[(py * a.w + px) * 4 + 3] > 20) return p;
+      if (a.data[py * a.w + px]! > 20) return p;
     }
     return null;
   }
@@ -4083,6 +4114,49 @@ export class Game {
   /** a hook for the benchmark's camera path */
   onFrame: ((now: number, dt: number) => void) | null = null;
 
+  /** T080: tell the atlas which cells this frame draws (on screen, weighted by their screen px) and which are near the view (the prepared
+   *  sprite tiles within half a screen around it, every few frames), at the mip the zoom needs; atlas-pages.ts streams them, finest wants and
+   *  most pixels first. Past the zoom where the always-resident low set suffices nothing streams. */
+  private streamAtlas(stream: Float32Array, floats: number, X0: number, Y0: number, X1: number, Y1: number) {
+    const a = this.gl.atlas; if (!a) return;
+    const P = a.plan, need = neededLevel(this.cam.z, this.dpr, P), G = P.grid, ze = this.cam.z * this.dpr;
+    if (need >= P.lowBase) { a.want([]); this.perf.atlasSoft = 0; return; }
+    if (this.atlasMark.length !== P.pages * G * G) this.atlasMark = new Float32Array(P.pages * G * G);
+    const mark = this.atlasMark, touched = this.atlasTouched; touched.length = 0;
+    const cell = (u0: number, v0: number, u1: number, v1: number, p: number, px: number) => {
+      const gx0 = Math.max(0, Math.floor(Math.min(u0, u1) * G)), gx1 = Math.min(G - 1, Math.floor(Math.max(u0, u1) * G));
+      const gy0 = Math.max(0, Math.floor(Math.min(v0, v1) * G)), gy1 = Math.min(G - 1, Math.floor(Math.max(v0, v1) * G)), share = px / ((gx1 - gx0 + 1) * (gy1 - gy0 + 1));
+      for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) { const u = (p * G + gy) * G + gx; if (mark[u] === 0) touched.push(u); mark[u] += share; }
+    };
+    for (let o = 0; o < floats; o += SPRITE_STRIDE) {
+      if (!(stream[o + 9]! > 0)) continue; // hidden
+      // the part of the picture on screen: its rect clipped to its tile and the view, in its uv rect
+      const x0 = stream[o]!, y0 = stream[o + 1]!, x1 = stream[o + 2]!, y1 = stream[o + 3]!, w = x1 - x0, h = y1 - y0;
+      const cx0 = Math.max(x0, stream[o + 12]!, X0), cy0 = Math.max(y0, stream[o + 13]!, Y0), cx1 = Math.min(x1, stream[o + 14]!, X1), cy1 = Math.min(y1, stream[o + 15]!, Y1);
+      if (cx1 <= cx0 || cy1 <= cy0 || w <= 0 || h <= 0) continue;
+      const u0 = stream[o + 4]!, v0 = stream[o + 5]!, du = stream[o + 6]! - u0, dv = stream[o + 7]! - v0;
+      cell(u0 + du * (cx0 - x0) / w, v0 + dv * (cy0 - y0) / h, u0 + du * (cx1 - x0) / w, v0 + dv * (cy1 - y0) / h, stream[o + 8]!, (cx1 - cx0) * (cy1 - cy0) * ze * ze);
+    }
+    const wants: PageWant[] = new Array(touched.length);
+    for (let i = 0; i < touched.length; i++) { const u = touched[i]!; wants[i] = { unit: u, level: need, onScreen: true, weight: mark[u]! }; mark[u] = 0; }
+    touched.length = 0;
+    // near the view, one mip coarser: the prepared tiles within half a screen around it (one more tile prepared per pass)
+    if (need + 1 >= P.lowBase) this.atlasNear = [];
+    else if (this.perf.frames - this.atlasNearAt >= 10) {
+      this.atlasNearAt = this.perf.frames; const hw = (X1 - X0) / 2, hh = (Y1 - Y0) / 2;
+      this.sprites.visit(X0 - hw, Y0 - hh, X1 + hw, Y1 + hh, (s, o) => {
+        if (!(s[o + 9]! > 0) || s[o + 2]! < X0 - hw || s[o]! > X1 + hw || s[o + 3]! < Y0 - hh || s[o + 1]! > Y1 + hh) return;
+        cell(s[o + 4]!, s[o + 5]!, s[o + 6]!, s[o + 7]!, s[o + 8]!, (s[o + 2]! - s[o]!) * (s[o + 3]! - s[o + 1]!) * ze * ze);
+      }, 1);
+      this.atlasNear = touched.map(u => { const w: PageWant = { unit: u, level: need + 1, onScreen: false, weight: mark[u]! }; mark[u] = 0; return w; });
+      touched.length = 0;
+    }
+    a.want(this.atlasNear.length ? wants.concat(this.atlasNear) : wants);
+    // the readout: the share of this frame's on-screen sprite px drawn coarser than the view needs (streaming in, or no slot left)
+    let soft = 0, total = 0; for (const w of wants) { total += w.weight!; if (a.pages.levelOf(w.unit) > need) soft += w.weight!; }
+    this.perf.atlasSoft = total ? soft / total : 0;
+  }
+
   private groundTier: 'g' | 'm' | null = null;
   private groundTarget = '';
   private groundBlendAt = Infinity;
@@ -4159,6 +4233,7 @@ export class Game {
       if (this.ground.livingActive) { const CW2 = this.groundTier === 'm' ? MID_W : CHUNK_W, CH2 = this.groundTier === 'm' ? MID_H : CHUNK_H; this.plantForest(Math.floor(X0 / CW2) * CW2, Math.floor(Y0 / CH2) * CH2, (Math.floor(X1 / CW2) + 1) * CW2, (Math.floor(Y1 / CH2) + 1) * CH2); }
       else this.plantForest(X0, Y0, X1, Y1);
       const f = this.sprites.frame(vis, movers), shadows = this.shadowStrength > 0;
+      this.streamAtlas(f.stream, f.floats, X0, Y0, X1, Y1);
       // car lights (night): lamps and beam glows of the cars in the same box, uploaded with the sprites
       const tr = this.traffic, lightOn = !!tr && cam.z >= 0.08;
       if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
@@ -4172,6 +4247,7 @@ export class Game {
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }
+    this.gl.atlas?.pump();
     this.ground.pump(); this.ground.settle(now); this.ground.evict(now);
     this.syncParkCars(now);
     this.drawOverlay(now);
@@ -4454,6 +4530,7 @@ export class Game {
     this.drawGroundOverlays(ctx);
     this.drawStadium(ctx);
     this.drawBusinesses(ctx);
+    if (this.showStandIns) this.drawStandIns(ctx);
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
@@ -4582,6 +4659,37 @@ export class Game {
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
       ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
     }
+  }
+  /** the stand-in labels (T114): each building on screen drawn as a stand-in (the view's props and the businesses' pictures) carries "Stand In
+   *  for <name>" (newart.ts standInLabel, cached strings) in a small dark pill just above its picture, sized with the zoom (11 to 9 css px) and
+   *  faded out between 12% and 8%. On the map overlay, under the UI. No allocation per frame: a reused query set and rect, widths measured once */
+  private siHits = new Set<Prop>(); private siBox: BBox = [0, 0, 0, 0]; private siRect = [0, 0, 0, 0]; private siW = new Map<string, number>();
+  private siFont = ''; private siPx = 0;
+  private drawStandIns(ctx: CanvasRenderingContext2D) {
+    const z = this.cam.z, fade = Math.min(1, (z - STANDIN_FADE[0]) / (STANDIN_FADE[1] - STANDIN_FADE[0])); if (!(fade > 0)) return;
+    const ze = z * this.dpr, hw = this.cw / 2 / ze, hh = this.ch / 2 / ze, b = this.siBox;
+    // the view in tiles: the bbox of the screen's corners, reaching further down for the tall pictures whose anchors are below the screen
+    const X0 = this.cam.X - hw, X1 = this.cam.X + hw, Y0 = this.cam.Y - hh, Y1 = this.cam.Y + hh + STANDIN_REACH;
+    b[0] = (X0 / HW + Y0 / HH) / 2; b[2] = (X1 / HW + Y1 / HH) / 2; b[1] = (Y0 / HH - X1 / HW) / 2; b[3] = (Y1 / HH - X0 / HW) / 2;
+    this.siHits.clear(); this.propGrid.query(b, this.siHits);
+    // 11 css px at the closest zoom, smaller as the view zooms out, never below a readable 9 px
+    const px = Math.round(this.dpr * Math.max(9, 11 * Math.sqrt(Math.min(1, z / ZOOM_MAX))));
+    if (px !== this.siPx) { this.siPx = px; this.siFont = `600 ${px}px system-ui, sans-serif`; }
+    ctx.save(); ctx.globalAlpha = fade; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = this.siFont;
+    for (const p of this.siHits) this.standInPill(ctx, p, ze);
+    for (const p of this.businessProps) this.standInPill(ctx, p, ze);
+    ctx.restore();
+  }
+  /** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen */
+  private standInPill(ctx: CanvasRenderingContext2D, p: Prop, ze: number) {
+    const label = standInLabel(p.item); if (label === null) return;
+    let w11 = this.siW.get(label);
+    if (w11 === undefined) { ctx.font = '600 11px system-ui, sans-serif'; w11 = ctx.measureText(label).width; this.siW.set(label, w11); ctx.font = this.siFont; }
+    const r = spriteRect(p, this.siRect), s = this.siPx / 11, w = w11 * s + 12 * s, h = 17 * s;
+    const cx = ((r[0]! + r[2]!) / 2 - this.cam.X) * ze + this.cw / 2, y0 = (r[1]! - this.cam.Y) * ze + this.ch / 2 - h - 3 * s;
+    if (cx + w / 2 < 0 || cx - w / 2 > this.cw || y0 + h < 0 || y0 > this.ch) return;
+    ctx.fillStyle = 'rgba(22,20,24,0.78)'; ctx.beginPath(); ctx.roundRect(cx - w / 2, y0, w, h, h / 2); ctx.fill();
+    ctx.fillStyle = '#f1f5f9'; ctx.fillText(label, cx, y0 + h / 2 + 0.5 * s);
   }
   /** the business tool's ghost at the cursor: the footprint (green where it can go, else red; the stadium's with its doors) and the reason beside the cursor if
    *  it cannot. With the type in hand at its max only the hint shows (a red footprint would hide the real one) */
