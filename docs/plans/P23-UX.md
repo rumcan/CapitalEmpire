@@ -1,627 +1,551 @@
-# P23: The course town, a friendly builder (UX plan v1)
+# P23: The course town, a friendly builder (UX plan v2, after the critique)
 
-Status: **v1 for critique** (2026-10-25). Research, audit and plan only: no game code changed. Written on `plan/P23-ux` from main at
-`223849a` (after #196: the 2 m map grid, the 1 m half grid, T108's cursor chip, T109's 1 m cells). A critic attacks this v1 next, then v2.
+Status: **v2** (2026-10-25), replacing v1. Built on main after #205 (the New hole wizard), #204 (the hole plan), #201 (3D collars),
+#200 (props and flags), #196 (grids, the chip, 1 m cells), #194 (painted grass) and #203 (stand-in labels). It answers every Blocker and
+Major of the critique (`P23-ux/CRITIQUE-v1.md`, 3 Blockers, 34 Majors, 36 Minors; section 2). v1 and its pictures are kept in `P23-ux/v1/`.
 
-The owner (2026-10-25, verbatim in the brief): "the Paiting and course stuff UIX is still TERRIBLE ... IT NEED TO BE USER FRIENDLY ...
-Seperate things and group them together logically and show the user beginner shit and hide advance stuff in collapsable menus. Think of
-the entire game as building the course and the pathways as a town you are building. The course will have its own houses later and the
-holes are like parks. All connected with litter cart paths and streets." And on T109: "there are 2 grids. 1 is the town grid. this is the
-size of 1 piece of road and then theres a mini grid which is 1 town grid square split into 4. that is the size we work on when building".
+The owner's brief, in short: the painting and course UX is terrible; make it user friendly; group things logically; show beginners the
+basics and fold the advanced things away; treat the whole game as building the course as a town, with holes as parks and everything
+joined by cart paths and streets; the surface preview chip sits small beside the pointer; course building happens on the 1 m mini grid.
 
 ## 0. The plan on one screen
 
-- **One mental model: the course is a town you build.** Holes are its parks, cart paths and drives are its streets, the clubhouse, pro
-  shop and later the course's homes are its houses. Every build tool belongs to one of those, and everything connects by paths.
-- **One rail, grouped by what you build:** Select · *Course:* **Holes**, **Paths**, **Buildings**, **Landscape** · *Town:* Roads,
-  Transport · Remove. Reports, money and views leave the rail and sit in the top bar. Nothing in the top bar changes what a click does.
-- **Each tool has one panel with the same anatomy:** title and purpose, undo, one gold primary action, the few beginner controls, its
-  objects (your holes), and one collapsed **More options** drawer. Never a third level.
-- **Holes are built as parks:** **New hole** (click a tee, click a green, drag handles, Build: 4 clicks) roughs in the whole hole with
-  real widths, par, length and price. **Shape by hand** in 1 m cells (T109) refines it. Cells join the hole they are painted in, so
-  there is no "current hole" to pick first.
-- **The preview is always the truth:** the ghost shows exactly what a click builds and what it costs; red appears only where it cannot
-  go, with the reason and a Fix. T108's surface chip sits beside the pointer and names the action.
-- **No hidden modes:** Land, Grass, Event and Holes stop hijacking clicks; Esc always steps out; temporary alternates are held keys
-  (Alt erases, Shift paints over).
-- **The first minute is three things:** a welcome card, New hole, a playable hole 1. Tools appear as the course earns them (a NEW
-  badge), not by stroke counts or a 10-minute timer.
-- **20 draft tickets,** three of them quick fixes for today (modes, Esc, the flag drawn as a house). Section 11.
+- **The course is a town you build, and the interface is built that way.** The rail's Course group holds **Holes** (the parks),
+  **Paths** (the streets: cart paths and drives) and **Buildings** (the houses). Each is one tool with one panel. Today's Course tool,
+  with Paths & drives and Buildings hidden inside it, splits into those three.
+- **A hole is drawn like a street and shaped like a park.** New hole (T102, merged) roughs in the whole hole: the camera now frames it
+  for you, Build is blocked only by real problems (and warns about the rest with a Fix), and Ctrl+Z takes back a drag, not the last
+  hole. Then **Shape by hand** refines it in 1 m cells with the brush or a new road-like **Run**.
+- **Minute zero is one button.** A new game opens on New hole and one line of text. The brush unfolds after hole 1. Tools that are not
+  ready yet stay in place on the rail, dimmed, with what unlocks them, so nothing reshuffles. Unlocks come from the course (a real hole,
+  the tour's invitation, seasons played), never from stroke counts, and a stuck player is helped after one season.
+- **The preview tells the truth, and only the disc rides beside the pointer.** The chip is a small disc with a mark per surface (a flag
+  on the green, stripes on the fairway); words appear beside it only while dragging, when something is refused, or when money is short.
+  The hint pill names the surface and the hole. A hole that is growing shows sprouts and "growing · ready Mar 1985", never bare brown.
+- **No click is ever stolen.** The Grass, Land, Event and Holes switches stop taking clicks from the tool in hand, and Esc closes the
+  top menu first, then steps back one stage, then leaves the tool.
+- **Nine owner decisions** (section 1), each with options and a recommendation; nothing he has decided is reversed without his yes.
+- **Phase 1 is seven tickets** (section 6.1) that need no owner decision and no unposted ticket. Wave A starts at once in parallel;
+  wave B follows when wave A's files are in.
 
-| | |
+| Today (main) | v2 |
 | --- | --- |
-| ![m1](P23-ux/m1-start.webp) | ![m2](P23-ux/m2-wizard.webp) |
-| m1 · the first minute, beginner Holes panel | m2 · New hole mid-build |
-| ![m3](P23-ux/m3-brush.webp) | ![m5](P23-ux/m5-paths.webp) |
-| m3 · shape by hand: the cell brush with the chip | m5 · Paths, drawn like roads |
+| ![today: the stage-1 Course panel](P23-ux/t01-start-today.webp) | ![v2: minute zero](P23-ux/v2-m1-start.webp) |
+| ![today: the wizard](P23-ux/t02-wizard-today.webp) | ![v2: New hole](P23-ux/v2-m2-new-hole.webp) |
 
 ---
 
-## 1. Inputs: what is already decided or on main
+## 1. Decisions for the owner
 
-- **On main (#196):** T100 (a subtle 2 m map grid, toggle G; the 1 m course half grid while a course tool is active; cart paths and
-  drives snap to the half grid), T108 (the pointer stays a pointer; a 40 px 3D surface chip sits lower right of it; the footprint is a
-  clean translucent tint of exactly the cells a click paints; muted red with a reason where it skips), T109 (the building unit is one
-  1 m cell; sizes 1, 2 x 2, 3 x 3, 4 x 4; the round brush and the big pieces, now **Stamps**, sit under Advanced; the Course tool opens on
-  the brush; prices per cell, live).
-- **Open tickets this plan builds on:** T101 (cell brush ghost and map animation), **T102 (the New hole wizard and plan handles)**,
-  T103 (the course panel, rounded and animated), T104 (stamps; retire Pieces and Shape for course surfaces), T105 (P19 hooks), T095
-  (P22's first minute), T069b (buildings snap to drives and paths), T068/T070 (the path network).
-- **Plans:** P21 (the 1 m course grid, droplet outlines, the wizard's defaults: par-4 fairway 30 / 40 / 28 / 22 m, green 550 m²,
-  60 m corridors), P19 (course paths and drives as a miniature road catalogue; buildings snap to them), P22 (the start: one road, the
-  driving range, founding seasons, the welcome card, the 7-step guide), P20 (lot presets: the town's houses; not a build tool).
-- **The owner's standing rules used here:** one sun at the upper right; nothing mirrored; no manual "rebuild ground" step; the lead's
-  recommendation is the decision for design questions (LEAD.md 5).
+One line each: the question, the options, and my pick in bold. Until you answer, the game keeps today's behaviour; Phase 1 does not
+depend on any of them. Pictures: decision 5 in `P23-ux/v2-m9-grid-options.webp`; decisions 2 and 3 in `v2-m8-rail-stages.webp` and
+`v2-m4-more.webp`; decision 8 against today's in `t02-wizard-today.webp`.
 
-## 2. Research
+1. **Keys:** **keep today's** (P car park, B bottlenecks, N upgrade, T toll, U bus, A Paint) / move to the rail's letters. (Also: A
+   opens Paint and pans left today; my pick: a tap opens Paint, a hold pans.)
+2. **Paint's place:** **keep it on the rail** / under a later Landscape tool / in the Course group as "Ground".
+3. **The surface style editor** (your "texture you have created"): **Holes > More options > My looks, with the disc as its preview** /
+   leave it under All tools > Fine tuning.
+4. **Right-click:** **keep your rule (a right-click builds or finishes, a right-drag pans)** / right-click backs out everywhere.
+5. **The 1 m half grid while building (your T100):** over all your land, as today / a spotlight only / **a spotlight over a faint
+   grid**.
+6. **The 2 m map grid:** **keep it off in the game and on in dev until you have played with it** / on for everyone.
+7. **Streets:** **one Streets tool with tabs Cart paths · Drives · Roads** / two tools, Paths and Roads, with drives only under Paths.
+8. **Drawing a hole:** as now (click tee, click green, drag to bend) / **like a road (click tee, click each bend, finish on the green)**;
+   the handles stay either way.
+9. **The course's homes (later):** placed by hand / **they grow along the drives you draw, like the town's lots**.
 
-Three research passes (principles; city and park builders; golf and cozy builders) opened the sources listed in section 12. Below is
-what we take. "(unverified)" marks a claim seen only in a search snippet.
+---
 
-### 2.1 Principles and the rule each gives us
+## 2. Response to the critique
 
-| Principle | What the evidence says | Our rule |
+### 2.1 Blockers and Majors
+
+| ID | The finding | v2's answer | Where |
+| --- | --- | --- | --- |
+| **B1** D4.8 | "Cells join the hole they are painted in" (U8) breaks hand-built holes and rewrites T102's `brushHole` | **Dropped.** v2 keeps T102's current hole and makes it automatic and visible: it is the hole you last built, edited or picked, and a stroke that starts on a hole's cells paints for that hole. Hand-made holes, overlaps and T102 keep working. | 4.5 |
+| **B2** D7.1 | The order collides with T102 in flight | T102 has merged (#205). Every v2 ticket lists its files and what it waits for; none rewrites `brushHole`; wizard changes are one follow-up on the merged code. | 6 |
+| **B3** D5.4 | Land cannot be bought in a range start | Being fixed separately now (treated as done). v2 shows no land action until that fix is in; land UI is Phase 2 and depends on it. | 4.9, 6.2 |
+| D1.1 | "4 clicks" ignores the camera; a par 4 needs about 10% zoom | New hole frames the camera itself: after the tee, it eases out to fit 450 m round the tee beside the panel (about 10% at 1600 px, 8% at 1366), then fits the plan; no 12% cut-offs apply to the wizard. Counts redone with camera moves. | 4.4, 4.12 |
+| D1.2 | Bends are dragged, roads are clicked | Owner decision 8 (recommended: road style). Phase 1 keeps T102's grammar; the switch is a Phase 2 ticket after his answer. | 1, 6.2 |
+| D1.3 | The hand tool has no street gesture | **Run**: click a start, click each bend, finish like a road; it lays a strip as wide as the brush size, with the same ghost and price. | 4.5, P1-G |
+| D1.5 | v1 reversed six owner decisions silently | All six are owner decisions now (1–6), today's behaviour kept until he answers. | 1 |
+| D2.1 | Two street tools | Owner decision 7 (recommended: one Streets tool). Phase 1 only moves Paths & drives onto the rail as "Paths". | 1, 4.7 |
+| D2.2 | The style editor has no home | Holes > More options > **My looks**, with plain texture names and the chip as the live preview (decision 3). | 4.3 |
+| D2.3 | More options is an eleven-item junk drawer, remembered for ever | Split by kind: Run beside the brush; the drawer has labelled sections (Shapes, Look, Planting, Hole, Plants, Ground) and is remembered for the session only. Saved holes move to New hole's menu. | 4.3 |
+| D2.4 | Top-bar cards arm map clicks (Land for sale, Care) | Care becomes its own tool later (Greenkeeping, Phase 2). Land for sale is an overlay whose block click opens a card and never buys; it closes when another tool is picked. Until then, opening the Grass panel switches to Select and picking a tool closes it. | 4.9, P1-A |
+| D3.1 | Minute zero is about 12 controls | Minute zero is New hole and one line. Shape by hand unfolds after hole 1, with a NEW badge. | 4.3, v2-m1 |
+| D3.2 | "Year 2" never comes in founding seasons; no way out | Stage 3 counts seasons including founding ones (`seasonsDone()`). A player with no hole after one founding season, or after 20 minutes of play, gets stage 2 and the guide offers New hole again. | 4.2, P1-B |
+| D3.3 | A hand-built hole never unlocks stage 2 under U8 | U8 is gone; stage 2 needs a hole with par > 0, hand-made or built. | 4.2 |
+| D3.5 | Seed or Sod is a money trap | Seed is the default everywhere. Sod shows what it means for the season ("Sod: 4.3 times the price; nine holes like this would cost about $1.2M", against "you have $600k"). One control in the wizard and the brush. The Grass panel's maintenance buttons become Overseed and Re-turf. | 4.4 |
+| D4.1 | The two-line label turns the chip into a tooltip box | Only the disc always rides beside the pointer. Words appear only while dragging (the run's total), on a refusal (reason and Fix), or when money is short. The steady "Fairway · hole 2 · $2 a m²" sits in the hint pill. | 4.9, P1-C |
+| D4.2 | Fairway, green, tee and rough chips look the same | Each disc carries a mark that survives 40 px and colour blindness: stripes (fairway), a flag (green), a peg (tee), tufts (rough), ripples (water), a rake line (bunker); the hint names it. Checked under deuteranopia and protanopia, and drawn to T110. | 4.9, P1-C |
+| D4.9 | Ctrl+Z while shaping undoes the previous Build | The wizard keeps its own history while open (drags, bends, green turns and sizes); Ctrl+Z and Ctrl+Y use it first. | 4.4, P1-D |
+| D4.10 | "Some cells left out": refusals versus warnings undefined | A table: what blocks Build (tee or green off your land or on the range, not enough money, nothing to change), what warns (cells left out with the count and reason, too close to another hole, a long walk, a road across the corridor), and the Fix for each. | 4.4 |
+| D4.12 | Hole numbers and routing not designed | The wizard says which number it takes and offers another free number or "after 9". Badges can be dragged to renumber (Phase 2). The walk check measures from the previous number's green. | 4.4 |
+| D4.14 | The "planned" state exists only in pictures | Removed from v2's states and mockups. Blueprint mode is a Phase 4 idea with a short spec. | 6.4 |
+| D4.15 | v1's right-click rule reverses the owner's road rule | Kept his rule (decision 4); a right-click audit per tool is in 4.10. | 1, 4.10 |
+| D4.16 | Path points on greens and tees need T068/T070 | Not promised before Phase 3; Phase 1 paths snap to what they snap to today. | 4.7, 6.3 |
+| D4.18 | "Draw a drive" sends the player away and loses the building | Phase 2 stopgap: after the drive is built, the clubhouse card comes back armed. Phase 3 (after T069b): the ghost proposes its own drive to the nearest road, one click builds both. | 4.8 |
+| D4.20 | Per-tool undo, refunds for ever, dependencies | A design spike for one chronological journal (each action supplies apply and revert), refunds in full until the next month tick and as a credit after, and undo that refuses or asks when something depends on it. Phase 1 adds only the wizard's own history. | 6.4 |
+| D5.1 | The look depends on the zoom | Being fixed separately now (treated as done); the readable grow-in ticket checks 8, 11, 17 and 30%. | P1-F |
+| D5.2 | A growing hole is unreadable brown | Seeded ground shows sprouts of its surface from day one (the growth mask starts at a quarter grass), and the badge, hint and card say "growing · ready Mar 1985". | 4.6, P1-F |
+| D5.3 | "Not your land" over the player's own range plot | Being fixed separately now (treated as done); v2's wording everywhere is "The driving range: golfers hit here". | 4.9 |
+| D6.1 | Mockups do not show today's game | Re-shot on main after #205: painted grass, 3D collars, flags, the real T102 ghost. Each v2 mockup has today's screen beside it. | 5 |
+| D7.2 | U11 and U12 depend on unposted tickets | Paths and Buildings features that need T068, T069b and T070 are Phase 3. Phase 1 only moves today's panels onto the rail. | 6.3 |
+| D7.3 | The hole card promised data the simulation lacks | The hole card shows only what exists: par, lengths, grow-in, surface areas, checks and warnings. No per-hole quality score, golfers or fees, and no Move. | 4.3, 6.2 |
+| D8.1 | No accessibility | A section with rules and tickets: icons beside colours, hatch and ✕ on refused cells, 13 px body text (12 px secondary), a UI scale setting, focus rings, Esc closing the top menu first, palette checks. | 4.11 |
+| D8.2 | 1366 x 768 | The primary action at the top of the panel (and T102's map pill); the top bar fits one row once All tools moves (P1-B); 52 px rail items under 800 px tall; the main mockups rendered at 1366 x 768 too; a compact panel in Phase 2. | 4.11, 5 |
+| D8.3 | Touch and trackpad | A trackpad setting (two-finger scroll pans, pinch zooms), an on-screen toggle for every held key, 24 px handles on coarse pointers; touch itself later. | 4.11 |
+| D8.8 | Town and course tools collide | One keymap for every tool and stage, with panning (4.10); 1–6 only arm Roads once Roads is unlocked. | 4.10 |
+| D9.1 | Mockups out of date | See D6.1. | 5 |
+| D9.2 | Mockups inconsistent with the plan | v2's mockups follow v2: one button at minute zero, the primary action on top, R turns the green (T102), no planned state, no Buy land, no per-hole money, no Alt for "no snap". | 5 |
+
+### 2.2 Minors taken on board
+
+- **The first ten minutes as an honest walk** (D1.4): section 4.12.
+- **Pins without re-planning** (D2.5): on the hole card, the pin and tee markers are free drags that never re-plan or charge (Phase 2).
+- **Remove refusing a bunker** (D2.6): it says "Bunkers are erased in Holes: hold Alt" with a button that goes there.
+- **Car parks, tents and orphans** (D2.7, D2.8): car parks stay in Transport, and a tournament tent's card reads "Rent for the
+  tournament $2,000 · or buy $15,000 (stays all year)". The zoom buttons, Skip to rush, the town chip and 20x keep their places.
+- **Ground height and homes** (D2.9, D2.10): height sits under Holes > More options > Ground until a Landscape tool exists; homes are
+  decision 9.
+- **Badges and the brush** (D3.4, D3.6, D4.3, D4.4, D4.5, D4.7): locked tools stay in place, and NEW badges live in the save. The brush
+  gets a "no change" state ("already fairway"), and Erase is a visible toggle (Alt only adds a quick hold). Shift means "straight" in
+  every tool; protecting other surfaces is a toggle. Erase takes the top surface under the footprint whatever the swatch (a playing
+  surface to rough, rough to grass).
+- **The wizard's rough edges** (D4.6, D4.11, D4.13, D4.17, D4.19): trees that a Build clears are tinted and counted in the ghost. A hole
+  with no plan offers "Make a plan from this hole" (later) or says why it cannot be edited. Where v1 and T102 differed, T102 wins.
+  Paths across a fairway warn and price the cells. Building ghosts are see-through and never use Alt.
+- **Feedback details** (D5.5–D5.10, D6.2–D6.4): the grids are decision 5, and labels near the pointer fade while building. Each dash
+  style has one meaning. The wizard shows a money projection, toasts use plain words, and camera eases are 400 ms at most and
+  interruptible. The chip catches up on fast moves, and reduced motion also stops the breathing. The footprint includes its collar ring,
+  T110 governs the chip, and status never uses colour alone.
+- **Plumbing** (D7.4, D8.4–D8.7): order corrections done. Empty states, error recovery, save hooks and guide anchors are in 4.11 and
+  section 6. The UI keeps T102's 150 ms panel throttle, and the chip's words are drawn on the overlay canvas.
+- **Wording and onboarding** (D8.9, D8.10): every disabled control says why and every locked tool says how to unlock it, in styled
+  tooltips with the key. Andersen et al. is now read the right way round: a complex game needs P06's guided steps, given just in time.
+- **Prototypes** (D9.3, D9.4): v2 pairs each mockup with today's screen from the same game and shows the chip at real size at 30%. A
+  click-through prototype of New hole and the brush behind a dev flag is offered as a Phase 2 option.
+
+---
+
+## 3. Where main is today (re-checked on 2026-10-25, after #205)
+
+- **New hole (T102) works:** "+ New hole" in the Course panel arms it; click the tee, click the green, drag the handles (bends, widths,
+  tee, green; R turns the green, [ ] sizes it, right-click removes a bend); the ghost shows exactly the cells a Build lays; a gold
+  "Build · $31,290" pill sits by the green; Enter builds; one undo step; "Edit hole N" reopens a plan. After Build it waits for the next
+  tee ("Hole 2 · click the tee · 161 m walk from hole 1", `t07`).
+- **What still hurts on main** (screens in `P23-ux/t0*.webp`, a new range game, production-like flags):
+  - the stage-1 Course panel still shows the 18-slot hole grid, four tabs, a Method row and a paragraph (`t01`); New hole is a small
+    chip among them;
+  - a 345 m hole needs 10% zoom at 1600 px and 8% at 1366 px, framed in the free map beside the panel (`t02`, `t04`); with the hole
+    centred in the window instead, my scripted tee click at 1366 px landed on the panel and the wizard stayed on "Click the tee";
+  - a tee clicked on the range plot reads "The tee is off your land", with 14,594 cells "left out" (`t03`; being fixed separately);
+  - after Build, the hole is brown dirt with green kerbs for months at 17% (`t05`);
+  - the 1 m half grid covers the whole course land at 30% (`t06`);
+  - the hidden modes, the Esc ping-pong, the stroke-counted unlocks and the crowded top bar of v1's audit are all still there
+    (confirmed by the critique, section 0).
+- **Being fixed separately right now** (treated as done in v2): land purchase in range starts, the same grow-in look at every zoom,
+  and the range-plot message. **Landing soon:** living ground (#206: Ground variety in the gear menu).
+
+---
+
+## 4. The design
+
+### 4.1 The model: what lives where
+
+| The town idea | On the course | Tool (Phase 1 name) | Inside it |
+| --- | --- | --- | --- |
+| Parks | Holes: tee, green, fairway, rough, bunkers, water, trees | **Holes** (today's Course) | New hole; Shape by hand; your holes; More options: Shapes, Look (My looks, stripes, collars), Planting, Hole, Plants, Ground |
+| Streets | Cart paths and course drives | **Paths** (today's Paths & drives) | Cart paths · Drives tabs; Draw · Upgrade |
+| Houses | Clubhouse, then pro shop, cart barn, halfway house; tournament tents; homes later | **Buildings** (today's Course > Buildings tab) | The clubhouse card now; Tournament tab when invited (Phase 3) |
+| The town around | Roads, junctions, car parks, buses | Roads, Junctions, Transport (as today) | as today |
+| Decoration | Plazas, paving, ground colours | Paint (as today, decision 2) | as today |
+| Upkeep | Mowing, watering, turf care | Greenkeeping (Phase 2; today's Grass panel) | the Grass panel's actions, armed like a tool |
+
+### 4.2 The rail, the stages and unlocks
+
+- **Order (Phase 1):** Select · *Course:* Holes, Paths, Buildings · *Town:* Roads, Junctions, Transport · Paint · Bulldoze. Keys stay as
+  today (decision 1). With decision 7 (a), Roads becomes the Streets tool's third tab and Paths is renamed Streets.
+- **Locked tools stay in place,** dimmed, with a lock and their condition in the tooltip ("Unlocks with your first hole"). Nothing moves
+  when a stage opens; the tool gets a NEW badge (saved in `golf.progress`) until it is first opened.
+
+| Stage | When (any of) | Open |
 | --- | --- | --- |
-| Progressive disclosure | Show what most people need; keep the rest one visible, labelled click away; past two levels usability drops (Nielsen). Hidden navigation was used 27% of the time against 48% visible (NN/g). | Two levels per tool: the panel, and one **More options** drawer with a label that says what is inside. Never hide a beginner tool in a drawer. |
-| Hick's law | Choice time grows with the log of the options for practised users; novices scan unfamiliar lists one by one, which is linear (Cockburn et al. 2007; Laws of UX). | Few options at once for beginners; a fixed order that never reshuffles, so practice turns search into knowing. |
-| Fitts's law | Time grows with distance and shrinks with size; the pixel under the pointer is the fastest target (Tognazzini). Hidden targets are the problem: Shift (Vogel and Baudisch) moved the occluded area to an offset callout. | Big labelled rail buttons; the preview chip sits offset beside the pointer and never covers the cells being painted (T108). |
-| Recognition over recall | Seeing beats remembering; few icons are universal, so labels stay visible (NN/g). | Every tool has an icon and a word; every surface is a swatch of its real photo with its name; keys printed on the buttons. |
-| Direct manipulation | Visible objects, physical actions, rapid, incremental, reversible operations with immediate results (Shneiderman, via NN/g). | Grab the tee, the green, the bend and the width on the map; the hole re-plans while you drag; each drag is one undo step. |
-| Feedforward and previews | Feedforward tells you what an action will do before you act (Vermeulen et al., CHI 2013); NN/g: preview before wide consequences. | Every tool shows a ghost of the result with its price before the click. |
-| Errors and undo | Slips (right goal, wrong action) and mistakes (wrong model) need different cures: constraints and defaults for slips, previews and undo for mistakes; easy recovery invites exploration (NN/g). | Snap and constrain instead of warning; Build stays disabled with a reason until valid; Ctrl+Z everywhere, with the action named. |
-| Consistency | One word, icon and gesture per meaning, across the game (NN/g). | Left click builds, right click or Esc backs out, Alt erases, Shift overrides, Enter commits, in every tool. |
-| Modes | A mode makes the same input do different things; mode errors happen when the mode is invisible or forgotten (NN/g; Raskin). Held modes cause fewer mode errors than latched ones (Sellen, Kurtenbach and Buxton 1992). | One active tool, shown twice (rail highlight and the pointer's chip). Temporary alternates are held keys. Nothing outside the active tool takes over clicks. |
-| Onboarding by doing | Front-loaded tutorials interrupt and are forgotten; help at the moment of need works (NN/g); playing is learning (Hodent). Tutorials paid off only in the most complex of three games (Andersen et al., CHI 2012). | A welcome card and New hole; tools unlock when the course needs them, each with a one-line tip; no wall of text. |
-| Motion | `prefers-reduced-motion` and WCAG 2.3.3: motion from interaction must be possible to turn off; most UI motion 100–500 ms, shorter when frequent (NN/g); animate only transform and opacity (web.dev). | 100–150 ms press feedback, 180–250 ms panels, a springy ease; nothing on every brush dab beyond a light squash; reduced motion gives fades. |
-| Grouping and words | Proximity and common region group things (NN/g); use the player's words, not internal jargon. | Group labels on the rail (Course, Town); plain names (Erase, not Rub out; Paths, not route). |
+| 1 · Your first hole | a new range game | Select, Holes (New hole only), Paths (walking and dirt cart paths, gravel drive), Buildings (clubhouse), Bulldoze |
+| 2 · Founding the club | a hole with par > 0; or one founding season, or 20 minutes of play, with no hole (the guide then offers New hole) | Shape by hand (Fairway, Green, Tee, Rough, Bunker, Water), Paint, the cement slab path, the rest of More options |
+| 3 · The town | the tour's invitation; or 3 holes; or two seasons including founding ones | Roads, Junctions, Transport, the Event catalogue (later Buildings > Tournament), land (after its fix) |
+| Tour levels | tier 2 and 3 (`courseTierNeeded`) | paved paths and drives, avenues (shown with "Tour level 2") |
 
-### 2.2 Games: what makes building feel easy, what to steal, what to avoid
+- No time-only unlock, no stroke counting. Settings > **Show every tool now** replaces the top bar's All tools chip. Old saves open with
+  every tool (as `normalizeProgress` does today).
 
-- **SimGolf:** click a tee, then a green, and par and the route appear; you paint around it after; criticism comes from golfers'
-  bubbles. *Steal:* the two-click hole and the route line; golfer feedback later. *Avoid:* no tutorial, a camera too far to read.
-- **PGA Tour 2K designer:** Create Hole is tee, landing point, green; surfaces by brush stamps or splines; rough added automatically.
-  *Steal:* big moves first, handles you drag later, live widths. *Avoid:* auto content experts strip out (guides tell you to set the
-  generator to zero), two ways to make one surface with no guidance, a hole that starts as a bare pin.
-- **Two Point Hospital and Campus:** pick a room, drag it, place the required items (marked), the tick turns green only when valid;
-  templates were the studio's most requested feature. *Steal:* the hole as a room: a checklist that keeps Build disabled until the hole
-  works. *Avoid:* edits that empty a room; requirements hidden in tooltips.
-- **Cities: Skylines I and II:** a road is two clicks, the zoning grid shows the blocks it creates before you commit, crossings make
-  junctions themselves, upgrade in place, the related info view opens with its tool, menus unlock by milestone. *Avoid:* snapping to
-  sources you cannot see (grids drift); vague refusals ("Overlapping items"); no undo (players asked for Move It and refunds).
-- **Planet Coaster 2 and Planet Zoo:** a tool per job (line, draw, stamp), brushes for bulk edits, undo that works while paused, a
-  habitat is one object with explicit validity rules. *Avoid:* reviewers called the UI tabs inside tabs, full-screen pickers and
-  confirm clicks for everything; a review found the path tool fights you, and notifications say what is wrong but not why.
-- **Parkitect:** paths on a grid, the cursor stops at a blocked tile, risky results are opt-in with a modifier, one always-on snap set,
-  the pipette jumps the menu to the item. *Avoid:* no undo (the developer: undo doubles the code of every action), deletes that hit
-  neighbours.
-- **RollerCoaster Tycoon / OpenRCT2:** every tool shows its price first; refusals are a headline plus the reason ("Land not owned by
-  park!", "Not enough cash - requires $X"). *Avoid:* dozens of tabs with no search; two modes in one path window.
-- **Townscaper and Islanders:** one action, an instant good result, no way to fail; Islanders previews the score before you place.
-  Islanders shipped without undo and added it after complaints. *Steal:* strokes whose edges resolve themselves (our collars), the
-  score at the pointer.
-- **Anno 1800 and 117:** quick-build keys, blueprint mode, ranges shown while placing, buildings snap and turn to face the nearest
-  road with a visible link, roads routed by a fixed rule between two clicks (guessing intent from the mouse "was not reliable
-  enough"). *Avoid:* deep radial nesting on console and mixed horizontal and vertical tabs (reviewers stayed lost).
-- **Tiny Glade and Manor Lords:** draw, and it builds and decorates itself; a building's connection dot turns white over a road; plots
-  follow the road's edge. *Steal:* the link dot, handles on the object, first-use hints only.
+![the rail at stages 1, 2 and 3](P23-ux/v2-m8-rail-stages.webp)
 
-**The ten patterns we take:** (1) big moves first, details after (the wizard, then cells); (2) the result and price before the click;
-(3) red only where it cannot go, with a named reason and a Fix; (4) things that touch join themselves (droplets, collars, path joins);
-(5) handles on the object, not sliders; (6) snap and turn to the nearest path, with a link marker; (7) a validity checklist that keeps
-Build disabled; (8) undo for every action; (9) two menu levels at most, a fixed order, labels always visible; (10) unlocks by progress,
-taught by one line at the moment they appear.
+### 4.3 The Holes panel
 
-## 3. Audit of today (main at `223849a`, after #196)
+**Anatomy (every tool panel follows it):** header (title, a one-line purpose, ↶ ↷ with the action named in the tooltip) → the primary
+action, sticky at the top → the beginner controls → the tool's objects → **More options ▸**.
 
-**Method.** Vite on 127.0.0.1:5404 from this worktree, a new range game with production-like flags (`?unlock=0&money=0&grow=1`),
-headless Chrome at 1600 x 900 (and dpr 2 for the cursor), scripted clicks and drags on the owned land. About 50 screenshots in
-`E:/ClaudeTemp/ux/audit2/` (current) and `E:/ClaudeTemp/ux/audit/` (before #196); the referenced ones are in `docs/plans/P23-ux/`.
-I also read `src/App.tsx`, `src/ui/**`, `src/PaintPanel.tsx`, `src/game/paint-tool.ts`, the engine's input and tool code and
-`ext/progressive-ui`.
+- **Stage 1 (minute zero):** the gold **New hole** pill and one line ("Click a tee, then a green: the whole hole is planned for you").
+  Nothing else until a hole exists.
+- **While New hole is open:** the pill area becomes the wizard card: the step (1 tee · 2 green · 3 shape), par, length, the price split
+  (fairway, green, tee, rough and collars), Seed (default) or Sod with what it means, the checks with Fix buttons, and **Build · $X**
+  at the top (T102's map pill stays by the green).
+- **After hole 1:**
+  - **Your holes:** a badge per hole that exists (1, 2 …) and a "+" badge (New hole ▾: Plan a hole · From a saved hole · An empty hole
+    to paint by hand). Each badge has an icon as well as a colour (✓ ready, ◔ growing, ! needs attention). One status line under them:
+    "Hole 1 · par 4 · 342 m · growing, ready Mar 1985".
+  - **Shape by hand:** six swatches with marks (Fairway, Green, Tee, Rough, Bunker, Water; keys 1–6); sizes 1, 2 x 2, 3 x 3, 4 x 4
+    ([ ]); **Brush | Run**; Erase (toggle; hold Alt for a moment); Protect other surfaces (on; hold Shift to paint over).
+- **More options ▸ (labelled sections, remembered for the session):** Shapes (Box, Lasso, Stamps, round brush) · Look (mowing
+  stripes; collars; and, with decision 3, **My looks**: each surface's saved look and the style editor, with the disc as its preview;
+  until then the editor stays where it is today, under Show every tool now) · Planting (Seed or Sod, the same control as the wizard's) ·
+  Hole (number, delete, saved holes) · Plants (today's plant brushes) · Ground (height).
+- **Gone:** the 18-slot grid, the Build / Presets / Plants / Buildings tabs, the Method row, the help paragraph (now the hint pill), the
+  separate hole box (now the status line, and the hole card in Phase 2).
 
-**What #196 fixed** (the owner's cursor complaint): the OS pointer is back; the pixelated wireframe prism is gone (before: `a12`); the
-chip sits beside the pointer and is crisp at dpr 2 (`a13`); the footprint is a clean tint on the half grid (`a03`, `a04`); the default is
-the 1-cell brush, and the massive pieces are under Advanced. The direction is right; the rest of the experience is not.
+### 4.4 New hole (T102, and what v2 adds)
 
-| Start (`a01`) | The stage-1 Course panel (`a02`) |
+1. **New hole** (the pill, or "+"). The tee follows the pointer; the other holes' corridors show faintly.
+2. **Click the tee.** The camera eases out (400 ms at most, interrupted by any drag or wheel; a jump under reduced motion) to fit a 450 m
+   circle round the tee in the free map beside the panel. Handles, labels and the corridor keep their screen size at any zoom.
+3. **Click the green** (or, with decision 8 (b), click each bend and finish on the green with double-click, Enter or right-click). The
+   camera fits the plan.
+4. **Shape:** as T102 (drag the line or a "+" to bend, the amber handles for width, the tee and the green to move them, R turns the
+   green, [ ] sizes it, right-click a bend to remove it). **Ctrl+Z and Ctrl+Y undo and redo these drags** while the wizard is open.
+5. **Build** (the pill, the panel's Build, or Enter): one undo step, the build ripple, and the badge appears with "growing".
+6. **Esc steps back one stage:** shape → the green step (the tee stays) → the tee step → out of New hole (the panel stays, nothing armed).
+
+**What blocks Build and what only warns:**
+
+| Check | Kind | What the player sees | Fix |
+| --- | --- | --- | --- |
+| Tee or green off your land | blocks | "The green is off your land" on the pill and in red at the green | drag it back |
+| Tee or green on the driving range | blocks | "The driving range: golfers hit here" | drag it off |
+| Not enough money | blocks | "Not enough money: $31,290 (you have $20,100)" | Sod → Seed, or a shorter hole |
+| Nothing changed (editing) | blocks | "No changes" | – |
+| Cells left out | warns | "340 m² left out: the driving range" (or a road, water, another hole), hatched on the ghost | Show me · Move the line |
+| Too close to another hole | warns | "38 m from hole 3's line: golfers there are in range" (under 60 m) | Show me |
+| A long walk | warns | "198 m walk from hole 1's green" (over 150 m) | – (a path after Build in Phase 3) |
+| A road across the corridor | warns | "Crosses the county road: carts need a crossing" | – |
+| Trees in the way | info | "12 trees cleared", the trees tinted in the ghost | – |
+
+The checks run with the ghost (throttled as T102's panel is, 150 ms): two distances and a count, no new simulation.
+
+- **Seed or Sod:** Seed is the default. Sod reads "Sod · ready now · $134,500: 4.3 times the price; nine holes like this would cost
+  about $1.2M". A money line under the price: "Nine holes like this: about $282k · you have $600k" (m2's numbers).
+- **Numbers:** the card says "New hole 3"; "Number ▾" offers another free number or "after 9".
+
+### 4.5 Shape by hand: the brush, Run, and the current hole
+
+- **The current hole is automatic and visible.** It is the hole you last built, edited or picked (a badge). A stroke that starts on a
+  cell belonging to a hole paints for that hole; on unassigned ground it paints for the current hole. The hint pill shows it ("Fairway ·
+  hole 2"). T102's data model (`brushHole`) is unchanged.
+- **Brush:** click a cell, drag a gap-free run (T109), sizes 1 to 4 x 4.
+- **Run (new, the street gesture):** click a start, click each bend, finish with double-click, Enter or right-click (decision 4); Shift
+  keeps a leg straight. It lays a strip as wide as the size (1–4 cells) along the line, with the brush's ghost and price. For a fairway
+  edge, a tee strip or a bunker lip.
+- **Erase** takes the top surface under the footprint, whatever the swatch: a playing surface (green, tee, fairway, bunker, water)
+  becomes rough, and rough becomes plain grass. Erasing refunds nothing (GOLF-PLAN 4.1); the hint says so.
+- **Protect other surfaces** is on by default (a fairway stroke slides past a green). Holding Shift paints over (and draws a straight
+  line from the last click, as in every other tool).
+
+### 4.6 Readable grow-in
+
+- Seeded ground starts as **sprouts**: the growth mask begins at a quarter grass instead of none (`course-fx` growMask), so a fairway reads
+  as fairway from day one; full grass at the end of its grow-in, as today.
+- The badge (◔), the status line, the hint and the hole card say "growing · ready Mar 1985".
+- Sod shows its laid-turf look for a month, as today. The same look at every zoom (the fix in progress).
+
+| Today, right after Build (17%) | v2 |
 | --- | --- |
-| ![a01](P23-ux/a01-start.webp) | ![a02](P23-ux/a02-course-panel.webp) |
-| A run of 2 x 2 cells and the checks (`a05`) | Paths & drives (`a08`) |
-| ![a05](P23-ux/a05-run-and-checks.webp) | ![a08](P23-ux/a08-paths.webp) |
-| All tools: the rail, the top bar, Stamps (`a09`) | The flag and the tee markers drawn as buildings (`a10`, `a11`) |
-| ![a09](P23-ux/a09-all-tools-stamps.webp) | ![a10](P23-ux/a10-flag-as-building.webp) ![a11](P23-ux/a11-tee-markers-as-building.webp) |
+| ![today](P23-ux/t05-growin-today.webp) | ![v2](P23-ux/v2-m6-growin.webp) |
 
-### 3.1 The problems (P1 misleads or blocks, P2 slows or confuses, P3 polish)
+### 4.7 Paths (the streets)
 
-**The top ten, in order:**
-1. **P1 Hidden modes hijack clicks.** The top bar's Grass panel, Land, Event (with a structure picked) and Holes chips are checked in
-   `Engine.pointerDown` *before* the active tool (`engine.ts:2467-2492`). With Grass open every click inspects turf; with Land on a click
-   buys; with Event armed a click places a tent, whatever the rail shows. The pointer and the panel still say "brush". Classic mode errors.
-2. **P1 A hole by hand is 40–70 actions; the fast way is hidden.** A 40 m x 250 m fairway is 10,000 cells: with the 4 x 4 brush about ten
-   parallel drags, each longer than the screen at 17%, plus a green (about 35 dabs) and a tee (my estimate; `a05` shows one run).
-   The first-run hint promises "click Tee, Fairway, and Green to snap a playable hole together" (no such snap exists). The only fast path,
-   Presets > "Generated: a new layout each time", is random, free (it charged $0 while cells cost money) and sits behind a tab name a
-   beginner does not read as "make a hole". The wizard (T102) is not built yet.
-3. **P1 The flag and the tee markers are drawn as buildings.** The pin and marker sprites are `business:` art (`golf/dressing.ts:11-19`),
-   and `business` is a building kind (`mirror.ts:9`), so the new-art rule (`newart.ts` standInFamily) draws a small shop on every green
-   and a mansion on every tee (`a10`, `a11`). The player cannot see where a hole starts and ends.
-4. **P2 The Course panel shows everything at once.** At stage 1: Course / Paths & drives switch, "COURSE Hole 1 Undo Redo", an 18-chip
-   hole grid of empty numbers, "+ New hole", a hole box, Build / Presets / Plants / Buildings tabs, "Surface (keys 1–7)" over three
-   chips, a Method row, size pills, Rub out and a four-line paragraph (`a02`). Groups are mixed: "Build" and "Buildings" are neighbouring
-   tabs meaning different things; Paths & drives is a road panel inside the Course menu.
-5. **P2 You must pick a "current hole" before painting.** "+ New hole" does not make a hole; it selects the next free number. Paint beside
-   hole 1 while hole 2 is selected and the cells belong to hole 2 (`paint-tool.ts` brushHole). The hole box then lists four red crosses
-   ("Green painted, Tee painted, Pin on the green, Tee markers on the tee") for what is two dabs (`a05`).
-6. **P2 Esc never leaves the tool.** From the brush, Esc goes to Shape, then back to the brush, then Shape again (measured:
-   `course:draw -> course:brush -> course:draw -> course:brush`; `paint-tool.ts:915-920`). The only way out is the rail.
-7. **P2 Two painters, two models.** Paint (polygons, styles, borders) and Course (1 m cells) both paint ground; Plants live in both.
-   Paths & drives speaks road language ("Build route", "To widen or narrow a road, use Upgrade (N)"), and its prices read "$8 / 2 m"
-   while cells read "$2" and Advanced sizes read "tiles" (`a08`, `a09`).
-8. **P2 Unlocks count strokes and minutes.** `progressFacts` counts a "playable hole" per three strokes (`progress.ts:30`), and stage 3
-   arrives after ten minutes whatever happened; Bunker and Water appear mid-task after three fairway strokes. "All tools" is a chip in
-   the top bar next to status.
-9. **P2 The top bar mixes status, reports, modes and tools:** Tier, Month, Course (stats), Land, Holes, Event, Skip, All tools, then
-   Grass on the far right (`a09`). A second pill "T1 Sep 1984" (the minimised round panel) repeats them, and its text says "The
-   tournament is at the end of August" during founding seasons, when there is none (`App.tsx:553`).
-10. **P3 Grid and chip need tuning.** At 17% the 1 m half grid covers the whole view like graph paper (`a02`, `a07` shows the 2 m grid
-   always on in dev); the 40 px chip is bigger than a 1-cell footprint (about 11 px at 17%), so the eye reads the chip as the brush; its
-   label says "1 cell · $2" but not the surface or the hole (`a03`).
+- **Phase 1:** today's Paths & drives panel becomes the **Paths** rail item, with tabs Cart paths · Drives, a Draw · Upgrade switch, the
+  cards with prices **a metre** ("$4 a metre"), the route box and **Build · $X** at the top. It is built exactly like a road: click,
+  click each bend, finish with double-click, Enter or right-click (the owner's rule); right-drag pans.
+- **Phase 2:** decision 7 (one Streets tool) and the keymap's single Upgrade.
+- **Phase 3 (after T068 and T070):** path points on greens and tees (the plan's green edge nearest the next tee, the tee's back),
+  "Path after Build" from the wizard, cart crossings instead of junctions, and a warning when a path crosses a fairway.
 
-**More problems:**
-- P2: the camera opens on the road side, so the first hover says "Not your land" (`a01`); the owned land is a thin dashed line.
-- P2: the clubhouse needs a drive within 6 tiles, and nothing in the Buildings tab says how to make one; the tab is a text card with no
-  picture of the building.
-- P2: Undo and Redo exist only in the Course panel; the road tool's "Undo" removes a route point; Ctrl+Z does nothing in other tools.
-- P2: panels come in three looks: the glass panels, the slate Event panel, and the plain Grass panel with raw checkboxes and selects; the
-  Event and Grass panels open on the right and cover the map.
-- P2: Stamps (Advanced) still draw the old glowing rim ghost with "Pear fairway · hole 1 · $2,332", unlike the brush's clean tint (`a09`).
-- P3: "Surface (keys 1–7)" with three surfaces; "Method"; "Rub out"; "Presets" and its 18 disabled "empty" slots (studio only);
-  "Brush size (1 m mini-grid cells)"; the hint bar's long sentences; the minimap's town chip far from the title.
-- P3: path cards are good (pictures, prices, locks), but the variant chips, Fine tuning and the long help line all show at once.
+### 4.8 Buildings (the houses)
 
-## 4. The mental model: the course is a town you build
+- **Phase 1:** the clubhouse moves from a tab to the **Buildings** rail item, as a card with its picture, price and "one only"; placement
+  as today (its front snaps to a drive within 12 m, R turns it).
+- **Phase 2:** when it is refused for want of a drive, "Draw a drive" opens Paths > Drives from the nearest road, and the clubhouse card
+  comes back armed as soon as the drive is built.
+- **Phase 3 (after T069b):** the ghost proposes its own drive to the nearest road or drive, with the price; one click builds both. The
+  Event catalogue moves into a Tournament tab (rent or buy on each card); stand-in pictures say so (T114).
 
-| In a town | On the course | Built with |
+### 4.9 Feedback and previews
+
+Words go in the hint pill; only Dragging, Refused and Money short also put them beside the disc.
+
+| State | Look | Words |
 | --- | --- | --- |
-| Parks | **Holes** (a tee, a green, the fairway and rough between, its bunkers, water and trees) | Holes: New hole, then cells |
-| Streets | **Cart paths** (walking path, dirt, cement slabs, paved, avenue) and **course drives** (gravel, paved, avenue) | Paths, drawn like roads |
-| Houses | **Course buildings** (clubhouse, pro shop, cart barn, halfway house; tents and stands for the tournament; the course's homes later) | Buildings, facing a drive or path |
-| Gardens, trees | **Landscape** (trees, shrubs, flower beds, mulch, decor ground) | Landscape |
-| The town around | The real town grows by itself (P22); its **roads** and **transport** carry the crowd | Roads, Transport |
+| Ready | the result's colour, translucent, with a crisp edge and its collar ring | the hint pill: "Fairway · hole 2 · $2 a m²" |
+| Dragging | as ready, along the run | the run's total by the disc: "Fairway · 64 m² · $128" |
+| No change | outline only | "already fairway" |
+| Protected | dotted outline on the kept cells | "7 cells kept: the green stays (Shift paints over)" |
+| Refused | red hatch and a ✕ at the pointer, only where it cannot go | the reason and one Fix: "The driving range: golfers hit here" |
+| Erase | dashed edge, the colour you get back | "Erase · 16 m² back to rough · no refund" |
+| Money short | the price in red | "Fairway · $3,200 · you have $2,100" |
+| Snap | a green ring; a white link dot for buildings | – |
 
-Rules that follow from the model:
-- **A hole is one thing.** You make it with New hole, click it to see one card, edit or delete it as a whole, and shape its cells. Cells
-  you paint join the hole whose corridor they are in (section 6.2).
-- **Streets connect everything.** Path ends snap to a green's and a tee's path point, to building fronts, to paths and to roads. A hole
-  with no path to the next tee shows it on its card, with a Fix.
-- **Houses face streets.** Buildings snap their front to the nearest drive or path and turn to face it; a link dot shows the join.
-- **The town is built on two grids (T109):** the town grid of 2 m tiles (one road piece) and the course's mini grid of 1 m cells (a road
-  tile split into four). Course surfaces and paths work on the mini grid; town roads on the town grid.
+- **One meaning per line style:** dotted = kept, dashed = erase, gold dashed = your land's edge, solid gold = selected.
+- **Labels near the pointer:** while a build tool is in hand, map labels and stand-in labels within 120 px of the pointer fade to 30%.
+- **Words:** toasts and refusals use the player's words ("Hole 1 built: par 4, 342 m, $31,290", not "8 painted areas, 156 props").
+- **Grids:** decision 5; nothing changes until the owner picks.
 
-## 5. Information architecture
+![the brush's states](P23-ux/v2-m7-states.webp)
 
-![m0](P23-ux/m0-ia.webp)
+### 4.10 Keys, mouse and Esc
 
-### 5.1 The rail (left), grouped
+| Input | Does | Notes |
+| --- | --- | --- |
+| V, R, J, X, C, A, P, T, U, N, Y | Select, Roads, Junctions, Bulldoze, Holes, Paint, Car park, Toll, Bus, Upgrade, Downgrade | today's keys (decision 1); a key of a locked tool shows "Unlocks with …" and does nothing |
+| WASD, arrows, right-drag, Space-drag | pan | recommended: a tap of A opens Paint, a hold pans |
+| Wheel | zoom (trackpad setting: two-finger scroll pans, pinch zooms) | |
+| 1–6 | surfaces in Holes; path kinds in Paths; road classes only when Roads is unlocked | today 1–6 arm a hidden Roads tool |
+| [ ] | size (brush, Run, the green in the wizard) | |
+| R | turn (the green, a building) | |
+| Shift (hold) | straight line; in Holes also paint over | |
+| Alt (hold) | erase for a moment (the Erase toggle is the main control: Alt is risky on Windows Chrome and Linux desktops) | |
+| Enter, double-click, right-click | build or finish what is being drawn (roads, paths, Run; New hole too with decision 8 b) | the owner's rule; Enter already builds in T102's shape step |
+| Right-click on a handle or corner | remove that bend or corner | as T102 and Paint today |
+| Ctrl+Z, Ctrl+Y | undo and redo (in the wizard: its drags first) | |
+| Esc | close the top menu or card → step back one stage → drop what is in hand → Select | today Esc flips Brush and Shape |
+| G, F, B, H, Space, , . | map grid, traffic, bottlenecks, skip to rush, pause, speed | today's |
 
-| Rail | Key | What lives there | Beginner sees | In More options |
+### 4.11 Accessibility and devices
+
+- **Text:** 13 px for body text and controls, 12 px at least for secondary lines (hints, sub-labels), 11 px only for keycaps and
+  small-caps headings (today: 10–12 px everywhere). Settings > UI scale: 90, 100, 125%.
+- **Colour never alone:** badges have icons (✓ ◔ ! 🔒); refused cells are hatched with a ✕; surfaces have marks on the swatches and the
+  chip; the palette is checked with deuteranopia, protanopia and tritanopia simulation.
+- **Keyboard:** visible focus rings (2 px gold, offset 2 px), a sensible Tab order through each panel, Enter and Space press, Esc closes
+  the top menu or card first.
+- **Motion:** only transform and opacity; press 100–150 ms, panels 180–250 ms, camera eases 400 ms at most and interruptible; the chip
+  catches up at once on a fast move; reduced motion: fades only, no breathing, no particles, camera jumps.
+- **1366 x 768:** the primary action at the top of every panel. The top bar fits one row once All tools moves to Settings (P1-B):
+  today it needs 1,346 px of the 1,342 px row and wraps, which pushes the rail down to y ≈ 150. Rail items are 52 px when the window is
+  under 800 px tall, so the nine items clear the minimap. A compact panel (icon rail 56 px, panel 300 px) is a Phase 2 option. The main
+  mockups are rendered at 1366 too (`v2-m1-start-1366.webp`, `v2-m2-new-hole-1366.webp`, `v2-m3-brush-1366.webp`).
+- **Trackpad and touch:** Settings > Controls > Trackpad (two-finger scroll pans, pinch zooms); every held key has an on-screen toggle;
+  handles are 24 px on coarse pointers; touch play (tap to preview, tap again or Build to commit) is designed for, shipped later.
+- **Empty states:** Select on empty grass shows "Click a hole, a path or a building"; Buildings with nothing affordable says what is
+  missing; a locked tool's panel says how it unlocks.
+
+### 4.12 The first ten minutes (an honest walk, with Phase 1 and 2 in)
+
+| When | The player does | Actions | What could go wrong | How v2 prevents it |
 | --- | --- | --- | --- | --- |
-| **Select** | V | Click anything: its card opens in the panel (hole, path, building, car, junction, land block) | the card; Edit shape, Move, Delete | – |
-| *Course* · **Holes** | C | New hole; shape by hand in 1 m cells; your holes | New hole; Fairway, Green, Tee; sizes 1, 2 x 2, 3 x 3, 4 x 4; Erase (hold Alt); hole badges | Fill: Brush, Box, Lasso; Stamps; Over others; Which hole; Seed or sod; Fescue, Waste; round brush; mowing stripes; collars; ground height; saved holes |
-| *Course* · **Paths** | P | Cart paths and drives, drawn like roads | Cart paths: walking, dirt; Drives: gravel; Draw / Upgrade | Trees and median variants; 45° or 90° bends; replace; don't join; downgrade |
-| *Course* · **Buildings** | B | The course's houses: they face a drive or path | Course tab: Clubhouse | Free turn; no snap; show catchments |
-| *Course* · **Landscape** | L | Trees, shrubs, flower beds, mulch and pine straw, decor ground | (after hole 1) the plant brushes | Plant picks, spacing, sizes; decor ground (today's Paint tool: plazas, paving, free shapes) |
-| *Town* · **Roads** | R | The town's roads; a Junctions tab | (when invited) Build, Upgrade | Downgrade, bends, replace, speed limits, centre lines |
-| *Town* · **Transport** | T | Car parks, shuttle routes, the pay plaza | (when invited) car parks | Rows, on-street bays, fees |
-| **Remove** | X | Removes paths, roads, buildings, trees and props | – | – |
+| 0–5 s | Reads the welcome card, clicks Build your first hole | 1 | the map is black while the ground bakes | the card waits for the ground (Phase 2, with T095) |
+| 5 s | The camera moves onto the course land; New hole is armed; a ring marks a good tee | 0 | a tee on the range plot | the range plot is marked; the ring is on the land |
+| 10 s | Clicks the tee | 1 | the green would be off screen | the camera eases out to fit |
+| 15 s | Clicks the green | 1 | – | – |
+| 20 s | Drags a bend or a width (optional) | 0–2 | Ctrl+Z undoes hole 1 | the wizard's own history |
+| 30 s | Builds | 1 | cells silently left out | the warning, hatch and count |
+| 35 s | Looks at hole 1 | 0 | brown dirt | sprouts and "growing · ready Mar 1985" |
+| 1–3 min | Buildings → Clubhouse → places it near the range's drive | 3 | no drive near the spot | the stopgap (Phase 2), the proposed drive (Phase 3) |
+| 3–10 min | Holes 2–9: New hole, tee, green, Build (x8) | 32–40 | too close, a long walk, the wrong number | the warnings and the number on the card |
 
-- Surfaces are erased with Erase in Holes (hold Alt), and a hole is deleted from its card: Remove never deletes painted ground by
-  surprise.
-- **Where today's controls go:** Course → Holes; Paths & drives → Paths; Paint → Landscape > More options (decor ground); Plants →
-  Landscape; Junctions → Roads (tab, J still jumps there); Bulldoze → Remove; Course > Buildings tab → Buildings; the top bar's Event →
-  Buildings > Tournament tab; Holes chip (move pins and markers) → the hole card's Edit shape; Land chip → View > Land for sale and the
-  land block's card; Grass → the course report's Care tab and View > Grass health; Course stats → the season card; All tools →
-  Settings > Show every tool now; Presets → Holes > More options > Saved holes (the Generated hole is replaced by New hole).
+About 40–50 actions for a nine and a clubhouse, and every failure point above has a design answer; paths between the holes wait for
+Phase 3.
 
-### 5.2 The top bar: where you are, what you have
+---
 
-- **Left:** the place name (the range's, then the town's, P22); the **season chip** ("Founding season · 3 of 9 holes", later "Club
-  Championship in 4 months") with a progress bar; **Money**.
-- Clicking the season chip opens the **season card**: the tour's needs as a checklist with Fix buttons (9 holes · car park ✓ ·
-  clubhouse ✗ [Place it]), then tabs for the course report (holes, par, length, quality, upkeep) and Care (today's Grass controls).
-- Clicking Money opens the budget, as today.
-- **Right:** pause and speed; **Next season** (today's Skip, with the same rules); **View ▾**; Settings; Help.
-- **Nothing in the top bar arms a mode.** Every report opens as a card under its chip and closes with Esc or a second click.
+## 5. Mockups (re-shot on main after #205)
 
-### 5.3 View ▾ (overlays, in any tool)
+Sources in `docs/plans/P23-ux/mockups/` (`v2-*.html`; `render.mjs` renders them; `capture-v2.mjs` re-shoots the backgrounds from a dev
+server). Today's screens (`t*.webp`) come from the same capture runs.
 
-Map grid (G) · Land for sale (block outlines with prices; click a block to buy) · Course plan (flat colours, hole numbers, playing lines,
-corridors) · Traffic (F) · Grass health · later Golfer moods. A tool may open its overlay itself and close it when it ends: New hole
-shows the other holes' corridors; a refused brush's "Buy land ▸" turns on Land for sale.
-
-### 5.4 Beginner versus unlocked versus More options
-
-Unlocks come from the course, never from stroke counts or timers. Each unlock adds a NEW badge on the rail item and one toast line.
-
-| Stage | When | The player gains |
+| v2 mockup | Shows | Today beside it |
 | --- | --- | --- |
-| 1 · Your first hole | a new range game | Select, Holes (New hole, Fairway, Green, Tee, sizes, Erase), Paths (walking and dirt cart paths, the gravel drive), Buildings (Clubhouse), Remove |
-| 2 · Founding the club | hole 1 exists (a derived hole with par > 0) | Rough, Bunker, Water; Landscape; cement slab path; pro shop and cart barn |
-| 3 · The town | invited by the tour, or 3 holes, or year 2 | Roads, Transport; Buildings > Tournament; the halfway house at 9 holes |
-| Tour levels | tier 2, 3 (`courseTierNeeded`) | paved paths and drives, avenues (shown locked with "Tour level 2") |
+| `v2-m1-start.webp` (+ `-1366`) | minute zero: welcome card, the rail with locked tools in place, the Holes panel as one button, the land lit and the range plot marked | `t01-start-today.webp` |
+| `v2-m2-new-hole.webp` (+ `-1366`) | New hole in the shape step over the real T102 ghost: the wizard card on top, checks with Fix, Seed default and Sod's cost, the money line, the camera framed | `t02-wizard-today.webp`, `t04-wizard-1366-today.webp` |
+| `v2-m3-brush.webp` (+ `-1366`) | after hole 1: badges with icons, Shape by hand with marked swatches, Brush and Run, the footprint and the disc alone, the hint pill naming the surface and hole | `t06-brush-today.webp` |
+| `v2-m4-more.webp` | More options open in sections, with My looks' editor and its live chip preview | – |
+| `v2-m5-paths.webp` | Paths as streets: Build on top, tabs, cards a metre, a cart path drawn like a road along hole 1, right-click or double-click to build | – |
+| `v2-m6-growin.webp` | readable grow-in: sprouts and "growing · ready" right after Build | `t05-growin-today.webp` |
+| `v2-m7-states.webp` | the brush's states: ready, dragging, protected, refused, erase, no change | – |
+| `v2-m8-rail-stages.webp` | the rail at stages 1, 2 and 3, locked tools in place | – |
+| `v2-m9-grid-options.webp` | decision 5's three half-grid options on the same view | – |
+| `v2-m0-model.webp` | the model: what lives where, Phase 1 against later | – |
 
-- **More options drawers exist from minute 0,** collapsed, and remember being open. They hold power, not progress.
-- Settings > **Show every tool now** opens everything (today's All tools). Old saves open with every tool, as `normalizeProgress` does.
-- The P22 first minute and guide map onto it: 1 Welcome (card) → 2 Build hole 1 (New hole) → 3 Place the clubhouse (Buildings; offers
-  "Draw a drive" if none is near) → 4 Finish nine holes → 5 The invitation → 6 The tournament → 7 Results.
+![v2-m3](P23-ux/v2-m3-brush.webp)
+![v2-m4](P23-ux/v2-m4-more.webp)
+![v2-m5](P23-ux/v2-m5-paths.webp)
+![v2-m9](P23-ux/v2-m9-grid-options.webp)
 
-### 5.5 Names: old → new
+---
 
-| Today | Proposed | Why |
-| --- | --- | --- |
-| Course (rail) | **Holes** (in the Course group) | the tool builds holes; "Course" names the whole group |
-| + New hole (selects a number) | **New hole** (the wizard) | the words should do what they say |
-| Rub out | **Erase** | the common word |
-| Method: Brush / Shape | (gone) Fill: Brush / Box / Lasso in More options | one way for beginners |
-| Pieces / Stamps | **Stamps** (More options) | ready-made shapes stamped in cells |
-| Presets, Generated | **Saved holes** (More options); New hole replaces Generated | plain words |
-| Paths & drives | **Paths** (tabs: Cart paths, Drives) | short; the tabs carry the detail |
-| Build route ⏎ | **Build · $384** | the price on the button |
-| Bulldoze | **Remove** | plain |
-| Plants; Paint | **Landscape**; decor ground under Landscape | one place for decoration |
-| Event (top bar) | Buildings > **Tournament** | tents and stands are buildings |
-| Tier T1 | **Tour level 1 · Club Championship** | the event name first |
-| Skip to tournament / season end | **Next season** (the tooltip says what happens) | one label |
-| $8 / 2 m; tiles | **$4 a metre**; metres | one unit per kind: metres for paths, m² for surfaces |
+## 6. Tickets
 
-## 6. The core flows (clicks counted)
+U-numbers are placeholders; the lead gives T-numbers when posting. **G** changes gameplay or rules, **L** is layout and words. Every
+ticket's checks include `npm run typecheck`, its own tests, and screenshots at 1600 x 900 and 1366 x 768 compared with the mockup named;
+the lead runs the full suite and the bench, one heavy run at a time.
 
-Counts start with the tool closed and end when the thing is built. "Today" is main at `223849a`.
+### 6.1 Phase 1: the 80/20 (no owner decision, no unposted ticket)
 
-### 6.1 Build a hole as a park (New hole, T102) — mockup m2
+**Wave A: start now, in parallel.**
 
-1. Holes (C), then **New hole** (N): the pointer carries a tee ghost; the other holes' corridors show faintly; near the last green
-   the tee snaps to a sensible spot and the label says "Tee · hole 2 · 85 m walk from hole 1".
-2. **Click the tee.** The pointer now carries the green; a live ghost runs from the tee: centre line, fairway with real widths, green,
-   tee, rough corridor, yardage ticks every 50 m, and at the pointer "Hole 2 · par 4 · 357 m · $31,600". Par snaps at 230 m and 430 m
-   with a small pop.
-3. **Click the green.** The plan stays open with handles: drag the dashed line to bend it (a "+" on the line adds a bend, up to 3),
-   drag ◆ to widen or narrow the fairway there, drag T or the flag to move them, [ ] green size, R green shape. The panel shows the hole
-   card: par, length, the price split (fairway, green, tee, rough and collars), Seed or Sod with both prices and the ready month, and
-   the checks (on your land, clear of roads, 60 m from other holes, the walk from the last green) with a Fix where one applies.
-4. **Build** (Enter, or "Build · $31,600"). The cells fill as a ripple from tee to green; the hole badge pops; one undo step.
-5. Esc steps back: the green, then the tee, then out of New hole. Nothing is paid until Build.
+- **P1-A Modes never steal a click; Esc closes menus first** (G, small).
+  - **Files:** `src/game/engine.ts` (pointerDown, setTool, keyDown), `src/App.tsx` (the gear menu, the right-hand panels),
+    `src/game/paint-tool.ts` (key(): the brush's Esc only).
+  - **Behaviour:** the Grass panel, Land, Event and Holes switches no longer take clicks from a build tool: opening one switches to
+    Select, and picking any build tool closes it. Esc closes the topmost menu or card (gear, Event, Grass, Course stats) before it
+    reaches the tool. In the brush, Esc drops what is in hand (no Brush–Shape flip), then a second Esc leaves to Select. The Land chip is
+    hidden in range starts until the land fix is in.
+  - **Checks:** tests that `setTool('course')` clears `grassPanel`, `landMode`, `holesTool`, `eventTool`, and the Esc ladder; a browser
+    check that the brush paints with the Grass panel just closed.
+  - **Depends on:** nothing. Small overlap with #206 in App.tsx (the gear menu): rebase.
+- **P1-B Unlocks from the course, never stranded** (G, small, pure).
+  - **Files:** `src/game/ext/progressive-ui/index.ts`, `progress.ts`, `guide.ts`; `src/game/engine.ts` (playerProgressFacts passes holes
+    with par and `seasonsDone()`); `src/App.tsx` (the All tools chip becomes a gear-menu checkbox); `tests/ext-progressive-ui*.test.ts`.
+  - **Behaviour:** the stage table of 4.2; NEW badges (seen ids in `golf.progress`); the state lists both visible and locked tools (for
+    the in-place rail); the stuck-player fallback; no 10-minute rule; All tools becomes Settings > Show every tool now (which also lets
+    the top bar fit one row at 1366 px).
+  - **Checks:** table tests for every row, a founding-season player with no hole reaching stage 2, old saves with every tool.
+  - **Depends on:** nothing; a few lines of App.tsx's gear menu overlap P1-A (rebase whichever lands second).
+- **P1-C The chip says what it lays** (L, small; follows T110).
+  - **Files:** `src/game/ext/course-cursor/index.ts`, `tex.ts`; `src/game/engine.ts` (the toasts' words); `src/App.tsx` (the hint pill
+    text for the Course tool).
+  - **Behaviour:** a mark per surface on the disc; no steady label, only the drag total, a refusal with its reason, or money short;
+    the "no change" state; refused cells hatched with a ✕; the hint pill names the surface, the hole and the price a m².
+  - **Checks:** `tests/ext-course-cursor.test.ts` (labels by state, marks by surface); dpr 1 and 2 screenshots at 17% and 30%; a
+    colour-blindness simulation of the six discs.
+  - **Depends on:** the range-plot message fix (it touches the same reason strings).
 
-| | Today | Proposed |
-| --- | --- | --- |
-| A straight par 4 | 40–70 actions with the brush (estimate), or Presets > Generated > click: 3 clicks, random, no control | **4 clicks** (New hole, tee, green, Build) + opening the tool |
-| A dogleg with a wider landing zone | not possible in one tool (doglegs read "off the course", P21 1.1) | **6–7**: + drag the bend, + drag a width handle |
+**Wave B: when wave A's files are in.**
 
-### 6.2 Shape by hand (the cell brush, T108 + T109) — mockups m3, m8
+- **P1-D New hole, finished** (G, medium; a T102 follow-up).
+  - **Files:** `src/game/paint-tool.ts` (plan mode: planKey, planDown), `src/game/ext/hole-wizard/index.ts` (history, checks, numbers),
+    `ext/hole-wizard/draw.ts` (the warning hatch, constant-size handles), `src/ui/course/HoleWizard.tsx`, `src/game/engine.ts` (the camera
+    fit), `tests/ext-hole-wizard.test.ts`.
+  - **Behaviour:** a new range game opens Holes with New hole armed; the camera framing of 4.4; the wizard's own undo; the Esc ladder; the
+    check table (blocks, warnings, Fix); Seed default and Sod's season cost; the money line; the number picker.
+  - **Checks:** tests (history, every check row, Esc stages, numbers); a browser walk: tee, green, a drag, Ctrl+Z, Build, at 1600 and 1366.
+  - **Depends on:** P1-A (engine.ts and paint-tool.ts key handling).
+- **P1-E The Holes panel and the Course group on the rail** (L, medium; replaces T103's layout, keeps its motion).
+  - **Files:** `src/App.tsx` (GROUPS: Holes, Paths, Buildings as rail items via `uiTool`, locked tools in place, NEW badges, the
+    status line), `src/ui/course/CoursePanel.tsx`, `HoleStrip.tsx` (badges with icons), `HoleWizard.tsx` (on top), `src/index.css` (13 px,
+    focus rings, pills, marked swatches), `src/PaintPanel.tsx` (plain texture names in StyleEditor; it stays where it is until
+    decision 3).
+  - **Behaviour:** sections 4.2 and 4.3; keys unchanged; rail items 52 px under 800 px tall; text sizes of 4.11.
+  - **Checks:** screenshots against v2-m1, m3, m4, m8 at both sizes (the top bar on one row at 1366 x 768); a test that stage 1 renders
+    New hole only.
+  - **Depends on:** P1-A (App.tsx), P1-B (the visible and locked lists).
+- **P1-F Readable grow-in** (G, small).
+  - **Files:** `src/game/ext/course-fx/index.ts` (growMask starts at a quarter grass), its test, `src/game/engine.ts` (re-send growing
+    chunks once on load so old saves pick it up).
+  - **Behaviour:** section 4.6.
+  - **Checks:** the course-fx tests; screenshots of a hole just built at 8, 11, 17 and 30%.
+  - **Depends on:** the grow-in-across-zooms fix in progress (same code path).
+- **P1-G Run: a road-like strip of cells** (G, medium).
+  - **Files:** `src/game/paint-tool.ts` (a `run` mode on the course grid), `src/game/ext/course-cursor/index.ts` (the run's footprint),
+    `src/ui/course/CoursePanel.tsx` (Brush | Run), tests.
+  - **Behaviour:** section 4.5; one undo step per run; price as the brush.
+  - **Checks:** tests (a straight run of 40 m by 2 cells lays 80 cells; a bend joins without gaps; Shift keeps a leg straight); a bench
+    case (a 200 m run under 4 ms main thread).
+  - **Depends on:** P1-C (course-cursor), P1-E (the panel row).
 
-1. In Holes, press **1–6** or click a swatch (Fairway, Green, Tee; Rough, Bunker, Water from stage 2). Picking a swatch arms the brush:
-   there is no Method row.
-2. Pick a size (1, 2 x 2, 3 x 3, 4 x 4; [ ] keys). The footprint is the exact cells on the 1 m half grid; the chip beside the pointer
-   reads "Bunker · 4 m² · $16" and, on a second line, "hole 1 · sand: no grow-in".
-3. **Click** paints the footprint; **drag** paints a gap-free run; the run's total shows at the pointer while dragging.
-4. **Hold Alt** to erase (cells go back to rough, then to grass); **hold Shift** to paint over other surfaces (by default a stroke slides
-   past higher surfaces, so a fairway stroke never eats the green).
-5. **Esc** drops the brush (the panel stays, nothing armed); Esc again leaves to Select.
+### 6.2 Phase 2: after Phase 1, T095 and the owner's answers
 
-**Which hole a cell joins:** the hole whose corridor (the plan's line, else the derived tee-to-pin line, within 30 m) holds it; between
-two corridors the nearer line; outside all corridors no hole (practice or decoration). More options > Which hole can lock it to one hole
-for overlaps. The current-hole picker goes.
+- **P2-1 The owner's decisions applied:** road-style New hole (8b), the chosen half grid (5), one Streets tool (7a), the A tap and hold
+  (1), My looks' place (3).
+- **P2-2 The top bar and the season card** (L): the season chip with the founding checklist and Fix buttons; Course stats move into its
+  card; the duplicate round pill goes and its founding sentence is fixed. Files: App.tsx, a new `ui/golf/SeasonCard.tsx`.
+- **P2-3 The welcome card and guide anchors** (with T095 and P06): `data-guide` anchors on controls, engine events (hole built,
+  clubhouse placed), the card waiting for the ground.
+- **P2-4 The hole card** (L): Select a hole: par, lengths, grow-in, areas, checks with Fix, pin and marker drags (no re-plan), Edit hole,
+  Delete; renumber by dragging badges. Existing data only.
+- **P2-5 Greenkeeping** (G): today's Grass panel as a tool on the rail (unlocks with the first grown hole); Overseed and Re-turf names.
+- **P2-6 Land for sale** (G, after the land fix): an overlay; a block click opens a card with Buy; the brush's refusal offers it.
+- **P2-7 Accessibility and devices** (L): UI scale, focus rings everywhere, colour checks, the compact panel, the trackpad setting,
+  24 px handles on coarse pointers, styled tooltips with keys and reasons.
+- **P2-8 The keymap** (behaviour): 1–6 and locked tools, the A tap and hold (if decided), Help > Keys.
+- **P2-9 The clubhouse stopgap**: "Draw a drive", then back to the clubhouse armed.
+- **P2-10 Ghost extras** (G): trees-cleared tint and count, the collar ring in the footprint, label fading near the pointer.
 
-| | Today | Proposed |
-| --- | --- | --- |
-| Add a bunker by a landing zone (stage 1 player) | not possible until 3 strokes unlock stage 2; then pick hole, Bunker, size, dabs | 5 (key) · size · 2–4 dabs |
-| Fix a ragged fairway edge | select the right hole first, else the cells go to another hole | key 1 · drag |
+### 6.3 Phase 3: after T068, T069b and T070
 
-### 6.3 Lay cart paths and drives like streets (P19, T070) — mockup m5
+- **P3-1 Streets features:** path points on greens and tees, "Path after Build", cart crossings, the fairway-crossing warning.
+- **P3-2 Buildings:** structures snap to drives and paths (T069b), the proposed drive, the Tournament tab with rent or buy.
 
-1. **Paths (P).** Cart paths is the default tab, Dirt the default kind; Drives is the other tab (the gravel drive from the start).
-2. **Click the start.** Points snap (shown by green rings) to a green's or tee's path point, building fronts, paths, roads and the half
-   grid; Shift keeps a straight run; Q switches 90° or 45° bends (in More options).
-3. **Click each bend; double-click** the end (or Enter). The route is a ghost with its length and price at the pointer:
-   "96 m of dirt path · $384".
-4. A path across a road gets a cart crossing, never a junction (P19).
-5. **Upgrade** (U, the Draw / Upgrade switch) steps a path up its ladder where you click; you pay the difference.
+### 6.4 Phase 4: spikes and later
 
-| | Today | Proposed |
-| --- | --- | --- |
-| A path from a green to the next tee | Course, Paths & drives, card, 2+ clicks, Build route: **6** | Paths, 2 clicks with a double-click: **3**; or the wizard's "Path after Build" chip: **1** + check |
-| A drive to the clubhouse spot | Course, Paths & drives, open Course drives, card, points, Build: **7** | Paths, Drives, points: **4** |
+- **Undo journal** (spike): one chronological history across tools, refund rules, dependencies.
+- **Blueprint mode:** lay out holes for free, see the total and the land, build as money allows; blueprint holes block nothing and are
+  drawn in a dashed blue, and they are saved.
+- **The course's homes** (decision 9), **moving a whole hole**, **touch play**, a click-through prototype of New hole and the brush.
 
-### 6.4 Place course buildings (P19 T069b, P22 T089) — mockup m6
+**Collisions to watch:** P1-A and P1-E both touch App.tsx (land P1-A first); P1-D and P1-G both touch paint-tool.ts (P1-D first); #206
+touches App.tsx's gear menu; the three bug fixes in progress touch the range-plot message (P1-C) and the grow-in path (P1-F).
 
-1. **Buildings (B)**, then the card (with its picture and price). The ghost follows the pointer as the building's picture.
-2. Near a drive or path (12 m), its **front snaps to the verge and it turns to face it;** a white link dot marks the join.
-3. **Click** builds it. R turns it when nothing is near; Esc stops.
-4. Refused: the footprint turns red with the reason ("Needs a drive within 12 m", "On hole 2's corridor", "Off your land") and a Fix
-   ("Draw a drive" opens Paths > Drives starting at the nearest road; "Buy land ▸" turns on Land for sale).
+---
 
-Today: Course, Buildings tab, click = 3 (no picture, no fix when there is no drive). Proposed: B, card, click = **3**, with the fix.
+## 7. Risks and open questions (v2's own doubts)
 
-### 6.5 Edit, move, delete, undo
+1. **Sprouts from day one** are friendlier than bare dirt but less literal: a hole seeded today shows a quarter grass. If the owner
+   wants bare earth first, keep the sprouts only while the Holes tool is in hand.
+2. **Road-style holes (decision 8 b)** turn the simplest straight hole into "click the tee, double-click the green". The hint must say
+   so, and a second click on the same spot should finish.
+3. **The automatic current hole** can still surprise: a stroke that starts on hole 2's rough paints for hole 2. The hint pill shows the
+   hole before the click; is that enough?
+4. **Locked tools shown in place** add four dimmed items at minute zero; I judge the fixed positions worth it.
+5. **Camera framing** moves the view without the player asking; it must be short, interruptible and never fight a drag.
+6. **Run** may overlap with Box and Lasso; if players never use it, fold it back.
+7. **Phase 1's App.tsx work** (P1-A, P1-E) runs next to #206; small but real merge work for the lead.
 
-- **Edit a hole's shape:** Select (V), click the hole, Edit shape: the wizard's handles return (tee, green, bends, widths, pin and
-  markers); Enter applies (re-plans only the cells that differ; hand-painted bunkers and water stay, P21 3.3). **4 clicks** + drags.
-- **Move a building:** Select, click it, Move, click the new spot (it snaps). **4.** Moving a whole hole is a later ticket.
-- **Delete:** Select, click, Delete (the button asks once, inline: "Click again to delete hole 2"). **4.** Or Remove (X) and click
-  (paths, buildings, trees): **2**.
-- **Undo:** Ctrl+Z, or the panel's ↶ whose tooltip names the action ("Undo: Fairway, 60 m²"). The goal (U18): every build action in
-  every tool is one undo step, and refunds follow what is undone. Today only the Course tool has undo.
+---
 
-### 6.6 Inspect a hole — mockup m7
+## 8. Appendix: research (from v1, kept)
 
-Select (V), click anywhere on the hole: the rest of the map dims and the hole's card opens in the panel: name, par, length (m and
-yd), grow-in (ready month and a bar), quality with its reasons, checks with Fix buttons, money (built for, upkeep, this season's golfers
-and green fees), and Edit shape · Move · Delete. **2 clicks.** Today: a hole chip shows par, length and a checklist; quality and money
-are in the top bar's Course stats (stage 3 only), so 2–3 clicks across two panels.
+**Principles, and the rule each gives us:** progressive disclosure (two levels, a labelled way in), Hick's law (few unfamiliar choices
+for beginners, a fixed order), Fitts's law (big labelled targets, previews beside the pointer, never on it), recognition over recall
+(icons with words, swatches of the real look), direct manipulation (handles on the map, live re-plans), feedforward (the ghost and price
+before the click), error prevention and undo (constrain, warn with a Fix, undo every step), consistency (one gesture per meaning),
+modes (one tool in hand, held keys for alternates, nothing steals clicks), onboarding by doing (guided steps at the moment of need),
+motion (short, transform and opacity, reduced motion respected), grouping and plain words.
 
-### 6.7 Buy land
+**Games:** SimGolf (the two-click hole), PGA Tour 2K's designer (tee, landing, green; handles later; auto content experts strip out),
+Two Point (a checklist that keeps Build disabled), Cities: Skylines I and II (two-click roads, previews of what a road creates,
+milestone unlocks, the cost of no undo), Planet Coaster and Planet Zoo (a tool per job, brushes, habitats with validity rules; tabs
+inside tabs), Parkitect (grid paths, risky results opt-in, no undo), RollerCoaster Tycoon (prices first, refusals with a reason),
+Townscaper and Islanders (one action, a good result, the score before you place), Anno (snap and face the road, roads by a fixed rule),
+Tiny Glade and Manor Lords (things that decorate themselves, the link dot).
 
-View ▾ > Land for sale: buyable blocks show their price; click one, its card says "Buy this block · $X" (2 + 2 clicks). From a refused
-brush, the chip's "Buy land ▸" turns the overlay on directly (1 + 2). Today: Land chip, then any click buys while the chip is on.
-
-### 6.8 The first minute (P22 2.8, revised) — mockup m1
-
-| Time | The player sees | The player does |
-| --- | --- | --- |
-| 0 s | The range on Route 9; the course land lit gold, the range plot hatched, the road side dimmed; a welcome card with three steps; the rail shows four tools and Remove | clicks **Build your first hole** |
-| 3 s | The camera eases onto the course land; New hole is armed; a pulsing ring at a suggested tee spot (P06 `newHoleSpot`) | clicks a tee, then a green |
-| 20–40 s | The live plan: par, length, price; handles | drags the bend (optional), presses Build |
-| ~45 s | Hole 1 ripples in as dirt; the badge pops; the guide moves to "Place the clubhouse" | the first street rolls out across the road (P22) |
-
-## 7. Feedback and previews
-
-### 7.1 One ghost language for every tool
-
-| State | Look | Words at the pointer |
-| --- | --- | --- |
-| Ready | translucent fill in the result's own colour + a crisp 1.5–2 device-px edge on the cell or footprint edges | what, how much, the price: "Fairway · 16 m² · $32" |
-| Slides past | the cells it will not change: no fill, a faint dashed outline | "7 cells kept: the bunker stays (Shift paints over)" |
-| Partly refused | muted red only on the cells or segments that cannot go | the reason and one Fix: "8 cells off your land · Buy land ▸" |
-| Erase (Alt) | dashed edge, the colour of what you get back | "Erase · 16 m² back to rough · free" |
-| Not enough money | the price turns red; nothing else changes | "Fairway · $3,200 · you have $2,100" |
-| Planned (wizard, blueprint) | sky-blue dashed outline | "Hole 2 tee · planned" |
-| Snap | a green ring on the target; a white link dot for buildings | "Starts at hole 1's green" |
-
-- Price = only what changes (P21 3.5): cells that change, path metres, the building. The panel's primary button repeats it.
-- Refusals are a headline plus the reason, in the game's words, never a bare "cannot place" (the RollerCoaster Tycoon pattern).
-
-### 7.2 The grids
-
-- **The 2 m map grid** (T100, G): off by default in the shipped game, on in dev; a Settings switch and G. Recommendation: the owner
-  tries both and decides (T100 called it an evaluation).
-- **The 1 m half grid** shows as a **spotlight** round the pointer (radius about 8 m, fading with distance) while a cell tool is armed,
-  not over the whole view; every second line is a touch stronger (it meets the 2 m grid); hidden below 12% zoom. Snapping is always on.
-
-### 7.3 The surface chip (T108)
-
-- 40 px, lower right of the pointer, the armed surface's real photo as a little lit disc (sun upper right), with a soft shadow.
-- Its label names the action (surface, m², price) and a second line (the hole and the grow-in, or the reason and Fix). It flips left or
-  up near the screen edges, hides while panning and over panels, and never covers the footprint.
-- At 1 cell and far zoom the footprint is tiny (about 11 px across at 17%, 8 px at 12%), so the footprint's edge is drawn 2 device px
-  bright and the chip keeps its offset; below 12% zoom the cell brush pauses and the chip says "Zoom in to paint cells".
-
-### 7.4 Motion (P21 3.5 kept, with limits)
-
-- Only `transform` and `opacity`; press feedback 100–150 ms (scale .94 → 1 with a `linear()` spring); panels and drawers 180–250 ms;
-  a hole badge pops once when the hole turns valid; the wizard's build ripple 600 ms; a light squash per click, nothing per dab beyond it.
-- `prefers-reduced-motion: reduce` or Settings > Effects and motion off: fades only, no particles, no scaling, camera jumps instead of
-  flying.
-
-## 8. Layout and visual design
-
-### 8.1 Where things sit (1600 x 900; scales down to 1366 x 768)
-
-- **Rail:** left, 82 px wide, under the top bar; icons 28 px with labels always visible; group labels (Course, Town) in small caps;
-  the key letter in the corner; a gold NEW badge on unlock.
-- **Tool panel:** 336 px, beside the rail, top aligned, at most the viewport height less the top bar and 16 px; scrolls inside.
-- **The right side stays map,** except cards that open under their top-bar chip (season, money, View) and close with Esc.
-- **Bottom centre:** one hint pill: the armed tool's keys as keycaps, or the guide's step. **Bottom left:** the minimap.
-- **Toasts:** top centre, under the top bar, 4 s.
-
-### 8.2 Panel anatomy (the same in every tool)
-
-1. Header: icon badge, title (Georgia), a one-line purpose ("Each hole is a park: build it, then shape it"), ↶ ↷.
-2. The primary action as a gold pill with its key (New hole · N; Build · $X).
-3. The beginner controls (swatches, sizes, cards).
-4. The tool's objects (Your holes: badges for the holes that exist and a "+"; their colour says planned, growing, ready or a problem).
-5. **More options ▸** with a short list of what is inside ("stamps · fill tools · seed or sod · height"), collapsed by default and
-   remembered.
-
-### 8.3 Keys
-
-| Key | Does | Today |
-| --- | --- | --- |
-| V C P B L R T X | Select, Holes, Paths, Buildings, Landscape, Roads, Transport, Remove | P car park, B bottlenecks, L lanes (debug), T toll, X bulldoze |
-| N | New hole (in Holes) | N upgrade |
-| 1–6 | surfaces (Holes); path kinds (Paths) | 1–6 road classes |
-| [ ] | size | same |
-| Alt (hold) / Shift (hold) | erase / paint over; straight run | Alt erase |
-| U | upgrade (Paths, Roads) | U bus route |
-| J | the Junctions tab of Roads | J junctions |
-| Enter, Esc, Ctrl+Z, Ctrl+Y | build, step back, undo, redo | Esc ping-pongs |
-| G, F, Space, , . | map grid, traffic, pause, speed | same |
-
-The debug keys (lanes, lots, access) move behind Developer (F3); bottlenecks to View. Help gets a Keys page.
-
-### 8.4 The look
-
-Rounded glass panels (18 px), pill buttons, one gold primary action per panel (`#ffcd52` → `#f0a91e`, dark text), round droplet swatches
-of the real photos, Georgia titles, small-caps section labels, the owner's gold icons. Colours with one meaning each: green ready, amber
-growing or attention, red refused, sky blue planned. One panel style for every panel (the Event and Grass panels join it).
-
-## 9. Mockups
-
-Static HTML in `docs/plans/P23-ux/mockups/` (sources; backgrounds are the real game with the UI hidden, overlays drawn on the real iso
-grid from the saved camera), rendered to WebP here by `render.mjs`:
-
-| File | State |
-| --- | --- |
-| `P23-ux/m0-ia.webp` | the information architecture |
-| `P23-ux/m1-start.webp` | the first minute: welcome card, the stage-1 rail and Holes panel, the course land lit |
-| `P23-ux/m2-wizard.webp` | New hole mid-build: the live plan, handles, yardage, the walk, the hole card with the price split, Seed or Sod, checks |
-| `P23-ux/m3-brush.webp` | shape by hand: the swatches, the 2 x 2 footprint on the half-grid spotlight, the chip with its label |
-| `P23-ux/m4-advanced.webp` | More options open: Fill Box in action, stamps, planting, stripes, collars, height |
-| `P23-ux/m5-paths.webp` | Paths: cart path cards, a route from a green to a planned tee, snap rings, the price at the pointer |
-| `P23-ux/m6-buildings.webp` | Buildings: the clubhouse snapping its front to a drive, the link dot, picture cards, Tournament tab |
-| `P23-ux/m7-inspect.webp` | Select a hole: the map dims, the hole card with grow-in, quality, checks with Fix, money, actions |
-| `P23-ux/m8-states.webp` | the brush's four states: ready, slides past, partly refused, erase |
-
-![m4](P23-ux/m4-advanced.webp)
-![m6](P23-ux/m6-buildings.webp)
-![m7](P23-ux/m7-inspect.webp)
-![m8](P23-ux/m8-states.webp)
-
-## 10. Risks, doubts and open questions (for the critic)
-
-1. **Inferring a cell's hole from where it is** (6.2) changes how holes are tagged. Overlapping corridors, a double green and a new
-   hand-made hole (a tee and a green painted with no wizard) need rules; I propose "nearest line, lock in More options", and for a
-   hand-made tee and green a suggestion "Make this hole 3?". Doubt: is removing the current hole too big a change before T102 lands?
-2. **The beginner flow depends on T102** (the wizard), which is not built. Until it lands, stage 1 is the cell brush plus the Generated
-   hole renamed "Quick hole"; the welcome card's "about a minute" waits for T102.
-3. **Re-keying** (P, B, N, T, U, L) breaks the owner's muscle memory and the dev keys. Recommendation: follow the rail's letters and add a
-   Keys page; the critic may prefer keeping today's keys.
-4. **Renaming Course to Holes:** the owner says "the Course tool". The group label keeps "Course"; the item says what it builds.
-5. **Paint leaves the rail** for Landscape > More options. The owner used Paint for plazas and road colours; one extra click for him.
-6. **One undo for every build tool** is engine-wide work (Parkitect's developer said undo doubles the code of every action). Phase it:
-   Ctrl+Z routes to the active tool's own stack first; a shared journal later.
-7. **Moving a whole hole** (cells and plan, with collisions) is valuable and risky: left as a later ticket.
-8. **The panel is 336 px:** with the rail it takes 32% of a 1366 px screen. A compact panel (collapse to the rail) may be needed.
-9. **The flag drawn as a house** is an art-pipeline rule (`newart.ts`): exempting golf markers is a judgement call for the art side; I
-   treat it as a bug.
-10. **Season chip as the door to the course report:** status chips are not always clicked; the Holes panel also links "Course report".
-11. **The always-on map grid** was the owner's experiment (T100); I recommend off by default with the half-grid spotlight, and the owner
-    decides after trying.
-12. **Out of scope here:** the tournament-day UI (the live surge, results), touch screens, gamepads, localisation (P17), audio (P13).
-13. **The 1-cell default (the owner's T109 rule)** makes shaping precise but slow for big touch-ups; 2 x 2 might be the better default
-    once New hole exists. Kept as the owner asked.
-14. **Unverified numbers:** the 40–70 actions for a hand-built hole and the clicks in "Today" columns are my measurements and estimates
-    from the scripted audit, not a user test. A 3-person hallway test of m1–m3 as click-through prototypes would check them.
-
-## 11. Draft tickets
-
-**G** changes gameplay or rules; **L** is layout and words only. U-numbers are placeholders: the lead gives them T-numbers when they are
-posted. Checks for every ticket: `npm run typecheck`, its own tests, and screenshots at 30% and 17% compared with the mockup named. The
-lead runs the full suite and the bench.
-
-**Quick fixes first (small, independent):**
-- **U1 Modes never hijack clicks** (G). `engine.ts` pointerDown, setTool; App.tsx chips. Land, Grass, Event and Holes no longer
-  intercept clicks for other tools: switching tools turns them off, each shows a pointer label and Esc leaves it, until U12/U13 move
-  them. Test: with Land on, `setTool('course')` clears it and a brush click paints.
-- **U2 Esc steps out** (L/behaviour). `paint-tool.ts` key(): Esc cancels the stroke or plan, then drops the armed surface, then leaves
-  to Select; no Brush–Shape ping-pong. Test: the Esc ladder.
-- **U3 The flag and markers draw as a flag and markers** (L, visible). `newart.ts`: golf pins, tee markers, carts, bag trolley and
-  benches are props, not buildings: exempt them from the building stand-in (an allow list), or draw a simple flag and marker until
-  their art exists. Check: a hole at 30% and 17% shows a flag on the green and markers on the tee.
-
-**The beginner experience (in order):**
-- **U4 The rail regrouped** (L). `App.tsx` GROUPS, `progressive-ui` ids: Select · Course (Holes, Paths, Buildings, Landscape) · Town
-  (Roads with a Junctions tab, Transport) · Remove; group labels, keys on the buttons, NEW badges; Paint under Landscape.
-- **U5 Unlocks from the course** (G, progression). `progressive-ui/index.ts`, `progress.ts`: stage 2 = a derived hole with par > 0
-  (`courseHoleViews`, not strokes / 3); stage 3 = invited or 3 holes or year 2; no 10-minute rule; the lists of 5.4; Show every tool now
-  in Settings; unlock toasts. Tests: the stage table.
-- **U6 The Holes panel** (L; supersedes T103's layout). `ui/course/CoursePanel.tsx`, `HoleStrip.tsx` → hole badges, `index.css`: the
-  anatomy of 8.2, swatches 1–6, sizes, Erase, Your holes, More options (Fill, Stamps, Over others, Which hole, Planting, Fescue and
-  Waste, round brush, stripes, collars, height, saved holes). Removes the 18-slot grid, the tabs, the Method row and the paragraph.
-  Mockups m1, m3, m4.
-- **U7 New hole as designed** (G; extends T102's spec). `paint-tool.ts` plan mode, `engine.ts`: the stepper, the hole card with the
-  price split, Seed or Sod with prices and ready month, the checks with Fix, Esc stepping back, other holes' corridors shown, the walk
-  line, par snap pop, "Build · $X". Mockup m2. After T102 or as its UI half.
-- **U8 Cells join the hole they are in** (G, RISKY: hole tagging). `paint-tool.ts` gridOpts and strokeStart, `golf/holes.ts`: the cell's
-  hole from the nearest corridor line within 30 m, else 0; Which hole lock in More options; the current-hole picker goes. Tests: beside
-  hole 1 → hole 1; between two holes → the nearer; outside → 0; a plan edit keeps them.
-- **U9 The chip names the action; the four states** (L; extends T108). `ext/course-cursor`: the two-line label, edge flipping, hide
-  while panning; slides-past cells dashed; red only on refused cells with one Fix (Buy land ▸). Tests: ext-course-cursor; mockup m8.
-- **U10 The half grid as a spotlight; the map grid off by default** (L). `ext/map-grid/layer.ts`, engine setting default. Tests:
-  ext-map-grid; bench with the grid on.
-- **U11 The Paths panel** (L). A `PathsPanel` from RoadPanel's course scope: Cart paths and Drives tabs, Draw / Upgrade, cards with
-  prices a metre, the route box, "Build · $X"; variants, bends, replace and downgrade in More options. Mockup m5.
-- **U12 Buildings with pictures and a Tournament tab** (L + small G). The Course tab cards with art; the Event catalogue moves into the
-  Tournament tab (rent or buy on each card); the clubhouse refusal's "Draw a drive" fix. Needs T069b for structures. Mockup m6.
-- **U13 Select opens a card; the hole card** (L + small G). `SelectPanel` → cards for holes (par, length, grow-in, quality reasons,
-  checks with Fix, money, Edit shape, Move, Delete), paths, buildings and land blocks (Buy). The Holes chip becomes Edit shape. Mockup m7.
-- **U14 The top bar** (L). The season chip and its card (needs with Fix, course report, Care tab), Money, time, Next season, View ▾
-  (Map grid, Land for sale, Course plan, Traffic, Grass health), Settings, Help. Removes Course, Land, Holes, Event, Grass, All tools and
-  the duplicate round pill; fixes its founding-season sentence.
-- **U15 The hint pill and the welcome** (L; with T095). The armed tool's keycaps or the guide's step; the welcome card of m1; the
-  stage-1 hint text matches what exists.
-- **U16 The panel look and motion** (L; merges T103's motion). Pills, droplet swatches, the gold primary, 18 px radius, the `linear()`
-  spring, the reduced-motion block, Settings > Effects and motion; the Event and Grass panels restyled.
-- **U17 Keys follow the rail** (behaviour). `engine.ts` keyDown: V C P B L R T X, N, U, J; debug keys behind Developer; Help > Keys.
-- **U18 One Ctrl+Z, named** (G, RISKY: engine-wide). Ctrl+Z / Ctrl+Y in every build tool, the ↶ tooltip names the action; roads,
-  paths and buildings undo their last build with its refund. Phase 1: per-tool stacks behind one key.
-- **U19 One price rule** (G, money). Saved holes, stamps and the Generated hole charge their cells like the brush (today the Generated
-  hole is free); prices in m² and metres everywhere.
-- **U20 The wizard's companions** (G; after T102 and T105). "Path after Build": a cart path pre-routed from the last green to the new
-  tee, one click; later, Move a whole hole.
-
-**Order:** U1, U2, U3 now (independent). Then U4 + U5 + U6 together (the rail, the stages and the panel are one change for the player),
-U9 + U10 (T108 follow-ups), U7 with T102, U8 after U7, U11, U12, U13, U14, U15 with T095, U16 with or instead of T103, U17, U18, U19,
-U20. **Overlaps:** U6 and U16 supersede T103's layout; U9 finishes T101's label; U7 is T102's UI; U11 uses T070; U12 needs T069b.
-
-## 12. Sources
-
-Principles:
+**Sources:**
 [Progressive Disclosure (NN/g)](https://www.nngroup.com/articles/progressive-disclosure/) ·
-[Hamburger menus and hidden navigation (NN/g)](https://www.nngroup.com/articles/hamburger-menus/) ·
 [Hick's Law (Laws of UX)](https://lawsofux.com/hicks-law/) ·
-[A predictive model of menu performance (Cockburn, Gutwin, Greenberg, CHI 2007)](https://doi.org/10.1145/1240624.1240723) ·
+[A predictive model of menu performance (Cockburn et al., CHI 2007)](https://doi.org/10.1145/1240624.1240723) ·
 [Fitts's Law (NN/g)](https://www.nngroup.com/articles/fitts-law/) ·
-[A quiz designed to give you Fitts (AskTog)](https://www.asktog.com/columns/022DesignedToGiveFitts.html) ·
 [Shift (Vogel and Baudisch, CHI 2007)](https://www.patrickbaudisch.com/projects/shift/index.html) ·
 [Recognition and recall (NN/g)](https://www.nngroup.com/articles/recognition-and-recall/) ·
-[Icon usability (NN/g)](https://www.nngroup.com/articles/icon-usability/) ·
 [Direct manipulation (NN/g)](https://www.nngroup.com/articles/direct-manipulation/) ·
-[Crossing the bridge over Norman's gulf of execution (Vermeulen et al., CHI 2013)](https://doi.org/10.1145/2470654.2466255) ·
-[Visibility of system status (NN/g)](https://www.nngroup.com/articles/visibility-system-status/) ·
-[Preventing user errors: slips (NN/g)](https://www.nngroup.com/articles/slips/) ·
-[Preventing user errors: mistakes (NN/g)](https://www.nngroup.com/articles/user-mistakes/) ·
+[Feedforward (Vermeulen et al., CHI 2013)](https://doi.org/10.1145/2470654.2466255) ·
+[Preventing user errors (NN/g)](https://www.nngroup.com/articles/slips/) ·
 [User control and freedom (NN/g)](https://www.nngroup.com/articles/user-control-and-freedom/) ·
-[Consistency and standards (NN/g)](https://www.nngroup.com/articles/consistency-and-standards/) ·
 [Modes in user interfaces (NN/g)](https://www.nngroup.com/articles/modes/) ·
-[The prevention of mode errors through sensory feedback (Sellen, Kurtenbach, Buxton 1992)](https://billbuxton.com/ModeErrors.html) ·
-[The Humane Interface (Raskin)](https://www.raskincenter.org/jef/humane-interface/) ·
+[Mode errors and sensory feedback (Sellen, Kurtenbach, Buxton 1992)](https://billbuxton.com/ModeErrors.html) ·
 [Onboarding tutorials vs contextual help (NN/g)](https://www.nngroup.com/articles/onboarding-tutorials/) ·
-[The Gamer's Brain, part 2: UX of onboarding (Hodent)](https://celiahodent.com/gamers-brain-ux-onboarding/) ·
 [The impact of tutorials on games of varying complexity (Andersen et al., CHI 2012)](https://grail.cs.washington.edu/projects/game-abtesting/chi2012/) ·
 [prefers-reduced-motion (MDN)](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion) ·
-[Understanding SC 2.3.3 Animation from interactions (W3C)](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) ·
+[WCAG 2.2 SC 2.3.3](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) ·
 [Animation duration (NN/g)](https://www.nngroup.com/articles/animation-duration/) ·
-[High-performance CSS animations (web.dev)](https://web.dev/articles/animations-guide) ·
-[Proximity (NN/g)](https://www.nngroup.com/articles/gestalt-proximity/) ·
-[Match between the system and the real world (NN/g)](https://www.nngroup.com/articles/match-system-real-world/).
-
-Games:
-[Sid Meier's SimGolf (Wikipedia)](https://en.wikipedia.org/wiki/Sid_Meier%27s_SimGolf) ·
-[SimGolf review (GameRevolution)](https://www.gamerevolution.com/review/33105-sid-meiers-simgolf-review) ·
-[PGA TOUR 2K25 course designer tips (2K)](https://pgatour.2k.com/2k25/up-your-game/course-designer/) ·
-[PGA TOUR 2K23 course designer (2K)](https://pgatour.2k.com/2k23/up-your-game/course-designer/) ·
-[PGA Tour 2K21: how to design a course (Game Rant)](https://gamerant.com/pga-2k21-design-course-guide/) ·
-[Two Point: room templates deep dive](https://community.twopointcounty.com/two-point-studios/two-point-hospital/blogs/9-room-templates-deep-dive) ·
-[Two Point Campus: creativity tools breakdown](https://www.twopointstudios.com/es/node/1888) ·
-[When we made Two Point Hospital (MCV)](https://mcvuk.com/development-news/when-we-made-two-point-hospital/) ·
-[Cities: Skylines dev diary 1: roads (Paradox)](https://forum.paradoxplaza.com/forum/threads/cities-skylines-dev-diary-1-roads.802639/) ·
-[Info views (CS wiki)](https://skylines.paradoxwikis.com/Info_views) ·
+[PGA TOUR 2K25 course designer (2K)](https://pgatour.2k.com/2k25/up-your-game/course-designer/) ·
+[Two Point room templates](https://community.twopointcounty.com/two-point-studios/two-point-hospital/blogs/9-room-templates-deep-dive) ·
+[Cities: Skylines II road tools (Paradox)](https://forum.paradoxplaza.com/forum/developer-diary/development-diary-1-road-tools.1590300/) ·
 [Milestones (CS wiki)](https://skylines.paradoxwikis.com/Milestones) ·
-[Cities: Skylines II dev diary 1: road tools (Paradox)](https://forum.paradoxplaza.com/forum/developer-diary/development-diary-1-road-tools.1590300/) ·
-[How roads became the backbone of CS2 (Game Developer)](https://www.gamedeveloper.com/design/how-colossal-order-turned-roads-into-the-backbone-of-cities-skylines-ii) ·
-["Overlapping items" (Steam, CS2)](https://steamcommunity.com/app/949230/discussions/0/3877095833473231872/) ·
 [Planet Coaster 2: building your park](https://www.planetcoaster.com/player-guides/building-your-park) ·
-[Planet Coaster 2 review (COGconnected)](https://cogconnected.com/review/planet-coaster-2-review/) ·
-[Planet Zoo: building your zoo](https://www.planetzoogame.com/help-centre/player-guides/building-your-zoo) ·
 [Parkitect devlog 130](https://www.texelraptor.com/blog/devlog-update-130) ·
-[Parkitect: undo changes? (Steam)](https://steamcommunity.com/app/453090/discussions/1/1741101364298060025) ·
 [OpenRCT2 footpaths](https://docs.openrct2.io/en/latest/playing/footpath/index.html) ·
-[OpenRCT2 UI strings](https://raw.githubusercontent.com/OpenRCT2/OpenRCT2/develop/data/language/en-GB.txt) ·
 [How Townscaper works (Game Developer)](https://gamedeveloper.com/blogs/how-townscaper-works-a-story-four-games-in-the-making) ·
-[Islanders (Wikipedia)](https://en.wikipedia.org/wiki/Islanders_(video_game)) ·
-[Strategic minimalism behind Islanders (WN Hub)](https://wnhub.io/news/analytics/item-2245) ·
-[Anno Union: UI/UX dev blog](https://www.anno-union.com/?p=9862) ·
-[Anno Union: roads and building in the grid (117)](https://www.anno-union.com/?p=20685) ·
-[Doodle designer: Tiny Glade](https://indiegames.substack.com/p/doodle-designer-tiny-glade) ·
+[Anno 117: roads and building in the grid](https://www.anno-union.com/?p=20685) ·
 [Manor Lords roads (Game8)](https://game8.co/games/Manor-Lords/archives/452353).
-Earlier golf, brush and juice research: P21 section 2.
+v1's full source list is in `P23-ux/v1/P23-UX-v1.md`.

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m7: the brush's states</title>
+<link rel="stylesheet" href="kit-v2.css"><script src="cameras-v2.js"></script><script src="mock-v2.js"></script>
+<style>
+  body { background: #101210; }
+  .crop { position: absolute; width: 520px; height: 434px; overflow: hidden; border-radius: 14px; border: 1px solid rgba(255,255,255,.14); }
+  .crop > .inner { position: absolute; width: 1600px; height: 900px; }
+  .cap { position: absolute; left: 10px; top: 10px; padding: 7px 11px; border-radius: 10px; background: rgba(14,15,12,.9); font-size: 14px; font-weight: 700; max-width: 470px; }
+  .cap small { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .mini { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: rgba(20,21,25,.94); border: 1px solid var(--line); font-size: 13px; white-space: nowrap; }
+</style></head>
+<body><div class="stage" id="s"></div>
+<script>
+const M = MOCK, S = document.getElementById('s'), C = M.cams, tee = C.tee, green = C.green;
+const dx = green.x - tee.x, dy = green.y - tee.y, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, nx = -uy, ny = ux, mid = [(tee.x + green.x) / 2, (tee.y + green.y) / 2];
+// the side of the hole that is on screen in the 30% view
+const P30 = M.iso(C['grown-30-bg']), sd = P30(mid[0] + nx * 10, mid[1] + ny * 10)[0] > 800 ? 1 : -1;
+const at = (off, s = 0) => [mid[0] + nx * off * sd + ux * s, mid[1] + ny * off * sd + uy * s];
+const block = (t, k) => { const cx = Math.round(t[0] * 2) / 2, cy = Math.round(t[1] * 2) / 2, r = []; const a = Math.floor(k / 2); for (let i = -a; i < k - a; i++) for (let j = -a; j < k - a; j++) r.push([cx * 2 + i, cy * 2 + j]); return r; };
+function crop(i, bgName, camName, centreTile, draw) {
+  const cam = C[camName], P = M.iso(cam), T = M.tileOf(cam), ctr = P(...centreTile);
+  const col = i % 3, row = Math.floor(i / 3), L0 = 8 + col * 528, T0 = 8 + row * 442;
+  const ox = Math.max(520 - 1600, Math.min(0, Math.round(260 - ctr[0]))), oy = Math.max(434 - 900, Math.min(0, Math.round(217 - ctr[1])));
+  const d = document.createElement('div'); d.className = 'crop'; d.style.left = L0 + 'px'; d.style.top = T0 + 'px';
+  d.innerHTML = `<div class="inner" style="left:${ox}px;top:${oy}px"><img class="bg" src="bg/${bgName}.webp" style="width:1600px;height:900px"><svg class="ov" style="width:1600px;height:900px"></svg></div>`;
+  S.appendChild(d);
+  const inner = d.querySelector('.inner'), svg = d.querySelector('svg');
+  draw({ P, T, svg, inner, d });
+}
+const fp = (P, cells, fill, edge, dash = '') => { const c = M.cells(P, cells); return `<path d="${c.fill}" fill="${fill}"/><path d="${c.stroke}" fill="none" stroke="${edge}" stroke-width="2" ${dash ? `stroke-dasharray="${dash}"` : ''}/>`; };
+const hatch = `<pattern id="rh" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="rgba(190,40,40,0.38)"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,190,190,0.75)" stroke-width="2"/></pattern>`;
+
+// 1 Ready: only the disc; the hint pill names the surface and hole
+crop(0, 'v2-grown-30-1600', 'grown-30-bg', at(10), ({ P, svg, inner, d }) => {
+  const cells = block(at(10), 2), p = P(...at(10));
+  M.svg(svg, M.spot(P, ...at(10), 6) + fp(P, cells, 'rgba(140,205,95,0.65)', '#f3ffe8'));
+  M.pointer(inner, p[0] - 2, p[1] - 4, { surf: 'fairway', wall: '#3d5a22' });
+  M.html(d, `<div class="cap">1 · Ready<small>The tint and a crisp edge: exactly the cells a click paints. No words at the pointer.</small></div><div class="mini">Fairway · hole 1 · $2 a m²</div>`);
+});
+// 2 Dragging: the run so far and its total, by the disc
+crop(1, 'v2-grown-30-1600', 'grown-30-bg', at(10, -4), ({ P, svg, inner, d }) => {
+  const cells = []; for (let s = -12; s <= 3; s += 0.5) cells.push(...block(at(10, s), 2));
+  const uniq = [...new Map(cells.map(c => [c.join(','), c])).values()], p = P(...at(10, 3));
+  M.svg(svg, M.spot(P, ...at(10, 3), 6) + fp(P, uniq, 'rgba(140,205,95,0.62)', '#f3ffe8'));
+  M.pointer(inner, p[0] - 2, p[1] - 4, { surf: 'fairway', wall: '#3d5a22', text: `Fairway · ${uniq.length} m² · $${uniq.length * 2}` });
+  M.html(d, `<div class="cap">2 · Dragging<small>The run so far and its total ride beside the disc.</small></div>`);
+});
+// 3 Protected: cells on the green are kept (dotted), the rest are laid; the words go to the hint pill
+// the green's outline on screen in the 30% green view (an ellipse fitted to the capture), and a footprint that straddles its edge
+const Pg = M.iso(C['green-30-bg']), g0 = Pg(green.x, green.y);
+const onGreenS = (s) => ((s[0] - (g0[0] + 5)) / 195) ** 2 + ((s[1] - (g0[1] + 15)) / 110) ** 2 < 1;
+let gt = [green.x + 8, green.y];
+for (let off = 4; off <= 14; off += 0.5) { const t = [green.x + off, green.y], cs = block(t, 4), k = cs.filter(([i, j]) => onGreenS(Pg(i / 2 + 0.25, j / 2 + 0.25))).length; if (k >= 5 && k <= 9) { gt = t; break; } }
+crop(2, 'v2-green-30-1600', 'green-30-bg', gt, ({ P, svg, inner, d }) => {
+  const cells = block(gt, 4);
+  const onGreen = ([i, j]) => onGreenS(P(i / 2 + 0.25, j / 2 + 0.25));
+  const kept = cells.filter(onGreen), laid = cells.filter(c => !onGreen(c)), p = P(...gt);
+  M.svg(svg, M.spot(P, ...gt, 6) + fp(P, laid, 'rgba(140,205,95,0.62)', '#f3ffe8') + (kept.length ? fp(P, kept, 'rgba(0,0,0,0.12)', 'rgba(255,255,255,0.85)', '2 3') : ''));
+  M.pointer(inner, p[0] - 2, p[1] - 4, { surf: 'fairway', wall: '#3d5a22' });
+  M.html(d, `<div class="cap">3 · Protected<small>Dotted: the cells a click keeps (the green). Shift paints over.</small></div><div class="mini">${kept.length} cells kept: the green stays · <span class="kc">Shift</span> paints over</div>`);
+});
+// 4 Refused: red hatch and ✕ only where it cannot go, with the reason and a fix, by the disc
+const st = C.state, f = [st.range.x, st.range.y, st.range.w, st.range.h], back = 150 - 24, d0 = st.dir;
+const plot = d0 === 2 ? [f[0], f[1], 70, 150] : d0 === 0 ? [f[0], f[1] - back, 70, 150] : d0 === 1 ? [f[0], f[1], 150, 70] : [f[0] - back, f[1], 150, 70];
+const inPlot = (x, y) => x >= plot[0] && x < plot[0] + plot[2] && y >= plot[1] && y < plot[1] + plot[3];
+const edgeT = [plot[0] + plot[2], plot[1] + 24];
+crop(3, 'v2-start-1600', 'start-bg', edgeT, ({ P, svg, inner, d }) => {
+  const cells = block(edgeT, 4), bad = cells.filter(([i, j]) => inPlot(i / 2 + 0.25, j / 2 + 0.25)), ok = cells.filter(([i, j]) => !inPlot(i / 2 + 0.25, j / 2 + 0.25)), p = P(...edgeT);
+  M.svg(svg, `<defs>${hatch}</defs>` + `<path d="${M.line(P, [[plot[0] + plot[2], plot[1]], [plot[0] + plot[2], plot[1] + plot[3]]])}" stroke="rgba(210,225,240,0.9)" stroke-width="2.5" stroke-dasharray="8 6" fill="none"/>` + M.spot(P, ...edgeT, 6) + fp(P, ok, 'rgba(140,205,95,0.62)', '#f3ffe8') + fp(P, bad, 'url(#rh)', '#fca5a5'));
+  M.html(inner, `<div style="position:absolute;left:${p[0] - 34}px;top:${p[1] - 12}px;width:22px;height:22px;border-radius:50%;background:#b91c1c;color:#fff;font-weight:900;font-size:14px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.5)">✕</div>`);
+  M.pointer(inner, p[0] - 2, p[1] - 4, { surf: 'fairway', wall: '#3d5a22', text: `${bad.length} cells: the driving range`, l2: 'golfers hit here · the rest is laid', bad: true });
+  M.html(d, `<div class="cap">4 · Refused<small>Red hatch and a ✕ only on the cells that cannot go, with the reason.</small></div>`);
+});
+// 5 Erase: a dashed edge in the colour you get back; the words go to the hint pill
+crop(4, 'v2-grown-30-1600', 'grown-30-bg', at(7), ({ P, svg, inner, d }) => {
+  const cells = block(at(7), 2), p = P(...at(7));
+  M.svg(svg, M.spot(P, ...at(7), 6) + fp(P, cells, 'rgba(150,130,80,0.7)', '#ffe7b8', '6 4'));
+  M.pointer(inner, p[0] - 2, p[1] - 4, { surf: 'rough', wall: '#5b4a32' });
+  M.html(d, `<div class="cap">5 · Erase<small>A dashed edge, in the colour you get back (fairway → rough).</small></div><div class="mini">Erase · 4 m² back to rough · no refund</div>`);
+});
+// 6 No change: outline only
+crop(5, 'v2-grown-30-1600', 'grown-30-bg', at(3), ({ P, svg, inner, d }) => {
+  const cells = block(at(3), 2), p = P(...at(3));
+  M.svg(svg, M.spot(P, ...at(3), 6) + fp(P, cells, 'rgba(0,0,0,0)', 'rgba(255,255,255,0.9)'));
+  M.pointer(inner, p[0] - 2, p[1] - 4, { surf: 'fairway', wall: '#3d5a22' });
+  M.html(d, `<div class="cap">6 · No change<small>Outline only, nothing to pay: the cells are fairway already.</small></div><div class="mini">already fairway · $0</div>`);
+});
+M.html(S, `<div class="title-strip">P23 v2 · m7 the brush's states (P1-C) · 30% zoom</div>`);
+</script>
+</body></html>
