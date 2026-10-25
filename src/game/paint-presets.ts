@@ -27,6 +27,9 @@ export interface PaintPreset {
   /** the painted set it is laid with instead of its mixed picture (painted-grass-art.ts PAINTED_GRASS, e.g. 'grass': three zoom levels), or
    *  null: its picture, as the studio baked it. The game's Grass setting 'photo' lays the picture whatever this says (T082) */
   painted: string | null;
+  /** the preset whose baked picture it borrows until the studio bakes its own (T132: the range's own presets, so no new picture ships with
+   *  them); missing: its own picture only */
+  pic?: string;
 }
 /** the surfaces that are not grass: a preset for one of them is never a lawn unless the owner says so */
 const NOT_GRASS = new Set(['bunker', 'waste', 'water', 'path']);
@@ -81,7 +84,7 @@ export function clampPreset(p: Partial<PaintPreset> | null | undefined): PaintPr
   const name = p.name.trim().slice(0, 40), id = presetSlug(typeof p.id === 'string' && p.id ? p.id : name); if (!id) return null;
   const surface = (PRESET_SURFACES as readonly string[]).includes(p.surface as string) ? (p.surface as PresetSurface) : null;
   const size = clamp(typeof p.size === 'number' && Number.isFinite(p.size) ? p.size : 8, PRESET_SIZE[0], PRESET_SIZE[1]);
-  return { id, name, surface, size, col: typeof p.col === 'string' && /^#[0-9a-f]{6}$/i.test(p.col) ? p.col : '#55602a', a: clampSide(p.a), b: clampSide(p.b), mix: clampMix(p.mix ?? {}), stripes: clampStripes(p.stripes), lawn: typeof p.lawn === 'boolean' ? p.lawn : !NOT_GRASS.has(surface ?? ''), painted: clampPainted(p.painted) };
+  return { id, name, surface, size, col: typeof p.col === 'string' && /^#[0-9a-f]{6}$/i.test(p.col) ? p.col : '#55602a', a: clampSide(p.a), b: clampSide(p.b), mix: clampMix(p.mix ?? {}), stripes: clampStripes(p.stripes), lawn: typeof p.lawn === 'boolean' ? p.lawn : !NOT_GRASS.has(surface ?? ''), painted: clampPainted(p.painted), ...(typeof p.pic === 'string' && /^[a-z0-9-]{1,40}$/.test(p.pic) ? { pic: p.pic } : {}) };
 }
 /** the file with its presets checked: bad ones dropped, a repeated id kept once (the first) */
 export function clampPresets(f: Partial<PresetsFile> | null | undefined): PresetsFile {

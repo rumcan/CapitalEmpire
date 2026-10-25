@@ -51,7 +51,13 @@ export function HoleWizardPanel({ game }: { game: Game }) {
           <button className="chip" title="Drop this plan (Esc steps back one stage)" onClick={() => p.cancelPlan()}>Cancel</button>
         </div>
       )}
-      {w.step !== 'shape' && <p className="sub-line mt-1.5">{ASK[step]}</p>}
+      {w.step !== 'shape' && <p className="sub-line mt-1.5">{w.suggestM > 0 && step === 1 ? `Point the way: the green sits ${w.suggestM} m out, a par-3 to start with. Esc moves the tee again.` : ASK[step]}</p>}
+      {w.suggestM > 0 && w.step !== 'shape' && (
+        <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]" data-testid="wiz-par3">
+          <span className="text-emerald-300">Suggested: a {w.suggestM} m par-3 for your first hole</span>
+          <button className="chip" title="Place the green anywhere, at any length" onClick={() => { w.suggestM = 0; game.emit(); }}>Any length</button>
+        </div>
+      )}
       {gh && <Stats game={game} />}
       {gh && <Planting game={game} />}
       {checks.length > 0 && <Checks game={game} rows={checks} />}

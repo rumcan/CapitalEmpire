@@ -30,6 +30,10 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
         <Tile label="Season takings" value={money(biz.season.takings)} sub={`${Math.round(biz.season.buckets).toLocaleString()} buckets`} tone="text-emerald-300" />
         <Tile label="Demand a day" value={`${want}`} sub={`room for ${cap}`} />
       </div>
+      <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs" data-testid="range-upkeep" title="Each upgrade costs a little every game month (twelve a season), booked as upkeep; the range itself costs $2,000 a season">
+        <span className="text-slate-300">Upgrades' upkeep: <span className={view.upkeep > 0 ? 'font-semibold text-rose-300' : 'text-white'}>{money(view.upkeep)} a month</span></span>
+        <span className="text-slate-500">{money(view.upkeepSeason)} this season</span>
+      </div>
       <div className="rounded-lg border border-white/10 bg-white/5 p-2 text-xs">
         <div className="mb-1 flex items-center justify-between"><span className="text-[10px] uppercase text-slate-400">Bucket price</span><span className="text-slate-400">{demandWord}</span></div>
         <div className="flex items-center gap-2">
@@ -74,6 +78,7 @@ export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right
               )}
             </div>
             <div className="text-[11px] text-slate-400">{u.effect}</div>
+            <div className="text-[10px] text-slate-500">Upkeep {money(u.upkeep)} a month</div>
             {!u.owned && u.why && u.why !== 'Built' && <div className="text-[10px] text-amber-300/80">{u.why}</div>}
           </div>
         ))}

@@ -24,8 +24,9 @@ range ... that means existing paths and tee boxes and distance markers etc."
   boards, covered bays, floodlights (open till 22:00), a ball dispenser, and the shack → a real pro shop. Each costs money, changes
   visitors, price or capacity, and changes the map at once. They are part of the save.
 - **Then the teaching ramp** (plans only here): Phase 2 practice facilities the player builds with the course brush (a putting green,
-  a chipping green and bunker), Phase 3 a Props tool (pot plants, foliage, fountains, statues, pillars), Phase 4 the unlock order from the
-  range to the first hole, and World of Golf extras (a second tier, the academy, a kiosk, a ball picker, the caravan becoming a house).
+  a chipping green and bunker), Phase 3 a Props tool (pot plants, foliage, fountains, statues, pillars), Phase 4a the unlock order from the
+  range to the first hole (built in T132), and Phase 4b the World of Golf extras (a second tier, the academy, a kiosk, a ball picker, the
+  caravan becoming a house: T133).
 
 ## 1. Where main is today (verified at `6ea3b0a`)
 
@@ -91,16 +92,17 @@ mirrored (`range.ts plotPoint`). Everything is derived from the save's range sta
   so the season card and the books show it).
 - **Price:** $3 to $12 in $1 steps, $6 to start. Demand `x (ref / price)^1.5`, clamped to 0.25..2.5; `ref` is $6, +$2 with covered bays,
   +$1 with the pro shop.
-- **Upkeep:** the range's $2,000 a season stays (the worker's business upkeep); upgrades add none in Phase 1.
+- **Upkeep:** the range's $2,000 a season stays (the worker's business upkeep); upgrades add none in Phase 1. Phase 4a (T132) gives each
+  upgrade a monthly upkeep (the table's last column), booked as upkeep in the ledger.
 
-| Upgrade | Cost | Effect | Visible change |
-| --- | --- | --- | --- |
-| 8 bays / 12 bays / 24 bays | $8,000 / $14,000 / $40,000 | capacity 4 → 8 → 12 → 24; queue limit grows | more mats on the tee box |
-| Target greens & yardage boards | $6,000 | appeal +25% | 2 → 5 greens, flags, boards at each |
-| Covered bays | $18,000 | appeal +15%, ref price +$2 | a covered-bay building over each four bays |
-| Floodlights | $24,000 | open till 22:00 (hours 11 → 15, the evening draw) | 8 floodlights, lit at night |
-| Ball dispenser | $5,000 | serve 0.8 s (the queue clears: the shack's counter limits 8 bays and more), appeal +5% | a dispenser by the shop |
-| Pro shop | $45,000 (the clubhouse's price) | +$2 spend a golfer (gear), appeal +15%, serve 2 s | the shack becomes the pro shop |
+| Upgrade | Cost | Effect | Visible change | Upkeep (T132) |
+| --- | --- | --- | --- | --- |
+| 8 bays / 12 bays / 24 bays | $8,000 / $14,000 / $40,000 | capacity 4 → 8 → 12 → 24; queue limit grows | more mats on the tee box | $60 / $90 / $300 a month |
+| Target greens & yardage boards | $6,000 | appeal +25% | 2 → 5 greens, flags, boards at each | $40 a month |
+| Covered bays | $18,000 | appeal +15%, ref price +$2 | a covered-bay building over each four bays | $120 a month |
+| Floodlights | $24,000 | open till 22:00 (hours 11 → 15, the evening draw) | 8 floodlights, lit at night | $250 a month |
+| Ball dispenser | $5,000 | serve 0.8 s (the queue clears: the shack's counter limits 8 bays and more), appeal +5% | a dispenser by the shop | $30 a month |
+| Pro shop | $45,000 (the clubhouse's price) | +$2 spend a golfer (gear), appeal +15%, serve 2 s | the shack becomes the pro shop | $400 a month |
 
 - **Start** (tier 1, 2 exits: pop 3,000): about 55 golfers a town day want 44 bay-hours; about 100 are served a season: **about $24,000
   gross, $22,000 net** (P22's year-1 target was $18,000).
@@ -129,7 +131,7 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 | D7 | Tee boxes | A tee-turf strip with a fringe edge and rubber pads under the mats; T127's raised tee banks are course-grid only, so they wait for Phase 2. |
 | D8 | Starting size | 4 open mats, 2 target greens (50 m, 100 m), no floodlights, no cover; the whole plot already mown and fenced. |
 | D9 | Price band | $3-$12, $6 to start, elasticity 1.5. |
-| D10 | Upkeep of upgrades | None in Phase 1 (one number less to balance); Phase 4 revisits. |
+| D10 | Upkeep of upgrades | None in Phase 1 (one number less to balance); Phase 4 revisits (done: D34). |
 | D11 | Lost customers | A car turns away at a queue of 4 + bays/4 or a full car park; a golfer leaves after two town hours queued. |
 | D12 | Missing art | Labelled stand-ins (the shack: the rusty lean-to shed, since the shanty has no four views and would be drawn as the grand clubhouse; floodlight: street lamp; yardage board and distance marker: chalkboard and post sign; dispenser: utility cabinet; sign: blank leaderboard); tee markers wait for `golf:tee-marker`. Requests in GOLF-SPRITES.md. |
 | D13 | Rain and covered bays | No live weather on the town day yet: covered bays raise appeal and price; rain play comes with live weather. |
@@ -139,7 +141,7 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 | D17 | Which way the four-view art faces | By the sheets' fronts (front in NE and NW: +y, -x, -y, +x), checked in game on the covered bays; `lots/preset-art.ts` documents +y, +x, -y, -x, which the lead may want to check for the lots. |
 | D18 | The Props tool's key | Z: the only letter free in play and in dev (I is the dev lot editor's toggle); Ctrl+Z stays undo. |
 | D19 | Turning a single picture | R cycles the view; four-view art takes its turned picture, a single picture stays as it is (a toast says so): never mirrored. The `variation:...:n` ids are variants of a picture, not its views, so turning does not use them. |
-| D20 | Where props count | Within 15 tiles of the shop or any open mat, each prop once; capped at +40% of appeal; the same factor on the fair price. Cheap plants reach the cap for about $2,000: Phase 4 may add upkeep or diminishing returns. |
+| D20 | Where props count | Within 15 tiles of the shop or any open mat, each prop once; capped at +40% of appeal; the same factor on the fair price. Cheap plants reach the cap for about $2,000: Phase 4 may add upkeep or diminishing returns (done: D33). |
 | D21 | The props' undo | The course tools' undo stack (`PaintTool.step`): one step per place, move, turn or sale; the money goes back with it. |
 | D22 | Missing props art | Labelled stand-ins: golfer statue = the coin-operated horse ride, stone pillar = the plain stone obelisk (`world:grave_2`), flag pole = the red flagstick scaled up, flower bed = `world:bush_2`. Requests in GOLF-SPRITES.md "Props kit". |
 | D23 | Where the practice area is (T130) | Across the drive from the car park (frame u 75..111, v 2..36): the plot's free corners by the shop are 6 to 8 tiles wide, too small for a putting green and a chipping green; this is the land next to the car park and the shop, owned from the start. |
@@ -149,6 +151,17 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 | D27 | The brushes at stage 1 (T130) | A range start opens Shape by hand with Green and Bunker from stage 1, to paint the practice greens; the rest open with the stages as before. |
 | D28 | The practice strokes (T130) | No putt or chip clip yet: a putt is the drive clip's address, takeaway and impact frames, a chip the whole drive clip, each labelled "Stand In for golfer putting/chipping clip"; requests in GOLF-SPRITES.md. |
 | D29 | The tee box in the grid (T130) | Laid past the brush rules (the plot stays the range's: the player cannot paint or rub it out); its upkeep is the course's (tee turf), and the outfield's patches are cut round it so the grid's raised tee shows. |
+| D30 | The ramp's steps (T132) | A range start's own step beside the stages (`GolfProgress.ramp`, 0..3, saved, never falls): 0 the range card; 1 the first range upgrade opens Holes (Shape by hand, Green and Bunker only) and Paths; 2 the putting green opens Props; 3 New hole and Buildings open once the season's takings reach $20,000, the second season starts or a hole exists. Bulldoze and Select are open from minute zero; the stages (Paint at the first hole, the town at stage 3) go on as before. |
+| D31 | Old saves and other starts (T132) | A range save from before T132 has no ramp saved: step 3, every tool as it had them, no NEW badges. Town and classic golf starts have no ramp. "Show every tool now" opens every step. |
+| D32 | The first hole (T132) | New hole's first use in a range start suggests a 150 m par-3 (`HoleWizard.suggestM`): after the tee the pointer only aims, the green sits 150 m out; "Any length" in the card drops it. Only the first hole. The range start is never "stuck" (the 20-minute fallback would open stage 2 and offer New hole while it is locked); the ramp's own hint offers the first hole. |
+| D33 | Props' diminishing returns (T132) | By kind (plants, water, statues, stonework, seats, small things, signs): the best prop of a kind counts in full, each further one 80% of the one before. The big pieces gain: fountain +15%, statue +8%, well +3%, arch +2.5%, welcome board +3%, pillar and flag pole +1.5%, the map bench +1.5%, other seats +1%, small things +0.5%, plants +1%. |
+| D34 | Upgrades' upkeep (T132) | A monthly cost each (the table in 2.3), paid as each game month begins (a skip pays every month crossed; the month a game is loaded in is not charged again), booked as upkeep in the ledger and counted in the range's season and lifetime `upkeep`. |
+| D35 | The range's own looks (T132) | Two texture presets of its own in `paint-presets.json`: Range outfield (the fairway's mix, mowing stripes on: 6-tile bands across the line of play) and Range target green; each with its own painted look in `painted-surfaces.json` (the green brighter: tone +0.26, a pale lime tint). Until the studio bakes their pictures they borrow the fairway's and the green's (`PaintPreset.pic`), so no new picture ships. |
+| D36 | Stripes on top (T132) | The outfield's stripes are laid last on its fill from the preset's Stripes (`PatchPaint.mw`, `renderer.mowStripes`): screened light bands, multiplied dark bands, soft edges, at every zoom; the T075 rule. Tuning the preset's stripes in the studio changes them. |
+| D37 | Target greens (T132) | A first-cut collar (feathered), a fringe ring and the green itself raised with the course's sun-lit edge (`edgeProfileOf('green')`). |
+| D38 | The range's map label (T132) | The stray glyph after "DRIVING RANGE" was the stadium label ("STADIUM · L1": the site falls back to the range) drawn under it at the same spot: only a real stadium draws it now. The range's own plate reads "DRIVING RANGE · 4 BAYS" on a dark plate below the shop's pill (the worker's "L1" meant nothing there); at district zoom the "Driving Range" map label stands alone. |
+| D39 | The car park counter (T132) | The range car park's "P · parked/bays" adds the range sim's parked cars (the worker never sees them). A bug found on the way: a leaving car freed its bay on every frame of its drive out, so later cars piled into one bay; it frees it once now. |
+| D40 | Selecting a prop (T132) | The Select panel names a Props tool prop by its catalogue name and group, with what it cost and sells for, and a "Sell for $X" button (not the library picture's name, e.g. "Main leaderboard (blank)"). |
 
 ## 4. Phases and tickets
 
@@ -218,12 +231,57 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 - **Art requests:** "Props kit" in `docs/GOLF-SPRITES.md` (golfer statue, stone pillar, club flag pole, flower bed, a small tiered
   fountain, a stone entrance arch, an urn).
 
-### Phase 4, T132: the ramp to the course, World of Golf extras
-- The unlock order through progressive-ui: the range card first; the practice area after the first upgrade; Props after the putting
-  green; New hole (a par-3 first, the wizard's short preset) once the range takes $20,000 in a season or the second season starts.
-- Extras: a second tier of bays (double-deck, +12 bays), the academy (lessons: a pro on two bays, +$15 a lesson), a coffee kiosk, a ball
-  picker cart on the outfield at night, upkeep for the upgrades, the arrivals driven by the sim's own visit cars again, and the caravan →
-  cottage → house as the player's money grows.
+### Phase 4a, T132 (#249): from the range to the first hole (built)
+- **The unlock order** (`ext/progressive-ui`: `RampStep`, `rampStep`, `rampLock`, `RAMP_TOOL_STEP`, D30): in a range start the rail shows
+  every tool from minute zero, the locked ones dimmed in place with their reason ("Unlocks with your first range upgrade", "... when your
+  putting green opens", "... when the range takes $20,000 in a season, or in season 2"); a click or a key says it. In order:
+  1. **Minute zero:** Select (the range card) and Bulldoze. The practice area's label says "Opens with your first range upgrade".
+  2. **The first range upgrade:** Holes (Shape by hand with Green and Bunker, to paint the practice greens) and Paths, with NEW badges. In the
+     Holes panel New hole stays in place, locked, with its reason.
+  3. **The putting green opens:** Props (key Z).
+  4. **$20,000 of takings in one season, or season 2:** New hole and Buildings. The first hole is suggested as a 150 m par-3 (D32).
+  Each step opening is toasted. The step is saved and never falls (D30); old saves and other starts keep their tools (D31).
+- **The hint bar** follows the ramp and never says "Step 1: Build your first hole" in a range start: "Your driving range is open" (minute
+  zero; Show me: the camera on the shop and the card) → "Buy your first upgrade" (once the card was seen; Show me opens it) → "Paint a putting
+  green" (Show me: the practice area with the Green brush) → "Props are open (Z)" (Show me: Props at the shop) → "Now a chipping green and a
+  bunker" → "Next: your first hole" (the season's takings so far against $20,000) → "New hole is open: start with a par-3" (Show me: Holes with
+  New hole armed, the par-3 suggested). After the first hole the stages' hints follow as everywhere.
+- **Balance:** the props' diminishing returns by kind (D33), the upgrades' monthly upkeep (D34), on the range card (each upgrade's line, and
+  "Upgrades' upkeep: $X a month · $Y this season").
+- **The range stays a range** (D35-D37): its own outfield preset with mowing stripes laid on top at every zoom, target greens brighter, raised
+  with a sun-lit edge in a fringe and a first-cut collar; checked at 30%, 15% and district zoom.
+- **Fixes:** the label glyph (D38), the car park counter and the bay bug (D39), the Select panel's name for a decor prop (D40).
+- **The first balance again** (`rangesave` rules, tier 1, 2 exits, no residents, $6 a bucket, a 10-minute town day; gross is buckets and
+  practice fees; upkeep is the range's $2,000 plus the upgrades' months):
+
+  | The range | Golfers a season | Gross | Upkeep | Net |
+  | --- | --- | --- | --- | --- |
+  | Bare (4 bays) | 95 | $22,800 | $2,000 | $20,800 |
+  | 8 bays ($8,000) | 119 | $28,700 | $2,700 | $25,900 |
+  | 8 bays, dispenser, targets ($19,000) | 149 | $35,700 | $3,600 | $32,100 |
+  | ... and both practice greens | 171 | $48,500 | $3,600 | $44,900 |
+  | ... and props +20% | 197 | $55,800 | $3,600 | $52,300 |
+  | 12 bays with all that ($33,000 of upgrades) | 265 | $75,000 | $4,600 | $70,400 |
+  | Fully grown (every upgrade, 2,000 residents, $8, props +40%) | 782 | $347,000 | $17,500 | $329,600 |
+
+  - The bare range reaches $20,000 of takings about 88% into season 1 (8 bays bought early: about 70%), so New hole opens late in season 1 for
+    a player who grows the range, at season 2 for one who does not.
+  - The props' cap now takes a real mix: a fountain, a statue, a well, ten plants, an arch, two pillars, two benches, the welcome board, a flag
+    pole and three bins and lamps (about $26,000) reach +40%; forty ornamental grasses ($2,000) give +5%, and the cheap pieces alone (a $12,000
+    mix with no fountain or statue) stay under +30%.
+  - The suggested first hole, a 150 m par-3, costs about $13,000 seeded on the test map (about $62,000 with Sod); a seeded par-4 about $17,000
+    to $35,000. A range grown with the early upgrades and its practice greens nets $30,000 to $50,000 a season: a hole or two a season from the
+    range alone by season 2 or 3, beside the $600,000 start.
+- **Tests:** `tests/golf-range-ramp.test.ts` (the order step by step, steps never closing, old saves and other starts, the hint per step, the
+  par-3, the diminishing returns, the upkeep, the looks' patches and stripes, the plate and the counter, the Select panel's words).
+
+### Phase 4b, T133: World of Golf extras (next)
+- A second tier of bays (double-deck, +12 bays), the academy (lessons: a pro on two bays, +$15 a lesson), a coffee kiosk, a ball picker cart
+  on the outfield at night (D15), the arrivals driven by the sim's own visit cars again, and the caravan → cottage → house as the player's
+  money grows.
+- Each extra a range card upgrade with its upkeep (D34), its place in the scene and its stand-in art until the art lands.
+- Left from 4a: the putt and chip clips (D28), the studio bake of the two range presets' own pictures (D35), and live weather for the covered
+  bays (D13).
 
 ## 5. Risks
 - **Two money paths** (the worker's visit cars and the range sim): the worker's are switched off only in range starts; a test holds it.
