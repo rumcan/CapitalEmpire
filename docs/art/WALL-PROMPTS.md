@@ -99,3 +99,17 @@ use an image:
 The ground workers build a slot the first time a course chunk with walls arrives. From then on the renderer
 (`GroundPainter.wallArt`) lays the art in each wall's body at the scale above, shaded by its light steps, instead of the
 painted placeholder. The top band (the root line under the lip) stays painted.
+
+## Rock faces (T127: the raised tees' rocky sides)
+
+A tee from 0.5 m up (the default 0.6 m) stands on a rocky slope, steeper the higher it is, with stairs; a lower tee and every
+green stand on a grass bank (`FaceForm` in `src/game/ext/course-walls`). The renderer paints the rock itself: earth lit by the
+slope's normal, stones hashed from where they are (never a repeating tile), each lit from the upper right. Its earth takes the
+slot `wallRock` once registered (laid in overlay under the stones), else `wallTurf`'s art, else the rocky dirt laid softly.
+
+**5. rock-wall** (optional; the earth and small stones between the painted stones)
+```
+Surface: a dry-stone retaining slope's earth. Compacted warm grey-brown soil with many small embedded stones (6-16 px) and
+gravel, a few fine roots. Mid value, even statistics, no large stones (the game draws those), no cracks or ledges.
+```
+Register it as `{ tex: 'wallRock', src: <import>, mix: 0 }` in `PHOTO_TEX`, as above.

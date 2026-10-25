@@ -77,6 +77,7 @@ const handle = async (m: ToWorker) => {
         break;
       }
       case 'living': painter.living = { on: m.on, debug: m.debug }; break;
+      case 'slopeLight': painter.slopeLight = m.strength; break;
       case 'lotground': {
         // the lazy photo textures the edit's paint areas use (fill and border) are built first, so the chunks baked after it see them
         const need = new Set<string>();

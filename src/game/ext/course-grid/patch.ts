@@ -2,20 +2,21 @@
 // cg:<cx>:<cy>, holding its surfaces' droplet outlines (course-blobs chunkOutlines) in draw order with their textures, edge profiles,
 // collars, the fairway's mowing lines and the growth mask; plus the chunk walk and the grow key the month tick compares.
 // Pure TypeScript, no DOM, deterministic. Units: tiles of 2 m; cells of 1 m (0.5 tile); months are game month indices.
-import { CELL_T, type Grid } from './index';
+import { CELL_T, SURF, type Grid } from './index';
 import { BLOB_STYLE, CHUNK_MARGIN, chunkOutlines, collarReach, type BlobStyle } from '../course-blobs';
 import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
 import { growMask } from '../course-fx';
-import { chunkWalls, coversOf, defaultShadow, layerCode } from '../course-walls';
+import { chunkWalls, coversOf, defaultShadow, layerCode, surfHeights, teeStairs } from '../course-walls';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
-/** how far past its chunk box a course patch is drawn (its feathers, rims and drop shadows: a bunker's sunken bevel reaches 2.3 tiles),
+/** how far past its chunk box a course patch is drawn (its feathers, rims and drop shadows: a bunker's sunken bevel reaches 2.3 tiles; a
+ *  tee at the Height slider's top beside a bunker drops 2.2 m, 2.75 tiles down the screen, T127),
  *  tiles: the patch's pts box is the chunk box grown by this, so the ground index finds it (and its edges, for the neighbours' rims) from
  *  a neighbouring ground chunk, and an edit re-bakes that far */
-export const COURSE_PATCH_REACH = 3;
+export const COURSE_PATCH_REACH = 4;
 /** how far past an edited box a chunk's outlines can change, tiles, with collars at most maxCollar cells wide: the field's margin plus the
  *  closing (2 cells) and the widest collar (at least the default 2) */
 export const courseEditReach = (maxCollar = 2) => CHUNK_MARGIN + (2 + Math.max(2, Math.ceil(maxCollar - 1e-9))) * CELL_T;
@@ -29,10 +30,11 @@ export const BORDER_MIN_M = 0.1, BORDER_MAX_M = 8;
 export const SURF_EDGE: readonly EdgeProfile[] = ['flat', 'flat', 'flat', 'water', 'turf', 'raised', 'sunken', 'flat', 'raised'];
 
 /** the textures a course chunk lays: per surface id (index 1..8; a missing one is not drawn) and per collar; with the course look's
- *  Border and Shadow, both by surface id: each surface's collar band width in metres (the Border slider; a missing one keeps BLOB_STYLE's)
- *  and the Shadow of its walls (0 none .. 1 strong; a missing one: course-walls defaultShadow, none for a green, else the hairline) */
+ *  Border, Shadow and Height, all by surface id: each surface's collar band width in metres (the Border slider; a missing one keeps
+ *  BLOB_STYLE's), the Shadow of its walls (0 none .. 1 strong; a missing one: course-walls defaultShadow, none for a green, else the
+ *  hairline) and a tee's or green's height in metres (the Height slider, T127; a missing one: course-walls SURF_HEIGHT) */
 export interface CourseLooks { surf: readonly (CourseTex | undefined)[]; collar: Readonly<Record<'first-cut' | 'fringe' | 'lip' | 'bank', CourseTex>>;
-  border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[];
+  border?: readonly (number | undefined)[]; shadow?: readonly (number | undefined)[]; height?: readonly (number | undefined)[];
   /** each surface's own collar look by surface id (the course look's Border texture, scale, angle and tone; a missing one: collar by name) */
   band?: readonly (CourseTex | undefined)[] }
 /** a course texture's fields alone (a look may carry more) */
@@ -129,12 +131,13 @@ const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.
 /** the lot-ground patch of course chunk (cx, cy), or null when no surface reaches it: pts is the chunk box grown by COURSE_PATCH_REACH,
  *  the layers come from chunkOutlines in draw order, each in its look (a surface with no look is left out), the fairway carries the
  *  centre lines (lines: per hole, flat tiles) of the holes whose fairway cells lie in or near the chunk, and the growth mask rides along
- *  when something grows (now: the effective game month) */
-export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>): LotPatch | null {
-  const S = COURSE_CHUNK, styles = courseStyles(looks.border), outs = chunkOutlines(g, cx, cy, S, styles, true).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
+ *  when something grows (now: the effective game month); the stairs of the tees within reach (T127) face the nearest of `paths` (the cart
+ *  paths and drives, flat segments ax, ay, bx, by in tiles) */
+export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>, paths?: ArrayLike<number> | null): LotPatch | null {
+  const S = COURSE_CHUNK, styles = courseStyles(looks.border), heights = surfHeights(looks.height), outs = chunkOutlines(g, cx, cy, S, styles, true).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
   // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
   const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
-  const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles);
+  const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs), styles, heights);
   for (const { o, se: [fill, edges], ce } of capped) {
     const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
     const L: CourseLayer = { s: o.surf, ...texOf(look), e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
@@ -150,9 +153,12 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   if (!layers.length) return null;
   const R = COURSE_PATCH_REACH, x0 = cx * S - R, y0 = cy * S - R, x1 = (cx + 1) * S + R, y1 = (cy + 1) * S + R;
   const grow = courseGrow(g, cx, cy, now);
-  const walls = cw.walls.map(w => ({ p: Float32Array.from(w.p), lo: w.lo, m: w.m, hs: w.hs })), rims = cw.rims.map(r => ({ p: Float32Array.from(r.p), hi: r.hi }));
+  const walls = cw.walls.map(w => ({ p: Float32Array.from(w.p), lo: w.lo, m: w.m, hs: w.hs, ...(w.f ? { f: w.f, r: w.r } : {}) })), rims = cw.rims.map(r => ({ p: Float32Array.from(r.p), hi: r.hi }));
+  // the tees' stairs (T127): every tee within reach of the chunk's walls, its whole box, so each chunk it touches cuts the same steps
+  const stairs = cw.walls.some(w => w.f && w.hs === SURF.tee) ? teeStairs(g, [x0, y0, x1, y1], paths, heights) : [];
+  const st = stairs.length ? { st: stairs.flatMap(q => [q.x, q.y, q.nx, q.ny, q.half]) } : {};
   const sh = looks.shadow?.length ? { sh: Array.from({ length: 9 }, (_, s) => { const v = looks.shadow![s]; return v !== undefined && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : defaultShadow(s); }) } : {};
-  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, z: 0 } };
+  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), ...sh, ...st, z: 0 } };
 }
 
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
