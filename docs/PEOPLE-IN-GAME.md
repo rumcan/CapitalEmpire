@@ -59,3 +59,13 @@ gains `fx, fy, ax, ay`.
 ## Checks
 `npm run typecheck`, the full `npm test` (the repack moves the digests `tests/compose.test.ts` pins: update them), `npm run bench` before and
 after (GAME-PLAN 2.3: the atlas grows by the new walker pages), and the game itself: a tournament day at 30% and 12% zoom, screenshots.
+
+## Status (2026-10-25)
+Done on `lead/people-in-game`: the pack (19 atlas pages, the walker pages 15-18; main's sprite pages 0-14 kept byte for byte), the data
+(8-float galleries, 6-float walkers), `crowdview.ts` with `tests/crowdview.test.ts`, and the engine (crowdMovers at the street tier; the old
+32 px sheet gone). Checked in the dev build with a crowd injected beside the camera (the sim paused, `__game.traffic` pinned): the green,
+tee, grandstand and tent galleries, a walking party and the tee golfer's 30 s cycle (address, swing, held finish, idle) all draw, no
+console errors, 118 crowd movers costing about 0.6 ms of CPU a frame. Not yet seen in a real tournament day (no saved scene has one).
+Next for the crowd: the grandstand's real seat rows (the fans now sit in stepped rows on the stand's point, not on its art), the staff
+(marshals, volunteers, caddies) and the kids once made, crowd patches for the far zoom (SPECTATOR-ART 3d), and the golfers' play once the
+sim plays golf (they replace the tee stand-in).
