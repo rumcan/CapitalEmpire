@@ -24,6 +24,8 @@ const SHOP = { u: 34, v: 8.5 }, COUNTER = { u: 34, v: 13.4 }, QUEUE_V = 14.5, CA
 const TARGET_D = [25, 50, 75, 100, 120], TARGET_U = [28, 44, 32, 40, 36], TARGET_R = [3, 4, 4, 5, 4];
 /** the far fence (v), the side fences (u) */
 const FAR_V = 149.4, SIDE_U: [number, number] = [0.6, 69.4];
+/** the land's grass the outfield leaves round the tee box (tiles): room for the raised tee's face at the Height slider's top (T127, T130) */
+const TEE_GAP = 2.6;
 
 /** a prop of the scene: its key (stable while it stays), library id, world point, quarter turns from the picture's base view (preset-art turned),
  *  scale (absent: the library's own size) or fit (the footprint's W + D in tiles the picture spans: business art), and its stand-in label */
@@ -73,12 +75,11 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave): 
   const pieces: ScenePiece[] = [], patches: ScenePatch[] = [];
   const put = (key: string, id: string, u: number, v: number, q = 0, o: Partial<ScenePiece> = {}) => { const p = P(u, v); pieces.push({ key, id, x: p.x, y: p.y, q, ...o }); };
 
-  // ---- the ground: the mown outfield in its first cut round the tee box (the tee box and its own first-cut collar are the course grid's, T130:
-  // painted areas draw over the course, so the outfield leaves it open), the pads and mats of the open bays on their concrete deck (over the
-  // tee box), the target greens, the shop's packed dirt and the caravan's dry lawn
-  const [t0, t1, t2, t3] = [TEE[0] - 0.8, TEE[1] + 0.8, TEE[2] - 0.8, TEE[3] + 0.8];
-  patches.push({ pts: quad(0.3, 69.7, t3, 149.7), surf: 'firstCut' }, { pts: quad(0.3, t0, 16.8, t3), surf: 'firstCut' }, { pts: quad(t1, 69.7, 16.8, t3), surf: 'firstCut' }, { pts: quad(t0, t1, 16.8, t2), surf: 'firstCut' });
-  patches.push({ pts: quad(2, 68, t3 + 0.4, 148), surf: 'fairway' });
+  // ---- the ground: the mown outfield in its first cut beyond the tee box (the tee box and its own first-cut collar are the course grid's, T130:
+  // painted areas draw over the course, so the outfield keeps TEE_GAP tiles off it, where the raised tee's bank or rock face hangs down onto the
+  // land's grass), the pads and mats of the open bays on their concrete deck (over the tee box), the target greens, the shop's packed dirt and
+  // the caravan's dry lawn
+  patches.push({ pts: quad(0.3, 69.7, TEE[3] + TEE_GAP, 149.7), surf: 'firstCut' }, { pts: quad(2, 68, TEE[3] + TEE_GAP + 0.6, 148), surf: 'fairway' });
   const open = openSlots(st.bays);
   patches.push({ pts: quad(slotU(open[0]!) - 1.5, slotU(open[open.length - 1]!) + 1.5, STAND_V - 2, STAND_V + 2.2), surf: 'concrete' });
   for (const k of open) { const u = slotU(k); patches.push({ pts: quad(u - 1.05, u + 1.05, STAND_V - 1.4, STAND_V + 1.6), surf: 'asphaltDark' }, { pts: quad(u - 0.65, u + 0.65, STAND_V - 0.2, STAND_V + 1.2), surf: 'green' }); }
