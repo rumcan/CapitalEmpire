@@ -15,7 +15,7 @@ import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBr
 import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
 import { BLOB_STYLE } from './ext/course-blobs';
 import { BORDER_MAX_M, BORDER_MIN_M } from './ext/course-grid/patch';
-import { defaultShadow } from './ext/course-walls';
+import { HEIGHT_RANGE, SURF_HEIGHT, defaultShadow } from './ext/course-walls';
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
@@ -72,9 +72,10 @@ const UNDO_MAX = 100;
 /** the most course-grid cells the undo steps keep in all (13 bytes a cell: about 26 MB); the oldest steps go first */
 const UNDO_CELLS = 2_000_000;
 /** a brush preset's editable settings: the brush radius (tiles), the area style it paints and, for a surface with a collar on the course
- *  grid, the collar band's width in metres (bw: the Border slider) and its walls' shadow (sh: the Shadow slider, 0 none .. 1 strong); absent:
- *  the defaults (BLOB_STYLE's band, course-walls defaultShadow) */
-type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number };
+ *  grid, the collar band's width in metres (bw: the Border slider), its walls' shadow (sh: the Shadow slider, 0 none .. 1 strong) and, for a
+ *  raised surface, its height in metres (ht: the Height slider, T127); absent: the defaults (BLOB_STYLE's band, course-walls defaultShadow
+ *  and SURF_HEIGHT) */
+type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number; ht?: number };
 /** the brush kinds whose course-grid surface has a collar band (the Border slider's surfaces), with their surface ids and the band's name */
 export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }>> = {
   fairway: { s: SURF.fairway, band: 'first cut' }, tee: { s: SURF.tee, band: 'first cut' }, green: { s: SURF.green, band: 'fringe' },
@@ -99,9 +100,10 @@ function loadBrush(): Record<BrushKind, BrushSet> {
     const saved = JSON.parse(localStorage.getItem(BRUSH_KEY) ?? 'null') as Partial<Record<BrushKind, { r?: number; style?: Partial<BrushSet['style']> }>> | null;
     if (saved && typeof saved === 'object') for (const p of BRUSH_PRESETS) {
       const s = saved[p.kind]; if (!s || typeof s !== 'object') continue;
-      const { bw, sh } = s as { bw?: unknown; sh?: unknown };
+      const { bw, sh, ht } = s as { bw?: unknown; sh?: unknown; ht?: unknown }, hr = HEIGHT_RANGE[BORDER_KINDS[p.kind]?.s ?? 0];
       out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }),
-        ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, bw)) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}) };
+        ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, bw)) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}),
+        ...(hr && typeof ht === 'number' && Number.isFinite(ht) ? { ht: Math.min(hr[1], Math.max(hr[0], ht)) } : {}) };
     }
   } catch { /* no storage or a bad save: the defaults */ }
   return out;
@@ -408,6 +410,26 @@ export class PaintTool {
   courseShadows(): (number | undefined)[] {
     const out: (number | undefined)[] = [];
     for (const k of Object.keys(BORDER_KINDS) as BrushKind[]) { const sh = this.brush[k].sh; if (sh !== undefined) out[BORDER_KINDS[k]!.s] = sh; }
+    return out;
+  }
+  /** the height in metres of a brush kind's raised course surface (the Height slider, T127: a tee from a low grass bank through rock with
+   *  stairs, the default 0.6 m as deep as a bunker, to a steep rock face; a green's gentle bank), or null for a kind whose height is fixed */
+  surfaceHeight(kind: BrushKind = this.brushKind): number | null {
+    const s = BORDER_KINDS[kind]?.s ?? 0; if (!HEIGHT_RANGE[s]) return null;
+    return this.brush[kind].ht ?? SURF_HEIGHT[s]!;
+  }
+  /** sets a kind's height (metres, clamped to course-walls HEIGHT_RANGE), remembered with its brush look; the course is drawn again
+   *  (throttled while the slider is dragged) */
+  setSurfaceHeight(m: number, kind: BrushKind = this.brushKind) {
+    const r = HEIGHT_RANGE[BORDER_KINDS[kind]?.s ?? 0]; if (!r || !Number.isFinite(m)) return;
+    const h = Math.min(r[1], Math.max(r[0], m)); if (h === this.surfaceHeight(kind)) return;
+    this.brush[kind] = { ...this.brush[kind], ht: h }; this.saveBrush();
+    this.lookSoon(); this.host.emit();
+  }
+  /** the heights set with the Height slider, by surface id (the engine's CourseLooks.height; unset ones are left out: SURF_HEIGHT) */
+  surfaceHeights(): (number | undefined)[] {
+    const out: (number | undefined)[] = [];
+    for (const k of Object.keys(BORDER_KINDS) as BrushKind[]) { const ht = this.brush[k].ht; if (ht !== undefined) out[BORDER_KINDS[k]!.s] = ht; }
     return out;
   }
   private lookAt = -Infinity;
