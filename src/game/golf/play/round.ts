@@ -24,13 +24,29 @@ export const SWING_TIME = 0.15;
 export const TEE_GAP = 3;
 /** the strokes on a hole at which a golfer picks up (the score is then 10) */
 export const PICK_UP = 10;
+/** a holed golfer steps off the green this far from the pin, toward the next tee (the last hole: toward his last stand), tiles */
+export const STEP_TILES = 4;
+/** the holed golfers of a group stand apart across that direction: (slot - 1) times this, tiles (slot: his place in the group, 0..3) */
+export const SPREAD_TILES = 1.2;
 
 /** the walk in game minutes between two points */
 const walkMin = (a: Pt, b: Pt): number => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M / WALK_M;
 
+/** what a golfer does after his last ball on a hole: he walks off from rest (the cup, or where he stood to pick up) to his step-off point at, from
+ *  minute t0 to t1 (the walking pace), then stands there until his walk to the next tee */
+interface Off { rest: Pt; at: Pt; t0: number; t1: number }
+
+/** the step-off for a golfer who finished a hole at minute t0: STEP_TILES from the pin toward `toward` (the next tee, or on the last hole his last
+ *  stand), spread across that direction by his slot in the group. He walks there from rest at the walking pace */
+function offOf(rest: Pt, pin: Pt, toward: Pt, slot: number, t0: number): Off {
+  const dx = toward.x - pin.x, dy = toward.y - pin.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0, k = (slot - 1) * SPREAD_TILES;
+  const at = { x: pin.x + ux * STEP_TILES - uy * k, y: pin.y + uy * STEP_TILES + ux * k };
+  return { rest, at, t0, t1: t0 + walkMin(rest, at) };
+}
+
 /** a golfer's ball during a hole: where it lies and who stands where, its lie, his strokes, whether he is finished, when his last ball
  *  comes to rest, and his own random stream for this hole */
-interface Player { id: number; pro: boolean; skill: number; ball: Pt; stand: Pt; lie: Lie; strokes: number; holed: boolean; end: number; r: () => number }
+interface Player { id: number; pro: boolean; skill: number; ball: Pt; stand: Pt; lie: Lie; strokes: number; holed: boolean; cup: boolean; end: number; r: () => number }
 
 /** plays the whole day: every group's holes in play order, the shots sorted by time, the strokes per hole and the minute each golfer is done.
  *  The golfer ids are 0..n-1. Groups play by tee time; a group waits on the tee until the group ahead has left it, and walks from each green to
@@ -46,7 +62,7 @@ export function playRound(view: CourseView, golfers: Golfer[], groups: Group[], 
     for (const id of gr.players) done[id] = gr.tee; // with no holes, a golfer is done at his tee time
     for (let h = 0; h < N; h++) {
       const hole = holes[h], start = Math.max(ready, ahead ? ahead[h] + TEE_GAP : -Infinity);
-      const ps: Player[] = gr.players.map(id => { const g = who.get(id)!; return { id, pro: g.pro, skill: g.skill, ball: { ...hole.tee }, stand: { ...hole.tee }, lie: 'tee', strokes: 0, holed: false, end: start, r: rng(seed, id, h) }; });
+      const ps: Player[] = gr.players.map(id => { const g = who.get(id)!; return { id, pro: g.pro, skill: g.skill, ball: { ...hole.tee }, stand: { ...hole.tee }, lie: 'tee', strokes: 0, holed: false, cup: false, end: start, r: rng(seed, id, h) }; });
       let now = start;
       for (;;) {
         // the player farthest from the pin plays next, after the last ball has flown
@@ -72,9 +88,10 @@ export function playRound(view: CourseView, golfers: Golfer[], groups: Group[], 
         shots.push({ golfer: p.id, hole: h, stroke: p.strokes + 1, t, from, to, club: c.club, lie, penalty, holed });
         p.strokes += 1 + penalty;
         if (holed || p.strokes >= PICK_UP) { p.holed = true; p.strokes = Math.min(p.strokes, PICK_UP); }
-        p.ball = to; p.stand = from; p.lie = lie; p.end = now = t + dur;
+        p.ball = to; p.stand = from; p.lie = lie; p.cup = holed; p.end = now = t + dur;
       }
-      for (const b of ps) { strokes[b.id][h] = b.strokes; if (h === N - 1) done[b.id] = b.end; }
+      // a golfer is done once he has walked off the last green (the last hole's step-off, from the cup or where he stood to pick up: as build)
+      for (const b of ps) { strokes[b.id][h] = b.strokes; if (h === N - 1) done[b.id] = offOf(b.cup ? b.ball : b.stand, hole.pin, b.stand, gr.players.indexOf(b.id), b.end).t1; }
       if (h + 1 < N) ready = now + walkMin(hole.pin, holes[h + 1].tee);
     }
     ahead = first;
@@ -83,8 +100,9 @@ export function playRound(view: CourseView, golfers: Golfer[], groups: Group[], 
   return { golfers, groups, shots, strokes, done };
 }
 
-/** one shot's playback row: the walk before it (from wf to wt, between ws and we, game minutes), the prep before the swing, the flight's length */
-interface Row { s: Shot; hole: number; first: boolean; last: boolean; prep: number; dur: number; ws: number; we: number; wf: Pt; wt: Pt }
+/** one shot's playback row: the walk before it (from wf to wt, between ws and we, game minutes), the prep before the swing, the flight's length, and on
+ *  the last shot of a hole the step-off (off) */
+interface Row { s: Shot; hole: number; first: boolean; last: boolean; prep: number; dur: number; ws: number; we: number; wf: Pt; wt: Pt; off: Off | null }
 /** a golfer's tee time and his shots' rows in order */
 interface Track { tee: number; rows: Row[] }
 /** the playback index of a plan, built once per plan and view */
@@ -94,9 +112,9 @@ const cache = new WeakMap<RoundPlan, Cache>();
 /** builds the playback index: each golfer's rows with their walks (a first stroke on a hole walks from the last green, starting when the group
  *  leaves it: the group's start on the hole is the earliest tee shot less its prep) */
 function build(plan: RoundPlan, view: CourseView): Cache {
-  const holes = view.holes, size = plan.strokes.length, grp: number[] = [], tracks: Track[] = [], pro: boolean[] = [];
+  const holes = view.holes, size = plan.strokes.length, grp: number[] = [], slot: number[] = [], tracks: Track[] = [], pro: boolean[] = [];
   plan.golfers.forEach(g => { pro[g.id] = g.pro; });
-  plan.groups.forEach((gr, gi) => { for (const id of gr.players) { grp[id] = gi; tracks[id] = { tee: gr.tee, rows: [] }; } });
+  plan.groups.forEach((gr, gi) => { gr.players.forEach((id, k) => { grp[id] = gi; slot[id] = k; tracks[id] = { tee: gr.tee, rows: [] }; }); });
   for (let id = 0; id < size; id++) if (!tracks[id]) tracks[id] = { tee: 0, rows: [] };
   const prep = (s: Shot) => s.club === 'putter' ? PUTT_TIME : pro[s.golfer] ? PRO_SHOT_TIME : SHOT_TIME;
   const start = plan.groups.map(() => new Array<number>(holes.length).fill(Infinity));
@@ -104,11 +122,20 @@ function build(plan: RoundPlan, view: CourseView): Cache {
   for (const s of plan.shots) {
     const tr = tracks[s.golfer], pr = tr.rows[tr.rows.length - 1], p = prep(s);
     let wf: Pt, we: number, ws: number;
-    if (s.stroke === 1) { wf = s.hole > 0 ? holes[s.hole - 1].pin : s.from; we = start[grp[s.golfer]][s.hole]; ws = we - walkMin(wf, s.from); }
+    // a first stroke's walk starts from the last green's step-off (fixed below, once the rows are in)
+    if (s.stroke === 1) { wf = s.from; we = start[grp[s.golfer]][s.hole]; ws = we - walkMin(wf, s.from); }
     else { wf = pr.s.from; we = s.t - p; ws = we - walkMin(wf, s.from); }
-    tr.rows.push({ s, hole: s.hole, first: s.stroke === 1, last: false, prep: p, dur: s.club === 'putter' ? PUTT_FLIGHT : FLIGHT_TIME, ws, we, wf, wt: s.from });
+    tr.rows.push({ s, hole: s.hole, first: s.stroke === 1, last: false, prep: p, dur: s.club === 'putter' ? PUTT_FLIGHT : FLIGHT_TIME, ws, we, wf, wt: s.from, off: null });
   }
-  for (const tr of tracks) tr.rows.forEach((r, i) => { r.last = i === tr.rows.length - 1 || tr.rows[i + 1].hole !== r.hole; });
+  // the last shot of each hole carries the golfer's step-off; the next hole's first walk starts there, and never before he has reached it
+  for (const tr of tracks) tr.rows.forEach((r, i) => {
+    r.last = i === tr.rows.length - 1 || tr.rows[i + 1]!.hole !== r.hole;
+    if (!r.last) return;
+    const toward = r.hole + 1 < holes.length ? holes[r.hole + 1]!.tee : r.s.from;
+    r.off = offOf(r.s.holed ? r.s.to : r.s.from, holes[r.hole]!.pin, toward, slot[r.s.golfer]!, r.s.t + r.dur); // the cup, else where he stood (a pick-up)
+    const nx = tr.rows[i + 1];
+    if (nx) { nx.wf = r.off.at; nx.ws = Math.max(nx.we - walkMin(nx.wf, nx.wt), r.off.t1); }
+  });
   return { view, tracks };
 }
 
@@ -152,17 +179,23 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
     out.ball = s.to; out.flight = flightAt(fl, s.from, s.to, (m - s.t) / r.dur);
     return out;
   }
+  // holed out (or picked up): he walks off the green from where his ball came to rest to his step-off, at the walking pace (m >= off.t0 here)
+  const off = cur >= 0 ? rows[cur].off : null;
+  if (off && m < off.t1) {
+    const u = (m - off.t0) / (off.t1 - off.t0);
+    out.action = 'walk'; out.hole = rows[cur].hole; out.x = off.rest.x + (off.at.x - off.rest.x) * u; out.y = off.rest.y + (off.at.y - off.rest.y) * u;
+    return out;
+  }
   const j = cur + 1 < rows.length ? rows[cur + 1] : null;
-  if (!j) { out.action = 'done'; out.hole = N ? N - 1 : 0; out.x = end.x; out.y = end.y; out.ball = end; return out; }
+  if (!j) { const p = off ? off.at : end; out.action = 'done'; out.hole = N ? N - 1 : 0; out.x = p.x; out.y = p.y; out.ball = end; return out; }
   out.hole = j.hole;
-  if (m >= j.ws && m < j.we) { // walking: from the last green to the tee, or from where he stood to his ball
+  if (m >= j.ws && m < j.we) { // walking: from the step-off to the tee, or from where he stood to his ball
     const u = (m - j.ws) / (j.we - j.ws);
     out.action = 'walk'; out.x = j.wf.x + (j.wt.x - j.wf.x) * u; out.y = j.wf.y + (j.wt.y - j.wf.y) * u; out.ball = j.s.from;
     return out;
   }
-  if (m < j.ws && j.first && cur >= 0) { // holed out and waiting at the green for the group
-    const pin = holes[rows[cur].hole].pin;
-    out.hole = rows[cur].hole; out.action = 'holed'; out.x = pin.x; out.y = pin.y; out.ball = rows[cur].s.to;
+  if (m < j.ws && off) { // holed out and standing at his step-off, turned to the pin, until he walks to the next tee
+    out.hole = rows[cur].hole; out.action = 'holed'; out.x = off.at.x; out.y = off.at.y;
     return out;
   }
   // before his walk to the ball he waits where he last stood (so the walk starts from there, no jump)
@@ -175,8 +208,9 @@ function stateOf(plan: RoundPlan, c: Cache, id: number, m: number, out: GolferSt
 
 /** every golfer's state at a game minute, one per golfer in plan order: waiting before his tee time (at the first tee); walking, addressing,
  *  swinging or putting along his shots (the ball in flight in `flight`, u 0..1); waiting where he last stood until his walk to the ball, then
- *  addressing it ('address', or 'putt' for a putt) in the last part before the swing; holed out and waiting at the
- *  green; and done (at the last green) after his last hole. The strokes, toPar and thru count only the shots struck by minute.
+ *  addressing it ('address', or 'putt' for a putt) in the last part before the swing; holed out: walking off the green from the cup to his step-off
+ *  (STEP_TILES from the pin toward the next tee, spread by his slot), then standing there ('holed', turned to the pin) until his walk to the next
+ *  tee; and done (at his step-off) once he has walked off the last green. The strokes, toPar and thru count only the shots struck by minute.
  *  With out, its objects are refilled in place and it is returned (the playback calls this every frame, so it allocates little) */
 export function stateAt(plan: RoundPlan, view: CourseView, minute: number, out?: GolferState[]): GolferState[] {
   const c = cacheOf(plan, view), res = out ?? [], n = plan.golfers.length;

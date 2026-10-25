@@ -20,7 +20,7 @@ export type Club = 'driver' | 'wood3' | 'iron4' | 'iron6' | 'iron8' | 'pw' | 'sw
 /** one stroke: the golfer, hole index (0..17), stroke number (1-based), the minute struck, from and to (tiles), the club, the lie where it came
  *  to rest, the penalty stroke (water or out of bounds), and whether it went in */
 export interface Shot { golfer: number; hole: number; stroke: number; t: number; from: Pt; to: Pt; club: Club; lie: Lie; penalty: 0 | 1; holed: boolean }
-/** the whole day's play: the field, the groups, every shot by t, strokes[golfer][hole] (penalties included), and the minute each golfer holed out */
+/** the whole day's play: the field, the groups, every shot by t, strokes[golfer][hole] (penalties included), and the minute each golfer is done (holed out and walked off the last green) */
 export interface RoundPlan { golfers: Golfer[]; groups: Group[]; shots: Shot[]; strokes: number[][]; done: number[] }
 /** what a golfer is doing at a minute: waiting for his tee time, walking, addressing or swinging a full shot, putting, holed, or done */
 export type Action = 'waiting' | 'walk' | 'address' | 'swing' | 'putt' | 'holed' | 'done';

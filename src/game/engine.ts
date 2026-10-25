@@ -91,7 +91,7 @@ import { adjacentBlockPrice, buyAdjacentBlock, COURSE_LAND_MSG, LAND_BLOCK, bloc
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout, GolfSurface } from './golf/types';
 import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
-import { PlayView, makeCourseView, makeField, playRound, teeTimes, type CourseView, type RoundPlan } from './golf/play';
+import { PlayView, boardRows, championLine, makeCourseView, makeField, playRound, standings, teeTimes, type BoardRow, type CourseView, type RoundPlan } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
@@ -177,7 +177,12 @@ function crowdDrawable(out: Drawable[], k: number, p: CrowdPerson) {
 const golferArt = (tag: string): number[] => { const a = GOLFER_PEOPLE.flatMap((p, i) => p.id.includes(tag) ? [i] : []); return a.length ? a : GOLFER_PEOPLE.map((_, i) => i); };
 const GOLFER_ART: Record<'m' | 'w', number[]> = { m: golferArt('_m'), w: golferArt('_w') };
 /** the day's golf round (docs/GOLF-PLAY.md P2): its plan, course view and playback, the tournament's key (the round's count), and each golfer's art index */
-interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[] }
+interface GolfPlay { plan: RoundPlan; view: CourseView; pv: PlayView; key: number; art: number[]; told: boolean }
+/** the day's leaderboard (docs/GOLF-PLAY.md decision 8): the game minute of the day, the top rows and the owner's (boardRows), the champion's line once
+ *  everyone is done (else null), whether everyone is done, and the tournament's name */
+export interface PlayBoard { minute: number; rows: BoardRow[]; champion: string | null; done: boolean; event: string }
+/** the leaderboard's rows shown (the top 8, and the owner's row below them) */
+const BOARD_ROWS = 8;
 /** a closed path over a flat x y list, in the current transform's units */
 function ring(ctx: CanvasRenderingContext2D, p: number[]) { ctx.moveTo(p[0]!, p[1]!); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i]!, p[i + 1]!); ctx.closePath(); }
 /** the distance from p to the seg s, tiles */
@@ -412,6 +417,8 @@ export class Game {
   private crowdDraw: Drawable[] = []; private crowdPeople: CrowdPerson[] = []; private crowdGolfers: CrowdPerson[] = [];
   /** the day's golf round (updatePlay, docs/GOLF-PLAY.md P2): built once per tournament; playTried is the key last tried, so a round with no holes is not rebuilt every frame */
   private play: GolfPlay | null = null; private playTried = -1;
+  /** the leaderboard (playBoard), recomputed at most every 250 ms: the play it is for, the time, and the board */
+  private boardCache: { play: GolfPlay; at: number; board: PlayBoard } | null = null;
   /** Local care and wear augment the existing base grass, lawn presets, paint and grow-in. */
   grass = new GrassManagement(); grassPanel = false; grassHeat = false; grassRadius = 12; grassArea = false; grassDose = 1; grassAngle = 0;
   grassAction: GrassAction | null = null; grassTarget: Pt | null = null;
@@ -4266,7 +4273,25 @@ export class Game {
     const tr = this.traffic, r = tr?.round;
     if (!this.golf || !r || (r.stage !== 'surge' && r.stage !== 'eval')) { this.play = null; this.playTried = -1; return; }
     if (this.playTried !== r.runs) { this.playTried = r.runs; this.play = this.buildPlay(r.runs); }
-    if (this.play) this.play.pv.update(townTimeOf(tr.town, tr.simTime(now)).dayMin, now / 1000);
+    if (!this.play) return;
+    this.play.pv.update(townTimeOf(tr.town, tr.simTime(now)).dayMin, now / 1000);
+    // the champion is toasted once, the first time the board has one (its line is the board's)
+    if (!this.play.told) { const b = this.playBoard(); if (b?.champion) { this.play.told = true; this.toast(`${b.champion} — ${b.event}`, 'good'); } }
+  }
+  /** the day's leaderboard (docs/GOLF-PLAY.md decision 8; the panel and the eval line read it): null with no play. The minute, the rows (boardRows: the
+   *  top 8 and the owner's row below them, the owner the one golfer marked owner), the champion's line once everyone is done, done, and the tournament's
+   *  name. Recomputed at most every 250 ms */
+  playBoard(): PlayBoard | null {
+    const pl = this.play; if (!pl) return null;
+    const now = performance.now(), c = this.boardCache;
+    if (c && c.play === pl && now - c.at < 250) return c.board;
+    const tr = this.traffic, plan = pl.plan, minute = townTimeOf(tr.town, tr.simTime(now)).dayMin, ownerId = plan.golfers.find(g => g.owner)?.id ?? null;
+    const board: PlayBoard = {
+      minute, rows: boardRows(standings(plan, pl.view, minute), plan.golfers, BOARD_ROWS, ownerId), champion: championLine(plan, pl.view, minute),
+      done: plan.golfers.every(g => plan.done[g.id]! <= minute), event: this.golf ? tierInfo(this.golf.tier).name : '',
+    };
+    this.boardCache = { play: pl, at: now, board };
+    return board;
   }
   /** the round of a tournament key (see updatePlay): the course's played holes (the course grid's surface where it is painted, else the painted
    *  areas), the field at the tier, its tee times and the round, all from a seed of the map's seed and the key. Null with no holes to play */
@@ -4281,7 +4306,7 @@ export class Game {
     if (!view.holes.length) return null;
     const seed = Math.floor(hash(this.seed, key) * 4294967296), golfers = makeField(g.tier, seed);
     const plan = playRound(view, golfers, teeTimes(golfers, seed), seed);
-    return { plan, view, pv: new PlayView(plan, view), key, art: golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!) };
+    return { plan, view, pv: new PlayView(plan, view), key, art: golfers.map(p => GOLFER_ART[p.sex][p.look % GOLFER_ART[p.sex].length]!), told: false };
   }
 
   // ---------- main loop ----------

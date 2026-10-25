@@ -4,8 +4,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIRST_TEE, LAST_TEE } from '../src/game/golf/calendar';
 import { TILE_M } from '../src/game/golf/types';
-import { GOLFER_NAMES, carryM, chooseShot, gauss, hitShot, makeField, playRound, putt, rng, standings, stateAt, teeTimes } from '../src/game/golf/play';
-import type { CourseView, Golfer, Lie, PlayHole, Pt, RoundPlan } from '../src/game/golf/play';
+import { GOLFER_NAMES, WALK_M, carryM, chooseShot, gauss, hitShot, makeField, playRound, putt, rng, standings, stateAt, teeTimes } from '../src/game/golf/play';
+import type { CourseView, Golfer, GolferState, Lie, PlayHole, Pt, RoundPlan } from '../src/game/golf/play';
 
 /** the pars of the 18 holes, in play order: three 3s, eleven 4s, four 5s */
 const PARS: (3 | 4 | 5)[] = [3, 4, 4, 5, 3, 4, 4, 4, 5, 4, 3, 4, 4, 4, 5, 4, 4, 5];
@@ -191,5 +191,51 @@ test('standings: started golfers only, sorted by to par, ties share a position',
     assert.ok(rows[i - 1].toPar <= rows[i].toPar, 'sorted by to par');
     if (rows[i - 1].toPar === rows[i].toPar) assert.equal(rows[i].pos, rows[i - 1].pos, 'ties share');
     else assert.ok(rows[i].pos > rows[i - 1].pos, 'the next position after a tie');
+  }
+});
+
+test('holed golfers step off the pin: while the group plays on, a holed golfer stands 3 to 6 tiles from the pin, and two holed golfers of a group never share a point', () => {
+  const view = course();
+  let holedWhileOn = 0;
+  for (const seed of [1, 2, 3]) {
+    const f = makeField(3, seed), gs = teeTimes(f, seed), p = playRound(view, f, gs, seed);
+    for (const g of gs.filter(x => x.players.length >= 3)) {
+      const end = Math.max(...g.players.map(id => p.done[id]!));
+      for (let m = g.tee; m < end; m += 0.25) {
+        const st = stateAt(p, view, m), mine = g.players.map(id => st.find(s => s.golfer === id)!);
+        const holed = mine.filter(s => s.action === 'holed' && !s.flight); // standing (a holing putt's roll into the cup has its flight)
+        if (!holed.length || !mine.some(s => s.action !== 'holed' && s.action !== 'done')) continue; // the group is still on the hole
+        for (const s of holed) {
+          const pin = view.holes[s.hole]!.pin, d = Math.hypot(s.x - pin.x, s.y - pin.y);
+          assert.ok(d >= 3 && d <= 6, `a holed golfer stands ${d.toFixed(2)} tiles from the pin at ${m}`);
+        }
+        for (let i = 0; i < holed.length; i++) for (let k = i + 1; k < holed.length; k++) {
+          assert.ok(Math.hypot(holed[i]!.x - holed[k]!.x, holed[i]!.y - holed[k]!.y) > 1, `two holed golfers apart at ${m}`);
+        }
+        holedWhileOn += holed.length;
+      }
+    }
+  }
+  assert.ok(holedWhileOn > 0, 'some golfer holes while his group plays on');
+});
+
+test('the playback is continuous: no golfer moves more than 1.5 walking paces per 0.02 game minutes (holed golfers included), and done at his done minute', () => {
+  const view = course(), step = 0.02, bound = 1.5 * (WALK_M / TILE_M) * step;
+  for (const seed of [1, 2]) {
+    const f = makeField(3, seed), gs = teeTimes(f, seed), p = playRound(view, f, gs, seed), out: GolferState[] = [];
+    let prev: Pt[] = [], worst = 0, worstAt = '';
+    for (let m = FIRST_TEE - 10; m < 1100; m += step) {
+      const st = stateAt(p, view, m, out);
+      st.forEach((s, i) => {
+        if (prev[i]) { const d = Math.hypot(s.x - prev[i]!.x, s.y - prev[i]!.y); if (d > worst) { worst = d; worstAt = `golfer ${s.golfer} at ${m.toFixed(2)} (${s.action})`; } }
+      });
+      prev = st.map(s => ({ x: s.x, y: s.y }));
+    }
+    assert.ok(worst <= bound, `largest move ${worst.toFixed(3)} tiles, bound ${bound.toFixed(3)}, ${worstAt}`);
+    // the done minute (the plan's) is the state's: done at it, not a moment before, for every golfer (the last hole's walk off included)
+    for (const id of gs.flatMap(g => g.players)) {
+      assert.equal(stateAt(p, view, p.done[id]!, out).find(s => s.golfer === id)!.action, 'done', `golfer ${id} done at his minute`);
+      assert.notEqual(stateAt(p, view, p.done[id]! - 0.01, out).find(s => s.golfer === id)!.action, 'done', `golfer ${id} not done a moment before`);
+    }
   }
 });
