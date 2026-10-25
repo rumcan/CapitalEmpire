@@ -215,6 +215,18 @@ function put(g: Grid, a: Acc, i: number, s: number, h: number, m: number): void 
   g.surf[i] = s; g.hole[i] = nh; g.month[i] = nm;
 }
 
+/** whether a surface id is turf (grass of some kind: the map grass, rough, fescue, fairway, tee, green), not sand or water */
+export const isTurf = (s: number) => s === SURF.none || s === SURF.rough || s === SURF.fescue || s === SURF.fairway || s === SURF.tee || s === SURF.green;
+/** the month value a cell of surface `cur` (holding month `curMonth`) takes when surface s is laid on it with the planting month `month`
+ *  (the owner's test, 2026-10-25: a built hole's rough came up as a brown dirt oval): rough and fescue laid over the map grass are already
+ *  grass, so they are established at once (0); over another grass they keep that grass's state (growing or not); over sand, water or waste
+ *  they are seeded as anything else. Every other surface takes `month` */
+export function laidMonth(s: number, cur: number, curMonth: number, month: number): number {
+  if (s !== SURF.rough && s !== SURF.fescue) return month;
+  if (cur === SURF.none) return 0;
+  return isTurf(cur) ? curMonth : month;
+}
+
 /** applies one brush to cell i under the options (allow, rub, over) */
 function brush(g: Grid, a: Acc, i: number, s: number, hole: number, month: number, o: PaintOpts): void {
   if (o.allow && !o.allow(i)) return;
@@ -225,7 +237,7 @@ function brush(g: Grid, a: Acc, i: number, s: number, hole: number, month: numbe
     return;
   }
   if (o.over === 'below' && cur > s) return;
-  put(g, a, i, s, hole, month);
+  put(g, a, i, s, hole, laidMonth(s, cur, g.month[i], month));
 }
 
 /** a diff from an accumulator: arrays cut to exactly n */

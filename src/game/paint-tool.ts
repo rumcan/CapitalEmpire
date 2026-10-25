@@ -1,6 +1,6 @@
 // The Paint tool's state and input (docs/PAINT-TOOL.md "The tool (UI)"): drawing outlines by clicks or a lasso, picking, erasing, the shape handles of the selected area, and the preview. No React; the engine and PaintPanel call it.
 import type { LotPatch } from './ground-protocol';
-import { BORDER_TEXES, BORDER_W, BRUSH_PRESETS, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
+import { BORDER_TEXES, BRUSH_PRESETS, borderW, drawZ, DEFAULT_STYLE, MAX_PTS, MAX_SIDE, PAINT_TEXES, areaAt, boxOf, checkArea, clampStyle, crossings, fromTuples, insertCorner, insidePoly, moveCorner, polyBox, removeCorner, roundCorners, rotatePts, scalePts, simplify, snapPt, toTuple, translatePts, type BrushKind, type PaintArea, type PaintBox, type PaintTuple } from './paint';
 import { dab, fillPoly, stroke as brushStroke, trace as traceMask, type Mask } from './brush';
 import { MAP } from './iso';
 import { holePreset, kindOfTex, placeHole, storedHolePreset, type HolePreset, type PresetProp, type StoredHole } from './golf/holepreset';
@@ -13,6 +13,9 @@ import { computeSnapPiecePlacement, type CoursePieceArchetype, type CoursePieceH
 import { PIECE_BUTTONS, piecePropsOf, pieceAreas, pieceCost, pieceWhy, snapTargets } from './ext/course-pieces';
 import { CourseHeightJournal, applyCourseHeightBrush, brushBox, estimateCourseBrushM3, unionBox, type CourseHeightBrushDab, type CourseHeightBrushMode, type CourseHeightField, type CourseHeightStep, type CourseTileBox } from './ext/course-height';
 import { CELL_T, SURF, applyDiff, cellAt, cellCentre, diffCost, fillPolygon, paintDisc, paintStroke, type Grid, type GridDiff, type PaintOpts } from './ext/course-grid';
+import { BLOB_STYLE } from './ext/course-blobs';
+import { BORDER_MAX_M, BORDER_MIN_M } from './ext/course-grid/patch';
+import { defaultShadow } from './ext/course-walls';
 import { SQUARE_SIZES, snapDab, squarePoly, squareRun, squareStart } from './ext/course-cursor/snap';
 import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type GridArea } from './ext/course-grid/areas';
 import { unitBuildCost } from './golf/costs';
@@ -70,8 +73,19 @@ interface UndoStep { label: string; before: AreaSnap; after: AreaSnap; props: Pr
 const UNDO_MAX = 100;
 /** the most course-grid cells the undo steps keep in all (13 bytes a cell: about 26 MB); the oldest steps go first */
 const UNDO_CELLS = 2_000_000;
-/** a brush preset's editable settings: the brush radius (tiles) and the area style it paints */
-type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'> };
+/** a brush preset's editable settings: the brush radius (tiles), the area style it paints and, for a surface with a collar on the course
+ *  grid, the collar band's width in metres (bw: the Border slider) and its walls' shadow (sh: the Shadow slider, 0 none .. 1 strong); absent:
+ *  the defaults (BLOB_STYLE's band, course-walls defaultShadow) */
+type BrushSet = { r: number; style: Omit<PaintArea, 'id' | 'pts' | 'hole' | 'kind'>; bw?: number; sh?: number };
+/** the brush kinds whose course-grid surface has a collar band (the Border slider's surfaces), with their surface ids and the band's name */
+export const BORDER_KINDS: Partial<Record<BrushKind, { s: number; band: string }>> = {
+  fairway: { s: SURF.fairway, band: 'first cut' }, tee: { s: SURF.tee, band: 'first cut' }, green: { s: SURF.green, band: 'fringe' },
+  bunker: { s: SURF.bunker, band: 'lip' }, water: { s: SURF.water, band: 'bank' },
+};
+/** the brush kinds that paint the course grid (the old painted-area border does nothing for them) */
+export const GRID_KINDS: readonly BrushKind[] = ['fairway', 'green', 'tee', 'rough', 'bunker', 'water'];
+/** the least ms between two re-draws of the course while a Border or Shadow slider is dragged (the last value always lands) */
+export const LOOK_MS = 120;
 /** the localStorage key of the edited brush presets */
 const BRUSH_KEY = 'capitalempire.brushPresets';
 /** the brush radius range in tiles */
@@ -87,7 +101,9 @@ function loadBrush(): Record<BrushKind, BrushSet> {
     const saved = JSON.parse(localStorage.getItem(BRUSH_KEY) ?? 'null') as Partial<Record<BrushKind, { r?: number; style?: Partial<BrushSet['style']> }>> | null;
     if (saved && typeof saved === 'object') for (const p of BRUSH_PRESETS) {
       const s = saved[p.kind]; if (!s || typeof s !== 'object') continue;
-      out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }) };
+      const { bw, sh } = s as { bw?: unknown; sh?: unknown };
+      out[p.kind] = { r: Number.isFinite(s.r) ? Math.min(BR_MAX, Math.max(BR_MIN, s.r!)) : p.r, style: clampStyle({ ...p.style, ...s.style }),
+        ...(typeof bw === 'number' && Number.isFinite(bw) ? { bw: Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, bw)) } : {}), ...(typeof sh === 'number' && Number.isFinite(sh) ? { sh: Math.min(1, Math.max(0, sh)) } : {}) };
     }
   } catch { /* no storage or a bad save: the defaults */ }
   return out;
@@ -280,7 +296,7 @@ export class PaintTool {
   constructor(host: PaintHost) { this.host = host; }
 
   /** the ground patch of a painted area (outline, texture, scale, angle, border width, border texture, draw order; the tone only when it is on); a brush area draws above the layers below it */
-  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: BORDER_W[a.border]!, bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}), ...edgeOf(a) } }; }
+  static patch(a: PaintArea, mature = true): LotPatch { return { pts: roundCorners(a.pts, a.radius), tex: mature ? a.tex : 'golfSod', paint: { s: a.scale, a: a.angle, b: borderW(a.border), bt: a.btex, z: drawZ(a), ...(a.tone ? { t: a.tone, ta: a.toneAmt, tc: a.tint } : {}), ...(a.bscale !== DEFAULT_STYLE.bscale || a.bangle !== DEFAULT_STYLE.bangle ? { bs: a.bscale, ba: a.bangle } : {}), ...(a.btone ? { bto: a.btone, bta: a.btoneAmt, btc: a.btint } : {}), ...(a.mtex ? { m: { t: a.mtex, s: a.mshare ?? 0.5, f: a.msoft ?? 0.12, p: a.mpatch ?? 1 } } : {}), ...edgeOf(a) } }; }
 
   /** an area's outline with its corners rounded, cached per area until the radius or the corners change */
   private outlineOf(a: PaintArea): number[] {
@@ -293,7 +309,7 @@ export class PaintTool {
   send(a: PaintArea, currentMonth?: number) { const m = currentMonth === undefined || isAreaMature(a, currentMonth); this.host.setLotGround('paint:' + a.id, [PaintTool.patch(a, m)]); }
 
   /** replaces the areas with the save tuples (none: clears) and sends their patches */
-  load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.undos = []; this.redos = []; this.tx = null; this.hj = new CourseHeightJournal(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
+  load(ts?: PaintTuple[], currentMonth?: number) { this.clear(); this.areas = fromTuples(ts ?? []); this.nextId = this.areas.length + 1; for (const a of this.areas) this.send(a, currentMonth); }
 
   /** takes out the areas pred picks (their ground goes; T078's load moves the golf surfaces into the course grid), in paint order, and
    *  clears the undo steps (they name the old areas); returns them */
@@ -308,7 +324,14 @@ export class PaintTool {
   clear() {
     for (const a of this.areas) this.host.setLotGround('paint:' + a.id, null);
     this.areas = []; this.pts = []; this.selected = 0; this.hover = 0; this.hoverH = null; this.drag = null; this.nextId = 1; this.lasso = false; this.down = null; this.stroke = null;
+    // a new game or a load: the last game's undo steps (they name its cells and areas), its current hole and the New hole wizard's plan and
+    // number go too (the owner's test, 2026-10-25); newGame() numbers the wizard from the new game's holes once they are in
+    this.undos = []; this.redos = []; this.tx = null; this.hj = new CourseHeightJournal(); this.pinHint = undefined;
+    this.brushHole = 1; this.pill = null; this.wizard.reset(1);
   }
+  /** a new game or a load is in (the engine's afterLoad, after the course grid and the plans): the New hole wizard waits for the tee of the
+   *  game's first free hole number (1 in a new game) */
+  newGame() { this.wizard.reset(this.nextFreeHole() || 1); this.pill = null; this.host.emit(); }
 
   /** the areas as save tuples */
   save(): PaintTuple[] { return this.areas.map(a => toTuple(a)); }
@@ -327,7 +350,7 @@ export class PaintTool {
       // the brush preset takes the change (the Course tool's Shape method paints with it too), and the areas of this hole and kind re-style at once
       const k = this.brushKind;
       const was = this.brush[k].style;
-      this.brush[k] = { r: this.brush[k].r, style: { ...this.style } }; this.saveBrush();
+      this.brush[k] = { ...this.brush[k], style: { ...this.style } }; this.saveBrush();
       let changed = false;
       for (const a of this.areas) if (a.hole === this.brushHole && a.kind === k) { Object.assign(a, this.brush[k].style); this.send(a); changed = true; }
       if (changed) this.host.save();
@@ -349,7 +372,59 @@ export class PaintTool {
   get strokeSpent(): number { return this.stroke?.grid?.spent ?? 0; }
   /** the cells the stroke in progress has laid or rubbed out so far (0 with none; the cursor's drag total, T118) */
   get strokeCells(): number { return this.stroke?.grid?.cells ?? 0; }
-  setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)), style: this.brush[k].style }; this.saveBrush(); this.host.emit(); }
+  setBrushR(r: number) { const k = this.brushKind; this.brush[k] = { ...this.brush[k], r: Math.min(BR_MAX, Math.max(BR_MIN, Number.isFinite(r) ? r : this.brush[k].r)) }; this.saveBrush(); this.host.emit(); }
+
+  // ---------- the course look's Border and Shadow (the owner's test, 2026-10-25) ----------
+  /** the collar band's width in metres of a brush kind's course-grid surface (the Border slider: the green's fringe, the fairway's and tee's
+   *  first cut, the bunker's lip, the pond's bank), or null when the kind has none */
+  courseBorder(kind: BrushKind = this.brushKind): number | null {
+    const b = BORDER_KINDS[kind]; if (!b) return null;
+    return this.brush[kind].bw ?? BLOB_STYLE[b.s]!.collar!.width;
+  }
+  /** sets a kind's collar band width (metres, BORDER_MIN_M hairline .. BORDER_MAX_M), remembered with its brush look; the course is drawn
+   *  again (throttled while the slider is dragged) */
+  setCourseBorder(m: number, kind: BrushKind = this.brushKind) {
+    if (!BORDER_KINDS[kind] || !Number.isFinite(m)) return;
+    const w = Math.min(BORDER_MAX_M, Math.max(BORDER_MIN_M, m));
+    if (w === this.courseBorder(kind)) return;
+    this.brush[kind] = { ...this.brush[kind], bw: w }; this.saveBrush();
+    this.lookSoon(); this.host.emit();
+  }
+  /** the collar widths set with the Border slider, by surface id (the engine's CourseLooks.border; unset ones are left out) */
+  courseBorders(): (number | undefined)[] {
+    const out: (number | undefined)[] = [];
+    for (const k of Object.keys(BORDER_KINDS) as BrushKind[]) { const bw = this.brush[k].bw; if (bw !== undefined) out[BORDER_KINDS[k]!.s] = bw; }
+    return out;
+  }
+  /** the Shadow of a brush kind's walls (the course look, by surface: the cast shadow and contact shade, 0 none .. SHADOW_HAIRLINE a hairline ..
+   *  1 strong, ext/course-walls wallShade; by default none under a green, the hairline elsewhere), or null for a kind with no walls of its own */
+  courseShadow(kind: BrushKind = this.brushKind): number | null {
+    const b = BORDER_KINDS[kind]; if (!b) return null;
+    return this.brush[kind].sh ?? defaultShadow(b.s);
+  }
+  /** sets a kind's Shadow (0..1), remembered with its brush look; the course is drawn again (throttled while the slider is dragged) */
+  setCourseShadow(v: number, kind: BrushKind = this.brushKind) {
+    if (!BORDER_KINDS[kind] || !Number.isFinite(v)) return;
+    const s = Math.min(1, Math.max(0, v)); if (s === this.courseShadow(kind)) return;
+    this.brush[kind] = { ...this.brush[kind], sh: s }; this.saveBrush();
+    this.lookSoon(); this.host.emit();
+  }
+  /** the Shadows set with the slider, by surface id (the engine's CourseLooks.shadow; unset ones are left out: their defaults) */
+  courseShadows(): (number | undefined)[] {
+    const out: (number | undefined)[] = [];
+    for (const k of Object.keys(BORDER_KINDS) as BrushKind[]) { const sh = this.brush[k].sh; if (sh !== undefined) out[BORDER_KINDS[k]!.s] = sh; }
+    return out;
+  }
+  private lookAt = -Infinity;
+  private lookTimer: ReturnType<typeof setTimeout> | null = null;
+  /** the course look changed: the grid's chunks are contoured and drawn again (the contour worker's queue merges what comes while a job
+   *  runs), at most every LOOK_MS, the last change always landing */
+  private lookSoon() {
+    if (!this.host.grid?.()) return;
+    const now = Date.now(), wait = LOOK_MS - (now - this.lookAt);
+    if (wait <= 0) { this.lookAt = now; this.host.courseLook?.(); return; }
+    this.lookTimer ??= setTimeout(() => { this.lookTimer = null; this.lookAt = Date.now(); this.host.courseLook?.(); }, wait);
+  }
 
   /** writes the brush presets to localStorage (a storage that is missing or full is skipped) */
   private saveBrush() { try { localStorage.setItem(BRUSH_KEY, JSON.stringify(this.brush)); } catch { /* storage may be unavailable */ } }
@@ -770,7 +845,7 @@ export class PaintTool {
   private drawPiece(v: PaintView) {
     const p = this.piece; if (!p) return;
     const status = p.why ? 'invalid' : 'valid';
-    for (const a of p.areas) drawGhostPoly(v, a.pts, status, { fillColor: p.why ? undefined : rgba(TEX_COL.get(a.tex) ?? '#888888', 0.45), dashed: !!a.kind, borderWidthTiles: a.border > 0 ? BORDER_W[a.border]! : 0, borderColor: rgba(BTEX_COL.get(a.btex) ?? '#888888', 0.7) });
+    for (const a of p.areas) drawGhostPoly(v, a.pts, status, { fillColor: p.why ? undefined : rgba(TEX_COL.get(a.tex) ?? '#888888', 0.45), dashed: !!a.kind, borderWidthTiles: a.border > 0 ? borderW(a.border) : 0, borderColor: rgba(BTEX_COL.get(a.btex) ?? '#888888', 0.7) });
     const pl = p.pl;
     if (pl.snapPt && pl.snapNormal) drawGhostSnap(v, { x: pl.snapPt.x, y: pl.snapPt.y, kind: 'edge', nx: pl.snapNormal.x, ny: pl.snapNormal.y, halfSpan: 2 });
     const name = PIECE_BUTTONS.find(q => q.arch === this.pieceArch)?.name ?? 'Piece';
@@ -1215,7 +1290,7 @@ export class PaintTool {
       const why = P.length >= 6 ? this.outlineWhy(P) : '', bad = why !== '';
       if (P.length >= 6) {
         // the shared ghost (T024): texture-tinted fill, the collar band clipped inside, the dashed wireframe; red with the reason when it cannot be placed
-        drawGhostPoly(v, P, bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : rgba(TEX_COL.get(this.style.tex) ?? '#888888', 0.5), borderWidthTiles: this.style.border > 0 ? BORDER_W[this.style.border]! : 0, borderColor: rgba(BTEX_COL.get(this.style.btex) ?? '#888888', 0.75) });
+        drawGhostPoly(v, P, bad ? 'invalid' : 'valid', { fillColor: bad ? undefined : rgba(TEX_COL.get(this.style.tex) ?? '#888888', 0.5), borderWidthTiles: this.style.border > 0 ? borderW(this.style.border) : 0, borderColor: rgba(BTEX_COL.get(this.style.btex) ?? '#888888', 0.75) });
       } else {
         // two corners: the first edge, dashed
         v.setIso(ctx); ctx.beginPath(); trace(ctx, P, false); ctx.setTransform(1, 0, 0, 1, 0, 0);
