@@ -19,6 +19,7 @@ import { lotBatch, type LotPatch } from './ground-protocol';
 import { BLOCK_MAX_AREA, enclosedBlocks } from './blocks';
 import { blockLawn, lotLawn } from './lawns';
 import { PaintTool } from './paint-tool';
+import { escapeLadder, pickTool, switchSideMode, type EscCard, type EscLadder, type SideMode } from './tool-modes';
 import type { PresetProp } from './golf/holepreset';
 import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
@@ -105,7 +106,7 @@ import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
 import { HALF_T, courseBuilding, loadMapGrid, saveMapGrid } from './ext/map-grid';
 import { MapGridLayer } from './ext/map-grid/layer';
-import { STAGE_3_TIME_SEC, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
+import { STUCK_PLAY_SEC, advanceProgress, computeProgressiveUiState, emptyProgress, normalizeProgress, progressFacts, type PlayerProgressFacts, type ProgressiveUiState } from './ext/progressive-ui';
 
 /** the junction types in Tab order (Shift+Tab goes back): each roundabout ring-lane count is its own step */
 const VARIANTS: { type: NodeType; rl: 1 | 2 | 3 }[] = [{ type: 'plain', rl: 1 }, { type: 'stop', rl: 1 }, { type: 'mini', rl: 1 }, { type: 'signal', rl: 1 }, { type: 'slip', rl: 1 }, { type: 'roundabout', rl: 1 }, { type: 'roundabout', rl: 2 }, { type: 'roundabout', rl: 3 }];
@@ -1749,12 +1750,7 @@ export class Game {
     golfStructureProps = new Map<number, Prop>();
     eventTool = false;
     eventStructurePending: { typeId: string; mode: 'rent' | 'buy' } | null = null;
-    toggleEventTool() {
-    if (!this.golfMode) return;
-    this.eventTool = !this.eventTool;
-    if (!this.eventTool) this.eventStructurePending = null;
-    this.emit();
-    }
+    toggleEventTool() { this.toggleSideMode('eventTool'); }
     setPendingStructure(typeId: string, mode: 'rent' | 'buy') {
     this.eventStructurePending = { typeId, mode };
     const def = STRUCTURE[typeId];
@@ -1816,12 +1812,7 @@ export class Game {
     }
     holesTool = false;
     selectedGolfMarker: { hole: number; kind: 'pin' | 'back' | 'middle' | 'forward'; x: number; y: number } | null = null;
-    toggleHolesTool() {
-    if (!this.golfMode) return;
-    this.holesTool = !this.holesTool;
-    if (!this.holesTool) this.selectedGolfMarker = null;
-    this.emit();
-    }
+    toggleHolesTool() { this.toggleSideMode('holesTool'); }
     selectGolfMarker(hole: number, kind: 'pin' | 'back' | 'middle' | 'forward') {
     if (!this.golf) return;
     const pt = kind === 'pin' ? this.golf.pins.find(p => p.hole === hole) : this.golf.tees.find(t => t.hole === hole && t.kind === kind);
@@ -1923,7 +1914,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (t === 'road') this.setRoadScope(scope); if (t !== 'course') this.clubPlacing = false; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t !== 'course') this.clubPlacing = false; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -2612,17 +2603,19 @@ export class Game {
   // ---------- input ----------
   pointerDown(e: PointerEvent) {
   const mx = e.offsetX, my = e.offsetY;
-  if (this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
-  if (this.landMode && this.landHover && e.button === 0) {
+  // the side modes live in Select (P23 P1-A): the Grass panel, Land, Event and Holes never take a build tool's click
+  const side = this.tool === 'select';
+  if (side && this.grassPanel && e.button === 0 && !this.keys.has(' ')) { this.grassTarget = this.tileAt(mx, my); if (this.grassAction) this.careGrass(this.grassAction); this.emit(); return; }
+  if (side && this.landMode && this.landHover && e.button === 0) {
   this.buyLandBlock(this.landHover.rect);
   return;
   }
   this.overlay.setPointerCapture(e.pointerId);
-    if (this.eventTool && this.eventStructurePending && this.golf && this.hover && e.button === 0) {  
+    if (side && this.eventTool && this.eventStructurePending && this.golf && this.hover && e.button === 0) {  
  this.placeEventStructure({ typeId: this.eventStructurePending.typeId, mode: this.eventStructurePending.mode, x: Math.round(this.hover.x), y: Math.round(this.hover.y) });  
  return;  
  }  
- if (this.holesTool && this.golf && this.hover && e.button === 0) {
+ if (side && this.holesTool && this.golf && this.hover && e.button === 0) {
     if (this.selectedGolfMarker) {
     this.moveGolfMarker(this.selectedGolfMarker.hole, this.selectedGolfMarker.kind, this.hover.x, this.hover.y);
     return;
@@ -2762,20 +2755,19 @@ export class Game {
   /** shows or hides the parking demand overlay (the Car park panel) and keeps the worker's heat on with it; callers emit */
   setParkDemand(on: boolean) { this.showParkDemand = on; this.traffic.heatOn(on || this.showFlow); }
   keyDown(e: KeyboardEvent) {
-    const tag = (e.target as HTMLElement)?.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    const el = e.target as HTMLInputElement | null, tag = el?.tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA';
+    // Esc (P23 4.10): the topmost menu or card first (even from a checkbox or slider in it), then the tool's own step, then out to Select; a
+    // focused text box keeps Esc from the tool
+    if (e.key === 'Escape') { escapeLadder(this.escRungs(e, tag === 'TEXTAREA' || (tag === 'INPUT' && !/^(checkbox|radio|range|button|color)$/.test(el!.type)))); return; }
+    if (typing) return;
     this.keys.add(e.key);
-    if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R' || e.key === 'Escape')) {
-      if (e.key === 'Escape') this.placeClubhouse(false); else { this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit(); }
+    if (this.clubPlacing && this.tool === 'course' && (e.key === 'r' || e.key === 'R')) {
+      this.bizRot = !this.bizRot; const h = this.bizHover; if (h) this.clubUpdate(h.mx, h.my); this.emit();
       return;
     }
     if (this.paintOn && this.paint.key(e)) return;
     if (this.tool === 'park' && this.parking.key(e)) return;
     switch (e.key) {
-      case 'Escape':
-        if (this.tool === 'junction' && (this.selectedJunction || this.brush !== 'select')) { if (this.selectedJunction) this.selectedJunction = null; else this.brush = 'select'; this.emit(); break; }
-        if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); break; }
-        if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); break; }
-        if (this.route.length) this.cancelRoute(); else { this.selected = null; this.emit(); } break;
       case 'Enter': if (this.tool === 'road') this.finishRoute(); break;
       case 'Backspace': if (this.tool === 'road') this.undoRoutePoint(); break;
       case 'Delete': this.deleteSelected(); break;
@@ -2810,6 +2802,38 @@ export class Game {
       case 'h': case 'H': this.skipToRush(); break;
       case 'Tab': if (this.tool === 'junction') { e.preventDefault(); if (!e.repeat) this.flipJunction(e.shiftKey ? -1 : 1); } else if (this.tool === 'road') { e.preventDefault(); if (!e.repeat) this.flipVariant(e.shiftKey ? -1 : 1); } break;
     }
+  }
+  /** the App's own menus and cards for Esc (Help, the gear menu, Course stats): which are open, and closing one (the App sets it) */
+  uiCards: { open(): Partial<Record<EscCard, boolean>>; close(c: EscCard): void } | null = null;
+  /** the Esc ladder's rungs (tool-modes.ts): the open cards (the App's, the Event catalogue, the Grass panel, the Budget or Bottlenecks
+   *  card), the tool's own step (with a text box focused, Esc stops there: the tool keeps what is in hand), and Select */
+  private escRungs(e: KeyboardEvent, textBox: boolean): EscLadder {
+    return {
+      open: () => ({ ...this.uiCards?.open(), event: this.eventTool, grass: this.grassPanel, panel: !!this.panel }),
+      close: c => {
+        if (c === 'event') this.toggleSideMode('eventTool'); else if (c === 'grass') this.toggleSideMode('grassPanel');
+        else { if (c === 'panel') this.panel = null; else this.uiCards?.close(c); this.emit(); }
+      },
+      hand: () => textBox || this.escHand(e),
+      tool: () => this.tool,
+      select: () => this.setTool('select'),
+    };
+  }
+  /** Esc's tool rung: the tool steps back one stage or drops what is in hand (the clubhouse, the brush's stroke or outline, a bay row, the
+   *  junction picked, the car watched, the bus stop picked, the route, the selection, the pin or tee picked, the Land or Holes switch);
+   *  true when it did (else Esc puts the tool down for Select) */
+  private escHand(e: KeyboardEvent): boolean {
+    if (this.clubPlacing && this.tool === 'course') { this.placeClubhouse(false); return true; }
+    if (this.paintOn && this.paint.key(e)) return true;
+    if (this.tool === 'park' && this.parking.key(e)) return true;
+    if (this.tool === 'junction' && (this.selectedJunction || this.brush !== 'select')) { if (this.selectedJunction) this.selectedJunction = null; else this.brush = 'select'; this.emit(); return true; }
+    if (this.traffic.car || this.traffic.watch) { this.closeInspect(); this.closeWatch(); return true; }
+    if (this.busPick) { this.busPick = null; this.busHover = null; this.emit(); return true; }
+    if (this.route.length) { this.cancelRoute(); return true; }
+    if (this.selected) { this.selected = null; this.emit(); return true; }
+    if (this.selectedGolfMarker) { this.selectedGolfMarker = null; this.emit(); return true; }
+    if (this.landMode || this.holesTool) { this.toggleSideMode(this.landMode ? 'landMode' : 'holesTool'); return true; }
+    return false;
   }
   keyUp(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement)?.tagName;
@@ -3545,11 +3569,22 @@ export class Game {
   get golfMode(): boolean { return this.golf !== null; }
   landMode = false;
   landHover: { rect: [number, number, number, number]; price: number; landClass: ParcelLandClass } | null = null;
-  toggleLandMode() {
-  if (!this.golfMode) return;
-  this.landMode = !this.landMode;
+  toggleLandMode() { this.toggleSideMode('landMode'); }
+  /** the Grass panel's button: opens the panel (in Select) or closes it */
+  toggleGrassPanel() { this.toggleSideMode('grassPanel'); }
+  /** opens side mode k (the Grass panel, Land, Holes, Event) and closes the others, or closes k: opening one switches to Select and picking a
+   *  build tool closes them (setTool), so a side mode never takes a build tool's click (P23 P1-A, tool-modes.ts). Land, Holes and Event are golf only */
+  toggleSideMode(k: SideMode) {
+  if (k !== 'grassPanel' && !this.golfMode) return;
+  const on = switchSideMode(this, k); this.tidySideModes();
+  if (on) this.setTool('select'); else this.emit();
+  }
+  /** what a closed side mode leaves behind: the land block under the pointer, the picked pin or tee, the structure in hand, the armed grass care */
+  private tidySideModes() {
   if (!this.landMode) this.landHover = null;
-  this.emit();
+  if (!this.holesTool) this.selectedGolfMarker = null;
+  if (!this.eventTool) this.eventStructurePending = null;
+  if (!this.grassPanel) this.grassAction = null;
   }
   private blockLandClass(r: [number, number, number, number]): { landClass: ParcelLandClass; houses: number; buildings: number } {
   const [bx, by, bw, bh] = r;
@@ -3608,15 +3643,29 @@ export class Game {
   }
   /** counts a player action toward the tool unlocks (golf mode only; saved) */
   private bump(k: 'pieces' | 'roads' | 'parks' | 'structures') { const p = this.golf?.progress; if (!p) return; p[k]++; this.scheduleSave(); this.emit(); }
-  /** the player's progress facts (T032), null outside golf mode */
-  playerProgressFacts(): PlayerProgressFacts | null { const p = this.golf?.progress; return p ? progressFacts(p, this.traffic.round.runs) : null; }
+  /** the player's progress facts (T032; T117: the unlocks read the course: its holes with a par, the seasons played and the tour's invitation),
+   *  null outside golf mode */
+  playerProgressFacts(): PlayerProgressFacts | null {
+    const g = this.golf, p = g?.progress;
+    return p ? progressFacts(p, { holes: this.courseHoleViews().filter(h => h.par > 0).length, seasons: this.seasonsDone(), invited: !!g!.invited }) : null;
+  }
+  private progTick = 0;
+  /** keeps the saved progress in step (T117, about 6 times a second): the unlock stage reached (it never falls) and the tool in hand counted as
+   *  opened (its NEW badge goes) */
+  private progressCheck() {
+    const p = this.golf?.progress; if (!p || ++this.progTick % 10) return;
+    const f = this.playerProgressFacts();
+    if (f && advanceProgress(p, f, this.uiTool)) { this.scheduleSave(); this.emit(); }
+  }
+  /** why a course path or drive is held back by the unlock stage (T117: the cement slab path until the first hole), or null when it is not */
+  courseStageLock(id: ClassId): string | null { return this.toolUi()?.lockedCourseClasses.find(c => c.id === id)?.why ?? null; }
   /** the progressive tool visibility (T032/T033), null outside golf mode (classic and sandbox show everything) */
   progressiveUi(): ProgressiveUiState | null { const f = this.playerProgressFacts(); return f ? computeProgressiveUiState(f) : null; }
   /** the tool visibility in force (T033): null shows everything (classic games, and the dev sandbox's unlock-all) */
   toolUi(): ProgressiveUiState | null { return this.unlockAll ? null : this.progressiveUi(); }
   /** hides a first-run hint for good (saved) */
   dismissHint(id: string) { const p = this.golf?.progress; if (!p || p.dismissed.includes(id)) return; p.dismissed.push(id); this.scheduleSave(); this.emit(); }
-  /** the "Show all tools (Advanced)" toggle (saved) */
+  /** Settings > "Show every tool now" (saved) */
   setAdvancedTools(on: boolean) { const p = this.golf?.progress; if (!p || p.advanced === on) return; p.advanced = on; this.scheduleSave(); this.emit(); }
   golfView(): GolfView | null {
   if (!this.golf) return null;
@@ -3683,9 +3732,10 @@ export class Game {
     this.toast('Skipping to the tournament… (8× for the day)');
   }
   /** a road class is open to build: every class in event mode, else as the Career unlocks it. A course path or drive (P19) is open only in a golf
-   *  game, at its tier (golf.tier: courseRoadOpen); the dev sandbox's unlock-all (sandboxUnlock: the dev server, or ?unlock=1) opens every tier (T084) */
+   *  game, at its tier (golf.tier: courseRoadOpen) and its unlock stage (T117: courseStageLock); the dev sandbox's unlock-all (sandboxUnlock: the
+   *  dev server, or ?unlock=1) opens every tier (T084) */
   classOpen(id: ClassId): boolean {
-    if (isCourseClass(id)) return courseRoadOpen(id, this.golf ? this.golf.tier : null, this.sandboxUnlock);
+    if (isCourseClass(id)) return courseRoadOpen(id, this.golf ? this.golf.tier : null, this.sandboxUnlock) && !this.courseStageLock(id);
     return this.sandboxUnlock || this.eventMode || classUnlocked(id, this.reached);
   }
   /** the road tool's scope (T084): entering the other scope swaps the picked class for the one last picked there (a town class under Roads, a
@@ -3695,11 +3745,12 @@ export class Game {
     this.roadScope = scope;
     if (isCourseClass(this.roadClass) !== course) { this.scopeClass[course ? 'town' : 'course'] = this.roadClass; this.roadClass = this.scopeClass[scope]; }
   }
-  /** why a road class is not open (classOpen is false): a course drive's golf tier (P19; outside golf it is only on golf courses), else the career
-   *  milestone that unlocks it; a town class no milestone lists gets a plain note */
+  /** why a road class is not open (classOpen is false): a course path's unlock stage (T117), a course drive's tour level (P19; outside golf it is
+   *  only on golf courses), else the career milestone that unlocks it; a town class no milestone lists gets a plain note */
   classLockWhy(id: ClassId): string {
-    const c = classOf(id), tier = courseTierNeeded(id);
-    if (tier !== null) return this.golf ? `${c.name} opens at golf tier ${tier}` : `${c.name} is only on golf courses`;
+    const c = classOf(id), tier = courseTierNeeded(id), stage = this.courseStageLock(id);
+    if (stage) return `${c.name}: ${stage.toLowerCase()}`;
+    if (tier !== null) return this.golf ? `${c.name} opens at Tour level ${tier}` : `${c.name} is only on golf courses`;
     const lk = unlockOf('class', id);
     return lk ? `${c.name} unlocks at ${lk.pop.toLocaleString()} residents (${lk.name})` : `${c.name} is not open yet`;
   }
@@ -4078,15 +4129,15 @@ export class Game {
   // ---------- main loop ----------
   frame = (now: number) => {
     this.raf = requestAnimationFrame(this.frame);
-    // real play seconds of a golf game while the sim runs (T033): stops at the Stage 3 mark, so the save does not churn
-    const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STAGE_3_TIME_SEC) gp.playS += pdt;
+    // real play seconds of a golf game while the sim runs (T033): stops at the stuck player's mark (T117: 20 minutes), so the save does not churn
+    const pdt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0; this.lastFrame = now; const gp = this.golf?.progress; if (gp && this.speed > 0 && gp.playS < STUCK_PLAY_SEC) gp.playS += pdt;
     this.perf.courseMs = this.cMs; this.cMs = 0; this.perf.lotFlushMs = 0;
     if (this.grassWait.size) { const tg = performance.now(); this.courseGrass(1); this.cMs += performance.now() - tg; }
     this.applyLotQueue(); this.applyFarmQueue(); if (this.cgDirty && performance.now() - this.cgSentAt >= this.courseSendMs) { const tc = performance.now(); this.flushCourse(); this.cMs += performance.now() - tc; } this.flushLotGround(); this.flushCasters(); this.laybyLots();
     // the farms yield to the lots the town builds on (checked about once a second: the count walks every lot)
     if (this.farmsEnabled && ++this.farmTick % 60 === 0 && this.farmMap.stale(claimedLots(this.traffic.lots), this.site, this.farmParks().length)) this.farmsUpdate(true);
     if (this.traffic.round.cards.length > this.cardsApplied) this.applyCards();
-    this.yearCheck(); this.foundingCheck();
+    this.yearCheck(); this.foundingCheck(); this.progressCheck();
     const t0 = performance.now();
     const dt = Math.min(0.05, (now - this.last) / 1000), frameMs = now - this.last; this.last = now;
     this.resize();

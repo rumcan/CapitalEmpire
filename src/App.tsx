@@ -87,7 +87,8 @@ export default function App() {
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
- const [eventTool, setEventTool] = useState(false);
+  // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
+  useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, stats: !!courseStats }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : setCourseStats(null)) }; });
   /** the Developer toggle (see devStart): the gear menu's checkbox and F3 set it; remembered */
   const [dev, setDevState] = useState(devStart);
   const devRef = useRef(dev);
@@ -212,9 +213,8 @@ export default function App() {
                   {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>}
                   {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>}
                   {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
- {chip('event') && <button className={`chip ${eventTool ? 'chip-on' : ''}`} onClick={() => { setEventTool(!eventTool); game?.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
+ {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
  {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</button>}
-                  {game.playerProgressFacts() && <button className={`chip ${ui?.advancedMode || !ui ? 'chip-on' : ''}`} onClick={() => { game.setAdvancedTools(!(ui?.advancedMode)); bump(); }} title={ui ? ui.stageLabel : 'All tools'}><Icon name="up" size={16} />All tools</button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -251,12 +251,19 @@ export default function App() {
               ))}
               <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
               <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to (G)"><Icon name="fullscreen" size={22} /></button>
-              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => { game.grassPanel = !game.grassPanel; game.grassAction = null; game.emit(); }} title="Inspect and maintain course and town grass">Grass</button>
+              <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
                 {menu && (
                   <div className="glass absolute right-0 top-full z-30 mt-2 flex max-h-[calc(100vh-8rem)] w-80 flex-col gap-1 overflow-y-auto p-2">
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="Performance panel, dev badge, Studio, traffic and growth controls (F3)"><input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} />Developer (F3)</label>
+                    {/* T117: the unlocks' Settings switch (was the top bar's All tools chip): every tool and fine control now, whatever the stage */}
+                    {game.playerProgressFacts() && (
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title={ui ? `Tools open as your course grows (${ui.stageLabel}). Tick to show every tool and fine control now` : 'The dev sandbox shows every tool (?unlock=0 plays the unlocks)'}>
+                        <input type="checkbox" checked={!ui || ui.advancedMode} disabled={!ui} onChange={e => { game.setAdvancedTools(e.target.checked); bump(); }} />
+                        Show every tool now
+                      </label>
+                    )}
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
@@ -392,11 +399,11 @@ export default function App() {
           <CourseStatsPanel stats={courseStats} onClose={() => setCourseStats(null)} onSelectHole={h => { if (game.holesTool) game.selectGolfMarker(h, 'pin'); else { const pin = game.golf?.pins.find(p => p.hole === h); if (pin) game.jumpTo(pin.x, pin.y); } }} />
           </div>
           )}
-          {eventTool && gv && (
+          {game.eventTool && gv && (
           <div className={`pointer-events-auto absolute ${game?.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 max-h-[75vh] w-80 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/90 p-3 text-slate-200 shadow-2xl backdrop-blur`}>
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
           <div className="flex items-center gap-2 font-semibold text-amber-200"><Icon name="buildings" size={18} />Event Structures</div>
-          <button className="btn-icon" onClick={() => { setEventTool(false); if (game) game.eventTool = false; bump(); }}>✕</button>
+          <button className="btn-icon" onClick={() => game.toggleEventTool()}>✕</button>
           </div>
           <div className="space-y-1.5 text-xs">
           {STRUCTURES.filter(s => s.tier <= gv.tier + 1).map(s => (
@@ -935,8 +942,9 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
               <Icon name={ex ? 'up' : 'down'} size={12} />
             </button>
             {ex && types.filter(t => t.family === f.id).map(t => {
-              // a locked card: a course drive shows its golf tier, a town class the career milestone that unlocks it (greyed either way)
-              const c = CLASS[t.id]!, open = game.classOpen(t.id), tier = courseTierNeeded(t.id), lk = open ? null : unlockOf('class', t.id), lock = open ? null : tier !== null ? `🔒 Tier ${tier}` : lk ? lockText(lk.pop) : '🔒', on = game.cls.base === t.id;
+              // a locked card: a course path held back by the unlock stage says so (T117), a course drive shows its tour level, a town class the
+              // career milestone that unlocks it (greyed either way)
+              const c = CLASS[t.id]!, open = game.classOpen(t.id), tier = courseTierNeeded(t.id), lk = open ? null : unlockOf('class', t.id), lock = open ? null : game.courseStageLock(t.id) ? '🔒 First hole' : tier !== null ? `🔒 Tour level ${tier}` : lk ? lockText(lk.pop) : '🔒', on = game.cls.base === t.id;
               return (
                 <div key={`${f.id}-${t.id}`}>
                   <button className={`card mb-1 ${on ? 'card-on' : ''} ${lock ? 'opacity-50' : ''}`} onClick={() => game.pickType(t.id)} title={KEY_CLASSES.includes(t.id) ? `Key ${KEY_CLASSES.indexOf(t.id) + 1}` : 'No key: picked here'}>
@@ -978,7 +986,7 @@ function RoadPanel({ game, scope }: { game: Game; scope: 'town' | 'course' }) {
           </div>
         </div>
       )}
-      {/* T036: the fine tuning rows sit under All tools (advanced); their hotkeys (Q, E, Tab) work from the engine either way */}
+      {/* T036: the fine tuning rows sit under Settings > Show every tool now (advanced); their hotkeys (Q, E, Tab) work from the engine either way */}
       {adv && <>
         <div className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Fine tuning</div>
         <div className="mt-2 flex items-center gap-1 text-xs">
