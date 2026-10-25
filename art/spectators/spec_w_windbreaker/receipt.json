@@ -4,6 +4,10 @@
   "rigFrom": "base_woman (local rig transfer, rig-local-person.mjs)",
   "clipsFrom": {
     "walk": "base_woman",
-    "idle": "base_woman"
+    "idle": "base_woman",
+    "clap": "base_woman",
+    "cheer": "base_woman",
+    "sit": "base_woman",
+    "sit_clap": "base_woman"
   }
 }

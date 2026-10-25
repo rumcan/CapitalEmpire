@@ -118,6 +118,16 @@ halfway 0.75, top 1.0, downswing 1.18, delivery 1.22, **impact 1.255**, release 
 finish 2.0 s (the json lists them as `times`). Two render fixes on the way: a prop clip renders at 2x supersampling, and a clip render no
 longer sends the idle file (three of a golfer's 28 MB files in one call closed the page).
 
+**Update 2026-10-25 13:40 UTC: the crowd clips** (the owner: clapping, cheering, sitting, seated clap). Made on Meshy for base_man and
+base_woman on the rigs above (3 credits each, 24 in all; **40 Meshy credits left**; each clip file is stripped of its unused textures by `strip-glb-images.mjs`, 13 to 4 MB, the sheets byte-identical): `clap` = `Stand_Clap_and_Sit_Down` 299 (Meshy has no
+standing clap loop; this one stands, claps, sits: the sheet takes one clap from the standing part), `cheer` = `Cheer_with_Both_Hands_Up` 298
+(a one-shot), `sit` = `Chair_Sit_Idle_M` 33 / `_F` 32 (only its first 1.5 s is upright; after that it hunches forward), `sit_clap` =
+`Sitting_Clap` 354 (small claps low over the lap). The frames were picked from dense test renders (`output/crowd-test`, git-ignored) and are in
+the cast's `clipRender`: clap 1.50/1.60/1.70/1.76 s (a loop: together, opening, apart, closing), cheer 0.33 to 1.24 s in 6 (dip, arms up,
+down; `--once`), sit 0.3/1.0 (`--seated`), sit_clap 1.00/1.05/1.12/1.22 (a loop, `--seated`). Every spectator from base_man or base_woman has
+`clips: [clap, cheer, sit, sit_clap]` (13; the kids, from base_kid, have no crowd clips yet: base_kid is not rigged on Meshy). The json `loop`
+is now true unless `--once` (it was false whenever `--times` was given). Seated sheets carry `seatHeightMetres` and `seat` for the grandstand.
+
 ## 2. The pipeline (all in `scripts/assets/people3d/`; details in SPECTATOR-ART.md 1 and 1b)
 1. `make-person-3d.mjs <id> "<look>" --root <dir> --model-only`: the model from RUN (text-to-3d, an A-pose prompt around the look). It
    checks RUN's library first (never pays twice), and when the CLI gives up after 600 s it waits for the model in the library.

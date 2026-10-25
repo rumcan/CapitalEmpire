@@ -1,0 +1,41 @@
+{
+  "id": "spectator:spec_m_bucket_hat:sit",
+  "name": "spec_m_bucket_hat sit",
+  "clip": "sit",
+  "heightMetres": 1.76,
+  "frameWidth": 160,
+  "frameHeight": 270,
+  "anchor": {
+    "x": 80,
+    "y": 260
+  },
+  "directions": [
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E",
+    "SE"
+  ],
+  "frames": [
+    "sit1",
+    "sit2"
+  ],
+  "fps": 0.2,
+  "loop": true,
+  "times": [
+    0.3,
+    1
+  ],
+  "source": "art/spectators/spec_m_bucket_hat",
+  "clips": {
+    "sit": "Armature|Chair_Sit_Idle_M|baselayer 10.70s, stride 10.30s, body turned 1 deg"
+  },
+  "seatHeightMetres": 0.64,
+  "seat": {
+    "x": 80,
+    "y": 189
+  }
+}

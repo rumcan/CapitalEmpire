@@ -224,7 +224,7 @@ try {
   const walkSecs = out.period;
   const meta = CLIP
     ? { id: `${PREFIX}:${id}:${CLIP}`, name: `${id} ${CLIP}`, clip: CLIP, heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY }, directions: ROWS, frames: names,
-        fps: Math.round(FRAMES / ((STRIDE ? out.period : out.clipSecs) || 1) * 10) / 10, loop: !ONCE && !TIMES, ...(TIMES ? { times: TIMES } : {}), source: `${ROOT_DIR}/${id}`, clips: { [CLIP]: out.walk },
+        fps: Math.round(FRAMES / ((STRIDE ? out.period : out.clipSecs) || 1) * 10) / 10, loop: !ONCE, ...(TIMES ? { times: TIMES } : {}), source: `${ROOT_DIR}/${id}`, clips: { [CLIP]: out.walk },
         ...(SEATED ? { seatHeightMetres: Math.round(out.hipY * 100) / 100, seat: { x: AX, y: Math.round(AY - out.hipY * Math.cos(Math.PI / 6) * ART_PPM) } } : {}),
         ...(PROP ? { prop: PROP, addressSecs: Math.round(out.tc * 100) / 100, shot: 'right-handed: the ball flies 90 degrees to the golfer\'s left of the row\'s facing (row S, the golfer facing the viewer: toward screen right)' } : {}) }
     : { id: `${PREFIX}:${id}`, name: `${id} (3D template)`, size: 'adult', heightMetres: HEIGHT, frameWidth: FW, frameHeight: FH, anchor: { x: AX, y: AY },

@@ -4,7 +4,11 @@
   "rigFrom": "base_man (local rig transfer, rig-local-person.mjs)",
   "clipsFrom": {
     "walk": "base_man",
-    "idle": "base_man"
+    "idle": "base_man",
+    "clap": "base_man",
+    "cheer": "base_man",
+    "sit": "base_man",
+    "sit_clap": "base_man"
   },
   "plateCut": "RUN fused a ground plate to the feet; cut off locally by cut-plate.mjs (2026-10-24)"
 }
