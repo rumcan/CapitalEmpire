@@ -3,6 +3,10 @@
 The owner, 2026-10-24: "We want Blizzard Entertainment style textures." Reference picture:
 `art/reference/grass-style-blizzard-20261024.webp` (a green with two bunkers). Attach it to every request.
 
+**Since T128 (2026-10-25)** the game lays the new three-coverage sets (near 40 m, mid 320 m, far 4096 m a tile:
+`new-painted-spatial-scales-20261025.json`) on every grass, sand, water and wall surface. The surfaces that still have no painted art
+(asphalt, concrete, gravel, mulch, worn path, rock, top-down soil, farm crops) and their prompts are in `docs/art/PAINTED-ART-REQUESTS.md`.
+
 ## How the game lays a set (T082 integration, 2026-10-25)
 - **Scale:** each image at its own pixels at its zoom level: close over 48 m, mid over 96 m, far over 192 m (1024 px each), crossfading
   between levels. The first set (`art/theme-consistency/generated/ground/painted-lod/grass-lod-v1`, painted as "8 m") is laid this way: at

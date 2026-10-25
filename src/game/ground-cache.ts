@@ -15,6 +15,7 @@ import type { Waterway } from './terrain/types';
 import GroundWorker from './ground.worker?worker';
 import type { GrassCellView } from './ext/grass-management';
 import { casterChange } from './living-ground';
+import { onPaintedSurfaces, paintedSurfaces } from './painted-surfaces-live';
 
 export interface Tile {
   kind: TileKind; i: number; j: number;
@@ -52,12 +53,15 @@ export class GroundCache {
       this.workers.push(wk); this.inflight.push(0);
     }
   }
-  terminate() { for (const w of this.workers) w.terminate(); this.workers = []; }
+  terminate() { for (const w of this.workers) w.terminate(); this.workers = []; this.unsurfaces?.(); this.unsurfaces = null; }
   /** the game's Grass setting (painted-grass-lod.ts GrassArt), sent with the art */
   grassArt: GrassArt = GRASS_ART_DEFAULT;
   /** the Grass setting changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */
   setGrassArt(art: GrassArt) { if (art === this.grassArt) return; this.grassArt = art; this.broadcast({ t: 'grassArt', art }); this.invalidateAll(); }
-  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); }
+  init(t: { cls: Uint8Array; height: Float32Array; waters: Waterway[] }) { const art = { ...withPresets(withBaseGrass(GROUND_ART)), grassArt: this.grassArt }; this.workers.forEach((wk, i) => wk.postMessage({ t: 'init', art, terrain: t.cls, height: t.height, waters: t.waters, build: i === 0, peers: this.workers.length - 1 } satisfies ToWorker)); this.broadcast({ t: 'living', ...this.living }); this.broadcast({ t: 'slopeLight', strength: this.slopeLight }); this.broadcast({ t: 'surfaces', file: paintedSurfaces() });
+    // the studio saved the painted surfaces (the dev server hot-swaps the file): every worker takes the new looks and every chunk is baked again
+    this.unsurfaces?.(); this.unsurfaces = onPaintedSurfaces(file => { this.broadcast({ t: 'surfaces', file }); this.invalidateAll(); }); }
+  private unsurfaces: (() => void) | null = null;
   /** the course height light's strength (T126): light.json's, or the gear menu's Slope light */
   slopeLight = HEIGHT_LIGHT_STRENGTH;
   /** the Slope light changed: every worker switches and every chunk is baked again (each keeps its old picture until then) */

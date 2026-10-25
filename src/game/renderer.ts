@@ -13,7 +13,7 @@ import { HS, TC, type Waterway } from './terrain/types';
 import { makeNoise } from './terrain/noise';
 import { WOODLAND_TEX, classAlpha, rockAlpha, shadeField, shadeRGBA, slopeField, waterBox, waterShape } from './terrain-paint';
 import { quadBox, type CourseLayer, type CoursePatch, type CourseRim, type CourseTex, type CourseWall, type LotPatch, type PatchTex } from './ground-protocol';
-import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
+import { DRAW_ORDER, FaceForm, GREEN_FACE, STAIR_TREAD, SURF_HEIGHT, SUN_DIR, WALL_DROP, WALL_PX_PER_M, WALL_TEX, WallMat, defaultShadow, faceLight, faceScale, isOverlay, layerCode, shadowOwner, slopeLight, stairSteps, wallShade, type Stair, type WallShade } from './ext/course-walls';
 import { SURF } from './ext/course-grid';
 import { SPROUT_PERIOD, growDraws, seedColour, seedSprouts, sproutRes, type GrowDraw } from './ext/course-fx/seed';
 import { courseImages, courseRes, lineField } from './ext/course-grid/field';
@@ -23,11 +23,17 @@ import { CELL as COURSE_CELL } from './golf/paintcourse';
 import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
-import { PaintedGround } from './painted-ground';
-import { trimLru } from './painted-grass-lod';
+import { PaintedGround, type LayLevel } from './painted-ground';
+import { coversMap } from './painted-families';
+import { WOODLAND, lawnSlot, lawnTex } from './painted-surfaces';
+import { BLEND_WAVES, blendAlpha, blendNoise, trimLru } from './painted-grass-lod';
 import { CasterStore, COURSE_GRASSY, COURSE_WATER, SHADOW_DIR, debugImage, grassyTex, influence, livingMasks, livingQueryBox, livingRes, livingSignature, waterTex, type Box, type InfluenceGrid, type LivingMasks, type RoadPiece, type WaterLine } from './living-ground';
-/** the chunks whose painted grass a worker keeps composed (about 3 MB each) */
-const COMPOSED_CHUNKS = 8;
+/** the bytes of painted compositions a worker keeps (a chunk's look is about 3 MB at the closest zoom; the bake in progress keeps all of its own) */
+const COMPOSED_BYTES = 64 << 20;
+/** a painted composition is made and kept in squares of this many chunk px (only the part of a chunk a surface uses is composed) */
+const PAINT_CELL = 128;
+/** a painted composition of a chunk: its picture, the cells composed so far, its size in bytes */
+type PaintedEntry = { buf: Cnv; cells: Uint8Array; bytes: number };
 /** the living ground's leaf litter (T111): the chunks whose leaves a worker keeps laid out, the picture's side (px), the tiles it covers and
  *  the leaves a square metre of it holds (the stochastic layout overlaps its soft patches about two deep, so the ground shows about twice that) */
 const LEAF_CHUNKS = 4, LEAF_PX = 1024, LEAF_PERIOD = 16, LEAF_DENSITY = 2.6;
@@ -230,9 +236,14 @@ export class GroundPainter {
    *  textures composed for it so far (one picture per family, a copy per tint) */
   private painted = new PaintedGround();
   private chunkNow: { key: string; L: number; box: BBox; M: DOMMatrix; Minv: DOMMatrix; W: number; H: number } | null = null;
-  private paintedBufs = new Map<string, Cnv | null>();
+  /** the tinted and toned copies the bake in progress made (by composition, tint and tone), and the compositions it uses (kept in the LRU) */
+  private toned = new Map<string, PaintedEntry>(); private bakeKeys = new Set<string>();
+  /** the planner's painted pictures (a look's far painting, tinted and toned), by look */
+  private planPics = new Map<string, Cnv>();
+  /** the course walls' painted cut faces (a look's near painting at a mip, tinted and toned), by look and mip */
+  private wallPics = new Map<string, Cnv>();
   /** the painted grass composed for the last few chunks (an LRU), by chunk, level, family and art level */
-  private composed = new Map<string, Cnv>();
+  private composed = new Map<string, PaintedEntry>(); private composedBytes = 0;
   private scratch = new Map<string, Cnv>();
   /** the noise that wobbles the class edges (fixed seed) */
   private edgeNoise = makeNoise(7);
@@ -245,7 +256,9 @@ export class GroundPainter {
   /** the influence grids and masks of the last few chunks, by chunk and sources (living-ground.ts livingSignature) */
   private livingMade = new Map<string, { grid: InfluenceGrid; masks: LivingMasks | null }>();
   /** forget the planner map's colours (the Grass setting changed: the grass is another picture) */
-  resetPlanColours() { this.planCols.clear(); }
+  resetPlanColours() { this.planCols.clear(); this.planPics.clear(); this.wallPics.clear(); }
+  /** the painted looks changed (the studio saved the surfaces, or the Grass setting): the compositions made with the old ones go */
+  resetPainted() { this.resetPlanColours(); this.composed.clear(); this.composedBytes = 0; }
   blocks: PlanBlocks = new Float32Array(0);
   /** hillshade per height sample, and the waterways with their bboxes (grown for the shore) */
   shade: Float32Array = new Float32Array(HS * HS);
@@ -302,10 +315,16 @@ export class GroundPainter {
 
   /** the planner colour of a texture: its mean RGB at the planner mip, 20% desaturated and lifted 5% (cached). It never depends on what this worker has built
    *  (every worker must plan the same colour): a lazy photo with no planner mip of its own uses its Paint swatch */
+  /** the woodland floor's texture: its painted look when it has one (T128: its own surface, so a forest on the planner map need not wear the
+   *  course's fescue), else the course's Fescue */
+  private woodlandTex(): string { return this.tex.isPainted(WOODLAND) ? WOODLAND : WOODLAND_TEX; }
   private planColour(name: string): string {
     let c = this.planCols.get(name);
     if (!c) {
-      const img = this.tex.isPainted(name) ? this.tex.sourceFor(name, .035)?.img : name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
+      // a painted texture: its look's mean colour (painted-families.ts lookColour, from the registry: the same in every worker)
+      const pm = this.tex.paintedMean(name);
+      if (pm) { const r = parseInt(pm.slice(1, 3), 16), g = parseInt(pm.slice(3, 5), 16), b = parseInt(pm.slice(5, 7), 16), y = 0.3 * r + 0.59 * g + 0.11 * b, lift = (v: number) => Math.round(Math.min(255, (v * 0.8 + y * 0.2) * 1.05)); c = `rgb(${lift(r)},${lift(g)},${lift(b)})`; this.planCols.set(name, c); return c; }
+      const img = name === 'lotAsphalt' ? this.tex.mosaicFor('lot', 0.035) : EAGER_PHOTO.has(name) && !GROUND_PHOTO.has(name) ? this.tex.mosaicFor(name, 0.035) : this.tex.mips.has(name + '@0.035') ? this.tex.image(name as TexName, 0.035) : null;
       if (!img) return PAINT_COL.get(name) ?? '#808080';
       const d = ctx2d(img).getImageData(0, 0, img.width, img.height).data, n = d.length / 4;
       let r = 0, g = 0, b = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; }
@@ -323,11 +342,13 @@ export class GroundPainter {
     const box = GroundPainter.tileBox(X0, Y0, X0 + PLAN_W, Y0 + PLAN_H, 2), [tx0, ty0, tx1, ty1] = box;
     ctx.fillStyle = '#2c3a20'; ctx.fillRect(0, 0, W, H);
     ctx.setTransform(M);
-    ctx.fillStyle = this.planColour('grass'); ctx.fillRect(0, 0, MAP, MAP);
+    // the map grass: its look's far painting (it covers the map once, so it never repeats), else its flat colour
+    const planTex = (t: string): CanvasPattern | string => { const pp = this.planPicture(t); if (!pp) return this.planColour(t); const pat = ctx.createPattern(pp.img, 'repeat')!, k = pp.period / pp.img.width; pat.setTransform(new DOMMatrix([k, 0, 0, k, 0, 0])); return pat; };
+    ctx.fillStyle = planTex('grass'); ctx.fillRect(0, 0, MAP, MAP);
     // meadow and forest in 4 x 4 tile blocks (the planner never shows finer detail)
     const mx0 = Math.max(0, tx0), mx1 = Math.min(MAP, tx1), my0 = Math.max(0, ty0), my1 = Math.min(MAP, ty1), byType = new Map<number, Path2D>();
     for (let y = my0 - (my0 % 4); y < my1; y += 4) for (let x = mx0 - (mx0 % 4); x < mx1; x += 4) { const t = this.terrain[y * MAP + x]; if (t !== TC.PATCH && t !== TC.HILL) continue; let p = byType.get(t); if (!p) byType.set(t, (p = new Path2D())); p.rect(x, y, 4, 4); }
-    for (const [t, p] of byType) { ctx.fillStyle = this.planColour(t === TC.PATCH ? 'meadow' : WOODLAND_TEX); ctx.fill(p); }
+    for (const [t, p] of byType) { ctx.fillStyle = planTex(t === TC.PATCH ? 'meadow' : this.woodlandTex()); ctx.fill(p); }
     // bare rock on the steep faces, as a flat colour (before the river banks, so they read on top)
     const ra = rockAlpha(this.slope, tx0, ty0, tx1 - tx0, ty1 - ty0, 0.25, this.edgeNoise);
     if (ra) { const rb = this.buffer('small', ra.W, ra.H), rg = ctx2d(rb); rg.putImageData(new ImageData(ra.data as Uint8ClampedArray<ArrayBuffer>, ra.W, ra.H), 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = this.planColour('rock'); rg.fillRect(0, 0, ra.W, ra.H); rg.globalCompositeOperation = 'source-over'; ctx.setTransform(M); ctx.drawImage(rb, tx0, ty0, ra.W / 0.25, ra.H / 0.25); }
@@ -446,8 +467,8 @@ export class GroundPainter {
   /** a Paint photo texture (an owner's preset or a grass-art PHOTO_TEX photo) as a tile-space fill under the current transform, as the painted
    *  areas lay it: the photo itself at the mip L * sx asks for (the mosaic only when the source is missing), turned and scaled by G; its flat
    *  Paint swatch while this worker has not built it (Textures.ensure) */
-  private paintPhoto(g: C2D, t: string, L: number, G?: DOMMatrix, sx = 1): CanvasPattern | string {
-    const painted = this.paintedFill(g, t); if (painted) return painted;
+  private paintPhoto(g: C2D, t: string, L: number, G?: DOMMatrix, sx = 1, need?: BBox): CanvasPattern | string {
+    const painted = this.paintedFill(g, t, need, sx); if (painted) return painted;
     if (!this.tex.has(t)) return PAINT_COL.get(t) ?? '#808080';
     const src = this.tex.sourceFor(t, L * sx);
     return src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * sx), G, this.tex.periodOf(t));
@@ -461,38 +482,84 @@ export class GroundPainter {
     return this.groundPattern(g, this.tex.mosaicFor(photo, L * k), undefined, this.tex.periodOf(photo) * k);
   }
 
-  /** a painted texture (Textures.paintedOf) as a fill for the chunk being baked, in its pixels under the chunk's matrix: the family composed
-   *  once per chunk (painted-ground.ts; never turned or scaled with an area, which would turn its painted light), a tint multiplied over a
-   *  copy; null when the texture is not painted (the Grass setting 'photo', or its pictures missing: then it is laid as its photo) */
-  private paintedFill(g: C2D, t: string): CanvasPattern | null {
-    const c = this.chunkNow, buf = c && this.paintedBuf(t); if (!c || !buf) return null;
+  /** a painted texture (Textures.paintedOf) as a fill for the chunk being baked, in its pixels under the chunk's matrix: the look composed once
+   *  per chunk (painted-ground.ts; never turned with an area, which would turn its painted light; an area's scale scales the look), over the
+   *  part of the chunk asked for (need: a tile box; absent: all of it), then its tint and tone over a copy; null when the texture is not
+   *  painted (the Grass setting 'photo', or its pictures missing: then it is laid as its photo) */
+  private paintedFill(g: C2D, t: string, need?: BBox, scale = 1): CanvasPattern | null {
+    const c = this.chunkNow, buf = c && this.paintedBuf(t, need, scale); if (!c || !buf) return null;
     const p = g.createPattern(buf, 'no-repeat')!; p.setTransform(c.Minv); return p;
   }
-  private paintedBuf(t: string): Cnv | null {
-    const c = this.chunkNow!, p = this.tex.paintedOf(t); if (!p) return null;
-    const key = p.tint ? p.tint + ':' + p.id : p.id;
-    if (this.paintedBufs.has(key)) return this.paintedBufs.get(key)!;
-    let out: Cnv | null = null;
-    if (p.tint) {
-      const base = this.paintedBuf(p.id);
-      if (base) { out = this.buffer('painted:' + key, c.W, c.H); const g = ctx2d(out); g.drawImage(base, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = p.tint; g.fillRect(0, 0, c.W, c.H); g.globalCompositeOperation = 'source-over'; }
-    } else {
-      // the composition depends only on where the chunk is, its level and the art level, never on its roads or lots: an edited chunk (a road,
-      // a lot, every send of a course stroke) is baked again over the one it composed before
-      const ck = `${c.key}:${p.id}@${this.tex.paintedArtLevel}`, have = this.composed.get(ck);
-      if (have) { this.composed.delete(ck); this.composed.set(ck, have); out = have; }
-      else {
-        const src = this.tex.sourceFor(p.id, c.L);
-        if (src) {
-          out = canvas(c.W, c.H); const g = ctx2d(out); g.setTransform(c.M); this.painted.compose(g, src.img, src.period, c.box, c.L); g.setTransform(1, 0, 0, 1, 0, 0);
-          this.composed.set(ck, out); trimLru(this.composed, new Set([ck]), COMPOSED_CHUNKS);
-        }
-      }
-    }
-    this.paintedBufs.set(key, out);
-    return out;
+  /** the cells (PAINT_CELL device px squares of the chunk being baked) a tile box covers, as cell indices [i0, j0, i1, j1) */
+  private cellsOf(need?: BBox): [number, number, number, number] {
+    const c = this.chunkNow!, cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
+    if (!need) return [0, 0, cw, chh];
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [x, y] of [[need[0], need[1]], [need[2], need[1]], [need[0], need[3]], [need[2], need[3]]] as const) { const X = c.M.a * x + c.M.c * y + c.M.e, Y = c.M.b * x + c.M.d * y + c.M.f; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); }
+    return [Math.max(0, Math.floor((x0 - 4) / PAINT_CELL)), Math.max(0, Math.floor((y0 - 4) / PAINT_CELL)), Math.min(cw, Math.ceil((x1 + 4) / PAINT_CELL)), Math.min(chh, Math.ceil((y1 + 4) / PAINT_CELL))];
   }
-
+  /** brings the cells of `want` in entry e up to date: the bounding rectangle of the missing ones is drawn by fill (clipped to it), then marked */
+  private fillCells(e: PaintedEntry, want: [number, number, number, number], fill: (g: C2D, rect: [number, number, number, number]) => boolean): boolean {
+    const cw = Math.ceil(e.buf.width / PAINT_CELL);
+    let i0 = Infinity, j0 = Infinity, i1 = -Infinity, j1 = -Infinity;
+    for (let j = want[1]; j < want[3]; j++) for (let i = want[0]; i < want[2]; i++) if (!e.cells[j * cw + i]) { i0 = Math.min(i0, i); i1 = Math.max(i1, i + 1); j0 = Math.min(j0, j); j1 = Math.max(j1, j + 1); }
+    if (i0 === Infinity) return true;
+    const rect: [number, number, number, number] = [i0 * PAINT_CELL, j0 * PAINT_CELL, Math.min(e.buf.width, i1 * PAINT_CELL) - i0 * PAINT_CELL, Math.min(e.buf.height, j1 * PAINT_CELL) - j0 * PAINT_CELL];
+    const g = ctx2d(e.buf); g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.beginPath(); g.rect(rect[0], rect[1], rect[2], rect[3]); g.clip();
+    const ok = fill(g, rect); g.restore();
+    if (ok) for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) e.cells[j * cw + i] = 1;
+    return ok;
+  }
+  private paintedBuf(t: string, need?: BBox, scale = 1): Cnv | null {
+    const c = this.chunkNow!, p = this.tex.paintedOf(t, scale); if (!p) return null;
+    const want = this.cellsOf(need), cw = Math.ceil(c.W / PAINT_CELL), chh = Math.ceil(c.H / PAINT_CELL);
+    // the composition depends only on where the chunk is, its level, the look and the art level, never on its roads or lots: an edited chunk (a
+    // road, a lot, every send of a course stroke) is baked again over the one it composed before
+    const ck = `${c.key}:${p.key}@${this.tex.paintedArtLevel}`;
+    let base = this.composed.get(ck);
+    if (base) { this.composed.delete(ck); this.composed.set(ck, base); }
+    else {
+      base = { buf: canvas(c.W, c.H), cells: new Uint8Array(cw * chh), bytes: c.W * c.H * 4 };
+      this.composed.set(ck, base); this.composedBytes += base.bytes;
+    }
+    this.bakeKeys.add(ck);
+    for (const [k, v] of this.composed) { if (this.composedBytes <= COMPOSED_BYTES) break; if (this.bakeKeys.has(k)) continue; this.composed.delete(k); this.composedBytes -= v.bytes; }
+    const ws = this.tex.paintedWeights(p), levels: LayLevel[] = ws.map(w => ({ pic: px => this.tex.paintedImage(p[w.detail].src, px), period: p[w.detail].metres / 2, weight: w.weight, map: coversMap(p[w.detail]) }));
+    const B = base;
+    if (!this.fillCells(B, want, (g, rect) => { g.setTransform(c.M); return this.painted.composeLevels(g, levels, this.rectTiles(rect), c.L); })) return null;
+    if (p.tint === '#ffffff' && p.tone === 0) return B.buf;
+    // the look's tint (multiplied) and tone (each colour times 1 + tone: darker multiplied, lighter the picture added to itself) over a copy
+    const tk = `${ck}|${p.tint}|${p.tone}`;
+    let tone = this.toned.get(tk);
+    if (!tone) { tone = { buf: this.buffer('toned:' + this.toned.size, c.W, c.H), cells: new Uint8Array(cw * chh), bytes: 0 }; this.toned.set(tk, tone); }
+    this.fillCells(tone, want, (g, rect) => {
+      g.clearRect(rect[0], rect[1], rect[2], rect[3]); g.drawImage(B.buf, 0, 0);
+      if (p.tint !== '#ffffff') { g.globalCompositeOperation = 'multiply'; g.fillStyle = p.tint; g.fillRect(rect[0], rect[1], rect[2], rect[3]); }
+      if (p.tone < 0) { const v = Math.round(255 * (1 + p.tone)); g.globalCompositeOperation = 'multiply'; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(rect[0], rect[1], rect[2], rect[3]); }
+      else if (p.tone > 0) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = p.tone; g.drawImage(g.canvas, 0, 0); }
+      return true;
+    });
+    return tone.buf;
+  }
+  /** the tile box a device-px rectangle of the chunk being baked covers (plus a tile) */
+  private rectTiles(rect: readonly number[]): BBox {
+    const c = this.chunkNow!, pts = [[rect[0]!, rect[1]!], [rect[0]! + rect[2]!, rect[1]!], [rect[0]!, rect[1]! + rect[3]!], [rect[0]! + rect[2]!, rect[1]! + rect[3]!]].map(([x, y]) => c.Minv.transformPoint(new DOMPoint(x, y)));
+    return [Math.floor(Math.min(...pts.map(q => q.x))) - 1, Math.floor(Math.min(...pts.map(q => q.y))) - 1, Math.ceil(Math.max(...pts.map(q => q.x))) + 1, Math.ceil(Math.max(...pts.map(q => q.y))) + 1];
+  }
+  /** a texture's painted picture for the planner (its far painting, which covers the map, tinted and toned as its look has it), or null */
+  private planPicture(t: string): { img: Cnv; period: number } | null {
+    const p = this.tex.paintedOf(t); if (!p) return null;
+    const k = `${p.key}|${p.tint}|${p.tone}`; let img = this.planPics.get(k) ?? null;
+    if (!img) {
+      const src = this.tex.paintedImage(p.far.src); if (!src) return null;
+      img = canvas(src.width, src.height); const g = ctx2d(img); g.drawImage(src, 0, 0);
+      if (p.tint !== '#ffffff') { g.globalCompositeOperation = 'multiply'; g.fillStyle = p.tint; g.fillRect(0, 0, img.width, img.height); }
+      if (p.tone < 0) { const v = Math.round(255 * (1 + p.tone)); g.globalCompositeOperation = 'multiply'; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(0, 0, img.width, img.height); }
+      else if (p.tone > 0) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = p.tone; g.drawImage(src, 0, 0); }
+      this.planPics.set(k, img);
+    }
+    return { img, period: p.far.metres / 2 };
+  }
   /** one ground chunk (CHUNK_W x CHUNK_H world px) at cache level L: the full-quality bake. lite = a district chunk
    *  (MID_K x MID_K ground chunks) for far zooms, without the detail too small to see there (slab sprites, litter,
    *  decals, tyre marks, wheel wear, curb joints) */
@@ -504,7 +571,7 @@ export class GroundPainter {
     const pats = new Map<TexName, CanvasPattern>();
     const pat = (n: TexName) => { let p = pats.get(n); if (!p) { p = this.photoFill(ctx, n, L) ?? this.screenPattern(ctx, n, L, X0, Y0, Minv); pats.set(n, p); } return p; };
     const box = GroundPainter.tileBox(X0, Y0, X0 + CW, Y0 + CH), [tx0, ty0, tx1, ty1] = box, vis = (b: BBox) => b[2] >= tx0 && b[0] <= tx1 && b[3] >= ty0 && b[1] <= ty1;
-    this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.paintedBufs.clear();
+    this.chunkNow = { key: `${lite ? 'm' : 'g'}${i},${j}@${L}`, L, box, M, Minv, W, H }; this.toned.clear(); this.bakeKeys.clear();
     const minW = 1 / (TILE_PX * L), net = this.net.view([tx0 - 8, ty0 - 8, tx1 + 8, ty1 + 8], !lite), tex = this.tex;
     const paint = (g: C2D, f: Feature) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w; g.stroke(f.path); } else g.fill(f.path); };
     const ring = (g: C2D, f: Feature, extra: number) => { g.lineCap = f.cap; if (f.kind === 'stroke') { g.lineWidth = f.w + extra; g.stroke(f.path); } else { g.lineWidth = extra; g.stroke(f.path); } };
@@ -527,8 +594,9 @@ export class GroundPainter {
     const water = (g: C2D): CanvasPattern | string => this.photoFill(g, 'water', L) ?? this.screenPattern(g, 'water', L, X0, Y0, Minv);
     const cres = lite ? 1 : 4;
     const meadow = classAlpha(this.terrain, TC.PATCH, tx0, ty0, bw, bh, cres, this.edgeNoise); if (meadow) layer('meadow', g => overlay(g, meadow, cres));
-    // the woodland floor in the course's Fescue (terrain-paint.ts WOODLAND_TEX), laid in tile space at scale 1 like a painted course area
-    const woods = classAlpha(this.terrain, TC.HILL, tx0, ty0, bw, bh, cres, this.edgeNoise); if (woods) layer('meadow', g => overlay(g, woods, cres), g => this.paintPhoto(g, WOODLAND_TEX, L));
+    // the woodland floor: its painted look (painted-surfaces.ts WOODLAND, T128), else the course's Fescue (terrain-paint.ts WOODLAND_TEX), laid
+    // in tile space at scale 1 like a painted course area
+    const woods = classAlpha(this.terrain, TC.HILL, tx0, ty0, bw, bh, cres, this.edgeNoise); if (woods) layer('meadow', g => overlay(g, woods, cres), g => this.paintPhoto(g, this.woodlandTex(), L));
     const ra = rockAlpha(this.slope, tx0, ty0, bw, bh, cres, this.edgeNoise); if (ra) layer('rock', g => overlay(g, ra, cres));
     const near = this.waters.filter(w => vis(w.box)), rivers = near.filter(w => w.w.kind === 'river'), creeks = near.filter(w => w.w.kind === 'creek');
     /** a feathered waterway mask: 4 nested shapes from extra + f down to extra - f (tiles), each adding a quarter of the alpha */
@@ -862,24 +930,34 @@ export class GroundPainter {
     const V = ex.length ? this.buffer('living', W, H) : null, vg = V ? ctx2d(V) : ctx;
     if (V) vg.drawImage(ctx.canvas, 0, 0);
     const lay = (layer: Cnv, op: GlobalCompositeOperation, alpha = 1) => { vg.save(); vg.setTransform(1, 0, 0, 1, 0, 0); vg.globalCompositeOperation = op; vg.globalAlpha = alpha; vg.drawImage(layer, 0, 0); vg.restore(); };
-    const art = (id: string) => (this.tex.isPainted(id) ? this.paintedBuf(id) : null), T = 0.02;
+    // a painted variant is composed only over the part of the chunk its mask reaches (T128: the lush, patchy and soil looks)
+    const maskBox = (a: Uint8ClampedArray): BBox | undefined => {
+      let i0 = Infinity, j0 = Infinity, i1 = -Infinity, j1 = -Infinity;
+      for (let j = 0; j < m.H; j++) for (let i = 0; i < m.W; i++) if (a[(j * m.W + i) * 4 + 3]! > 5) { if (i < i0) i0 = i; if (i > i1) i1 = i; if (j < j0) j0 = j; if (j > j1) j1 = j; }
+      return i0 === Infinity ? undefined : [m.x0 + i0 / m.res - 1, m.y0 + j0 / m.res - 1, m.x0 + (i1 + 1) / m.res + 1, m.y0 + (j1 + 1) / m.res + 1];
+    };
+    const art = (id: string, need?: BBox) => (this.tex.isPainted(id) ? this.paintedBuf(id, need) : null), T = 0.02;
+    const both = (a?: BBox, b?: BBox): BBox | undefined => (a && b ? [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])] : a ?? b);
+    const soilBox = both(m.max.thin > T ? maskBox(m.thin) : undefined, m.max.bare > T ? maskBox(m.bare) : undefined);
     /** the soil, made once a chunk: the painted dirt-bare set, else the game's dirt (its photo when built, else the painted screen texture) */
     let soilBuf: Cnv | null = null;
     const soil = (g: C2D) => {
       if (!soilBuf) soilBuf = art('dirt-bare');
       if (!soilBuf) {
         soilBuf = this.buffer('livingSoil', W, H); const s = ctx2d(soilBuf);
-        s.setTransform(M); s.fillStyle = this.photoFill(s, 'dirt', L) ?? this.screenPattern(s, 'dirt', L, X0, Y0, Minv); s.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
-        // the game's dirt is a dark, grey soil: lifted warm toward the painted grass's garden earth (in proportion to itself, so its grains stay)
-        s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'screen'; s.fillStyle = SOIL_LIFT; s.fillRect(0, 0, W, H);
-        s.globalCompositeOperation = 'multiply'; s.fillStyle = SOIL_WARM; s.fillRect(0, 0, W, H); s.globalCompositeOperation = 'source-over';
+        s.setTransform(M); const pd = this.paintedFill(s, 'dirt', soilBox);
+        s.fillStyle = pd ?? this.photoFill(s, 'dirt', L) ?? this.screenPattern(s, 'dirt', L, X0, Y0, Minv); s.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
+        // the game's dirt is a dark, grey soil: lifted warm toward the painted grass's garden earth (in proportion to itself, so its grains
+        // stay); the painted soil (painted-surfaces.ts dirt) is laid as its look has it
+        if (!pd) { s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'screen'; s.fillStyle = SOIL_LIFT; s.fillRect(0, 0, W, H);
+          s.globalCompositeOperation = 'multiply'; s.fillStyle = SOIL_WARM; s.fillRect(0, 0, W, H); s.globalCompositeOperation = 'source-over'; }
       }
       g.drawImage(soilBuf, 0, 0);
     };
     // lush: richer, denser grass along fences, walls and hedges, near water and on the verges: the grass laid over itself (its strokes' contrast
     // and colour deepen: darker gaps, brighter tips), tinted a deeper green
     if (m.max.lush > T) {
-      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-lush');
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-lush', maskBox(m.lush));
       if (a) lg.drawImage(a, 0, 0);
       else { lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'overlay'; lg.drawImage(vg.canvas, 0, 0); lg.globalCompositeOperation = 'multiply'; lg.fillStyle = LUSH_TINT; lg.fillRect(0, 0, W, H); lg.globalCompositeOperation = 'source-over'; }
       put(lg, m.lush, 'destination-in'); lay(lb, 'source-over');
@@ -887,7 +965,7 @@ export class GroundPainter {
     // thin: patchy grass going over to soil, under trees, at doors and corners, on worn edges: the soil's colour on the grass's own strokes
     // (dry, thin turf that keeps its texture), then the soil in the grass's dark gaps (lighten: the lit tufts stay)
     if (m.max.thin > T) {
-      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-patchy');
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('grass-patchy', maskBox(m.thin));
       if (a) lg.drawImage(a, 0, 0); else soil(lg);
       put(lg, m.thin, 'destination-in');
       if (a) lay(lb, 'source-over'); else { lay(lb, 'color', 0.7); lay(lb, 'lighten'); }
@@ -995,38 +1073,57 @@ export class GroundPainter {
     if (!m) { const N = 256, f = fbm(31, N, N, 3, 3), c0 = 1 - share; m = maskFrom(N, N, (x, y) => (share >= 1 ? 1 : share <= 0 ? 0 : smooth(c0 - soft, c0 + soft, f(x, y)))); this.blendMasks.set(key, m); }
     return m;
   }
-  /** a painted area's blend (PatchPaint m): the second texture through the patch mask (24 tiles a period at patch size 1, in tile space, turned
-   *  with the fill), laid over the fill inside the area's clip */
   /** the lawns of a chunk (lawns.ts): each in its texture (a preset, turned by its angle), all of the patch or through the soft-patch mask (drawBlend) */
   private drawLawns(ctx: C2D, lawns: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox) {
     for (const p of lawns) {
-      // with the painted grass on, every town lawn is painted: its preset's own painted set, else the base grass's (T082; the golf surfaces
-      // that also serve as lawns keep their pictures on the course); with the Grass setting 'photo', the preset's picture as before
-      const t = this.tex.isPainted(p.tex) || !this.tex.isPainted('grass') ? p.tex : 'grass';
+      // with the painted art on, every town lawn wears one of the painted lawns (painted-surfaces.ts lawnSlot: picked by where it lies, so
+      // neighbouring lots and blocks differ, and it stays put), else its preset's own painted look, else the map grass's; with the Grass
+      // setting 'photo', the preset's picture as before
+      const slot = this.tex.paintedOn ? lawnSlot(p.pts, this.tex.surfaces.lawns) : -1, lt = slot >= 0 ? lawnTex(slot) : '';
+      const t = lt && this.tex.isPainted(lt) ? lt : this.tex.isPainted(p.tex) || !this.tex.isPainted('grass') ? p.tex : 'grass';
       const lw = p.lawn!, pb = quadBox(p.pts), r = [Math.max(pb[0], box[0]) - 1, Math.max(pb[1], box[1]) - 1, Math.min(pb[2], box[2]) + 1, Math.min(pb[3], box[3]) + 1];
       if (r[2] <= r[0] || r[3] <= r[1] || !isPaintPhoto(p.tex) || !this.tex.has(t)) continue;
       const path = polyPath(p.pts), G = new DOMMatrix().rotateSelf(0, 0, lw.a);
       if (lw.share >= 1) {
-        const painted = this.paintedFill(ctx, t), src = painted ? null : this.tex.sourceFor(t, L);
+        const painted = this.paintedFill(ctx, t, r as BBox), src = painted ? null : this.tex.sourceFor(t, L);
         ctx.save(); ctx.setTransform(M); ctx.clip(path);
         ctx.fillStyle = painted ?? (src ? this.groundPattern(ctx, src.img, G, src.period) : this.groundPattern(ctx, this.tex.mosaicFor(t, L), G, this.tex.periodOf(t)));
         ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.restore();
-      } else this.drawBlend(ctx, { s: 1, a: lw.a, b: 0, bt: 'kerb', z: 0, m: { t, s: lw.share, f: lw.soft, p: lw.patch } } as NonNullable<LotPatch['paint']>, G, path, r, L, X0, Y0, M, Minv);
+      } else this.drawBlend(ctx, { t, s: lw.share, f: lw.soft, p: lw.patch }, 1, G, path, 'nonzero', r, L, X0, Y0, M, Minv);
     }
   }
-  private drawBlend(ctx: C2D, st: NonNullable<LotPatch['paint']>, G: DOMMatrix, path: Path2D, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix) {
-    const m = st.m!, b = this.buffer('blend', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b), t = m.t;
+  /** a second texture laid over a surface in soft patches (a painted area's Blend with, PatchPaint m; a course look's; a road block's lawn): the
+   *  texture (painted, a photo or preset in tile space at scale sx turned by G, else the screen texture) through the blend noise's mask
+   *  (painted-grass-lod.ts blendNoise: world space, never periodic; share, softness and patch size from m), inside clip */
+  private drawBlend(ctx: C2D, m: { t: string; s: number; f: number; p: number }, sx: number, G: DOMMatrix, clip: Path2D, rule: CanvasFillRule, r: number[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix) {
+    if (m.s <= 0) return;
+    const b = this.buffer('blend', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b), t = m.t;
     // the scratch layer's context is reused chunk after chunk: its clip is saved and restored, or the clips would add up
-    g.save(); g.setTransform(M); g.clip(path);
+    g.save(); g.setTransform(M); g.clip(clip, rule);
     let style: CanvasPattern | string = PAINT_COL.get(t) ?? '#808080';
-    if (isPaintPhoto(t)) { const painted = this.paintedFill(g, t); if (painted) style = painted; else if (this.tex.has(t)) { const src = this.tex.sourceFor(t, L * st.s); style = src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * st.s), G, this.tex.periodOf(t)); } }
-    else if (t === 'asphaltDark' || t === 'lotAsphalt') style = this.groundPattern(g, this.tex.mosaicFor(t === 'lotAsphalt' ? 'lot' : 'base', L * st.s), G);
-    else if (this.tex.image(t as TexName, L)) style = this.screenPattern(g, t as TexName, L, X0, Y0, Minv, G);
+    const painted = this.paintedFill(g, t, r as BBox, sx);
+    if (painted) style = painted;
+    else if (isPaintPhoto(t)) { if (this.tex.has(t)) { const src = this.tex.sourceFor(t, L * sx); style = src ? this.groundPattern(g, src.img, G, src.period) : this.groundPattern(g, this.tex.mosaicFor(t, L * sx), G, this.tex.periodOf(t)); } }
+    else if (t === 'asphaltDark' || t === 'lotAsphalt') style = this.groundPattern(g, this.tex.mosaicFor(t === 'lotAsphalt' ? 'lot' : 'base', L * sx), G);
+    else if (this.tex.mips.has(t + '@' + L)) style = this.screenPattern(g, t as TexName, L, X0, Y0, Minv, G);
     g.fillStyle = style; g.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]);
-    const mask = this.blendMask(m.s, m.f), period = 24 * m.p, mp = g.createPattern(mask, 'repeat')!;
-    mp.setTransform(new DOMMatrix().rotateSelf(0, 0, st.a).scaleSelf(period / mask.width, period / mask.width));
-    g.globalCompositeOperation = 'destination-in'; g.fillStyle = mp; g.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); g.globalCompositeOperation = 'source-over'; g.restore();
+    if (m.s < 1) {
+      const nm = this.noiseMask(r, m, L);
+      g.globalCompositeOperation = 'destination-in'; g.imageSmoothingEnabled = true; g.drawImage(nm.img, nm.x0, nm.y0, nm.w, nm.h);
+    }
+    g.globalCompositeOperation = 'source-over'; g.restore();
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(b, 0, 0); ctx.restore();
+  }
+  /** the blend's mask over tile box r: blendAlpha of the blend noise sampled on the world grid (a step of a quarter of its shortest wave, finer
+   *  at the closest zooms), as a small picture to stretch over r (x0, y0, w, h: tiles); outside r it is transparent */
+  private noiseMask(r: number[], m: { s: number; f: number; p: number }, L: number) {
+    const step = Math.max(BLEND_WAVES[BLEND_WAVES.length - 1]![0] * m.p / 4, 1 / (8 * L * 10)), x0 = Math.floor(r[0]! / step) * step, y0 = Math.floor(r[1]! / step) * step;
+    const w = Math.min(1024, Math.ceil((r[2]! - x0) / step) + 1), h = Math.min(1024, Math.ceil((r[3]! - y0) / step) + 1), st = Math.max((r[2]! - x0) / (w - 1), (r[3]! - y0) / (h - 1), step);
+    const img = this.buffer('blendNoise', w, h), d = new ImageData(w, h);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const o = (j * w + i) * 4; d.data[o + 3] = Math.round(255 * blendAlpha(blendNoise(x0 + i * st, y0 + j * st, m.p), m.s, m.f)); }
+    ctx2d(img).putImageData(d, 0, 0);
+    // the samples sit on the picture's pixel centres: the picture spans half a step more on each side
+    return { img, x0: x0 - st / 2, y0: y0 - st / 2, w: w * st, h: h * st };
   }
   /** the painted areas of a chunk (the Paint tool), in id order. A crisp area (paving, kerbs: no edge profile) is drawn straight onto the
    *  chunk, as before. Any other is drawn into a scratch layer, given its sun-lit light and dark rims and its feather (paint-edges.ts: images
@@ -1082,16 +1179,34 @@ export class GroundPainter {
    *  (no feathers, shades, bands, edges or stripes) */
   private drawCourses(ctx: C2D, cs: CoursePatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     const r = [box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], res = courseRes(L);
-    /** a course texture as a fill style on g: the photo or preset in tile space (turned and scaled about the origin), else the screen texture */
-    const style = (g: C2D, t: CourseTex) => {
+    /** a course texture as a fill style on g: painted (its look, composed over the part `need` of the chunk), the photo or preset in tile space
+     *  (turned and scaled about the origin), else the screen texture */
+    const style = (g: C2D, t: CourseTex, need?: BBox) => {
       const G = new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc);
+      const painted = this.paintedFill(g, t.tex, need, t.sc); if (painted) return painted;
       return isPaintPhoto(t.tex) ? this.paintPhoto(g, t.tex, L, G, t.sc) : this.screenPattern(g, t.tex as TexName, L, X0, Y0, Minv, G);
     };
     const ringsOf = (rings: readonly ArrayLike<number>[]) => { const p = new Path2D(); for (const q of rings) ringPath(p, q); return p; };
-    /** rings filled even-odd in t */
+    /** the tile box of rings or polylines grown by pad, inside the chunk's box (a painted look is composed only there) */
+    const boxOf = (lines: readonly ArrayLike<number>[], pad = 1): BBox => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const q of lines) for (let k = 0; k + 1 < q.length; k += 2) { const x = q[k]!, y = q[k + 1]!; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      return [Math.max(r[0]!, x0 - pad), Math.max(r[1]!, y0 - pad), Math.min(r[2]!, x1 + pad), Math.min(r[3]!, y1 + pad)];
+    };
+    /** a course look's tone (Multiply or Screen of its tint at its strength) over what g draws next with `draw` (fill or stroke), at alpha k */
+    const toneOver = (g: C2D, t: CourseTex, k: number, draw: () => void) => {
+      if (!t.t || !(t.ta ?? 0)) return;
+      g.globalCompositeOperation = t.t === 1 ? 'multiply' : 'screen'; g.globalAlpha = (t.ta ?? 0) * k; g.fillStyle = g.strokeStyle = t.tc ?? '#000000'; draw();
+      g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    };
+    /** rings filled even-odd in t: the fill, its blend with a second texture in soft patches (never periodic), then its tone (course-look.ts) */
     const fill = (t: CourseTex, rings: readonly ArrayLike<number>[]) => {
       if (!rings.length) return;
-      ctx.save(); ctx.setTransform(M); ctx.clip(ringsOf(rings), 'evenodd'); ctx.fillStyle = style(ctx, t); ctx.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); ctx.restore();
+      const clip = ringsOf(rings), need = boxOf(rings);
+      if (need[2] <= need[0] || need[3] <= need[1]) return;
+      ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); ctx.fillStyle = style(ctx, t, need); ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1]); ctx.restore();
+      if (t.m && !lite) this.drawBlend(ctx, t.m, t.sc, new DOMMatrix().rotateSelf(0, 0, t.a).scaleSelf(t.sc, t.sc), clip, 'evenodd', need, L, X0, Y0, M, Minv);
+      if (t.t) { ctx.save(); ctx.setTransform(M); ctx.clip(clip, 'evenodd'); toneOver(ctx, t, 1, () => ctx.fillRect(need[0], need[1], need[2] - need[0], need[3] - need[1])); ctx.restore(); }
     };
     /** polylines (a closed one repeats its first point) as one path */
     const linesOf = (lines: readonly ArrayLike<number>[]) => {
@@ -1108,9 +1223,10 @@ export class GroundPainter {
      *  falls linearly (butt ends: a polyline cut at a chunk seam meets its neighbour's end square on) */
     const feather = (t: CourseTex, lines: readonly ArrayLike<number>[], f: number) => {
       if (!lines.length || f <= 0) return;
-      const p = linesOf(lines), n = FEATHER_STEPS;
-      ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt'; ctx.strokeStyle = style(ctx, t);
-      for (let k = 0; k < n; k++) { ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); }
+      const p = linesOf(lines), n = FEATHER_STEPS, need = boxOf(lines, f + 1);
+      if (need[2] <= need[0] || need[3] <= need[1]) return;
+      ctx.save(); ctx.setTransform(M); ctx.lineJoin = 'round'; ctx.lineCap = 'butt'; const st = style(ctx, t, need);
+      for (let k = 0; k < n; k++) { ctx.strokeStyle = st; ctx.globalAlpha = 1 / (n - k); ctx.lineWidth = 2 * f * (1 - k / n); ctx.stroke(p); toneOver(ctx, t, 1 / (n - k), () => ctx.stroke(p)); }
       ctx.restore();
     };
     /** an edge image over the tiles from (x0, y0), stretched onto ctx through the chunk transform with the op */
@@ -1689,6 +1805,24 @@ export class GroundPainter {
    *  scale, WALL_PX_PER_M x 0.6 art px per metre of wall (one art px a cache px at the closest zoom, smaller further out, never enlarged),
    *  anchored to the world so chunks meet; null until the art is registered and built (the painted placeholder draws instead) */
   private wallArt(g: C2D, slot: string, L: number, Minv: DOMMatrix, X0: number, Y0: number): CanvasPattern | null {
+    // the painted cut face (painted-surfaces.ts wallTurf, wallSand, wallBank): its near painting, one repeat covering its metres (the family's
+    // coverage times the look's scale) of wall at WALL_PX_PER_M world px a metre (scale 0.533 of a 40 m painting: one picture px a cache px at
+    // the closest zoom, the walls' 48 px a metre, docs/art/WALL-PROMPTS.md), shrunk further out, tinted and toned as its look has it
+    const pw = this.tex.paintedOf(slot);
+    if (pw) {
+      const want = WALL_PX_PER_M * L * pw.near.metres, src = this.tex.paintedImage(pw.near.src, Math.ceil(want)); if (!src) return null;
+      const key = `${pw.key}|${pw.tint}|${pw.tone}|${src.width}`; let img = this.wallPics.get(key);
+      if (!img) {
+        img = canvas(src.width, src.height); const wg = ctx2d(img); wg.drawImage(src, 0, 0);
+        if (pw.tint !== '#ffffff') { wg.globalCompositeOperation = 'multiply'; wg.fillStyle = pw.tint; wg.fillRect(0, 0, img.width, img.height); }
+        if (pw.tone < 0) { const v = Math.round(255 * (1 + pw.tone)); wg.globalCompositeOperation = 'multiply'; wg.fillStyle = `rgb(${v},${v},${v})`; wg.fillRect(0, 0, img.width, img.height); }
+        else if (pw.tone > 0) { wg.globalCompositeOperation = 'lighter'; wg.globalAlpha = pw.tone; wg.drawImage(src, 0, 0); }
+        this.wallPics.set(key, img); trimLru(this.wallPics, new Set([key]), 12);
+      }
+      const k = want / img.width, pat = g.createPattern(img, 'repeat'); if (!pat) return null;
+      pat.setTransform(Minv.multiply(new DOMMatrix([k, 0, 0, k, -X0 * L, -Y0 * L])));
+      return pat;
+    }
     if (!this.tex.has(slot)) return null;
     const full = this.tex.sourceFor(slot, 99); if (!full) return null;
     const want = full.img.width * Math.min(1, L / 0.6), src = this.tex.sourceFor(slot, want / (128 * full.period)) ?? full;
@@ -1790,7 +1924,8 @@ export class GroundPainter {
       const st = d.stage, m = this.growStageMask(c, d);
       const b = this.buffer('courseDirt', ctx.canvas.width, ctx.canvas.height), g = ctx2d(b);
       g.save(); g.setTransform(M); g.clip(clip, 'evenodd');
-      g.fillStyle = isPaintPhoto(DIRT_TEX) ? this.paintPhoto(g, DIRT_TEX, L) : this.screenPattern(g, DIRT_TEX as TexName, L, X0, Y0, Minv); g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
+      // the grow-in soil's painted look (painted-surfaces.ts growSoil), else the dirt
+      g.fillStyle = this.paintedFill(g, 'growSoil', r as BBox) ?? (isPaintPhoto(DIRT_TEX) ? this.paintPhoto(g, DIRT_TEX, L) : this.screenPattern(g, DIRT_TEX as TexName, L, X0, Y0, Minv)); g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!);
       // the young grass over the soil
       const sp = this.sproutPattern(g, d, L);
       if (sp) { g.fillStyle = sp; g.fillRect(r[0]!, r[1]!, r[2]! - r[0]!, r[3]! - r[1]!); }
@@ -1841,13 +1976,13 @@ export class GroundPainter {
       if (isPaintPhoto(t)) {
         // the photo itself at the mip this zoom and scale ask for (sharp at every scale); a photo this worker has not built yet
         // (Textures.ensure, before the edit that uses it lands) shows its flat Paint swatch
-        put(this.paintPhoto(ctx, t, L, Gx, sx)); return;
+        put(this.paintPhoto(ctx, t, L, Gx, sx, r as BBox)); return;
       }
       put(this.screenPattern(ctx, t as TexName, L, X0, Y0, Minv, Gx));
     };
     ctx.save(); ctx.setTransform(M); ctx.clip(path); ctx.lineJoin = 'round';
     lay(p.tex, 0, G, st.s);
-    if (st.m && !lite) this.drawBlend(ctx, st, G, path, r, L, X0, Y0, M, Minv);
+    if (st.m && !lite) this.drawBlend(ctx, st.m, st.s, G, path, 'nonzero', r, L, X0, Y0, M, Minv);
     // the tone filter: Multiply (darker) or Screen (lighter) of the tint over the fill, at its strength; the border is not toned
     if (st.t) { ctx.globalCompositeOperation = st.t === 1 ? 'multiply' : 'screen'; ctx.globalAlpha = st.ta ?? 0; ctx.fillStyle = st.tc ?? '#000000'; ctx.fillRect(r[0], r[1], r[2] - r[0], r[3] - r[1]); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
     this.drawManagedGrass(ctx, [p], box, L);

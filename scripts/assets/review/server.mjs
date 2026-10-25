@@ -10,6 +10,9 @@
 //   Ground:  the map's base grass: two pictures (any ground picture or grass photo) with size and colour controls, mixed as the game mixes them,
 //            previewed on a block of 4 houses inside 4 streets; Save writes src/game/base-grass.json and src/assets/ground/base-grass-a/-b.webp (ground.js);
 //            and the map decals over it (nature patches, bare soil, grass patches, leaf scatters, tufts): Save decals writes src/game/map-decals.json
+//   Painted: which hand-painted family each surface wears (the golf surfaces, the map, the town lawns, the living ground, the course walls, any
+//            preset): a family picker with each family's three zoom levels, its version, scale, tint and tone; Save writes
+//            src/game/painted-surfaces.json, which a dev game from this checkout takes at once (painted.js)
 //   Rebuild: runs the asset steps again, then npm run build, so the game takes the changes.
 //   node scripts/assets/review/server.mjs [--port 5179]   then open http://127.0.0.1:5179/
 import { execFile, spawn } from 'node:child_process';
@@ -268,16 +271,11 @@ const GROUND_SRC = [
   // the painted grass (T082): each set's three zoom levels (painted-grass-art.ts), shown with the presets that use them
   { group: 'Painted grass', dir: 'src/assets/ground/painted', re: /\.(webp|png|jpg)$/i },
 ];
-/** the painted sets (src/game/painted-grass-art.ts PAINTED_GRASS): id and its three levels (picture, metres one repeat covers), read from its
- *  imports and entries; a preset's Painted set picks one, and the game lays it instead of the preset's mix */
-const PAINTED_ART = path.join(ROOT, 'src/game/painted-grass-art.ts');
+/** the painted sets a preset's old Painted set field can name (T082): the first painted grass only (the painted surfaces are edited in the Painted tab) */
 function paintedSets() {
   try {
-    const src = fs.readFileSync(PAINTED_ART, 'utf8'), file = new Map(), out = [];
-    for (const m of src.matchAll(/^import (\w+) from '\.\.\/assets\/ground\/painted\/([^']+)';/gm)) file.set(m[1], 'src/assets/ground/painted/' + m[2]);
-    for (const m of src.matchAll(/^\s+([\w-]+): \{ near: \{ src: (\w+), metres: ([\d.]+) \}, mid: \{ src: (\w+), metres: ([\d.]+) \}, far: \{ src: (\w+), metres: ([\d.]+) \}/gm))
-      out.push({ id: m[1], levels: [['near', m[2], m[3]], ['mid', m[4], m[5]], ['far', m[6], m[7]]].map(([level, v, metres]) => ({ level, src: file.get(v), metres: +metres })) });
-    return out;
+    const fam = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/game/painted-families.json'), 'utf8')).families.find(f => f.id === 'first-painted');
+    return fam ? [{ id: 'grass', levels: ['near', 'mid', 'far'].map(level => ({ level, src: 'src/assets/ground/painted/' + Object.values(fam.levels[level])[0].file, metres: fam.coverage[level] })) }] : [];
   } catch { return []; }
 }
 function groundSources() {
@@ -311,6 +309,26 @@ function photos() {
   for (const m of src.matchAll(/\{ tex: '(\w+)', src: (\w+)/g)) if (file.has(m[2])) PHOTOS.set(m[1], file.get(m[2]));
   return PHOTOS;
 }
+
+// ---------------------------------------------------------------- the painted surfaces (the Painted tab; src/game/painted-surfaces.json)
+// which hand-painted family each surface of the game wears (painted-surfaces.ts): a family and version, scale, tint and tone per surface, the
+// town's lawns and any preset's own look. Save writes the file; a game on a vite dev server from this checkout takes it at once (no rebuild)
+const PL_ENTRY = path.join(ROOT, 'scripts/assets/review/painted-lib.ts'), PS_FILE = path.join(ROOT, 'src/game/painted-surfaces.json');
+const PAINTED_DIR = path.join(ROOT, 'src/assets/ground/painted'), PT_THUMBS = path.join(OUT, 'painted-thumbs');
+buildSync({ entryPoints: [PL_ENTRY], bundle: true, platform: 'node', format: 'esm', outfile: path.join(OUT, 'painted-lib.mjs'), loader: HL_LOADERS, logLevel: 'silent' });
+buildSync({ entryPoints: [PL_ENTRY], bundle: true, platform: 'browser', format: 'esm', outfile: path.join(OUT, 'painted-lib.js'), loader: HL_LOADERS, logLevel: 'silent' });
+const PL = await import(pathToFileURL(path.join(OUT, 'painted-lib.mjs')).href);
+fs.mkdirSync(PT_THUMBS, { recursive: true });
+function readSurfaces() { let f = null; try { f = JSON.parse(fs.readFileSync(PS_FILE, 'utf8')); } catch { /* none yet */ } return PL.clampSurfaces(f); }
+/** the file as the game keeps it: one look a line */
+function writeSurfaces(f) {
+  const line = o => JSON.stringify(o).replace(/":/g, '": ').replace(/,"/g, ', "').replace(/^\{/, '{ ').replace(/\}$/, ' }');
+  const obj = (o, pad) => Object.entries(o).map(([k, v]) => `${pad}${JSON.stringify(k)}: ${line(v)}`).join(',\n');
+  const txt = `{\n "v": 1,\n "surfaces": {\n${obj(f.surfaces, '  ')}\n },\n "lawns": [\n${f.lawns.map(l => '  ' + line(l)).join(',\n')}\n ],\n "presets": {\n${obj(f.presets, '  ')}\n }\n}\n`;
+  fs.writeFileSync(PS_FILE, txt.replace(/\{\n\n \}/g, '{}').replace(/\[\n\n \]/g, '[]'));
+}
+/** every painting the registry names (the Painted tab may read only these) */
+const paintedFiles = () => new Set(PL.FAMILIES.flatMap(f => PL.LEVEL_NAMES.flatMap(l => Object.values(f.levels[l]).map(p => p.file))));
 
 const body = req => new Promise(res => { let s = ''; req.on('data', d => { s += d; }); req.on('end', () => { try { res(JSON.parse(s || '{}')); } catch { res({}); } }); });
 http.createServer(async (req, res) => {
@@ -430,6 +448,22 @@ http.createServer(async (req, res) => {
       const rm = readRemoved(), sc = readScales(), houses = library().filter(x => x.kind === 'house' && x.tex && !rm[x.id]).map(x => ({ id: x.id, name: x.name, quad: x.quad ?? [0, 0, x.w, x.h], ax: x.ax, ay: x.ay, scale: sc[x.id] ?? mapScale(x.id) }));
       return json({ file: readGround(), sources: groundSources(), houses, ranges: GL.RANGES, defaults: { side: GL.DEFAULT_SIDE, mix: GL.DEFAULT_MIX }, decals: readDecals() });
     }
+    if (req.method === 'GET' && P === '/api/painted') return json({ families: PL.FAMILIES, surfaces: PL.SURFACES, presets: readPresets().presets.map(p => ({ id: p.id, name: p.name, surface: p.surface, lawn: p.lawn })), file: readSurfaces(), ranges: PL.LOOK_RANGES, lawnSlots: PL.LAWN_SLOTS });
+    if (req.method === 'POST' && P === '/api/painted') {
+      const { file } = await body(req);
+      if (!file || typeof file !== 'object') { res.writeHead(400); return res.end('no surfaces'); }
+      const out = PL.clampSurfaces(file); writeSurfaces(out); return json({ file: out });
+    }
+    if (P === '/painted-art') {
+      const f = url.searchParams.get('f'), px = Math.min(1024, Math.max(32, +(url.searchParams.get('px') || 0) || 0));
+      if (!f || !paintedFiles().has(f)) { res.writeHead(404); return res.end(); }
+      const abs = path.join(PAINTED_DIR, f);
+      if (!url.searchParams.get('px')) { res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(abs)); }
+      const st = fs.statSync(abs), t = path.join(PT_THUMBS, safe(f) + `-${px}-${st.size}-${Math.round(st.mtimeMs)}.webp`);
+      if (!fs.existsSync(t)) fs.writeFileSync(t, await sharp(abs).resize(px, px).webp({ quality: 85 }).toBuffer());
+      res.writeHead(200, { 'content-type': 'image/webp', 'cache-control': 'max-age=3600' }); return res.end(fs.readFileSync(t));
+    }
+    if (P === '/painted.js' || P === '/painted-lib.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache' }); return res.end(fs.readFileSync(P === '/painted.js' ? path.join(ROOT, 'scripts/assets/review/painted.js') : path.join(OUT, 'painted-lib.js'))); }
     if (req.method === 'GET' && P === '/api/presets') return json({ ...readPresets(), surfaces: GL.PRESET_SURFACES, size: GL.PRESET_SIZE, painted: paintedSets() });
     if (req.method === 'POST' && P === '/api/preset') {
       // { preset, png: the baked seamless picture (base64), replaces: the id it was saved under before (a rename) }
