@@ -178,11 +178,11 @@ export class RangeHost {
   /** the range as the card shows it */
   view() {
     const b = this.ctx.biz(); if (!b) return null;
-    const st = rangeStats(b), money = this.ctx.money();
+    const dem = this.ctx.demand(), st = rangeStats(b, dem), money = this.ctx.money();
     return {
       biz: b, stats: st, today: this.sim.today, hours: `${String(st.open).padStart(2, '0')}:00-${st.close}:00`,
       upgrades: RANGE_UPGRADES.map(u => ({ ...u, why: upgradeWhy(b, u.id, money), owned: b.owned.includes(u.id) })),
-      demand: this.ctx.demand(), dayLen: this.ctx.dayLen(),
+      demand: dem, dayLen: this.ctx.dayLen(),
     };
   }
 }

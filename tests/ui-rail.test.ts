@@ -9,7 +9,7 @@ import { advanceProgress, computeProgressiveUiState, emptyProgress, progressFact
 import { railEntries, toolNew, type RailEntry } from '../src/ui/rail-items';
 import { Rail } from '../src/ui/Rail';
 
-const GOLF_RAIL = ['select', 'holes', 'paths', 'buildings', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
+const GOLF_RAIL = ['select', 'holes', 'paths', 'buildings', 'props', 'roads', 'junction', 'transport', 'paint', 'bulldoze'];
 const course = (holes: number): CourseProgress => ({ holes, seasons: 0, invited: false });
 /** the unlocks of a golf game with this progress and holes */
 const uiOf = (p: GolfProgress, holes: number) => computeProgressiveUiState(progressFacts(p, course(holes)));
@@ -26,7 +26,7 @@ const html = (es: RailEntry[]) => renderToStaticMarkup(createElement(Rail, { ent
 const button = (h: string, id: string) => h.match(new RegExp(`<button data-rail="${id}"[^>]*>[\\s\\S]*?</button>`))?.[0] ?? '';
 
 describe('the rail keeps the same places at every stage (P23 4.2)', () => {
-  it('Select · Course: Holes, Paths, Buildings · Town: Roads, Junctions, Transport · Paint · Bulldoze, at stages 1, 2 and 3 and with every tool shown', () => {
+  it('Select · Course: Holes, Paths, Buildings, Props · Town: Roads, Junctions, Transport · Paint · Bulldoze, at stages 1, 2 and 3 and with every tool shown', () => {
     for (const [holes, adv] of [[0, false], [1, false], [3, false], [0, true]] as const) {
       const p = played(holes); p.advanced = adv;
       const es = railEntries(uiOf(p, holes), true, 'select');
@@ -67,7 +67,7 @@ describe('locked tools stay in place, dimmed, with what unlocks them (P23 4.2)',
     assert.match(paint, /aria-label="Paint: Unlocks with your first hole"/);
     assert.match(paint, /class="rail-lock"/, 'with its lock');
     assert.match(button(h, 'roads'), /title="Roads · Unlocks with your third hole or the tour&#x27;s invitation"/);
-    for (const id of ['select', 'holes', 'paths', 'buildings', 'bulldoze']) {
+    for (const id of ['select', 'holes', 'paths', 'buildings', 'props', 'bulldoze']) {
       assert.doesNotMatch(button(h, id), /rail-tab-locked|aria-disabled/, id);
     }
     assert.match(button(h, 'holes'), /class="rail-tab rail-tab-on/, 'Holes is the tool in hand');

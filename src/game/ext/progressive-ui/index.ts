@@ -10,7 +10,7 @@ export type RailGroupId = 'select' | 'roads' | 'paint' | 'course' | 'junction' |
 
 /** individual tool ids matching Tool in src/game/types.ts, plus 'buildings': the Course tool's Buildings tab (the clubhouse), a rail item of its
  *  own from plan P23 P1-E */
-export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
+export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
 
 /** top-bar golf chip ids in src/App.tsx */
 export type GolfChipId = 'courseStats' | 'land' | 'holes' | 'event' | 'skipTournament' | 'grass';
@@ -100,11 +100,11 @@ export const GROUP_STAGE: Readonly<Partial<Record<RailGroupId, OnboardingStage>>
 });
 /** the stage each golf tool opens at: Holes, Paths and Buildings from the start, Paint with the first hole, the town's tools at stage 3 */
 export const TOOL_STAGE: Readonly<Partial<Record<UiToolId, OnboardingStage>>> = Object.freeze({
-  select: 1, course: 1, path: 1, buildings: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
+  select: 1, course: 1, path: 1, buildings: 1, props: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
 });
 /** the rail group each golf tool sits in */
 export const TOOL_GROUP: Readonly<Partial<Record<UiToolId, RailGroupId>>> = Object.freeze({
-  select: 'select', course: 'course', path: 'course', buildings: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
+  select: 'select', course: 'course', path: 'course', buildings: 'course', props: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
   bus: 'transport', park: 'transport', toll: 'transport', paint: 'paint', bulldoze: 'bulldoze',
 });
 /** the stage each top-bar chip shows at: the course stats from the start; skip and the grass with the first hole; the pins and tees, the Event
