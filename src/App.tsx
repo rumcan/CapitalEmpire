@@ -22,6 +22,7 @@ import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
+import { PropsPanel } from './ui/course/PropsPanel';
 import { MyLooksCard } from './ui/course/MyLooks';
 import { Rail, NewBadge } from './ui/Rail';
 import { railEntries, railItemOf, toolNew } from './ui/rail-items';
@@ -43,6 +44,7 @@ import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
 import { ShotPanel } from './ui/ShotPanel';
+import { RangeCard } from './ui/golf/RangeCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the hint's key words, drawn as keycaps */
@@ -200,6 +202,7 @@ export default function App() {
                 <>
                   <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
+                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} title="The driving range: golfers, takings, bucket price and upgrades" data-testid="range-chip"><Icon name="income" size={16} />Range</button>}
                   {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="The tour's invitation: the first tournament is held at the end of the season it names">The Club Championship: end of {fv.due ? 'this' : 'next'} season</span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
                   {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>}
@@ -273,12 +276,6 @@ export default function App() {
                       <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
-                    <div className="flex items-center gap-2 px-2 py-2 text-sm" title="The grass on the open ground, the meadows and the town lawns: Painted, the game-art grass with a picture for each zoom level (T082), or Photo, the photo grass the game had before (the studio's base grass and texture presets)">
-                      <span className="w-16 shrink-0">Grass</span>
-                      {(['painted', 'photo'] as const).map(a => (
-                        <button key={a} className={`btn flex-1 ${game.grassArt === a ? 'on' : ''}`} onClick={() => { game.setGrassArt(a); bump(); }}>{a === 'painted' ? 'Painted' : 'Photo'}</button>
-                      ))}
-                    </div>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="The grass grows where it would: darker, bushier grass along fences, walls, hedges and water, patchy grass with bare dirt and leaves under trees, worn ground at doors and path edges, and soft shade at the foot of everything (T111)">
                       <input type="checkbox" checked={game.groundVariety} onChange={e => { game.setGroundVariety(e.target.checked); bump(); }} />
                       Ground variety
@@ -350,6 +347,7 @@ export default function App() {
               {game.tool === 'paint' && <PaintPanel game={game} />}
               {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
               {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
+              {game.tool === 'props' && <PropsPanel game={game} />}
               {game.tool === 'park' && <ParkPanel game={game} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
@@ -368,7 +366,7 @@ export default function App() {
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
               {gv && hint
-                ? <><span><b>{hint.title}</b> · {hint.body}</span><button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
+                ? <><span><b>{hint.title}</b> · {hint.body}</span>{hint.id.startsWith('hint-practice') && <button className="chip chip-on" data-testid="hint-show-practice" onClick={() => { game.showPracticeArea(); bump(); }}>Show me</button>}<button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
                 : <span>{keyed(hintFor(game))}</span>}
             </div>
             )}
@@ -435,6 +433,7 @@ export default function App() {
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
           {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
+          {(() => { const rc = game.rangeCard(); return rc && <RangeCard view={rc} right={game.panel ? 'right-[19.5rem]' : 'right-3'} onClose={() => game.openRangeCard(false)} onPrice={p => game.setRangePrice(p)} onBuy={id => game.buyRangeUpgrade(id)} onShowPractice={() => game.showPracticeArea()} />; })()}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>
               <Icon name="trophy" size={32} />

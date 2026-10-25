@@ -1,4 +1,4 @@
-// The rail (plan P23 4.2, P1-E): Select · Course: Holes, Paths, Buildings · Town: Roads, Junctions, Transport · Paint · Bulldoze. The same
+// The rail (plan P23 4.2, P1-E): Select · Course: Holes, Paths, Buildings, Props (T131) · Town: Roads, Junctions, Transport · Paint · Bulldoze. The same
 // places from minute zero: a tool the stage has not opened stays in place, dimmed, with what unlocks it, and a tool opened past stage 1 carries
 // a NEW badge until it is first opened (the seen ids are T117's, saved in golf.progress). Pure TypeScript, no DOM (the rail's buttons are
 // Rail.tsx); the icon names are types only.
@@ -21,6 +21,7 @@ export const RAIL: readonly RailItem[] = [
   { id: 'holes', label: 'Holes', icon: 'trophy', key: 'C', section: 'course', group: 'course', tools: [{ id: 'course', label: 'Holes', key: 'C', icon: 'trophy' }] },
   { id: 'paths', label: 'Paths', icon: 'sidewalk', key: '', section: 'course', group: 'course', tools: [{ id: 'path', label: 'Paths', key: '', icon: 'sidewalk' }] },
   { id: 'buildings', label: 'Buildings', icon: 'house', key: '', section: 'course', group: 'course', tools: [{ id: 'buildings', label: 'Buildings', key: '', icon: 'house' }], only: 'golf' },
+  { id: 'props', label: 'Props', icon: 'leaf', key: 'Z', section: 'course', group: 'course', tools: [{ id: 'props', label: 'Props', key: 'Z', icon: 'leaf' }], only: 'golf' },
   { id: 'roads', label: 'Roads', icon: 'road', key: 'R', section: 'town', group: 'roads', tools: [
     { id: 'road', label: 'Build', key: 'R', icon: 'road' },
     { id: 'lane', label: 'Upgrade', key: 'N', icon: 'up' },

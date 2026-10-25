@@ -26,6 +26,11 @@ export function SeasonReportCard({ report, onContinue }: { report: SeasonReport;
             <div className="text-base font-bold text-white">{report.residents.toLocaleString()}</div>
           </div>
         </div>
+        {report.range && (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-2 text-center text-xs text-slate-300" data-testid="season-range">
+            The range: {Math.round(report.range.golfers).toLocaleString()} golfers seen, {Math.round(report.range.buckets).toLocaleString()} buckets sold, {money(report.range.takings)} taken{report.range.lost > 0 ? `, ${Math.round(report.range.lost).toLocaleString()} drove on at the queue` : ''}
+          </div>
+        )}
         <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
           <div className="mb-1 text-[10px] uppercase text-slate-400">The tour's invitation</div>
           <div className="flex flex-wrap gap-x-3 gap-y-1">

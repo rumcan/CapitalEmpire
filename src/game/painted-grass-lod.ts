@@ -50,7 +50,7 @@ export function grassTranslationSeeds(repeat: number, levelMetres: number) {
   }));
 }
 /** decoded pictures a worker keeps (the least recently used past this are dropped; the current batch is always kept) */
-export const MAX_PAINTED_SOURCES = 9;
+export const MAX_PAINTED_SOURCES = 16;
 /** blends (mip chains) a worker keeps: a few art levels of the grass and its tints */
 export const MAX_PAINTED_CHAINS = 6;
 /** a blend's side at most, px (2048: 48 m at 42.7 px a metre, enough for the closest zoom on a dpr-2 screen) */
@@ -123,3 +123,20 @@ export function toneOps(t: number): { mul: [number, number, number]; gain: [numb
   const s = Math.max(0, -t), l = Math.max(0, t);
   return { mul: [0, 1, 2].map(k => 1 - s * (1 - TONE_SHADE[k]!)) as [number, number, number], gain: [0, 1, 2].map(k => l * TONE_LIGHT[k]!) as [number, number, number] };
 }
+
+/* ---- the blend's soft patches (a second texture over a surface: the painted areas' and course looks' Blend with, the road blocks' lawns): a
+ *  world-space noise, not periodic, so the patches never repeat (the owner: "If we ever see a repeating pattern something is wrong") ---- */
+/** the blend noise's wavelengths in tiles at patch size 1 (the old tiled mask had about 8 tiles), and their weights */
+export const BLEND_WAVES: readonly [number, number][] = [[8, 0.55], [3.7, 0.3], [1.9, 0.15]];
+/** the blend noise at tile (x, y) for patch size p (1 = about 8 tiles a patch), 0..1, smooth, never periodic */
+export function blendNoise(x: number, y: number, p: number) {
+  let n = 0; BLEND_WAVES.forEach(([w, a], i) => { n += a * valueNoise(x / (w * p) + 31.7 * i, y / (w * p) - 11.3 * i, 41 + i); });
+  return n;
+}
+/** the blend's coverage at noise value n: 1 where the noise passes 1 - share, blended over +-soft (share 1: everywhere, 0: nowhere) */
+export const blendAlpha = (n: number, share: number, soft: number) => {
+  if (share >= 1) return 1; if (share <= 0) return 0;
+  // value noise bunches round 0.5: stretch it so the share is about the covered fraction
+  const v = Math.max(0, Math.min(1, (n - 0.5) * 2.2 + 0.5)), c0 = 1 - share, a = c0 - soft, b = c0 + soft, t = Math.max(0, Math.min(1, (v - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};

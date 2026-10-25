@@ -10,7 +10,7 @@ export type RailGroupId = 'select' | 'roads' | 'paint' | 'course' | 'junction' |
 
 /** individual tool ids matching Tool in src/game/types.ts, plus 'buildings': the Course tool's Buildings tab (the clubhouse), a rail item of its
  *  own from plan P23 P1-E */
-export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
+export type UiToolId = 'select' | 'road' | 'lane' | 'downgrade' | 'paint' | 'course' | 'path' | 'buildings' | 'props' | 'junction' | 'bulldoze' | 'bus' | 'park' | 'toll' | 'business';
 
 /** top-bar golf chip ids in src/App.tsx */
 export type GolfChipId = 'courseStats' | 'land' | 'holes' | 'event' | 'skipTournament' | 'grass';
@@ -49,6 +49,9 @@ export interface PlayerProgressFacts {
   eventStructuresPlaced: number;
   /** hint ids already dismissed by the player */
   dismissedHints?: readonly string[];
+  /** a range start's practice facilities (plan P24 Phase 2, T130: golf/practice.ts PracticeState); missing outside range starts. Their hints
+   *  teach the brush before the first hole, and the Green and Bunker brushes are open from stage 1 to paint them */
+  practice?: { putting: 'none' | 'small' | 'nobunker' | 'open'; chipping: 'none' | 'small' | 'nobunker' | 'open' };
 }
 
 /** a one-line contextual first-run hint banner */
@@ -100,11 +103,11 @@ export const GROUP_STAGE: Readonly<Partial<Record<RailGroupId, OnboardingStage>>
 });
 /** the stage each golf tool opens at: Holes, Paths and Buildings from the start, Paint with the first hole, the town's tools at stage 3 */
 export const TOOL_STAGE: Readonly<Partial<Record<UiToolId, OnboardingStage>>> = Object.freeze({
-  select: 1, course: 1, path: 1, buildings: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
+  select: 1, course: 1, path: 1, buildings: 1, props: 1, road: 3, lane: 3, downgrade: 3, junction: 3, bus: 3, park: 3, toll: 3, paint: 2, bulldoze: 1,
 });
 /** the rail group each golf tool sits in */
 export const TOOL_GROUP: Readonly<Partial<Record<UiToolId, RailGroupId>>> = Object.freeze({
-  select: 'select', course: 'course', path: 'course', buildings: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
+  select: 'select', course: 'course', path: 'course', buildings: 'course', props: 'course', road: 'roads', lane: 'roads', downgrade: 'roads', junction: 'junction',
   bus: 'transport', park: 'transport', toll: 'transport', paint: 'paint', bulldoze: 'bulldoze',
 });
 /** the stage each top-bar chip shows at: the course stats from the start; skip and the grass with the first hole; the pins and tees, the Event
@@ -166,6 +169,25 @@ export const FIRST_RUN_HINTS: readonly FirstRunHint[] = [
   },
 ];
 
+/** a range start's teaching ramp (plan P24 Phase 2, T130): paint the putting green, then the chipping green and its bunker, in the practice area
+ *  beside the range (the hint bar's Show me pans there and picks the brush) */
+export const PRACTICE_HINTS: readonly FirstRunHint[] = [
+  {
+    id: 'hint-practice-putting',
+    stage: 1,
+    title: 'Paint a putting green',
+    body: 'Drag the Green brush in the Practice area beside the car park: 300 m² with its fringe opens it (+10% visitors, $2 a golfer).',
+    targetTool: 'course',
+  },
+  {
+    id: 'hint-practice-chipping',
+    stage: 1,
+    title: 'Now a chipping green and a bunker',
+    body: 'Paint a second, smaller green in the Practice area (200 m²), then a bunker beside it with the Bunker brush.',
+    targetTool: 'course',
+  },
+];
+
 /** the stuck player's hint (P23 4.2: no hole after one season or 20 minutes of play): New hole again, even when Step 1 was dismissed */
 export const STUCK_HINT: FirstRunHint = Object.freeze({
   id: 'hint-stuck-new-hole',
@@ -197,6 +219,12 @@ export function resolveOnboardingStage(f: PlayerProgressFacts): OnboardingStage 
 export function nextFirstRunHint(f: PlayerProgressFacts): FirstRunHint | null {
   const dismissed = new Set(f.dismissedHints ?? []), stage = resolveOnboardingStage(f), [h1, h2, h3, h4] = FIRST_RUN_HINTS;
   if (isStuck(f) && !dismissed.has(STUCK_HINT.id)) return STUCK_HINT;
+  // a range start's practice facilities first (T130): the putting green, then the chipping green and bunker
+  const [pp, pc] = PRACTICE_HINTS;
+  if (f.practice && f.playableHoles < 1) {
+    if (f.practice.putting !== 'open' && !dismissed.has(pp!.id)) return pp!;
+    if (f.practice.putting === 'open' && f.practice.chipping !== 'open' && !dismissed.has(pc!.id)) return pc!;
+  }
   if (f.playableHoles < 1 && !dismissed.has(h1!.id)) return h1!;
   if (stage < 3) return null;
   if (f.carParksBuilt < 1 && !dismissed.has(h2!.id)) return h2!;
@@ -229,8 +257,9 @@ export function computeProgressiveUiState(f: PlayerProgressFacts): ProgressiveUi
     newGroups: visibleGroups.filter(id => isNew(id, GROUP_STAGE[id])),
     newTools: visibleTools.filter(id => isNew(id, TOOL_STAGE[id])),
     visibleGolfChips: openAt(CHIP_STAGE, stage, adv),
-    visibleCourseBrushes: openAt(BRUSH_STAGE, stage, adv),
-    shapeByHand: adv || stage >= 2,
+    // a range start paints its practice greens and bunker by hand from stage 1 (T130)
+    visibleCourseBrushes: f.practice ? [...new Set<CourseBrushId>([...openAt(BRUSH_STAGE, stage, adv), 'green', 'bunker'])] : openAt(BRUSH_STAGE, stage, adv),
+    shapeByHand: adv || stage >= 2 || !!f.practice,
     lockedCourseClasses: lockedAt(COURSE_CLASS_STAGE, stage, adv),
     visibleFineControls: adv ? ALL_FINE_CONTROLS.slice() : [],
     stageLabel: adv ? 'Every tool shown (Settings)' : `Stage ${stage}: ${STAGE_NAME[stage]}`,
