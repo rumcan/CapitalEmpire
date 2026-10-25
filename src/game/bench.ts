@@ -12,6 +12,7 @@ import { generateOldNine } from './golf/coursegen';
 import { courseAreas } from './golf/paintcourse';
 import { surfaceOfTex } from './golf/costs';
 import { roundCorners } from './paint';
+import { HoleWizard, newPlan } from './ext/hole-wizard';
 
 export const BENCH_CARS = 10000;
 
@@ -111,17 +112,43 @@ function startTour(g: Game, info: Record<string, unknown>) {
       s++; t = 0; frames = []; cpu = []; inst = draws = upload = up = 0; stageSim = 0; g.cam.X = startX; g.cam.Y = startY;
       if (s >= STAGES.length) {
         g.onFrame = null;
-        if (info.course) { paintStage(g, info.course as { x: number; y: number }, r => { results.push(r); finish(); }); return; }
+        if (info.course) { const at = info.course as { x: number; y: number }; paintStage(g, at, r => { results.push(r); wizardStage(g, at, r2 => { results.push(r2); finish(); }); }); return; }
         finish();
       }
     }
   };
   function finish() {
-    const out = { ...info, cars: BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
+    const out = { ...info, cars: BENCH_CARS, dpr: g.dpr, screen: `${g.cw}x${g.ch}`, groundBakes: g.ground.baked, avgBakeMs: +(g.ground.bakeMs / Math.max(1, g.ground.baked)).toFixed(1), groundCacheMB: Math.round(g.ground.residentPx * 4 / 1048576), groundCachePeakMB: Math.round(g.ground.peakPx * 4 / 1048576), sim: { active: g.perf.simActive, tickMsAvg: +(simSum / Math.max(1, simN)).toFixed(2), tickMsMax: +simMax.toFixed(2) }, stages: results };
     (window as unknown as { __bench: unknown }).__bench = out;
     console.log('[bench] results', JSON.stringify(out, null, 1));
     g.toast('Benchmark finished: results in the console', 'good');
   }
+}
+
+/** the New hole wizard's drag (T102, with ?course=1): 4 s at 30% over the course, the green of a 3-bend par 5 (about 560 m, 40,000 cells)
+ *  dragged half a tile every frame; per frame the main-thread ms of the re-plan and the ghost (the cells a Build would lay, their price
+ *  and outlines: ext/hole-wizard), the budget being 4 ms */
+function wizardStage(g: Game, at: { x: number; y: number }, done: (r: Record<string, unknown>) => void) {
+  g.cam = { X: worldX(at.x, at.y), Y: worldY(at.x, at.y), z: 0.3 };
+  const w = new HoleWizard({ grid: () => g.courseGrid, plans: () => [], month: () => 64, price: s => (s ? 2 : 0), money: () => Infinity });
+  const green = { x: at.x + 70.25, y: at.y + 90.25 };
+  w.start(10);
+  w.plan = newPlan(10, { x: at.x - 110.25, y: at.y - 100.25 }, green, [{ x: at.x - 60, y: at.y - 80 }, { x: at.x - 10, y: at.y - 20 }, { x: at.x + 50, y: at.y + 20 }]);
+  w.step = 'shape';
+  w.drag = { k: 'green', i: 0, x: green.x, y: green.y };
+  let t = -1, k = 0, cells = 0, len = 0;
+  const ms: number[] = [];
+  const stats = (a: number[]) => { const s = [...a].sort((p, q) => p - q), q = (p: number) => s[Math.min(s.length - 1, Math.floor(p * s.length))] ?? 0; return { avg: +(a.reduce((p, v) => p + v, 0) / Math.max(1, a.length)).toFixed(2), p95: +q(0.95).toFixed(2), max: +(s[s.length - 1] ?? 0).toFixed(2) }; };
+  g.onFrame = (_now, dt) => {
+    t += dt;
+    if (t < 0) return;
+    const t0 = performance.now();
+    k++; w.dragTo({ x: green.x + (k % 40) * 0.5, y: green.y + (k % 7) * 0.5 });
+    const gh = w.ghost();
+    ms.push(performance.now() - t0);
+    if (gh) { cells = gh.diff.n; len = gh.info.lengthM; }
+    if (t >= 4) { g.onFrame = null; done({ stage: 'hole wizard drag 30%', drags: ms.length, ghostMs: stats(ms), cells, lengthM: len }); }
+  };
 }
 
 /** the scripted paint stroke (T077b, with ?course=1): 6 s at 30% over the course, a 3-tile green dab every frame moving 0.5 tile along a

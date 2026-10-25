@@ -8,6 +8,7 @@ import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
 import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
 import { HoleStrip } from './HoleStrip';
 import { HoleInspector } from './HoleInspector';
+import { HoleWizardPanel } from './HoleWizard';
 
 type CourseTab = 'build' | 'presets' | 'plants' | 'buildings';
 
@@ -37,6 +38,7 @@ export function CoursePanel({ game }: { game: Game }) {
         <button className={`chip ${p.canRedo ? '' : 'opacity-40'}`} disabled={!p.canRedo} title="Ctrl+Y" onClick={() => p.redo()}>Redo</button>
       </div>
       <HoleStrip game={game} />
+      {p.mode === 'plan' && <HoleWizardPanel game={game} />}
       <HoleInspector game={game} />
       <div className="mt-2 flex flex-wrap gap-1">
         <button className={`chip ${tab === 'build' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setBrush(p.brushKind); }}>Build</button>
@@ -44,7 +46,7 @@ export function CoursePanel({ game }: { game: Game }) {
         <button className={`chip ${tab === 'plants' ? 'chip-on' : ''}`} onClick={() => { game.placeClubhouse(false); p.setPlant(p.plantBrush); }}>Plants</button>
         {game.golfMode && <button className={`chip ${tab === 'buildings' ? 'chip-on' : ''}`} onClick={() => game.placeClubhouse(true)}>Buildings</button>}
       </div>
-      {tab === 'build' && (
+      {tab === 'build' && p.mode !== 'plan' && (
         <>
           <div className="mt-2 text-[11px] text-slate-400">Surface (keys 1–7)</div>
           <div className="flex flex-wrap gap-1">

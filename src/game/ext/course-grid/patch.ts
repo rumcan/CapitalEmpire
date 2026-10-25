@@ -8,6 +8,7 @@ import type { CourseLayer, CourseTex, LotPatch } from '../../ground-protocol';
 import type { EdgeProfile } from '../../paint-edges';
 import { MONTH_BASE } from './areas';
 import { growMask } from '../course-fx';
+import { chunkWalls, coversOf, layerCode } from '../course-walls';
 
 /** a course chunk's side, tiles (128 cells) */
 export const COURSE_CHUNK = 64;
@@ -104,13 +105,15 @@ const f32 = (a: readonly number[][]): Float32Array[] => a.map(q => Float32Array.
  *  centre lines (lines: per hole, flat tiles) of the holes whose fairway cells lie in or near the chunk, and the growth mask rides along
  *  when something grows (now: the effective game month) */
 export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks, now: number, lines?: ReadonlyMap<number, readonly number[]>): LotPatch | null {
-  const S = COURSE_CHUNK, outs = chunkOutlines(g, cx, cy, S, BLOB_STYLE), layers: CourseLayer[] = [];
-  for (const o of outs) {
-    const look = looks.surf[o.surf]; if (!look) continue;
-    const [fill, edges] = capPoints(o.fill, o.edges);
-    const L: CourseLayer = { s: o.surf, tex: look.tex, sc: look.sc, a: look.a, e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges) };
+  const S = COURSE_CHUNK, outs = chunkOutlines(g, cx, cy, S, BLOB_STYLE, true).filter(o => looks.surf[o.surf]), layers: CourseLayer[] = [];
+  // the edges exactly as they will be drawn (capped), for the walls (T099): each layer's edges sorted into soft, joint and wall runs
+  const capped = outs.map(o => ({ o, se: capPoints(o.fill, o.edges), ce: o.collar ? capPoints(o.collar.fill, o.collar.edges) : null }));
+  const cw = chunkWalls(g, capped.flatMap(({ o, se, ce }) => [{ code: layerCode(o.surf, false), edges: se[1] }, ...(ce ? [{ code: layerCode(o.surf, true), edges: ce[1] }] : [])]), coversOf(outs));
+  for (const { o, se: [fill, edges], ce } of capped) {
+    const look = looks.surf[o.surf]!, r = cw.runs.get(layerCode(o.surf, false));
+    const L: CourseLayer = { s: o.surf, tex: look.tex, sc: look.sc, a: look.a, e: SURF_EDGE[o.surf] ?? 'flat', fill: f32(fill), edges: f32(edges), soft: f32(r?.soft ?? []), joint: f32(r?.joint ?? []) };
     const col = BLOB_STYLE[o.surf]?.collar;
-    if (o.collar && col) { const cl = looks.collar[col.name], [cf, ce] = capPoints(o.collar.fill, o.collar.edges); L.collar = { n: col.name, tex: cl.tex, sc: cl.sc, a: cl.a, fill: f32(cf), edges: f32(ce) }; }
+    if (ce && col) { const cl = looks.collar[col.name], [cf, cE] = ce; L.collar = { n: col.name, tex: cl.tex, sc: cl.sc, a: cl.a, fill: f32(cf), edges: f32(cE), soft: f32(cw.runs.get(layerCode(o.surf, true))?.soft ?? []) }; }
     if (o.surf === 4 && lines?.size && o.fill.length) {
       const holes = holesIn(g, cx, cy, o.surf), st: { hole: number; line: number[] }[] = [];
       for (const h of holes) { const l = lines.get(h); if (l && l.length >= 4) st.push({ hole: h, line: l.slice() }); }
@@ -121,13 +124,15 @@ export function coursePatch(g: Grid, cx: number, cy: number, looks: CourseLooks,
   if (!layers.length) return null;
   const R = COURSE_PATCH_REACH, x0 = cx * S - R, y0 = cy * S - R, x1 = (cx + 1) * S + R, y1 = (cy + 1) * S + R;
   const grow = courseGrow(g, cx, cy, now);
-  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(grow ? { grow } : {}), z: 0 } };
+  const walls = cw.walls.map(w => ({ p: Float32Array.from(w.p), lo: w.lo, m: w.m })), rims = cw.rims.map(r => ({ p: Float32Array.from(r.p), hi: r.hi }));
+  return { pts: [x0, y0, x1, y0, x1, y1, x0, y1], tex: 'grass', course: { cx, cy, size: S, layers, ...(walls.length ? { walls } : {}), ...(rims.length ? { rims } : {}), ...(grow ? { grow } : {}), z: 0 } };
 }
 
 /** the buffers of a patch's typed arrays (a postMessage transfer list) */
 export function patchBuffers(p: LotPatch): ArrayBuffer[] {
   const out: ArrayBuffer[] = [], c = p.course; if (!c) return out;
-  for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.collar ? [...l.collar.fill, ...l.collar.edges] : [])]) out.push(a.buffer as ArrayBuffer);
+  for (const l of c.layers) for (const a of [...l.fill, ...l.edges, ...(l.soft ?? []), ...(l.joint ?? []), ...(l.collar ? [...l.collar.fill, ...l.collar.edges, ...(l.collar.soft ?? [])] : [])]) out.push(a.buffer as ArrayBuffer);
+  for (const w of [...(c.walls ?? []), ...(c.rims ?? [])]) out.push(w.p.buffer as ArrayBuffer);
   if (c.grow) out.push(c.grow.buffer as ArrayBuffer);
   return out;
 }

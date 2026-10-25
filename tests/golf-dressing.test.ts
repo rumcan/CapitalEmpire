@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateOldNine } from '../src/game/golf/coursegen';
 import {
-  BENCH_ID, DRESSING_SPRITE_IDS, PIN_RED_ID, PIN_YELLOW_ID,
+  BENCH_ID, DRESSING_SPRITE_IDS, MARKER_SCALE, PIN_RED_ID, PIN_YELLOW_ID,
   DRESS_CONIFER_SHARE, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID, TREE_IDS,
   buildCartPathLoop, dressCourse, dressTree, withCartPathLoop,
 } from '../src/game/golf/dressing';
@@ -28,16 +28,17 @@ test('dressCourse is deterministic per seed and emits only verified library spri
     assert.ok(p.scale > 0 && Number.isFinite(p.x) && Number.isFinite(p.y));
   }
 
-  // 8 red pins + 1 yellow pin on the 9th hole + 9 forward tee markers (which also use PIN_YELLOW_ID at smaller scale)
-  const pinsAtGreen = a.filter(p => (p.id === PIN_RED_ID || p.id === PIN_YELLOW_ID) && p.scale === 0.32);
+  // 8 red pins + 1 yellow pin on the 9th hole, and no flag anywhere else (T111: the forward tee marker was a yellow flag)
+  const pinsAtGreen = a.filter(p => (p.id === PIN_RED_ID || p.id === PIN_YELLOW_ID) && p.scale === MARKER_SCALE.pin);
   assert.equal(pinsAtGreen.length, 9);
+  assert.equal(a.filter(p => p.id === PIN_RED_ID || p.id === PIN_YELLOW_ID).length, 9);
   assert.equal(pinsAtGreen.filter(p => p.id === PIN_RED_ID).length, 8);
   assert.equal(pinsAtGreen.filter(p => p.id === PIN_YELLOW_ID).length, 1);
 
-  // 9 back, 9 middle, 9 forward tee markers
-  assert.equal(a.filter(p => p.id === TEE_BACK_ID).length, 9);
-  assert.equal(a.filter(p => p.id === TEE_MIDDLE_ID).length, 9);
-  assert.equal(a.filter(p => p.id === TEE_FORWARD_ID && p.scale === 0.18).length, 9);
+  // 9 back, 9 middle, 9 forward tee markers, each kind at its marker scale
+  assert.equal(a.filter(p => p.id === TEE_BACK_ID && p.scale === MARKER_SCALE.back).length, 9);
+  assert.equal(a.filter(p => p.id === TEE_MIDDLE_ID && p.scale === MARKER_SCALE.middle).length, 9);
+  assert.equal(a.filter(p => p.id === TEE_FORWARD_ID && p.scale === MARKER_SCALE.forward).length, 9);
 
   // 9 benches near tees, never mirrored (flip === false)
   const benches = a.filter(p => p.id === BENCH_ID);

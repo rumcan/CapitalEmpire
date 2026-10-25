@@ -47,7 +47,8 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": false
+   "lawn": false,
+   "painted": null
   },
   {
    "id": "fescue",
@@ -95,7 +96,8 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": true
+   "lawn": true,
+   "painted": null
   },
   {
    "id": "fairway",
@@ -143,7 +145,8 @@
     "tint": 0.18,
     "soft": 0.2
    },
-   "lawn": false
+   "lawn": false,
+   "painted": null
   },
   {
    "id": "rough",
@@ -191,7 +194,8 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": false
+   "lawn": false,
+   "painted": null
   },
   {
    "id": "fringe",
@@ -239,7 +243,8 @@
     "tint": 0.07,
     "soft": 0.3
    },
-   "lawn": true
+   "lawn": true,
+   "painted": null
   },
   {
    "id": "first-cut",
@@ -287,7 +292,8 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": true
+   "lawn": true,
+   "painted": null
   },
   {
    "id": "path-worn",
@@ -335,7 +341,8 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": false
+   "lawn": false,
+   "painted": null
   },
   {
    "id": "sand",
@@ -383,7 +390,8 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": false
+   "lawn": false,
+   "painted": null
   },
   {
    "id": "lawns",
@@ -431,7 +439,8 @@
     "tint": 0.25,
     "soft": 0.3
    },
-   "lawn": true
+   "lawn": true,
+   "painted": "grass"
   }
  ],
  "blocks": null,
