@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIRST_TEE, LAST_TEE } from '../src/game/golf/calendar';
 import { TILE_M } from '../src/game/golf/types';
-import { GOLFER_NAMES, WALK_M, carryM, chooseShot, gauss, hitShot, makeField, playRound, putt, rng, standings, stateAt, teeTimes } from '../src/game/golf/play';
+import { AM_SKILL, GOLFER_NAMES, PRO_SKILL, WALK_M, carryM, chooseShot, gauss, hitShot, makeField, playRound, putt, rng, standings, stateAt, teeTimes } from '../src/game/golf/play';
 import type { CourseView, Golfer, GolferState, Lie, PlayHole, Pt, RoundPlan } from '../src/game/golf/play';
 
 /** the pars of the 18 holes, in play order: three 3s, eleven 4s, four 5s */
@@ -61,7 +61,7 @@ test('field: 24 to 72 golfers by tier, unique names, the pro share by tier, the 
   assert.ok(f.every((g, i) => g.id === i && g.sex === f[0].sex), 'ids 0..n-1, one sex for the whole field');
   assert.ok(f.every(g => GOLFER_NAMES[g.sex].includes(g.name.split(' ')[0]) && GOLFER_NAMES.last.includes(g.name.split(' ')[1])), 'names from the lists');
   assert.ok(f.every(g => Number.isInteger(g.look) && g.look >= 0 && g.look <= 4), 'looks 0..4');
-  assert.ok(f.every(g => g.pro ? g.skill >= 0.6 && g.skill <= 1 : g.skill >= 0.2 && g.skill <= 0.55), 'skill by pro or amateur');
+  assert.ok(f.every(g => { const [lo, hi] = (g.pro ? PRO_SKILL : AM_SKILL)[2]!; return g.skill >= lo && g.skill <= hi; }), 'skill by pro or amateur at the tier');
   const men = Array.from({ length: 200 }, (_, s) => makeField(1, s + 1)[0].sex === 'm' ? 1 : 0).reduce((a: number, b) => a + b, 0) / 200;
   assert.ok(men > 0.5 && men < 0.7, `about 60% men, got ${men}`);
   assert.equal(GOLFER_NAMES.m.length, 40); assert.equal(GOLFER_NAMES.w.length, 40); assert.equal(GOLFER_NAMES.last.length, 80);

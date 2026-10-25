@@ -18,6 +18,10 @@ const GAP = 8;
 
 /** a tier as an integer 1..5 */
 const tierOf = (tier: number): number => Math.min(5, Math.max(1, Math.round(tier)));
+/** the skill ranges [low, high] by tier (1..5): a small-town club championship's pros are the local club pros, the Open's are touring pros (on a short
+ *  course tour-level pros went 8 to 11 under in a tier-1 test day, 2026-10-25); the amateurs are club golfers, a little better at the bigger events */
+export const PRO_SKILL: readonly (readonly [number, number])[] = [[0.40, 0.62], [0.45, 0.70], [0.50, 0.80], [0.55, 0.90], [0.60, 1.0]];
+export const AM_SKILL: readonly (readonly [number, number])[] = [[0.15, 0.50], [0.15, 0.50], [0.20, 0.55], [0.20, 0.55], [0.20, 0.55]];
 
 /** a tournament's field at a tier (1..5): 24 to 72 golfers, all of one sex (men 60% of the time), the pro share by tier, unique names.
  *  The same tier and seed always give the same field */
@@ -34,8 +38,8 @@ export function makeField(tier: number, seed: number): Golfer[] {
     let name: string;
     do name = `${firsts[Math.floor(r() * firsts.length)]} ${GOLFER_NAMES.last[Math.floor(r() * GOLFER_NAMES.last.length)]}`; while (used.has(name));
     used.add(name);
-    // pros are 0.6 to 1.0 in skill, the club amateurs 0.2 to 0.55
-    const skill = pro ? 0.6 + 0.4 * r() : 0.2 + 0.35 * r();
+    // the skill by the tier's ranges (PRO_SKILL, AM_SKILL)
+    const [lo, hi] = (pro ? PRO_SKILL : AM_SKILL)[k - 1]!, skill = lo + (hi - lo) * r();
     out.push({ id, name, sex, pro, skill, look: Math.floor(r() * 5) });
   }
   return out;

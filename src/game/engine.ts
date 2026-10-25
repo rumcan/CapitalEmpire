@@ -4408,8 +4408,14 @@ export class Game {
     const r = s.input.club === 'putter' ? PUTT_POWER : POWER;
     this.shot = { ...s, input: { ...s.input, power: Math.min(r[1]!, Math.max(r[0]!, p)) } }; this.emit();
   }
-  /** the owner's aim: a point on the course (a click, not a drag, while his shot is open) */
-  private aimAt(t: Pt) { const s = this.shot; if (!s) return; this.shot = { ...s, input: { ...s.input, aim: { x: t.x, y: t.y } } }; this.emit(); }
+  /** the owner's aim: a point on the course (a click, not a drag, while his shot is open). The power follows (powerFor), so the ring is where he means the
+   *  ball to land: a click 30 m out with the driver at 100% would otherwise fly the full carry past it */
+  private aimAt(t: Pt) {
+    const s = this.shot, own = this.play?.own; if (!s) return;
+    const aim = { x: t.x, y: t.y }, dM = Math.hypot(aim.x - s.turn.ball.x, aim.y - s.turn.ball.y) * TILE_M;
+    const power = own && s.input.club !== 'putter' ? powerFor(s.input.club, dM, own.skill) : s.input.power;
+    this.shot = { ...s, input: { ...s.input, aim, power } }; this.emit();
+  }
   /** the owner's hit (P4b): plays his shot from the panel's input, plays the day on to his next turn, closes the shot (the sim resumes) and saves. When his
    *  group is done, his score is toasted */
   ownerHit() {

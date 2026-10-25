@@ -64,3 +64,20 @@ interface Standing { golfer: number; pos: number; toPar: number; thru: number; s
 - `round.ts`: `playRound(view, golfers, groups, seed): RoundPlan`, `stateAt(plan, view, minute): GolferState[]`, `standings(plan, view,
   minute): Standing[]`.
 The details (the dispersion, lies, roll, water, out of bounds, putting, the time model) are in the P1 brief and the code's comments.
+
+## Status (2026-10-25, branch `lead/golf-play`)
+P1 to P4 are built and checked: the pure modules by their tests (`tests/golf-play*.test.ts`, 50+), the game in the dev build on the
+old nine (`?start=town`, "Skip to the tournament"): 24 golfers in 8 groups, the 9 played twice, the golfers walking, swinging and
+putting, the balls flying, the leaderboard (bottom right), "Play in it" as a man, the pause at the owner's address with the shot
+panel, aiming by a click (the power follows the aim), Hit, the camera to his ball, "Let the caddie finish", "You shot 78 (+6)",
+the last group in at 16:55 and "Bruce Grant wins at −11 — Maple Falls Club Championship".
+Changes after the first look: the field's skill now follows the tier (`PRO_SKILL`, `AM_SKILL` in field.ts: tier-1 pros are club pros;
+tour-level pros went 8 to 11 under on the short old nine), and a click to aim sets the power so the ring is where the ball should land.
+**Decision 1, recorded:** the played competition is one 18-hole round on the tournament day; the tier table's extra days
+(`tour.ts` TIERS `days`, `practiceDays`) are left as they are, because setting them to 1 would put a whole multi-day crowd into the one
+played day (50,000 fans at tier 5) and change the year-end money; say if the economy should be one day too.
+**Open:** a reload during a tournament day comes back as a fresh day (the round's surge is not restored by the save today), so the
+owner's round cannot resume after a reload yet, although his inputs are saved and replay (tested); the results screen opens at the
+15:00 kick-off while golf goes on (the leaderboard stays, the champion follows when the last group is in); putts use the drive clip's
+address frames (no putt clip in Meshy's library); no caddies, carts or celebrations yet; the groups behind the owner's do not wait
+for his.
