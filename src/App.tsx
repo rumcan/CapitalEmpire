@@ -21,6 +21,8 @@ import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
+import { SurfaceMark } from './ui/course/SurfaceMark';
+import { BRUSH_PRESETS } from './game/paint';
 import { STRUCTURES } from './game/golf/tents';
 import { findGolfCard, type GolfCardDef } from './game/golf/golfcards';
 import { getTournamentWeather } from './game/golf/weather';
@@ -148,8 +150,10 @@ export default function App() {
   const chip = (id: string) => !ui || (ui.visibleGolfChips as string[]).includes(id);
   /** the first-run hint (null when none or all dismissed); golf mode shows it in the bottom bar */
   const hint = ui?.activeHint ?? null;
-  /** the Course brush's words (T118): the surface, the hole, the price a m², and what a click would do; golf mode shows them in the bottom bar */
+  /** the Course brush's words (T118): what a click does (the surface, the hole it joins or starts, the price a cell) and the state; golf mode always shows them while a surface is armed */
   const courseHint = game?.courseHint() ?? '';
+  /** the surface keys in force: 1 to the last surface the progressive unlocks show (BRUSH_PRESETS' order, as PaintTool.key reads them) */
+  const surfaceKeys = Math.max(1, ...BRUSH_PRESETS.map((b, i) => (!ui || (ui.visibleCourseBrushes as string[]).includes(b.kind) ? i + 1 : 0)));
   /** the open group's tools that the progressive unlocks show */
   const shownTools = grp ? grp.tools.filter(t => !ui || (ui.visibleTools as string[]).includes(t.id)) : [];
 
@@ -366,15 +370,26 @@ export default function App() {
             </div>
           </div>
 
-          {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it, else the Course brush's words (T118); no bar without one */}
+          {/* the hint bar, centred in the lane between the minimap's town chip and the stats card. Golf mode (T035): the first-run hint, with its Got it;
+              and while a course surface is armed (T118), always the Course pill: what a click lays (the surface's disc and mark, the hole it joins, the
+              price a cell, the state's words) and how to switch or stop; no bar without either */}
           {(!gv || hint || courseHint) && (
-          <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex justify-center">
+          <div className="pointer-events-none absolute bottom-3 left-[24.5rem] right-[15.5rem] z-20 flex flex-col items-center gap-1.5">
+            {(!gv || hint) && (
             <div className={`flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs ${gv ? 'pointer-events-auto' : ''}`}>
               <Icon name="info" size={18} />
               {gv && hint
                 ? <><span><b>{hint.title}</b> · {hint.body}</span><button className="chip" onClick={() => { game.dismissHint(hint.id); bump(); }}>Got it</button></>
-                : <span>{keyed(gv ? courseHint : hintFor(game))}</span>}
+                : <span>{keyed(hintFor(game))}</span>}
             </div>
+            )}
+            {gv && courseHint && (
+            <div className="flex items-center gap-2 glass rounded-full! px-4 py-1.5 text-xs" data-testid="course-pill">
+              <SurfaceMark kind={game.paint.brushKind} size={24} />
+              <span className="text-slate-100">{courseHint}</span>
+              <span className="whitespace-nowrap text-slate-300">· <span className="keycap">1–{surfaceKeys}</span> switch surface · <span className="keycap">Esc</span> stop</span>
+            </div>
+            )}
           </div>
           )}
           {(game.showAccess || (dev && game.cam.z < PLANNER_Z)) && <AccessLegend game={game} />}

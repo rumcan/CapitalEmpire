@@ -1,11 +1,12 @@
 import type { Game } from '../../game/engine';
-import { BRUSH_PRESETS, PAINT_TEXES } from '../../game/paint';
+import { BRUSH_PRESETS } from '../../game/paint';
 import { PLANT_KINDS } from '../../game/plant';
 import { PIECE_BUTTONS } from '../../game/ext/course-pieces';
 import { SQUARE_SIZES } from '../../game/ext/course-cursor/snap';
 import { EARTHWORK_PER_M3 } from '../../game/golf/costs';
 import { BUSINESS, CLUBHOUSE_RANGE_COST } from '../../game/business/catalogue';
-import { PlantControls, StyleEditor, swatch } from '../../PaintPanel';
+import { PlantControls, StyleEditor } from '../../PaintPanel';
+import { SurfaceMark } from './SurfaceMark';
 import { HoleStrip } from './HoleStrip';
 import { HoleInspector } from './HoleInspector';
 import { HoleWizardPanel } from './HoleWizard';
@@ -53,9 +54,10 @@ export function CoursePanel({ game }: { game: Game }) {
       )}
       {tab === 'build' && p.mode !== 'plan' && shape && (
         <>
-          <div className="mt-2 text-[11px] text-slate-400">Surface (keys 1–7)</div>
+          <div className="mt-2 text-[11px] text-slate-400">Surface (keys 1–{Math.max(1, ...BRUSH_PRESETS.map((b, i) => (brushOk(b.kind) ? i + 1 : 0)))})</div>
+          {/* T118: each surface's disc with its mark (the cursor's chip carries the same), its key, and the armed one plainly lit */}
           <div className="flex flex-wrap gap-1">
-            {BRUSH_PRESETS.filter(b => brushOk(b.kind)).map(b => <button key={b.kind} className={`chip ${p.brushKind === b.kind ? 'chip-on' : ''}`} onClick={() => p.mode === 'draw' ? p.setShape(b.kind) : p.setBrush(b.kind)}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(PAINT_TEXES.find(t => t.id === b.style.tex)!)} />{b.name}</button>)}
+            {BRUSH_PRESETS.map((b, i) => brushOk(b.kind) && <button key={b.kind} aria-pressed={p.brushKind === b.kind} title={`${b.name} (key ${i + 1})`} className={`chip ${p.brushKind === b.kind ? 'chip-on ring-2 ring-amber-200/80' : ''}`} onClick={() => p.mode === 'draw' ? p.setShape(b.kind) : p.setBrush(b.kind)}><SurfaceMark kind={b.kind} size={20} />{b.name}<span className={`ml-0.5 text-[10px] font-bold ${p.brushKind === b.kind ? 'text-amber-950/70' : 'text-slate-500'}`}>{i + 1}</span></button>)}
           </div>
           <div className="mt-2 text-[11px] text-slate-400">Method</div>
           <div className="flex flex-wrap gap-1">

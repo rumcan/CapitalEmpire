@@ -8,6 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CHIP_CSS, CourseCursor, Footprints, MARKS, cellOutline, dabCells, isRefusal, markOf, paintMark, polyFootprint, snapDab, squareStart, type CursorView, type MarkKind, type Shape, type SpriteCanvas } from '../src/game/ext/course-cursor';
 import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
+import { gridAreas } from '../src/game/ext/course-grid/areas';
 import { CELL as BRUSH_CELL, dab, type Mask } from '../src/game/brush';
 import { LAND_WHY, PaintTool, type LandRefusal } from '../src/game/paint-tool';
 import { unitBuildCost } from '../src/game/golf/costs';
@@ -77,7 +78,7 @@ function brushTool(kind: 'fairway' | 'green' | 'tee' | 'bunker' | 'water' | 'rou
 }
 /** a golf game's Paint tool on a course grid g (land east of x = ownX is not yours), and a cursor wired to it as the engine wires it */
 function golfTool(g: Grid, ownX = Infinity, money = { cash: 1e6 }, refusal: LandRefusal = 'off') {
-  const tool = new PaintTool({ ...HOST, golfMode: () => true, grid: () => g, gridChanged() {}, ownedAt: (x: number) => x < ownX, landWhy: (x: number) => (x < ownX ? '' : refusal), money: () => money.cash, spend: (n: number) => { money.cash -= n; } });
+  const tool = new PaintTool({ ...HOST, golfMode: () => true, grid: () => g, gridChanged() {}, gridAreas: () => gridAreas(g), ownedAt: (x: number) => x < ownX, landWhy: (x: number) => (x < ownX ? '' : refusal), money: () => money.cash, spend: (n: number) => { money.cash -= n; } });
   tool.course = true; tool.setBrush('fairway');
   const cur = new CourseCursor({ canvas: mockCanvases().make, why: () => tool.brushSkipWhy(), cost: () => tool.brushCellCost(), rev: () => g.rev * 64 + tool.brushHole * 2 + (tool.rubOut ? 1 : 0), money: () => money.cash });
   return { tool, cur, money };
@@ -329,7 +330,7 @@ test('prices per cell, live: the footprint shows its cells and price, and a drag
   cur.draw(m.ctx, v, tool, 1000);
   assert.equal(cur.feet.count, 4); assert.equal(cur.feet.price, 4 * unit);
   assert.deepEqual(m.texts, [], 'no words by the disc at rest (T118)');
-  assert.equal(cur.hint, `Fairway · hole 1 · $${unit} a m²`, 'the hint pill: the surface, the hole and the price a m²');
+  assert.equal(cur.hint, `Painting Fairway · starts Hole 1 · $${unit} a cell`, 'the hint pill: the surface, the hole it starts and the price a cell');
   // a drag along three town squares: 12 cells charged once each
   tool.pointerDown({ x: 100.3, y: 200.6 }, 0, 0);
   tool.pointerMove({ x: 101.3, y: 200.6 }, 0, 0); tool.pointerMove({ x: 102.4, y: 200.6 }, 0, 0);
@@ -373,18 +374,23 @@ test('labels by state (T118): no words by the disc at rest; only the drag total,
   const money = { cash: 1e6 }, { tool, cur } = golfTool(g, 102, money);
   tool.setBrushCells(2);
 
-  // ready: the tint, no words by the disc; the hint names the surface, the hole and the price a m²
+  // ready: the tint, no words by the disc; the hint says what a click does: the surface, the hole it joins (hole 1 has the green) and the
+  // price a cell
   tool.cursor = { x: 90.3, y: 210.6 };
   let m = frame(cur, tool);
   assert.equal(cur.state.kind, 'ready'); assert.equal(cur.state.dragging, false);
   assert.deepEqual(cur.state.label, []); assert.deepEqual(m.texts, [], 'no label at rest');
-  assert.equal(cur.hint, `Fairway · hole 1 · $${unit} a m²`);
+  assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${unit} a cell`);
+  // a hole with nothing yet: the stroke starts it
+  tool.setHole(2); frame(cur, tool);
+  assert.equal(cur.hint, `Painting Fairway · starts Hole 2 · $${unit} a cell`);
+  tool.setHole(1);
 
   // no change: the same cells once painted lay nothing new (outline only, no words by the disc)
   clickChanges(g, tool);
   m = frame(cur, tool);
   assert.equal(cur.state.kind, 'nochange'); assert.deepEqual(m.texts, []);
-  assert.equal(cur.hint, 'Fairway · hole 1 · already fairway · $0');
+  assert.equal(cur.hint, 'Painting Fairway · Hole 1 · already fairway here · $0');
 
   // protected: a round dab over the green keeps the green's cells (no words by the disc; the hint says how many and why)
   tool.setBrushCells(0); tool.setBrushR(2); tool.cursor = { x: 99.13, y: 200.07 };
@@ -393,7 +399,7 @@ test('labels by state (T118): no words by the disc at rest; only the drag total,
   assert.deepEqual(m.texts, []);
   const kept = cur.feet.shape!.kept.length / 2;
   assert.ok(kept > 0);
-  assert.equal(cur.hint, `Fairway · hole 1 · $${unit} a m² · ${kept} cell${kept === 1 ? '' : 's'} kept: green stays on top`);
+  assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${unit} a cell · ${kept} cell${kept === 1 ? '' : 's'} kept: green stays on top`);
 
   // refused: over the land line, the reason by the disc (part of the dab is laid: the count leads)
   tool.cursor = { x: 101.6, y: 205.2 };
@@ -431,9 +437,9 @@ test('labels by state (T118): no words by the disc at rest; only the drag total,
   tool.rubOut = true;
   frame(cur, tool, 0.3, 2300);
   assert.equal(cur.state.kind, 'erase'); assert.deepEqual(cur.state.label, []);
-  assert.equal(cur.hint, `Erase · hole 1 · ${cur.feet.count} m² back to rough · no refund`);
+  assert.equal(cur.hint, `Erasing fairway · Hole 1 · ${cur.feet.count} cells back to rough · no refund`);
   tool.cursor = { x: 85.3, y: 216.6 }; frame(cur, tool, 0.3, 2400);
-  assert.equal(cur.state.kind, 'nochange', 'nothing of this surface to rub out'); assert.match(cur.hint, /^Erase · hole 1 · no fairway/);
+  assert.equal(cur.state.kind, 'nochange', 'nothing of this surface to rub out'); assert.match(cur.hint, /^Erasing fairway · Hole 1 · no fairway/);
   tool.rubOut = false;
 
   // money short: the price in red by the disc
@@ -441,18 +447,46 @@ test('labels by state (T118): no words by the disc at rest; only the drag total,
   m = frame(cur, tool, 0.3, 2500);
   assert.equal(cur.state.kind, 'short');
   assert.deepEqual(cur.state.label, [`Fairway · $${4 * unit} · you have $5`]); assert.deepEqual(cur.state.bad, [true]);
-  assert.equal(cur.hint, `Fairway · hole 1 · $${4 * unit} · you have $5`);
+  assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${4 * unit} · you have $5`);
   assert.deepEqual(m.texts, cur.state.label);
 
   // off the map: no words by the disc, the hint keeps the brush's own words
   tool.cursor = null; money.cash = 1e6;
   m = frame(cur, tool, 0.3, 2600);
-  assert.deepEqual(cur.state.label, []); assert.deepEqual(m.texts, []); assert.equal(cur.hint, `Fairway · hole 1 · $${unit} a m²`);
+  assert.deepEqual(cur.state.label, []); assert.deepEqual(m.texts, []); assert.equal(cur.hint, `Painting Fairway · Hole 1 · $${unit} a cell`);
 
   // outside a golf game (no grid rules, no price): ready, no words, no price in the hint
   const plain = new CourseCursor({ canvas: mockCanvases().make }), bt = brushTool('green', 3, 40.2, 50.7);
   m = frame(plain, bt);
-  assert.equal(plain.state.kind, 'ready'); assert.deepEqual(m.texts, []); assert.equal(plain.hint, 'Green · hole 1');
+  assert.equal(plain.state.kind, 'ready'); assert.deepEqual(m.texts, []); assert.equal(plain.hint, 'Painting Green · starts Hole 1');
+});
+
+test('switching and stopping (T118, the owner): number keys switch the surface, and the disc and the hint follow at once; Esc drops a stroke', () => {
+  const g = makeGrid(80, 180, 80, 80), { tool, cur } = golfTool(g), key = (k: string) => tool.key({ key: k, preventDefault() {} } as KeyboardEvent);
+  tool.setBrushCells(2); tool.cursor = { x: 90.3, y: 200.6 };
+  frame(cur, tool);
+  assert.match(cur.hint, /^Painting Fairway · /);
+  const sprites = cur.stats.sprites;
+  // the keys follow BRUSH_PRESETS: 1 fairway, 2 green, 3 tee, 4 rough, 5 bunker, 6 water, 7 cart path
+  for (const [k, kind, name] of [['2', 'green', 'Green'], ['3', 'tee', 'Tee'], ['4', 'rough', 'Rough'], ['5', 'bunker', 'Bunker'], ['6', 'water', 'Water'], ['1', 'fairway', 'Fairway']] as const) {
+    assert.equal(key(k), true, `key ${k} is taken`);
+    assert.equal(tool.brushKind, kind);
+    frame(cur, tool);
+    assert.ok(cur.hint.startsWith(`Painting ${name} · `), `the hint follows key ${k}: ${cur.hint}`);
+  }
+  assert.ok(cur.stats.sprites >= sprites + 5, 'a disc (with its own mark) per surface switched to');
+  // a key mid-stroke ends that stroke (what it laid stays) and arms the new surface
+  tool.pointerDown(tool.cursor!, 0, 0);
+  assert.ok(tool.strokeCells > 0);
+  key('2');
+  assert.equal(tool.brushKind, 'green'); assert.equal(tool.strokeCells, 0, 'the stroke ended');
+  assert.ok(tool.canUndo, 'what it laid is one undo step');
+  tool.pointerUp(0.5);
+  // Esc: a stroke in hand is dropped first; with nothing in hand the key is the engine's (out to Select, T116)
+  tool.pointerDown(tool.cursor!, 0, 0);
+  assert.equal(key('Escape'), true, 'Esc drops the stroke'); assert.equal(tool.strokeCells, 0);
+  tool.pointerUp(0.5);
+  assert.equal(key('Escape'), false, 'then Esc leaves the brush to the engine');
 });
 
 test('the footprint by state (T118): refused cells hatched with a small ✕, kept cells dotted, erase dashed, no change outline only', () => {

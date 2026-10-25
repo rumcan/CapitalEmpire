@@ -780,8 +780,8 @@ export class Game {
    *  reason, the price; re-run when the grid, the hole or Rub out change), the course grid round them and the surface chip beside the pointer */
   private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
-  /** the hint pill's words for the Course brush (T118: the surface, the hole, the price a m², and what a click would do); '' otherwise */
-  courseHint(): string { return this.tool === 'course' && this.paint.mode === 'brush' ? this.courseCursor.hint : ''; }
+  /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
+  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */

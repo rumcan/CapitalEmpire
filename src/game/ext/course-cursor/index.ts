@@ -19,7 +19,8 @@
 //   refused (muted red, hatched, a small ✕: off your land or on the driving range, landWhy's words), erase (a dashed edge in the colour you
 //   get back; the chip is the surface you get back, its rim dashed), no change (outline only: nothing new to lay), money short;
 // - words: none by the disc at rest; only the drag total ("6 cells · $12"), a refusal with its reason, or money short sit beside it. The
-//   hint pill (CourseCursor.hint) names the surface, the hole and the price a m², and the state's words.
+//   hint pill (CourseCursor.hint) says what a click does ("Painting Fairway · Hole 1 · $2 a cell", or "starts Hole 2" when that hole has
+//   nothing yet), then the state's words; the App adds the switch and stop keys (1–7, Esc) and the same disc mark (ui/course/SurfaceMark).
 // Speed: the chip and its shadow are sprites cached per look and dpr (the chip's size never changes with the zoom); a footprint is worked out
 // once per cell the dab sits on and its outline once per shape (LRU, by its cells relative to the anchor cell); the grid's fade is one cached
 // gradient. A frame where the pointer stays in its cell allocates nothing.
@@ -41,7 +42,7 @@ export { snapDab, squarePoly, squareStart, SQUARE_SIZES } from './snap';
 // ---- inputs ----
 
 /** what the cursor reads from the Paint tool each frame (PaintTool fits it) */
-export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind'>;
+export type CursorTool = Pick<PaintTool, 'mode' | 'brushKind' | 'brush' | 'rubOut' | 'cursor' | 'piece' | 'brushSquare' | 'strokeSpent' | 'strokeCells' | 'brushHole' | 'plantKind' | 'usedHoles'>;
 /** the camera, filled in by the engine each frame (one object, reused): device px per world px (ze = zoom x dpr), the world px at the
  *  overlay's centre (camX, camY), the overlay's size in device px (cw, ch) and the dpr */
 export interface CursorView { ze: number; camX: number; camY: number; cw: number; ch: number; dpr: number }
@@ -137,6 +138,8 @@ const LOOKS: Readonly<Record<string, Look>> = {
 };
 /** plain grass: what rubbing out rough gives back (T118: the erase footprint and chip show the colour you get back) */
 const GRASS: Look = { glow: '#a6e07a', core: '#f0fbe2', fill: '#86c25a', wall: 'turf', splash: 'dirt', surf: 0 };
+/** each brush kind's tint (the footprint's fill): the UI's small disc icons (the hint pill, the surface chips) use the same colours */
+export const SURFACE_TINT: Readonly<Record<string, string>> = { ...Object.fromEntries(Object.entries(LOOKS).map(([k, l]) => [k, l.fill])), grass: GRASS.fill };
 /** the refused cells' muted red: tint, edge and hatch; the ✕ badge's red */
 const SKIP_FILL = '#c8604f', SKIP_EDGE = '#f0a090', HATCH = 'rgba(255,196,180,0.85)', CROSS_RED = '#cf3f33';
 /** the footprint's tint and edge strengths, and the dark line under the edge that keeps it crisp on a light surface */
@@ -642,11 +645,12 @@ export function paintMark(g: CanvasRenderingContext2D, mark: MarkKind, pass: 'fl
       break;
     }
     case 'tufts': case 'wisps': {
-      // rough: three short tufts of three blades; fescue: two tall clusters of wispy blades with seed heads
+      // rough: three short tufts of three leaves on a wide base (grass, never an arrow); fescue: two tall clusters of wispy blades with seed
+      // heads
       const tuft = (x: number, y: number, k: number) => {
-        g.moveTo(x - 0.5 * k, y); g.quadraticCurveTo(x - 1.4 * k, y - 2.6 * k, x - 3 * k, y - 4.6 * k);
-        g.moveTo(x, y); g.quadraticCurveTo(x + 0.1 * k, y - 3.2 * k, x + 0.4 * k, y - 6 * k);
-        g.moveTo(x + 0.5 * k, y); g.quadraticCurveTo(x + 1.5 * k, y - 2.5 * k, x + 3.2 * k, y - 4.2 * k);
+        g.moveTo(x - 1.9 * k, y); g.quadraticCurveTo(x - 2.3 * k, y - 2.6 * k, x - 3.5 * k, y - 4.4 * k); g.quadraticCurveTo(x - 1.4 * k, y - 2.9 * k, x - 0.7 * k, y); g.closePath();
+        g.moveTo(x - 0.65 * k, y); g.quadraticCurveTo(x - 0.4 * k, y - 3.4 * k, x + 0.2 * k, y - 6.2 * k); g.quadraticCurveTo(x + 0.6 * k, y - 3.2 * k, x + 0.75 * k, y); g.closePath();
+        g.moveTo(x + 0.8 * k, y); g.quadraticCurveTo(x + 1.6 * k, y - 2.7 * k, x + 3.5 * k, y - 4.2 * k); g.quadraticCurveTo(x + 2.3 * k, y - 2.3 * k, x + 2 * k, y); g.closePath();
       };
       const tips: number[] = [];
       const wisp = (x: number, y: number, k: number) => {
@@ -659,7 +663,8 @@ export function paintMark(g: CanvasRenderingContext2D, mark: MarkKind, pass: 'fl
       g.beginPath();
       if (mark === 'tufts') { tuft(cx - 8.5 * u, cy + 2.4 * u, 1.15 * u); tuft(cx + 0.5 * u, cy - 1.4 * u, 1.15 * u); tuft(cx + 8.5 * u, cy + 3.6 * u, 1.05 * u); }
       else { wisp(cx - 5 * u, cy + 3.5 * u, u); wisp(cx + 5.5 * u, cy + 1.5 * u, 0.9 * u); }
-      haloStroke(g, mark === 'tufts' ? '#f4f0c4' : '#fbeec4', u, 1.2, 2.8);
+      if (mark === 'tufts') { g.strokeStyle = HALO; g.lineWidth = 1.6 * u; g.stroke(); g.fillStyle = '#f4f0c4'; g.fill(); }
+      else haloStroke(g, '#fbeec4', u, 1.2, 2.8);
       if (tips.length) {
         g.beginPath();
         for (let i = 0; i < tips.length; i += 2) { g.moveTo(tips[i]! + 1.1 * u, tips[i + 1]!); g.ellipse(tips[i]!, tips[i + 1]!, 1.1 * u, 1.6 * u, 0.4, 0, Math.PI * 2); }
@@ -689,7 +694,7 @@ function paintShadow(g: CanvasRenderingContext2D, rx: number, ry: number) {
  *  dab's rim (unit circle, x y pairs), and whether it ripples */
 interface Burst { x: number; y: number; t0: number; r: number; parts: SplashParticle[]; rim: Float32Array; ring: boolean; col: string }
 
-/** the words' small formats: money ($1,234), a price a m² ($2, $0.80), a count of cells, a reason with its first letter lowered */
+/** the words' small formats: money ($1,234), a price a cell (1 m²: $2, $0.80), a count of cells, a reason with its first letter lowered */
 const money$ = (v: number) => `$${Math.round(v).toLocaleString()}`;
 const unit$ = (v: number) => `$${v % 1 ? v.toFixed(2) : v}`;
 const cellsOf = (n: number) => `${n.toLocaleString()} cell${n === 1 ? '' : 's'}`;
@@ -709,7 +714,7 @@ export class CourseCursor {
   readonly last = { rx: 0, ry: 0, x: 0, y: 0, shown: false };
   /** what a click would do this frame and the words beside the disc (T118; none at rest) */
   readonly state: CursorState = { kind: 'ready', dragging: false, label: [], bad: [] };
-  /** the hint pill's words for the brush in hand ('' with none): the surface, the hole and the price a m², then the state's own words */
+  /** the hint pill's words for the brush in hand ('' with none): what a click does (the surface, the hole it joins or starts, the price a cell), then the state's own words */
   hint = '';
   /** counts the hint's changes (the engine re-renders the pill when it moves) */
   hintRev = 0;
@@ -731,7 +736,7 @@ export class CourseCursor {
   private sprites = new Map<string, Sprite>();
   private spr: Sprite | null = null;
   private sk = { kind: '', st: null as PuckStyle | null, erase: false, band: true, d: 0, rev: -1, tex: '', scale: 0, angle: 0, border: -1, btex: '', tone: -1 };
-  /** whether the last footprint laid on the course grid had a price (a golf game): the words show the price a m² */
+  /** whether the last footprint laid on the course grid had a price (a golf game): the words show the price a cell */
   private golf = false;
   /** the erase chip's plain-grass style and the rough style it was made from */
   private backSt: PuckStyle | null = null; private backFrom: PuckStyle | null = null;
@@ -776,25 +781,36 @@ export class CourseCursor {
   /** no footprint this frame (the pointer is off the map): no words by the disc; the hint keeps the brush's own words */
   private atRest(tool: CursorTool) {
     const s = this.state; s.kind = 'ready'; s.dragging = false;
-    if (tool.mode === 'brush') this.words(tool, tool.rubOut ? 'erase' : 'ready', false, tool.rubOut, -1, 0, 0, '', '', -1, 0);
+    if (tool.mode === 'brush' || tool.mode === 'draw') this.words(tool, tool.rubOut && tool.mode === 'brush' ? 'erase' : 'ready', false, tool.rubOut && tool.mode === 'brush', -1, 0, 0, '', '', -1, 0);
     else { s.label.length = 0; s.bad.length = 0; this.setHint(''); }
   }
   private setHint(h: string) { if (h !== this.hint) { this.hint = h; this.hintRev++; } }
+  /** whether the brush's hole has nothing yet (a stroke starts it), worked out again only when the grid, the hole or Rub out change (rev) */
+  private holeRev = NaN; private holeNew = false;
+  private isNewHole(tool: CursorTool): boolean {
+    const rv = (this.env.rev?.() ?? 0) * 32 + tool.brushHole;
+    if (rv !== this.holeRev) { this.holeRev = rv; this.holeNew = !tool.usedHoles().has(tool.brushHole); }
+    return this.holeNew;
+  }
 
   /** the words' inputs at their last build (the words are built again only when one changes, so a still frame makes no string) */
-  private wk = { kind: '', drag: false, erase: false, brush: '', hole: 0, unit: 0, n: 0, kept: 0, ref: 0, whyK: '', whyR: '', price: 0, money: 0, cells: 0, spent: 0 };
-  /** the state's words: the hint pill (the surface, the hole, the price a m², then the state's words) and the lines beside the disc (only
-   *  the drag total, a refusal with its reason, or money short); n: the cells a click lays (-1: unknown), kept and ref: the cells it keeps
-   *  and refuses with their main reasons, price: what it costs ($; -1: no price), money: the treasury */
+  private wk = { kind: '', drag: false, erase: false, brush: '', mode: '', hole: 0, fresh: false, unit: 0, n: 0, kept: 0, ref: 0, whyK: '', whyR: '', price: 0, money: 0, cells: 0, spent: 0 };
+  /** the state's words: the hint pill (what a click does: "Painting Fairway · Hole 1 · $2 a cell", or "starts Hole 2" when that hole has
+   *  nothing yet, then the state's words) and the lines beside the disc (only the drag total, a refusal with its reason, or money short);
+   *  n: the cells a click lays (-1: unknown), kept and ref: the cells it keeps and refuses with their main reasons, price: what it costs ($;
+   *  -1: no price), money: the treasury */
   private words(tool: CursorTool, kind: CursorStateKind, drag: boolean, erase: boolean, n: number, kept: number, ref: number, whyK: string, whyR: string, price: number, money: number) {
-    const brush = tool.brushKind, hole = tool.brushHole, surf = LOOKS[brush]?.surf ?? 0;
+    const brush = tool.brushKind, mode = tool.mode, hole = tool.brushHole, surf = LOOKS[brush]?.surf ?? 0, fresh = surf > 0 && this.isNewHole(tool);
     const unit = this.golf && !erase && surf > 0 ? unitBuildCost(SURF_SURFACE[surf] ?? 'other', tool.plantKind) : -1;
     const cells = drag ? tool.strokeCells : 0, spent = drag ? Math.round(tool.strokeSpent) : 0, m = kind === 'short' ? Math.round(money) : 0;
     const w = this.wk;
-    if (w.kind === kind && w.drag === drag && w.erase === erase && w.brush === brush && w.hole === hole && w.unit === unit && w.n === n && w.kept === kept && w.ref === ref
-      && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.cells === cells && w.spent === spent) return;
-    w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.hole = hole; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent;
-    const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush))), base = `${name} · hole ${hole}${unit >= 0 ? ` · ${unit$(unit)} a m²` : ''}`;
+    if (w.kind === kind && w.drag === drag && w.erase === erase && w.brush === brush && w.mode === mode && w.hole === hole && w.fresh === fresh && w.unit === unit && w.n === n && w.kept === kept
+      && w.ref === ref && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.cells === cells && w.spent === spent) return;
+    w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.mode = mode; w.hole = hole; w.fresh = fresh; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent;
+    const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
+    // the hole a click joins: a cart path belongs to no hole; a hole with nothing yet is started by the stroke
+    const joins = surf > 0 ? (fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
+    const base = `${verb} ${name}${joins}${unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
     s.label.length = 0; s.bad.length = 0;
     // the drag total: the cells the stroke has laid and what they cost
     if (drag && cells > 0) { s.label.push(erase ? `${cellsOf(cells)} back to ${back}` : this.golf ? `${cellsOf(cells)} · ${money$(spent)}` : cellsOf(cells)); s.bad.push(false); }
@@ -802,9 +818,9 @@ export class CourseCursor {
     switch (kind) {
       case 'protected': hint = `${base} · ${cellsOf(kept)} kept: ${lower(whyK)}`; break;
       case 'refused': hint = `${base} · ${cellsOf(ref)} refused: ${lower(whyR)}`; break;
-      case 'nochange': hint = erase ? `Erase · hole ${hole} · no ${lower(name)} of this hole here` : `${name} · hole ${hole} · already ${lower(name)}${this.golf ? ' · $0' : ''}`; break;
-      case 'erase': hint = `Erase · hole ${hole}${n >= 0 ? ` · ${n.toLocaleString()} m²` : ''} back to ${back}${this.golf ? ' · no refund' : ''}`; break;
-      case 'short': hint = `${name} · hole ${hole} · ${money$(price)} · you have ${money$(m)}`; break;
+      case 'nochange': hint = erase ? `Erasing ${lower(name)} · Hole ${hole} · no ${lower(name)} of this hole here` : `${verb} ${name}${joins} · already ${lower(name)} here${this.golf ? ' · $0' : ''}`; break;
+      case 'erase': hint = `Erasing ${lower(name)}${surf > 0 ? ` · Hole ${hole}` : ''}${n >= 0 ? ` · ${cellsOf(n)}` : ''}${surf > 0 ? ` back to ${back}` : ''}${this.golf ? ' · no refund' : ''}`; break;
+      case 'short': hint = `${verb} ${name}${joins} · ${money$(price)} · you have ${money$(m)}`; break;
     }
     // a refusal with its reason, or money short, by the disc
     if (kind === 'short') { s.label.push(`${name} · ${money$(price)} · you have ${money$(m)}`); s.bad.push(true); }
