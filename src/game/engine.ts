@@ -97,7 +97,7 @@ import { invitedFacts, tierInfo, tournamentDue, type InviteCheck, type Need } fr
 import { NightRenderer, clampNight, nightAt, nightDay, propLights, type NightLight, type NightSettings } from './night-light';
 import { drawnAs } from './mirror';
 import { TREE_MIRROR } from './tree-sun';
-import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale } from './newart';
+import { NEW_ART_ONLY, OLD_ART, lookOf, maxDrawScale, standInLabel } from './newart';
 import { webpSource } from './atlas-gl';
 import { ktx2Built, ktx2Source, pickFormat } from './atlas-ktx2';
 import { neededLevel, type PageWant } from './atlas-pages';
@@ -208,6 +208,9 @@ export interface Camera { X: number; Y: number; z: number }
 const AUTO_TREES = ['world:tree_oak_1', 'ref:tree-maple-crimson', 'world:tree_oak_2', 'ref:tree-birch-gold'];
 /** a garden median's plants (P19): the beds' flowers and shrubs (lots/compose.ts FLOWERS and the bushes it scatters), picked by the prop's index */
 const AUTO_GARDEN = ['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'world:bush_2'];
+/** the stand-in labels (T114) fade out between these zooms (gone below 8%, whole from 12%: the district view stays clear), and the view's query
+ *  reaches this far below the screen (world px) for the tall pictures whose anchors lie under it */
+const STANDIN_FADE = [0.08, 0.12] as const, STANDIN_REACH = 1200;
 /** a golf structure's sprite scale: its picture fitted to the structure's footprint (tiles, turned when rotated), then the owner's size for
  *  that sprite from the studio (OWNER_SCALE). The stand-in sprites are much bigger than the structures they stand for; a smaller one keeps
  *  its own size (the entrance gate stood in by a 0.8-tile boom gate was drawn 7.8x) until the structure has its own art. */
@@ -312,6 +315,14 @@ export class Game {
    *  on in dev builds, off in production until the owner decides; remembered). Set it with setShowGrid */
   showGrid = false;
   setShowGrid(on: boolean) { this.showGrid = on; saveMapGrid(storageOf(), on); this.emit(); }
+  /** the stand-in labels (T114, newart.ts standInLabel): "Stand In for Church" over each building drawn as a stand-in until its own art lands; on
+   *  by default (the owner wants to see them), remembered. Set it with setShowStandIns */
+  showStandIns = true;
+  setShowStandIns(on: boolean) {
+    this.showStandIns = on;
+    try { localStorage.setItem('capitalempire.standins', String(on)); } catch { /* storage may be unavailable */ }
+    this.emit();
+  }
   /** a course building tool is on (T100): the Course menu's tools, Paths & drives, an event structure being placed; the course half grid shows */
   get courseBuilding() { return courseBuilding(this.tool, this.roadScope, this.eventTool && !!this.eventStructurePending); }
   /** the course land the half grid covers (the course and its parcels; none outside a golf game: the whole view), into a reused list */
@@ -904,6 +915,7 @@ export class Game {
     this.ground = new GroundCache(this.gl);
     this.traffic = new SimClient();
     try { this.disastersEnabled = localStorage.getItem('capitalempire.disasters') !== 'false'; } catch { /* default on */ }
+    try { this.showStandIns = localStorage.getItem('capitalempire.standins') !== 'false'; } catch { /* default on */ }
     try { const v = parseFloat(localStorage.getItem('capitalempire.shadows') ?? ''); if (Number.isFinite(v)) this.shadowStrength = Math.max(0, Math.min(2, v)); } catch { /* default 1.1 */ }
     try { this.grassArt = clampGrassArt(localStorage.getItem('capitalempire.grassArt')); } catch { /* the default, painted */ }
     this.ground.grassArt = this.grassArt;
@@ -4440,6 +4452,7 @@ export class Game {
     this.drawGroundOverlays(ctx);
     this.drawStadium(ctx);
     this.drawBusinesses(ctx);
+    if (this.showStandIns) this.drawStandIns(ctx);
     this.drawParks(ctx);
     this.drawParkPreview(ctx);
     this.drawBuses(ctx);
@@ -4568,6 +4581,37 @@ export class Game {
       ctx.fillStyle = '#f8fafc'; ctx.fillText(label, c.x, c.y);
       ctx.lineJoin = 'miter'; ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
     }
+  }
+  /** the stand-in labels (T114): each building on screen drawn as a stand-in (the view's props and the businesses' pictures) carries "Stand In
+   *  for <name>" (newart.ts standInLabel, cached strings) in a small dark pill just above its picture, sized with the zoom (11 to 9 css px) and
+   *  faded out between 12% and 8%. On the map overlay, under the UI. No allocation per frame: a reused query set and rect, widths measured once */
+  private siHits = new Set<Prop>(); private siBox: BBox = [0, 0, 0, 0]; private siRect = [0, 0, 0, 0]; private siW = new Map<string, number>();
+  private siFont = ''; private siPx = 0;
+  private drawStandIns(ctx: CanvasRenderingContext2D) {
+    const z = this.cam.z, fade = Math.min(1, (z - STANDIN_FADE[0]) / (STANDIN_FADE[1] - STANDIN_FADE[0])); if (!(fade > 0)) return;
+    const ze = z * this.dpr, hw = this.cw / 2 / ze, hh = this.ch / 2 / ze, b = this.siBox;
+    // the view in tiles: the bbox of the screen's corners, reaching further down for the tall pictures whose anchors are below the screen
+    const X0 = this.cam.X - hw, X1 = this.cam.X + hw, Y0 = this.cam.Y - hh, Y1 = this.cam.Y + hh + STANDIN_REACH;
+    b[0] = (X0 / HW + Y0 / HH) / 2; b[2] = (X1 / HW + Y1 / HH) / 2; b[1] = (Y0 / HH - X1 / HW) / 2; b[3] = (Y1 / HH - X0 / HW) / 2;
+    this.siHits.clear(); this.propGrid.query(b, this.siHits);
+    // 11 css px at the closest zoom, smaller as the view zooms out, never below a readable 9 px
+    const px = Math.round(this.dpr * Math.max(9, 11 * Math.sqrt(Math.min(1, z / ZOOM_MAX))));
+    if (px !== this.siPx) { this.siPx = px; this.siFont = `600 ${px}px system-ui, sans-serif`; }
+    ctx.save(); ctx.globalAlpha = fade; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = this.siFont;
+    for (const p of this.siHits) this.standInPill(ctx, p, ze);
+    for (const p of this.businessProps) this.standInPill(ctx, p, ze);
+    ctx.restore();
+  }
+  /** one stand-in's label pill (drawStandIns), if p is drawn as a stand-in and its label is on screen */
+  private standInPill(ctx: CanvasRenderingContext2D, p: Prop, ze: number) {
+    const label = standInLabel(p.item); if (label === null) return;
+    let w11 = this.siW.get(label);
+    if (w11 === undefined) { ctx.font = '600 11px system-ui, sans-serif'; w11 = ctx.measureText(label).width; this.siW.set(label, w11); ctx.font = this.siFont; }
+    const r = spriteRect(p, this.siRect), s = this.siPx / 11, w = w11 * s + 12 * s, h = 17 * s;
+    const cx = ((r[0]! + r[2]!) / 2 - this.cam.X) * ze + this.cw / 2, y0 = (r[1]! - this.cam.Y) * ze + this.ch / 2 - h - 3 * s;
+    if (cx + w / 2 < 0 || cx - w / 2 > this.cw || y0 + h < 0 || y0 > this.ch) return;
+    ctx.fillStyle = 'rgba(22,20,24,0.78)'; ctx.beginPath(); ctx.roundRect(cx - w / 2, y0, w, h, h / 2); ctx.fill();
+    ctx.fillStyle = '#f1f5f9'; ctx.fillText(label, cx, y0 + h / 2 + 0.5 * s);
   }
   /** the business tool's ghost at the cursor: the footprint (green where it can go, else red; the stadium's with its doors) and the reason beside the cursor if
    *  it cannot. With the type in hand at its max only the hint shows (a red footprint would hide the real one) */
