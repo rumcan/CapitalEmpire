@@ -12,23 +12,27 @@ const MAX_CELLS = 4096 * 4096;
 /** a point in tiles */
 export interface Pt { x: number; y: number }
 
-/** the course grid: origin (x0, y0) in tiles, on the cell lattice; size (w, h) in cells; per cell, row-major (i = cy * w + cx), the surface (SURF id), the hole number (0 to 18 as P21; a none cell holds 0) and the planted month; rev counts changes */
-export interface Grid { x0: number; y0: number; w: number; h: number; surf: Uint8Array; hole: Uint8Array; month: Uint16Array; rev: number }
+/** the course grid: origin (x0, y0) in tiles, on the cell lattice; size (w, h) in cells; per cell, row-major (i = cy * w + cx), the surface (SURF id), the hole number (0 to 18 as P21; a none cell holds 0) and the planted month; rev counts changes. carve (T125): 1 on a cell the player rubbed out (Rub out laid the base there: rough, or the land's grass), so course-blobs' closing, fillets and collars never claim it and the gap shows as cut; painting the cell again clears it (see isCarved; absent: no cell is carved) */
+export interface Grid { x0: number; y0: number; w: number; h: number; surf: Uint8Array; hole: Uint8Array; month: Uint16Array; rev: number; carve?: Uint8Array }
 
-/** the cells one call changed: indices (row-major, i = cy * w + cx) into the geometry (x0, y0, w) the diff was made on, and each cell's surface, hole and month before (s0, h0, m0) and after (s1, h1, m1); every array is n long */
-export interface GridDiff { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array }
+/** the cells one call changed: indices (row-major, i = cy * w + cx) into the geometry (x0, y0, w) the diff was made on, and each cell's surface, hole and month before (s0, h0, m0) and after (s1, h1, m1), and its carve flag before and after (c0, c1; T125: 255, or no arrays, leaves the flag as it is); every array is n long */
+export interface GridDiff { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array; c0?: Uint8Array; c1?: Uint8Array }
 
-/** brush options: over 'below' changes only cells whose surface is lower than the brush's, or equal (which changes the hole and month), and 'any' (the default) changes every cell; allow(i) refuses cell i when it returns false (refused cells are left out of the diff); rub turns the brush into rub out (see paintDisc) */
-export interface PaintOpts { over?: 'below' | 'any'; allow?: (i: number) => boolean; rub?: boolean }
+/** brush options: over 'below' changes only cells whose surface is lower than the brush's, or equal (which changes the hole and month), and 'any' (the default) changes every cell; allow(i) refuses cell i when it returns false (refused cells are left out of the diff); rub turns the brush into rub out (see paintDisc); carve (T125: the Paint tool's Rub out) marks the cells it lays as carved, where any other brush clears the mark */
+export interface PaintOpts { over?: 'below' | 'any'; allow?: (i: number) => boolean; rub?: boolean; carve?: boolean }
 
-/** the save of a grid (plan 3.7): v 1, origin (tiles), size (cells), and the surface (s), hole (hl) and month (m) layers as base64 of (run, value) unsigned LEB128 varint pairs */
-export interface GridSave { v: 1; x0: number; y0: number; w: number; h: number; s: string; hl: string; m: string }
+/** the save of a grid (plan 3.7): v 1, origin (tiles), size (cells), and the surface (s), hole (hl) and month (m) layers as base64 of (run, value) unsigned LEB128 varint pairs; c, the carve layer the same way (T125; left out when no cell is carved) */
+export interface GridSave { v: 1; x0: number; y0: number; w: number; h: number; s: string; hl: string; m: string; c?: string }
 
 /** a new grid of none cells with holes 0 and months 0; the origin (x0, y0) is in tiles and is snapped to the cell lattice (multiples of CELL_T), the size (w, h) is in whole cells */
 export function makeGrid(x0: number, y0: number, w: number, h: number): Grid {
   const n = w * h;
-  return { x0: snap(x0), y0: snap(y0), w, h, surf: new Uint8Array(n), hole: new Uint8Array(n), month: new Uint16Array(n), rev: 0 };
+  return { x0: snap(x0), y0: snap(y0), w, h, surf: new Uint8Array(n), hole: new Uint8Array(n), month: new Uint16Array(n), rev: 0, carve: new Uint8Array(n) };
 }
+
+/** whether cell i is carved (T125): the player rubbed it out and it still holds the base (rough or the land's grass), so the blobs' closing,
+ *  fillets and collars leave it alone */
+export function isCarved(g: Grid, i: number): boolean { return !!g.carve?.[i] && g.surf[i]! <= SURF.rough; }
 
 /** the index of the cell that holds tile (x, y), or -1 when it lies outside the grid (tiles in, cell index out) */
 export function cellAt(g: Grid, x: number, y: number): number {
@@ -101,11 +105,14 @@ export function fillPolygon(g: Grid, pts: Pt[], s: number, hole: number, month: 
 
 /** applies a diff to g: undo true restores each cell's before values, false sets its after values (redo). A diff made on another geometry (the grid grew) lands on the cells at the same tiles; cells g does not cover are skipped. Bumps rev. */
 export function applyDiff(g: Grid, d: GridDiff, undo: boolean): void {
+  const cs = undo ? d.c0 : d.c1;
   for (let k = 0; k < d.n; k++) {
     const i = locate(g, d, k);
     if (i < 0) continue;
     if (undo) { g.surf[i] = d.s0[k]; g.hole[i] = d.h0[k]; g.month[i] = d.m0[k]; }
     else { g.surf[i] = d.s1[k]; g.hole[i] = d.h1[k]; g.month[i] = d.m1[k]; }
+    const c = cs?.[k];
+    if (c !== undefined && c !== 255 && (c || g.carve)) (g.carve ??= new Uint8Array(g.w * g.h))[i] = c;
   }
   if (d.n) g.rev++;
 }
@@ -145,6 +152,7 @@ export function growGrid(g: Grid, x0: number, y0: number, w: number, h: number):
   for (let cy = 0; cy < g.h; cy++) {
     const s = cy * g.w, d = (cy + dy) * ng.w + dx;
     ng.surf.set(g.surf.subarray(s, s + g.w), d); ng.hole.set(g.hole.subarray(s, s + g.w), d); ng.month.set(g.month.subarray(s, s + g.w), d);
+    if (g.carve) ng.carve!.set(g.carve.subarray(s, s + g.w), d);
   }
   ng.rev = g.rev + 1;
   return ng;
@@ -171,7 +179,7 @@ export function fitGrid(g: Grid, b: readonly [number, number, number, number]): 
 
 /** the save of a grid (see GridSave): a few tens of kB for a full course, since most cells repeat their neighbour */
 export function encodeGrid(g: Grid): GridSave {
-  return { v: 1, x0: g.x0, y0: g.y0, w: g.w, h: g.h, s: rle(g.surf), hl: rle(g.hole), m: rle(g.month) };
+  return { v: 1, x0: g.x0, y0: g.y0, w: g.w, h: g.h, s: rle(g.surf), hl: rle(g.hole), m: rle(g.month), ...(g.carve?.some(v => v) ? { c: rle(g.carve) } : {}) };
 }
 
 /** the grid from a save, or null when the save is not one: wrong version or types, a size of 1 to 16.7 M cells, an origin off the cell lattice, a layer that does not fill the grid exactly, or a value out of range. Never throws. */
@@ -184,20 +192,22 @@ export function decodeGrid(save: unknown): Grid | null {
   if (!Number.isFinite(x0) || !Number.isFinite(y0) || snap(x0) !== x0 || snap(y0) !== y0) return null;
   const n = w * h, surf = new Uint8Array(n), hole = new Uint8Array(n), month = new Uint16Array(n);
   if (!unrle(r.s, surf, SURF.green) || !unrle(r.hl, hole, 255) || !unrle(r.m, month, 65535)) return null;
-  return { x0, y0, w, h, surf, hole, month, rev: 0 };
+  const carve = new Uint8Array(n);
+  if (r.c !== undefined && !unrle(r.c, carve, 1)) return null;
+  return { x0, y0, w, h, surf, hole, month, rev: 0, carve };
 }
 
 /* ---- internals ---- */
 
 /** a diff under construction: room for cap cells, the most one call can change (each cell is visited once) */
-interface Acc { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array }
+interface Acc { x0: number; y0: number; w: number; n: number; idx: Uint32Array; s0: Uint8Array; h0: Uint8Array; m0: Uint16Array; s1: Uint8Array; h1: Uint8Array; m1: Uint16Array; c0: Uint8Array; c1: Uint8Array }
 
 /** snaps a tile coordinate to the cell lattice */
 const snap = (v: number) => Math.round(v / CELL_T) * CELL_T;
 
 /** an empty accumulator for a geometry of w cells per row with origin (x0, y0), room for cap cells */
 function newAcc(x0: number, y0: number, w: number, cap: number): Acc {
-  return { x0, y0, w, n: 0, idx: new Uint32Array(cap), s0: new Uint8Array(cap), h0: new Uint8Array(cap), m0: new Uint16Array(cap), s1: new Uint8Array(cap), h1: new Uint8Array(cap), m1: new Uint16Array(cap) };
+  return { x0, y0, w, n: 0, idx: new Uint32Array(cap), s0: new Uint8Array(cap), h0: new Uint8Array(cap), m0: new Uint16Array(cap), s1: new Uint8Array(cap), h1: new Uint8Array(cap), m1: new Uint16Array(cap), c0: new Uint8Array(cap), c1: new Uint8Array(cap) };
 }
 
 /** the cell range [lo, hi] that the tile span [a, b] touches on one axis (origin o, n cells), with one cell of margin, clamped to the grid */
@@ -205,14 +215,15 @@ function span(a: number, b: number, o: number, n: number): [number, number] {
   return [Math.max(0, Math.floor((a - o) / CELL_T) - 1), Math.min(n - 1, Math.floor((b - o) / CELL_T) + 1)];
 }
 
-/** sets cell i to (s, h, m) and records it when it changes; a none cell holds hole 0 and month 0 */
-function put(g: Grid, a: Acc, i: number, s: number, h: number, m: number): void {
+/** sets cell i to (s, h, m) with carve flag c (255: as it is) and records it when it changes; a none cell holds hole 0 and month 0 */
+function put(g: Grid, a: Acc, i: number, s: number, h: number, m: number, c = 255): void {
   const nh = s === SURF.none ? 0 : h, nm = s === SURF.none ? 0 : m;
-  const s0 = g.surf[i], h0 = g.hole[i], m0 = g.month[i];
-  if (s0 === s && h0 === nh && m0 === nm) return;
+  const s0 = g.surf[i], h0 = g.hole[i], m0 = g.month[i], cv0 = g.carve?.[i] ?? 0, cv = c === 255 ? cv0 : c;
+  if (s0 === s && h0 === nh && m0 === nm && cv0 === cv) return;
   const k = a.n++;
-  a.idx[k] = i; a.s0[k] = s0; a.h0[k] = h0; a.m0[k] = m0; a.s1[k] = s; a.h1[k] = nh; a.m1[k] = nm;
+  a.idx[k] = i; a.s0[k] = s0; a.h0[k] = h0; a.m0[k] = m0; a.s1[k] = s; a.h1[k] = nh; a.m1[k] = nm; a.c0[k] = cv0; a.c1[k] = cv;
   g.surf[i] = s; g.hole[i] = nh; g.month[i] = nm;
+  if (cv !== cv0) (g.carve ??= new Uint8Array(g.w * g.h))[i] = cv;
 }
 
 /** whether a surface id is turf (grass of some kind: the map grass, rough, fescue, fairway, tee, green), not sand or water */
@@ -237,13 +248,13 @@ function brush(g: Grid, a: Acc, i: number, s: number, hole: number, month: numbe
     return;
   }
   if (o.over === 'below' && cur > s) return;
-  put(g, a, i, s, hole, laidMonth(s, cur, g.month[i], month));
+  put(g, a, i, s, hole, laidMonth(s, cur, g.month[i], month), o.carve ? 1 : 0);
 }
 
 /** a diff from an accumulator: arrays cut to exactly n */
 function close(a: Acc): GridDiff {
   const n = a.n;
-  return { x0: a.x0, y0: a.y0, w: a.w, n, idx: a.idx.slice(0, n), s0: a.s0.slice(0, n), h0: a.h0.slice(0, n), m0: a.m0.slice(0, n), s1: a.s1.slice(0, n), h1: a.h1.slice(0, n), m1: a.m1.slice(0, n) };
+  return { x0: a.x0, y0: a.y0, w: a.w, n, idx: a.idx.slice(0, n), s0: a.s0.slice(0, n), h0: a.h0.slice(0, n), m0: a.m0.slice(0, n), s1: a.s1.slice(0, n), h1: a.h1.slice(0, n), m1: a.m1.slice(0, n), c0: a.c0.slice(0, n), c1: a.c1.slice(0, n) };
 }
 
 /** closes a brush's accumulator into a diff and bumps the grid's rev when something changed */
@@ -278,15 +289,18 @@ function mergeAll(list: GridDiff[]): GridDiff {
     for (let k = 0; k < d.n; k++) {
       const i = d.idx[k], key = (lr + Math.floor(i / d.w) - r0) * w + (lc + (i % d.w) - c0);
       let j = slot.get(key);
-      if (j === undefined) { j = a.n++; slot.set(key, j); a.idx[j] = key; a.s0[j] = d.s0[k]; a.h0[j] = d.h0[k]; a.m0[j] = d.m0[k]; }
-      a.s1[j] = d.s1[k]; a.h1[j] = d.h1[k]; a.m1[j] = d.m1[k];
+      // the carve flag (T125): a diff without one leaves it as it is (255), so the first known value before and the last one after win
+      const cb = d.c0?.[k] ?? 255, ca = d.c1?.[k] ?? 255;
+      if (j === undefined) { j = a.n++; slot.set(key, j); a.idx[j] = key; a.s0[j] = d.s0[k]; a.h0[j] = d.h0[k]; a.m0[j] = d.m0[k]; a.c0[j] = cb; a.c1[j] = 255; }
+      else if (a.c0[j] === 255) a.c0[j] = cb;
+      a.s1[j] = d.s1[k]; a.h1[j] = d.h1[k]; a.m1[j] = d.m1[k]; if (ca !== 255) a.c1[j] = ca;
     }
   }
   let m = 0;
   for (let j = 0; j < a.n; j++) {
-    if (a.s0[j] === a.s1[j] && a.h0[j] === a.h1[j] && a.m0[j] === a.m1[j]) continue;
+    if (a.s0[j] === a.s1[j] && a.h0[j] === a.h1[j] && a.m0[j] === a.m1[j] && (a.c1[j] === 255 || a.c0[j] === a.c1[j])) continue;
     a.idx[m] = a.idx[j]; a.s0[m] = a.s0[j]; a.h0[m] = a.h0[j]; a.m0[m] = a.m0[j];
-    a.s1[m] = a.s1[j]; a.h1[m] = a.h1[j]; a.m1[m] = a.m1[j]; m++;
+    a.s1[m] = a.s1[j]; a.h1[m] = a.h1[j]; a.m1[m] = a.m1[j]; a.c0[m] = a.c0[j]; a.c1[m] = a.c1[j]; m++;
   }
   a.n = m;
   return close(a);

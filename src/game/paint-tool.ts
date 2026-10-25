@@ -613,9 +613,9 @@ export class PaintTool {
     return (x, y) => { const i = cellAt(g, x, y); return i < 0 || (g.surf[i] === s && g.hole[i] === h) || g.surf[i]! > s ? 0 : unit; };
   }
   /** the brush rules on grid g: 'below' (a stroke slides past the surfaces drawn above it, as the old layers did) and owned
-   *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them: no 'below', no course-grid rub) */
+   *  cells only; a rub out (T125) takes every cell rubWhy lets it (it lays the base over them, carved: no 'below', no course-grid rub) */
   private gridOpts(g: Grid, erase: boolean): PaintOpts {
-    if (erase) { const why = this.rubWhy(g); return { allow: i => !why(i) }; }
+    if (erase) { const why = this.rubWhy(g); return { allow: i => !why(i), carve: true }; } // carved: the drawn course leaves the gap open
     const own = this.host.ownedAt;
     return { over: 'below', allow: i => { if (!own) return true; const c = cellCentre(g, i); return own(c.x, c.y); } };
   }

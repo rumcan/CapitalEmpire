@@ -2,11 +2,13 @@
  * everything below it not just the fairway"): the square brush rubs out exactly its 1, 4, 9 or 16 cells, the same cells painting lays; it
  * takes every course surface (fairway, green, tee, bunker, water, waste, fescue) back to rough with no hole, whatever the brush and the hole
  * (the rough brush gives back the land's own grass); it keeps to your land, never touches the driving range plot or a painted cart path;
- * a drag never rubs through the rough it gives back; a stroke is one undo step; and the per-hole limit is an option, off by default.
+ * a drag never rubs through the rough it gives back; a stroke is one undo step; the per-hole limit is an option, off by default; and the
+ * cells it takes are carved, so the drawn course (course-blobs' closing, fillets and collars) leaves the gap open at its full size.
  * Pure, Node: a PaintTool with a stand-in golf host (npm test). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CELL_T, SURF, fillPolygon, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
+import { CELL_T, SURF, decodeGrid, encodeGrid, fillPolygon, isCarved, makeGrid, paintDisc, type Grid } from '../src/game/ext/course-grid';
+import { chunkOutlines } from '../src/game/ext/course-blobs';
 import { snapDab, squareStart } from '../src/game/ext/course-cursor/snap';
 import { LAND_WHY, PaintTool, RUB_WHY, type LandRefusal, type PaintHost } from '../src/game/paint-tool';
 
@@ -154,4 +156,97 @@ test('5. the per-hole limit is an option, off by default: on, it takes only the 
   assert.deepEqual(at(g, 41.2, 40.2), [SURF.rough, 0, 0]);
   tool.rubHoleOnly = false; click(tool, 41, 41);
   assert.deepEqual(at(g, 40.2, 40.2), [SURF.rough, 0, 0], 'off: every hole');
+});
+
+// ---- carved cells (T125, the lead: "what the owner rubs out must always show") ----
+
+/** the nonzero winding number of closed rings round (x, y) (course-blobs' fills: outer rings counter-clockwise, holes clockwise) */
+function winding(rings: number[][], x: number, y: number): number {
+  let w = 0;
+  for (const p of rings) {
+    const m = p.length / 2;
+    for (let i = 0; i < m; i++) {
+      const j = (i + 1) % m, ax = p[2 * i]!, ay = p[2 * i + 1]!, bx = p[2 * j]!, by = p[2 * j + 1]!;
+      const cross = (bx - ax) * (y - ay) - (x - ax) * (by - ay);
+      if (ay <= y) { if (by > y && cross > 0) w++; } else if (by <= y && cross < 0) w--;
+    }
+  }
+  return w;
+}
+/** what the drawn course shows at tile (x, y) for surface s, from its 64-tile chunk's outlines: its fill, or its collar band (first cut) */
+function drawn(g: Grid, x: number, y: number, s = SURF.fairway): { fill: boolean; band: boolean } {
+  const o = chunkOutlines(g, Math.floor(x / 64), Math.floor(y / 64)).find(q => q.surf === s);
+  return { fill: !!o && winding(o.fill, x, y) !== 0, band: !!o?.collar && winding(o.collar.fill, x, y) !== 0 };
+}
+/** the centres (tiles) of the n x n cells from cell (ix, iy), and of the cells along its four sides just outside it (corners left out) */
+function squareCentres(ix: number, iy: number, n: number) {
+  const inside: [number, number][] = [], ring: [number, number][] = [];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) inside.push([(ix + x + 0.5) * CELL_T, (iy + y + 0.5) * CELL_T]);
+  for (let k = 0; k < n; k++) for (const [x, y] of [[ix + k, iy - 1], [ix + k, iy + n], [ix - 1, iy + k], [ix + n, iy + k]] as const) ring.push([(x + 0.5) * CELL_T, (y + 0.5) * CELL_T]);
+  return { inside, ring };
+}
+
+test('6. a 4 x 4 rub-out in an established fairway shows as a 4 x 4 gap in the drawn course; painting it again closes it; undo restores it', () => {
+  const { g, tool } = world();
+  rect(g, 10, 10, 90, 90, SURF.rough, 1); rect(g, 20, 20, 80, 80, SURF.fairway, 1, 0); // sod: established (month 0)
+  const { inside, ring } = squareCentres(88, 88, 4);
+  assert.ok(inside.every(([x, y]) => drawn(g, x, y).fill), 'before: fairway everywhere');
+  tool.setBrushCells(4); tool.rubOut = true; click(tool, 45, 45); // cells 88..91 (tiles 44..46)
+  assert.ok(inside.every(([x, y]) => isCarved(g, Math.floor(y / CELL_T) * g.w + Math.floor(x / CELL_T))), 'the 16 cells are carved');
+  for (const [x, y] of inside) { const d = drawn(g, x, y); assert.ok(!d.fill && !d.band, `the gap shows at ${x},${y}: neither fairway nor its first cut`); }
+  for (const [x, y] of ring) assert.ok(drawn(g, x, y).fill, `the fairway still reaches the gap's edge at ${x},${y}`);
+  // the gap is the square: a hole ring in the fairway's fill whose box is the 4 x 4 cells (2 x 2 tiles)
+  const o = chunkOutlines(g, 0, 0).find(q => q.surf === SURF.fairway)!;
+  const hole = o.fill.find(p => { let a = 0; for (let i = 0, m = p.length / 2; i < m; i++) { const j = (i + 1) % m; a += p[2 * i]! * p[2 * j + 1]! - p[2 * j]! * p[2 * i + 1]!; } return a < 0 && winding([p], 45, 45) !== 0; });
+  assert.ok(hole, 'a hole ring round the gap');
+  const xs = hole!.filter((_, i) => i % 2 === 0), ys = hole!.filter((_, i) => i % 2 === 1);
+  const box = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  for (const [v, want] of [[box[0], 44], [box[1], 44], [box[2], 46], [box[3], 46]] as const) assert.ok(Math.abs(v! - want) <= 0.25, `the gap's box ${box.map(b => b!.toFixed(2)).join(', ')} is the 4 x 4 cells`);
+  // without the flag the closing would fill it (what the owner saw): the fix is the flag
+  const plain: Grid = { ...g, carve: new Uint8Array(g.w * g.h) };
+  assert.ok(inside.every(([x, y]) => drawn(plain, x, y).fill), 'uncarved, the fairway closes over a 4 x 4 gap');
+  // painting it again clears the flag and closes the gap; undo carves it again, and undo again puts the fairway back
+  tool.rubOut = false; click(tool, 45, 45);
+  assert.ok(inside.every(([x, y]) => !isCarved(g, Math.floor(y / CELL_T) * g.w + Math.floor(x / CELL_T))), 'painting clears the flag');
+  assert.ok(inside.every(([x, y]) => drawn(g, x, y).fill), 'repainted: fairway again');
+  tool.undo();
+  for (const [x, y] of inside) assert.ok(!drawn(g, x, y).fill, `undo: the gap is back at ${x},${y}`);
+  tool.undo();
+  assert.ok(inside.every(([x, y]) => drawn(g, x, y).fill && !isCarved(g, Math.floor(y / CELL_T) * g.w + Math.floor(x / CELL_T))), 'undo again: the fairway as it was');
+  // rough painted over a carved cell clears the flag too (a change of the flag alone, one undo step)
+  tool.redo(); tool.setBrush('rough'); tool.setBrushCells(1);
+  const i = Math.floor(44.25 / CELL_T) * g.w + Math.floor(44.25 / CELL_T);
+  assert.ok(isCarved(g, i));
+  click(tool, 44.25, 44.25);
+  assert.equal(isCarved(g, i), false, 'rough painted over it: no longer carved'); assert.equal(g.surf[i], SURF.rough);
+  tool.undo(); assert.equal(isCarved(g, i), true, 'undo carves it again');
+});
+
+test('7. a carved gap on a chunk border: both chunks leave it open and their edges meet on the seam', () => {
+  const { g, tool } = world();
+  rect(g, 10, 10, 95, 90, SURF.rough, 1); rect(g, 40, 20, 90, 80, SURF.fairway, 1, 0);
+  tool.setBrushCells(4); tool.rubOut = true; click(tool, 64, 45); // cells 126..129: tiles 63..65, across the seam x = 64
+  const A = chunkOutlines(g, 0, 0).find(o => o.surf === SURF.fairway)!, B = chunkOutlines(g, 1, 0).find(o => o.surf === SURF.fairway)!;
+  const { inside } = squareCentres(126, 88, 4);
+  for (const [x, y] of inside) { const o = x < 64 ? A : B; assert.equal(winding(o.fill, x, y), 0, `the gap shows at ${x},${y} in chunk ${x < 64 ? 0 : 1}`); assert.equal(winding(o.collar!.fill, x, y), 0, 'no first cut in it'); }
+  const ends = (o: { edges: number[][] }) => { const e: number[][] = []; for (const p of o.edges) for (const k of [0, p.length - 2]) if (Math.abs(p[k]! - 64) < 1e-9) e.push([p[k]!, p[k + 1]!]); return e; };
+  const ea = ends(A), eb = ends(B);
+  assert.ok(ea.length >= 2 && ea.length === eb.length, `edge ends on the seam: ${ea.length} and ${eb.length}`);
+  let worst = 0;
+  for (const [x, y] of ea) worst = Math.max(worst, Math.min(...eb.map(([u, v]) => Math.hypot(u! - x!, v! - y!))));
+  assert.ok(worst <= 1e-6, `the two chunks' edges meet on the seam (worst ${worst})`);
+  assert.ok(ea.some(([, y]) => Math.abs(y! - 44) < 0.3) && ea.some(([, y]) => Math.abs(y! - 46) < 0.3), "the gap's own edges cross the seam");
+});
+
+test('8. the carve flags are saved with the grid; an older save without them loads with none', () => {
+  const { g, tool } = world();
+  rect(g, 20, 20, 80, 80, SURF.fairway, 1);
+  tool.setBrushCells(4); tool.rubOut = true; click(tool, 45, 45);
+  const save = encodeGrid(g), back = decodeGrid(JSON.parse(JSON.stringify(save)))!;
+  assert.ok(save.c, 'a carve layer in the save');
+  assert.deepEqual(back.carve, g.carve);
+  const { c: _c, ...old } = save;
+  const plain = decodeGrid(old)!;
+  assert.ok(plain && plain.carve!.every(v => v === 0), 'an old save: nothing carved');
+  assert.equal(encodeGrid(makeGrid(0, 0, 4, 4)).c, undefined, 'no carve layer when nothing is carved');
 });
