@@ -11,7 +11,7 @@ import { patchBox, type FromWorker, type LotPatch, type NetOp, type TileKind, ty
 import type { GLRenderer } from './gl';
 import { unionBox, type BBox } from './network';
 import type { Waterway } from './terrain/types';
-import GroundWorker from './ground.worker?worker&inline';
+import GroundWorker from './ground.worker?worker';
 import type { GrassCellView } from './ext/grass-management';
 
 export interface Tile {

@@ -8,7 +8,7 @@ import type { LotPatch } from './ground-protocol';
 import { coursePatch, courseGrowKey, patchBuffers, type CourseLooks } from './ext/course-grid/patch';
 import { gridAreas, type GridArea } from './ext/course-grid/areas';
 import { applyDiff, type Grid, type GridDiff } from './ext/course-grid';
-import CourseWorker from './course.worker?worker&inline';
+import CourseWorker from './course.worker?worker';
 
 /** a chunk job: chunks as cx cy pairs, the looks, the effective game month and the holes' centre lines */
 export interface CourseJob { chunks: number[]; looks: CourseLooks; now: number; lines: [number, number[]][] }

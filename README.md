@@ -18,7 +18,7 @@ Open http://localhost:5173/. Add `?bench` for the 4 km benchmark city (`?bench=0
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Dev server |
-| `npm run build` | Single-file production build in `dist/` |
+| `npm run build` | Production build in `dist/`: `index.html` plus hashed code and picture files in `dist/assets/` (serve the folder with `npx vite preview` or any static server; opening `index.html` from disk does not work) |
 | `npm test` | Headless tests (road network, incremental rebuilds, worker replay, saves) |
 | `npm run typecheck` | TypeScript check |
 | `npm run assets:ground` | Rebuild `src/assets/ground/` and `src/game/ground-art.ts` from the town builder's ground art |
