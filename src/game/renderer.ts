@@ -34,7 +34,7 @@ const LEAF_CHUNKS = 4, LEAF_PX = 1024, LEAF_PERIOD = 16, LEAF_DENSITY = 2.6;
 const LIVING_MADE = 12;
 /** the lush variant's tint (multiplied over the grass laid over itself: deeper and greener, never a flat colour), and the warm light the derived
  *  soil is lifted by (screen) */
-const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#5e3e1e', SOIL_WARM = '#f2d4ae';
+const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#40291a', SOIL_WARM = '#f0cfa4';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
@@ -723,14 +723,16 @@ export class GroundPainter {
     if (this.living.debug) { put(ctx, debugImage(grid), 'source-over'); return; }
     const m = made.masks ??= livingMasks(grid);
     // ---- the ground the variety leaves alone: the lots' hard ground, painted areas that are no grass, the course's managed turf and its
-    //      collars (the pond's bank keeps it), the rivers' and creeks' water
-    const ex: { path: Path2D; rule: CanvasFillRule }[] = [];
+    //      collars (the pond's bank keeps it), the course walls' faces (T099: their own light and shade), the rivers' and creeks' water
+    const ex: { path: Path2D; rule: CanvasFillRule }[] = [], walls: CourseWall[] = [];
     const rings = (rs: readonly ArrayLike<number>[]) => { const q = new Path2D(); for (const r of rs) ringPath(q, r); ex.push({ path: q, rule: 'evenodd' }); };
     for (const p of lots) {
-      if (p.course) { for (const l of p.course.layers) { if (!COURSE_GRASSY.has(l.s) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } continue; }
+      if (p.course) { for (const l of p.course.layers) { if (!COURSE_GRASSY.has(l.s) && l.fill.length) rings(l.fill); if (l.collar && l.collar.n !== 'bank' && l.collar.fill.length) rings(l.collar.fill); } if (p.course.walls) walls.push(...p.course.walls); continue; }
       if (p.top || p.layby || p.lawn || p.tex === 'marks' || grassyTex(p.tex)) continue;
       ex.push({ path: polyPath(p.pts), rule: 'nonzero' });
     }
+    const wallPath = walls.length ? wallFaces(walls) : null;
+    if (wallPath) ex.push({ path: wallPath, rule: 'nonzero' });
     for (const w of waters) { const q = new Path2D(); if (waterShape(q, w.w.pts, 0, box, w.w.kind === 'creek' ? 0.35 : 1)) ex.push({ path: q, rule: 'nonzero' }); }
     // the variants go onto a copy of the chunk when some ground is left alone (cut out at the end), else straight onto it
     const V = ex.length ? this.buffer('living', W, H) : null, vg = V ? ctx2d(V) : ctx;
@@ -766,7 +768,13 @@ export class GroundPainter {
       put(lg, m.thin, 'destination-in');
       if (a) lay(lb, 'source-over'); else { lay(lb, 'color', 0.7); lay(lb, 'lighten'); }
     }
-    if (m.max.bare > T) { const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb); soil(lg); put(lg, m.bare, 'destination-in'); lay(lb, 'source-over'); }
+    // bare: the soil, then the grass that was there laid back over it with lighten (its lit tufts and strokes run through the soil, its dark gaps
+    // stay soil), so the soil's edge dissolves into thin grass instead of ending in a cut-out rim
+    if (m.max.bare > T) {
+      const kb = this.buffer('livingKeep', W, H), kg = ctx2d(kb); kg.drawImage(vg.canvas, 0, 0); put(kg, m.bare, 'destination-in');
+      const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb); soil(lg); put(lg, m.bare, 'destination-in'); lay(lb, 'source-over');
+      lay(kb, 'lighten', 0.9);
+    }
     if (!lite && m.max.litter > T) {
       const lb = this.buffer('livingLayer', W, H), lg = ctx2d(lb), a = art('leaf-litter');
       lg.drawImage(a ?? this.leavesOfChunk(), 0, 0);
@@ -778,8 +786,16 @@ export class GroundPainter {
       vg.globalCompositeOperation = 'destination-in'; vg.drawImage(mb, 0, 0); vg.globalCompositeOperation = 'source-over';
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(V, 0, 0); ctx.restore();
     }
-    // ---- the ambient occlusion: a cool multiply over everything, the foundations and paving too
-    if (m.max.ao > 0.01) put(ctx, m.ao, 'multiply');
+    // ---- the ambient occlusion: a cool multiply over everything, the foundations and paving too, but never over a course wall's face (its
+    //      own light and shade, T099): there the shade layer is white
+    if (m.max.ao > 0.01) {
+      if (!wallPath) put(ctx, m.ao, 'multiply');
+      else {
+        const ab = this.buffer('livingAo', W, H), ag = ctx2d(ab); ag.fillStyle = '#fff'; ag.fillRect(0, 0, W, H); put(ag, m.ao, 'source-over');
+        ag.setTransform(M); ag.fillStyle = '#fff'; ag.fill(wallPath); ag.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(ab, 0, 0); ctx.restore();
+      }
+    }
   }
   /** the leaf litter of the chunk being baked (T111): the leaf picture laid in the painted grass's stochastic layout (painted-ground.ts: soft
    *  patches at their own phases and turns, so it never repeats), alone (transparent between the leaves); kept for the last few chunks */

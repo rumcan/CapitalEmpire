@@ -50,7 +50,7 @@ test('a tree makes a patchy disc, bare at the trunk and fading to its drip line,
   // fading out: half way it is thinner than at the trunk, past the drip line nothing of it is left
   assert.ok(at(g, 'thin', 20 + R * 0.5, 20) < at(g, 'thin', 20, 20) && at(g, 'thin', 20 + R * 0.5, 20) > 0.3);
   assert.ok(at(g, 'bare', 20 + R * 0.8, 20) < 0.1, 'the bare core stays near the trunk');
-  assert.ok(Math.abs(at(g, 'thin', 20 + R * 1.15, 20) - at(none, 'thin', 20 + R * 1.15, 20)) < 0.02, 'the drip line');
+  for (const a of [0, 1, 2, 3, 4, 5]) { const x = 20 + Math.cos(a) * R * 2.25, y = 20 + Math.sin(a) * R * 2.25; assert.ok(Math.abs(at(g, 'thin', x, y) - at(none, 'thin', x, y)) < 1e-6, 'nothing of it past its reach'); }
   // the ambient occlusion: contact darkening at the trunk, the canopy's shade lying toward the shadow side (the sun at the upper right)
   assert.ok(at(g, 'ao', 20, 20) > 0.3, `trunk shade ${at(g, 'ao', 20, 20)}`);
   const [sx, sy] = SHADOW_DIR, k = R * 0.8;
@@ -64,6 +64,33 @@ test('a tree makes a patchy disc, bare at the trunk and fading to its drip line,
   const m = livingMasks(g), vals: number[] = [];
   for (let a = 0; a < 64; a++) { const x = 20 + Math.cos(a / 64 * 2 * Math.PI) * R * 0.7, y = 20 + Math.sin(a / 64 * 2 * Math.PI) * R * 0.7; vals.push(m.thin[((Math.round(y * 4 - g.iy0 - 0.5)) * g.w + Math.round(x * 4 - g.ix0 - 0.5)) * 4 + 3]!); }
   assert.ok(Math.max(...vals) - Math.min(...vals) > 40, `the patchy ring varies: ${Math.min(...vals)}..${Math.max(...vals)}`);
+});
+
+test('the worn patch under a tree is no stamped disc: its own lumpy, stretched shape per tree, leaning to the shade, soil only at big broadleaf trees', () => {
+  const R = 2.5, none = influence(BOX, 4, src());
+  /** a tree's thin value (over the open ground's) on a ring of k radii round its trunk, 48 directions */
+  const ring = (g: InfluenceGrid, x0: number, y0: number, k: number) => Array.from({ length: 48 }, (_, a) => { const x = x0 + Math.cos(a / 48 * 2 * Math.PI) * R * k, y = y0 + Math.sin(a / 48 * 2 * Math.PI) * R * k; return at(g, 'thin', x, y) - at(none, 'thin', x, y); });
+  const g1 = influence(BOX, 4, src(tree(12, 12, R))), g2 = influence(BOX, 4, src(tree(28, 26, R)));
+  const r1 = ring(g1, 12, 12, 0.85), r2 = ring(g2, 28, 26, 0.85);
+  // not round: round its rim the patch reaches out in some directions and has already faded in others
+  assert.ok(Math.max(...r1) - Math.min(...r1) > 0.25, `lumpy rim: ${Math.min(...r1).toFixed(2)}..${Math.max(...r1).toFixed(2)}`);
+  // two trees of one size have different shapes (seeded by where they stand)
+  let diff = 0; for (let a = 0; a < 48; a++) diff += Math.abs(r1[a]! - r2[a]!); assert.ok(diff / 48 > 0.08, `different shapes: ${(diff / 48).toFixed(3)}`);
+  // it leans to the shade side (145 degrees on screen): more thin grass a radius toward the shadow than a radius toward the sun, on average over trees
+  const [sx, sy] = SHADOW_DIR; let lean = 0;
+  for (let k = 0; k < 8; k++) { const x = 8 + (k % 4) * 8, y = 10 + Math.floor(k / 4) * 18, g = influence(BOX, 4, src(tree(x, y, R))); lean += (at(g, 'thin', x + sx * R * 0.9, y + sy * R * 0.9) - at(g, 'thin', x - sx * R * 0.9, y - sy * R * 0.9)) / 8; }
+  assert.ok(lean > 0.03, `leans to the shade: ${lean.toFixed(3)}`);
+  // soil: a big broadleaf tree wears a core of it; a small tree and a conifer hardly any (needles: litter instead)
+  const small = influence(BOX, 4, src(tree(20, 20, 1))), pine = influence(BOX, 4, src(tree(20, 20, R, 0.5))), oak = influence(BOX, 4, src(tree(20, 20, R)));
+  assert.ok(at(oak, 'bare', 20, 20) > 0.6 && at(small, 'bare', 20, 20) < 0.05 && at(pine, 'bare', 20, 20) < 0.15, `soil: oak ${at(oak, 'bare', 20, 20).toFixed(2)} small ${at(small, 'bare', 20, 20).toFixed(2)} pine ${at(pine, 'bare', 20, 20).toFixed(2)}`);
+  assert.ok(at(pine, 'litter', 20, 20) > 0.6, 'a conifer drops needles');
+  // mostly thin grass, a little soil: under a big tree the soil mask covers far less ground than the thin grass
+  const m = livingMasks(oak); let thinPx = 0, barePx = 0;
+  for (let q = 0; q < oak.w * oak.h; q++) { if (m.thin[q * 4 + 3]! > 128) thinPx++; if (m.bare[q * 4 + 3]! > 128) barePx++; }
+  assert.ok(barePx * 3 < thinPx, `soil ${barePx} px, thin ${thinPx} px`);
+  // canopies overlapping run together into one woodland floor: between two trees 1.6 radii apart the ground stays thin, no gap of grass
+  const pair = influence(BOX, 4, src(tree(16, 20, R), tree(16 + R * 1.6, 20, R)));
+  assert.ok(at(pair, 'thin', 16 + R * 0.8, 20) > 0.6, `the floor between them: ${at(pair, 'thin', 16 + R * 0.8, 20).toFixed(2)}`);
 });
 
 test('buildings darken round their foundations and wear the ground at the door; roads leave a worn edge and a lush verge; water a lush bank', () => {

@@ -26,10 +26,12 @@ const M_PER_TILE = 2;
 /** the reach of a caster past its own shape, in tiles: how far its influence (lush strips, worn doors, shade) spreads */
 const LINE_REACH: Record<number, number> = { [CK.FENCE]: 1.3, [CK.HEDGE]: 1.6, [CK.WALL]: 1.3 };
 const BUILDING_REACH = 1.8;
+/** a tree's or bush's reach in canopy radii (its irregular worn patch, litter and lush ring fade out inside it) */
+const TREE_REACH = 2.2;
 /** the influence box of record k of recs (its shape grown by its reach) */
 export function casterBox(recs: ArrayLike<number>, k: number): Box {
   const o = k * CASTER_STRIDE, kind = recs[o]!, a = recs[o + 1]!, b = recs[o + 2]!, c = recs[o + 3]!, d = recs[o + 4]!;
-  if (kind === CK.TREE || kind === CK.BUSH) { const r = c * 1.85 + 0.6; return [a - r, b - r, a + r, b + r]; }
+  if (kind === CK.TREE || kind === CK.BUSH) { const r = c * TREE_REACH + 0.6; return [a - r, b - r, a + r, b + r]; }
   if (kind === CK.BUILDING) { const g = BUILDING_REACH; return [Math.min(a, c) - g, Math.min(b, d) - g, Math.max(a, c) + g, Math.max(b, d) + g]; }
   const g = (LINE_REACH[kind] ?? 1) + recs[o + 5]!;
   return [Math.min(a, c) - g, Math.min(b, d) - g, Math.max(a, c) + g, Math.max(b, d) + g];
@@ -189,6 +191,16 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
     const s = span(x0 - r, y0 - r, x1 + r, y1 + r); if (!s) return;
     for (let j = s[1]; j <= s[3]; j++) { const y = Y(j), dy = Math.max(y0 - y, 0, y - y1); for (let i = s[0]; i <= s[2]; i++) { const x = X(i), dx = Math.max(x0 - x, 0, x - x1), d = Math.sqrt(dx * dx + dy * dy) * M_PER_TILE, o = j * w + i; if (d < f[o]!) f[o] = d; } }
   };
+  /** the world-space warp that breaks the trees' patches up (-0.3 .. 0.3 of their size): two octaves, the finer one only where the samples
+   *  resolve it; made once a grid, when the first tree needs it */
+  let warpF: Float32Array | null = null;
+  const warpField = () => {
+    if (warpF) return warpF;
+    warpF = new Float32Array(n);
+    const a = Math.max(1.4, 2.2 / res), b = Math.max(0.6, 2.2 / res), fine = res >= 2 ? 0.35 : 0;
+    for (let j = 0; j < h; j++) { const y = Y(j); for (let i = 0; i < w; i++) { const x = X(i); warpF[j * w + i] = ((vnoise(x / a + 3.3, y / a - 7.1, 61) - 0.5) * (1 - fine) + (vnoise(x / b - 5.9, y / b + 2.7, 63) - 0.5) * fine) * 0.62; } }
+    return warpF;
+  };
   // ---- the casters
   const c = src.casters, nc = c.length / CASTER_STRIDE, [sx, sy] = SHADOW_DIR;
   for (let k = 0; k < nc; k++) {
@@ -202,18 +214,31 @@ export function influence(box: Box, res: number, src: LivingSources): InfluenceG
     } else if (kind === CK.TREE || kind === CK.BUSH) {
       const tx = c[o + 1]!, ty = c[o + 2]!, R = Math.max(0.2, c[o + 3]!), Rm = R * M_PER_TILE, leafy = c[o + 4]!, tree = kind === CK.TREE;
       // the canopy's shade sits a third of the radius toward the shadow side (145 degrees on screen)
-      const cx = tx + sx * R * 0.35, cy = ty + sy * R * 0.35, reach = R * 1.85 + 0.6, s = span(tx - reach, ty - reach, tx + reach, ty + reach); if (!s) continue;
-      // the falloffs by kind (metres): thin, bare, litter, the lush ring past the drip line, the canopy's shade and the trunk's contact shade
-      const thinA = tree ? 0.15 * Rm : 0.2 * Rm, thinK = tree ? 0.95 : 0.35, bareA = 0.1 * Rm + 0.3, bareB = 0.65 * Rm + 0.5, litA = 0.3 * Rm, litB = tree ? 1.2 * Rm : Rm, litK = tree ? 0.45 + 0.55 * leafy : 0.25;
-      const ringA = tree ? 0.95 * Rm : 0.8 * Rm, ringB = tree ? 1.2 * Rm : Rm, ringC = tree ? 1.35 * Rm : 1.3 * Rm, ringE = 1.85 * Rm, ringK = tree ? 0.32 : 0.4;
-      const shA = 0.1 * Rm, shB = tree ? 1.05 * Rm : 1.1 * Rm, shK = tree ? 0.24 : 0.34, ctB = 0.35 + 0.08 * Rm, dMax = Rm * 1.85 + 1.2, d2Max = (dMax / M_PER_TILE) ** 2;
+      const cx = tx + sx * R * 0.35, cy = ty + sy * R * 0.35, reach = R * TREE_REACH + 0.6, s = span(tx - reach, ty - reach, tx + reach, ty + reach); if (!s) continue;
+      // the worn patch is never a disc: its own shape per tree (seeded by where it stands), its middle a little toward the shade side and
+      // jittered, its long axis turned at random and stretched up to 1.45 : 1, its rim lumpy (two and three lobes), and its edge broken by the
+      // world-space warp, so overlapping canopies run together into one woodland floor; it fades out before the tree's reach (no cut edge)
+      const xi = Math.round(tx * 16), yi = Math.round(ty * 16), hv = (k: number) => hash2(xi, yi, 71 + k);
+      const pcx = tx + (sx * 0.28 + (hv(1) - 0.5) * 0.24) * R, pcy = ty + (sy * 0.28 + (hv(2) - 0.5) * 0.24) * R;
+      const th = hv(3) * Math.PI, ca = Math.cos(th), sa = Math.sin(th), el = 1 + 0.45 * hv(4), ea = Math.sqrt(el), eb = 1 / ea;
+      const k2c = (hv(5) - 0.5) * 0.3, k2s = (hv(6) - 0.5) * 0.3, k3c = (hv(7) - 0.5) * 0.2, k3s = (hv(8) - 0.5) * 0.2, envA = (reach * 0.78) ** 2;
+      // by kind and size: every tree thins the grass under it; a big broadleaf tree wears a little soil at its core, a small tree or a conifer
+      // hardly any (a conifer drops needles instead: litter all under it)
+      const big = sm(1.3, 2.6, R), broad = leafy > 0.75;
+      const thinK = tree ? (broad ? 0.6 + 0.35 * big : 0.55 + 0.25 * big) : 0.3, bareK = tree ? 0.8 * big * (broad ? 1 : 0.12) : 0, litK = tree ? (broad ? 0.5 + 0.4 * big : 0.8) : 0.2, ringK = tree ? 0.32 : 0.4;
+      const shA = 0.1 * Rm, shB = tree ? 1.05 * Rm : 1.1 * Rm, shK = tree ? 0.24 : 0.34, ctB = 0.35 + 0.08 * Rm, d2Max = reach * reach;
+      const warp = warpField();
       for (let j = s[1]; j <= s[3]; j++) {
-        const y = (iy0 + j + 0.5) / res, ey = y - ty, ecy = y - cy;
+        const y = (iy0 + j + 0.5) / res, ey = y - ty, ecy = y - cy, py = y - pcy;
         for (let i = s[0]; i <= s[2]; i++) {
           const x = (ix0 + i + 0.5) / res, ex = x - tx, d2 = ex * ex + ey * ey;
           if (d2 > d2Max) continue;
-          const d = Math.sqrt(d2) * M_PER_TILE, ecx = x - cx, dc = Math.sqrt(ecx * ecx + ecy * ecy) * M_PER_TILE, q = j * w + i;
-          const vThin = thinK * near(thinA, Rm, d), vBare = tree ? 0.9 * near(bareA, bareB, d) : 0, vLit = litK * near(litA, litB, d), vLush = d > ringA ? ringK * band(ringA, ringB, ringC, ringE, d) : 0;
+          const d = Math.sqrt(d2) * M_PER_TILE, ecx = x - cx, dc = Math.sqrt(ecx * ecx + ecy * ecy) * M_PER_TILE, q = j * w + i, wf = 1 + warp[q]!;
+          // the patch's distance in canopy radii: in its stretched, turned frame, over its lumpy rim and the warp
+          const px = x - pcx, al = px * ca + py * sa, ac = -px * sa + py * ca, dr = Math.sqrt(al * al + ac * ac) || 1e-6, cc = al / dr, ss = ac / dr;
+          const rim = 1 + k2c * (cc * cc - ss * ss) + k2s * 2 * cc * ss + k3c * cc * (4 * cc * cc - 3) + k3s * ss * (3 - 4 * ss * ss);
+          const qn = Math.sqrt((al / ea) ** 2 + (ac / eb) ** 2) / (R * rim * wf), qt = Math.sqrt(d2) / (R * wf), env = d2 > envA ? near(envA, d2Max, d2) : 1;
+          const vThin = env * thinK * near(0.2, 1.05, qn), vBare = bareK ? env * bareK * Math.max(near(0.05, 0.42, qn), near(0, 0.26, qt)) : 0, vLit = env * litK * near(0.3, 1.2, qn), vLush = qn > 0.95 ? env * ringK * band(0.95, 1.15, 1.3, 1.6, qn) : 0;
           const vAo = tree ? 1 - (1 - shK * near(shA, shB, dc)) * (1 - 0.34 * near(0, ctB, d)) : shK * near(shA, shB, dc);
           thin[q] = thin[q]! + vThin * (1 - thin[q]!); bare[q] = bare[q]! + vBare * (1 - bare[q]!); litter[q] = litter[q]! + vLit * (1 - litter[q]!);
           lush[q] = lush[q]! + vLush * (1 - lush[q]!); ao[q] = ao[q]! + vAo * (1 - ao[q]!);
@@ -307,9 +332,9 @@ export function livingMasks(g: InfluenceGrid): LivingMasks {
       const nb = vnoise(x / s2 + 5.5, y / s2 + 1.9, 57);
       const L = LUSH_MAX * sm(0.05, 0.85, g.lush[q]! * (0.7 + 0.6 * nf));
       const T = sm(0.22, 0.8, g.thin[q]! + (nf - 0.5) * 0.5);
-      // bare soil: the cores (trunks, doors) and, where the grass is thinnest, patches of soil between its clumps (never on the open ground's
-      // thin patches, which stay grass)
-      const B = Math.max(sm(0.4, 0.88, g.bare[q]! + (nb - 0.5) * 0.6), 0.85 * sm(0.66, 0.98, g.thin[q]! + (nb - 0.5) * 0.7));
+      // bare soil: the cores (big trees' trunks, doors) and, only in the deepest shade (canopies overlapping), small patches between the grass
+      // clumps; mostly the ground stays thin grass (never soil on the open ground's thin patches)
+      const B = Math.max(sm(0.4, 0.88, g.bare[q]! + (nb - 0.5) * 0.6), 0.6 * sm(0.96, 1.14, g.thin[q]! + (nb - 0.5) * 0.5));
       const F = 0.9 * sm(0.18, 0.75, g.litter[q]! * (0.45 + nf));
       const A = Math.min(AO_MAX, g.ao[q]!);
       lush[o + 3] = L * 255; thin[o + 3] = T * 255; bare[o + 3] = B * 255; litter[o + 3] = F * 255;
