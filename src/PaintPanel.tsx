@@ -22,6 +22,15 @@ export const swatch = (t: { id: string; col: string }) => {
 /** whether a texture is laid with its painted look in this game (its angle then does nothing: a painted look is never turned, its light stays upper right) */
 const paintedTex = (game: Game, id: string) => game.grassArt === 'painted' && !!paintedSwatch(id);
 const LIB_BY_ID = new Map(LIBRARY.map(it => [it.id, it]));
+/** a texture's plain name for the menus (P23 P1-E): the owner's preset names as saved in the studio ("Golf - Green", "Path_worn", "sand",
+ *  "First Cut") read as words ("Green", "Worn path", "Sand", "First cut"): a "Golf -" prefix goes, underscores become spaces, a trailing
+ *  adjective moves to the front, and the name is in sentence case */
+export function plainName(name: string): string {
+  let s = name.replace(/^\s*golf\s*[-–:]\s*/i, '').replace(/_+/g, ' ').replace(/\s+-\s+/g, ' ').replace(/\s+/g, ' ').trim();
+  const m = /^(\S+) (worn|old|dry|wet|dark|light|new|cracked|stained)$/i.exec(s); if (m) s = `${m[2]} ${m[1]}`;
+  s = s.toLowerCase();
+  return s ? s[0]!.toUpperCase() + s.slice(1) : name;
+}
 const TONES: { id: 0 | 1 | 2; label: string }[] = [{ id: 0, label: 'None' }, { id: 1, label: 'Darker' }, { id: 2, label: 'Lighter' }];
 /** the style change for a tone chip: switching to Lighter turns a black tint white, to Darker a white tint black (other tints are kept) */
 const toneStyle =(tone: 0 | 1 | 2, tint: string) => ({ tone, tint: tone === 2 && tint === '#000000' ? '#ffffff' : tone === 1 && tint === '#ffffff' ? '#000000' : tint });
@@ -125,13 +134,15 @@ function Section({ id, title, children, open: dflt = true }: { id: string; title
   );
 }
 
-/** the style editor: the fill's texture, scale, angle, corners, tone and border (and the border's own), the snap setting, and the area count and cost */
-export function StyleEditor({ game }: { game: Game }) {
+/** the style editor: the fill's texture, scale, angle, corners, tone and border (and the border's own), the snap setting, and the area count and cost.
+ *  gridOnly (Holes > My looks on a golf course's 1 m grid, P23 P1-E): what the grid's cells wear (T128: the texture, its size and angle, its tone
+ *  and blend, and its collar band's width, shadow, texture, size, angle and tone), without the painted areas' layer, corners and cost */
+export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?: boolean }) {
   const p = game.paint, s = p.style;
   // a course surface's border is its collar band on the course grid (the course look); any other is the painted area's. Every control shown
   // works on both (course-look.ts: the fill's texture, scale, angle, tone and blend, the band's texture, scale, angle and tone); the ones that
   // cannot (a grid surface's corners, the kerb as its band, a painted look's angle) are left out
-  const grid = p.course && GRID_KINDS.includes(p.brushKind) && !p.selected, band = grid && !!BORDER_KINDS[p.brushKind];
+  const grid = (gridOnly || p.course) && GRID_KINDS.includes(p.brushKind) && !p.selected, band = grid && !!BORDER_KINDS[p.brushKind];
   const fillPainted = paintedTex(game, s.tex), bandPainted = paintedTex(game, s.btex);
   const picked = p.selected ? p.areas.find(a => a.id === p.selected) : undefined;
   const pts = picked ? picked.pts : p.pts;
@@ -140,7 +151,7 @@ export function StyleEditor({ game }: { game: Game }) {
   const bOwn = (c: { bscale?: number; bangle?: number }) => p.setStyle({ bscale: bScale, bangle: bAngle, ...c });
   return (
     <>
-      {picked && (<Section id="layer" title="Layer">
+      {picked && !gridOnly && (<Section id="layer" title="Layer">
         <div className="mt-2 text-[11px] text-slate-400">Layer (over or under the areas it overlaps)</div>
         <div className="flex flex-wrap gap-1">
           <button className="chip" title="To the back: under every area it overlaps (Shift+Page Down, Ctrl+Shift+[)" onClick={() => p.moveLayer('back')}>To back</button>
@@ -153,13 +164,13 @@ export function StyleEditor({ game }: { game: Game }) {
       <Section id="texture" title="Texture and blend">
       <div className="mt-2 text-[11px] text-slate-400">Texture</div>
       <div className="flex flex-wrap gap-1">
-        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
+        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.tex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ tex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
         {!MENU_TEXES.length && <div className="text-[11px] text-slate-400">No texture presets yet: make them in the studio (Ground → Texture presets), then Rebuild game sprites.</div>}
       </div>
       <div className="mt-2 text-[11px] text-slate-400">Blend with</div>
       <div className="flex flex-wrap gap-1">
         <button className={`chip ${!s.mtex ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: undefined })}>None</button>
-        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.mtex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
+        {MENU_TEXES.map(t => <button key={t.id} className={`chip ${s.mtex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ mtex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
       </div>
       {s.mtex && (
         <>
@@ -225,7 +236,7 @@ export function StyleEditor({ game }: { game: Game }) {
         <>
           <div className="mt-2 text-[11px] text-slate-400">Border texture</div>
           <div className="flex flex-wrap gap-1">
-            {BORDER_MENU.filter(t => !grid || t.id !== 'kerb').map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{t.name}</button>)}
+            {BORDER_MENU.filter(t => !grid || t.id !== 'kerb').map(t => <button key={t.id} className={`chip ${s.btex === t.id ? 'chip-on' : ''}`} onClick={() => p.setStyle({ btex: t.id })}><span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm align-middle" style={swatch(t)} />{plainName(t.name)}</button>)}
           </div>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
             Border scale and angle
@@ -268,7 +279,7 @@ export function StyleEditor({ game }: { game: Game }) {
         </>
       )}
       </Section>
-      <Section id="shape" title={grid ? 'Grid' : 'Corners and grid'} open={false}>
+      {!gridOnly && <Section id="shape" title={grid ? 'Grid' : 'Corners and grid'} open={false}>
       {!grid && (<>
       <div className="mt-2 text-[11px] text-slate-400">Corners</div>
       <div className="flex items-center gap-2">
@@ -280,8 +291,8 @@ export function StyleEditor({ game }: { game: Game }) {
       <input type="checkbox" checked={p.snap} onChange={e => { p.snap = e.target.checked; game.emit(); }} />
       Snap corners to the grid
       </label>
-      </Section>
-      <div className="mt-2 text-[11px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, p.plantKind)).toLocaleString()} (${p.plantKind}) · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>
+      </Section>}
+      {!gridOnly && <div className="mt-2 text-[11px] text-slate-400">{game.golfMode ? (p.outline().length >= 6 ? `Estimated cost: $${Math.round(areaBuildCost(p.outline(), s.tex, p.plantKind)).toLocaleString()} (${p.plantKind}) · ${p.areas.length} area(s)` : `${p.areas.length} painted area(s)`) : `${p.areas.length} painted area(s) · free (decoration)`}</div>}
     </>
   );
 }

@@ -1,5 +1,5 @@
 /** The course grid wired into the game (T078 review fixes): a golf save's grid at load (an old save migrates, a second load restores the
- * same grid, a corrupt grid fails the load), the trees a stroke clears staying in its undo step, rub out keeping to its hole, and the
+ * same grid, a corrupt grid fails the load), the trees a stroke clears staying in its undo step, rub out taking every hole (its per-hole limit an option), and the
  * course looks re-sent only when a look changes (pure, Node: the engine's load path and a PaintTool with a stand-in host). */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -78,14 +78,18 @@ test('2. the trees a stroke clears are in its undo step, even when the last chun
   assert.deepEqual(log.undone, ['t1']);
 });
 
-test('3. rub out keeps to the current hole', () => {
+test('3. rub out takes every hole (T125); its per-hole limit is an option, off by default', () => {
   const { g, tool } = world();
   paintDisc(g, 50, 50, 4, SURF.fairway, 1, 0); paintDisc(g, 58, 50, 4, SURF.fairway, 2, 0);
   tool.enterCourse(); tool.setBrush('fairway'); tool.setHole(1); tool.rubOut = true; tool.setBrushCells(0); tool.setBrushR(10); // the round brush (Advanced, T109)
-  tool.pointerDown({ x: 54, y: 50 }, 0, 0); tool.pointerUp(0.5);
   const at = (x: number, y: number) => { const i = Math.floor(y / 0.5) * g.w + Math.floor(x / 0.5); return [g.surf[i], g.hole[i]]; };
-  assert.deepEqual(at(48, 50), [SURF.rough, 1], "hole 1's fairway rubbed to rough");
-  assert.deepEqual(at(60, 50), [SURF.fairway, 2], "hole 2's fairway untouched");
+  tool.rubHoleOnly = true;
+  tool.pointerDown({ x: 54, y: 50 }, 0, 0); tool.pointerUp(0.5);
+  assert.deepEqual(at(48, 50), [SURF.rough, 0], "hole 1's fairway rubbed to rough (no hole)");
+  assert.deepEqual(at(60, 50), [SURF.fairway, 2], "with the limit on, hole 2's fairway untouched");
+  tool.rubHoleOnly = false;
+  tool.pointerDown({ x: 54, y: 50 }, 0, 0); tool.pointerUp(0.5);
+  assert.deepEqual(at(60, 50), [SURF.rough, 0], "off (the default), hole 2's fairway goes too");
 });
 
 test('4. every look control re-sends the course (the tone, tint, blend and border too: course-look.ts), at most once per LOOK_MS while dragged', async () => {

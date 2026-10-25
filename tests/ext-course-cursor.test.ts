@@ -289,7 +289,7 @@ test('on the golf course grid the footprint is exactly the cells a click paints:
   assert.match(cur.hint, /refused: not your land$/);
   const notMine = shapeCells(s, cur.feet.ax, cur.feet.ay, true).filter(k => (k % 100000) * CELL_T >= 102);
   assert.ok(notMine.length > 0, 'the cells past the land line are among the skipped');
-  // rub out: only this hole's fairway, which is what the rub changes; nothing shown in red
+  // rub out: every course surface under it (T125), which is what the rub changes
   tool.pointerDown(tool.cursor!, 0, 0); tool.pointerUp(0.5);
   tool.rubOut = true; tool.cursor = { x: 99.4, y: 201.3 };
   const f2 = foot();
@@ -298,6 +298,51 @@ test('on the golf course grid the footprint is exactly the cells a click paints:
   // a cart path paints areas, not cells: no grid rules
   tool.rubOut = false; tool.setBrush('path'); foot();
   assert.equal(cur.feet.grid, false);
+});
+
+test('rub out (T125): the dashed footprint is exactly the cells a click takes back, at every size and over every surface; refused cells hatched', () => {
+  // a fairway (hole 1) with a green (hole 2), a bunker (hole 3), water and a strip of rough in it; the land east of x = 102 is not yours
+  const g = makeGrid(80, 180, 80, 80), rect = (x0: number, y0: number, x1: number, y1: number, s: number, h: number) => fillPolygon(g, [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }], s, h, 0);
+  rect(84, 184, 116, 216, SURF.fairway, 1); paintDisc(g, 100, 200, 2, SURF.green, 2, 0); rect(92, 196, 95, 199, SURF.bunker, 3); rect(104, 204, 107, 207, SURF.water, 1); rect(84, 212, 116, 216, SURF.rough, 1);
+  const { tool, cur } = golfTool(g, 102), v = view(0.3);
+  let m = mockCtx({ width: 1600, height: 1000 });
+  const foot = () => { m = mockCtx({ width: 1600, height: 1000 }); cur.draw(m.ctx, v, tool, 1000); return shapeCells(cur.feet.shape!, cur.feet.ax, cur.feet.ay); };
+  tool.cursor = { x: 90.2, y: 210.7 }; foot(); // a painting frame first: the cursor learns it is a golf game (the pill's "no refund")
+  tool.rubOut = true;
+  for (const n of [1, 2, 3, 4, 0]) for (const [x, y, whole] of [[96.3, 197.8, true], [100.13, 200.07, true], [90.2, 210.7, true], [101.6, 199.2, false], [85.3, 214.6, false]] as const) {
+    tool.setBrushCells(n); tool.setBrushR(2); tool.cursor = { x, y };
+    const f = foot();
+    assert.ok(cur.feet.grid, 'the footprint follows the rub-out rules');
+    assert.deepEqual(f, clickChanges(g, tool), `${n || 'round'} at ${x},${y}: the footprint is exactly the cells the rub out took back`);
+    if (n && whole) assert.equal(f.length, n * n, `${n} x ${n} over the course: all ${n * n} cells`);
+    if (f.length) { assert.equal(cur.state.kind, 'erase'); assert.ok(m.dashes.some(a => a.length === 2 && a[0]! >= 3), 'a dashed edge'); }
+    tool.undo();
+  }
+  // over the land line: the cells not yours are refused, hatched with the ✕ and their reason by the disc; the rest is taken
+  tool.setBrushCells(4); tool.cursor = { x: 101.6, y: 199.2 };
+  foot();
+  const ref = cur.feet.shape!.refused.length / 2;
+  assert.equal(ref, 8, 'two columns of the square lie past the line'); assert.equal(cur.feet.count, 8);
+  assert.equal(cur.state.kind, 'erase');
+  assert.deepEqual(cur.state.label, ['8 cells: not your land']); assert.deepEqual(cur.state.bad, [true]);
+  assert.ok(m.sets.some(([k, val]) => k === 'fillStyle' && val === '#cf3f33'), 'the ✕ badge');
+  assert.equal(cur.hint, 'Rub out · 8 cells back to rough · no refund');
+  // wholly refused: the refusal, not "nothing to rub out"
+  tool.setBrushCells(1); tool.cursor = { x: 110.3, y: 205.2 }; foot();
+  assert.equal(cur.state.kind, 'refused'); assert.deepEqual(cur.state.label, [LAND_WHY.off]);
+  assert.equal(cur.hint, 'Rub out · 1 cell refused: not your land');
+  // the rough brush gives back the land's own grass: the rough strip is taken too, and the pill says so
+  tool.setBrush('rough'); tool.setBrushCells(4); tool.cursor = { x: 90.2, y: 214.6 };
+  const fr = foot();
+  assert.equal(fr.length, 16); assert.deepEqual(fr, clickChanges(g, tool));
+  assert.equal(cur.hint, 'Rub out · 16 cells back to grass · no refund');
+  tool.undo();
+  // the per-hole option: only the current hole's cells, and the pill names it
+  tool.setBrush('fairway'); tool.setHole(2); tool.rubHoleOnly = true; tool.cursor = { x: 99.4, y: 201.1 };
+  const fh = foot();
+  assert.ok(fh.length > 0 && fh.length < 16, "only hole 2's green");
+  assert.deepEqual(fh, clickChanges(g, tool));
+  assert.match(cur.hint, /^Rub out · Hole 2 only · \d+ cells? back to rough/);
 });
 
 test('a drag with the one-cell brush paints a run of cells with no gap, not even a corner, at 30% and 15% zoom', () => {
@@ -437,9 +482,9 @@ test('labels by state (T118): no words by the disc at rest; only the drag total,
   tool.rubOut = true;
   frame(cur, tool, 0.3, 2300);
   assert.equal(cur.state.kind, 'erase'); assert.deepEqual(cur.state.label, []);
-  assert.equal(cur.hint, `Erasing fairway · Hole 1 · ${cur.feet.count} cells back to rough · no refund`);
+  assert.equal(cur.hint, `Rub out · ${cur.feet.count} cells back to rough · no refund`);
   tool.cursor = { x: 85.3, y: 216.6 }; frame(cur, tool, 0.3, 2400);
-  assert.equal(cur.state.kind, 'nochange', 'nothing of this surface to rub out'); assert.match(cur.hint, /^Erasing fairway · Hole 1 · no fairway/);
+  assert.equal(cur.state.kind, 'nochange', 'nothing to rub out'); assert.equal(cur.hint, 'Rub out · nothing to rub out here');
   tool.rubOut = false;
 
   // money short: the price in red by the disc
