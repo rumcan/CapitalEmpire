@@ -29,8 +29,8 @@ const LAYOUT: Record<BusinessId, Piece[]> = {
   // the starting clubhouse is a tin-and-tarp shack (the owner, 2026-10-22: start with a poor clubhouse; the grand clubhouse, the pro shop and the
   // cart garage are built later), at its own size
   clubhouse: [['golf:clubhouse-shanty', .5, .5, 0]],
-  // the driving range's hut at its own size, a placeholder until T096 draws the range from golf/range.ts rangeLayout (hut, mats, flags, lights)
-  range: [['golf-driving-range', .5, .5, 0]],
+  // the driving range draws its own scene (plan P24, T129: golf/rangebiz.ts rangeScene: the shop, the caravan, the mats, the greens, the fence)
+  range: [],
   fishing: [ ['fishing-lodge', .45, .45, .38], ['fishing-cabin', .18, .2, .18], ['fishing-cabin', .18, .7, .18],
     ['fishing-boathouse', .78, .45, .22], ['fishing-dock-rope', .82, .2, .14], ['fishing-dock-lifebuoy', .85, .7, .14],
     ['fishing-rental-kiosk', .54, .83, .12], ['fishing-bass-boat', .93, .7, .1] ],
