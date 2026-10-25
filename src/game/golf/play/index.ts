@@ -8,3 +8,4 @@ export * from './courseview';
 export * from './view';
 export * from './board';
 export * from './live';
+export * from './owner';

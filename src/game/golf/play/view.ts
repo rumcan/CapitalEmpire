@@ -4,8 +4,10 @@
 import { clipFrame, golferRow, rowToward } from '../../crowdview';
 import { GOLFER_CLIPS } from '../../library';
 import { TILE_M } from '../types';
-import { stateAt } from './round';
-import type { CourseView, GolferState, RoundPlan, Shot } from './types';
+import { FLIGHT_TIME, PICK_UP, PUTT_FLIGHT, offOf, stateAt, walkMin } from './round';
+import { OWNER_ADDRESS } from './owner';
+import type { OwnerTurn } from './live';
+import type { CourseView, GolferState, Pt, RoundPlan, Shot } from './types';
 
 /** a golfer to draw: his position (tiles), his id, his sheet row and his frame (absolute, in the row: the golfer clips' frames) */
 export interface PlayPerson { x: number; y: number; golfer: number; row: number; frame: number }
@@ -40,6 +42,8 @@ export class PlayView {
   /** the golfers to draw and the balls, as of the last update (refilled in place) */
   people: PlayPerson[] = []; balls: PlayBall[] = [];
   private plan: RoundPlan; private view: CourseView;
+  /** the owner's stand before his pending turn (standOf), worked out once for the turn standFor */
+  private standFor: OwnerTurn | null = null; private stand: { at: Pt; free: number } = { at: { x: 0, y: 0 }, free: 0 };
   /** the states (stateAt refills them) and each golfer's shots in time order; per golfer id: how many of his shots are struck (k), the real second his
    *  newest was first seen (swingAt; -Infinity: none), his tee time, and his position and sheet row at the last update */
   private states: GolferState[] = []; private shots: Shot[][] = [];
@@ -61,13 +65,16 @@ export class PlayView {
 
   /** the playback at a game minute of the day and real seconds (now). A golfer's newest shot that the minute has passed since the last update starts
    *  its swing and its flight at now; a shot the minute has gone back before is forgotten without a swing. Then the people (not the done, nor the
-   *  waiting more than LEAD_MIN before their tee) and the balls (in the air, or at rest unless holed) */
-  update(minute: number, now: number): void {
+   *  waiting more than LEAD_MIN before their tee) and the balls (in the air, or at rest unless holed). `pending` is the owner's turn while his stroke
+   *  is not played yet (P4b; see pendingAt): his walk to the ball and his address there, facing `aim` (his open shot's aim; else the suggested aim) */
+  update(minute: number, now: number, pending: OwnerTurn | null = null, aim: Pt | null = null): void {
     if (this.count !== this.plan.shots.length) this.index();
     const states = stateAt(this.plan, this.view, minute, this.states), fresh = this.started, drive = GOLFER_CLIPS.golf_drive;
+    const pa = pending ? (aim ?? pending.suggested.aim) : null;
     let np = 0, nb = 0;
     for (let i = 0; i < states.length; i++) {
-      const s = states[i]!, id = s.golfer, list = this.shots[id]!;
+      const s = states[i]!, id = s.golfer, list = this.shots[id]!, mine = pending !== null && pa !== null && id === pending.golfer;
+      if (mine) this.pendingAt(s, minute, pending);
       // the shots struck by the minute: the newest of them is the one in play
       const old = this.k[id]!;
       let k = old;
@@ -90,7 +97,7 @@ export class PlayView {
       // stands); otherwise (waiting, holed out), turned to the pin
       let row = this.rows[id]!;
       if (s.action === 'address' || s.action === 'putt' || s.action === 'swing') {
-        const sh = s.flight ? newest : k < list.length ? list[k]! : null, tg = sh ? sh.to : this.view.holes[s.hole]?.pin;
+        const sh = s.flight ? newest : k < list.length ? list[k]! : null, tg = mine ? pa : sh ? sh.to : this.view.holes[s.hole]?.pin;
         if (tg && (tg.x - s.x) ** 2 + (tg.y - s.y) ** 2 > AIM2) row = golferRow(tg.x - s.x, tg.y - s.y);
       } else if (s.action === 'walk') {
         if (moved) row = rowToward(dx, dy);
@@ -113,6 +120,40 @@ export class PlayView {
     this.people.length = np; this.balls.length = nb; this.started = true;
   }
 
+  /** the owner's pending turn (P4b, docs/GOLF-PLAY.md decision 7): his next stroke is not in the plan yet, so the playback gives him the walk to it. From
+   *  where he stands (standOf) he walks to the turn's ball at the walking pace, starting when he is free there and no later than it lets him arrive by
+   *  the address (turn.t less OWNER_ADDRESS); then he stands at the ball in address. The ball is the turn's, at rest. Written over his stateAt state */
+  private pendingAt(s: GolferState, minute: number, turn: OwnerTurn): void {
+    // his stand is worked out once per turn (the turn object changes when his strokes do): the playback calls this every frame
+    if (this.standFor !== turn) { this.stand = this.standOf(turn.golfer); this.standFor = turn; }
+    const st = this.stand, ball = turn.ball, W = walkMin(st.at, ball), A = turn.t - OWNER_ADDRESS, T = A - st.free;
+    // at the walking pace, starting when there is time for it (he waits at his stand until then). Free too late for that (a long walk after a hole, the
+    // hole-out's flight and the step-off leave T < W), he walks faster for the time there is, so he is at the ball by the address; with no time at all
+    // (T <= 0) he walks at the pace from when he is free
+    const window = T >= W || T <= 0 ? W : T, ws = T >= W ? A - W : st.free;
+    s.ball = ball;
+    if (minute < ws) return;
+    s.hole = turn.holeIdx;
+    if (minute < ws + window) {
+      const u = window > 0 ? (minute - ws) / window : 1;
+      s.x = st.at.x + (ball.x - st.at.x) * u; s.y = st.at.y + (ball.y - st.at.y) * u; s.action = 'walk';
+      return;
+    }
+    s.x = ball.x; s.y = ball.y; s.action = 'address';
+  }
+  /** where golfer id stands before his next stroke, and the minute he is free there: his tee before any stroke; after his last stroke on a hole that
+   *  ended it (holed out or picked up), his step-off (round.ts offOf, free once his walk to it is over); else the ball he last struck to, free once its
+   *  flight and his walk to it are over */
+  private standOf(id: number): { at: Pt; free: number } {
+    const list = this.shots[id]!, holes = this.view.holes, ls: Shot | undefined = list[list.length - 1];
+    if (!ls) return { at: holes[0]!.tee, free: -Infinity };
+    const dur = ls.club === 'putter' ? PUTT_FLIGHT : FLIGHT_TIME;
+    if (!(ls.holed || ls.stroke + ls.penalty >= PICK_UP)) return { at: ls.to, free: ls.t + Math.max(dur, walkMin(ls.from, ls.to)) };
+    // the same step-off the playback gives him after this hole (round.ts build: toward the next tee, his slot in the group)
+    const toward = ls.hole + 1 < holes.length ? holes[ls.hole + 1]!.tee : ls.from, gr = this.plan.groups.find(g => g.players.includes(id)), slot = gr ? gr.players.indexOf(id) : 0;
+    const off = offOf(ls.holed ? ls.to : ls.from, holes[ls.hole]!.pin, toward, slot, ls.t + dur);
+    return { at: off.at, free: off.t1 };
+  }
   /** the shots of each golfer in time order, from the plan (refilled in place) */
   private index(): void { for (const l of this.shots) l.length = 0; for (const s of this.plan.shots) this.shots[s.golfer]!.push(s); this.count = this.plan.shots.length; }
 

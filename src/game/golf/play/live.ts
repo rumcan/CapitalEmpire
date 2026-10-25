@@ -16,7 +16,7 @@ export interface OwnerTurn { golfer: number; holeIdx: number; hole: number; par:
   suggested: { club: Club; aim: Pt; power: number } }
 
 /** the power range of a full shot or a chip, and of a putt (the putt's length) */
-const POWER = [0.3, 1], PUTT_POWER = [0.5, 1.5];
+export const POWER = [0.3, 1], PUTT_POWER = [0.5, 1.5];
 /** a putt holes only with its aim within this many degrees of the pin */
 const AIM_DEG = 3;
 

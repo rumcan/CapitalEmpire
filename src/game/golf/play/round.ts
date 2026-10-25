@@ -31,7 +31,7 @@ export const STEP_TILES = 4;
 export const SPREAD_TILES = 1.2;
 
 /** the walk in game minutes between two points */
-const walkMin = (a: Pt, b: Pt): number => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M / WALK_M;
+export const walkMin = (a: Pt, b: Pt): number => Math.hypot(b.x - a.x, b.y - a.y) * TILE_M / WALK_M;
 
 /** the routine of a stroke: the minutes before the group's next strike (a putt, a pro's full shot, a club golfer's full shot) */
 export const routineOf = (club: Club, pro: boolean): number => club === 'putter' ? PUTT_ROUTINE : pro ? PRO_ROUTINE : FULL_ROUTINE;
@@ -42,7 +42,7 @@ interface Off { rest: Pt; at: Pt; t0: number; t1: number }
 
 /** the step-off for a golfer who finished a hole at minute t0: STEP_TILES from the pin toward `toward` (the next tee, or on the last hole his last
  *  stand), spread across that direction by his slot in the group. He walks there from rest at the walking pace */
-function offOf(rest: Pt, pin: Pt, toward: Pt, slot: number, t0: number): Off {
+export function offOf(rest: Pt, pin: Pt, toward: Pt, slot: number, t0: number): Off {
   const dx = toward.x - pin.x, dy = toward.y - pin.y, L = Math.hypot(dx, dy), ux = L > 0 ? dx / L : 1, uy = L > 0 ? dy / L : 0, k = (slot - 1) * SPREAD_TILES;
   const at = { x: pin.x + ux * STEP_TILES - uy * k, y: pin.y + uy * STEP_TILES + ux * k };
   return { rest, at, t0, t1: t0 + walkMin(rest, at) };

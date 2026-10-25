@@ -42,6 +42,7 @@ import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { formatPercent } from './ui/TournamentResults';
 import { SeasonReportCard } from './ui/golf/SeasonReportCard';
 import { GolfLeaderboard } from './ui/GolfLeaderboard';
+import { ShotPanel } from './ui/ShotPanel';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
 /** the hint's key words, drawn as keycaps */
@@ -432,6 +433,7 @@ export default function App() {
           {game.site && game.traffic.round.stage !== 'eval' && <RoundPanel game={game} />}
           {game.site && game.traffic.round.stage === 'eval' && <EvalScreen game={game} />}
           {game.site && game.playBoard() && <GolfLeaderboard game={game} />}
+          {game.shotState() && <ShotPanel game={game} />}
           {game.seasonReport && game.traffic.round.stage === 'free' && <SeasonReportCard report={game.seasonReport} onContinue={() => game.dismissSeasonReport()} />}
           {game.eventMode && !game.site && !game.golfMode && (
             <div className={`pointer-events-auto absolute ${game.panel ? 'right-[19.5rem]' : 'right-3'} top-[var(--hud-top,6rem)] z-20 flex items-center gap-3 glass p-3 text-sm`}>

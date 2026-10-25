@@ -5,8 +5,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GOLFER_CLIPS } from '../src/game/library';
 import { TILE_M } from '../src/game/golf/types';
-import { PlayView, playRound, stateAt } from '../src/game/golf/play';
-import type { CourseView, Golfer, Group, Lie, PlayHole, RoundPlan, Shot } from '../src/game/golf/play';
+import { golferRow } from '../src/game/crowdview';
+import { LiveGroup, OWNER_ADDRESS, PlayView, playRound, stateAt, walkMin } from '../src/game/golf/play';
+import type { CourseView, Golfer, Group, Lie, OwnerTurn, PlayHole, RoundPlan, Shot } from '../src/game/golf/play';
 
 /** the pars of the three holes: a par 3 of 160 m, a par 4 of 380 m, a par 5 of 500 m */
 const PARS: (3 | 4 | 5)[] = [3, 4, 5];
@@ -163,4 +164,39 @@ test('update: refills the same arrays and objects, so a warm view allocates noth
   assert.equal(pv.people, people, 'the people array is the same');
   assert.equal(pv.people[0], p0, 'the first person is the same object');
   assert.equal(pv.balls, balls, 'the balls array is the same');
+});
+
+test('pending: the owner\'s stroke on hole 2 (not played yet) is drawn at its ball in address facing the aim, with the ball there; he walks in to it from his step-off', () => {
+  // the owner is the pro of the first group, played live: his hole 1 is played by the suggestions, then his tee shot on hole 2 is due and pending
+  const view = view3(), owned: Golfer[] = [{ ...GOLFERS[0]!, owner: true }, GOLFERS[1]!], seed = 1234;
+  const plan = playRound(view, owned, GROUPS, seed, { live: 0 }), live = new LiveGroup(plan, view, 0, seed);
+  let t = live.advance();
+  for (let k = 0; t && t.holeIdx < 1 && k < 60; k++) { live.play({ holeIdx: t.holeIdx, stroke: t.stroke, club: t.suggested.club, aim: t.suggested.aim, power: t.suggested.power }); t = live.advance(); }
+  if (!t) throw new Error('the owner\'s group is done before hole 2');
+  const turn: OwnerTurn = t;
+  assert.equal(turn.holeIdx, 1, 'his tee shot on hole 2 is pending');
+  assert.equal(turn.stroke, 1);
+  const A = turn.t - OWNER_ADDRESS, owner = (s: { golfer: number }) => s.golfer === 0;
+  // the old playback: before the owner plays, he stands where he finished hole 1 (the step-off, far from hole 2's tee)
+  const old = stateAt(plan, view, A).find(owner)!;
+  const oldDist = Math.hypot(old.x - turn.ball.x, old.y - turn.ball.y);
+  assert.ok(oldDist > 20, `the step-off on hole 1 is ${oldDist.toFixed(1)} tiles from the ball`);
+  // at the address: he is at the turn's ball, in address, turned to the aim, and the ball is there at rest
+  const pv = new PlayView(plan, view);
+  pv.update(A, 500, turn);
+  const p = pv.people.find(q => q.golfer === 0);
+  assert.ok(p, 'he is drawn at his address');
+  assert.ok(Math.hypot(p.x - turn.ball.x, p.y - turn.ball.y) < 1e-9, 'at his ball, not at the step-off');
+  assert.equal(p.frame, GOLFER_CLIPS.golf_drive.start, 'in address');
+  assert.equal(p.row, golferRow(turn.suggested.aim.x - turn.ball.x, turn.suggested.aim.y - turn.ball.y), 'turned to the suggested aim');
+  assert.ok(pv.balls.some(b => b.x === turn.ball.x && b.y === turn.ball.y && b.h === 0), 'his ball is drawn at the turn\'s ball, at rest');
+  // the walk in: on the line from the step-off to the ball, between them while he walks (a quarter of the way before the address, when he is still walking)
+  const W = walkMin(old, turn.ball), mid = A - W / 4, L = oldDist, pw = new PlayView(plan, view);
+  pw.update(mid, 501, turn);
+  const q = pw.people.find(x => x.golfer === 0);
+  assert.ok(q, 'he is drawn on the walk');
+  const cross = (q.x - old.x) * (turn.ball.y - old.y) - (q.y - old.y) * (turn.ball.x - old.x);
+  const along = ((q.x - old.x) * (turn.ball.x - old.x) + (q.y - old.y) * (turn.ball.y - old.y)) / L;
+  assert.ok(Math.abs(cross) < 1e-6 * L, 'on the line from the step-off to the ball');
+  assert.ok(along > 1e-6 && along < L - 1e-6, `between the step-off and the ball (${along.toFixed(2)} of ${L.toFixed(2)} tiles)`);
 });
