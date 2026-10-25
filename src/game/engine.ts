@@ -412,7 +412,7 @@ export class Game {
   /** the Props tool (plan P24 Phase 3, T131: golf/propstool.ts): the decor the player places, moves, turns and sells; its appeal feeds the range */
   readonly decor: PropsTool = new PropsTool({
     golf: () => this.golfMode && !!this.golf, item: id => LIB_INDEX.get(id), idOf: p => LIBRARY[p.item]!.id,
-    scaleOf: (item, want) => { const it = LIBRARY[item]!; return Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, STUDIO_SCALE[it.id] ?? want ?? OWNER_SCALE[it.id] ?? 1); },
+    scaleOf: (item, want) => { const it = LIBRARY[item]!; return Math.min(PIXEL_LIMIT[item]! * PIXEL_SLACK, want ?? STUDIO_SCALE[it.id] ?? OWNER_SCALE[it.id] ?? 1); },
     footprint: (item, x, y, k) => { const f = this.footprint(LIBRARY[item]!, x, y, false, k); return [f.x0, f.y0, f.x1, f.y1]; },
     spot: {
       owned: (x, y) => this.ownedAt(x, y),

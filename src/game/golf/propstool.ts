@@ -14,7 +14,7 @@ import { DECOR_BY_KEY, decorAppeal, decorSpotWhy, inPoly, sellBack, type Box, ty
 export interface PropsHostCtx {
   /** a golf game (the tool works only there); the library index of an id */
   golf(): boolean; item(id: string): number | undefined; idOf(p: Prop): string;
-  /** the size a library item is drawn at (the studio's, else want, else its own; capped by its pixels) and its footprint there (unflipped) */
+  /** the size a library item is drawn at (want: the catalogue's, else the studio's, else its own; capped by its pixels) and its footprint there (unflipped) */
   scaleOf(item: number, want?: number): number; footprint(item: number, x: number, y: number, scale: number): Box;
   /** the map's checks (decor.ts DecorSpot) without the range's ground, which the tool reads from the scene */
   spot: Omit<DecorSpot, 'range' | 'overlaps'>;

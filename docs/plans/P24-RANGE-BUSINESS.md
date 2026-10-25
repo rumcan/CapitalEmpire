@@ -137,6 +137,11 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 | D15 | Ball clearing | Balls lie until the range closes and are gone by morning; the picker cart is Phase 4. |
 | D16 | The first minute | A new range game's town day starts at 06:30, so the first car turns in within the first minute. |
 | D17 | Which way the four-view art faces | By the sheets' fronts (front in NE and NW: +y, -x, -y, +x), checked in game on the covered bays; `lots/preset-art.ts` documents +y, +x, -y, -x, which the lead may want to check for the lots. |
+| D18 | The Props tool's key | Z: the only letter free in play and in dev (I is the dev lot editor's toggle); Ctrl+Z stays undo. |
+| D19 | Turning a single picture | R cycles the view; four-view art takes its turned picture, a single picture stays as it is (a toast says so): never mirrored. The `variation:...:n` ids are variants of a picture, not its views, so turning does not use them. |
+| D20 | Where props count | Within 15 tiles of the shop or any open mat, each prop once; capped at +40% of appeal; the same factor on the fair price. Cheap plants reach the cap for about $2,000: Phase 4 may add upkeep or diminishing returns. |
+| D21 | The props' undo | The course tools' undo stack (`PaintTool.step`): one step per place, move, turn or sale; the money goes back with it. |
+| D22 | Missing props art | Labelled stand-ins: golfer statue = the coin-operated horse ride, stone pillar = the plain stone obelisk (`world:grave_2`), flag pole = the red flagstick scaled up, flower bed = `world:bush_2`. Requests in GOLF-SPRITES.md "Props kit". |
 
 ## 4. Phases and tickets
 
@@ -157,11 +162,34 @@ not saved. Old starts (`?start=town`) and classic games never see any of it.
 - Each adds appeal (+10% putting, +10% chipping) and a small fee ($2 a golfer who uses it; a share of the range's golfers walk over
   after their bucket). The range's tee box moves into the course grid so T127's tee banks raise it.
 
-### Phase 3, T131: the Props tool
-- One panel of decor: pot plants, ornamental shrubs and grasses, flower beds, fountains, statues, pillars, benches, bins, lamp posts,
-  flag poles (T113's course props and the library's Trees & plants, Street furniture and Landmarks; new art requested where missing).
-- Place, turn (one of four views, never mirrored), move, sell (half back); a price each; **appeal in a radius** (a plant +1% within 15
-  tiles of the shop or the mats, a fountain +5%, capped at +40% in all) that raises visitors and what they pay.
+### Phase 3, T131 (#242): the Props tool (built)
+- **The tool:** Props on the rail's Course group after Buildings (key Z; golf games only; open from stage 1 until Phase 4 sets the unlock
+  order). `golf/decor.ts` is the catalogue and the rules (pure), `golf/propstool.ts` the engine's side (a small context, as `rangehost.ts`),
+  `ui/course/PropsPanel.tsx` the panel.
+- **The panel:** four groups of cards (picture, plain name, price, appeal; a "Stand In for ..." pill where the art is a stand-in):
+  - Plants (+1% each): terracotta pot plant $120, potted palm $90, stone planter box $250, hydrangea shrub $60, ornamental grass $50,
+    fern clump $50, clipped hedge $80, flower bed $150 (stand-in), ornamental maple $300.
+  - Water: plaza fountain $12,000 (+5%, four views), wishing well $1,200 (+2%).
+  - Stone: golfer statue $6,000 (+3%, stand-in), stone pillar $400 (+1%, stand-in), ivy garden arch $900 (+2%).
+  - Furniture (+0.5% each unless said): park bench $300, course-map bench $600, picnic table $450, bag trolley $150, litter bin $80, lamp
+    post $350 (lit at night), welcome board $2,500 (+1%, four views), flag pole $500 (+1%, stand-in).
+- **Using it:** a card puts the item in hand; its ghost (the picture over its footprint, green or red, with the price or the reason) follows
+  the cursor on a quarter-tile snap; R turns it (`preset-art.ts turned()`: four-view art takes its turned view; single pictures stay as they
+  are, never mirrored); a click buys and places it. Placement is the player's land only (the golf parcels: the range plot, the practice
+  area, the course), refused on roads, paths and car parks, water (the map's or a course pond), greens and bunkers, the range's tee box and
+  mats and its target greens, and any building or prop. With nothing in hand a click selects a placed prop: drag moves it, R turns it,
+  Delete or Sell sells it for half its price; Esc puts the item down, then the selection. Each place, move, turn and sale is one step of
+  the course tools' undo (`PaintTool.step`; Ctrl+Z and Ctrl+Y work in the Props tool too). The Select tool, Delete and the bulldozer refund
+  a Props tool prop at half its catalogue price.
+- **Appeal:** each prop within 15 tiles of the shop or an open mat counts its appeal once; the sum is capped at +40% (`PROPS_APPEAL_CAP`).
+  It is its own term in `rangeStats` (`RangeExtras.propsAppeal`, passed in the demand context): the appeal and the fair price are both
+  multiplied by (1 + propsAppeal). The engine works it out twice a second (and at once after the tool's own changes). The range card shows
+  "Appeal from props: +12% (of +40%)", and the Props panel the same in range starts.
+- **Save:** the props are ordinary placed props; a Props tool prop's tuple carries 0 and its catalogue key after the scale
+  (`decor.ts propTuple`, `tupleMarks`): the kind, the view (its picture id) and the spot come back on load. Old saves (five- and six-long
+  tuples) load untouched; an unknown key loads as a plain prop. The tool works in any golf game; appeal only feeds a range start's range.
+- **Art requests:** "Props kit" in `docs/GOLF-SPRITES.md` (golfer statue, stone pillar, club flag pole, flower bed, a small tiered
+  fountain, a stone entrance arch, an urn).
 
 ### Phase 4, T132: the ramp to the course, World of Golf extras
 - The unlock order through progressive-ui: the range card first; the practice area after the first upgrade; Props after the putting

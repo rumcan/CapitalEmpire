@@ -37,7 +37,7 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'well', name: 'Wishing well', group: 'water', id: 'expansion:wooden-well', price: 1200, appeal: 0.02, desc: 'A covered garden well: golfers toss a coin for luck' },
   // ---- stone
   { key: 'statue', name: 'Golfer statue', group: 'stone', id: 'expansion:coin-horse-ride', price: 6000, appeal: APPEAL.statue, standIn: 'Bronze golfer statue', desc: 'A bronze golfer at the top of his swing, on a stone plinth' },
-  { key: 'pillar', name: 'Stone pillar', group: 'stone', id: 'world:grave_1', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
+  { key: 'pillar', name: 'Stone pillar', group: 'stone', id: 'world:grave_2', price: 400, appeal: APPEAL.pillar, standIn: 'Stone pillar', desc: 'A dressed stone column with a ball finial: pair them at a gate' },
   { key: 'arch', name: 'Ivy garden arch', group: 'stone', id: 'expansion:ivy-arbor', price: 900, appeal: 0.02, desc: 'An arbor grown over with ivy: an entrance to walk through' },
   // ---- furniture: +0.5% each (a flag pole +1%)
   { key: 'bench', name: 'Park bench', group: 'furniture', id: 'world:bench', price: 300, appeal: APPEAL.bench, desc: 'A slatted bench to watch the golfers from' },
@@ -46,6 +46,7 @@ export const DECOR: readonly DecorItem[] = [
   { key: 'trolley', name: 'Bag trolley', group: 'furniture', id: 'business:golf-bag-trolley', price: 150, appeal: APPEAL.bench, desc: 'A golf bag on its trolley, parked for show' },
   { key: 'bin', name: 'Litter bin', group: 'furniture', id: 'world:trashcan', price: 80, appeal: APPEAL.bench, desc: 'A tidy front is a busy front' },
   { key: 'lamp', name: 'Lamp post', group: 'furniture', id: 'world:streetlamp', price: 350, appeal: APPEAL.bench, desc: 'Lit at night' },
+  { key: 'board', name: 'Welcome board', group: 'furniture', id: 'golf:leaderboard', price: 2500, appeal: 0.01, scale: 0.45, desc: 'A tall board to greet golfers at the drive: four views' },
   { key: 'flagpole', name: 'Flag pole', group: 'furniture', id: 'business:golf-pin-red', price: 500, appeal: 0.01, scale: 0.6, standIn: 'Club flag pole', desc: 'A tall white pole flying the club flag' },
 ];
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
