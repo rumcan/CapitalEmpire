@@ -182,3 +182,12 @@ spending RUN credits and make one person before a batch. Ask before downloading 
 Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; git here needs
 `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*`. Other sessions work in this repo too: add only your own files
 (`git status` shows theirs), never revert theirs. The code side (the game, M2.5 next) is LEAD.md and NOW.md, not this file.
+
+## 7. In the game (2026-10-25 18:30 UTC): PR #238 merged into main
+The spectators, golfers and new townspeople are in the game (main `6ea3b0a`; the plan and contract: `docs/PEOPLE-IN-GAME.md` on main).
+This branch's art up to `1a096f9` is in main with it. The batch loop here (`make-cast-loop.sh`) still makes the last 12 people (picture-first)
+after RUN's daily cap. **To bring them into the game:** a new branch from `origin/main`, merge this branch, run
+`node scripts/assets/prep-sprites.mjs` (it packs townspeople, spectators with all four crowd clips, and golfers with the swing), and if the
+fresh pack moves main's sprite pages 0-14 (it moved 7 sprites by under a pixel on 2026-10-25: their sources differ slightly from what main's
+pages were packed from), keep main's `src/assets/atlas/sprites-0..14-*.webp` and `LIBRARY` lines and take only the walker pages and exports;
+then typecheck, the touched tests (crowdview, galleries, golf-gallerydraw, gates, ext-pedestrians, bus, compose, newart), PR, merge.
