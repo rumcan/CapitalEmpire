@@ -2,6 +2,11 @@
 // organic green/tee placement, footprint rasterisation, undo diffs, and compact plan serialization.
 // Pure TypeScript, no DOM, deterministic.
 // Units: positions in tiles of 2 m; widths, lengths, areas and distances in metres/m²; turns in degrees.
+//
+// Speed (T074b): the line, its arc length, normals, the sorted widths and each bend's s and turn are computed once per
+// plan (`planGeom`, cached by the plan's tuple), and the footprint is rasterised as row spans on a local box: the rough
+// corridor is a union of discs along the line and the fairway a union of quads between line samples, so neither folds on
+// a hairpin and a 3-bend hole rasters in a few milliseconds.
 
 import {
   CELL_T,
@@ -19,6 +24,9 @@ export type { Pt, AimPoint };
 
 /** supported archetype green shapes */
 export type GreenShape = 'round' | 'kidney' | 'peanut' | 'pear' | CoursePieceArchetype;
+
+/** the green shapes a saved plan may hold (decodePlan accepts these and no others) */
+export const GREEN_SHAPES: readonly GreenShape[] = ['round', 'kidney', 'peanut', 'pear', 'green-kidney', 'green-peanut', 'green-practice'];
 
 /** fairway width handle at distance s metres along centre line */
 export interface WidthHandle {
@@ -67,108 +75,134 @@ export interface PlanInfo {
   };
 }
 
-/** interactive editor handles for a hole plan */
+/** interactive editor handles for a hole plan (positions in tiles) */
 export interface PlanHandles {
   tee: Pt;
   green: Pt;
   bends: Pt[];
+  /** one per width handle: its s (m), width (m) and the two points on the drawn fairway edges (tiles) */
   widths: { s: number; w: number; left: Pt; right: Pt }[];
+  /** '+' points on the line, one per leg (between consecutive control points), where a new bend can be inserted */
   insertPoints: Pt[];
 }
+
+/** a bend as the raster sees it: its distance along the line (m), the side its outside is on (-1 left, 1 right; left is the
+ *  line's left normal (-dy, dx)), and its turn angle (degrees, 0 = straight on) */
+export interface BendInfo { s: number; out: -1 | 1; turn: number }
+
+/** the plan's geometry, computed once per plan: the centre line samples (tiles, about 1 m apart) with their distance from the
+ *  back tee (m) and unit left normals (-dy, dx), the line length (m), the width handles sorted by s, where the fairway ends (m,
+ *  under the green), the green radius (m) and the bends */
+export interface PlanGeom {
+  line: Pt[];
+  s: Float64Array;
+  nx: Float64Array;
+  ny: Float64Array;
+  lengthM: number;
+  widths: WidthHandle[];
+  fwEnd: number;
+  greenR: number;
+  bends: BendInfo[];
+}
+
+/** a footprint on a local box of the grid: the box's first cell column and row and its size (cells), and per cell the surface
+ *  the plan puts there (0 = not in the footprint) */
+export interface PlanRaster { cx0: number; cy0: number; w: number; h: number; s: Uint8Array }
+
+/** the outside of a bend gets this much more fairway width at a turn of BEND_FULL_DEG or more (P21 3.3) */
+export const BEND_BOOST = 0.15;
+/** the turn angle (degrees) at which a bend's outside gets the full BEND_BOOST; smaller turns get a linear share */
+export const BEND_FULL_DEG = 45;
+/** the bend boost fades out over this distance (m) either side of the bend */
+const BEND_REACH = 35;
+/** the rough corridor reaches this far (m) from the centre line (P21: the 60 m corridor) */
+export const CORRIDOR_M = 30;
+/** the fairway's rounded nose at its start and its taper under the green, in metres along the line */
+const NOSE_M = 8;
+/** the tee box: 28 x 10 m, a rounded strip along the line (P21 3.3) */
+const TEE_LEN_M = 28;
+const TEE_WID_M = 10;
 
 /** distance between two points in tiles */
 function ptDist(a: Pt, b: Pt): number {
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
-/** default hole plan parameters derived from tee, green and par defaults (P21 section 2.3 and 3.3) */
+/** the green's radius in metres for an area in m² (as a circle) */
+function greenRadius(m2: number): number {
+  return Math.sqrt(Math.max(1, m2) / Math.PI);
+}
+
+/** default hole plan parameters derived from tee, green and par defaults (P21 section 2.3 and 3.3). Stations are measured
+ *  along the real centre line (a dogleg's curve is longer than its straight legs), so the last handle sits at the green front. */
 export function defaultPlan(
   hole: number,
   tee: Pt,
   green: Pt,
   bends: Pt[] = [],
 ): HolePlan {
-  // calculate total straight/aim-point length
-  const pts = [tee, ...bends, green];
-  let totalTiles = 0;
-  for (let i = 0; i < pts.length - 1; i++) {
-    totalTiles += ptDist(pts[i]!, pts[i + 1]!);
-  }
-  const totalM = Math.round(totalTiles * 2); // 1 tile = 2 m
-  const par = parFromLength(totalM);
-
-  // approach heading for green orientation
-  const lastBend = bends.length > 0 ? bends[bends.length - 1]! : tee;
-  const approachAngleDeg = (Math.atan2(green.y - lastBend.y, green.x - lastBend.x) * 180) / Math.PI;
-
-  if (par === 3) {
-    // Par 3: no fairway; an approach apron 18 m wide over the last 25 m before the green
-    const apronStart = Math.max(0, totalM - 25);
-    return {
-      hole,
-      tee: { x: tee.x, y: tee.y },
-      green: { x: green.x, y: green.y },
-      greenShape: 'kidney',
-      greenM2: 550,
-      greenTurn: approachAngleDeg,
-      bends: bends.map((b) => ({ x: b.x, y: b.y })),
-      widths: [
-        { s: apronStart, w: 18 },
-        { s: totalM, w: 18 },
-      ],
-      fwStart: apronStart,
-      seed: 0,
-    };
-  }
-
-  if (par === 4) {
-    // Par 4: fairway from fwStart; widths 30 at fwStart, 40 at landing, 28 at length-50, 22 at green front
-    const fwStart = Math.min(100, Math.max(30, totalM - 90));
-    const sFront = Math.max(fwStart + 30, totalM - 20);
-    const sLanding = Math.min(210, Math.round(fwStart + (sFront - fwStart) * 0.55));
-    const s50 = Math.min(Math.max(sLanding + 20, totalM - 50), sFront - 15);
-    return {
-      hole,
-      tee: { x: tee.x, y: tee.y },
-      green: { x: green.x, y: green.y },
-      greenShape: 'kidney',
-      greenM2: 550,
-      greenTurn: approachAngleDeg,
-      bends: bends.map((b) => ({ x: b.x, y: b.y })),
-      widths: [
-        { s: fwStart, w: 30 },
-        { s: sLanding, w: 40 },
-        { s: s50, w: 28 },
-        { s: sFront, w: 22 },
-      ],
-      fwStart,
-      seed: 0,
-    };
-  }
-
-  // Par 5: as par 4, plus 32 at 300 and second landing 38 at 390
-  const fwStart = 100;
-  const sFront = Math.max(fwStart + 60, totalM - 20);
-  const s50 = Math.min(Math.max(410, totalM - 50), sFront - 15);
-  return {
+  const base: HolePlan = {
     hole,
     tee: { x: tee.x, y: tee.y },
     green: { x: green.x, y: green.y },
     greenShape: 'kidney',
     greenM2: 550,
-    greenTurn: approachAngleDeg,
+    greenTurn: 0,
     bends: bends.map((b) => ({ x: b.x, y: b.y })),
-    widths: [
-      { s: 100, w: 30 },
-      { s: 210, w: 40 },
-      { s: 300, w: 32 },
-      { s: 390, w: 38 },
-      { s: s50, w: 28 },
-      { s: sFront, w: 22 },
-    ],
-    fwStart: 100,
+    widths: [],
+    fwStart: 0,
     seed: 0,
   };
+  const line = centreLine(base);
+  let lenTiles = 0;
+  for (let i = 1; i < line.length; i++) lenTiles += ptDist(line[i - 1]!, line[i]!);
+  const totalM = lenTiles * 2; // 1 tile = 2 m
+  const par = parFromLength(Math.round(totalM));
+  // approach heading for green orientation: the line's direction over its last ~20 m
+  const back = line[Math.max(0, line.length - 21)]!;
+  base.greenTurn = (Math.atan2(green.y - back.y, green.x - back.x) * 180) / Math.PI;
+  const front = Math.round(totalM - greenRadius(base.greenM2)); // the green front, m from the back tee
+
+  if (par === 3) {
+    // Par 3: no fairway; an approach apron 18 m wide over the last 25 m before the green
+    const apronStart = Math.max(0, front - 25);
+    base.widths = [
+      { s: apronStart, w: 18 },
+      { s: Math.max(apronStart + 1, front), w: 18 },
+    ];
+    base.fwStart = apronStart;
+    return base;
+  }
+
+  if (par === 4) {
+    // Par 4: fairway from fwStart; widths 30 at fwStart, 40 at landing, 28 at 50 m out, 22 at green front
+    const fwStart = Math.min(100, Math.max(30, Math.round(totalM - 90)));
+    const sFront = Math.max(fwStart + 30, front);
+    const sLanding = Math.min(210, Math.round(fwStart + (sFront - fwStart) * 0.55));
+    const s50 = Math.min(Math.max(sLanding + 20, Math.round(totalM - 50)), sFront - 15);
+    base.widths = [
+      { s: fwStart, w: 30 },
+      { s: sLanding, w: 40 },
+      { s: s50, w: 28 },
+      { s: sFront, w: 22 },
+    ];
+    base.fwStart = fwStart;
+    return base;
+  }
+
+  // Par 5: as par 4, plus 32 at 300 and second landing 38 at 390
+  const sFront = Math.max(160, front);
+  const s50 = Math.min(Math.max(410, Math.round(totalM - 50)), sFront - 15);
+  base.widths = [
+    { s: 100, w: 30 },
+    { s: 210, w: 40 },
+    { s: 300, w: 32 },
+    { s: 390, w: 38 },
+    { s: s50, w: 28 },
+    { s: sFront, w: 22 },
+  ];
+  base.fwStart = 100;
+  return base;
 }
 
 /** centripetal Catmull-Rom spline through tee, bends and green, sampled every 1 m (0.5 tile) */
@@ -279,130 +313,107 @@ function smoothstep(e0: number, e1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/** green front boundary distance along line in metres */
-function greenFrontDistance(plan: HolePlan): number {
-  if (plan.widths.length > 0) {
-    const sorted = plan.widths.slice().sort((a, b) => a.s - b.s);
-    return sorted[sorted.length - 1]!.s;
+/** the plan's geometry (see PlanGeom), computed from scratch */
+export function planGeom(plan: HolePlan): PlanGeom {
+  const line = centreLine(plan);
+  const n = line.length;
+  const s = new Float64Array(n), nx = new Float64Array(n), ny = new Float64Array(n);
+  for (let i = 1; i < n; i++) s[i] = s[i - 1]! + ptDist(line[i - 1]!, line[i]!) * 2;
+  for (let i = 0; i < n; i++) {
+    const a = line[Math.max(0, i - 1)]!, b = line[Math.min(n - 1, i + 1)]!;
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    nx[i] = -dy / len; ny[i] = dx / len;
   }
-  const pts = [plan.tee, ...plan.bends, plan.green];
-  let totalTiles = 0;
-  for (let i = 0; i < pts.length - 1; i++) {
-    totalTiles += ptDist(pts[i]!, pts[i + 1]!);
+  const lengthM = s[n - 1]!;
+  const widths = plan.widths.slice().sort((a, b) => a.s - b.s);
+  const greenR = greenRadius(plan.greenM2);
+  // the fairway runs on under the green (the green paints over it), so the two always meet
+  const fwEnd = Math.max(plan.fwStart, lengthM - greenR * 0.5);
+  const ctrl = [plan.tee, ...plan.bends, plan.green];
+  const bends: BendInfo[] = [];
+  for (let k = 0; k < plan.bends.length; k++) {
+    const bend = plan.bends[k]!, prev = ctrl[k]!, next = ctrl[k + 2]!;
+    let best = 0, bestD = Infinity;
+    for (let i = 0; i < n; i++) {
+      const d = (line[i]!.x - bend.x) ** 2 + (line[i]!.y - bend.y) ** 2;
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    const v1x = bend.x - prev.x, v1y = bend.y - prev.y, v2x = next.x - bend.x, v2y = next.y - bend.y;
+    const cross = v1x * v2y - v1y * v2x, dot = v1x * v2x + v1y * v2y;
+    // cross > 0: the line turns towards its left normal (-dy, dx), so the left is the inside and the outside is the right
+    bends.push({ s: s[best]!, out: cross > 0 ? 1 : -1, turn: (Math.atan2(Math.abs(cross), dot) * 180) / Math.PI });
   }
-  const totalM = totalTiles * 2;
-  const greenRadiusM = Math.sqrt(plan.greenM2 / Math.PI);
-  return Math.max(plan.fwStart, totalM - greenRadiusM);
+  return { line, s, nx, ny, lengthM, widths, fwEnd, greenR, bends };
 }
 
-/** fairway width in metres at distance s metres from back tee */
-export function widthAt(plan: HolePlan, s: number): number {
-  const greenFront = greenFrontDistance(plan);
-  if (s < plan.fwStart || s > greenFront) {
-    return 0;
+let geomKey = '';
+let geomVal: PlanGeom | null = null;
+/** the plan's geometry, from a one-entry cache keyed by the plan's tuple (plans are plain mutable objects) */
+function geomOf(plan: HolePlan): PlanGeom {
+  const key = JSON.stringify(encodePlan(plan));
+  if (key !== geomKey || !geomVal) { geomVal = planGeom(plan); geomKey = key; }
+  return geomVal;
+}
+
+/** the nominal fairway width (m) at s m from the back tee, from sorted handles: smoothstep between handles, the end handles'
+ *  widths held beyond them, 0 before fwStart and after fwEnd */
+function widthOf(widths: readonly WidthHandle[], fwStart: number, fwEnd: number, s: number): number {
+  if (s < fwStart || s > fwEnd) return 0;
+  const n = widths.length;
+  if (n === 0) return 36;
+  if (s <= widths[0]!.s) return widths[0]!.w;
+  if (s >= widths[n - 1]!.s) return widths[n - 1]!.w;
+  for (let i = 0; i < n - 1; i++) {
+    const h0 = widths[i]!, h1 = widths[i + 1]!;
+    if (s >= h0.s && s <= h1.s) return h0.w + smoothstep(h0.s, h1.s, s) * (h1.w - h0.w);
   }
-  const wHandles = plan.widths.slice().sort((a, b) => a.s - b.s);
-  if (wHandles.length === 0) {
-    return 36;
+  return widths[n - 1]!.w;
+}
+
+/** fairway width in metres at distance s metres from back tee (0 before fwStart and past the green) */
+export function widthAt(plan: HolePlan, s: number, geom: PlanGeom = geomOf(plan)): number {
+  return widthOf(geom.widths, plan.fwStart, geom.fwEnd, s);
+}
+
+/** the edge offset (m) of one side at s: the seeded swell plus the bend boost, for a nominal width w (m) */
+function offsetOf(plan: HolePlan, geom: PlanGeom, s: number, left: boolean, w: number): number {
+  if (w <= 0 || s <= plan.fwStart || s >= geom.fwEnd) return 0;
+  let swell = 0;
+  if (plan.seed !== 0) {
+    // envelope that is strictly 0 at fwStart and the fairway's end
+    const env = Math.sin((Math.PI * (s - plan.fwStart)) / (geom.fwEnd - plan.fwStart));
+    // two low-frequency waves (wavelengths 52 m and 68 m)
+    const seedShift = (plan.seed * 1337) % 1000;
+    const sidePhase = left ? 0.785 : 2.356;
+    const combined = Math.sin((2 * Math.PI * s) / 52 + seedShift + sidePhase) * 0.65 + Math.cos((2 * Math.PI * s) / 68 + seedShift * 0.7) * 0.35;
+    const maxAmp = Math.min(2.5, 0.08 * w);
+    swell = Math.max(-2.5, Math.min(2.5, combined * maxAmp * env));
   }
-  if (s <= wHandles[0]!.s) {
-    return wHandles[0]!.w;
+  // the outside of a bend: up to BEND_BOOST more width, scaled with the turn angle, faded over BEND_REACH either side
+  let boost = 0;
+  const side = left ? -1 : 1;
+  for (const b of geom.bends) {
+    if (b.out !== side) continue;
+    const ds = Math.abs(s - b.s);
+    if (ds >= BEND_REACH) continue;
+    boost += BEND_BOOST * w * Math.min(1, b.turn / BEND_FULL_DEG) * 0.5 * (1 + Math.cos((Math.PI * ds) / BEND_REACH));
   }
-  if (s >= wHandles[wHandles.length - 1]!.s) {
-    return wHandles[wHandles.length - 1]!.w;
-  }
-  for (let i = 0; i < wHandles.length - 1; i++) {
-    const h0 = wHandles[i]!;
-    const h1 = wHandles[i + 1]!;
-    if (s >= h0.s && s <= h1.s) {
-      const t = smoothstep(h0.s, h1.s, s);
-      return h0.w + t * (h1.w - h0.w);
-    }
-  }
-  return wHandles[wHandles.length - 1]!.w;
+  return swell + Math.min(boost, BEND_BOOST * w);
 }
 
 /**
- * seeded fairway edge swell in metres (wavelength 40–70 m, amplitude at most 8% and 2.5 m, zero at ends),
- * plus 15% outside a dogleg bend.
+ * fairway edge offset in metres added to the half width on one side at s m: the seeded swell (wavelength 40–70 m, amplitude at
+ * most 8% of the width and 2.5 m, zero at the ends) plus, on the outside of a bend, up to 15% of the width (a full share from a
+ * 45° turn, less for gentler turns), faded out 35 m either side of the bend. Side 'left' (or -1) is the line's left normal (-dy, dx).
  */
 export function edgeOffset(
   plan: HolePlan,
   s: number,
   side: 'left' | 'right' | -1 | 1,
+  geom: PlanGeom = geomOf(plan),
 ): number {
-  const greenFront = greenFrontDistance(plan);
-  if (s <= plan.fwStart || s >= greenFront) {
-    return 0;
-  }
-
-  const w = widthAt(plan, s);
-  if (w <= 0) return 0;
-
-  let wavySwell = 0;
-  if (plan.seed !== 0) {
-    // envelope that is strictly 0 at fwStart and greenFront
-    const span = greenFront - plan.fwStart;
-    const env = Math.sin((Math.PI * (s - plan.fwStart)) / span);
-
-    // two low-frequency waves (wavelengths 52 m and 68 m)
-    const seedShift = (plan.seed * 1337) % 1000;
-    const sidePhase = side === 'left' || side === -1 ? 0.785 : 2.356;
-    const wave1 = Math.sin((2 * Math.PI * s) / 52 + seedShift + sidePhase);
-    const wave2 = Math.cos((2 * Math.PI * s) / 68 + seedShift * 0.7);
-    const combined = wave1 * 0.65 + wave2 * 0.35;
-
-    const maxAmp = Math.min(2.5, 0.08 * w);
-    wavySwell = Math.max(-2.5, Math.min(2.5, combined * maxAmp * env));
-  }
-
-  // plus 15% outside a dogleg bend
-  let bendBoost = 0;
-  if (plan.bends.length > 0) {
-    const isLeft = side === 'left' || side === -1;
-    const pts = [plan.tee, ...plan.bends, plan.green];
-    const line = centreLine(plan);
-
-    for (let k = 0; k < plan.bends.length; k++) {
-      const bend = plan.bends[k]!;
-      const prevPt = pts[k]!;
-      const nextPt = pts[k + 2]!;
-
-      // find arc length of bend along centre line (line sampled every 1 m)
-      let bendS = 0;
-      let minD = Infinity;
-      for (let i = 0; i < line.length; i++) {
-        const d = Math.hypot(line[i]!.x - bend.x, line[i]!.y - bend.y);
-        if (d < minD) {
-          minD = d;
-          bendS = i;
-        }
-      }
-
-      // turn direction: cross product of (bend - prev) and (next - bend) in tile coords
-      const v1x = bend.x - prevPt.x;
-      const v1y = bend.y - prevPt.y;
-      const v2x = nextPt.x - bend.x;
-      const v2y = nextPt.y - bend.y;
-      const cp = v1x * v2y - v1y * v2x;
-
-      // cp > 0 means turning right, so OUTSIDE of bend is left.
-      // cp < 0 means turning left, so OUTSIDE of bend is right.
-      const outsideIsLeft = cp > 0;
-      const isOutside = isLeft === outsideIsLeft;
-
-      if (isOutside && Math.abs(cp) > 1e-4) {
-        const ds = Math.abs(s - bendS);
-        const radius = 35; // 35 m transition window around bend
-        if (ds < radius) {
-          const fade = 0.5 * (1 + Math.cos((Math.PI * ds) / radius));
-          bendBoost += 0.15 * w * fade;
-        }
-      }
-    }
-  }
-
-  return wavySwell + bendBoost;
+  const w = widthOf(geom.widths, plan.fwStart, geom.fwEnd, s);
+  return offsetOf(plan, geom, s, side === 'left' || side === -1, w);
 }
 
 /** helper to calculate polygon area in tiles² */
@@ -417,7 +428,7 @@ function polygonAreaTiles(pts: readonly number[]): number {
 }
 
 /** build green boundary polygon in tiles matching greenShape, greenM2 and greenTurn */
-function buildGreenPolygon(plan: HolePlan): Pt[] {
+export function greenPolygon(plan: HolePlan): Pt[] {
   const shape = plan.greenShape;
   if (shape === 'round') {
     const rTiles = Math.sqrt(plan.greenM2 / (Math.PI * 4)); // 1 tile = 2 m, tile² = 4 m²
@@ -434,10 +445,10 @@ function buildGreenPolygon(plan: HolePlan): Pt[] {
   }
 
   const arch: CoursePieceArchetype =
-    shape === 'peanut'
-      ? 'green-peanut'
-      : shape === 'pear'
-      ? 'fairway-pear'
+    shape === 'peanut' ? 'green-peanut'
+      : shape === 'pear' ? 'fairway-pear'
+      : shape === 'kidney' ? 'green-kidney'
+      : shape.startsWith('green-') ? shape
       : 'green-kidney';
 
   const base = buildArchetypePolygon(arch, plan.green, plan.greenTurn, 1, false);
@@ -452,227 +463,205 @@ function buildGreenPolygon(plan: HolePlan): Pt[] {
   return out;
 }
 
-/** build tee boundary polygon in tiles: 28 x 10 m rounded box along line heading */
-function buildTeePolygon(plan: HolePlan, line: Pt[]): Pt[] {
-  // heading of the line at the tee
+/** the tee box in tiles: a 28 x 10 m rounded strip (a stadium) along the line's heading at the tee, its back end 2.5 m behind
+ *  the back tee point so the back marker stands on it */
+export function teePolygon(line: Pt[]): Pt[] {
   const p0 = line[0]!;
   const p1 = line[Math.min(line.length - 1, 4)]!;
-  const dx = p1.x - p0.x;
-  const dy = p1.y - p0.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  const nx = -uy;
-  const ny = ux;
-
-  // 28 m x 10 m in tiles: total length 14 tiles, width 5 tiles (r = 2.5 tiles).
-  // Straight body half-length = (14 - 2 * 2.5) / 2 = 4.5 tiles.
-  const r = 2.5;
-  const halfBody = 4.5;
-  const cx = plan.tee.x + ux * (halfBody + r * 0.5);
-  const cy = plan.tee.y + uy * (halfBody + r * 0.5);
-
+  const dx = p1.x - p0.x, dy = p1.y - p0.y, len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+  const r = TEE_WID_M / 4; // tiles: half of 10 m
+  const halfBody = (TEE_LEN_M - TEE_WID_M) / 4; // tiles: half the straight body, (28 - 10) / 2 m / 2
+  const back = { x: p0.x - ux * (r * 0.5), y: p0.y - uy * (r * 0.5) }; // the back end of the strip
+  const backC = { x: back.x + ux * r, y: back.y + uy * r };
+  const frontC = { x: backC.x + ux * 2 * halfBody, y: backC.y + uy * 2 * halfBody };
   const pts: Pt[] = [];
-  const frontCenter = { x: cx + ux * halfBody, y: cy + uy * halfBody };
-  const backCenter = { x: cx - ux * halfBody, y: cy - uy * halfBody };
-
   const steps = 8;
+  // front arc: frontC + (u cos a + n sin a) r for a in [-pi/2, pi/2] (from the right side round the front to the left side)
   for (let i = 0; i <= steps; i++) {
-    const a = -Math.PI / 2 + (Math.PI * i) / steps;
-    const cosA = Math.cos(a);
-    const sinA = Math.sin(a);
-    pts.push({
-      x: frontCenter.x + (ux * sinA + nx * cosA) * r,
-      y: frontCenter.y + (uy * sinA + ny * cosA) * r,
-    });
+    const a = -Math.PI / 2 + (Math.PI * i) / steps, c = Math.cos(a), sn = Math.sin(a);
+    pts.push({ x: frontC.x + (ux * c + nx * sn) * r, y: frontC.y + (uy * c + ny * sn) * r });
   }
+  // back arc, mirrored: backC - (u cos a + n sin a) r (from the left side round the back to the right side)
   for (let i = 0; i <= steps; i++) {
-    const a = Math.PI / 2 + (Math.PI * i) / steps;
-    const cosA = Math.cos(a);
-    const sinA = Math.sin(a);
-    pts.push({
-      x: backCenter.x + (ux * sinA + nx * cosA) * r,
-      y: backCenter.y + (uy * sinA + ny * cosA) * r,
-    });
+    const a = -Math.PI / 2 + (Math.PI * i) / steps, c = Math.cos(a), sn = Math.sin(a);
+    pts.push({ x: backC.x - (ux * c + nx * sn) * r, y: backC.y - (uy * c + ny * sn) * r });
   }
   return pts;
 }
 
-/** rasterize a polygon into a cell map with surface id using fast scanline fill */
-function rasterizePoly(
-  g: Grid,
-  poly: readonly Pt[],
-  surfId: number,
-  map: Map<number, number>,
-  allow?: (i: number) => boolean,
-): void {
-  const n = poly.length;
-  if (n < 3) return;
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (let i = 0; i < n; i++) {
-    const p = poly[i]!;
-    if (p.x < minX) minX = p.x;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.y > maxY) maxY = p.y;
-  }
-  const cx0 = Math.max(0, Math.floor((minX - g.x0) / CELL_T));
-  const cx1 = Math.min(g.w - 1, Math.floor((maxX - g.x0) / CELL_T));
-  const cy0 = Math.max(0, Math.floor((minY - g.y0) / CELL_T));
-  const cy1 = Math.min(g.h - 1, Math.floor((maxY - g.y0) / CELL_T));
+// ---- rasterising on a local box as row spans ----
 
-  const xs: number[] = [];
-  for (let cy = cy0; cy <= cy1; cy++) {
-    const yc = g.y0 + (cy + 0.5) * CELL_T;
-    xs.length = 0;
-    for (let j = 0, k = n - 1; j < n; k = j++) {
-      const p = poly[k]!;
-      const q = poly[j]!;
-      if ((p.y > yc) !== (q.y > yc)) {
-        xs.push(p.x + ((yc - p.y) * (q.x - p.x)) / (q.y - p.y));
-      }
+/** row spans of cells on a box (inclusive cell column ranges per row), merged as they come when they touch the row's last span */
+class Spans {
+  readonly rows: number[][];
+  constructor(readonly g: Grid, readonly cx0: number, readonly cy0: number, readonly w: number, readonly h: number) {
+    this.rows = Array.from({ length: h }, () => []);
+  }
+  /** adds cells a..b (grid columns, inclusive) on grid row cy */
+  add(cy: number, a: number, b: number): void {
+    const r = cy - this.cy0;
+    if (r < 0 || r >= this.h) return;
+    if (a < this.cx0) a = this.cx0;
+    if (b > this.cx0 + this.w - 1) b = this.cx0 + this.w - 1;
+    if (a > b) return;
+    const row = this.rows[r]!, n = row.length;
+    if (n && a <= row[n - 1]! + 1 && b >= row[n - 2]! - 1) {
+      if (a < row[n - 2]!) row[n - 2] = a;
+      if (b > row[n - 1]!) row[n - 1] = b;
+    } else row.push(a, b);
+  }
+  /** a disc of radius r tiles about (px, py): the cells whose centres lie within it */
+  disc(px: number, py: number, r: number): void {
+    const g = this.g;
+    const ra = Math.ceil((py - r - g.y0) / CELL_T - 0.5), rb = Math.floor((py + r - g.y0) / CELL_T - 0.5);
+    for (let cy = ra; cy <= rb; cy++) {
+      const dy = g.y0 + (cy + 0.5) * CELL_T - py, q = r * r - dy * dy;
+      if (q < 0) continue;
+      const half = Math.sqrt(q);
+      this.add(cy, Math.ceil((px - half - g.x0) / CELL_T - 0.5), Math.floor((px + half - g.x0) / CELL_T - 0.5));
     }
-    if (xs.length === 0) continue;
-    xs.sort((u, v) => u - v);
-    let e = 0;
-    const rowOffset = cy * g.w;
-    for (let cx = cx0; cx <= cx1; cx++) {
-      const xc = g.x0 + (cx + 0.5) * CELL_T;
-      while (e < xs.length && xs[e]! <= xc) e++;
-      if (e & 1) {
-        const idx = rowOffset + cx;
-        if (!allow || allow(idx)) {
-          map.set(idx, surfId);
+  }
+  /** a quad (a, b, c, d in order; tiles): per row, the cells between its outermost edge crossings */
+  quad(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): void {
+    const g = this.g;
+    const y0 = Math.min(ay, by, cy, dy), y1 = Math.max(ay, by, cy, dy);
+    const ra = Math.ceil((y0 - g.y0) / CELL_T - 0.5), rb = Math.floor((y1 - g.y0) / CELL_T - 0.5);
+    const xs = [ax, bx, cx, dx], ys = [ay, by, cy, dy];
+    for (let row = ra; row <= rb; row++) {
+      const yc = g.y0 + (row + 0.5) * CELL_T;
+      let lo = Infinity, hi = -Infinity;
+      for (let j = 0, k = 3; j < 4; k = j++) {
+        const pyk = ys[k]!, pyj = ys[j]!;
+        if ((pyk > yc) !== (pyj > yc)) {
+          const x = xs[k]! + ((yc - pyk) * (xs[j]! - xs[k]!)) / (pyj - pyk);
+          if (x < lo) lo = x;
+          if (x > hi) hi = x;
+        }
+      }
+      if (lo <= hi) this.add(row, Math.ceil((lo - g.x0) / CELL_T - 0.5), Math.floor((hi - g.x0) / CELL_T - 0.5));
+    }
+  }
+  /** a polygon (tiles, even-odd rule) */
+  poly(pts: readonly Pt[]): void {
+    const g = this.g, n = pts.length;
+    if (n < 3) return;
+    let y0 = Infinity, y1 = -Infinity;
+    for (const p of pts) { if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
+    const ra = Math.ceil((y0 - g.y0) / CELL_T - 0.5), rb = Math.floor((y1 - g.y0) / CELL_T - 0.5);
+    const xs: number[] = [];
+    for (let row = ra; row <= rb; row++) {
+      const yc = g.y0 + (row + 0.5) * CELL_T;
+      xs.length = 0;
+      for (let j = 0, k = n - 1; j < n; k = j++) {
+        const p = pts[k]!, q = pts[j]!;
+        if ((p.y > yc) !== (q.y > yc)) xs.push(p.x + ((yc - p.y) * (q.x - p.x)) / (q.y - p.y));
+      }
+      xs.sort((u, v) => u - v);
+      for (let e = 0; e + 1 < xs.length; e += 2) this.add(row, Math.ceil((xs[e]! - g.x0) / CELL_T - 0.5), Math.floor((xs[e + 1]! - g.x0) / CELL_T - 0.5));
+    }
+  }
+  /** writes surface sid into out (a raster on this box) for every covered cell that allow accepts */
+  write(out: PlanRaster, sid: number, allow?: (i: number) => boolean): void {
+    const gw = this.g.w;
+    for (let r = 0; r < this.h; r++) {
+      const row = this.rows[r]!;
+      if (!row.length) continue;
+      if (row.length > 2) {
+        // several runs on this row (a hairpin, or quads arriving out of order): sort by start; overlaps just write twice
+        const pairs: [number, number][] = [];
+        for (let k = 0; k < row.length; k += 2) pairs.push([row[k]!, row[k + 1]!]);
+        pairs.sort((p, q) => p[0] - q[0]);
+        row.length = 0;
+        for (const [a, b] of pairs) row.push(a, b);
+      }
+      const gy = this.cy0 + r, base = r * out.w - out.cx0;
+      for (let k = 0; k < row.length; k += 2) {
+        for (let cx = row[k]!; cx <= row[k + 1]!; cx++) {
+          if (allow && !allow(gy * gw + cx)) continue;
+          out.s[base + cx] = sid;
         }
       }
     }
   }
 }
 
-/** build fairway outline polygon from centre line, widths and swell */
-function buildFairwayPolygon(plan: HolePlan, line: Pt[]): Pt[] {
-  const greenFront = greenFrontDistance(plan);
-  const left: Pt[] = [];
-  const right: Pt[] = [];
-
-  let cumM = 0;
-  for (let i = 0; i < line.length; i++) {
-    if (i > 0) {
-      cumM += ptDist(line[i - 1]!, line[i]!) * 2;
+/**
+ * the plan's footprint on a local box of g (see PlanRaster): the rough corridor (every cell within 30 m of the line, more where
+ * the fairway is wider), the fairway (union of quads between line samples, with a rounded nose), the tee and the green, each
+ * over the one before; cells allow refuses are left out. Units: tiles in, cells out.
+ */
+export function rasterPlanBox(
+  plan: HolePlan,
+  g: Grid,
+  allow?: (i: number) => boolean,
+  geom: PlanGeom = geomOf(plan),
+): PlanRaster {
+  const { line, s, nx, ny, fwEnd } = geom;
+  const n = line.length;
+  // per sample: the fairway's left and right half widths (tiles) and the corridor radius (tiles)
+  const hl = new Float64Array(n), hr = new Float64Array(n), cr = new Float64Array(n);
+  const fwStart = plan.fwStart;
+  for (let i = 0; i < n; i++) {
+    const si = s[i]!;
+    const w = widthOf(geom.widths, fwStart, fwEnd, si);
+    let halfL = 0, halfR = 0;
+    if (w > 0) {
+      // the rounded nose at the start and the taper under the green (elliptical)
+      const a = Math.min(1, (si - fwStart) / NOSE_M, (fwEnd - si) / NOSE_M);
+      const f = a <= 0 ? 0 : Math.sqrt(1 - (1 - a) * (1 - a));
+      halfL = Math.max(0, (w / 2 + offsetOf(plan, geom, si, true, w)) * f) / 2;
+      halfR = Math.max(0, (w / 2 + offsetOf(plan, geom, si, false, w)) * f) / 2;
     }
-    if (cumM < plan.fwStart - 1 || cumM > greenFront + 1) {
-      continue;
-    }
-    // tangent
-    const pPrev = line[Math.max(0, i - 1)]!;
-    const pNext = line[Math.min(line.length - 1, i + 1)]!;
-    const dx = pNext.x - pPrev.x;
-    const dy = pNext.y - pPrev.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
-
-    const wM = widthAt(plan, cumM);
-    if (wM <= 0) continue;
-
-    const offL = edgeOffset(plan, cumM, 'left');
-    const offR = edgeOffset(plan, cumM, 'right');
-
-    const halfTilesL = (wM / 2 + offL) / 2; // m to tiles
-    const halfTilesR = (wM / 2 + offR) / 2;
-
-    left.push({
-      x: line[i]!.x + nx * halfTilesL,
-      y: line[i]!.y + ny * halfTilesL,
-    });
-    right.push({
-      x: line[i]!.x - nx * halfTilesR,
-      y: line[i]!.y - ny * halfTilesR,
-    });
+    hl[i] = halfL; hr[i] = halfR;
+    cr[i] = Math.max(CORRIDOR_M / 2, Math.max(halfL, halfR) + 2.5);
   }
-
-  if (left.length === 0) return [];
-  return [...left, ...right.reverse()];
-}
-
-/** build 30 m rough corridor polygon (60 m total width) along centre line with rounded end caps */
-function buildCorridorPolygon(line: Pt[]): Pt[] {
-  if (line.length < 2) return [];
-  const left: Pt[] = [];
-  const right: Pt[] = [];
-  const halfTiles = 15; // 30 m = 15 tiles
-
-  for (let i = 0; i < line.length; i++) {
-    const pPrev = line[Math.max(0, i - 1)]!;
-    const pNext = line[Math.min(line.length - 1, i + 1)]!;
-    const dx = pNext.x - pPrev.x;
-    const dy = pNext.y - pPrev.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
-
-    left.push({
-      x: line[i]!.x + nx * halfTiles,
-      y: line[i]!.y + ny * halfTiles,
-    });
-    right.push({
-      x: line[i]!.x - nx * halfTiles,
-      y: line[i]!.y - ny * halfTiles,
-    });
+  const green = greenPolygon(plan);
+  const tee = teePolygon(line);
+  // the box: the line grown by the corridor, plus the green and the tee
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const p = line[i]!, r = cr[i]!;
+    if (p.x - r < x0) x0 = p.x - r; if (p.x + r > x1) x1 = p.x + r;
+    if (p.y - r < y0) y0 = p.y - r; if (p.y + r > y1) y1 = p.y + r;
   }
+  for (const p of green) { if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x; if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
+  for (const p of tee) { if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x; if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y; }
+  const cx0 = Math.max(0, Math.floor((x0 - g.x0) / CELL_T)), cx1 = Math.min(g.w - 1, Math.floor((x1 - g.x0) / CELL_T));
+  const cy0 = Math.max(0, Math.floor((y0 - g.y0) / CELL_T)), cy1 = Math.min(g.h - 1, Math.floor((y1 - g.y0) / CELL_T));
+  const w = Math.max(0, cx1 - cx0 + 1), h = Math.max(0, cy1 - cy0 + 1);
+  const out: PlanRaster = { cx0, cy0, w, h, s: new Uint8Array(w * h) };
+  if (!w || !h) return out;
 
-  // End cap around green (line end): semicircle from left[last] to right[last]
-  const lastIdx = line.length - 1;
-  const pLast = line[lastIdx]!;
-  const pPen = line[Math.max(0, lastIdx - 1)]!;
-  const dxE = pLast.x - pPen.x;
-  const dyE = pLast.y - pPen.y;
-  const lenE = Math.hypot(dxE, dyE) || 1;
-  const uxE = dxE / lenE;
-  const uyE = dyE / lenE;
-  const nxE = -uyE;
-  const nyE = uxE;
+  // 1. the rough corridor: discs along the line (no folds on a hairpin; round ends behind the tee and past the green)
+  const rough = new Spans(g, cx0, cy0, w, h);
+  for (let i = 0; i < n; i++) rough.disc(line[i]!.x, line[i]!.y, cr[i]!);
+  rough.write(out, SURF.rough, allow);
 
-  const greenCap: Pt[] = [];
-  const steps = 8;
-  for (let i = 1; i < steps; i++) {
-    const a = (Math.PI * i) / steps;
-    const cosA = Math.cos(a);
-    const sinA = Math.sin(a);
-    // starts at left (nxE), swings forward (uxE), lands at right (-nxE)
-    greenCap.push({
-      x: pLast.x + (nxE * cosA + uxE * sinA) * halfTiles,
-      y: pLast.y + (nyE * cosA + uyE * sinA) * halfTiles,
-    });
+  // 2. the fairway: quads between consecutive samples that both carry fairway
+  const fw = new Spans(g, cx0, cy0, w, h);
+  let any = false;
+  for (let i = 0; i + 1 < n; i++) {
+    if (hl[i]! + hr[i]! <= 0 && hl[i + 1]! + hr[i + 1]! <= 0) continue;
+    const a = line[i]!, b = line[i + 1]!;
+    fw.quad(
+      a.x + nx[i]! * hl[i]!, a.y + ny[i]! * hl[i]!,
+      b.x + nx[i + 1]! * hl[i + 1]!, b.y + ny[i + 1]! * hl[i + 1]!,
+      b.x - nx[i + 1]! * hr[i + 1]!, b.y - ny[i + 1]! * hr[i + 1]!,
+      a.x - nx[i]! * hr[i]!, a.y - ny[i]! * hr[i]!,
+    );
+    any = true;
   }
+  if (any) fw.write(out, SURF.fairway, allow);
 
-  // End cap around tee (line start): semicircle from right[0] to left[0]
-  const p0 = line[0]!;
-  const p1 = line[Math.min(line.length - 1, 1)]!;
-  const dxS = p1.x - p0.x;
-  const dyS = p1.y - p0.y;
-  const lenS = Math.hypot(dxS, dyS) || 1;
-  const uxS = dxS / lenS;
-  const uyS = dyS / lenS;
-  const nxS = -uyS;
-  const nyS = uxS;
-
-  const teeCap: Pt[] = [];
-  for (let i = 1; i < steps; i++) {
-    const a = (Math.PI * i) / steps;
-    const cosA = Math.cos(a);
-    const sinA = Math.sin(a);
-    // starts at right (-nxS), swings backward (-uxS), lands at left (nxS)
-    teeCap.push({
-      x: p0.x + (-nxS * cosA - uxS * sinA) * halfTiles,
-      y: p0.y + (-nyS * cosA - uyS * sinA) * halfTiles,
-    });
-  }
-
-  return [...left, ...greenCap, ...right.reverse(), ...teeCap];
+  // 3. the tee, 4. the green
+  const t = new Spans(g, cx0, cy0, w, h);
+  t.poly(tee);
+  t.write(out, SURF.tee, allow);
+  const gr = new Spans(g, cx0, cy0, w, h);
+  gr.poly(green);
+  gr.write(out, SURF.green, allow);
+  return out;
 }
 
 /**
@@ -684,35 +673,88 @@ export function rasterPlan(
   g: Grid,
   allow?: (i: number) => boolean,
 ): Map<number, number> {
+  const r = rasterPlanBox(plan, g, allow);
   const map = new Map<number, number>();
-  const line = centreLine(plan);
-
-  // 1. 30 m rough corridor
-  const corridor = buildCorridorPolygon(line);
-  rasterizePoly(g, corridor, SURF.rough, map, allow);
-
-  // 2. Fairway ribbon
-  const fairway = buildFairwayPolygon(plan, line);
-  if (fairway.length >= 3) {
-    rasterizePoly(g, fairway, SURF.fairway, map, allow);
+  for (let y = 0; y < r.h; y++) {
+    for (let x = 0; x < r.w; x++) {
+      const v = r.s[y * r.w + x]!;
+      if (v) map.set((r.cy0 + y) * g.w + r.cx0 + x, v);
+    }
   }
-
-  // 3. Tee
-  const tee = buildTeePolygon(plan, line);
-  rasterizePoly(g, tee, SURF.tee, map, allow);
-
-  // 4. Green
-  const green = buildGreenPolygon(plan);
-  rasterizePoly(g, green, SURF.green, map, allow);
-
   return map;
 }
 
+/** the surface a raster puts at grid cell (cx, cy), 0 outside it */
+function rasterAt(r: PlanRaster | null, cx: number, cy: number): number {
+  if (!r) return 0;
+  const x = cx - r.cx0, y = cy - r.cy0;
+  return x >= 0 && y >= 0 && x < r.w && y < r.h ? r.s[y * r.w + x]! : 0;
+}
+
+/** surfaces a plan never overwrites or clears: the player's own water, bunkers and waste */
+function playerSurf(s: number): boolean {
+  return s === SURF.water || s === SURF.bunker || s === SURF.waste;
+}
+
 /**
- * calculates and applies diff between an old hole plan and next hole plan on grid g:
- * - cells in old and not in next go back to rough or none (if still holding old plan's surface);
- * - cells in next are set with 'below';
- * - other holes' cells and player's water and bunkers never change.
+ * the cells a plan edit would change on g, without changing g (the wizard's ghost and price read this; planDiff applies it):
+ * - a cell where the old and new plans put the same surface is left alone (it holds the plan's surface or the player's touch-up);
+ * - a cell in the old footprint and not the new goes back to none (hole 0, month 0), only if it still holds the old plan's surface
+ *   for this hole;
+ * - a cell in the new footprint takes the new surface if it still holds the old plan's surface for this hole, or else if its
+ *   surface is lower or equal ('below'); a cell whose surface stays and only joins the hole keeps its planted month;
+ * - other holes' cells and the player's water, bunkers and waste never change.
+ * The old and new rasters may be passed in when the caller has them. Months are the grid's stored values (course-grid/areas
+ * plantMonth).
+ */
+export function planChanges(
+  g: Grid,
+  oldPlan: HolePlan | null,
+  nextPlan: HolePlan,
+  hole: number,
+  month: number,
+  allow?: (i: number) => boolean,
+  rasters?: { old?: PlanRaster | null; next?: PlanRaster },
+): GridDiff {
+  const nr = rasters?.next ?? rasterPlanBox(nextPlan, g, allow, planGeom(nextPlan));
+  const or = oldPlan ? (rasters?.old ?? rasterPlanBox(oldPlan, g, allow, planGeom(oldPlan))) : null;
+  // the union of the two boxes
+  let bx0 = nr.cx0, by0 = nr.cy0, bx1 = nr.cx0 + nr.w - 1, by1 = nr.cy0 + nr.h - 1;
+  if (or && or.w && or.h) {
+    bx0 = Math.min(bx0, or.cx0); by0 = Math.min(by0, or.cy0);
+    bx1 = Math.max(bx1, or.cx0 + or.w - 1); by1 = Math.max(by1, or.cy0 + or.h - 1);
+  }
+  const idx: number[] = [], s0: number[] = [], h0: number[] = [], m0: number[] = [], s1: number[] = [], h1: number[] = [], m1: number[] = [];
+  for (let cy = by0; cy <= by1; cy++) {
+    for (let cx = bx0; cx <= bx1; cx++) {
+      const nv = rasterAt(nr, cx, cy), ov = rasterAt(or, cx, cy);
+      if (nv === ov) continue;
+      const i = cy * g.w + cx, cs = g.surf[i]!, ch = g.hole[i]!, cm = g.month[i]!;
+      if (nv === 0) {
+        // left the footprint: clear it if it still holds the old plan's surface for this hole
+        if (cs === ov && ch === hole && !playerSurf(cs)) { idx.push(i); s0.push(cs); h0.push(ch); m0.push(cm); s1.push(SURF.none); h1.push(0); m1.push(0); }
+        continue;
+      }
+      if (ch !== 0 && ch !== hole) continue;
+      if (playerSurf(cs)) continue;
+      const holdsOld = ov !== 0 && ch === hole && cs === ov;
+      if (!holdsOld && cs > nv) continue;
+      if (cs === nv && ch === hole) continue;
+      idx.push(i); s0.push(cs); h0.push(ch); m0.push(cm); s1.push(nv); h1.push(hole); m1.push(cs === nv ? cm : month);
+    }
+  }
+  const n = idx.length;
+  return {
+    x0: g.x0, y0: g.y0, w: g.w, n,
+    idx: Uint32Array.from(idx), s0: Uint8Array.from(s0), h0: Uint8Array.from(h0), m0: Uint16Array.from(m0),
+    s1: Uint8Array.from(s1), h1: Uint8Array.from(h1), m1: Uint16Array.from(m1),
+  };
+}
+
+/**
+ * calculates and applies the diff between an old hole plan and the next hole plan on grid g (see planChanges for the rules):
+ * cells left by the old footprint go back to none; cells in the new footprint are set 'below'; cells both plans agree on, other
+ * holes' cells and the player's water, bunkers and waste never change. Returns the diff (for undo); bumps g.rev.
  */
 export function planDiff(
   g: Grid,
@@ -722,106 +764,13 @@ export function planDiff(
   month: number,
   allow?: (i: number) => boolean,
 ): GridDiff {
-  const nextMap = rasterPlan(nextPlan, g, allow);
-  const oldMap = oldPlan ? rasterPlan(oldPlan, g, allow) : null;
-
-  const changes: { idx: number; s0: number; h0: number; m0: number; s1: number; h1: number; m1: number }[] = [];
-
-  // Cells in old footprint and not the new: revert to none
-  if (oldMap) {
-    for (const [idx, oldExpectedSurf] of oldMap.entries()) {
-      if (nextMap.has(idx)) continue;
-      // only if cell still holds the old plan's surface and belongs to this hole
-      if (g.surf[idx] === oldExpectedSurf && g.hole[idx] === hole) {
-        // player bunker/water never change
-        if (g.surf[idx] === SURF.bunker || g.surf[idx] === SURF.water) continue;
-        changes.push({
-          idx,
-          s0: g.surf[idx]!,
-          h0: g.hole[idx]!,
-          m0: g.month[idx]!,
-          s1: SURF.none,
-          h1: 0,
-          m1: 0,
-        });
-      }
-    }
-  }
-
-  // Cells in next footprint:
-  for (const [idx, newSurf] of nextMap.entries()) {
-    // other holes' cells never change
-    if (g.hole[idx] !== 0 && g.hole[idx] !== hole) continue;
-    // player's water and bunkers never change
-    if (g.surf[idx] === SURF.water || g.surf[idx] === SURF.bunker) continue;
-
-    const curSurf = g.surf[idx]!;
-    const curHole = g.hole[idx]!;
-    const curMonth = g.month[idx]!;
-
-    const holdsOldPlanSurf =
-      oldMap !== null && oldMap.has(idx) && curHole === hole && curSurf === oldMap.get(idx);
-
-    // If cell still holds old plan's surface for this hole, set it straight to newSurf.
-    // Otherwise, only overwrite if current surface is lower or equal.
-    if (holdsOldPlanSurf || curSurf <= newSurf) {
-      if (curSurf !== newSurf || curHole !== hole) {
-        changes.push({
-          idx,
-          s0: curSurf,
-          h0: curHole,
-          m0: curMonth,
-          s1: newSurf,
-          h1: hole,
-          m1: month,
-        });
-      }
-      // If surface and hole are unchanged, keep existing planted month (do not re-seed)
-    }
-  }
-
-  // Sort changes by cell index for deterministic diff
-  changes.sort((a, b) => a.idx - b.idx);
-
-  const n = changes.length;
-  const diffIdx = new Uint32Array(n);
-  const diffS0 = new Uint8Array(n);
-  const diffH0 = new Uint8Array(n);
-  const diffM0 = new Uint16Array(n);
-  const diffS1 = new Uint8Array(n);
-  const diffH1 = new Uint8Array(n);
-  const diffM1 = new Uint16Array(n);
-
-  for (let k = 0; k < n; k++) {
-    const c = changes[k]!;
-    diffIdx[k] = c.idx;
-    diffS0[k] = c.s0;
-    diffH0[k] = c.h0;
-    diffM0[k] = c.m0;
-    diffS1[k] = c.s1;
-    diffH1[k] = c.h1;
-    diffM1[k] = c.m1;
-
-    // apply in place to grid
-    g.surf[c.idx] = c.s1;
-    g.hole[c.idx] = c.h1;
-    g.month[c.idx] = c.m1;
+  const d = planChanges(g, oldPlan, nextPlan, hole, month, allow);
+  for (let k = 0; k < d.n; k++) {
+    const i = d.idx[k]!;
+    g.surf[i] = d.s1[k]!; g.hole[i] = d.h1[k]!; g.month[i] = d.m1[k]!;
   }
   g.rev++;
-
-  return {
-    x0: g.x0,
-    y0: g.y0,
-    w: g.w,
-    n,
-    idx: diffIdx,
-    s0: diffS0,
-    h0: diffH0,
-    m0: diffM0,
-    s1: diffS1,
-    h1: diffH1,
-    m1: diffM1,
-  };
+  return d;
 }
 
 /** returns the hole's bends as ordered AimPoints */
@@ -836,85 +785,57 @@ export function planAims(plan: HolePlan): AimPoint[] {
 
 /** computes length, par, and approximate area per surface in m² */
 export function planInfo(plan: HolePlan): PlanInfo {
-  const line = centreLine(plan);
-  let totalLengthTiles = 0;
-  for (let i = 0; i < line.length - 1; i++) {
-    totalLengthTiles += ptDist(line[i]!, line[i + 1]!);
-  }
-  const lengthM = Math.round(totalLengthTiles * 2);
+  const geom = geomOf(plan);
+  const lengthM = Math.round(geom.lengthM);
   const par = parFromLength(lengthM);
-
   const greenM2 = plan.greenM2;
-  const teeM2 = 28 * 10; // 280 m²
-
-  // fairway m² by trapezoidal integration
+  const teeM2 = Math.round((TEE_LEN_M - TEE_WID_M) * TEE_WID_M + Math.PI * (TEE_WID_M / 2) ** 2); // the stadium, ~258 m²
   let fairwayM2 = 0;
-  const greenFront = greenFrontDistance(plan);
-  for (let s = plan.fwStart; s < greenFront; s += 1) {
-    fairwayM2 += widthAt(plan, s);
-  }
-
-  // rough corridor m² (60 m width along line minus fairway, green, tee)
-  const totalCorridorM2 = lengthM * 60;
-  const roughM2 = Math.max(0, totalCorridorM2 - fairwayM2 - greenM2 - teeM2);
-
+  for (let s = plan.fwStart; s < geom.fwEnd; s += 1) fairwayM2 += widthOf(geom.widths, plan.fwStart, geom.fwEnd, s);
+  const corridorM2 = lengthM * CORRIDOR_M * 2 + Math.PI * CORRIDOR_M * CORRIDOR_M;
+  const roughM2 = Math.max(0, corridorM2 - fairwayM2 - greenM2 - teeM2);
   return {
     lengthM,
     par,
-    m2: {
-      tee: teeM2,
-      fairway: Math.round(fairwayM2),
-      green: Math.round(greenM2),
-      rough: Math.round(roughM2),
-    },
+    m2: { tee: teeM2, fairway: Math.round(fairwayM2), green: Math.round(greenM2), rough: Math.round(roughM2) },
   };
 }
 
-/** computes interactive plan handles (tee, green, bends, left/right width handles, and '+' insert points) */
+/** the index of the line sample nearest to s m (samples are about 1 m apart) */
+function sampleAt(geom: PlanGeom, s: number): number {
+  const n = geom.s.length;
+  let lo = 0, hi = n - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (geom.s[mid]! < s) lo = mid + 1; else hi = mid;
+  }
+  if (lo > 0 && Math.abs(geom.s[lo - 1]! - s) < Math.abs(geom.s[lo]! - s)) lo--;
+  return lo;
+}
+
+/** computes interactive plan handles: tee, green, bends, a left and right handle on the drawn fairway edges for each width
+ *  handle, and a '+' point at the middle (along the line) of each leg while there are fewer than 3 bends */
 export function planHandles(plan: HolePlan): PlanHandles {
-  const line = centreLine(plan);
-
-  // width handles (sorted by distance s)
-  const widths: { s: number; w: number; left: Pt; right: Pt }[] = [];
-  let cumM = 0;
-  let lineIdx = 0;
-  const sortedWidths = [...plan.widths].sort((a, b) => a.s - b.s);
-
-  for (const h of sortedWidths) {
-    while (lineIdx < line.length - 1 && cumM < h.s) {
-      lineIdx++;
-      cumM += ptDist(line[lineIdx - 1]!, line[lineIdx]!) * 2;
-    }
-    const pt = line[lineIdx]!;
-    const pPrev = line[Math.max(0, lineIdx - 1)]!;
-    const pNext = line[Math.min(line.length - 1, lineIdx + 1)]!;
-    const dx = pNext.x - pPrev.x;
-    const dy = pNext.y - pPrev.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
-
-    const halfTiles = h.w / 4; // h.w / 2 metres = h.w / 4 tiles
+  const geom = geomOf(plan);
+  const widths: PlanHandles['widths'] = [];
+  for (const h of geom.widths) {
+    const i = sampleAt(geom, h.s), pt = geom.line[i]!, si = geom.s[i]!;
+    const w = widthOf(geom.widths, plan.fwStart, geom.fwEnd, si) || h.w;
+    const l = (w / 2 + offsetOf(plan, geom, si, true, w)) / 2, r = (w / 2 + offsetOf(plan, geom, si, false, w)) / 2;
     widths.push({
-      s: h.s,
-      w: h.w,
-      left: { x: pt.x + nx * halfTiles, y: pt.y + ny * halfTiles },
-      right: { x: pt.x - nx * halfTiles, y: pt.y - ny * halfTiles },
+      s: h.s, w: h.w,
+      left: { x: pt.x + geom.nx[i]! * l, y: pt.y + geom.ny[i]! * l },
+      right: { x: pt.x - geom.nx[i]! * r, y: pt.y - geom.ny[i]! * r },
     });
   }
-
-  // '+' points to insert a bend (at midpoint of each straight leg)
-  const legs = [plan.tee, ...plan.bends, plan.green];
   const insertPoints: Pt[] = [];
   if (plan.bends.length < 3) {
-    for (let i = 0; i < legs.length - 1; i++) {
-      insertPoints.push({
-        x: (legs[i]!.x + legs[i + 1]!.x) / 2,
-        y: (legs[i]!.y + legs[i + 1]!.y) / 2,
-      });
+    const stops = [0, ...geom.bends.map((b) => b.s), geom.lengthM];
+    for (let k = 0; k + 1 < stops.length; k++) {
+      const p = geom.line[sampleAt(geom, (stops[k]! + stops[k + 1]!) / 2)]!;
+      insertPoints.push({ x: p.x, y: p.y });
     }
   }
-
   return {
     tee: { x: plan.tee.x, y: plan.tee.y },
     green: { x: plan.green.x, y: plan.green.y },
@@ -924,31 +845,58 @@ export function planHandles(plan: HolePlan): PlanHandles {
   };
 }
 
-/** generates CourseArea polygons for hole validation in deriveHoles */
-export function planAreas(plan: HolePlan): CourseArea[] {
-  const line = centreLine(plan);
-  const corridor = buildCorridorPolygon(line);
-  const fairway = buildFairwayPolygon(plan, line);
-  const tee = buildTeePolygon(plan, line);
-  const green = buildGreenPolygon(plan);
-
-  const flat = (pts: Pt[]) => pts.flatMap((p) => [p.x, p.y]);
-
-  const areas: CourseArea[] = [
-    { id: 1, surface: 'rough', pts: flat(corridor) },
-  ];
-  if (fairway.length >= 3) {
-    areas.push({ id: 2, surface: 'fairway', pts: flat(fairway) });
+/** build 30 m rough corridor polygon (60 m total width) along centre line with rounded end caps (for planAreas only: the
+ *  raster uses discs, which never fold) */
+function corridorPolygon(line: Pt[]): Pt[] {
+  if (line.length < 2) return [];
+  const left: Pt[] = [], right: Pt[] = [];
+  const half = CORRIDOR_M / 2;
+  for (let i = 0; i < line.length; i++) {
+    const a = line[Math.max(0, i - 1)]!, b = line[Math.min(line.length - 1, i + 1)]!;
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+    left.push({ x: line[i]!.x + nx * half, y: line[i]!.y + ny * half });
+    right.push({ x: line[i]!.x - nx * half, y: line[i]!.y - ny * half });
   }
+  const cap = (p: Pt, q: Pt, sign: number): Pt[] => {
+    const dx = p.x - q.x, dy = p.y - q.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+    const out: Pt[] = [];
+    for (let i = 1; i < 8; i++) {
+      const a = (Math.PI * i) / 8, c = Math.cos(a), sn = Math.sin(a);
+      out.push({ x: p.x + (sign * nx * c + ux * sn) * half, y: p.y + (sign * ny * c + uy * sn) * half });
+    }
+    return out;
+  };
+  const last = line.length - 1;
+  return [...left, ...cap(line[last]!, line[last - 1]!, 1), ...right.reverse(), ...cap(line[0]!, line[1]!, -1)];
+}
+
+/** the fairway outline (tiles) as one polygon: the left edge out, the right edge back */
+function fairwayPolygon(plan: HolePlan, geom: PlanGeom): Pt[] {
+  const left: Pt[] = [], right: Pt[] = [];
+  for (let i = 0; i < geom.line.length; i++) {
+    const si = geom.s[i]!, w = widthOf(geom.widths, plan.fwStart, geom.fwEnd, si);
+    if (w <= 0) continue;
+    const l = (w / 2 + offsetOf(plan, geom, si, true, w)) / 2, r = (w / 2 + offsetOf(plan, geom, si, false, w)) / 2, p = geom.line[i]!;
+    left.push({ x: p.x + geom.nx[i]! * l, y: p.y + geom.ny[i]! * l });
+    right.push({ x: p.x - geom.nx[i]! * r, y: p.y - geom.ny[i]! * r });
+  }
+  return left.length ? [...left, ...right.reverse()] : [];
+}
+
+/** the plan as CourseArea polygons (tiles; rough corridor, fairway, tee, green), for previews; the game's holes read the grid
+ *  (course-grid/areas gridAreas) */
+export function planAreas(plan: HolePlan): CourseArea[] {
+  const geom = geomOf(plan);
+  const flat = (pts: Pt[]) => pts.flatMap((p) => [p.x, p.y]);
+  const areas: CourseArea[] = [{ id: 1, surface: 'rough', pts: flat(corridorPolygon(geom.line)) }];
+  const fairway = fairwayPolygon(plan, geom);
+  if (fairway.length >= 3) areas.push({ id: 2, surface: 'fairway', pts: flat(fairway) });
   areas.push(
-    { id: 3, surface: 'tee', pts: flat(tee) },
-    { id: 4, surface: 'green', pts: flat(green) },
+    { id: 3, surface: 'tee', pts: flat(teePolygon(geom.line)) },
+    { id: 4, surface: 'green', pts: flat(greenPolygon(plan)) },
   );
   return areas;
 }
-
-/** alias for backwards compatibility */
-export { planAreas as gridAreas };
 
 /** compact tuple representation of a HolePlan */
 export type HolePlanTuple = [
@@ -980,61 +928,36 @@ export function encodePlan(plan: HolePlan): HolePlanTuple {
   ];
 }
 
-/** decodes a compact tuple back into a HolePlan */
+const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const pair = (v: unknown): v is [number, number] => Array.isArray(v) && v.length === 2 && num(v[0]) && num(v[1]);
+
+/** decodes a compact tuple (or its JSON) back into a HolePlan, or null when it is not a valid plan: hole 1..18, a known green
+ *  shape (GREEN_SHAPES), finite numbers, at most 3 bends */
 export function decodePlan(raw: HolePlanTuple | string | unknown): HolePlan | null {
   try {
     const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!Array.isArray(data) || data.length < 10) return null;
-    const [
-      hole,
-      tee,
-      green,
-      greenShape,
-      greenM2,
-      greenTurn,
-      bends,
-      widths,
-      fwStart,
-      seed,
-    ] = data;
-
+    const [hole, tee, green, greenShape, greenM2, greenTurn, bends, widths, fwStart, seed] = data as unknown[];
     if (
-      typeof hole !== 'number' || !Number.isFinite(hole) || hole < 0 ||
-      !Array.isArray(tee) || tee.length !== 2 || typeof tee[0] !== 'number' || typeof tee[1] !== 'number' ||
-      !Array.isArray(green) || green.length !== 2 || typeof green[0] !== 'number' || typeof green[1] !== 'number' ||
-      typeof greenShape !== 'string' ||
-      !['round', 'kidney', 'peanut', 'pear'].includes(greenShape) ||
-      typeof greenM2 !== 'number' || !Number.isFinite(greenM2) ||
-      typeof greenTurn !== 'number' || !Number.isFinite(greenTurn) ||
-      !Array.isArray(bends) || bends.length > 3 ||
-      !Array.isArray(widths) ||
-      typeof fwStart !== 'number' || !Number.isFinite(fwStart) ||
-      typeof seed !== 'number' || !Number.isFinite(seed)
+      !num(hole) || !Number.isInteger(hole) || hole < 1 || hole > 18 ||
+      !pair(tee) || !pair(green) ||
+      typeof greenShape !== 'string' || !(GREEN_SHAPES as readonly string[]).includes(greenShape) ||
+      !num(greenM2) || greenM2 <= 0 || !num(greenTurn) ||
+      !Array.isArray(bends) || bends.length > 3 || !bends.every(pair) ||
+      !Array.isArray(widths) || !widths.every(pair) ||
+      !num(fwStart) || !num(seed)
     ) {
       return null;
     }
-
-    for (const b of bends) {
-      if (!Array.isArray(b) || b.length !== 2 || typeof b[0] !== 'number' || typeof b[1] !== 'number') {
-        return null;
-      }
-    }
-
-    for (const w of widths) {
-      if (!Array.isArray(w) || w.length !== 2 || typeof w[0] !== 'number' || typeof w[1] !== 'number') {
-        return null;
-      }
-    }
-
     return {
       hole,
-      tee: { x: tee[0]!, y: tee[1]! },
-      green: { x: green[0]!, y: green[1]! },
+      tee: { x: tee[0], y: tee[1] },
+      green: { x: green[0], y: green[1] },
       greenShape: greenShape as GreenShape,
       greenM2,
       greenTurn,
-      bends: bends.map((b: [number, number]) => ({ x: b[0]!, y: b[1]! })),
-      widths: widths.map((w: [number, number]) => ({ s: w[0]!, w: w[1]! })),
+      bends: (bends as [number, number][]).map((b) => ({ x: b[0], y: b[1] })),
+      widths: (widths as [number, number][]).map((w) => ({ s: w[0], w: w[1] })),
       fwStart,
       seed,
     };

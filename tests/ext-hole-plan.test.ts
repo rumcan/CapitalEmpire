@@ -11,12 +11,14 @@ import {
   planInfo,
   planHandles,
   planAreas,
-  gridAreas,
+  planGeom,
+  planChanges,
   encodePlan,
   decodePlan,
   type HolePlan,
 } from '../src/game/ext/hole-plan';
 import { makeGrid, paintDisc, SURF, cellAt, cellCentre, applyDiff } from '../src/game/ext/course-grid';
+import { gridAreas } from '../src/game/ext/course-grid/areas';
 import { deriveHoles } from '../src/game/golf/holes';
 
 test('1. A straight 380 m line with seed 0 gives par 4; fairway width at s=210 is 40 ±1 m; fairway starts within 2 m of 100 m; green is 550 m² ±5%', () => {
@@ -98,45 +100,74 @@ test('2. A 200 m line gives par 3 with no fairway and an 18 m apron', () => {
   assert.equal(widthAt(plan, 190), 18, '18 m apron at green entrance');
 });
 
-test('3. A dogleg: the line passes through the bend; planAims returns it; deriveHoles on planAreas gives no "off the course" warning', () => {
-  const tee = { x: 0, y: 0 };
-  const bend = { x: 60, y: 30 }; // dogleg bend in tiles
-  const green = { x: 100, y: 100 };
+test('3. A dogleg through the real raster: the line passes through the bend; planAims returns it; planDiff, gridAreas(g) and deriveHoles give no warning', () => {
+  const tee = { x: 10, y: 10 };
+  const bend = { x: 70, y: 40 }; // dogleg bend in tiles
+  const green = { x: 110, y: 110 };
   const plan = defaultPlan(1, tee, green, [bend]);
 
   // Centre line passes through the bend
   const line = centreLine(plan);
   let closestDist = Infinity;
-  for (const p of line) {
-    closestDist = Math.min(closestDist, Math.hypot(p.x - bend.x, p.y - bend.y));
-  }
-  assert.ok(
-    closestDist < 0.5, // within 0.5 tile (1 m) of sample resolution
-    `expected centre line to pass through bend, closest was ${closestDist} tiles`,
-  );
+  for (const p of line) closestDist = Math.min(closestDist, Math.hypot(p.x - bend.x, p.y - bend.y));
+  assert.ok(closestDist < 0.5, `expected centre line to pass through bend, closest was ${closestDist} tiles`);
 
   // planAims returns the bend
   const aims = planAims(plan);
   assert.equal(aims.length, 1);
-  assert.equal(aims[0]!.x, bend.x);
-  assert.equal(aims[0]!.y, bend.y);
-  assert.equal(aims[0]!.order, 0);
-  assert.equal(aims[0]!.hole, 1);
+  assert.deepEqual([aims[0]!.x, aims[0]!.y, aims[0]!.order, aims[0]!.hole], [bend.x, bend.y, 0, 1]);
 
-  // deriveHoles on planAreas gives no "off the course" warning
-  const areas = planAreas(plan);
-  const tees = [{ hole: 1, x: tee.x, y: tee.y, kind: 'back' as const }];
-  const pins = [{ hole: 1, x: green.x, y: green.y }];
-  const holes = deriveHoles(areas, tees, pins, aims);
-
+  // the real path: paint the plan into a grid, read the grid back as course areas (T078), derive the hole
+  const g = makeGrid(-30, -30, 340, 340);
+  const d = planDiff(g, null, plan, 1, 0);
+  assert.ok(d.n > 0, 'planDiff paints cells');
+  const holes = deriveHoles(gridAreas(g), [{ hole: 1, x: tee.x, y: tee.y, kind: 'back' as const }], [{ hole: 1, x: green.x, y: green.y }], aims);
   assert.equal(holes.length, 1);
-  const offCourseWarning = holes[0]!.warnings.find((w) => w.toLowerCase().includes('off the course'));
-  assert.equal(offCourseWarning, undefined, `unexpected warning: ${offCourseWarning}`);
+  assert.deepEqual(holes[0]!.warnings, [], `unexpected warnings: ${holes[0]!.warnings.join('; ')}`);
+  assert.equal(holes[0]!.par, planInfo(plan).par);
+});
 
-  // rasterPlan produces cells matching plan
-  const g = makeGrid(0, 0, 150, 150);
-  const rMap = rasterPlan(plan, g);
-  assert.ok(rMap.size > 0, 'rasterPlan should produce cells');
+test('3b. The tee is one rounded 28 x 10 m strip that holds the back tee', () => {
+  const cases: [{ x: number; y: number }, { x: number; y: number }][] = [
+    [{ x: 0, y: 0 }, { x: 190, y: 0 }],
+    [{ x: 0, y: 0 }, { x: 120, y: 140 }],
+    [{ x: 50, y: 50 }, { x: -60, y: -40 }],
+  ];
+  for (const [tee, green] of cases) {
+    const plan = defaultPlan(2, tee, green);
+    const g = makeGrid(Math.min(tee.x, green.x) - 40, Math.min(tee.y, green.y) - 40, 600, 600);
+    planDiff(g, null, plan, 2, 0);
+    const teeCells: number[] = [];
+    for (let i = 0; i < g.surf.length; i++) if (g.surf[i] === SURF.tee) teeCells.push(i);
+    // the stadium: an 18 x 10 m body plus a 10 m disc = 258 m²
+    assert.ok(teeCells.length >= 240 && teeCells.length <= 275, `tee area ${teeCells.length} m², expected about 258`);
+    const at = cellAt(g, tee.x, tee.y);
+    assert.equal(g.surf[at], SURF.tee, 'the back tee point is on the tee');
+    // one blob: a flood from the back tee reaches every tee cell
+    const seen = new Set<number>([at]);
+    const stack = [at];
+    while (stack.length) {
+      const i = stack.pop()!;
+      for (const j of [i - 1, i + 1, i - g.w, i + g.w]) if (g.surf[j] === SURF.tee && !seen.has(j)) { seen.add(j); stack.push(j); }
+    }
+    assert.equal(seen.size, teeCells.length, 'the tee is one piece');
+  }
+});
+
+test('3c. A hairpin (about 130 degrees) leaves no hole in the rough corridor', () => {
+  const plan = defaultPlan(1, { x: 0, y: 0 }, { x: 30, y: 60 }, [{ x: 100, y: 20 }]);
+  const geom = planGeom(plan);
+  assert.ok(geom.bends[0]!.turn > 120, `turn ${geom.bends[0]!.turn}`);
+  const g = makeGrid(-60, -60, 440, 300);
+  const map = rasterPlan(plan, g);
+  let missing = 0;
+  for (let i = 0; i < g.surf.length; i++) {
+    const c = cellCentre(g, i);
+    let best = Infinity;
+    for (const p of geom.line) best = Math.min(best, (p.x - c.x) ** 2 + (p.y - c.y) ** 2);
+    if (Math.sqrt(best) * 2 <= 27 && !map.has(i)) missing++;
+  }
+  assert.equal(missing, 0, `${missing} cells within 27 m of the line are missing`);
 });
 
 test('4. Moving the green 20 m changes only cells in the symmetric difference, and diff is applied and undoable', () => {
@@ -267,18 +298,37 @@ test('6. The swell never exceeds 2.5 m, two seeds differ, and 15% outside dogleg
   assert.ok(maxSwell <= 2.5001, `max swell (${maxSwell}) must not exceed 2.5 m`);
   assert.ok(differences > 10, 'two different seeds must produce different swells');
 
-  // Dogleg with seed 0: outside of bend gets 15% more width
-  // Tee at (0, 0), bend at (80, 0), green at (80, 80) -> 320 m par 4.
-  // Vector in: (80, 0) (East). Vector out: (0, 80) (South).
-  // cp = 80*80 - 0 = +6400 > 0 (turns right). Outside of turn is LEFT!
-  const doglegPlan = defaultPlan(1, { x: 0, y: 0 }, { x: 80, y: 80 }, [{ x: 80, y: 0 }]);
-  doglegPlan.seed = 0;
+  // Tee (0, 0) -> bend (80, 0) -> green (80, 80): heading east, then south (+y). The left normal (-dy, dx) of an
+  // eastward line is +y, the side the hole turns to: the inside. The outside is the right (north-east).
+  const dog = defaultPlan(1, { x: 0, y: 0 }, { x: 80, y: 80 }, [{ x: 80, y: 0 }]);
+  const geom = planGeom(dog);
+  const sb = geom.bends[0]!.s;
+  assert.equal(geom.bends[0]!.out, 1, 'the outside is the right');
+  const w = widthAt(dog, sb);
+  const right = edgeOffset(dog, sb, 'right');
+  const left = edgeOffset(dog, sb, 'left');
+  assert.ok(Math.abs(right - 0.15 * w) < 0.01, `outside (right) gets 15% of ${w} m at a 90 degree turn, got ${right}`);
+  assert.equal(left, 0, `inside (left) gets nothing, got ${left}`);
 
-  // Arc length at bend is 160 m (fairway runs from 100 m to ~300 m)
-  const leftOffAtBend = edgeOffset(doglegPlan, 160, 'left');
-  const rightOffAtBend = edgeOffset(doglegPlan, 160, 'right');
-  assert.ok(leftOffAtBend > 2.0, `outside of bend (left) should get 15% width boost, got ${leftOffAtBend}`);
-  assert.equal(rightOffAtBend, 0, `inside of bend (right) should get 0 boost, got ${rightOffAtBend}`);
+  // in cells: from the bend point the fairway reaches farther to the outside (north-east) than to the inside (south-west)
+  const g = makeGrid(-40, -60, 300, 300);
+  planDiff(g, null, dog, 1, 0);
+  const reach = (dx: number, dy: number) => {
+    let k = 0;
+    while (g.surf[cellAt(g, 80 + dx * (k + 1) * 0.5, dy * (k + 1) * 0.5)] === SURF.fairway) k++;
+    return k; // metres (steps of 0.5 tile)
+  };
+  const outM = reach(Math.SQRT1_2, -Math.SQRT1_2), inM = reach(-Math.SQRT1_2, Math.SQRT1_2);
+  assert.ok(outM > inM + 2, `outside reach ${outM} m must exceed inside reach ${inM} m`);
+
+  // a gentle bend of about 7 degrees gets a proportional share only
+  const gentle = defaultPlan(1, { x: 0, y: 0 }, { x: 160, y: 10 }, [{ x: 80, y: 0 }]);
+  const gg = planGeom(gentle);
+  const turn = gg.bends[0]!.turn, sg = gg.bends[0]!.s;
+  const boost = Math.max(edgeOffset(gentle, sg, 'left'), edgeOffset(gentle, sg, 'right'));
+  const wg = widthAt(gentle, sg);
+  assert.ok(turn > 5 && turn < 10, `turn ${turn}`);
+  assert.ok(Math.abs(boost - 0.15 * wg * (turn / 45)) < 0.05, `a ${turn.toFixed(1)} degree turn gets ${boost} m`);
 });
 
 test('7. Deterministic and serializable (encodePlan / decodePlan tuple)', () => {
@@ -329,10 +379,49 @@ test('7. Deterministic and serializable (encodePlan / decodePlan tuple)', () => 
   assert.ok(handles.widths.length > 0, 'must have width handles');
   assert.ok(handles.insertPoints.length > 0, 'must have insert points');
 
-  assert.equal(gridAreas, planAreas, 'gridAreas should be an alias for planAreas');
+  assert.ok(planAreas(plan).some((a) => a.surface === 'tee'), 'planAreas gives the tee');
+
+  // the archetype greens load; holes outside 1..18 do not
+  assert.equal(decodePlan(encodePlan({ ...plan, greenShape: 'green-peanut' }))?.greenShape, 'green-peanut');
+  assert.equal(decodePlan(encodePlan({ ...plan, greenShape: 'green-kidney' }))?.greenShape, 'green-kidney');
+  assert.equal(decodePlan(encodePlan({ ...plan, hole: 19 })), null);
+  assert.equal(decodePlan(encodePlan({ ...plan, hole: 0 })), null);
+  assert.equal(decodePlan(JSON.stringify(encodePlan(plan)))?.hole, 3, 'the JSON form decodes');
+
   const g1 = makeGrid(0, 0, 100, 100);
   const g2 = makeGrid(0, 0, 100, 100);
   const map1 = rasterPlan(plan, g1);
   const map2 = rasterPlan(plan, g2);
   assert.deepEqual(Array.from(map1.entries()), Array.from(map2.entries()), 'rasterPlan must be deterministic');
+});
+
+test('8. Speed: a 3-bend hole rasters and plans in a few milliseconds', () => {
+  const plan = defaultPlan(1, { x: 0, y: 0 }, { x: 200, y: 160 }, [{ x: 60, y: 10 }, { x: 110, y: 70 }, { x: 170, y: 90 }]);
+  const moved = { ...plan, green: { x: 205, y: 170 } };
+  const g = makeGrid(-40, -40, 600, 520);
+  planDiff(g, null, plan, 1, 0); // warm up
+  const time = (f: () => void, k = 10) => { const t0 = performance.now(); for (let i = 0; i < k; i++) f(); return (performance.now() - t0) / k; };
+  const raster = time(() => rasterPlan(plan, g));
+  const changes = time(() => planChanges(g, plan, moved, 1, 0));
+  const one = time(() => edgeOffset(plan, 200, 'left'), 200);
+  console.log(`hole-plan speed: rasterPlan ${raster.toFixed(2)} ms, planChanges ${changes.toFixed(2)} ms, edgeOffset ${(one * 1000).toFixed(1)} us (3 bends, ${planInfo(plan).lengthM} m)`);
+  assert.ok(raster < 40, `rasterPlan ${raster} ms`);
+  assert.ok(changes < 80, `planChanges ${changes} ms`);
+});
+
+test('9. Cells both plans agree on keep a hand touch-up; planChanges does not touch the grid', () => {
+  const g = makeGrid(0, 0, 500, 200);
+  const plan = defaultPlan(4, { x: 10, y: 50 }, { x: 190, y: 50 });
+  planDiff(g, null, plan, 4, 0);
+  // the player rubs a fairway cell back to rough by hand
+  const i = cellAt(g, 110, 50);
+  assert.equal(g.surf[i], SURF.fairway);
+  g.surf[i] = SURF.rough;
+  const rev = g.rev;
+  const edited = { ...plan, green: { x: 195, y: 52 } };
+  const dry = planChanges(g, plan, edited, 4, 1);
+  assert.equal(g.rev, rev, 'planChanges is a dry run');
+  assert.ok(dry.n > 0);
+  planDiff(g, plan, edited, 4, 1);
+  assert.equal(g.surf[i], SURF.rough, 'the hand touch-up stays');
 });
