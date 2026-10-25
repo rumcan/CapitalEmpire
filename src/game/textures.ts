@@ -2,6 +2,8 @@ import { LEVELS, MID_LEVELS, mulberry } from './iso';
 import { canvas, clamp, ctx2d, fbm, smooth, type C2D, type Cnv } from './canvas2d';
 import { DEFAULT_MIX, mixGrass, type BaseGrassArt } from './base-grass';
 import { EAGER_PHOTO, PHOTO_SIZE, PHOTO_TEX, photoPeriod, type GrassTex, type PhotoTexEntry } from './grass-art';
+import { PAINTED_GRASS, PAINTED_TINTS } from './painted-grass-art';
+import { blendMetres, grassDetailWeights, grassTranslationSeeds, MAX_PAINTED_CHAINS, MAX_PAINTED_SOURCES, PAINTED_MAX_PX, trimLru, type GrassArt, type GrassDetailWeight, type PaintedFamily } from './painted-grass-lod';
 import { ASPHALT_MEAN, type GroundArt, LEAF_CELL, LEAF_COLS, LEAVES, LOT_ASPHALT_M, POOL_ANCHOR, PPM, SLAB_CELL, SLAB_COUNT, SLAB_TOP } from './ground-art';
 
 /** Ground materials, following the town builder's ground renderer (scripts/lib/town-scene.mjs):
@@ -200,6 +202,105 @@ export class Textures {
   /** each built photo's full-resolution source canvas (sourceFor: a large Paint scale shows it, not the mosaic) */
   photoSrc = new Map<string, Cnv>();
   private photoBuilds = new Map<string, Promise<void>>();
+  /* ---- the painted grass (painted-grass-lod.ts, painted-grass-art.ts): its pictures decoded on demand (by URL, an LRU), the art level the
+   *  next bake is for (preparePainted), and each family's blend at an art level as a mip chain (an LRU) ---- */
+  private paintedPics = new Map<string, Cnv>();
+  private paintedLoads = new Map<string, Promise<void>>();
+  private paintedLevel = .3;
+  /** the art level the next bake is for (set by preparePainted) */
+  get paintedArtLevel() { return this.paintedLevel; }
+  private paintedChains = new Map<string, Cnv[]>();
+  /** presets laid with a painted family instead of their baked picture (the studio's Painted set, PaintPreset painted), by texture id */
+  private paintedAlias = new Map<string, string>();
+  /** false: every painted family is off and the grass is the photo grass (the game's Grass setting, GrassArt 'photo') */
+  paintedOn = true;
+  /** the family a texture is laid with, or null: a family's own key ('grass'), a tint of one ('meadow', 'outside'), or a preset set to one */
+  paintedOf(variant: string): { id: string; family: PaintedFamily; tint?: string } | null {
+    if (!this.paintedOn) return null;
+    const t = PAINTED_TINTS[variant], id = t ? t.of : this.paintedAlias.get(variant) ?? variant, family = PAINTED_GRASS[id];
+    return family ? { id, family, tint: t?.tint } : null;
+  }
+  isPainted(variant: string) { return !!this.paintedOf(variant); }
+  /** before a bake at art level L (CSS zoom, painted-grass-lod.ts grassZoomLevels): decodes the pictures the given textures need at that level
+   *  (one or two per family), never all of them; a picture that fails to load leaves its texture on the photo grass */
+  async preparePainted(L: number, variants: Iterable<string>) {
+    this.paintedLevel = L;
+    const urls = new Set<string>();
+    for (const v of variants) { const p = this.paintedOf(v); if (p) for (const w of grassDetailWeights(L)) urls.add(p.family[w.detail].src); }
+    await Promise.all([...urls].map(src => {
+      const have = this.paintedPics.get(src); if (have) { this.paintedPics.delete(src); this.paintedPics.set(src, have); return null; }
+      let pending = this.paintedLoads.get(src);
+      if (!pending) {
+        pending = loadImage(src).then(img => { try { this.paintedPics.set(src, toCanvas(img)); } finally { img.close(); } }, err => console.warn('[painted grass]', String(err)))
+          .finally(() => this.paintedLoads.delete(src));
+        this.paintedLoads.set(src, pending);
+      }
+      return pending;
+    }));
+    trimLru(this.paintedPics, urls, MAX_PAINTED_SOURCES);
+  }
+  /** a painted texture at scale L (cache level times area scale) for the current art level: the mip of its blend with the px a tile L asks
+   *  for (never upsampled past the blend), and its period in tiles; null when it is not painted or its pictures are not decoded */
+  private paintedSource(variant: string, L: number): { img: Cnv; period: number } | null {
+    const p = this.paintedOf(variant); if (!p) return null;
+    const weights = grassDetailWeights(this.paintedLevel), chain = this.paintedChain(p, weights); if (!chain) return null;
+    const period = blendMetres(p.family, weights.map(w => w.detail)) / 2, want = 128 * L;
+    let img = chain[0]; for (const m of chain) { if (m.width / period >= want) img = m; else break; }
+    return { img, period };
+  }
+  private paintedChain(p: { id: string; family: PaintedFamily; tint?: string }, weights: GrassDetailWeight[]): Cnv[] | null {
+    const key = (p.tint ? p.tint + ':' : '') + p.id + '@' + this.paintedLevel;
+    let chain = this.paintedChains.get(key);
+    if (chain) { this.paintedChains.delete(key); this.paintedChains.set(key, chain); return chain; }
+    if (p.tint) {
+      // a tint: the family's own chain, multiplied by the colour (opaque pictures, so multiply is exact)
+      const base = this.paintedChain({ id: p.id, family: p.family }, weights); if (!base) return null;
+      chain = base.map(m => { const c = canvas(m.width, m.height), g = ctx2d(c); g.drawImage(m, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = p.tint!; g.fillRect(0, 0, c.width, c.height); return c; });
+    } else {
+      const pics = weights.map(w => this.paintedPics.get(p.family[w.detail].src));
+      if (pics.some(x => !x)) return null;
+      chain = this.mipChain(this.paintedBlend(p.family, weights, pics as Cnv[]));
+    }
+    this.paintedChains.set(key, chain); trimLru(this.paintedChains, new Set([key]), MAX_PAINTED_CHAINS);
+    return chain;
+  }
+  /** the blend of a family's levels at their weights as one seamless square over blendMetres (each level at its own metres; one smaller than
+   *  the family's repeat laid as the translation mosaic), at the density of its densest level, at most PAINTED_MAX_PX */
+  private paintedBlend(family: PaintedFamily, weights: GrassDetailWeight[], pics: Cnv[]) {
+    const P = blendMetres(family, weights.map(w => w.detail));
+    const ppm = Math.min(Math.max(...weights.map((w, i) => pics[i].width / family[w.detail].metres)), PAINTED_MAX_PX / P), size = Math.round(P * ppm);
+    const out = canvas(size, size), g = ctx2d(out);
+    weights.forEach((w, i) => {
+      const level = family[w.detail], layer = level.metres < family.repeat ? this.paintedMosaic(pics[i], level.metres, P, size) : this.paintedTile(pics[i], level.metres, P, size);
+      g.globalAlpha = i ? w.weight : 1; g.drawImage(layer, 0, 0); g.globalAlpha = 1;
+    });
+    return out;
+  }
+  /** a level as painted, repeated over P metres (its metres divide P) */
+  private paintedTile(pic: Cnv, metres: number, P: number, size: number) {
+    const out = canvas(size, size), g = ctx2d(out), pat = g.createPattern(pic, 'repeat')!, s = metres * size / P / pic.width;
+    g.imageSmoothingQuality = 'high'; pat.setTransform(new DOMMatrix([s, 0, 0, s, 0, 0])); g.fillStyle = pat; g.fillRect(0, 0, size, size);
+    return out;
+  }
+  /** a level laid over and over in soft round patches (half its metres across, a flat core), each shifted by its own phase: translations only
+   *  (no turns or mirrors: the painted light stays upper right), seamless over P metres (painted-grass-lod.ts grassTranslationSeeds) */
+  private paintedMosaic(pic: Cnv, metres: number, P: number, size: number) {
+    const ppm = size / P, out = this.paintedTile(pic, metres, P, size), g = ctx2d(out), radius = metres / 2 * ppm, patchSize = Math.ceil(radius * 2) + 2;
+    const patch = canvas(patchSize, patchSize), pg = ctx2d(patch), mask = canvas(patchSize, patchSize), mg = ctx2d(mask);
+    const gradient = mg.createRadialGradient(patchSize / 2, patchSize / 2, 0, patchSize / 2, patchSize / 2, radius);
+    gradient.addColorStop(0, '#000'); gradient.addColorStop(.25, '#000'); gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    mg.fillStyle = gradient; mg.fillRect(0, 0, patchSize, patchSize);
+    const s = metres * ppm / pic.width, pattern = pg.createPattern(pic, 'repeat')!;
+    for (const seed of grassTranslationSeeds(P, metres)) {
+      pg.globalCompositeOperation = 'source-over'; pg.clearRect(0, 0, patchSize, patchSize);
+      const x = seed.x * ppm - patchSize / 2, y = seed.y * ppm - patchSize / 2;
+      pattern.setTransform(new DOMMatrix([s, 0, 0, s, -seed.phaseX * metres * ppm - x, -seed.phaseY * metres * ppm - y]));
+      pg.fillStyle = pattern; pg.fillRect(0, 0, patchSize, patchSize);
+      pg.globalCompositeOperation = 'destination-in'; pg.drawImage(mask, 0, 0);
+      for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) if (x + ox > -patchSize && x + ox < size && y + oy > -patchSize && y + oy < size) g.drawImage(patch, x + ox, y + oy);
+    }
+    return out;
+  }
   slabs!: Cnv; leaves!: Cnv; pool1!: Cnv; pool2!: Cnv;
   /** the builder's grass decals (ground-art DECALS rects) and SOIL_STAMPS ragged bare-soil stamps in a row (SOIL_W x SOIL_H each) */
   decals!: Cnv; soil!: Cnv;
@@ -218,8 +319,10 @@ export class Textures {
 
   /** what every worker takes from the art, whether it builds the textures or restores them from a snapshot or the browser cache: the
    *  owner's texture presets and how the base grass lies (its angle and tilt) */
-  configure(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }) {
+  configure(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[]; grassArt?: GrassArt }) {
     if (art.presets?.length) { this.photos = [...PHOTO_TEX, ...art.presets]; for (const p of art.presets) this.periods.set(p.tex, photoPeriod(p, MOSAIC_TILES)); }
+    this.paintedAlias = new Map((art.presets ?? []).filter(p => p.painted && PAINTED_GRASS[p.painted]).map(p => [p.tex, p.painted!]));
+    this.paintedOn = art.grassArt !== 'photo';
     this.grassLay = { angle: art.grassMix?.mix.angle ?? DEFAULT_MIX.angle, tilt: art.grassMix?.mix.tilt ?? DEFAULT_MIX.tilt };
   }
   async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void) {
@@ -324,14 +427,18 @@ export class Textures {
    *  its period in tiles. The Paint areas always draw this, never the hex-mixed mosaic: the mosaic is 128 px a tile (the photo has ~500)
    *  and its feathered patches blend, so a Paint area at scale 1 or below looked soft and smeared (the owner, 2026-10-21). null: no photo */
   sourceFor(variant: string, L: number): { img: Cnv; period: number } | null {
+    const painted = this.paintedSource(variant, L); if (painted) return painted;
     const src = this.photoSrc.get(variant); if (!src) return null;
     let chain = this.photoMips.get(variant); if (!chain) this.photoMips.set(variant, chain = this.mipChain(src));
     const period = photoSrcPeriod(this.photos.find(q => q.tex === variant)!), want = 128 * L; let img = chain[0];
     for (const m of chain) { if (m.width / period >= want) img = m; else break; }
     return { img, period };
   }
-  /** true when a tile-space texture is built in this worker (the eager ones always are; a lazy photo once ensure has run) */
-  has(variant: string) { return this.mosaics.has(variant); }
+  /** true when a texture can be laid in this worker: its photo built (the eager ones always are; a lazy photo once ensure has run), or its painted
+   *  family's pictures for the current art level decoded */
+  has(variant: string) { const p = this.paintedOf(variant); return !!p && grassDetailWeights(this.paintedLevel).every(w => this.paintedPics.has(p.family[w.detail].src)) || this.mosaics.has(variant); }
+  /** true when its photo (tile-space mosaic) is built, whatever the Grass setting */
+  built(variant: string) { return this.mosaics.has(variant); }
   /** builds a lazy photo texture (grass-art.ts PHOTO_TEX) the first time an area uses it; concurrent calls share one build;
    *  a name that is not a photo, or is built already, resolves at once */
   ensure(variant: string): Promise<void> {

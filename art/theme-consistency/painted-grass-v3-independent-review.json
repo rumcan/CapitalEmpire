@@ -1,0 +1,193 @@
+{
+  "date": "2026-10-24",
+  "reviewer": "variation_review_resume",
+  "scope": "Independent read-only visual review of three authored painted grass v3 sources, exact owner references, direct4x4 tiles, half-offset joins, and existing game screenshots. No source/code/provenance/queue changes.",
+  "references": [
+    "worktrees/theme-consistency/art/reference/grass-style-blizzard-20261024.webp",
+    "art/theme-consistency/generated/ground/grass-owner-green-style-crop.png"
+  ],
+  "records": [
+    {
+      "level": "far",
+      "file": "art/theme-consistency/generated/ground/grass-painted-8m-far-v3.png",
+      "width": 1024,
+      "height": 1024,
+      "pixelCount": 1048576,
+      "alpha": {
+        "fullyOpaque": 1048576,
+        "partial": 0,
+        "clear": 0
+      },
+      "sha256": "7634710f712f01ff4be0121932592f81038634a5bdacdf1f545702d879a12fd8",
+      "meanRgb": [
+        109.90138721466064,
+        139.97269821166992,
+        15.20108413696289
+      ],
+      "seamMeasurements": {
+        "file": "art/theme-consistency/generated/ground/grass-painted-8m-far-v3.png",
+        "width": 1024,
+        "height": 1024,
+        "horizontalWrapMeanRgbError": 3.88216145833333,
+        "verticalWrapMeanRgbError": 4.180013020833334,
+        "interiorAdjacentMeanX": 1.7087126303358633,
+        "interiorAdjacentMeanY": 2.297137516801213,
+        "visualReviewRequired": true
+      }
+    },
+    {
+      "level": "mid",
+      "file": "art/theme-consistency/generated/ground/grass-painted-8m-mid-v3.png",
+      "width": 1024,
+      "height": 1024,
+      "pixelCount": 1048576,
+      "alpha": {
+        "fullyOpaque": 1048576,
+        "partial": 0,
+        "clear": 0
+      },
+      "sha256": "5d24c806e3d367d35cbb797e4120771c81fc3d623e9bc2720b2e7d3ab86b33a7",
+      "meanRgb": [
+        114.7200517654419,
+        143.93337726593018,
+        14.669163703918457
+      ],
+      "seamMeasurements": {
+        "file": "art/theme-consistency/generated/ground/grass-painted-8m-mid-v3.png",
+        "width": 1024,
+        "height": 1024,
+        "horizontalWrapMeanRgbError": 4.9931640625,
+        "verticalWrapMeanRgbError": 5.258138020833331,
+        "interiorAdjacentMeanX": 2.318215865815469,
+        "interiorAdjacentMeanY": 3.357353461530604,
+        "visualReviewRequired": true
+      }
+    },
+    {
+      "level": "near",
+      "file": "art/theme-consistency/generated/ground/grass-painted-8m-near-v3.png",
+      "width": 1024,
+      "height": 1024,
+      "pixelCount": 1048576,
+      "alpha": {
+        "fullyOpaque": 1048576,
+        "partial": 0,
+        "clear": 0
+      },
+      "sha256": "5e01830646aa019a4df6f4a4868b5503571ed47c36ffcd76eafc8072ca8cdfd0",
+      "meanRgb": [
+        113.46599388122559,
+        146.45777988433838,
+        12.500471115112305
+      ],
+      "seamMeasurements": {
+        "file": "art/theme-consistency/generated/ground/grass-painted-8m-near-v3.png",
+        "width": 1024,
+        "height": 1024,
+        "horizontalWrapMeanRgbError": 4.475911458333332,
+        "verticalWrapMeanRgbError": 4.50716145833333,
+        "interiorAdjacentMeanX": 2.321671859726405,
+        "interiorAdjacentMeanY": 3.1442798702752475,
+        "visualReviewRequired": true
+      }
+    }
+  ],
+  "pairwise": [
+    {
+      "a": "far",
+      "b": "mid",
+      "exactSamePixels": false,
+      "changedPixelCount": 1047984,
+      "meanAbsoluteRgbDifference": 9.220197041829428
+    },
+    {
+      "a": "far",
+      "b": "near",
+      "exactSamePixels": false,
+      "changedPixelCount": 1048537,
+      "meanAbsoluteRgbDifference": 8.526217778523764
+    },
+    {
+      "a": "mid",
+      "b": "near",
+      "exactSamePixels": false,
+      "changedPixelCount": 1048459,
+      "meanAbsoluteRgbDifference": 8.891552607218424
+    }
+  ],
+  "visualAssessment": {
+    "style": "The short-turf crop is the relevant material authority: broad painted low-frequency olive/lime strokes rather than individual photographic grass blades. All three v3 sources belong to that family. Do not compare them to the taller rough vegetation at the outer edges of the full reference.",
+    "lighting": "No sky/backdrop or large top-right-to-bottom-left exposure ramp. Local warm lime stroke highlights and olive shadow strokes have coherent upper-right illumination; source translations preserve that light direction. This is visual assessment, not recovered 3D normal evidence.",
+    "family": "Same yellow-green/olive palette and similarly placed broad soft cloudy patches. Far is visibly calmer and lower-contrast; mid and near have somewhat sharper/finer strokes, but their detail distinction is modest. Different file hashes alone do not establish useful LODs; the side-by-side and downsampled128px row show an actual visual difference.",
+    "tiling": "The raw4x4 diagnostic reveals regular repeated soft green cloud shapes and diagonal brush groups. This is an 8m periodicity problem more than a hard grid-edge line. Half-offset previews show a faint orthogonal cross/join in the paint field, not a strong dark border. Source is approximately tileable, not mathematically seamless.",
+    "scale": "At declared8m coverage, broad stroke groups read as stylized surface colour and clipped turf rather than giant upright blades. Near screenshot looks somewhat soft/waxy as expected for this painted style; a bare-ground screenshot cannot certify material scale against people/buildings. Preserve fixed8m source scale during translation blending and check beside course fixtures after integration.",
+    "currentGame": "Existing zoom-far.png is calm but a repeated soft patch rhythm remains across open ground. Existing zoom-mid.png and zoom-near.png reveal stronger regular8m brush/patch cadence. Orange leaf scatter is a separate game overlay absent from these three source PNGs, so do not treat it as generated texture contamination.",
+    "recommendedRuntimeReview": "Translation-only overlap/composite can interrupt local8m cadence while retaining authored8m source detail and fixed lighting. Review updated far/mid/near screenshots and moving zoom transitions for a new48m supertile grid, bright blended seams, ghosted doubled strokes, or LOD brightness pop before claiming no obvious repeat."
+  },
+  "decision": {
+    "sourceStyleAndFamily": "acceptable for runtime anti-repeat evaluation",
+    "plain8mRepeat": "not accepted as final no-repeat delivery",
+    "exactSeamlessClaim": false,
+    "jitterRuntimeAcceptance": "accepted on fresh far/mid/near, transition and actual-scale mixed-building screenshots",
+    "additional14MidFamilyReview": "pending source arrivals",
+    "catalogCompletion": "Only first3-image grass family reviewed here; all95subjects/285slots are not complete by this review."
+  },
+  "diagnostics": {
+    "family": "art/theme-consistency/generated/ground/grass-painted-8m-family-v3.review.png",
+    "directTiles": [
+      "art/theme-consistency/generated/ground/grass-painted-8m-far-v3.4x4.png",
+      "art/theme-consistency/generated/ground/grass-painted-8m-mid-v3.4x4.png",
+      "art/theme-consistency/generated/ground/grass-painted-8m-near-v3.4x4.png"
+    ],
+    "halfOffsets": [
+      "art/theme-consistency/generated/ground/grass-painted-8m-far-v3.offset.png",
+      "art/theme-consistency/generated/ground/grass-painted-8m-mid-v3.offset.png",
+      "art/theme-consistency/generated/ground/grass-painted-8m-near-v3.offset.png"
+    ],
+    "gameShots": [
+      "worktrees/painted-grass-lod/output/painted-grass/zoom-far.png",
+      "worktrees/painted-grass-lod/output/painted-grass/zoom-mid.png",
+      "worktrees/painted-grass-lod/output/painted-grass/zoom-near.png"
+    ]
+  },
+  "updatedRuntimeReview": {
+    "reviewed": "2026-10-24",
+    "method": "Independent visual inspection of fresh far/mid/near screenshots plus mid-near transition during/after after translation-only48mcomposite. File hashes recorded to distinguish updated screenshots from older same-path plain8m shots.",
+    "captures": [
+      {
+        "level": "far",
+        "file": "worktrees/painted-grass-lod/output/painted-grass/zoom-far.png",
+        "sha256": "41abc4a61024afb04a721bca106ad384dde766df97d57f6390b270a5ca17feda"
+      },
+      {
+        "level": "mid",
+        "file": "worktrees/painted-grass-lod/output/painted-grass/zoom-mid.png",
+        "sha256": "f4d625f4175393e91f3371bdbb88666fbd8ad932a1a6f5425435c265c5c8ba8a"
+      },
+      {
+        "level": "near",
+        "file": "worktrees/painted-grass-lod/output/painted-grass/zoom-near.png",
+        "sha256": "ae9a1b2e93e0909e26298b8982152e93b21d2257d4ca32b81d41f5e4afeb2cb2"
+      }
+    ],
+    "assessment": "Updated open-ground screenshots remove the conspicuous regular8m cloud/diamond cadence. No obvious hex/honeycomb cell pattern, hard orthogonal join, large48m supertile frame or sharp compositing transition is visible in the inspected viewport. Local painted strokes remain softly irregular; near stays detailed enough to read as clipped painted turf. A little softness is expected from blending and the selected painted art; no conspicuous double-edge/ghosted repeating stamp is visible.",
+    "transitionAssessment": "Mid-near during/after screenshots show continuous coverage without a patchwork/chunk boundary or obvious exposure flash; close to identical look across threshold. Static frames alone do not prove temporal smoothness across all camera speeds.",
+    "referenceMatch": "Continues to match the exact owner short-turf crop in broad olive/lime paint rather than photoreal grass. Rendered surface is brighter/yellower than the crop due to scene treatment, but remains same coherent family; no new global vignette or invented lighting direction.",
+    "limits": "8m authored sources remain approximately tileable and must not be advertised as exact pixel-seamless. This screenshot view is finite, so no claim of mathematically nonperiodic infinite terrain; code reports48m period. Fixture/building scale capture remains useful and is being added by runtime agent.",
+    "decision": "Accept first painted grass family runtime style and visible anti-repeat result for current tested far/mid/near views.",
+    "contextAssessment": {
+      "captures": [
+        {
+          "file": "worktrees/painted-grass-lod/output/painted-grass/context-mid.png",
+          "sha256": "44b52dcfb03a0908a39aeb5c8a96bf6e52eb66ffcfdd28e0ae5b4a0dc3f20eb4"
+        },
+        {
+          "file": "worktrees/painted-grass-lod/output/painted-grass/context-near.png",
+          "sha256": "5a845b66f3291bdb71f127a9594fe38ebf07b7d778e56d3490b0399bb9815b7e"
+        }
+      ],
+      "assessment": "World house0/house2 at actual owner scales sit naturally on the new grass. Grass reads as painted clipped ground below the buildings, with no oversized upright blades, visible48m borders, honeycomb stamps or grey sprite aprons. Warm yellow-green grass and warm miniature buildings belong in one painted scene; upper-right building key and lower-left projected shadows remain coherent. Ground still has separate seasonal leaf scatter. Near ground texture is deliberately broad/smooth, not a literal individual-blade simulation; this agrees with owner short-turf crop.",
+      "decision": "Mixed building/ground style and practical material scale accepted for first family."
+    }
+  }
+}
