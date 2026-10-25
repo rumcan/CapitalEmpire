@@ -759,9 +759,9 @@ export class Game {
   private gateProps = new Map<string, Prop>();
   /** the overlay's view of this engine (its canvas is set each frame; reused, so the render loop allocates nothing) */
   private parkView: ParkOverlayView = { ctx: null as unknown as CanvasRenderingContext2D, dpr: 1, setIso: c => this.setIso(c), screen: (x, y) => this.screen(x, y) };
-  /** the Course brush's cursor (T081): the surface puck, the course grid and the glowing footprint (the cells a dab paints, by the grid's
-   *  brush rules; re-run when the grid, the hole or Rub out change); and its camera view (reused) */
-  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), refuse: () => this.paint.brushSkip(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0) });
+  /** the brush's cursor (T081, T108, T109): the cells a click paints on the half grid (by the grid's brush rules, the skipped ones with their
+   *  reason, the price; re-run when the grid, the hole or Rub out change), the course grid round them and the surface chip beside the pointer */
+  private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0) });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
   private gridLayer = new MapGridLayer();
