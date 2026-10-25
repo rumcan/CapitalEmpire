@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m0: the course town, what lives where</title>
+<link rel="stylesheet" href="kit-v2.css">
+<style>
+  body { background: #141711; }
+  .stage { padding: 22px 26px; background: radial-gradient(1200px 600px at 30% 0%, #1f2a18, #121510); }
+  h1 { margin: 0; font-family: Georgia, serif; font-size: 28px; color: var(--gold-hi); }
+  .lead { font-size: 14.5px; color: #d6cfbd; margin-top: 5px; max-width: 1480px; line-height: 1.45; }
+  .grid3 { display: grid; grid-template-columns: 1.15fr 1fr 1fr 0.8fr; gap: 12px; margin-top: 18px; }
+  .col { border-radius: 16px; background: rgba(20,21,25,.92); border: 1px solid var(--line); padding: 13px 14px; }
+  .col.town { border-color: rgba(125,211,252,.28); }
+  .col.later { border-style: dashed; }
+  .col h3 { margin: 0 0 2px; display: flex; align-items: center; gap: 8px; font-family: Georgia, serif; font-size: 20px; }
+  .col h3 img { width: 26px; height: 26px; }
+  .col .what { font-size: 13.5px; color: var(--muted); margin-bottom: 8px; }
+  .tool { border-top: 1px solid var(--line); padding: 8px 0 6px; }
+  .tool .n { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; }
+  .tool .n img { width: 22px; height: 22px; }
+  .tool .n .ph { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: .1em; padding: 1px 8px; border-radius: 999px; }
+  .p1 { background: rgba(110,231,160,.16); color: #9ff3c4; } .p2 { background: rgba(251,191,36,.16); color: #fcd57a; } .p3 { background: rgba(125,211,252,.16); color: #b4e5fc; } .dec { background: rgba(245,181,46,.18); color: var(--gold-hi); }
+  .tool .d { font-size: 13px; color: #d9d3c4; margin-top: 3px; line-height: 1.4; }
+  .anat { margin-top: 14px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .anat div { border-radius: 14px; background: rgba(20,21,25,.92); border: 1px solid var(--line); padding: 10px 12px; font-size: 13px; color: #d9d3c4; line-height: 1.4; }
+  .anat b { display: block; color: var(--gold-hi); font-size: 13.5px; margin-bottom: 2px; }
+  .legend { display: flex; gap: 14px; margin-top: 12px; font-size: 13px; color: var(--muted); align-items: center; }
+</style></head>
+<body><div class="stage">
+  <h1>The course town: what lives where</h1>
+  <div class="lead">Holes are the parks, paths and drives are the streets, course buildings are the houses. Each is one tool on the rail with one panel, built with the same anatomy. Phase 1 splits today's Course tool into these three and keeps the town's tools and Paint where they are.</div>
+  <div class="grid3">
+    <div class="col"><h3><img src="../../../../src/assets/ui/icons/trophy.webp">Course</h3><div class="what">the park town you build</div>
+      <div class="tool"><div class="n"><img src="../../../../src/assets/ui/icons/trophy.webp">Holes (the parks)<span class="ph p1">PHASE 1</span></div><div class="d">New hole first (the camera frames it; Build is blocked only by real problems; its own undo). After hole 1: Shape by hand in 1 m cells with Brush or Run; your holes as badges. More options in sections: Shapes · Look (My looks, stripes, collars) · Planting · Hole · Plants · Ground.</div></div>
+      <div class="tool"><div class="n"><img src="../../../../src/assets/ui/icons/sidewalk.webp">Paths (the streets)<span class="ph p1">PHASE 1</span></div><div class="d">Cart paths and Drives tabs, Draw or Upgrade, prices a metre, built like roads. One Streets tool with Roads as a third tab: decision 7. Path points on greens, crossings: Phase 3.</div></div>
+      <div class="tool"><div class="n"><img src="../../../../src/assets/ui/icons/buildings.webp">Buildings (the houses)<span class="ph p1">PHASE 1</span></div><div class="d">The clubhouse card with its picture; its front snaps to a drive. The drive stopgap: Phase 2. Proposed drive and the Tournament tab: Phase 3 (T069b).</div></div>
+    </div>
+    <div class="col town"><h3><img src="../../../../src/assets/ui/icons/road.webp">Town</h3><div class="what">the town around your course (as today)</div>
+      <div class="tool"><div class="n"><img src="../../../../src/assets/ui/icons/road.webp">Roads · Junctions · Transport<span class="ph p1">IN PLACE</span></div><div class="d">Unchanged, shown dimmed until the tour's invitation (or 3 holes, or two seasons). 1–6 arm road classes only once Roads is open.</div></div>
+      <div class="tool"><div class="n"><img src="../../../../src/assets/ui/icons/terrain.webp">Paint<span class="ph dec">DECISION 2</span></div><div class="d">Stays on the rail (opens after hole 1). Plazas, paving and ground colours, as today.</div></div>
+    </div>
+    <div class="col"><h3><img src="../../../../src/assets/ui/icons/compass.webp">Everywhere</h3><div class="what">the rules every tool follows</div>
+      <div class="tool"><div class="n">No stolen clicks<span class="ph p1">PHASE 1</span></div><div class="d">Grass, Land, Event and Holes switches never take a build tool's click. Esc: the top menu, then one stage back, then out.</div></div>
+      <div class="tool"><div class="n">The disc and the hint pill<span class="ph p1">PHASE 1</span></div><div class="d">Only the marked disc rides by the pointer; words when dragging, refused or short of money; the hint names surface and hole.</div></div>
+      <div class="tool"><div class="n">Unlocks from the course<span class="ph p1">PHASE 1</span></div><div class="d">A real hole, the invitation, seasons; a stuck player is helped; locked tools stay in place.</div></div>
+    </div>
+    <div class="col later"><h3>Later</h3><div class="what">after Phase 1 and the owner's answers</div>
+      <div class="tool"><div class="n">Greenkeeping<span class="ph p2">PHASE 2</span></div><div class="d">Today's Grass panel as a tool.</div></div>
+      <div class="tool"><div class="n">Season card<span class="ph p2">PHASE 2</span></div><div class="d">The tour's checklist with Fix; course stats inside.</div></div>
+      <div class="tool"><div class="n">Hole card<span class="ph p2">PHASE 2</span></div><div class="d">Select a hole: par, grow-in, checks, pin drags.</div></div>
+      <div class="tool"><div class="n">Homes<span class="ph dec">DECISION 9</span></div><div class="d">Grow along your drives, or placed by hand.</div></div>
+    </div>
+  </div>
+  <div class="anat">
+    <div><b>1 · Header</b>Title, a one-line purpose, undo and redo naming the action.</div>
+    <div><b>2 · Primary action, on top</b>New hole · Build $X · Use this look: gold, sticky at the top (and T102's map pill).</div>
+    <div><b>3 · Beginner controls</b>Swatches with marks, sizes, Brush or Run, Erase, Protect; path and building cards.</div>
+    <div><b>4 · The tool's objects</b>Your holes as badges with icons and one status line.</div>
+    <div><b>5 · More options ▸</b>Labelled sections, open for the session only.</div>
+  </div>
+  <div class="legend"><span class="ph p1" style="padding:2px 9px;border-radius:999px">PHASE 1</span> no owner decision, no unposted ticket <span class="ph p2" style="padding:2px 9px;border-radius:999px">PHASE 2</span> after Phase 1 and T095 <span class="ph p3" style="padding:2px 9px;border-radius:999px">PHASE 3</span> after T068, T069b, T070 <span class="ph dec" style="padding:2px 9px;border-radius:999px">DECISION n</span> the owner's call (section 1)</div>
+  <div class="title-strip">P23 v2 · m0 the model</div>
+</div></body></html>

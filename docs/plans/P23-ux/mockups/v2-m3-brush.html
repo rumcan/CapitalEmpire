@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m3: shape by hand</title>
+<link rel="stylesheet" href="kit-v2.css"><script src="cameras-v2.js"></script><script src="mock-v2.js"></script></head>
+<body><div class="stage" id="s"><img class="bg" id="bg"><svg class="ov" id="ov"></svg></div>
+<script>
+const M = MOCK, S = document.getElementById('s'), ov = document.getElementById('ov');
+document.getElementById('bg').src = `bg/v2-grown-30-${M.W}.webp`;
+const c = M.cam('grown-30-bg'), P = M.iso(c), T = M.tileOf(c), st = M.cams.state, tee = M.cams.tee, green = M.cams.green;
+// the fairway's edge: 10 tiles (20 m) off the hole's centre line at its middle, on whichever side is in the free map
+const dx = green.x - tee.x, dy = green.y - tee.y, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L, mid = [(tee.x + green.x) / 2, (tee.y + green.y) / 2];
+let edge = null;
+for (const sd of [1, -1]) for (const off of [10, 9.5, 10.5]) { const t = [mid[0] + nx * off * sd, mid[1] + ny * off * sd], p = P(...t); if (p[0] > 560 && p[0] < M.W - 260 && p[1] > 170 && p[1] < M.H - 190 && (!edge || p[0] > edge.p[0] + 40)) edge = { t, p }; }
+const cx = Math.round(edge.t[0] * 2) / 2, cy = Math.round(edge.t[1] * 2) / 2;
+const cells = []; for (let i = -1; i < 1; i++) for (let j = -1; j < 1; j++) cells.push([cx * 2 + i, cy * 2 + j]);
+const fp = M.cells(P, cells), ring = M.cells(P, (() => { const r = []; for (let i = -2; i < 2; i++) for (let j = -2; j < 2; j++) if (i < -1 || i > 0 || j < -1 || j > 0) r.push([cx * 2 + i, cy * 2 + j]); return r; })());
+// decision 5 (c), recommended: a spotlight round the pointer over a faint grid on the course land (today: the whole land at one strength)
+const corners = [T(0, 0), T(M.W, 0), T(0, M.H), T(M.W, M.H)], xs = corners.map(q => q[0]), ys = corners.map(q => q[1]);
+const [px, py, pw, ph] = st.parcel, bx0 = Math.max(px, Math.min(...xs)), bx1 = Math.min(px + pw, Math.max(...xs)), by0 = Math.max(py, Math.min(...ys)), by1 = Math.min(py + ph, Math.max(...ys));
+M.svg(ov, `<defs><clipPath id="land"><path d="${M.poly(P, M.rect(...st.parcel))}"/></clipPath></defs>
+  <g clip-path="url(#land)">${M.grid(P, bx0, by0, bx1, by1, '255,250,230', 0.07)}</g>
+  <g>${M.spot(P, cx, cy, 7, '255,250,230', 0.5)}</g>
+  <path d="${ring.fill}" fill="rgba(170,200,120,0.3)"/><path d="${ring.stroke}" fill="none" stroke="rgba(240,255,220,0.55)" stroke-width="1" stroke-dasharray="2 3"/>
+  <path d="${fp.fill}" fill="rgba(140,205,95,0.62)"/>
+  <path d="${fp.stroke}" fill="none" stroke="#f3ffe8" stroke-width="2"/>`);
+M.topbar(S, { money: '$657,790', month: 'Sep 1985' });
+M.rail(S, { stage: 2, active: 'holes', newIds: ['paint'] });
+M.pointer(S, edge.p[0] - 2, edge.p[1] - 4, { surf: 'fairway', wall: '#3d5a22' });
+M.html(S, `
+<div class="glass panel">
+  <div class="phead"><div class="badge"><img src="../../../../src/assets/ui/icons/trophy.webp"></div><div><h2>Holes</h2><div class="sub">Each hole is a park: build it, then shape it</div></div>
+    <div class="undo"><span title="Undo: build hole 1">↶</span><span class="off">↷</span></div></div>
+  <div class="sec"><div class="primary" style="padding:8px 14px"><span class="plus">+</span><div class="t">New hole</div></div></div>
+  <div class="sec"><div class="caps">Your holes</div>
+    <div class="holes"><span class="hb ready sel"><span class="ic">✓</span>1</span><span class="hb add">+ ▾</span></div>
+    <div class="status">Hole 1 · par 4 · 342 m · ready</div></div>
+  <div class="sec"><div class="caps">Shape by hand <span class="hint">1 m cells · keys 1–6</span></div>
+    <div class="swatches">${M.swatch('fairway', 'Fairway', 1, true)}${M.swatch('green', 'Green', 2)}${M.swatch('tee', 'Tee', 3)}${M.swatch('rough', 'Rough', 4)}${M.swatch('bunker', 'Bunker', 5)}${M.swatch('water', 'Water', 6)}</div>
+    <div class="row" style="margin-top:9px;gap:5px">${M.sizes(2)}</div>
+    <div class="row" style="margin-top:8px;gap:6px"><div class="seg" style="flex:1"><span class="on">Brush</span><span>Run</span></div><span class="pill">Erase</span><span class="pill" title="Protect other surfaces (hold Shift to paint over)">🛡 Protect</span></div>
+  </div>
+  <div class="more"><div class="h">More options <span class="cnt">shapes · my looks · planting · more</span><span class="chev">▸</span></div></div>
+</div>
+<div class="glass hintpill"><span class="sw0" style="background-image:url(tex2/fairway.webp)"></span><b>Fairway · hole 1</b><span class="muted">· $2 a m² · 2×2 · click a cell, drag a run · <span class="kc">[</span><span class="kc">]</span> size · <span class="kc">Alt</span> erase</span></div>`);
+M.minimap(S, `bg/v2-grown-30-${M.W}.webp`);
+if (!M.small) M.html(S, `
+  <div class="note" style="left:${Math.min(edge.p[0] + 80, M.W - 330)}px;top:${edge.p[1] - 150}px;max-width:300px"><span class="n">1</span>Only the <b>disc</b> rides beside the pointer, with a mark per surface (stripes = fairway). Words come only while dragging, on a refusal or when money is short (D4.1, D4.2).</div>
+  <div class="note" style="left:${Math.max(470, edge.p[0] - 340)}px;top:${edge.p[1] + 80}px;max-width:300px"><span class="n">2</span>The footprint: exactly the 2 × 2 cells a click paints, with the collar ring it grows. The grid: a <b>spotlight</b> over a faint grid on your land (decision 5 c, recommended).</div>`);
+M.html(S, `<div class="title-strip">P23 v2 · m3 shape by hand (P1-C, P1-E) · ${M.W} × ${M.H}</div>`);
+</script>
+</body></html>

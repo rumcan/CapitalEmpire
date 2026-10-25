@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>P23 v2 m8: the rail at stages 1, 2 and 3</title>
+<link rel="stylesheet" href="kit-v2.css"><script src="cameras-v2.js"></script><script src="mock-v2.js"></script>
+<style>
+  .back { position: absolute; inset: 0; background: url(bg/v2-start-1600.webp) center/cover; filter: brightness(.35) saturate(.6) blur(2px); }
+  .col { position: absolute; top: 60px; width: 440px; }
+  .col h3 { margin: 0 0 4px; font-family: Georgia, serif; font-size: 22px; color: var(--gold-hi); }
+  .col p { margin: 0; font-size: 14px; color: #ddd6c6; line-height: 1.45; }
+  .tip { position: absolute; padding: 7px 11px; border-radius: 10px; background: rgba(14,15,12,.95); border: 1px solid var(--gold-line); font-size: 13px; line-height: 1.35; box-shadow: 0 6px 16px rgba(0,0,0,.5); }
+</style></head>
+<body><div class="stage" id="s"><div class="back"></div></div>
+<script>
+const M = MOCK, S = document.getElementById('s');
+const cols = [
+  { x: 40, stage: 1, t: 'Stage 1 · your first hole', p: 'A new range game. Holes (New hole only), Paths, Buildings and Bulldoze are open. Roads, Junctions, Transport and Paint are shown in place, dimmed, with what unlocks them.' },
+  { x: 560, stage: 2, t: 'Stage 2 · founding the club', p: 'A hole with par (hand-made or built), or one founding season or 20 minutes with no hole. Shape by hand and Paint open; Paint carries NEW until it is first opened.', newIds: ['paint'] },
+  { x: 1080, stage: 3, t: 'Stage 3 · the town', p: 'The tour\'s invitation, or 3 holes, or two seasons including founding ones. Roads, Junctions and Transport open with NEW badges.', newIds: ['roads', 'junction', 'transport'] },
+];
+for (const c of cols) {
+  M.html(S, `<div class="col" style="left:${c.x}px"><h3>${c.t}</h3><p>${c.p}</p></div>`);
+  M.rail(S, { stage: c.stage, active: c.stage === 1 ? 'holes' : c.stage === 2 ? 'holes' : 'roads', newIds: c.newIds || [], top: 210, left: c.x + 10 });
+}
+M.html(S, `<div class="tip" style="left:150px;top:470px">🔒 <b>Roads</b><br><span class="muted">Unlocks with the tour's invitation</span></div>
+  <div class="tip" style="left:150px;top:660px">🔒 <b>Paint</b><br><span class="muted">Unlocks with your first hole</span></div>
+  <div class="note" style="left:560px;top:820px;max-width:960px"><span class="n">1</span><b>Nothing moves</b> when a stage opens (critique D3.4): the same nine places from minute zero, so practice turns search into knowing. Keys stay as today (decision 1).</div>
+  <div class="title-strip">P23 v2 · m8 the rail at stages 1, 2 and 3 (P1-B, P1-E)</div>`);
+</script>
+</body></html>
