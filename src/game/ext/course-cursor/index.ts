@@ -74,6 +74,9 @@ export interface CursorEnv {
   cost?: (() => CellCost | null) | null;
   rev?: () => number;
   money?: (() => number) | null;
+  /** what the cells at tile (x, y) are besides a hole ('' for a hole: the course): a range start's practice area (T130) lays no hole, so the
+   *  hint pill says what it builds there instead of the hole a click joins */
+  zone?: ((x: number, y: number) => string) | null;
 }
 
 /** what a click would do (plan P23 4.9): ready to lay, protected (some cells keep a higher surface), refused (some cells cannot take the
@@ -784,6 +787,7 @@ export class CourseCursor {
   /** no footprint this frame (the pointer is off the map): no words by the disc; the hint keeps the brush's own words */
   private atRest(tool: CursorTool) {
     const s = this.state; s.kind = 'ready'; s.dragging = false;
+    this.zoneNow = '';
     if (tool.mode === 'brush' || tool.mode === 'draw') this.words(tool, tool.rubOut && tool.mode === 'brush' ? 'erase' : 'ready', false, tool.rubOut && tool.mode === 'brush', -1, 0, 0, '', '', -1, 0);
     else { s.label.length = 0; s.bad.length = 0; this.setHint(''); }
   }
@@ -797,7 +801,9 @@ export class CourseCursor {
   }
 
   /** the words' inputs at their last build (the words are built again only when one changes, so a still frame makes no string) */
-  private wk = { kind: '', drag: false, erase: false, brush: '', mode: '', hole: 0, fresh: false, unit: 0, n: 0, kept: 0, ref: 0, whyK: '', whyR: '', price: 0, money: 0, cells: 0, spent: 0, grid: false, only: false };
+  private wk = { kind: '', drag: false, erase: false, brush: '', mode: '', hole: 0, fresh: false, unit: 0, n: 0, kept: 0, ref: 0, whyK: '', whyR: '', price: 0, money: 0, cells: 0, spent: 0, grid: false, only: false, zone: '' };
+  /** the zone under the pointer this frame (CursorEnv.zone; '' on the course) */
+  private zoneNow = '';
   /** the state's words: the hint pill (what a click does: "Painting Fairway · Hole 1 · $2 a cell", or "starts Hole 2" when that hole has
    *  nothing yet, then the state's words) and the lines beside the disc (only the drag total, a refusal with its reason, or money short);
    *  n: the cells a click lays (-1: unknown), kept and ref: the cells it keeps and refuses with their main reasons, price: what it costs ($;
@@ -808,12 +814,13 @@ export class CourseCursor {
     const cells = drag ? tool.strokeCells : 0, spent = drag ? Math.round(tool.strokeSpent) : 0, m = kind === 'short' ? Math.round(money) : 0;
     const grid = this.feet.grid, only = !!tool.rubHoleOnly;
     const w = this.wk;
+    const zone = this.zoneNow;
     if (w.kind === kind && w.drag === drag && w.erase === erase && w.brush === brush && w.mode === mode && w.hole === hole && w.fresh === fresh && w.unit === unit && w.n === n && w.kept === kept
-      && w.ref === ref && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.cells === cells && w.spent === spent && w.grid === grid && w.only === only) return;
-    w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.mode = mode; w.hole = hole; w.fresh = fresh; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent; w.grid = grid; w.only = only;
+      && w.ref === ref && w.whyK === whyK && w.whyR === whyR && w.price === price && w.money === m && w.cells === cells && w.spent === spent && w.grid === grid && w.only === only && w.zone === zone) return;
+    w.zone = zone; w.kind = kind; w.drag = drag; w.erase = erase; w.brush = brush; w.mode = mode; w.hole = hole; w.fresh = fresh; w.unit = unit; w.n = n; w.kept = kept; w.ref = ref; w.whyK = whyK; w.whyR = whyR; w.price = price; w.money = m; w.cells = cells; w.spent = spent; w.grid = grid; w.only = only;
     const s = this.state, name = nameOf(brush), back = lower(nameOf(backKind(brush)));
     // the hole a click joins: a cart path belongs to no hole; a hole with nothing yet is started by the stroke
-    const joins = surf > 0 ? (fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
+    const joins = surf > 0 ? (zone ? ` · ${zone}` : fresh ? ` · starts Hole ${hole}` : ` · Hole ${hole}`) : '', verb = mode === 'draw' ? 'Shaping' : 'Painting';
     // a rub out on the course grid (T125) takes every course surface under it back to rough (grass for the rough brush), whatever the brush
     const rub = erase && grid && surf > 0, rubBase = `Rub out${only ? ` · Hole ${hole} only` : ''}`;
     const base = rub ? rubBase : `${verb} ${name}${joins}${unit >= 0 ? ` · ${unit$(unit)} a cell` : ''}`;
@@ -859,6 +866,7 @@ export class CourseCursor {
     const base = LOOKS[tool.brushKind] ?? LOOKS.fairway!, d = v.dpr, n = tool.brushSquare();
     // the dab's middle and size: the square brush's n x n cells (T109), or the round brush on the nearest cell corner (T108)
     const x = n ? (squareStart(cx, n) + n / 2) * CELL_T : snapDab(cx), y = n ? (squareStart(cy, n) + n / 2) * CELL_T : snapDab(cy), size = n ? (n * CELL_T) / 2 : r;
+    this.zoneNow = this.env.zone?.(x, y) ?? '';
     this.drawGrid(ctx, v, x, y, size);
     const f = this.feet, fp = f.at(n ? cx : x, n ? cy : y, r, base.surf, this.env.why, (this.env.rev?.() ?? 0) * 2 + (tool.rubHoleOnly ? 1 : 0), this.env.refuse, n, this.env.cost);
     if (f.grid && !erase) this.golf = f.price >= 0;

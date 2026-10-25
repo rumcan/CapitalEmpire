@@ -7,7 +7,7 @@ import { Icon } from '../Icon';
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
 
-export function RangeCard({ view, onClose, onPrice, onBuy, right = 'right-3' }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; right?: string }) {
+export function RangeCard({ view, onClose, onPrice, onBuy, onShowPractice, right = 'right-3' }: { view: RangeCardView; onClose: () => void; onPrice: (p: number) => void; onBuy: (id: RangeCardView['upgrades'][number]['id']) => void; onShowPractice?: () => void; right?: string }) {
   const { biz, stats: st, today } = view, scale = Math.round(rangeScale(view.dayLen)), pf = priceFactor(biz.price, st.ref);
   const want = Math.round(dayDemand(biz, view.demand, st)), cap = st.bays * (st.close - st.open);
   const demandWord = pf >= 1.15 ? 'cheap: more golfers' : pf <= 0.85 ? 'dear: fewer golfers' : 'fair';
@@ -38,6 +38,26 @@ export function RangeCard({ view, onClose, onPrice, onBuy, right = 'right-3' }: 
           <span className="text-[11px] text-slate-400">{st.extra ? `+ ${money(st.extra)} shop spend · ` : ''}fair price {money(st.ref)}</span>
         </div>
         <div className="mt-1 text-[10px] text-slate-500">Each golfer you see stands for {scale} customers over the season.</div>
+      </div>
+      <div className="space-y-1.5" data-testid="range-practice">
+        <div className="flex items-center justify-between text-[10px] uppercase text-slate-400">
+          <span>Practice facilities</span>
+          {onShowPractice && <button className="chip normal-case" onClick={onShowPractice} title="Show the practice area and pick the brush">Show area</button>}
+        </div>
+        {view.practice.map(f => (
+          <div key={f.id} className={`rounded-lg border p-2 text-xs ${f.state === 'open' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/5 bg-white/5'}`} data-testid={`range-practice-${f.id}`}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium text-white">{f.name}</span>
+              <span className={f.state === 'open' ? 'text-emerald-300' : f.state === 'none' ? 'text-slate-400' : 'text-amber-300'}>{f.state === 'open' ? 'Open' : f.state === 'none' ? 'Not built' : 'Not open yet'}</span>
+            </div>
+            <div className="text-[11px] text-slate-400">{f.words}</div>
+            <div className="mt-0.5 flex justify-between text-[10px] text-slate-500">
+              <span>+{Math.round(f.appeal * 100)}% visitors · ${view.fee} a golfer</span>
+              <span>{f.today} today · {Math.round(f.golfers)} this season · <span className="text-emerald-300/90">{money(f.takings)}</span></span>
+            </div>
+          </div>
+        ))}
+        <div className="text-[10px] text-slate-500">Paint them with the Green and Bunker brushes in the Practice area beside the car park. A share of the range's golfers walk over after their bucket.</div>
       </div>
       <div className="space-y-1.5">
         <div className="text-[10px] uppercase text-slate-400">Upgrades</div>

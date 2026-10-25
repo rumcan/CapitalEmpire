@@ -6,9 +6,18 @@ import { RANGE_PASS_POP } from './range';
 export type RangeUpgradeId = 'bays8' | 'bays12' | 'bays24' | 'targets' | 'covered' | 'lights' | 'dispenser' | 'proshop';
 /** a span's counts: the golfers who bought a bucket, the buckets (the customers they stand for), the lost (turned away or left the queue), the takings ($) */
 export interface RangeCounts { golfers: number; buckets: number; lost: number; takings: number }
+/** the practice facilities the player paints beside the range (plan P24 Phase 2, T130): the putting green, and the chipping green with its bunker */
+export type PracticeId = 'putting' | 'chipping';
+export const PRACTICE_IDS: readonly PracticeId[] = ['putting', 'chipping'];
+/** a practice facility's counts over a span: the golfers who used it, and its fees ($) */
+export interface PracticeCounts { golfers: number; takings: number }
+/** a practice facility in the save: open (big enough and in the practice area when the course grid was last read: the appeal follows it before
+ *  the grid is read again on a load), and its season's and lifetime counts */
+export interface PracticeFacSave { open: boolean; season: PracticeCounts; total: PracticeCounts }
 /** the range business in the save (golf.range): v 1, the upgrades owned (in buying order), the bucket price ($), the season's and the lifetime
- *  counts, and paths (the game has laid the range's cart paths: an old save's first load lays them) */
-export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean }
+ *  counts, paths (the game has laid the range's cart paths: an old save's first load lays them), tee (T130: the game has laid the tee box into the
+ *  course grid: an old save's first load lays it) and the practice facilities (T130; a save without them: none built) */
+export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; season: RangeCounts; total: RangeCounts; paths?: boolean; tee?: boolean; practice: Record<PracticeId, PracticeFacSave> }
 
 /** the bucket price band and the start ($) */
 export const PRICE_MIN = 3, PRICE_MAX = 12, PRICE_START = 6;
@@ -36,12 +45,26 @@ export const RANGE_UPGRADES: readonly RangeUpgrade[] = [
 const BY_ID = new Map(RANGE_UPGRADES.map(u => [u.id, u]));
 
 const zero = (): RangeCounts => ({ golfers: 0, buckets: 0, lost: 0, takings: 0 });
-/** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts */
-export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero() }; }
+const noPractice = (): Record<PracticeId, PracticeFacSave> => ({ putting: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } }, chipping: { open: false, season: { golfers: 0, takings: 0 }, total: { golfers: 0, takings: 0 } } });
+/** the range a new game starts with: 4 bays, $6 a bucket, nothing bought, no counts, no practice facilities */
+export function defaultRangeBiz(): RangeBizSave { return { v: 1, owned: [], price: PRICE_START, season: zero(), total: zero(), practice: noPractice() }; }
+const pos = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
 const counts = (c: unknown): RangeCounts => {
-  const o = (c && typeof c === 'object' ? c : {}) as Partial<RangeCounts>, n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
-  return { golfers: n(o.golfers), buckets: n(o.buckets), lost: n(o.lost), takings: n(o.takings) };
+  const o = (c && typeof c === 'object' ? c : {}) as Partial<RangeCounts>;
+  return { golfers: pos(o.golfers), buckets: pos(o.buckets), lost: pos(o.lost), takings: pos(o.takings) };
 };
+/** a loaded practice record made well formed (the migration: a save from before T130 has none built) */
+function normalizePractice(x: unknown): Record<PracticeId, PracticeFacSave> {
+  const out = noPractice(), o = (x && typeof x === 'object' ? x : {}) as Partial<Record<PracticeId, Partial<PracticeFacSave>>>;
+  const pc = (c: unknown): PracticeCounts => { const q = (c && typeof c === 'object' ? c : {}) as Partial<PracticeCounts>; return { golfers: pos(q.golfers), takings: pos(q.takings) }; };
+  for (const id of PRACTICE_IDS) { const f = o[id]; if (f && typeof f === 'object') out[id] = { open: f.open === true, season: pc(f.season), total: pc(f.total) }; }
+  return out;
+}
+/** the season closes with the books: the range's and its practice facilities' season counts start again from zero */
+export function rangeNewSeason(s: RangeBizSave): void {
+  s.season = zero();
+  for (const id of PRACTICE_IDS) s.practice[id].season = { golfers: 0, takings: 0 };
+}
 /** a loaded golf.range made well formed (the migration: a range-start save without one gets the starting range); unknown upgrades are dropped,
  *  an upgrade whose prerequisite is missing is dropped, the price is clamped to the band */
 export function normalizeRangeBiz(x: unknown): RangeBizSave {
@@ -49,8 +72,9 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   const o = x as Partial<RangeBizSave>, owned: RangeUpgradeId[] = [];
   for (const id of Array.isArray(o.owned) ? o.owned : []) { const u = BY_ID.get(id as RangeUpgradeId); if (u && !owned.includes(u.id) && (!u.needs || owned.includes(u.needs))) owned.push(u.id); }
   const p = typeof o.price === 'number' && Number.isFinite(o.price) ? Math.round(o.price) : PRICE_START;
-  const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total) };
+  const out: RangeBizSave = { v: 1, owned, price: Math.min(PRICE_MAX, Math.max(PRICE_MIN, p)), season: counts(o.season), total: counts(o.total), practice: normalizePractice(o.practice) };
   if (o.paths === true) out.paths = true;
+  if (o.tee === true) out.tee = true;
   return out;
 }
 
@@ -64,12 +88,28 @@ export function rangeStats(s: RangeBizSave): RangeStats {
   const has = (id: RangeUpgradeId) => s.owned.includes(id);
   const bays = has('bays24') ? 24 : has('bays12') ? 12 : has('bays8') ? 8 : START_BAYS;
   const covered = has('covered'), lights = has('lights'), dispenser = has('dispenser'), proShop = has('proshop');
-  const appeal = 1 + (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0);
+  const appeal = (1 + (has('targets') ? 0.25 : 0) + (covered ? 0.15 : 0) + (dispenser ? 0.05 : 0) + (proShop ? 0.15 : 0)) * practiceAppeal(s);
   return {
     bays, targets: has('targets') ? 5 : 2, covered, lights, dispenser, proShop, appeal,
     ref: PRICE_START + (covered ? 2 : 0) + (proShop ? 1 : 0), extra: proShop ? 2 : 0, serve: dispenser ? 0.8 : proShop ? 2 : 3,
     open: OPEN_HOUR, close: lights ? CLOSE_LIT : CLOSE_HOUR, qMax: 4 + Math.floor(bays / 4),
   };
+}
+/** the practice facilities' appeal (T130, plan P24 Phase 2): x(1 + 0.1) for an open putting green, x(1 + 0.1) for an open chipping green with its
+ *  bunker; multiplied into the stats' appeal beside the upgrades' (and T131's props) */
+export const PRACTICE_APPEAL: Readonly<Record<PracticeId, number>> = { putting: 0.1, chipping: 0.1 };
+export function practiceAppeal(s: Pick<RangeBizSave, 'practice'>): number {
+  let a = 1; for (const id of PRACTICE_IDS) if (s.practice?.[id]?.open) a *= 1 + PRACTICE_APPEAL[id];
+  return a;
+}
+/** the fee a golfer pays to use a practice facility ($, before the scale) and the share of the range's golfers who walk over after their bucket
+ *  (each tries the putting green first, then the chipping green) */
+export const PRACTICE_FEE = 2;
+export const PRACTICE_SHARE: Readonly<Record<PracticeId, number>> = { putting: 0.35, chipping: 0.3 };
+/** the expected golfers each open facility gets out of n who finished a bucket (the skip's booking: putting first, chipping out of the rest) */
+export function practiceUsers(s: Pick<RangeBizSave, 'practice'>, n: number): Record<PracticeId, number> {
+  const put = s.practice?.putting?.open ? n * PRACTICE_SHARE.putting : 0, chip = s.practice?.chipping?.open ? (n - put) * PRACTICE_SHARE.chipping : 0;
+  return { putting: put, chipping: chip };
 }
 /** the demand's price factor: (ref / price)^1.5, clamped to 0.25..2.5 */
 export function priceFactor(price: number, ref: number): number { return Math.min(2.5, Math.max(0.25, Math.pow(ref / Math.max(1, price), 1.5))); }
