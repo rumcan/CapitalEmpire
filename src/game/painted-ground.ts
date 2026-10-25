@@ -9,7 +9,7 @@ type Box = readonly [number, number, number, number];
 /** the sample step of the drift's picture, tiles (its shortest wave is 28 tiles, so 4 is smooth after the bilinear stretch) */
 const TONE_STEP = 4;
 /** the patch pictures a worker keeps: one set per blend picture, patch size and density */
-const MAX_SPRITE_SETS = 2;
+const MAX_SPRITE_SETS = 3; // the grass's blend, the next art level's, and the living ground's leaf litter (T111)
 
 export class PaintedGround {
   private sprites = new Map<string, Cnv[]>();
@@ -44,16 +44,17 @@ export class PaintedGround {
     return m;
   }
   /** lays the blend (img repeating over period tiles) over tile box `box` of g, whose transform is the chunk's iso matrix M at cache level L:
-   *  its mean colour underneath, the patches, then the drift */
-  compose(g: C2D, img: Cnv, period: number, box: Box, L: number) {
+   *  its mean colour underneath, the patches, then the drift; base false lays the patches alone (a picture with transparent gaps, the living
+   *  ground's leaf litter: no mean colour under it and no drift over it) */
+  compose(g: C2D, img: Cnv, period: number, box: Box, L: number, base = true) {
     // patch pictures at the chunk's density (80 L px a tile: a tile edge is 71.6 L chunk px) or the blend's own, at most 640 px across (only
     // the 20% zoom's near and mid mix on a dpr-2 screen asks for more, and gets 1.2x less)
     const R = patchRadius(period), spp = Math.min(img.width / period, 80 * L, 640 / (2 * R));
     // under the patches, the blend's mean colour: where their soft edges thin out the ground blurs a little, but no periodic picture shows
-    g.fillStyle = this.meanOf(img); g.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2);
+    if (base) { g.fillStyle = this.meanOf(img); g.fillRect(box[0] - 1, box[1] - 1, box[2] - box[0] + 2, box[3] - box[1] + 2); }
     const set = this.patchSet(img, period, R, spp);
     for (const q of grassPatches(box, R)) g.drawImage(set[q.k]!, q.x - R, q.y - R, 2 * R, 2 * R);
-    this.drawTone(g, box);
+    if (base) this.drawTone(g, box);
   }
   private lit: Cnv | null = null;
   /** the world-space drift (painted-grass-lod.ts grassTone, toneOps) over tile box `box` of g (transform: tile space), sampled every TONE_STEP

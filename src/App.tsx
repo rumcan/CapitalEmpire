@@ -278,6 +278,16 @@ export default function App() {
                         <button key={a} className={`btn flex-1 ${game.grassArt === a ? 'on' : ''}`} onClick={() => { game.setGrassArt(a); bump(); }}>{a === 'painted' ? 'Painted' : 'Photo'}</button>
                       ))}
                     </div>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="The grass grows where it would: darker, bushier grass along fences, walls, hedges and water, patchy grass with bare dirt and leaves under trees, worn ground at doors and path edges, and soft shade at the foot of everything (T111)">
+                      <input type="checkbox" checked={game.groundVariety} onChange={e => { game.setGroundVariety(e.target.checked); bump(); }} />
+                      Ground variety
+                    </label>
+                    {dev && (
+                      <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs" title="Developer: the ground shows the living ground's influence maps instead of the grass: lush green, thin orange, bare brown, litter red, shade blue-grey">
+                        <input type="checkbox" checked={game.groundDebug} onChange={e => { game.setGroundDebug(e.target.checked); bump(); }} />
+                        Ground variety maps (debug)
+                      </label>
+                    )}
                     <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" title="Every tree, building, prop and car throws its silhouette onto the ground away from the sun (the baked house lots have theirs baked in, from cast-shadow.json)">
                       <input type="checkbox" checked={game.cast.on} onChange={e => { game.setCast({ on: e.target.checked }); bump(); }} />
                       Cast shadows
