@@ -117,8 +117,8 @@ export function hitShot(r: () => number, skill: number, lie: Lie, from: Pt, aim:
 
 /** a putt from distM metres: the make chance falls with distance and rises with skill; a miss leaves the ball at least 0.3 m from the hole,
  *  at a share of the putt that is tighter for better putters */
-export function putt(r: () => number, skill: number, distM: number): { holed: boolean; leaveM: number } {
+export function putt(r: () => number, skill: number, distM: number, factor = 1): { holed: boolean; leaveM: number } {
   const p = Math.min(0.99, Math.exp(-Math.max(0, distM - 0.3) / (2.0 + 1.5 * skill)));
-  if (r() < p) return { holed: true, leaveM: 0 };
+  if (r() < p * factor) return { holed: true, leaveM: 0 };
   return { holed: false, leaveM: Math.max(0.3, distM * (0.05 + (0.07 + 0.15 * (1 - skill)) * r())) };
 }

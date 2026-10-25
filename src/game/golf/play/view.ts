@@ -46,6 +46,8 @@ export class PlayView {
   private k: Int32Array; private swingAt: Float64Array; private tee: Float64Array; private lx: Float64Array; private ly: Float64Array; private rows: Uint8Array;
   /** whether an update has run: the first one swings nothing (the shots struck before it, a page load mid-round, are shown at rest) */
   private started = false;
+  /** the shots per golfer as indexed, and how many the plan had then (a live group appends shots: the index follows) */
+  private count = -1;
 
   constructor(plan: RoundPlan, view: CourseView) {
     this.plan = plan; this.view = view;
@@ -53,7 +55,7 @@ export class PlayView {
     this.k = new Int32Array(size); this.swingAt = new Float64Array(size).fill(-Infinity); this.tee = new Float64Array(size);
     this.lx = new Float64Array(size); this.ly = new Float64Array(size); this.rows = new Uint8Array(size);
     this.shots = Array.from({ length: size }, () => [] as Shot[]);
-    for (const s of plan.shots) this.shots[s.golfer]!.push(s);
+    this.index();
     for (const gr of plan.groups) for (const id of gr.players) this.tee[id] = gr.tee;
   }
 
@@ -61,6 +63,7 @@ export class PlayView {
    *  its swing and its flight at now; a shot the minute has gone back before is forgotten without a swing. Then the people (not the done, nor the
    *  waiting more than LEAD_MIN before their tee) and the balls (in the air, or at rest unless holed) */
   update(minute: number, now: number): void {
+    if (this.count !== this.plan.shots.length) this.index();
     const states = stateAt(this.plan, this.view, minute, this.states), fresh = this.started, drive = GOLFER_CLIPS.golf_drive;
     let np = 0, nb = 0;
     for (let i = 0; i < states.length; i++) {
@@ -109,6 +112,9 @@ export class PlayView {
     }
     this.people.length = np; this.balls.length = nb; this.started = true;
   }
+
+  /** the shots of each golfer in time order, from the plan (refilled in place) */
+  private index(): void { for (const l of this.shots) l.length = 0; for (const s of this.plan.shots) this.shots[s.golfer]!.push(s); this.count = this.plan.shots.length; }
 
   /** the ball object at index i of balls (made on first use, then reused) */
   private slot(i: number): PlayBall { return this.balls[i] ?? (this.balls[i] = { x: 0, y: 0, h: 0 }); }

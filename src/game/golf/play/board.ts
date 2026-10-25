@@ -32,7 +32,7 @@ export function boardRows(standings: Standing[], golfers: Golfer[], limit: numbe
 /** the champion: the lowest total against the course's par, with every golfer tied at it. Null with no holes to play, or (with a minute) before
  *  every golfer is done by that minute; without one, the final result */
 export function champion(plan: RoundPlan, view: CourseView, minute = Infinity): { golfers: number[]; toPar: number; strokes: number } | null {
-  if (!view.holes.length || !plan.golfers.length || !plan.golfers.every(g => plan.done[g.id]! <= minute)) return null;
+  if (!view.holes.length || !plan.golfers.length || !plan.golfers.every(g => plan.done[g.id]! <= minute && Number.isFinite(plan.done[g.id]!))) return null;
   const par = view.holes.reduce((a, h) => a + h.par, 0);
   let best = Infinity, strokes = 0, ids: number[] = [];
   for (const g of plan.golfers) {
