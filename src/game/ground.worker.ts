@@ -10,6 +10,7 @@ import { EAGER_PHOTO } from './grass-art';
 import { isPaintPhoto } from './paint';
 import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
 import { WOODLAND_TEX } from './terrain-paint';
+import { WALL_TEX } from './ext/course-walls';
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 const terrain = new Uint8Array(MAP * MAP), net = new RoadNetwork(), tex = new Textures();
@@ -70,6 +71,8 @@ const handle = async (m: ToWorker) => {
         for (const [, ps] of m.set) for (const p of ps) if (p.lawn && isPaintPhoto(p.tex) && !EAGER_PHOTO.has(p.tex) && !tex.has(p.tex)) need.add(p.tex); else if (p.paint) for (const t of [p.tex, ...(p.paint.b > 0 ? [p.paint.bt] : []), ...(p.paint.m ? [p.paint.m.t] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
         // a course chunk's surfaces and collars (T078)
         for (const [, ps] of m.set) for (const p of ps) if (p.course) for (const l of p.course.layers) for (const t of [l.tex, ...(l.collar ? [l.collar.tex] : [])]) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
+        // and the wall art its walls wear (T099 WALL_TEX slots; nothing until a slot is registered in grass-art PHOTO_TEX)
+        for (const [, ps] of m.set) for (const p of ps) if (p.course?.walls?.length) for (const t of WALL_TEX) if (isPaintPhoto(t) && !EAGER_PHOTO.has(t) && !tex.has(t)) need.add(t);
         await Promise.all([...need].map(t => tex.ensure(t).catch(err => post({ t: 'error', message: String(err) }))));
         painter.setLotGround(m.set, m.drop);
         break;
