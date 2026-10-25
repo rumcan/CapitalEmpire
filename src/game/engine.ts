@@ -25,6 +25,7 @@ import { OWNER_SCALE } from './lots/scales';
 import { areaAt, toTuple, type PaintTuple, type PaintTex } from './paint';
 import { CELL_T, SURF, cellAt, diffBox, encodeGrid, fitGrid, landGridBox, makeGrid, paintStroke, type Grid as CourseGrid, type GridDiff, type GridSave } from './ext/course-grid';
 import { SURFACE_TEX_ID, SURF_SURFACE, areaRank, ringArea, type GridArea } from './ext/course-grid/areas';
+import { holeGrowth, holeReadyMonths, monthIndexLabel, type HoleGrowth } from './ext/course-fx/hole-grow';
 import { aimsFromPlans, decodePlans } from './ext/hole-wizard';
 import { isCourseArea, loadCourseGrid, migrateAreas } from './ext/course-grid/migrate';
 import { COURSE_EDIT_REACH, COURSE_PATCH_REACH, courseChunksIn, courseGrowKey, courseKey, growStatic, type CourseLooks } from './ext/course-grid/patch';
@@ -305,8 +306,10 @@ export class Game {
   /** the road tool's scope (T084): 'course' when the Course menu's Paths & drives opened it (it lays the course's cart paths and drives), 'town'
    *  from Roads; scopeClass: the class last picked in each scope, picked again on coming back to it */
   roadScope: 'town' | 'course' = 'town'; private scopeClass: Record<'town' | 'course', ClassId> = { town: 'street', course: 'cart-dirt' };
-  /** the tool as the menus show it: the road tool in the course scope is the Course menu's Paths & drives ('path') */
-  get uiTool(): Tool { return this.tool === 'road' && this.roadScope === 'course' ? 'path' : this.tool; }
+  /** the course tool's scope (plan P23 P1-E): 'buildings' when the rail's Buildings opened it (it places the clubhouse; no brush), else 'holes' */
+  courseScope: 'holes' | 'buildings' = 'holes';
+  /** the tool as the rail shows it: the road tool in the course scope is Paths ('path'), the course tool in its buildings scope is Buildings */
+  get uiTool(): Tool { return this.tool === 'road' && this.roadScope === 'course' ? 'path' : this.tool === 'course' && this.courseScope === 'buildings' ? 'buildings' : this.tool; }
   /** Replace on (E): finishing a route first bulldozes the road pieces it would clash with (replaceCuts in snap.ts), then builds it */
   replaceMode = false;
   /** the junction tool's brush: 'select' (a click selects a junction), or a type that a click installs on the junction (plain, stop, mini, signal, roundabout) */
@@ -426,8 +429,8 @@ export class Game {
     g.plans = p; g.aims = aimsFromPlans(g.aims ?? [], before, decodePlans(p));
     this.scheduleSave();
   }
-  /** the Paint and Course tools drive the same PaintTool */
-  get paintOn() { return this.tool === 'paint' || this.tool === 'course'; }
+  /** the Paint and Holes tools drive the same PaintTool (Buildings, the course tool's other scope, does not paint) */
+  get paintOn() { return this.tool === 'paint' || (this.tool === 'course' && this.courseScope === 'holes'); }
   /** the Course tool's hole strip: makes hole n current and moves the camera to its areas (when it has any) */
   goToHole(n: number) { this.paint.setHole(n); const b = this.paint.holeBox(n); if (b) this.lookAt((b[0] + b[2]) / 2, (b[1] + b[3]) / 2); }
   /** the golf land the town never builds on: the course and every parcel the player owns (tiles, [x, y, w, h]) */
@@ -440,6 +443,16 @@ export class Game {
     const g = this.golf, areas = this.courseAreaList(), key = `${this.caCache?.key}:${g ? JSON.stringify([g.pins, g.tees, g.aims]) : ''}`;
     if (this.holeCache?.key !== key) this.holeCache = { key, v: holeViews(areas, g ? { pins: g.pins, tees: g.tees, aims: g.aims } : null) };
     return this.holeCache.v;
+  }
+  /** each hole's ready month on the course grid (ext/course-fx/hole-grow.ts), kept for the grid object and its revision */
+  private growCache: { grid: CourseGrid; rev: number; ready: Map<number, number> } | null = null;
+  /** hole n's grow-in for the Holes panel's badge and status line (P23 4.3): growing, and the month it is ready in ("Mar 1985"); null outside
+   *  golf mode or without a course grid */
+  holeGrowthOf(n: number): (HoleGrowth & { ready: string }) | null {
+    const g = this.courseGrid; if (!g || !this.golf) return null;
+    if (this.growCache?.grid !== g || this.growCache.rev !== g.rev) this.growCache = { grid: g, rev: g.rev, ready: holeReadyMonths(g) };
+    const h = holeGrowth(this.growCache.ready.get(n), this.growMonth(), this.golfMonthIndex());
+    return { ...h, ready: monthIndexLabel(h.readyMonth) };
   }
   /** fits every hole's pin and tee markers to its painted green and tee (a golf game; golf/holeview.ts markerPlan): runs after each Course change,
    *  undo and redo, outside the undo journal (pins: a placed preset's flag spot by hole) */
@@ -781,7 +794,7 @@ export class Game {
   private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
-  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
+  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && this.paintOn && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
   private hintSeen = 0; private hintEmitAt = 0;
   /** the map grid and the course half grid (T100), drawn between the ground and the sprites */
@@ -1914,7 +1927,7 @@ export class Game {
     }
 
   // ---------- road routing ----------
-  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ if (this.tool !== t || scope !== this.roadScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t !== 'course') this.clubPlacing = false; if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
+  setTool(t: Tool) { if (t === 'business' && this.golfMode) return; /* golf mode: the game places the clubhouse, so no Business tool */ const scope = t === 'path' ? 'course' : t === 'road' ? 'town' : this.roadScope; if (t === 'path') t = 'road'; /* T084: Paths & drives is the road tool on the course */ const cScope = t === 'buildings' ? 'buildings' : t === 'course' ? 'holes' : this.courseScope; if (t === 'buildings') t = 'course'; /* P23 P1-E: Buildings is the course tool's clubhouse scope */ if (this.tool !== t || scope !== this.roadScope || cScope !== this.courseScope) { this.paint.cancel(); this.cancelRoute(); this.selected = null; this.selectedJunction = null; this.parkDrag = null; this.parking.drag = null; this.tollHover = null; this.bizHover = null; this.busPick = null; this.busHover = null; this.laneHover = null; } this.tool = t; if (pickTool(this, t)) this.tidySideModes(); /* P23 P1-A: a build tool closes the Grass panel, Land, Holes and Event */ if (t === 'road') this.setRoadScope(scope); if (t === 'course') this.courseScope = cScope; if (t !== 'course' || cScope === 'holes') this.clubPlacing = false; else if (this.golf && !this.bizDefs.some(d => d.type === 'clubhouse')) this.clubPlacing = true; /* Buildings arms the clubhouse until it stands */ if (t === 'course') this.paint.enterCourse(); else if (t === 'paint') this.paint.enterPaint(); this.emit(); }
   /** the snap radius in tiles: about 14 screen px (at least 2 tiles) */
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
@@ -2660,6 +2673,7 @@ export class Game {
       case 'bulldoze': this.bulldozeAt(mx, my, true); this.dragging = { kind: 'bulldoze', sx: mx, sy: my, camX: 0, camY: 0, moved: false }; break;
       case 'paint': case 'course':
         if (this.clubPlacing && this.tool === 'course') { this.clubUpdate(mx, my); this.clubClick(); break; }
+        if (!this.paintOn) break; // Buildings with nothing in hand: a click lays nothing
         this.paint.pointerDown(this.tileAt(mx, my), mx, my, e.altKey); this.courseCursor.press(this.paint, e.altKey); break;
       case 'park': {
         // the bay rows drag and the on-street click are the Parking tool's (docs/PARKING.md); the rectangle is the car park drag below
@@ -2996,12 +3010,13 @@ export class Game {
     this.bizUpdate(h.mx, h.my); this.emit();
   }
   // ---------- the clubhouse the player places (range starts, plan P22 2.5.2, T089) ----------
-  /** the Course tool's Buildings tab: the clubhouse's ghost follows the cursor and a click places it */
+  /** the rail's Buildings (P23 P1-E; was the Course tool's Buildings tab): the clubhouse's ghost follows the cursor and a click places it */
   clubPlacing = false;
-  /** starts (on) or ends placing the clubhouse (golf games; the Course tool opens) */
+  /** starts (on) or ends placing the clubhouse (golf games; Buildings opens) */
   placeClubhouse(on: boolean) {
-    this.clubPlacing = on && !!this.golf; this.bizHover = null;
-    if (this.clubPlacing && this.tool !== 'course') this.setTool('course');
+    const go = on && !!this.golf;
+    if (go && this.uiTool !== 'buildings') this.setTool('buildings');
+    this.clubPlacing = go; this.bizHover = null;
     this.emit();
   }
   /** the gap from rect (x, y, w, h) to the nearest road's verge (any road or drive), tiles: below 0 when a verge reaches into it; Infinity with no

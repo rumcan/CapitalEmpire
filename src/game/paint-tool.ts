@@ -573,6 +573,9 @@ export class PaintTool {
   /** whether there is a step to undo / redo (the panel's buttons) */
   get canUndo() { return this.undos.length > 0 && !this.tx; }
   get canRedo() { return this.redos.length > 0 && !this.tx; }
+  /** what an undo / redo would take back or do again ('' when there is none), for the Holes panel's tooltips (P23 4.3) */
+  get undoLabel() { return this.canUndo ? this.undos[this.undos.length - 1]!.label : ''; }
+  get redoLabel() { return this.canRedo ? this.redos[this.redos.length - 1]!.label : ''; }
   /** undoes the last action: its areas go back, its props are taken away or put back, its money is refunded */
   undo() {
     if (this.tx) return;
