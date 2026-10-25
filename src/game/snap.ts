@@ -1,7 +1,9 @@
 // Road-tool snapping (pure: no DOM). snapPoint decides where a click lands (a node, a road or the tile grid); checkLegs refuses a
 // route that would build on top of a road, crowd a junction or make a sharp join. Tiles are 2 m; distances below are in tiles.
 import { MAP, clamp } from './iso';
-import { CLASS, type Leg, type Node, type PieceSel, type Pt, type RoadClass, type RoadNetwork, type Seg } from './network';
+import { CLASS, isCourseClass, type Leg, type Node, type PieceSel, type Pt, type RoadClass, type RoadNetwork, type Seg } from './network';
+import { COURSE_LAND_MSG, legsOnLand } from './golf/parcels';
+import type { Rect } from './golf/mode';
 
 /** where a road point lands: a node (kind 'node', or 'end' for a dead end), a point on a road ('road'), or the tile grid */
 export interface Snap { p: Pt; kind: 'node' | 'end' | 'road' | 'grid'; node?: Node; seg?: Seg }
@@ -98,9 +100,14 @@ function onRoad(net: RoadNetwork, q: Pt, skip?: Set<Seg>): boolean {
  *  (5) a leg may not enter a roundabout's circle; (6) the route against itself: a join may not double back (under MIN_ANGLE with the leg
  *  before it), two legs that are not neighbours may not lie within two corridors of each other (a closed loop's first and last legs
  *  meet at its start, so there only the join's angle counts), and a new junction must be 2 tiles from every other route point.
- *  skip (Replace on): the segs the route bulldozes, which are judged as gone (no rule sees them) */
-export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: Snap | null, cls: RoadClass = CLASS.street, skip?: Set<Seg>): string {
+ *  skip (Replace on): the segs the route bulldozes, which are judged as gone (no rule sees them). land (T124): the player's course land, where
+ *  only the course's cart paths and drives are built: a town road's corridor may not reach into it (it may end on the land's edge, where a
+ *  course drive or path meets it; the roads already on the land stay, but no town road is built further onto it) */
+export function checkLegs(net: RoadNetwork, legs: Leg[], from: Snap | null, to: Snap | null, cls: RoadClass = CLASS.street, skip?: Set<Seg>, land?: readonly Rect[]): string {
   const hw = cls.h + cls.walk;
+  // (a leg under 2 tiles, the split rule's least gap for a road with lanes, is refused below with that rule's reason: the jog of a few tenths
+  // where a route from a point on a road meets a node, at the land's edge, was said to be on the land)
+  if (land?.length && !isCourseClass(cls.id) && legsOnLand(land, legs.filter(l => dist(l.a, l.b) >= 2), hw)) return COURSE_LAND_MSG;
   /** the node a point sits on: the route's snapped node if it is one of the ends, else the node at that spot */
   const nodeOf = (q: Pt): Node | null => {
     if (from?.node && dist(q, from.p) < EPS) return from.node;

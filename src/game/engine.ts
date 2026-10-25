@@ -85,7 +85,7 @@ import { parkRideNeeds } from './golf/parkride';
 import { applyCourseConsultantQuality, effectiveGrowInClockMonth, findGolfCard, isGolfCardId, parkRideNeedsWithCards } from './golf/golfcards';
 import type { CourseFacts } from './golf/tour';
 import { surfaceOfTex } from './golf/costs';
-import { adjacentBlockPrice, buyAdjacentBlock, LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
+import { adjacentBlockPrice, buyAdjacentBlock, COURSE_LAND_MSG, LAND_BLOCK, blockAt, blockOnRoad, blockOnWater, pointInLand, polyInParcels, type LandRoad, type ParcelLandClass } from './golf/parcels';
 import { buildCourseStatsPanel, type CourseStatsPanel } from './golf/coursestats';
 import type { CourseArea, CourseLayout } from './golf/types';
 import { deriveHoles, validateMarkerPlacement } from './golf/holes';
@@ -1951,13 +1951,16 @@ export class Game {
   private snapRadius() { return Math.max(2, 14 / (HW * this.cam.z)); }
   /** the road tool's snap under the cursor, or null with no cursor */
   private cursorSnap(): Snap | null { return this.hover ? snapPoint(this.net, this.hover, this.snapRadius(), this.roadStep()) : null; }
-  /** why the preview route cannot be built ('' when it can): see checkLegs */
+  /** why the preview route cannot be built ('' when it can): see checkLegs; before the first click, a town road's start inside the course land */
   routeBlock(legs: Leg[] = this.previewLegs()): string {
-    if (!legs.length) return '';
+    if (!legs.length) { const cs = this.route.length ? null : this.cursorSnap(); return cs && this.startOnLand(cs.p) ? COURSE_LAND_MSG : ''; }
     // judged exactly as a click at the cursor would be (roadClick refuses such a point), or, with the cursor on the last point, as finishing does
     const c0 = this.cursorSnap(), last = this.route[this.route.length - 1], cs = c0 && last ? this.aim(last, c0) : c0, onLast = !!cs && !!last && cs.p.x === last.x && cs.p.y === last.y;
-    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, new Set(this.routeCuts(legs).map(c => c.seg)));
+    return checkLegs(this.net, legs, this.routeFrom, onLast || !cs ? this.routeLast : cs, this.cls, new Set(this.routeCuts(legs).map(c => c.seg)), this.golfLand());
   }
+  /** whether a route of the class in hand may not start at p (T124): a town road inside the course land, where only the course's cart paths
+   *  and drives are built (a point on the land's edge is fine: a town road may meet a course drive there) */
+  private startOnLand(p: Pt): boolean { return !isCourseClass(this.cls.id) && pointInLand(this.golfLand(), p.x, p.y); }
   /** the road pieces the route bulldozes: with Replace on, those it clashes with (see replaceCuts); always, the hidden stubs inside a ring it joins (see ringStubs) */
   private routeCuts(legs: Leg[]): PieceSel[] {
     if (!legs.length) return [];
@@ -2038,11 +2041,11 @@ export class Game {
   private roadClick(mx: number, my: number) {
     let s = snapPoint(this.net, this.tileAt(mx, my), this.snapRadius(), this.roadStep());
     if (this.route.length) s = this.aim(this.route[this.route.length - 1]!, s);
-    if (!this.route.length) { this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
+    if (!this.route.length) { if (this.startOnLand(s.p)) { this.toast(COURSE_LAND_MSG, 'warn'); return; } this.routeFrom = s; this.route.push(s.p); this.routeLast = s; this.emit(); return; }
     const last = this.route[this.route.length - 1], add = this.legsTo(last, s.p, this.keys.has('Shift'));
     // a point the route could not be built with is refused at once (the preview shows it red with the same reason)
     const legs: Leg[] = []; for (let i = 1; i < this.route.length; i++) legs.push({ a: this.route[i - 1]!, b: this.route[i]! });
-    const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, new Set(this.routeCuts(all).map(c => c.seg))) : '';
+    const all = [...legs, ...add], why = add.length ? checkLegs(this.net, all, this.routeFrom, s, this.cls, new Set(this.routeCuts(all).map(c => c.seg)), this.golfLand()) : '';
     if (why) { this.toast(why, 'warn'); return; }
     for (const l of add) this.route.push(this.weld(l.b));
     this.routeLast = s; this.emit();
@@ -2142,7 +2145,7 @@ export class Game {
     const legs: Leg[] = [];
     for (let i = 1; i < this.route.length; i++) if (this.route[i].x !== this.route[i - 1].x || this.route[i].y !== this.route[i - 1].y) legs.push({ a: this.route[i - 1], b: this.route[i] });
     if (!legs.length) { this.cancelRoute(); return; }
-    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, new Set(cuts.map(c => c.seg)));
+    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, new Set(cuts.map(c => c.seg)), this.golfLand());
     if (block) { this.toast(block, 'warn'); return; }
     const cls = this.cls, st = this.structured(legs), { parts, kinds, cost: build, lens } = st, cost = Math.round(build - this.piecesValue(cuts));
     const hit = this.lotsInLegs(parts), comp = hit.reduce((s, v) => s + compensation(v), 0);
@@ -4893,7 +4896,7 @@ export class Game {
         for (const p of pts) { const s = this.screen(p.x, p.y); ctx.fillStyle = '#ffd866'; ctx.beginPath(); ctx.arc(s.x, s.y, 4 * this.dpr, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#4a3200'; ctx.lineWidth = 1.5; ctx.stroke(); }
       } else if (cs) {
         const s = this.screen(cs.p.x, cs.p.y);
-        ctx.fillStyle = 'rgba(255,216,102,0.9)'; ctx.beginPath(); ctx.arc(s.x, s.y, 5 * this.dpr, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = bad ? 'rgba(248,113,113,0.9)' : 'rgba(255,216,102,0.9)'; ctx.beginPath(); ctx.arc(s.x, s.y, 5 * this.dpr, 0, Math.PI * 2); ctx.fill();
       }
       if (cs) {
         this.drawSnapMark(ctx, cs);
