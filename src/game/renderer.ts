@@ -1030,7 +1030,9 @@ export class GroundPainter {
       }
     }
     const out = canvas(S, S), og = ctx2d(out), k = Math.max(1, 0.03 * ppm);
-    og.drawImage(c, SHADOW_DIR[0] * k, SHADOW_DIR[1] * k); og.globalCompositeOperation = 'source-in'; og.fillStyle = 'rgba(30,22,12,0.42)'; og.fillRect(0, 0, S, S);
+    // the shade slides the seamless square with its wrapped neighbours too, so the leaves across its edge keep their shade (T140)
+    for (const wx of [-S, 0, S]) for (const wy of [-S, 0, S]) og.drawImage(c, SHADOW_DIR[0] * k + wx, SHADOW_DIR[1] * k + wy);
+    og.globalCompositeOperation = 'source-in'; og.fillStyle = 'rgba(30,22,12,0.42)'; og.fillRect(0, 0, S, S);
     og.globalCompositeOperation = 'source-over'; og.drawImage(c, 0, 0);
     this.leafPic = out; return out;
   }
