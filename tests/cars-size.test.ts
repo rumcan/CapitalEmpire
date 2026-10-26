@@ -68,7 +68,7 @@ test('a studio size set for a car is what the game draws: its owner scale, its p
     studio[MODEL] = BIG;
     assert.equal(ownerScaleOf(CAR), BIG);
     assert.equal(ownerScaleOf(`${MODEL}:N`), BIG, 'every heading of the model');
-    assert.equal(ownerScaleOf(OTHER), STUDIO_SCALE[OTHER] ?? 1, 'another model is not resized');
+    assert.equal(ownerScaleOf(OTHER), carModelSize(STUDIO_SCALE, 'cars:navy-wood-panel-wagon') ?? 1, 'another model is not resized (it keeps its own studio size)');
     const item = INDEX.get(CAR)!;
     assert.ok(Math.abs(width(parked(item, ownerScaleOf(CAR))) / width(parked(item, 1)) - BIG) < 1e-9, 'the picture');
     assert.ok(Math.abs(footprintOf(CAR, ownerScaleOf(CAR), false)[2] / footprintOf(CAR, 1, false)[2] - BIG) < 1e-9, 'the footprint');
