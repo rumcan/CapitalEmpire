@@ -19,15 +19,18 @@ import { OWNER_SCALE, TABLE_SCALE } from '../../../src/game/lots/scales';
 import { lookOf, standInCandidates } from '../../../src/game/newart';
 import { PIXEL_LIMIT, PIXEL_SLACK, atlasRes } from '../../../src/game/sizes';
 import { VIEW_ART } from '../../../src/game/views-library';
-import { CAR_SCALE, carSizeId } from '../../../src/game/ext/car-art';
+import { CAR_SCALE, carModelSize, carOwnerScale, carSizeId } from '../../../src/game/ext/car-art';
+import { STUDIO_SCALE } from '../../../src/game/lots/scales';
 import type { LibItem } from '../../../src/game/types';
 import { TOT, libraryItems } from '../source.mjs';
 import { capitalItems } from '../capital-art.mjs';
 
 const ROOT = process.cwd(), INDEX = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 const span = (it: LibItem) => { const b = it.boxes[0]; return b ? b.hx + b.hy : 1; };
-const sizeIdOf = (id: string) => { const v = /^view:(.+):(se|sw|nw)$/.exec(id); return v ? v[1]! : id.startsWith('east:') && INDEX.has(id.slice(5)) ? id.slice(5) : carSizeId(id); };
-const scaleOf = (id: string) => OWNER_SCALE[sizeIdOf(id)] ?? OWNER_SCALE[id] ?? 1;
+const isCar = (id: string) => LIBRARY[INDEX.get(id) ?? -1]?.kind === 'car';
+/** the id whose studio size a sprite takes: a view's or an east view's building, a car's model (carSizeId, for cars only: a building's variation views are their own) */
+const sizeIdOf = (id: string) => { const v = /^view:(.+):(se|sw|nw)$/.exec(id); return v ? v[1]! : id.startsWith('east:') && INDEX.has(id.slice(5)) ? id.slice(5) : isCar(id) ? carSizeId(id) : id; };
+const scaleOf = (id: string) => isCar(id) ? carOwnerScale(id) : OWNER_SCALE[sizeIdOf(id)] ?? OWNER_SCALE[id] ?? 1;
 /** the four-view sources' native widths (art/building-views/<slug>/<DIR>.png) by the library id each view is drawn as */
 const NATIVE_W = new Map<string, number>(), STORE = path.join(ROOT, 'art/building-views');
 if (fs.existsSync(STORE)) for (const slug of fs.readdirSync(STORE)) {
@@ -48,7 +51,7 @@ if (fs.existsSync(CARS)) for (const model of fs.readdirSync(CARS)) {
 }
 /** prep-sprites.mjs packs a town sprite at 0.6 x its largest drawn scale (the owner's scale +5%, the forest's 1.5), up to 3x its source (upscaled past it) */
 const FOREST = new Set([...fs.readFileSync(path.join(ROOT, 'src/game/forest.ts'), 'utf8').matchAll(/'([a-z]+:[^']+)'/g)].map(m => m[1]!));
-const packedFor = (id: string) => Math.max(1, (OWNER_SCALE[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5 : 0);
+const packedFor = (id: string) => Math.max(1, ((isCar(id) ? carModelSize(STUDIO_SCALE, carSizeId(id)) : undefined) ?? OWNER_SCALE[id] ?? 0) * 1.05, FOREST.has(id) ? 1.5 : 0);
 
 /** a picture's width in its own pixels, from its PNG or WebP header (cached by file; null for any other format or a missing file) */
 const WIDTH = new Map<string, number | null>();

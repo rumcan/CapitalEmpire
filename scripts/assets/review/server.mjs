@@ -36,13 +36,17 @@ import { mapScale } from '../lot-layout.mjs';
 import { boundsOf, lotVariants } from '../lot-variants.mjs';
 import { fixCode, newFramePath, parseFix } from '../walker-fix.mjs';
 import { averageHash, foldCopies } from './copies.mjs';
+import { carModel, carModelName, carModelSize, foldCarSizes } from '../../../src/game/ext/car-art/model.mjs';
 
 const PORT = +(process.argv[process.argv.indexOf('--port') + 1] || 5179) || 5179;
 const ATLAS = path.join(ROOT, 'src/assets/atlas'), CACHE = path.join(ROOT, 'output/review/thumbs');
 fs.mkdirSync(CACHE, { recursive: true });
 const LOT_RES = 0.45;
-/** a car's size key (src/game/ext/car-art carSizeId, the same rule): the eight headings of one car model (cars:<model>:<heading>) share the model's size */
-const carKey = id => id.replace(/^(cars:.+):(?:SE|S|SW|W|NW|N|NE|E)$/, '$1');
+/** a car's size key: its model (src/game/ext/car-art/model.mjs, the game's own rule): every picture of one car (the eight headings of an eight-way car,
+ *  a town car's facings and their views, a world car's views) shares the model's size, so a resized car is the same size whichever way it faces (T143) */
+const carKey = carModel;
+/** every car id the game has or had (the library's kind car, the removed ones too): what foldCarSizes folds into the models' keys */
+const carIds = () => [...library().filter(s => s.kind === 'car').map(s => s.id), ...Object.entries(readRemoved()).filter(([, r]) => r.kind === 'car').map(([id]) => id)];
 /** the road cars' size (src/game/ext/car-art CAR_SCALE): a car is drawn at it times its studio size, so its card shows that size */
 const CAR_SCALE = +(/export const CAR_SCALE = ([\d.]+)/.exec(fs.readFileSync(path.join(ROOT, 'src/game/ext/car-art/index.ts'), 'utf8'))?.[1] ?? 1);
 
@@ -374,8 +378,9 @@ http.createServer(async (req, res) => {
       for (const s of list) if (/^(golf:|business:golf-)/.test(s.id)) s.cat = 'Golf';
       // the display lists More houses with Houses (the game's library keeps its own category)
       for (const s of list) if (s.cat === 'More houses') s.cat = 'Houses';
-      // a car is drawn at the road cars' size (CAR_SCALE) times its studio size, which its model shares (sizeId): 1 when unset
-      for (const s of list) { const car = s.kind === 'car'; s.base = car ? 1 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = car ? (sc[carKey(s.id)] ?? 1) : (sc[s.id] ?? s.base); if (car) Object.assign(s, { sizeId: carKey(s.id), carScale: CAR_SCALE }); s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
+      // a car is drawn at the road cars' size (CAR_SCALE) times its studio size, which its model shares (sizeId; carModelSize: a size still kept under one of
+      // its pictures' own keys counts, the largest, until the next save folds them): 1 when unset
+      for (const s of list) { const car = s.kind === 'car'; s.base = car ? 1 : s.kind === 'walker' || s.kind === 'decal' || s.cat === 'Lots' ? 1 : mapScale(s.id); s.scale = car ? (carModelSize(sc, carKey(s.id)) ?? 1) : (sc[s.id] ?? s.base); if (car) Object.assign(s, { sizeId: carKey(s.id), carScale: CAR_SCALE }); s.quad ??= [0, 0, s.w, s.h]; delete s.tex; delete s.page; }
       // the game's sizes (size-report.ts): the scale it places each sprite at, what a reset falls back to, the id whose size it takes (a building's
       // views share one), what it is drawn as and how big, the scale it is sharp to at the closest zoom and the most its source pixels allow
       for (const s of list) {
@@ -388,12 +393,24 @@ http.createServer(async (req, res) => {
       // The card shows all four as thumbnails (/thumb/<id>) and sizes all four; the views are not cards of their own, so the east one is left out of the grid
       const viewsOf = id => { if (!rep[`view:${id}:sw`] || !rep[`view:${id}:nw`]) return null; const se = rep[`east:${id}`] ? `east:${id}` : `view:${id}:se`; return [{ dir: 'NE', id }, { dir: 'SE', id: se }, { dir: 'SW', id: `view:${id}:sw` }, { dir: 'NW', id: `view:${id}:nw` }]; };
       for (const s of list) { if (s.id.startsWith('east:')) continue; const v = viewsOf(s.id); if (v) s.views = v; }
-      const grid = list.filter(s => !(s.id.startsWith('east:') && viewsOf(s.id.slice(5))));
+      // one card per car model (T143, model.mjs carModel): its pictures the game has (every facing, view and heading; the removed ones are left out)
+      // as thumbs (views, in the library's order), its first base picture (not a variation view) as the card's own; the card is named for the model,
+      // sizes every picture of it (sizeId), and its sharp and native are the smallest over them, so the card says what every one of them can take
+      const byModel = new Map();
+      for (const s of list) if (s.kind === 'car' && !rm[s.id]) { const m = carKey(s.id); if (!byModel.has(m)) byModel.set(m, []); byModel.get(m).push(s); }
+      const carCards = new Set();
+      for (const [m, pics] of byModel) {
+        const lead = pics.find(s => !s.id.startsWith('variation:')) ?? pics[0], min = k => { const v = pics.map(s => s[k]).filter(x => x != null); return v.length ? Math.min(...v) : null; };
+        Object.assign(lead, { name: carModelName(m), model: m, views: pics.map(s => ({ dir: s.name, id: s.id })), sharp: min('sharp'), native: min('native') });
+        carCards.add(lead.id);
+      }
+      const grid = list.filter(s => !(s.id.startsWith('east:') && viewsOf(s.id.slice(5))) && !(s.kind === 'car' && !rm[s.id] && !carCards.has(s.id)));
       // the townspeople, for the cursor: each one's trimmed picture and where its feet are (the anchor) inside it, in native px
       const walkers = list.filter(s => s.kind === 'walker' && !rm[s.id]).map(s => ({ id: s.id, name: s.name, quad: s.quad, ax: s.ax, ay: s.ay }));
       // the copies: a card whose picture is the same as another's in its category is folded into it (copies.mjs), so each picture is listed once;
-      // walkers and removed sprites are never folded
-      const { cards: sprites } = await foldCopies(grid, s => (s.kind === 'walker' || rm[s.id] ? null : hashOf(s.id, pics.get(s.id) ?? sizes.data[s.id])));
+      // walkers, removed sprites and the car model cards are never folded (two cars' average hashes are close: a small body on a plain ground; and a
+      // model's pictures are already one card)
+      const { cards: sprites } = await foldCopies(grid, s => (s.kind === 'walker' || s.kind === 'car' || rm[s.id] ? null : hashOf(s.id, pics.get(s.id) ?? sizes.data[s.id])));
       return json({ sprites, removed: rm, walkers });
     }
     if (P.startsWith('/thumb/')) return png(await thumb(decodeURIComponent(P.slice(7))));
@@ -410,11 +427,14 @@ http.createServer(async (req, res) => {
       const kind = library().find(x => x.id === asked)?.kind ?? readRemoved()[asked]?.kind, car = kind === 'car';
       const id = car ? carKey(asked) : e?.sizeId ?? asked, own = rep[id] ?? e;
       const base = car || kind === 'decal' ? 1 : own?.base ?? mapScale(id);
-      const cur = sc[id] ?? (car ? base : own?.scale ?? base), next = reset ? base : +(cur * factor).toFixed(3);
+      // a car's size is its model's (carModelSize: a size still kept under one of its pictures' own keys counts, the largest)
+      const cur = car ? carModelSize(sc, id) ?? base : sc[id] ?? own?.scale ?? base, next = reset ? base : +(cur * factor).toFixed(3);
       // past its picture's own pixels is allowed: soft says so (a Rebuild upscales the picture, a little softer). The limit is the smallest native of the pictures that take this size (a building's four views, a car's eight; a stand-in's atlas)
       const limit = Math.min(...Object.values(rep).filter(x => x.sizeId === id && x.native != null).map(x => x.native));
-      if (reset) delete sc[id]; else sc[id] = next;
-      writeScales(sc); return json({ id, scale: sc[id] ?? base, base, soft: next > limit * 1.001 });
+      // every save folds the sizes kept per car picture before T143 into their models' keys (foldCarSizes: one key per model, the largest; nothing lost)
+      const out = foldCarSizes(sc, carIds());
+      if (reset) delete out[id]; else out[id] = next;
+      writeScales(out); return json({ id, scale: out[id] ?? base, base, soft: next > limit * 1.001 });
     }
     // lots
     if (P === '/api/lots') return json(lotVariants().map(v => ({ id: v.id, name: v.name, edits: Object.keys(readLotEdits()[v.id] ?? {}).length })));
