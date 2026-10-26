@@ -21,15 +21,18 @@ export interface Drawable { item: number; x: number; y: number; flip: boolean; s
  *  about the car's centre): the owner, 2026-10-19, "20% smaller", the parked cars too */
 export { CAR_SCALE };
 interface DTile { i: number; j: number; props: Set<Prop>; order: Prop[] | null; packed: Float32Array; shadows: Float32Array; rects: Float32Array; buckets: Map<number, number[]>;
-  /** the vector shadows (T142) of its props, small meshes and big ones (gl.ts drawVector draws each set up to its largest count), and those counts */
-  vsmall: Float32Array; vbig: Float32Array; vmax: [number, number] }
+  /** the vector shadows (T142) of its props, in sets by their meshes' size (VECTOR_SETS: gl.ts drawVector runs each set to its largest
+   *  count), and those counts */
+  vsets: Float32Array[]; vmax: number[] }
 export interface TileDraw { i: number; j: number; shadows: number; sprites: number }
 
 /** the vector shadows (T142, shadow-vector.ts): on, every picture with an entry draws its own contact and cast shapes instead of T141's shape
  *  and silhouette; off, T141's everywhere (the gear menu's comparison; engine.ts setVectorShadows re-packs the tiles) */
 export const VECTOR = { on: true };
-/** a mesh of at most this many indices draws in the small set (gl.ts drawVector runs every instance of a set to its largest count) */
-export const VECTOR_SMALL = 240;
+/** the vector shadows' sets: a mesh of at most this many indices draws in this set (gl.ts drawVector runs every instance of a set to its
+ *  largest count, so a few sets of like sizes waste little: half the meshes have under 270 indices, 1% over 490) */
+export const VECTOR_SETS = [300, 420, Infinity] as const;
+const setOf = (count: number) => { let k = 0; while (count > VECTOR_SETS[k]!) k++; return k; };
 /** per library item: its vector mesh's range (null: none, T141's shadows); filled as items are first packed */
 const VEC: (VectorRange | null)[] = [];
 export const vecOf = (item: number) => VEC[item] !== undefined ? VEC[item]! : (VEC[item] = vectorMesh().at.get(LIBRARY[item]!.id) ?? null);
@@ -155,7 +158,7 @@ export class SpriteTiles {
   tiles = new Map<number, DTile>();
   private where = new Map<Prop, number[]>();
   private stream = new Float32Array(1 << 16); private shadowStream = new Float32Array(1 << 14);
-  private vecStream = [new Float32Array(1 << 14), new Float32Array(1 << 12)];
+  private vecStream = VECTOR_SETS.map(() => new Float32Array(1 << 13));
   private tmp = [0, 0, 0, 0];
   count = 0;
 
@@ -163,7 +166,7 @@ export class SpriteTiles {
     const r = spriteRect(p, this.tmp), keys: number[] = [];
     for (let j = Math.floor(r[1] / CHUNK_H); j <= Math.floor(r[3] / CHUNK_H); j++) for (let i = Math.floor(r[0] / CHUNK_W); i <= Math.floor(r[2] / CHUNK_W); i++) {
       const k = tkey(i, j); let t = this.tiles.get(k);
-      if (!t) { t = { i, j, props: new Set(), order: null, packed: new Float32Array(0), shadows: new Float32Array(0), rects: new Float32Array(0), buckets: new Map(), vsmall: new Float32Array(0), vbig: new Float32Array(0), vmax: [0, 0] }; this.tiles.set(k, t); }
+      if (!t) { t = { i, j, props: new Set(), order: null, packed: new Float32Array(0), shadows: new Float32Array(0), rects: new Float32Array(0), buckets: new Map(), vsets: [], vmax: [] }; this.tiles.set(k, t); }
       t.props.add(p); t.order = null; keys.push(k);
     }
     this.where.set(p, keys); this.count++;
@@ -193,14 +196,14 @@ export class SpriteTiles {
     t.order.forEach((p, i) => { packSprite(p, t.packed, i * SPRITE_STRIDE, t.i, t.j); t.rects.set(t.packed.subarray(i * SPRITE_STRIDE, i * SPRITE_STRIDE + 4), i * 4); if (SHADOWED(LIBRARY[p.item]) && !p.lift) sh.push(i); });
     t.shadows = new Float32Array(sh.length * SHADOW_STRIDE); sh.forEach((i, k) => packShadow(t.order![i], t.shadows, k * SHADOW_STRIDE, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4)));
     // the vector shadows (T142), small meshes and big ones
-    const vs = new Float32Array(n * VECTOR_STRIDE), vb = new Float32Array(n * VECTOR_STRIDE); let ns = 0, nb = 0; t.vmax = [0, 0];
+    const vs = VECTOR_SETS.map(() => new Float32Array(n * VECTOR_STRIDE)), vn = VECTOR_SETS.map(() => 0); t.vmax = VECTOR_SETS.map(() => 0);
     for (let i = 0; i < n; i++) {
       const p = t.order[i]!, l = lookOf(p), v = SHADOWED(LIBRARY[p.item]!) ? vecOf(l.item) : null, c = v ? (l.flip ? v.mcount : v.count) : 0; if (!c) continue;
-      const big = c > VECTOR_SMALL, arr = big ? vb : vs, at = (big ? nb : ns) * VECTOR_STRIDE;
-      if (!packVector(p, arr, at, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4))) continue;
-      if (big) { nb++; t.vmax[1] = Math.max(t.vmax[1], c); } else { ns++; t.vmax[0] = Math.max(t.vmax[0], c); }
+      const k = setOf(c);
+      if (!packVector(p, vs[k]!, vn[k]! * VECTOR_STRIDE, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4))) continue;
+      vn[k]!++; t.vmax[k] = Math.max(t.vmax[k]!, c);
     }
-    t.vsmall = vs.slice(0, ns * VECTOR_STRIDE); t.vbig = vb.slice(0, nb * VECTOR_STRIDE);
+    t.vsets = vs.map((a, k) => a.slice(0, vn[k]! * VECTOR_STRIDE));
     t.buckets = new Map();
     for (let i = 0; i < n; i++) { const o = i * 4; for (let gx = Math.floor(t.rects[o] / BUCKET); gx <= Math.floor(t.rects[o + 2] / BUCKET); gx++) for (let gy = Math.floor(t.rects[o + 1] / BUCKET); gy <= Math.floor(t.rects[o + 3] / BUCKET); gy++) { const k = gx * 65536 + gy; let l = t.buckets.get(k); if (!l) t.buckets.set(k, (l = [])); l.push(i); } }
   }
@@ -234,7 +237,7 @@ export class SpriteTiles {
     }
     let at = 0, sat = 0; const draws: TileDraw[] = [];
     // the vector shadows: small and big sets, their floats and their largest counts
-    const vat = [0, 0], vmax = [0, 0], vput = (set: number, src: Float32Array, n: number) => {
+    const vat = VECTOR_SETS.map(() => 0), vmax = VECTOR_SETS.map(() => 0), vput = (set: number, src: Float32Array, n: number) => {
       let b = this.vecStream[set]!; if (vat[set]! + n > b.length) { const g = new Float32Array(Math.max(vat[set]! + n, b.length * 2)); g.set(b); this.vecStream[set] = b = g; }
       b.set(n === src.length ? src : src.subarray(0, n), vat[set]); vat[set]! += n;
     }, vone = this.vone;
@@ -247,10 +250,10 @@ export class SpriteTiles {
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
       if (mv) for (const m of mv) { packShadow(m.d, ss, sat, i, j, m.r); sat += SHADOW_STRIDE; d.shadows++; }
-      if (t) { vput(0, t.vsmall, t.vsmall.length); vput(1, t.vbig, t.vbig.length); vmax[0] = Math.max(vmax[0]!, t.vmax[0]); vmax[1] = Math.max(vmax[1]!, t.vmax[1]); }
+      if (t) t.vsets.forEach((a, k) => { if (a.length) { vput(k, a, a.length); vmax[k] = Math.max(vmax[k]!, t.vmax[k]!); } });
       if (mv) for (const m of mv) {
         if (!packVector(m.d, vone, 0, i, j, m.r)) continue;
-        const c = vone[5]!, set = c > VECTOR_SMALL ? 1 : 0; vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c);
+        const c = vone[5]!, set = setOf(c); vput(set, vone, VECTOR_STRIDE); vmax[set] = Math.max(vmax[set]!, c);
       }
       if (!mv) { if (t) { s.set(t.packed, at); at += t.packed.length; d.sprites = nProps; } }
       else {
@@ -274,6 +277,6 @@ export class SpriteTiles {
       draws.push(d);
     }
     return { stream: this.stream, floats: at, shadows: this.shadowStream, shadowFloats: sat, draws,
-      vec: [{ data: this.vecStream[0]!, floats: vat[0]!, verts: vmax[0]! }, { data: this.vecStream[1]!, floats: vat[1]!, verts: vmax[1]! }] };
+      vec: this.vecStream.map((data, k) => ({ data, floats: vat[k]!, verts: vmax[k]! })) };
   }
 }

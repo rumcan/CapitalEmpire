@@ -234,7 +234,7 @@ export async function startShadowAudit(root: HTMLElement) {
     gl.drawShadows(at[0]!, f[0]!.shadowFloats / SHADOW_STRIDE, CONTACT_STRENGTH, lx, ly);
     gl.drawShadows(at[1]!, f[1]!.shadowFloats / SHADOW_STRIDE, CONTACT_STRENGTH, lx, ly);
     // the vector shadows (T142): both in the first strip, the contact shapes alone in the second, the cast shapes alone in the third
-    f.forEach((s, m) => s.vec.forEach((v, b) => gl.drawVector(at[5 + m * 2 + b]!, v.floats / VECTOR_STRIDE, v.verts, sh.sx, sh.sy, m === 2 ? 0 : CONTACT_STRENGTH, m === 1 ? 0 : CAST.strength)));
+    f.forEach((s, m) => s.vec.forEach((v, b) => gl.drawVector(at[5 + m * s.vec.length + b]!, v.floats / VECTOR_STRIDE, v.verts, sh.sx, sh.sy, m === 2 ? 0 : CONTACT_STRENGTH, m === 1 ? 0 : CAST.strength)));
     for (const k of [2, 3, 4]) gl.drawSprites(at[k]!, f[k - 2]!.floats / SPRITE_STRIDE, 0);
     const soft = wants.filter(w => a.pages.levelOf(w.unit) > need).length;
     settled = soft === 0 ? settled + 1 : 0;

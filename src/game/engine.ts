@@ -4884,8 +4884,8 @@ export class Game {
       if (tr && lightOn && this.lightBuf.length < tr.n * 7 * POINT_STRIDE) this.lightBuf = new Float32Array(tr.n * 7 * POINT_STRIDE);
       const lt = tr && lightOn ? tr.lights(bx0, by0, bx1, by1, ze, Math.floor(now / 350) % 2 === 0, this.lightBuf) : null;
       const vecOn = shadows || this.cast.on;
-      const [sAt, pAt, lAt, vsAt, vbAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0],
-        [f.vec[0]!.data, vecOn ? f.vec[0]!.floats : 0], [f.vec[1]!.data, vecOn ? f.vec[1]!.floats : 0]]);
+      const [sAt, pAt, lAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0],
+        ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number])]);
       // the cast shadows (cast-shadow.ts), faded out by night, then the contact shadows, then the sprites
       if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
       // the contact shadows lean toward the cast shadows' side (away from the sun), blob and box alike (shadow-shape.ts contactLean, T141)
@@ -4894,8 +4894,7 @@ export class Game {
       // the hand-drawn vector shadows (T142): each picture's contact and cast shapes, the cast following the sun and fading out by night
       if (vecOn) {
         const sh = this.cast.on ? castShear(this.cast) : { sx: 0, sy: 0 }, castMul = this.cast.on ? this.cast.strength * (1 - this.nightAmount()) : 0;
-        gl.drawVector(vsAt!, f.vec[0]!.floats / VECTOR_STRIDE, f.vec[0]!.verts, sh.sx, sh.sy, this.shadowStrength, castMul);
-        gl.drawVector(vbAt!, f.vec[1]!.floats / VECTOR_STRIDE, f.vec[1]!.verts, sh.sx, sh.sy, this.shadowStrength, castMul);
+        f.vec.forEach((v, k) => gl.drawVector(vAt[k]!, v.floats / VECTOR_STRIDE, v.verts, sh.sx, sh.sy, this.shadowStrength, castMul));
       }
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }

@@ -31,6 +31,10 @@ export interface DraftHint {
   groundBelow?: number;
   /** the contact runs merge across gaps whose underside stays within this many display px of the ground (a bench seat stays apart) */
   clear?: number;
+  /** a long thing seen end on: it stands this share of its picture's height tall, the rest of the picture is its length running back */
+  box?: number;
+  /** false: no box depth (the whole picture's height casts, as a frontal board or a tower does) */
+  depth?: false;
   /** passed through to the entry: feather, penumbra, contact feather, contact darkness, contact lean, cast darkness, fade */
   f?: number; p?: number; fc?: number; kc?: number; cl?: number; ks?: number; fade?: number;
   /** why (copied to the entry's note) */
@@ -68,7 +72,8 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   const slope = 0.5 * rx / ry, tent = new Float64Array(w).fill(-Infinity);
   { let run = -Infinity; for (let x = 0; x < w; x++) { run = Math.max(run - slope, bot[x]!); tent[x] = run; } run = -Infinity; for (let x = w - 1; x >= 0; x--) { run = Math.max(run - slope, bot[x]!); tent[x] = Math.max(tent[x]!, run); } }
   const tol = Math.max(1.5, 0.012 * H);
-  const touch = new Uint8Array(w); for (const x of cols) if (bot[x]! >= tent[x]! - tol) touch[x] = 1;
+  // (touching is judged on a slightly steeper tent, so a wall drawn a hair off the 2:1 slope still touches all along)
+  const steep = tentOf(bot, w, slope * 1.2), touch = new Uint8Array(w); for (const x of cols) if (bot[x]! >= steep[x]! - tol) touch[x] = 1;
   // 2. the ground line g (texel rows) under every column
   const g = new Float64Array(w);
   const lowest = Math.max(...cols.map(x => bot[x]!));
@@ -81,7 +86,8 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   else {
     // the touching feet, median-smoothed, then linear between them and flat past the outer ones
     const tx = cols.filter(x => touch[x]), feet: [number, number][] = tx.map((x, i) => { const win = tx.slice(Math.max(0, i - 2), i + 3).map(c => bot[c]!).sort((a, b) => a - b); return [x, win[win.length >> 1]!]; });
-    for (let x = 0; x < w; x++) g[x] = interp(feet, x);
+    // (past the outer feet the ground follows the tent: a wall's end, a roof's eaves)
+    for (let x = 0; x < w; x++) g[x] = feet.length && (x < feet[0]![0] || x > feet[feet.length - 1]![0]) && Number.isFinite(tent[x]!) ? Math.min(interp(feet, x), tent[x]!) : interp(feet, x);
     mode = 'iso';
   }
   // 2b. a box's depth (iso ground with a V: a building's walls, a car's body). Its footprint is the diamond on the V's three corners (the far
@@ -89,18 +95,24 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   // height above the near edge is its roof, standing further back: its height is held to the box's (hcap) and its foot moves back with it,
   // so the roof's shadow is the walls' height long, not the picture's whole height (the old silhouette shadows' fault at the back)
   const gb = Float64Array.from(g); let hcap = Infinity;
-  if (mode === 'iso') {
-    const tx = cols.filter(x => touch[x]);
-    if (tx.length) {
-      const xl = tx[0]!, xr = tx[tx.length - 1]!; let xf = xl; for (const x of tx) if (g[x]! > g[xf]!) xf = x;
-      const yl = g[xl]!, yr = g[xr]!, yf = g[xf]!, xbk = xl + xr - xf, ybk = yl + yr - yf;
-      if ((xr - xl) * rx > 0.3 * Wd && yf - Math.max(yl, yr) > 0.12 * slope * (xr - xl)) {
-        for (let x = xl; x <= xr; x++) gb[x] = x <= xbk ? yl + (ybk - yl) * (x - xl) / Math.max(1e-6, xbk - xl) : ybk + (yr - ybk) * (x - xbk) / Math.max(1e-6, xr - xbk);
-        const hs: number[] = []; for (let x = xl; x <= xr; x++) if (top[x]! >= 0) hs.push(gb[x]! - top[x]!);
-        hs.sort((a, b) => a - b); if (hs.length) hcap = Math.max(hs[Math.floor(hs.length * 0.7)]!, 0.2 * H);
-      }
+  if (hint.box) {
+    // a long thing seen end on (a camper, a tractor from the front): its picture's height is mostly its length running back; it stands this
+    // share of its picture's height tall, the rest is depth
+    for (const x of cols) gb[x] = top[x]!; hcap = hint.box * H;
+  } else
+  if (mode === 'iso' && hint.depth !== false) {
+    // the diamond from the tent over the picture's whole width (a box's walls, a car's or a wagon's wheels near its corners): the near corner
+    // at the tent's lowest point, the side corners at the picture's ends, the far corner opposite the near one
+    const xl = cols[0]!, xr = cols[cols.length - 1]!; let xf = xl; for (let x = xl; x <= xr; x++) if (tent[x]! > tent[xf]!) xf = x;
+    const yl = tent[xl]!, yr = tent[xr]!, yf = tent[xf]!, xbk = xl + xr - xf, ybk = yl + yr - yf;
+    if ((xr - xl) * rx > 0.3 * Wd && yf - Math.max(yl, yr) > 0.15 * slope * (xr - xl)) {
+      for (let x = xl; x <= xr; x++) gb[x] = Math.min(g[x]!, x <= xbk ? yl + (ybk - yl) * (x - xl) / Math.max(1e-6, xbk - xl) : ybk + (yr - ybk) * (x - xbk) / Math.max(1e-6, xr - xbk));
+      const hs: number[] = []; for (let x = xl; x <= xr; x++) if (top[x]! >= 0 && gb[x]! < g[x]!) hs.push(gb[x]! - top[x]!);
+      hs.sort((a, b) => a - b); if (hs.length) hcap = Math.max(hs[Math.floor(hs.length * 0.7)]!, 0.15 * H);
     }
   }
+  // a vehicle seen end on (drawn heading up or down the screen): its picture's height is mostly its length; it stands about its width tall
+  if (!Number.isFinite(hcap) && kind === 'vehicle' && !hint.box && H * ry > 0.9 * Wd) { for (const x of cols) gb[x] = top[x]!; hcap = 0.9 * Wd / ry; }
   const hk = hint.height ?? 1, minH = (hint.minH ?? 0), below = hint.groundBelow;
   const out: VectorShadow = {};
   // 3. the cast: land every opaque pixel on the ground, fill, trace
@@ -135,7 +147,7 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       if (cover < 0.8 && hint.ks === undefined) out.ks = Math.round(clamp(0.2 + cover, 0.45, 1) * 100) / 100;
       const biggest = Math.max(0, ...rings.map(r => Math.abs(r.a)));
       // (specks far from the rest are a roof's ornament landing apart: dropped; holes only when they are big enough to see)
-      const keep = rings.filter(r => (r.a > 0 ? r.a > Math.max(6, biggest * 0.03) : -r.a > Math.max(24, biggest * 0.03)));
+      const keep = rings.filter(r => (r.a > 0 ? r.a > Math.max(6, biggest * (leafy ? 0.08 : 0.03)) : -r.a > Math.max(24, biggest * 0.03)));
       // the height under each landed cell, for a vertex's foot (the nearest cells' mean)
       const hAt = (vx: number, vy: number) => {
         let s = 0, n = 0; const cx = vx, cy = vy;
@@ -147,8 +159,8 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       };
       const s: number[][] = [];
       for (const { r, a } of keep) {
-        const cap = a > 0 ? 26 : 10;
-        let tolDP = Math.max(1.2, 0.006 * Math.max(GW, GH)), simp = simplifyRing(r, tolDP);
+        const cap = a > 0 ? 22 : 8;
+        let tolDP = Math.max(1.5, 0.007 * Math.max(GW, GH)), simp = simplifyRing(r, tolDP);
         while (simp.length > cap) { tolDP *= 1.3; simp = simplifyRing(r, tolDP); }
         // never a ring that crosses itself (it would fill wrong): simplify less until it does not
         while (selfCrosses(simp) && tolDP > 0.6) { tolDP *= 0.75; simp = simplifyRing(r, tolDP); }
@@ -182,7 +194,7 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       // a tree: one soft pool at its trunk's foot (the canopy keeps the sky off the ground round it), a little wider than the trunk
       const run = merged.reduce((a, b) => (b[1] - b[0] > a[1] - a[0] ? b : a)), xc = (run[0] + run[1]) / 2;
       const rr = clamp(0.2 * Wd, Math.max(6, (run[1] - run[0] + 1) * rx), 70);
-      c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 16));
+      c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 14));
       out.kc = hint.kc ?? 0.38; out.fc = hint.fc ?? Math.round(clamp(0.45 * rr, 3, 24));
       // (its canopy lets some light through)
       if (hint.ks === undefined) out.ks = Math.min(out.ks ?? 1, 0.85);
@@ -195,7 +207,7 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
       for (const [a, b] of merged) {
         const W = (b - a + 1) * rx, xc = (a + b) / 2;
         if (W < Math.max(9, 0.1 * Wd) || kind === 'pole' && W < 0.3 * Wd) {
-          const rr = Math.max(W * 0.75 + 2, 3.5); c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 10));
+          const rr = Math.max(W * 0.75 + 2, 3.5); c.push(ellipse(X(xc), gY(xc), rr, rr * 0.5, 8));
         } else {
           // a band along the ground line: a little under the thing (hidden by it, so the rim reads as one shape) and a little out in front
           const up = clamp(0.25 * Hd, 3, 14), dn = clamp(0.07 * W, 3, kind === 'vehicle' ? 10 : 9), e = dn;
@@ -223,6 +235,12 @@ export function draftShadow(pic: DraftPicture, kind: DraftKind, shear: { sx: num
   return out;
 }
 
+function tentOf(bot: Float64Array, w: number, slope: number) {
+  const t = new Float64Array(w).fill(-Infinity); let run = -Infinity;
+  for (let x = 0; x < w; x++) { run = Math.max(run - slope, bot[x]!); t[x] = run; }
+  run = -Infinity; for (let x = w - 1; x >= 0; x--) { run = Math.max(run - slope, bot[x]!); t[x] = Math.max(t[x]!, run); }
+  return t;
+}
 function interp(pts: [number, number][], x: number) {
   if (!pts.length) return 0;
   if (x <= pts[0]![0]) return pts[0]![1];

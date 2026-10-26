@@ -1,1 +1,12 @@
-{}
+{
+  "business:golf-pond": {"none": true, "n": "a flat pond laid on the ground: no shadow"},
+  "business:golf-bunker-crescent": {"none": true, "n": "a flat bunker laid on the ground: no shadow"},
+  "business:golf-practice-net": {"ks": 0.45, "n": "a net: a light shadow"},
+  "expansion:glasshouse": {"all": true, "ks": 0.6, "n": "glass walls: a lighter shadow"},
+  "variation:expansion-camper-2399016c:2": {"box": 0.45, "n": "seen end on: as tall as it is wide, the rest is its length"},
+  "variation:expansion-camper-2399016c:3": {"box": 0.45, "n": "seen end on: as tall as it is wide, the rest is its length"},
+  "variation:expansion-farm-tractor-1df19163:2": {"box": 0.6, "n": "seen end on: the rest of the picture is its length"},
+  "variation:expansion-farm-tractor-1df19163:3": {"box": 0.6, "n": "seen end on: the rest of the picture is its length"},
+  "variation:expansion-scrap-pickup-rear-7e2d1193:2": {"box": 0.5, "n": "seen end on: as tall as it is wide, the rest is its length"},
+  "variation:expansion-scrap-pickup-rear-7e2d1193:3": {"box": 0.5, "n": "seen end on: as tall as it is wide, the rest is its length"}
+}

@@ -165,3 +165,56 @@ On the dev PC (scratch, not committed): before `E:/ClaudeTemp/T141/before/`, aft
 category at 30% (`<cat>-<n>-30pct.jpg`: trees 4, poles 5, props 12, golf 5, range 3, vehicles 2, walkers 1, buildings 31, fences 2) and at 2x
 the golf and range categories in full (24 and 9 pages) and the first two pages of the others; `items-<cat>-<n>.json` (each page's entries and
 shapes) and, in before/, `measure-<cat>.json` (each picture's measured base). Regenerate with the capture command above.
+
+# T142: a hand-drawn vector shadow for every picture (#288)
+
+The owner (2026-10-26), after T141's sheets: "clearly some are still screwed up ... can you put a smart opus on the shadows to vector draw each
+shadow individually for all assets?" T141 placed every shadow from the footprint; where the footprint does not match the picture (the range's
+covered bays, the leaderboard) the shadow came off the picture. T142 draws each picture's shadow from the picture itself, which also settles
+T141's follow-ups above: the frontal fence panels' strips follow the panel as drawn, two-post signs get a spot under each post, and a mirrored
+sprite draws a mirrored copy of its shapes (the sun's side kept).
+
+## The data: src/game/shadow-shapes.json (one picture a line, 1,401 pictures)
+
+By library id: `c` contact rings `[x, y, ...]` and `s` cast rings `[x, y, h, ...]` in the picture's display px about its anchor (world px at
+scale 1; x right, y down the screen, so a point is the spot of the 2:1 ground drawn there). A cast vertex is the ground point (x, y) under a
+point h px up the picture; it lands at (x, y) + h * the sun's shear (cast-shadow.ts castShear), so the gear menu's sun angle and length still
+move it. A cast ring wound the other way is a hole (the gap under a bench). `f`/`p` the cast's soft rim and its growth with height, `fc`/`kc`/`cl`
+the contact's rim, darkness and lean, `ks`/`fade` the cast's darkness and how much lighter it gets at its tip, `same` another picture's shapes,
+`n` a hand note. An entry with no rings draws no shadow (a pond, a bunker).
+
+## How it is made
+
+1. **Draft** (src/game/dev/shadow-draft.ts, run over every picture by the dev page `?shadows=draft`;
+   `node scripts/dev/draft-shadows.mjs --base http://127.0.0.1:5188/ [--only id,id]` writes the file):
+   - each column's lowest opaque pixel; a column touches the ground when nothing stands lower in front of it (the iso tent, slope 1:2);
+   - the ground line through the touching feet (a box's walls give its V, two posts the line between them), or flat at the lowest foot
+     for trees, plants, poles and walkers;
+   - a box's depth: the footprint diamond from the tent (near corner, side corners, the far corner opposite); pixels more than the walls'
+     height above the near edge are roof standing further back (their height held, their foot moved back), so roofs do not cast the whole
+     picture's height (the old silhouette shadows' fault at the back); a vehicle seen end on stands about its width tall;
+   - the cast: every opaque pixel laid on the ground, filled, traced and simplified (at most 22 points a ring); trees and plants blurred
+     into one soft shape; see-through things (a mesh, a lattice) lighter by how much of the shape their pixels really cover;
+   - the contact: runs of touching columns (legs and posts as round spots, walls as a band along the ground line), one soft pool under a
+     tree's trunk or a plant.
+2. **Hand hints** (src/game/dev/shadow-hints.json, by id, variation set, or a four-view family's NE id with `"all": true`): `none`,
+   `contact`/`cast` false or the contact's own rings, `ground` (iso / flat / its points), `box` (a long thing seen end on: the share of its
+   picture that is its height), `depth: false`, `height`, `minH`, `groundBelow`, `clear`, the look numbers, and `n` (copied into the entry as
+   its note). Re-run the draft after editing.
+3. **Review** on the audit sheets: `node scripts/dev/shadow-audit.mjs --base ... --out <dir> --cats <cat> --scales 2 --q "&strips=both"`
+   (`&strips=both`: the BOTH strip alone, three times as many pictures a page; `&old=1`: T141's shadows, for the before sheets). In game:
+   `node scripts/dev/shadow-shots.mjs --base ... --out <dir>` (the range start, a hole, a street; before and after, 30% and 15%, 1x and 2x).
+
+## The engine
+
+- src/game/shadow-vector.ts builds one mesh for all pictures at load (ear clipping with hole bridging; each ring rimmed outward by its feather,
+  edge 1 on the shape and 0 outside; a mirrored copy of each), two RGBA32F texels a vertex and an R32UI index texture (gl.ts initVector).
+- sprites.ts packs one 16-float instance per sprite (anchor, scale, the mesh's range, the tile clip, the picture's rect) in each draw tile, cached
+  like the old shadows; gl.ts drawVector draws a frame's instances in two instanced draws (meshes of up to 240 indices, and bigger ones), each
+  instance running to its set's largest count (the rest fold away). The fragment: smoothstep of the rim, the darkness per vertex times the
+  Shadows slider (contact) or the cast strength (fading out by night), the same cool multiply as before. Each tile's copy of a sprite draws only
+  what falls from its part of the picture, so a sprite over several tiles draws once.
+- A picture with an entry draws neither T141's contact shape nor its silhouette cast. Without one (the walkers' animated frames, new art) T141's
+  rules stay: `VECTOR_FALLBACK` lists the deliberate ones, and tests/shadow-vector.test.ts fails for any other drawn picture without an entry
+  (new art: run the draft for it).
+- The gear menu (dev): "Drawn shadows (T142)" turns them off for comparison (localStorage `capitalempire.vectorShadows`).
