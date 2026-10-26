@@ -8,7 +8,7 @@ import { LIBRARY } from './library';
 import { CAR_SCALE } from './ext/car-art';
 import { SHADOW_STRIDE, SPRITE_STRIDE } from './gl';
 import type { Prop } from './types';
-import { shadowShape } from './shadow-shape';
+import { castsShadow, contactShadow, placeholderBoxes, type ContactShadow, type ShadowSpot } from './shadow-shape';
 import { lookOf } from './newart';
 
 /** anything drawn like a prop: library item, anchor (tiles), flip, scale, footprint (tiles) */
@@ -48,24 +48,46 @@ export function isBehind(a: Drawable, b: Drawable) {
   return a.x1 + a.y1 < b.x1 + b.y1;
 }
 function clip(out: Float32Array, o: number, i: number, j: number) { out[o] = i * CHUNK_W; out[o + 1] = j * CHUNK_H; out[o + 2] = (i + 1) * CHUNK_W; out[o + 3] = (j + 1) * CHUNK_H; }
+/** per library item: casts a cast shadow (shadow-shape.ts castsShadow: an override can turn it off), and has business art's placeholder
+ *  footprint (its cast shadow stands on its picture's base instead: contactShadow's foot); filled as items are first packed */
+const CASTS: boolean[] = [], PLACEHOLDER: boolean[] = [];
+const casts = (item: number) => CASTS[item] ??= castsShadow(LIBRARY[item]!);
+const placeholder = (item: number) => PLACEHOLDER[item] ??= placeholderBoxes(LIBRARY[item]!);
+/** the drawn spot of a drawable for its contact shadow (scratch): the look's anchor and scale, the footprint (a parked car's shrunk like its
+ *  picture, about its middle) */
+const SPOT: ShadowSpot = { x: 0, y: 0, x0: 0, y0: 0, x1: 0, y1: 0, scale: 1 };
+function spotOf(d: Drawable, l: { x?: number; y?: number; scale: number; item: number }): ShadowSpot {
+  const f = LIBRARY[l.item]!.kind === 'car' && !d.moving ? CAR_SCALE : 1, cx = (d.x0 + d.x1) / 2, cy = (d.y0 + d.y1) / 2, hw = (d.x1 - d.x0) * f / 2, hh = (d.y1 - d.y0) * f / 2;
+  SPOT.x = l.x ?? d.x; SPOT.y = l.y ?? d.y; SPOT.x0 = cx - hw; SPOT.y0 = cy - hh; SPOT.x1 = cx + hw; SPOT.y1 = cy + hh; SPOT.scale = l.scale;
+  return SPOT;
+}
 function packSprite(d0: Drawable, out: Float32Array, o: number, i: number, j: number, alpha = 1) {
   // the picture drawn for it (newart.ts: a stand-in on the same footprint for an old building, the drawable itself otherwise)
   const l = lookOf(d0), it = LIBRARY[l.item]!, t = it.tex;
   spriteRect(d0, out, o);
   out[o + 4] = l.flip ? t[3] : t[1]; out[o + 5] = t[2]; out[o + 6] = l.flip ? t[1] : t[3]; out[o + 7] = t[4];
-  // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked); a hidden one draws nothing
-  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
+  // w: the foot line (world px) the cast shadow hinges on; a baked lot casts none (its picture carries its own, baked), nor a sprite whose
+  // override says so (shadow-overrides.json: a flat one); a hidden one draws nothing
+  out[o + 8] = t[0]; out[o + 9] = l.hidden ? 0 : alpha; out[o + 10] = it.big ? 0 : 1; out[o + 11] = it.kind === 'lot' || l.hidden || d0.lift || !casts(l.item) ? -1 : worldY(l.x ?? d0.x, l.y ?? d0.y);
   clip(out, o + 12, i, j);
-  // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0) corners
-  out[o + 16] = worldX(d0.x1, d0.y1); out[o + 17] = worldY(d0.x1, d0.y1); out[o + 18] = worldX(d0.x0, d0.y1); out[o + 19] = worldX(d0.x1, d0.y0);
+  // the footprint's front edges, for the cast shadows (gl.ts VS_CAST): the near corner (x1, y1) and the left (x0, y1) and right (x1, y0)
+  // corners; business art's placeholder footprint (a 2 x 2 m box under a whole building) gives way to its picture's base (T141)
+  let x0 = d0.x0, y0 = d0.y0, x1 = d0.x1, y1 = d0.y1;
+  if (placeholder(l.item) && !l.hidden) { const f = contactShadow(it, spotOf(d0, l), out.subarray(o, o + 4))?.foot; if (f) [x0, y0, x1, y1] = f; }
+  out[o + 16] = worldX(x1, y1); out[o + 17] = worldY(x1, y1); out[o + 18] = worldX(x0, y1); out[o + 19] = worldX(x1, y0);
 }
-/** the sprite's contact shadow (shadow-shape.ts): its shape from the footprint (2 m tiles, so the half extents in metres are the tile
- *  spans), a parked car's shrunk like its picture; none packs as a zero-size shape */
-function packShadow(d: Drawable, out: Float32Array, o: number, i: number, j: number) {
-  const it = LIBRARY[d.item], f = it.kind === 'car' && !d.moving ? CAR_SCALE : 1, sh = d.lift ? null : shadowShape(it, (d.x1 - d.x0) * f, (d.y1 - d.y0) * f, d.scale);
-  const cx = sh?.atAnchor ? d.x : (d.x0 + d.x1) / 2, cy = sh?.atAnchor ? d.y : (d.y0 + d.y1) / 2;
-  out[o] = worldX(cx, cy); out[o + 1] = worldY(cx, cy); out[o + 2] = sh?.hx ?? 0; out[o + 3] = sh?.hy ?? 0;
-  out[o + 4] = sh?.core ?? 0; out[o + 5] = sh?.feather ?? 0; out[o + 6] = sh?.round ? 1 : 0; out[o + 7] = 0;
+/** a drawable's contact shadow as packShadow packs it (null: none), its picture's rect `rect` (spriteRect) when known */
+export function contactOf(d: Drawable, rect: ArrayLike<number> = spriteRect(d)): ContactShadow | null {
+  const l = lookOf(d);
+  return d.lift || l.hidden ? null : contactShadow(LIBRARY[l.item]!, spotOf(d, l), rect);
+}
+/** the sprite's contact shadow (shadow-shape.ts contactShadow): the drawn picture's (the look's) shape from the footprint (2 m tiles, so the
+ *  half extents in metres are the tile spans) and the picture's rect `rect` (world px, spriteRect), a parked car's shrunk like its picture;
+ *  none (a lifted or hidden sprite, a lot, an override's contact: false) packs as a zero-size shape */
+function packShadow(d: Drawable, out: Float32Array, o: number, i: number, j: number, rect: ArrayLike<number>) {
+  const sh = contactOf(d, rect);
+  out[o] = sh ? worldX(sh.x, sh.y) : 0; out[o + 1] = sh ? worldY(sh.x, sh.y) : 0; out[o + 2] = sh?.hx ?? 0; out[o + 3] = sh?.hy ?? 0;
+  out[o + 4] = sh?.core ?? 0; out[o + 5] = sh?.feather ?? 0; out[o + 6] = sh?.round ? 1 : 0; out[o + 7] = sh?.lean ?? 0;
   clip(out, o + 8, i, j);
 }
 /** topological painter's order over the props of one tile (their pictures overlap) */
@@ -133,7 +155,7 @@ export class SpriteTiles {
     const n = t.order.length; t.packed = new Float32Array(n * SPRITE_STRIDE); t.rects = new Float32Array(n * 4);
     const sh: number[] = [];
     t.order.forEach((p, i) => { packSprite(p, t.packed, i * SPRITE_STRIDE, t.i, t.j); t.rects.set(t.packed.subarray(i * SPRITE_STRIDE, i * SPRITE_STRIDE + 4), i * 4); if (SHADOWED(LIBRARY[p.item]) && !p.lift) sh.push(i); });
-    t.shadows = new Float32Array(sh.length * SHADOW_STRIDE); sh.forEach((i, k) => packShadow(t.order![i], t.shadows, k * SHADOW_STRIDE, t.i, t.j));
+    t.shadows = new Float32Array(sh.length * SHADOW_STRIDE); sh.forEach((i, k) => packShadow(t.order![i], t.shadows, k * SHADOW_STRIDE, t.i, t.j, t.rects.subarray(i * 4, i * 4 + 4)));
     t.buckets = new Map();
     for (let i = 0; i < n; i++) { const o = i * 4; for (let gx = Math.floor(t.rects[o] / BUCKET); gx <= Math.floor(t.rects[o + 2] / BUCKET); gx++) for (let gy = Math.floor(t.rects[o + 1] / BUCKET); gy <= Math.floor(t.rects[o + 3] / BUCKET); gy++) { const k = gx * 65536 + gy; let l = t.buckets.get(k); if (!l) t.buckets.set(k, (l = [])); l.push(i); } }
   }
@@ -173,7 +195,7 @@ export class SpriteTiles {
       this.ensure(at + (nProps + nMv) * SPRITE_STRIDE, sat + (t ? t.shadows.length : 0) + nMv * SHADOW_STRIDE);
       const s = this.stream, ss = this.shadowStream, d: TileDraw = { i, j, shadows: 0, sprites: 0 };
       if (t) { ss.set(t.shadows, sat); sat += t.shadows.length; d.shadows += t.shadows.length / SHADOW_STRIDE; }
-      if (mv) for (const m of mv) { packShadow(m.d, ss, sat, i, j); sat += SHADOW_STRIDE; d.shadows++; }
+      if (mv) for (const m of mv) { packShadow(m.d, ss, sat, i, j, m.r); sat += SHADOW_STRIDE; d.shadows++; }
       if (!mv) { if (t) { s.set(t.packed, at); at += t.packed.length; d.sprites = nProps; } }
       else {
         // each mover goes after the last prop behind it that its picture overlaps

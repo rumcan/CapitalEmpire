@@ -223,15 +223,22 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       )}
       </Section>
       {/* the owner (2026-10-25): "should be a slider". One continuous Border, a hairline to huge: a course surface's collar band (its course look,
-          with its Shadow right under it), or a painted area's border (the old None, Small, Medium and Large are points on it) */}
+          with its Shadow right under it), or a painted area's border (the old None, Small, Medium and Large are points on it) with the area's
+          own Shadow under it (T136) */}
       <Section id="border" title="Border">
-      {grid ? <CourseEdges game={game} /> : (
+      {grid ? <CourseEdges game={game} /> : (<>
         <div className="flex items-center gap-2 text-[11px] text-slate-400" title="The border band inside the area's edge: none, a hairline, up to 8 m">
           <span className="w-12 shrink-0">Border</span>
           <input type="range" aria-label="Border width" min={0} max={BORDER_STEPS} step={1} value={paintBorderPos(s.border)} onChange={e => p.setStyle({ border: paintBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{s.border > 0 ? borderLabel(2 * borderW(s.border)) : 'none'}</span>
         </div>
-      )}
+        {/* T136: the area's edge shade, so it reads as slightly raised under the sun at the upper right (0 none, the look before it) */}
+        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400" title="The area's edge shade: a soft shade inside its edges turned away from the sun and a little light on those turned to it, so it reads as slightly raised">
+          <span className="w-12 shrink-0">Shadow</span>
+          <input type="range" aria-label="Area shadow" min={0} max={100} step={1} value={Math.round((s.shadow ?? 0) * 100)} onChange={e => p.setStyle({ shadow: +e.target.value / 100 })} className="min-w-0 flex-1" />
+          <span className="w-16 text-right text-xs text-slate-200">{`${Math.round((s.shadow ?? 0) * 100)}%`}</span>
+        </div>
+      </>)}
       {(grid ? band : s.border > 0) && (
         <>
           <div className="mt-2 text-[11px] text-slate-400">Border texture</div>

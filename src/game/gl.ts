@@ -4,12 +4,13 @@
 import { ATLAS_PAGES, ATLAS_SIZE } from './library';
 import { AtlasGL, type AtlasSource } from './atlas-gl';
 import { atlasMip0 } from './sizes';
+import { CONTACT_LEAN } from './shadow-shape';
 
 /** floats per sprite instance: rect x0 y0 x1 y1 (world px), uv u0 v0 u1 v1, layer, alpha, cullable, foot line (world px; < 0: casts no shadow),
  *  clip x0 y0 x1 y1 (world px), foot: the footprint's near corner x y and its left and right corners' x (world px; the cast shadows stand on it) */
 export const SPRITE_STRIDE = 20;
 /** floats per shadow instance: centre x y (world px), half extents hx hy (metres along the map's axes), core, feather (metres), round (0 / 1),
- *  spare, clip x0 y0 x1 y1 (world px) */
+ *  lean (a multiplier of the common lean, shadow-shape.ts contactShadow), clip x0 y0 x1 y1 (world px) */
 export const SHADOW_STRIDE = 12;
 /** floats per point: x y (world px), rgba */
 export const POINT_STRIDE = 6;
@@ -94,7 +95,10 @@ void main() {
   if (a < 0.004) discard;
   o = vec4(0.024, 0.031, 0.051, 1.0) * a;
 }`;
-// the shape's 2:1 diamond bound: 32 world px per metre across, 16 down (x = (X - Y) * 32, y = (X + Y) * 16, X and Y in metres)
+// the shape's 2:1 diamond bound: 32 world px per metre across, 16 down (x = (X - Y) * 32, y = (X + Y) * 16, X and Y in metres).
+// The lean (T141, shadow-shape.ts leanShift: blob and box alike): uShift is the cast shadows' screen direction times their length against the
+// default (contactLean); the shape moves that way on the ground by CONTACT_LEAN.frac of its own reach from its centre to its edge in that
+// direction, at most CONTACT_LEAN.max metres, times its own multiplier (aLook.w)
 const VS_SHADOW = `#version 300 es
 layout(location=0) in vec4 aShape; layout(location=1) in vec4 aLook; layout(location=2) in vec4 aClip;
 uniform vec4 uCam; uniform vec2 uScreen; uniform vec2 uShift;
@@ -102,8 +106,14 @@ out vec2 vOff; out vec2 vW; flat out vec4 vShape; flat out vec4 vLook; flat out 
 void main() {
   vec2 c = vec2(gl_VertexID & 1, gl_VertexID >> 1) * 2.0 - 1.0;
   float e = aShape.z + aShape.w + aLook.y * 3.2;
-  // uShift leans the shape toward the cast shadows' side (screen px per metre of its half extents): the sun is on the other side
-  vec2 off = c * vec2(e * 32.0 + 2.0, e * 16.0 + 2.0), w = aShape.xy + uShift * (aShape.z + aShape.w) + off;
+  vec2 m = vec2(uShift.x / 32.0 + uShift.y / 16.0, uShift.y / 16.0 - uShift.x / 32.0) * 0.5, lean = vec2(0.0);
+  float n = length(uShift);
+  if (n > 0.0) {
+    vec2 u = normalize(m), h = max(aShape.zw, vec2(1e-4));
+    float reach = aLook.z > 0.5 ? 1.0 / length(u / h) : min(h.x / max(abs(u.x), 1e-4), h.y / max(abs(u.y), 1e-4));
+    lean = vec2((u.x - u.y) * 32.0, (u.x + u.y) * 16.0) * min(reach * ${CONTACT_LEAN.frac.toFixed(4)}, ${CONTACT_LEAN.max.toFixed(4)}) * aLook.w * n;
+  }
+  vec2 off = c * vec2(e * 32.0 + 2.0, e * 16.0 + 2.0), w = aShape.xy + lean + off;
   vec2 s = (w - uCam.xy) * uCam.z + uScreen * 0.5;
   gl_Position = vec4(s.x / uScreen.x * 2.0 - 1.0, 1.0 - s.y / uScreen.y * 2.0, 0.0, 1.0);
   vOff = off; vW = w; vShape = aShape; vLook = aLook; vClip = aClip;
@@ -275,7 +285,8 @@ export class GLRenderer {
     for (let i = 0; i < 5; i++) { gl.vertexAttribDivisor(i, 0); gl.disableVertexAttribArray(i); }
     this.stats.draws++;
   }
-  /** instances at float offset `firstFloat` of the uploaded stream, as contact shadows; strength scales their darkness (1 = the builder's) */
+  /** instances at float offset `firstFloat` of the uploaded stream, as contact shadows; strength scales their darkness (1 = the builder's); (shiftX,
+   *  shiftY) the lean (shadow-shape.ts contactLean: the cast shadows' screen direction times their length against the default) */
   drawShadows(firstFloat: number, count: number, strength = 1, shiftX = 0, shiftY = 0) {
     if (!count || strength <= 0) return; const gl = this.gl, pr = this.shadow;
     gl.useProgram(pr.p); this.camUniforms(pr); gl.uniform1f(pr.u.uStrength, strength); gl.uniform2f(pr.u.uShift, shiftX, shiftY); gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn);

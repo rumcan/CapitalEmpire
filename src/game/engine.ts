@@ -47,7 +47,7 @@ import { drawParkingOverlay, type ParkOverlayView } from './parking-overlay';
 import type { BayRowDef } from './event/rows';
 import { inQuad, type CurbDef } from './event/curb';
 import { SpriteTiles, spriteRect, type Drawable } from './sprites';
-import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, type SaveV5 } from './save';
+import { readSave, writeSave, clearSave, backupTownSlot, SAVE_VERSION, segRec, exportSaveBytes, importSaveBytes, listSaveBackups, readBackup, deleteBackup, type SaveV5 } from './save';
 import { CAR_COLOURS, parkedCar } from './traffic';
 import { carOwnerScale } from './ext/car-art';
 import { SimClient, type LotView } from './sim/client';
@@ -55,7 +55,7 @@ import { townClockFor, townTimeOf } from './sim/townclock';
 import { zoneOf } from './sim/routing';
 import { lastRush, nextRush, windowOf, type Window } from './beforeafter';
 import { placeStadium, siteAt, siteWhy, type Site } from './event/site';
-import { BUSINESS, CLUBHOUSE_RANGE_COST, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
+import { BUSINESS, CLUBHOUSE_RANGE_COST, knownBusinesses, unlockedBy, unlockText, type BusinessId, type BusinessType, type Owned } from './business/catalogue';
 import { snapFrontage, snapSegOf, type SnapSeg } from './ext/frontage-snap';
 import { freshStats, ownedOf, type BizDef, type BizStats } from './business/state';
 import { businessArt } from './business/art';
@@ -89,7 +89,8 @@ import { planGolfGame } from './golf/start';
 import { RANGE_CAM_ZOOM, planRangeStart } from './golf/rangestart';
 import { CLUB_REACH, clubhouseSpotWhy, plotOfFront, rangeLayout } from './golf/range';
 import { dressCourse } from './golf/dressing';
-import { FIRST_TEE, SEASON_START, monthIndexLabel, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { FIRST_TEE, SEASON_START, monthsLeft, seasonLabel, seasonMonth, yearOf } from './golf/calendar';
+import { growReadyLabel, hintWithGrow } from './golf/growlabel';
 import { computeTournamentCloseBook, computeYearEnd, type YearEndResult } from './golf/yearend';
 import { countParkedCars } from './golf/parkingfee';
 import { parkRideNeeds } from './golf/parkride';
@@ -103,6 +104,7 @@ import { deriveHoles, surfaceAt, validateMarkerPlacement } from './golf/holes';
 import { LiveGroup, OWNER_ADDRESS, OWNER_ART, OWNER_SKILL, POWER, PUTT_POWER, PlayView, allowedClubs, boardRows, carryM, championLine, makeCourseView, makeField, ownerGolfer, playRound, powerFor, startOwner, stateAt, standings, teeTimes, toParText, type BoardRow, type Club, type CourseView, type OwnerTurn, type RoundPlan, type Sex } from './golf/play';
 import { holeViews, markerPlan, tagByHole, type HoleView, type MarkerKind } from './golf/holeview';
 import { CAST, castShear, clampCast, type CastShadow } from './cast-shadow';
+import { contactLean } from './shadow-shape';
 import { MARKER_SCALE, OLD_TEE_IDS, PIN_RED_ID, PIN_YELLOW_ID, TEE_BACK_ID, TEE_FORWARD_ID, TEE_MIDDLE_ID } from './golf/dressing';
 import { FALLBACK_STRUCTURE_SPRITE, STRUCTURE_SPRITE, STRUCTURE_SPRITE_OLD } from './golf/structure-art';
 import { checkStructurePlacement, findStructureIndexAt, structureRect, structuresNeeds, type PlacedEventStructure, type StructurePlacementCheck } from './golf/eventtool';
@@ -739,8 +741,9 @@ export class Game {
     }
     return this.growCache!.v;
   }
-  /** a hole's grow-in for the Course panel (P23 4.6): 'growing · ready Mar 1985', or '' once it is grown in */
-  holeGrowLabel(n: number): string { const r = this.holesGrowing().get(n); return r === undefined ? '' : `growing · ready ${monthIndexLabel(r)}`; }
+  /** a hole's grow-in (P23 4.6, T135): 'growing · ready Mar 1985', or '' once it is grown in. The one source of the badge's, the Holes panel's
+   *  status line's and the course hint pill's words (golf/growlabel.ts) */
+  holeGrowLabel(n: number): string { return growReadyLabel(this.holesGrowing().get(n)); }
   /** the effective game month for grow-in (the grow cards included) */
   private growMonth(): number { return this.golf ? effectiveGrowInClockMonth(this.golfMonthIndex(), this.golf.cards ?? this.traffic.round.cards) : 0; }
   /** the course grid, with both workers holding a copy of this very grid object (a new or grown grid goes to them whole first) */
@@ -958,7 +961,11 @@ export class Game {
   private courseCursor = new CourseCursor({ texture: browserCursorTexture(), why: () => this.paint.brushSkipWhy(), cost: () => this.paint.brushCellCost(), rev: () => (this.courseGrid?.rev ?? 0) * 64 + this.paint.brushHole * 2 + (this.paint.rubOut ? 1 : 0), money: () => this.money, zone: (x, y) => this.range.zoneAt(x, y) });
   private cursorView: CursorView = { ze: 1, camX: 0, camY: 0, cw: 1, ch: 1, dpr: 1 };
   /** the hint pill's words for the Course brush (T118: what a click does: the surface, the hole it joins or starts, the price a cell, and the state); '' otherwise */
-  courseHint(): string { const m = this.paint.mode; return this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing ? this.courseCursor.hint : ''; }
+  courseHint(): string {
+    const m = this.paint.mode; if (!(this.tool === 'course' && this.paintOn && this.brushOpen && (m === 'brush' || m === 'draw') && !this.clubPlacing)) return '';
+    // a growing hole's pill says so after the hole's name (P23 4.6, T135): 'Painting Fairway · Hole 1 · growing · ready Mar 1985 · $2 a cell'
+    const n = this.paint.brushHole; return hintWithGrow(this.courseCursor.hint, n, this.holeGrowLabel(n));
+  }
   /** whether the Paint tool or Holes may lay what is in hand: Holes at stage 1 is New hole only (P23 4.2, 4.3), so outside New hole its brush,
    *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
   get brushOpen(): boolean { if (this.tool !== 'course' || this.paint.mode === 'plan') return true; const ui = this.toolUi(); return !ui || ui.shapeByHand; }
@@ -4132,7 +4139,8 @@ export class Game {
       if (this.golf) { if (this.golf.cards?.length && (!d.round || !d.round.cards?.length)) { if (d.round) d.round.cards = this.golf.cards.slice() as CardId[]; } else if (!this.golf.cards && d.round?.cards?.length) { this.golf.cards = d.round.cards.filter(isGolfCardId); } }
       if (this.golf?.town) { this.townPts = [this.golf.town]; this.roadNames = new RoadNames(this.names, this.townPts); }
       // a save with businesses has its list; an old one has its stadium as id 1 (or, with no stadium field either, the game's spot)
-      if (d.biz) this.setBizDefs(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })));
+      // a type the catalogue does not have (a save from another branch) is dropped, so the rest of the save keeps working (T135)
+      if (d.biz) this.setBizDefs(knownBusinesses(d.biz.map(([type, x, y, w, h], k): BizDef => ({ id: k + 1, type, x, y, w, h })), 'load'));
       else { const at = d.stadium !== undefined ? d.stadium : this.gameSpot(); this.setBizDefs(at ? [{ id: 1, type: 'stadium', x: at[0], y: at[1], w: at[2], h: at[3] }] : []); }
       for (const [ax, ay, bx, by, cls, style, kind, town] of d.segs) this.edit.addLegs([{ a: { x: ax, y: ay }, b: { x: bx, y: by } }], classOf(cls), style as LineStyle, [(kind ?? 0) as SegKind], town ? true : undefined);
       if (d.speed) this.edit.setSpeedTier(Math.min(3, Math.max(0, d.speed | 0)) as 0 | 1 | 2 | 3);
@@ -4171,6 +4179,8 @@ export class Game {
     this.golf = null; this.townPts = []; this.golfProps.clear(); this.golfStructureProps.clear(); this.range.drop(); this.range.cardOpen = false;
     this.landMode = false; this.landHover = null; this.holesTool = false; this.selectedGolfMarker = null;
     this.eventTool = false; this.eventStructurePending = null; this.lastGolfMonth = -1;
+    // the last game's season card and calendar year do not carry over (T135: the new game's clock starts again in the city worker)
+    this.seasonReport = null; this.seenYear = 0; this.foundTick = 0;
     this.setBizDefs([]); this.bizHover = null; this.bizOpenSeen = null;
     // the new town's round has no cards: the mirror goes with it (a frame still in flight would otherwise apply the old cards again)
     this.cardsApplied = 0; this.setCardFields([]); this.traffic.round = new Round().view();
@@ -4191,6 +4201,37 @@ export class Game {
     void this.save(); this.toast(`New game (seed ${this.seed})`); this.emit();
   }
   clearTown() { this.reset(); this.sendTerrain(); this.afterLoad(); void clearSave(); void this.save(); this.emit(); }
+  /** downloads the current save as capital-empire-YYYY-MM-DD.cesave (saves first, unless saving is blocked) */
+  async downloadSave(): Promise<void> {
+    await this.save();
+    const buf = await exportSaveBytes();
+    if (!buf) { this.toast('No save to download yet', 'warn'); return; }
+    const t = new Date(), pad = (n: number) => String(n).padStart(2, '0');
+    this.downloadBytes(buf, `capital-empire-${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}.cesave`);
+  }
+  /** loads a .cesave file: on success the page reloads into it (the current save is backed up first); on failure a toast says why */
+  async loadSaveFile(file: File): Promise<void> {
+    const was = this.saveBlocked; this.saveBlocked = true; // no autosave may write the old game over the file while it loads
+    const r = await importSaveBytes(await file.arrayBuffer());
+    if (r.ok) { location.reload(); return; }
+    this.saveBlocked = was; this.toast(r.why ?? 'This save could not be read', 'warn');
+  }
+  /** the backup slots for the gear menu, with a download and a delete for each */
+  async saveBackups(): Promise<string[]> { return listSaveBackups(); }
+  async downloadBackup(key: string): Promise<void> {
+    const buf = await readBackup(key);
+    if (!buf) { this.toast('That backup is gone', 'warn'); return; }
+    this.downloadBytes(buf, `capital-empire-${key}.cesave`);
+  }
+  async deleteSaveBackup(key: string): Promise<void> {
+    if (await deleteBackup(key)) this.toast('Backup deleted'); else this.toast('That backup could not be deleted', 'warn');
+  }
+  /** a file download of bytes: a Blob behind a temporary link that is clicked, then its URL is released */
+  private downloadBytes(buf: ArrayBuffer, name: string) {
+    const url = URL.createObjectURL(new Blob([buf], { type: 'application/gzip' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000); // released later: some browsers start the download after the click returns
+  }
   /** debug (the contact sheet): an empty map at the camera, then a street grid of cols x rows blocks (BLOCK tiles). Every lot is composed
    *  directly (no town) with a use from uses (cycled), the level, decline and seed + i. The states hold until the next reset. */
   stageLots(o: { cols: number; rows: number; uses: number[]; level: number; decline: number; seed: number }) {
@@ -4877,9 +4918,9 @@ export class Game {
       const [sAt, pAt, lAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats], [this.lightBuf, lt ? (lt.small + lt.beams) * POINT_STRIDE : 0]]);
       // the cast shadows (cast-shadow.ts), faded out by night, then the contact shadows, then the sprites
       if (this.cast.on) { const sh = castShear(this.cast); gl.drawCast(pAt, f.floats / SPRITE_STRIDE, sh.sx, sh.sy, this.cast.strength * (1 - this.nightAmount())); }
-      // the contact shadows lean toward the cast shadows' side (away from the sun): 6 px per metre of a shape's half extents at full length
-      const lean = this.cast.on ? 6 * this.cast.length : 0, la = this.cast.angle * Math.PI / 180;
-      if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength, lean * Math.cos(la), lean * Math.sin(la));
+      // the contact shadows lean toward the cast shadows' side (away from the sun), blob and box alike (shadow-shape.ts contactLean, T141)
+      const lean = contactLean(this.cast);
+      if (shadows) gl.drawShadows(sAt, f.shadowFloats / SHADOW_STRIDE, this.shadowStrength, lean.x, lean.y);
       gl.drawSprites(pAt, f.floats / SPRITE_STRIDE, tier === 'district' ? 7 * this.dpr : 0);
       if (lt) { gl.drawPoints(lAt, lt.small, Math.max(2, 0.55 * 64 * ze), true); gl.drawPoints(lAt + lt.small * POINT_STRIDE, lt.beams, Math.max(4, 2.6 * 64 * ze), true); }
     }

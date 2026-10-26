@@ -10,6 +10,7 @@ import { isLights, junctionCorners, slipRule } from './game/junctions';
 import { PLANNER_Z, ZOOM_MAX, ZOOM_MIN } from './game/iso';
 import { GROWTH_OPTIONS } from './game/lots/town';
 import { shortName } from './game/ext/names';
+import { parkPanelControls, busHowTo, tollHowTo } from './game/ext/progressive-ui';
 import { Budget, DEBT_DAYS, GAME_DAY, LOAN, LOAN_RATE } from './game/budget';
 import { compare, type Delta, type Window } from './game/beforeafter';
 import { MILESTONES, WIN_POP, unlockOf } from './game/career';
@@ -19,6 +20,7 @@ import { freshStats } from './game/business/state';
 import { BUSINESS_IMAGE } from './game/business/art';
 import { BUSINESS_THUMBS } from './game/business-library';
 import type { SurgeView } from './game/event/surge';
+import { BUILD } from './game/save';
 import { PaintPanel } from './PaintPanel';
 import { CoursePanel } from './ui/course/CoursePanel';
 import { BuildingsPanel } from './ui/course/BuildingsPanel';
@@ -48,6 +50,9 @@ import { ShotPanel } from './ui/ShotPanel';
 import { RangeCard } from './ui/golf/RangeCard';
 import stadiumArt from './assets/ui/art/stadium.webp';
 
+/** the top bar on one row (P23 4.11, T135): its golf chips (and the invitation's whole sentence) show their words only from 2200 px; narrower,
+ *  the icon alone with its tooltip (a stage 3 range start needs about 2,170 px with every word, the 1920 px row has 1,896) */
+const WIDE = 'hidden min-[2200px]:inline';
 /** the hint's key words, drawn as keycaps */
 const KEY_WORDS = /\b(Esc|Tab|Enter|Shift|Backspace|Space|Delete)\b/;
 const money = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -75,6 +80,12 @@ export default function App() {
   /** the menu button waiting for its second click (New game, Empty map), or null */
   const [armed, setArmed] = useState<'new' | 'empty' | null>(null);
   useEffect(() => { if (!menu) setArmed(null); }, [menu]);
+  /** the save file input (Load save file…) and the backup slots listed under the gear (T044); the list is read when the menu opens */
+  const saveFile = useRef<HTMLInputElement>(null);
+  const [backups, setBackups] = useState<string[]>([]);
+  const [backupsOpen, setBackupsOpen] = useState(false);
+  const [armedBackup, setArmedBackup] = useState<string | null>(null);
+  useEffect(() => { if (!menu || !game) { setBackupsOpen(false); setArmedBackup(null); return; } void game.saveBackups().then(setBackups); }, [menu, game]);
   const [courseStats, setCourseStats] = useState<ReturnType<Game['courseStatsView']>>(null);  
   // Esc closes the topmost menu or card before it reaches the tool (P23 P1-A): the engine's Esc ladder asks which of these are open
   useEffect(() => { if (game) game.uiCards = { open: () => ({ help, menu, looks: looksOpen, stats: !!courseStats }), close: c => (c === 'help' ? setHelp(false) : c === 'menu' ? setMenu(false) : c === 'looks' ? setLooks(false) : setCourseStats(null)) }; });
@@ -193,10 +204,10 @@ export default function App() {
       {game && game.ready && (
         <>
           <div ref={topBar} className="pointer-events-none absolute left-0 right-0 top-0 z-30 flex flex-wrap items-start justify-between gap-2 p-3">
-            <div className="pointer-events-auto glass flex items-center gap-3 px-4 py-2">
+            <div className="pointer-events-auto glass flex items-center gap-2 px-4 py-2 min-[1600px]:gap-3">
               <div className="flex items-center gap-2.5">
                 <Icon name="leaf" size={38} />
-                <div className="max-[1599px]:hidden">
+                <div className={gv ? 'max-[1899px]:hidden' : 'max-[1599px]:hidden'}>{/* the golf bar's title from 1900 px (T135: one row) */}
                   <div className="whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]">Maple Falls</div>
                   <div className="label-caps whitespace-nowrap">Town Builder</div>
                 </div>
@@ -204,16 +215,19 @@ export default function App() {
               <div className="h-9 w-px bg-white/10" />
               {gv ? (
                 <>
-                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} tone="text-amber-200" />
+                  {/* P23 4.11 (T135): the top bar keeps one row at 1366, 1600 and 1920 px at every stage: the tier's name under 1600 px, the title
+                      under 1900 px, the chips' words and the invitation's sentence under 2200 px go into their tooltips; the traffic views are in the
+                      gear menu */}
+                  <Stat icon="trophy" label="Tier" value={`T${gv.tier}`} sub={gv.tierName} subClass="max-[1599px]:hidden" title={`Tier ${gv.tier}: ${gv.tierName}`} tone="text-amber-200" />
                   <Stat icon="calendar" label="Month" value={gv.month} sub={gv.live ? 'Tournament day' : `${Math.ceil(gv.monthsLeft)} ${Math.ceil(gv.monthsLeft) === 1 ? 'month' : 'months'} to ${fv && !fv.due ? 'season end' : 'the tournament'}`} />
-                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} title="The driving range: golfers, takings, bucket price and upgrades" data-testid="range-chip"><Icon name="income" size={16} />Range</button>}
-                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title="The tour's invitation: the first tournament is held at the end of the season it names">The Club Championship: end of {fv.due ? 'this' : 'next'} season</span>}
+                  {game.golf?.start === 'range' && <button className={`chip ${game.range.cardOpen ? 'chip-on' : ''}`} onClick={() => game.openRangeCard()} title="The driving range: golfers, takings, bucket price and upgrades" aria-label="Range" data-testid="range-chip"><Icon name="income" size={16} /><span className={WIDE}>Range</span></button>}
+                  {fv?.invited && game.traffic.round.runs === 0 && !gv.live && <span className="flex items-center gap-1 whitespace-nowrap rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" data-testid="invite-pill" title={`The tour's invitation: the Club Championship at the end of ${fv.due ? 'this' : 'next'} season (the first tournament is held at the end of the season it names)`}><Icon name="trophy" size={14} /><span className="min-[2200px]:hidden">Invited</span><span className={WIDE}>The Club Championship: end of {fv.due ? 'this' : 'next'} season</span></span>}
                   {gv.live && (() => { const w = getTournamentWeather(game.seed, game.traffic.round.stage === 'eval' && game.traffic.round.last ? game.traffic.round.last.run : game.traffic.round.runs + 1); return <span className="rounded-md border border-amber-400/40 bg-amber-400/15 px-2 py-1 text-xs font-semibold text-amber-200" title={w.summary}>{w.icon} {w.label}</span>; })()}
-                  {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard"><Icon name="trophy" size={16} />Course</button>}
-                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Buy adjacent land parcels"><Icon name="compass" size={16} />Land</button>}
-                  {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Move pins and tee markers"><Icon name="pin" size={16} />Holes</button>}  
- {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} title="Event structures catalogue"><Icon name="buildings" size={16} />Event</button>}  
- {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'}><Icon name="skip" size={16} />{/* P23 4.11: under 1600 px the chip says Skip (its tooltip says the rest), so the top bar keeps one row at 1366 px */}<span className="max-[1599px]:hidden">{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span><span className="min-[1600px]:hidden">Skip</span></button>}
+                  {chip('courseStats') && <button className={`chip ${courseStats ? 'chip-on' : ''}`} onClick={() => setCourseStats(courseStats ? null : (game.courseStatsView() ?? null))} title="Course stats and scorecard" aria-label="Course"><Icon name="trophy" size={16} /><span className={WIDE}>Course</span></button>}
+                  {chip('land') && <button className={`chip ${game.landMode ? 'chip-on' : ''}`} onClick={() => { game.toggleLandMode(); bump(); }} title="Land: buy adjacent land parcels" aria-label="Land"><Icon name="compass" size={16} /><span className={WIDE}>Land</span></button>}
+                  {chip('holes') && <button className={`chip ${game.holesTool ? 'chip-on' : ''}`} onClick={() => { game.toggleHolesTool(); bump(); }} title="Holes: move pins and tee markers" aria-label="Holes"><Icon name="pin" size={16} /><span className={WIDE}>Holes</span></button>}
+ {chip('event') && <button className={`chip ${game.eventTool ? 'chip-on' : ''}`} onClick={() => { game.toggleEventTool(); bump(); }} title="Event: the event structures catalogue" aria-label="Event"><Icon name="buildings" size={16} /><span className={WIDE}>Event</span></button>}
+ {chip('skipTournament') && <button className="chip disabled:opacity-40" disabled={game.traffic.skipping || gv.live} onClick={() => game.skipToTournament()} title={fv && !fv.due ? `Skip to the end of the season (no tournament yet: ${fv.invited ? 'the first one closes the next season' : fv.check.text})` : 'Skip to the tournament (end of August)'} aria-label={fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}><Icon name="skip" size={16} /><span className={WIDE}>{fv && !fv.due ? 'Skip to season end' : 'Skip to tournament'}</span></button>}
                 </>
               ) : game.eventMode
                 ? <Stat icon="trophy" label="Level" value={String(game.traffic.round.xp)} sub={`${game.traffic.round.cards.length} cards`} tone="text-amber-200" />
@@ -244,12 +258,6 @@ export default function App() {
                 <button className="btn-icon" onClick={() => game.zoomAt(Math.max(ZOOM_MIN, game.cam.z / 1.25))} title="Zoom out (-)"><Icon name="zoom-out" size={20} /></button>
                 <button className="btn-icon" onClick={() => game.zoomAt(Math.min(ZOOM_MAX, game.cam.z * 1.25))} title="Zoom in (+)"><Icon name="zoom-in" size={20} /></button>
               </div>
-              <button className={`btn-icon ${game.showFlow ? 'on' : ''}`} onClick={() => { game.setFlow(!game.showFlow); bump(); }} title="Live congestion heat map (F)"><Icon name="layers" size={22} /></button>
-              {game.showFlow && (['time', 'now'] as const).map(m => (
-                <button key={m} className={`btn ${game.flowMode === m ? 'bg-amber-400/20 text-amber-200' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
-              ))}
-              <button className={`btn-icon ${game.panel === 'bottlenecks' ? 'on' : ''}`} onClick={() => { game.panel = game.panel === 'bottlenecks' ? null : 'bottlenecks'; if (game.panel) game.traffic.requestReport(); bump(); }} title="The worst bottlenecks (B)"><Icon name="chart" size={22} /></button>
-              <button className={`btn-icon ${game.showGrid ? 'on' : ''}`} onClick={() => { game.setShowGrid(!game.showGrid); bump(); }} title="Map grid: the 2 m tiles roads and lots snap to, shown while a build or paint tool is in hand (G)"><Icon name="fullscreen" size={22} /></button>
               <button className={`btn ${game.grassPanel ? 'on' : ''}`} onClick={() => game.toggleGrassPanel()} title="Inspect and maintain course and town grass">Grass</button>
               <div className="relative">
                 <button className={`btn-icon ${menu ? 'on' : ''}`} onClick={() => setMenu(!menu)} title="Settings"><Icon name="gear" size={22} /></button>
@@ -266,6 +274,20 @@ export default function App() {
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A subtle iso grid of the 2 m tiles roads and lots snap to, at all times (it fades out as you zoom out). Building the course shows its 1 m half grid either way (G)">
                       <input type="checkbox" checked={game.showGrid} onChange={e => { game.setShowGrid(e.target.checked); bump(); }} />
                       Map grid (G)
+                    </label>
+                    {/* T135: the traffic views moved here from the top bar (it keeps one row at 1366 px); their keys are unchanged (F, B) */}
+                    <div className="flex items-center gap-2 px-2 py-2 text-sm">
+                      <label className="flex cursor-pointer items-center gap-2" title="Live congestion heat map (F)">
+                        <input type="checkbox" checked={game.showFlow} onChange={e => { game.setFlow(e.target.checked); bump(); }} />
+                        Heat map (F)
+                      </label>
+                      {game.showFlow && <span className="ml-auto flex gap-1">{(['time', 'now'] as const).map(m => (
+                        <button key={m} className={`chip ${game.flowMode === m ? 'chip-on' : ''}`} onClick={() => { game.flowMode = m; game.emit(); }}>{m === 'time' ? 'Over time' : 'Now'}</button>
+                      ))}</span>}
+                    </div>
+                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="The worst bottlenecks (B)">
+                      <input type="checkbox" checked={game.panel === 'bottlenecks'} onChange={e => { game.panel = e.target.checked ? 'bottlenecks' : null; if (game.panel) game.traffic.requestReport(); bump(); }} />
+                      Bottlenecks (B)
                     </label>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" title="A small label over each building drawn as a stand-in (another building of its kind) until its own art arrives: Stand In for Church">
                       <input type="checkbox" checked={game.showStandIns} onChange={e => { game.setShowStandIns(e.target.checked); bump(); }} />
@@ -308,6 +330,18 @@ export default function App() {
                     ))}
                     <NightPanel game={game} bump={bump} />
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} title="Saved automatically; force a save now">Save</button>
+                    <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} title="Download the save as a .cesave file (for a bug report, or to carry it to another computer)">Download save</button>
+                    <button className="btn w-full" onClick={() => saveFile.current?.click()} title="Load a .cesave file in place of this game: this game is backed up first">Load save file…</button>
+                    <input ref={saveFile} type="file" accept=".cesave,application/gzip" className="hidden" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void game.loadSaveFile(f); }} />
+                    {backups.length > 0 && <button className="btn w-full" onClick={() => setBackupsOpen(!backupsOpen)} title="Saves kept as backups: a newer build's, an unreadable one, the copy before a migration, and the one replaced by a load">Backups ({backups.length}) {backupsOpen ? '▴' : '▾'}</button>}
+                    {backupsOpen && backups.map(k => (
+                      <div key={k} className="flex items-center gap-1 px-2 py-1 text-xs">
+                        <span className="min-w-0 flex-1 truncate text-[10px] opacity-70" title={k}>{k}</span>
+                        <button className="btn" onClick={() => void game.downloadBackup(k)} title="Download this backup as a .cesave file">Download</button>
+                        <button className={`btn ${armedBackup === k ? '!border-red-400 !text-red-300' : ''}`} title="Delete this backup for good" onClick={async () => { if (armedBackup !== k) { setArmedBackup(k); return; } setArmedBackup(null); await game.deleteSaveBackup(k); setBackups(await game.saveBackups()); }}>{armedBackup === k ? 'Click again' : 'Delete'}</button>
+                      </div>
+                    ))}
+                    <div className="px-2 pt-1 text-[10px] opacity-50" title="The build that is running: every save records it (P07), so a bug report with a .cesave says which build wrote it">Build {BUILD.app} · {BUILD.sha}</div>
                     {/* asked in the menu (the browser's confirm() is not shown in every embedded browser): a first click arms, a second acts */}
                     <button className={`btn w-full ${armed === 'new' ? '!border-red-400 !text-red-300' : ''}`} title="Start a new game: your current game is replaced" onClick={() => { if (armed !== 'new') { setArmed('new'); return; } setArmed(null); setMenu(false); game.newTown(); }}>{armed === 'new' ? 'Click again: replace this game' : 'New game'}</button>
                     <button className={`btn w-full ${armed === 'empty' ? '!border-red-400 !text-red-300' : ''}`} title="Clear everything and start from an empty field" onClick={() => { if (armed !== 'empty') { setArmed('empty'); return; } setArmed(null); setMenu(false); game.clearTown(); }}>{armed === 'empty' ? 'Click again: clear everything' : 'Empty map'}</button>
@@ -352,7 +386,7 @@ export default function App() {
               {game.uiTool === 'course' && <CoursePanel game={game} looks={looksOpen} onLooks={setLooks} />}
               {game.uiTool === 'buildings' && <BuildingsPanel game={game} />}
               {game.tool === 'props' && <PropsPanel game={game} />}
-              {game.tool === 'park' && <ParkPanel game={game} />}
+              {game.tool === 'park' && <ParkPanel game={game} dev={dev} />}
               {game.tool === 'toll' && <TollPanel game={game} />}
               {game.tool === 'business' && <BusinessPanel game={game} />}
               {game.tool === 'bus' && <BusPanel game={game} />}
@@ -502,14 +536,14 @@ function PerfPanel({ game }: { game: Game }) {
 }
 
 /** a top-bar figure: its icon (in a square, when given), its label, value and a line under it; bar (0 to 1) draws a thin progress bar under that */
-function Stat({ label, value, sub, tone, subTone, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
+function Stat({ label, value, sub, tone, subTone, subClass, title, bar, onClick, icon }: { label: string; value: string; sub?: string; tone?: string; subTone?: string; subClass?: string; title?: string; bar?: number; onClick?: () => void; icon?: IconName }) {
   return (
-    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick}>
+    <div className={`flex items-center gap-2.5 px-1 ${onClick ? 'cursor-pointer rounded-lg hover:bg-white/5' : ''}`} onClick={onClick} title={title}>
       {icon && <div className="glass-2 hidden h-8 w-8 shrink-0 place-items-center min-[1900px]:grid"><Icon name={icon} size={24} /></div>}
       <div>
         <div className="label-caps">{label}</div>
         <div className={`text-sm font-semibold tabular-nums leading-tight ${tone ?? ''}`}>{value}</div>
-        {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'}`}>{sub}</div>}
+        {sub && <div className={`text-[10px] ${subTone ?? 'text-slate-500'} ${subClass ?? ''}`}>{sub}</div>}
         {bar !== undefined && <div className="mt-0.5 h-1 w-28 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(bar * 100)}%` }} /></div>}
       </div>
     </div>
@@ -1045,13 +1079,17 @@ const PARK_MODES: { id: 'rect' | 'rows' | 'curb'; label: string }[] = [{ id: 're
 
 /** the car park tool: its mode and how to place with it, the parking fee, the lots and runs with their cars, the parks' cars (rectangles: the list; Go;
  *  a dev-only test of 50 cars) */
-function ParkPanel({ game }: { game: Game }) {
-  const views = game.traffic.parks, pk = game.parking, mode = pk.mode;
+function ParkPanel({ game, dev }: { game: Game; dev: boolean }) {
+  const views = game.traffic.parks, pk = game.parking;
+  const ui = game.toolUi(), facts = { golf: game.golfMode, advanced: !ui || ui.advancedMode, dev };
+  const show = new Set(parkPanelControls(facts));
+  /** the mode chips the rules show, plus the current mode (hidden is not locked: a hotkey may have picked it) */
+  const modes = PARK_MODES.filter(m => m.id === pk.mode || show.has(m.id === 'rect' ? 'modeRect' : m.id === 'rows' ? 'modeRows' : 'modeCurb')), mode = pk.mode;
   return (
     <Panel title="Car park" icon="pin">
-      <div className="flex flex-wrap gap-1">
-        {PARK_MODES.map(m => <button key={m.id} className={`chip ${mode === m.id ? 'chip-on' : ''}`} onClick={() => { pk.mode = m.id; game.emit(); }}>{m.label}</button>)}
-      </div>
+      {modes.length > 1 && <div className="flex flex-wrap gap-1">
+        {modes.map(m => <button key={m.id} className={`chip ${mode === m.id ? 'chip-on' : ''}`} onClick={() => { pk.mode = m.id; game.emit(); }}>{m.label}</button>)}
+      </div>}
       {mode === 'rect' && <>
         <p className="mt-2 text-xs leading-relaxed text-slate-300">
           <b className="text-slate-100">Drag a rectangle beside a road.</b> The road along one of its sides is the frontage: the entrances go on it and the bays fill the rows along it. Cars park at the bays nearest an entrance first; when it is full, the rest are turned away. Roads cannot cross a car park, and bulldozing one refunds nothing.
@@ -1060,27 +1098,27 @@ function ParkPanel({ game }: { game: Game }) {
       </>}
       {mode === 'rows' && <>
         <p className="mt-2 text-xs leading-relaxed text-slate-300">Drag to lay a row of bays along the drag. Tab flips the side, Shift snaps the angle to 15°. Click a row to remove it.</p>
-        <div className="mt-2 flex gap-1">{([90, 60, 45] as const).map(a => <button key={a} className={`chip ${pk.bay === a ? 'chip-on' : ''}`} onClick={() => { pk.bay = a; game.emit(); }}>{a}°</button>)}</div>
-        <div className="mt-1 flex gap-1">{(['yellow', 'white'] as const).map(c => <button key={c} className={`chip ${pk.col === c ? 'chip-on' : ''}`} onClick={() => { pk.col = c; game.emit(); }}>{c === 'yellow' ? 'Yellow' : 'White'}</button>)}</div>
+        {show.has('rowAngle') && <div className="mt-2 flex gap-1">{([90, 60, 45] as const).map(a => <button key={a} className={`chip ${pk.bay === a ? 'chip-on' : ''}`} onClick={() => { pk.bay = a; game.emit(); }}>{a}°</button>)}</div>}
+        {show.has('rowColour') && <div className="mt-1 flex gap-1">{(['yellow', 'white'] as const).map(c => <button key={c} className={`chip ${pk.col === c ? 'chip-on' : ''}`} onClick={() => { pk.col = c; game.emit(); }}>{c === 'yellow' ? 'Yellow' : 'White'}</button>)}</div>}
         <div className="mt-2 text-xs text-amber-300">{`$${ROW_BAY_COST} per bay`}</div>
       </>}
       {mode === 'curb' && <>
         <p className="mt-2 text-xs leading-relaxed text-slate-300">Hover a road: the kerb on the pointer's side gets parallel bays. Roads with 2+ lanes that way give up their kerb lane; plain roads park on the shoulder. Click again to remove.</p>
         <div className="mt-2 text-xs text-amber-300">{`$${CURB_BAY_COST} per bay`}</div>
       </>}
-      <div className="mt-2 flex items-center gap-2 text-xs text-slate-200">
+      {show.has('fee') && <div className="mt-2 flex items-center gap-2 text-xs text-slate-200">
         <span>Parking fee per car</span>
         <button className="btn" onClick={() => pk.setFee(pk.fee - 1)}>−</button>
         <span className="tabular-nums">{`$${pk.fee}`}</span>
         <button className="btn" onClick={() => pk.setFee(pk.fee + 1)}>+</button>
-      </div>
-      <div className="mt-2 text-xs tabular-nums text-slate-200">{`${rowLots(pk.rows).length} lots · ${pk.curbs.length} on-street runs`}</div>
+      </div>}
+      {show.has('counts') && <div className="mt-2 text-xs tabular-nums text-slate-200">{`${rowLots(pk.rows).length} lots · ${pk.curbs.length} on-street runs`}</div>}
       {game.extraParks.map(p => { const v = views.find(q => q.id === p.id); return v ? <div key={p.id} className="text-xs tabular-nums text-slate-300">{`P · ${v.parked}/${v.bays}`}</div> : null; })}
-      <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
+      {show.has('demandToggle') && <label className="mt-2 flex items-center gap-2 text-xs text-slate-200">
         <input type="checkbox" checked={game.showParkDemand} onChange={e => { game.setParkDemand(e.target.checked); game.emit(); }} />
         Show parking demand (cars per hour wanting a space)
-      </label>
-      {mode === 'rect' && <div className="mt-2 max-h-64 overflow-y-auto">
+      </label>}
+      {mode === 'rect' && show.has('parkList') && <div className="mt-2 max-h-64 overflow-y-auto">
         {game.parkDefs.length === 0 && <p className="text-xs text-slate-400">No car parks yet.</p>}
         {game.parkDefs.map(d => {
           const v = views.find(q => q.id === d.id);
@@ -1089,7 +1127,7 @@ function ParkPanel({ game }: { game: Game }) {
               <span className="tabular-nums text-slate-200">#{d.id} · {v ? `${v.bays} bays · ${v.parked}/${v.turned}` : 'no road along it'}</span>
               <span className="flex gap-1">
                 <button className="btn" onClick={() => game.goToPark(d.id)}>Go</button>
-                {import.meta.env.DEV && <button className="btn" onClick={() => game.parkTest(d.id, 50)}>Test 50 cars</button>}
+                {show.has('parkTest') && <button className="btn" onClick={() => game.parkTest(d.id, 50)}>Test 50 cars</button>}
               </span>
             </div>
           );
@@ -1168,11 +1206,11 @@ function TouristLine({ game }: { game: Game }) {
 
 /** the toll gate tool: how it works, the price per car (at the round's level), the booths a new gate has and its cost, and the list of toll gates (Go) */
 function TollPanel({ game }: { game: Game }) {
-  const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST;
+  const price = tollPrice(game.traffic.round.level), cost = TOLL_BASE_COST + game.tollBooths * TOLL_BOOTH_COST, how = tollHowTo(game.golfMode);
   return (
     <Panel title="Toll gate" icon="swap">
       <p className="text-xs leading-relaxed text-slate-300">
-        <b className="text-slate-100">Click a straight road.</b> The gate is a plaza across it: each car that passes a booth pays {money(price)}. Drivers avoid a toll road when a free way exists, so close the free ways. R flips the way in. Roads cannot cross the plaza; bulldozing it removes the gate (the road stays, no refund).
+        <b className="text-slate-100">{how.lead}</b> {how.body} R flips the way in. Roads cannot cross the plaza; bulldozing it removes the gate (the road stays, no refund).
       </p>
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Toll per car</span><span>{money(price)}</span></div>
@@ -1195,11 +1233,11 @@ function TollPanel({ game }: { game: Game }) {
 /** the bus route tool: how a route works (fans walk to the lot stop, the buses carry them to the doors), its buses and seats, its cost (the first is
  *  free), and the routes (Go) */
 function BusPanel({ game }: { game: Game }) {
-  const cost = game.busDefs.length ? BUS_ROUTE_COST : 0;
+  const cost = game.busDefs.length ? BUS_ROUTE_COST : 0, how = busHowTo(game.golfMode);
   return (
     <Panel title="Bus route" icon="bus">
       <p className="text-xs leading-relaxed text-slate-300">
-        <b className="text-slate-100">Click a road beside a car park, then a road near the stadium.</b> Fans walk from the bays to the stop and queue there; the buses carry them to the doors. Without a route they walk all the way. Esc cancels; with Bulldoze (X), click a stop to remove its route (no refund).
+        <b className="text-slate-100">{how.lead}</b> {how.body} Esc cancels; with Bulldoze (X), click a stop to remove its route (no refund).
       </p>
       <div className="mt-2 rounded-lg bg-white/5 p-2 text-xs">
         <div className="flex justify-between"><span className="text-slate-400">Buses per new route</span><span>{game.busFleet}</span></div>

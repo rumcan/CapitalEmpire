@@ -17,6 +17,8 @@ import type { SurfacesFile } from './painted-surfaces';
  *  ta its strength (0..1), tc its tint ('#rrggbb'); absent when the area has no tone */
 export interface PatchPaint { s: number; a: number; b: number; bt: string; z: number; /** a second texture blended over the fill in soft patches: its texture, share, softness and patch size (PaintArea mtex ...) */ m?: { t: string; s: number; f: number; p: number }; t?: 1 | 2; ta?: number; tc?: string; /** the border's own scale, angle, tone, strength and tint (sent only when they differ from the default) */ bs?: number; ba?: number; bto?: 1 | 2; bta?: number; btc?: string;
   /** how its outline is drawn (paint-edges.ts): a feather and a sun-lit bevel by profile; absent = crisp, as before */ e?: EdgeProfile;
+  /** its edge shade (T136, PaintArea shadow: 0 none .. 1 strong; paint-edges areaShadeImages): a cool multiply inside its edges turned from the
+   *  sun and a textured light a gap inside those turned to it; absent = none */ sh?: number;
   /** mowing stripes laid last on its top (T132, the driving range's outfield; the T075 rule: stripes over the surface, never baked under it), from a
    *  preset's Stripes: bands w tiles wide alternating (light first) along the unit (ux, uy) from (ox, oy) in tiles; l / k how much lighter /
    *  darker, lc / dc the colours washed in, t the tint, f the soft edge (0 hard .. 1 a smooth wave) */

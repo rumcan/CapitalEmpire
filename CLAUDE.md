@@ -1,7 +1,10 @@
 # CapitalEmpire: working rules for Claude
 
-> **Start here (2026-10-23):** Claude leads the coding side now. Read `docs/LEAD.md` (the game, the MVP milestones, how to work so
-> anyone can continue) and then `docs/NOW.md` (the live work log: the current branch and the exact next action, even mid-line).
+> **Start here, after any switch-over or crash (2026-10-26):** read `docs/NOW.md` section "START HERE". It is always current: what is
+> in flight, the queue, and how to get every agent back to work. Then read `docs/AGENT-BRIEF.md`: the agent rules, the brief template,
+> the progress protocol and the restart checklist. Every ticket is a GitHub issue. Its agent pushes the branch and comments on the
+> issue after every sub-step, so the work survives a lost chat or a change of Claude account (the owner, 2026-10-26).
+> Background on the game and how the lead works: `docs/LEAD.md`.
 > **Asked to make the spectator / crowd art or the 3D people?** Start with `docs/HANDOVER-PEOPLE.md` (the state and next steps), then `docs/SPECTATOR-ART.md`.
 
 Two agents share this repo (from 2026-10-21): the second agent writes the game code, the first chat does the art with the owner;

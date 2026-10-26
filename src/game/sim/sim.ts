@@ -523,6 +523,9 @@ export class Sim {
   freezeAt(c: number) { this.shift = Math.round((c - this.t) * PER_S) / PER_S; this.frozen = true; }
   /** the clock runs again from where it stopped (shift stays) */
   unfreeze() { this.frozen = false; }
+  /** a new game (City.terrain): the game clock starts again at 0 (the season's first instant: shift = -t, on the DT grid as t is; not
+   *  frozen) and the town day at day 1, 00:00 from t at the day's length. t (the physics) runs on, so nothing that reads it jumps */
+  restartClock() { this.shift = -this.t; this.frozen = false; this.town = { t0: this.t, m0: 0, rate: 1440 / this.dayLen }; }
 
   /** advances the simulation by one DT: accelerations, lane changes, moves, lane transfers, towing, then refills to the target */
   step() {

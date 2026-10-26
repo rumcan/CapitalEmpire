@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { Game } from '../../game/engine';
 import type { HoleView } from '../../game/golf/holeview';
 import { HOLE_COUNT } from '../../game/paint-tool';
-import { monthIndexLabel } from '../../game/golf/calendar';
 
 /** New hole: the plan mode (golf: click a tee, then a green; T102) or, in a classic game, the next free hole to paint by hand */
 export function newHole(game: Game) {
@@ -11,22 +10,23 @@ export function newHole(game: Game) {
   const f = p.nextFreeHole(); if (f) { game.goToHole(f); p.setBrush(p.brushKind); } else game.toast(`All ${HOLE_COUNT} holes have areas`, 'warn');
 }
 
-/** a hole's badge state (P23 4.3, colour never alone: each has an icon): ✓ ready, ◔ growing (with the month it is ready in), ! needs attention */
+/** a hole's badge state (P23 4.3, colour never alone: each has an icon): ✓ ready, ◔ growing (grow: Game.holeGrowLabel's 'growing · ready Mar
+ *  1985', '' once grown in: P23 4.6, T135), ! needs attention */
 export interface HoleState { kind: 'ready' | 'growing' | 'attn'; icon: string; word: string }
-export function holeState(v: HoleView, growth: { growing: boolean; ready: string } | null): HoleState {
+export function holeState(v: HoleView, grow: string): HoleState {
   if (!v.ok) return { kind: 'attn', icon: '!', word: 'needs attention' };
-  if (growth?.growing) return { kind: 'growing', icon: '◔', word: `growing, ready ${growth.ready}` };
+  if (grow) return { kind: 'growing', icon: '◔', word: grow };
   return { kind: 'ready', icon: '✓', word: 'ready' };
 }
 
 /** the Holes panel's Your holes (P23 4.3): a badge per hole that exists, each with its icon as well as its colour, the current one ringed (a
  *  click makes it current and moves the camera there), and the "+" badge (New hole ▾: Plan a hole · From a saved hole · An empty hole to
- *  paint by hand); one status line under them for the current hole ("Hole 1 · par 4 · 342 m · growing, ready Mar 1985") and, when it needs
+ *  paint by hand); one status line under them for the current hole ("Hole 1 · par 4 · 342 m · growing · ready Mar 1985") and, when it needs
  *  attention, what it is missing */
 export function HoleStrip({ game }: { game: Game }) {
-  const p = game.paint, views = game.courseHoleViews(), cur = p.brushHole, cv = views[cur - 1], growing = game.holesGrowing();
-  /** a hole's grow-in (T121: the game month its last seeded cell is grown in), or null once it is grown in */
-  const growth = (n: number) => { const r = growing.get(n); return r === undefined ? null : { growing: true, ready: monthIndexLabel(r) }; };
+  const p = game.paint, views = game.courseHoleViews(), cur = p.brushHole, cv = views[cur - 1];
+  /** a hole's grow-in words (T121, T135: the one source, Game.holeGrowLabel), '' once it is grown in */
+  const growth = (n: number) => game.holeGrowLabel(n);
   const [menu, setMenu] = useState(false);
   const built = views.filter(v => v.started), scored = views.filter(v => v.par > 0);
   const totalPar = scored.reduce((s, v) => s + v.par, 0), totalM = scored.reduce((s, v) => s + v.lengthM, 0);

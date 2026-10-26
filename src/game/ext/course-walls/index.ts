@@ -217,6 +217,18 @@ export class LayerStack {
     const s = code >> 1;
     return code & 1 ? inCover(this.K.c[s]!, u, v) && !inCover(this.K.s[s]!, u, v) : inCover(this.K.s[s]!, u, v);
   }
+  /** whether (u, v) lies inside the outline layer `code`'s edges are drawn on: a surface's own, a collar's outer one (its surface and its
+   *  band together: for a collar on its surface's platform, the platform's outline) */
+  within(code: number, u: number, v: number): boolean { return inCover((code & 1 ? this.K.c : this.K.s)[code >> 1]!, u, v); }
+  /** surface s's height (m) */
+  surfHeight(s: number): number { return this.heights[s] ?? 0; }
+  /** the outward unit normal at (u, v) of the outline layer `code`'s edges are drawn on, from its droplet field (down its slope), or null
+   *  where the field is flat: it depends only on the point and the grid, not on how a chunk's edge was cut or simplified there */
+  outward(code: number, u: number, v: number): { x: number; y: number } | null {
+    const cv = (code & 1 ? this.K.c : this.K.s)[code >> 1]; if (!cv) return null;
+    const h = 0.02, gx = coverField(cv, u + h, v) - coverField(cv, u - h, v), gy = coverField(cv, u, v + h) - coverField(cv, u, v - h), l = Math.hypot(gx, gy);
+    return l > 1e-9 ? { x: -gx / l, y: -gy / l } : null;
+  }
   /** the code of the layer on top at (u, v) (0: none, the map grass); solid: of the layers with a height of their own (no lip or bank) */
   top(u: number, v: number, solid = false): number {
     for (let r = this.order.length - 1; r >= 0; r--) { const c = this.order[r]!; if ((!solid || !isOverlay(c, this.styles)) && this.covers(c, u, v)) return c; }
@@ -248,29 +260,51 @@ const REFINE = 0.08;
  *  solid surface on its higher side (no lip or bank: a bunker's lip lying over a green's edge leaves the green's bank the green's) */
 interface Probe { cls: Cls; dh: number; lo: number; hi: number; hs: number }
 
-/** classifies one point of an edge of layer `code` at (x, y) with outward unit normal (nx, ny) */
-function probe(st: LayerStack, g: Grid, code: number, styles: readonly BlobStyle[], x: number, y: number, nx: number, ny: number, out: Probe): void {
+/** whether layer `code` is a platform's outline: a collar on its surface's platform (fringe, first cut), whose outer edge runs round the
+ *  surface and the band together, at one height (T137) */
+const isPlatform = (code: number, styles: readonly BlobStyle[] = BLOB_STYLE) => (code & 1) === 1 && collarOnTop(styles[code >> 1]?.collar?.name ?? '');
+
+/** classifies one point of an edge of layer `code` at (x, y) with outward unit normal (nx, ny). plats: the platform layers present (a surface
+ *  with one of them hands every boundary but its joint to it) */
+function probe(st: LayerStack, g: Grid, code: number, styles: readonly BlobStyle[], plats: ReadonlySet<number>, x: number, y: number, nx: number, ny: number, out: Probe): void {
   const u = (x - g.x0) / CELL_T, v = (y - g.y0) / CELL_T, cx = nx / CELL_T, cy = ny / CELL_T;
+  // a platform's outline (T137): its inside is the surface and the band alike, so its edge goes on where the band thins to nothing (beside
+  // a pond or a bunker the fringe is not laid) and one polyline carries the whole platform's walls
+  const plat = isPlatform(code, styles), inside = (a: number, b: number) => (plat ? st.within(code, a, b) : st.covers(code, a, b));
   let iu = u - PROBE[0]! * cx, iv = v - PROBE[0]! * cy, found = false;
-  for (const e of PROBE) { const a = u - e * cx, b = v - e * cy; if (st.covers(code, a, b)) { iu = a; iv = b; found = true; break; } }
+  for (const e of PROBE) { const a = u - e * cx, b = v - e * cy; if (inside(a, b)) { iu = a; iv = b; found = true; break; } }
   out.dh = 0; out.lo = 0; out.hi = 0; out.hs = 0; out.cls = Cls.Hidden;
   if (!found) return;
   let ou = 0, ov = 0; found = false;
-  for (const e of PROBE) { const a = u + e * cx, b = v + e * cy; if (!st.covers(code, a, b)) { ou = a; ov = b; found = true; break; } }
+  for (const e of PROBE) { const a = u + e * cx, b = v + e * cy; if (!inside(a, b)) { ou = a; ov = b; found = true; break; } }
   if (!found) return; // no outside within reach
   // a lip or bank: only feathered where it is on top inside, never a wall (the solid layers under it carry those)
   if (isOverlay(code, styles)) { if (st.top(iu, iv) === code) out.cls = Cls.Soft; return; }
-  const hIn = st.height(iu, iv), hOut = st.height(ou, ov), dh = hIn - hOut, s = code >> 1, own = layerCode(s, true);
-  const lout = st.top(ou, ov, true);
+  // a pit (a pond, a bunker: a surface below the map grass) carries every wall of its own rim, whatever stands above it (the rough, a green,
+  // a bank) and whichever is drawn later, and no other edge carries one over a pit (T137). A far wall so runs on round the rim in one piece
+  // where the ground above it changes, instead of handing over to the green's outline, which meets the rim only roughly: each outline is
+  // relaxed off the droplet field the sides are read from (by up to a fifth of a tile on a staircase of cells), so the two outlines' ends,
+  // judged each on its own, missed each other by a sliver, a gap or a double wall where three surfaces meet. Nothing drawn later lies over a
+  // pit's cells (none may claim them), only a neighbour's rounded outline over its rim, which then hides the face's top as it would its own
+  const s = code >> 1, own = layerCode(s, true), pit = !(code & 1) && st.surfHeight(s) < 0;
+  const hIn = pit ? st.surfHeight(s) : st.height(iu, iv), hOut = st.height(ou, ov), dh = hIn - hOut;
+  const lout = st.top(ou, ov, true), tin = st.top(iu, iv, true);
   out.dh = dh;
-  if (st.top(iu, iv, true) !== code) return; // covered inside by a later layer
+  if (tin !== code && !pit && !(plat && tin === code - 1)) return; // covered inside by a later layer (a platform's own surface is its own)
+  // a surface on a platform carries only its joint with the band: every other boundary is the platform's (its outline carries it, so no
+  // wall hands over from the surface's edge to the band's where the band ends: the ends missed each other and left a gap, T137)
+  if (!(code & 1) && lout !== own && plats.has(own)) return;
   // the boundary belongs to the layer drawn later: a later layer outside carries it on its own edge (a surface's own collar band has no
   // inner edge, so the surface carries that one)
-  if (st.rankOf(lout) > st.rankOf(code) && !(!(code & 1) && lout === own)) return;
+  const later = st.rankOf(lout) > st.rankOf(code) && !(!(code & 1) && lout === own);
   if (Math.abs(dh) < FLAT_DH) {
+    if (later) return;
     out.cls = !(code & 1) && lout === own && collarOnTop(styles[s]?.collar?.name ?? '') ? Cls.Joint : Cls.Soft;
     return;
   }
+  // a step down into a pit is the pit's; a step up out of one is ours whichever is drawn later; any other step the later layer's
+  if (dh > 0 && hOut < 0 && st.surfHeight(lout >> 1) < 0 && !(lout & 1)) return;
+  if (!(pit && dh < 0) && later) return;
   // hi: the layer seen on the higher side (a lip included: its top is the one lit along the edge)
   if (dh > 0) { out.cls = Cls.WallOut; out.lo = lout; out.hi = st.top(iu, iv); out.hs = s; } else { out.cls = Cls.WallIn; out.lo = code; out.hi = st.top(ou, ov); out.hs = lout >> 1; }
 }
@@ -282,6 +316,21 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
   const cam = Math.SQRT1_2, P: Probe = { cls: Cls.Hidden, dh: 0, lo: 0, hi: 0, hs: 0 };
   /** how far round past side-on a face over layer lo with surface hs above it still shows (a wall: none; a bank to its silhouette, T127) */
   const vis = (lo: number, hs: number) => { const m = wallMat(lo); return faceVis(faceForm(hs, m, heights).r, faceScale({ m, hs })); };
+  // the platforms drawn in this chunk (a collar on its surface's platform: its outer edge carries the platform's walls)
+  const plats = new Set(layers.map(l => l.code).filter(c => isPlatform(c, styles)));
+  /** the draw rank of surface s's first layer (the renderer draws a bank just before it) */
+  const firstRank = (s: number) => { const c = DRAW_ORDER.find(q => q >> 1 === s); return c === undefined ? -1 : st.rankOf(c); };
+  /** a wall's run key: its class, lower layer and higher surface, as far as they change the look (T137). A pit's wall (sand, water) looks
+   *  the same whatever is above it, the rough, a green or the map grass in a junction's chink, so it runs on round the rim in one piece (a
+   *  tee above one is kept apart: the renderer lays its rock band on it); a bank drawn before its surface looks the same over any flat
+   *  ground below it (the renderer draws them all in one pass) */
+  const wallKey = (c: Cls, lo: number, hs: number) => {
+    const m = wallMat(lo);
+    let lk = lo, hk = hs;
+    if (m !== WallMat.Turf) { if (hs !== TEE) hk = 0; }
+    else if (faceForm(hs, m, heights).f !== FaceForm.Wall && (lo === 0 || st.rankOf(lo) < firstRank(hs))) lk = 0;
+    return 1 + c * 64 + lk + 512 * hk;
+  };
   for (const { code, edges } of layers) {
     const er: EdgeRuns = { soft: [], joint: [] };
     for (const e of edges) {
@@ -298,13 +347,20 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
         const a = closed ? (k + segs - 1) % segs : k - 1, b = closed ? k % segs : k < segs ? k : -1;
         let nx = (a >= 0 ? snx[a]! : 0) + (b >= 0 ? snx[b]! : 0), ny = (a >= 0 ? sny[a]! : 0) + (b >= 0 ? sny[b]! : 0);
         const l = Math.hypot(nx, ny); if (l < 1e-9) { nx = b >= 0 ? snx[b]! : snx[a]!; ny = b >= 0 ? sny[b]! : sny[a]!; } else { nx /= l; ny /= l; }
-        probe(st, g, code, styles, X(k), Y(k), nx, ny, P); pc[k] = P.cls; pd[k] = P.dh; pl[k] = P.lo; ph[k] = P.hi; ps[k] = P.hs;
+        // an open end lies on the chunk's border, where the neighbour chunk's edge starts or ends too: read it along the field's own normal
+        // there, so both chunks read the same (each simplified its piece of the edge on its own, so their end segments differ, T137)
+        if (!closed && (k === 0 || k === m - 1)) { const f = st.outward(code, (X(k) - g.x0) / CELL_T, (Y(k) - g.y0) / CELL_T); if (f && f.x * nx + f.y * ny > 0) { nx = f.x; ny = f.y; } }
+        probe(st, g, code, styles, plats, X(k), Y(k), nx, ny, P); pc[k] = P.cls; pd[k] = P.dh; pl[k] = P.lo; ph[k] = P.hi; ps[k] = P.hs;
       }
       // refined pieces: a segment whose ends disagree is sampled every REFINE tiles and cut where its kind changes (bisected to a few mm), so
       // each kind runs right up to where the next layer takes over (a long segment no longer takes its midpoint's kind whole: a junction of
-      // two layers' outlines left a gap in the wall). Per point x, y and raw step; per piece (point i to i + 1) its main and rim keys
-      const qx: number[] = [], qy: number[] = [], qd: number[] = [], qMain: number[] = [], qRim: number[] = [];
+      // two layers' outlines left a gap in the wall). Per point x, y; per piece (point i to i + 1) its main and rim keys, its lower layer and
+      // higher surface, and the raw step at its start and its end, each read on its own side: where the kind changes the old piece ends at the
+      // cut with its own step and the new one starts there with its own, so a wall ends square at its height (T137: the new piece used to
+      // start a few mm back, with the step read on the old side, a sliver hanging from every run that began at a change)
+      const qx: number[] = [], qy: number[] = [], q0: number[] = [], q1: number[] = [], qMain: number[] = [], qRim: number[] = [], qLo: number[] = [], qHs: number[] = [];
       const raw = (c: number, lo: number, hi: number, hs: number) => ((c * 64 + lo) * 64 + hi) * 16 + hs;
+      let lead: number | undefined, leadHs = 0;
       for (let k = 0; k < segs; k++) {
         const a = k, b = (k + 1) % m, x0 = X(a), y0 = Y(a), dx = X(a + 1) - x0, dy = Y(a + 1) - y0, nx = snx[k]!, ny = sny[k]!;
         // the face (from high to low) of a wall on this segment, judged on its normal with its neighbours' (weights 1, 2, 1), so a wiggle that
@@ -314,49 +370,65 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
         if (pa >= 0) { fx += snx[pa]!; fy += sny[pa]!; }
         if (pb >= 0) { fx += snx[pb]!; fy += sny[pb]!; }
         const fl = Math.hypot(fx, fy) || 1, camF = (fx + fy) * cam / fl, sunF = (fx * SUN_TILE_DIR.x + fy * SUN_TILE_DIR.y) / fl;
-        /** a piece's keys: main (its class, lower layer and solid higher surface; a face turned from the camera hidden: a wall past side-on,
-         *  a bank past its silhouette) and rim (a step facing the sun) */
-        const keys = (c: Cls, lo: number, hi: number, hs: number) => {
+        /** a piece's main key: its class, lower layer and solid higher surface (wallKey); a face turned from the camera hidden (a wall past
+         *  side-on, a bank past its silhouette) */
+        const mainOf = (c: Cls, lo: number, hs: number) => {
+          const wall = c === Cls.WallOut || c === Cls.WallIn, sgn = c === Cls.WallOut ? 1 : -1;
+          return c === Cls.Hidden || (wall && sgn * camF <= -vis(lo, hs)) ? 0 : wall ? wallKey(c, lo, hs) : 1 + c * 64;
+        };
+        /** one piece from the last point pushed: its keys (main; rim: a step facing the sun) and its steps at its ends */
+        const piece = (c: Cls, lo: number, hi: number, hs: number, d0: number, d1: number) => {
           const wall = c === Cls.WallOut || c === Cls.WallIn, sgn = c === Cls.WallOut ? 1 : -1;
           qRim.push(wall && sgn * sunF > RIM_SUN ? 1 + 2 * hi + (sgn < 0 ? 1 : 0) : 0);
-          qMain.push(c === Cls.Hidden || (wall && sgn * camF <= -vis(lo, hs)) ? 0 : 1 + c * 64 + (wall ? lo + 512 * hs : 0)); // a wall keyed by its lower layer and higher surface
+          qMain.push(mainOf(c, lo, hs));
+          qLo.push(lo); qHs.push(hs); q0.push(d0); q1.push(d1);
         };
-        qx.push(x0); qy.push(y0); qd.push(pd[a]!);
-        let cc = pc[a]! as Cls, cl = pl[a]!, ch = ph[a]!, cs = ps[a]!, cd = pd[a]!;
+        qx.push(x0); qy.push(y0);
+        const len = Math.hypot(dx, dy);
+        let cc = pc[a]! as Cls, cl = pl[a]!, ch = ph[a]!, cs = ps[a]!, cd = pd[a]!, sd = pd[a]!, tp = 0; // sd, tp: the current piece's start
         if (raw(cc, cl, ch, cs) !== raw(pc[b]!, pl[b]!, ph[b]!, ps[b]!)) {
-          const N = Math.max(2, Math.ceil(Math.hypot(dx, dy) / REFINE));
+          const N = Math.max(2, Math.ceil(len / REFINE));
           for (let i = 1, t0 = 0; i <= N; i++) {
             const t = i / N;
             let c: Cls, lo: number, hi: number, hs: number, dd: number;
-            if (i < N) { probe(st, g, code, styles, x0 + t * dx, y0 + t * dy, nx, ny, P); c = P.cls; lo = P.lo; hi = P.hi; hs = P.hs; dd = P.dh; } else { c = pc[b]! as Cls; lo = pl[b]!; hi = ph[b]!; hs = ps[b]!; dd = pd[b]!; }
-            if (raw(c, lo, hi, hs) !== raw(cc, cl, ch, cs)) {
-              // the change lies between t0 and t: bisect it; the old piece ends at ta with the step read on its side, the new one starts at tb
-              // (a few mm on) with the step on its own, so a wall ends square at its height instead of ramping to its neighbour's
-              let ta = t0, tb = t, da = cd, db = dd;
+            if (i < N) { probe(st, g, code, styles, plats, x0 + t * dx, y0 + t * dy, nx, ny, P); c = P.cls; lo = P.lo; hi = P.hi; hs = P.hs; dd = P.dh; } else { c = pc[b]! as Cls; lo = pl[b]!; hi = ph[b]!; hs = ps[b]!; dd = pd[b]!; }
+            // the kind changes between t0 and t: bisect to a few mm (ta the last of the old kind, tb the first of another) and cut there: the old
+            // piece ends with the step read on its side, the next starts with the kind and the step read at tb (T137: not the kind at t, as
+            // three kinds can lie between two samples where three surfaces meet); then on from tb to t, until the kind at t is reached
+            for (let rep = 0; rep < 4 && raw(c, lo, hi, hs) !== raw(cc, cl, ch, cs); rep++) {
+              let ta = t0, tb = t, da = cd, db = dd, kc = c, kl = lo, kh = hi, ks = hs;
               for (let it = 0; it < 6; it++) {
-                const tm = (ta + tb) / 2; probe(st, g, code, styles, x0 + tm * dx, y0 + tm * dy, nx, ny, P);
-                if (raw(P.cls, P.lo, P.hi, P.hs) === raw(cc, cl, ch, cs)) { ta = tm; da = P.dh; } else { tb = tm; db = P.dh; }
+                const tm = (ta + tb) / 2; probe(st, g, code, styles, plats, x0 + tm * dx, y0 + tm * dy, nx, ny, P);
+                if (raw(P.cls, P.lo, P.hi, P.hs) === raw(cc, cl, ch, cs)) { ta = tm; da = P.dh; } else { tb = tm; db = P.dh; kc = P.cls; kl = P.lo; kh = P.hi; ks = P.hs; }
               }
-              keys(cc, cl, ch, cs); qx.push(x0 + ta * dx); qy.push(y0 + ta * dy); qd.push(da);
-              keys(c, lo, hi, hs); qx.push(x0 + tb * dx); qy.push(y0 + tb * dy); qd.push(db);
-              cc = c; cl = lo; ch = hi; cs = hs;
+              // (an old kind with no length here, a change right at the segment's start, leaves no piece; at an open polyline's first point, a
+              // chunk border, a wall that steps there starts from the drop read at the point itself, as the neighbour chunk's run ends with it)
+              if ((ta - tp) * len > 1e-6) { piece(cc, cl, ch, cs, sd, da); qx.push(x0 + ta * dx); qy.push(y0 + ta * dy); tp = ta; }
+              else if (k === 0 && !closed && tp === 0 && mainOf(cc, cl, cs) === mainOf(kc, kl, ks)) { lead = pd[0]!; leadHs = ps[0]!; }
+              cc = kc; cl = kl; ch = kh; cs = ks; sd = db; cd = db; t0 = tb;
+              if (rep === 3) { cc = c; cl = lo; ch = hi; cs = hs; } // (never in practice: take the kind at t)
             }
             cd = dd; t0 = t;
           }
         }
-        keys(cc, cl, ch, cs);
+        piece(cc, cl, ch, cs, sd, pd[b]!);
       }
-      if (!closed) { qx.push(X(m - 1)); qy.push(Y(m - 1)); qd.push(pd[m - 1]!); }
-      const np = qx.length, QX = (i: number) => qx[i % np]!, QY = (i: number) => qy[i % np]!, QD = (i: number) => qd[i % np]!;
+      if (!closed) { qx.push(X(m - 1)); qy.push(Y(m - 1)); }
+      const np = qx.length, nq = qMain.length, QX = (i: number) => qx[i % np]!, QY = (i: number) => qy[i % np]!;
+      // the pieces' lengths, then a junction's crumbs healed into the runs beside them (heal)
+      const ql = new Float64Array(nq);
+      for (let i = 0; i < nq; i++) ql[i] = Math.hypot(QX(i + 1) - QX(i), QY(i + 1) - QY(i));
+      heal(qMain, ql, q0, q1, [qLo, qHs], closed);
       groupRuns(Int32Array.from(qMain), closed, (k0, len) => {
-        const key = qMain[k0 % qMain.length]! - 1, hs = Math.floor(key / 512), c = Math.floor((key % 512) / 64) as Cls, lo = key % 64;
+        const key = qMain[k0 % nq]! - 1, c = Math.floor((key % 512) / 64) as Cls, lo = qLo[k0 % nq]!, hs = qHs[k0 % nq]!;
         const pts: number[] = [];
         for (let q = 0; q <= len; q++) pts.push(QX(k0 + q), QY(k0 + q));
         if (c === Cls.Soft) { er.soft.push(pts); return; }
         if (c === Cls.Joint) { er.joint.push(pts); return; }
-        // a wall: the higher side on the left (an inward wall runs backwards), each point with its own drop (its raw step, never below 0)
-        const sign = c === Cls.WallOut ? 1 : -1, p: number[] = [];
-        for (let q = 0; q <= len; q++) p.push(QX(k0 + q), QY(k0 + q), Math.max(0, sign * QD(k0 + q)));
+        // a wall: the higher side on the left (an inward wall runs backwards), each point with its own drop (its raw step, never below 0),
+        // a step in it eased (easedRun)
+        const sign = c === Cls.WallOut ? 1 : -1, J = (j: number) => (k0 + j) % nq, from = k0 === 0 && lead !== undefined ? { d: Math.max(0, sign * lead), hs: leadHs } : undefined;
+        const p = easedRun(len, q => QX(k0 + q), q => QY(k0 + q), j => Math.max(0, sign * q0[J(j)]!), j => Math.max(0, sign * q1[J(j)]!), j => qHs[J(j)]!, heights, from);
         // an end that reads (nearly) flat beside a tall neighbour is the corner where the step meets another surface (an island's wall beside
         // a bunker cut into it): a clean vertical cut there, not a ramp down to nothing that would stand as a spike
         const last = p.length - 1;
@@ -376,6 +448,90 @@ export function chunkWalls(g: Grid, layers: readonly { code: number; edges: read
     runs.set(code, er);
   }
   return { walls, rims, runs };
+}
+
+/** the least width a step in a wall's drop is eased over, tiles (T137) */
+export const RAMP_MIN = 0.2;
+/** the points a step's easing is drawn with */
+const RAMP_N = 6;
+const smooth = (u: number) => { const t = Math.min(1, Math.max(0, u)); return t * t * (3 - 2 * t); };
+/** a wall run's points as flat x, y, drop triples, from its len pieces (X, Y: point q's place, q 0..len; d0, d1: piece j's drop at its ends,
+ *  metres; hs: piece j's higher surface). Where the drop steps between two pieces (a pit's rim where the ground above it changes: a green
+ *  above it, then the rough) the higher ground's bank comes down to the lower ground there, so the drop eases from the one to the other
+ *  over that bank's width (bankWidth, at least RAMP_MIN) on the lower ground's side, instead of a square step in the wall's foot (T137):
+ *  extra points are laid on the run's own segments, so its top edge keeps its place. The easing stays inside the run, so its ends keep their
+ *  own drops (and two chunks' runs still meet at their border with the same). from: the drop the run starts from at its first point and the
+ *  higher surface there, when the step lies right on that point (a chunk border: the neighbour chunk's run ends with that drop) */
+function easedRun(len: number, X: (q: number) => number, Y: (q: number) => number, d0: (j: number) => number, d1: (j: number) => number, hs: (j: number) => number, heights: readonly number[], from?: { d: number; hs: number }): number[] {
+  const s = new Float64Array(len + 1);
+  for (let q = 1; q <= len; q++) s[q] = s[q - 1]! + Math.hypot(X(q) - X(q - 1), Y(q) - Y(q - 1));
+  // the steps: at point q, the jump dd from the piece before (at q 0: the drop it starts from) to the piece after, eased over [a, b]
+  const steps: { q: number; dd: number; a: number; b: number }[] = [];
+  const width = (high: number, dd: number) => Math.max(RAMP_MIN, bankWidth(faceForm(high, WallMat.Turf, heights).r, Math.abs(dd)));
+  if (from && Math.abs(d0(0) - from.d) >= FLAT_DH) { const dd = d0(0) - from.d; steps.push({ q: 0, dd, a: 0, b: Math.min(s[len]!, width(dd < 0 ? from.hs : hs(0), dd)) }); }
+  for (let q = 1; q < len; q++) {
+    const L = d1(q - 1), R = d0(q), dd = R - L;
+    if (Math.abs(dd) < FLAT_DH) continue;
+    const w = width(L > R ? hs(q - 1) : hs(q), dd);
+    if (dd < 0) steps.push({ q, dd, a: s[q]!, b: Math.min(s[len]!, s[q]! + w) }); else steps.push({ q, dd, a: Math.max(0, s[q]! - w), b: s[q]! });
+  }
+  const out: number[] = [];
+  /** the eased drop on piece j at arc position at, its own drop there being base: each step's jump taken out ([q <= j]: the piece is past
+   *  it) and laid back in eased over its span */
+  const at = (j: number, pos: number, base: number) => {
+    let v = base;
+    for (const k of steps) v += k.dd * ((k.b > k.a ? smooth((pos - k.a) / (k.b - k.a)) : pos >= k.b ? 1 : 0) - (k.q <= j ? 1 : 0));
+    return Math.max(0, v);
+  };
+  for (let j = 0; j < len; j++) {
+    const l = s[j + 1]! - s[j]!, x0 = X(j), y0 = Y(j), x1 = X(j + 1), y1 = Y(j + 1);
+    out.push(x0, y0, at(j, s[j]!, d0(j)));
+    // the easing's points inside this piece
+    if (steps.length && l > 1e-6) {
+      const ts: number[] = [];
+      for (const k of steps) for (let i = 0; i <= RAMP_N; i++) { const t = (k.a + ((k.b - k.a) * i) / RAMP_N - s[j]!) / l; if (t > 1e-4 && t < 1 - 1e-4) ts.push(t); }
+      ts.sort((a, b) => a - b);
+      for (let i = 0; i < ts.length; i++) { const t = ts[i]!; if (i && t - ts[i - 1]! < 1e-4) continue; out.push(x0 + t * (x1 - x0), y0 + t * (y1 - y0), at(j, s[j]! + t * l, d0(j) + (d1(j) - d0(j)) * t)); }
+    }
+  }
+  out.push(X(len), Y(len), at(len - 1, s[len]!, d1(len - 1)));
+  return out;
+}
+
+/** the shortest run of one kind a polyline keeps between two others, tiles (T137: 0.5 m, a few px at 30% zoom). Where three surfaces meet
+ *  the sampled sides flicker for a few cm (the droplet outlines round off near the junction, so the point just outside reads one neighbour,
+ *  then the other, then the map grass in the chink between them) and left crumbs: a pixel-wide wall of another kind, or a gap, standing in
+ *  a run */
+export const MIN_RUN = 0.25;
+/** heals a polyline's crumbs in place: a run of pieces (keys: their main keys, len: their lengths) shorter than MIN_RUN with runs either side
+ *  takes the kind of the run before it, with its step (d0, d1: at each piece's ends) held from that run's end (a change of drop at its far
+ *  end is a step between pieces, which easedRun eases) and its other per-piece values (more) copied from it; the shortest first, until none
+ *  is left. Runs at an open end (a chunk border) are kept as they are, so each chunk heals only what it holds whole and two chunks' walls
+ *  still meet at their border */
+function heal(keys: number[], len: Float64Array, d0: number[], d1: number[], more: number[][], closed: boolean): void {
+  const n = keys.length;
+  for (let pass = 0; pass < n; pass++) {
+    // the runs in order: first piece, how many, kind, length (a closed ring's start at a change)
+    let start = 0;
+    if (closed) { start = -1; for (let k = 0; k < n; k++) if (keys[k] !== keys[(k + n - 1) % n]) { start = k; break; } if (start < 0) return; }
+    const runs: { k0: number; c: number; key: number; L: number }[] = [];
+    for (let q = 0; q < n;) {
+      const k0 = (start + q) % n; let q1 = q, L = 0;
+      while (q1 < n && keys[(start + q1) % n] === keys[k0]) { L += len[(start + q1) % n]!; q1++; }
+      runs.push({ k0, c: q1 - q, key: keys[k0]!, L }); q = q1;
+    }
+    const R = runs.length; if (R < (closed ? 2 : 3)) return;
+    let best = -1, bl = MIN_RUN;
+    for (let r = closed ? 0 : 1; r < (closed ? R : R - 1); r++) if (runs[r]!.L < bl) { bl = runs[r]!.L; best = r; }
+    if (best < 0) return;
+    const run = runs[best]!, A = runs[(best + R - 1) % R]!;
+    const la = (A.k0 + A.c - 1) % n, da = d1[la]!;
+    for (let q = 0; q < run.c; q++) {
+      const i = (run.k0 + q) % n;
+      keys[i] = A.key; d0[i] = d1[i] = da;
+      for (const a of more) a[i] = a[la]!;
+    }
+  }
 }
 
 /** calls emit(k0, len) for each run of equal nonzero keys among a polyline's segments (k0 its first segment, len how many; on a closed ring

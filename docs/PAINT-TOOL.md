@@ -137,6 +137,13 @@ Design: [GOLF-PLAN.md](GOLF-PLAN.md) sections 4.1–4.5. What changes here:
 - **Tone filters (the owner, 2026-10-21):** per area, **Multiply** (darker) or **Lighten** (screen: lighter), a strength slider
   (0–100%) and an optional tint colour, applied after the texture in the area's bake (as the asphalt tones are today). Saved as
   optional tuple elements (mode, strength, tint).
+- **Shadow (T136, #260):** a slider under Border width (0 to 100%; the StyleEditor and My looks) gives a painted area an edge shade, so it
+  reads as slightly raised under the sun at the upper right: a cool multiply inside the edges whose outside faces 145° on screen, full at
+  the edge and fading inward over 2 to 3.5 m (a slow world-space noise varies the depth), and a light a 0.2 m gap inside the edges turned
+  to the sun, textured by the area's own colours (T110). Both stay inside the area, so nothing lands on the course, a road or a
+  neighbour; the light is left out on district chunks and far levels. Saved as optional tuple element 24 (missing: 0, the look before
+  it); a change re-bakes the area's own chunks and is one undo step per slider drag (`paint-edges.ts` areaShadeImages,
+  `renderer.ts` drawPaints and areaLight).
 - **Costs and grow-in:** painting costs money by surface and m², with seed or sod; seeded areas show a grow-in look until ready
   (GOLF-PLAN 4.1). Erasing refunds nothing.
 - **Hole objects** belong to the course tools beside Paint: tee markers, pins, hole numbers, aim points (GOLF-PLAN 4.2).

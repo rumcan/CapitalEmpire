@@ -20,8 +20,10 @@ import { courseImages, courseRes, lineField } from './ext/course-grid/field';
 import { grassSurface, type GrassCellView } from './ext/grass-management';
 import { surfaceOfTex } from './golf/costs';
 import { CELL as COURSE_CELL } from './golf/paintcourse';
-import { EDGE_LOOKS, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
+import { AREA_SHADE, EDGE_LOOKS, areaLightEdge, areaShadeImages, areaShadeReach, areaShadow, bandRamp, edgeBox, edgeField, edgeImages, edgeReach, edgeRes, featherTiles, type EdgeImage } from './paint-edges';
 import { CH_SIZE } from './ext/course-height';
+import { CART_RIM, CART_SURFACE, cartCast, cartRim } from './cart-bevel';
+import { faceShift, kerbFace, stepReach, upScreen } from './kerb-face';
 import { HEIGHT_LIGHT_STRENGTH, HL_MASK, LUMA_SIGMA_PER_L, heightLightGrid, heightLightPictures, heightLightRect, type HeightLightGrid } from './ext/course-height/light';
 import { PaintedGround, type LayLevel } from './painted-ground';
 import { coversMap } from './painted-families';
@@ -45,8 +47,8 @@ const LUSH_TINT = '#c4dcac', SOIL_LIFT = '#40291a', SOIL_WARM = '#f0cfa4';
 
 /** screen px per tile unit along the iso axes at level 1 */
 const TILE_PX = Math.hypot(HW, HH);
-/** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m) */
-const CURB_TOP = 0.065, CURB_JOINT = 0.04, FACE_WORLD = 7.5, GUTTER = 0.2;
+/** curb geometry in tiles (kit: top 0.13 m, joint 0.08 m, face 0.18 m, gutter 0.40 m); the face's height on screen is kerb-face.ts FACE_WORLD */
+const CURB_TOP = 0.065, CURB_JOINT = 0.04, GUTTER = 0.2;
 const SLAB_LEN = 1.25;
 /** the owner's map decals (the sprite studio's Ground tab writes map-decals.json) */
 const MAP_DECALS = clampDecals(savedDecals as Parameters<typeof clampDecals>[0]);
@@ -66,13 +68,6 @@ const PAINT_COL = new Map(PAINT_TEXES.map(t => [t.id as string, t.col] as [strin
 /** the painted ground textures a photo (grass-art PHOTO_TEX) replaces in the ground layers: lot patches, verges, gravel roads (the dark grey
  *  Asphalt photo, the owner's call 2026-10-21), water, and the river and creek banks (the dirt photo, the owner 2026-10-21) */
 const GROUND_PHOTO = new Map<string, string>([['dirt', 'dirt'], ['gravel', 'gravel'], ['roadgravel', 'asphalt'], ['field', 'field'], ['water', 'waterDark'], ['bank', 'dirt'], ['creek', 'dirt']]);
-/** the starter cart paths' painted looks (T084, the hand-painted game-art style of T082), by road surface: a flat fill (multiplied by the grime
- *  blotches), the bevel rims (the sun at the upper right: lit rim on the upper-right edge, shade rim on the lower-left) with their strengths, a
- *  dirt path's feathered worn halo, and the slabs' thin cast shade. The planner's flat colour is plan */
-export const CART_SURFACE = new Map<string, { fill: string; plan: string; lit: string; litA: number; shade: string; shadeA: number; halo?: string; cast?: string }>([
-  ['dirt', { fill: '#cba673', plan: '#b08f60', lit: '#fbe8c0', litA: 0.5, shade: '#5e4127', shadeA: 0.3, halo: 'rgba(98,74,42,0.55)' }],
-  ['cement', { fill: '#d4d0c7', plan: '#bdb9b0', lit: '#fdfaf2', litA: 0.75, shade: '#6c675e', shadeA: 0.5, cast: 'rgba(18,22,16,0.32)' }],
-]);
 /** a ground photo drawn this many times its size (the owner, 2026-10-21: the gravel roads' asphalt "a lot" bigger); the hex-mixed mosaic
  *  still has 43 px a tile at 3x, above the 38 the closest zoom asks for */
 const GROUND_SCALE = new Map<string, number>([['roadgravel', 3]]);
@@ -124,6 +119,8 @@ const WALL_STEPS = 24, WALL_LIGHT_SPAN = 0.1;
 const WALL_LINE_FACING = 0.2;
 /** the shade colour every course shadow multiplies in (cool, so shade reads as sky light, T110) and the warm tint of the textured shines */
 const SHADE_TINT = 'rgb(112,120,152)', SHINE_TINT = 'rgb(255,232,176)', RIM_TINT = 'rgb(236,234,214)';
+/** a painted area's sun-side light (areaLight, T136) works in rows this many cache px tall, each over the lit band's span in it */
+const LIGHT_ROW = 16;
 /** a lit top edge (courseRims): its gap inside the edge, the width of its light and its soft ramp in, tiles (0.2 m, 0.44 m, 0.12 m) */
 const RIM_GAP = 0.1, RIM_W = 0.22, RIM_RAMP = 0.06;
 /** the wall art's shade per band in full shade (multiplied over the art: 1 is the art as painted), the top band being painted */
@@ -303,9 +300,19 @@ export class GroundPainter {
     return [...out];
   }
   private buffer(name: string, W: number, H: number) {
+    const c = this.bufferKeep(name, W, H); ctx2d(c).clearRect(0, 0, W, H); return c;
+  }
+  /** a named scratch buffer at least W x H (it only grows: no reallocation for each smaller box), its drawing state reset, its pixels kept */
+  private bufferAtLeast(name: string, W: number, H: number) {
+    const c = this.scratch.get(name);
+    return this.bufferKeep(name, Math.max(W, c?.width ?? 0), Math.max(H, c?.height ?? 0));
+  }
+  /** a named scratch buffer W x H with its drawing state reset but its pixels kept (a caller that uses only a box of it clears or overwrites
+   *  that box itself, rather than the whole chunk-sized canvas) */
+  private bufferKeep(name: string, W: number, H: number) {
     let c = this.scratch.get(name); if (!c) { c = canvas(W, H); this.scratch.set(name, c); }
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
-    const g = ctx2d(c); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, W, H); return c;
+    const g = ctx2d(c); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; return c;
   }
   /** the tile box a world-px rectangle covers (plus a margin) */
   static tileBox(X0: number, Y0: number, X1: number, Y1: number, pad = 1): BBox {
@@ -693,8 +700,10 @@ export class GroundPainter {
 
     if (asph.length) {
       // the starter cart paths (dirt, cement slabs: T084) draw their own soft edges (5a), not the plain roads' dark one
-      const kerbed = asph.filter(f => f.kerb), plain = asph.filter(f => !f.kerb && !CART_SURFACE.has(f.tex));
-      const asphMask = maskOf('asphMask', asph), shift = Math.max(1, FACE_WORLD * L);
+      // the kerbed roads include those whose kerb face steps into this chunk from just below its bottom edge (T140)
+      const shift = faceShift(L), up = upScreen(M, shift);
+      const kerbed = net.asphF.filter(f => f.kerb && vis(stepReach(f.bbox, up))), plain = asph.filter(f => !f.kerb && !CART_SURFACE.has(f.tex));
+      const asphMask = maskOf('asphMask', asph);
       // ---- 4. curb: raised top ring (joint colour outside, cream top inside), then the visible face between the top and the road
       if (kerbed.length) {
         const top = this.buffer('curbTop', W, H), tg = ctx2d(top);
@@ -704,41 +713,39 @@ export class GroundPainter {
           tg.strokeStyle = tex.curb.top; for (const f of kerbed) ring(tg, f, 2 * CURB_TOP);
         }
         composite(top);
-        // the face: a wall of height `shift` px standing on the asphalt edge wherever the road lies below the curb on
-        // screen = (asphalt mask shifted up) minus (asphalt mask). Three tones from the strip, light at the top.
-        const kerbMask = maskOf('kerbMask', kerbed), bands = tex.curb.face;
-        const faceBands = this.buffer('faceBands', W, H), bg = ctx2d(faceBands);
-        bg.drawImage(kerbMask, 0, -shift); bg.globalCompositeOperation = 'destination-out'; bg.drawImage(kerbMask, 0, 0);
-        bg.globalCompositeOperation = 'source-in'; bg.fillStyle = bands[0]; bg.fillRect(0, 0, W, H);
-        const tint = (col: string, dy: number) => { const t = this.buffer('faceTint', W, H), g = ctx2d(t); g.drawImage(kerbMask, 0, dy); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); bg.globalCompositeOperation = 'source-atop'; bg.drawImage(t, 0, 0); };
-        tint(bands[1], -shift * 0.62); tint(bands[2], -shift * 0.3);
+        // the face: a wall of height `shift` px standing on the asphalt edge wherever the road lies below the curb on screen = the kerbed
+        // roads stepped up the screen less the roads, in three tones from the strip, light at the top (kerb-face.ts). The steps are taken on
+        // the roads in tile space, never on this chunk's mask, so the face stays whole across the chunk's bottom edge (T140)
+        const faceBands = this.buffer('faceBands', W, H);
+        kerbFace(ctx2d(faceBands), kerbed, M, shift, tex.curb.face);
         composite(faceBands);
       }
       // plain (verge) roads: a soft dark edge instead of a curb, feathered by a 1 px blur (the owner: no hard vector line)
       if (plain.length) { ctx.save(); ctx.filter = 'blur(1px)'; ctx.strokeStyle = 'rgba(12,10,8,0.5)'; for (const f of plain) ring(ctx, f, Math.max(0.2, 2 * minW)); ctx.restore(); ctx.setTransform(M); }
       // ---- 5. asphalt: the painted mosaic in ground space, per class tone
       // ---- 5a. the starter cart paths (T084), first, so every road meeting one paints over it: packed dirt and cement slabs in flat painted
-      // colour with soft blotches (the grime layer), a feathered worn halo round the dirt, a thin cast shade under the slabs' lower-left edge, and
-      // the sun's bevel (the sun at the upper right): a light rim on each path's upper-right edge, a shade rim on its lower-left edge. Their
-      // slab joints, wheel ruts and centre grass are markings (8); a dirt path's edge tufts are litter (10)
+      // colour with soft blotches (the grime layer), a feathered worn halo round the dirt, a thin cast shade under the slabs falling at 145°, and
+      // the sun's bevel (cart-bevel.ts; the sun at the upper right): a light rim on the edges facing it, a shade rim on those facing away. The
+      // cast and the rims step the paths themselves in tile space, never this chunk's mask, so they stay on the paths' edges across the chunk's
+      // border (T139). Their slab joints, wheel ruts and centre grass are markings (8); a dirt path's edge tufts are litter (10)
       const cartF = asph.filter(f => CART_SURFACE.has(f.tex));
       if (cartF.length) {
-        const tpx = Math.hypot(M.a, M.b), shift = (s: number) => [M.c * s, M.d * s] as const; // px per tile; a tile-space (0, s) step on screen (+y: toward the lower left)
+        const tpx = Math.hypot(M.a, M.b); // px per tile
         for (const [kind, look] of CART_SURFACE) {
           const feats = cartF.filter(f => f.tex === kind); if (!feats.length) continue;
           const m = maskOf('cartMask', feats);
           if (!lite && look.halo) { ctx.save(); ctx.filter = `blur(${Math.max(1, 0.14 * tpx).toFixed(1)}px)`; ctx.lineJoin = 'round'; ctx.strokeStyle = look.halo; for (const f of feats) ring(ctx, f, 0.4); ctx.restore(); ctx.setTransform(M); }
-          if (!lite && look.cast) { const cb = this.buffer('cartRim', W, H), cg = ctx2d(cb), [dx, dy] = shift(0.09); cg.drawImage(m, dx, dy); cg.globalCompositeOperation = 'source-in'; cg.fillStyle = look.cast; cg.fillRect(0, 0, W, H); composite(cb); }
+          if (!lite && look.cast) { const cb = this.buffer('cartRim', W, H); cartCast(ctx2d(cb), feats, M, W, H, look.cast); composite(cb); }
+          // the body: the flat fill and its two rims, then the grime blotches multiplied over all three, so the light and the shade keep the
+          // surface's texture (T110: no smooth shine)
           const bb = this.buffer('cartBody', W, H), bg = ctx2d(bb);
           bg.fillStyle = look.fill; bg.fillRect(0, 0, W, H);
+          if (!lite) for (const [col, s, alpha] of [[look.lit, CART_RIM, look.litA], [look.shade, -CART_RIM, look.shadeA]] as const) {
+            const rb = this.buffer('cartRim', W, H); cartRim(ctx2d(rb), m, feats, M, W, H, col, s);
+            bg.globalAlpha = alpha; bg.drawImage(rb, 0, 0); bg.globalAlpha = 1;
+          }
           bg.setTransform(M); bg.globalCompositeOperation = 'multiply'; bg.fillStyle = this.screenPattern(bg, 'grime', L, X0, Y0, Minv); bg.fillRect(tx0, ty0, tx1 - tx0, ty1 - ty0); bg.globalCompositeOperation = 'source-over';
           through(bb, m); composite(bb);
-          if (!lite) for (const [col, s, alpha] of [[look.lit, 0.11, look.litA], [look.shade, -0.11, look.shadeA]] as const) {
-            // a rim: the path's mask less the same mask stepped s tiles along y (a positive step leaves its upper-right edge, a negative its lower-left)
-            const rb = this.buffer('cartRim', W, H), rg = ctx2d(rb), [dx, dy] = shift(s);
-            rg.drawImage(m, 0, 0); rg.globalCompositeOperation = 'source-in'; rg.fillStyle = col; rg.fillRect(0, 0, W, H);
-            rg.globalCompositeOperation = 'destination-out'; rg.drawImage(m, dx, dy); composite(rb, 'source-over', alpha);
-          }
         }
       }
       // gravel roads are painted first, with their own pattern and no tones, so a paved road meeting one paints over it
@@ -1023,7 +1030,9 @@ export class GroundPainter {
       }
     }
     const out = canvas(S, S), og = ctx2d(out), k = Math.max(1, 0.03 * ppm);
-    og.drawImage(c, SHADOW_DIR[0] * k, SHADOW_DIR[1] * k); og.globalCompositeOperation = 'source-in'; og.fillStyle = 'rgba(30,22,12,0.42)'; og.fillRect(0, 0, S, S);
+    // the shade slides the seamless square with its wrapped neighbours too, so the leaves across its edge keep their shade (T140)
+    for (const wx of [-S, 0, S]) for (const wy of [-S, 0, S]) og.drawImage(c, SHADOW_DIR[0] * k + wx, SHADOW_DIR[1] * k + wy);
+    og.globalCompositeOperation = 'source-in'; og.fillStyle = 'rgba(30,22,12,0.42)'; og.fillRect(0, 0, S, S);
     og.globalCompositeOperation = 'source-over'; og.drawImage(c, 0, 0);
     this.leafPic = out; return out;
   }
@@ -1125,9 +1134,11 @@ export class GroundPainter {
     // the samples sit on the picture's pixel centres: the picture spans half a step more on each side
     return { img, x0: x0 - st / 2, y0: y0 - st / 2, w: w * st, h: h * st };
   }
-  /** the painted areas of a chunk (the Paint tool), in id order. A crisp area (paving, kerbs: no edge profile) is drawn straight onto the
-   *  chunk, as before. Any other is drawn into a scratch layer, given its sun-lit light and dark rims and its feather (paint-edges.ts: images
-   *  from its outline, made when the chunk bakes, never per frame), and laid over the chunk after the shadow it casts on the ground below */
+  /** the painted areas of a chunk (the Paint tool), in id order. A crisp area (paving, kerbs: no edge profile) with no Shadow is drawn straight
+   *  onto the chunk, as before. Any other is drawn into a scratch layer, given its sun-lit light and dark rims, its edge shade (T136, the Shadow
+   *  slider: a cool multiply inside the edges turned from the sun and a textured light a gap inside those turned to it, both clipped to the area)
+   *  and its feather (paint-edges.ts: images from its outline, made when the chunk bakes, never per frame), and laid over the chunk after the
+   *  shadow it casts on the ground below */
   private drawPaints(ctx: C2D, paints: LotPatch[], L: number, X0: number, Y0: number, M: DOMMatrix, Minv: DOMMatrix, box: BBox, lite: boolean) {
     const res = edgeRes(L);
     let layer: Cnv | null = null;
@@ -1142,16 +1153,25 @@ export class GroundPainter {
       // the course chunks (all z 0, so side by side in the order) draw together, surface by surface, so a chunk's lower surface never
       // lands over its neighbour's higher one at a seam
       if (p.course) { if (!course) { course = true; this.drawCourses(ctx, paints.filter(q => q.course).map(q => q.course!), L, X0, Y0, M, Minv, box, lite); } continue; }
-      const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null;
-      if (!look) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
-      const feather = featherTiles(look, L), reach = edgeReach(look, feather), eb = edgeBox(quadBox(p.pts), box, reach);
+      const look = p.paint!.e ? EDGE_LOOKS[p.paint!.e] ?? null : null, sh = areaShadow(p.paint!.sh);
+      if (!look && !sh) { this.drawPaint(ctx, p, L, X0, Y0, M, Minv, box, lite, 0); continue; }
+      const feather = look ? featherTiles(look, L) : 0, reach = Math.max(look ? edgeReach(look, feather) : 0, areaShadeReach(sh, feather)), eb = edgeBox(quadBox(p.pts), box, reach);
       if (!eb) continue;
-      const [ex0, ey0, ex1, ey1] = eb, im = edgeImages(edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL), look, feather);
-      put(ctx, im.shadow, ex0, ey0, 'source-over');
+      const [ex0, ey0, ex1, ey1] = eb, field = edgeField(p.pts, ex0, ey0, ex1 - ex0, ey1 - ey0, res, reach, COURSE_CELL);
+      const im = look ? edgeImages(field, look, feather) : null, sd = sh ? areaShadeImages(field, sh, !lite && L >= AREA_SHADE.lightL, feather) : null;
+      if (im) put(ctx, im.shadow, ex0, ey0, 'source-over');
       layer ??= this.buffer('paintEdge', ctx.canvas.width, ctx.canvas.height);
       const g = ctx2d(layer);
       this.drawPaint(g, p, L, X0, Y0, M, Minv, box, lite, feather);
-      put(g, im.light, ex0, ey0, 'screen'); put(g, im.dark, ex0, ey0, 'multiply'); put(g, im.cut, ex0, ey0, 'destination-out');
+      if (im) { put(g, im.light, ex0, ey0, 'screen'); put(g, im.dark, ex0, ey0, 'multiply'); }
+      if (sd && (sd.shade || sd.light)) {
+        // the edge shade (T136): multiplied in its cool colour inside the area only (a crisp area has no cut to trim what lands outside), then
+        // the light on the sun side
+        const path = polyPath(p.pts);
+        if (sd.shade) { g.save(); g.setTransform(M); g.clip(path); put(g, sd.shade, ex0, ey0, 'multiply'); g.restore(); }
+        if (sd.light && sd.lightBox) this.areaLight(g, sd.light, sd.lightBox, path, ex0, ey0, res, L, M, areaLightEdge(feather));
+      }
+      if (im) put(g, im.cut, ex0, ey0, 'destination-out');
       // only the canvas px under the image box: laid over the chunk, then cleared for the next area
       let sx0 = Infinity, sy0 = Infinity, sx1 = -Infinity, sy1 = -Infinity;
       for (const [x, y] of [[ex0, ey0], [ex1, ey0], [ex0, ey1], [ex1, ey1]]) { const X = M.a * x! + M.c * y! + M.e, Y = M.b * x! + M.d * y! + M.f; sx0 = Math.min(sx0, X); sx1 = Math.max(sx1, X); sy0 = Math.min(sy0, Y); sy1 = Math.max(sy1, Y); }
@@ -1778,6 +1798,40 @@ export class GroundPainter {
     for (const [w, a] of [[RG + RIM_RAMP * thin, 0.5], [RG, 1]] as const) { g.strokeStyle = `rgba(0,0,0,${a})`; g.lineWidth = Math.max(px, 2 * w); for (const q of steps) g.stroke(q); }
     g.restore();
     this.shine(ctx, box, RIM_TINT, 0.8, m => { m.setTransform(1, 0, 0, 1, 0, 0); m.drawImage(B, box[0], box[1], box[2], box[3], box[0], box[1], box[2], box[3]); });
+  }
+  /** a painted area's light on its sun side (T136, paint-edges areaShadeImages; the owner's rule T110): a shine textured by the area's own
+   *  colours (each px gains its own colour squared times RIM_TINT, through the mask, so its mid-tones and highlights brighten and its dark gaps
+   *  stay dark), its mask the low-resolution light image (res px a tile from tile (x0, y0)) stretched, with the gap inside the edge (e tiles
+   *  in: paint-edges areaLightEdge) cut at full resolution (none within AREA_SHADE.gap of it, half over the ramp after it: areaLightGap). It
+   *  works in a buffer the size of the light's box (the tile box lb) and only in the rows of LIGHT_ROW cache px the lit band crosses, each over
+   *  the band's span in it, so its cost follows the band, not the chunk (T136's bake cost) */
+  private areaLight(g: C2D, img: EdgeImage, lb: readonly number[], path: Path2D, x0: number, y0: number, res: number, L: number, M: DOMMatrix, e: number) {
+    const cb = this.cacheBox(M, lb[0]!, lb[1]!, lb[2]!, lb[3]!, g); if (!cb) return;
+    const [bx, by, bw, bh] = cb;
+    // the rows: each lit image px (its centre on the canvas, grown by its bilinear footprint) widens the span of the rows it reaches
+    const fx = (Math.abs(M.a) + Math.abs(M.c)) / res, fy = (Math.abs(M.b) + Math.abs(M.d)) / res, rows = new Map<number, [number, number]>();
+    for (let v = 0; v < img.H; v++) for (let u = 0; u < img.W; u++) {
+      if (!img.data[4 * (v * img.W + u) + 3]) continue;
+      const tx = x0 + (u + 0.5) / res, ty = y0 + (v + 0.5) / res, X = M.a * tx + M.c * ty + M.e, Y = M.b * tx + M.d * ty + M.f;
+      for (let r = Math.floor((Y - fy) / LIGHT_ROW); r <= Math.floor((Y + fy) / LIGHT_ROW); r++) { const sp = rows.get(r); if (sp) { sp[0] = Math.min(sp[0], X - fx); sp[1] = Math.max(sp[1], X + fx); } else rows.set(r, [X - fx, X + fx]); }
+    }
+    const strips = new Path2D(); let any = false;
+    for (const [r, [a, b]] of rows) {
+      const sx0 = Math.max(bx, Math.floor(a) - 1), sx1 = Math.min(bx + bw, Math.ceil(b) + 1), sy0 = Math.max(by, r * LIGHT_ROW), sy1 = Math.min(by + bh, (r + 1) * LIGHT_ROW);
+      if (sx1 > sx0 && sy1 > sy0) { strips.rect(sx0, sy0, sx1 - sx0, sy1 - sy0); any = true; }
+    }
+    if (!any) return;
+    const s = this.buffer('small', img.W, img.H); ctx2d(s).putImageData(new ImageData(img.data as Uint8ClampedArray<ArrayBuffer>, img.W, img.H), 0, 0);
+    // the light, in canvas px shifted by the box's corner: the area's colours squared, times the tint, through the mask, the gap cut out
+    const A = this.bufferAtLeast('areaLight', bw, bh), a = ctx2d(A), T = new DOMMatrix([1, 0, 0, 1, -bx, -by]), px = 1 / (TILE_PX * L);
+    a.save(); a.setTransform(T); a.clip(strips);
+    a.globalCompositeOperation = 'copy'; a.drawImage(g.canvas as CanvasImageSource, bx, by, bw, bh, bx, by, bw, bh);
+    a.globalCompositeOperation = 'multiply'; a.drawImage(g.canvas as CanvasImageSource, bx, by, bw, bh, bx, by, bw, bh); a.fillStyle = RIM_TINT; a.fillRect(bx, by, bw, bh);
+    a.setTransform(T.multiply(M)); a.globalCompositeOperation = 'destination-in'; a.imageSmoothingEnabled = true; a.drawImage(s, x0, y0, img.W / res, img.H / res);
+    a.globalCompositeOperation = 'destination-out'; a.lineJoin = 'round';
+    for (const [w, al] of [[e + AREA_SHADE.gap + AREA_SHADE.ramp, 0.5], [e + AREA_SHADE.gap, 1]] as const) { a.strokeStyle = `rgba(0,0,0,${al})`; a.lineWidth = Math.max(px, 2 * w); a.stroke(path); }
+    a.restore();
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.clip(strips); g.globalCompositeOperation = 'lighter'; g.drawImage(A, 0, 0, bw, bh, bx, by, bw, bh); g.restore();
   }
   /** a shine laid on ctx inside a mask, textured by the ground under it (the owner's rule T110): the light added is the ground's own colour
    *  squared (so it lands on its mid-tones and highlights and leaves its dark gaps dark) times a warm tint and k, through the mask's alpha.

@@ -92,6 +92,13 @@ const RANGE: BusinessType = { id: 'range', name: 'Driving range', family: 'leisu
 export const CLUBHOUSE_RANGE_COST = 45000;
 /** a type by id (the clubhouse and the driving range too, though they are not in BUSINESSES) */
 export const BUSINESS: Record<BusinessId, BusinessType> = Object.fromEntries([...BUSINESSES, CLUBHOUSE, RANGE].map(b => [b.id, b])) as Record<BusinessId, BusinessType>;
+/** the businesses whose type today's catalogue has: a save made by another branch may name a type it does not (the engine's drawing and the city's
+ *  visit plan would throw on every frame), so those are dropped, with one warning naming their types (where: who loaded them). T135 */
+export function knownBusinesses<T extends { type: string }>(defs: readonly T[], where: string): T[] {
+  const ok = defs.filter(d => Object.prototype.hasOwnProperty.call(BUSINESS, d.type));
+  if (ok.length < defs.length) console.warn(`${where}: dropped ${defs.length - ok.length} business(es) of a type the catalogue does not have: ${[...new Set(defs.filter(d => !ok.includes(d)).map(d => d.type))].join(', ')}`);
+  return ok;
+}
 
 /** the level for xp (1..LEVEL_XP.length): the last level whose XP is reached */
 export function levelFromXp(xp: number): number { let L = 1; for (let i = 1; i < LEVEL_XP.length; i++) if (xp >= LEVEL_XP[i]!) L = i + 1; return L; }

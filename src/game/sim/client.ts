@@ -145,6 +145,12 @@ export class SimClient {
   // the town starts again: the lot mirror too, or a lot whose key the new network shares with the old one (the range start's county roads
   // are lattice-aligned, so two games often share one) would keep the old town's state, be saved with it and come back on a load
   this.lots.clear();
+  // the worker starts the game clock again (City.terrain, T135): the mirror reads the new game's first instant and day 1 at once, not the last
+  // game's month until the next frame (simT runs on: the clock's shift and the town day's start take it up)
+  if (this.cur) {
+    const t = this.simTime(performance.now()), d = t - this.stats.simT;
+    this.stats = { ...this.stats, clock: -d, frozen: false, skipping: false, town: { t0: t, m0: 0, rate: 1440 / this.dayLen } }; this.town = this.stats.town;
+  }
   // the worker resets the books and the career with a new valley (City.terrain): the mirror shows the fresh treasury at once
   this.budget = { ...new Budget().toJSON(), money: golf ? GOLF_START_MONEY : startMoney(towns.length > 0), base: Math.floor(this.clockTime(performance.now()) / GAME_DAY) * GAME_DAY };
   this.career = { reached: 0, won: false };
