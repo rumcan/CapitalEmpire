@@ -27,13 +27,15 @@ export interface PaintedFamilyDef {
    *  its levels here list each set's first tile, for the swatches and the studio's cards) */
   tiled?: boolean;
 }
-/** a tile set family as the families list shows it: each level's set (its revision, e.g. near-v3) with its first tile, and as coverage the
- *  metres one tile covers at the first step of its band (painted-tiles.ts: the camera picks the step) */
+/** a tile set family as the families list shows it: each level's set, its first tile under the set's revision (e.g. near-v3, the pick: the
+ *  swatches, the cards) and the other three as `<revision>/<tile id>` (so the studio can show the whole set; a tile set has no version to
+ *  choose: clampLook drops it), and as coverage the metres one tile covers at the first step of its band (painted-tiles.ts: the camera picks
+ *  the step) */
 function fromTiles(t: TiledFamily): PaintedFamilyDef {
   const levels = {} as Record<GrassDetail, Record<string, FamilyPicture>>, coverage = {} as Record<GrassDetail, number>, pick: Partial<Record<GrassDetail, string>> = {};
   for (const l of ['near', 'mid', 'far'] as const) {
-    const lv = t.levels[l], first = lv.tiles[0]!;
-    levels[l] = { [lv.revision]: { file: first.file, mean: first.mean, px: lv.native[0], sha256: first.sha256 } }; pick[l] = lv.revision;
+    const lv = t.levels[l];
+    levels[l] = Object.fromEntries(lv.tiles.map((x, i) => [i ? `${lv.revision}/${x.id}` : lv.revision, { file: x.file, mean: x.mean, px: lv.native[0], sha256: x.sha256 }])); pick[l] = lv.revision;
     coverage[l] = STEPS.find(s => s.band === l)?.metres ?? 0;
   }
   return { id: t.id, name: t.name, kind: t.kind, coverage, levels, pick, tiled: true };
