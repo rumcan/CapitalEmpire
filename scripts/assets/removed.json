@@ -273,6 +273,22 @@
    344.32
   ]
  },
+ "expansion:dormer-rear": {
+  "at": "2026-10-26T10:37:31.510Z",
+  "name": "Dormer home — rear and side",
+  "cat": "More houses",
+  "kind": "building",
+  "w": 519.8,
+  "h": 447.55,
+  "quad": [
+   0,
+   0,
+   519.8,
+   447.55
+  ],
+  "ax": 307.59,
+  "ay": 320.27
+ },
  "expansion:garage-rear": {
   "at": "2026-10-20T16:12:32.838Z",
   "name": "Timber garage — rear view",
@@ -342,6 +358,22 @@
    543.82,
    339.31
   ]
+ },
+ "expansion:stationwagon-rear": {
+  "at": "2026-10-26T10:38:00.330Z",
+  "name": "Woodgrain station wagon — rear",
+  "cat": "Odds & ends",
+  "kind": "decor",
+  "w": 214.39999999999998,
+  "h": 105.97718631178707,
+  "quad": [
+   0,
+   0,
+   214.79,
+   106.41
+  ],
+  "ax": 107.19999999999999,
+  "ay": 52.37718631178707
  },
  "expansion:victorian-rear": {
   "at": "2026-10-21T16:28:49.893Z",
@@ -1867,6 +1899,22 @@
    455
   ]
  },
+ "variation:expansion-derelict-two-storey-012bed48:1": {
+  "at": "2026-10-26T10:36:00.741Z",
+  "name": "Dilapidated two-storey house — variation 1",
+  "cat": "Industry",
+  "kind": "building",
+  "w": 576,
+  "h": 564.5436464088398,
+  "quad": [
+   1.67,
+   1.67,
+   576.67,
+   565
+  ],
+  "ax": 288,
+  "ay": 420.5436464088398
+ },
  "variation:expansion-fence-privacy-x-dd8abdb9-ns:2": {
   "at": "2026-10-20T16:32:14.401Z",
   "name": "Privacy fence — X — A north view",
@@ -2118,6 +2166,38 @@
    543.33,
    458.33
   ]
+ },
+ "variation:expansion-rundown-house-a7c17683-plain-corner:1": {
+  "at": "2026-10-26T10:35:16.808Z",
+  "name": "Boarded-up timber house — variation 1",
+  "cat": "Industry",
+  "kind": "building",
+  "w": 512,
+  "h": 494.9699570815451,
+  "quad": [
+   1.38,
+   1.38,
+   512.08,
+   494.13
+  ],
+  "ax": 256,
+  "ay": 366.9699570815451
+ },
+ "variation:expansion-rundown-house-north-24ae3116-plain:1": {
+  "at": "2026-10-26T10:35:27.105Z",
+  "name": "Boarded-up timber house — variation 1",
+  "cat": "Industry",
+  "kind": "building",
+  "w": 511.99999999999994,
+  "h": 519.1775700934579,
+  "quad": [
+   1.61,
+   1.61,
+   511.93,
+   519.98
+  ],
+  "ax": 255.99999999999997,
+  "ay": 391.1775700934579
  },
  "variation:expansion-treehouse-2128dfc1-plain-corner:1": {
   "at": "2026-10-20T16:34:58.965Z",
@@ -2661,6 +2741,22 @@
   "ax": 247.39999999999998,
   "ay": 361.83215400624346
  },
+ "variation:world-house_2-e2dddf71-plain:1": {
+  "at": "2026-10-26T09:57:42.915Z",
+  "name": "House 2 — variation 1",
+  "cat": "Houses",
+  "kind": "building",
+  "w": 425,
+  "h": 388.8110072689512,
+  "quad": [
+   0.57,
+   0.57,
+   424.19,
+   388.46
+  ],
+  "ax": 212.5,
+  "ay": 282.5610072689512
+ },
  "variation:world-house_3-577a8e37-plain:1": {
   "at": "2026-10-20T16:08:15.039Z",
   "name": "House 3 — variation 1",
@@ -2814,6 +2910,22 @@
    36.67,
    30
   ]
+ },
+ "variation:world-video-bf85dfb9-plain:1": {
+  "at": "2026-10-26T10:18:19.739Z",
+  "name": "Video — variation 1",
+  "cat": "Landmarks",
+  "kind": "building",
+  "w": 406,
+  "h": 391.4349775784753,
+  "quad": [
+   1.01,
+   1.01,
+   405.44,
+   390.24
+  ],
+  "ax": 203,
+  "ay": 289.9349775784753
  },
  "world:candy_stand": {
   "at": "2026-10-20T16:29:09.281Z",
