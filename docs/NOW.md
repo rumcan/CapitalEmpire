@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 evening)
+## START HERE (kept current by the lead; last updated 2026-10-26 21:30)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,7 +27,6 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T165 | #365 | `arena/T165-fairway-seams` | `.claude/worktrees/t165` | — | The fairway seam (the owner: "fix that seam in the fairway textures"). Redirected to the art session's new building-free paintings `scene-backgrounds/{fairway,putting-green}/*-background-anchored-v1.raw.png`: families `fairway-paint` / `putting-green-paint` like `rough-owner` (T162), fairway cropped to whole stripe periods, then the edge heal; fallback the shared-strip heal on the raw tiles. Agent: the T162 agent. |
 | T160 | #367 | `arena/T160-lots-on-the-fly` | `.claude/worktrees/t160` | 5186 | P25 step 5: house lots get their plants, props, cars and decals from the generator, seeded per lot; a shipped, versioned model (`lots/lot-models/v<N>.json`, `lotModel` in the save); `?oldlots` for the old way; owner presets stay exact overrides. Agent: the lot agent (T155/T158/T159). |
 | T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
@@ -54,6 +53,12 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+- **OVERNIGHT 2026-10-26 → 27 (the owner, 21:10: "make sure you guys keep coding till tomorrow morning. im going to bed. if you dono what
+  to do, i trust you to make the best decision. try your best").** The lead keeps two agents busy; a session cron (`054b2391`, :13 and :53
+  from 22:00 to 07:53) wakes the lead to review/merge/dispatch. Order: **T166 #370** the game's RAM (ground workers' texture packs) →
+  **T161** (after T160, the lot agent) → **T167 #371** removed pictures never drawn (stand-ins; owner data untouched) → **T154 phase 2**
+  (#330, the eight-heading contract, code only) → **T112 #199** (sharp) → real failures from the 02:00 nightly go first. Morning: a summary
+  with screenshots for the owner.
 - **P25 #348 lots generated on the fly** (the owner: "start over with the lot presets we need a workflow that gets us to generating perfect
   lots on the fly"): hard rules + learned per-sector taste (T158 wizard, in flight) → T159 bootstrap from the existing presets + a 12-lot
   gallery → T160 the generator in the game, seeded per lot, model as data → T161 pairs, densities by state, a 50-seed exam sheet. The
@@ -82,6 +87,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26 21:20: **T165 #369 fairway and putting green from the new paintings** (`art/owner-supplied/{fairway,putting-green}-20261026`,
+  families `fairway-paint`, `putting-green-paint`): edges healed with a matched bridge (no seam line); the putting green MID falls back to
+  the raw MID tiles with one shared strip (the painting's bright corner repeated). The fairway's mowing stripes fan out in perspective,
+  so no crop lines them up: a soft stripe kink stays at the wrap. Straight stripes need a fairway painted without perspective (or without
+  stripes: the game draws its own mowing bands). Old `fairway` / `putting-green` families kept as the option.
 - 2026-10-26 evening: **T164 #361 + #366 main's tests green after the Rebuild**: a frozen house preset's house keeps its yards at today's
   sizes (`compose.ts houseYards`: moved along the frontage into its band; `pickedPreset` prefers presets whose house fits);
   `draft-shadows.mjs` drops shadow entries for pictures the library no longer has; newart-default pins no stand-in count. **T159 #364**
