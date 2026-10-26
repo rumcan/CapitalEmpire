@@ -27,7 +27,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T166 | #370 | `arena/T166-game-ram` | `.claude/worktrees/t166` | 5187 | The game's RAM: T157's lazy textures, CPU canvases, one shared pack and the pack cache for the game's three ground workers (~450-630 MB each), measured step by step with `scripts/perf/memory.mjs`. Agent: the ground agent (T162/T165). |
+| T168 | #381 | `arena/T168-texture-prewarm` | `.claude/worktrees/t166` | 5187 | T166 follow-up: the lazy textures made ahead in idle time (the surfaces the map lays and the open tool paints) and in slices, so no ~1 s first-use stall; memory within 5% of T166. Agent: the ground agent. |
 | T161 | (agent opens it) | from origin/main | `.claude/worktrees/t160` | 5186 | P25 step 6: pairs that go together, densities by state, the 50-seed exam contact sheet. Agent: the lot agent. |
 | T154 | #330 | `arena/T154-new-art` | `.claude/worktrees/t154` | — | **Phase 1 merged (#345).** Phase 2 waits: the eight-heading contract (a building on a 45° road picks its cardinal view, `AXIS_SETS`); the new subjects' diagonal views are art work (listed in GOLF-SPRITES.md). |
 | T152 | #325 | `arena/T152-car-spacing` (d3bdbf1) | `.claude/worktrees/t152` | — | **Paused** for the art (the owner). Root cause: the range's own cars (`rangebiz.ts:803/832/723`) are placed by their own clock; fixed in rangebiz.ts only (overlaps -75-82% with the 44-bay lot, money identical). **Owner's decision needed:** at full demand the one-lane drive and the building's ramp cannot carry the cars at a car's gap (wider drive, second ramp, faster car-park speeds, or the queue limiting sales). Left: three gates, shots, PR. |
@@ -88,6 +88,12 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26 23:40: **T166 #380 the game's RAM about halved** (the owner: "we need to optimise the app"): one ground worker instead of three
+  (three baked no faster: one GPU process), lazy procedural textures and photo mosaics, no IndexedDB texture pack (the old one deleted once).
+  All Edge processes idle 5,895 → 3,316 MB, after a pan 5,949 → 2,910, after 10 jumps 7,095 → 3,671; VRAM 3.4-4.3 → 1.5-1.9 GB; browser
+  process 455 → 56 MB; ready 5.9 → 3.0 s; bakes faster (bench 15.7 → 9.4 ms, district fps 47-54 → 57-59). The ground pixel-identical
+  (NEAR 202 of 924,800 px by ≤2 levels). CPU canvases tried and dropped (bakes 9 → 38 ms). Cost: a ~1 s stall the first time a texture is
+  needed (T168). Dev switch `?ground=old|lazy,one,two,soft,cache` and `scripts/perf/memory.mjs` measure each lever.
 - 2026-10-26 23:00: **#376 generated lots keep their garages and sheds** (every building of the frozen preset stays; nothing generated
   lands on them). **T167 #377 removed pictures are never drawn**: the declined presets placed the removed rundown house (70), derelict
   two-storey (35) and fire station (48), so decrepit streets had no houses; now the house is an allocated dwelling of its size class that
