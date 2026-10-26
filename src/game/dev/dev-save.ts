@@ -3,6 +3,10 @@
 // preflight), and the check of a save's body. vite.config.ts loads it before the game's modules exist: its only import (preset-read.ts) has no
 // runtime imports of its own.
 import { formatPresets, parsePresets } from '../lots/preset-read';
+export { mergeAllocations } from '../lots/house-alloc';
+
+/** the house allocations' file (T155: lots/house-alloc.ts), written only through its per-house merge (POST /__dev/allocations), never whole */
+export const ALLOC_PATH = 'src/game/lots/house-allocations.json';
 
 /** the files the dev editor may write, by the name it sends, with their path in the repo: the lot presets, and the studio Library tab's
  *  sprite sizes and removals (the same JSON the studio writes) */

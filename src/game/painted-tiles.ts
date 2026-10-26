@@ -13,6 +13,14 @@ import { HH, HW, ZOOM_MIN, mulberry } from './iso';
  *    zooms out. A set is never drawn larger than its native pixels: zooming in past a set's anchor switches to the finer set at once; zooming
  *    out, the finer set shrinks below native until the coarser set's anchor, where the coarser one takes over (a few % past it, the
  *    hysteresis; FAR at the furthest zoom itself). The device pixel ratio is part of the size: a DPR change re-lays the tiles once.
+ *  - **NEAR for longer (T153, #327).** Zooming out, NEAR stays on down to the manifest's nearUntil, MID takes over there below its native size.
+ *  - **Half size, earlier sets, a nearer limit (T156).** The owner: "half the size the fescue is displayed at, when fully zoomed in, bring in
+ *    the next fescue earlier and the final fescue even earlier and make the final fescue smaller", "just dont let the player zoom out that
+ *    far". Each set comes in at half its native size: NEAR at the closest zoom (anchor 0.6), MID at nearUntil 10% (anchor 0.2), FAR at the
+ *    manifest's farFrom 2.5% (anchor 0.05); the furthest zoom is 1.25% (iso.ts ZOOM_MIN), FAR a quarter of native there. nearUntil and
+ *    farFrom are the owner's numbers to tune in painted-tiles.json.
+ *  - **Provisional families (T153).** A family shipped before its art handoff (`provisional: true`: the newest raw tiles, hash-recorded) is
+ *    laid exactly like an accepted one; the readout and the studio say "provisional".
  *  - **Placement.** A world-anchored grid of whole tiles from the world origin; each cell shows one of the four tiles, chosen by a seeded stable
  *    permutation, `(ix + 2 iy) mod 4`, so no tile ever touches a copy of itself (all eight neighbours differ). The four tiles butt edge to edge
  *    along their common borders; no overlap, random offset, mosaic, mask, blend or crossfade.
@@ -21,19 +29,26 @@ import { HH, HW, ZOOM_MIN, mulberry } from './iso';
 export type TileBand = 'near' | 'mid' | 'far';
 /** finest first: a band's index is its place here (0 NEAR, 1 MID, 2 FAR) */
 export const TILE_BANDS: readonly TileBand[] = ['near', 'mid', 'far'];
-export interface TileRef { id: string; file: string; sha256: string; mean: string }
-export interface TiledLevel { revision: string; folder: string; native: [number, number]; decision: { file: string; sha256: string | null }; tiles: TileRef[] }
+/** a tile; a provisional set's tile (T153) also names the PNG it was made from (source, under the art folder) */
+export interface TileRef { id: string; file: string; sha256: string; mean: string; source?: string }
+/** a level's set; a provisional one (T153) has no visual decision (file null) and carries the art session's own status for it */
+export interface TiledLevel { revision: string; folder: string; native: [number, number]; decision: { file: string | null; sha256: string | null }; tiles: TileRef[]; status?: string }
 export interface TiledFamily {
   /** the game's family id (painted-families.ts, painted-surfaces.json) and READY-MATERIALS' id */
   id: string; materialId: string; name: string; kind: 'grass' | 'sand' | 'water' | 'cut';
-  /** the canonical selection's sha256 (its first 12 hex digits: the revision) */
-  revision: string; selection: { file: string; sha256: string }; light: string | null; mean: string;
+  /** the canonical selection's sha256 (its first 12 hex digits: the revision); a provisional family's revision is its tiles' hashes' */
+  revision: string; selection: { file: string; sha256: string } | null; light: string | null; mean: string;
   levels: Record<TileBand, TiledLevel>;
+  /** T153 (#327): shipped before its handoff: each level's newest complete set of four tiles as the art session left them (raw generator
+   *  outputs, seams not repaired yet), hash-recorded; re-running the prep script after the handoff lands switches it to the canonical selection */
+  provisional?: true;
 }
 /** each set's anchor (the CSS zoom at which it draws at its native pixels), the switch hysteresis (zooming out, a coarser set takes over this
- *  factor past its anchor), the preload factor (the next set's tiles are decoded once the zoom is this close to its switch), the camera's
- *  zoom range, and how each anchor was found */
-export interface TileAnchors extends Record<TileBand, number> { hysteresis: number; preload: number; zoom: [number, number]; how: Record<TileBand, string> }
+ *  factor past its switch), the preload factor (the next set's tiles are decoded once the zoom is this close to its switch), the camera's
+ *  zoom range, and how each anchor was found; nearUntil (T153, the owner's number to tune): zooming out, NEAR stays on down to this zoom and
+ *  MID takes over there (absent: T150's switch, just past MID's anchor) */
+export interface TileAnchors extends Record<TileBand, number> { hysteresis: number; preload: number; zoom: [number, number]; how: Record<TileBand, string>; nearUntil?: number;
+  /** T156 (the owner's number to tune): zooming out, MID stays on down to this zoom and FAR takes over there (absent: FAR's anchor) */ farFrom?: number }
 export interface TilesManifest {
   v: 1; revision: string; source: { file: string; sha256: string; date: string | null };
   display: { minVisibleTiles: number; maxVisibleTiles: number };
@@ -54,30 +69,50 @@ const N_BANDS = TILE_BANDS.length;
 export const anchorAt = (b: number): number => ANCHORS[TILE_BANDS[Math.max(0, Math.min(N_BANDS - 1, b))]!];
 /** z is at or below zoom a (to rounding: a camera clamped to ZOOM_MIN sits exactly on FAR's anchor) */
 const atOrBelow = (z: number, a: number) => z <= a * (1 + 1e-9);
-/** the band a CSS zoom lays with no history (a fresh start): the coarsest set not magnified there (the last whose anchor is at or above z) */
+/** NEAR's lower end zooming out (T153): the manifest's nearUntil, held between FAR's anchor x the hysteresis and MID's anchor / the
+ *  hysteresis (at that top end it is T150's switch, just past MID's anchor; absent, it is that) */
+export function nearUntil(): number {
+  const H = ANCHORS.hysteresis, top = anchorAt(1) / H, u = ANCHORS.nearUntil;
+  return Math.min(top, Math.max(farFrom() * H * H, typeof u === 'number' && Number.isFinite(u) ? u : top));
+}
+/** MID's lower end zooming out (T156, the owner: "bring in ... the final fescue even earlier"): the manifest's farFrom, held between the
+ *  furthest zoom and FAR's anchor / the hysteresis (FAR never magnified); absent, FAR's anchor as before */
+export function farFrom(): number {
+  const H = ANCHORS.hysteresis, top = Math.max(anchorAt(2) / H, ZOOM_MIN), u = ANCHORS.farFrom;
+  return Math.min(top, Math.max(ZOOM_MIN, typeof u === 'number' && Number.isFinite(u) ? u : anchorAt(2)));
+}
+/** where band b (1 MID, 2 FAR) gives way to the finer band b - 1 zooming in: just above this zoom the finer set shows. Never above b's anchor
+ *  (b would be magnified past it). MID (T153): nearUntil x the hysteresis, so zooming out NEAR stays on down to nearUntil (the owner: "lets
+ *  the closest zoom stay on when you zoom out for longer"), and MID shows below its native size until FAR. FAR: its anchor, the furthest zoom. */
+export const switchIn = (b: number): number => (b <= 0 ? Infinity : b === 1 ? Math.min(anchorAt(1), nearUntil() * ANCHORS.hysteresis) : Math.min(anchorAt(b), farFrom() * ANCHORS.hysteresis));
+/** where band b takes over from the finer band zooming out: the hysteresis below switchIn (MID: nearUntil itself), never below the furthest zoom */
+export const switchOut = (b: number): number => (b <= 0 ? Infinity : Math.max(switchIn(b) / ANCHORS.hysteresis, ZOOM_MIN));
+/** the band a CSS zoom lays with no history (a fresh start): the coarsest set whose switchIn is at or above z (so never magnified) */
 export function bandAt(z: number): number {
   let b = 0;
-  for (let i = 0; i < N_BANDS; i++) if (z > 0 && atOrBelow(z, anchorAt(i))) b = i;
+  for (let i = 1; i < N_BANDS; i++) if (z > 0 && atOrBelow(z, switchIn(i))) b = i;
   return b;
 }
-/** the band at zoom z after band prev (the hysteresis, never magnified): zooming in past prev's anchor switches to the finer set at once (prev
- *  would be magnified); zooming out, a coarser set takes over only once z is the manifest's hysteresis past its anchor (the finer set shrinks a
- *  little further meanwhile), or at the furthest zoom, so a camera resting at an anchor never flips between two sets */
+/** the band at zoom z after band prev (the hysteresis, never magnified): zooming in past prev's switchIn switches to the finer set at once;
+ *  zooming out, a coarser set takes over only at its switchOut, the manifest's hysteresis below (the finer set shrinks a little further
+ *  meanwhile), or at the furthest zoom, so a camera resting at a switch never flips between two sets */
 export function nextBand(z: number, prev: number | null | undefined): number {
   const canon = bandAt(z);
   if (prev == null || !Number.isInteger(prev) || prev < 0 || prev >= N_BANDS || canon <= prev) return canon;
   let b = prev;
-  for (let c = prev + 1; c <= canon; c++) if (atOrBelow(z, Math.max(anchorAt(c) / ANCHORS.hysteresis, ZOOM_MIN))) b = c;
+  for (let c = prev + 1; c <= canon; c++) if (atOrBelow(z, switchOut(c))) b = c;
   return b;
 }
-/** the other bands whose tiles to decode ahead at zoom z in band b: the coarser set once z is within the preload factor of its anchor, the
- *  finer one once z is within it of b's own anchor (where zooming in switches) */
+/** the other bands whose tiles to decode ahead at zoom z in band b: the coarser set once z is within the preload factor of its switchOut, the
+ *  finer one once z is within it of b's own switchIn (where zooming in switches) */
 export function bandsAhead(z: number, b: number): number[] {
   const out: number[] = [];
-  if (b > 0 && z * ANCHORS.preload >= anchorAt(b)) out.push(b - 1);
-  if (b < N_BANDS - 1 && z <= anchorAt(b + 1) * ANCHORS.preload) out.push(b + 1);
+  if (b > 0 && z * ANCHORS.preload >= switchIn(b)) out.push(b - 1);
+  if (b < N_BANDS - 1 && z <= switchOut(b + 1) * ANCHORS.preload) out.push(b + 1);
   return out;
 }
+/** the zooms band b shows over, zooming out: from its switchIn (NEAR: the closest zoom) down to the coarser set's switchOut (FAR: the furthest zoom) */
+export const bandRange = (b: number): [number, number] => [b < N_BANDS - 1 ? switchOut(b + 1) : ANCHORS.zoom[0], b > 0 ? switchIn(b) : ANCHORS.zoom[1]];
 
 /* ---- the tile spec: the band and the display density a bake lays the tile sets at, as one number ---- */
 /** a device pixel ratio as the tile spec keeps it (hundredths, 0.5 to 4) */

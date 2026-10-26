@@ -36,7 +36,7 @@ import { toFrame, toWorld, type PresetFrame } from '../lots/preset-frame';
 import { footprintOf, ownerScaleOf, sizeKey, sizeViews, turned } from '../lots/preset-art';
 import { applyEdit, clampToLot, fit1, growWithin, placeInPreset, presetToWorld, removeSprite, replacePreset, scaleOverride, snap, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
 import { copySel, count, deleteSel, has, inBox, mainBuilding, moveSel, NONE, pasteClip, scaleSel, selOf, swapHouse, toggle as toggleSel, turnSel, union, within, type Clip, type Kind, type ScreenPt, type Selection } from './lot-select';
-import { artLimit, classWords, frameHalf, isHouseLike, nextHouse } from './lot-houses';
+import { artLimit, classWords, frameHalf, isHouseLike, nextHouse, type HouseOk } from './lot-houses';
 
 /** an edit's kind, as the keys name it */
 type Act = 'bigger' | 'smaller' | 'move' | 'turn' | 'delete' | 'duplicate';
@@ -81,11 +81,14 @@ function paint(el: HTMLElement, it: LibItem, w: number, h: number) {
   const [page, u0, v0, u1, v1] = it.tex, P = ATLAS_SIZE / 2, kx = w / Math.max(1e-6, (u1 - u0) * P), ky = h / Math.max(1e-6, (v1 - v0) * P);
   Object.assign(el.style, { backgroundImage: `url(${ATLAS_PAGES[page]![1]})`, backgroundSize: `${P * kx}px ${P * ky}px`, backgroundPosition: `${-u0 * P * kx}px ${-v0 * P * ky}px`, backgroundRepeat: 'no-repeat' });
 }
-/** draws a library sprite's look (the picture the lots draw, lookOf) fitted into size x size css px on el's background; clears it for an unknown id */
-export function thumb(el: HTMLElement, id: string, size: number): void {
-  const item = INDEX.get(id); if (item === undefined) { el.style.backgroundImage = ''; return; }
+/** draws a library sprite's look (the picture the lots draw, lookOf) fitted into size x size css px on el's background (from its top left); clears it
+ *  for an unknown id. Returns the picture's size there (css px) */
+export function thumb(el: HTMLElement, id: string, size: number): { w: number; h: number } {
+  const item = INDEX.get(id); if (item === undefined) { el.style.backgroundImage = ''; return { w: 0, h: 0 }; }
   const look = LIBRARY[lookOf({ item, flip: false, scale: 1, x: 0, y: 0 }).item] ?? LIBRARY[item]!, [, u0, v0, u1, v1] = look.tex, a = (u1 - u0) / Math.max(1e-6, v1 - v0);
-  paint(el, look, a >= 1 ? size : size * a, a >= 1 ? size / a : size);
+  const w = a >= 1 ? size : size * a, h = a >= 1 ? size / a : size;
+  paint(el, look, w, h);
+  return { w, h };
 }
 
 /** a whitelisted file's text: the newest the editor is about to write (behind the write in flight), else the dev server's copy, read once
@@ -128,8 +131,24 @@ async function savePresets(ids: string[], removed: string[] = []): Promise<void>
 }
 /** saves the lot presets with these ids (the lot lab's Save, Approve and edits: [id]) and drops the removed ids (a removal: [], [id]) in lot-presets.json */
 export function saveLotPresets(ids: string[], removed: string[] = []): Promise<void> { return savePresets(ids, removed); }
-/** the open editor's entries for the lot lab (set by installLotEditor, null while no editor is installed): arm a library id, run an action, let go of the selection */
-let lab: { place: (id: string) => void; edit: (a: LabAct) => void; deselect: () => void } | null = null;
+/** the selection as the lot lab shows it (T155: the floating selection bar and the inspector): a key that changes whenever the selection or its
+ *  items change; the count of sprites and decals; the items (a preset's: its prop or decal index, library or decal id, scale, view; a sprite of no
+ *  preset: index -1); the lot and preset they belong to; and the box round them on screen (client px; null when none is drawn) */
+export interface EditorSel {
+  key: string; props: number; decals: number; lot: string | null; preset: string | null;
+  items: { kind: 'prop' | 'decal'; index: number; id: string; scale: number; view: number }[];
+  box: { x0: number; y0: number; x1: number; y1: number } | null;
+}
+const NO_SEL: EditorSel = { key: '', props: 0, decals: 0, lot: null, preset: null, items: [], box: null };
+/** the open editor's entries for the lot lab (set by installLotEditor, null while no editor is installed): arm a library id, run an action, let go of the selection, the selection now */
+let lab: { place: (id: string) => void; edit: (a: LabAct) => void; deselect: () => void; sel: () => EditorSel } | null = null;
+/** the selection as the lot lab shows it (EditorSel); nothing while no editor is installed */
+export function editorSel(): EditorSel { return lab ? lab.sel() : NO_SEL; }
+/** the houses Change house may deal (T155: the lot lab's allocations for its road and state) and their words for the messages ('road 3, built');
+ *  null: every one (the in-game editor) */
+let houseOk: { ok: HouseOk; words: string } | null = null;
+/** sets the houses Change house may deal (the lot lab, after its road or state changed), or null for every one */
+export function setHouseFilter(ok: HouseOk | null, words = ''): void { houseOk = ok ? { ok, words } : null; }
 /** the lot the editor may select and edit on (the lot lab: 'lab', so the neighbours shown round it are never edited, and a plain drag on empty
  *  ground draws the selection box); null: any lot */
 let only: string | null = null;
@@ -426,8 +445,8 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       lot = only; p = lp.preset; f = lp.frame; i = mainBuilding(p, q => isHouseLike(q.id), frameHalf(f)); keep = i >= 0 ? selOf([i]) : NONE;
       if (i < 0) { say('Change house: this lot has no house or building'); return true; }
     } else { if (sel || ghost) say('Change house: select a house or a building of a lot preset'); return !!(sel || ghost); }
-    const q = p.props[i]!, next = nextHouse(q.id, dir);
-    if (!next) { say(`${q.id}: no other ${classWords(q.id)} to change to`); return true; }
+    const q = p.props[i]!, next = nextHouse(q.id, dir, houseOk?.ok);
+    if (!next) { say(`${q.id}: no other ${classWords(q.id)} to change to${houseOk ? ` that suits ${houseOk.words} (the house allocations)` : ''}`); return true; }
     const half = frameHalf(f), maxS = scaleLimit({ ...q, id: next }), after = half({ ...q, id: next, scale: Math.min(q.scale, maxS) });
     const np = swapHouse(p, i, next, half(q), after, maxS);
     if (np) await commitGroup(lot, p, np, keep, `${dir > 0 ? 'changed' : 'changed back'} ${q.id} to ${next} (${classWords(next)})`);
@@ -757,6 +776,29 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   raf = requestAnimationFrame(frame);
   if (new URLSearchParams(location.search).has('dev')) toggle(true);
 
+  /** the selection for the lot lab (EditorSel): a multi-selection's items (its preset's props and decals) or the one sprite alone, and their box on
+   *  screen: the selected sprites' pictures and a ring's reach round each decal */
+  function selInfo(): EditorSel {
+    if (!on) return NO_SEL;
+    const b = canvas.getBoundingClientRect(), z = game.cam.z, sx = (X: number) => b.left + (X - game.cam.X) * z + game.cssW / 2, sy = (Y: number) => b.top + (Y - game.cam.Y) * z + game.cssH / 2;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const grow = (d: Drawable) => { spriteRect(d, r4); x0 = Math.min(x0, sx(r4[0])); y0 = Math.min(y0, sy(r4[1])); x1 = Math.max(x1, sx(r4[2])); y1 = Math.max(y1, sy(r4[3])); };
+    const g = groupSrc(), items: EditorSel['items'] = [];
+    if (g && count(g.sel)) {
+      for (const i of g.sel.props) { const q = g.preset.props[i]; if (q) items.push({ kind: 'prop', index: i, id: q.id, scale: q.scale, view: q.view }); }
+      for (const i of g.sel.decals) { const c = g.preset.decals?.[i]; if (c) items.push({ kind: 'decal', index: i, id: c.id, scale: c.scale, view: 0 }); }
+      for (const p of game.propsOfLot(g.lot)) { const f = game.lotFrom.get(p); if (f && f.preset === g.preset.id && has(g.sel, 'props', f.prop)) grow(p); }
+      for (const i of g.sel.decals) {
+        const c = g.preset.decals![i]!, w = toWorld(g.frame, fit1(c.x, g.preset.w, g.frame.w), fit1(c.y, g.preset.d, g.frame.d)), X = sx(worldX(w.x, w.y)), Y = sy(worldY(w.x, w.y));
+        x0 = Math.min(x0, X - 12); y0 = Math.min(y0, Y - 12); x1 = Math.max(x1, X + 12); y1 = Math.max(y1, Y + 12);
+      }
+      const d = ghost ? ghostDrawable() : null; if (d) grow(d);
+    } else if (sel && game.props.has(sel)) { items.push({ kind: 'prop', index: -1, id: LIBRARY[sel.item]!.id, scale: sel.scale, view: 0 }); grow(sel); }
+    else return NO_SEL;
+    const props = items.filter(t => t.kind === 'prop').length;
+    return { key: `${g?.lot ?? ''}|${g?.preset.id ?? ''}|${items.map(t => `${t.kind[0]}${t.index}:${t.id}@${t.scale}/${t.view}`).join(',')}`, props, decals: items.length - props, lot: g?.lot ?? null, preset: g?.preset.id ?? null, items, box: x0 < x1 ? { x0, y0, x1, y1 } : null };
+  }
+
   lab = {
     place: id => { if (!on) toggle(true); pick.value = id; showThumb(); arm(); },
     edit: a => {
@@ -767,6 +809,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
       else void act(a);
     },
     deselect: () => { drag = null; box = null; if (sel || ghost || group) select(null); },
+    sel: selInfo,
   };
   return () => {
     cancelAnimationFrame(raf); unReload(); lab = null;

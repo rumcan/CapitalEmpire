@@ -13,6 +13,7 @@ import { drawnAsStandIn, lookOf, standInLabel } from '../src/game/newart';
 import { carModel } from '../src/game/ext/car-art';
 import { DECOR } from '../src/game/golf/decor';
 import { OWNER_SCALE } from '../src/game/lots/scales';
+import { placeable, spriteGroup } from '../src/game/dev/lot-lab-palette';
 
 const BY = new Map(LIBRARY.map((it, i) => [it.id, i] as const));
 
@@ -65,6 +66,14 @@ test('the new subjects: the car parks, the shrubs and the beds, in their categor
   }
   // the eight-way cars take their cardinal headings in prep-cars.mjs: no set of their own here
   assert.ok(!AXIS_SETS['cars:burgundy-wagon'] && !AXIS_SETS['cars:navy-wood-panel-wagon']);
+});
+
+test('the lot lab\x27s palette offers each set once, by its N view, in its group', () => {
+  const ok = (id: string) => placeable(LIBRARY[BY.get(id)!]!, BY.get(id)!);
+  for (const id of ['ce:parking-garage-6storey', 'landscape:flowerbed-daisies', 'view:town:bakery:n', 'view:world:bench:n', 'view:static:pickup_n:n']) assert.ok(ok(id), `${id} is offered`);
+  for (const id of ['view:ce:parking-garage-6storey:e', 'view:town:bakery:s', 'view:world:bench:w']) assert.ok(!ok(id), `${id} is a turn of its set, not offered`);
+  assert.equal(spriteGroup(LIBRARY[BY.get('landscape:bush-sage-round')!]!), 'plants');
+  assert.equal(spriteGroup(LIBRARY[BY.get('ce:parking-garage-2storey')!]!), 'buildings');
 });
 
 test('sizes: a set is sized with its subject (one studio size, its card), a car with its model', () => {

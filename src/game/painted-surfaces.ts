@@ -1,4 +1,5 @@
 import { clampLook, DEFAULT_LOOK, familyById, type PaintedKind, type PaintedLook } from './painted-families';
+import type { PresetState } from './lots/presets';
 
 /** Which hand-painted family each surface of the game wears (#147, T128): the golf surfaces, the town's lawns (several looks, one picked per lot
  *  and per road block so streets are not uniform), the map's ground, the living ground's lush and patchy grass, the course walls' cut faces,
@@ -37,6 +38,9 @@ export const SURFACES: readonly SurfaceDef[] = [
   { key: 'woodland', name: 'Woodland floor (under the trees; the forests on the planner map)', group: 'Map', tex: [WOODLAND], kinds: ['grass', 'cut'] },
   { key: 'outside', name: 'Outside the map', group: 'Map', tex: ['outside'], kinds: ['grass'] },
   { key: 'lawn', name: 'Lawn (the Paint tool\'s lawn textures)', group: 'Town', tex: ['lawnLush', 'lawnClover'], kinds: ['grass'] },
+  { key: 'lawnBuilt', name: 'Lot lawn: built lots (T155: the fairway)', group: 'Town', tex: ['lawnBuilt'], kinds: ['grass'] },
+  { key: 'lawnUpgraded', name: 'Lot lawn: upgraded lots (T155: the putting green)', group: 'Town', tex: ['lawnUpgraded'], kinds: ['grass'] },
+  { key: 'lawnDeclined', name: 'Lot lawn: decrepit (declined) lots (T155: the rough)', group: 'Town', tex: ['lawnDeclined'], kinds: ['grass'] },
   { key: 'lush', name: 'Lush grass (along fences, walls and water)', group: 'Living ground', tex: ['grass-lush'], kinds: ['grass'] },
   { key: 'patchy', name: 'Patchy grass (under trees, at doors)', group: 'Living ground', tex: ['grass-patchy'], kinds: ['grass'] },
   { key: 'wallTurf', name: 'Turf wall (raised greens and tees)', group: 'Course walls', tex: ['wallTurf'], kinds: ['cut'] },
@@ -54,6 +58,9 @@ export interface SurfacesFile { v: 1; surfaces: Record<string, PaintedLook>; law
 export const LAWN_SLOTS = 8;
 /** a lawn's texture id (the town's lawns, when the painted art is on: one per lot and per road block, picked by lawnSlot) */
 export const lawnTex = (i: number) => `lawn:${i}`;
+/** each look state's lot lawn (T155, the owner: "green grass for upgraded house lawns, fairway for the built ones and rough for the decrepit ones"):
+ *  the surface key, which is also its texture id */
+export const STATE_LAWN: Readonly<Record<PresetState, string>> = { built: 'lawnBuilt', upgraded: 'lawnUpgraded', declined: 'lawnDeclined' };
 
 /** the file with every look checked: a look naming no family is dropped (that surface keeps its photo), at most LAWN_SLOTS lawns */
 export function clampSurfaces(f: unknown): SurfacesFile {
@@ -95,6 +102,14 @@ export function lawnSlot(pts: ArrayLike<number>, lawns: readonly Pick<LawnLook, 
   let r = (fnvNums(pts) / 4294967296) * total;
   for (let i = 0; i < lawns.length; i++) { r -= Math.max(0, lawns[i]!.weight); if (r < 0) return i; }
   return lawns.length - 1;
+}
+/** the painted texture a lawn patch wears (the painted art on): a lot's look state's lawn (STATE_LAWN) when the file gives that surface a look,
+ *  else one of the town lawns by where it lies (lawnSlot); '' when there is neither */
+export function lawnTexFor(lawn: { st?: PresetState } | undefined, pts: ArrayLike<number>, file: Pick<SurfacesFile, 'surfaces' | 'lawns'>): string {
+  const k = lawn?.st ? STATE_LAWN[lawn.st] : undefined;
+  if (k && file.surfaces[k]) return k;
+  const slot = lawnSlot(pts, file.lawns);
+  return slot >= 0 ? lawnTex(slot) : '';
 }
 /** the kinds of family a surface key fits (the studio's picker), grass for a preset or a lawn */
 export const surfaceKinds = (key: string): readonly PaintedKind[] => SURFACES.find(s => s.key === key)?.kinds ?? ['grass'];
