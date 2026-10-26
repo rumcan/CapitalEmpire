@@ -66,8 +66,9 @@ const handle = async (m: ToWorker) => {
         const t0 = performance.now();
         if (!m.build) { ready = new Promise<void>(res => { gotTextures = res; }); await ready; post({ t: 'ready', ms: performance.now() - t0 }); break; }
         // the builder: textures from the cache if this browser has them, else built (and cached for next time)
-        const key = cacheKey(m.art), cached = await loadCached(key, lim ? lightPack(EAGER_PHOTO, eager, lim.lazy ? new Set([...PAINTED_NAMES, ...GRASS_TINTS.map(t => t[0])]) : undefined, lim.lazy) : undefined);
-        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art, undefined, eager, !!lim?.lazy);
+        const lazyTints = !!lim?.lazy && lim.tints !== false;
+        const key = cacheKey(m.art), cached = await loadCached(key, lim ? lightPack(EAGER_PHOTO, eager, lim.lazy ? new Set([...PAINTED_NAMES, ...(lazyTints ? GRASS_TINTS.map(t => t[0]) : [])]) : undefined, lim.lazy) : undefined);
+        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art, undefined, eager, !!lim?.lazy, lazyTints);
         if (cached && lazyTex) tex.lazyMissing();
         await ready; texReady();
         post({ t: 'log', message: `textures ${cached ? 'from cache' : 'built'} in ${(performance.now() - t0).toFixed(0)} ms` });
