@@ -1,6 +1,6 @@
 import REGISTRY from './painted-families.json';
 import { grassDetailWeights, type GrassDetail, type GrassDetailWeight } from './painted-grass-lod';
-import { STEPS, TILED_FAMILIES, type TiledFamily } from './painted-tiles';
+import { TILED_FAMILIES, TILE_BANDS, tileMetres, type TiledFamily } from './painted-tiles';
 
 /** The hand-painted ground families (#147, the art model's new-painted-spatial-scales-20261025.json): each a palette and length of grass, a
  *  sand, the pond water or a wall's cut face, with three paintings of real spatial coverage (near 40 m: half a town block; mid 320 m: half a
@@ -29,14 +29,13 @@ export interface PaintedFamilyDef {
 }
 /** a tile set family as the families list shows it: each level's set, its first tile under the set's revision (e.g. near-v3, the pick: the
  *  swatches, the cards) and the other three as `<revision>/<tile id>` (so the studio can show the whole set; a tile set has no version to
- *  choose: clampLook drops it), and as coverage the metres one tile covers at the first step of its band (painted-tiles.ts: the camera picks
- *  the step) */
+ *  choose: clampLook drops it), and as coverage the metres one tile covers (painted-tiles.ts tileMetres: its one world size, at DPR 1) */
 function fromTiles(t: TiledFamily): PaintedFamilyDef {
   const levels = {} as Record<GrassDetail, Record<string, FamilyPicture>>, coverage = {} as Record<GrassDetail, number>, pick: Partial<Record<GrassDetail, string>> = {};
   for (const l of ['near', 'mid', 'far'] as const) {
     const lv = t.levels[l];
     levels[l] = Object.fromEntries(lv.tiles.map((x, i) => [i ? `${lv.revision}/${x.id}` : lv.revision, { file: x.file, mean: x.mean, px: lv.native[0], sha256: x.sha256 }])); pick[l] = lv.revision;
-    coverage[l] = STEPS.find(s => s.band === l)?.metres ?? 0;
+    coverage[l] = Math.round(tileMetres(lv, TILE_BANDS.indexOf(l)));
   }
   return { id: t.id, name: t.name, kind: t.kind, coverage, levels, pick, tiled: true };
 }

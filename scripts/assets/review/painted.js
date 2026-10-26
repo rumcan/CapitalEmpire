@@ -4,7 +4,7 @@
 // picked surface's look: a family (each card shows its three zoom levels: near 40 m, mid 320 m, far 4096 m a tile), the version, the scale,
 // the tint and the tone, previewed as the game lays it. Save writes the file; a game on a vite dev server from this checkout takes it at once
 // (no rebuild, no reload). Served by server.mjs.
-import { FAMILIES, LEVEL_NAMES, familyVersions, lookColour, resolveFamily, newLook, surfaceKinds, TILED_FAMILIES, STEPS, TILES, tilePermutation, tileIndex } from '/painted-lib.js';
+import { FAMILIES, LEVEL_NAMES, familyVersions, lookColour, resolveFamily, newLook, surfaceKinds, TILED_FAMILIES, TILE_BANDS, ANCHORS, TILES, tilePermutation, tileIndex, tileMetres } from '/painted-lib.js';
 
 const el = (t, a = {}, ...k) => { const e = document.createElement(t); Object.assign(e, a); for (const c of k) if (c != null) e.append(c); return e; };
 const btn = (t, fn, c = '') => el('button', { className: 'btn ' + c, textContent: t, onclick: fn });
@@ -131,16 +131,15 @@ function editor() {
 
 /** a tile set family (T145, src/game/painted-tiles.ts): each band's set of four whole tiles, two by two as the game's placement butts them
  *  (its seeded permutation, cells 0..1), at their native aspect and light, never squashed, turned, mirrored, tinted or blended; and the world
- *  size one tile takes at each coverage step of the band (the camera picks the step: 2 to 4 whole tiles in view) */
+ *  one world size a tile takes (T150: its native pixels at the band's anchor zoom, on a DPR 1 screen) */
 async function tiledPreview(f) {
   const t = TILED_FAMILIES.find(x => x.id === f.id); if (!t) return;
-  side.append(hint(`A hand-painted tile set (${t.materialId}, selection ${t.revision}): three independently authored sets, four whole tiles each, laid exactly as authored. No version, scale, tint or tone: the camera picks the set and the tile size (${TILES.coverage.areas.join(' to ')} whole tiles on a ${TILES.coverage.refViewport.join(' x ')} view).`));
+  side.append(hint(`A hand-painted tile set (${t.materialId}, selection ${t.revision}): three independently authored sets, four whole tiles each, laid exactly as authored. No version, scale, tint or tone: the camera picks the set; each set has one world size, drawn at its native pixels at its anchor zoom and smaller as the camera zooms out, never larger.`));
   const box = el('div', { style: 'display:flex;flex-direction:column;gap:12px;margin-top:10px' }); side.append(box);
   for (const band of LEVEL_NAMES) {
     const lv = t.levels[band], perm = tilePermutation(t.id, band), k = 0.2, w = Math.round(lv.native[0] * k), h = Math.round(lv.native[1] * k);
-    const steps = STEPS.map((s, i) => ({ ...s, i })).filter(s => s.band === band);
     const c = el('canvas', { width: 2 * w, height: 2 * h, style: 'display:block;max-width:100%' }), g = c.getContext('2d');
-    box.append(el('div', {}, el('div', { className: 'hint', textContent: `${band}: ${lv.revision} · ${lv.native.join(' x ')} px · tiles ${lv.tiles.map(x => x.id).join(', ')} · one tile ${steps.map(s => s.metres).join(', ')} m wide (steps ${steps[0].i + 1}-${steps[steps.length - 1].i + 1}, zoom ${(steps[steps.length - 1].zLo * 100).toFixed(1)}-${(steps[0].zHi * 100).toFixed(1)}%)` }), c));
+    box.append(el('div', {}, el('div', { className: 'hint', textContent: `${band}: ${lv.revision} · ${lv.native.join(' x ')} px · tiles ${lv.tiles.map(x => x.id).join(', ')} · one tile ${Math.round(tileMetres(lv, TILE_BANDS.indexOf(band)))} m wide (native at zoom ${(ANCHORS[band] * 100).toFixed(1)}% on a DPR 1 screen)` }), c));
     for (let iy = 0; iy < 2; iy++) for (let ix = 0; ix < 2; ix++) {
       const img = await pic(lv.tiles[tileIndex(perm, ix, iy)].file); if (img) g.drawImage(img, ix * w, iy * h, w, h);
     }

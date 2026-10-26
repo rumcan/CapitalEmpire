@@ -24,8 +24,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| **T150 (top priority)** | #315 | `arena/T150-tile-scale` | `.claude/worktrees/t150` | 5186 | The owner: the painted tiles are "too big", zooming out "they zoom in", at the furthest zoom "a zoomed in version of 1 of the texture images instead of 4 tiles at their max native size". New rule in the issue: one fixed world size per set, native at its anchor zoom (FAR at the furthest zoom, NEAR from the near-shop reference), never magnified, real zoom, switch at anchors. |
-| T147 | #306 | `arena/T147-money-floats` | `.claude/worktrees/t147` (made by hand: the agent worktree failed for memory) | 5187 | Green +$X / red -$X floating up where money moves; the range first via T146's `RangeSim.onMoney`. Yields heavy steps to T145. |
+| T148 | #309 | `arena/T148-lot-lab` | `.claude/worktrees/t148` | 5187 | The lot lab: multi-select with move/delete, Ctrl+C/V, Change house (H), Lot grid (L), Generate in place + "New lot ▶", Neighbours (N). Yields heavy steps to T150. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -52,9 +51,6 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
   READY-MATERIALS → `node scripts/assets/prep-painted-tiles.mjs` → a surface in Studio › Painted.
-0. **T148 #309 the lot lab** (the owner, 2026-10-26, "after the new textures"): multi-select with move/delete, Ctrl+C/V, a Change house
-   button, a lot-boundary grid, Generate staying on the current lot (type, size, angle) and re-rolling its layout and building, and a
-   Neighbours on/off toggle. T145 has landed: start it when memory allows (the PC was at 1.3 GB free at 15:07 with Codex making a worktree). Decisions in the issue.
 0b. **T149 #312 painted terrain follow-ups**: real game-vs-proof comparisons (T145's side-by-sides were invalid), the in-band zoom steps
    (the owner's call), seams, DPR 2 softness, rivers.
 1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
@@ -71,6 +67,15 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T150 #319 painted tiles at their true size**: one fixed world size per set, native at its anchor (NEAR 30% from the
+  near-shop reference, MID 10%, FAR at the furthest zoom 0.6%), never magnified, real zoom, switches only at anchors (4% hysteresis).
+  **Open, the owner's call:** at DPR 1 a FAR tile at native is wider than the map at the furthest zoom (2x2 tiles at DPR 2); MID shrinks
+  to tiny repeats just before FAR pops in 16x larger at the last zoom step; the alternative is FAR at its own reference scale (~5.5%).
+- 2026-10-26: **T147 #317 money floats**: green +$X where money comes in, red -$X where it goes out, red with a reason for lost sales
+  (the treasury untouched); one per sale from zoom 0.2, merged per place 0.12-0.2, none further out; gear-menu "Money floats"
+  (`src/game/moneyfloats.ts`; the range via `RangeSim.onMoney`, the worker's money buffer, purchases at the click point).
+- 2026-10-26: **#314 the map's open grass draws golden fescue and rivers draw lake** (course turf and town lawns stay green until their
+  families exist).
 - 2026-10-26: **T145 #311 the hand-painted terrain tiles**: golden fescue (surface `fescue`) and lake (surface `water`), three authored
   sets NEAR/MID/FAR of four 1742x902 tiles each, hash-verified by `scripts/assets/prep-painted-tiles.mjs` from
   `eight-tiles/READY-MATERIALS.json` into `src/assets/ground/painted/tiles/` and `src/game/painted-tiles.json`; world-anchored seeded

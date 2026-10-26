@@ -15,7 +15,7 @@ import { MIN_SEP, checkLegs, replaceCuts, ringStubs, segDist as segSeg, snapPoin
 import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitByTerrain, structureLengths } from './structures';
 import { GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
-import { STEPS, TILES_REVISION, bandOf, cellOf, cellsIn, coverageOf, nextStep, stepAt, tiledFamily, tileIndex, tilePermutation, tileSize } from './painted-tiles';
+import { ANCHORS, TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { paintedSurfaces } from './painted-surfaces-live';
 import { chunkLayers, pictureCurrent } from './ground-layers';
 import { clampGrassArt, grassZoomLevels, type GrassArt } from './painted-grass-lod';
@@ -4152,7 +4152,7 @@ export class Game {
       segs: [...this.net.segs].map(segRec),
       nodes: [...this.net.nodes.values()].filter(n => n.type !== 'plain' || n.wide || n.tl).map(nodeEntry),
       props: [...this.props].filter(p => !p.auto).map(p => propTuple(LIBRARY[p.item].id, p)),
-      money: this.traffic.budget.money, day: this.day, cam: { ...this.cam, ...(this.tileStep !== null ? { ts: this.tileStep } : {}) },
+      money: this.traffic.budget.money, day: this.day, cam: { ...this.cam, ...(this.tileBand !== null ? { tb: this.tileBand } : {}) },
       lots: [...this.traffic.lots.values()].filter(l => l.level !== LV.EMPTY).map((l): LotTuple => [l.key, l.use, l.level, l.decline, l.seed, l.since]),
       simT: this.traffic.simTime(performance.now()), shift: this.traffic.stats.clock - this.traffic.stats.simT, townClock: this.traffic.town, budget: this.traffic.budget, career: this.traffic.career, round: this.traffic.round,
       parks: this.parkDefs.map((d): [number, number, number, number] => [d.x, d.y, d.w, d.h]),
@@ -4212,7 +4212,7 @@ export class Game {
       // the cards the save had applied are in its tolls and routes already: only the fields new gates and routes take are set from them
       const cards = d.round?.cards ?? [], n = Math.min(cards.length, d.cardsApplied ?? cards.length);
       this.cardsApplied = n; this.setCardFields(cards.slice(0, n));
-      if (d.cam) { this.cam = { X: d.cam.X, Y: d.cam.Y, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) }; this.tileStep = nextStep(this.cam.z, d.cam.ts); }
+      if (d.cam) { this.cam = { X: d.cam.X, Y: d.cam.Y, z: clamp(d.cam.z, ZOOM_MIN, ZOOM_MAX) }; this.tileBand = nextBand(this.cam.z, d.cam.tb); }
       return true;
     } catch (e) { console.error('load failed', e); return false; }
   }
@@ -4895,22 +4895,23 @@ export class Game {
   private groundTarget = '';
   private groundBlendAt = Infinity;
   private groundBlendOtherTier = false;
-  /** the last target's coverage step, and whether the zoom transition in progress is a step switch (cut once the whole view has it) */
+  /** the last target's tile spec, and whether the zoom transition in progress is a band (or DPR) switch (cut once the whole view has it) */
   private groundTs = -1; private groundCut = false;
-  /** the tile set families' coverage step (T145, painted-tiles.ts nextStep: from the CSS zoom with hysteresis; saved with the camera) */
-  tileStep: number | null = null;
-  /** the dev readout of the tile set families (T145; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's step and band, and for each tile set family a surface
-   *  wears, its set, the tiles in view and how many whole tiles the view shows; under the pointer, the course surface there and, when it wears
-   *  a tile set, the tile and its grid cell */
+  /** the tile set families' band (T150, painted-tiles.ts nextBand: from the CSS zoom with hysteresis, never magnified; saved with the camera) */
+  tileBand: number | null = null;
+  /** the dev readout of the tile set families (T145, T150; App.tsx TilesPanel, shown with the Developer panel: ?debug, F3 or the gear menu): the camera's
+   *  band, its anchor zoom (where it draws at its native pixels), how big it is drawn against native, and the zooms the band shows over; for each
+   *  tile set family a surface wears, its set, the tiles in view, a tile's width on screen in device px and how many whole tiles the view shows;
+   *  under the pointer, the course surface there and, when it wears a tile set, the tile and its grid cell */
   tilesReadout() {
-    const z = this.cam.z, k = this.tileStep ?? stepAt(z), band = bandOf(k), file = paintedSurfaces();
+    const z = this.cam.z, b = this.tileBand ?? bandAt(z), band = TILE_BANDS[b]!, k = tileSpec(b, this.dpr), file = paintedSurfaces();
     const X0 = this.cam.X - this.cssW / 2 / z, Y0 = this.cam.Y - this.cssH / 2 / z, X1 = this.cam.X + this.cssW / 2 / z, Y1 = this.cam.Y + this.cssH / 2 / z;
     const used = new Map<string, string[]>();
     for (const [key, look] of Object.entries(file.surfaces)) if (tiledFamily(look.family)) used.set(look.family, [...(used.get(look.family) ?? []), key]);
     const fams = [...used].map(([id, surfaces]) => {
       const f = tiledFamily(id)!, lv = f.levels[band], size = tileSize(lv, k), perm = tilePermutation(f.id, band), cells = cellsIn(X0, Y0, X1, Y1, size[0], size[1]);
       const ids = [...new Set(cells.map(c => lv.tiles[tileIndex(perm, c.ix, c.iy)]!.id))].sort(), cov = coverageOf(this.cssW, this.cssH, z, size);
-      return { id: f.id, materialId: f.materialId, name: f.name, surfaces, set: lv.revision, native: lv.native, ids, cells: cells.length, areas: cov.areas, across: cov.across, down: cov.down, tileW: size[0], tileH: size[1] };
+      return { id: f.id, materialId: f.materialId, name: f.name, surfaces, set: lv.revision, native: lv.native, ids, cells: cells.length, areas: cov.areas, across: cov.across, down: cov.down, tileW: size[0], tileH: size[1], screenPx: tileScreenPx(lv, z, b) };
     });
     let pointer: { surface: string; family: string | null; tile: string | null; cell: [number, number] | null } | null = null;
     const h = this.hover, g = this.courseGrid;
@@ -4920,11 +4921,16 @@ export class Game {
       if (f) { const lv = f.levels[band], [w, hh] = tileSize(lv, k), c = cellOf(worldX(h.x, h.y), worldY(h.x, h.y), w, hh); pointer = { surface, family: f.materialId, tile: lv.tiles[tileIndex(tilePermutation(f.id, band), c[0], c[1])]!.id, cell: c }; }
       else pointer = { surface, family: look?.family ?? null, tile: null, cell: null };
     }
-    return { step: k, steps: STEPS.length, band, zoom: z, dpr: this.dpr, metres: STEPS[k]!.metres, zRange: [STEPS[k]!.zLo, STEPS[k]!.zHi] as const, revision: TILES_REVISION, fams, pointer };
+    // the zooms this band shows over, zooming out: from its anchor (or the closest zoom) down to the coarser set's switch (or the furthest zoom)
+    const zRange = [b < TILE_BANDS.length - 1 ? Math.max(anchorAt(b + 1) / ANCHORS.hysteresis, ZOOM_MIN) : ZOOM_MIN, b > 0 ? anchorAt(b) : ZOOM_MAX] as const;
+    return { band, bandIndex: b, spec: k, anchor: anchorAt(b), scale: drawnScale(z, b), zoom: z, dpr: this.dpr, zRange, revision: TILES_REVISION, fams, pointer };
   }
   private draw(now: number) {
     const z = this.cam.z, ze = z * this.dpr, gl = this.gl, cam = this.cam;
-    const ts = this.tileStep = nextStep(z, this.tileStep);
+    // the tile set families' band and its spec (the band at this screen's DPR: the one world size its tiles are laid at), and the band the
+    // workers decode ahead once the camera nears its switch (T150, painted-tiles.ts)
+    const tb = this.tileBand = nextBand(z, this.tileBand), ts = tileSpec(tb, this.dpr);
+    this.ground.tilesAhead(bandsAhead(z, tb));
     const tier = z < PLANNER_Z ? 'planner' : z < DISTRICT_Z ? 'district' : 'street'; this.perf.tier = tier;
     // the golf round moves on before the movers (the golfers) and the overlay (the balls) read it
     this.updatePlay(now);
