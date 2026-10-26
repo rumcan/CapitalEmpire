@@ -383,7 +383,7 @@ export class Textures {
   /** builds the texture pack; `eager` the photo textures built now (a light boot's few, T157), the others built by ensure() on first use */
   /** builds the texture pack; `eager` the photo textures built now (a light boot's few, T157), the others built by ensure() on first use; lazy
    *  (a light boot's): the procedural textures (PAINTED) are made on first use too (image), not now */
-  async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void, eager: ReadonlySet<string> = EAGER_PHOTO, lazy = false) {
+  async build(art: GroundArt & { grassMix?: BaseGrassArt; presets?: PhotoTexEntry[] }, progress?: (p: number) => void, eager: ReadonlySet<string> = EAGER_PHOTO, lazy = false, lazyTints = lazy) {
     this.configure(art);
     const yieldNow = () => new Promise(res => setTimeout(res, 0));
     const steps = PAINTED.length + 12 + eager.size; let done = 0; const tick = async () => { progress?.(++done / steps); await yieldNow(); };
@@ -415,7 +415,7 @@ export class Textures {
     this.store('grass', grass);
     // ---- the Paint tool's photo textures that every worker needs (grasses, concrete): built here; the others are built by ensure() on first use
     for (const p of PHOTO_TEX) if (eager.has(p.tex)) { await this.buildPhoto(p, lazy); await tick(); }
-    if (lazy) this.lazyTinted();
+    if (lazyTints) this.lazyTinted();
     else for (const [name, tint] of GRASS_TINTS) { const c = canvas(BASE_W, BASE_H), g = ctx2d(c); g.drawImage(grass, 0, 0); g.globalCompositeOperation = 'multiply'; g.fillStyle = tint; g.fillRect(0, 0, BASE_W, BASE_H); this.store(name, c); }
     await tick();
     // ---- curb colours from the kit's strips (rows: hidden 0.5-4 joint, 4-10.5 top; visible 10-20.5 face, 20.5+ gutter)
@@ -531,6 +531,9 @@ export class Textures {
   /** the screen-space textures not made yet (a light boot's, T157: build's lazy): the procedural ones (PAINTED_NAMES) and the grass's tints
    *  (GRASS_TINTS); each is made, every level, on first use */
   lazy = new Map<TexName, () => void>();
+  /** T166: a lazy texture is made when the planner asks for its colour (the game's: the same colour as ever); a light boot's (T157) shows its
+   *  Paint swatch's instead, never making a texture for a colour */
+  makeForColour = true;
   private make(name: TexName) { const f = this.lazy.get(name); if (f) { this.lazy.delete(name); f(); } }
   /** the grass's tints made on first use from the grass's own levels (a multiply by a flat colour is the same before or after the downscale) */
   private lazyTinted() {

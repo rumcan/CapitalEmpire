@@ -8,7 +8,7 @@ import { GroundPainter } from './renderer';
 import { GRASS_TINTS, PAINTED_NAMES, Textures } from './textures';
 import { EAGER_PHOTO } from './grass-art';
 import { isPaintPhoto } from './paint';
-import { cacheKey, loadCached, restore, saveCached, snapshot } from './texture-share';
+import { cacheKey, dropCache, loadCached, restore, saveCached, snapshot } from './texture-share';
 import { lightPack } from './boot';
 import { WOODLAND_TEX } from './terrain-paint';
 import { VARIANT_IDS } from './living-ground';
@@ -61,13 +61,17 @@ const handle = async (m: ToWorker) => {
         if (lim?.eager) eager = new Set(lim.eager);
         if (lim?.soft) softCanvases(true);
         lazyTex = !!lim?.lazy;
+        tex.makeForColour = !(lim?.lazy && lim.tints !== false); // a light boot's (its tints lazy too) keeps T157's swatch colours
         // every worker (the builder, and the peers that restore its snapshot) takes the presets and the grass's angle and tilt from the art
         tex.configure(m.art);
         const t0 = performance.now();
         if (!m.build) { ready = new Promise<void>(res => { gotTextures = res; }); await ready; post({ t: 'ready', ms: performance.now() - t0 }); break; }
         // the builder: textures from the cache if this browser has them, else built (and cached for next time)
-        const key = cacheKey(m.art), cached = await loadCached(key, lim ? lightPack(EAGER_PHOTO, eager, lim.lazy ? new Set([...PAINTED_NAMES, ...GRASS_TINTS.map(t => t[0])]) : undefined, lim.lazy) : undefined);
-        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art, undefined, eager, !!lim?.lazy);
+        const lazyTints = !!lim?.lazy && lim.tints !== false;
+        // T166: the game neither reads nor writes the browser's cache (ground-protocol.ts WorkerLimits.readCache): the old one is deleted
+        if (lim?.readCache === false && lim.saveCache === false) dropCache();
+        const key = cacheKey(m.art), cached = lim?.readCache === false ? null : await loadCached(key, lim ? lightPack(EAGER_PHOTO, eager, lim.lazy ? new Set([...PAINTED_NAMES, ...(lazyTints ? GRASS_TINTS.map(t => t[0]) : [])]) : undefined, lim.lazy) : undefined);
+        ready = cached ? Promise.resolve(restore(tex, cached)) : tex.build(m.art, undefined, eager, !!lim?.lazy, lazyTints);
         if (cached && lazyTex) tex.lazyMissing();
         await ready; texReady();
         post({ t: 'log', message: `textures ${cached ? 'from cache' : 'built'} in ${(performance.now() - t0).toFixed(0)} ms` });
