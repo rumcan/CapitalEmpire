@@ -1,10 +1,13 @@
 // The range's cars keep their distance (T152, issue #325; the owner's shots of T146 and T147: "the incoming cars stack on top of each other on the
 // range drive and the county road"). A range car keeps a car's length behind the car ahead in its lane (the county road, the drive, the car park),
-// an arrival waits at the road's end for room, and the cars bound for the car park building queue in a line into its ramp. The golfers keep their
-// timetable (golf/rangebiz.ts RangeCar, RangeSim.drive), so the counts and the money are what they were. The checks read the cars as view() draws them.
+// an arrival waits at the road's end for room, and the cars bound for the car park building queue in a line into its ramp. The building takes up
+// to 2 golfers a sim s, more than a lane carries at a car's gap: so a car there brings its golfers (SEATS: 1 to 4, about 2), the drive's cars keep
+// to its two halves, and the building takes its cars in two lanes in and two out across its open face. The golfers keep their timetable
+// (golf/rangebiz.ts RangeCar, RangeSim.drive, drawnRoute, rides), so the counts and the money are what they were. The checks read the cars as
+// view() draws them.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GARAGE_CARS, RangeSim, defaultRangeBiz, garageSlots, rangeScene, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId } from '../src/game/golf/rangebiz';
+import { DRIVE_HALF, GARAGE_CARS, RAMP_SPREAD, RangeSim, SEATS, defaultRangeBiz, garageSlots, rangeScene, seatsOf, withUpgrade, type CarSlot, type RangeBizSave, type RangeUpgradeId } from '../src/game/golf/rangebiz';
 import { bayGrid } from '../src/game/event/carpark';
 import type { Rect } from '../src/game/golf/mode';
 
@@ -22,7 +25,8 @@ const LEN = 2.75;
 
 type Car = { x: number; y: number; ang: number };
 /** the sim's private parts these tests drive and look at */
-type Inside = { rnd: () => number; arrive(slot: number): void; visits: { id: number; stage: number; rc?: { out: boolean } }[] };
+type Inside = { rnd: () => number; arrive(slot: number): void; rides(...a: unknown[]): boolean; slots: CarSlot[]; visits: { id: number; stage: number; slot: number; rc?: { out: boolean; inside: boolean; c: number; x: number; y: number; ang: number } }[] };
+const slotsOf = (sim: RangeSim): CarSlot[] => inside(sim).slots;
 const inside = (sim: RangeSim) => sim as unknown as Inside;
 /** the cars view() draws (the ball picker cart, drawn last, left out) */
 function drawn(sim: RangeSim): Car[] { const v = sim.view(); return v.cars.slice(0, v.nCars - (v.picker ? 1 : 0)).map(c => ({ ...c })); }
@@ -84,7 +88,7 @@ test('a spawn waits for room: the second arrival is not on the road until the fi
   assert.ok(lead >= LEN, `the first was ${lead.toFixed(2)} tiles on when it started`);
 });
 
-test('a queue at the car park building\'s ramp forms a line: four cars in one lane, a car length apart, each driving in in turn', () => {
+test("a queue at the car park building's ramp forms a line: four golfers' cars a car length apart, each driving in in turn", () => {
   const { sc, sim, step } = range(buy([...GROWN, 'parking']), sc => [...lot(sc.garage!.lot), ...garageSlots(sc.garage!, GARAGE_CARS)]);
   const n = lot(sc.garage!.lot).length, ramp = sc.garage!.ramp;
   arrivals(sim, [n, n + 1, n + 2, n + 3]);
@@ -114,4 +118,55 @@ test('a busy day at the grown range: every car leaves the road by morning (the i
   assert.ok(sim.today.golfers > 300, `the day's golfers (${sim.today.golfers})`);
   assert.equal(inside(sim).visits.length, 0, 'no car left on the road');
   assert.equal(drawn(sim).length, 0, 'no car drawn but the picker cart');
+});
+
+/** a busy day at the grown range with the car park building (P24's demand): steps fn(sim) every 0.1 s from 06:00 to closing */
+function busyDay(seed: number, fn: (sim: RangeSim) => void = () => {}, patch: (sim: RangeSim) => void = () => {}) {
+  const s = buy([...GROWN, 'parking']), sc = rangeScene(P, 2, s), sim = new RangeSim(seed, 10), slots = [...lot(sc.garage!.lot), ...garageSlots(sc.garage!, GARAGE_CARS)];
+  sim.setScene(sc, slots, entrance); patch(sim);
+  for (let h = 6; h < 23; h++) for (let t = 0; t < HOUR; t += 0.1) { sim.step(0.1, { hour: h + t / HOUR, day: 1 }, s, grown, DAY); fn(sim); }
+  return { s, sc, sim, slots };
+}
+
+test("a car into the car park building brings its golfers (1 to 4, about 2): its passengers draw no car; the surface lot's cars one golfer each", () => {
+  assert.deepEqual([0, 0.34, 0.35, 0.69, 0.7, 0.89, 0.9, 0.999].map(seatsOf), [1, 1, 2, 2, 3, 3, 4, 4]);
+  const mean = SEATS.reduce((m, c, i) => m + (c - (SEATS[i - 1] ?? 0)) * (i + 1), 0);
+  assert.ok(mean >= 1.5 && mean <= 2.2, `a mean of ${mean.toFixed(2)} golfers a car`);
+  const seen = new Map<number, { inside: boolean; car: boolean }>();
+  const { slots } = busyDay(12, sim => { for (const v of inside(sim).visits) if (v.stage === 0 && !seen.has(v.id)) seen.set(v.id, { inside: !!slotsOf(sim)[v.slot]?.inside, car: !!v.rc }); });
+  const g = [...seen.values()].filter(v => v.inside), l = [...seen.values()].filter(v => !v.inside), share = g.filter(v => v.car).length / g.length;
+  assert.ok(slots.length > 0 && g.length > 300 && l.length > 30, `${g.length} golfers into the building, ${l.length} into the lot`);
+  assert.ok(Math.abs(share - 1 / mean) < 0.08, `${(100 * share).toFixed(0)}% of the building's golfers drive (1 / ${mean.toFixed(2)} expected)`);
+  assert.ok(l.every(v => v.car), 'every golfer into the surface lot drives its own car (drawn parked in its bay)');
+});
+
+test('the golfers, the takings and the car hours are those of one golfer a car (only the cars as drawn change)', () => {
+  const a = busyDay(13), b = busyDay(13, () => {}, sim => { inside(sim).rides = () => false; });
+  assert.equal(a.sim.today.golfers, b.sim.today.golfers);
+  assert.equal(a.s.season.takings, b.s.season.takings);
+  assert.deepEqual(a.sim.carStats, b.sim.carStats);
+  assert.ok(a.sim.today.golfers > 300);
+});
+
+test("the drive's cars keep to its two halves, and the building takes its cars in two lanes in and two out across its face", () => {
+  const at = { inD: new Set<number>(), outD: new Set<number>(), inR: new Set<number>(), outR: new Set<number>() };
+  const { sc } = busyDay(11, sim => {
+    const sc = (sim as unknown as { scene: ReturnType<typeof rangeScene> }).scene, d = sc.roadDir, g = sc.garage!, r = g.ramp;
+    for (const v of inside(sim).visits) {
+      const c = v.rc; if (!c || c.c <= 0) continue;
+      const hx = Math.cos(c.ang), hy = Math.sin(c.ang), dx = c.x - sc.J.x, dy = c.y - sc.J.y, along = dx * sc.rangeSide.x + dy * sc.rangeSide.y;
+      // on the drive (heading along it, between the road and the entrance): its side of the drive's line, along the road's direction
+      if (along > 2 && along < 12 && Math.abs(hx * sc.rangeSide.x + hy * sc.rangeSide.y) > 0.95) (c.out ? at.outD : at.inD).add(Math.round((dx * d.x + dy * d.y) * 100) / 100);
+      // the building's cars at its face (within 2 tiles of the ramp's point along its way in and 4 across it, heading in or out): across its face
+      const ix = -g.into.y, iy = g.into.x, ex = c.x - r.x, ey = c.y - r.y, into = ex * g.into.x + ey * g.into.y, across = ex * ix + ey * iy;
+      if (c.inside && Math.abs(across) < 4 && into > -2 && into < 0.01 && Math.abs(hx * g.into.x + hy * g.into.y) > 0.95) (c.out ? at.outR : at.inR).add(Math.round((ex * ix + ey * iy) * 100) / 100);
+    }
+  });
+  assert.ok(sc.garage);
+  assert.deepEqual([...at.inD], [-DRIVE_HALF], "in: on one half of the drive");
+  assert.deepEqual([...at.outD], [DRIVE_HALF], 'out: on the other half');
+  const ins = [...at.inR].sort((x, y) => x - y), outs = [...at.outR].sort((x, y) => x - y);
+  assert.equal(ins.length, 2, `two lanes in: ${ins}`); assert.equal(outs.length, 2, `two lanes out: ${outs}`);
+  for (const [p, q] of [[ins[0]!, ins[1]!], [outs[0]!, outs[1]!]]) assert.ok(Math.abs(Math.abs(q - p) - RAMP_SPREAD) < 1e-6, `lanes ${RAMP_SPREAD} apart: ${p}, ${q}`);
+  assert.ok(Math.min(...outs.map(o => Math.min(...ins.map(i => Math.abs(o - i))))) >= RAMP_SPREAD - 1e-6, 'the lanes out beside the lanes in');
 });
