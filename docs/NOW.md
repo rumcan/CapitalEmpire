@@ -3,7 +3,7 @@
 Update this file **before** each edit and after each sub-step. The section below is always the current state. Everything under
 "History" is older and kept for reference.
 
-## START HERE (kept current by the lead; last updated 2026-10-26 after the account switch)
+## START HERE (kept current by the lead; last updated 2026-10-26 midday)
 
 **Paste-ready start prompts for every role are in `docs/START-PROMPTS.md`:** the lead, a coding ticket, and the other sessions in this
 repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any moment.
@@ -27,6 +27,15 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 | T142 | #288 | `arena/T142-vector-shadows` | `.claude/worktrees/agent-a687f83d04c54c00a` | 5188 | The owner: "put a smart opus on the shadows to vector draw each shadow individually for all assets". Opus (high effort): a contact and a cast polygon per asset view in a data file, drafted from each picture then corrected by eye; range and golf first. T141's after sheets still show faults (the range bays' detached cast, the leaderboard's footprint). |
 | Gates | #285 | detached bisect | `.claude/worktrees/agent-a7002980f03663418` | — | Bisecting `fix:gate` (a) (green 2026-10-18 at -19.9%, now +23.9%) and `event:gate` (a), (b), (c); report and recommend, no src changes yet. |
 
+**One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
+sprites"; "put the studio on the network for all pcs on network to edit").** The lot lab's branch is on main (#290): the only studio is
+port 5191 from `worktrees/theme-consistency`, the checkout of the owner's 5174 game, both on the LAN (http://192.168.0.2:5191 and
+http://192.168.0.2:5174; launch configs `studio` with `STUDIO_HOST=0.0.0.0`, `lead-game` with `--host 0.0.0.0`). Never start a second
+studio for the owner; an agent's check studio (5193) is stopped before it reports. The old lot lab servers (5241, 5242) and its
+worktree `.claude/worktrees/lot-presets` are dead: the owner closes the servers, then the worktree goes. Open from #290: the owner's call on
+`variation:gen-house-l-shape-e0e3b328-plain:1` (removed in the studio, still placed by 9 lot presets: `tests/lot-presets-json.test.ts`
+fails until they restore it or the presets are re-pointed).
+
 **2026-10-26 manual regression** (main `d750592`, `E:/ClaudeTemp/nightly/2026-10-26-manual.md`): typecheck, 1697/1697 tests, the build,
 sim, town, towns and biz gates PASS; fix and event gates FAIL (#285). towns/event/biz had not run for days (no .webp loader; fixed by #286).
 
@@ -49,6 +58,11 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **#290 the lot lab lands on main**: the lot presets and the lot lab (`?lotlab&dev`), cars and business art resizable, and the
+  Library's locked sizes fixed: the studio's Rebuild never ran `prep-views.mjs` (nor prep-cars, prep-business-art), so a size set on a
+  four-view building was never packed; now Rebuild runs every pack in dependency order and stand-ins are packed for the largest size
+  any building drawn as them needs (`newart.ts standInNeeds`, `stand-in-needs.ts`, `prep-views.mjs packFor`, 3x source cap). A Rebuild
+  takes about 12 min (prep-sprites 10). Only `golf:clubhouse-shanty` still cannot reach its size (needs higher-res art).
 - 2026-10-26: T044 #287 build stamp and save download/load/backups in the gear menu (P07 5-6); T041 #284 transport panels' fine controls
   under All tools, golf wording (both orphaned 2026-10-24 work, found at the account switch); #286 the gate scripts' image loaders.
   Removed the merged and dead worktrees (63 GB free on E:). About 32 unregistered old folders (~10 GB, 2026-10-22) remain in
@@ -65,7 +79,7 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 - **Memory:** the PC has 16 GB shared by several Claude sessions, VS Code and Codex. With many open, git checkouts of the 2-3 GB packs
   fail (use `git -c checkout.workers=1`). Run one heavy step at a time.
 - **Disk:** E: has about 30-45 GB free. Each agent worktree with node_modules is about 4.3 GB. Remove it as soon as its PR merges.
-- **Others in the repo:** other sessions work here too (branches `lead/golf-play`, the `lot-presets` worktree on ports 5241 and 5242,
+- **Others in the repo:** other sessions work here too (branches `lead/golf-play`, the people session's `worktrees/people-ground`,
   `finite-atlas-runtime-20261026`). Do not touch their worktrees.
 
 ## History: owner-requested integration (2026-10-23)
