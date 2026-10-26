@@ -33,6 +33,8 @@ import { lookOf, maxDrawScale } from '../newart';
 import { compose, lotPreset, lotPresets, lotPresetsMeta, onLotPresetsReload, setLotPresets, type PresetDrop } from '../lots/compose';
 import { formatPresets, type LotPreset, type PresetProp } from '../lots/presets';
 import { detach } from '../lots/derive';
+import { onStudioScales } from '../lots/scales-live';
+import { resetFacings } from '../traffic';
 import { toFrame, toWorld, type PresetFrame } from '../lots/preset-frame';
 import { footprintOf, ownerScaleOf, sizeKey, sizeViews, turned } from '../lots/preset-art';
 import { applyEdit, clampToLot, fit1, growWithin, placeInPreset, presetToWorld, removeSprite, replacePreset, scaleOverride, snap, studioJson, worldToPreset, type PresetEdit } from './lot-edit';
@@ -720,6 +722,9 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
   // a hot reload of lot-presets.json (the file on disk is the merged truth): a reload while a write is queued or in flight is skipped (the editor
   // holds the same or a newer state); any other that differs from the presets held (another person's save, the studio, a hand edit) replaces
   // them, every lot composes again, and the selection follows its preset prop. The echo of the editor's own save matches them: nothing changes
+  // the studio saved a size (scale-overrides.json, applied in place by lots/scales-live.ts): the cars' facings again and every lot composed again,
+  // so the running game draws what the studio's card shows (T163: before, it kept the old size until a reload by hand)
+  const unScales = onStudioScales(() => { resetFacings(); recomposeKeeping(); game.recomposeLots(); say('the studio sizes changed: every lot was composed again at the new sizes'); });
   const unReload = onLotPresetsReload((list, meta) => {
     if (writing || waiting.size || formatPresets(list, meta) === formatPresets(lotPresets(), lotPresetsMeta())) return;
     setLotPresets(list, meta); recomposeKeeping();
@@ -820,7 +825,7 @@ export function installLotEditor(game: Game, canvas: HTMLCanvasElement): () => v
     sel: selInfo,
   };
   return () => {
-    cancelAnimationFrame(raf); unReload(); lab = null;
+    cancelAnimationFrame(raf); unReload(); unScales(); lab = null;
     boxEl.remove(); for (const d of [...outlines, ...rings]) d.remove();
     window.removeEventListener('keydown', onKey, true); window.removeEventListener('pointerdown', onDown, true); window.removeEventListener('pointermove', onMove, true);
     window.removeEventListener('pointerup', onRelease, true); window.removeEventListener('pointercancel', onRelease, true);

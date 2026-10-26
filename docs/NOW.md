@@ -18,6 +18,9 @@ repo. The weekly usage cap is close (2026-10-26), so any chat may stop at any mo
    its branch with AGENT-BRIEF's template.
 5. Then take the queue in order. Ask the owner only the questions marked as theirs.
 
+**Tests never block a merge** (the owner, 2026-10-26): the lead merges on review + typecheck; agents run their tests after the PR, in
+parallel, and push fixes as follow-up PRs (AGENT-BRIEF sections 1 and 5).
+
 **The owner tests on http://localhost:5174.** The owner pre-approves the lead's recommended decisions (state them in chat). The lead
 merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of every change.
 

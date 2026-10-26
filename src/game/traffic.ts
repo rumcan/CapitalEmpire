@@ -23,6 +23,8 @@ export function facings() {
   }));
   return FACINGS;
 }
+/** the facings built again at their next use (T163: the studio changed a car's size in a running dev game, lots/scales-live.ts) */
+export function resetFacings(): void { FACINGS = []; }
 /** Painted car for a parking bay's cardinal direction: 0 +x, 1 +y, 2 -x, 3 -y. */
 export function parkedCar(type: number, direction: number): Facing { return facings()[type % 5]![carHeading(direction * Math.PI / 2)]!; }
 /** body colours of the cars (the planner dots), by car type */

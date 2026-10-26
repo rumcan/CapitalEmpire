@@ -84,7 +84,10 @@ $('#who').onchange=e=>{me=walkers.find(p=>p.id===e.target.value)||null;man();};
 function cats(){const c=[...new Set(all.filter(s=>!removed[s.id]).map(s=>s.cat))].sort(),box=$('#cats');box.innerHTML='';for(const k of ['',...c]){const b=el('span',{className:'chip'+(k===cat?' on':''),textContent:k||'All'});b.onclick=()=>{cat=k;cats();draw();};box.append(b);}}
 /** the picture the game draws for a sprite (an old building's new-art stand-in) and its drawn scale: its scale times the stand-in's fill, never past
  *  its pixels (the game draws it at its cap there: newart.ts lookOf) */
-const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:s.scale*(s.carScale||1)};
+// a sprite drawn as itself past its sharp size is drawn at its pixels' limit (newart.ts lookOf: sharp / PIXEL_SLACK, src/game/sizes.ts), so its
+// card shows that size too (T163: a car's card was drawn at the size asked while the lots drew it at its limit)
+const PIXEL_SLACK=1.02,ownK=s=>s.sharp!=null&&s.scale>s.sharp?s.sharp/PIXEL_SLACK:s.scale;
+const drawnOf=s=>s.drawn?{id:s.drawn.id,quad:s.drawn.quad,k:Math.min(s.scale*s.drawn.fill,s.drawn.cap)}:{id:s.id,quad:s.quad,k:ownK(s)*(s.carScale||1)};
 // a card's picture is a WebP sized for the card (T144, server.mjs sized()): its long side at the next size step above what the card shows in device px
 // (the steps of scripts/assets/review/thumb-size.mjs, repeated here: this script cannot import), so the slider reuses the server's cache and the
 // browser never decodes more pixels than the card shows. The picture is loaded only while its card is near the view (near, below): data-src holds the URL
