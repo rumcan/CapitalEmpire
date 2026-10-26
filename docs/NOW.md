@@ -24,7 +24,7 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T148 | #309 | `arena/T148-lot-lab` | `.claude/worktrees/t148` | 5187 | The lot lab: multi-select with move/delete, Ctrl+C/V, Change house (H), Lot grid (L), Generate in place + "New lot ▶", Neighbours (N). Yields heavy steps to T150. |
+| T151 | #322 | `arena/T151-labels` | `.claude/worktrees/t151` | 5186 | World labels never overlap (the range's shop front first): one placement pass by priority, stable, hidden when crowded; money floats avoid them. |
 
 **Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
 PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
@@ -51,14 +51,14 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
   has finished 2 of its 14 families (golden fescue, lake: in the game). sand-ripples has raw variants, sand-raked 2/12, desert/dirt
   anchors only; fairway, putting-green, first-cut, long-grass and the rest have job files and no pictures yet. Each lands through
   READY-MATERIALS → `node scripts/assets/prep-painted-tiles.mjs` → a surface in Studio › Painted.
-0b. **T149 #312 painted terrain follow-ups**: real game-vs-proof comparisons (T145's side-by-sides were invalid), the in-band zoom steps
+0b. **T149 #312 painted terrain follow-ups** (waits for the owner's FAR-anchor choice after T150): real game-vs-proof comparisons (T145's side-by-sides were invalid), the in-band zoom steps
    (the owner's call), seams, DPR 2 softness, rivers.
 1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
    passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
-   - overlapping labels at the range's shop front;
+   - overlapping labels at the range's shop front: T151 in flight;
    - the putt, chip and coaching clips;
    - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
 4. **The owner's call:** the top bar's chip words are icons only below 2200 px (T135). Bring the words back at 1920 if the owner asks.
@@ -67,6 +67,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T148 #321 the lot lab's editing tools**: multi-select (Shift+click, box drag) with group move/delete/turn/size as one undo,
+  Ctrl+C/V across lots, Change house (H, same family and size class), Lot grid (L), Generate in place + New lot ▶, Neighbours (N).
 - 2026-10-26: **T150 #319 painted tiles at their true size**: one fixed world size per set, native at its anchor (NEAR 30% from the
   near-shop reference, MID 10%, FAR at the furthest zoom 0.6%), never magnified, real zoom, switches only at anchors (4% hysteresis).
   **Open, the owner's call:** at DPR 1 a FAR tile at native is wider than the map at the furthest zoom (2x2 tiles at DPR 2); MID shrinks
