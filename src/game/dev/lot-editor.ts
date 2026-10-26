@@ -79,10 +79,14 @@ function drawable(id: string, cx: number, cy: number, s: number, flip: boolean):
   const fp = footprintOf(id, s, flip), x = cx - (fp[0] + fp[2]) / 2, y = cy - (fp[1] + fp[3]) / 2;
   return { item, x, y, flip, scale: s, x0: x + fp[0], y0: y + fp[1], x1: x + fp[2], y1: y + fp[3] };
 }
+/** T173: the atlas mip a picture of tex rectangle side (0..1 of a page) is painted from at `shown` css px: mip 2 (a page a quarter of mip 0's, a
+ *  sixteenth of its pixels) when the picture is at least that big there (no upscaling: as sharp), else mip 1; the lab palette's 48 px cards then
+ *  decode the small mip-2 pages for most of their pages (mip 1 only on the few pages of small props) */
+export const picMip = (side: number, shown: number): 1 | 2 => (side * ATLAS_SIZE / 4 >= shown ? 2 : 1);
 /** paints a library sprite's atlas picture (its stand-in for an old building, as the game draws it) over an element of w x h px */
 function paint(el: HTMLElement, it: LibItem, w: number, h: number) {
-  const [page, u0, v0, u1, v1] = it.tex, P = ATLAS_SIZE / 2, kx = w / Math.max(1e-6, (u1 - u0) * P), ky = h / Math.max(1e-6, (v1 - v0) * P);
-  Object.assign(el.style, { backgroundImage: `url(${ATLAS_PAGES[page]![1]})`, backgroundSize: `${P * kx}px ${P * ky}px`, backgroundPosition: `${-u0 * P * kx}px ${-v0 * P * ky}px`, backgroundRepeat: 'no-repeat' });
+  const [page, u0, v0, u1, v1] = it.tex, m = picMip(Math.max(u1 - u0, v1 - v0), Math.max(w, h)), P = ATLAS_SIZE / 2 ** m, kx = w / Math.max(1e-6, (u1 - u0) * P), ky = h / Math.max(1e-6, (v1 - v0) * P);
+  Object.assign(el.style, { backgroundImage: `url(${ATLAS_PAGES[page]![m]})`, backgroundSize: `${P * kx}px ${P * ky}px`, backgroundPosition: `${-u0 * P * kx}px ${-v0 * P * ky}px`, backgroundRepeat: 'no-repeat' });
 }
 /** draws a library sprite's look (the picture the lots draw, lookOf) fitted into size x size css px on el's background (from its top left); clears it
  *  for an unknown id. Returns the picture's size there (css px) */

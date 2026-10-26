@@ -35,7 +35,7 @@ export interface PairCount { n: number; offs: number[] }
 export interface Taste { anchors: Map<string, number>; pairs: Map<string, Map<string, PairCount>>; density: Map<string, [number, number]> }
 export const emptyTaste = (): Taste => ({ anchors: new Map(), pairs: new Map(), density: new Map() });
 const dkey = (s: PresetState, k: ItemKind) => `${s}|${k}`;
-const r2 = (v: number) => Math.round(v * 100) / 100, r3 = (v: number) => Math.round(v * 1000) / 1000;
+const r2 = (v: number) => Math.round(v * 100) / 100 + 0, r3 = (v: number) => Math.round(v * 1000) / 1000 + 0;  // (+ 0: never -0, as the data file reads back)
 
 /** the taste of a list of samples (group: whose lots' densities it counts, T169: the houses' unless told) */
 export function buildTaste(samples: readonly Sample[], group: UseGroup = 'res'): Taste { const t = emptyTaste(); for (const s of samples) learnTaste(t, s, group); return t; }

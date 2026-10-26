@@ -6,11 +6,10 @@ import type { Game } from '../engine';
 import type { ComposeState, LotGeom } from '../lots/compose-core';
 import type { PresetState, Road } from '../lots/presets';
 import { addLotModel, lotLayout, lotModelVersion, lotPresets, setGeneratedLots, setLotModel } from '../lots/compose';
-import { LATEST, LOT_MODELS } from '../lots/lot-models';
+import { LATEST } from '../lots/lot-models';
 import { examLots, examRows, type ExamLot } from '../lots/lot-exam';
-import { ITEM_KINDS, learningStats, modelData, type ItemKind } from '../lots/learn';
-import { tasteData } from '../lots/taste';
-import { learnedModel, learnedSamples, learnedTaste } from './learn-store';
+import { ITEM_KINDS, learningStats, type ItemKind } from '../lots/learn';
+import { learnedSamples, liveModel } from './learn-store';
 import { worldX, worldY } from '../iso';
 import { LU, LV } from '../lots/town';
 
@@ -58,6 +57,17 @@ export function makeExam(host: ExamHost) {
   let z = Math.min(CELL.w / big.w, CELL.h / big.h), label = `v${was}`, street: LotGeom[] = [];
   const clip = () => ({ w: Math.ceil(big.w * z), h: Math.ceil(big.h * z) });
   return {
+    /** T173: the exam's lots by number (a fresh list from the presets: Ship model's few), its rows laid again */
+    pick(ids: readonly number[]): number { lots = examLots(lotPresets()).filter(l => ids.includes(l.i)); rows = examRows(lots); geos.clear(); return lots.length; },
+    /** T173: a shot of the game's canvas (the world only: the lab's panels are not in it) over a rectangle (viewport px), taken in the next frame
+     *  right after the engine has drawn it (its drawing buffer is not kept: the frame's own callback, registered before this one, has drawn) */
+    capture(rect: { x: number; y: number; w: number; h: number }): Promise<HTMLCanvasElement> {
+      return new Promise(res => requestAnimationFrame(() => {
+        const cv = host.game.canvas, b = cv.getBoundingClientRect(), k = cv.width / Math.max(1, b.width), c = document.createElement('canvas');
+        c.width = rect.w; c.height = rect.h; c.getContext('2d')!.drawImage(cv, (rect.x - b.left) * k, (rect.y - b.top) * k, rect.w * k, rect.h * k, 0, 0, rect.w, rect.h);
+        res(c);
+      }));
+    },
     /** the exam narrowed to some use groups (T169: res, com, ind, open), its rows laid again */
     only(groups: readonly string[]): number { lots = lots.filter(l => groups.includes(l.group ?? 'res')); rows = examRows(lots); return lots.length; },
     /** the lots and the rows they are staged in (lot numbers) */
@@ -69,7 +79,8 @@ export function makeExam(host: ExamHost) {
       setGeneratedLots(which !== 'old');
       if (which === 'old') { label = 'oldlots'; return label; }
       if (which === 'learned') {
-        addLotModel(LEARNED_V, { ...modelData(learnedModel()), ...tasteData(learnedTaste()), groups: (LOT_MODELS[LATEST] as { groups?: unknown } | undefined)?.groups });
+        // T173: the live model (live-model.ts: what Ship model ships)
+        addLotModel(LEARNED_V, liveModel().data);
         setLotModel(LEARNED_V); label = `learned now (${learnedSamples().length} samples)`;
       } else { setLotModel(which === 'shipped' ? LATEST : Number(which)); label = `v${lotModelVersion()}`; }
       return label;

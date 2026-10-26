@@ -87,7 +87,7 @@ export const ROW_MIN = 3, ROW_GAP = 2.6, ROW_OFF = 0.6;
  *  lot (n / lots, at the lot's size) rather than drawing its kind's items at random */
 export interface Places { items: Map<string, ItemPlaces>; rows: Map<string, RowCount>; lots: number; area: number; inventory?: boolean }
 export const emptyPlaces = (): Places => ({ items: new Map(), rows: new Map(), lots: 0, area: 0 });
-const r2 = (v: number) => Math.round(v * 100) / 100;
+const r2 = (v: number) => Math.round(v * 100) / 100 + 0;  // (+ 0: never -0, as the data file reads back)
 /** a lot's kept items counted into the places (each its anchor and place; each anchor's line read for runs) */
 export function learnPlaces(t: Places, l: PlaceLot, items: readonly { id: string; kind: ItemKind; x: number; y: number; kept: boolean }[]): Places {
   t.lots++; t.area += l.w * l.d;

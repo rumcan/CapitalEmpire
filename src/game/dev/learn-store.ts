@@ -4,11 +4,24 @@
 import FILE from '../lots/lot-learning.json';
 import { buildModel, learn, parseLearning, type Model, type Sample } from '../lots/learn';
 import { buildTaste, learnTaste, type Taste } from '../lots/taste';
+import { layModelFrom, lotPresets, type LayModel } from '../lots/compose';
+import { LATEST, LOT_MODELS } from '../lots/lot-models';
+import { liveModelData } from './live-model';
+import type { LotPreset } from '../lots/presets';
 
 let samples: Sample[] = parseLearning(FILE).samples, model: Model = buildModel(samples), taste: Taste = buildTaste(samples);
 const pending = new Map<string, Sample>();
 let listener: (() => void) | null = null;
 
+/** T173: the live model (live-model.ts: the latest shipped model's parts learnt again from the presets and the owner's samples, each group its
+ *  own), made again when the samples, the presets or the latest model change; its data (what Ship model ships) and its LayModel (what the
+ *  wizard and the gallery lay with: every group, on in the game or not) */
+let live: { key: [readonly Sample[], readonly LotPreset[], unknown]; data: Record<string, unknown>; lay: LayModel } | null = null;
+export function liveModel(): { data: Record<string, unknown>; lay: LayModel } {
+  const pr = lotPresets(), latest = LOT_MODELS[LATEST];
+  if (!live || live.key[0] !== samples || live.key[1] !== pr || live.key[2] !== latest) { const data = liveModelData(pr, samples, latest, new Date().toISOString()); live = { key: [samples, pr, latest], data, lay: layModelFrom(data, true) }; }
+  return live;
+}
 /** the samples now, oldest first, and the model built from them */
 export const learnedSamples = (): readonly Sample[] => samples;
 export const learnedModel = (): Model => model;
