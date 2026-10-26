@@ -36,23 +36,9 @@ Tickets in progress now: see NOW.md "START HERE" (the In flight table); it is th
 
 ## Other sessions working in this repo
 Each keeps its own handover doc with a start prompt at the top. Paste that prompt into a new chat.
-- **The lot lab (lot-preset studio).** Its start prompt (the owner, 2026-10-26; it supersedes older ones), paste as is:
-  ```
-  You are the lot lab session on CapitalEmpire (the lot-preset studio, separate from the lead's work).
-  - Worktree E:\Repos\CapitalEmpire\.claude\worktrees\lot-presets, branch lot-presets (never the main checkout). Git there needs
-    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=*.
-  - Handover: docs/handovers/lot-presets.md in that worktree (read its "Now" section, starting "At the account switch"), then
-    docs/plans/P20.md section "The lot lab".
-  - Servers (keep them up for the owner): game http://localhost:5241, studio http://127.0.0.1:5242 (also http://192.168.0.2:5242 on the
-    network for helpers), .claude/launch.json configs lot-presets-game and lot-presets-studio. They are not the lead's 5174/5191.
-  - Next: (1) check the studio Rebuild finished: GET http://127.0.0.1:5242/api/status (never POST /api/rebuild to poll); check the
-    Library pictures match their cards. (2) Finish the stand-in packing fix in scripts/assets/prep-sprites.mjs (old houses such as
-    variation:world-house_0-north-1dde6f56-plain:1 are drawn as four-view stand-ins; pack each stand-in for the largest size any
-    house drawn as it needs); check git diff for unfinished work. (3) Rebuild game sprites, then check resized houses in the lab
-    (http://localhost:5241/?lotlab&dev) with the Person cursor.
-  - The branch's newest commits (up to 309d68a) are local only; origin has 51643a7. Push them when the owner says so; no PR yet. Do not
-    merge lot-presets into main without the owner's review.
-  ```
+- **The lot lab (lot-preset studio): finished as a separate session (2026-10-26).** Its branch `lot-presets` is on main (#290). Lot
+  presets are now made in the one studio, http://192.168.0.2:5191 (Lots tab; the lab at http://localhost:5174/?lotlab&dev), by the owner and
+  helpers on the network. Its history: `docs/handovers/lot-presets.md`. Do not start the old 5241/5242 servers again.
 - **3D people, golf play and run.world.** This session made the 3D crowd and golfers (PR #238) and golf play (PR #258; its open items
   are under "Status" in `docs/GOLF-PLAY.md`).
   - **Handover:** `docs/HANDOVER-PEOPLE.md` section 0 "START HERE", with the start prompt at the top. It is on branch
