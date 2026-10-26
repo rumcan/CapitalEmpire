@@ -24,11 +24,13 @@ merges reviewed PRs (AGENT-BRIEF section 1). The owner wants screenshots of ever
 ### In flight
 | Ticket | Issue | Branch | Worktree | Port | State |
 | --- | --- | --- | --- | --- | --- |
-| T144 | #296 | `arena/T144-light-library` | an agent worktree under `.claude/worktrees` | 5193 | The owner: "studio crashed with ran out of memory" (the browser tab; the PC at 1.5 GB free). Thumbs as WebP at the card's size, off-screen cards release their images; memory measured before and after. |
+| **T145 (top priority)** | #300 | `arena/T145-painted-terrain` | `.claude/worktrees/t145` | 5186 | The owner's brief (in the issue): the accepted golden fescue and lake tiles in the game, three authored sets NEAR/MID/FAR of four large tiles each, hash-checked from `eight-tiles/READY-MATERIALS.json`, on main's T128 painted-families runtime. Brief: `E:/ClaudeTemp/lead/t145-brief.md`. |
+| T146 | #303 | `arena/T146-range-parking` | an agent worktree under `.claude/worktrees` | 5187 | Resumed with the owner's new scope (2026-10-26: "lets add a carpark building. server the golfers in parallel"): a multi-storey car park building as the range's parking upgrade (stand-in + art request), the pro shop serving in parallel so a full range fills its bays, the skip counting parking. Yields heavy steps to T145. Opus, high effort. |
 
-**One coding agent at a time (the owner, 2026-10-26: "maybe just too many background tasks?", after the studio tab died with the PC at
-1.5 GB free): the lead dispatches one coding agent at a time (a second only when it is one light process, such as a gate scan); the rest
-wait as tickets. Agents start only the servers they need and stop them before reporting.**
+**Two coding agents at a time (the owner, 2026-10-26: first "maybe just too many background tasks?" after the studio tab died with the
+PC at 1.5 GB free, then "start up two coding agents"):** keep two coding agents running, start the next queue ticket when one lands, no
+more; each runs one heavy process at a time. Both stopped once at the usage limit (13:50) and were resumed: an agent that stops on a
+limit is resumed with a message, not restarted.
 
 **One studio (the owner, 2026-10-26: "when a studio is running it is the only studio and any changes made affect the actual game
 sprites"; "put the studio on the network for all pcs on network to edit").** The lot lab's branch is on main (#290): the only studio is
@@ -46,12 +48,15 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
 `docs/START-PROMPTS.md`.
 
 ### Queue (in order)
+0. **T147 #306 money floats up where it is made** (the owner, 2026-10-26: "show green +$400 ... float up from a customer when we make
+   money and -$300 when we dont in red"): next when an agent slot frees. Decisions in the issue (green in, red out, red for a lost sale
+   without charging the treasury; merged at mid zoom, none at overview; a setting to hide them).
 1. **The nightly.** The owner should allow the nightly session's commands so it runs unattended. fix:gate's new default (seed 1 day 60)
    passes by 1.8 points only: if it flips, retune the scenario (#298's header has the scan table), do not touch traffic.
 2. **The owner's new grass paintings**, when they arrive. Import them with `scripts/assets/prep-painted-families.mjs` (the families list
    in the script), then map them per surface in Studio › Painted.
 3. **P24 follow-ups:**
-   - a bigger range car park, or parking with the second tier (D49);
+   - a bigger range car park, or parking with the second tier (D49): T146 in flight;
    - overlapping labels at the range's shop front;
    - the putt, chip and coaching clips;
    - real art for the stand-ins in `docs/GOLF-SPRITES.md` (the range, practice and props kits).
@@ -61,6 +66,8 @@ ending with "To resume". **Other live sessions** (the lot-preset studio, the 3D 
    (the sharp bump). See the History sections below and `gh issue list --label arena --state open`.
 
 ### Done recently (newest first; details in each PR)
+- 2026-10-26: **T144 #302 the studio's Library page is light**: WebP card thumbs at four size steps, cards scrolled far away drop their
+  pictures (decoded pictures held: 545 MB → at most 26 MB). The 5191 studio was restarted on it.
 - 2026-10-26: **#298 the gates retuned to the game as it is** (#285 closed; the bisect found intended features, not a regression: #87 woods
   buildable, 78e5472 three-town growth, 0c58278 parking fees). fix:gate refuses a city not at capacity (exit 2) and defaults to seed 1
   day 60; a round books its parking fees like its tolls (`Round.parking`); event:gate reconciles with them, (b) measured on the fixed
