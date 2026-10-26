@@ -97,17 +97,19 @@ export function generateLayout(g: GenInput, r: () => number = mulberry(g.seed >>
     return null;
   };
   /** T171: the row an item laid at a line anchor runs on (its kind's habit there: its share of rows, their length and spacing): more of the kind
-   *  along the line from it, toward the line's longer side, each a spacing on, while its kind has tries left and each fits */
+   *  along the line from it, a spacing apart, toward the line's longer side and, when the line ends or a place is taken, on the other side of it,
+   *  while its kind has tries left and each fits */
   const row = (it: { kind: ItemKind; a: Anchor; along: number; off: number; p: number }, pool: readonly string[]) => {
     const R = rowOf(PL!.t, it.kind, it.a), L = lineLen(PL!.lot, it.a, it.p);
     if (!R || L <= 0 || r() >= R.share) return;
-    const step = R.gap / L, dir = it.along > 0.5 ? -1 : 1, n = Math.round(R.len) - 1;
-    for (let i = 1; i <= n && left > 1; i++) {
+    const step = R.gap / L, first = it.along > 0.5 ? -1 : 1;
+    let n = Math.round(R.len) - 1;
+    for (const dir of [first, -first]) for (let i = 1; n > 0 && left > 1; i++) {
       const u = it.along + dir * i * step; if (u < -0.05 || u > 1.05) break;
       const id = pool[Math.floor(r() * pool.length)]!, h = halfOf(id), pt = pointAt(PL!.lot, it.a, u, it.off + (r() - 0.5) * 0.1, it.p)!;
       const box: Box = [pt.x - h.ha, pt.y - h.hb, pt.x + h.ha, pt.y + h.hb];
       if (!fits(box, it.kind, it.a === 'kerb')) break;
-      boxes.push(box); out.push({ kind: it.kind, id, x: pt.x, y: pt.y }); laid.set(it.kind, (laid.get(it.kind) ?? 0) + 1); left--;
+      boxes.push(box); out.push({ kind: it.kind, id, x: pt.x, y: pt.y }); laid.set(it.kind, (laid.get(it.kind) ?? 0) + 1); left--; n--;
     }
   };
   for (const kind of ORDER) {
